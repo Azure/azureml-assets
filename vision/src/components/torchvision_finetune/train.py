@@ -266,7 +266,7 @@ class PyTorchDistributedModelTrainingSequence:
                     loss = criterion(outputs, one_hot_targets)
                     running_loss += loss.item() * images.size(0)
 
-                    correct = (torch.argmax(outputs, dim=-1) == (targets))
+                    correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
                     num_correct += torch.sum(correct).item()
                     num_total_images += len(images)
 
@@ -303,7 +303,7 @@ class PyTorchDistributedModelTrainingSequence:
                 outputs = self.model(images)
                 _, preds = torch.max(outputs, 1)
                 loss = criterion(outputs, one_hot_targets)
-                correct = (torch.argmax(outputs, dim=-1) == (targets))
+                correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
 
                 running_loss += loss.item() * images.size(0)
                 num_correct += torch.sum(correct).item()
