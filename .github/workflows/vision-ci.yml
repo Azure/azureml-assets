@@ -23,6 +23,5 @@ jobs:
       continue-on-error: true
     - name: run job
       run: |
-        ls
-        az ml component create --file spec.yml
+        az ml component create --file spec.yaml
       working-directory: vision/src/components/torchvision_finetune
