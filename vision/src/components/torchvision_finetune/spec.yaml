@@ -18,7 +18,7 @@ inputs:
   valid_images:
     type: path
     description: "Path to folder containing validation images, stored in subdirectories according to their class."
-
+  
   # data loading  
   batch_size:
     type: integer

@@ -223,6 +223,11 @@ class PyTorchDistributedModelTrainingSequence:
             pin_memory=self.dataloading_config.pin_memory,
         )
 
+        if self.self_is_main_node:
+            # MLFLOW: report relevant parameters using mlflow
+            mlflow.log_params({"num_classes": len(labels)})
+
+
     def setup_model(self, model):
         """Configures a model for training."""
         self.logger.info(f"Setting up model to use device {self.device}")
