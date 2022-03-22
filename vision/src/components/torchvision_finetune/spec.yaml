@@ -7,7 +7,7 @@ description: >-
   as we're using [ImageFolder](http://pytorch.org/vision/main/generated/torchvision.datasets.ImageFolder.html) to load data.
 
 name: TorchVision_FineTune_ImageClassification
-display_name: TorchVision model fine-tuning
+display_name: TorchVision classification model fine-tuning
 version: 1
 
 inputs:
