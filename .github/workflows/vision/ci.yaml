@@ -1,0 +1,27 @@
+name: vision-ci
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - vision/**
+      - scripts/setup.sh
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: check out repo
+      uses: actions/checkout@v2
+    - name: azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.BUILTINREGISTRYDEVSECRET}}
+    - name: setup
+      run: bash setup.sh
+      working-directory: scripts
+      continue-on-error: true
+    - name: run job
+      run: |
+        az ml component create --file spec.yml
+      working-directory: vision/components/torchvision_finetune
