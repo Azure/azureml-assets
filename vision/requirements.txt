@@ -6,3 +6,6 @@ torch==1.11.0
 mlflow==1.24.0
 azureml-mlflow==1.39.0
 matplotlib==3.5.1
+
+# for unit testing
+pytest==7.1.1
