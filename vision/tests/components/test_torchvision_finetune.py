@@ -59,7 +59,7 @@ def test_components_torchvision_finetune(mlflow_pytorch_log_model_mock, temporar
         "--num_epochs", "1",
         "--model_output", model_dir,
         "--register_model_as", "foo",
-        "--enable_profiling", "False"
+        "--enable_profiling", "True"
     ]
 
     # replaces sys.argv with test arguments and run main
