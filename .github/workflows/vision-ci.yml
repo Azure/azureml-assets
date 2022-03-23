@@ -42,12 +42,12 @@ jobs:
       with:
         check_name: Unit Test Results for Build
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        files: test-build-result.xml
+        files: vision/test-build-result.xml
 
     - name: Code Coverage Summary Report
       uses: irongut/CodeCoverageSummary@v1.0.2
       with:
-        filename: coverage.xml
+        filename: vision/coverage.xml
         badge: true
         format: 'markdown'
         output: 'both'
@@ -57,7 +57,7 @@ jobs:
       if: github.event_name == 'pull_request'
       with:
         recreate: true
-        path: code-coverage-results.md
+        path: vision/code-coverage-results.md
 
   publish:
     name: "Publish vision components from main branch"
