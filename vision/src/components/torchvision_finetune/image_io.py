@@ -14,6 +14,31 @@ import torch
 import torchvision
 
 
+def find_image_subfolder(current_root):
+    """Identifies the right level of a directory
+    that matches with torchvision.datasets.ImageFolder requirements.
+    In particular, if images are in current_root/foo/bar/category_X/*.jpg
+    we will want to feed current_root/foo/bar/ to ImageFolder.
+
+    Args:
+        current_root (str): a given directory
+    
+    Returns:
+        image_folder (str): the subfolder containing multiple subdirs
+    """
+    if not os.path.isdir(current_root):
+        raise FileNotFoundError(f"While identifying the image folder, provided current_root={current_root} is not a directory.")
+    
+    sub_directories = glob.glob(os.path.join(current_root, "*"))
+    if len(sub_directories) == 1:
+        # let's do it recursively
+        return find_image_subfolder(sub_directories[0])
+    if len(sub_directories) == 0:
+        raise FileNotFoundError(f"While identifying image folder under {current_root}, we found no content at all. The image folder is empty.")
+    else:
+        return current_root
+
+
 def build_image_datasets(
     train_images_dir: str,
     valid_images_dir: str,
@@ -30,10 +55,8 @@ def build_image_datasets(
     """
     logger = logging.getLogger(__name__)
 
-    train_directories = glob.glob(os.path.join(train_images_dir, "*"))
-    if len(train_directories) == 1:
-        # there's one directory containing them all
-        train_images_dir = train_directories[0]
+    # identify the right level of sub directory
+    train_images_dir = find_image_subfolder(train_images_dir)
 
     train_transform = torchvision.transforms.Compose(
         [
@@ -49,13 +72,11 @@ def build_image_datasets(
         root=train_images_dir, transform=train_transform
     )
     logger.info(
-        f"ImageFolder loaded training image list samples={len(train_dataset)}, has classes {train_dataset.classes}"
+        f"ImageFolder loaded training image from {train_images_dir}: samples={len(train_dataset)}, #classes={len(train_dataset.classes)} classes={train_dataset.classes}"
     )
 
-    valid_directories = glob.glob(os.path.join(valid_images_dir, "*"))
-    if len(valid_directories) == 1:
-        # there's one directory containing them all
-        valid_images_dir = valid_directories[0]
+    # identify the right level of sub directory
+    valid_images_dir = find_image_subfolder(valid_images_dir)
 
     valid_transform = torchvision.transforms.Compose(
         [
@@ -72,7 +93,7 @@ def build_image_datasets(
     )
 
     logger.info(
-        f"ImageFolder loaded validation image list samples={len(valid_dataset)}, has classes {train_dataset.classes}"
+        f"ImageFolder loaded training image from {valid_images_dir}: samples={len(valid_dataset)}, #classes={len(valid_dataset.classes)} classes={valid_dataset.classes}"
     )
 
     return train_dataset, valid_dataset, train_dataset.classes
