@@ -301,7 +301,6 @@ class PyTorchDistributedModelTrainingSequence:
                 optimizer.zero_grad()
 
                 outputs = self.model(images)
-                _, preds = torch.max(outputs, 1)
                 loss = criterion(outputs, one_hot_targets)
                 correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
 

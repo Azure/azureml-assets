@@ -1,0 +1,27 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+
+command: |
+  tar xvfm ${{inputs.archive}} --no-same-owner -C ${{outputs.valid_images}} places365_standard/val/ &&
+  tar xvfm ${{inputs.archive}} --no-same-owner -C ${{outputs.train_images}} places365_standard/train/
+
+inputs:
+  archive:
+    type: uri_file
+    path: http://data.csail.mit.edu/places/places365/places365standard_easyformat.tar
+
+outputs:
+  train_images:
+    type: uri_folder
+    mode: upload
+  valid_images:
+    type: uri_folder
+    mode: upload
+
+#  valid_images: azureml:places365_standard_val
+
+environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu@latest
+
+#environment_variables:
+  # AZUREML_COMPUTE_USE_COMMON_RUNTIME: "false"
+
+compute: azureml:cpu-cluster-lg
