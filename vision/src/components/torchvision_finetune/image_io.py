@@ -30,6 +30,11 @@ def build_image_datasets(
     """
     logger = logging.getLogger(__name__)
 
+    train_directories = glob.glob(os.path.join(train_images_dir, "*"))
+    if len(train_directories) == 1:
+        # there's one directory containing them all
+        train_images_dir = train_directories[0]
+
     train_transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.RandomResizedCrop(200),
@@ -46,6 +51,11 @@ def build_image_datasets(
     logger.info(
         f"ImageFolder loaded training image list samples={len(train_dataset)}, has classes {train_dataset.classes}"
     )
+
+    valid_directories = glob.glob(os.path.join(valid_images_dir, "*"))
+    if len(valid_directories) == 1:
+        # there's one directory containing them all
+        valid_images_dir = valid_directories[0]
 
     valid_transform = torchvision.transforms.Compose(
         [

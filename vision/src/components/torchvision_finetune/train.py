@@ -223,6 +223,11 @@ class PyTorchDistributedModelTrainingSequence:
             pin_memory=self.dataloading_config.pin_memory,
         )
 
+        if self.self_is_main_node:
+            # MLFLOW: report relevant parameters using mlflow
+            mlflow.log_params({"num_classes": len(labels)})
+
+
     def setup_model(self, model):
         """Configures a model for training."""
         self.logger.info(f"Setting up model to use device {self.device}")
@@ -251,22 +256,17 @@ class PyTorchDistributedModelTrainingSequence:
                     images = images.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
                     )
-                    targets = torch.nn.functional.one_hot(
-                        targets.to(
+                    one_hot_targets = targets.to(
                             self.device, non_blocking=self.dataloading_config.non_blocking
-                        ),
-                        num_classes=len(self.labels)
-                    ).float()
+                    )
 
                 with record_function("eval.forward"):
                     outputs = self.model(images)
 
-                    loss = criterion(outputs, targets)
-                    #loss = criterion(outputs.squeeze(), targets.squeeze())
+                    loss = criterion(outputs, one_hot_targets)
                     running_loss += loss.item() * images.size(0)
-                    #correct = (outputs.squeeze() > 0.5) == (targets.squeeze() > 0.5)
-                    correct = (outputs > 0.5) == (targets > 0.5)
 
+                    correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
                     num_correct += torch.sum(correct).item()
                     num_total_images += len(images)
 
@@ -288,7 +288,7 @@ class PyTorchDistributedModelTrainingSequence:
                 images = images.to(
                     self.device, non_blocking=self.dataloading_config.non_blocking
                 )
-                targets = torch.nn.functional.one_hot(
+                one_hot_targets = torch.nn.functional.one_hot(
                     targets.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
                     ),
@@ -302,11 +302,8 @@ class PyTorchDistributedModelTrainingSequence:
 
                 outputs = self.model(images)
                 _, preds = torch.max(outputs, 1)
-                loss = criterion(outputs, targets)
-
-                #loss = criterion(outputs.squeeze(), targets.squeeze())
-                correct = (outputs > 0.5) == (targets > 0.5)
-                #correct = (outputs.squeeze() > 0.5) == (targets.squeeze() > 0.5)
+                loss = criterion(outputs, one_hot_targets)
+                correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
 
                 running_loss += loss.item() * images.size(0)
                 num_correct += torch.sum(correct).item()
@@ -359,6 +356,16 @@ class PyTorchDistributedModelTrainingSequence:
             epoch_train_loss = running_loss / num_samples
             epoch_train_acc = num_correct / num_samples
 
+            # report metric values in stdout
+            self.logger.info(
+                f"MLFLOW: epoch_train_loss={epoch_train_loss} epoch_train_acc={epoch_train_acc} epoch={epoch}"
+            )
+
+            # MLFLOW / DISTRIBUTED: report metrics only from main node
+            if self.self_is_main_node:
+                mlflow.log_metric("epoch_train_loss", epoch_train_loss, step=epoch)
+                mlflow.log_metric("epoch_train_acc", epoch_train_acc, step=epoch)
+
             # EVAL: run evaluation on validation set and return metrics
             running_loss, num_correct, num_samples = self._epoch_eval(epoch, criterion)
             epoch_valid_loss = running_loss / num_samples
@@ -373,10 +380,6 @@ class PyTorchDistributedModelTrainingSequence:
             # stop timer
             epoch_train_time = time.time() - epoch_start
 
-            # report metric values in stdout
-            self.logger.info(
-                f"MLFLOW: epoch_train_loss={epoch_train_loss} epoch_train_acc={epoch_train_acc} epoch={epoch}"
-            )
             self.logger.info(
                 f"MLFLOW: epoch_valid_loss={epoch_valid_loss} epoch_valid_acc={epoch_valid_acc} epoch={epoch}"
             )
@@ -386,8 +389,6 @@ class PyTorchDistributedModelTrainingSequence:
 
             # MLFLOW / DISTRIBUTED: report metrics only from main node
             if self.self_is_main_node:
-                mlflow.log_metric("epoch_train_loss", epoch_train_loss, step=epoch)
-                mlflow.log_metric("epoch_train_acc", epoch_train_acc, step=epoch)
                 mlflow.log_metric("epoch_valid_loss", epoch_valid_loss, step=epoch)
                 mlflow.log_metric("epoch_valid_acc", epoch_valid_acc, step=epoch)
                 mlflow.log_metric("epoch_train_time", epoch_train_time, step=epoch)

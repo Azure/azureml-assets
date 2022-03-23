@@ -68,7 +68,10 @@ def load_and_model_arch(
         )
 
     if model_arch == "resnet18":
-        model.fc = nn.Linear(model.fc.in_features, output_dimension)
+        model.fc = torch.nn.Sequential(
+            torch.nn.Linear(model.fc.in_features, output_dimension),
+            torch.nn.Softmax(dim=1)   # adding Softmax to output probs
+        )
     else:
         raise NotImplementedError(
             f"loading model_arch={model_arch} is not implemented yet in our custom code."
