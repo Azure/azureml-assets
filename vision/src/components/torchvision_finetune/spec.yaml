@@ -7,8 +7,8 @@ description: >-
   as we're using [ImageFolder](http://pytorch.org/vision/main/generated/torchvision.datasets.ImageFolder.html) to load data.
 
 name: TorchVision_FineTune_ImageClassification
-display_name: TorchVision model fine-tuning
-version: 1
+display_name: TorchVision classification model fine-tuning
+version: 1.0.1
 
 inputs:
   # data loading  
@@ -18,7 +18,7 @@ inputs:
   valid_images:
     type: path
     description: "Path to folder containing validation images, stored in subdirectories according to their class."
-
+  
   # data loading  
   batch_size:
     type: integer
