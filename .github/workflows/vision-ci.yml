@@ -57,7 +57,7 @@ jobs:
       if: github.event_name == 'pull_request'
       with:
         recreate: true
-        path: vision/code-coverage-results.md
+        path: code-coverage-results.md
 
   publish:
     name: "Publish vision components from main branch"
