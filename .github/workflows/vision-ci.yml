@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       test_run:
-        description: 'Test (y/n)?'
+        description: 'Run canary e2e (approx 10 mins) ? (y/n)'
         required: true
-        default: 'y'
+        default: 'n'
   # build triggered for every PR to main
   pull_request:
     branches:
