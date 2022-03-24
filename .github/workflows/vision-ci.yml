@@ -38,7 +38,6 @@ jobs:
         python -m pip install --upgrade pip==21.3.1
         pip install flake8==3.9.1 pytest~=6.2 pytest-cov~=2.11
         pip install -r requirements.txt
-        pip install azure-ml==0.0.139 --extra-index-url  https://azuremlsdktestpypi.azureedge.net/sdk-cli-v2
 
     - name: Test with pytest
       run: >-
