@@ -17,11 +17,6 @@ outputs:
     type: uri_folder
     mode: upload
 
-#  valid_images: azureml:places365_standard_val
-
 environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu@latest
 
-#environment_variables:
-  # AZUREML_COMPUTE_USE_COMMON_RUNTIME: "false"
-
-compute: azureml:cpu-cluster-lg
+compute: azureml:cpu-cluster
