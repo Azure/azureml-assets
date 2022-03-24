@@ -208,22 +208,22 @@ class PyTorchDistributedModelTrainingSequence:
         )
 
         # setting up DataLoader with the right arguments
-        data_loading_kwargs = {
-            "batch_size" : self.dataloading_config.batch_size,
-            "num_workers" : self.dataloading_config.num_workers,
-            "pin_memory" : self.dataloading_config.pin_memory,
-        }
+        optional_data_loading_kwargs = {}
+        
         if self.dataloading_config.num_workers > 0:
             # NOTE: this option _ONLY_ applies if num_workers > 0
             # or else DataLoader will except
-            data_loading_kwargs["prefetch_factor"] = self.dataloading_config.prefetch_factor
+            optional_data_loading_kwargs["prefetch_factor"] = self.dataloading_config.prefetch_factor
 
         self.training_data_loader = DataLoader(
             training_dataset,
+            batch_size=self.dataloading_config.batch_size,
+            num_workers=self.dataloading_config.num_workers,  # self.cpu_count,
+            pin_memory=self.dataloading_config.pin_memory,
             # DISTRIBUTED: the sampler needs to be provided to the DataLoader
             sampler=self.training_data_sampler,
             # all other args
-            **data_loading_kwargs
+            **optional_data_loading_kwargs
         )
 
         # DISTRIBUTED: we don't need a sampler for validation set
