@@ -91,9 +91,13 @@ jobs:
       with:
         creds: ${{secrets.AZ_CREDS_BUILTINREGISTRYDEV}}
 
+    - name: Install AzureML sdk v2
+      run: |
+        pip install azure-ml==0.0.139 --extra-index-url  https://azuremlsdktestpypi.azureedge.net/sdk-cli-v2
+
     - name : Run canary pipeline e2e [classification_random]
       run: >-
-        python .\src\pipelines\canary\classification_random.py
+        python ./src/pipelines/canary/classification_random.py
         --aml_subscription_id ${{secrets.SUBSCRIPTION}}
         --aml_resource_group_name ${{secrets.RESOURCE_GROUP}}
         --aml_workspace_name ${{secrets.WORKSPACE_NAME}}
