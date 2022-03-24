@@ -1,6 +1,5 @@
 """
-Executes the series of scripts end-to-end
-to test LightGBM (python) manual benchmark
+Tests running the generate_random_image_classes/run.py script.
 """
 import os
 import sys
@@ -17,7 +16,7 @@ from components.generate_random_image_classes import run
 # IMPORTANT: see conftest.py for fixtures
 
 def test_generate_random_image_classes(temporary_dir):
-    """Tests src/components/generate_random_image_classes/train.py"""
+    """Tests src/components/generate_random_image_classes/run.py"""
     random_train_images = os.path.join(temporary_dir, "random_train_images")
     random_valid_images = os.path.join(temporary_dir, "random_valid_images")
 
