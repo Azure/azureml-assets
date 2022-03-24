@@ -17,14 +17,14 @@ from azure.identity import AzureCliCredential
 from azure.ml import dsl
 
 # add path to here, if necessary
-PIPELINES_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..")
+SRC_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
 )
-if PIPELINES_ROOT not in sys.path:
-    print(f"Adding {PIPELINES_ROOT} to path")
-    sys.path.append(str(PIPELINES_ROOT))
+if SRC_ROOT not in sys.path:
+    print(f"Adding {SRC_ROOT} to path")
+    sys.path.append(str(SRC_ROOT))
 
-from common.main import main, VISION_COMPONENTS_FOLDER
+from pipelines.common.main import main, VISION_COMPONENTS_FOLDER
 
 
 def build_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
