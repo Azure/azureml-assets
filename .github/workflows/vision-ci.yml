@@ -78,6 +78,7 @@ jobs:
         working-directory: vision/
     needs: [test]
     environment: BuiltinRegistryDev
+    # timeout-minutes: 30 # TBD
     steps:
 
     - name: check out repo
