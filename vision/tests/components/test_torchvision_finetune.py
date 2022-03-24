@@ -1,6 +1,6 @@
 """
-Executes the series of scripts end-to-end
-to test LightGBM (python) manual benchmark
+Tests running the torchvision_finetune/train.py script
+on a randomly generated small dataset.
 """
 import os
 import sys
