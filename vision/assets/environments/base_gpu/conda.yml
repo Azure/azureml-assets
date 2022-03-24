@@ -5,9 +5,10 @@ channels:
 dependencies:
   - python=3.8
   - pip=21.2.4
-  - pytorch==1.11.0
-  - torchvision==0.12.0
-  - cudatoolkit=11.3
+  - pytorch=1.11.0
+  - torchvision=0.12.0
+  - cudatoolkit=11.1.1
+  - nvidia-apex=0.1.0
   - pip:
     - mlflow==1.24.0
     - azureml-mlflow==1.39.0
