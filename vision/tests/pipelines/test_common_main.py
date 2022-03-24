@@ -36,15 +36,24 @@ def test_common_main(azure_ml_mlclient_mock, ml_client_instance_mock):
     with patch.object(sys, "argv", script_args):
         common_main(_build_mock, _build_arguments_mock)
 
+    # call to MLClient
+    mlclient_call_args, mlclient_call_kwargs = azure_ml_mlclient_mock.call_args
+    assert "subscription_id" in mlclient_call_kwargs and mlclient_call_kwargs["subscription_id"] == "FAKE_SUB"
+    assert "resource_group_name" in mlclient_call_kwargs and mlclient_call_kwargs["resource_group_name"] == "FAKE_RG"
+    assert "workspace_name" in mlclient_call_kwargs and mlclient_call_kwargs["workspace_name"] == "FAKE_WS"
+
+    # call to build + build_arguments
     _build_arguments_mock.assert_called_once()
     _build_mock.assert_called_once()
 
+    # call to submit the job
     ml_client_instance_mock.jobs.create_or_update.assert_called_with(
         "fake_pipeline_object",
         experiment_name="FAKE_EXP",
         continue_run_on_step_failure=True,
     )
 
+    # call to wait for completion
     ml_client_instance_mock.jobs.stream.assert_called_with(
         # see conftest.py, returned_job fixture is using this fake name
         "THIS_IS_A_MOCK_NAME"
