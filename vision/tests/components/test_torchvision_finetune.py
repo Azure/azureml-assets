@@ -50,7 +50,7 @@ def test_components_torchvision_finetune(mlflow_pytorch_log_model_mock, temporar
         "--train_images", random_image_in_folder_classes,
         "--valid_images", random_image_in_folder_classes, # using same data for train/valid
         "--batch_size", "16",
-        "--num_workers", "1", # single thread pre-fetching
+        "--num_workers", "0", # single thread pre-fetching
         "--prefetch_factor", "2",
         "--pin_memory", "True",
         "--non_blocking", "False",
