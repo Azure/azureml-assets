@@ -78,9 +78,6 @@ jobs:
         working-directory: vision/
     needs: [test]
     environment: BuiltinRegistryDev
-    # runs only if (from main branch) or (triggered manually)
-    if: ${{ (github.ref == 'refs/heads/main') || (github.event.inputs.test_run == 'y') }}
-
     steps:
 
     - name: check out repo
@@ -95,7 +92,18 @@ jobs:
       run: |
         pip install azure-ml==0.0.139 --extra-index-url  https://azuremlsdktestpypi.azureedge.net/sdk-cli-v2
 
+    - name : Validate canary pipeline [classification_random]
+      # runs only if (from main branch) or (triggered manually)
+      run: >-
+        python ./src/pipelines/canary/classification_random.py
+        --aml_subscription_id ${{secrets.SUBSCRIPTION}}
+        --aml_resource_group_name ${{secrets.RESOURCE_GROUP}}
+        --aml_workspace_name ${{secrets.WORKSPACE_NAME}}
+        --validate_only
+
     - name : Run canary pipeline e2e [classification_random]
+      # runs only if (from main branch) or (triggered manually)
+      if: ${{ (github.ref == 'refs/heads/main') || (github.event.inputs.test_run == 'y') }}
       run: >-
         python ./src/pipelines/canary/classification_random.py
         --aml_subscription_id ${{secrets.SUBSCRIPTION}}
