@@ -1,3 +1,7 @@
+"""
+Azure ML Pipeline Script - Runs the torchvision image classification
+training component on a given training/validation dataset.
+"""
 import os
 import sys
 import argparse
@@ -21,6 +25,7 @@ if PIPELINES_ROOT not in sys.path:
     sys.path.append(str(PIPELINES_ROOT))
 
 from common.main import main, VISION_COMPONENTS_FOLDER
+
 
 def build_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     """Constructs the argument parser"""
@@ -97,6 +102,8 @@ def build_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         help="how many processes per node (set to number of gpus on instance)",
     )
 
+    return parser
+
 
 def build(ml_client: MLClient, config: argparse.Namespace) -> Any:
     """Builds the pipeline.
@@ -142,7 +149,7 @@ def build(ml_client: MLClient, config: argparse.Namespace) -> Any:
             config.process_count_per_instance  # set to number of gpus on instance
         )
 
-        # use instance_count to increase the number of nodes (machines)
+        # use instance_count to increase the number of nodes (distributed training)
         training_step.resources.instance_count = config.instance_count
 
         # this pipeline will not return anything
@@ -165,4 +172,11 @@ def build(ml_client: MLClient, config: argparse.Namespace) -> Any:
 
 
 if __name__ == "__main__":
+    # NOTE: the main() function is imported from pipelines.common.main
+    # it will:
+    # 1. calls build_arguments() to create an argument parser
+    # 2. parse the arguments from the command line
+    # 3. connect to Azure ML using MLClient
+    # 4. call build() with the right client and config (args)
+    # 5. submit the pipeline
     main(build, build_arguments)

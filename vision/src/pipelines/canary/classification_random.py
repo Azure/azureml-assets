@@ -12,15 +12,15 @@ from azure.identity import AzureCliCredential
 # python sdk
 from azure.ml import dsl
 
+# add path to here, if necessary
+PIPELINES_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..")
+)
+if PIPELINES_ROOT not in sys.path:
+    print(f"Adding {PIPELINES_ROOT} to path")
+    sys.path.append(str(PIPELINES_ROOT))
 
-# resolving a couple useful paths
-ASSETS_REPO_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..", "..")
-)
-VISION_AREA_ROOT = os.path.abspath(os.path.join(ASSETS_REPO_ROOT, "vision"))
-VISION_COMPONENTS_FOLDER = os.path.abspath(
-    os.path.join(VISION_AREA_ROOT, "src", "components")
-)
+from common.main import main, VISION_COMPONENTS_FOLDER
 
 
 def build_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
@@ -39,7 +39,6 @@ def build_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         default="gpu-cluster",
         help="name of GPU cluster",
     )
-
     parser.add_argument(
         "--instance_count",
         required=False,
@@ -54,6 +53,8 @@ def build_arguments(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         default=1,
         help="how many processes per node (set to number of gpus on instance)",
     )
+
+    return parser
 
 
 def build(ml_client: MLClient, config: argparse.Namespace) -> Any:
@@ -115,102 +116,19 @@ def build(ml_client: MLClient, config: argparse.Namespace) -> Any:
         # use instance_count to increase the number of nodes (distributed training)
         training_step.resources.instance_count = config.instance_count
 
-        # outputs of this pipeline are coded as a dictionary
-        # keys can be used to assemble and link this pipeline with other pipelines
+        # this pipeline will not return anything
         return {}
 
     # return the instance
     return canary_pipeline()
 
 
-def main(cli_args: List[str] = None) -> None:
-    """Main function (builds and submit pipeline)"""
-    parser = argparse.ArgumentParser(__doc__)
-
-    group_aml = parser.add_argument_group(f"Azure ML connection setup")
-    group_aml.add_argument(
-        "--aml_subscription_id",
-        required=False,
-        type=str,
-        help="(using $AML_SUBSCRIPTION_ID if not provided)",
-    )
-    group_aml.add_argument(
-        "--aml_resource_group_name",
-        required=False,
-        type=str,
-        help="(using $AML_RESOURCE_GROUP_NAME if not provided)",
-    )
-    group_aml.add_argument(
-        "--aml_workspace_name",
-        required=False,
-        type=str,
-        help="(using $AML_WORKSPACE_NAME if not provided)",
-    )
-
-    group_aml = parser.add_argument_group(f"Experiment config")
-    group_aml.add_argument(
-        "--experiment_name", required=False, type=str, default="canary"
-    )
-    group_aml.add_argument(
-        "--validate_only", required=False, action="store_true", default=False
-    )
-    group_aml.add_argument(
-        "--wait_for_completion", required=False, action="store_true", default=False
-    )
-
-    group_pipeline = parser.add_argument_group(f"Pipeline config")
-    build_arguments(group_pipeline)
-
-    # actually parses arguments now
-    args = parser.parse_args(cli_args)  # if cli_args, uses sys.argv
-
-    # get a handle to the workspace
-    ml_client = MLClient(
-        AzureCliCredential(),
-        subscription_id=args.aml_subscription_id
-        or os.environ.get("AML_SUBSCRIPTION_ID", None),
-        resource_group_name=args.aml_resource_group_name
-        or os.environ.get("AML_RESOURCE_GROUP_NAME", None),
-        workspace_name=args.aml_workspace_name
-        or os.environ.get("AML_WORKSPACE_NAME", None),
-    )
-
-    # call build() to get pipeline instance
-    pipeline_instance = build(ml_client, args)
-
-    # stop here to just validate (not submit)
-    if args.validate_only:
-        print("Pipeline built successfully (validation not implemented yet)")
-        return
-
-    # submit the pipeline job
-    returned_job = ml_client.jobs.create_or_update(
-        pipeline_instance,
-        # Project's name
-        experiment_name=args.experiment_name,
-        # If there is no dependency, pipeline run will continue even after the failure of one component
-        continue_run_on_step_failure=True,
-    )
-
-    # get a URL for the status of the job
-    print("********************")
-    print("********************")
-    print("The url to your job:")
-    print("********************")
-    print(returned_job.services["Studio"].endpoint)
-
-    # print the pipeline run id
-    print("********************")
-    print(
-        f"The pipeline details can be access programmatically using identifier: {returned_job.name}"
-    )
-    print("********************")
-    print("********************")
-
-    if args.wait_for_completion:
-        print("Waiting for job to finish...")
-        ml_client.jobs.stream(returned_job.name)
-
-
 if __name__ == "__main__":
-    main()
+    # NOTE: the main() function is imported from pipelines.common.main
+    # it will:
+    # 1. calls build_arguments() to create an argument parser
+    # 2. parse the arguments from the command line
+    # 3. connect to Azure ML using MLClient
+    # 4. call build() with the right client and config (args)
+    # 5. submit the pipeline
+    main(build, build_arguments)
