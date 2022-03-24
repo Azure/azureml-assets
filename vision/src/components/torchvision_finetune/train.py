@@ -101,6 +101,9 @@ class PyTorchDistributedModelTrainingSequence:
             self.dataloading_config.num_workers = 0
         if self.dataloading_config.num_workers < 0:
             self.dataloading_config.num_workers = os.cpu_count()
+        if self.dataloading_config.num_workers == 0:
+            self.logger.warning("You specified num_workers=0, forcing prefetch_factor to be discarded.")
+            self.dataloading_config.prefetch_factor = None
 
         # NOTE: strtobool returns an int, converting to bool explicitely
         self.dataloading_config.pin_memory = bool(self.dataloading_config.pin_memory)
@@ -204,14 +207,23 @@ class PyTorchDistributedModelTrainingSequence:
             training_dataset, num_replicas=self.world_size, rank=self.world_rank
         )
 
+        # setting up DataLoader with the right arguments
+        optional_data_loading_kwargs = {}
+        
+        if self.dataloading_config.num_workers > 0:
+            # NOTE: this option _ONLY_ applies if num_workers > 0
+            # or else DataLoader will except
+            optional_data_loading_kwargs["prefetch_factor"] = self.dataloading_config.prefetch_factor
+
         self.training_data_loader = DataLoader(
             training_dataset,
             batch_size=self.dataloading_config.batch_size,
             num_workers=self.dataloading_config.num_workers,  # self.cpu_count,
-            prefetch_factor=self.dataloading_config.prefetch_factor,
             pin_memory=self.dataloading_config.pin_memory,
-            # DISTRIBUTED: the samples will be provided to the DataLoader
+            # DISTRIBUTED: the sampler needs to be provided to the DataLoader
             sampler=self.training_data_sampler,
+            # all other args
+            **optional_data_loading_kwargs
         )
 
         # DISTRIBUTED: we don't need a sampler for validation set
