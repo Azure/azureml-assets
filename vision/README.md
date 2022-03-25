@@ -92,3 +92,51 @@ python src/pipelines/benchmark/train.py --training_dataset places2_train:1 --val
 ```
 
 **Important**: reference to a dataset (ex: `places2_train:1`) requires a version number (`:1`) corresponding to the number you used during manual registration.
+
+## Run script locally or on a VM
+
+If you want to run this component locally or on a GPU VM to test performance, please follow instructions below.
+
+### Download the Places2 dataset locally
+
+```bash
+# create data/ folder (gitignored)
+mkdir data
+
+# download the 24.8G archive
+curl -o ./data/archive.tar http://data.csail.mit.edu/places/places365/places365standard_easyformat.tar
+
+# alternatively, download the Stanford Dogs (smaller)
+# curl -o ./data/archive.tar http://vision.stanford.edu/aditya86/ImageNetDogs/images.tar
+
+# unpack in the data/ folder
+# with so many files, do not use verbose, but add checkpoint to show progress
+tar xfm ./data/archive.tar --no-same-owner --checkpoint=1000 -C ./data/
+```
+
+For the Places2 dataset, it will create 2 subfolders:
+- `data/places365_standard/train/` for the training dataset
+- `data/places365_standard/val/` for the validation dataset
+
+Alternatively, for the Stanford Dogs dataset, it will create:
+- `data/Images/` for the entire dataset (no train/val split)
+
+### Run pytorch distributed from command line
+
+Use the [PyTorch distributed launch utility](https://pytorch.org/docs/stable/distributed.html#launch-utility) to run the script on your VM with multiple GPUs:
+
+```bash
+python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_YOU_HAVE \
+    src/components/torchvision_finetune/train.py \
+    --train_images ./data/places365_standard/train/ \
+    --valid_images ./data/places365_standard/val/ \
+    --model_arch resnet18 \
+    --num_epochs 5 \
+    --batch_size 64 \
+    --num_workers 8 \
+    --prefetch_factor 2 \
+    --distributed_backend nccl \
+    --enable_profiling False
+```
+
+The script will use mlflow to track its metrics, and log the model. Use [MLflow tracking command line interface](https://mlflow.org/docs/latest/tracking.html) to get the metrics. Or watch for the logs, they will display those metrics inline as well.

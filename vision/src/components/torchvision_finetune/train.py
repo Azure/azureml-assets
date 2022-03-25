@@ -533,6 +533,16 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         default="nccl",
         help="Which distributed backend to use.",
     )
+    # DISTRIBUTED: torch.distributed.launch is passing this argument to your script
+    # it is likely to be deprecated in favor of os.environ['LOCAL_RANK']
+    # see https://pytorch.org/docs/stable/distributed.html#launch-utility
+    group.add_argument(
+        "--local_rank",
+        type=int,
+        required=False,
+        default=None,
+        help="Passed by torch.distributed.launch utility when running from cli.",
+    )
     group.add_argument(
         "--num_epochs",
         type=int,
