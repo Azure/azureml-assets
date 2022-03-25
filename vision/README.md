@@ -110,7 +110,7 @@ curl -o ./data/archive.tar http://data.csail.mit.edu/places/places365/places365s
 # curl -o ./data/archive.tar http://vision.stanford.edu/aditya86/ImageNetDogs/images.tar
 
 # unpack in the data/ folder
-# not using verbose, but adding checkpoint to show progress
+# with so many files, do not use verbose, but add checkpoint to show progress
 tar xfm ./data/archive.tar --no-same-owner --checkpoint=1000 -C ./data/
 ```
 
