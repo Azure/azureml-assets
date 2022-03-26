@@ -42,11 +42,13 @@ def find_image_subfolder(current_root):
 def build_image_datasets(
     train_images_dir: str,
     valid_images_dir: str,
+    input_size: int = 224,
 ):
     """
     Args:
         train_images_dir (str): path to the directory containing training images
         valid_images_dir (str): path to the directory containing validation images
+        input_size (int): input size expected by the model
 
     Returns:
         train_dataset (torchvision.datasets.VisionDataset): training dataset
@@ -58,9 +60,13 @@ def build_image_datasets(
     # identify the right level of sub directory
     train_images_dir = find_image_subfolder(train_images_dir)
 
+    logger.info(
+        f"Creating training dataset from {train_images_dir}"
+    )
+
     train_transform = torchvision.transforms.Compose(
         [
-            torchvision.transforms.RandomResizedCrop(200),
+            torchvision.transforms.RandomResizedCrop(input_size),
             torchvision.transforms.RandomHorizontalFlip(),
             torchvision.transforms.ToTensor(),
             torchvision.transforms.Normalize(
@@ -78,10 +84,14 @@ def build_image_datasets(
     # identify the right level of sub directory
     valid_images_dir = find_image_subfolder(valid_images_dir)
 
+    logger.info(
+        f"Creating validation dataset from {valid_images_dir}"
+    )
+
     valid_transform = torchvision.transforms.Compose(
         [
-            torchvision.transforms.Resize(200),
-            torchvision.transforms.CenterCrop(200),
+            torchvision.transforms.Resize(input_size),
+            torchvision.transforms.CenterCrop(input_size),
             torchvision.transforms.ToTensor(),
             torchvision.transforms.Normalize(
                 mean=[0.485, 0.456, 0.405], std=[0.229, 0.224, 0.225]
@@ -93,7 +103,7 @@ def build_image_datasets(
     )
 
     logger.info(
-        f"ImageFolder loaded training image from {valid_images_dir}: samples={len(valid_dataset)}, #classes={len(valid_dataset.classes)} classes={valid_dataset.classes}"
+        f"ImageFolder loaded validation image from {valid_images_dir}: samples={len(valid_dataset)}, #classes={len(valid_dataset.classes)} classes={valid_dataset.classes}"
     )
 
     return train_dataset, valid_dataset, train_dataset.classes
