@@ -179,6 +179,7 @@ class PyTorchDistributedModelTrainingSequence:
                     "batch_size": self.dataloading_config.batch_size,
                     "num_workers": self.dataloading_config.num_workers,
                     "prefetch_factor": self.dataloading_config.prefetch_factor,
+                    "persistent_workers": self.dataloading_config.persistent_workers,
                     "pin_memory": self.dataloading_config.pin_memory,
                     "non_blocking": self.dataloading_config.non_blocking,
 
@@ -214,6 +215,7 @@ class PyTorchDistributedModelTrainingSequence:
             # NOTE: this option _ONLY_ applies if num_workers > 0
             # or else DataLoader will except
             optional_data_loading_kwargs["prefetch_factor"] = self.dataloading_config.prefetch_factor
+            optional_data_loading_kwargs["persistent_workers"] = self.dataloading_config.persistent_workers
 
         self.training_data_loader = DataLoader(
             training_dataset,
@@ -493,6 +495,13 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         required=False,
         default=2,
         help="Data loader prefetch factor (default: 2)",
+    )
+    group.add_argument(
+        "--persistent_workers",
+        type=strtobool,
+        required=False,
+        default=True,
+        help="Use persistent prefetching workers (default: True)",
     )
     group.add_argument(
         "--pin_memory",

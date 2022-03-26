@@ -33,6 +33,10 @@ inputs:
     type: integer
     optional: true
     description: "Data loader prefetch factor (default: 2)"
+  persistent_workers:
+    type: boolean
+    optional: true
+    description: "Use persistent prefetching workers (default: True)"
   pin_memory:
     type: boolean
     optional: true
@@ -96,6 +100,7 @@ command: >-
   [--batch_size ${{inputs.batch_size}}]
   [--num_workers ${{inputs.num_workers}}]
   [--prefetch_factor ${{inputs.prefetch_factor}}]
+  [--persistent_workers ${{inputs.persistent_workers}}]
   [--pin_memory ${{inputs.pin_memory}}]
   [--non_blocking ${{inputs.non_blocking}}]
 
