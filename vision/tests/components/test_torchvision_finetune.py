@@ -47,18 +47,10 @@ TEST_MODEL_ARCH_LIST = [
 ]
 
 @patch("mlflow.end_run")
-@patch("mlflow.log_metric")
-@patch("mlflow.set_tags")
-@patch("mlflow.log_params")
 @patch("mlflow.start_run")
-@patch("mlflow.pytorch.log_model")
 @pytest.mark.parametrize("model_arch", TEST_MODEL_ARCH_LIST)
 def test_components_torchvision_finetune(
-    mlflow_pytorch_log_model_mock,
     mlflow_start_run_mock,
-    mlflow_log_params_mock,
-    mlflow_set_tags_mock,
-    mlflow_log_metric_mock,
     mlflow_end_run_mock,
     model_arch,
     temporary_dir,
