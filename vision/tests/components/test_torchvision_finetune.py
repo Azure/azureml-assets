@@ -46,11 +46,16 @@ TEST_MODEL_ARCH_LIST = [
     "resnet34",
 ]
 
-@patch("mlflow.end_run")
-@patch("mlflow.start_run")
+# we only care about patching those specific mlflow methods
+@patch("mlflow.end_run") # we can have only 1 start/end per test session
+@patch("mlflow.pytorch.log_model") # patched to test model name registration
+@patch("mlflow.log_params") # patched to avoid conflict in parameters
+@patch("mlflow.start_run") # we can have only 1 start/end per test session
 @pytest.mark.parametrize("model_arch", TEST_MODEL_ARCH_LIST)
 def test_components_torchvision_finetune(
     mlflow_start_run_mock,
+    mlflow_log_params_mock,
+    mlflow_pytorch_log_model_mock,
     mlflow_end_run_mock,
     model_arch,
     temporary_dir,
@@ -93,6 +98,15 @@ def test_components_torchvision_finetune(
     # replaces sys.argv with test arguments and run main
     with patch.object(sys, "argv", script_args):
         train.main()
+
+    # those mlflow calls must be unique in the script
+    mlflow_start_run_mock.assert_called_once()
+    mlflow_end_run_mock.assert_called_once()
+
+    # test all log_params calls
+    for log_params_call in mlflow_log_params_mock.call_args_list:
+        args, kwargs = log_params_call
+        assert isinstance(args[0], dict) # call has only 1 argument, and it's a dict
 
     # test model registration
     log_model_calls = mlflow_pytorch_log_model_mock.call_args_list
