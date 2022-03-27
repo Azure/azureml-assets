@@ -257,7 +257,7 @@ class PyTorchDistributedModelTrainingSequence:
                 params_count += param.numel()
         self.logger.info("MLFLOW: model_param_count={:2f} (millions)".format(params_count/1e6))
         if self.self_is_main_node:
-            mlflow.log_params("model_param_count", params_count/1e6)
+            mlflow.log_params({"model_param_count": params_count/1e6})
 
         return self.model
 
