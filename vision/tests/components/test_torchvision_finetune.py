@@ -39,6 +39,12 @@ def random_image_in_folder_classes(temporary_dir):
 
     return image_dataset_path
 
+# IMPORTANT: we have to restrict the list of models for unit test
+# because github actions runners have 7GB RAM only and will OOM
+TEST_MODEL_ARCH_LIST = [
+    "resnet18",
+    "resnet34",
+]
 
 @patch("mlflow.end_run")
 @patch("mlflow.log_metric")
@@ -46,7 +52,7 @@ def random_image_in_folder_classes(temporary_dir):
 @patch("mlflow.log_params")
 @patch("mlflow.start_run")
 @patch("mlflow.pytorch.log_model")
-@pytest.mark.parametrize("model_arch", MODEL_ARCH_LIST)
+@pytest.mark.parametrize("model_arch", TEST_MODEL_ARCH_LIST)
 def test_components_torchvision_finetune(
     mlflow_pytorch_log_model_mock,
     mlflow_start_run_mock,
