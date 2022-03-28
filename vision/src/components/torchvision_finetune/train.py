@@ -44,7 +44,7 @@ if COMPONENT_ROOT not in sys.path:
     sys.path.append(str(COMPONENT_ROOT))
 
 # internal imports
-from model import load_and_model_arch, MODEL_ARCH_LIST
+from model import load_and_model_arch, MODEL_ARCH_LIST, MODEL_ARCH_INPUT_SIZES
 from image_io import build_image_datasets
 from profiling import PyTorchProfilerHandler
 
@@ -251,6 +251,15 @@ class PyTorchDistributedModelTrainingSequence:
         if self.multinode_available:
             self.logger.info(f"Setting up model to use DistributedDataParallel.")
             self.model = DistributedDataParallel(self.model)
+
+        # fun: log the number of parameters
+        params_count = 0
+        for param in model.parameters():
+            if param.requires_grad:
+                params_count += param.numel()
+        self.logger.info("MLFLOW: model_param_count={:2f} (millions)".format(params_count/1e6))
+        if self.self_is_main_node:
+            mlflow.log_params({"model_param_count": params_count/1e6})
 
         return self.model
 
@@ -597,7 +606,8 @@ def run(args):
     # build the image folder datasets
     train_dataset, valid_dataset, labels = build_image_datasets(
         train_images_dir=args.train_images,
-        valid_images_dir=args.valid_images
+        valid_images_dir=args.valid_images,
+        input_size=MODEL_ARCH_INPUT_SIZES[args.model_arch]
     )
 
     # creates the model architecture

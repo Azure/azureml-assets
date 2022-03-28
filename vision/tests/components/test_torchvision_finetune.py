@@ -12,8 +12,10 @@ import numpy as np
 from PIL import Image
 
 from components.torchvision_finetune import train
+from components.torchvision_finetune.model import MODEL_ARCH_LIST
 
 # IMPORTANT: see conftest.py for fixtures
+
 
 @pytest.fixture()
 def random_image_in_folder_classes(temporary_dir):
@@ -24,53 +26,93 @@ def random_image_in_folder_classes(temporary_dir):
     n_classes = 4
 
     for i in range(n_samples):
-        a = np.random.rand(300,300,3) * 255
-        im_out = Image.fromarray(a.astype('uint8')).convert('RGB')
+        a = np.random.rand(300, 300, 3) * 255
+        im_out = Image.fromarray(a.astype("uint8")).convert("RGB")
 
         class_dir = "class_{}".format(i % n_classes)
-        
+
         image_path = os.path.join(
-            image_dataset_path,
-            class_dir,
-            "random_image_{}.jpg".format(i)
+            image_dataset_path, class_dir, "random_image_{}.jpg".format(i)
         )
         os.makedirs(os.path.join(image_dataset_path, class_dir), exist_ok=True)
         im_out.save(image_path)
 
     return image_dataset_path
 
-@patch('mlflow.pytorch.log_model')
-def test_components_torchvision_finetune(mlflow_pytorch_log_model_mock, temporary_dir, random_image_in_folder_classes):
+# IMPORTANT: we have to restrict the list of models for unit test
+# because github actions runners have 7GB RAM only and will OOM
+TEST_MODEL_ARCH_LIST = [
+    "resnet18",
+    "resnet34",
+]
+
+# we only care about patching those specific mlflow methods
+@patch("mlflow.end_run") # we can have only 1 start/end per test session
+@patch("mlflow.pytorch.log_model") # patched to test model name registration
+@patch("mlflow.log_params") # patched to avoid conflict in parameters
+@patch("mlflow.start_run") # we can have only 1 start/end per test session
+@pytest.mark.parametrize("model_arch", TEST_MODEL_ARCH_LIST)
+def test_components_torchvision_finetune(
+    mlflow_start_run_mock,
+    mlflow_log_params_mock,
+    mlflow_pytorch_log_model_mock,
+    mlflow_end_run_mock,
+    model_arch,
+    temporary_dir,
+    random_image_in_folder_classes,
+):
     """Tests src/components/torchvision_finetune/train.py"""
     model_dir = os.path.join(temporary_dir, "torchvision_finetune_model")
 
     # create test arguments for the script
     script_args = [
         "train.py",
-        "--train_images", random_image_in_folder_classes,
-        "--valid_images", random_image_in_folder_classes, # using same data for train/valid
-        "--batch_size", "16",
-        "--num_workers", "0", # single thread pre-fetching
-        "--prefetch_factor", "2", # will be discarded if num_workers=0
-        "--pin_memory", "True",
-        "--non_blocking", "False",
-        "--model_arch", "resnet18",
-        "--model_arch_pretrained", "True",
-        "--num_epochs", "1",
-        "--model_output", model_dir,
-        "--register_model_as", "foo",
-        "--enable_profiling", "True"
+        "--train_images",
+        random_image_in_folder_classes,
+        "--valid_images",
+        random_image_in_folder_classes,  # using same data for train/valid
+        "--batch_size",
+        "16",
+        "--num_workers",
+        "0",  # single thread pre-fetching
+        "--prefetch_factor",
+        "2",  # will be discarded if num_workers=0
+        "--pin_memory",
+        "True",
+        "--non_blocking",
+        "False",
+        "--model_arch",
+        model_arch,
+        "--model_arch_pretrained",
+        "True",
+        "--num_epochs",
+        "1",
+        "--model_output",
+        model_dir,
+        "--register_model_as",
+        "foo",
+        "--enable_profiling",
+        "True",
     ]
 
     # replaces sys.argv with test arguments and run main
     with patch.object(sys, "argv", script_args):
         train.main()
 
+    # those mlflow calls must be unique in the script
+    mlflow_start_run_mock.assert_called_once()
+    mlflow_end_run_mock.assert_called_once()
+
+    # test all log_params calls
+    for log_params_call in mlflow_log_params_mock.call_args_list:
+        args, kwargs = log_params_call
+        assert isinstance(args[0], dict) # call has only 1 argument, and it's a dict
+
     # test model registration
     log_model_calls = mlflow_pytorch_log_model_mock.call_args_list
 
     assert len(log_model_calls) == 1
-    
+
     # unpack arguments
     args, kwargs = log_model_calls[0]
     assert "artifact_path" in kwargs
