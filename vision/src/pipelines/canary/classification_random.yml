@@ -1,0 +1,38 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+# <jobs>
+settings:
+  default_datastore: azureml:workspaceblobstore
+  continue_on_step_failure: true
+
+jobs:
+  generate:
+    type: command
+    component: file:../../components/generate_random_image_classes/spec.yaml
+    compute: azureml:cpu-cluster
+    inputs:
+      classes: 4
+      train_samples: 100
+      valid_samples: 100
+      width: 300
+      height: 300
+
+  train:
+    type: command
+    component: file:../../components/torchvision_finetune/spec.yaml
+    compute: azureml:gpu-cluster
+    inputs:
+      train_images: ${{parent.jobs.generate.outputs.output_train}}
+      valid_images: ${{parent.jobs.generate.outputs.output_valid}}
+      num_epochs: 7
+      batch_size: 16
+      num_workers: 5
+      prefetch_factor: 4
+      enable_profiling: false
+    distribution:
+      type: pytorch
+      process_count_per_instance: 1
+    resources:
+      instance_count: 1
+# </jobs>

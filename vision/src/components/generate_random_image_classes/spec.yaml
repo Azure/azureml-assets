@@ -38,8 +38,7 @@ outputs:
     type: path
     description: "Path to the validation images"
 
-code:
-  local_path: .
+code: .
 
 environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu:11
 
