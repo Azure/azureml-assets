@@ -1,0 +1,38 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+# <inputs_and_outputs>
+inputs:
+  training_images: #using registerd datasets
+    type: uri_folder
+    path: azureml:stanford_dogs@latest
+  validation_images:
+    type: uri_folder
+    path: azureml:stanford_dogs@latest
+# </inputs_and_outputs>
+
+# <jobs>
+settings:
+  default_datastore: azureml:workspaceblobstore
+  continue_on_step_failure: true
+
+jobs:
+  train:
+    type: command
+    component: file:../../components/torchvision_finetune/spec.yaml
+    compute: azureml:gpu-cluster
+    inputs:
+      train_images: ${{parent.inputs.training_images}}
+      valid_images: ${{parent.inputs.validation_images}}
+      num_epochs: 7
+      batch_size: 16
+      num_workers: 5
+      prefetch_factor: 4
+      enable_profiling: false
+    environment: azureml:AzureML-pytorch-1.10-ubuntu18.04-py38-cuda11-gpu:10
+    distribution:
+      type: pytorch
+      process_count_per_instance: 1
+    resources:
+      instance_count: 1
+# </jobs>

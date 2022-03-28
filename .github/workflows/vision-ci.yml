@@ -17,7 +17,7 @@ on:
 
 jobs:
   test:
-    # Runs all unit tests
+    # Runs all pytest unit tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -76,7 +76,7 @@ jobs:
     defaults:
       run:
         working-directory: vision/
-    needs: [test]
+
     environment: BuiltinRegistryDev
     # timeout-minutes: 30 # TBD
     steps:
@@ -84,34 +84,20 @@ jobs:
     - name: check out repo
       uses: actions/checkout@v2
 
+    - name: Install AzureML cli v2
+      run: |
+        az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.59342943-py3-none-any.whl --yes
+
     - name: azure login
       uses: azure/login@v1
       with:
         creds: ${{secrets.AZ_CREDS_BUILTINREGISTRYDEV}}
 
-    - name: Install AzureML sdk v2
-      run: |
-        pip install azure-ml==0.0.139 --extra-index-url  https://azuremlsdktestpypi.azureedge.net/sdk-cli-v2
-
-    - name : Validate canary pipeline [classification_random]
-      # runs only if (from main branch) or (triggered manually)
-      run: >-
-        python ./src/pipelines/canary/classification_random.py
-        --aml_subscription_id ${{secrets.SUBSCRIPTION}}
-        --aml_resource_group_name ${{secrets.RESOURCE_GROUP}}
-        --aml_workspace_name ${{secrets.WORKSPACE_NAME}}
-        --validate_only
-
     - name : Run canary pipeline e2e [classification_random]
       # runs only if (from main branch) or (triggered manually)
       if: ${{ (github.ref == 'refs/heads/main') || (github.event.inputs.test_run == 'y') }}
       run: >-
-        python ./src/pipelines/canary/classification_random.py
-        --aml_subscription_id ${{secrets.SUBSCRIPTION}}
-        --aml_resource_group_name ${{secrets.RESOURCE_GROUP}}
-        --aml_workspace_name ${{secrets.WORKSPACE_NAME}}
-        --experiment_name canary
-        --wait_for_completion
+        az ml job create -f ./src/pipelines/canary/classification_random.yml --stream
 
 
   publish:
