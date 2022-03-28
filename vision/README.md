@@ -28,13 +28,14 @@ This subfolders hosts the code for AzureML assets related to vision machine lear
 
 ## Running a test pipeline
 
-Check out arguments of canary pipeline script:
+You can use the az ml cli to run a test pipeline:
 
 ```bash
-python src/pipelines/canary/classification_random.py -h
+az ml job create --f src/pipelines/canary/classification_random.yml
 ```
 
-Run this script by providing arguments to connect to your AzureML workspace. It does not require any particular dataset. The corresponding pipeline will generate 4 image folders with random noise images. Then will train the classifier on this dataset for 5 epochs.
+Running this job does not require any particular dataset. The corresponding pipeline will generate 4 image folders with random noise images. Then will train the classifier on this dataset for 5 epochs.
+
 
 ## Running a benchmark pipeline
 
@@ -78,20 +79,17 @@ To create those datasets, you'll need to run jobs that will unpack the dataset a
 
 ### Run a benchmark pipeline
 
-Check out arguments of benchmark pipeline script:
+To run a training on a given pair of training/validation dataset, use the az ml cli again:
 
 ```bash
-python src/pipelines/benchmark/train.py -h
+az ml job create --file src/pipelines/benchmark/train.yml
 ```
 
-Run this script by providing arguments to connect to your AzureML workspace.
+The cli allows you to override all parameters from the command line. Check the content of the yaml to align your override syntax with the tree of yaml fields in the job. For instance, to increase the number of nodes, use:
 
-You can switch the training and validation datasets using the arguments. For instance, use:
 ```bash
-python src/pipelines/benchmark/train.py --training_dataset places2_train:1 --validation_dataset places2_valid:1
+az ml job create --file src/pipelines/benchmark/train.yml --set jobs.train.resources.instance_count=2
 ```
-
-**Important**: reference to a dataset (ex: `places2_train:1`) requires a version number (`:1`) corresponding to the number you used during manual registration.
 
 ## Run script locally or on a VM
 
