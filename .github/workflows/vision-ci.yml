@@ -17,7 +17,7 @@ on:
 
 jobs:
   test:
-    # Runs all pytest unit tests
+    name: "Runs all pytest unit tests"
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -71,7 +71,7 @@ jobs:
   canary:
     # Tests running a sample pipeline end-to-end
     # and wait for completion
-    name: "Run canary pipeline to test end-to-end"
+    name: "Run canary pipeline e2e"
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -84,8 +84,14 @@ jobs:
     - name: check out repo
       uses: actions/checkout@v2
 
+    - name: setup
+      run: bash setup.sh
+      working-directory: scripts
+      continue-on-error: true
+
     - name: Install AzureML cli v2
       run: |
+        az extension remove -n ml
         az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.59342943-py3-none-any.whl --yes
 
     - name: azure login
