@@ -87,7 +87,6 @@ jobs:
     - name: Install AzureML cli v2
       run: |
         az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.59342943-py3-none-any.whl --yes
-        az account set --subscription ${{secrets.SUBSCRIPTION}}
         az configure --defaults group=${{secrets.RESOURCE_GROUP}} workspace=${{secrets.WORKSPACE_NAME}}
 
     - name: azure login
