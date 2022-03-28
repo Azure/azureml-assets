@@ -12,9 +12,19 @@ import torchvision.models as models
 
 MODEL_ARCH_LIST = [
     "resnet18",
-    # TODO: support other models
-    # "alexnet",
-    # "vgg16",
+    "resnet34",
+    "resnet50",
+    "resnet101",
+    "resnet152",
+    "alexnet",
+    "vgg11",
+    "vgg11_bn",
+    "vgg13",
+    "vgg13_bn",
+    "vgg16",
+    "vgg16_bn",
+    "vgg19",
+    "vgg19_bn",
     # "squeezenet",
     # "densenet",
     # "inception",
@@ -50,6 +60,23 @@ MODEL_ARCH_LIST = [
     # "regnet_x_32gf",
 ]
 
+MODEL_ARCH_INPUT_SIZES = {
+    "resnet18" : 224,
+    "resnet34" : 224,
+    "resnet50" : 224,
+    "resnet101" : 224,
+    "resnet152" : 224,
+    "alexnet" : 224,
+    "vgg11" : 224,
+    "vgg11_bn" : 224,
+    "vgg13" : 224,
+    "vgg13_bn" : 224,
+    "vgg16" : 224,
+    "vgg16_bn" : 224,
+    "vgg19" : 224,
+    "vgg19_bn" : 224,
+}
+
 
 def load_and_model_arch(
     model_arch: str, output_dimension: int = 1, pretrained: bool = True
@@ -67,9 +94,25 @@ def load_and_model_arch(
             f"model_arch={model_arch} is not implemented in torchvision model zoo."
         )
 
-    if model_arch == "resnet18":
+    # see https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html
+    if model_arch.startswith("resnet"):
         model.fc = torch.nn.Sequential(
             torch.nn.Linear(model.fc.in_features, output_dimension),
+            torch.nn.Softmax(dim=1)   # adding Softmax to output probs
+        )
+    elif model_arch == "alexnet":
+        model.classifier[6] = torch.nn.Sequential(
+            torch.nn.Linear(4096, output_dimension),
+            torch.nn.Softmax(dim=1)   # adding Softmax to output probs
+        )
+    elif model_arch.startswith("vgg"):
+        model.classifier[6] = torch.nn.Sequential(
+            torch.nn.Linear(4096, output_dimension),
+            torch.nn.Softmax(dim=1)   # adding Softmax to output probs
+        )
+    elif model_arch == "densenet":
+        model.classifier = torch.nn.Sequential(
+            torch.nn.Linear(1024, output_dimension),
             torch.nn.Softmax(dim=1)   # adding Softmax to output probs
         )
     else:
