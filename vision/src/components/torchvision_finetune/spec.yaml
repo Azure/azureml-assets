@@ -11,7 +11,7 @@ display_name: TorchVision classification model fine-tuning
 version: 1.0.2
 
 inputs:
-  # data loading  
+  # data loading
   train_images:
     type: path
     description: "Path to folder containing training images, stored in subdirectories according to their class."
@@ -19,7 +19,7 @@ inputs:
     type: path
     description: "Path to folder containing validation images, stored in subdirectories according to their class."
   
-  # data loading  
+  # data loading
   batch_size:
     type: integer
     min: 1
