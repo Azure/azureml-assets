@@ -43,9 +43,6 @@ jobs:
       learning_rate: 0.01
       momentum: 0.01
       
-      # model registration
-      register_model_as: null # do not register
-
       # profiling
       enable_profiling: false
 
