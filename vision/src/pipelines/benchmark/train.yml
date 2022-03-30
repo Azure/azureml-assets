@@ -20,6 +20,10 @@ jobs:
   train:
     type: command
     component: file:../../components/torchvision_finetune/spec.yaml
+    environment_variables:
+      NCCL_IB_DISABLE: "1"
+      NCCL_DEBUG: "INFO"
+
     compute: azureml:gpu-cluster
     inputs:
       # data inputs
