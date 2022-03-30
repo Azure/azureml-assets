@@ -101,7 +101,11 @@ def get_latest_package_version(package: str,
     return None
 
 
-def transform(input_file: str, output_file: str):
+def transform(input_file: str, output_file: str=None):
+    # Output to input file by default
+    if output_file is None:
+        output_file = input_file
+
     # Read Dockerfile
     with open(input_file) as f:
         contents = f.read()

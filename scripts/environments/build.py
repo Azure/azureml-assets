@@ -3,6 +3,7 @@ import os
 import sys
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import timedelta
+from pin_versions import transform
 from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
 
@@ -38,7 +39,7 @@ def create_github_env_var(key, value):
         else:
             print("::warning Failed to write image names: GITHUB_ENV environment variable not found")
 
-def build_images(image_dirs, dockerfile_name, build_logs_dir, max_parallel, changed_files, image_names_key):
+def build_images(image_dirs, dockerfile_name, build_logs_dir, max_parallel, changed_files, image_names_key, files_to_pin):
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find Dockerfiles under image root directory
         futures = []
@@ -50,6 +51,11 @@ def build_images(image_dirs, dockerfile_name, build_logs_dir, max_parallel, chan
                     if changed_files and not any([f for f in changed_files if f.startswith(f"{root}/")]):
                         print(f"Skipping build of {image_name}: No files in its directory were changed")
                         continue
+
+                    # Pin images/packages in files
+                    for file_to_pin in [os.path.join(root, f) for f in files_to_pin]:
+                        if os.path.exists(file_to_pin):
+                            transform(file_to_pin)
 
                     # Start building image
                     build_log = os.path.join(build_logs_dir, f"{image_name}.log")
@@ -81,13 +87,15 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--max-parallel", type=int, default=25, help="Maximum number of images to build at the same time")
     parser.add_argument("-c", "--changed_files", help="Comma-separated list of changed files, used to filter images")
     parser.add_argument("-k", "--image-names-key", help="GitHub actions environment variable that will receive a comma-separated list of images built")
+    parser.add_argument("-P", "--files-to-pin", help="Comma-separated list of files that should be updated to pin images/packages to latest versions")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
     image_dirs = args.image_dirs.split(",")
     changed_files = args.changed_files.split(",") if args.changed_files else []
+    files_to_pin = args.files_to_pin.split(",") if args.files_to_pin else []
 
     # Build images
-    build_images(image_dirs, args.dockerfile_name, args.build_logs_dir, args.max_parallel, changed_files, args.image_names_key)
+    build_images(image_dirs, args.dockerfile_name, args.build_logs_dir, args.max_parallel, changed_files, args.image_names_key, files_to_pin)
 
     
