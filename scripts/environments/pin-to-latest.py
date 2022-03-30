@@ -130,16 +130,20 @@ def transform(input_file: str, output_file: str):
         logging.info(f"Latest version of {package} is {version}")
         contents = contents[:match.start()] + f"{package}{selector}{version}" + contents[match.end():]
 
-    # TODO: Write to output_file
-    print(contents)
+    # Write to stdout or output_file
+    if output_file == "-":
+        print(contents)
+    else:
+        with open(output_file, "w") as f:
+            f.write(contents)
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input", help="Dockerfile to transform", required=True)
-    parser.add_argument("-o", "--output", help="Name of file to which the transformed Dockerfile will be written. If not specified, defaults to the input Dockerfile.")
+    parser.add_argument("-i", "--input", help="File containing images/packages to pin to latest versions", required=True)
+    parser.add_argument("-o", "--output", help="File to which output will be written. Defaults to the input file if not specified.")
     args = parser.parse_args()
 
     output = args.output or args.input

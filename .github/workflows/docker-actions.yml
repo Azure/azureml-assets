@@ -27,7 +27,7 @@ on:
         type: string
 
 env:
-  SCRIPTS_DIR: .github/scripts
+  SCRIPTS_DIR: scripts/environments
   IMAGE_NAMES_ENV_VAR: IMAGE_NAMES
 
 defaults:
