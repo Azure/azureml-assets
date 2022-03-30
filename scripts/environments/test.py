@@ -3,10 +3,11 @@ import sys
 from datetime import timedelta
 from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
+from typing import List
 
 TEST_PHRASE = "hello world!"
 
-def test_image(image_name):
+def test_image(image_name: str):
     print(f"Testing {image_name}")
     start = timer()
     p = run(["docker", "run", image_name, "python", "-c", f"print(\"{TEST_PHRASE}\")"],
@@ -16,7 +17,7 @@ def test_image(image_name):
     print(f"{image_name} tested in {timedelta(seconds=end-start)}")
     return (p.returncode, p.stdout.decode())
 
-def test_images(image_names):
+def test_images(image_names: List[str]):
     for image_name in image_names:
         # Test image
         (return_code, output) = test_image(image_name)

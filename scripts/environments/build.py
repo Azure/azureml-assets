@@ -6,8 +6,9 @@ from datetime import timedelta
 from pin_versions import transform
 from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
+from typing import List
 
-def build_image(image_name, build_context_dir, dockerfile, build_log):
+def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_log: str):
     print(f"Building {image_name}")
     start = timer()
     p = run(["docker", "build", "--file", dockerfile, "--progress", "plain", "--tag", image_name, "."],
@@ -20,7 +21,7 @@ def build_image(image_name, build_context_dir, dockerfile, build_log):
         f.write(p.stdout.decode())
     return (image_name, p.returncode, p.stdout.decode())
 
-def get_image_digest(image_name):
+def get_image_digest(image_name: str):
     p = run(["docker", "image", "inspect", image_name, "--format=\"{{index .Id}}\""],
             stdout=PIPE,
             stderr=STDOUT)
@@ -30,7 +31,7 @@ def get_image_digest(image_name):
         print(f"::warning Failed to get image digest for {image_name}: {p.stdout.decode()}")
         return None
 
-def create_github_env_var(key, value):
+def create_github_env_var(key: str, value: str):
     # Make list of image names available to following steps
         github_env = os.getenv('GITHUB_ENV')
         if github_env:
@@ -39,7 +40,8 @@ def create_github_env_var(key, value):
         else:
             print("::warning Failed to write image names: GITHUB_ENV environment variable not found")
 
-def build_images(image_dirs, dockerfile_name, build_logs_dir, max_parallel, changed_files, image_names_key, files_to_pin):
+def build_images(image_dirs: List[str], dockerfile_name: str, build_logs_dir: str, max_parallel: int,
+                 changed_files: List[str], image_names_key: str, files_to_pin: List[str]):
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find Dockerfiles under image root directory
         futures = []

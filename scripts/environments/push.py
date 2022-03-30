@@ -4,10 +4,11 @@ from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
+from typing import List
 
 TAG_DATETIME_FORMAT = "%Y%m%d%H%M%S"
 
-def tag_image(image_name, target_image_name):
+def tag_image(image_name: str, target_image_name: str):
     p = run(["docker", "tag", image_name, target_image_name],
             stdout=PIPE,
             stderr=STDOUT)
@@ -30,7 +31,7 @@ def push_image(image_name, all_tags = False):
     print(f"{image_name} pushed in {timedelta(seconds=end-start)}")
     return (image_name, p.returncode, p.stdout.decode())
 
-def push_images(image_names, target_image_prefix, tags, max_parallel):
+def push_images(image_names: List[str], target_image_prefix: str, tags: List[str], max_parallel: int):
     with ThreadPoolExecutor(max_parallel) as pool:
         futures = []
         for image_name in image_names:

@@ -3,13 +3,13 @@ import json
 import logging
 import re
 import urllib.parse
-from urllib.request import Request, urlopen
 from pip._internal.index.collector import LinkCollector
 from pip._internal.index.package_finder import PackageFinder
 from pip._internal.models.search_scope import SearchScope
 from pip._internal.models.selection_prefs import SelectionPreferences
 from pip._internal.network.session import PipSession
-    
+from typing import List
+from urllib.request import Request, urlopen    
 
 LATEST_TAG = "latest"
 LATEST_IMAGE_TAG = re.compile(r"([^\"'\s]+):\{\{latest-image-tag\}\}")
@@ -61,7 +61,7 @@ def get_latest_image_suffix(image: str):
         return f"@{latest_digest}"
 
 
-def create_package_finder(index_urls: list[str]) -> PackageFinder:
+def create_package_finder(index_urls: List[str]) -> PackageFinder:
     """
     Create a pip PackageFinder.
     """
