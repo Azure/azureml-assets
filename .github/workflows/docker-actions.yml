@@ -1,0 +1,84 @@
+name: Docker-Actions
+
+on:
+  workflow_call:
+    inputs:
+      machine_type:
+        required: true
+        type: string
+      image_dirs:
+        required: true
+        type: string
+      only_changed_images:
+        required: false
+        type: boolean
+      build_log_dir:
+        required: true
+        type: string
+      dockerfile_name:
+        default: Dockerfile
+        required: false
+        type: string
+      build_artifact_name:
+        required: false
+        type: string
+      target_image_prefix:
+        required: false
+        type: string
+
+env:
+  SCRIPTS_DIR: .github/scripts
+  IMAGE_NAMES_ENV_VAR: IMAGE_NAMES
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  docker-actions:
+    name: Docker actions
+    runs-on: ${{ inputs.machine_type }}
+    
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      
+      - name: Get changed files
+        if: inputs.only_changed_images
+        id: changed-files
+        uses: tj-actions/changed-files@v10.1
+        with:
+          separator: ','
+      
+      - name: Create build logs directory
+        run: mkdir ${{ inputs.build_log_dir }}
+          
+      - name: Build images
+        if: ${{ ! inputs.only_changed_images }}
+        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -d ${{ inputs.dockerfile_name }} -l ${{ inputs.build_log_dir }} -k $IMAGE_NAMES_ENV_VAR
+
+      - name: Build only changed images
+        if: inputs.only_changed_images
+        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -d ${{ inputs.dockerfile_name }} -l ${{ inputs.build_log_dir }} -k $IMAGE_NAMES_ENV_VAR -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
+
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: ${{ inputs.build_artifact_name || inputs.build_log_dir }}
+          path: ${{ inputs.build_log_dir }}
+
+      - name: Test images
+        run: python -u $SCRIPTS_DIR/test.py -i "$${{ env.IMAGE_NAMES_ENV_VAR }}"
+
+      - name: Log into registry
+        if: inputs.target_image_prefix != ''
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push images
+        if: inputs.target_image_prefix != ''
+        run: python -u $SCRIPTS_DIR/push.py -i "$${{ env.IMAGE_NAMES_ENV_VAR }}" -t ${{ inputs.target_image_prefix }}
