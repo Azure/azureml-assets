@@ -6,6 +6,9 @@ on:
       machine_type:
         required: true
         type: string
+      os_to_build:
+        required: true
+        type: string
       image_dirs:
         required: true
         type: string
@@ -15,12 +18,8 @@ on:
       build_log_dir:
         required: true
         type: string
-      dockerfile_name:
-        default: Dockerfile
-        required: false
-        type: string
-      files_to_pin:
-        default: Dockerfile,conda_dependencies.yml
+      env_config_filename:
+        default: env_config.yml
         required: false
         type: string
       build_artifact_name:
@@ -57,14 +56,17 @@ jobs:
       
       - name: Create build logs directory
         run: mkdir ${{ inputs.build_log_dir }}
+      
+      - name: Install dependencies
+        run: pip install -r $SCRIPTS_DIR/requirements.txt
           
       - name: Build images
         if: ${{ ! inputs.only_changed_images }}
-        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -d ${{ inputs.dockerfile_name }} -P ${{ inputs.files_to_pin }} -l ${{ inputs.build_log_dir }} -k $IMAGE_NAMES_ENV_VAR
+        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -e ${{ inputs.env_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k $IMAGE_NAMES_ENV_VAR
 
       - name: Build only changed images
         if: inputs.only_changed_images
-        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -d ${{ inputs.dockerfile_name }} -P ${{ inputs.files_to_pin }} -l ${{ inputs.build_log_dir }} -k $IMAGE_NAMES_ENV_VAR -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
+        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -d ${{ inputs.env_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k $IMAGE_NAMES_ENV_VAR -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
 
       - uses: actions/upload-artifact@v2
         if: always()

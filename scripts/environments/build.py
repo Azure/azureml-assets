@@ -3,10 +3,12 @@ import os
 import sys
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import timedelta
-from pin_versions import transform
 from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
 from typing import List
+
+from env_config import EnvConfig, OS_OPTIONS
+from pin_versions import transform
 
 def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_log: str):
     print(f"Building {image_name}")
@@ -40,28 +42,39 @@ def create_github_env_var(key: str, value: str):
         else:
             print("::warning Failed to write image names: GITHUB_ENV environment variable not found")
 
-def build_images(image_dirs: List[str], dockerfile_name: str, build_logs_dir: str, max_parallel: int,
-                 changed_files: List[str], image_names_key: str, files_to_pin: List[str]):
+def build_images(image_dirs: List[str], env_config_filename: str, build_logs_dir: str,
+                 max_parallel: int, changed_files: List[str], image_names_key: str,
+                 os_to_build: str=None):
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find Dockerfiles under image root directory
         futures = []
         for image_dir in image_dirs:
             for root, _, files in os.walk(image_dir):
-                for dockerfile in [f for f in files if f == dockerfile_name]:
+                for env_config_file in [f for f in files if f == env_config_filename]:
+                    # Load config
+                    env_config = EnvConfig(os.path.join(root, env_config_file))
+
+                    # Filter by OS
+                    if os_to_build and env_config.os != os_to_build:
+                        print(f"Skipping build of {env_config.image_name}: Operating system {env_config.os} != {os_to_build}")
+                        continue
+
                     # If provided, skip directories with no changed files
-                    image_name = os.path.basename(root).lower()
                     if changed_files and not any([f for f in changed_files if f.startswith(f"{root}/")]):
-                        print(f"Skipping build of {image_name}: No files in its directory were changed")
+                        print(f"Skipping build of {env_config.image_name}: No files in its directory were changed")
                         continue
 
                     # Pin images/packages in files
-                    for file_to_pin in [os.path.join(root, f) for f in files_to_pin]:
+                    for file_to_pin in [os.path.join(root, env_config.context_dir, f) for f in env_config.pin_version_files]:
                         if os.path.exists(file_to_pin):
                             transform(file_to_pin)
+                        else:
+                            print(f"::warning Failed to pin versions in {file_to_pin}: File not found")
 
                     # Start building image
-                    build_log = os.path.join(build_logs_dir, f"{image_name}.log")
-                    futures.append(pool.submit(build_image, image_name, root, dockerfile, build_log))
+                    build_log = os.path.join(build_logs_dir, f"{env_config.image_name}.log")
+                    futures.append(pool.submit(build_image, env_config.image_name, os.path.join(root, env_config.context_dir),
+                                               env_config.dockerfile, build_log))
 
         # Wait for builds to complete
         image_names = []
@@ -84,20 +97,19 @@ if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--image-dirs", required=True, help="Comma-separated list of directories containing image to build")
-    parser.add_argument("-d", "--dockerfile-name", default="Dockerfile", help="Dockerfile names to search for")
+    parser.add_argument("-e", "--env-config-filename", default="env_config.py", help="Environment config file name to search for")
     parser.add_argument("-l", "--build-logs-dir", required=True, help="Directory to receive build logs")
     parser.add_argument("-p", "--max-parallel", type=int, default=25, help="Maximum number of images to build at the same time")
-    parser.add_argument("-c", "--changed_files", help="Comma-separated list of changed files, used to filter images")
+    parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter images")
     parser.add_argument("-k", "--image-names-key", help="GitHub actions environment variable that will receive a comma-separated list of images built")
-    parser.add_argument("-P", "--files-to-pin", help="Comma-separated list of files that should be updated to pin images/packages to latest versions")
+    parser.add_argument("-o", "--os-to-build", choices=OS_OPTIONS, help="Only build environments based on this OS.")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
     image_dirs = args.image_dirs.split(",")
     changed_files = args.changed_files.split(",") if args.changed_files else []
-    files_to_pin = args.files_to_pin.split(",") if args.files_to_pin else []
-
+    
     # Build images
-    build_images(image_dirs, args.dockerfile_name, args.build_logs_dir, args.max_parallel, changed_files, args.image_names_key, files_to_pin)
+    build_images(image_dirs, args.env_config_filename, args.build_logs_dir, args.max_parallel, changed_files, args.image_names_key, args.os_to_build)
 
     
