@@ -66,10 +66,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
-    image_names = args.image_names.split(",")
-    if not image_names:
-        print("::warning Nothing to do")
-        sys.exit()
+    image_names = args.image_names.split(",") if args.image_names else []
 
     # Generate tags
     timestamp_tag = datetime.now(timezone.utc).strftime(TAG_DATETIME_FORMAT)

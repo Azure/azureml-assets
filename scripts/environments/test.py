@@ -32,10 +32,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
-    image_names = args.image_names.split(",")
-    if not image_names:
-        print("::warning Nothing to do")
-        sys.exit()
+    image_names = args.image_names.split(",") if args.image_names else []
 
     # Test images
     test_images(image_names)
