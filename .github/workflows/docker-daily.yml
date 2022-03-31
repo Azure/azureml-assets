@@ -4,8 +4,8 @@ on:
   push:
     branches:
     - elesel/start-general-envs
-  schedule:
-    - cron: '30 6,18 * * *' # 2x daily
+  #schedule:
+  #  - cron: '30 6,18 * * *' # 2x daily
   workflow_dispatch:
     inputs:
       linux_image_dirs:

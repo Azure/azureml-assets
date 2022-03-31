@@ -31,7 +31,6 @@ on:
 
 env:
   SCRIPTS_DIR: scripts/environments
-  IMAGE_NAMES_ENV_VAR: IMAGE_NAMES
 
 defaults:
   run:
@@ -62,11 +61,11 @@ jobs:
           
       - name: Build images
         if: ${{ ! inputs.only_changed_images }}
-        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -e ${{ inputs.env_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k $IMAGE_NAMES_ENV_VAR
+        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -e ${{ inputs.env_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k IMAGE_NAMES
 
       - name: Build only changed images
         if: inputs.only_changed_images
-        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -d ${{ inputs.env_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k $IMAGE_NAMES_ENV_VAR -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
+        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -e ${{ inputs.env_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k IMAGE_NAMES -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
 
       - uses: actions/upload-artifact@v2
         if: always()
@@ -76,7 +75,7 @@ jobs:
 
       - name: Test images
         if: env.IMAGE_NAMES != ''
-        run: python -u $SCRIPTS_DIR/test.py -i "$${{ env.IMAGE_NAMES_ENV_VAR }}"
+        run: python -u $SCRIPTS_DIR/test.py -i "$IMAGE_NAMES"
 
       - name: Log into registry
         if: inputs.target_image_prefix != '' && env.IMAGE_NAMES != ''
@@ -88,4 +87,4 @@ jobs:
 
       - name: Push images
         if: inputs.target_image_prefix != '' && env.IMAGE_NAMES != ''
-        run: python -u $SCRIPTS_DIR/push.py -i "$${{ env.IMAGE_NAMES_ENV_VAR }}" -t ${{ inputs.target_image_prefix }}
+        run: python -u $SCRIPTS_DIR/push.py -i "$IMAGE_NAMES" -t ${{ inputs.target_image_prefix }}
