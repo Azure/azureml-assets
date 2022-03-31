@@ -118,6 +118,4 @@ command: >-
 distribution:
   # NOTE: using type:pytorch will use all the right env variables for pytorch init_process_group
   type: pytorch
-  worker_count: 1
-
-compute: azureml:gpu-cluster
+  process_count_per_instance: 1
