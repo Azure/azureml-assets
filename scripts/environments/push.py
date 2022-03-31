@@ -67,6 +67,9 @@ if __name__ == '__main__':
 
     # Convert comma-separated values to lists
     image_names = args.image_names.split(",")
+    if not image_names:
+        print("::warning Nothing to do")
+        sys.exit()
 
     # Generate tags
     timestamp_tag = datetime.now(timezone.utc).strftime(TAG_DATETIME_FORMAT)

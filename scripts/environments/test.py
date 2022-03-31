@@ -33,6 +33,9 @@ if __name__ == '__main__':
 
     # Convert comma-separated values to lists
     image_names = args.image_names.split(",")
+    if not image_names:
+        print("::warning Nothing to do")
+        sys.exit()
 
     # Test images
     test_images(image_names)
