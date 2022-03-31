@@ -36,12 +36,12 @@ def get_image_digest(image_name: str):
 
 def create_github_env_var(key: str, value: str):
     # Make list of image names available to following steps
-        github_env = os.getenv('GITHUB_ENV')
-        if github_env:
-            with open(github_env, "w+") as f:
-                f.write(f"{key}={value}")
-        else:
-            print("::warning Failed to write image names: GITHUB_ENV environment variable not found")
+    github_env = os.getenv('GITHUB_ENV')
+    if github_env:
+        with open(github_env, "w+") as f:
+            f.write(f"{key}={value}")
+    else:
+        print("::warning Failed to write image names: GITHUB_ENV environment variable not found")
 
 def build_images(image_dirs: List[str], env_config_filename: str, build_logs_dir: str,
                  max_parallel: int, changed_files: List[str], image_names_key: str,
@@ -88,8 +88,6 @@ def build_images(image_dirs: List[str], env_config_filename: str, build_logs_dir
                 print(f"::error title=Build failure::Build of {image_name} failed with exit status {return_code}")
                 sys.exit(1)
             image_names.append(image_name)
-
-            digest = get_image_digest(image_name)
         
         # Make list of image names available to following steps
         create_github_env_var(image_names_key, ",".join(image_names))
