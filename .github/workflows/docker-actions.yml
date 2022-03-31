@@ -12,10 +12,6 @@ on:
       image_dirs:
         required: true
         type: string
-      only_changed_images:
-        default: false
-        required: false
-        type: boolean
       build_log_dir:
         required: true
         type: string
