@@ -1,0 +1,44 @@
+name: environments-ci
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - general/src/environments/**
+      - scripts/environments/**
+  schedule:
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+    inputs:
+      image_dirs:
+        description: Image directories
+        default: general/src/environments
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # Build Linux-based images
+  build-push-linux:
+    name: Build Linux images
+    uses: Azure/azureml-assets/.github/workflows/docker-actions.yml@main
+    with:
+      machine_type: ubuntu-latest
+      os_to_build: linux
+      image_dirs: ${{ github.event.inputs.image_dirs || 'general/src/environments' }}
+      build_log_dir: build-logs
+      build_artifact_name: build-logs-linux
+  
+  # Build Windows-based images
+  build-push-windows:
+    name: Build Windows images
+    uses: Azure/azureml-assets/.github/workflows/docker-actions.yml@main
+    with:
+      machine_type: windows-2019
+      os_to_build: windows
+      image_dirs: ${{ github.event.inputs.image_dirs || 'general/src/environments' }}
+      build_log_dir: build-logs
+      build_artifact_name: build-logs-windows
