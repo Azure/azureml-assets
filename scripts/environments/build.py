@@ -19,6 +19,7 @@ def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_
             stderr=STDOUT)
     end = timer()
     print(f"{image_name} built in {timedelta(seconds=end-start)}")
+    os.makedirs(os.path.dirname(build_log), exist_ok=True)
     with open(build_log, "w") as f:
         f.write(p.stdout.decode())
     return (image_name, p.returncode, p.stdout.decode())
