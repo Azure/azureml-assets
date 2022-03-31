@@ -11,9 +11,9 @@ Example:
 name: azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu
 os: linux
 context:
-- dir: context
-- dockerfile: Dockerfile
-- pin_version_files:
+  dir: context
+  dockerfile: Dockerfile
+  pin_version_files:
   - Dockerfile
 """
 
