@@ -75,11 +75,11 @@ jobs:
           path: ${{ inputs.build_log_dir }}
 
       - name: Test images
-        if: env.${{ env.IMAGE_NAMES_ENV_VAR }} != ''
+        if: ${{ env.${{ env.IMAGE_NAMES_ENV_VAR }} != '' }}
         run: python -u $SCRIPTS_DIR/test.py -i "$${{ env.IMAGE_NAMES_ENV_VAR }}"
 
       - name: Log into registry
-        if: inputs.target_image_prefix != '' && env.${{ env.IMAGE_NAMES_ENV_VAR }} != ''
+        if: inputs.target_image_prefix != '' && ${{ env.${{ env.IMAGE_NAMES_ENV_VAR }} != '' }}
         uses: docker/login-action@v1
         with:
           registry: ghcr.io
@@ -87,5 +87,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push images
-        if: inputs.target_image_prefix != '' && env.${{ env.IMAGE_NAMES_ENV_VAR }} != ''
+        if: inputs.target_image_prefix != '' && ${{ env.${{ env.IMAGE_NAMES_ENV_VAR }} != '' }}
         run: python -u $SCRIPTS_DIR/push.py -i "$${{ env.IMAGE_NAMES_ENV_VAR }}" -t ${{ inputs.target_image_prefix }}
