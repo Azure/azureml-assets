@@ -1,19 +1,21 @@
-name: Docker-Daily
+name: environments-ci
 
 on:
   push:
     branches:
     - elesel/start-general-envs
-  #schedule:
-  #  - cron: '30 6,18 * * *' # 2x daily
+  pull_request:
+    branches:
+      - main
+    paths:
+      - general/src/environments/**
+      - scripts/environments/**
+  schedule:
+    - cron: '30 6,18 * * *' # 2x daily
   workflow_dispatch:
     inputs:
-      linux_image_dirs:
-        description: Linux image directories
-        default: general/src/environments
-        required: true
-      windows_image_dirs:
-        description: Windows image directories
+      image_dirs:
+        description: Image directories
         default: general/src/environments
         required: true
 
@@ -29,10 +31,9 @@ jobs:
     with:
       machine_type: ubuntu-latest
       os_to_build: linux
-      image_dirs: ${{ github.event.inputs.linux_image_dirs || 'general/src/environments' }}
+      image_dirs: ${{ github.event.inputs.image_dirs || 'general/src/environments' }}
       build_log_dir: build-logs
       build_artifact_name: build-logs-linux
-      #target_image_prefix: ghcr.io/azure/azureml/
   
   # Build Windows-based images
   build-push-windows:
@@ -41,7 +42,6 @@ jobs:
     with:
       machine_type: windows-2019
       os_to_build: windows
-      image_dirs: ${{ github.event.inputs.windows_image_dirs || 'general/src/environments' }}
+      image_dirs: ${{ github.event.inputs.image_dirs || 'general/src/environments' }}
       build_log_dir: build-logs
       build_artifact_name: build-logs-windows
-      #target_image_prefix: ghcr.io/azure/azureml/

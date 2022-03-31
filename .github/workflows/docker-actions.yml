@@ -1,4 +1,4 @@
-name: Docker-Actions
+name: docker-actions
 
 on:
   workflow_call:
@@ -13,6 +13,7 @@ on:
         required: true
         type: string
       only_changed_images:
+        default: false
         required: false
         type: boolean
       build_log_dir:
@@ -46,11 +47,19 @@ jobs:
         with:
           fetch-depth: 2
       
-      - name: Get changed files
-        if: inputs.only_changed_images
-        id: changed-files
+      - name: Get changed environments
+        id: changed-environments
         uses: tj-actions/changed-files@v10.1
         with:
+          files: ${{ inputs.image_dirs }}
+          files_separator: ','
+          separator: ','
+      
+      - name: Get changed environment scripts
+        id: changed-scripts
+        uses: tj-actions/changed-files@v10.1
+        with:
+          files: ${{ env.SCRIPTS_DIR }}
           separator: ','
       
       - name: Create build logs directory
@@ -58,14 +67,14 @@ jobs:
       
       - name: Install dependencies
         run: pip install -r $SCRIPTS_DIR/requirements.txt
-          
-      - name: Build images
-        if: ${{ ! inputs.only_changed_images }}
+      
+      - name: Build all images
+        if: steps.changed-environments.outputs.any_changed == 'false' || steps.changed-scripts.outputs.any_changed == 'true'
         run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -e ${{ inputs.env_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k IMAGE_NAMES
 
-      - name: Build only changed images
-        if: inputs.only_changed_images
-        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -e ${{ inputs.env_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k IMAGE_NAMES -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
+      - name: Build changed images
+        if: steps.changed-environments.outputs.any_changed == 'true' && steps.changed-scripts.outputs.any_changed == 'false'
+        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -e ${{ inputs.env_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k IMAGE_NAMES -c "${{ steps.changed-environments.outputs.all_changed_and_modified_files }}"
 
       - uses: actions/upload-artifact@v2
         if: always()
