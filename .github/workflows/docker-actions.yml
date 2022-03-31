@@ -49,7 +49,7 @@ jobs:
       
       - name: Get changed environments
         id: changed-environments
-        uses: tj-actions/changed-files@v10.1
+        uses: tj-actions/changed-files@v18.6
         with:
           files: ${{ inputs.image_dirs }}
           files_separator: ','
@@ -57,7 +57,7 @@ jobs:
       
       - name: Get changed environment scripts
         id: changed-scripts
-        uses: tj-actions/changed-files@v10.1
+        uses: tj-actions/changed-files@v18.6
         with:
           files: ${{ env.SCRIPTS_DIR }}
           separator: ','
