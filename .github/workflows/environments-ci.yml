@@ -1,9 +1,6 @@
 name: environments-ci
 
 on:
-  push:
-    branches:
-    - elesel/start-general-envs
   pull_request:
     branches:
       - main
@@ -27,7 +24,7 @@ jobs:
   # Build Linux-based images
   build-push-linux:
     name: Build Linux images
-    uses: Azure/azureml-assets/.github/workflows/docker-actions.yml@elesel/start-general-envs
+    uses: Azure/azureml-assets/.github/workflows/docker-actions.yml@main
     with:
       machine_type: ubuntu-latest
       os_to_build: linux
@@ -38,7 +35,7 @@ jobs:
   # Build Windows-based images
   build-push-windows:
     name: Build Windows images
-    uses: Azure/azureml-assets/.github/workflows/docker-actions.yml@elesel/start-general-envs
+    uses: Azure/azureml-assets/.github/workflows/docker-actions.yml@main
     with:
       machine_type: windows-2019
       os_to_build: windows

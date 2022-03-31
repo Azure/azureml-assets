@@ -1,1 +1,0 @@
-An environment for deep learning with Tensorflow containing the Azure ML SDK and additional python packages.
