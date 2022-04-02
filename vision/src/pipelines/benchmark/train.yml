@@ -25,6 +25,7 @@ jobs:
     resources:
       instance_count: 1 # number of nodes
     distribution:
+      type: pytorch
       process_count_per_instance: 1 # number of gpus
 
     # NOTE: set env var if needed
