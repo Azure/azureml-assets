@@ -6,7 +6,7 @@ description: >-
   Inputs should be provided as distinct directories containing distinct images
   as we're using [ImageFolder](http://pytorch.org/vision/main/generated/torchvision.datasets.ImageFolder.html) to load data.
 
-name: TorchVision_FineTune_ImageClassification
+name: pytorch_image_classifier_ImageClassification
 display_name: TorchVision classification model fine-tuning
 version: 1.0.2
 
