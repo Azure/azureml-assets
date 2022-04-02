@@ -2,13 +2,13 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 type: command
 
 description: >-
-  Fine-tunes a pre-trained torchvision model for image classification.
+  Fine-tunes a pre-trained pytorch model for image classification.
   Inputs should be provided as distinct directories containing distinct images
   as we're using [ImageFolder](http://pytorch.org/vision/main/generated/torchvision.datasets.ImageFolder.html) to load data.
 
-name: pytorch_image_classifier_ImageClassification
-display_name: TorchVision classification model fine-tuning
-version: 1.0.2
+name: pytorch_image_classifier
+display_name: Image Classification Model (PyTorch)
+version: 1.0.3
 
 inputs:
   # data loading
