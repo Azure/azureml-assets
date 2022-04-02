@@ -44,7 +44,7 @@ if COMPONENT_ROOT not in sys.path:
     sys.path.append(str(COMPONENT_ROOT))
 
 # internal imports
-from model import load_and_model_arch, MODEL_ARCH_LIST, MODEL_ARCH_INPUT_SIZES
+from model import MODEL_ARCH_LIST, get_model_metadata, load_model
 from image_io import build_image_datasets
 from profiling import PyTorchProfilerHandler
 
@@ -607,11 +607,11 @@ def run(args):
     train_dataset, valid_dataset, labels = build_image_datasets(
         train_images_dir=args.train_images,
         valid_images_dir=args.valid_images,
-        input_size=MODEL_ARCH_INPUT_SIZES[args.model_arch]
+        input_size=get_model_metadata(args.model_arch)['input_size']
     )
 
     # creates the model architecture
-    model = load_and_model_arch(
+    model = load_model(
         args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
     )
 
