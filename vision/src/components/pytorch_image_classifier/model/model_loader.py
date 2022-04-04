@@ -23,7 +23,7 @@ MODEL_ARCH_MAP = {
     "vgg19_bn" : { 'input_size': 224, 'library': 'torchvision' },
 
     # swin models (transformer)
-    "swin-t-in1k" : { 'input_size': 224, 'library': 'swin' },
+    "microsoft/swin-tiny-patch4-window7-224" : { 'input_size': 224, 'library': 'swin' },
 }
 
 MODEL_ARCH_LIST = list(MODEL_ARCH_MAP.keys())

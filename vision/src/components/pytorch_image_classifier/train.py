@@ -35,6 +35,8 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader
 from torch.profiler import record_function
 
+from transformers.modeling_outputs import SequenceClassifierOutput
+
 # add path to here, if necessary
 COMPONENT_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), ".")
@@ -286,10 +288,18 @@ class PyTorchDistributedModelTrainingSequence:
                 with record_function("eval.forward"):
                     outputs = self.model(images)
 
-                    loss = criterion(outputs, one_hot_targets)
+                    if isinstance(outputs, torch.Tensor):
+                        loss = criterion(outputs, one_hot_targets)
+                        correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
+                    elif isinstance(outputs, SequenceClassifierOutput):
+                        loss = criterion(outputs.logits, one_hot_targets)
+                        correct = (torch.argmax(outputs.logits, dim=-1) == (targets.to(self.device)))
+                    else:
+                        raise ValueError(f"outputs from model is type {type(outputs)} which is unknown.")
+
                     running_loss += loss.item() * images.size(0)
 
-                    correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
+                    #correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
                     num_correct += torch.sum(correct).item()
                     num_total_images += len(images)
 
@@ -317,15 +327,21 @@ class PyTorchDistributedModelTrainingSequence:
                     ),
                     num_classes=len(self.labels)
                 ).float()
-                
 
             with record_function("train.forward"):
                 # zero the parameter gradients
                 optimizer.zero_grad()
 
                 outputs = self.model(images)
-                loss = criterion(outputs, one_hot_targets)
-                correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
+
+                if isinstance(outputs, torch.Tensor):
+                    loss = criterion(outputs, one_hot_targets)
+                    correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
+                elif isinstance(outputs, SequenceClassifierOutput):
+                    loss = criterion(outputs.logits, one_hot_targets)
+                    correct = (torch.argmax(outputs.logits, dim=-1) == (targets.to(self.device)))
+                else:
+                    raise ValueError(f"outputs from model is type {type(outputs)} which is unknown.")
 
                 running_loss += loss.item() * images.size(0)
                 num_correct += torch.sum(correct).item()
@@ -532,7 +548,6 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--model_arch",
         type=str,
         required=False,
-        choices=MODEL_ARCH_LIST,
         default="resnet18",
         help="Which model architecture to use (default: resnet18)",
     )
