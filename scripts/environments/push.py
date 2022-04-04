@@ -1,5 +1,6 @@
 import argparse
 import sys
+from ci_logger import logger
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from subprocess import run, PIPE, STDOUT
@@ -42,7 +43,7 @@ def push_images(image_names: List[str], target_image_prefix: str, tags: List[str
                 target_image_name = f"{target_image_base_name}:{tag}"
                 (return_code, output) = tag_image(image_name, target_image_name)
                 if return_code != 0:
-                    print(f"::error title=Tag failure::Failed to tag {image_name} as {target_image_name}: {output}")
+                    logger.log_error(f"Failed to tag {image_name} as {target_image_name}: {output}", "Tag failure")
                     sys.exit(1)
 
             # Start push
@@ -50,11 +51,11 @@ def push_images(image_names: List[str], target_image_prefix: str, tags: List[str
 
         for future in as_completed(futures):
             (image_name, return_code, output) = future.result()
-            print(f"::group::{image_name} push log")
+            logger.start_group(f"{image_name} push log")
             print(output)
-            print("::endgroup::")
+            logger.end_group()
             if return_code != 0:
-                print(f"::error title=Build failure::Push of {image_name} failed with exit status {return_code}")
+                logger.log_error(f"Push of {image_name} failed with exit status {return_code}", "Push failure")
                 sys.exit(1)
 
 if __name__ == '__main__':

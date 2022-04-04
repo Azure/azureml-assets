@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+from ci_logger import logger
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import timedelta
 from subprocess import run, PIPE, STDOUT
@@ -31,7 +32,7 @@ def get_image_digest(image_name: str):
     if p.returncode == 0:
         return p.stdout.decode()
     else:
-        print(f"::warning Failed to get image digest for {image_name}: {p.stdout.decode()}")
+        logger.log_warning(f"Failed to get image digest for {image_name}: {p.stdout.decode()}")
         return None
 
 def create_github_env_var(key: str, value: str):
@@ -41,7 +42,7 @@ def create_github_env_var(key: str, value: str):
         with open(github_env, "w+") as f:
             f.write(f"{key}={value}")
     else:
-        print("::warning Failed to write image names: GITHUB_ENV environment variable not found")
+        logger.log_warning("Failed to write image names: GITHUB_ENV environment variable not found")
 
 def build_images(image_dirs: List[str], env_config_filename: str, build_logs_dir: str,
                  max_parallel: int, changed_files: List[str], image_names_key: str,
@@ -70,7 +71,7 @@ def build_images(image_dirs: List[str], env_config_filename: str, build_logs_dir
                         if os.path.exists(file_to_pin):
                             transform(file_to_pin)
                         else:
-                            print(f"::warning Failed to pin versions in {file_to_pin}: File not found")
+                            logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
                     # Start building image
                     build_log = os.path.join(build_logs_dir, f"{env_config.image_name}.log")
@@ -81,11 +82,11 @@ def build_images(image_dirs: List[str], env_config_filename: str, build_logs_dir
         image_names = []
         for future in as_completed(futures):
             (image_name, return_code, output) = future.result()
-            print(f"::group::{image_name} build log")
+            logger.start_group(f"{image_name} build log")
             print(output)
-            print("::endgroup::")
+            logger.end_group()
             if return_code != 0:
-                print(f"::error title=Build failure::Build of {image_name} failed with exit status {return_code}")
+                logger.log_error(f"Build of {image_name} failed with exit status {return_code}", "Build failure")
                 sys.exit(1)
             image_names.append(image_name)
         

@@ -1,8 +1,8 @@
 import argparse
 import json
-import logging
 import re
 import urllib.parse
+from ci_logger import logger
 from pip._internal.index.collector import LinkCollector
 from pip._internal.index.package_finder import PackageFinder
 from pip._internal.models.search_scope import SearchScope
@@ -57,7 +57,7 @@ def get_latest_image_suffix(image: str):
     if latest_tag is not None:
         return f":{latest_tag}"
     else:
-        logging.warning(f"Using digest for {image} because a non-{LATEST_TAG} was not found")
+        logger.log_warning(f"Using digest for {image} because a non-{LATEST_TAG} was not found")
         return f"@{latest_digest}"
 
 
@@ -96,7 +96,7 @@ def get_latest_package_version(package: str,
                         if not v.is_prerelease:
                             return str(v)
         except Exception as e:
-            logging.warning(f"Failed to find candidates for {package}: {e}")
+            logger.log_warning(f"Failed to find candidates for {package}: {e}")
             continue
     return None
 
@@ -116,9 +116,9 @@ def transform(input_file: str, output_file: str=None):
         if not match:
             break
         repo = match.group(1)
-        logging.info(f"Finding latest image tag/digest for {repo}")
+        print(f"Finding latest image tag/digest for {repo}")
         suffix = get_latest_image_suffix(repo)
-        logging.info(f"Latest image reference is {repo}{suffix}")
+        print(f"Latest image reference is {repo}{suffix}")
         contents = contents[:match.start()] + f"{repo}{suffix}" + contents[match.end():]
     
     # Process pip template tags
@@ -129,9 +129,9 @@ def transform(input_file: str, output_file: str=None):
             break
         package = match.group(1)
         selector = match.group(2)
-        logging.info(f"Looking up latest version of {package}")
+        print(f"Looking up latest version of {package}")
         version = get_latest_package_version(package, package_finder)
-        logging.info(f"Latest version of {package} is {version}")
+        print(f"Latest version of {package} is {version}")
         contents = contents[:match.start()] + f"{package}{selector}{version}" + contents[match.end():]
 
     # Write to stdout or output_file
@@ -143,8 +143,6 @@ def transform(input_file: str, output_file: str=None):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", help="File containing images/packages to pin to latest versions", required=True)
     parser.add_argument("-o", "--output", help="File to which output will be written. Defaults to the input file if not specified.")
