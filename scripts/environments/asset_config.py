@@ -81,6 +81,8 @@ class AssetConfig:
 
 class EnvironmentConfig(AssetConfig):
     def __init__(self, asset_config: AssetConfig):
+        self._file_name = asset_config.file_name
+        self._file_path = asset_config.file_path
         self._yaml = asset_config._yaml
         self._validate()
     
