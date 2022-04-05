@@ -80,7 +80,7 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
                         continue
 
                     # Pin images/packages in files
-                    for file_to_pin in [os.path.join(root, env_config.context_dir, f) for f in env_config.pin_version_files]:
+                    for file_to_pin in env_config.pin_version_files:
                         if os.path.exists(file_to_pin):
                             transform(file_to_pin)
                         else:
@@ -88,7 +88,7 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
 
                     # Start building image
                     build_log = os.path.join(build_logs_dir, f"{env_config.image_name}.log")
-                    futures.append(pool.submit(build_image, env_config.image_name, os.path.join(root, env_config.context_dir),
+                    futures.append(pool.submit(build_image, env_config.image_name, env_config.context_dir,
                                                env_config.dockerfile, build_log, os_to_build, resource_group, registry))
 
         # Wait for builds to complete
