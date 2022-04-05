@@ -70,7 +70,7 @@ class AssetConfig:
 
     @property
     def config(self):
-        return self._yaml.get('config')
+        return self._yaml.get('config', {})
     
     def _append_to_path(self, relative_path: str):
         return os.path.join(self._file_path, relative_path)
@@ -81,13 +81,13 @@ class EnvironmentConfig(AssetConfig):
         self._validate()
     
     def _validate(self):
-        if not self.config.image_name:
+        if not self.image_name:
             raise ValidationException("Missing 'config.image_name' property")
 
-        if not self.config.os:
+        if not self.os:
             raise ValidationException("Missing 'config.os' property")
-        elif self.config.os not in OS_OPTIONS:
-            raise ValidationException(f"Invalid 'config.os' property: {self.config.os} is not in {OS_OPTIONS}")
+        elif self.os not in OS_OPTIONS:
+            raise ValidationException(f"Invalid 'config.os' property: {self.os} is not in {OS_OPTIONS}")
     
     @property
     def image_name(self):
