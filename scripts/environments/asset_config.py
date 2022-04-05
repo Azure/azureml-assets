@@ -9,7 +9,7 @@ class AssetType(Enum):
 # Environment-specific
 DEFAULT_CONTEXT_DIR = "context"
 DEFAULT_DOCKERFILE = "Dockerfile"
-DEFAULT_PIN_VERSION_FILES = [DEFAULT_DOCKERFILE]
+DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
 OS_OPTIONS = ["linux", "windows"]
 
 
@@ -46,8 +46,8 @@ class AssetConfig:
         if self._raw_type not in asset_type_vals:
             raise ValidationException(f"Invalid 'type' property: {self._raw_type} is not in {asset_type_vals}")
         
-        if not self.definition:
-            raise ValidationException("Missing 'definition' property")
+        if not self.definition_file_with_path:
+            raise ValidationException("Missing 'definition_file' property")
         
         if not self.config:
             raise ValidationException("Missing 'config' property")
@@ -69,8 +69,8 @@ class AssetConfig:
         return self._yaml.get('type')
 
     @property
-    def definition(self):
-        return self._append_to_path(self._yaml.get('definition'))
+    def definition_file_with_path(self):
+        return self._append_to_path(self._yaml.get('definition_file'))
 
     @property
     def config(self):
@@ -107,17 +107,21 @@ class EnvironmentConfig(AssetConfig):
         return self.config.get('context', {})
 
     @property
-    def context_dir(self):
+    def context_dir_with_path(self):
         return self._append_to_path(self._context().get('dir', DEFAULT_CONTEXT_DIR))
     
     def _append_to_context_path(self, relative_path: str):
-        return os.path.join(self.context_dir, relative_path)
+        return os.path.join(self.context_dir_with_path, relative_path)
 
     @property
     def dockerfile(self):
-        return self._append_to_context_path(self._context().get('dockerfile', DEFAULT_DOCKERFILE))
+        return self._context().get('dockerfile', DEFAULT_DOCKERFILE)
     
     @property
-    def pin_version_files(self):
-        relative_files = self._context().get('pin_version_files', DEFAULT_PIN_VERSION_FILES)
+    def dockerfile_with_path(self):
+        return self._append_to_context_path(self.dockerfile)
+    
+    @property
+    def template_files_with_path(self):
+        relative_files = self._context().get('template_files', DEFAULT_TEMPLATE_FILES)
         return [self._append_to_context_path(f) for f in relative_files]

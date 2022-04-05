@@ -12,12 +12,12 @@ from ci_logger import logger
 from pin_versions import transform
 
 def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_log: str,
-                os_to_build: str=None, resource_group: str=None, registry: str=None):
+                build_os: str=None, resource_group: str=None, registry: str=None):
     print(f"Building {image_name}")
     start = timer()
     if registry is not None:
         # Build on ACR
-        cmd = ["az", "acr", "build", "-g", resource_group, "-r", registry, "--file", dockerfile, "--platform", os_to_build, "--image", image_name, "."]
+        cmd = ["az", "acr", "build", "-g", resource_group, "-r", registry, "--file", dockerfile, "--platform", build_os, "--image", image_name, "."]
     else:
         # Build locally
         cmd = ["docker", "build", "--file", dockerfile, "--progress", "plain", "--tag", image_name, "."]
@@ -80,7 +80,7 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
                         continue
 
                     # Pin images/packages in files
-                    for file_to_pin in env_config.pin_version_files:
+                    for file_to_pin in env_config.template_files_with_path:
                         if os.path.exists(file_to_pin):
                             transform(file_to_pin)
                         else:
@@ -88,8 +88,8 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
 
                     # Start building image
                     build_log = os.path.join(build_logs_dir, f"{env_config.image_name}.log")
-                    futures.append(pool.submit(build_image, env_config.image_name, env_config.context_dir,
-                                               env_config.dockerfile, build_log, os_to_build, resource_group, registry))
+                    futures.append(pool.submit(build_image, env_config.image_name, env_config.context_dir_with_path,
+                                               env_config.dockerfile, build_log, env_config.os, resource_group, registry))
 
         # Wait for builds to complete
         image_names = []
@@ -116,8 +116,8 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter images")
     parser.add_argument("-k", "--image-names-key", help="GitHub actions environment variable that will receive a comma-separated list of images built")
     parser.add_argument("-o", "--os-to-build", choices=OS_OPTIONS, help="Only build environments based on this OS")
-    parser.add_argument("-g", "--resource-group", help="Resource group containing the container registry")
     parser.add_argument("-r", "--registry", help="Container registry on which to build images")
+    parser.add_argument("-g", "--resource-group", help="Resource group containing the container registry")
     args = parser.parse_args()
 
     # Ensure dependent args are present
