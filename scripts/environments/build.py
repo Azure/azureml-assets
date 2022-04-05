@@ -1,14 +1,14 @@
 import argparse
 import os
 import sys
-from ci_logger import logger
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import timedelta
 from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
 from typing import List
 
-from env_config import EnvConfig, OS_OPTIONS
+from asset_config import AssetConfig, AssetType, EnvironmentConfig, OS_OPTIONS
+from ci_logger import logger
 from pin_versions import transform
 
 def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_log: str,
@@ -52,7 +52,7 @@ def create_github_env_var(key: str, value: str):
     else:
         logger.log_warning("Failed to write image names: GITHUB_ENV environment variable not found")
 
-def build_images(image_dirs: List[str], env_config_filename: str, build_logs_dir: str,
+def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_dir: str,
                  max_parallel: int, changed_files: List[str], image_names_key: str,
                  os_to_build: str=None, resource_group: str=None, registry: str=None):
     with ThreadPoolExecutor(max_parallel) as pool:
@@ -60,9 +60,14 @@ def build_images(image_dirs: List[str], env_config_filename: str, build_logs_dir
         futures = []
         for image_dir in image_dirs:
             for root, _, files in os.walk(image_dir):
-                for env_config_file in [f for f in files if f == env_config_filename]:
+                for asset_config_file in [f for f in files if f == asset_config_filename]:
                     # Load config
-                    env_config = EnvConfig(os.path.join(root, env_config_file))
+                    asset_config = AssetConfig(os.path.join(root, asset_config_file))
+
+                    # Skip if not environment
+                    if asset_config.type is not AssetType.ENVIRONMENT:
+                        continue
+                    env_config = EnvironmentConfig(asset_config)
 
                     # Filter by OS
                     if os_to_build and env_config.os != os_to_build:
@@ -105,7 +110,7 @@ if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--image-dirs", required=True, help="Comma-separated list of directories containing image to build")
-    parser.add_argument("-e", "--env-config-filename", default="env_config.py", help="Environment config file name to search for")
+    parser.add_argument("-a", "--asset-config-filename", default="asset_config.py", help="Asset config file name to search for")
     parser.add_argument("-l", "--build-logs-dir", required=True, help="Directory to receive build logs")
     parser.add_argument("-p", "--max-parallel", type=int, default=25, help="Maximum number of images to build at the same time")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter images")
@@ -124,7 +129,7 @@ if __name__ == '__main__':
     changed_files = args.changed_files.split(",") if args.changed_files else []
     
     # Build images
-    build_images(image_dirs=image_dirs, env_config_filename=args.env_config_filename, build_logs_dir=args.build_logs_dir,
+    build_images(image_dirs=image_dirs, asset_config_filename=args.asset_config_filename, build_logs_dir=args.build_logs_dir,
                  max_parallel=args.max_parallel, changed_files=changed_files, image_names_key=args.image_names_key,
                  os_to_build=args.os_to_build, resource_group=args.resource_group, registry=args.registry)
 
