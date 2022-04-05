@@ -82,7 +82,7 @@ class EnvironmentConfig(AssetConfig):
     
     def _validate(self):
         if not self.config.image_name:
-            raise ValidationException("Missing 'config.name' property")
+            raise ValidationException("Missing 'config.image_name' property")
 
         if not self.config.os:
             raise ValidationException("Missing 'config.os' property")
