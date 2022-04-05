@@ -57,6 +57,10 @@ class AssetConfig:
         return self._file_name
 
     @property
+    def file_path(self):
+        return self._file_path
+
+    @property
     def type(self):
         return AssetType(self._raw_type)
 
@@ -73,7 +77,7 @@ class AssetConfig:
         return self._yaml.get('config', {})
     
     def _append_to_path(self, relative_path: str):
-        return os.path.join(self._file_path, relative_path)
+        return os.path.join(self.file_path, relative_path)
 
 class EnvironmentConfig(AssetConfig):
     def __init__(self, asset_config: AssetConfig):
