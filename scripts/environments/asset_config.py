@@ -35,7 +35,7 @@ class AssetConfig:
     def __init__(self, file_name: str):
         with open(file_name) as f:
             self._yaml = load(f, Loader=Loader)
-        self._file_name
+        self._file_name = file_name
         self._file_path = os.path.dirname(file_name)
         self._validate()
     
