@@ -39,9 +39,9 @@ class AssetConfig:
     def _validate(self):
         if not self.type:
             raise ValidationException("Missing 'type' property")
-        elif self.type not in AssetType.__members__:
-            vals = [t.value for t in list(AssetType)]
-            raise ValidationException(f"Invalid 'type' property: {self.type} is not in {vals}")
+        asset_type_vals = [t.value for t in list(AssetType)]
+        if self.type not in asset_type_vals:
+            raise ValidationException(f"Invalid 'type' property: {self.type} is not in {asset_type_vals}")
     
     @property
     def type(self):
