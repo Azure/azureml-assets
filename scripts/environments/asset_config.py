@@ -40,11 +40,11 @@ class AssetConfig:
         self._validate()
     
     def _validate(self):
-        if not self.type:
+        if not self._raw_type:
             raise ValidationException("Missing 'type' property")
         asset_type_vals = [t.value for t in list(AssetType)]
-        if self.type not in asset_type_vals:
-            raise ValidationException(f"Invalid 'type' property: {self.type} is not in {asset_type_vals}")
+        if self._raw_type not in asset_type_vals:
+            raise ValidationException(f"Invalid 'type' property: {self._raw_type} is not in {asset_type_vals}")
         
         if not self.definition:
             raise ValidationException("Missing 'definition' property")
@@ -58,7 +58,11 @@ class AssetConfig:
 
     @property
     def type(self):
-        return AssetType(self._yaml.get('type'))
+        return AssetType(self._raw_type)
+
+    @property
+    def _raw_type(self):
+        return self._yaml.get('type')
 
     @property
     def definition(self):
