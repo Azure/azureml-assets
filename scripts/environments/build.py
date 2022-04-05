@@ -115,9 +115,9 @@ if __name__ == '__main__':
     parser.add_argument("-r", "--registry", help="Container registry on which to build images")
     args = parser.parse_args()
 
-    # Ensure --os-to-build is used along with --registry
-    if args.registry and not args.os_to_build:
-        parser.error("If --registry is used then --os-to-build is also required")
+    # Ensure dependent args are present
+    if args.registry and (not args.os_to_build or not args.resource_group):
+        parser.error("If --registry is specified then --resource-group and --os-to-build are also required")
 
     # Convert comma-separated values to lists
     image_dirs = args.image_dirs.split(",")
