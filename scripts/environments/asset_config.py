@@ -58,7 +58,7 @@ class AssetConfig:
 
     @property
     def type(self):
-        return self._yaml.get('type')
+        return AssetType(self._yaml.get('type'))
 
     @property
     def definition(self):
