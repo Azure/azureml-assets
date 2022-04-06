@@ -21,6 +21,29 @@ jobs:
     type: command
     component: file:../../components/pytorch_image_classifier/spec.yaml
     compute: azureml:gpu-cluster
+    resources:
+      instance_count: 1 # number of nodes
+    distribution:
+      type: pytorch
+      process_count_per_instance: 1 # number of gpus
+
+    # NOTE: set env var if needed
+    environment_variables:
+      NCCL_DEBUG: "INFO" # adjusts the level of info from NCCL tests
+
+      # NCCL_IB_PCI_RELAXED_ORDERING: "1" # Relaxed Ordering can greatly help the performance of Infiniband networks in virtualized environments.
+      # NCCL_IB_DISABLE: "1" # force disable infiniband (if set to "1")
+      # NCCL_NET_PLUGIN: "none" # to force NET/Plugin off (no rdma/sharp plugin at all)
+      # NCCL_NET: "Socket" # to force node-to-node comm to use Socket (slow)
+      # NCCL_SOCKET_IFNAME: "eth0" # to force Socket comm to use eth0 (use NCCL_NET=Socket)
+      # NCCL_TOPO_FILE: "/opt/microsoft/ndv4-topo.xml" # Use specific topology file
+
+      # UCX_IB_PCI_RELAXED_ORDERING: "on"
+      # UCX_TLS: "tcp"
+      # UCX_NET_DEVICES: "eth0" # if you have Error: Failed to resolve UCX endpoint...
+
+      # CUDA_DEVICE_ORDER: "PCI_BUS_ID" # ordering of gpus
+
     inputs:
       # data inputs
       train_images: ${{parent.inputs.training_images}}
@@ -46,9 +69,4 @@ jobs:
       # profiling
       enable_profiling: false
 
-    distribution:
-      type: pytorch
-      process_count_per_instance: 1
-    resources:
-      instance_count: 1
 # </jobs>
