@@ -53,8 +53,8 @@ class AssetConfig:
         if self._raw_type not in asset_type_vals:
             raise ValidationException(f"Invalid 'type' property: {self._raw_type} is not in {asset_type_vals}")
         
-        if not self.definition_file_with_path:
-            raise ValidationException("Missing 'definition_file' property")
+        if not self.spec_with_path:
+            raise ValidationException("Missing 'spec' property")
         
         if not self.config:
             raise ValidationException("Missing 'config' property")
@@ -76,8 +76,8 @@ class AssetConfig:
         return self._yaml.get('type')
 
     @property
-    def definition_file_with_path(self):
-        return self._append_to_path(self._yaml.get('definition_file'))
+    def spec_with_path(self):
+        return self._append_to_path(self._yaml.get('spec'))
 
     @property
     def config(self):
