@@ -16,7 +16,7 @@ on:
         required: true
         type: string
       asset_config_filename:
-        default: asset_config.yml
+        default: asset_config.yaml
         required: false
         type: string
       build_artifact_name:

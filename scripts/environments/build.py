@@ -110,7 +110,7 @@ if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--image-dirs", required=True, help="Comma-separated list of directories containing image to build")
-    parser.add_argument("-a", "--asset-config-filename", default="asset_config.py", help="Asset config file name to search for")
+    parser.add_argument("-a", "--asset-config-filename", default="asset_config.yaml", help="Asset config file name to search for")
     parser.add_argument("-l", "--build-logs-dir", required=True, help="Directory to receive build logs")
     parser.add_argument("-p", "--max-parallel", type=int, default=25, help="Maximum number of images to build at the same time")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter images")
