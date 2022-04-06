@@ -19,6 +19,7 @@ import json
 import pickle
 import logging
 import argparse
+import traceback
 from tqdm import tqdm
 from distutils.util import strtobool
 
@@ -141,7 +142,7 @@ class PyTorchDistributedModelTrainingSequence:
             )
 
         # Use CUDA if it is available
-        if torch.cuda.is_available():
+        if not self.training_config.disable_cuda and torch.cuda.is_available():
             self.logger.info(
                 f"Setting up torch.device for CUDA for local gpu:{self.local_rank}"
             )
@@ -176,6 +177,7 @@ class PyTorchDistributedModelTrainingSequence:
                     "cuda_device_count": torch.cuda.device_count(),
                     "distributed": self.multinode_available,
                     "distributed_backend": self.distributed_backend,
+                    "disable_cuda": self.training_config.disable_cuda,
 
                     # data loading params
                     "batch_size": self.dataloading_config.batch_size,
@@ -259,9 +261,9 @@ class PyTorchDistributedModelTrainingSequence:
         for param in model.parameters():
             if param.requires_grad:
                 params_count += param.numel()
-        self.logger.info("MLFLOW: model_param_count={:2f} (millions)".format(params_count/1e6))
+        self.logger.info("MLFLOW: model_param_count={:.2f} (millions)".format(round(params_count/1e6, 2)))
         if self.self_is_main_node:
-            mlflow.log_params({"model_param_count": params_count/1e6})
+            mlflow.log_params({"model_param_count": round(params_count/1e6, 2)})
 
         return self.model
 
@@ -431,6 +433,16 @@ class PyTorchDistributedModelTrainingSequence:
                 mlflow.log_metric("epoch_valid_acc", epoch_valid_acc, step=epoch)
                 mlflow.log_metric("epoch_train_time", epoch_train_time, step=epoch)
 
+    def runtime_error_report(self, runtime_exception):
+        """Call this when catching a critical exception."""
+        self.logger.critical(traceback.format_exc())
+        if torch.cuda.is_available():
+            self.logger.critical(torch.cuda.memory_summary(device=None, abbreviated=False))
+            self.logger.critical(json.dumps(torch.cuda.memory_snapshot(), indent="    "))
+        else:
+            self.logger.critical("Cuda is not available, not reporting cuda memory allocation.")
+
+
     #################
     ### MODEL I/O ###
     #################
@@ -566,6 +578,13 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         default="nccl",
         help="Which distributed backend to use.",
     )
+    group.add_argument(
+        "--disable_cuda",
+        type=strtobool,
+        required=False,
+        default=False,
+        help="set True to force use of cpu (local testing).",
+    )
     # DISTRIBUTED: torch.distributed.launch is passing this argument to your script
     # it is likely to be deprecated in favor of os.environ['LOCAL_RANK']
     # see https://pytorch.org/docs/stable/distributed.html#launch-utility
@@ -653,7 +672,13 @@ def run(args):
 
     # runs training sequence
     # NOTE: num_epochs is provided in args
-    training_handler.train()
+    try:
+        training_handler.train()
+    except RuntimeError as runtime_exception: # if runtime error occurs (ex: cuda out of memory)
+        # then print some runtime error report in the logs
+        training_handler.runtime_error_report(runtime_exception)
+        # re-raise
+        raise runtime_exception
 
     # stops profiling (and save in mlflow)
     training_profiler.stop_profiler()

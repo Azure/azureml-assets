@@ -45,22 +45,22 @@ def load_torchvision_model(
     if model_arch.startswith("resnet"):
         model.fc = torch.nn.Sequential(
             torch.nn.Linear(model.fc.in_features, output_dimension),
-            torch.nn.Softmax(dim=1)   # adding Softmax to output probs
+            torch.nn.Softmax(dim=1),  # adding Softmax to output probs
         )
     elif model_arch == "alexnet":
         model.classifier[6] = torch.nn.Sequential(
             torch.nn.Linear(4096, output_dimension),
-            torch.nn.Softmax(dim=1)   # adding Softmax to output probs
+            torch.nn.Softmax(dim=1),  # adding Softmax to output probs
         )
     elif model_arch.startswith("vgg"):
         model.classifier[6] = torch.nn.Sequential(
             torch.nn.Linear(4096, output_dimension),
-            torch.nn.Softmax(dim=1)   # adding Softmax to output probs
+            torch.nn.Softmax(dim=1),  # adding Softmax to output probs
         )
     elif model_arch == "densenet":
         model.classifier = torch.nn.Sequential(
             torch.nn.Linear(1024, output_dimension),
-            torch.nn.Softmax(dim=1)   # adding Softmax to output probs
+            torch.nn.Softmax(dim=1),  # adding Softmax to output probs
         )
     else:
         raise NotImplementedError(
