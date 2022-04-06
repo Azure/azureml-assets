@@ -39,7 +39,7 @@ def load_model(model_arch: str, output_dimension: int = 1, pretrained: bool = Tr
         return NotImplementedError(f"model_arch={model_arch} is not implemented yet.")
 
     if MODEL_ARCH_MAP[model_arch]["library"] == "torchvision":
-        from ...torchvision_finetune.model.torchvision_models import load_torchvision_model
+        from .model.torchvision_models import load_torchvision_model
 
         return load_torchvision_model(model_arch, output_dimension, pretrained)
     else:
