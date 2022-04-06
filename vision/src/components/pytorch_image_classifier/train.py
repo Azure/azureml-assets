@@ -36,8 +36,6 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader
 from torch.profiler import record_function
 
-from transformers.modeling_outputs import SequenceClassifierOutput
-
 # add path to here, if necessary
 COMPONENT_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), ".")
@@ -293,7 +291,7 @@ class PyTorchDistributedModelTrainingSequence:
                     if isinstance(outputs, torch.Tensor):
                         loss = criterion(outputs, one_hot_targets)
                         correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
-                    elif isinstance(outputs, SequenceClassifierOutput):
+                    elif outputs.__class__.__name__ == "SequenceClassifierOutput":
                         loss = criterion(outputs.logits, one_hot_targets)
                         correct = (torch.argmax(outputs.logits, dim=-1) == (targets.to(self.device)))
                     else:
@@ -339,7 +337,7 @@ class PyTorchDistributedModelTrainingSequence:
                 if isinstance(outputs, torch.Tensor):
                     loss = criterion(outputs, one_hot_targets)
                     correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
-                elif isinstance(outputs, SequenceClassifierOutput):
+                elif outputs.__class__.__name__ == "SequenceClassifierOutput":
                     loss = criterion(outputs.logits, one_hot_targets)
                     correct = (torch.argmax(outputs.logits, dim=-1) == (targets.to(self.device)))
                 else:
