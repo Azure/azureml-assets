@@ -20,7 +20,7 @@ jobs:
 
   train:
     type: command
-    component: file:../../components/torchvision_finetune/spec.yaml
+    component: file:../../components/pytorch_image_classifier/spec.yaml
     compute: azureml:gpu-cluster
     inputs:
       train_images: ${{parent.jobs.generate.outputs.output_train}}
