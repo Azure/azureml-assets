@@ -1,5 +1,5 @@
 """
-Tests running the torchvision_finetune/train.py script
+Tests running the pytorch_image_classifier/train.py script
 on a randomly generated small dataset.
 """
 import os
@@ -11,8 +11,8 @@ from unittest.mock import patch
 import numpy as np
 from PIL import Image
 
-from components.torchvision_finetune import train
-from components.torchvision_finetune.model import MODEL_ARCH_LIST
+from components.pytorch_image_classifier import train
+from components.pytorch_image_classifier.model import MODEL_ARCH_LIST
 
 # IMPORTANT: see conftest.py for fixtures
 
@@ -52,7 +52,7 @@ TEST_MODEL_ARCH_LIST = [
 @patch("mlflow.log_params") # patched to avoid conflict in parameters
 @patch("mlflow.start_run") # we can have only 1 start/end per test session
 @pytest.mark.parametrize("model_arch", TEST_MODEL_ARCH_LIST)
-def test_components_torchvision_finetune(
+def test_components_pytorch_image_classifier(
     mlflow_start_run_mock,
     mlflow_log_params_mock,
     mlflow_pytorch_log_model_mock,
@@ -61,8 +61,8 @@ def test_components_torchvision_finetune(
     temporary_dir,
     random_image_in_folder_classes,
 ):
-    """Tests src/components/torchvision_finetune/train.py"""
-    model_dir = os.path.join(temporary_dir, "torchvision_finetune_model")
+    """Tests src/components/pytorch_image_classifier/train.py"""
+    model_dir = os.path.join(temporary_dir, "pytorch_image_classifier_model")
 
     # create test arguments for the script
     script_args = [

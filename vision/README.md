@@ -125,7 +125,7 @@ Use the [PyTorch distributed launch utility](https://pytorch.org/docs/stable/dis
 
 ```bash
 python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_YOU_HAVE \
-    src/components/torchvision_finetune/train.py \
+    src/components/pytorch_image_classifier/train.py \
     --train_images ./data/places365_standard/train/ \
     --valid_images ./data/places365_standard/val/ \
     --model_arch resnet18 \
