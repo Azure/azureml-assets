@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import List
+from typing import Dict, List
 from yaml import safe_load
 
 
@@ -151,7 +151,7 @@ class EnvironmentConfig(Config):
             Config._validate_enum('publish.visibility', self._publish_visibility, PublishVisibility, True)
 
     @property
-    def _image(self) -> dict[str, object]:
+    def _image(self) -> Dict[str, object]:
         return self._yaml.get('image', {})
 
     @property
@@ -167,7 +167,7 @@ class EnvironmentConfig(Config):
         return Os(self._os)
 
     @property
-    def _context(self) -> dict[str, object]:
+    def _context(self) -> Dict[str, object]:
         return self._image.get('context', {})
 
     @property
@@ -198,7 +198,7 @@ class EnvironmentConfig(Config):
         return [self._append_to_context_path(f) for f in self.template_files]
 
     @property
-    def _publish(self) -> dict[str, str]:
+    def _publish(self) -> Dict[str, str]:
         return self._image.get('publish', {})
 
     @property
@@ -220,7 +220,7 @@ class EnvironmentConfig(Config):
         return PublishVisibility(visiblity) if visiblity else None
 
     @property
-    def _environment(self) -> dict[str, object]:
+    def _environment(self) -> Dict[str, object]:
         return self._yaml.get('environment', {})
 
     @property
@@ -228,5 +228,5 @@ class EnvironmentConfig(Config):
         return self._environment.get('visible', DEFAULT_ENVIRONMENT_VISIBLE)
 
     @property
-    def environment_metadata(self) -> dict[str, object]:
+    def environment_metadata(self) -> Dict[str, object]:
         return self._environment.get('metadata')
