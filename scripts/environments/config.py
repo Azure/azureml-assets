@@ -61,7 +61,7 @@ class AssetConfig(Config):
     definition: spec.yaml
     """
     def __init__(self, file_name: str):
-        super(file_name)
+        super().__init__(file_name)
         self._validate()
 
     def _validate(self):
@@ -135,7 +135,7 @@ class EnvironmentConfig(Config):
         version: "20.04"
     """
     def __init__(self, file_name: str):
-        super(file_name)
+        super().__init__(file_name)
         self._validate()
 
     def _validate(self):
