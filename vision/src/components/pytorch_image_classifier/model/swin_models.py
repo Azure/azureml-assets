@@ -40,6 +40,7 @@ def load_swin_model(
     if model_arch in SWIN_MODEL_ARCH_LIST:
         # TODO: not pretrained
         model = SwinForImageClassification.from_pretrained(model_arch)
+
         model.classifier = torch.nn.Sequential(
             torch.nn.Linear(model.swin.num_features, output_dimension),
             torch.nn.Softmax(dim=1)   # adding Softmax to output probs
