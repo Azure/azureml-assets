@@ -6,6 +6,7 @@ This script provides code to load and setup a variety of models from multiple li
 """
 
 MODEL_ARCH_MAP = {
+    # TorchVision models
     "resnet18": {"input_size": 224, "library": "torchvision"},
     "resnet34": {"input_size": 224, "library": "torchvision"},
     "resnet50": {"input_size": 224, "library": "torchvision"},
@@ -20,7 +21,18 @@ MODEL_ARCH_MAP = {
     "vgg16_bn": {"input_size": 224, "library": "torchvision"},
     "vgg19": {"input_size": 224, "library": "torchvision"},
     "vgg19_bn": {"input_size": 224, "library": "torchvision"},
+
+    # Swin HuggingFace models
     "microsoft/swin-tiny-patch4-window7-224": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-large-patch4-window12-384-in22k": {"input_size": 384, "library": "swin"},
+    "microsoft/swin-base-patch4-window12-384": {"input_size": 384, "library": "swin"},
+    "microsoft/swin-base-patch4-window12-384-in22k": {"input_size": 384, "library": "swin"},
+    "microsoft/swin-large-patch4-window12-384": {"input_size": 384, "library": "swin"},
+    "microsoft/swin-large-patch4-window7-224-in22k": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-base-patch4-window7-224": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-base-patch4-window7-224-in22k": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-small-patch4-window7-224": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-large-patch4-window7-224": {"input_size": 224, "library": "swin"},
 }
 
 MODEL_ARCH_LIST = list(MODEL_ARCH_MAP.keys())

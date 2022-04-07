@@ -9,7 +9,16 @@ import torch
 from transformers import SwinForImageClassification
 
 SWIN_MODEL_ARCH_LIST = [
-    "microsoft/swin-tiny-patch4-window7-224"
+    "microsoft/swin-tiny-patch4-window7-224",
+    "microsoft/swin-large-patch4-window12-384-in22k",
+    "microsoft/swin-base-patch4-window12-384",
+    "microsoft/swin-base-patch4-window12-384-in22k",
+    "microsoft/swin-large-patch4-window12-384",
+    "microsoft/swin-large-patch4-window7-224-in22k",
+    "microsoft/swin-base-patch4-window7-224",
+    "microsoft/swin-base-patch4-window7-224-in22k",
+    "microsoft/swin-small-patch4-window7-224",
+    "microsoft/swin-large-patch4-window7-224",
 ]
 
 def load_swin_model(
