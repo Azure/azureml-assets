@@ -15,8 +15,8 @@ on:
       build_log_dir:
         required: true
         type: string
-      env_config_filename:
-        default: env_config.yml
+      asset_config_filename:
+        default: asset.yaml
         required: false
         type: string
       build_artifact_name:
@@ -66,11 +66,11 @@ jobs:
       
       - name: Build all images
         if: steps.changed-environments.outputs.any_changed == 'false' || steps.changed-scripts.outputs.any_changed == 'true'
-        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -e ${{ inputs.env_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k IMAGE_NAMES
+        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -a ${{ inputs.asset_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k IMAGE_NAMES
 
       - name: Build changed images
         if: steps.changed-environments.outputs.any_changed == 'true' && steps.changed-scripts.outputs.any_changed == 'false'
-        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -e ${{ inputs.env_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k IMAGE_NAMES -c "${{ steps.changed-environments.outputs.all_changed_and_modified_files }}"
+        run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -a ${{ inputs.asset_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k IMAGE_NAMES -c "${{ steps.changed-environments.outputs.all_changed_and_modified_files }}"
 
       - uses: actions/upload-artifact@v2
         if: always()
