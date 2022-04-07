@@ -1,7 +1,7 @@
 import os
 from enum import Enum
 from typing import List
-from yaml import safe_load, SafeLoader
+from yaml import safe_load
 
 
 class ValidationException(Exception):
@@ -18,7 +18,7 @@ class AssetType(Enum):
 class Config:
     def __init__(self, file_name: str):
         with open(file_name) as f:
-            self._yaml = safe_load(f, Loader=SafeLoader)
+            self._yaml = safe_load(f)
         self._file_name = file_name
         self._file_path = os.path.dirname(file_name)
 
