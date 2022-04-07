@@ -97,6 +97,7 @@ class AssetConfig(Config):
 DEFAULT_CONTEXT_DIR = "context"
 DEFAULT_DOCKERFILE = "Dockerfile"
 DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
+DEFAULT_ENVIRONMENT_VISIBLE = True
 
 
 class Os(Enum):
@@ -119,48 +120,55 @@ class EnvironmentConfig(Config):
     """
     Example:
 
-    image_name: azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu
-    os: linux
-    context:
-      dir: context
-      dockerfile: Dockerfile
-      pin_version_files:
-      - Dockerfile
-    publish:
-      location: mcr
-      visibility: public
-    metadata:
-      os:
-        name: Ubuntu
-        version: "20.04"
+    image:
+      name: azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu
+      os: linux
+      context:
+        dir: context
+        dockerfile: Dockerfile
+        pin_version_files:
+        - Dockerfile
+      publish:
+        location: mcr
+        visibility: public
+    environment:
+      visible: true
+      metadata:
+        os:
+          name: Ubuntu
+          version: "20.04"
     """
     def __init__(self, file_name: str):
         super().__init__(file_name)
         self._validate()
 
     def _validate(self):
-        Config._validate_exists('image_name', self.image_name)
-        Config._validate_enum('os', self._os, Os, True)
+        Config._validate_exists('image.name', self.image_name)
+        Config._validate_enum('image.os', self._os, Os, True)
 
         if self._publish:
             Config._validate_enum('publish.location', self._publish_location, PublishLocation, True)
             Config._validate_enum('publish.visibility', self._publish_visibility, PublishVisibility, True)
 
     @property
+    def _image(self) -> dict[str, object]:
+        return self._yaml.get('image', {})
+
+    @property
     def image_name(self) -> str:
-        return self._yaml.get('image_name')
+        return self._image.get('name')
 
     @property
     def _os(self) -> str:
-        return self._yaml.get('os')
+        return self._image.get('os')
 
     @property
     def os(self) -> Os:
         return Os(self._os)
 
     @property
-    def _context(self) -> dict:
-        return self._yaml.get('context', {})
+    def _context(self) -> dict[str, object]:
+        return self._image.get('context', {})
 
     @property
     def context_dir(self) -> str:
@@ -190,8 +198,8 @@ class EnvironmentConfig(Config):
         return [self._append_to_context_path(f) for f in self.template_files]
 
     @property
-    def _publish(self) -> dict:
-        return self._yaml.get('publish', {})
+    def _publish(self) -> dict[str, str]:
+        return self._image.get('publish', {})
 
     @property
     def _publish_location(self) -> str:
@@ -212,5 +220,13 @@ class EnvironmentConfig(Config):
         return PublishVisibility(visiblity) if visiblity else None
 
     @property
-    def metadata(self) -> object:
-        return self._yaml.get('metadata')
+    def _environment(self) -> dict[str, object]:
+        return self._yaml.get('environment', {})
+
+    @property
+    def environment_visible(self) -> bool:
+        return self._environment.get('visible', DEFAULT_ENVIRONMENT_VISIBLE)
+
+    @property
+    def environment_metadata(self) -> dict[str, object]:
+        return self._environment.get('metadata')
