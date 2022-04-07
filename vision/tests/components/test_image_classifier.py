@@ -44,6 +44,7 @@ def random_image_in_folder_classes(temporary_dir):
 TEST_MODEL_ARCH_LIST = [
     "resnet18",
     "resnet34",
+    "microsoft/swin-tiny-patch4-window7-224"
 ]
 
 # we only care about patching those specific mlflow methods
