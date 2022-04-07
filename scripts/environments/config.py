@@ -82,7 +82,7 @@ class AssetConfig(Config):
 
     @property
     def spec_with_path(self) -> str:
-        return self._append_to_path(self.spec)
+        return self._append_to_file_path(self.spec)
 
     @property
     def extra_config(self) -> str:
@@ -91,7 +91,7 @@ class AssetConfig(Config):
     @property
     def extra_config_with_path(self) -> str:
         config = self.extra_config
-        return self._append_to_path(config) if config else None
+        return self._append_to_file_path(config) if config else None
 
 
 DEFAULT_CONTEXT_DIR = "context"
@@ -168,7 +168,7 @@ class EnvironmentConfig(Config):
 
     @property
     def context_dir_with_path(self) -> str:
-        return self._append_to_path(self.context_dir)
+        return self._append_to_file_path(self.context_dir)
 
     def _append_to_context_path(self, relative_path: str) -> str:
         return os.path.join(self.context_dir_with_path, relative_path)
