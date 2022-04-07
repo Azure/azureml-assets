@@ -12,22 +12,6 @@ SWIN_MODEL_ARCH_LIST = [
     "microsoft/swin-tiny-patch4-window7-224"
 ]
 
-class WrappedHFModel(torch.nn.Module):
-    def __init__(self, hf_model, output_dimension):
-        super(WrappedHFModel, self).__init__()
-        self._hf_model = hf_model
-        logging.info(f"Creating HF Model wrapper with {hf_model.num_features} x {output_dimension} linear")
-        self._classifier = torch.nn.Sequential(
-            torch.nn.Linear(hf_model.num_features, output_dimension),
-            torch.nn.Softmax(dim=1)   # adding Softmax to output probs
-        )
-        self._output_dimension = output_dimension
-    
-    def forward(self, inputs):
-        hf_outputs = self._hf_model(inputs)
-        classifier_outputs = self._classifier(hf_outputs.logits)
-        return classifier_outputs
-
 def load_swin_model(
     model_arch: str, output_dimension: int = 1, pretrained: bool = True
 ):
@@ -51,4 +35,3 @@ def load_swin_model(
         )
 
     return model
-    #return WrappedHFModel(model, output_dimension)

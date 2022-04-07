@@ -299,7 +299,6 @@ class PyTorchDistributedModelTrainingSequence:
 
                     running_loss += loss.item() * images.size(0)
 
-                    #correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
                     num_correct += torch.sum(correct).item()
                     num_total_images += len(images)
 
