@@ -7,12 +7,13 @@ from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
 from typing import List
 
-from asset_config import AssetConfig, AssetType, EnvironmentConfig, OS_OPTIONS
+from config import AssetConfig, AssetType, EnvironmentConfig, Os
 from ci_logger import logger
 from pin_versions import transform
 
+
 def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_log: str,
-                build_os: str=None, resource_group: str=None, registry: str=None):
+                build_os: str = None, resource_group: str = None, registry: str = None):
     print(f"Building {image_name}")
     start = timer()
     if registry is not None:
@@ -32,6 +33,7 @@ def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_
         f.write(p.stdout.decode())
     return (image_name, p.returncode, p.stdout.decode())
 
+
 # Doesn't support ACR yet
 def get_image_digest(image_name: str):
     p = run(["docker", "image", "inspect", image_name, "--format=\"{{index .Id}}\""],
@@ -43,6 +45,7 @@ def get_image_digest(image_name: str):
         logger.log_warning(f"Failed to get image digest for {image_name}: {p.stdout.decode()}")
         return None
 
+
 def create_github_env_var(key: str, value: str):
     # Make list of image names available to following steps
     github_env = os.getenv('GITHUB_ENV')
@@ -52,9 +55,10 @@ def create_github_env_var(key: str, value: str):
     else:
         logger.log_warning("Failed to write image names: GITHUB_ENV environment variable not found")
 
+
 def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_dir: str,
                  max_parallel: int, changed_files: List[str], image_names_key: str,
-                 os_to_build: str=None, resource_group: str=None, registry: str=None):
+                 os_to_build: str = None, resource_group: str = None, registry: str = None):
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find Dockerfiles under image root directory
         futures = []
@@ -67,10 +71,10 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
                     # Skip if not environment
                     if asset_config.type is not AssetType.ENVIRONMENT:
                         continue
-                    env_config = EnvironmentConfig(asset_config)
+                    env_config = EnvironmentConfig(asset_config.extra_config_with_path)
 
                     # Filter by OS
-                    if os_to_build and env_config.os != os_to_build:
+                    if os_to_build and env_config.os.value != os_to_build:
                         print(f"Skipping build of {env_config.image_name}: Operating system {env_config.os} != {os_to_build}")
                         continue
 
@@ -89,7 +93,8 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
                     # Start building image
                     build_log = os.path.join(build_logs_dir, f"{env_config.image_name}.log")
                     futures.append(pool.submit(build_image, env_config.image_name, env_config.context_dir_with_path,
-                                               env_config.dockerfile, build_log, env_config.os, resource_group, registry))
+                                               env_config.dockerfile, build_log, env_config.os.value, resource_group,
+                                               registry))
 
         # Wait for builds to complete
         image_names = []
@@ -102,20 +107,21 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
                 logger.log_error(f"Build of {image_name} failed with exit status {return_code}", "Build failure")
                 sys.exit(1)
             image_names.append(image_name)
-        
+
         # Make list of image names available to following steps
         create_github_env_var(image_names_key, ",".join(image_names))
+
 
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--image-dirs", required=True, help="Comma-separated list of directories containing image to build")
-    parser.add_argument("-a", "--asset-config-filename", default="asset_config.yaml", help="Asset config file name to search for")
+    parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
     parser.add_argument("-l", "--build-logs-dir", required=True, help="Directory to receive build logs")
     parser.add_argument("-p", "--max-parallel", type=int, default=25, help="Maximum number of images to build at the same time")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter images")
     parser.add_argument("-k", "--image-names-key", help="GitHub actions environment variable that will receive a comma-separated list of images built")
-    parser.add_argument("-o", "--os-to-build", choices=OS_OPTIONS, help="Only build environments based on this OS")
+    parser.add_argument("-o", "--os-to-build", choices=[i.value for i in list(Os)], help="Only build environments based on this OS")
     parser.add_argument("-r", "--registry", help="Container registry on which to build images")
     parser.add_argument("-g", "--resource-group", help="Resource group containing the container registry")
     args = parser.parse_args()
@@ -127,10 +133,8 @@ if __name__ == '__main__':
     # Convert comma-separated values to lists
     image_dirs = args.image_dirs.split(",")
     changed_files = args.changed_files.split(",") if args.changed_files else []
-    
+
     # Build images
     build_images(image_dirs=image_dirs, asset_config_filename=args.asset_config_filename, build_logs_dir=args.build_logs_dir,
                  max_parallel=args.max_parallel, changed_files=changed_files, image_names_key=args.image_names_key,
                  os_to_build=args.os_to_build, resource_group=args.resource_group, registry=args.registry)
-
-    

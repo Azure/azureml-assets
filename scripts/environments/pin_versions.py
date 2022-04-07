@@ -23,7 +23,7 @@ def get_latest_image_suffix(image: str):
     # Retrieve tags
     response = urlopen(f"https://{hostname}/v2/{repo}/tags/list")
     tags = json.loads(response.read().decode("utf-8")).get("tags", [])
-    
+
     # Ensure latest is present
     if LATEST_TAG not in tags:
         raise Exception(f"{image} does not have a {LATEST_TAG} tag")
@@ -32,7 +32,7 @@ def get_latest_image_suffix(image: str):
     # and move latest to the beginning to ensure we get its digest first
     tags_sorted = sorted([t for t in tags if t != LATEST_TAG], reverse=True)
     tags_sorted.insert(0, LATEST_TAG)
-    
+
     # Find another tag corresponding to latest
     latest_digest = None
     latest_tag = None
@@ -44,7 +44,7 @@ def get_latest_image_suffix(image: str):
                           headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
         response = urlopen(request)
         digest = response.info()['Docker-Content-Digest']
-        
+    
         if tag == LATEST_TAG:
             # Store latest digest for comparison
             latest_digest = digest
@@ -52,7 +52,7 @@ def get_latest_image_suffix(image: str):
             # Found matching digest
             latest_tag = tag
             break
-    
+
     # Return tag or digest
     if latest_tag is not None:
         return f":{latest_tag}"
@@ -80,7 +80,7 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
 
 def get_latest_package_version(package: str,
                                package_finder: PackageFinder,
-                               include_pre: bool=False) -> str:
+                               include_pre: bool = False) -> str:
     for _ in range(5):
         try:
             candidates = package_finder.find_all_candidates(package)
@@ -101,7 +101,7 @@ def get_latest_package_version(package: str,
     return None
 
 
-def transform(input_file: str, output_file: str=None):
+def transform(input_file: str, output_file: str = None):
     # Output to input file by default
     if output_file is None:
         output_file = input_file
@@ -109,7 +109,7 @@ def transform(input_file: str, output_file: str=None):
     # Read Dockerfile
     with open(input_file) as f:
         contents = f.read()
-    
+
     # Process MCR template tags
     while True:
         match = LATEST_IMAGE_TAG.search(contents)
@@ -120,7 +120,7 @@ def transform(input_file: str, output_file: str=None):
         suffix = get_latest_image_suffix(repo)
         print(f"Latest image reference is {repo}{suffix}")
         contents = contents[:match.start()] + f"{repo}{suffix}" + contents[match.end():]
-    
+
     # Process pip template tags
     package_finder = create_package_finder([PYPI_URL])
     while True:

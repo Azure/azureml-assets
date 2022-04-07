@@ -9,19 +9,21 @@ from typing import List
 
 TAG_DATETIME_FORMAT = "%Y%m%d%H%M%S"
 
+
 def tag_image(image_name: str, target_image_name: str):
     p = run(["docker", "tag", image_name, target_image_name],
             stdout=PIPE,
             stderr=STDOUT)
     return (p.returncode, p.stdout.decode())
 
-def push_image(image_name, all_tags = False):
+
+def push_image(image_name: str, all_tags: bool = False):
     # Create args
     args = ["docker", "push"]
     if all_tags:
         args.append("--all-tags")
     args.append(image_name)
-    
+
     # Push
     print(f"Pushing {image_name}")
     start = timer()
@@ -31,6 +33,7 @@ def push_image(image_name, all_tags = False):
     end = timer()
     print(f"{image_name} pushed in {timedelta(seconds=end-start)}")
     return (image_name, p.returncode, p.stdout.decode())
+
 
 def push_images(image_names: List[str], target_image_prefix: str, tags: List[str], max_parallel: int):
     with ThreadPoolExecutor(max_parallel) as pool:
@@ -58,6 +61,7 @@ def push_images(image_names: List[str], target_image_prefix: str, tags: List[str
                 logger.log_error(f"Push of {image_name} failed with exit status {return_code}", "Push failure")
                 sys.exit(1)
 
+
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
@@ -75,5 +79,3 @@ if __name__ == '__main__':
 
     # Push images
     push_images(image_names, args.target_image_prefix, tags, args.max_parallel)
-
-    

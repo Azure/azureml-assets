@@ -4,7 +4,7 @@ import os
 class Logger:
     def log_debug(self, message, title=None):
         pass
-    
+
     def log_warning(self, message, title=None):
         pass
 
@@ -21,7 +21,7 @@ class Logger:
 class GitHubLogger(Logger):
     def log_debug(self, message, title=None):
         self._log("debug", message, title)
-    
+
     def log_warning(self, message, title=None):
         self._log("warning", message, title)
 
@@ -42,7 +42,7 @@ class GitHubLogger(Logger):
 class AzureDevOpsLogger(Logger):
     def log_debug(self, message, title=None):
         self._log("debug", message, title)
-    
+
     def log_warning(self, message, title=None):
         self._log("warning", message, title)
 
@@ -66,7 +66,7 @@ class AzureDevOpsLogger(Logger):
 class ConsoleLogger(Logger):
     def log_debug(self, message, title=None):
         self._log("debug", message, title)
-    
+
     def log_warning(self, message, title=None):
         self._log("warning", message, title)
 
@@ -90,6 +90,7 @@ def _create_default_logger() -> Logger:
         return AzureDevOpsLogger()
     else:
         return ConsoleLogger()
+
 
 # Create default logger
 logger = _create_default_logger()
