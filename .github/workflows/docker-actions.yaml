@@ -27,7 +27,7 @@ on:
         type: string
 
 env:
-  RELEASE_DIR: ${{ runner.temp }}/release
+  RELEASE_DIR: release
   SCRIPTS_DIR: scripts/environments
 
 defaults:
