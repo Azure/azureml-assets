@@ -133,3 +133,6 @@ data/
 
 # ignore mlflow local dumps
 mlruns/
+
+# VS Code settings
+.vscode
