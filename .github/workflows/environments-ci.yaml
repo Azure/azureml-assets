@@ -2,6 +2,7 @@ name: environments-ci
 
 on:
   push:
+    # FIXME: Remove this before merging to main
     branches:
       - elesel/work-with-release-branch
   pull_request:
@@ -24,16 +25,27 @@ defaults:
     shell: bash
 
 jobs:
+  clone-release-branch-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Clone release branch
+      uses: actions/checkout@v3
+      with:
+        ref: release
+        fetch-depth: 0
+        path: ${{ env.GITHUB_WORKSPACE }}/release
+
   # Build Linux-based images
-  build-push-linux:
-    name: Build Linux images
-    uses: Azure/azureml-assets/.github/workflows/docker-actions.yaml@main
-    with:
-      machine_type: ubuntu-latest
-      os_to_build: linux
-      image_dirs: ${{ github.event.inputs.image_dirs || 'general/src/environments' }}
-      build_log_dir: build-logs
-      build_artifact_name: build-logs-linux
+  # build-push-linux:
+  #   name: Build Linux images
+  #   uses: Azure/azureml-assets/.github/workflows/docker-actions.yaml@main
+  #   with:
+  #     machine_type: ubuntu-latest
+  #     os_to_build: linux
+  #     image_dirs: ${{ github.event.inputs.image_dirs || 'general/src/environments' }}
+  #     build_log_dir: build-logs
+  #     build_artifact_name: build-logs-linux
   
   # Build Windows-based images
   build-push-windows:
