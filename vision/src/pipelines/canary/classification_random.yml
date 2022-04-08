@@ -27,8 +27,6 @@ jobs:
     distribution:
       type: pytorch
       process_count_per_instance: 1 # number of gpus
-    overrides:
-      environment: file:../../../assets/environments/nvidia/env.yml
 
     inputs:
       train_images: ${{parent.jobs.generate.outputs.output_train}}
