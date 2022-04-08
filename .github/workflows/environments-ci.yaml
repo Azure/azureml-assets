@@ -34,7 +34,7 @@ jobs:
       with:
         ref: release
         fetch-depth: 0
-        path: ${{ env.GITHUB_WORKSPACE }}/release
+        path: release
 
   # Build Linux-based images
   # build-push-linux:
