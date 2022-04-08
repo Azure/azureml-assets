@@ -431,13 +431,20 @@ class PyTorchDistributedModelTrainingSequence:
                 mlflow.log_metric("epoch_train_time", epoch_train_time, step=epoch)
 
     def runtime_error_report(self, runtime_exception):
-        """Call this when catching a critical exception."""
+        """Call this when catching a critical exception.
+        Will print all sorts of relevant information to the log."""
         self.logger.critical(traceback.format_exc())
+        try:
+            import psutil
+            self.logger.critical(f"Memory: {str(psutil.virtual_memory())}")
+        except ImportError:
+            self.logger.critical("import psutil failed, cannot display virtual memory stats.")
+
         if torch.cuda.is_available():
-            self.logger.critical(torch.cuda.memory_summary(device=None, abbreviated=False))
-            self.logger.critical(json.dumps(torch.cuda.memory_snapshot(), indent="    "))
+            self.logger.critical("Cuda memory summary:\n"+str(torch.cuda.memory_summary(device=None, abbreviated=False)))
+            self.logger.critical("Cuda memory snapshot:\n"+json.dumps(torch.cuda.memory_snapshot(), indent="    "))
         else:
-            self.logger.critical("Cuda is not available, not reporting cuda memory allocation.")
+            self.logger.critical("Cuda is not available, cannot report cuda memory allocation.")
 
 
     #################
