@@ -28,7 +28,7 @@ jobs:
   # Build Linux-based images
   build-push-linux:
     name: Build Linux images
-    uses: ./docker-actions.yaml
+    uses: ./.github/workflows/docker-actions.yaml
     with:
       machine_type: ubuntu-latest
       os_to_build: linux
@@ -39,7 +39,7 @@ jobs:
   # Build Windows-based images
   build-push-windows:
     name: Build Windows images
-    uses: ./docker-actions.yaml
+    uses: ./.github/workflows/docker-actions.yaml
     with:
       machine_type: windows-2019
       os_to_build: windows
