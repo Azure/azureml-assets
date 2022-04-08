@@ -27,6 +27,7 @@ on:
         type: string
 
 env:
+  RELEASE_DIR: ${{ runner.temp }}/release
   SCRIPTS_DIR: scripts/environments
 
 defaults:
@@ -71,7 +72,7 @@ jobs:
         with:
           ref: release
           fetch-depth: 0
-          path: release
+          path: ${{ env.RELEASE_DIR }}
       
       - name: Build all images
         if: steps.changed-environments.outputs.any_changed == 'false' || steps.changed-scripts.outputs.any_changed == 'true'
