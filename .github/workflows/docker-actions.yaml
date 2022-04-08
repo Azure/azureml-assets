@@ -39,9 +39,17 @@ jobs:
     runs-on: ${{ inputs.machine_type }}
     
     steps:
-      - uses: actions/checkout@v2
+      - name: Clone branch
+        uses: actions/checkout@v3
         with:
           fetch-depth: 2
+      
+      - name: Clone release branch
+        uses: actions/checkout@v3
+        with:
+          ref: release
+          fetch-depth: 0
+          path: release
       
       - name: Get changed environments
         id: changed-environments
