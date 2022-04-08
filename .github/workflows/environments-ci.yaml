@@ -1,6 +1,9 @@
 name: environments-ci
 
 on:
+  push:
+    branches:
+      - elesel/work-with-release-branch
   pull_request:
     branches:
       - main
