@@ -289,12 +289,15 @@ class PyTorchDistributedModelTrainingSequence:
                     outputs = self.model(images)
 
                     if isinstance(outputs, torch.Tensor):
+                        # if we're training a regular pytorch model (ex: torchvision)
                         loss = criterion(outputs, one_hot_targets)
                         correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
                     elif outputs.__class__.__name__ == "SequenceClassifierOutput":
+                        # if we're training a HuggingFace model
                         loss = criterion(outputs.logits, one_hot_targets)
                         correct = (torch.argmax(outputs.logits, dim=-1) == (targets.to(self.device)))
                     else:
+                        # if anything else, just except
                         raise ValueError(f"outputs from model is type {type(outputs)} which is unknown.")
 
                     running_loss += loss.item() * images.size(0)
