@@ -1,15 +1,14 @@
 """
 Tests running the pytorch_image_classifier/model/ loader
 """
-import os
-import sys
-import tempfile
 import pytest
-from unittest.mock import patch
-
 import torch
 
-from components.pytorch_image_classifier.model import MODEL_ARCH_LIST, get_model_metadata, load_model
+from components.pytorch_image_classifier.model import (
+    MODEL_ARCH_LIST,
+    get_model_metadata,
+    load_model,
+)
 
 # IMPORTANT: see conftest.py for fixtures
 
