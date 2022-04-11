@@ -9,7 +9,7 @@ from typing import List
 
 from config import AssetConfig, AssetType, EnvironmentConfig, Os
 from ci_logger import logger
-from pin_versions import transform
+from pin_versions import transform_file
 
 
 def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_log: str,
@@ -86,7 +86,7 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
                     # Pin images/packages in files
                     for file_to_pin in env_config.template_files_with_path:
                         if os.path.exists(file_to_pin):
-                            transform(file_to_pin)
+                            transform_file(file_to_pin)
                         else:
                             logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
