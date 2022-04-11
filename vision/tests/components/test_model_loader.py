@@ -7,8 +7,7 @@ import tempfile
 import pytest
 from unittest.mock import patch
 
-import numpy as np
-from PIL import Image
+import torch
 
 from components.pytorch_image_classifier.model import MODEL_ARCH_LIST, get_model_metadata, load_model
 
@@ -27,3 +26,6 @@ def test_model_loader(model_arch):
 
     # using pretrained=False to avoid downloading each time we unit test
     model = load_model(model_arch, output_dimension=4, pretrained=False)
+
+    assert model is not None
+    assert isinstance(model, torch.nn.Module)
