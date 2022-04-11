@@ -70,10 +70,6 @@ def pin_packages(contents: str) -> str:
 
 
 def transform_file(input_file: str, output_file: str = None):
-    # Output to input file by default
-    if output_file is None:
-        output_file = input_file
-
     # Read file
     with open(input_file) as f:
         contents = f.read()
@@ -85,6 +81,8 @@ def transform_file(input_file: str, output_file: str = None):
     if output_file == "-":
         print(contents)
     else:
+        if output_file is None:
+            output_file = input_file
         with open(output_file, "w") as f:
             f.write(contents)
 

@@ -57,20 +57,33 @@ class AssetConfig(Config):
     """
     Example:
 
+    name: my-asset
+    version: 1
     type: environment
-    definition: spec.yaml
+    spec: spec.yaml
+    extra_config: environment.yaml
     """
     def __init__(self, file_name: str):
         super().__init__(file_name)
         self._validate()
 
     def _validate(self):
+        Config._validate_exists('name', self.spec)
+        Config._validate_exists('version', self.spec)
         Config._validate_enum('type', self._type, AssetType, True)
         Config._validate_exists('spec', self.spec)
 
     @property
     def _type(self) -> str:
         return self._yaml.get('type')
+
+    @property
+    def name(self) -> str:
+        return self._yaml.get('name')
+
+    @property
+    def version(self) -> str:
+        return str(self._yaml.get('version'))
 
     @property
     def type(self) -> AssetType:
@@ -114,6 +127,12 @@ class PublishVisibility(Enum):
     INTERNAL = 'internal'
     STAGING = 'staging'
     UNLISTED = 'unlisted'
+
+
+# Associates publish locations with their hostnames
+PUBLISH_LOCATION_HOSTNAMES = {
+    PublishLocation.MCR: 'mcr.microsoft.com'
+}
 
 
 class EnvironmentConfig(Config):
@@ -209,6 +228,11 @@ class EnvironmentConfig(Config):
     def publish_location(self) -> str:
         location = self._publish_location
         return PublishLocation(location) if location else None
+
+    @property
+    def publish_location_hostname(self) -> str:
+        location = self._publish_location
+        return PUBLISH_LOCATION_HOSTNAMES[PublishLocation(location)] if location else None
 
     @property
     def _publish_visibility(self) -> str:
