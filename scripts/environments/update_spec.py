@@ -17,7 +17,7 @@ def update(asset_config_file: str, output_file: str = None):
 
     # Augment with with type-specific data
     if asset_config.type == AssetType.ENVIRONMENT:
-        environment_config = EnvironmentConfig()
+        environment_config = EnvironmentConfig(asset_config.extra_config_with_path)
         if environment_config.publish_location == PublishLocation.MCR:
             data['image'] = {
                 'name': environment_config.image_name,
