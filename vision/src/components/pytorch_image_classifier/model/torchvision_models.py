@@ -6,8 +6,6 @@ This script provides code to load and setup a variety of models from torchvision
 """
 import logging
 import torch
-import torch.nn as nn
-import torch.optim as optim
 import torchvision.models as models
 
 TORCHVISION_MODEL_ARCH_LIST = [
