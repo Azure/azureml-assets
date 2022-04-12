@@ -8,22 +8,6 @@ import logging
 import torch
 import torchvision.models as models
 
-TORCHVISION_MODEL_ARCH_LIST = [
-    "resnet18",
-    "resnet34",
-    "resnet50",
-    "resnet101",
-    "resnet152",
-    "alexnet",
-    "vgg11",
-    "vgg11_bn",
-    "vgg13",
-    "vgg13_bn",
-    "vgg16",
-    "vgg16_bn",
-    "vgg19",
-    "vgg19_bn",
-]
 
 def load_torchvision_model(
     model_arch: str, output_dimension: int = 1, pretrained: bool = True
@@ -34,12 +18,7 @@ def load_torchvision_model(
     logger.info(
         f"Loading model from arch={model_arch} pretrained={pretrained} output_dimension={output_dimension}"
     )
-    if model_arch in TORCHVISION_MODEL_ARCH_LIST:
-        model = getattr(models, model_arch)(pretrained=pretrained)
-    else:
-        raise NotImplementedError(
-            f"model_arch={model_arch} is not implemented in torchvision model zoo."
-        )
+    model = getattr(models, model_arch)(pretrained=pretrained)
 
     # see https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html
     if model_arch.startswith("resnet"):
@@ -57,7 +36,7 @@ def load_torchvision_model(
             torch.nn.Linear(4096, output_dimension),
             torch.nn.Softmax(dim=1),  # adding Softmax to output probs
         )
-    elif model_arch == "densenet":
+    elif model_arch.startswith("densenet"):
         model.classifier = torch.nn.Sequential(
             torch.nn.Linear(1024, output_dimension),
             torch.nn.Softmax(dim=1),  # adding Softmax to output probs
