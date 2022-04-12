@@ -25,6 +25,10 @@ TORCHVISION_MODEL_ARCH_LIST = [
     "vgg16_bn",
     "vgg19",
     "vgg19_bn",
+    "densenet121",
+    "densenet169",
+    "densenet201",
+    "densenet161"
 ]
 
 
@@ -60,7 +64,7 @@ def load_torchvision_model(
             torch.nn.Linear(4096, output_dimension),
             torch.nn.Softmax(dim=1),  # adding Softmax to output probs
         )
-    elif model_arch == "densenet":
+    elif model_arch.startswith("densenet"):
         model.classifier = torch.nn.Sequential(
             torch.nn.Linear(1024, output_dimension),
             torch.nn.Softmax(dim=1),  # adding Softmax to output probs

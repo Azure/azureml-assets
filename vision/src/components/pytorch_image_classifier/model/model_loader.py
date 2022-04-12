@@ -20,6 +20,10 @@ MODEL_ARCH_MAP = {
     "vgg16_bn": {"input_size": 224, "library": "torchvision"},
     "vgg19": {"input_size": 224, "library": "torchvision"},
     "vgg19_bn": {"input_size": 224, "library": "torchvision"},
+    "densenet121": {"input_size": 224, "library": "torchvision"},
+    "densenet169": {"input_size": 224, "library": "torchvision"},
+    "densenet201": {"input_size": 224, "library": "torchvision"},
+    "densenet161": {"input_size": 224, "library": "torchvision"}
 }
 
 MODEL_ARCH_LIST = list(MODEL_ARCH_MAP.keys())
