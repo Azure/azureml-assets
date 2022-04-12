@@ -100,7 +100,7 @@ class PyTorchDistributedModelTrainingSequence:
         if self.dataloading_config.num_workers is None:
             self.dataloading_config.num_workers = 0
         if self.dataloading_config.num_workers < 0:
-            self.dataloading_config.num_workers = os.cpu_count()
+            self.dataloading_config.num_workers = self.cpu_count
         if self.dataloading_config.num_workers == 0:
             self.logger.warning("You specified num_workers=0, forcing prefetch_factor to be discarded.")
             self.dataloading_config.prefetch_factor = None
@@ -165,34 +165,44 @@ class PyTorchDistributedModelTrainingSequence:
         # only from main process (rank==0) to avoid conflict
         if self.self_is_main_node:
             # MLFLOW: report relevant parameters using mlflow
-            mlflow.log_params(
-                {
-                    # log some distribution params
-                    "nodes": self.world_size // self.local_world_size,
-                    "instance_per_node": self.local_world_size,
-                    "cuda_available": torch.cuda.is_available(),
-                    "cuda_device_count": torch.cuda.device_count(),
-                    "distributed": self.multinode_available,
-                    "distributed_backend": self.distributed_backend,
-                    "disable_cuda": self.training_config.disable_cuda,
+            logged_params = {
+                # log some distribution params
+                "nodes": self.world_size // self.local_world_size,
+                "instance_per_node": self.local_world_size,
+                "cuda_available": torch.cuda.is_available(),
+                "disable_cuda": self.training_config.disable_cuda,
+                "distributed": self.multinode_available,
+                "distributed_backend": self.distributed_backend,
 
-                    # data loading params
-                    "batch_size": self.dataloading_config.batch_size,
-                    "num_workers": self.dataloading_config.num_workers,
-                    "prefetch_factor": self.dataloading_config.prefetch_factor,
-                    "persistent_workers": self.dataloading_config.persistent_workers,
-                    "pin_memory": self.dataloading_config.pin_memory,
-                    "non_blocking": self.dataloading_config.non_blocking,
+                # data loading params
+                "batch_size": self.dataloading_config.batch_size,
+                "num_workers": self.dataloading_config.num_workers,
+                "cpu_count": self.cpu_count,
+                "prefetch_factor": self.dataloading_config.prefetch_factor,
+                "persistent_workers": self.dataloading_config.persistent_workers,
+                "pin_memory": self.dataloading_config.pin_memory,
+                "non_blocking": self.dataloading_config.non_blocking,
 
-                    # training params
-                    "model_arch": self.training_config.model_arch,
-                    "model_arch_pretrained": self.training_config.model_arch_pretrained,
-                    "learning_rate": self.training_config.learning_rate,
+                # training params
+                "model_arch": self.training_config.model_arch,
+                "model_arch_pretrained": self.training_config.model_arch_pretrained,
+                "learning_rate": self.training_config.learning_rate,
 
-                    # profiling params
-                    "enable_profiling": self.training_config.enable_profiling,
-                }
-            )
+                # profiling params
+                "enable_profiling": self.training_config.enable_profiling,
+            }
+
+            if torch.cuda.is_available():
+                # add some gpu properties
+                logged_params['cuda_device_count'] = torch.cuda.device_count()
+                cuda_device_properties = torch.cuda.get_device_properties(self.device)
+                logged_params['cuda_device_name'] = cuda_device_properties.name
+                logged_params['cuda_device_major'] = cuda_device_properties.major
+                logged_params['cuda_device_minor'] = cuda_device_properties.minor
+                logged_params['cuda_device_memory'] = cuda_device_properties.total_memory
+                logged_params['cuda_device_processor_count'] = cuda_device_properties.multi_processor_count
+
+            mlflow.log_params(logged_params)
 
     def setup_datasets(
         self,
