@@ -13,9 +13,11 @@ outputs:
   train_images:
     type: uri_folder
     mode: upload
+    path: azureml://datastores/workspaceblobstore/paths/azureml-vision-datasets/places2/train/
   valid_images:
     type: uri_folder
     mode: upload
+    path: azureml://datastores/workspaceblobstore/paths/azureml-vision-datasets/places2/valid/
 
 environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu@latest
 
