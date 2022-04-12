@@ -3,12 +3,14 @@ type: pipeline
 
 # <inputs_and_outputs>
 inputs:
-  training_images: #using registered datasets
+  training_images:
     type: uri_folder
-    path: azureml:stanford_dogs@latest
+    path: azureml://datastores/workspaceblobstore/paths/azureml-vision-datasets/dogs/**
+    # path: azureml://datastores/workspaceblobstore/paths/azureml-vision-datasets/places2/train//**
   validation_images:
     type: uri_folder
-    path: azureml:stanford_dogs@latest
+    path: azureml://datastores/workspaceblobstore/paths/azureml-vision-datasets/dogs/**
+    # path: azureml://datastores/workspaceblobstore/paths/azureml-vision-datasets/places2/valid/**
 # </inputs_and_outputs>
 
 # <jobs>
