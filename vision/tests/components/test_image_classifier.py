@@ -130,7 +130,7 @@ def test_components_pytorch_image_classifier_single_node(
 @patch("torch.distributed.init_process_group") # to avoid calling for the actual thing
 @patch("torch.nn.parallel.DistributedDataParallel") # to avoid calling for the actual thing
 @pytest.mark.parametrize("backend", ['nccl', 'mpi'])
-def test_components_pytorch_image_classifier_two_nodes_nccl_backend(
+def test_components_pytorch_image_classifier_second_of_two_nodes(
     torch_ddp_mock,
     torch_dist_init_process_group_mock,
     mlflow_start_run_mock,
