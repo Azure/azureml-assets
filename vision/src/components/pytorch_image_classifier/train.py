@@ -31,7 +31,6 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision
 from torch.optim import lr_scheduler
-from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader
 from torch.profiler import record_function
@@ -252,7 +251,7 @@ class PyTorchDistributedModelTrainingSequence:
         # DISTRIBUTED: the model needs to be wrapped in a DistributedDataParallel class
         if self.multinode_available:
             self.logger.info(f"Setting up model to use DistributedDataParallel.")
-            self.model = DistributedDataParallel(self.model)
+            self.model = torch.nn.parallel.DistributedDataParallel(self.model)
 
         # fun: log the number of parameters
         params_count = 0
@@ -440,7 +439,7 @@ class PyTorchDistributedModelTrainingSequence:
             # create output directory just in case
             os.makedirs(output_dir, exist_ok=True)
 
-            if isinstance(self.model, DistributedDataParallel):
+            if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
                 # DISTRIBUTED: to export model, you need to get it out of the DistributedDataParallel class
                 self.logger.info(
                     "Model was distibuted, we will export DistributedDataParallel.module"
