@@ -39,6 +39,8 @@ def random_image_in_folder_classes(temporary_dir):
 
     return image_dataset_path
 
+
+
 # IMPORTANT: we have to restrict the list of models for unit test
 # because github actions runners have 7GB RAM only and will OOM
 TEST_MODEL_ARCH_LIST = [
@@ -52,7 +54,7 @@ TEST_MODEL_ARCH_LIST = [
 @patch("mlflow.log_params") # patched to avoid conflict in parameters
 @patch("mlflow.start_run") # we can have only 1 start/end per test session
 @pytest.mark.parametrize("model_arch", TEST_MODEL_ARCH_LIST)
-def test_components_pytorch_image_classifier(
+def test_components_pytorch_image_classifier_single_node(
     mlflow_start_run_mock,
     mlflow_log_params_mock,
     mlflow_pytorch_log_model_mock,
@@ -119,3 +121,91 @@ def test_components_pytorch_image_classifier(
     assert kwargs["artifact_path"] == "final_model"
     assert "registered_model_name" in kwargs
     assert kwargs["registered_model_name"] == "foo"
+
+
+@patch("mlflow.end_run") # we can have only 1 start/end per test session
+@patch("mlflow.pytorch.log_model") # patched to test model name registration
+@patch("mlflow.log_params") # patched to avoid conflict in parameters
+@patch("mlflow.start_run") # we can have only 1 start/end per test session
+@patch("torch.distributed.init_process_group") # to avoid calling for the actual thing
+@patch("torch.nn.parallel.DistributedDataParallel") # to avoid calling for the actual thing
+@pytest.mark.parametrize("backend", ['nccl', 'mpi'])
+def test_components_pytorch_image_classifier_two_nodes_nccl_backend(
+    torch_ddp_mock,
+    torch_dist_init_process_group_mock,
+    mlflow_start_run_mock,
+    mlflow_log_params_mock,
+    mlflow_pytorch_log_model_mock,
+    mlflow_end_run_mock,
+    backend,
+    temporary_dir,
+    random_image_in_folder_classes,
+):
+    """Tests src/components/pytorch_image_classifier/train.py"""
+    model_dir = os.path.join(temporary_dir, "pytorch_image_classifier_distributed_model")
+
+    torch_ddp_mock.side_effect = lambda model: model# ddp would return just the model
+
+    # create some environment variables for the backend
+    if backend == "nccl":
+        backend_expected_env = {
+            # setup as if there were 2 nodes with 1 gpu each
+            'WORLD_SIZE': '2',
+            'RANK': '1',
+            'LOCAL_WORLD_SIZE': '1',
+            'LOCAL_RANK': '0',
+        }
+    elif backend == "mpi":
+        backend_expected_env = {
+            # setup as if there were 2 nodes with 1 gpu each
+            'OMPI_COMM_WORLD_SIZE': '2',
+            'OMPI_COMM_WORLD_RANK': '1',
+            'OMPI_COMM_WORLD_LOCAL_SIZE': '1',
+            'OMPI_COMM_WORLD_LOCAL_RANK': '0',
+        }
+    else:
+        raise Exception("backend {} used for testing is not implemented in script.")
+
+
+    with patch.dict(os.environ, backend_expected_env, clear=False):
+        # create test arguments for the script
+        script_args = [
+            "train.py",
+            "--train_images",
+            random_image_in_folder_classes,
+            "--valid_images",
+            random_image_in_folder_classes,  # using same data for train/valid
+            "--distributed_backend",
+            backend,
+            "--batch_size",
+            "16",
+            "--num_workers",
+            "0",  # single thread pre-fetching
+            "--prefetch_factor",
+            "2",  # will be discarded if num_workers=0
+            "--pin_memory",
+            "True",
+            "--non_blocking",
+            "False",
+            "--model_arch",
+            "resnet18",
+            "--model_arch_pretrained",
+            "True",
+            "--num_epochs",
+            "1",
+            "--register_model_as",
+            "foo",
+        ]
+
+        # replaces sys.argv with test arguments and run main
+        with patch.object(sys, "argv", script_args):
+            train.main()
+
+    # those mlflow calls must be unique in the script
+    mlflow_start_run_mock.assert_called_once()
+    mlflow_end_run_mock.assert_called_once()
+
+    mlflow_pytorch_log_model_mock.assert_not_called() # not saving from non-head nodes
+
+    torch_dist_init_process_group_mock.assert_called_once()
+    torch_dist_init_process_group_mock.assert_called_with(backend, rank=1, world_size=2)
