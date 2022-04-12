@@ -1,20 +1,17 @@
 """
 Tests running the pytorch_image_classifier/model/ loader
 """
-import os
-import sys
-import tempfile
 import pytest
-from unittest.mock import patch
+import torch
 
-import numpy as np
-from PIL import Image
-
-from components.pytorch_image_classifier.model import MODEL_ARCH_LIST, get_model_metadata, load_model
+from components.pytorch_image_classifier.model import (
+    MODEL_ARCH_LIST,
+    get_model_metadata,
+    load_model,
+)
 
 # IMPORTANT: see conftest.py for fixtures
 
-# we only care about patching those specific mlflow methods
 @pytest.mark.parametrize("model_arch", MODEL_ARCH_LIST)
 def test_model_loader(model_arch):
     """Tests src/components/pytorch_image_classifier/model/"""
@@ -27,3 +24,15 @@ def test_model_loader(model_arch):
 
     # using pretrained=False to avoid downloading each time we unit test
     model = load_model(model_arch, output_dimension=4, pretrained=False)
+
+    assert model is not None
+    assert isinstance(model, torch.nn.Module)
+
+
+def test_model_loader_failure():
+    """Test asking for a model that deosn't exist"""
+    with pytest.raises(NotImplementedError):
+        get_model_metadata("not_a_model")
+
+    with pytest.raises(NotImplementedError):
+        load_model("not_a_model", output_dimension=4, pretrained=False)
