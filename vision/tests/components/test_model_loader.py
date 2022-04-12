@@ -22,14 +22,17 @@ def test_model_loader(model_arch):
     assert "library" in model_metadata
     assert "input_size" in model_metadata
 
-    with pytest.raises(NotImplementedError):
-        get_model_metadata("not_a_model")
-
     # using pretrained=False to avoid downloading each time we unit test
     model = load_model(model_arch, output_dimension=4, pretrained=False)
 
     assert model is not None
     assert isinstance(model, torch.nn.Module)
+
+
+def test_model_loader_failure():
+    """Test asking for a model that deosn't exist"""
+    with pytest.raises(NotImplementedError):
+        get_model_metadata("not_a_model")
 
     with pytest.raises(NotImplementedError):
         load_model("not_a_model", output_dimension=4, pretrained=False)
