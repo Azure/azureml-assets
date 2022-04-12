@@ -18,7 +18,12 @@ def load_torchvision_model(
     logger.info(
         f"Loading model from arch={model_arch} pretrained={pretrained} output_dimension={output_dimension}"
     )
-    model = getattr(models, model_arch)(pretrained=pretrained)
+    if hasattr(models, model_arch):
+        model = getattr(models, model_arch)(pretrained=pretrained)
+    else:
+        raise NotImplementedError(
+            f"model_arch={model_arch} is not implemented in torchvision model zoo."
+        )
 
     # see https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html
     if model_arch.startswith("resnet"):
