@@ -73,7 +73,11 @@ jobs:
           ref: release
           fetch-depth: 0
           path: ${{ env.RELEASE_DIR }}
-      
+
+      - name: Update release branch
+        #if: steps.changed-environments.outputs.any_changed == 'false' || steps.changed-scripts.outputs.any_changed == 'true'
+        run: python -u $SCRIPTS_DIR/update_release.py -i "${{ inputs.image_dirs }}" -r ${{ env.RELEASE_DIR }}
+
       - name: Build all images
         if: steps.changed-environments.outputs.any_changed == 'false' || steps.changed-scripts.outputs.any_changed == 'true'
         run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -a ${{ inputs.asset_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k IMAGE_NAMES
