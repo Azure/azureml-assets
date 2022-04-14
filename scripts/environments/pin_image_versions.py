@@ -60,9 +60,9 @@ def pin_images(contents: str) -> str:
         if not match:
             break
         repo = match.group(1)
-        print(f"Finding latest image tag/digest for {repo}")
+        logger.log_debug(f"Finding latest image tag/digest for {repo}")
         suffix = get_latest_image_suffix(repo)
-        print(f"Latest image reference is {repo}{suffix}")
+        logger.log_debug(f"Latest image reference is {repo}{suffix}")
         contents = contents[:match.start()] + f"{repo}{suffix}" + contents[match.end():]
 
     return contents

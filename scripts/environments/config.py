@@ -19,8 +19,12 @@ class Config:
     def __init__(self, file_name: str):
         with open(file_name) as f:
             self._yaml = safe_load(f)
-        self._file_name = file_name
+        self._file_name = os.path.basename(file_name)
         self._file_path = os.path.dirname(file_name)
+
+    @property
+    def file_name(self) -> str:
+        return self._file_name
 
     @property
     def file_path(self) -> str:
@@ -67,9 +71,11 @@ class AssetConfig(Config):
         super().__init__(file_name)
         self._validate()
 
+    def __str__(self) -> str:
+        return f"{self.name} v{self.version}"
+
     def _validate(self):
         Config._validate_exists('name', self.spec)
-        Config._validate_exists('version', self.spec)
         Config._validate_enum('type', self._type, AssetType, True)
         Config._validate_exists('spec', self.spec)
 
@@ -83,7 +89,8 @@ class AssetConfig(Config):
 
     @property
     def version(self) -> str:
-        return str(self._yaml.get('version'))
+        version = self._yaml.get('version')
+        return str(version) if version is not None else None
 
     @property
     def type(self) -> AssetType:
@@ -96,6 +103,10 @@ class AssetConfig(Config):
     @property
     def spec_with_path(self) -> str:
         return self._append_to_file_path(self.spec)
+
+    def get_spec_contents(self) -> object:
+        with open(self.spec_with_path) as f:
+            return safe_load(f)
 
     @property
     def extra_config(self) -> str:
@@ -168,6 +179,9 @@ class EnvironmentConfig(Config):
         if self._publish:
             Config._validate_enum('publish.location', self._publish_location, PublishLocation, True)
             Config._validate_enum('publish.visibility', self._publish_visibility, PublishVisibility, True)
+
+        if ".." in self.context_dir:
+            raise ValidationException(f"Invalid context.dir property: {self.context_dir} refers to a parent directory")
 
     @property
     def _image(self) -> Dict[str, object]:

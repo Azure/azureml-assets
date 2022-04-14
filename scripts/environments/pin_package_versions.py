@@ -61,9 +61,9 @@ def pin_packages(contents: str) -> str:
             break
         package = match.group(1)
         selector = match.group(2)
-        print(f"Looking up latest version of {package}")
+        logger.log_debug(f"Looking up latest version of {package}")
         version = get_latest_package_version(package, package_finder)
-        print(f"Latest version of {package} is {version}")
+        logger.log_debug(f"Latest version of {package} is {version}")
         contents = contents[:match.start()] + f"{package}{selector}{version}" + contents[match.end():]
 
     return contents

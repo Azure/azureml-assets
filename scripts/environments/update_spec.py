@@ -3,15 +3,19 @@ import chevron
 from config import AssetConfig, AssetType, EnvironmentConfig, PublishLocation
 
 
-def update(asset_config_file: str, output_file: str = None):
-    # Read configs
-    asset_config = AssetConfig(asset_config_file)
+def update(asset_config: AssetConfig, output_file: str = None, version: str = None):
+    """Update template tags in an asset's spec file using data from the asset config and any extra configs.
 
+    Args:
+        asset_config (AssetConfig): AssetConfig object
+        output_file (str, optional): File to which updated spec file will be written. If unspecified, the original spec file will be updated.
+        version (str, optional): Version to use instead of the one in the asset config file.
+    """
     # Create data
     data = {
         'asset': {
             'name': asset_config.name,
-            'version': asset_config.version,
+            'version': version or asset_config.version,
         }
     }
 
