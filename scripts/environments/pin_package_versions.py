@@ -23,10 +23,19 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
     selection_prefs = SelectionPreferences(
         allow_yanked=True,
     )
-    return PackageFinder.create(
-        link_collector=link_collector,
-        selection_prefs=selection_prefs,
-    )
+    try:
+        return PackageFinder.create(
+            link_collector=link_collector,
+            selection_prefs=selection_prefs,
+        )
+    except TypeError:
+        # Handle pip>=22.0
+        return PackageFinder.create(
+            link_collector=link_collector,
+            selection_prefs=selection_prefs,
+            use_deprecated_html5lib=False
+        )
+
 
 
 def get_latest_package_version(package: str,
