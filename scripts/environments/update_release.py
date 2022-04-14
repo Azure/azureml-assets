@@ -120,11 +120,11 @@ def update_release(image_dirs: List[str], asset_config_filename: str, release_di
                 new_version = update_asset(asset_config=asset_config,
                                            release_directory_root=release_directory_root)
                 if new_version:
-                    logger.log_debug(f"Updated {asset_config.type.value} {asset_config.name} to version {new_version}")
+                    print(f"Updated {asset_config.type.value} {asset_config.name} to version {new_version}")
                     updated_count += 1
                 else:
                     logger.log_debug(f"No changes detected for {asset_config.type.value} {asset_config.name}")
-    logger.log_debug(f"{updated_count} of {asset_count} asset(s) updated")
+    print(f"{updated_count} of {asset_count} asset(s) updated")
 
 
 if __name__ == '__main__':
