@@ -63,6 +63,11 @@ jobs:
       - name: Create build logs directory
         run: mkdir ${{ inputs.build_log_dir }}
       
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v3
+        with:
+          python-version: '>=3.8'
+    
       - name: Install dependencies
         run: pip install -r $SCRIPTS_DIR/requirements.txt
       
