@@ -55,6 +55,7 @@ jobs:
       - name: Create commit and push
         run: |
           if [[ -n $(git status -s) ]]; then
+            echo "No updates to the release branch"
             exit 0
           fi
           git add -A .
