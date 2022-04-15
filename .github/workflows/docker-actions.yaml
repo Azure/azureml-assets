@@ -22,11 +22,9 @@ on:
       build_artifact_name:
         required: false
         type: string
-      target_image_prefix:
-        required: false
-        type: string
 
 env:
+  RELEASE_DIR: release
   SCRIPTS_DIR: scripts/environments
 
 defaults:
@@ -39,7 +37,8 @@ jobs:
     runs-on: ${{ inputs.machine_type }}
     
     steps:
-      - uses: actions/checkout@v2
+      - name: Clone branch
+        uses: actions/checkout@v3
         with:
           fetch-depth: 2
       
@@ -61,6 +60,11 @@ jobs:
       - name: Create build logs directory
         run: mkdir ${{ inputs.build_log_dir }}
       
+      - name: Use Python 3.8 or newer
+        uses: actions/setup-python@v3
+        with:
+          python-version: '>=3.8'
+    
       - name: Install dependencies
         run: pip install -r $SCRIPTS_DIR/requirements.txt
       
@@ -72,7 +76,8 @@ jobs:
         if: steps.changed-environments.outputs.any_changed == 'true' && steps.changed-scripts.outputs.any_changed == 'false'
         run: python -u $SCRIPTS_DIR/build.py -i "${{ inputs.image_dirs }}" -a ${{ inputs.asset_config_filename }} -o ${{ inputs.os_to_build }} -l ${{ inputs.build_log_dir }} -k IMAGE_NAMES -c "${{ steps.changed-environments.outputs.all_changed_and_modified_files }}"
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload build logs
+        uses: actions/upload-artifact@v2
         if: always()
         with:
           name: ${{ inputs.build_artifact_name || inputs.build_log_dir }}
@@ -81,15 +86,3 @@ jobs:
       - name: Test images
         if: env.IMAGE_NAMES != ''
         run: python -u $SCRIPTS_DIR/test.py -i "$IMAGE_NAMES"
-
-      - name: Log into registry
-        if: inputs.target_image_prefix != '' && env.IMAGE_NAMES != ''
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push images
-        if: inputs.target_image_prefix != '' && env.IMAGE_NAMES != ''
-        run: python -u $SCRIPTS_DIR/push.py -i "$IMAGE_NAMES" -t ${{ inputs.target_image_prefix }}
