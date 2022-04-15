@@ -54,9 +54,9 @@ jobs:
   
       - name: Create commit and push
         run: |
-          if [[ -n $(git status -s) ]]; then
+          if [[ -z $(git status -s) ]]; then
             echo "No updates to the release branch"
-            exit 0
+            return
           fi
           git add -A .
           git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
