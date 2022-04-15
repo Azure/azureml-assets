@@ -11,8 +11,6 @@ on:
     paths:
       - general/src/environments/**
       - scripts/environments/**
-  schedule:
-    - cron: '30 6 * * *'
   workflow_dispatch:
     inputs:
       image_dirs:
