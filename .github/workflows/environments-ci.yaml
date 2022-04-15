@@ -1,10 +1,6 @@
 name: environments-ci
 
 on:
-  push:
-    # FIXME: Remove this before merging to main
-    branches:
-      - elesel/work-with-release-branch
   pull_request:
     branches:
       - main
