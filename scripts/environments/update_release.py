@@ -1,43 +1,27 @@
 import argparse
-import filecmp
 import os
+import pygit2
 import shutil
 import tempfile
 from typing import List
 
 from build import pin_env_files
-from config import AssetConfig, AssetType, EnvironmentConfig
 from ci_logger import logger
+from config import AssetConfig, AssetType, EnvironmentConfig
 from update_spec import update as update_spec
+from util import are_dir_trees_equal
 
+TAG_TEMPLATE = "refs/tags/{name}"
+RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
 RELEASE_SUBDIR_TEMPLATE = "latest/{type}/{name}"
 
 
-# See https://stackoverflow.com/questions/4187564/recursively-compare-two-directories-to-ensure-they-have-the-same-files-and-subdi
-def are_dir_trees_equal(dir1: str, dir2: str) -> bool:
-    """Comparee two directories recursively based on files names and content.
-
-    Args:
-        dir1 (str): First directory
-        dir2 (str): Second directory
-
-    Returns:
-        bool: True if the directory trees are the same and there were no errors
-            while accessing the directories or files, False otherwise.
-    """
-
-    dirs_cmp = filecmp.dircmp(dir1, dir2)
-    if dirs_cmp.left_only or dirs_cmp.right_only or dirs_cmp.funny_files:
-        return False
-    (_, mismatch, errors) = filecmp.cmpfiles(dir1, dir2, dirs_cmp.common_files, shallow=False)
-    if mismatch or errors:
-        return False
-    for common_dir in dirs_cmp.common_dirs:
-        new_dir1 = os.path.join(dir1, common_dir)
-        new_dir2 = os.path.join(dir2, common_dir)
-        if not are_dir_trees_equal(new_dir1, new_dir2):
-            return False
-    return True
+def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):
+    # Check git repo for version-specific tag
+    repo = pygit2.Repository(release_directory_root)
+    version_tag = RELEASE_TAG_VERSION_TEMPLATE.format(type=asset_config.type.value, name=asset_config.name,
+                                                      version=asset_config.version)
+    return repo.references.get(TAG_TEMPLATE.format(name=version_tag)) is not None
 
 
 def update_asset(asset_config: AssetConfig, release_directory_root: str) -> str:
@@ -60,6 +44,11 @@ def update_asset(asset_config: AssetConfig, release_directory_root: str) -> str:
             release_version = release_asset_config.version
             if current_version == release_version:
                 # No version change
+                return None
+            if not release_tag_exists(release_asset_config, release_directory_root):
+                # Skip a non-released version
+                logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
+                                   f"version {release_asset_config.version} hasn't been released yet")
                 return None
         else:
             # Dynamic releases, will need to check contents

@@ -34,6 +34,13 @@ jobs:
         with:
           fetch-depth: 2
       
+      - name: Clone release branch
+        uses: actions/checkout@v3
+        with:
+          ref: release
+          fetch-depth: 0
+          path: ${{ env.RELEASE_DIR }}
+      
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
         with:
@@ -42,12 +49,5 @@ jobs:
       - name: Install dependencies
         run: pip install -r $SCRIPTS_DIR/requirements.txt
       
-      - name: Clone release branch
-        uses: actions/checkout@v3
-        with:
-          ref: release
-          fetch-depth: 0
-          path: ${{ env.RELEASE_DIR }}
-
       - name: Update release branch
         run: python -u $SCRIPTS_DIR/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $RELEASE_DIR
