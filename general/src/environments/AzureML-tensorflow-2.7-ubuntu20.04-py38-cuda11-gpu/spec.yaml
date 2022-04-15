@@ -5,7 +5,6 @@ description: >-
 
 # Should this have an azureml: prefix?
 #   See component's environment value of azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu:11
-# Remove me after testing
 name: {{asset.name}}
 display_name: {{asset.name}}
 version: {{asset.version}}

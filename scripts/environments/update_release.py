@@ -39,16 +39,17 @@ def update_asset(asset_config: AssetConfig, release_directory_root: str) -> str:
     if os.path.exists(release_dir):
         release_asset_config = AssetConfig(os.path.join(release_dir, asset_config.file_name))
 
+        if not release_tag_exists(release_asset_config, release_directory_root):
+            # Skip a non-released version
+            logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
+                                f"version {release_asset_config.version} hasn't been released yet")
+            return None
+
         if current_version:
             # Explicit releases, just check version
             release_version = release_asset_config.version
             if current_version == release_version:
                 # No version change
-                return None
-            if not release_tag_exists(release_asset_config, release_directory_root):
-                # Skip a non-released version
-                logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
-                                   f"version {release_asset_config.version} hasn't been released yet")
                 return None
         else:
             # Dynamic releases, will need to check contents
