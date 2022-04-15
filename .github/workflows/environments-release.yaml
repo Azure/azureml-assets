@@ -62,5 +62,5 @@ jobs:
           git config user.name "$GITHUB_WORKFLOW"
           git add -A .
           git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          #git push
+          git push
         working-directory: ${{ env.RELEASE_DIR }}
