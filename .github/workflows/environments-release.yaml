@@ -56,7 +56,7 @@ jobs:
         run: |
           if [[ -z $(git status -s) ]]; then
             echo "No updates to the release branch"
-            return
+            exit 0
           fi
           git config user.email "<>"
           git config user.name "$GITHUB_WORKFLOW"
