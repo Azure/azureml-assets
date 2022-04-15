@@ -53,6 +53,7 @@ def update_asset(asset_config: AssetConfig, release_directory_root: str) -> str:
 
         if not release_tag_exists(release_asset_config, release_directory_root):
             # Skip a non-released version
+            # TODO: Determine whether this should fail the workflow
             logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
                                 f"version {release_version} hasn't been released yet")
             return None
