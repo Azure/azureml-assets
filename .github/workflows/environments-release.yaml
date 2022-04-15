@@ -2,9 +2,10 @@ name: environments-release
 
 on:
   push:
-    # FIXME: Remove this before merging to main
     branches:
+      # FIXME: Remove this before merging to main
       - elesel/work-with-release-branch
+      - main
   schedule:
     - cron: '30 6 * * *'
   workflow_dispatch:
@@ -33,7 +34,7 @@ jobs:
         with:
           fetch-depth: 2
       
-      - name: Setup Python 3.8
+      - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
         with:
           python-version: '>=3.8'
@@ -49,4 +50,4 @@ jobs:
           path: ${{ env.RELEASE_DIR }}
 
       - name: Update release branch
-        run: python -u $SCRIPTS_DIR/update_release.py -i "${{ inputs.image_dirs }}" -r ${{ env.RELEASE_DIR }}
+        run: python -u $SCRIPTS_DIR/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $RELEASE_DIR

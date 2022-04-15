@@ -60,7 +60,7 @@ jobs:
       - name: Create build logs directory
         run: mkdir ${{ inputs.build_log_dir }}
       
-      - name: Setup Python 3.8
+      - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
         with:
           python-version: '>=3.8'
