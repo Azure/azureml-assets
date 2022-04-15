@@ -51,3 +51,13 @@ jobs:
       
       - name: Update release branch
         run: python -u $SCRIPTS_DIR/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $RELEASE_DIR
+  
+      - name: Create commit and push
+        run: |
+          if [[ -n $(git status -s) ]]; then
+            exit 0
+          fi
+          git add -A .
+          git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          #git push
+        working-directory: ${{ env.RELEASE_DIR }}
