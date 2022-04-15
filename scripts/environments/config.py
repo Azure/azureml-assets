@@ -72,10 +72,10 @@ class AssetConfig(Config):
         self._validate()
 
     def __str__(self) -> str:
-        return f"{self.name} v{self.version}"
+        return f"{self.name} {self.version}"
 
     def _validate(self):
-        Config._validate_exists('name', self.spec)
+        Config._validate_exists('name', self.name)
         Config._validate_enum('type', self._type, AssetType, True)
         Config._validate_exists('spec', self.spec)
 
@@ -103,10 +103,6 @@ class AssetConfig(Config):
     @property
     def spec_with_path(self) -> str:
         return self._append_to_file_path(self.spec)
-
-    def get_spec_contents(self) -> object:
-        with open(self.spec_with_path) as f:
-            return safe_load(f)
 
     @property
     def extra_config(self) -> str:
@@ -268,3 +264,31 @@ class EnvironmentConfig(Config):
     @property
     def environment_metadata(self) -> Dict[str, object]:
         return self._environment.get('metadata')
+
+
+class Spec(Config):
+    """
+    Example:
+
+    name: my-asset
+    version: 1
+    """
+    def __init__(self, file_name: str):
+        super().__init__(file_name)
+        self._validate()
+
+    def __str__(self) -> str:
+        return f"{self.name} {self.version}"
+
+    def _validate(self):
+        Config._validate_exists('name', self.name)
+        Config._validate_exists('version', self.version)
+
+    @property
+    def name(self) -> str:
+        return self._yaml.get('name')
+
+    @property
+    def version(self) -> str:
+        version = self._yaml.get('version')
+        return str(version) if version is not None else None

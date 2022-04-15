@@ -7,7 +7,7 @@ from typing import List
 
 from build import pin_env_files
 from ci_logger import logger
-from config import AssetConfig, AssetType, EnvironmentConfig
+from config import AssetConfig, AssetType, EnvironmentConfig, Spec
 from update_spec import update as update_spec
 from util import are_dir_trees_equal
 
@@ -30,8 +30,8 @@ def update_asset(asset_config: AssetConfig, release_directory_root: str) -> str:
                                                     name=asset_config.name)
     release_dir = os.path.join(release_directory_root, release_subdir)
 
-    # Get current version, set a few defaults
-    current_version = asset_config.version
+    # Get version from main branch, set a few defaults
+    main_version = asset_config.version
     release_version = None
     check_contents = False
 
@@ -39,23 +39,23 @@ def update_asset(asset_config: AssetConfig, release_directory_root: str) -> str:
     if os.path.exists(release_dir):
         release_asset_config = AssetConfig(os.path.join(release_dir, asset_config.file_name))
 
-        if not release_tag_exists(release_asset_config, release_directory_root):
-            # Skip a non-released version
-            logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
-                                f"version {release_asset_config.version} hasn't been released yet")
-            return None
-
-        if current_version:
+        if main_version:
             # Explicit releases, just check version
             release_version = release_asset_config.version
-            if current_version == release_version:
+            if main_version == release_version:
                 # No version change
                 return None
         else:
             # Dynamic releases, will need to check contents
-            spec = release_asset_config.get_spec_contents()
-            release_version = str(spec['version'])
+            release_spec = Spec(release_asset_config.spec_with_path)
+            release_version = release_spec.version
             check_contents = True
+
+        if not release_tag_exists(release_asset_config, release_directory_root):
+            # Skip a non-released version
+            logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
+                                f"version {release_version} hasn't been released yet")
+            return None
 
     with tempfile.TemporaryDirectory() as temp_dir:
         # Copy asset to temp directory and pin image/package versions
@@ -80,9 +80,9 @@ def update_asset(asset_config: AssetConfig, release_directory_root: str) -> str:
         shutil.copytree(temp_dir, release_dir)
 
         # Determine new version
-        if current_version:
+        if main_version:
             # Explicit versioning
-            new_version = current_version
+            new_version = main_version
         else:
             # Dynamic versioning
             new_version = int(release_version) + 1 if release_version else 1
