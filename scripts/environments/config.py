@@ -19,8 +19,12 @@ class Config:
     def __init__(self, file_name: str):
         with open(file_name) as f:
             self._yaml = safe_load(f)
-        self._file_name = file_name
+        self._file_name = os.path.basename(file_name)
         self._file_path = os.path.dirname(file_name)
+
+    @property
+    def file_name(self) -> str:
+        return self._file_name
 
     @property
     def file_path(self) -> str:
@@ -57,20 +61,36 @@ class AssetConfig(Config):
     """
     Example:
 
+    name: my-asset
+    version: 1
     type: environment
-    definition: spec.yaml
+    spec: spec.yaml
+    extra_config: environment.yaml
     """
     def __init__(self, file_name: str):
         super().__init__(file_name)
         self._validate()
 
+    def __str__(self) -> str:
+        return f"{self.name} {self.version}"
+
     def _validate(self):
+        Config._validate_exists('name', self.name)
         Config._validate_enum('type', self._type, AssetType, True)
         Config._validate_exists('spec', self.spec)
 
     @property
     def _type(self) -> str:
         return self._yaml.get('type')
+
+    @property
+    def name(self) -> str:
+        return self._yaml.get('name')
+
+    @property
+    def version(self) -> str:
+        version = self._yaml.get('version')
+        return str(version) if version is not None else None
 
     @property
     def type(self) -> AssetType:
@@ -116,6 +136,12 @@ class PublishVisibility(Enum):
     UNLISTED = 'unlisted'
 
 
+# Associates publish locations with their hostnames
+PUBLISH_LOCATION_HOSTNAMES = {
+    PublishLocation.MCR: 'mcr.microsoft.com'
+}
+
+
 class EnvironmentConfig(Config):
     """
     Example:
@@ -149,6 +175,9 @@ class EnvironmentConfig(Config):
         if self._publish:
             Config._validate_enum('publish.location', self._publish_location, PublishLocation, True)
             Config._validate_enum('publish.visibility', self._publish_visibility, PublishVisibility, True)
+
+        if ".." in self.context_dir:
+            raise ValidationException(f"Invalid context.dir property: {self.context_dir} refers to a parent directory")
 
     @property
     def _image(self) -> Dict[str, object]:
@@ -211,6 +240,11 @@ class EnvironmentConfig(Config):
         return PublishLocation(location) if location else None
 
     @property
+    def publish_location_hostname(self) -> str:
+        location = self._publish_location
+        return PUBLISH_LOCATION_HOSTNAMES[PublishLocation(location)] if location else None
+
+    @property
     def _publish_visibility(self) -> str:
         return self._publish.get('visibility')
 
@@ -230,3 +264,31 @@ class EnvironmentConfig(Config):
     @property
     def environment_metadata(self) -> Dict[str, object]:
         return self._environment.get('metadata')
+
+
+class Spec(Config):
+    """
+    Example:
+
+    name: my-asset
+    version: 1
+    """
+    def __init__(self, file_name: str):
+        super().__init__(file_name)
+        self._validate()
+
+    def __str__(self) -> str:
+        return f"{self.name} {self.version}"
+
+    def _validate(self):
+        Config._validate_exists('name', self.name)
+        Config._validate_exists('version', self.version)
+
+    @property
+    def name(self) -> str:
+        return self._yaml.get('name')
+
+    @property
+    def version(self) -> str:
+        version = self._yaml.get('version')
+        return str(version) if version is not None else None
