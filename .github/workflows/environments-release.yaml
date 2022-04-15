@@ -1,4 +1,4 @@
-name: environments-ci
+name: environments-release
 
 on:
   push:
