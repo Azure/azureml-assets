@@ -58,6 +58,31 @@ jobs:
           name: ${{ env.RELEASE_ARTIFACT }}
           path: ${{ runner.temp }}/${{ env.RELEASE_ARTIFACT }}
 
+  build-linux-images:
+    name: Build Linux images
+    runs-on: ubuntu-latest
+    needs: identify-updated-assets
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      
+      - name: Download changed assets
+        uses: actions/download-artifact@v3
+        with:
+          name: changed-assets
+          path: ${{ runner.temp }}/${{ env.RELEASE_ARTIFACT }}
+    
+      - name: Use Python 3.8 or newer
+        uses: actions/setup-python@v3
+        with:
+          python-version: '>=3.8'
+    
+      - name: Install dependencies
+        run: pip install -r $SCRIPTS_DIR/requirements.txt
+
   # release-environments:
   #   name: Release environments
   #   runs-on: ubuntu-latest
