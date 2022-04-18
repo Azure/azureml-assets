@@ -17,6 +17,7 @@ on:
 env:
   RELEASE_DIR: release
   SCRIPTS_DIR: scripts/environments
+  RELEASE_ARTIFACT: changed-assets
 
 defaults:
   run:
@@ -49,7 +50,13 @@ jobs:
         run: pip install -r $SCRIPTS_DIR/requirements.txt
       
       - name: Update release branch
-        run: python -u $SCRIPTS_DIR/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $RELEASE_DIR
+        run: python -u $SCRIPTS_DIR/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $RELEASE_DIR -o ${{ runner.temp }}/$RELEASE_ARTIFACT
+
+      - name: Upload changed assets
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.RELEASE_ARTIFACT }}
+          path: ${{ runner.temp }}/${{ env.RELEASE_ARTIFACT }}
 
   # release-environments:
   #   name: Release environments

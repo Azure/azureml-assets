@@ -24,7 +24,7 @@ def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):
     return repo.references.get(TAG_TEMPLATE.format(name=version_tag)) is not None
 
 
-def update_asset(asset_config: AssetConfig, release_directory_root: str) -> str:
+def update_asset(asset_config: AssetConfig, release_directory_root: str, output_directory_root: str) -> str:
     # Determine asset's release directory
     release_subdir = RELEASE_SUBDIR_TEMPLATE.format(type=asset_config.type.value,
                                                     name=asset_config.name)
@@ -55,7 +55,7 @@ def update_asset(asset_config: AssetConfig, release_directory_root: str) -> str:
             # Skip a non-released version
             # TODO: Determine whether this should fail the workflow
             logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
-                                f"version {release_version} hasn't been released yet")
+                               f"version {release_version} hasn't been released yet")
             return None
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -73,12 +73,15 @@ def update_asset(asset_config: AssetConfig, release_directory_root: str) -> str:
             if dirs_equal:
                 return None
 
-        # Delete release dir
-        if os.path.exists(release_dir):
-            shutil.rmtree(release_dir)
+        # Define output directory, which may be different from the release directory
+        output_directory = os.path.join(output_directory_root, release_subdir)
 
-        # Copy temp asset to release dir
-        shutil.copytree(temp_dir, release_dir)
+        # Delete output dir
+        if os.path.exists(output_directory):
+            shutil.rmtree(output_directory)
+
+        # Copy temp asset to output dir
+        shutil.copytree(temp_dir, output_directory)
 
         # Determine new version
         if main_version:
@@ -89,14 +92,15 @@ def update_asset(asset_config: AssetConfig, release_directory_root: str) -> str:
             new_version = int(release_version) + 1 if release_version else 1
 
         # Update version in spec by copying clean spec and updating it
-        shutil.copyfile(asset_config.spec_with_path, os.path.join(release_dir, asset_config.spec))
-        release_asset_config = AssetConfig(os.path.join(release_dir, asset_config.file_name))
-        update_spec(release_asset_config, version=str(new_version))
+        shutil.copyfile(asset_config.spec_with_path, os.path.join(output_directory, asset_config.spec))
+        output_asset_config = AssetConfig(os.path.join(output_directory, asset_config.file_name))
+        update_spec(output_asset_config, version=str(new_version))
 
         return new_version
 
 
-def update_release(image_dirs: List[str], asset_config_filename: str, release_directory_root: str):
+def update_release(image_dirs: List[str], asset_config_filename: str, release_directory_root: str,
+                   output_directory_root: str):
     # Find environments under image root directories
     asset_count = 0
     updated_count = 0
@@ -109,7 +113,8 @@ def update_release(image_dirs: List[str], asset_config_filename: str, release_di
 
                 # Update asset if it's changed
                 new_version = update_asset(asset_config=asset_config,
-                                           release_directory_root=release_directory_root)
+                                           release_directory_root=release_directory_root,
+                                           output_directory_root=output_directory_root)
                 if new_version:
                     print(f"Updated {asset_config.type.value} {asset_config.name} to version {new_version}")
                     updated_count += 1
@@ -124,11 +129,15 @@ if __name__ == '__main__':
     parser.add_argument("-i", "--image-dirs", required=True, help="Comma-separated list of directories containing image to build")
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
     parser.add_argument("-r", "--release-directory", required=True, help="Directory to which the release branch has been cloned")
+    parser.add_argument("-o", "--output-directory", help="Directory to which new/updated assets will be written, defaults to release directory")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
     image_dirs = args.image_dirs.split(",")
 
+    # Default output directory to release directory if unspecified
+    output_directory = args.output_directory or args.release_directory
+
     # Build images
     update_release(image_dirs=image_dirs, asset_config_filename=args.asset_config_filename,
-                   release_directory_root=args.release_directory)
+                   release_directory_root=args.release_directory, output_directory_root=args.output_directory)
