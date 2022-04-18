@@ -14,6 +14,7 @@ from util import are_dir_trees_equal
 TAG_TEMPLATE = "refs/tags/{name}"
 RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
 RELEASE_SUBDIR_TEMPLATE = "latest/{type}/{name}"
+OUTPUT_SUBDIR_TEMPLATE = "{type}/{name}"
 
 
 def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):
@@ -24,7 +25,10 @@ def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):
     return repo.references.get(TAG_TEMPLATE.format(name=version_tag)) is not None
 
 
-def update_asset(asset_config: AssetConfig, release_directory_root: str, output_directory_root: str) -> str:
+def update_asset(asset_config: AssetConfig,
+                 release_directory_root: str,
+                 release_subdirectory: str = None,
+                 output_directory_root: str = None) -> str:
     # Determine asset's release directory
     release_subdir = RELEASE_SUBDIR_TEMPLATE.format(type=asset_config.type.value,
                                                     name=asset_config.name)
@@ -74,7 +78,12 @@ def update_asset(asset_config: AssetConfig, release_directory_root: str, output_
                 return None
 
         # Define output directory, which may be different from the release directory
-        output_directory = os.path.join(output_directory_root, release_subdir)
+        if output_directory_root:
+            output_subdir = OUTPUT_SUBDIR_TEMPLATE.format(type=asset_config.type.value,
+                                                          name=asset_config.name)
+            output_directory = os.path.join(output_directory_root, output_subdir)
+        else:
+            output_directory = release_dir
 
         # Delete output dir
         if os.path.exists(output_directory):
@@ -99,8 +108,10 @@ def update_asset(asset_config: AssetConfig, release_directory_root: str, output_
         return new_version
 
 
-def update_release(image_dirs: List[str], asset_config_filename: str, release_directory_root: str,
-                   output_directory_root: str):
+def update_release(image_dirs: List[str],
+                   asset_config_filename: str,
+                   release_directory_root: str,
+                   output_directory_root: str = None):
     # Find environments under image root directories
     asset_count = 0
     updated_count = 0
@@ -135,9 +146,8 @@ if __name__ == '__main__':
     # Convert comma-separated values to lists
     image_dirs = args.image_dirs.split(",")
 
-    # Default output directory to release directory if unspecified
-    output_directory = args.output_directory or args.release_directory
-
     # Build images
-    update_release(image_dirs=image_dirs, asset_config_filename=args.asset_config_filename,
-                   release_directory_root=args.release_directory, output_directory_root=args.output_directory)
+    update_release(image_dirs=image_dirs,
+                   asset_config_filename=args.asset_config_filename,
+                   release_directory_root=args.release_directory,
+                   output_directory_root=args.output_directory)
