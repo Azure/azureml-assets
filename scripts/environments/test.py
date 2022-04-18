@@ -5,6 +5,8 @@ from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
 from typing import List
 
+from ci_logger import logger
+
 TEST_PHRASE = "hello world!"
 
 
@@ -24,8 +26,9 @@ def test_images(image_names: List[str]):
         # Test image
         (return_code, output) = test_image(image_name)
         if return_code != 0 or not output.startswith(TEST_PHRASE):
-            print(f"::error title=Testing failure::Failed to test {image_name}: {output}")
-            sys.exit(1)
+            logger.log_error(f"Test failure on {image_name}: {output}", title="Testing failure")
+        else:
+            logger.log_debug(f"Test successful on {image_name}")
 
 
 if __name__ == '__main__':

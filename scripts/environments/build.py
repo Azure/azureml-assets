@@ -109,8 +109,9 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
             logger.end_group()
             if return_code != 0:
                 logger.log_error(f"Build of {image_name} failed with exit status {return_code}", "Build failure")
-                sys.exit(1)
-            image_names.append(image_name)
+            else:
+                logger.log_debug(f"Successfully built {image_name}")
+                image_names.append(image_name)
 
         # Make list of image names available to following steps
         create_github_env_var(image_names_key, ",".join(image_names))
