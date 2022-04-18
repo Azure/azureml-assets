@@ -66,7 +66,7 @@ jobs:
 
     env:
       os_to_build: linux
-      build_log_dir: ${{ runner.temp }}/build-logs
+      build_log_dir: build-logs
       build_log_artifact_name: build-logs-linux
 
     steps:
@@ -92,14 +92,14 @@ jobs:
       # TODO: Update this so that per-image failures don't kill the whole thing
       # TODO: Make it delete failed envs from changed_assets_dir
       - name: Build images
-        run: python -u $scripts_dir/build.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o $os_to_build -l $build_log_dir -k IMAGE_NAMES
+        run: python -u $scripts_dir/build.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o $os_to_build -l ${{ runner.temp }}/$build_log_dir -k IMAGE_NAMES
 
       - name: Upload build logs
         uses: actions/upload-artifact@v2
         if: always()
         with:
           name: ${{ env.build_log_artifact_name }}
-          path: ${{ env.build_log_dir }}
+          path: ${{ runner.temp }}/${{ env.build_log_dir }}
 
       - name: Test images
         if: env.IMAGE_NAMES != ''
