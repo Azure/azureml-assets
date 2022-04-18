@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - elesel/build-and-test-before-release
   schedule:
     - cron: '30 6 * * *'
   workflow_dispatch:
@@ -22,10 +23,10 @@ defaults:
     shell: bash
 
 jobs:
-  release-environments:
-    name: Release environments
+  identify-updated-assets:
+    name: Identify updated assets
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Clone branch
         uses: actions/checkout@v3
@@ -49,16 +50,44 @@ jobs:
       
       - name: Update release branch
         run: python -u $SCRIPTS_DIR/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $RELEASE_DIR
+
+  # release-environments:
+  #   name: Release environments
+  #   runs-on: ubuntu-latest
+    
+  #   steps:
+  #     - name: Clone branch
+  #       uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 2
+      
+  #     - name: Clone release branch
+  #       uses: actions/checkout@v3
+  #       with:
+  #         ref: release
+  #         fetch-depth: 0
+  #         path: ${{ env.RELEASE_DIR }}
+      
+  #     - name: Use Python 3.8 or newer
+  #       uses: actions/setup-python@v3
+  #       with:
+  #         python-version: '>=3.8'
+    
+  #     - name: Install dependencies
+  #       run: pip install -r $SCRIPTS_DIR/requirements.txt
+      
+  #     - name: Update release branch
+  #       run: python -u $SCRIPTS_DIR/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $RELEASE_DIR
   
-      - name: Create commit and push
-        run: |
-          if [[ -z $(git status -s) ]]; then
-            echo "No updates to the release branch"
-            exit 0
-          fi
-          git config user.email "<>"
-          git config user.name "$GITHUB_WORKFLOW"
-          git add -A .
-          git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          git push
-        working-directory: ${{ env.RELEASE_DIR }}
+  #     - name: Create commit and push
+  #       run: |
+  #         if [[ -z $(git status -s) ]]; then
+  #           echo "No updates to the release branch"
+  #           exit 0
+  #         fi
+  #         git config user.email "<>"
+  #         git config user.name "$GITHUB_WORKFLOW"
+  #         git add -A .
+  #         git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+  #         git push
+  #       working-directory: ${{ env.RELEASE_DIR }}
