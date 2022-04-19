@@ -39,7 +39,7 @@ def test_images(image_dirs: List[str],
 
                 # Filter by OS
                 if os_to_test and env_config.os.value != os_to_test:
-                    print(f"Not testing {env_config.image_name}: Operating system {env_config.os} != {os_to_test}")
+                    print(f"Not testing {env_config.image_name}: Operating system {env_config.os.value} != {os_to_test}")
                     continue
 
                 # Test image

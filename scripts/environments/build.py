@@ -90,7 +90,7 @@ def build_images(image_dirs: List[str],
 
                     # Filter by OS
                     if os_to_build and env_config.os.value != os_to_build:
-                        print(f"Skipping build of {env_config.image_name}: Operating system {env_config.os} != {os_to_build}")
+                        print(f"Skipping build of {env_config.image_name}: Operating system {env_config.os.value} != {os_to_build}")
                         continue
 
                     # If provided, skip directories with no changed files
