@@ -52,7 +52,7 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact -p
+        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
 
       # TODO: Find a way to exit without generating a notification email
       - name: Upload changed assets
@@ -152,7 +152,7 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i ${{ runner.temp }}/$tested_assets_artifact -r $release_dir
+        run: python -u $scripts_dir/update_release.py -i ${{ runner.temp }}/$tested_assets_artifact -r $release_dir -c
   
       - name: Create commit and push
         run: |
