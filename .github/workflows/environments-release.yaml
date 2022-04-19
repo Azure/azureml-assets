@@ -52,7 +52,7 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
+        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact -p
 
       # TODO: Find a way to exit without generating a notification email
       - name: Upload changed assets
@@ -63,7 +63,7 @@ jobs:
           if-no-files-found: error  
 
   build-images:
-    name: Build images
+    name: Build and test images
     runs-on: ${{ matrix.runs_on }}
     needs: identify-updated-assets
 
@@ -80,17 +80,17 @@ jobs:
       build_log_artifact_name: build-logs-${{ matrix.os }}
 
     steps:
+      - name: Download changed assets
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.changed_assets_artifact }}
+          path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
+    
       - name: Clone branch
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
       
-      - name: Download changed assets
-        uses: actions/download-artifact@v3
-        with:
-          name: changed-assets
-          path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
-    
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
         with:
@@ -119,43 +119,42 @@ jobs:
           name: ${{ env.tested_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
 
-  # release-environments:
-  #   name: Release environments
-  #   runs-on: ubuntu-latest
+  release-environments:
+    name: Release environments
+    runs-on: ubuntu-latest
+    needs: build-images
     
-  #   steps:
-  #     - name: Clone branch
-  #       uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: 2
+    steps:
+      - name: Download tested assets
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.tested_assets_artifact }}
+          path: ${{ runner.temp }}/${{ env.tested_assets_artifact }}
       
-  #     - name: Clone release branch
-  #       uses: actions/checkout@v3
-  #       with:
-  #         ref: release
-  #         fetch-depth: 0
-  #         path: ${{ env.release_dir }}
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Clone release branch
+        uses: actions/checkout@v3
+        with:
+          ref: release
+          fetch-depth: 0
+          path: ${{ env.release_dir }}
       
-  #     - name: Use Python 3.8 or newer
-  #       uses: actions/setup-python@v3
-  #       with:
-  #         python-version: '>=3.8'
-    
-  #     - name: Install dependencies
-  #       run: pip install -r $scripts_dir/requirements.txt
-      
-  #     - name: Update release branch
-  #       run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir
+      - name: Update release branch
+        run: python -u $scripts_dir/update_release.py -i ${{ runner.temp }}/${{ env.tested_assets_artifact }} -r $release_dir
   
-  #     - name: Create commit and push
-  #       run: |
-  #         if [[ -z $(git status -s) ]]; then
-  #           echo "No updates to the release branch"
-  #           exit 0
-  #         fi
-  #         git config user.email "<>"
-  #         git config user.name "$GITHUB_WORKFLOW"
-  #         git add -A .
-  #         git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-  #         git push
-  #       working-directory: ${{ env.release_dir }}
+      - name: Create commit and push
+        run: |
+          if [[ -z $(git status -s) ]]; then
+            echo "No updates to the release branch"
+            exit 0
+          fi
+          git config user.email "<>"
+          git config user.name "$GITHUB_WORKFLOW"
+          git add -A .
+          git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          git push
+        #working-directory: ${{ env.release_dir }}

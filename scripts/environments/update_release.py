@@ -27,7 +27,7 @@ def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):
 
 def update_asset(asset_config: AssetConfig,
                  release_directory_root: str,
-                 release_subdirectory: str = None,
+                 pin_dependencies: bool,
                  output_directory_root: str = None) -> str:
     # Determine asset's release directory
     release_subdir = RELEASE_SUBDIR_TEMPLATE.format(type=asset_config.type.value,
@@ -68,7 +68,8 @@ def update_asset(asset_config: AssetConfig,
         temp_asset_config = AssetConfig(os.path.join(temp_dir, asset_config.file_name))
         if asset_config.type is AssetType.ENVIRONMENT:
             temp_env_config = EnvironmentConfig(temp_asset_config.extra_config_with_path)
-            pin_env_files(temp_env_config)
+            if pin_dependencies:
+                pin_env_files(temp_env_config)
 
         # Compare temporary version with one in release
         if check_contents:
@@ -111,6 +112,7 @@ def update_asset(asset_config: AssetConfig,
 def update_release(image_dirs: List[str],
                    asset_config_filename: str,
                    release_directory_root: str,
+                   pin_dependencies: bool,
                    output_directory_root: str = None):
     # Find environments under image root directories
     asset_count = 0
@@ -125,6 +127,7 @@ def update_release(image_dirs: List[str],
                 # Update asset if it's changed
                 new_version = update_asset(asset_config=asset_config,
                                            release_directory_root=release_directory_root,
+                                           pin_dependencies=pin_dependencies,
                                            output_directory_root=output_directory_root)
                 if new_version:
                     print(f"Updated {asset_config.type.value} {asset_config.name} to version {new_version}")
@@ -141,6 +144,7 @@ if __name__ == '__main__':
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
     parser.add_argument("-r", "--release-directory", required=True, help="Directory to which the release branch has been cloned")
     parser.add_argument("-o", "--output-directory", help="Directory to which new/updated assets will be written, defaults to release directory")
+    parser.add_argument("-p", "--pin-dependencies", action="store_true", help="Pin assets to latest available dependencies")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
@@ -150,4 +154,5 @@ if __name__ == '__main__':
     update_release(image_dirs=image_dirs,
                    asset_config_filename=args.asset_config_filename,
                    release_directory_root=args.release_directory,
+                   pin_dependencies=args.pin_dependencies,
                    output_directory_root=args.output_directory)
