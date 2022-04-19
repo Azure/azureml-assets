@@ -57,7 +57,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--image-dirs", required=True, help="Comma-separated list of directories containing environments to test")
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
-    parser.add_argument("-d", "--delete-failed", type="store_true", help="Delete environments that failed tests")
+    parser.add_argument("-d", "--delete-failed", action="store_true", help="Delete environments that failed tests")
     parser.add_argument("-o", "--os-to-test", choices=[i.value for i in list(Os)], help="Only test environments based on this OS")
     args = parser.parse_args()
 

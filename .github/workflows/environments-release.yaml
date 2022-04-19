@@ -17,7 +17,7 @@ on:
 env:
   release_dir: release
   scripts_dir: scripts/environments
-  release_artifact: changed-assets
+  changed_assets_artifact: changed-assets
   tested_assets_artifact: tested-assets
   asset_config_filename: asset.yaml
 
@@ -52,14 +52,14 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$release_artifact
+        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
 
       # TODO: Find a way to exit without generating a notification email
       - name: Upload changed assets
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.release_artifact }}
-          path: ${{ runner.temp }}/${{ env.release_artifact }}
+          name: ${{ env.changed_assets_artifact }}
+          path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
           if-no-files-found: error  
 
   build-images:
@@ -89,7 +89,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: changed-assets
-          path: ${{ runner.temp }}/${{ env.release_artifact }}
+          path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
     
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -100,7 +100,7 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Build images
-        run: python -u $scripts_dir/build.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o ${{ matrix.os }} -l ${{ runner.temp }}/$build_log_dir -d -k IMAGE_NAMES
+        run: python -u $scripts_dir/build.py -i "${{ runner.temp }}/$changed_assets_artifact" -a $asset_config_filename -o ${{ matrix.os }} -l ${{ runner.temp }}/$build_log_dir -d -k IMAGE_NAMES
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3
@@ -111,13 +111,13 @@ jobs:
 
       - name: Test images
         if: env.IMAGE_NAMES != ''
-        run: python -u $scripts_dir/test.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o ${{ matrix.os }} -d
+        run: python -u $scripts_dir/test.py -i "${{ runner.temp }}/$changed_assets_artifact" -a $asset_config_filename -o ${{ matrix.os }} -d
       
       - name: Upload tested assets
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.tested_assets_artifact }}
-          path: ${{ runner.temp }}/${{ env.release_artifact }}
+          path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
 
   # release-environments:
   #   name: Release environments
