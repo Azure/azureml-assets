@@ -54,12 +54,13 @@ jobs:
       - name: Update release branch
         run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$release_artifact
 
+      # TODO: Find a way to exit without generating a notification email
       - name: Upload changed assets
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.release_artifact }}
           path: ${{ runner.temp }}/${{ env.release_artifact }}
-          if-no-files-found: error  # TODO: Find a way to do this without generating a notification email
+          if-no-files-found: error  
 
   build-images:
     name: Build images
