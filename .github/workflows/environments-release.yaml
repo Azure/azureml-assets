@@ -41,7 +41,7 @@ jobs:
         with:
           ref: release
           fetch-depth: 0
-          path: ${{ env.release_dir }}
+          path: ${{ runner.temp }}/${{ env.release_dir }}
       
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -52,7 +52,7 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact -p
+        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r ${{ runner.temp }}/$release_dir -o ${{ runner.temp }}/$changed_assets_artifact -p
 
       # TODO: Find a way to exit without generating a notification email
       - name: Upload changed assets
@@ -100,7 +100,7 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Build images
-        run: python -u $scripts_dir/build.py -i "${{ runner.temp }}/$changed_assets_artifact" -a $asset_config_filename -o ${{ matrix.os }} -l ${{ runner.temp }}/$build_log_dir -d -k IMAGE_NAMES
+        run: python -u $scripts_dir/build.py -i ${{ runner.temp }}/$changed_assets_artifact -a $asset_config_filename -o ${{ matrix.os }} -l ${{ runner.temp }}/$build_log_dir -d -k IMAGE_NAMES
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3
@@ -111,7 +111,7 @@ jobs:
 
       - name: Test images
         if: env.IMAGE_NAMES != ''
-        run: python -u $scripts_dir/test.py -i "${{ runner.temp }}/$changed_assets_artifact" -a $asset_config_filename -o ${{ matrix.os }} -d
+        run: python -u $scripts_dir/test.py -i ${{ runner.temp }}/$changed_assets_artifact -a $asset_config_filename -o ${{ matrix.os }} -d
       
       - name: Upload tested assets
         uses: actions/upload-artifact@v3
@@ -141,7 +141,7 @@ jobs:
         with:
           ref: release
           fetch-depth: 0
-          path: ${{ env.release_dir }}
+          path: ${{ runner.temp }}/${{ env.release_dir }}
 
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -152,7 +152,7 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i ${{ runner.temp }}/${{ env.tested_assets_artifact }} -r $release_dir
+        run: python -u $scripts_dir/update_release.py -i ${{ runner.temp }}/$tested_assets_artifact -r ${{ runner.temp }}/$release_dir
   
       - name: Create commit and push
         run: |
@@ -165,4 +165,4 @@ jobs:
           git add -A .
           git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           git push
-        #working-directory: ${{ env.release_dir }}
+        working-directory: ${{ runner.temp }}/${{ env.release_dir }}
