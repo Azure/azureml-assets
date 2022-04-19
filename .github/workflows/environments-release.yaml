@@ -53,21 +53,30 @@ jobs:
       - name: Update release branch
         run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$release_artifact
 
+      # TODO: Add something here to bail no updates were found
+
       - name: Upload changed assets
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.release_artifact }}
           path: ${{ runner.temp }}/${{ env.release_artifact }}
 
-  build-linux-images:
-    name: Build Linux images
-    runs-on: ubuntu-latest
+  build-images:
+    name: Build images
+    runs-on: ${{ matrix.runs_on }}
     needs: identify-updated-assets
 
+    strategy:
+      matrix:
+        os: [linux, windows]
+        include:
+        - os: linux
+          runs_on: ubuntu-latest
+        - os: windows
+          runs_on: windows-latest
     env:
-      os_to_build: linux
       build_log_dir: build-logs
-      build_log_artifact_name: build-logs-linux
+      build_log_artifact_name: build-logs-${{ matrix.os }}
 
     steps:
       - name: Clone branch
@@ -90,10 +99,10 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Build images
-        run: python -u $scripts_dir/build.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o $os_to_build -l ${{ runner.temp }}/$build_log_dir -d -k IMAGE_NAMES
+        run: python -u $scripts_dir/build.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o ${{ matrix.os }} -l ${{ runner.temp }}/$build_log_dir -d -k IMAGE_NAMES
 
       - name: Upload build logs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ${{ env.build_log_artifact_name }}
@@ -101,7 +110,7 @@ jobs:
 
       - name: Test images
         if: env.IMAGE_NAMES != ''
-        run: python -u $scripts_dir/test.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o $os_to_build -d
+        run: python -u $scripts_dir/test.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o ${{ matrix.os }} -d
 
   # release-environments:
   #   name: Release environments
