@@ -41,7 +41,7 @@ jobs:
         with:
           ref: release
           fetch-depth: 0
-          path: ${{ runner.temp }}/${{ env.release_dir }}
+          path: ${{ env.release_dir }}
       
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -52,7 +52,7 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r ${{ runner.temp }}/$release_dir -o ${{ runner.temp }}/$changed_assets_artifact -p
+        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact -p
 
       # TODO: Find a way to exit without generating a notification email
       - name: Upload changed assets
@@ -141,7 +141,7 @@ jobs:
         with:
           ref: release
           fetch-depth: 0
-          path: ${{ runner.temp }}/${{ env.release_dir }}
+          path: ${{ env.release_dir }}
 
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -152,7 +152,7 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i ${{ runner.temp }}/$tested_assets_artifact -r ${{ runner.temp }}/$release_dir
+        run: python -u $scripts_dir/update_release.py -i ${{ runner.temp }}/$tested_assets_artifact -r $release_dir
   
       - name: Create commit and push
         run: |
@@ -165,4 +165,4 @@ jobs:
           git add -A .
           git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           git push
-        working-directory: ${{ runner.temp }}/${{ env.release_dir }}
+        working-directory: ${{ env.release_dir }}
