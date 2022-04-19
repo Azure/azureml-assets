@@ -89,10 +89,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r $scripts_dir/requirements.txt
       
-      # TODO: Update this so that per-image failures don't kill the whole thing
-      # TODO: Make it delete failed envs from changed_assets_dir
       - name: Build images
-        run: python -u $scripts_dir/build.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o $os_to_build -l ${{ runner.temp }}/$build_log_dir -k IMAGE_NAMES
+        run: python -u $scripts_dir/build.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o $os_to_build -l ${{ runner.temp }}/$build_log_dir -d -k IMAGE_NAMES
 
       - name: Upload build logs
         uses: actions/upload-artifact@v2
@@ -103,7 +101,7 @@ jobs:
 
       - name: Test images
         if: env.IMAGE_NAMES != ''
-        run: python -u $scripts_dir/test.py -i "$IMAGE_NAMES"
+        run: python -u $scripts_dir/test.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o $os_to_build -d
 
   # release-environments:
   #   name: Release environments

@@ -64,9 +64,16 @@ def pin_env_files(env_config: EnvironmentConfig):
             logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
 
-def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_dir: str,
-                 max_parallel: int, changed_files: List[str], image_names_key: str,
-                 os_to_build: str = None, resource_group: str = None, registry: str = None):
+def build_images(image_dirs: List[str],
+                 asset_config_filename: str,
+                 delete_failed: bool,
+                 build_logs_dir: str,
+                 max_parallel: int,
+                 changed_files: List[str],
+                 image_names_key: str,
+                 os_to_build: str = None,
+                 resource_group: str = None,
+                 registry: str = None):
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find environments under image root directories
         futures = []
@@ -109,6 +116,8 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
             logger.end_group()
             if return_code != 0:
                 logger.log_error(f"Build of {image_name} failed with exit status {return_code}", "Build failure")
+                if delete_failed:
+                    asset_config.delete()
             else:
                 logger.log_debug(f"Successfully built {image_name}")
                 image_names.append(image_name)
@@ -120,8 +129,9 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--image-dirs", required=True, help="Comma-separated list of directories containing image to build")
+    parser.add_argument("-i", "--image-dirs", required=True, help="Comma-separated list of directories containing environments to build")
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
+    parser.add_argument("-d", "--delete-failed", type="store_true", help="Delete environments that fail to build")
     parser.add_argument("-l", "--build-logs-dir", required=True, help="Directory to receive build logs")
     parser.add_argument("-p", "--max-parallel", type=int, default=25, help="Maximum number of images to build at the same time")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter images")
@@ -140,6 +150,13 @@ if __name__ == '__main__':
     changed_files = args.changed_files.split(",") if args.changed_files else []
 
     # Build images
-    build_images(image_dirs=image_dirs, asset_config_filename=args.asset_config_filename, build_logs_dir=args.build_logs_dir,
-                 max_parallel=args.max_parallel, changed_files=changed_files, image_names_key=args.image_names_key,
-                 os_to_build=args.os_to_build, resource_group=args.resource_group, registry=args.registry)
+    build_images(image_dirs=image_dirs,
+                 asset_config_filename=args.asset_config_filename,
+                 delete_failed=args.delete_failed,
+                 build_logs_dir=args.build_logs_dir,
+                 max_parallel=args.max_parallel,
+                 changed_files=changed_files,
+                 image_names_key=args.image_names_key,
+                 os_to_build=args.os_to_build,
+                 resource_group=args.resource_group,
+                 registry=args.registry)
