@@ -18,6 +18,7 @@ env:
   release_dir: release
   scripts_dir: scripts/environments
   release_artifact: changed-assets
+  tested_assets_artifact: tested-assets
   asset_config_filename: asset.yaml
 
 defaults:
@@ -53,13 +54,12 @@ jobs:
       - name: Update release branch
         run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$release_artifact
 
-      # TODO: Add something here to bail no updates were found
-
       - name: Upload changed assets
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.release_artifact }}
           path: ${{ runner.temp }}/${{ env.release_artifact }}
+          if-no-files-found: error  # TODO: Find a way to do this without generating a notification email
 
   build-images:
     name: Build images
@@ -111,6 +111,12 @@ jobs:
       - name: Test images
         if: env.IMAGE_NAMES != ''
         run: python -u $scripts_dir/test.py -i "${{ runner.temp }}/$release_artifact" -a $asset_config_filename -o ${{ matrix.os }} -d
+      
+      - name: Upload tested assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.tested_assets_artifact }}
+          path: ${{ runner.temp }}/${{ env.release_artifact }}
 
   # release-environments:
   #   name: Release environments
