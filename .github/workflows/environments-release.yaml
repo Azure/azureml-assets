@@ -67,7 +67,8 @@ jobs:
         name: Prepare build and test matrix
         run: |
           os_regex=$(echo "${{ steps.update-release-branch.outputs.os_updates }}" | tr ',' '|')
-          matrix=$(jq -c --arg os_regex "$os_regex" 'map(. | select(.os | test($os_regex)) )' .github/includes/build-test-matrix.json)                
+          matrix=$(jq -c --arg os_regex "$os_regex" 'map(. | select(.os | test($os_regex)) )' .github/includes/build-test-matrix.json)
+          echo "matrix=$matrix"
           echo "::set-output name=matrix::$matrix"
 
     outputs:
