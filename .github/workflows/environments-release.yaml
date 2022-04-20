@@ -62,25 +62,30 @@ jobs:
           name: ${{ env.changed_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
           #if-no-files-found: error
+      
+      - id: prepare-matrix
+        name: Prepare build and test matrix
+        run: |
+          matrix=$(echo "${{ steps.update-release-branch.outputs.os_updates }}"" | sed -r -e 's/[^,]+/"&"/g')
+          echo '::set-output name=matrix::[$(echo $matrix)]'
 
     outputs:
       has_updates: ${{ steps.update-release-branch.has_updates }}
-      os_updates: ${{ steps.update-release-branch.os_updates }}
+      matrix: ${{ steps.prepare-matrix.outputs.matrix }}
 
   build-images:
-    if: contains(needs.identify-updated-assets.outputs.os_updates, ${{ matrix.os }})
     name: Build and test images
     runs-on: ${{ matrix.runs_on }}
     needs: identify-updated-assets
 
     strategy:
-      matrix:
-        os: [linux, windows]
-        include:
-        - os: linux
-          runs_on: ubuntu-latest
-        - os: windows
-          runs_on: windows-latest
+      matrix: ${{ fromJson(needs.identify-updated-assets.outputs.matrix) }}
+        # os: [linux, windows]
+        # include:
+        # - os: linux
+        #   runs_on: ubuntu-latest
+        # - os: windows
+        #   runs_on: windows-latest
     env:
       build_log_dir: build-logs
       build_log_artifact_name: build-logs-${{ matrix.os }}
