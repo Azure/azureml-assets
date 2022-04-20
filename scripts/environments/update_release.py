@@ -16,8 +16,8 @@ TAG_TEMPLATE = "refs/tags/{name}"
 RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
 RELEASE_SUBDIR_TEMPLATE = "latest/{type}/{name}"
 OUTPUT_SUBDIR_TEMPLATE = "{type}/{name}"
-OS_UPDATE_COUNT_TEMPLATE = "{os}_update_count"
-UPDATE_COUNT = "update_count"
+HAS_UPDATES = "has_updates"
+OS_UPDATES = "os_updates"
 
 
 def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):
@@ -158,9 +158,8 @@ def update_release(image_dirs: List[str],
     print(f"{updated_count} of {asset_count} asset(s) updated")
 
     # Set variables
-    logger.set_output(UPDATE_COUNT, updated_count)
-    for os_name, count in env_os_counter.items():
-        logger.set_output(OS_UPDATE_COUNT_TEMPLATE.format(os=os_name), count)
+    logger.set_output(HAS_UPDATES, "true" if updated_count > 0 else "false")
+    logger.set_output(OS_UPDATES, ",".join([n for n, c in env_os_counter.items if c > 0]))
 
 
 if __name__ == '__main__':
