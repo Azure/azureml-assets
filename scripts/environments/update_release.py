@@ -7,7 +7,8 @@ from typing import List
 
 from build import pin_env_files
 from ci_logger import logger
-from config import AssetConfig, AssetType, EnvironmentConfig, Spec
+from collections import Counter
+from config import AssetConfig, AssetType, EnvironmentConfig, Os, Spec
 from update_spec import update as update_spec
 from util import are_dir_trees_equal
 
@@ -15,6 +16,8 @@ TAG_TEMPLATE = "refs/tags/{name}"
 RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
 RELEASE_SUBDIR_TEMPLATE = "latest/{type}/{name}"
 OUTPUT_SUBDIR_TEMPLATE = "{type}/{name}"
+OS_UPDATE_COUNT_TEMPLATE = "{os}_update_count"
+UPDATE_COUNT = "update_count"
 
 
 def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):
@@ -33,9 +36,11 @@ def copy_replace_dir(source: str, dest: str):
     # Copy temp asset to output dir
     shutil.copytree(source, dest)
 
+
 def update_asset(asset_config: AssetConfig,
                  release_directory_root: str,
                  copy_only: bool,
+                 env_os_counter: Counter,
                  output_directory_root: str = None) -> str:
     # Determine asset's release directory
     release_subdir = RELEASE_SUBDIR_TEMPLATE.format(type=asset_config.type.value,
@@ -115,6 +120,11 @@ def update_asset(asset_config: AssetConfig,
         output_asset_config = AssetConfig(os.path.join(output_directory, asset_config.file_name))
         update_spec(output_asset_config, version=str(new_version))
 
+        # Count by OS
+        if asset_config.type is AssetType.ENVIRONMENT:
+            temp_env_config = EnvironmentConfig(temp_asset_config.extra_config_with_path)
+            env_os_counter[temp_env_config.os.value] += 1
+
         return new_version
 
 
@@ -126,6 +136,7 @@ def update_release(image_dirs: List[str],
     # Find environments under image root directories
     asset_count = 0
     updated_count = 0
+    env_os_counter = Counter({i.value: 0 for i in list(Os)})
     for image_dir in image_dirs:
         for root, _, files in os.walk(image_dir):
             for asset_config_file in [f for f in files if f == asset_config_filename]:
@@ -137,6 +148,7 @@ def update_release(image_dirs: List[str],
                 new_version = update_asset(asset_config=asset_config,
                                            release_directory_root=release_directory_root,
                                            copy_only=copy_only,
+                                           env_os_counter=env_os_counter,
                                            output_directory_root=output_directory_root)
                 if new_version:
                     print(f"Updated {asset_config.type.value} {asset_config.name} to version {new_version}")
@@ -144,6 +156,11 @@ def update_release(image_dirs: List[str],
                 else:
                     logger.log_debug(f"No changes detected for {asset_config.type.value} {asset_config.name}")
     print(f"{updated_count} of {asset_count} asset(s) updated")
+
+    # Set variables
+    logger.set_output(UPDATE_COUNT, updated_count)
+    for os_name, count in env_os_counter.items():
+        logger.set_output(OS_UPDATE_COUNT_TEMPLATE.format(os=os_name), count)
 
 
 if __name__ == '__main__':

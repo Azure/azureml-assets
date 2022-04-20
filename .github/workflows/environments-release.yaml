@@ -51,18 +51,25 @@ jobs:
       - name: Install dependencies
         run: pip install -r $scripts_dir/requirements.txt
       
-      - name: Update release branch
+      - id: update-release-branch
+        name: Update release branch
         run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
 
-      # TODO: Find a way to exit without generating a notification email
       - name: Upload changed assets
         uses: actions/upload-artifact@v3
+        if: steps.update-release-branch.update_count > 0
         with:
           name: ${{ env.changed_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
-          if-no-files-found: error  
+          #if-no-files-found: error
+
+    outputs:
+      update_count: ${{ steps.update-release-branch.update_count }}
+      linux_update_count: ${{ steps.update-release-branch.linux_update_count }}
+      windows_update_count: ${{ steps.update-release-branch.windows_update_count }}
 
   build-images:
+    if: ${{ matrix.os }}_update_count > 0
     name: Build and test images
     runs-on: ${{ matrix.runs_on }}
     needs: identify-updated-assets
