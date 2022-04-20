@@ -1,0 +1,10 @@
+[
+    {
+        "os": "linux",
+        "runs_on": "ubuntu-latest"
+    },
+    {
+        "os": "windows",
+        "runs_on": "windows-latest"
+    }
+]

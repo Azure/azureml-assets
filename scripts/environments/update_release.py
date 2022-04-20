@@ -159,7 +159,7 @@ def update_release(image_dirs: List[str],
 
     # Set variables
     logger.set_output(HAS_UPDATES, "true" if updated_count > 0 else "false")
-    logger.set_output(OS_UPDATES, ",".join([n for n, c in env_os_counter.items if c > 0]))
+    logger.set_output(OS_UPDATES, ",".join([n for n, c in env_os_counter.items() if c > 0]))
 
 
 if __name__ == '__main__':

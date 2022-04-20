@@ -66,8 +66,9 @@ jobs:
       - id: prepare-matrix
         name: Prepare build and test matrix
         run: |
-          matrix=$(echo "${{ steps.update-release-branch.outputs.os_updates }}"" | sed -r -e 's/[^,]+/"&"/g')
-          echo '::set-output name=matrix::[$(echo $matrix)]'
+          os_regex=$(echo "${{ steps.update-release-branch.outputs.os_updates }}" | tr ',' '|')
+          matrix=$(jq -c --arg os_regex "$os_regex" 'map(. | select(.os | test($os_regex)) )' .github/includes/build-test-matrix.json)                
+          echo "::set-output name=matrix::$matrix"
 
     outputs:
       has_updates: ${{ steps.update-release-branch.has_updates }}
