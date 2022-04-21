@@ -141,7 +141,6 @@ def update_release(image_dirs: List[str],
                 new_version = update_asset(asset_config=asset_config,
                                            release_directory_root=release_directory_root,
                                            copy_only=copy_only,
-                                           env_updated_os_set=updated_os,
                                            output_directory_root=output_directory_root)
                 if new_version:
                     print(f"Updated {asset_config.type.value} {asset_config.name} to version {new_version}")
