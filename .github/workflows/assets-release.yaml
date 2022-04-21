@@ -85,7 +85,7 @@ jobs:
 
     outputs:
       has_updates: ${{ steps.update-assets.outputs.has_updates }}
-      build_matrix: ${{ steps.create-matrix.outputs.matrix }}
+      build_matrix: ${{ steps.create-matrix.outputs.build_matrix }}
 
   build-images:
     name: Build and test images
