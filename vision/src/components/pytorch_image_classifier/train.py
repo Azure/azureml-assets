@@ -100,7 +100,7 @@ class PyTorchDistributedModelTrainingSequence:
         if self.dataloading_config.num_workers is None:
             self.dataloading_config.num_workers = 0
         if self.dataloading_config.num_workers < 0:
-            self.dataloading_config.num_workers = os.cpu_count()
+            self.dataloading_config.num_workers = self.cpu_count
         if self.dataloading_config.num_workers == 0:
             self.logger.warning("You specified num_workers=0, forcing prefetch_factor to be discarded.")
             self.dataloading_config.prefetch_factor = None
@@ -165,34 +165,44 @@ class PyTorchDistributedModelTrainingSequence:
         # only from main process (rank==0) to avoid conflict
         if self.self_is_main_node:
             # MLFLOW: report relevant parameters using mlflow
-            mlflow.log_params(
-                {
-                    # log some distribution params
-                    "nodes": self.world_size // self.local_world_size,
-                    "instance_per_node": self.local_world_size,
-                    "cuda_available": torch.cuda.is_available(),
-                    "cuda_device_count": torch.cuda.device_count(),
-                    "distributed": self.multinode_available,
-                    "distributed_backend": self.distributed_backend,
-                    "disable_cuda": self.training_config.disable_cuda,
+            logged_params = {
+                # log some distribution params
+                "nodes": self.world_size // self.local_world_size,
+                "instance_per_node": self.local_world_size,
+                "cuda_available": torch.cuda.is_available(),
+                "disable_cuda": self.training_config.disable_cuda,
+                "distributed": self.multinode_available,
+                "distributed_backend": self.distributed_backend,
 
-                    # data loading params
-                    "batch_size": self.dataloading_config.batch_size,
-                    "num_workers": self.dataloading_config.num_workers,
-                    "prefetch_factor": self.dataloading_config.prefetch_factor,
-                    "persistent_workers": self.dataloading_config.persistent_workers,
-                    "pin_memory": self.dataloading_config.pin_memory,
-                    "non_blocking": self.dataloading_config.non_blocking,
+                # data loading params
+                "batch_size": self.dataloading_config.batch_size,
+                "num_workers": self.dataloading_config.num_workers,
+                "cpu_count": self.cpu_count,
+                "prefetch_factor": self.dataloading_config.prefetch_factor,
+                "persistent_workers": self.dataloading_config.persistent_workers,
+                "pin_memory": self.dataloading_config.pin_memory,
+                "non_blocking": self.dataloading_config.non_blocking,
 
-                    # training params
-                    "model_arch": self.training_config.model_arch,
-                    "model_arch_pretrained": self.training_config.model_arch_pretrained,
-                    "learning_rate": self.training_config.learning_rate,
+                # training params
+                "model_arch": self.training_config.model_arch,
+                "model_arch_pretrained": self.training_config.model_arch_pretrained,
+                "learning_rate": self.training_config.learning_rate,
 
-                    # profiling params
-                    "enable_profiling": self.training_config.enable_profiling,
-                }
-            )
+                # profiling params
+                "enable_profiling": self.training_config.enable_profiling,
+            }
+
+            if torch.cuda.is_available():
+                # add some gpu properties
+                logged_params['cuda_device_count'] = torch.cuda.device_count()
+                cuda_device_properties = torch.cuda.get_device_properties(self.device)
+                logged_params['cuda_device_name'] = cuda_device_properties.name
+                logged_params['cuda_device_major'] = cuda_device_properties.major
+                logged_params['cuda_device_minor'] = cuda_device_properties.minor
+                logged_params['cuda_device_memory'] = cuda_device_properties.total_memory
+                logged_params['cuda_device_processor_count'] = cuda_device_properties.multi_processor_count
+
+            mlflow.log_params(logged_params)
 
     def setup_datasets(
         self,
@@ -417,13 +427,20 @@ class PyTorchDistributedModelTrainingSequence:
                 mlflow.log_metric("epoch_train_time", epoch_train_time, step=epoch)
 
     def runtime_error_report(self, runtime_exception):
-        """Call this when catching a critical exception."""
+        """Call this when catching a critical exception.
+        Will print all sorts of relevant information to the log."""
         self.logger.critical(traceback.format_exc())
+        try:
+            import psutil
+            self.logger.critical(f"Memory: {str(psutil.virtual_memory())}")
+        except ImportError:
+            self.logger.critical("import psutil failed, cannot display virtual memory stats.")
+
         if torch.cuda.is_available():
-            self.logger.critical(torch.cuda.memory_summary(device=None, abbreviated=False))
-            self.logger.critical(json.dumps(torch.cuda.memory_snapshot(), indent="    "))
+            self.logger.critical("Cuda memory summary:\n"+str(torch.cuda.memory_summary(device=None, abbreviated=False)))
+            self.logger.critical("Cuda memory snapshot:\n"+json.dumps(torch.cuda.memory_snapshot(), indent="    "))
         else:
-            self.logger.critical("Cuda is not available, not reporting cuda memory allocation.")
+            self.logger.critical("Cuda is not available, cannot report cuda memory allocation.")
 
 
     #################
