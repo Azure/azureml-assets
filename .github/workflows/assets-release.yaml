@@ -1,4 +1,4 @@
-name: environments-release
+name: assets-release
 
 on:
   push:
@@ -9,9 +9,9 @@ on:
     - cron: '30 6 * * *'
   workflow_dispatch:
     inputs:
-      image_dirs:
-        description: Image directories
-        default: general/src/environments
+      asset_dirs:
+        description: Asset directories
+        default: .
         required: true
 
 env:
@@ -53,7 +53,7 @@ jobs:
       
       - id: update-release-branch
         name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.image_dirs || 'general/src/environments' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
+        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
 
       - name: Upload changed assets
         uses: actions/upload-artifact@v3
