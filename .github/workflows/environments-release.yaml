@@ -18,7 +18,7 @@ env:
   release_dir: release
   scripts_dir: scripts/environments
   changed_assets_artifact: changed-assets
-  tested_assets_artifact: tested-assets
+  releasable_assets_artifact: releasable-assets
   asset_config_filename: asset.yaml
 
 defaults:
@@ -61,6 +61,15 @@ jobs:
         with:
           name: ${{ env.changed_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
+      
+      - name: Upload non-testable assets
+        uses: actions/upload-artifact@v3
+        if: steps.update-release-branch.has_updates
+        with:
+          name: ${{ env.releasable_assets_artifact }}
+          path: |
+            ${{ runner.temp }}/${{ env.changed_assets_artifact }}
+            !${{ runner.temp }}/${{ env.changed_assets_artifact }}/environment
       
       - id: prepare-matrix
         name: Prepare build and test matrix
@@ -123,22 +132,23 @@ jobs:
       - name: Upload tested assets
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.tested_assets_artifact }}
+          name: ${{ env.releasable_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
 
   release-assets:
     name: Release assets
+    if: always()
     runs-on: ubuntu-latest
     needs:
       - build-images
       - identify-updated-assets
     
     steps:
-      - name: Download tested assets
+      - name: Download releasable assets
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.tested_assets_artifact }}
-          path: ${{ runner.temp }}/${{ env.tested_assets_artifact }}
+          name: ${{ env.releasable_assets_artifact }}
+          path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
       
       - name: Clone branch
         uses: actions/checkout@v3
@@ -161,7 +171,7 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i ${{ runner.temp }}/$tested_assets_artifact -r $release_dir -c
+        run: python -u $scripts_dir/update_release.py -i ${{ runner.temp }}/$_artifact -r $release_dir -c
   
       - name: Create commit and push
         run: |
