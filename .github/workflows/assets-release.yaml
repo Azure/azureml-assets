@@ -75,26 +75,26 @@ jobs:
             !${{ runner.temp }}/${{ env.changed_assets_artifact }}/environment
       
       # Consider using https://github.com/marketplace/actions/conditional-build-matrix
-      - id: prepare-matrix
-        name: Prepare build and test matrix
+      - id: create-matrix
+        name: Create build and test matrix
         run: |
           os_regex=$(echo "${{ steps.update-assets.outputs.env_os_updates }}" | tr ',' '|')
           if [ -z "$os_regex" ]; then os_regex="EMPTY"; fi
-          matrix=$(jq -c --arg os_regex "$os_regex" '{ os: map(.os | select(test($os_regex))), include: map(. | select(.os | test($os_regex))) }' $main_dir/$build_test_matrix_template)
-          echo "::set-output name=matrix::$matrix"
+          build_matrix=$(jq -c --arg os_regex "$os_regex" '{ os: map(.os | select(test($os_regex))), include: map(. | select(.os | test($os_regex))) }' $main_dir/$build_test_matrix_template)
+          echo "::set-output name=build_matrix::$build_matrix"
 
     outputs:
       has_updates: ${{ steps.update-assets.outputs.has_updates }}
-      matrix: ${{ steps.prepare-matrix.outputs.matrix }}
+      build_matrix: ${{ steps.create-matrix.outputs.matrix }}
 
   build-images:
     name: Build and test images
-    if: fromJson(needs.identify-updated-assets.outputs.matrix).os[0]
+    if: fromJson(needs.identify-updated-assets.outputs.build_matrix).os[0]
     runs-on: ${{ matrix.runs_on }}
     needs: identify-updated-assets
 
     strategy:
-      matrix: ${{ fromJson(needs.identify-updated-assets.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.identify-updated-assets.outputs.build_matrix) }}
     env:
       build_log_dir: build-logs
       build_log_artifact_name: build-logs-${{ matrix.os }}
