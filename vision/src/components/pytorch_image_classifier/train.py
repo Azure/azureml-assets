@@ -171,8 +171,6 @@ class PyTorchDistributedModelTrainingSequence:
                 "disable_cuda": self.training_config.disable_cuda,
                 "distributed": self.multinode_available,
                 "distributed_backend": self.distributed_backend,
-                # "nodes": self.world_size // self.local_world_size,
-                # "instance_per_node": self.local_world_size,
 
                 # data loading params
                 "batch_size": self.dataloading_config.batch_size,
