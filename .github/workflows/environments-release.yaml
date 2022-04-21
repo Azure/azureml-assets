@@ -68,7 +68,8 @@ jobs:
         run: |
           echo "env_os_updates=${{ steps.update-release-branch.outputs.env_os_updates }}"
           os_regex=$(echo "${{ steps.update-release-branch.outputs.env_os_updates }}" | tr ',' '|')
-          echo "os_regex=$os_regex"
+          if [ -z "$os_regex" ]; then os_regex="EMPTY"; fi
+          echo "os_regex=$matrix"
           matrix=$(jq -c --arg os_regex "$os_regex" '{ os: map(.os | select(test($os_regex))), include: map(. | select(.os | test($os_regex))) }' .github/includes/build-test-matrix.json)
           echo "matrix=$matrix"
           echo "::set-output name=matrix::$matrix"
