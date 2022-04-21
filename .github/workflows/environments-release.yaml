@@ -171,7 +171,6 @@ jobs:
         with:
           name: ${{ env.releasable_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
-        continue-on-error: true
       
       - name: Clone branch
         uses: actions/checkout@v3
