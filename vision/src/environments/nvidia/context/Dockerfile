@@ -40,3 +40,4 @@ ENV NCCL_DEBUG_SUBSYS="GRAPH,INIT,ENV"
 # Relaxed Ordering can greatly help the performance of Infiniband networks in virtualized environments.
 ENV NCCL_IB_PCI_RELAXED_ORDERING: "1"
 ENV CUDA_DEVICE_ORDER="PCI_BUS_ID"
+ENV NCCL_SOCKET_IFNAME="eth0"
