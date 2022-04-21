@@ -1,4 +1,0 @@
-name: test
-type: code
-spec: spec.yaml
-extra_config: environment.yaml
