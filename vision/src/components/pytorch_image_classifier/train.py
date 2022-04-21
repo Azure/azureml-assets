@@ -160,19 +160,19 @@ class PyTorchDistributedModelTrainingSequence:
             )
         else:
             self.logger.info(f"Not running in multinode.")
-        
+
         # DISTRIBUTED: in distributed mode, you want to report parameters
         # only from main process (rank==0) to avoid conflict
         if self.self_is_main_node:
             # MLFLOW: report relevant parameters using mlflow
             logged_params = {
                 # log some distribution params
-                "nodes": self.world_size // self.local_world_size,
-                "instance_per_node": self.local_world_size,
                 "cuda_available": torch.cuda.is_available(),
                 "disable_cuda": self.training_config.disable_cuda,
                 "distributed": self.multinode_available,
                 "distributed_backend": self.distributed_backend,
+                # "nodes": self.world_size // self.local_world_size,
+                # "instance_per_node": self.local_world_size,
 
                 # data loading params
                 "batch_size": self.dataloading_config.batch_size,
