@@ -43,7 +43,7 @@ This subfolders hosts the code for AzureML assets related to vision machine lear
 2. Create the required environments
 
     ```bash
-    az ml environment create --file ./assets/environments/nvidia/env.yml
+    az ml environment create --file ./src/environments/nvidia/env.yml
     ```
 
 ### Run a test pipeline (no datasets)
