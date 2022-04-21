@@ -37,7 +37,7 @@ This subfolders hosts the code for AzureML assets related to vision machine lear
     az account set --name "..."
 
     # set references to connect to Azure ML
-    az config set defaults.workspace="..." defaults.resource_group="..."
+    az configure --defaults workspace="..." group="..."
     ```
 
 2. Create the required environments
