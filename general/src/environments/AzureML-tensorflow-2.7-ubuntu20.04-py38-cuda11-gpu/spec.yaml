@@ -5,11 +5,11 @@ description: >-
 
 # Should this have an azureml: prefix?
 #   See component's environment value of azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu:11
-name: AzureML-tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu
-display_name: AzureML-tensorflow-2.8-ubuntu20.04-py38-cuda11-gpu
-version: 1
+name: {{asset.name}}
+display_name: {{asset.name}}
+version: {{asset.version}}
 
-image: "mcr.microsoft.com/azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu:1"
+image: "{{image.publish.hostname}}/{{image.name}}:{{asset.version}}"
 
 os_type: linux
 

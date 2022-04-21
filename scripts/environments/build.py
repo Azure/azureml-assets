@@ -9,7 +9,7 @@ from typing import List
 
 from config import AssetConfig, AssetType, EnvironmentConfig, Os
 from ci_logger import logger
-from pin_versions import transform
+from pin_versions import transform_file
 
 
 def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_log: str,
@@ -56,11 +56,19 @@ def create_github_env_var(key: str, value: str):
         logger.log_warning("Failed to write image names: GITHUB_ENV environment variable not found")
 
 
+def pin_env_files(env_config: EnvironmentConfig):
+    for file_to_pin in env_config.template_files_with_path:
+        if os.path.exists(file_to_pin):
+            transform_file(file_to_pin)
+        else:
+            logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
+
+
 def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_dir: str,
                  max_parallel: int, changed_files: List[str], image_names_key: str,
                  os_to_build: str = None, resource_group: str = None, registry: str = None):
     with ThreadPoolExecutor(max_parallel) as pool:
-        # Find Dockerfiles under image root directory
+        # Find environments under image root directories
         futures = []
         for image_dir in image_dirs:
             for root, _, files in os.walk(image_dir):
@@ -84,11 +92,7 @@ def build_images(image_dirs: List[str], asset_config_filename: str, build_logs_d
                         continue
 
                     # Pin images/packages in files
-                    for file_to_pin in env_config.template_files_with_path:
-                        if os.path.exists(file_to_pin):
-                            transform(file_to_pin)
-                        else:
-                            logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
+                    pin_env_files(env_config)
 
                     # Start building image
                     build_log = os.path.join(build_logs_dir, f"{env_config.image_name}.log")
