@@ -8,7 +8,7 @@ description: >-
 
 name: pytorch_image_classifier
 display_name: Image Classification Model (PyTorch)
-version: 1.0.3
+version: 1.0.4
 
 inputs:
   # data loading
@@ -89,7 +89,7 @@ outputs:
 
 code: .
 
-environment: azureml:nvidia_pytorch:22.02-py3-mod3
+environment: azureml:nvidia_pytorch:22.02-py3-mod4
 
 command: >-
   python train.py 
