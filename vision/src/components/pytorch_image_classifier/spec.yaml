@@ -89,7 +89,7 @@ outputs:
 
 code: .
 
-environment: azureml:nvidia_pytorch:22.02-py3-mod5
+environment: azureml:nvidia_pytorch:22.02-py3-mod7
 
 command: >-
   python train.py 
