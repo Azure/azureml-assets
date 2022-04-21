@@ -28,15 +28,15 @@ MODEL_ARCH_MAP = {
 
     # Swin HuggingFace models
     "microsoft/swin-tiny-patch4-window7-224": {"input_size": 224, "library": "swin"},
-    "microsoft/swin-large-patch4-window12-384-in22k": {"input_size": 384, "library": "swin"},
+    "microsoft/swin-small-patch4-window7-224": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-base-patch4-window7-224": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-base-patch4-window7-224-in22k": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-large-patch4-window7-224": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-large-patch4-window7-224-in22k": {"input_size": 224, "library": "swin"},
     "microsoft/swin-base-patch4-window12-384": {"input_size": 384, "library": "swin"},
     "microsoft/swin-base-patch4-window12-384-in22k": {"input_size": 384, "library": "swin"},
     "microsoft/swin-large-patch4-window12-384": {"input_size": 384, "library": "swin"},
-    "microsoft/swin-large-patch4-window7-224-in22k": {"input_size": 224, "library": "swin"},
-    "microsoft/swin-base-patch4-window7-224": {"input_size": 224, "library": "swin"},
-    "microsoft/swin-base-patch4-window7-224-in22k": {"input_size": 224, "library": "swin"},
-    "microsoft/swin-small-patch4-window7-224": {"input_size": 224, "library": "swin"},
-    "microsoft/swin-large-patch4-window7-224": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-large-patch4-window12-384-in22k": {"input_size": 384, "library": "swin"},
 }
 
 MODEL_ARCH_LIST = list(MODEL_ARCH_MAP.keys())
