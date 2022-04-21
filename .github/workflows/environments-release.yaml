@@ -71,6 +71,7 @@ jobs:
             ${{ runner.temp }}/${{ env.changed_assets_artifact }}
             !${{ runner.temp }}/${{ env.changed_assets_artifact }}/environment
       
+      # Consider using https://github.com/marketplace/actions/conditional-build-matrix
       - id: prepare-matrix
         name: Prepare build and test matrix
         run: |
