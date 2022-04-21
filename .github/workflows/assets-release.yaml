@@ -21,6 +21,7 @@ env:
   changed_assets_artifact: changed-assets
   releasable_assets_artifact: releasable-assets
   asset_config_filename: asset.yaml
+  build_test_matrix_template: .github/includes/build-test-matrix.json
 
 defaults:
   run:
@@ -79,7 +80,7 @@ jobs:
         run: |
           os_regex=$(echo "${{ steps.update-assets.outputs.env_os_updates }}" | tr ',' '|')
           if [ -z "$os_regex" ]; then os_regex="EMPTY"; fi
-          matrix=$(jq -c --arg os_regex "$os_regex" '{ os: map(.os | select(test($os_regex))), include: map(. | select(.os | test($os_regex))) }' .github/includes/build-test-matrix.json)
+          matrix=$(jq -c --arg os_regex "$os_regex" '{ os: map(.os | select(test($os_regex))), include: map(. | select(.os | test($os_regex))) }' $main_dir/$build_test_matrix_template)
           echo "::set-output name=matrix::$matrix"
 
     outputs:
