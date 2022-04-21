@@ -76,7 +76,7 @@ jobs:
 
   build-images:
     name: Build and test images
-    if: ${{ fromJson(needs.identify-updated-assets.outputs.matrix).os }}
+    if: ${{ fromJson(needs.identify-updated-assets.outputs.matrix).os[0] }}
     runs-on: ${{ matrix.runs_on }}
     needs: identify-updated-assets
 
