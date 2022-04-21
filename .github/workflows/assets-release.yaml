@@ -10,11 +10,12 @@ on:
   workflow_dispatch:
     inputs:
       asset_dirs:
-        description: Asset directories
+        description: Asset directory
         default: .
         required: true
 
 env:
+  main_dir: main
   release_dir: release
   scripts_dir: scripts/environments
   changed_assets_artifact: changed-assets
@@ -35,6 +36,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
+          path: ${{ env.main_dir }}
       
       - name: Clone release branch
         uses: actions/checkout@v3
@@ -49,22 +51,22 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -r $scripts_dir/requirements.txt
+        run: pip install -r $main_dir/$scripts_dir/requirements.txt
       
-      - id: update-release-branch
-        name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
+      - id: update-assets
+        name: Update assets
+        run: python -u $main_dir/$scripts_dir/update_release.py -i "$main_dir/${{ github.event.inputs.asset_dirs || '.' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
 
       - name: Upload changed assets
         uses: actions/upload-artifact@v3
-        if: steps.update-release-branch.outputs.has_updates
+        if: steps.update-assets.outputs.has_updates
         with:
           name: ${{ env.changed_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
       
       - name: Upload non-testable assets
         uses: actions/upload-artifact@v3
-        if: steps.update-release-branch.outputs.has_updates
+        if: steps.update-assets.outputs.has_updates
         with:
           name: ${{ env.releasable_assets_artifact }}
           path: |
@@ -75,13 +77,13 @@ jobs:
       - id: prepare-matrix
         name: Prepare build and test matrix
         run: |
-          os_regex=$(echo "${{ steps.update-release-branch.outputs.env_os_updates }}" | tr ',' '|')
+          os_regex=$(echo "${{ steps.update-assets.outputs.env_os_updates }}" | tr ',' '|')
           if [ -z "$os_regex" ]; then os_regex="EMPTY"; fi
           matrix=$(jq -c --arg os_regex "$os_regex" '{ os: map(.os | select(test($os_regex))), include: map(. | select(.os | test($os_regex))) }' .github/includes/build-test-matrix.json)
           echo "::set-output name=matrix::$matrix"
 
     outputs:
-      has_updates: ${{ steps.update-release-branch.outputs.has_updates }}
+      has_updates: ${{ steps.update-assets.outputs.has_updates }}
       matrix: ${{ steps.prepare-matrix.outputs.matrix }}
 
   build-images:
@@ -107,6 +109,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
+          path: ${{ env.main_dir }}
       
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -114,10 +117,10 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -r $scripts_dir/requirements.txt
+        run: pip install -r $main_dir/$scripts_dir/requirements.txt
       
       - name: Build images
-        run: python -u $scripts_dir/build.py -i ${{ runner.temp }}/$changed_assets_artifact -a $asset_config_filename -o ${{ matrix.os }} -l ${{ runner.temp }}/$build_log_dir -d -k IMAGE_NAMES
+        run: python -u $main_dir/$scripts_dir/build.py -i ${{ runner.temp }}/$changed_assets_artifact -a $asset_config_filename -o ${{ matrix.os }} -l ${{ runner.temp }}/$build_log_dir -d -k IMAGE_NAMES
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3
@@ -128,7 +131,7 @@ jobs:
 
       - name: Test images
         if: env.IMAGE_NAMES != ''
-        run: python -u $scripts_dir/test.py -i ${{ runner.temp }}/$changed_assets_artifact -a $asset_config_filename -o ${{ matrix.os }} -d
+        run: python -u $main_dir/$scripts_dir/test.py -i ${{ runner.temp }}/$changed_assets_artifact -a $asset_config_filename -o ${{ matrix.os }} -d
       
       - name: Upload tested assets
         uses: actions/upload-artifact@v3
@@ -177,6 +180,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
+          path: ${{ env.main_dir }}
 
       - name: Clone release branch
         uses: actions/checkout@v3
@@ -192,10 +196,10 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -r $scripts_dir/requirements.txt
+        run: pip install -r $main_dir/$scripts_dir/requirements.txt
       
       - name: Update release branch
-        run: python -u $scripts_dir/update_release.py -i ${{ runner.temp }}/$_artifact -r $release_dir -c
+        run: python -u $main_dir/$scripts_dir/update_release.py -i ${{ runner.temp }}/$_artifact -r $release_dir -c
   
       - name: Create commit and push
         run: |
