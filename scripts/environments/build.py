@@ -82,6 +82,7 @@ def build_images(image_dirs: List[str],
                     # Load config
                     asset_config = AssetConfig(os.path.join(root, asset_config_file))
                     print(f"asset_config={asset_config.file_path}")
+                    print(f"asset_config.type={asset_config.type}")
 
                     # Skip if not environment
                     if asset_config.type is not AssetType.ENVIRONMENT:
