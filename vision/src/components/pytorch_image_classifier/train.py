@@ -186,7 +186,8 @@ class PyTorchDistributedModelTrainingSequence:
                 # training params
                 "model_arch": self.training_config.model_arch,
                 "model_arch_pretrained": self.training_config.model_arch_pretrained,
-                "learning_rate": self.training_config.learning_rate,
+                "optimizer.learning_rate": self.training_config.learning_rate,
+                "optimizer.momentum": self.training_config.momentum,
 
                 # profiling params
                 "enable_profiling": self.training_config.enable_profiling,
@@ -290,14 +291,17 @@ class PyTorchDistributedModelTrainingSequence:
                     images = images.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
                     )
-                    one_hot_targets = targets.to(
+                    targets = targets.to(
                             self.device, non_blocking=self.dataloading_config.non_blocking
                     )
 
                 with record_function("eval.forward"):
                     outputs = self.model(images)
 
-                    loss = criterion(outputs, one_hot_targets)
+                    loss = criterion(outputs, targets)
+                    _, predicted = torch.max(outputs.data, 1)
+                    correct = (predicted == (targets.to(self.device)))
+
                     running_loss += loss.item() * images.size(0)
 
                     correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
@@ -322,21 +326,19 @@ class PyTorchDistributedModelTrainingSequence:
                 images = images.to(
                     self.device, non_blocking=self.dataloading_config.non_blocking
                 )
-                one_hot_targets = torch.nn.functional.one_hot(
-                    targets.to(
+                targets = targets.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
-                    ),
-                    num_classes=len(self.labels)
-                ).float()
+                )
                 
-
             with record_function("train.forward"):
                 # zero the parameter gradients
                 optimizer.zero_grad()
 
                 outputs = self.model(images)
-                loss = criterion(outputs, one_hot_targets)
-                correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
+
+                loss = criterion(outputs, targets)
+                _, predicted = torch.max(outputs.data, 1)
+                correct = (predicted == (targets.to(self.device)))
 
                 running_loss += loss.item() * images.size(0)
                 num_correct += torch.sum(correct).item()
@@ -364,8 +366,8 @@ class PyTorchDistributedModelTrainingSequence:
             self.model.parameters(),
             lr=self.training_config.learning_rate,
             momentum=self.training_config.momentum,
-            nesterov=True,
-            weight_decay=1e-4,
+            #nesterov=True,
+            #weight_decay=1e-4,
         )
 
         #criterion = nn.BCEWithLogitsLoss()
@@ -607,14 +609,14 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--learning_rate",
         type=float,
         required=False,
-        default=0.01,
+        default=0.001,
         help="Learning rate of optimizer",
     )
     group.add_argument(
         "--momentum",
         type=float,
         required=False,
-        default=0.01,
+        default=0.9,
         help="Momentum of optimizer",
     )
 
