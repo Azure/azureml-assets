@@ -114,10 +114,6 @@ class AssetConfig(Config):
         config = self.extra_config
         return self._append_to_file_path(config) if config else None
 
-    def delete(self):
-        """Delete the directory containing the asset."""
-        shutil.rmtree(self.file_path)
-
 
 DEFAULT_CONTEXT_DIR = "context"
 DEFAULT_DOCKERFILE = "Dockerfile"

@@ -9,6 +9,7 @@ from typing import List
 from config import AssetConfig, AssetType, EnvironmentConfig, Os
 from ci_logger import logger
 from pin_versions import transform_file
+from util import copy_asset_to_output_dir
 
 
 def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_log: str,
@@ -63,9 +64,9 @@ def pin_env_files(env_config: EnvironmentConfig):
             logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
 
-def build_images(image_dirs: List[str],
+def build_images(input_dirs: List[str],
                  asset_config_filename: str,
-                 delete_failed: bool,
+                 output_directory: str,
                  build_logs_dir: str,
                  max_parallel: int,
                  changed_files: List[str],
@@ -76,8 +77,8 @@ def build_images(image_dirs: List[str],
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find environments under image root directories
         futures = []
-        for image_dir in image_dirs:
-            for root, _, files in os.walk(image_dir):
+        for input_dir in input_dirs:
+            for root, _, files in os.walk(input_dir):
                 for asset_config_file in [f for f in files if f == asset_config_filename]:
                     # Load config
                     asset_config = AssetConfig(os.path.join(root, asset_config_file))
@@ -117,11 +118,11 @@ def build_images(image_dirs: List[str],
             logger.end_group()
             if return_code != 0:
                 logger.log_error(f"Build of {image_name} failed with exit status {return_code}", "Build failure")
-                if delete_failed:
-                    asset_config.delete()
             else:
                 logger.log_debug(f"Successfully built {image_name}")
                 image_names.append(image_name)
+                if output_directory:
+                    copy_asset_to_output_dir(asset_config, output_directory)
 
         # Make list of image names available to following steps
         create_github_env_var(image_names_key, ",".join(image_names))
@@ -130,14 +131,14 @@ def build_images(image_dirs: List[str],
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--image-dirs", required=True, help="Comma-separated list of directories containing environments to build")
+    parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing environments to build")
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
-    parser.add_argument("-d", "--delete-failed", action="store_true", help="Delete environments that fail to build")
+    parser.add_argument("-o", "--output-directory", help="Directory to which successfully built environments will be written")
     parser.add_argument("-l", "--build-logs-dir", required=True, help="Directory to receive build logs")
     parser.add_argument("-p", "--max-parallel", type=int, default=25, help="Maximum number of images to build at the same time")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter images")
     parser.add_argument("-k", "--image-names-key", help="GitHub actions environment variable that will receive a comma-separated list of images built")
-    parser.add_argument("-o", "--os-to-build", choices=[i.value for i in list(Os)], help="Only build environments based on this OS")
+    parser.add_argument("-O", "--os-to-build", choices=[i.value for i in list(Os)], help="Only build environments based on this OS")
     parser.add_argument("-r", "--registry", help="Container registry on which to build images")
     parser.add_argument("-g", "--resource-group", help="Resource group containing the container registry")
     args = parser.parse_args()
@@ -147,13 +148,13 @@ if __name__ == '__main__':
         parser.error("If --registry is specified then --resource-group and --os-to-build are also required")
 
     # Convert comma-separated values to lists
-    image_dirs = args.image_dirs.split(",")
+    input_dirs = args.input_dirs.split(",")
     changed_files = args.changed_files.split(",") if args.changed_files else []
 
     # Build images
-    build_images(image_dirs=image_dirs,
+    build_images(input_dirs=input_dirs,
                  asset_config_filename=args.asset_config_filename,
-                 delete_failed=args.delete_failed,
+                 output_directory=args.output_directory,
                  build_logs_dir=args.build_logs_dir,
                  max_parallel=args.max_parallel,
                  changed_files=changed_files,

@@ -58,7 +58,7 @@ jobs:
       
       - id: find-updated-assets
         name: Find updated assets
-        run: python -u $main_dir/$scripts_dir/update_release.py -i "$main_dir/${{ github.event.inputs.asset_dirs || '.' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
+        run: python -u $main_dir/$scripts_dir/update_assets.py -i "$main_dir/${{ github.event.inputs.asset_dirs || '.' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
 
       - name: Upload changed assets
         uses: actions/upload-artifact@v3
@@ -100,6 +100,8 @@ jobs:
     env:
       build_log_dir: build-logs
       build_log_artifact_name: build-logs-${{ matrix.os }}
+      built_dir: built-environments
+      tested_dir: tested-environments
 
     steps:
       - name: Download changed assets
@@ -123,7 +125,7 @@ jobs:
         run: pip install -r $main_dir/$scripts_dir/requirements.txt
       
       - name: Build images
-        run: python -u $main_dir/$scripts_dir/build.py -i ${{ runner.temp }}/$changed_assets_artifact -a $asset_config_filename -o ${{ matrix.os }} -l ${{ runner.temp }}/$build_log_dir -d -k IMAGE_NAMES
+        run: python -u $main_dir/$scripts_dir/build.py -i ${{ runner.temp }}/$changed_assets_artifact -a $asset_config_filename -o ${{ runner.temp }}/$built_dir -O ${{ matrix.os }} -l ${{ runner.temp }}/$build_log_dir -k IMAGE_NAMES
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3
@@ -134,13 +136,13 @@ jobs:
 
       - name: Test images
         if: env.IMAGE_NAMES != ''
-        run: python -u $main_dir/$scripts_dir/test.py -i ${{ runner.temp }}/$changed_assets_artifact -a $asset_config_filename -o ${{ matrix.os }} -d
+        run: python -u $main_dir/$scripts_dir/test.py -i ${{ runner.temp }}/$built_dir -a $asset_config_filename -o -o ${{ runner.temp }}/$tested_dir -O ${{ matrix.os }}
       
       - name: Upload tested assets
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.releasable_assets_artifact }}
-          path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
+          path: ${{ runner.temp }}/${{ env.tested_dir }}
 
   check-release-assets:
     name: Check releaseable assets
@@ -193,6 +195,7 @@ jobs:
           fetch-depth: 0
           path: ${{ env.release_dir }}
 
+      # TODO: Not needed unless calling update_assets.py
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
         with:
@@ -201,8 +204,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r $main_dir/$scripts_dir/requirements.txt
       
+      # TODO: This is overkill, just copy directories without involving this script
       - name: Update release branch
-        run: python -u $main_dir/$scripts_dir/update_release.py -i ${{ runner.temp }}/$_artifact -r $release_dir -c
+        run: python -u $main_dir/$scripts_dir/update_assets.py -i ${{ runner.temp }}/$_artifact -r $release_dir -c
   
       - name: Create commit and push
         run: |

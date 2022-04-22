@@ -9,12 +9,10 @@ from build import pin_env_files
 from ci_logger import logger
 from config import AssetConfig, AssetType, EnvironmentConfig, Spec
 from update_spec import update as update_spec
-from util import are_dir_trees_equal
+from util import are_dir_trees_equal, copy_asset_to_output_dir, get_asset_output_dir, get_asset_release_dir
 
 TAG_TEMPLATE = "refs/tags/{name}"
 RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
-RELEASE_SUBDIR_TEMPLATE = "latest/{type}/{name}"
-OUTPUT_SUBDIR_TEMPLATE = "{type}/{name}"
 HAS_UPDATES = "has_updates"
 ENV_OS_UPDATES = "env_os_updates"
 
@@ -27,35 +25,22 @@ def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):
     return repo.references.get(TAG_TEMPLATE.format(name=version_tag)) is not None
 
 
-def copy_replace_dir(source: str, dest: str):
-    # Delete output dir
-    if os.path.exists(dest):
-        shutil.rmtree(dest)
-
-    # Copy temp asset to output dir
-    shutil.copytree(source, dest)
-
-
 def update_asset(asset_config: AssetConfig,
                  release_directory_root: str,
                  copy_only: bool,
                  output_directory_root: str = None) -> str:
     # Determine asset's release directory
-    release_subdir = RELEASE_SUBDIR_TEMPLATE.format(type=asset_config.type.value,
-                                                    name=asset_config.name)
-    release_dir = os.path.join(release_directory_root, release_subdir)
+    release_dir = get_asset_release_dir(asset_config, release_directory_root)
 
     # Define output directory, which may be different from the release directory
     if output_directory_root:
-        output_subdir = OUTPUT_SUBDIR_TEMPLATE.format(type=asset_config.type.value,
-                                                      name=asset_config.name)
-        output_directory = os.path.join(output_directory_root, output_subdir)
+        output_directory = get_asset_output_dir(asset_config, output_directory_root)
     else:
         output_directory = release_dir
 
     # Simpler operation that just copies the directory
     if copy_only:
-        copy_replace_dir(asset_config.file_path, output_directory)
+        copy_asset_to_output_dir(asset_config, output_directory)
         spec = Spec(asset_config.spec_with_path)
         return spec.version
 
@@ -103,7 +88,7 @@ def update_asset(asset_config: AssetConfig,
                 return None
 
         # Copy and replace any existing directory
-        copy_replace_dir(temp_dir, output_directory)
+        copy_asset_to_output_dir(temp_asset_config, output_directory)
 
         # Determine new version
         if main_version:
@@ -121,17 +106,17 @@ def update_asset(asset_config: AssetConfig,
         return new_version
 
 
-def update_release(image_dirs: List[str],
-                   asset_config_filename: str,
-                   release_directory_root: str,
-                   copy_only: bool,
-                   output_directory_root: str = None):
+def update_assets(input_dirs: List[str],
+                  asset_config_filename: str,
+                  release_directory_root: str,
+                  copy_only: bool,
+                  output_directory_root: str = None):
     # Find environments under image root directories
     asset_count = 0
     updated_count = 0
     updated_os = set()
-    for image_dir in image_dirs:
-        for root, _, files in os.walk(image_dir):
+    for input_dir in input_dirs:
+        for root, _, files in os.walk(input_dir):
             for asset_config_file in [f for f in files if f == asset_config_filename]:
                 # Load config
                 asset_config = AssetConfig(os.path.join(root, asset_config_file))
@@ -162,7 +147,7 @@ def update_release(image_dirs: List[str],
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--image-dirs", required=True, help="Comma-separated list of directories containing image to build")
+    parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing assets")
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
     parser.add_argument("-r", "--release-directory", required=True, help="Directory to which the release branch has been cloned")
     parser.add_argument("-o", "--output-directory", help="Directory to which new/updated assets will be written, defaults to release directory")
@@ -170,11 +155,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
-    image_dirs = args.image_dirs.split(",")
+    input_dirs = args.input_dirs.split(",")
 
-    # Build images
-    update_release(image_dirs=image_dirs,
-                   asset_config_filename=args.asset_config_filename,
-                   release_directory_root=args.release_directory,
-                   copy_only=args.copy_only,
-                   output_directory_root=args.output_directory)
+    # Update assets
+    update_assets(input_dirs=input_dirs,
+                  asset_config_filename=args.asset_config_filename,
+                  release_directory_root=args.release_directory,
+                  copy_only=args.copy_only,
+                  output_directory_root=args.output_directory)
