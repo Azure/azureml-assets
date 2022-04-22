@@ -1,6 +1,5 @@
 import argparse
 import os
-import sys
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import timedelta
 from subprocess import run, PIPE, STDOUT
@@ -82,6 +81,7 @@ def build_images(image_dirs: List[str],
                 for asset_config_file in [f for f in files if f == asset_config_filename]:
                     # Load config
                     asset_config = AssetConfig(os.path.join(root, asset_config_file))
+                    print(f"asset_config={asset_config.file_path}")
 
                     # Skip if not environment
                     if asset_config.type is not AssetType.ENVIRONMENT:
