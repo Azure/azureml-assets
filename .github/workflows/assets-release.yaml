@@ -136,7 +136,7 @@ jobs:
 
       - name: Test images
         if: env.IMAGE_NAMES != ''
-        run: python -u $main_dir/$scripts_dir/test.py -i ${{ runner.temp }}/$built_dir -a $asset_config_filename -o -o ${{ runner.temp }}/$tested_dir -O ${{ matrix.os }}
+        run: python -u $main_dir/$scripts_dir/test.py -i ${{ runner.temp }}/$built_dir -a $asset_config_filename -o ${{ runner.temp }}/$tested_dir -O ${{ matrix.os }}
       
       - name: Upload tested assets
         uses: actions/upload-artifact@v3
