@@ -2,7 +2,7 @@ import filecmp
 import os
 import shutil
 
-from scripts.environments.config import AssetConfig
+from config import AssetConfig
 
 OUTPUT_SUBDIR_TEMPLATE = "{type}/{name}"
 RELEASE_SUBDIR = "latest"
