@@ -9,7 +9,7 @@ from build import pin_env_files
 from ci_logger import logger
 from config import AssetConfig, AssetType, EnvironmentConfig, Spec
 from update_spec import update as update_spec
-from util import are_dir_trees_equal, copy_asset_to_output_dir, get_asset_output_dir, get_asset_release_dir
+from util import are_dir_trees_equal, copy_replace_dir, get_asset_output_dir, get_asset_release_dir
 
 TAG_TEMPLATE = "refs/tags/{name}"
 RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
@@ -40,7 +40,7 @@ def update_asset(asset_config: AssetConfig,
 
     # Simpler operation that just copies the directory
     if copy_only:
-        copy_asset_to_output_dir(asset_config, output_directory)
+        copy_replace_dir(asset_config.file_path, output_directory)
         spec = Spec(asset_config.spec_with_path)
         return spec.version
 
@@ -88,7 +88,7 @@ def update_asset(asset_config: AssetConfig,
                 return None
 
         # Copy and replace any existing directory
-        copy_asset_to_output_dir(temp_asset_config, output_directory)
+        copy_replace_dir(temp_asset_config.file_path, output_directory)
 
         # Determine new version
         if main_version:

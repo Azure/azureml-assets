@@ -65,17 +65,6 @@ def get_asset_output_dir(asset_config: AssetConfig, output_directory_root: str) 
     return os.path.join(output_directory_root, output_subdir)
 
 
-def copy_asset_to_output_dir(asset_config: AssetConfig, output_directory_root: str):
-    """Copy asset directory to output directory.
-
-    Args:
-        asset_config (AssetConfig): Asset config to copy
-        output_directory_root (str): Output directory root
-    """
-    output_directory = get_asset_output_dir(asset_config, output_directory_root)
-    copy_replace_dir(asset_config.file_path, output_directory)
-
-
 def get_asset_release_dir(asset_config: AssetConfig, release_directory_root: str) -> str:
     """Generate the release directory for a given asset.
 
@@ -87,3 +76,14 @@ def get_asset_release_dir(asset_config: AssetConfig, release_directory_root: str
         str: The release directory
     """
     return get_asset_output_dir(asset_config, os.path.join(release_directory_root, RELEASE_SUBDIR))
+
+
+def copy_asset_to_output_dir(asset_config: AssetConfig, output_directory_root: str):
+    """Copy asset directory to output directory.
+
+    Args:
+        asset_config (AssetConfig): Asset config to copy
+        output_directory_root (str): Output directory root
+    """
+    output_directory = get_asset_output_dir(asset_config, output_directory_root)
+    copy_replace_dir(asset_config.file_path, output_directory)
