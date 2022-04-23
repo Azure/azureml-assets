@@ -149,6 +149,9 @@ if __name__ == '__main__':
     input_dirs = args.input_dirs.split(",")
     changed_files = args.changed_files.split(",") if args.changed_files else []
 
+    for k, v in os.environ.items():
+        print(f'ENV {k}={v}')
+
     # Build images
     build_images(input_dirs=input_dirs,
                  asset_config_filename=args.asset_config_filename,
