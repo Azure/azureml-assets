@@ -157,6 +157,9 @@ if __name__ == '__main__':
     # Convert comma-separated values to lists
     input_dirs = args.input_dirs.split(",")
 
+    for k, v in os.environ.items():
+        print(f'ENV {k}={v}')
+
     # Update assets
     update_assets(input_dirs=input_dirs,
                   asset_config_filename=args.asset_config_filename,

@@ -56,6 +56,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r $main_dir/$scripts_dir/requirements.txt
       
+      # TODO: Consider using Git to detect changes
       - id: find-updated-assets
         name: Find updated assets
         run: python -u $main_dir/$scripts_dir/update_assets.py -i "$main_dir/${{ github.event.inputs.asset_dirs || '.' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
