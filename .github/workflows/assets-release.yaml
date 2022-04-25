@@ -77,18 +77,24 @@ jobs:
             ${{ runner.temp }}/${{ env.changed_assets_artifact }}
             !${{ runner.temp }}/${{ env.changed_assets_artifact }}/environment
       
-      # Consider using https://github.com/marketplace/actions/conditional-build-matrix
+      # # Consider using https://github.com/marketplace/actions/conditional-build-matrix
+      # - id: create-matrix
+      #   name: Create build and test matrix
+      #   run: |
+      #     os_regex=$(echo "${{ steps.find-updated-assets.outputs.env_os_updates }}" | tr ',' '|')
+      #     if [ -z "$os_regex" ]; then os_regex="EMPTY"; fi
+      #     build_matrix=$(jq -c --arg os_regex "$os_regex" '{ os: map(.os | select(test($os_regex))), include: map(. | select(.os | test($os_regex))) }' $main_dir/$build_test_matrix_template)
+      #     echo "::set-output name=build_matrix::$build_matrix"
+      
       - id: create-matrix
-        name: Create build and test matrix
-        run: |
-          os_regex=$(echo "${{ steps.find-updated-assets.outputs.env_os_updates }}" | tr ',' '|')
-          if [ -z "$os_regex" ]; then os_regex="EMPTY"; fi
-          build_matrix=$(jq -c --arg os_regex "$os_regex" '{ os: map(.os | select(test($os_regex))), include: map(. | select(.os | test($os_regex))) }' $main_dir/$build_test_matrix_template)
-          echo "::set-output name=build_matrix::$build_matrix"
+        uses: JoshuaTheMiller/conditional-build-matrix@0.0.1
+        with:
+          inputFile: $main_dir/$build_test_matrix_template
+          filter: '{os: [?contains(`${{ steps.find-updated-assets.outputs.env_os_updates }}`, os)].os, include: [?contains(`${{ steps.find-updated-assets.outputs.env_os_updates }}`, os)]}'
 
     outputs:
       has_updates: ${{ steps.find-updated-assets.outputs.has_updates }}
-      build_matrix: ${{ steps.create-matrix.outputs.build_matrix }}
+      build_matrix: ${{ steps.create-matrix.outputs.matrix }}
 
   build-images:
     name: Build and test images
