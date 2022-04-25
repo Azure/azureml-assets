@@ -167,8 +167,8 @@ class PyTorchDistributedModelTrainingSequence:
             # MLFLOW: report relevant parameters using mlflow
             logged_params = {
                 # log some distribution params
-                "nodes": self.world_size // self.local_world_size,
-                "instance_per_node": self.local_world_size,
+                "nodes": int(os.environ.get("AZUREML_NODE_COUNT", "1")),
+                "instance_per_node": self.world_size // int(os.environ.get("AZUREML_NODE_COUNT", "1")),
                 "cuda_available": torch.cuda.is_available(),
                 "disable_cuda": self.training_config.disable_cuda,
                 "distributed": self.multinode_available,
