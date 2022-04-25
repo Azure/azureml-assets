@@ -167,6 +167,8 @@ class PyTorchDistributedModelTrainingSequence:
             # MLFLOW: report relevant parameters using mlflow
             logged_params = {
                 # log some distribution params
+                "nodes": int(os.environ.get("AZUREML_NODE_COUNT", "1")),
+                "instance_per_node": self.world_size // int(os.environ.get("AZUREML_NODE_COUNT", "1")),
                 "cuda_available": torch.cuda.is_available(),
                 "disable_cuda": self.training_config.disable_cuda,
                 "distributed": self.multinode_available,
@@ -184,7 +186,8 @@ class PyTorchDistributedModelTrainingSequence:
                 # training params
                 "model_arch": self.training_config.model_arch,
                 "model_arch_pretrained": self.training_config.model_arch_pretrained,
-                "learning_rate": self.training_config.learning_rate,
+                "optimizer.learning_rate": self.training_config.learning_rate,
+                "optimizer.momentum": self.training_config.momentum,
 
                 # profiling params
                 "enable_profiling": self.training_config.enable_profiling,
@@ -288,7 +291,7 @@ class PyTorchDistributedModelTrainingSequence:
                     images = images.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
                     )
-                    one_hot_targets = targets.to(
+                    targets = targets.to(
                             self.device, non_blocking=self.dataloading_config.non_blocking
                     )
 
@@ -297,12 +300,14 @@ class PyTorchDistributedModelTrainingSequence:
 
                     if isinstance(outputs, torch.Tensor):
                         # if we're training a regular pytorch model (ex: torchvision)
-                        loss = criterion(outputs, one_hot_targets)
-                        correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
+                        loss = criterion(outputs, targets)
+                        _, predicted = torch.max(outputs.data, 1)
+                        correct = (predicted == targets)
                     elif outputs.__class__.__name__ == "SequenceClassifierOutput":
                         # if we're training a HuggingFace model
-                        loss = criterion(outputs.logits, one_hot_targets)
-                        correct = (torch.argmax(outputs.logits, dim=-1) == (targets.to(self.device)))
+                        loss = criterion(outputs.logits, targets)
+                        _, predicted = torch.max(outputs.data, 1)
+                        correct = (predicted == targets)
                     else:
                         # if anything else, just except
                         raise ValueError(f"outputs from model is type {type(outputs)} which is unknown.")
@@ -330,13 +335,10 @@ class PyTorchDistributedModelTrainingSequence:
                 images = images.to(
                     self.device, non_blocking=self.dataloading_config.non_blocking
                 )
-                one_hot_targets = torch.nn.functional.one_hot(
-                    targets.to(
+                targets = targets.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
-                    ),
-                    num_classes=len(self.labels)
-                ).float()
-
+                )
+                
             with record_function("train.forward"):
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -344,12 +346,17 @@ class PyTorchDistributedModelTrainingSequence:
                 outputs = self.model(images)
 
                 if isinstance(outputs, torch.Tensor):
-                    loss = criterion(outputs, one_hot_targets)
-                    correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
+                    # if we're training a regular pytorch model (ex: torchvision)
+                    loss = criterion(outputs, targets)
+                    _, predicted = torch.max(outputs.data, 1)
+                    correct = (predicted == targets)
                 elif outputs.__class__.__name__ == "SequenceClassifierOutput":
-                    loss = criterion(outputs.logits, one_hot_targets)
-                    correct = (torch.argmax(outputs.logits, dim=-1) == (targets.to(self.device)))
+                    # if we're training a HuggingFace model
+                    loss = criterion(outputs.logits, targets)
+                    _, predicted = torch.max(outputs.data, 1)
+                    correct = (predicted == targets)
                 else:
+                    # if anything else, just except
                     raise ValueError(f"outputs from model is type {type(outputs)} which is unknown.")
 
                 running_loss += loss.item() * images.size(0)
@@ -378,8 +385,8 @@ class PyTorchDistributedModelTrainingSequence:
             self.model.parameters(),
             lr=self.training_config.learning_rate,
             momentum=self.training_config.momentum,
-            nesterov=True,
-            weight_decay=1e-4,
+            #nesterov=True,
+            #weight_decay=1e-4,
         )
 
         #criterion = nn.BCEWithLogitsLoss()
@@ -620,14 +627,14 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--learning_rate",
         type=float,
         required=False,
-        default=0.01,
+        default=0.001,
         help="Learning rate of optimizer",
     )
     group.add_argument(
         "--momentum",
         type=float,
         required=False,
-        default=0.01,
+        default=0.9,
         help="Momentum of optimizer",
     )
 

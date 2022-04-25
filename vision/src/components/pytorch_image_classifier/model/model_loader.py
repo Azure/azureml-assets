@@ -37,6 +37,9 @@ MODEL_ARCH_MAP = {
     "microsoft/swin-base-patch4-window12-384-in22k": {"input_size": 384, "library": "swin"},
     "microsoft/swin-large-patch4-window12-384": {"input_size": 384, "library": "swin"},
     "microsoft/swin-large-patch4-window12-384-in22k": {"input_size": 384, "library": "swin"},
+
+    # test model (super small)
+    "test": {"input_size": 32, "library": "test"},
 }
 
 MODEL_ARCH_LIST = list(MODEL_ARCH_MAP.keys())
@@ -62,7 +65,12 @@ def load_model(model_arch: str, output_dimension: int = 1, pretrained: bool = Tr
         from .swin_models import load_swin_model
 
         return load_swin_model(model_arch, output_dimension, pretrained)
-    else:
-        raise NotImplementedError(
-            f"library {MODEL_ARCH_MAP[model_arch]['library']} is not implemented yet."
-        )
+
+    if MODEL_ARCH_MAP[model_arch]["library"] == "test":
+        from .test_model import load_test_model
+
+        return load_test_model(model_arch, output_dimension, pretrained)
+
+    raise NotImplementedError(
+        f"library {MODEL_ARCH_MAP[model_arch]['library']} is not implemented yet."
+    )
