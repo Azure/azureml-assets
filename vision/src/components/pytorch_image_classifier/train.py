@@ -406,15 +406,15 @@ class PyTorchDistributedModelTrainingSequence:
             epoch_valid_loss = running_loss / num_samples
             epoch_valid_acc = num_correct / num_samples
 
+            # DISTRIBUTED: export checkpoint only from main node
+            if self.self_is_main_node and checkpoints_dir is not None:
+                self.checkpoint_save(self.model, optimizer, checkpoints_dir, epoch=epoch, loss=epoch_valid_loss)
+
             # PROFILER: use profiler.step() to mark a step in training
             # the pytorch profiler will use internally to trigger
             # saving the traces in different files
             if self.profiler:
                 self.profiler.step()
-
-            # DISTRIBUTED: export checkpoint only from main node
-            if self.self_is_main_node:
-                self.checkpoint_save(checkpoints_dir, epoch=epoch, loss=epoch_valid_loss)
 
             # stop timer
             epoch_train_time = time.time() - epoch_start
@@ -454,7 +454,7 @@ class PyTorchDistributedModelTrainingSequence:
     ### MODEL I/O ###
     #################
 
-    def checkpoint_save(self, optimizer, output_dir: str, epoch: int, loss: float):
+    def checkpoint_save(self, model, optimizer, output_dir: str, epoch: int, loss: float):
         """Saves model as checkpoint"""
         # create output directory just in case
         os.makedirs(output_dir, exist_ok=True)
@@ -463,14 +463,14 @@ class PyTorchDistributedModelTrainingSequence:
 
         self.logger.info(f"Exporting checkpoint to {model_output_path}")
 
-        if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
+        if isinstance(model, torch.nn.parallel.DistributedDataParallel):
             # DISTRIBUTED: to export model, you need to get it out of the DistributedDataParallel class
             self.logger.info(
                 "Model was distributed, we will checkpoint DistributedDataParallel.module"
             )
-            model_to_save = self.model.module
+            model_to_save = model.module
         else:
-            model_to_save = self.model
+            model_to_save = model
 
         with record_function("checkpoint.save"):
             torch.save({
