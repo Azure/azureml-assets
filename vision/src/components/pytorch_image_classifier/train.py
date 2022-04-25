@@ -401,7 +401,7 @@ class PyTorchDistributedModelTrainingSequence:
             self.logger.info(f"Starting epoch={epoch}")
 
             # start timer for epoch time metric
-            epoch_global_start = time.time()
+            epoch_train_start = time.time()
 
             # TRAIN: loop on training set and return metrics
             running_loss, num_correct, num_samples = self._epoch_train(
@@ -411,7 +411,7 @@ class PyTorchDistributedModelTrainingSequence:
             epoch_train_acc = num_correct / num_samples
 
             # stop timer
-            epoch_train_time = time.time() - epoch_global_start
+            epoch_train_time = time.time() - epoch_train_start
 
             # report metric values in stdout
             self.logger.info(
