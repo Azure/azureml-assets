@@ -23,9 +23,6 @@ def load_swin_model(
     else:
         model = SwinForImageClassification(config=SwinConfig())
 
-    model.classifier = torch.nn.Sequential(
-        torch.nn.Linear(model.swin.num_features, output_dimension),
-        torch.nn.Softmax(dim=1)   # adding Softmax to output probs
-    )
+    model.classifier = torch.nn.Linear(model.swin.num_features, output_dimension)
 
     return model
