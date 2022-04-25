@@ -23,7 +23,10 @@ MODEL_ARCH_MAP = {
     "densenet121": {"input_size": 224, "library": "torchvision"},
     "densenet169": {"input_size": 224, "library": "torchvision"},
     "densenet201": {"input_size": 224, "library": "torchvision"},
-    "densenet161": {"input_size": 224, "library": "torchvision"}
+    "densenet161": {"input_size": 224, "library": "torchvision"},
+
+    # test model (super small)
+    "test": {"input_size": 32, "library": "test"},
 }
 
 MODEL_ARCH_LIST = list(MODEL_ARCH_MAP.keys())
@@ -46,7 +49,12 @@ def load_model(model_arch: str, output_dimension: int = 1, pretrained: bool = Tr
         from .torchvision_models import load_torchvision_model
 
         return load_torchvision_model(model_arch, output_dimension, pretrained)
-    else:
-        raise NotImplementedError(
-            f"library {MODEL_ARCH_MAP[model_arch]['library']} is not implemented yet."
-        )
+
+    if MODEL_ARCH_MAP[model_arch]["library"] == "test":
+        from .test_model import load_test_model
+
+        return load_test_model(model_arch, output_dimension, pretrained)
+
+    raise NotImplementedError(
+        f"library {MODEL_ARCH_MAP[model_arch]['library']} is not implemented yet."
+    )
