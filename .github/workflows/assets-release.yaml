@@ -151,7 +151,7 @@ jobs:
 
   check-release-assets:
     name: Check releaseable assets
-    if: needs.identify-updated-assets.outputs.has_updates && always()
+    if: always()
     runs-on: ubuntu-latest
     needs:
       - identify-updated-assets
