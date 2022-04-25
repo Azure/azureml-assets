@@ -193,7 +193,7 @@ class PyTorchDistributedModelTrainingSequence:
                 "enable_profiling": self.training_config.enable_profiling,
             }
 
-            if torch.cuda.is_available():
+            if not self.training_config.disable_cuda and torch.cuda.is_available():
                 # add some gpu properties
                 logged_params['cuda_device_count'] = torch.cuda.device_count()
                 cuda_device_properties = torch.cuda.get_device_properties(self.device)
