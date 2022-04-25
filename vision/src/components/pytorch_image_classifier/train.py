@@ -47,7 +47,6 @@ if COMPONENT_ROOT not in sys.path:
 from model import MODEL_ARCH_LIST, get_model_metadata, load_model
 from image_io import build_image_datasets
 from profiling import PyTorchProfilerHandler
-from profiling import LogTimeBlock
 
 
 class PyTorchDistributedModelTrainingSequence:
@@ -396,6 +395,11 @@ class PyTorchDistributedModelTrainingSequence:
 
         # Decay LR by a factor of 0.1 every 7 epochs
         scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+
+        # DISTRIBUTED: export checkpoint only from main node
+        if self.self_is_main_node and checkpoints_dir is not None:
+            # saving checkpoint before training
+            self.checkpoint_save(self.model, optimizer, checkpoints_dir, epoch=-1, loss=0.0)
 
         # DISTRIBUTED: you'll node that this loop has nothing specifically "distributed"
         # that's because most of the changes are in the backend (DistributedDataParallel)
