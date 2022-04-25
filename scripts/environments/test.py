@@ -58,6 +58,7 @@ def test_images(input_dirs: List[str],
     # Set variables
     logger.set_output(SUCCESS_COUNT, success_count)
 
+
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
