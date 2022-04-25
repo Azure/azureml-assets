@@ -306,7 +306,7 @@ class PyTorchDistributedModelTrainingSequence:
                     elif outputs.__class__.__name__ == "SequenceClassifierOutput":
                         # if we're training a HuggingFace model
                         loss = criterion(outputs.logits, targets)
-                        _, predicted = torch.max(outputs.data, 1)
+                        _, predicted = torch.max(outputs.logits.data, 1)
                         correct = (predicted == targets)
                     else:
                         # if anything else, just except
@@ -353,7 +353,7 @@ class PyTorchDistributedModelTrainingSequence:
                 elif outputs.__class__.__name__ == "SequenceClassifierOutput":
                     # if we're training a HuggingFace model
                     loss = criterion(outputs.logits, targets)
-                    _, predicted = torch.max(outputs.data, 1)
+                    _, predicted = torch.max(outputs.logits.data, 1)
                     correct = (predicted == targets)
                 else:
                     # if anything else, just except
