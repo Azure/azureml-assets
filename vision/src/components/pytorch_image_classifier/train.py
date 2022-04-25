@@ -401,7 +401,7 @@ class PyTorchDistributedModelTrainingSequence:
             self.logger.info(f"Starting epoch={epoch}")
 
             # start timer for epoch time metric
-            epoch_start = time.time()
+            epoch_global_start = time.time()
 
             # TRAIN: loop on training set and return metrics
             running_loss, num_correct, num_samples = self._epoch_train(
@@ -410,10 +410,16 @@ class PyTorchDistributedModelTrainingSequence:
             epoch_train_loss = running_loss / num_samples
             epoch_train_acc = num_correct / num_samples
 
+            # stop timer
+            epoch_train_time = time.time() - epoch_global_start
+
             # report metric values in stdout
             self.logger.info(
                 f"MLFLOW: epoch_train_loss={epoch_train_loss} epoch_train_acc={epoch_train_acc} epoch={epoch}"
             )
+
+            # start timer for epoch time metric
+            epoch_eval_start = time.time()
 
             # MLFLOW / DISTRIBUTED: report metrics only from main node
             if self.self_is_main_node:
@@ -425,6 +431,12 @@ class PyTorchDistributedModelTrainingSequence:
             epoch_valid_loss = running_loss / num_samples
             epoch_valid_acc = num_correct / num_samples
 
+            # stop timer
+            epoch_eval_time = time.time() - epoch_eval_start
+
+            # start timer for epoch time metric
+            epoch_utility_start = time.time()
+
             # PROFILER: use profiler.step() to mark a step in training
             # the pytorch profiler will use internally to trigger
             # saving the traces in different files
@@ -432,7 +444,7 @@ class PyTorchDistributedModelTrainingSequence:
                 self.profiler.step()
 
             # stop timer
-            epoch_train_time = time.time() - epoch_start
+            epoch_utility_time = time.time() - epoch_utility_start
 
             self.logger.info(
                 f"MLFLOW: epoch_valid_loss={epoch_valid_loss} epoch_valid_acc={epoch_valid_acc} epoch={epoch}"
@@ -440,12 +452,21 @@ class PyTorchDistributedModelTrainingSequence:
             self.logger.info(
                 f"MLFLOW: epoch_train_time={epoch_train_time} epoch={epoch}"
             )
+            self.logger.info(
+                f"MLFLOW: epoch_eval_time={epoch_eval_time} epoch={epoch}"
+            )
+            self.logger.info(
+                f"MLFLOW: epoch_utility_time={epoch_utility_time} epoch={epoch}"
+            )
 
             # MLFLOW / DISTRIBUTED: report metrics only from main node
             if self.self_is_main_node:
                 mlflow.log_metric("epoch_valid_loss", epoch_valid_loss, step=epoch)
                 mlflow.log_metric("epoch_valid_acc", epoch_valid_acc, step=epoch)
                 mlflow.log_metric("epoch_train_time", epoch_train_time, step=epoch)
+                mlflow.log_metric("epoch_eval_time", epoch_eval_time, step=epoch)
+                mlflow.log_metric("epoch_utility_time", epoch_utility_time, step=epoch)
+
 
     def runtime_error_report(self, runtime_exception):
         """Call this when catching a critical exception.
