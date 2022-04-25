@@ -64,11 +64,11 @@ inputs:
   learning_rate:
     type: number
     optional: true
-    description: "Learning rate of optimizer (default: 0.01)"
+    description: "Learning rate of optimizer (default: 0.001)"
   momentum:
     type: number
     optional: true
-    description: "Momentum of optimizer (default: 0.01)"
+    description: "Momentum of optimizer (default: 0.9)"
   
   # model registration
   register_model_as:
