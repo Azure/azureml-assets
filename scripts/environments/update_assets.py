@@ -5,9 +5,9 @@ import shutil
 import tempfile
 from typing import List
 
-from build import pin_env_files
 from ci_logger import logger
 from config import AssetConfig, AssetType, EnvironmentConfig, Spec
+from pin_versions import transform_file
 from update_spec import update as update_spec
 from util import are_dir_trees_equal, copy_replace_dir, get_asset_output_dir, get_asset_release_dir
 
@@ -15,6 +15,14 @@ TAG_TEMPLATE = "refs/tags/{name}"
 RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
 HAS_UPDATES = "has_updates"
 ENV_OS_UPDATES = "env_os_updates"
+
+
+def pin_env_files(env_config: EnvironmentConfig):
+    for file_to_pin in env_config.template_files_with_path:
+        if os.path.exists(file_to_pin):
+            transform_file(file_to_pin)
+        else:
+            logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
 
 def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):

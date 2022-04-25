@@ -8,12 +8,13 @@ from typing import List
 
 from config import AssetConfig, AssetType, EnvironmentConfig, Os
 from ci_logger import logger
-from pin_versions import transform_file
 from util import copy_asset_to_output_dir
 
+SUCCESS_COUNT = "success_count"
 
-def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_log: str,
-                build_os: str = None, resource_group: str = None, registry: str = None):
+
+def build_image(asset_config: AssetConfig, image_name: str, build_context_dir: str, dockerfile: str,
+                build_log: str, build_os: str = None, resource_group: str = None, registry: str = None):
     print(f"Building {image_name}")
     start = timer()
     if registry is not None:
@@ -31,7 +32,7 @@ def build_image(image_name: str, build_context_dir: str, dockerfile: str, build_
     os.makedirs(os.path.dirname(build_log), exist_ok=True)
     with open(build_log, "w") as f:
         f.write(p.stdout.decode())
-    return (image_name, p.returncode, p.stdout.decode())
+    return (asset_config, image_name, p.returncode, p.stdout.decode())
 
 
 # Doesn't support ACR yet
@@ -46,31 +47,12 @@ def get_image_digest(image_name: str):
         return None
 
 
-def create_github_env_var(key: str, value: str):
-    # Make list of image names available to following steps
-    github_env = os.getenv('GITHUB_ENV')
-    if github_env:
-        with open(github_env, "w+") as f:
-            f.write(f"{key}={value}")
-    else:
-        logger.log_warning("Failed to write image names: GITHUB_ENV environment variable not found")
-
-
-def pin_env_files(env_config: EnvironmentConfig):
-    for file_to_pin in env_config.template_files_with_path:
-        if os.path.exists(file_to_pin):
-            transform_file(file_to_pin)
-        else:
-            logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
-
-
 def build_images(input_dirs: List[str],
                  asset_config_filename: str,
                  output_directory: str,
                  build_logs_dir: str,
                  max_parallel: int,
                  changed_files: List[str],
-                 image_names_key: str,
                  os_to_build: str = None,
                  resource_group: str = None,
                  registry: str = None):
@@ -98,19 +80,16 @@ def build_images(input_dirs: List[str],
                         print(f"Skipping build of {env_config.image_name}: No files in its directory were changed")
                         continue
 
-                    # Pin images/packages in files
-                    pin_env_files(env_config)
-
                     # Start building image
                     build_log = os.path.join(build_logs_dir, f"{env_config.image_name}.log")
-                    futures.append(pool.submit(build_image, env_config.image_name, env_config.context_dir_with_path,
-                                               env_config.dockerfile, build_log, env_config.os.value, resource_group,
-                                               registry))
+                    futures.append(pool.submit(build_image, asset_config, env_config.image_name,
+                                               env_config.context_dir_with_path, env_config.dockerfile, build_log,
+                                               env_config.os.value, resource_group, registry))
 
         # Wait for builds to complete
-        image_names = []
+        success_count = 0
         for future in as_completed(futures):
-            (image_name, return_code, output) = future.result()
+            (asset_config, image_name, return_code, output) = future.result()
             logger.start_group(f"{image_name} build log")
             print(output)
             logger.end_group()
@@ -118,12 +97,12 @@ def build_images(input_dirs: List[str],
                 logger.log_error(f"Build of {image_name} failed with exit status {return_code}", "Build failure")
             else:
                 logger.log_debug(f"Successfully built {image_name}")
-                image_names.append(image_name)
+                success_count += 1
                 if output_directory:
                     copy_asset_to_output_dir(asset_config, output_directory)
 
-        # Make list of image names available to following steps
-        create_github_env_var(image_names_key, ",".join(image_names))
+        # Set variables
+        logger.set_output(SUCCESS_COUNT, success_count)
 
 
 if __name__ == '__main__':
@@ -135,7 +114,6 @@ if __name__ == '__main__':
     parser.add_argument("-l", "--build-logs-dir", required=True, help="Directory to receive build logs")
     parser.add_argument("-p", "--max-parallel", type=int, default=25, help="Maximum number of images to build at the same time")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter images")
-    parser.add_argument("-k", "--image-names-key", help="GitHub actions environment variable that will receive a comma-separated list of images built")
     parser.add_argument("-O", "--os-to-build", choices=[i.value for i in list(Os)], help="Only build environments based on this OS")
     parser.add_argument("-r", "--registry", help="Container registry on which to build images")
     parser.add_argument("-g", "--resource-group", help="Resource group containing the container registry")
@@ -156,7 +134,6 @@ if __name__ == '__main__':
                  build_logs_dir=args.build_logs_dir,
                  max_parallel=args.max_parallel,
                  changed_files=changed_files,
-                 image_names_key=args.image_names_key,
                  os_to_build=args.os_to_build,
                  resource_group=args.resource_group,
                  registry=args.registry)
