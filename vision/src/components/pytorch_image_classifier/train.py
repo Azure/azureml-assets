@@ -160,7 +160,7 @@ class PyTorchDistributedModelTrainingSequence:
             )
         else:
             self.logger.info(f"Not running in multinode.")
-        
+
         # DISTRIBUTED: in distributed mode, you want to report parameters
         # only from main process (rank==0) to avoid conflict
         if self.self_is_main_node:
@@ -298,13 +298,22 @@ class PyTorchDistributedModelTrainingSequence:
                 with record_function("eval.forward"):
                     outputs = self.model(images)
 
-                    loss = criterion(outputs, targets)
-                    _, predicted = torch.max(outputs.data, 1)
-                    correct = (predicted == (targets.to(self.device)))
+                    if isinstance(outputs, torch.Tensor):
+                        # if we're training a regular pytorch model (ex: torchvision)
+                        loss = criterion(outputs, targets)
+                        _, predicted = torch.max(outputs.data, 1)
+                        correct = (predicted == targets)
+                    elif outputs.__class__.__name__ == "SequenceClassifierOutput":
+                        # if we're training a HuggingFace model
+                        loss = criterion(outputs.logits, targets)
+                        _, predicted = torch.max(outputs.data, 1)
+                        correct = (predicted == targets)
+                    else:
+                        # if anything else, just except
+                        raise ValueError(f"outputs from model is type {type(outputs)} which is unknown.")
 
                     running_loss += loss.item() * images.size(0)
 
-                    correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
                     num_correct += torch.sum(correct).item()
                     num_total_images += len(images)
 
@@ -336,9 +345,19 @@ class PyTorchDistributedModelTrainingSequence:
 
                 outputs = self.model(images)
 
-                loss = criterion(outputs, targets)
-                _, predicted = torch.max(outputs.data, 1)
-                correct = (predicted == (targets.to(self.device)))
+                if isinstance(outputs, torch.Tensor):
+                    # if we're training a regular pytorch model (ex: torchvision)
+                    loss = criterion(outputs, targets)
+                    _, predicted = torch.max(outputs.data, 1)
+                    correct = (predicted == targets)
+                elif outputs.__class__.__name__ == "SequenceClassifierOutput":
+                    # if we're training a HuggingFace model
+                    loss = criterion(outputs.logits, targets)
+                    _, predicted = torch.max(outputs.data, 1)
+                    correct = (predicted == targets)
+                else:
+                    # if anything else, just except
+                    raise ValueError(f"outputs from model is type {type(outputs)} which is unknown.")
 
                 running_loss += loss.item() * images.size(0)
                 num_correct += torch.sum(correct).item()
@@ -562,7 +581,6 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--model_arch",
         type=str,
         required=False,
-        choices=MODEL_ARCH_LIST,
         default="resnet18",
         help="Which model architecture to use (default: resnet18)",
     )
