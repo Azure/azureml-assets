@@ -5,6 +5,6 @@
     },
     {
         "os": "windows",
-        "runs_on": "windows-latest"
+        "runs_on": "windows-2019"
     }
 ]
