@@ -102,7 +102,7 @@ jobs:
 
   build-images:
     name: Build and test images
-    if: fromJson(needs.identify-updated-assets.outputs.build_matrix).os[0]
+    if: fromJson(needs.identify-updated-assets.outputs.build_matrix)
     runs-on: ${{ matrix.runs_on }}
     needs: identify-updated-assets
 
