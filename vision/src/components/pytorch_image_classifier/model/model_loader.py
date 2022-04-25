@@ -6,6 +6,7 @@ This script provides code to load and setup a variety of models from multiple li
 """
 
 MODEL_ARCH_MAP = {
+    # TorchVision models
     "resnet18": {"input_size": 224, "library": "torchvision"},
     "resnet34": {"input_size": 224, "library": "torchvision"},
     "resnet50": {"input_size": 224, "library": "torchvision"},
@@ -25,12 +26,23 @@ MODEL_ARCH_MAP = {
     "densenet201": {"input_size": 224, "library": "torchvision"},
     "densenet161": {"input_size": 224, "library": "torchvision"},
 
+    # Swin HuggingFace models
+    "microsoft/swin-tiny-patch4-window7-224": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-small-patch4-window7-224": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-base-patch4-window7-224": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-base-patch4-window7-224-in22k": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-large-patch4-window7-224": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-large-patch4-window7-224-in22k": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-base-patch4-window12-384": {"input_size": 384, "library": "swin"},
+    "microsoft/swin-base-patch4-window12-384-in22k": {"input_size": 384, "library": "swin"},
+    "microsoft/swin-large-patch4-window12-384": {"input_size": 384, "library": "swin"},
+    "microsoft/swin-large-patch4-window12-384-in22k": {"input_size": 384, "library": "swin"},
+
     # test model (super small)
     "test": {"input_size": 32, "library": "test"},
 }
 
 MODEL_ARCH_LIST = list(MODEL_ARCH_MAP.keys())
-
 
 def get_model_metadata(model_arch: str):
     """Returns the model metadata"""
@@ -49,6 +61,10 @@ def load_model(model_arch: str, output_dimension: int = 1, pretrained: bool = Tr
         from .torchvision_models import load_torchvision_model
 
         return load_torchvision_model(model_arch, output_dimension, pretrained)
+    if MODEL_ARCH_MAP[model_arch]["library"] == "swin":
+        from .swin_models import load_swin_model
+
+        return load_swin_model(model_arch, output_dimension, pretrained)
 
     if MODEL_ARCH_MAP[model_arch]["library"] == "test":
         from .test_model import load_test_model

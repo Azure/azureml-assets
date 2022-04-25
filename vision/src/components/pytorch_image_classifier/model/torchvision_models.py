@@ -8,27 +8,6 @@ import logging
 import torch
 import torchvision.models as models
 
-TORCHVISION_MODEL_ARCH_LIST = [
-    "resnet18",
-    "resnet34",
-    "resnet50",
-    "resnet101",
-    "resnet152",
-    "alexnet",
-    "vgg11",
-    "vgg11_bn",
-    "vgg13",
-    "vgg13_bn",
-    "vgg16",
-    "vgg16_bn",
-    "vgg19",
-    "vgg19_bn",
-    "densenet121",
-    "densenet169",
-    "densenet201",
-    "densenet161"
-]
-
 
 def load_torchvision_model(
     model_arch: str, output_dimension: int = 1, pretrained: bool = True
@@ -39,7 +18,7 @@ def load_torchvision_model(
     logger.info(
         f"Loading model from arch={model_arch} pretrained={pretrained} output_dimension={output_dimension}"
     )
-    if model_arch in TORCHVISION_MODEL_ARCH_LIST:
+    if hasattr(models, model_arch):
         model = getattr(models, model_arch)(pretrained=pretrained)
     else:
         raise NotImplementedError(
