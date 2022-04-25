@@ -165,9 +165,6 @@ jobs:
           name: ${{ env.releasable_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
         continue-on-error: true
-    
-      - name: Echo download path
-        run: echo ${{ steps.download-artifact.outputs.download-path }}
 
     outputs:
       has_releasable_assets: ${{ steps.download-artifact.outputs.download-path }}
