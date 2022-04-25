@@ -23,12 +23,12 @@ def test_image(image_name: str):
     return (p.returncode, p.stdout.decode())
 
 
-def test_images(image_dirs: List[str],
+def test_images(input_dirs: List[str],
                 asset_config_filename: str,
                 output_directory: str,
                 os_to_test: str = None):
-    for image_dir in image_dirs:
-        for root, _, files in os.walk(image_dir):
+    for input_dir in input_dirs:
+        for root, _, files in os.walk(input_dir):
             for asset_config_file in [f for f in files if f == asset_config_filename]:
                 # Load config
                 asset_config = AssetConfig(os.path.join(root, asset_config_file))
@@ -63,10 +63,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
-    image_dirs = args.image_dirs.split(",")
+    input_dirs = args.input_dirs.split(",")
 
     # Test images
-    test_images(image_dirs=image_dirs,
+    test_images(input_dirs=input_dirs,
                 asset_config_filename=args.asset_config_filename,
                 output_directory=args.output_directory,
                 os_to_test=args.os_to_test)
