@@ -87,10 +87,14 @@ jobs:
       #     echo "::set-output name=build_matrix::$build_matrix"
       
       - id: create-matrix
+        name: Create build and test matrix
         uses: JoshuaTheMiller/conditional-build-matrix@0.0.1
         with:
           inputFile: ${{ env.main_dir }}/${{ env.build_test_matrix_template }}
           filter: '{os: [?contains(`${{ steps.find-updated-assets.outputs.env_os_updates }}`, os)].os, include: [?contains(`${{ steps.find-updated-assets.outputs.env_os_updates }}`, os)]}'
+      
+      - name: Debug matrix
+        run: echo '${{ steps.create-matrix.outputs.matrix }}'
 
     outputs:
       has_updates: ${{ steps.find-updated-assets.outputs.has_updates }}
