@@ -15,7 +15,7 @@ TEST_PHRASE = "hello world!"
 def test_image(image_name: str):
     print(f"Testing {image_name}")
     start = timer()
-    p = run(["docker", "run", image_name, "python", "-c", f"print(\"{TEST_PHRASE}\")"],
+    p = run(["docker", "run", "--entrypoint", "python", image_name, "-c", f"print(\"{TEST_PHRASE}\")"],
             stdout=PIPE,
             stderr=STDOUT)
     end = timer()

@@ -92,6 +92,9 @@ jobs:
         with:
           inputFile: ${{ env.main_dir }}/${{ env.build_test_matrix_template }}
           filter: '[?contains(`${{ steps.find-updated-assets.outputs.env_os_updates }}`, os)]'
+          # TODO: Use these after this merges: https://github.com/JoshuaTheMiller/conditional-build-matrix/pull/2
+          # filter: '[?contains(`${{ steps.find-updated-assets.outputs.env_os_updates }}`, os)] | {os: [].os, include: @}'
+          # addInclude: false
 
       - name: Debug matrix
         run: echo '${{ steps.create-matrix.outputs.matrix }}'
