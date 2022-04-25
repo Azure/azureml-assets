@@ -47,6 +47,7 @@ if COMPONENT_ROOT not in sys.path:
 from model import MODEL_ARCH_LIST, get_model_metadata, load_model
 from image_io import build_image_datasets
 from profiling import PyTorchProfilerHandler
+from profiling import LogTimeBlock
 
 
 class PyTorchDistributedModelTrainingSequence:
@@ -350,11 +351,12 @@ class PyTorchDistributedModelTrainingSequence:
 
         return running_loss, num_correct, num_total_images
 
-    def train(self, epochs=None):
+    def train(self, epochs:int=None, checkpoints_dir:str=None):
         """Trains the model.
 
         Args:
             epochs (int, optional): if not provided uses internal config
+            checkpoints_dir (str, optional): path to write checkpoints
         """
         if epochs is None:
             epochs = self.training_config.num_epochs
@@ -410,6 +412,10 @@ class PyTorchDistributedModelTrainingSequence:
             if self.profiler:
                 self.profiler.step()
 
+            # DISTRIBUTED: export checkpoint only from main node
+            if self.self_is_main_node:
+                self.checkpoint_save(checkpoints_dir, epoch=epoch, loss=epoch_valid_loss)
+
             # stop timer
             epoch_train_time = time.time() - epoch_start
 
@@ -425,6 +431,7 @@ class PyTorchDistributedModelTrainingSequence:
                 mlflow.log_metric("epoch_valid_loss", epoch_valid_loss, step=epoch)
                 mlflow.log_metric("epoch_valid_acc", epoch_valid_acc, step=epoch)
                 mlflow.log_metric("epoch_train_time", epoch_train_time, step=epoch)
+            
 
     def runtime_error_report(self, runtime_exception):
         """Call this when catching a critical exception.
@@ -447,6 +454,33 @@ class PyTorchDistributedModelTrainingSequence:
     ### MODEL I/O ###
     #################
 
+    def checkpoint_save(self, optimizer, output_dir: str, epoch: int, loss: float):
+        """Saves model as checkpoint"""
+        # create output directory just in case
+        os.makedirs(output_dir, exist_ok=True)
+
+        model_output_path = os.path.join(output_dir, f"model-checkpoint-epoch{epoch}-loss{loss}.pt")
+
+        self.logger.info(f"Exporting checkpoint to {model_output_path}")
+
+        if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
+            # DISTRIBUTED: to export model, you need to get it out of the DistributedDataParallel class
+            self.logger.info(
+                "Model was distributed, we will checkpoint DistributedDataParallel.module"
+            )
+            model_to_save = self.model.module
+        else:
+            model_to_save = self.model
+
+        with record_function("checkpoint.save"):
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model_to_save.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss
+            }, model_output_path)
+
+        
     def save(self, output_dir: str, name: str = "dev", register_as: str = None) -> None:
         # DISTRIBUTED: you want to save the model only from the main node/process
         # in data distributed mode, all models should theoretically be the same
@@ -459,7 +493,7 @@ class PyTorchDistributedModelTrainingSequence:
             if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
                 # DISTRIBUTED: to export model, you need to get it out of the DistributedDataParallel class
                 self.logger.info(
-                    "Model was distibuted, we will export DistributedDataParallel.module"
+                    "Model was distributed, we will export DistributedDataParallel.module"
                 )
                 model_to_save = self.model.module.to("cpu")
             else:
@@ -502,6 +536,13 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         required=False,
         default=None,
         help="Path to write final model",
+    )
+    group.add_argument(
+        "--checkpoints",
+        type=str,
+        required=False,
+        default=None,
+        help="Path to read/write checkpoints",
     )
     group.add_argument(
         "--register_model_as",
@@ -674,7 +715,7 @@ def run(args):
     # runs training sequence
     # NOTE: num_epochs is provided in args
     try:
-        training_handler.train()
+        training_handler.train(checkpoints_dir=args.checkpoints)
     except RuntimeError as runtime_exception: # if runtime error occurs (ex: cuda out of memory)
         # then print some runtime error report in the logs
         training_handler.runtime_error_report(runtime_exception)

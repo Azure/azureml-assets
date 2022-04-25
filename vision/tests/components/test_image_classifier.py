@@ -65,6 +65,7 @@ def test_components_pytorch_image_classifier_single_node(
 ):
     """Tests src/components/pytorch_image_classifier/train.py"""
     model_dir = os.path.join(temporary_dir, "pytorch_image_classifier_model")
+    checkpoints_dir = os.path.join(temporary_dir, "pytorch_image_classifier_checkpoints")
 
     # create test arguments for the script
     script_args = [
@@ -88,9 +89,11 @@ def test_components_pytorch_image_classifier_single_node(
         "--model_arch_pretrained",
         "True",
         "--num_epochs",
-        "1",
+        "2",
         "--model_output",
         model_dir,
+        "--checkpoints",
+        checkpoints_dir,
         "--register_model_as",
         "foo",
         "--enable_profiling",
@@ -121,6 +124,9 @@ def test_components_pytorch_image_classifier_single_node(
     assert kwargs["artifact_path"] == "final_model"
     assert "registered_model_name" in kwargs
     assert kwargs["registered_model_name"] == "foo"
+
+    # there should be 1 checkpoint per epoch
+    assert len(os.listdir(checkpoints_dir)) == 2
 
 
 @patch("mlflow.end_run") # we can have only 1 start/end per test session
