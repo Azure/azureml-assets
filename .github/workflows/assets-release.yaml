@@ -151,12 +151,12 @@ jobs:
 
   check-release-assets:
     name: Check releaseable assets
-    if: always()
+    if: needs.identify-updated-assets.outputs.has_updates && always()
     runs-on: ubuntu-latest
     needs:
-      - build-images
       - identify-updated-assets
-    
+      - build-images
+
     steps:
       - name: Download releasable assets
         id: download-artifact
