@@ -89,7 +89,7 @@ jobs:
       - id: create-matrix
         uses: JoshuaTheMiller/conditional-build-matrix@0.0.1
         with:
-          inputFile: $main_dir/$build_test_matrix_template
+          inputFile: ${{ env.main_dir }}/${{ env.build_test_matrix_template }}
           filter: '{os: [?contains(`${{ steps.find-updated-assets.outputs.env_os_updates }}`, os)].os, include: [?contains(`${{ steps.find-updated-assets.outputs.env_os_updates }}`, os)]}'
 
     outputs:
