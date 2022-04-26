@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - elesel/update-ci-workflow
   schedule:
     - cron: '30 6 * * *'
   workflow_dispatch:

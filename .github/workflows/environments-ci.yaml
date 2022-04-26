@@ -1,9 +1,6 @@
 name: environments-ci
 
 on:
-  push:
-    branches:
-      - elesel/update-ci-workflow
   pull_request:
     branches:
       - main
