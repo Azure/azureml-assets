@@ -19,10 +19,7 @@ on:
 
 env:
   scripts_dir: scripts/environments
-  changed_assets_artifact: changed-assets
-  releasable_assets_artifact: releasable-assets
   asset_config_filename: asset.yaml
-  build_test_matrix_template: .github/includes/build-test-matrix.json
 
 defaults:
   run:
@@ -42,9 +39,7 @@ jobs:
           - os: windows
             runs_on: windows-2019
     env:
-      build_logs_dir: build-logs
       build_logs_artifact_name: build-logs
-      built_dir: built-environments
 
     steps:
       - name: Clone branch
@@ -76,23 +71,20 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Build all images
-        id: build-images
         if: steps.changed-environments.outputs.any_changed == 'false' || steps.changed-scripts.outputs.any_changed == 'true'
-        run: python -u $scripts_dir/build.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_dir
+        run: python -u $scripts_dir/build.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name
 
       - name: Build changed images
-        id: build-images
         if: steps.changed-environments.outputs.any_changed == 'true' && steps.changed-scripts.outputs.any_changed == 'false'
-        run: python -u $scripts_dir/build.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_dir -c "${{ steps.changed-environments.outputs.all_changed_and_modified_files }}"
+        run: python -u $scripts_dir/build.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name -c "${{ steps.changed-environments.outputs.all_changed_and_modified_files }}"
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ${{ env.build_logs_artifact_name }}
-          path: ${{ runner.temp }}/${{ env.build_logs_dir }}
+          path: ${{ runner.temp }}/${{ env.build_logs_artifact_name }}
 
       - name: Test images
         id: test-images
-        if: steps.build-images.outputs.success_count > 0
         run: python -u $scripts_dir/test.py -i -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }}
