@@ -47,8 +47,8 @@ jobs:
         with:
           fetch-depth: 2
       
-      - name: Get changed environments
-        id: changed-environments
+      - name: Get changed files
+        id: changed-files
         uses: tj-actions/changed-files@v18.6
         with:
           files: ${{ inputs.asset_dirs }}
@@ -72,13 +72,13 @@ jobs:
       
       - name: Build all images
         id: build-all-images
-        if: steps.changed-environments.outputs.any_changed == 'false' || steps.changed-scripts.outputs.any_changed == 'true'
+        if: steps.changed-scripts.outputs.any_modified == 'true'
         run: python -u $scripts_dir/build.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name
 
       - name: Build changed images
         id: build-changed-images
-        if: steps.changed-environments.outputs.any_changed == 'true' && steps.changed-scripts.outputs.any_changed == 'false'
-        run: python -u $scripts_dir/build.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name -c "${{ steps.changed-environments.outputs.all_changed_and_modified_files }}"
+        if: steps.changed-scripts.outputs.any_modified == 'false'
+        run: python -u $scripts_dir/build.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3
