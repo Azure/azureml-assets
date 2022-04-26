@@ -1,5 +1,7 @@
 import argparse
 import os
+import sys
+from collections import Counter
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import timedelta
 from subprocess import run, PIPE, STDOUT
@@ -11,11 +13,13 @@ from ci_logger import logger
 from util import copy_asset_to_output_dir
 
 SUCCESS_COUNT = "success_count"
+FAILED_COUNT = "failed_count"
+COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 
 
 def build_image(asset_config: AssetConfig, image_name: str, build_context_dir: str, dockerfile: str,
                 build_log: str, build_os: str = None, resource_group: str = None, registry: str = None):
-    print(f"Building {image_name}")
+    print(f"Building image for {asset_config.name}")
     start = timer()
     if registry is not None:
         # Build on ACR
@@ -28,11 +32,11 @@ def build_image(asset_config: AssetConfig, image_name: str, build_context_dir: s
             stdout=PIPE,
             stderr=STDOUT)
     end = timer()
-    print(f"{image_name} built in {timedelta(seconds=end-start)}")
+    print(f"Image for {asset_config.name} built in {timedelta(seconds=end-start)}")
     os.makedirs(os.path.dirname(build_log), exist_ok=True)
     with open(build_log, "w") as f:
         f.write(p.stdout.decode())
-    return (asset_config, image_name, p.returncode, p.stdout.decode())
+    return (asset_config, p.returncode, p.stdout.decode())
 
 
 # Doesn't support ACR yet
@@ -56,6 +60,8 @@ def build_images(input_dirs: List[str],
                  os_to_build: str = None,
                  resource_group: str = None,
                  registry: str = None):
+    changed_files_abs = [os.path.abspath(f) for f in changed_files]
+    counters = Counter()
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find environments under image root directories
         futures = []
@@ -72,37 +78,43 @@ def build_images(input_dirs: List[str],
 
                     # Filter by OS
                     if os_to_build and env_config.os.value != os_to_build:
-                        print(f"Skipping build of {env_config.image_name}: Operating system {env_config.os.value} != {os_to_build}")
+                        print(f"Skipping build of image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_build}")
                         continue
 
                     # If provided, skip directories with no changed files
-                    if changed_files and not any([f for f in changed_files if f.startswith(f"{root}/")]):
-                        print(f"Skipping build of {env_config.image_name}: No files in its directory were changed")
+                    root_abs = os.path.abspath(root)
+                    if changed_files and not any([f for f in changed_files_abs if f.startswith(os.path.join(root_abs, ""))]):
+                        print(f"Skipping build of image for {asset_config.name}: No files in its directory were changed")
                         continue
 
                     # Start building image
-                    build_log = os.path.join(build_logs_dir, f"{env_config.image_name}.log")
+                    build_log = os.path.join(build_logs_dir, f"{asset_config.name}.log")
                     futures.append(pool.submit(build_image, asset_config, env_config.image_name,
                                                env_config.context_dir_with_path, env_config.dockerfile, build_log,
                                                env_config.os.value, resource_group, registry))
 
         # Wait for builds to complete
-        success_count = 0
         for future in as_completed(futures):
-            (asset_config, image_name, return_code, output) = future.result()
-            logger.start_group(f"{image_name} build log")
+            (asset_config, return_code, output) = future.result()
+            logger.start_group(f"{asset_config.name} build log")
             print(output)
             logger.end_group()
             if return_code != 0:
-                logger.log_error(f"Build of {image_name} failed with exit status {return_code}", "Build failure")
+                logger.log_error(f"Build of image for {asset_config.name} failed with exit status {return_code}", "Build failure")
+                counters[FAILED_COUNT] += 1
             else:
-                logger.log_debug(f"Successfully built {image_name}")
-                success_count += 1
+                logger.log_debug(f"Successfully built image for {asset_config.name}")
+                counters[SUCCESS_COUNT] += 1
                 if output_directory:
                     copy_asset_to_output_dir(asset_config, output_directory)
 
-        # Set variables
-        logger.set_output(SUCCESS_COUNT, success_count)
+    # Set variables
+    for counter_name in COUNTERS:
+        logger.set_output(counter_name, counters[counter_name])
+
+    if counters[FAILED_COUNT] > 0:
+        logger.log_error(f"{counters[FAILED_COUNT]} environment image(s) failed to build")
+        sys.exit(1)
 
 
 if __name__ == '__main__':

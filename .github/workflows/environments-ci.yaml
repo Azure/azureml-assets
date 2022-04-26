@@ -8,11 +8,10 @@ on:
       - general/src/environments/**
       - scripts/environments/**
   workflow_dispatch:
-    inputs:
-      image_dirs:
-        description: Image directories
-        default: general/src/environments
-        required: true
+
+env:
+  scripts_dir: scripts/environments
+  asset_config_filename: asset.yaml
 
 defaults:
   run:
@@ -20,24 +19,67 @@ defaults:
 
 # TODO: Refactor to match assets-release
 jobs:
-  # Build Linux-based images
-  build-push-linux:
-    name: Build Linux images
-    uses: ./.github/workflows/docker-actions.yaml
-    with:
-      machine_type: ubuntu-latest
-      os_to_build: linux
-      image_dirs: ${{ github.event.inputs.image_dirs || 'general/src/environments' }}
-      build_log_dir: build-logs
-      build_artifact_name: build-logs-linux
-  
-  # Build Windows-based images
-  build-push-windows:
-    name: Build Windows images
-    uses: ./.github/workflows/docker-actions.yaml
-    with:
-      machine_type: windows-2019
-      os_to_build: windows
-      image_dirs: ${{ github.event.inputs.image_dirs || 'general/src/environments' }}
-      build_log_dir: build-logs
-      build_artifact_name: build-logs-windows
+  build-images:
+    name: Build and test images
+    runs-on: ${{ matrix.runs_on }}
+
+    strategy:
+      matrix:
+        os: [linux, windows]
+        include:
+          - os: linux
+            runs_on: ubuntu-latest
+          - os: windows
+            runs_on: windows-2019
+    env:
+      build_logs_artifact_name: build-logs
+      built_dir: built-environments
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v18.6
+        with:
+          files_separator: ','
+          separator: ','
+      
+      - name: Get changed environment scripts
+        id: changed-scripts
+        uses: tj-actions/changed-files@v18.6
+        with:
+          files: ${{ env.scripts_dir }}
+          separator: ','
+      
+      - name: Use Python 3.8 or newer
+        uses: actions/setup-python@v3
+        with:
+          python-version: '>=3.8'
+    
+      - name: Install dependencies
+        run: pip install -r $scripts_dir/requirements.txt
+      
+      - name: Build all images
+        id: build-all-images
+        if: steps.changed-scripts.outputs.any_modified == 'true'
+        run: python -u $scripts_dir/build.py -i . -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name
+
+      - name: Build changed images
+        id: build-changed-images
+        if: steps.changed-scripts.outputs.any_modified == 'false'
+        run: python -u $scripts_dir/build.py -i . -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
+
+      - name: Upload build logs
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ${{ env.build_logs_artifact_name }}
+          path: ${{ runner.temp }}/${{ env.build_logs_artifact_name }}
+
+      - name: Test images
+        if: steps.build-all-images.outputs.success_count > 0 || steps.build-changed-images.outputs.success_count > 0
+        run: python -u $scripts_dir/test.py -i '${{ runner.temp }}'/$built_dir -a $asset_config_filename -O ${{ matrix.os }}
