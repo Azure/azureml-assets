@@ -1,5 +1,7 @@
 import argparse
 import os
+import sys
+from collections import Counter
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import timedelta
 from subprocess import run, PIPE, STDOUT
@@ -11,6 +13,8 @@ from ci_logger import logger
 from util import copy_asset_to_output_dir
 
 SUCCESS_COUNT = "success_count"
+FAILED_COUNT = "failed_count"
+COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 
 
 def build_image(asset_config: AssetConfig, image_name: str, build_context_dir: str, dockerfile: str,
@@ -56,6 +60,7 @@ def build_images(input_dirs: List[str],
                  os_to_build: str = None,
                  resource_group: str = None,
                  registry: str = None):
+    counters = Counter()
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find environments under image root directories
         futures = []
@@ -87,7 +92,6 @@ def build_images(input_dirs: List[str],
                                                env_config.os.value, resource_group, registry))
 
         # Wait for builds to complete
-        success_count = 0
         for future in as_completed(futures):
             (asset_config, image_name, return_code, output) = future.result()
             logger.start_group(f"{image_name} build log")
@@ -95,14 +99,20 @@ def build_images(input_dirs: List[str],
             logger.end_group()
             if return_code != 0:
                 logger.log_error(f"Build of {image_name} failed with exit status {return_code}", "Build failure")
+                counters[FAILED_COUNT] += 1
             else:
                 logger.log_debug(f"Successfully built {image_name}")
-                success_count += 1
+                counters[SUCCESS_COUNT] += 1
                 if output_directory:
                     copy_asset_to_output_dir(asset_config, output_directory)
 
-        # Set variables
-        logger.set_output(SUCCESS_COUNT, success_count)
+    # Set variables
+    for counter_name in COUNTERS:
+        logger.set_output(counter_name, counters[counter_name])
+
+    if counters[FAILED_COUNT] > 0:
+        logger.log_error(f"{counters[FAILED_COUNT]} environments failed to build")
+        sys.exit(1)
 
 
 if __name__ == '__main__':
