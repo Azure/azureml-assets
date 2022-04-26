@@ -17,14 +17,14 @@ COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 TEST_PHRASE = "hello world!"
 
 
-def test_image(image_name: str):
-    print(f"Testing {image_name}")
+def test_image(asset_config: AssetConfig, image_name: str):
+    print(f"Testing image for {asset_config.name}")
     start = timer()
     p = run(["docker", "run", "--entrypoint", "python", image_name, "-c", f"print(\"{TEST_PHRASE}\")"],
             stdout=PIPE,
             stderr=STDOUT)
     end = timer()
-    print(f"{image_name} tested in {timedelta(seconds=end-start)}")
+    print(f"Image for {asset_config.name} tested in {timedelta(seconds=end-start)}")
     return (p.returncode, p.stdout.decode())
 
 
@@ -46,16 +46,16 @@ def test_images(input_dirs: List[str],
 
                 # Filter by OS
                 if os_to_test and env_config.os.value != os_to_test:
-                    print(f"Not testing {env_config.image_name}: Operating system {env_config.os.value} != {os_to_test}")
+                    print(f"Not testing image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_test}")
                     continue
 
                 # Test image
-                (return_code, output) = test_image(env_config.image_name)
+                (return_code, output) = test_image(asset_config, env_config.image_name)
                 if return_code != 0 or not output.startswith(TEST_PHRASE):
-                    logger.log_error(f"Test failure on {env_config.image_name}: {output}", title="Testing failure")
+                    logger.log_error(f"Testing of image for {asset_config.name} failed: {output}", title="Testing failure")
                     counters[FAILED_COUNT] += 1
                 else:
-                    logger.log_debug(f"Test successful on {env_config.image_name}")
+                    logger.log_debug(f"Successfully tested image for {asset_config.name}")
                     counters[SUCCESS_COUNT] += 1
                     if output_directory:
                         copy_asset_to_output_dir(asset_config, output_directory)
@@ -65,7 +65,7 @@ def test_images(input_dirs: List[str],
         logger.set_output(counter_name, counters[counter_name])
 
     if counters[FAILED_COUNT] > 0:
-        logger.log_error(f"{counters[FAILED_COUNT]} environments failed to test")
+        logger.log_error(f"{counters[FAILED_COUNT]} environment image(s) failed to test")
         sys.exit(1)
 
 
