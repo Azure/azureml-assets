@@ -71,10 +71,12 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Build all images
+        id: build-all-images
         if: steps.changed-environments.outputs.any_changed == 'false' || steps.changed-scripts.outputs.any_changed == 'true'
         run: python -u $scripts_dir/build.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name
 
       - name: Build changed images
+        id: build-changed-images
         if: steps.changed-environments.outputs.any_changed == 'true' && steps.changed-scripts.outputs.any_changed == 'false'
         run: python -u $scripts_dir/build.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name -c "${{ steps.changed-environments.outputs.all_changed_and_modified_files }}"
 
@@ -86,5 +88,5 @@ jobs:
           path: ${{ runner.temp }}/${{ env.build_logs_artifact_name }}
 
       - name: Test images
-        id: test-images
+        if: steps.build-all-images.outputs.success_count > 0 || steps.build-changed-images.outputs.success_count > 0
         run: python -u $scripts_dir/test.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }}
