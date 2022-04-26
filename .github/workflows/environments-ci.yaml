@@ -87,4 +87,4 @@ jobs:
 
       - name: Test images
         id: test-images
-        run: python -u $scripts_dir/test.py -i -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }}
+        run: python -u $scripts_dir/test.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }}
