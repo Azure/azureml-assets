@@ -1,0 +1,11 @@
+image:
+  name: azureml/curated/sidecar-windows
+  os: windows
+  context:
+    dir: context
+    dockerfile: Dockerfile
+  publish:
+    location: mcr
+    visibility: unlisted
+environment:
+  visible: false

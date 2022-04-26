@@ -1,0 +1,6 @@
+name: AzureML-Sidecar-Windows
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+testing:
+  enabled: false

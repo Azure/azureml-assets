@@ -18,6 +18,7 @@ defaults:
   run:
     shell: bash
 
+# TODO: Refactor to match assets-release
 jobs:
   # Build Linux-based images
   build-push-linux:

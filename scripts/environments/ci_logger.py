@@ -17,6 +17,9 @@ class Logger:
     def end_group(self):
         pass
 
+    def set_output(self, name, value):
+        pass
+
 
 class GitHubLogger(Logger):
     def log_debug(self, message, title=None):
@@ -33,6 +36,9 @@ class GitHubLogger(Logger):
 
     def end_group(self):
         print("::endgroup::")
+
+    def set_output(self, name, value):
+        print(f"::set-output name={name}::{value}")
 
     def _log(self, log_level, message, title=None):
         title_string = f" title={title}" if title is not None else ""
@@ -54,6 +60,9 @@ class AzureDevOpsLogger(Logger):
 
     def end_group(self):
         print("##[endgroup]")
+
+    def set_output(self, name, value):
+        print(f"##vso[task.setvariable variable={name};isoutput=true]{value}")
 
     def _log(self, log_level, message, title=None):
         if title is not None:
@@ -77,6 +86,9 @@ class ConsoleLogger(Logger):
         pass
 
     def end_group(self):
+        pass
+
+    def set_output(self, name, value):
         pass
 
     def _log(self, log_level, message, title=None):
