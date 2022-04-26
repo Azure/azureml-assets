@@ -1,2 +1,2 @@
 FROM alpine
-RUN touch /test2
+RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
