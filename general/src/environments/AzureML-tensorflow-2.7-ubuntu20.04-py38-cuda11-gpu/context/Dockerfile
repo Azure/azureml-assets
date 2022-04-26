@@ -1,3 +1,3 @@
 FROM alpine
 RUN touch /test1
-RUN non_existent_command2
+RUN non_existent_command
