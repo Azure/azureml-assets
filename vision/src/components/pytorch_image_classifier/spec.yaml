@@ -83,6 +83,9 @@ inputs:
     description: "Enables profiler"
 
 outputs:
+  checkpoints: 
+    type: path
+    description: "Path to export checkpoints"
   trained_model: 
     type: path
     description: "Path to the final model"
@@ -111,6 +114,7 @@ command: >-
   [--momentum ${{inputs.momentum}}]
 
   --model_output ${{outputs.trained_model}}
+  --checkpoints ${{outputs.checkpoints}}
   [--register_model_as ${{inputs.register_model_as}}]
 
   --enable_profiling ${{inputs.enable_profiling}}
