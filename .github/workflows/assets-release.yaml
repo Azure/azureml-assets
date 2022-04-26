@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - elesel/build-and-test-before-release
   schedule:
     - cron: '30 6 * * *'
   workflow_dispatch:
