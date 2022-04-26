@@ -81,6 +81,7 @@ def build_images(input_dirs: List[str],
                         continue
 
                     # If provided, skip directories with no changed files
+                    print(f"root={root}")
                     if changed_files and not any([f for f in changed_files if f.startswith(f"{root}/")]):
                         print(f"Skipping build of {env_config.image_name}: No files in its directory were changed")
                         continue
