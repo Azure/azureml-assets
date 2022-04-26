@@ -60,6 +60,7 @@ def build_images(input_dirs: List[str],
                  os_to_build: str = None,
                  resource_group: str = None,
                  registry: str = None):
+    changed_files_abs = [os.path.abspath(f) for f in changed_files]
     counters = Counter()
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find environments under image root directories
@@ -81,8 +82,8 @@ def build_images(input_dirs: List[str],
                         continue
 
                     # If provided, skip directories with no changed files
-                    print(f"root={root}")
-                    if changed_files and not any([f for f in changed_files if f.startswith(f"{root}/")]):
+                    root_abs = os.path.abspath(root)
+                    if changed_files and not any([f for f in changed_files_abs if f.startswith(f"{root_abs}/")]):
                         print(f"Skipping build of {env_config.image_name}: No files in its directory were changed")
                         continue
 
