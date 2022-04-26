@@ -11,11 +11,6 @@ on:
       - general/src/environments/**
       - scripts/environments/**
   workflow_dispatch:
-    inputs:
-      asset_dirs:
-        description: Asset directory
-        default: .
-        required: true
 
 env:
   scripts_dir: scripts/environments
@@ -51,7 +46,6 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v18.6
         with:
-          files: ${{ inputs.asset_dirs }}
           files_separator: ','
           separator: ','
       
@@ -73,12 +67,12 @@ jobs:
       - name: Build all images
         id: build-all-images
         if: steps.changed-scripts.outputs.any_modified == 'true'
-        run: python -u $scripts_dir/build.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name
+        run: python -u $scripts_dir/build.py -i . -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name
 
       - name: Build changed images
         id: build-changed-images
         if: steps.changed-scripts.outputs.any_modified == 'false'
-        run: python -u $scripts_dir/build.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
+        run: python -u $scripts_dir/build.py -i . -a $asset_config_filename -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3
@@ -89,4 +83,4 @@ jobs:
 
       - name: Test images
         if: steps.build-all-images.outputs.success_count > 0 || steps.build-changed-images.outputs.success_count > 0
-        run: python -u $scripts_dir/test.py -i "${{ github.event.inputs.asset_dirs || '.' }}" -a $asset_config_filename -O ${{ matrix.os }}
+        run: python -u $scripts_dir/test.py -i . -a $asset_config_filename -O ${{ matrix.os }}
