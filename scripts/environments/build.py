@@ -83,7 +83,7 @@ def build_images(input_dirs: List[str],
 
                     # If provided, skip directories with no changed files
                     root_abs = os.path.abspath(root)
-                    if changed_files and not any([f for f in changed_files_abs if f.startswith(f"{root_abs}/")]):
+                    if changed_files and not any([f for f in changed_files_abs if f.startswith(os.path.join(root_abs, ""))]):
                         print(f"Skipping build of image for {asset_config.name}: No files in its directory were changed")
                         continue
 
