@@ -780,6 +780,9 @@ def run(args):
     # MLFLOW: finalize mlflow (once in entire script)
     mlflow.end_run()
 
+    logger.info("run() completed")
+
+
 
 def main(cli_args=None):
     """Main function of the script."""
