@@ -10,6 +10,7 @@ from typing import List
 
 from config import AssetConfig, AssetType, EnvironmentConfig, Os
 from ci_logger import logger
+from update_assets import pin_env_files
 from util import copy_asset_to_output_dir
 
 SUCCESS_COUNT = "success_count"
@@ -55,6 +56,7 @@ def build_images(input_dirs: List[str],
                  asset_config_filename: str,
                  output_directory: str,
                  build_logs_dir: str,
+                 pin_versions: bool,
                  max_parallel: int,
                  changed_files: List[str],
                  os_to_build: str = None,
@@ -86,6 +88,10 @@ def build_images(input_dirs: List[str],
                     if changed_files and not any([f for f in changed_files_abs if f.startswith(os.path.join(root_abs, ""))]):
                         print(f"Skipping build of image for {asset_config.name}: No files in its directory were changed")
                         continue
+
+                    # Pin versions
+                    if pin_versions:
+                        pin_env_files(env_config)
 
                     # Start building image
                     build_log = os.path.join(build_logs_dir, f"{asset_config.name}.log")
@@ -129,6 +135,7 @@ if __name__ == '__main__':
     parser.add_argument("-O", "--os-to-build", choices=[i.value for i in list(Os)], help="Only build environments based on this OS")
     parser.add_argument("-r", "--registry", help="Container registry on which to build images")
     parser.add_argument("-g", "--resource-group", help="Resource group containing the container registry")
+    parser.add_argument("-P", "--pin-versions", action="store_true", help="Pin images/packages to latest versions")
     args = parser.parse_args()
 
     # Ensure dependent args are present
@@ -144,6 +151,7 @@ if __name__ == '__main__':
                  asset_config_filename=args.asset_config_filename,
                  output_directory=args.output_directory,
                  build_logs_dir=args.build_logs_dir,
+                 pin_versions=args.pin_versions,
                  max_parallel=args.max_parallel,
                  changed_files=changed_files,
                  os_to_build=args.os_to_build,
