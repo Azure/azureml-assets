@@ -26,7 +26,27 @@ This subfolders hosts the code for AzureML assets related to vision machine lear
     pytest ./tests
     ```
 
-## Running a test pipeline
+## Running a pipeline using Azure ML CLI v2
+
+### Requirements
+
+1. Set your `az` CLI with your subscription, workspace and resource group:
+
+    ```bash
+    # set the name of your subscription in az cli
+    az account set --name "..."
+
+    # set references to connect to Azure ML
+    az configure --defaults workspace="..." group="..."
+    ```
+
+2. Create the required environments
+
+    ```bash
+    az ml environment create --file ./src/environments/nvidia/env.yml
+    ```
+
+### Run a test pipeline (no datasets)
 
 You can use the az ml cli to run a test pipeline:
 
@@ -36,8 +56,6 @@ az ml job create --f src/pipelines/canary/classification_random.yml
 
 Running this job does not require any particular dataset. The corresponding pipeline will generate 4 image folders with random noise images. Then will train the classifier on this dataset for 5 epochs.
 
-
-## Running a benchmark pipeline
 
 ### Create train/valid datasets using jobs
 
@@ -50,32 +68,17 @@ For running the benchmark pipeline, you'll need to create training and validatio
 
 To create those datasets, you'll need to run jobs that will unpack the dataset archive. Those jobs use the Azure ML CLI v2.
 
-1. Set your `az` CLI with your subscription, workspace and resource group:
+Run each job in your workspace. To unpack the Places2 dataset, you will need a SKU with at least 100GB of disk. Those jobs will write the data into a static location in your default Azure ML datastore.
 
-    ```bash
-    # set the name of your subscription in az cli
-    az account set --name "..."
+```bash
+# to use a specific cluster, override with --set
+az ml job create --file src/jobs/create_stanford_dogs_dataset.yml --web
 
-    # set references to connect to Azure ML
-    az config set defaults.workspace="..." defaults.resource_group="..."
-    ```
-2. Run each job in your workspace. To unpack the Places2 dataset, you will need a SKU with at least 100GB of disk.
+# to use a specific cluster, override with --set
+az ml job create --file src/jobs/create_places2_dataset.yml --web --set compute="cpu-cluster-d12"
+```
 
-    ```bash
-    # to use a specific cluster, override with --set
-    az ml job create --file src/jobs/create_stanford_dogs_dataset.yml --web
-
-    # to use a specific cluster, override with --set
-    az ml job create --file src/jobs/create_places2_dataset.yml --web --set compute="cpu-cluster-d12"
-    ```
-
-    **Important** : unpacking Stanford Dogs dataset should take a couple minutes (3mins in our tests), while Places2 might take up to 30-45 mins depending on SKU.
-
-3. Once the jobs complete, go into the Azure ML portal and manually register the outputs with a corresponding name:
-    - `stanford_dogs` is only one output we'll use for both training and validation
-    - `places2_train` and `places2_valid` as each of the outputs of the job.
-
-    **Work in progress**: automatic registration of dataset within jobs is coming, once it's available you won't need to manually register the datasets yourself.
+**Important** : unpacking Stanford Dogs dataset should take a couple minutes (3mins in our tests), while Places2 might take up to 30-45 mins depending on SKU.
 
 ### Run a benchmark pipeline
 

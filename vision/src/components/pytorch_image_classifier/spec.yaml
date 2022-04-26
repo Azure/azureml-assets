@@ -8,7 +8,7 @@ description: >-
 
 name: pytorch_image_classifier
 display_name: Image Classification Model (PyTorch)
-version: 1.0.3
+version: 1.0.4
 
 inputs:
   # data loading
@@ -64,11 +64,11 @@ inputs:
   learning_rate:
     type: number
     optional: true
-    description: "Learning rate of optimizer (default: 0.01)"
+    description: "Learning rate of optimizer (default: 0.001)"
   momentum:
     type: number
     optional: true
-    description: "Momentum of optimizer (default: 0.01)"
+    description: "Momentum of optimizer (default: 0.9)"
   
   # model registration
   register_model_as:
@@ -83,13 +83,16 @@ inputs:
     description: "Enables profiler"
 
 outputs:
+  checkpoints: 
+    type: path
+    description: "Path to export checkpoints"
   trained_model: 
     type: path
     description: "Path to the final model"
 
 code: .
 
-environment: azureml:nvidia_pytorch:22.02-py3-mod3
+environment: azureml:nvidia_pytorch:22.02-py3-mod7
 
 command: >-
   python train.py 
@@ -111,6 +114,7 @@ command: >-
   [--momentum ${{inputs.momentum}}]
 
   --model_output ${{outputs.trained_model}}
+  --checkpoints ${{outputs.checkpoints}}
   [--register_model_as ${{inputs.register_model_as}}]
 
   --enable_profiling ${{inputs.enable_profiling}}

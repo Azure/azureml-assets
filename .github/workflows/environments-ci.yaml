@@ -17,6 +17,7 @@ defaults:
   run:
     shell: bash
 
+# TODO: Refactor to match assets-release
 jobs:
   build-images:
     name: Build and test images

@@ -8,27 +8,6 @@ import logging
 import torch
 import torchvision.models as models
 
-TORCHVISION_MODEL_ARCH_LIST = [
-    "resnet18",
-    "resnet34",
-    "resnet50",
-    "resnet101",
-    "resnet152",
-    "alexnet",
-    "vgg11",
-    "vgg11_bn",
-    "vgg13",
-    "vgg13_bn",
-    "vgg16",
-    "vgg16_bn",
-    "vgg19",
-    "vgg19_bn",
-    "densenet121",
-    "densenet169",
-    "densenet201",
-    "densenet161"
-]
-
 
 def load_torchvision_model(
     model_arch: str, output_dimension: int = 1, pretrained: bool = True
@@ -39,7 +18,7 @@ def load_torchvision_model(
     logger.info(
         f"Loading model from arch={model_arch} pretrained={pretrained} output_dimension={output_dimension}"
     )
-    if model_arch in TORCHVISION_MODEL_ARCH_LIST:
+    if hasattr(models, model_arch):
         model = getattr(models, model_arch)(pretrained=pretrained)
     else:
         raise NotImplementedError(
@@ -48,25 +27,13 @@ def load_torchvision_model(
 
     # see https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html
     if model_arch.startswith("resnet"):
-        model.fc = torch.nn.Sequential(
-            torch.nn.Linear(model.fc.in_features, output_dimension),
-            torch.nn.Softmax(dim=1),  # adding Softmax to output probs
-        )
+        model.fc = torch.nn.Linear(model.fc.in_features, output_dimension)
     elif model_arch == "alexnet":
-        model.classifier[6] = torch.nn.Sequential(
-            torch.nn.Linear(4096, output_dimension),
-            torch.nn.Softmax(dim=1),  # adding Softmax to output probs
-        )
+        model.classifier[6] = torch.nn.Linear(4096, output_dimension)
     elif model_arch.startswith("vgg"):
-        model.classifier[6] = torch.nn.Sequential(
-            torch.nn.Linear(4096, output_dimension),
-            torch.nn.Softmax(dim=1),  # adding Softmax to output probs
-        )
+        model.classifier[6] = torch.nn.Linear(4096, output_dimension)
     elif model_arch.startswith("densenet"):
-        model.classifier = torch.nn.Sequential(
-            torch.nn.Linear(1024, output_dimension),
-            torch.nn.Softmax(dim=1),  # adding Softmax to output probs
-        )
+        model.classifier = torch.nn.Linear(1024, output_dimension)
     else:
         raise NotImplementedError(
             f"loading model_arch={model_arch} is not implemented yet in our custom code."

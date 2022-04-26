@@ -100,7 +100,7 @@ class PyTorchDistributedModelTrainingSequence:
         if self.dataloading_config.num_workers is None:
             self.dataloading_config.num_workers = 0
         if self.dataloading_config.num_workers < 0:
-            self.dataloading_config.num_workers = os.cpu_count()
+            self.dataloading_config.num_workers = self.cpu_count
         if self.dataloading_config.num_workers == 0:
             self.logger.warning("You specified num_workers=0, forcing prefetch_factor to be discarded.")
             self.dataloading_config.prefetch_factor = None
@@ -160,39 +160,50 @@ class PyTorchDistributedModelTrainingSequence:
             )
         else:
             self.logger.info(f"Not running in multinode.")
-        
+
         # DISTRIBUTED: in distributed mode, you want to report parameters
         # only from main process (rank==0) to avoid conflict
         if self.self_is_main_node:
             # MLFLOW: report relevant parameters using mlflow
-            mlflow.log_params(
-                {
-                    # log some distribution params
-                    "nodes": self.world_size // self.local_world_size,
-                    "instance_per_node": self.local_world_size,
-                    "cuda_available": torch.cuda.is_available(),
-                    "cuda_device_count": torch.cuda.device_count(),
-                    "distributed": self.multinode_available,
-                    "distributed_backend": self.distributed_backend,
-                    "disable_cuda": self.training_config.disable_cuda,
+            logged_params = {
+                # log some distribution params
+                "nodes": int(os.environ.get("AZUREML_NODE_COUNT", "1")),
+                "instance_per_node": self.world_size // int(os.environ.get("AZUREML_NODE_COUNT", "1")),
+                "cuda_available": torch.cuda.is_available(),
+                "disable_cuda": self.training_config.disable_cuda,
+                "distributed": self.multinode_available,
+                "distributed_backend": self.distributed_backend,
 
-                    # data loading params
-                    "batch_size": self.dataloading_config.batch_size,
-                    "num_workers": self.dataloading_config.num_workers,
-                    "prefetch_factor": self.dataloading_config.prefetch_factor,
-                    "persistent_workers": self.dataloading_config.persistent_workers,
-                    "pin_memory": self.dataloading_config.pin_memory,
-                    "non_blocking": self.dataloading_config.non_blocking,
+                # data loading params
+                "batch_size": self.dataloading_config.batch_size,
+                "num_workers": self.dataloading_config.num_workers,
+                "cpu_count": self.cpu_count,
+                "prefetch_factor": self.dataloading_config.prefetch_factor,
+                "persistent_workers": self.dataloading_config.persistent_workers,
+                "pin_memory": self.dataloading_config.pin_memory,
+                "non_blocking": self.dataloading_config.non_blocking,
 
-                    # training params
-                    "model_arch": self.training_config.model_arch,
-                    "model_arch_pretrained": self.training_config.model_arch_pretrained,
-                    "learning_rate": self.training_config.learning_rate,
+                # training params
+                "model_arch": self.training_config.model_arch,
+                "model_arch_pretrained": self.training_config.model_arch_pretrained,
+                "optimizer.learning_rate": self.training_config.learning_rate,
+                "optimizer.momentum": self.training_config.momentum,
 
-                    # profiling params
-                    "enable_profiling": self.training_config.enable_profiling,
-                }
-            )
+                # profiling params
+                "enable_profiling": self.training_config.enable_profiling,
+            }
+
+            if not self.training_config.disable_cuda and torch.cuda.is_available():
+                # add some gpu properties
+                logged_params['cuda_device_count'] = torch.cuda.device_count()
+                cuda_device_properties = torch.cuda.get_device_properties(self.device)
+                logged_params['cuda_device_name'] = cuda_device_properties.name
+                logged_params['cuda_device_major'] = cuda_device_properties.major
+                logged_params['cuda_device_minor'] = cuda_device_properties.minor
+                logged_params['cuda_device_memory'] = cuda_device_properties.total_memory
+                logged_params['cuda_device_processor_count'] = cuda_device_properties.multi_processor_count
+
+            mlflow.log_params(logged_params)
 
     def setup_datasets(
         self,
@@ -280,17 +291,29 @@ class PyTorchDistributedModelTrainingSequence:
                     images = images.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
                     )
-                    one_hot_targets = targets.to(
+                    targets = targets.to(
                             self.device, non_blocking=self.dataloading_config.non_blocking
                     )
 
                 with record_function("eval.forward"):
                     outputs = self.model(images)
 
-                    loss = criterion(outputs, one_hot_targets)
+                    if isinstance(outputs, torch.Tensor):
+                        # if we're training a regular pytorch model (ex: torchvision)
+                        loss = criterion(outputs, targets)
+                        _, predicted = torch.max(outputs.data, 1)
+                        correct = (predicted == targets)
+                    elif outputs.__class__.__name__ == "SequenceClassifierOutput":
+                        # if we're training a HuggingFace model
+                        loss = criterion(outputs.logits, targets)
+                        _, predicted = torch.max(outputs.logits.data, 1)
+                        correct = (predicted == targets)
+                    else:
+                        # if anything else, just except
+                        raise ValueError(f"outputs from model is type {type(outputs)} which is unknown.")
+
                     running_loss += loss.item() * images.size(0)
 
-                    correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
                     num_correct += torch.sum(correct).item()
                     num_total_images += len(images)
 
@@ -312,21 +335,29 @@ class PyTorchDistributedModelTrainingSequence:
                 images = images.to(
                     self.device, non_blocking=self.dataloading_config.non_blocking
                 )
-                one_hot_targets = torch.nn.functional.one_hot(
-                    targets.to(
+                targets = targets.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
-                    ),
-                    num_classes=len(self.labels)
-                ).float()
+                )
                 
-
             with record_function("train.forward"):
                 # zero the parameter gradients
                 optimizer.zero_grad()
 
                 outputs = self.model(images)
-                loss = criterion(outputs, one_hot_targets)
-                correct = (torch.argmax(outputs, dim=-1) == (targets.to(self.device)))
+
+                if isinstance(outputs, torch.Tensor):
+                    # if we're training a regular pytorch model (ex: torchvision)
+                    loss = criterion(outputs, targets)
+                    _, predicted = torch.max(outputs.data, 1)
+                    correct = (predicted == targets)
+                elif outputs.__class__.__name__ == "SequenceClassifierOutput":
+                    # if we're training a HuggingFace model
+                    loss = criterion(outputs.logits, targets)
+                    _, predicted = torch.max(outputs.logits.data, 1)
+                    correct = (predicted == targets)
+                else:
+                    # if anything else, just except
+                    raise ValueError(f"outputs from model is type {type(outputs)} which is unknown.")
 
                 running_loss += loss.item() * images.size(0)
                 num_correct += torch.sum(correct).item()
@@ -340,11 +371,12 @@ class PyTorchDistributedModelTrainingSequence:
 
         return running_loss, num_correct, num_total_images
 
-    def train(self, epochs=None):
+    def train(self, epochs:int=None, checkpoints_dir:str=None):
         """Trains the model.
 
         Args:
             epochs (int, optional): if not provided uses internal config
+            checkpoints_dir (str, optional): path to write checkpoints
         """
         if epochs is None:
             epochs = self.training_config.num_epochs
@@ -354,8 +386,8 @@ class PyTorchDistributedModelTrainingSequence:
             self.model.parameters(),
             lr=self.training_config.learning_rate,
             momentum=self.training_config.momentum,
-            nesterov=True,
-            weight_decay=1e-4,
+            #nesterov=True,
+            #weight_decay=1e-4,
         )
 
         #criterion = nn.BCEWithLogitsLoss()
@@ -364,13 +396,18 @@ class PyTorchDistributedModelTrainingSequence:
         # Decay LR by a factor of 0.1 every 7 epochs
         scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
+        # DISTRIBUTED: export checkpoint only from main node
+        if self.self_is_main_node and checkpoints_dir is not None:
+            # saving checkpoint before training
+            self.checkpoint_save(self.model, optimizer, checkpoints_dir, epoch=-1, loss=0.0)
+
         # DISTRIBUTED: you'll node that this loop has nothing specifically "distributed"
         # that's because most of the changes are in the backend (DistributedDataParallel)
         for epoch in range(epochs):
             self.logger.info(f"Starting epoch={epoch}")
 
             # start timer for epoch time metric
-            epoch_start = time.time()
+            epoch_train_start = time.time()
 
             # TRAIN: loop on training set and return metrics
             running_loss, num_correct, num_samples = self._epoch_train(
@@ -379,10 +416,16 @@ class PyTorchDistributedModelTrainingSequence:
             epoch_train_loss = running_loss / num_samples
             epoch_train_acc = num_correct / num_samples
 
+            # stop timer
+            epoch_train_time = time.time() - epoch_train_start
+
             # report metric values in stdout
             self.logger.info(
                 f"MLFLOW: epoch_train_loss={epoch_train_loss} epoch_train_acc={epoch_train_acc} epoch={epoch}"
             )
+
+            # start timer for epoch time metric
+            epoch_eval_start = time.time()
 
             # MLFLOW / DISTRIBUTED: report metrics only from main node
             if self.self_is_main_node:
@@ -394,14 +437,24 @@ class PyTorchDistributedModelTrainingSequence:
             epoch_valid_loss = running_loss / num_samples
             epoch_valid_acc = num_correct / num_samples
 
+            # stop timer
+            epoch_eval_time = time.time() - epoch_eval_start
+
+            # start timer for epoch time metric
+            epoch_utility_start = time.time()
+
             # PROFILER: use profiler.step() to mark a step in training
             # the pytorch profiler will use internally to trigger
             # saving the traces in different files
             if self.profiler:
                 self.profiler.step()
 
+            # DISTRIBUTED: export checkpoint only from main node
+            if self.self_is_main_node and checkpoints_dir is not None:
+                self.checkpoint_save(self.model, optimizer, checkpoints_dir, epoch=epoch, loss=epoch_valid_loss)
+
             # stop timer
-            epoch_train_time = time.time() - epoch_start
+            epoch_utility_time = time.time() - epoch_utility_start
 
             self.logger.info(
                 f"MLFLOW: epoch_valid_loss={epoch_valid_loss} epoch_valid_acc={epoch_valid_acc} epoch={epoch}"
@@ -409,27 +462,70 @@ class PyTorchDistributedModelTrainingSequence:
             self.logger.info(
                 f"MLFLOW: epoch_train_time={epoch_train_time} epoch={epoch}"
             )
+            self.logger.info(
+                f"MLFLOW: epoch_eval_time={epoch_eval_time} epoch={epoch}"
+            )
+            self.logger.info(
+                f"MLFLOW: epoch_utility_time={epoch_utility_time} epoch={epoch}"
+            )
 
             # MLFLOW / DISTRIBUTED: report metrics only from main node
             if self.self_is_main_node:
                 mlflow.log_metric("epoch_valid_loss", epoch_valid_loss, step=epoch)
                 mlflow.log_metric("epoch_valid_acc", epoch_valid_acc, step=epoch)
                 mlflow.log_metric("epoch_train_time", epoch_train_time, step=epoch)
+                mlflow.log_metric("epoch_eval_time", epoch_eval_time, step=epoch)
+                mlflow.log_metric("epoch_utility_time", epoch_utility_time, step=epoch)
+
 
     def runtime_error_report(self, runtime_exception):
-        """Call this when catching a critical exception."""
+        """Call this when catching a critical exception.
+        Will print all sorts of relevant information to the log."""
         self.logger.critical(traceback.format_exc())
+        try:
+            import psutil
+            self.logger.critical(f"Memory: {str(psutil.virtual_memory())}")
+        except ImportError:
+            self.logger.critical("import psutil failed, cannot display virtual memory stats.")
+
         if torch.cuda.is_available():
-            self.logger.critical(torch.cuda.memory_summary(device=None, abbreviated=False))
-            self.logger.critical(json.dumps(torch.cuda.memory_snapshot(), indent="    "))
+            self.logger.critical("Cuda memory summary:\n"+str(torch.cuda.memory_summary(device=None, abbreviated=False)))
+            self.logger.critical("Cuda memory snapshot:\n"+json.dumps(torch.cuda.memory_snapshot(), indent="    "))
         else:
-            self.logger.critical("Cuda is not available, not reporting cuda memory allocation.")
+            self.logger.critical("Cuda is not available, cannot report cuda memory allocation.")
 
 
     #################
     ### MODEL I/O ###
     #################
 
+    def checkpoint_save(self, model, optimizer, output_dir: str, epoch: int, loss: float):
+        """Saves model as checkpoint"""
+        # create output directory just in case
+        os.makedirs(output_dir, exist_ok=True)
+
+        model_output_path = os.path.join(output_dir, f"model-checkpoint-epoch{epoch}-loss{loss}.pt")
+
+        self.logger.info(f"Exporting checkpoint to {model_output_path}")
+
+        if isinstance(model, torch.nn.parallel.DistributedDataParallel):
+            # DISTRIBUTED: to export model, you need to get it out of the DistributedDataParallel class
+            self.logger.info(
+                "Model was distributed, we will checkpoint DistributedDataParallel.module"
+            )
+            model_to_save = model.module
+        else:
+            model_to_save = model
+
+        with record_function("checkpoint.save"):
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model_to_save.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss
+            }, model_output_path)
+
+        
     def save(self, output_dir: str, name: str = "dev", register_as: str = None) -> None:
         # DISTRIBUTED: you want to save the model only from the main node/process
         # in data distributed mode, all models should theoretically be the same
@@ -442,7 +538,7 @@ class PyTorchDistributedModelTrainingSequence:
             if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
                 # DISTRIBUTED: to export model, you need to get it out of the DistributedDataParallel class
                 self.logger.info(
-                    "Model was distibuted, we will export DistributedDataParallel.module"
+                    "Model was distributed, we will export DistributedDataParallel.module"
                 )
                 model_to_save = self.model.module.to("cpu")
             else:
@@ -485,6 +581,13 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         required=False,
         default=None,
         help="Path to write final model",
+    )
+    group.add_argument(
+        "--checkpoints",
+        type=str,
+        required=False,
+        default=None,
+        help="Path to read/write checkpoints",
     )
     group.add_argument(
         "--register_model_as",
@@ -543,7 +646,6 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--model_arch",
         type=str,
         required=False,
-        choices=MODEL_ARCH_LIST,
         default="resnet18",
         help="Which model architecture to use (default: resnet18)",
     )
@@ -590,14 +692,14 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--learning_rate",
         type=float,
         required=False,
-        default=0.01,
+        default=0.001,
         help="Learning rate of optimizer",
     )
     group.add_argument(
         "--momentum",
         type=float,
         required=False,
-        default=0.01,
+        default=0.9,
         help="Momentum of optimizer",
     )
 
@@ -657,7 +759,7 @@ def run(args):
     # runs training sequence
     # NOTE: num_epochs is provided in args
     try:
-        training_handler.train()
+        training_handler.train(checkpoints_dir=args.checkpoints)
     except RuntimeError as runtime_exception: # if runtime error occurs (ex: cuda out of memory)
         # then print some runtime error report in the logs
         training_handler.runtime_error_report(runtime_exception)
@@ -677,6 +779,9 @@ def run(args):
 
     # MLFLOW: finalize mlflow (once in entire script)
     mlflow.end_run()
+
+    logger.info("run() completed")
+
 
 
 def main(cli_args=None):
