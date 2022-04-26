@@ -1,2 +1,2 @@
 FROM alpine
-RUN touch /test
+RUN touch /test2
