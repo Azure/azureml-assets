@@ -187,6 +187,9 @@ class EnvironmentConfig(Config):
     def image_name(self) -> str:
         return self._image.get('name')
 
+    def get_image_name_with_tag(self, tag: str) -> str:
+        return self._image.get('name') + f":{tag}"
+
     @property
     def _os(self) -> str:
         return self._image.get('os')
@@ -249,7 +252,7 @@ class EnvironmentConfig(Config):
         return self._publish.get('visibility')
 
     @property
-    def publish_visibility(self) -> str:
+    def publish_visibility(self) -> PublishVisibility:
         visiblity = self._publish_visibility
         return PublishVisibility(visiblity) if visiblity else None
 
