@@ -8,7 +8,7 @@ from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
 from typing import List
 
-from config import AssetConfig, AssetType, EnvironmentConfig, Os
+from config import AssetConfig, AssetType, EnvironmentConfig, Os, Spec
 from ci_logger import logger
 from update_assets import pin_env_files
 from util import copy_asset_to_output_dir
@@ -59,6 +59,7 @@ def build_images(input_dirs: List[str],
                  pin_versions: bool,
                  max_parallel: int,
                  changed_files: List[str],
+                 tag_with_version: bool,
                  os_to_build: str = None,
                  resource_group: str = None,
                  registry: str = None):
@@ -93,9 +94,16 @@ def build_images(input_dirs: List[str],
                     if pin_versions:
                         pin_env_files(env_config)
 
+                    # Tag with version from spec
+                    if tag_with_version:
+                        version = Spec(asset_config.spec_with_path).version
+                        image_name = env_config.get_image_name_with_tag(version)
+                    else:
+                        image_name = env_config.image_name
+
                     # Start building image
                     build_log = os.path.join(build_logs_dir, f"{asset_config.name}.log")
-                    futures.append(pool.submit(build_image, asset_config, env_config.image_name,
+                    futures.append(pool.submit(build_image, asset_config, image_name,
                                                env_config.context_dir_with_path, env_config.dockerfile, build_log,
                                                env_config.os.value, resource_group, registry))
 
@@ -136,6 +144,7 @@ if __name__ == '__main__':
     parser.add_argument("-r", "--registry", help="Container registry on which to build images")
     parser.add_argument("-g", "--resource-group", help="Resource group containing the container registry")
     parser.add_argument("-P", "--pin-versions", action="store_true", help="Pin images/packages to latest versions")
+    parser.add_argument("-t", "--tag-with-version", action="store_true", help="Tag image names using the version in the asset's spec file")
     args = parser.parse_args()
 
     # Ensure dependent args are present
@@ -154,6 +163,7 @@ if __name__ == '__main__':
                  pin_versions=args.pin_versions,
                  max_parallel=args.max_parallel,
                  changed_files=changed_files,
+                 tag_with_version=args.tag_with_version,
                  os_to_build=args.os_to_build,
                  resource_group=args.resource_group,
                  registry=args.registry)
