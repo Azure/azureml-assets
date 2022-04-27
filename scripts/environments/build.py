@@ -139,8 +139,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Ensure dependent args are present
-    if args.registry and (not args.os_to_build or not args.resource_group):
-        parser.error("If --registry is specified then --resource-group and --os-to-build are also required")
+    if args.registry and not args.resource_group:
+        parser.error("If --registry is specified then --resource-group is also required")
 
     # Convert comma-separated values to lists
     input_dirs = args.input_dirs.split(",")
