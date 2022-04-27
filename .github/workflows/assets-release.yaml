@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '.github/**'
+      - 'scripts/**'
   schedule:
     - cron: '30 6 * * *'
   workflow_dispatch:
@@ -18,7 +21,7 @@ concurrency: ${{ github.workflow }}
 env:
   main_dir: main
   release_dir: release
-  scripts_dir: scripts/environments
+  scripts_dir: scripts
   changed_assets_artifact: changed-assets
   releasable_assets_artifact: releasable-assets
   asset_config_filename: asset.yaml

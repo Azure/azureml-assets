@@ -4,20 +4,16 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - general/src/environments/**
-      - scripts/environments/**
   workflow_dispatch:
 
 env:
-  scripts_dir: scripts/environments
+  scripts_dir: scripts
   asset_config_filename: asset.yaml
 
 defaults:
   run:
     shell: bash
 
-# TODO: Refactor to match assets-release
 jobs:
   build-images:
     name: Build and test images
