@@ -28,7 +28,7 @@ def create_import_config(input_directory: str,
                 continue
 
             # Get source image name
-            version = Spec(asset_config.file_path).version
+            version = Spec(asset_config.spec_with_path).version
             source_image_name = env_config.get_image_name_with_tag(version)
 
             # Form destination image name and tag
