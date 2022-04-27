@@ -28,8 +28,9 @@ def pin_env_files(env_config: EnvironmentConfig):
 def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):
     # Check git repo for version-specific tag
     repo = pygit2.Repository(release_directory_root)
+    version = Spec(asset_config.spec_with_path).version
     version_tag = RELEASE_TAG_VERSION_TEMPLATE.format(type=asset_config.type.value, name=asset_config.name,
-                                                      version=asset_config.version)
+                                                      version=version)
     return repo.references.get(TAG_TEMPLATE.format(name=version_tag)) is not None
 
 
@@ -119,7 +120,7 @@ def update_assets(input_dirs: List[str],
                   release_directory_root: str,
                   copy_only: bool,
                   output_directory_root: str = None):
-    # Find environments under image root directories
+    # Find assets under input dirs
     asset_count = 0
     updated_count = 0
     updated_os = set()
