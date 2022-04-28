@@ -182,6 +182,20 @@ jobs:
     outputs:
       has_releasable_assets: ${{ steps.download-artifact.outputs.download-path }}
   
+  check-var:
+    name: check variables
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: check
+        id: check-var
+        run: |
+          echo ${{ needs.check-release-assets.outputs.has_releasable_assets != '' && github.ref == 'refs/heads/wayliu/releasebug' }}
+          echo ${{ needs.check-release-assets.outputs.has_releasable_assets }}
+          echo ${{ needs.check-release-assets.outputs.has_releasable_assets != ''}}
+          echo ${{github.ref}}
+
   release-assets:
     name: Release assets
     if: ${{ needs.check-release-assets.outputs.has_releasable_assets != '' && github.ref == 'refs/heads/wayliu/releasebug' }}
