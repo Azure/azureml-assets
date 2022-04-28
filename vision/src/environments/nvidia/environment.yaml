@@ -1,4 +1,5 @@
 image:
+  name: azureml/curated/nvidia_pytorch
   os: windows
   context:
     dir: context
