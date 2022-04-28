@@ -37,6 +37,7 @@ def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):
 def update_asset(asset_config: AssetConfig,
                  release_directory_root: str,
                  copy_only: bool,
+                 skip_unreleased: bool,
                  output_directory_root: str = None) -> str:
     # Determine asset's release directory
     release_dir = get_asset_release_dir(asset_config, release_directory_root)
@@ -74,7 +75,7 @@ def update_asset(asset_config: AssetConfig,
             release_version = release_spec.version
             check_contents = True
 
-        if not release_tag_exists(release_asset_config, release_directory_root):
+        if skip_unreleased and not release_tag_exists(release_asset_config, release_directory_root):
             # Skip a non-released version
             # TODO: Determine whether this should fail the workflow
             logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
@@ -119,6 +120,7 @@ def update_assets(input_dirs: List[str],
                   asset_config_filename: str,
                   release_directory_root: str,
                   copy_only: bool,
+                  skip_unreleased: bool,
                   output_directory_root: str = None):
     # Find assets under input dirs
     asset_count = 0
@@ -135,6 +137,7 @@ def update_assets(input_dirs: List[str],
                 new_version = update_asset(asset_config=asset_config,
                                            release_directory_root=release_directory_root,
                                            copy_only=copy_only,
+                                           skip_unreleased=skip_unreleased,
                                            output_directory_root=output_directory_root)
                 if new_version:
                     print(f"Updated {asset_config.type.value} {asset_config.name} to version {new_version}")
@@ -161,6 +164,7 @@ if __name__ == '__main__':
     parser.add_argument("-r", "--release-directory", required=True, help="Directory to which the release branch has been cloned")
     parser.add_argument("-o", "--output-directory", help="Directory to which new/updated assets will be written, defaults to release directory")
     parser.add_argument("-c", "--copy-only", action="store_true", help="Just copy assets into the release directory")
+    parser.add_argument("-s", "--skip-unreleased", action="store_true", help="Skip unreleased assets in the release branch")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
@@ -171,4 +175,5 @@ if __name__ == '__main__':
                   asset_config_filename=args.asset_config_filename,
                   release_directory_root=args.release_directory,
                   copy_only=args.copy_only,
+                  skip_unreleased=args.skip_unreleased,
                   output_directory_root=args.output_directory)
