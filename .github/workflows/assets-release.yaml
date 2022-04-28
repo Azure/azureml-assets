@@ -183,6 +183,7 @@ jobs:
       has_releasable_assets: ${{ steps.download-artifact.outputs.download-path }}
   
   check-var0:
+    if: always()
     name: check variables0
     runs-on: ubuntu-latest
     needs: check-release-assets
