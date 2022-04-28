@@ -1,0 +1,3 @@
+name: pytorch_image_classifier
+type: component
+spec: spec.yaml
