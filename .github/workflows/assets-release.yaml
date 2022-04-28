@@ -182,6 +182,26 @@ jobs:
     outputs:
       has_releasable_assets: ${{ steps.download-artifact.outputs.download-path }}
   
+  check-var0:
+    name: check variables
+    runs-on: ubuntu-latest
+    needs: check-release-assets
+
+    steps:
+      - name: check
+        id: check-var
+        run: |
+          echo ${{ needs.check-release-assets.outputs.has_releasable_assets != '' && github.ref == 'refs/pull/50/merge' }}
+          echo ${{ needs.check-release-assets.outputs.has_releasable_assets }}
+          echo ${{ needs.check-release-assets.outputs.has_releasable_assets != null}}
+          echo ${{github.ref}}
+      - name: checkOutput
+        if: needs.check-release-assets.outputs.has_releasable_assets
+        run: echo 'check output'
+      - name: checkBranch
+        if: github.ref == 'refs/pull/50/merge'
+        run: echo 'check branch'
+
   check-var1:
     name: check variables
     if: github.ref == 'refs/pull/50/merge'
