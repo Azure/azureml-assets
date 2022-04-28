@@ -75,6 +75,7 @@ class AssetConfig(Config):
         return f"{self.name} {self.version}"
 
     def _validate(self):
+        Config._validate_exists('name', self.name)
         Config._validate_enum('type', self._type, AssetType, True)
         Config._validate_exists('spec', self.spec)
 

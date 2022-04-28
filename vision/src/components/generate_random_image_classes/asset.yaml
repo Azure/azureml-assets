@@ -1,2 +1,3 @@
+name: generate_random_image_classes
 type: component
 spec: spec.yaml
