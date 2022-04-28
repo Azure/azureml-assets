@@ -9,6 +9,9 @@ on:
       - 'scripts/**'
   schedule:
     - cron: '30 6 * * *'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       asset_dirs:
