@@ -5,9 +5,9 @@ on:
     branches:
       - main
       - elesel/update-matrix-action
-    paths-ignore:
-      - '.github/**'
-      - 'scripts/**'
+    # paths-ignore:
+    #   - '.github/**'
+    #   - 'scripts/**'
   schedule:
     - cron: '30 6 * * *'
   pull_request:
