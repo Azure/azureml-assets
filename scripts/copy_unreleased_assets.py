@@ -50,7 +50,7 @@ if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--release-directory", required=True, help="Directory to which the release branch has been cloned")
-    parser.add_argument("-o", "--output-directory", required=True, help="Directory to which releasable assets will be written")
+    parser.add_argument("-o", "--output-directory", required=True, help="Directory to which unreleased assets will be written")
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
     args = parser.parse_args()
 
