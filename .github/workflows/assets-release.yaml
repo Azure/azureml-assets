@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths-ignore:
-      - '.github/**'
-      - 'scripts/**'
+      - .github/**
+      - scripts/**
   schedule:
     - cron: '30 6 * * *'
   pull_request:
