@@ -1,8 +1,6 @@
 name: assets-validation
 
 on:
-  push:
-    branches: elesel/validate-assets
   pull_request:
     branches:
       - main
