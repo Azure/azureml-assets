@@ -58,6 +58,7 @@ def update_asset(asset_config: AssetConfig,
     main_version = asset_config.version
     release_version = None
     check_contents = False
+    pending_release = False
 
     # Check existing release dir
     if os.path.exists(release_dir):
@@ -75,12 +76,24 @@ def update_asset(asset_config: AssetConfig,
             release_version = release_spec.version
             check_contents = True
 
-        if skip_unreleased and not release_tag_exists(release_asset_config, release_directory_root):
-            # Skip a non-released version
-            # TODO: Determine whether this should fail the workflow
+        # See if the asset version is unreleased
+        pending_release = not release_tag_exists(release_asset_config, release_directory_root)
+        if pending_release and (main_version or skip_unreleased):
+            # Skip the non-released asset version
             logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
                                f"version {release_version} hasn't been released yet")
             return None
+
+    # Determine new version
+    if main_version:
+        # Use explicit version
+        new_version = main_version
+    elif pending_release:
+        # Reuse existing dynamic version
+        new_version = int(release_version)
+    else:
+        # Increment dynamic version
+        new_version = int(release_version) + 1 if release_version else 1
 
     with tempfile.TemporaryDirectory() as temp_dir:
         # Copy asset to temp directory and pin image/package versions
@@ -99,14 +112,6 @@ def update_asset(asset_config: AssetConfig,
 
         # Copy and replace any existing directory
         copy_replace_dir(temp_asset_config.file_path, output_directory)
-
-        # Determine new version
-        if main_version:
-            # Explicit versioning
-            new_version = main_version
-        else:
-            # Dynamic versioning
-            new_version = int(release_version) + 1 if release_version else 1
 
         # Update version in spec by copying clean spec and updating it
         shutil.copyfile(asset_config.spec_with_path, os.path.join(output_directory, asset_config.spec))
@@ -164,7 +169,7 @@ if __name__ == '__main__':
     parser.add_argument("-r", "--release-directory", required=True, help="Directory to which the release branch has been cloned")
     parser.add_argument("-o", "--output-directory", help="Directory to which new/updated assets will be written, defaults to release directory")
     parser.add_argument("-c", "--copy-only", action="store_true", help="Just copy assets into the release directory")
-    parser.add_argument("-s", "--skip-unreleased", action="store_true", help="Skip unreleased assets in the release branch")
+    parser.add_argument("-s", "--skip-unreleased", action="store_true", help="Skip unreleased dynamically-versioned assets in the release branch")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
