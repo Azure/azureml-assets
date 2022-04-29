@@ -64,13 +64,21 @@ class AssetType(Enum):
     ENVIRONMENT = 'environment'
     MODEL = 'model'
 
+VERSION_AUTO = "auto"
+
 
 class AssetConfig(Config):
     """
-    Example:
+    Examples:
 
     name: my-asset
     version: 1
+    type: environment
+    spec: spec.yaml
+    extra_config: environment.yaml
+
+    name: my-other-asset
+    version: auto
     type: environment
     spec: spec.yaml
     extra_config: environment.yaml
@@ -86,6 +94,7 @@ class AssetConfig(Config):
         Config._validate_enum('type', self._type, AssetType, True)
         Config._validate_exists('spec', self.spec)
         Config._validate_exists('name', self.name)
+        Config._validate_exists('version', self.version)
 
     @property
     def _type(self) -> str:
@@ -114,9 +123,33 @@ class AssetConfig(Config):
         return name
 
     @property
-    def version(self) -> str:
+    def version(self, fallback_to_spec: bool = True) -> str:
+        """Retrieve the asset's version from its YAML file, optionally falling back to the spec if not set.
+
+        Args:
+            fallback_to_spec (bool, optional): Read version from spec if not present in asset's YAML file.
+                Defaults to True.
+
+        Raises:
+            ValidationException: If the version isn't set in the asset's YAML file and the version from spec includes a
+                template tag.
+
+        Returns:
+            str: The asset's version or None if auto-versioning and version from spec includes a template tag.
+        """
         version = self._yaml.get('version')
+        if (self.auto_version or not Config._is_set(version)) and fallback_to_spec:
+            version = Spec(self.spec_with_path).version
+            if Config._contains_template(version):
+                if self.auto_version:
+                    version = None
+                else:
+                    raise ValidationException(f"Tried to read asset version from spec, but it includes a template tag: {version}")
         return str(version) if version is not None else None
+
+    @property
+    def auto_version(self) -> bool:
+        return self._yaml.get('version') == VERSION_AUTO
 
     @property
     def type(self) -> AssetType:
