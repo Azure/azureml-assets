@@ -1,6 +1,4 @@
-#name: AzureML-tensorflow-2.8-ubuntu20.04-py38-cuda11-gpu
-name: AzureML-tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu
+name: AzureML-tensorflow-2.8-ubuntu20.04-py38-cuda11-gpu
 type: environment
-#spec: spec.yaml
-spec: spec2.yaml
+spec: spec.yaml
 extra_config: environment.yaml
