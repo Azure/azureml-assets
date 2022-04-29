@@ -1,0 +1,42 @@
+name: assets-validation
+
+on:
+  push:
+    branches: elesel/validate-assets
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - .github/**
+      - scripts/**
+  workflow_dispatch:
+
+env:
+  scripts_dir: scripts
+  asset_config_filename: asset.yaml
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+      
+      - name: Use Python 3.8 or newer
+        uses: actions/setup-python@v3
+        with:
+          python-version: '>=3.8'
+    
+      - name: Install dependencies
+        run: pip install -r $scripts_dir/requirements.txt
+      
+      - name: Validate assets
+        run: python -u $scripts_dir/validate_assets.py -i . -a $asset_config_filename
