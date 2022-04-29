@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - elesel/update-matrix-action
     paths-ignore:
       - '.github/**'
       - 'scripts/**'
@@ -84,24 +85,15 @@ jobs:
       
       - name: Create build and test matrix
         id: create-matrix
-        uses: JoshuaTheMiller/conditional-build-matrix@0.0.1
+        uses: JoshuaTheMiller/conditional-build-matrix@0.1.0
         with:
           inputFile: ${{ env.main_dir }}/${{ env.build_test_matrix_template }}
           filter: '[?contains(`${{ steps.find-updated-assets.outputs.env_os_updates }}`, os)] | {os: [].os, include: @}'
-          # TODO: Use the line below after this PR merges: https://github.com/JoshuaTheMiller/conditional-build-matrix/pull/2
-          # addInclude: false
-      
-      # TODO: Remove this step after the above PR merges
-      # Remove the wrapper added by the step above
-      - name: Update matrix
-        id: update-matrix
-        run: |
-          matrix=$(echo '${{ steps.create-matrix.outputs.matrix }}' | sed -E 's/^\{"include":(.+)\}$/\1/')
-          echo "::set-output name=matrix::$matrix"
+          addInclude: false
 
     outputs:
       has_updates: ${{ steps.find-updated-assets.outputs.has_updates }}
-      build_matrix: ${{ steps.update-matrix.outputs.matrix }}
+      build_matrix: ${{ steps.create-matrix.outputs.matrix }}
 
   build-images:
     name: Build and test images
