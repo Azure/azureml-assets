@@ -1,4 +1,5 @@
 import os
+import re
 from enum import Enum
 from typing import Dict, List
 from yaml import safe_load
@@ -8,11 +9,7 @@ class ValidationException(Exception):
     """ Validation errors """
 
 
-class AssetType(Enum):
-    CODE = 'code'
-    COMPONENT = 'component'
-    ENVIRONMENT = 'environment'
-    MODEL = 'model'
+TEMPLATE_CHECK = re.compile(r"\{\{.*\}\}")
 
 
 class Config:
@@ -38,6 +35,10 @@ class Config:
         return value is not None
 
     @staticmethod
+    def _contains_template(value: str):
+        return TEMPLATE_CHECK.match(value) is not None
+
+    @staticmethod
     def _validate_exists(property_name: str, property_value: object):
         if not Config._is_set(property_value):
             raise ValidationException(f"Missing {property_name} property")
@@ -55,6 +56,13 @@ class Config:
         if property_value not in enum_vals:
             raise ValidationException(f"Invalid {property_name} property: {property_value}"
                                       f" is not one of {enum_vals}")
+
+
+class AssetType(Enum):
+    CODE = 'code'
+    COMPONENT = 'component'
+    ENVIRONMENT = 'environment'
+    MODEL = 'model'
 
 
 class AssetConfig(Config):
@@ -75,17 +83,35 @@ class AssetConfig(Config):
         return f"{self.name} {self.version}"
 
     def _validate(self):
-        Config._validate_exists('name', self.name)
         Config._validate_enum('type', self._type, AssetType, True)
         Config._validate_exists('spec', self.spec)
+        Config._validate_exists('name', self.name)
 
     @property
     def _type(self) -> str:
         return self._yaml.get('type')
 
     @property
-    def name(self) -> str:
-        return self._yaml.get('name')
+    def name(self, fallback_to_spec: bool = True) -> str:
+        """Retrieve the asset's name from its YAML file, optionally falling back to the spec if not set.
+
+        Args:
+            fallback_to_spec (bool, optional): Read name from spec if not present in asset's YAML file.
+                Defaults to True.
+
+        Raises:
+            ValidationException: If the name isn't set in the asset's YAML file and the name from spec includes a
+                template tag.
+
+        Returns:
+            str: The asset's name
+        """
+        name = self._yaml.get('name')
+        if not Config._is_set(name) and fallback_to_spec:
+            name = Spec(self.spec_with_path).name
+            if Config._contains_template(name):
+                raise ValidationException(f"Tried to read asset name from spec, but it includes a template tag: {name}")
+        return name
 
     @property
     def version(self) -> str:
