@@ -92,8 +92,12 @@ class AssetConfig(Config):
         return self._yaml.get('type')
 
     @property
-    def name(self) -> str:
-        """Retrieve the asset's name from its YAML file, falling back to the spec if not set.
+    def name(self, fallback_to_spec: bool = True) -> str:
+        """Retrieve the asset's name from its YAML file, optionally falling back to the spec if not set.
+
+        Args:
+            fallback_to_spec (bool, optional): Read name from spec if not present in asset's YAML file.
+                Defaults to True.
 
         Raises:
             ValidationException: If the name isn't set in the asset's YAML file and the name from spec includes a
@@ -103,7 +107,7 @@ class AssetConfig(Config):
             str: The asset's name
         """
         name = self._yaml.get('name')
-        if not Config._is_set(name):
+        if not Config._is_set(name) and fallback_to_spec:
             name = Spec(self.spec_with_path).name
             if Config._contains_template(name):
                 raise ValidationException(f"Tried to read asset name from spec, but it includes a template tag: {name}")
