@@ -52,10 +52,8 @@ def markdown_trace_handler(dir_name: str, rank: int = 0):
 def composite_trace_handler(handler_list):
     """This can call multiple trace handlers inside one"""
     def _handler_fn(prof) -> None:
-        for i, handler in enumerate(handler_list):
-            logging.getLogger(__name__).info(f"handler {i}")
+        for handler in enumerate(handler_list):
             handler(prof)
-            logging.getLogger(__name__).info(f"/handler {i}")
 
     return _handler_fn
 
