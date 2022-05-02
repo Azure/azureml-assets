@@ -56,7 +56,7 @@ def create_import_config(input_directory: str,
     import_config = {'images': images}
     with open(import_config_file_path, 'w') as f:
         json.dump(import_config, f, indent=2)
-    print("Created import manifest file")
+    print(f"Created import config file at {import_config_file_path}")
 
 
 if __name__ == "__main__":
