@@ -171,9 +171,7 @@ jobs:
 
   release-assets:
     name: Release assets
-    if: always() && needs.check-release-assets.outputs.has_releasable_assets != ''
-    # TODO: Restore this
-    #if: always() && needs.check-release-assets.outputs.has_releasable_assets != '' && github.ref == 'refs/heads/main'
+    if: always() && needs.check-release-assets.outputs.has_releasable_assets != '' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: check-release-assets
     
