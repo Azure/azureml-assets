@@ -64,13 +64,21 @@ class AssetType(Enum):
     ENVIRONMENT = 'environment'
     MODEL = 'model'
 
+VERSION_AUTO = "auto"
+
 
 class AssetConfig(Config):
     """
-    Example:
+    Examples:
 
     name: my-asset
     version: 1
+    type: environment
+    spec: spec.yaml
+    extra_config: environment.yaml
+
+    name: my-other-asset
+    version: auto
     type: environment
     spec: spec.yaml
     extra_config: environment.yaml
@@ -86,18 +94,24 @@ class AssetConfig(Config):
         Config._validate_enum('type', self._type, AssetType, True)
         Config._validate_exists('spec', self.spec)
         Config._validate_exists('name', self.name)
+        if not self.auto_version:
+            Config._validate_exists('version', self.version)
 
     @property
     def _type(self) -> str:
         return self._yaml.get('type')
 
     @property
-    def name(self, fallback_to_spec: bool = True) -> str:
-        """Retrieve the asset's name from its YAML file, optionally falling back to the spec if not set.
+    def type(self) -> AssetType:
+        return AssetType(self._type)
 
-        Args:
-            fallback_to_spec (bool, optional): Read name from spec if not present in asset's YAML file.
-                Defaults to True.
+    @property
+    def _name(self) -> str:
+        return self._yaml.get('name')
+
+    @property
+    def name(self) -> str:
+        """Retrieve the asset's name from its YAML file, falling back to the spec if not set.
 
         Raises:
             ValidationException: If the name isn't set in the asset's YAML file and the name from spec includes a
@@ -106,21 +120,41 @@ class AssetConfig(Config):
         Returns:
             str: The asset's name
         """
-        name = self._yaml.get('name')
-        if not Config._is_set(name) and fallback_to_spec:
+        name = self._name
+        if not Config._is_set(name):
             name = Spec(self.spec_with_path).name
             if Config._contains_template(name):
                 raise ValidationException(f"Tried to read asset name from spec, but it includes a template tag: {name}")
         return name
 
     @property
+    def _version(self) -> str:
+        return self._yaml.get('version')
+
+    @property
     def version(self) -> str:
-        version = self._yaml.get('version')
+        """Retrieve the asset's version from its YAML file, falling back to the spec if not set.
+
+        Raises:
+            ValidationException: If the version isn't set in the asset's YAML file and the version from spec includes a
+                template tag.
+
+        Returns:
+            str: The asset's version or None if auto-versioning and version from spec includes a template tag.
+        """
+        version = self._version
+        if self.auto_version or not Config._is_set(version):
+            version = Spec(self.spec_with_path).version
+            if Config._contains_template(version):
+                if self.auto_version:
+                    version = None
+                else:
+                    raise ValidationException(f"Tried to read asset version from spec, but it includes a template tag: {version}")
         return str(version) if version is not None else None
 
     @property
-    def type(self) -> AssetType:
-        return AssetType(self._type)
+    def auto_version(self) -> bool:
+        return self._version == VERSION_AUTO
 
     @property
     def spec(self) -> str:

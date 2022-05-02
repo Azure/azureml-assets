@@ -56,6 +56,7 @@ def update_asset(asset_config: AssetConfig,
 
     # Get version from main branch, set a few defaults
     main_version = asset_config.version
+    auto_version = asset_config.auto_version
     release_version = None
     check_contents = False
     pending_release = False
@@ -63,36 +64,34 @@ def update_asset(asset_config: AssetConfig,
     # Check existing release dir
     if os.path.exists(release_dir):
         release_asset_config = AssetConfig(os.path.join(release_dir, asset_config.file_name))
+        release_version = release_asset_config.version
 
-        if main_version:
-            # Explicit releases, just check version
-            release_version = release_asset_config.version
+        if not auto_version:
+            # Explicit versioning, just check version
             if main_version == release_version:
                 # No version change
                 return None
         else:
-            # Dynamic releases, will need to check contents
-            release_spec = Spec(release_asset_config.spec_with_path)
-            release_version = release_spec.version
+            # Auto versioning, will need to check contents
             check_contents = True
 
         # See if the asset version is unreleased
         pending_release = not release_tag_exists(release_asset_config, release_directory_root)
-        if pending_release and (main_version or skip_unreleased):
+        if pending_release and (not auto_version or skip_unreleased):
             # Skip the non-released asset version
             logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
                                f"version {release_version} hasn't been released yet")
             return None
 
     # Determine new version
-    if main_version:
+    if not auto_version:
         # Use explicit version
         new_version = main_version
     elif pending_release:
-        # Reuse existing dynamic version
-        new_version = int(release_version)
+        # Reuse existing auto version
+        new_version = release_version
     else:
-        # Increment dynamic version
+        # Increment auto version
         new_version = int(release_version) + 1 if release_version else 1
 
     with tempfile.TemporaryDirectory() as temp_dir:
