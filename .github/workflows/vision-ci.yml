@@ -43,7 +43,7 @@ jobs:
       run: >-
         python -m pytest tests/ -v
         --junitxml=test-build-result.xml
-        --cov=src/ --cov-report xml:coverage.xml --cov-report term
+        --cov=src/ --cov-report xml:coverage.xml --cov-report term-missing
 
     - name: Publish test results
       uses: EnricoMi/publish-unit-test-result-action/composite@v1
