@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-import pygit2
+from git import Repo
 from pathlib import Path
 
 from config import AssetConfig, AssetType, EnvironmentConfig, PublishLocation, Spec
@@ -11,13 +11,13 @@ ENV_DEF_FILE_TEMPLATE = "envs/{name}/envdef.json"
 
 
 def get_repo_remote_url(release_directory_root: str) -> str:
-    repo = pygit2.Repository(release_directory_root)
-    return repo.remotes['origin'].url
+    repo = Repo(release_directory_root)
+    return repo.remotes.origin.url
 
 
 def get_repo_commit_hash(release_directory_root: str) -> str:
-    repo = pygit2.Repository(release_directory_root)
-    return repo[repo.head.target].hex
+    repo = Repo(release_directory_root)
+    return repo.head.commit.hexsha
 
 
 def create_deployment_config(input_directory: str,
