@@ -43,6 +43,7 @@ def random_image_in_folder_classes(temporary_dir):
 # IMPORTANT: we have to restrict the list of models for unit test
 # because github actions runners have 7GB RAM only and will OOM
 TEST_MODEL_ARCH_LIST = [
+    "test",
     "resnet18",
     "resnet34",
 ]

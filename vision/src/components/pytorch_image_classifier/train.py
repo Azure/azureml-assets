@@ -386,7 +386,7 @@ class PyTorchDistributedModelTrainingSequence:
             self.model.parameters(),
             lr=self.training_config.learning_rate,
             momentum=self.training_config.momentum,
-            #nesterov=True,
+            nesterov=True,
             #weight_decay=1e-4,
         )
 
