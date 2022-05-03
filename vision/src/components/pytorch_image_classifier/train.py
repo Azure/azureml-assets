@@ -111,6 +111,11 @@ class PyTorchDistributedModelTrainingSequence:
             self.dataloading_config.non_blocking
         )
 
+        # add this switch to test for different strategies
+        if self.dataloading_config.multiprocessing_sharing_strategy:
+            torch.multiprocessing.set_sharing_strategy(self.dataloading_config.multiprocessing_sharing_strategy)
+
+
         # DISTRIBUTED: detect multinode config
         # depending on the Azure ML distribution.type, different environment variables will be provided
         # to configure DistributedDataParallel
@@ -182,6 +187,7 @@ class PyTorchDistributedModelTrainingSequence:
                 "persistent_workers": self.dataloading_config.persistent_workers,
                 "pin_memory": self.dataloading_config.pin_memory,
                 "non_blocking": self.dataloading_config.non_blocking,
+                "multiprocessing_sharing_strategy": self.dataloading_config.multiprocessing_sharing_strategy,
 
                 # training params
                 "model_arch": self.training_config.model_arch,
@@ -703,13 +709,21 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="Momentum of optimizer",
     )
 
-    group = parser.add_argument_group(f"Monitoring/Profiling Parameters")
+    group = parser.add_argument_group(f"System Parameters")
     group.add_argument(
         "--enable_profiling",
         type=strtobool,
         required=False,
         default=False,
         help="Enable pytorch profiler.",
+    )
+    group.add_argument(
+        "--multiprocessing_sharing_strategy",
+        type=str,
+        choices=torch.multiprocessing.get_all_sharing_strategies(),
+        required=False,
+        default=torch.multiprocessing.get_sharing_strategy(),
+        help="Check https://pytorch.org/docs/stable/multiprocessing.html",
     )
 
     return parser
