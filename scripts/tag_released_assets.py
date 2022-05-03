@@ -8,8 +8,16 @@ from update_assets import get_release_tag_name
 
 def tag_released_assets(input_directory: str,
                         asset_config_filename: str,
-                        release_directory_root: str):
+                        release_directory_root: str,
+                        git_username: str = None,
+                        git_email: str = None):
     repo = Repo(release_directory_root)
+
+    # Set username and email
+    if git_username is not None:
+        repo.config_writer().set_value("user", "name", git_username).release()
+    if git_email is not None:
+        repo.config_writer().set_value("user", "email", git_email).release()
 
     # Create tags locally
     tag_refs = []
@@ -34,8 +42,12 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input-directory", required=True, help="Directory containing released assets")
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
     parser.add_argument("-r", "--release-directory", required=True, help="Directory to which the release branch has been cloned")
+    parser.add_argument("-u", "--username", help="Username for git push")
+    parser.add_argument("-e", "--email", help="Email for git push")
     args = parser.parse_args()
 
     tag_released_assets(input_directory=args.input_directory,
                         asset_config_filename=args.asset_config_filename,
-                        release_directory_root=args.release_directory)
+                        release_directory_root=args.release_directory,
+                        git_username=args.username,
+                        git_email=args.email)
