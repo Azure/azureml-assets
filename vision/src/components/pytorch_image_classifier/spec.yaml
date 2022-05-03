@@ -76,11 +76,15 @@ inputs:
     optional: true
     description: "Name to register final model in MLFlow"
 
-  # profiling
+  # system parameters
   enable_profiling:
     type: boolean
     default: false
     description: "Enables profiler"
+  multiprocessing_sharing_strategy:
+    type: string
+    default: "file_system"
+    description: "Check https://pytorch.org/docs/stable/multiprocessing.html"
 
 outputs:
   checkpoints: 
@@ -118,6 +122,7 @@ command: >-
   [--register_model_as ${{inputs.register_model_as}}]
 
   --enable_profiling ${{inputs.enable_profiling}}
+  --multiprocessing_sharing_strategy ${{inputs.multiprocessing_sharing_strategy}}
 
 distribution:
   # NOTE: using type:pytorch will use all the right env variables for pytorch init_process_group
