@@ -46,7 +46,7 @@ if COMPONENT_ROOT not in sys.path:
 # internal imports
 from model import MODEL_ARCH_LIST, get_model_metadata, load_model
 from image_io import build_image_datasets
-from profiling import PyTorchProfilerHandler
+from profiling import PyTorchProfilerHandler, LogTimeBlock, LogDiskUsageBlock
 
 
 class PyTorchDistributedModelTrainingSequence:
@@ -737,18 +737,6 @@ def run(args):
     # MLFLOW: initialize mlflow (once in entire script)
     mlflow.start_run()
 
-    # build the image folder datasets
-    train_dataset, valid_dataset, labels = build_image_datasets(
-        train_images_dir=args.train_images,
-        valid_images_dir=args.valid_images,
-        input_size=get_model_metadata(args.model_arch)['input_size']
-    )
-
-    # creates the model architecture
-    model = load_model(
-        args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
-    )
-
     # use a handler for the training sequence
     training_handler = PyTorchDistributedModelTrainingSequence()
 
@@ -764,8 +752,23 @@ def run(args):
     # PROFILER: set profiler in trainer to call profiler.step() during training
     training_handler.profiler = training_profiler.start_profiler()
 
+    # report the time and disk usage during this code block
+    with LogTimeBlock("build_image_datasets"), LogDiskUsageBlock("build_image_datasets", perdisk=False):
+        # build the image folder datasets
+        train_dataset, valid_dataset, labels = build_image_datasets(
+            train_images_dir=args.train_images,
+            valid_images_dir=args.valid_images,
+            input_size=get_model_metadata(args.model_arch)['input_size']
+        )
+
     # creates data loaders from datasets for distributed training
     training_handler.setup_datasets(train_dataset, valid_dataset, labels)
+
+    with LogTimeBlock("time.load_model"):
+        # creates the model architecture
+        model = load_model(
+            args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
+        )
 
     # sets the model for distributed training
     training_handler.setup_model(model)

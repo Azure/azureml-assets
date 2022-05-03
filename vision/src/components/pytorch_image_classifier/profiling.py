@@ -10,6 +10,7 @@ import logging
 import torch
 import mlflow
 import tempfile
+import psutil
 from torch.profiler import profile, record_function, ProfilerActivity
 
 
@@ -203,3 +204,112 @@ class PyTorchProfilerHandler:
             self.logger.info(
                 "Not stopping profiler as it was not started in the first place."
             )
+
+class LogTimeBlock(object):
+    """ This class should be used to time a code block.
+    The time diff is computed from __enter__ to __exit__.
+    Example
+    -------
+    ```python
+    with LogTimeBlock("my_perf_metric_name"):
+        print("(((sleeping for 1 second)))")
+        time.sleep(1)
+    ```
+    """
+
+    def __init__(self, name, **kwargs):
+        """
+        Constructs the LogTimeBlock.
+        Args:
+        name (str): key for the time difference (for storing as metric)
+        kwargs (dict): any keyword will be added  as properties to metrics for logging (work in progress)
+        """
+        # kwargs
+        self.step = kwargs.get('step', None)
+
+        # internal variables
+        self.name = name
+        self.start_time = None
+        self._logger = logging.getLogger(__name__)
+
+    def __enter__(self):
+        """ Starts the timer, gets triggered at beginning of code block """
+        self.start_time = time.time() # starts "timer"
+
+    def __exit__(self, exc_type, value, traceback):
+        """ Stops the timer and stores accordingly
+        gets triggered at beginning of code block.
+        
+        Note:
+            arguments are by design for with statements.
+        """
+        run_time = time.time() - self.start_time # stops "timer"
+
+        self._logger.info(f"--- time elapsed: {self.name} = {run_time:2f} s [step={self.step}]")
+        mlflow.log_metric(self.name + ".time", run_time)
+
+
+class LogDiskUsageBlock(object):
+    def __init__(self, name, **kwargs):
+        """
+        Constructs the LogDiskUsageBlock.
+        Args:
+        name (str): key for the time difference (for storing as metric)
+        kwargs (dict): any keyword will be added  as properties to metrics for logging (work in progress)
+        """
+        # kwargs
+        self.step = kwargs.get('step', None)
+        self.perdisk = kwargs.get('perdisk', False)
+
+        # internal variables
+        self.name = name
+        self.start_time = None
+        self.start_disk_usage = None
+        self.start_disk_io_counter_read = None
+        self.start_disk_io_counter_write = None
+        self._logger = logging.getLogger(__name__)
+
+    def __enter__(self):
+        """ Get initial values, gets triggered at beginning of code block """
+        try:
+            import psutil
+
+            self.start_time = time.time()
+            self.start_disk_usage = psutil.disk_usage("/").percent
+            self.start_disk_io_counters = psutil.disk_io_counters(perdisk=self.perdisk)
+
+            print(self.start_disk_io_counter_read)
+
+        except ImportError:
+            self.logger.critical("import psutil failed, cannot display disk stats.")
+
+    def __exit__(self, exc_type, value, traceback):
+        """ Stops the timer and stores accordingly
+        gets triggered at beginning of code block.
+        
+        Note:
+            arguments are by design for with statements.
+        """
+        try:
+            import psutil
+        except ImportError:
+            self.logger.critical("import psutil failed, cannot display disk stats.")
+            return
+
+        run_time = time.time() - self.start_time
+        disk_usage = psutil.disk_usage("/").percent - self.start_disk_usage
+
+        disk_io_metrics = {}
+        end_disk_io_counters = psutil.disk_io_counters(perdisk=self.perdisk)
+        if self.perdisk:
+            for key in self.start_disk_io_counters:
+                disk_io_metrics[f"{self.name}.disk.read.{key}"] = (end_disk_io_counters[key].read_bytes - self.start_disk_io_counters[key].read_bytes) / (1024 * 1024)
+                disk_io_metrics[f"{self.name}.disk.write.{key}"] = (end_disk_io_counters[key].write_bytes - self.start_disk_io_counters[key].write_bytes) / (1024 * 1024)
+        else:
+            disk_io_metrics[f"{self.name}.disk.read"] = (end_disk_io_counters.read_bytes - self.start_disk_io_counters.read_bytes) / (1024 * 1024)
+            disk_io_metrics[f"{self.name}.disk.write"] = (end_disk_io_counters.write_bytes - self.start_disk_io_counters.write_bytes) / (1024 * 1024)
+
+        self._logger.info(f"--- time elapsed: {self.name} = {run_time:2f} s [step={self.step}]")
+        self._logger.info(f"--- disk_io_metrics: {disk_io_metrics}s [step={self.step}]")
+
+        mlflow.log_metrics(disk_io_metrics)
