@@ -10,7 +10,6 @@ import logging
 import torch
 import mlflow
 import tempfile
-import psutil
 from torch.profiler import profile, record_function, ProfilerActivity
 
 

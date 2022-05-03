@@ -764,7 +764,7 @@ def run(args):
     # creates data loaders from datasets for distributed training
     training_handler.setup_datasets(train_dataset, valid_dataset, labels)
 
-    with LogTimeBlock("time.load_model"):
+    with LogTimeBlock("load_model"):
         # creates the model architecture
         model = load_model(
             args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
