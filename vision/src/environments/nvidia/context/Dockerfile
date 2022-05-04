@@ -1,5 +1,5 @@
 # check release notes https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/index.html
-FROM nvcr.io/nvidia/pytorch:22.02-py3
+FROM nvcr.io/nvidia/pytorch:22.04-py3
 
 ##############################################################################
 # NCCL TESTS
@@ -20,11 +20,11 @@ RUN mkdir /tmp/nccltests && \
 
 # Install dependencies missing in this container
 # NOTE: container already has matplotlib==3.5.1 tqdm==4.62.0
-RUN python -m pip install   azureml-defaults==1.39.0 \
-                            mlflow==1.24.0 \
-                            azureml-mlflow==1.39.0 \
-                            transformers==4.17.0 \
-                            psutil==5.7.0
+RUN python -m pip install   azureml-defaults==1.41.0 \
+                            mlflow==1.25.1 \
+                            azureml-mlflow==1.41.0 \
+                            transformers==4.18.0 \
+                            psutil==5.9.0
 
 # add ndv4-topo.xml
 RUN mkdir /opt/microsoft/
