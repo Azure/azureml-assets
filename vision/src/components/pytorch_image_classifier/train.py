@@ -164,7 +164,7 @@ class PyTorchDistributedModelTrainingSequence:
                 world_size=self.world_size,
             )
         else:
-            self.logger.info(f"Not running in multinode.")
+            self.logger.info(f"Not running in multinode, so not initializing process group.")
 
         # DISTRIBUTED: in distributed mode, you want to report parameters
         # only from main process (rank==0) to avoid conflict
@@ -500,6 +500,17 @@ class PyTorchDistributedModelTrainingSequence:
         else:
             self.logger.critical("Cuda is not available, cannot report cuda memory allocation.")
 
+    def close(self):
+        """Tear down potential resources"""
+        if self.multinode_available:
+            self.logger.info(
+                f"Destroying process group on local_rank={self.local_rank} rank={self.world_rank} size={self.world_size}"
+            )
+            # DISTRIBUTED: this will teardown the distributed process group
+            torch.distributed.destroy_process_group()
+        else:
+            self.logger.info(f"Not running in multinode, so not destroying process group.")
+
 
     #################
     ### MODEL I/O ###
@@ -790,6 +801,9 @@ def run(args):
             name=f"epoch-{args.num_epochs}",
             register_as=args.register_model_as,
         )
+
+    # properly teardown distributed resources
+    training_profiler.close()
 
     # MLFLOW: finalize mlflow (once in entire script)
     mlflow.end_run()
