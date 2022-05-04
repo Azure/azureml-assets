@@ -491,7 +491,7 @@ class PyTorchDistributedModelTrainingSequence:
         try:
             import psutil
             self.logger.critical(f"Memory: {str(psutil.virtual_memory())}")
-        except ImportError:
+        except ModuleNotFoundError:
             self.logger.critical("import psutil failed, cannot display virtual memory stats.")
 
         if torch.cuda.is_available():

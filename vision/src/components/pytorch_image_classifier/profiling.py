@@ -279,7 +279,7 @@ class LogDiskUsageBlock(object):
 
             print(self.start_disk_io_counter_read)
 
-        except ImportError:
+        except ModuleNotFoundError:
             self.logger.critical("import psutil failed, cannot display disk stats.")
 
     def __exit__(self, exc_type, value, traceback):
@@ -291,14 +291,16 @@ class LogDiskUsageBlock(object):
         """
         try:
             import psutil
-        except ImportError:
+        except ModuleNotFoundError:
             self.logger.critical("import psutil failed, cannot display disk stats.")
             return
 
         run_time = time.time() - self.start_time
         disk_usage = psutil.disk_usage("/").percent - self.start_disk_usage
 
-        disk_io_metrics = {}
+        disk_io_metrics = {
+            f'{self.name}.disk.usage_delta' : (psutil.disk_usage("/").percent - self.start_disk_usage)
+        }
         end_disk_io_counters = psutil.disk_io_counters(perdisk=self.perdisk)
         if self.perdisk:
             for key in self.start_disk_io_counters:
