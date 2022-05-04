@@ -355,3 +355,15 @@ class Spec(Config):
     def version(self) -> str:
         version = self._yaml.get('version')
         return str(version) if version is not None else None
+
+    @property
+    def description(self) -> str:
+        return self._yaml.get('description')
+
+    @property
+    def tags(self) -> str:
+        return self._yaml.get('tags')
+
+    @property
+    def image(self) -> str:
+        return self._yaml.get('image')

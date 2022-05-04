@@ -9,6 +9,7 @@ def create_import_config(input_directory: str,
                          asset_config_filename: str,
                          import_config_file_path: str,
                          registry_address: str,
+                         tag: str = None,
                          registry_username: str = None,
                          registry_password: str = None):
     images = []
@@ -36,7 +37,8 @@ def create_import_config(input_directory: str,
             image_tag = version
 
             # Generate target image names
-            destination_images = [f"{destination_image_name}:{tag}" for tag in [image_tag, "latest"]]
+            destination_tags = [tag] if tag is not None else [image_tag, "latest"]
+            destination_images = [f"{destination_image_name}:{tag}" for tag in destination_tags]
 
             # Store image info
             source = {
@@ -56,7 +58,7 @@ def create_import_config(input_directory: str,
     import_config = {'images': images}
     with open(import_config_file_path, 'w') as f:
         json.dump(import_config, f, indent=2)
-    print("Created import manifest file")
+    print(f"Created import config file at {import_config_file_path}")
 
 
 if __name__ == "__main__":
@@ -66,6 +68,7 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
     parser.add_argument("-o", "--import-config", required=True, help="Path to import config file")
     parser.add_argument("-A", "--registry-address", required=True, help="Address of registry login server")
+    parser.add_argument("-t", "--tag", help="Destination tag to use instead of asset version and latest")
     parser.add_argument("-u", "--registry-username", help="Registry username")
     parser.add_argument("-p", "--registry-password", help="Registry password")
     args = parser.parse_args()
@@ -78,5 +81,6 @@ if __name__ == "__main__":
                          asset_config_filename=args.asset_config_filename,
                          import_config_file_path=args.import_config,
                          registry_address=args.registry_address,
+                         tag=args.tag,
                          registry_username=args.registry_username,
                          registry_password=args.registry_password)
