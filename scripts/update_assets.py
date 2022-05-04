@@ -1,8 +1,8 @@
 import argparse
 import os
-import pygit2
 import shutil
 import tempfile
+from git import Repo
 from typing import List
 
 from ci_logger import logger
@@ -11,7 +11,6 @@ from pin_versions import transform_file
 from update_spec import update as update_spec
 from util import are_dir_trees_equal, copy_replace_dir, get_asset_output_dir, get_asset_release_dir
 
-TAG_TEMPLATE = "refs/tags/{name}"
 RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
 HAS_UPDATES = "has_updates"
 ENV_OS_UPDATES = "env_os_updates"
@@ -25,13 +24,17 @@ def pin_env_files(env_config: EnvironmentConfig):
             logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
 
-def release_tag_exists(asset_config: AssetConfig, release_directory_root: str):
-    # Check git repo for version-specific tag
-    repo = pygit2.Repository(release_directory_root)
+def get_release_tag_name(asset_config: AssetConfig):
     version = Spec(asset_config.spec_with_path).version
-    version_tag = RELEASE_TAG_VERSION_TEMPLATE.format(type=asset_config.type.value, name=asset_config.name,
-                                                      version=version)
-    return repo.references.get(TAG_TEMPLATE.format(name=version_tag)) is not None
+    return RELEASE_TAG_VERSION_TEMPLATE.format(type=asset_config.type.value, name=asset_config.name,
+                                               version=version)
+
+
+def release_tag_exists(asset_config: AssetConfig, release_directory_root: str) -> bool:
+    # Check git repo for version-specific tag
+    repo = Repo(release_directory_root)
+    tag = get_release_tag_name(asset_config)
+    return tag in repo.tags
 
 
 def update_asset(asset_config: AssetConfig,
