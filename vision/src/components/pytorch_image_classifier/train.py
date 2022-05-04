@@ -803,7 +803,7 @@ def run(args):
         )
 
     # properly teardown distributed resources
-    training_profiler.close()
+    training_handler.close()
 
     # MLFLOW: finalize mlflow (once in entire script)
     mlflow.end_run()
