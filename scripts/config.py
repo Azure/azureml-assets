@@ -177,7 +177,6 @@ class AssetConfig(Config):
 DEFAULT_CONTEXT_DIR = "context"
 DEFAULT_DOCKERFILE = "Dockerfile"
 DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
-DEFAULT_ENVIRONMENT_VISIBLE = True
 
 
 class Os(Enum):
@@ -218,7 +217,6 @@ class EnvironmentConfig(Config):
         location: mcr
         visibility: public
     environment:
-      visible: true
       metadata:
         os:
           name: Ubuntu
@@ -319,10 +317,6 @@ class EnvironmentConfig(Config):
     @property
     def _environment(self) -> Dict[str, object]:
         return self._yaml.get('environment', {})
-
-    @property
-    def environment_visible(self) -> bool:
-        return self._environment.get('visible', DEFAULT_ENVIRONMENT_VISIBLE)
 
     @property
     def environment_metadata(self) -> Dict[str, object]:
