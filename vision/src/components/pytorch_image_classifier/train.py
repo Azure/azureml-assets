@@ -34,6 +34,7 @@ from torch.optim import lr_scheduler
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader
 from torch.profiler import record_function
+from transformers.utils import ModelOutput
 
 # add path to here, if necessary
 COMPONENT_ROOT = os.path.abspath(
@@ -309,7 +310,7 @@ class PyTorchDistributedModelTrainingSequence:
                         loss = criterion(outputs, targets)
                         _, predicted = torch.max(outputs.data, 1)
                         correct = (predicted == targets)
-                    elif outputs.__class__.__name__ == "SequenceClassifierOutput":
+                    elif isinstance(outputs, ModelOutput):
                         # if we're training a HuggingFace model
                         loss = criterion(outputs.logits, targets)
                         _, predicted = torch.max(outputs.logits.data, 1)
@@ -356,7 +357,7 @@ class PyTorchDistributedModelTrainingSequence:
                     loss = criterion(outputs, targets)
                     _, predicted = torch.max(outputs.data, 1)
                     correct = (predicted == targets)
-                elif outputs.__class__.__name__ == "SequenceClassifierOutput":
+                elif isinstance(outputs, ModelOutput):
                     # if we're training a HuggingFace model
                     loss = criterion(outputs.logits, targets)
                     _, predicted = torch.max(outputs.logits.data, 1)
