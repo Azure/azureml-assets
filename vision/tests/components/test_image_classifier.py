@@ -123,12 +123,14 @@ def test_components_pytorch_image_classifier_single_node(
 @patch("mlflow.log_params")  # patched to avoid conflict in parameters
 @patch("mlflow.start_run")  # we can have only 1 start/end per test session
 @patch("torch.distributed.init_process_group")  # to avoid calling for the actual thing
+@patch("torch.distributed.destroy_process_group")  # to avoid calling for the actual thing
 @patch(
     "torch.nn.parallel.DistributedDataParallel"
 )  # to avoid calling for the actual thing
 @pytest.mark.parametrize("backend", ["nccl", "mpi"])
 def test_components_pytorch_image_classifier_second_of_two_nodes(
     torch_ddp_mock,
+    torch_dist_destroy_process_group_mock,
     torch_dist_init_process_group_mock,
     mlflow_start_run_mock,
     mlflow_log_params_mock,
@@ -197,3 +199,5 @@ def test_components_pytorch_image_classifier_second_of_two_nodes(
 
     torch_dist_init_process_group_mock.assert_called_once()
     torch_dist_init_process_group_mock.assert_called_with(backend, rank=1, world_size=2)
+
+    torch_dist_destroy_process_group_mock.assert_called_once()
