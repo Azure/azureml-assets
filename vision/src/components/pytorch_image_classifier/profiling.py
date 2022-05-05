@@ -225,6 +225,7 @@ class LogTimeBlock(object):
         """
         # kwargs
         self.step = kwargs.get('step', None)
+        self.enabled = kwargs.get('enabled', True)
 
         # internal variables
         self.name = name
@@ -233,6 +234,8 @@ class LogTimeBlock(object):
 
     def __enter__(self):
         """ Starts the timer, gets triggered at beginning of code block """
+        if not self.enabled:
+            return
         self.start_time = time.time() # starts "timer"
 
     def __exit__(self, exc_type, value, traceback):
@@ -242,6 +245,8 @@ class LogTimeBlock(object):
         Note:
             arguments are by design for with statements.
         """
+        if not self.enabled:
+            return
         run_time = time.time() - self.start_time # stops "timer"
 
         self._logger.info(f"--- time elapsed: {self.name} = {run_time:2f} s [step={self.step}]")
@@ -258,7 +263,7 @@ class LogDiskIOBlock(object):
         """
         # kwargs
         self.step = kwargs.get('step', None)
-        self.perdisk = kwargs.get('perdisk', False)
+        self.enabled = kwargs.get('enabled', True)
 
         # internal variables
         self.name = name
@@ -269,6 +274,8 @@ class LogDiskIOBlock(object):
 
     def __enter__(self):
         """ Get initial values, gets triggered at beginning of code block """
+        if not self.enabled:
+            return
         try:
             import psutil
 
@@ -285,6 +292,8 @@ class LogDiskIOBlock(object):
         Note:
             arguments are by design for with statements.
         """
+        if not self.enabled:
+            return
         try:
             import psutil
         except ModuleNotFoundError:

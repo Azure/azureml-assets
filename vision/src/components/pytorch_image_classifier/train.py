@@ -769,7 +769,7 @@ def run(args):
     training_handler.profiler = training_profiler.start_profiler()
 
     # report the time and disk usage during this code block
-    with LogTimeBlock("build_image_datasets"), LogDiskIOBlock("build_image_datasets", perdisk=False):
+    with LogTimeBlock("build_image_datasets", enabled=training_handler.self_is_main_node), LogDiskIOBlock("build_image_datasets", enabled=training_handler.self_is_main_node):
         # build the image folder datasets
         train_dataset, valid_dataset, labels = build_image_datasets(
             train_images_dir=args.train_images,
@@ -780,7 +780,7 @@ def run(args):
     # creates data loaders from datasets for distributed training
     training_handler.setup_datasets(train_dataset, valid_dataset, labels)
 
-    with LogTimeBlock("load_model"):
+    with LogTimeBlock("load_model", enabled=training_handler.self_is_main_node):
         # creates the model architecture
         model = load_model(
             args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
