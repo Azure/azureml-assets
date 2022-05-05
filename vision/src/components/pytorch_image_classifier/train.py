@@ -165,7 +165,7 @@ class PyTorchDistributedModelTrainingSequence:
                 world_size=self.world_size,
             )
         else:
-            self.logger.info(f"Not running in multinode.")
+            self.logger.info(f"Not running in multinode, so not initializing process group.")
 
         # DISTRIBUTED: in distributed mode, you want to report parameters
         # only from main process (rank==0) to avoid conflict
@@ -501,6 +501,17 @@ class PyTorchDistributedModelTrainingSequence:
         else:
             self.logger.critical("Cuda is not available, cannot report cuda memory allocation.")
 
+    def close(self):
+        """Tear down potential resources"""
+        if self.multinode_available:
+            self.logger.info(
+                f"Destroying process group on local_rank={self.local_rank} rank={self.world_rank} size={self.world_size}"
+            )
+            # DISTRIBUTED: this will teardown the distributed process group
+            torch.distributed.destroy_process_group()
+        else:
+            self.logger.info(f"Not running in multinode, so not destroying process group.")
+
 
     #################
     ### MODEL I/O ###
@@ -532,7 +543,7 @@ class PyTorchDistributedModelTrainingSequence:
                 'loss': loss
             }, model_output_path)
 
-        
+
     def save(self, output_dir: str, name: str = "dev", register_as: str = None) -> None:
         # DISTRIBUTED: you want to save the model only from the main node/process
         # in data distributed mode, all models should theoretically be the same
@@ -723,7 +734,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         type=str,
         choices=torch.multiprocessing.get_all_sharing_strategies(),
         required=False,
-        default=torch.multiprocessing.get_sharing_strategy(),
+        default=None,
         help="Check https://pytorch.org/docs/stable/multiprocessing.html",
     )
 
@@ -791,6 +802,9 @@ def run(args):
             name=f"epoch-{args.num_epochs}",
             register_as=args.register_model_as,
         )
+
+    # properly teardown distributed resources
+    training_handler.close()
 
     # MLFLOW: finalize mlflow (once in entire script)
     mlflow.end_run()
