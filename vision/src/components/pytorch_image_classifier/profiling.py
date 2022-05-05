@@ -248,7 +248,7 @@ class LogTimeBlock(object):
         mlflow.log_metric(self.name + ".time", run_time)
 
 
-class LogDiskUsageBlock(object):
+class LogDiskIOBlock(object):
     def __init__(self, name, **kwargs):
         """
         Constructs the LogDiskUsageBlock.
@@ -262,10 +262,9 @@ class LogDiskUsageBlock(object):
 
         # internal variables
         self.name = name
+        self.process_id = os.getpid() # focus on current process
         self.start_time = None
-        self.start_disk_usage = None
-        self.start_disk_io_counter_read = None
-        self.start_disk_io_counter_write = None
+        self.start_disk_counters = None
         self._logger = logging.getLogger(__name__)
 
     def __enter__(self):
@@ -274,10 +273,7 @@ class LogDiskUsageBlock(object):
             import psutil
 
             self.start_time = time.time()
-            self.start_disk_usage = psutil.disk_usage("/").percent
-            self.start_disk_io_counters = psutil.disk_io_counters(perdisk=self.perdisk)
-
-            print(self.start_disk_io_counter_read)
+            self.start_disk_counters = psutil.Process(self.process_id).io_counters()
 
         except ModuleNotFoundError:
             self.logger.critical("import psutil failed, cannot display disk stats.")
@@ -296,21 +292,51 @@ class LogDiskUsageBlock(object):
             return
 
         run_time = time.time() - self.start_time
-        disk_usage = psutil.disk_usage("/").percent - self.start_disk_usage
 
-        disk_io_metrics = {
-            f'{self.name}.disk.usage_delta' : (psutil.disk_usage("/").percent - self.start_disk_usage)
-        }
-        end_disk_io_counters = psutil.disk_io_counters(perdisk=self.perdisk)
-        if self.perdisk:
-            for key in self.start_disk_io_counters:
-                disk_io_metrics[f"{self.name}.disk.read.{key}"] = (end_disk_io_counters[key].read_bytes - self.start_disk_io_counters[key].read_bytes) / (1024 * 1024)
-                disk_io_metrics[f"{self.name}.disk.write.{key}"] = (end_disk_io_counters[key].write_bytes - self.start_disk_io_counters[key].write_bytes) / (1024 * 1024)
-        else:
-            disk_io_metrics[f"{self.name}.disk.read"] = (end_disk_io_counters.read_bytes - self.start_disk_io_counters.read_bytes) / (1024 * 1024)
-            disk_io_metrics[f"{self.name}.disk.write"] = (end_disk_io_counters.write_bytes - self.start_disk_io_counters.write_bytes) / (1024 * 1024)
+        disk_io_metrics = {}
+        end_disk_counters = psutil.Process(self.process_id).io_counters()
+        disk_io_metrics[f"{self.name}.disk.read"] = (end_disk_counters.read_bytes - self.start_disk_counters.read_bytes) / (1024 * 1024)
+        disk_io_metrics[f"{self.name}.disk.write"] = (end_disk_counters.write_bytes - self.start_disk_counters.write_bytes) / (1024 * 1024)
 
         self._logger.info(f"--- time elapsed: {self.name} = {run_time:2f} s [step={self.step}]")
         self._logger.info(f"--- disk_io_metrics: {disk_io_metrics}s [step={self.step}]")
 
         mlflow.log_metrics(disk_io_metrics)
+
+
+class LogTimeOfIterator():
+    def __init__(self, wrapped_sequence, name, enabled=True):
+        self.wrapped_sequence = wrapped_sequence
+        self.wrapped_iterator = None
+        self.iterator_times = []
+        self.name = name
+        self.enabled = enabled
+        self._logger = logging.getLogger(__name__)
+        self.metrics = {}
+    
+    def __iter__(self):
+        if self.enabled:
+            start_time = time.time()
+            self.wrapped_iterator = self.wrapped_sequence.__iter__()
+            self.metrics[f"{self.name}.init"] = time.time() - start_time
+            return self
+        else:
+            return self.wrapped_sequence.__iter__()
+
+    def __next__(self):
+        try:
+            start_time = time.time()
+            next_val = self.wrapped_iterator.__next__()
+            self.iterator_times.append(time.time() - start_time)
+            return next_val
+        except StopIteration as e:
+            self.log_metrics()
+            raise e
+
+    def log_metrics(self):
+        self.metrics[f"{self.name}.count"] = len(self.iterator_times)
+        self.metrics[f"{self.name}.time.sum"] = sum(self.iterator_times)
+        self.metrics[f"{self.name}.time.first"] = self.iterator_times[0]
+        self._logger.info(f"MLFLOW: {self.metrics}")
+
+        mlflow.log_metrics(self.metrics)

@@ -47,7 +47,7 @@ if COMPONENT_ROOT not in sys.path:
 # internal imports
 from model import MODEL_ARCH_LIST, get_model_metadata, load_model
 from image_io import build_image_datasets
-from profiling import PyTorchProfilerHandler, LogTimeBlock, LogDiskUsageBlock
+from profiling import PyTorchProfilerHandler, LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
 
 
 class PyTorchDistributedModelTrainingSequence:
@@ -293,7 +293,9 @@ class PyTorchDistributedModelTrainingSequence:
             num_total_images = 0
             running_loss = 0.0
 
-            for images, targets in tqdm(self.validation_data_loader):
+            # PROFILER: here we're introducing a layer on top of data loader to capture its performance
+            # in pratice, we'd just use for images, targets in tqdm(self.training_data_loader)
+            for images, targets in LogTimeOfIterator(tqdm(self.validation_data_loader), "validation_data_loader", enabled=self.self_is_main_node):
                 with record_function("eval.to_device"):
                     images = images.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
@@ -335,7 +337,9 @@ class PyTorchDistributedModelTrainingSequence:
         num_total_images = 0
         running_loss = 0.0
 
-        for images, targets in tqdm(self.training_data_loader):
+        # PROFILER: here we're introducing a layer on top of data loader to capture its performance
+        # in pratice, we'd just use for images, targets in tqdm(self.training_data_loader)
+        for images, targets in LogTimeOfIterator(tqdm(self.training_data_loader), "training_data_loader", enabled=self.self_is_main_node):
             # PROFILER: record_function will report to the profiler (if enabled)
             # here a specific wall time for a given block of code
             with record_function("train.to_device"):
@@ -765,7 +769,7 @@ def run(args):
     training_handler.profiler = training_profiler.start_profiler()
 
     # report the time and disk usage during this code block
-    with LogTimeBlock("build_image_datasets"), LogDiskUsageBlock("build_image_datasets", perdisk=False):
+    with LogTimeBlock("build_image_datasets"), LogDiskIOBlock("build_image_datasets", perdisk=False):
         # build the image folder datasets
         train_dataset, valid_dataset, labels = build_image_datasets(
             train_images_dir=args.train_images,
