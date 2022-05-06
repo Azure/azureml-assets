@@ -7,7 +7,7 @@ from pathlib import Path
 from config import AssetConfig, AssetType, EnvironmentConfig, PublishLocation, Spec
 from ci_logger import logger
 
-ENV_DEF_FILE_TEMPLATE = "envs/{name}/envdef.json"
+ENV_DEF_FILE_TEMPLATE = "envs/{name}.json"
 
 
 def get_repo_remote_url(release_directory_root: str) -> str:
@@ -47,24 +47,15 @@ def create_deployment_config(input_directory: str,
             deployment_config[asset_config.name] = {
                 'version': asset_config.version,
                 'path': env_def_file,
-                'contact': [],
-                'metadata': {
-                    'attributes': env_config.environment_metadata,
-                    'tags': spec.tags,
-                },
-                'visible': env_config.environment_visible,
-                'description': spec.description,
                 'publish': {
                     'fullImageName': spec.image,
-                },
-                'imageDetails': None,
+                }
             }
 
-            # Create envdef.json file
+            # Create environment definition
             remote_url = get_repo_remote_url(release_directory_root)
             commit_hash = get_repo_commit_hash(release_directory_root)
-            build_context_path = Path(os.path.relpath(root, input_directory)).as_posix()
-
+            build_context_path = Path(os.path.relpath(root, input_directory), env_config.context_dir).as_posix()
             git_url = f"{remote_url}#{commit_hash}:{build_context_path}"
             env_def = {
                 'name': asset_config.name,
@@ -84,11 +75,21 @@ def create_deployment_config(input_directory: str,
                 }
             }
 
+            # Create EnvironmentDefinitionWithSetMetadataDto object
+            env_def_with_metadata = {
+                'metadata': {
+                    'tags': spec.tags,
+                    'description': spec.description,
+                    'attributes': env_config.environment_metadata,
+                },
+                'definition': env_def
+            }
+
             # Store environment definition file
             env_def_file_path = os.path.join(os.path.dirname(deployment_config_file_path), env_def_file)
             os.makedirs(os.path.dirname(env_def_file_path), exist_ok=True)
             with open(env_def_file_path, 'w') as f:
-                json.dump(env_def, f, indent=4)
+                json.dump(env_def_with_metadata, f, indent=4)
 
     # Create deployment config file
     with open(deployment_config_file_path, 'w') as f:

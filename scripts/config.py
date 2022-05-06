@@ -355,7 +355,7 @@ class Spec(Config):
         return self._yaml.get('description')
 
     @property
-    def tags(self) -> str:
+    def tags(self) -> Dict[str, str]:
         return self._yaml.get('tags')
 
     @property
