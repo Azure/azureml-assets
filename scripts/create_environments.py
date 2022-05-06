@@ -32,7 +32,8 @@ def create_environments(deployment_config_file_path: str,
                         base_url: str,
                         registry: str,
                         access_token: str,
-                        version_template: str = None):
+                        version_template: str = None,
+                        tag_template: str = None):
     # Load config
     path = os.path.dirname(os.path.abspath(deployment_config_file_path))
     with open(deployment_config_file_path) as f:
@@ -56,12 +57,17 @@ def create_environments(deployment_config_file_path: str,
 
             # Get published full image name
             full_image_name = value['publish']['fullImageName']
+            if tag_template:
+                components = full_image_name.rsplit(":", 1)
+                components[-1] = tag_template.format(tag=components[-1])
+                full_image_name = ":".join(components)
 
             # Apply version template
-            updated_version = version_template.format(version=version) if version_template else version
+            if version_template:
+                version = version_template.format(version=version)
 
             # Create environment
-            success = create_environment(base_url=base_url, name=name, version=updated_version, registry=registry,
+            success = create_environment(base_url=base_url, name=name, version=version, registry=registry,
                                          image_name=full_image_name, access_token=access_token,
                                          env_def_with_metadata=env_def_with_metadata)
             if not success:
@@ -81,10 +87,13 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--token", required=True, help="Access token to use for bearer authentication")
     parser.add_argument("-v", "--version-template", help="Template to apply to the version in the deployment config "
                         "file, example: '{version}.dev1'")
+    parser.add_argument("-t", "--tag-template", help="Template to apply to fullImageName tags in the deployment "
+                        "config file, example: '{tag}.dev1'")
     args = parser.parse_args()
 
     create_environments(deployment_config_file_path=args.deployment_config,
                         base_url=args.url,
                         registry=args.registry,
                         access_token=args.token,
-                        version_template=args.version_template)
+                        version_template=args.version_template,
+                        tag_template=args.tag_template)
