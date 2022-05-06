@@ -11,7 +11,7 @@ import torch
 import mlflow
 import tempfile
 from torch.profiler import profile, record_function, ProfilerActivity
-
+from typing import Any
 
 def markdown_trace_handler(dir_name: str, rank: int = 0):
     """This handler can be used inside torch.profiler call to output
@@ -314,25 +314,37 @@ class LogDiskIOBlock(object):
 
 
 class LogTimeOfIterator():
-    def __init__(self, wrapped_sequence, name, enabled=True):
+    """This class is intended to "wrap" an existing Iterator
+    and log metrics for each next() call"""
+    def __init__(self, wrapped_sequence:Any, name:str, enabled:bool=True):
         self.wrapped_sequence = wrapped_sequence
         self.wrapped_iterator = None
-        self.iterator_times = []
-        self.name = name
+
+        # for metrics
         self.enabled = enabled
-        self._logger = logging.getLogger(__name__)
+        self.name = name
+        self.iterator_times = []
         self.metrics = {}
+
+        self._logger = logging.getLogger(__name__)
     
     def __iter__(self):
+        """Creates the iterator"""
         if self.enabled:
             start_time = time.time()
+            # if enabled, creates iterator from wrapped_sequence
             self.wrapped_iterator = self.wrapped_sequence.__iter__()
             self.metrics[f"{self.name}.init"] = time.time() - start_time
+
+            # return self
             return self
         else:
+            # if disabled, return the iterator from wrapped_sequence
+            # so that LogTimeOfIterator.__next__() will never get called
             return self.wrapped_sequence.__iter__()
 
     def __next__(self):
+        """Iterates"""
         try:
             start_time = time.time()
             next_val = self.wrapped_iterator.__next__()
@@ -343,6 +355,7 @@ class LogTimeOfIterator():
             raise e
 
     def log_metrics(self):
+        """Logs metrics once iterator is finished"""
         self.metrics[f"{self.name}.count"] = len(self.iterator_times)
         self.metrics[f"{self.name}.time.sum"] = sum(self.iterator_times)
         self.metrics[f"{self.name}.time.first"] = self.iterator_times[0]
