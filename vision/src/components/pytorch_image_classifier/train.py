@@ -34,6 +34,7 @@ from torch.optim import lr_scheduler
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader
 from torch.profiler import record_function
+from transformers.utils import ModelOutput
 
 # add path to here, if necessary
 COMPONENT_ROOT = os.path.abspath(
@@ -111,6 +112,11 @@ class PyTorchDistributedModelTrainingSequence:
             self.dataloading_config.non_blocking
         )
 
+        # add this switch to test for different strategies
+        if self.dataloading_config.multiprocessing_sharing_strategy:
+            torch.multiprocessing.set_sharing_strategy(self.dataloading_config.multiprocessing_sharing_strategy)
+
+
         # DISTRIBUTED: detect multinode config
         # depending on the Azure ML distribution.type, different environment variables will be provided
         # to configure DistributedDataParallel
@@ -159,7 +165,7 @@ class PyTorchDistributedModelTrainingSequence:
                 world_size=self.world_size,
             )
         else:
-            self.logger.info(f"Not running in multinode.")
+            self.logger.info(f"Not running in multinode, so not initializing process group.")
 
         # DISTRIBUTED: in distributed mode, you want to report parameters
         # only from main process (rank==0) to avoid conflict
@@ -182,6 +188,7 @@ class PyTorchDistributedModelTrainingSequence:
                 "persistent_workers": self.dataloading_config.persistent_workers,
                 "pin_memory": self.dataloading_config.pin_memory,
                 "non_blocking": self.dataloading_config.non_blocking,
+                "multiprocessing_sharing_strategy": self.dataloading_config.multiprocessing_sharing_strategy,
 
                 # training params
                 "model_arch": self.training_config.model_arch,
@@ -303,7 +310,7 @@ class PyTorchDistributedModelTrainingSequence:
                         loss = criterion(outputs, targets)
                         _, predicted = torch.max(outputs.data, 1)
                         correct = (predicted == targets)
-                    elif outputs.__class__.__name__ == "SequenceClassifierOutput":
+                    elif isinstance(outputs, ModelOutput):
                         # if we're training a HuggingFace model
                         loss = criterion(outputs.logits, targets)
                         _, predicted = torch.max(outputs.logits.data, 1)
@@ -350,7 +357,7 @@ class PyTorchDistributedModelTrainingSequence:
                     loss = criterion(outputs, targets)
                     _, predicted = torch.max(outputs.data, 1)
                     correct = (predicted == targets)
-                elif outputs.__class__.__name__ == "SequenceClassifierOutput":
+                elif isinstance(outputs, ModelOutput):
                     # if we're training a HuggingFace model
                     loss = criterion(outputs.logits, targets)
                     _, predicted = torch.max(outputs.logits.data, 1)
@@ -386,7 +393,7 @@ class PyTorchDistributedModelTrainingSequence:
             self.model.parameters(),
             lr=self.training_config.learning_rate,
             momentum=self.training_config.momentum,
-            #nesterov=True,
+            nesterov=True,
             #weight_decay=1e-4,
         )
 
@@ -494,6 +501,17 @@ class PyTorchDistributedModelTrainingSequence:
         else:
             self.logger.critical("Cuda is not available, cannot report cuda memory allocation.")
 
+    def close(self):
+        """Tear down potential resources"""
+        if self.multinode_available:
+            self.logger.info(
+                f"Destroying process group on local_rank={self.local_rank} rank={self.world_rank} size={self.world_size}"
+            )
+            # DISTRIBUTED: this will teardown the distributed process group
+            torch.distributed.destroy_process_group()
+        else:
+            self.logger.info(f"Not running in multinode, so not destroying process group.")
+
 
     #################
     ### MODEL I/O ###
@@ -525,7 +543,7 @@ class PyTorchDistributedModelTrainingSequence:
                 'loss': loss
             }, model_output_path)
 
-        
+
     def save(self, output_dir: str, name: str = "dev", register_as: str = None) -> None:
         # DISTRIBUTED: you want to save the model only from the main node/process
         # in data distributed mode, all models should theoretically be the same
@@ -703,13 +721,21 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="Momentum of optimizer",
     )
 
-    group = parser.add_argument_group(f"Monitoring/Profiling Parameters")
+    group = parser.add_argument_group(f"System Parameters")
     group.add_argument(
         "--enable_profiling",
         type=strtobool,
         required=False,
         default=False,
         help="Enable pytorch profiler.",
+    )
+    group.add_argument(
+        "--multiprocessing_sharing_strategy",
+        type=str,
+        choices=torch.multiprocessing.get_all_sharing_strategies(),
+        required=False,
+        default=None,
+        help="Check https://pytorch.org/docs/stable/multiprocessing.html",
     )
 
     return parser
@@ -776,6 +802,9 @@ def run(args):
             name=f"epoch-{args.num_epochs}",
             register_as=args.register_model_as,
         )
+
+    # properly teardown distributed resources
+    training_handler.close()
 
     # MLFLOW: finalize mlflow (once in entire script)
     mlflow.end_run()

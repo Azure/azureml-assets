@@ -148,12 +148,14 @@ class PyTorchProfilerHandler:
             ))
 
             # export tensorboard
-            tensorboard_logs_export = os.path.join(
-                self.profiler_output_tmp_dir.name, "tensorboard_logs"
-            )
-            trace_handlers.append(torch.profiler.tensorboard_trace_handler(
-                tensorboard_logs_export
-            ))
+            # NOTE: removed due to segfault in pytorch 1.11.0
+            # will need to be uncommented for pytorch 1.11.1 which has a fix
+            # tensorboard_logs_export = os.path.join(
+            #     self.profiler_output_tmp_dir.name, "tensorboard_logs"
+            # )
+            # trace_handlers.append(torch.profiler.tensorboard_trace_handler(
+            #     tensorboard_logs_export
+            # ))
 
             # profiler takes 1 handler, we're composing all above in a single handler
             trace_handler = composite_trace_handler(trace_handlers)
@@ -164,7 +166,8 @@ class PyTorchProfilerHandler:
             # initialize profiler
             self.profiler = torch.profiler.profile(
                 schedule=profiler_schedule,
-                record_shapes=False,
+                record_shapes=True,
+                with_flops=True,
                 profile_memory=True,
                 activities=activities,
                 with_stack=True, # needed to export stacks

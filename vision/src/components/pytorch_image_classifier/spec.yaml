@@ -69,18 +69,22 @@ inputs:
     type: number
     optional: true
     description: "Momentum of optimizer (default: 0.9)"
-  
+
   # model registration
   register_model_as:
     type: string
     optional: true
     description: "Name to register final model in MLFlow"
 
-  # profiling
+  # system parameters
   enable_profiling:
     type: boolean
     default: false
     description: "Enables profiler"
+  multiprocessing_sharing_strategy:
+    type: string
+    optional: true
+    description: "Check https://pytorch.org/docs/stable/multiprocessing.html"
 
 outputs:
   checkpoints: 
@@ -92,7 +96,7 @@ outputs:
 
 code: .
 
-environment: azureml:nvidia_pytorch:22.02-py3-mod7
+environment: azureml:nvidia_pytorch:22.04-py3
 
 command: >-
   python train.py 
@@ -118,6 +122,7 @@ command: >-
   [--register_model_as ${{inputs.register_model_as}}]
 
   --enable_profiling ${{inputs.enable_profiling}}
+  [--multiprocessing_sharing_strategy ${{inputs.multiprocessing_sharing_strategy}}]
 
 distribution:
   # NOTE: using type:pytorch will use all the right env variables for pytorch init_process_group
