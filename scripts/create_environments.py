@@ -87,7 +87,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--token", required=True, help="Access token to use for bearer authentication")
     parser.add_argument("-v", "--version-template", help="Template to apply to the version in the deployment config "
                         "file, example: '{version}.dev1'")
-    parser.add_argument("-t", "--tag-template", help="Template to apply to fullImageName tags in the deployment "
+    parser.add_argument("-T", "--tag-template", help="Template to apply to fullImageName tags in the deployment "
                         "config file, example: '{tag}.dev1'")
     args = parser.parse_args()
 
