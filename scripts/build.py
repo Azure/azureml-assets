@@ -4,22 +4,29 @@ import sys
 from collections import Counter
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import timedelta
+from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
-from typing import List
+from typing import List, Tuple
 
 from config import AssetConfig, AssetType, EnvironmentConfig, Os, Spec
 from ci_logger import logger
 from update_assets import pin_env_files
-from util import copy_asset_to_output_dir
+from util import copy_asset_to_output_dir, find_assets
 
 SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 
 
-def build_image(asset_config: AssetConfig, image_name: str, build_context_dir: str, dockerfile: str,
-                build_log: str, build_os: str = None, resource_group: str = None, registry: str = None):
+def build_image(asset_config: AssetConfig,
+                image_name: str,
+                build_context_dir: Path,
+                dockerfile: str,
+                build_log: Path,
+                build_os: str = None,
+                resource_group: str = None,
+                registry: str = None) -> Tuple[AssetConfig, int, str]:
     print(f"Building image for {asset_config.name}")
     start = timer()
     if registry is not None:
@@ -34,7 +41,7 @@ def build_image(asset_config: AssetConfig, image_name: str, build_context_dir: s
             stderr=STDOUT)
     end = timer()
     print(f"Image for {asset_config.name} built in {timedelta(seconds=end-start)}")
-    os.makedirs(os.path.dirname(build_log), exist_ok=True)
+    os.makedirs(build_log.parent, exist_ok=True)
     with open(build_log, "w") as f:
         f.write(p.stdout.decode())
     return (asset_config, p.returncode, p.stdout.decode())
@@ -52,60 +59,50 @@ def get_image_digest(image_name: str):
         return None
 
 
-def build_images(input_dirs: List[str],
+def build_images(input_dirs: List[Path],
                  asset_config_filename: str,
-                 output_directory: str,
-                 build_logs_dir: str,
+                 output_directory: Path,
+                 build_logs_dir: Path,
                  pin_versions: bool,
                  max_parallel: int,
-                 changed_files: List[str],
+                 changed_files: List[Path],
                  tag_with_version: bool,
                  os_to_build: str = None,
                  resource_group: str = None,
                  registry: str = None):
-    changed_files_abs = [os.path.abspath(f) for f in changed_files]
     counters = Counter()
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find environments under image root directories
         futures = []
-        for input_dir in input_dirs:
-            for root, _, files in os.walk(input_dir):
-                for asset_config_file in [f for f in files if f == asset_config_filename]:
-                    # Load config
-                    asset_config = AssetConfig(os.path.join(root, asset_config_file))
+        for asset_config in find_assets(input_dirs, asset_config_filename, AssetType.ENVIRONMENT):
+            env_config = EnvironmentConfig(asset_config.extra_config_with_path)
 
-                    # Skip if not environment
-                    if asset_config.type is not AssetType.ENVIRONMENT:
-                        continue
-                    env_config = EnvironmentConfig(asset_config.extra_config_with_path)
+            # Filter by OS
+            if os_to_build and env_config.os.value != os_to_build:
+                print(f"Skipping build of image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_build}")
+                continue
 
-                    # Filter by OS
-                    if os_to_build and env_config.os.value != os_to_build:
-                        print(f"Skipping build of image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_build}")
-                        continue
+            # If provided, skip directories with no changed files
+            if changed_files and not any([f for f in changed_files if asset_config.file_path in f]):
+                print(f"Skipping build of image for {asset_config.name}: No files in its directory were changed")
+                continue
 
-                    # If provided, skip directories with no changed files
-                    root_abs = os.path.abspath(root)
-                    if changed_files and not any([f for f in changed_files_abs if f.startswith(os.path.join(root_abs, ""))]):
-                        print(f"Skipping build of image for {asset_config.name}: No files in its directory were changed")
-                        continue
+            # Pin versions
+            if pin_versions:
+                pin_env_files(env_config)
 
-                    # Pin versions
-                    if pin_versions:
-                        pin_env_files(env_config)
+            # Tag with version from spec
+            if tag_with_version:
+                version = Spec(asset_config.spec_with_path).version
+                image_name = env_config.get_image_name_with_tag(version)
+            else:
+                image_name = env_config.image_name
 
-                    # Tag with version from spec
-                    if tag_with_version:
-                        version = Spec(asset_config.spec_with_path).version
-                        image_name = env_config.get_image_name_with_tag(version)
-                    else:
-                        image_name = env_config.image_name
-
-                    # Start building image
-                    build_log = os.path.join(build_logs_dir, f"{asset_config.name}.log")
-                    futures.append(pool.submit(build_image, asset_config, image_name,
-                                               env_config.context_dir_with_path, env_config.dockerfile, build_log,
-                                               env_config.os.value, resource_group, registry))
+            # Start building image
+            build_log = build_logs_dir / f"{asset_config.name}.log"
+            futures.append(pool.submit(build_image, asset_config, image_name,
+                                       env_config.context_dir_with_path, env_config.dockerfile, build_log,
+                                       env_config.os.value, resource_group, registry))
 
         # Wait for builds to complete
         for future in as_completed(futures):
@@ -136,8 +133,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing environments to build")
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
-    parser.add_argument("-o", "--output-directory", help="Directory to which successfully built environments will be written")
-    parser.add_argument("-l", "--build-logs-dir", required=True, help="Directory to receive build logs")
+    parser.add_argument("-o", "--output-directory", type=Path, help="Directory to which successfully built environments will be written")
+    parser.add_argument("-l", "--build-logs-dir", required=True, type=Path, help="Directory to receive build logs")
     parser.add_argument("-p", "--max-parallel", type=int, default=25, help="Maximum number of images to build at the same time")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter images")
     parser.add_argument("-O", "--os-to-build", choices=[i.value for i in list(Os)], help="Only build environments based on this OS")
@@ -152,8 +149,8 @@ if __name__ == '__main__':
         parser.error("If --registry is specified then --resource-group is also required")
 
     # Convert comma-separated values to lists
-    input_dirs = args.input_dirs.split(",")
-    changed_files = args.changed_files.split(",") if args.changed_files else []
+    input_dirs = [Path(d) for d in args.input_dirs.split(",")]
+    changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
 
     # Build images
     build_images(input_dirs=input_dirs,

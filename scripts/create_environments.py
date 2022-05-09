@@ -1,7 +1,7 @@
 import argparse
 import json
-import os
 import requests
+from pathlib import Path
 from urllib.parse import urljoin
 
 from ci_logger import logger
@@ -29,14 +29,14 @@ def create_environment(base_url: str,
     return response.ok
 
 
-def create_environments(deployment_config_file_path: str,
+def create_environments(deployment_config_file_path: Path,
                         base_url: str,
                         registry: str,
                         access_token: str,
                         version_template: str = None,
                         tag_template: str = None):
     # Load config
-    path = os.path.dirname(os.path.abspath(deployment_config_file_path))
+    base_path = deployment_config_file_path.parent
     with open(deployment_config_file_path) as f:
         deployment_config = json.loads(f.read())
 
@@ -53,7 +53,7 @@ def create_environments(deployment_config_file_path: str,
             version = value['version']
 
             # Load EnvironmentDefinitionWithSetMetadataDto
-            with open(os.path.join(path, value['path'])) as f:
+            with open(base_path / value['path']) as f:
                 env_def_with_metadata = json.loads(f.read())
 
             # Apply tag template to image name
@@ -77,7 +77,7 @@ def create_environments(deployment_config_file_path: str,
 if __name__ == "__main__":
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--deployment-config", required=True, help="Path to deployment config file")
+    parser.add_argument("-i", "--deployment-config", required=True, type=Path, help="Path to deployment config file")
     parser.add_argument("-u", "--url", required=True, help="Base AzureML URL, example: https://master.api.azureml-test.ms")
     parser.add_argument("-r", "--registry", required=True, help="Name of the target registry")
     parser.add_argument("-t", "--token", required=True, help="Access token to use for bearer authentication")

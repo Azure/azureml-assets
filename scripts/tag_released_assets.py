@@ -1,14 +1,14 @@
 import argparse
-import os
 from git import Repo
+from pathlib import Path
 
-from config import AssetConfig
 from update_assets import get_release_tag_name
+from util import find_assets
 
 
-def tag_released_assets(input_directory: str,
+def tag_released_assets(input_directory: Path,
                         asset_config_filename: str,
-                        release_directory_root: str,
+                        release_directory_root: Path,
                         git_username: str = None,
                         git_email: str = None):
     repo = Repo(release_directory_root)
@@ -21,14 +21,12 @@ def tag_released_assets(input_directory: str,
 
     # Create tags locally
     tag_refs = []
-    for root, _, files in os.walk(input_directory):
-        for asset_config_file in [f for f in files if f == asset_config_filename]:
-            asset_config = AssetConfig(os.path.join(root, asset_config_file))
-            tag = get_release_tag_name(asset_config)
-            message = f"Release {asset_config.type.value} {asset_config.name} {asset_config.version}"
+    for asset_config in find_assets(input_directory, asset_config_filename):
+        tag = get_release_tag_name(asset_config)
+        message = f"Release {asset_config.type.value} {asset_config.name} {asset_config.version}"
 
-            print(f"Creating tag {tag}")
-            tag_refs.append(repo.create_tag(tag, message=message))
+        print(f"Creating tag {tag}")
+        tag_refs.append(repo.create_tag(tag, message=message))
 
     # Push tags
     for tag_ref in tag_refs:
@@ -39,9 +37,9 @@ def tag_released_assets(input_directory: str,
 if __name__ == "__main__":
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-directory", required=True, help="Directory containing released assets")
+    parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory containing released assets")
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
-    parser.add_argument("-r", "--release-directory", required=True, help="Directory to which the release branch has been cloned")
+    parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
     parser.add_argument("-u", "--username", help="Username for git push")
     parser.add_argument("-e", "--email", help="Email for git push")
     args = parser.parse_args()

@@ -1,12 +1,13 @@
 import argparse
 import re
 from ci_logger import logger
+from pathlib import Path
 from pip._internal.index.collector import LinkCollector
 from pip._internal.index.package_finder import PackageFinder
 from pip._internal.models.search_scope import SearchScope
 from pip._internal.models.selection_prefs import SelectionPreferences
 from pip._internal.network.session import PipSession
-from typing import List  
+from typing import List
 
 LATEST_PYPI_VERSION = re.compile(r"([^\"'\s]+)([=~]=)\{\{latest-pypi-version\}\}")
 PYPI_URL = "https://pypi.org/simple"
@@ -78,7 +79,7 @@ def pin_packages(contents: str) -> str:
     return contents
 
 
-def transform_file(input_file: str, output_file: str = None):
+def transform_file(input_file: Path, output_file: Path = None):
     # Read file
     with open(input_file) as f:
         contents = f.read()
@@ -98,8 +99,8 @@ def transform_file(input_file: str, output_file: str = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input", help="File containing packages to pin to latest versions", required=True)
-    parser.add_argument("-o", "--output", help="File to which output will be written. Defaults to the input file if not specified.")
+    parser.add_argument("-i", "--input", type=Path, help="File containing packages to pin to latest versions", required=True)
+    parser.add_argument("-o", "--output", type=Path, help="File to which output will be written. Defaults to the input file if not specified.")
     args = parser.parse_args()
 
     output = args.output or args.input
