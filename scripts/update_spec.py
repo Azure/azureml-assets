@@ -5,7 +5,7 @@ from pathlib import Path
 from config import AssetConfig, AssetType, EnvironmentConfig, PublishLocation
 
 
-def update(asset_config: AssetConfig, output_file: str = Path, version: str = None):
+def update(asset_config: AssetConfig, output_file: Path = None, version: str = None):
     """Update template tags in an asset's spec file using data from the asset config and any extra configs.
 
     Args:
