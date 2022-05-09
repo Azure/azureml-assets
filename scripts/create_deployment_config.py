@@ -6,7 +6,7 @@ from pathlib import Path
 
 from config import AssetConfig, AssetType, EnvironmentConfig, PublishLocation, Spec
 from ci_logger import logger
-from util import apply_tag_template, apply_version_template
+from util import apply_tag_template, apply_version_template, get_asset_release_dir
 
 ENV_DEF_FILE_TEMPLATE = "envs/{name}.json"
 
@@ -63,7 +63,9 @@ def create_deployment_config(input_directory: str,
             # Create environment definition
             remote_url = get_repo_remote_url(release_directory_root)
             commit_hash = get_repo_commit_hash(release_directory_root)
-            build_context_path = Path(os.path.relpath(root, input_directory), env_config.context_dir).as_posix()
+            asset_release_dir = os.path.relpath(release_directory_root,
+                                                get_asset_release_dir(asset_config, release_directory_root))
+            build_context_path = Path(asset_release_dir, env_config.context_dir).as_posix()
             git_url = f"{remote_url}#{commit_hash}:{build_context_path}"
             env_def = {
                 'name': asset_config.name,
