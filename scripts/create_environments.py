@@ -5,6 +5,7 @@ import requests
 from urllib.parse import urljoin
 
 from ci_logger import logger
+from util import apply_tag_template, apply_version_template
 
 ENV_URL_TEMPLATE = "environment/1.0/environments/{environment}/versions/{version}/registry/{registry}"
 
@@ -55,16 +56,11 @@ def create_environments(deployment_config_file_path: str,
             with open(os.path.join(path, value['path'])) as f:
                 env_def_with_metadata = json.loads(f.read())
 
-            # Get published full image name
-            full_image_name = value['publish']['fullImageName']
-            if tag_template:
-                components = full_image_name.rsplit(":", 1)
-                components[-1] = tag_template.format(tag=components[-1])
-                full_image_name = ":".join(components)
+            # Apply tag template to image name
+            full_image_name = apply_tag_template(value['publish']['fullImageName'], tag_template)
 
             # Apply version template
-            if version_template:
-                version = version_template.format(version=version)
+            version = apply_version_template(version, version_template)
 
             # Create environment
             success = create_environment(base_url=base_url, name=name, version=version, registry=registry,
@@ -85,9 +81,9 @@ if __name__ == "__main__":
     parser.add_argument("-u", "--url", required=True, help="Base AzureML URL, example: https://master.api.azureml-test.ms")
     parser.add_argument("-r", "--registry", required=True, help="Name of the target registry")
     parser.add_argument("-t", "--token", required=True, help="Access token to use for bearer authentication")
-    parser.add_argument("-v", "--version-template", help="Template to apply to the version in the deployment config "
+    parser.add_argument("-v", "--version-template", help="Template to apply to the version from the deployment config "
                         "file, example: '{version}.dev1'")
-    parser.add_argument("-T", "--tag-template", help="Template to apply to fullImageName tags in the deployment "
+    parser.add_argument("-T", "--tag-template", help="Template to apply to fullImageName tags from the deployment "
                         "config file, example: '{tag}.dev1'")
     args = parser.parse_args()
 

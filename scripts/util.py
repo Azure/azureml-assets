@@ -87,3 +87,36 @@ def copy_asset_to_output_dir(asset_config: AssetConfig, output_directory_root: s
     """
     output_directory = get_asset_output_dir(asset_config, output_directory_root)
     copy_replace_dir(asset_config.file_path, output_directory)
+
+
+def apply_tag_template(full_image_name: str, template: str = None) -> str:
+    """Apply a template to an image's tag.
+
+    Args:
+        full_image_name (str): The full image name, which must include a tag suffix.
+        template (str): Template to use. If desired, use {tag} as a placeholder for the existing tag value.
+
+    Returns:
+        str: The transformed image name.
+    """
+    if template is None:
+        return full_image_name
+
+    components = full_image_name.rsplit(":", 1)
+    components[-1] = template.format(tag=components[-1])
+    return ":".join(components)
+
+
+def apply_version_template(version: str, template: str = None) -> str:
+    """Apply a template to a version string.
+
+    Args:
+        version (str): The version.
+        template (str): Template to use. If desired, use {version} as a placeholder for the existing version string.
+
+    Returns:
+        str: The transformed version.
+    """
+    if template is None:
+        return version
+    return template.format(version=version)

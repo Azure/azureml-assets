@@ -6,6 +6,7 @@ from pathlib import Path
 
 from config import AssetConfig, AssetType, EnvironmentConfig, PublishLocation, Spec
 from ci_logger import logger
+from util import apply_tag_template, apply_version_template
 
 ENV_DEF_FILE_TEMPLATE = "envs/{name}.json"
 
@@ -23,9 +24,10 @@ def get_repo_commit_hash(release_directory_root: str) -> str:
 def create_deployment_config(input_directory: str,
                              asset_config_filename: str,
                              release_directory_root: str,
-                             deployment_config_file_path: str):
+                             deployment_config_file_path: str,
+                             version_template: str = None,
+                             tag_template: str = None):
     deployment_config = {}
-    # Create in memory from contents of deployment config
     for root, _, files in os.walk(input_directory):
         for asset_config_file in [f for f in files if f == asset_config_filename]:
             # Load config
@@ -41,14 +43,20 @@ def create_deployment_config(input_directory: str,
                 logger.log_warning(f"Skipping {asset_config.name} because it's not published to MCR")
                 continue
 
-            # Add to deployment config
+            # Apply tag template to image name
             spec = Spec(asset_config.spec_with_path)
+            full_image_name = apply_tag_template(spec.image, tag_template)
+
+            # Apply version template
+            version = apply_version_template(asset_config.version, version_template)
+
+            # Add to deployment config
             env_def_file = ENV_DEF_FILE_TEMPLATE.format(name=asset_config.name)
             deployment_config[asset_config.name] = {
-                'version': asset_config.version,
+                'version': version,
                 'path': env_def_file,
                 'publish': {
-                    'fullImageName': spec.image,
+                    'fullImageName': full_image_name,
                 }
             }
 
@@ -104,9 +112,15 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
     parser.add_argument("-r", "--release-directory", required=True, help="Directory to which the release branch has been cloned")
     parser.add_argument("-o", "--deployment-config", required=True, help="Path to deployment config file")
+    parser.add_argument("-v", "--version-template", help="Template to apply to versions from spec files "
+                        "file, example: '{version}.dev1'")
+    parser.add_argument("-T", "--tag-template", help="Template to apply to image name tags from spec files "
+                        "config file, example: '{tag}.dev1'")
     args = parser.parse_args()
 
     create_deployment_config(input_directory=args.input_directory,
                              asset_config_filename=args.asset_config_filename,
                              release_directory_root=args.release_directory,
-                             deployment_config_file_path=args.deployment_config)
+                             deployment_config_file_path=args.deployment_config,
+                             version_template=args.version_template,
+                             tag_template=args.tag_template)
