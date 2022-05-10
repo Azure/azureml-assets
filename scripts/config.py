@@ -1,6 +1,6 @@
-import os
 import re
 from enum import Enum
+from pathlib import Path
 from typing import Dict, List
 from yaml import safe_load
 
@@ -13,22 +13,22 @@ TEMPLATE_CHECK = re.compile(r"\{\{.*\}\}")
 
 
 class Config:
-    def __init__(self, file_name: str):
+    def __init__(self, file_name: Path):
         with open(file_name) as f:
             self._yaml = safe_load(f)
-        self._file_name = os.path.basename(file_name)
-        self._file_path = os.path.dirname(file_name)
+        self._file_name = file_name.name
+        self._file_path = file_name.parent
 
     @property
     def file_name(self) -> str:
         return self._file_name
 
     @property
-    def file_path(self) -> str:
+    def file_path(self) -> Path:
         return self._file_path
 
-    def _append_to_file_path(self, relative_path: str) -> str:
-        return os.path.join(self.file_path, relative_path)
+    def _append_to_file_path(self, relative_path: Path) -> Path:
+        return self.file_path / relative_path
 
     @staticmethod
     def _is_set(value: object):
@@ -83,7 +83,7 @@ class AssetConfig(Config):
     spec: spec.yaml
     extra_config: environment.yaml
     """
-    def __init__(self, file_name: str):
+    def __init__(self, file_name: Path):
         super().__init__(file_name)
         self._validate()
 
@@ -161,7 +161,7 @@ class AssetConfig(Config):
         return self._yaml.get('spec')
 
     @property
-    def spec_with_path(self) -> str:
+    def spec_with_path(self) -> Path:
         return self._append_to_file_path(self.spec)
 
     @property
@@ -169,7 +169,7 @@ class AssetConfig(Config):
         return self._yaml.get('extra_config')
 
     @property
-    def extra_config_with_path(self) -> str:
+    def extra_config_with_path(self) -> Path:
         config = self.extra_config
         return self._append_to_file_path(config) if config else None
 
@@ -222,7 +222,7 @@ class EnvironmentConfig(Config):
           name: Ubuntu
           version: "20.04"
     """
-    def __init__(self, file_name: str):
+    def __init__(self, file_name: Path):
         super().__init__(file_name)
         self._validate()
 
@@ -265,18 +265,18 @@ class EnvironmentConfig(Config):
         return self._context.get('dir', DEFAULT_CONTEXT_DIR)
 
     @property
-    def context_dir_with_path(self) -> str:
+    def context_dir_with_path(self) -> Path:
         return self._append_to_file_path(self.context_dir)
 
-    def _append_to_context_path(self, relative_path: str) -> str:
-        return os.path.join(self.context_dir_with_path, relative_path)
+    def _append_to_context_path(self, relative_path: Path) -> Path:
+        return self.context_dir_with_path / relative_path
 
     @property
     def dockerfile(self) -> str:
         return self._context.get('dockerfile', DEFAULT_DOCKERFILE)
 
     @property
-    def dockerfile_with_path(self) -> str:
+    def dockerfile_with_path(self) -> Path:
         return self._append_to_context_path(self.dockerfile)
 
     @property
@@ -284,7 +284,7 @@ class EnvironmentConfig(Config):
         return self._context.get('template_files', DEFAULT_TEMPLATE_FILES)
 
     @property
-    def template_files_with_path(self) -> List[str]:
+    def template_files_with_path(self) -> List[Path]:
         return [self._append_to_context_path(f) for f in self.template_files]
 
     @property
@@ -355,7 +355,7 @@ class Spec(Config):
         return self._yaml.get('description')
 
     @property
-    def tags(self) -> str:
+    def tags(self) -> Dict[str, str]:
         return self._yaml.get('tags')
 
     @property

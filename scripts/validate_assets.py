@@ -1,48 +1,46 @@
 import argparse
-import os
 import sys
 from collections import defaultdict
+from pathlib import Path
 from typing import List
 
 from ci_logger import logger
 from config import AssetConfig, AssetType, EnvironmentConfig, Spec
+from util import find_asset_config_files
 
 
-def validate_assets(input_dirs: List[str],
+def validate_assets(input_dirs: List[Path],
                     asset_config_filename: str):
     # Find assets under input dirs
     asset_count = 0
     error_count = 0
     asset_dirs = defaultdict(list)
-    for input_dir in input_dirs:
-        for root, _, files in os.walk(input_dir):
-            for asset_config_file in [f for f in files if f == asset_config_filename]:
-                asset_count += 1
+    for asset_config_path in find_asset_config_files(input_dirs, asset_config_filename):
+        asset_count += 1
 
-                # Load config
-                asset_config_path = os.path.join(root, asset_config_file)
-                try:
-                    asset_config = AssetConfig(asset_config_path)
-                except Exception as e:
-                    logger.log_error(f"Validation of {asset_config_path} failed: {e}")
-                    error_count += 1
-                    continue
-                asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
+        # Load config
+        try:
+            asset_config = AssetConfig(asset_config_path)
+        except Exception as e:
+            logger.log_error(f"Validation of {asset_config_path} failed: {e}")
+            error_count += 1
+            continue
+        asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
-                # Validate specific asset types
-                if asset_config.type is AssetType.ENVIRONMENT:
-                    try:
-                        _ = EnvironmentConfig(asset_config.extra_config_with_path)
-                    except Exception as e:
-                        logger.log_error(f"Validation of {asset_config.extra_config_with_path} failed: {e}")
-                        error_count += 1
+        # Validate specific asset types
+        if asset_config.type is AssetType.ENVIRONMENT:
+            try:
+                _ = EnvironmentConfig(asset_config.extra_config_with_path)
+            except Exception as e:
+                logger.log_error(f"Validation of {asset_config.extra_config_with_path} failed: {e}")
+                error_count += 1
 
-                # Validate spec
-                try:
-                    _ = Spec(asset_config.spec_with_path)
-                except Exception as e:
-                    logger.log_error(f"Validation of {asset_config.spec_with_path} failed: {e}")
-                    error_count += 1
+        # Validate spec
+        try:
+            _ = Spec(asset_config.spec_with_path)
+        except Exception as e:
+            logger.log_error(f"Validation of {asset_config.spec_with_path} failed: {e}")
+            error_count += 1
 
     # Ensure unique assets
     for type_and_name, dirs in asset_dirs.items():
@@ -63,8 +61,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
-    input_dirs = args.input_dirs.split(",")
+    input_dirs = [Path(d) for d in args.input_dirs.split(",")]
 
     # Validate assets
     validate_assets(input_dirs=input_dirs,
-                  asset_config_filename=args.asset_config_filename)
+                    asset_config_filename=args.asset_config_filename)
