@@ -3,6 +3,7 @@ import json
 import re
 import urllib.parse
 from ci_logger import logger
+from pathlib import Path
 from urllib.request import Request, urlopen
 
 LATEST_TAG = "latest"
@@ -68,7 +69,7 @@ def pin_images(contents: str) -> str:
     return contents
 
 
-def transform_file(input_file: str, output_file: str = None):
+def transform_file(input_file: Path, output_file: Path = None):
     # Read file
     with open(input_file) as f:
         contents = f.read()
@@ -88,8 +89,8 @@ def transform_file(input_file: str, output_file: str = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input", help="File containing images to pin to latest versions", required=True)
-    parser.add_argument("-o", "--output", help="File to which output will be written. Defaults to the input file if not specified.")
+    parser.add_argument("-i", "--input", type=Path, help="File containing images to pin to latest versions", required=True)
+    parser.add_argument("-o", "--output", type=Path, help="File to which output will be written. Defaults to the input file if not specified.")
     args = parser.parse_args()
 
     output = args.output or args.input
