@@ -47,7 +47,7 @@ if COMPONENT_ROOT not in sys.path:
 # internal imports
 from model import MODEL_ARCH_LIST, get_model_metadata, load_model
 from image_io import build_image_datasets
-from profiling import PyTorchProfilerHandler
+from profiling import PyTorchProfilerHandler, LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
 
 
 class PyTorchDistributedModelTrainingSequence:
@@ -293,7 +293,9 @@ class PyTorchDistributedModelTrainingSequence:
             num_total_images = 0
             running_loss = 0.0
 
-            for images, targets in tqdm(self.validation_data_loader):
+            # PROFILER: here we're introducing a layer on top of data loader to capture its performance
+            # in pratice, we'd just use for images, targets in tqdm(self.training_data_loader)
+            for images, targets in LogTimeOfIterator(tqdm(self.validation_data_loader), "validation_data_loader", enabled=self.self_is_main_node):
                 with record_function("eval.to_device"):
                     images = images.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
@@ -335,7 +337,9 @@ class PyTorchDistributedModelTrainingSequence:
         num_total_images = 0
         running_loss = 0.0
 
-        for images, targets in tqdm(self.training_data_loader):
+        # PROFILER: here we're introducing a layer on top of data loader to capture its performance
+        # in pratice, we'd just use for images, targets in tqdm(self.training_data_loader)
+        for images, targets in LogTimeOfIterator(tqdm(self.training_data_loader), "training_data_loader", enabled=self.self_is_main_node):
             # PROFILER: record_function will report to the profiler (if enabled)
             # here a specific wall time for a given block of code
             with record_function("train.to_device"):
@@ -492,7 +496,7 @@ class PyTorchDistributedModelTrainingSequence:
         try:
             import psutil
             self.logger.critical(f"Memory: {str(psutil.virtual_memory())}")
-        except ImportError:
+        except ModuleNotFoundError:
             self.logger.critical("import psutil failed, cannot display virtual memory stats.")
 
         if torch.cuda.is_available():
@@ -749,18 +753,6 @@ def run(args):
     # MLFLOW: initialize mlflow (once in entire script)
     mlflow.start_run()
 
-    # build the image folder datasets
-    train_dataset, valid_dataset, labels = build_image_datasets(
-        train_images_dir=args.train_images,
-        valid_images_dir=args.valid_images,
-        input_size=get_model_metadata(args.model_arch)['input_size']
-    )
-
-    # creates the model architecture
-    model = load_model(
-        args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
-    )
-
     # use a handler for the training sequence
     training_handler = PyTorchDistributedModelTrainingSequence()
 
@@ -776,8 +768,23 @@ def run(args):
     # PROFILER: set profiler in trainer to call profiler.step() during training
     training_handler.profiler = training_profiler.start_profiler()
 
+    # report the time and disk usage during this code block
+    with LogTimeBlock("build_image_datasets", enabled=training_handler.self_is_main_node), LogDiskIOBlock("build_image_datasets", enabled=training_handler.self_is_main_node):
+        # build the image folder datasets
+        train_dataset, valid_dataset, labels = build_image_datasets(
+            train_images_dir=args.train_images,
+            valid_images_dir=args.valid_images,
+            input_size=get_model_metadata(args.model_arch)['input_size']
+        )
+
     # creates data loaders from datasets for distributed training
     training_handler.setup_datasets(train_dataset, valid_dataset, labels)
+
+    with LogTimeBlock("load_model", enabled=training_handler.self_is_main_node):
+        # creates the model architecture
+        model = load_model(
+            args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
+        )
 
     # sets the model for distributed training
     training_handler.setup_model(model)
