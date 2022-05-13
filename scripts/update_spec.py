@@ -1,8 +1,8 @@
 import argparse
-import chevron
 from pathlib import Path
 
 from config import AssetConfig, AssetType, EnvironmentConfig, PublishLocation
+from template import render
 
 
 def update(asset_config: AssetConfig, output_file: Path = None, version: str = None):
@@ -34,7 +34,7 @@ def update(asset_config: AssetConfig, output_file: Path = None, version: str = N
 
     # Load spec template and render
     with open(asset_config.spec_with_path) as f:
-        contents = chevron.render(f, data)
+        contents = render(f.read(), data)
 
     # Write spec
     if output_file == "-":
