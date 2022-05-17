@@ -16,6 +16,7 @@ FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 TEST_PHRASE = "hello world!"
 BASE_ENVIRONMENT = "base_env"
+ISOLATED_ENVIRONMENT = "isolated_env"
 
 
 def test_image(asset_config: AssetConfig, image_name: str) -> Tuple[int, str]:
@@ -36,7 +37,7 @@ def test_assets(input_dirs: List[Path],
     for asset_config in find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
         # Skip assets without testing enabled
         if not asset_config.test_enabled:
-            logger.log_debug(f"Will not test {asset_config}")
+            logger.log_debug(f"Testing is not enabled for {asset_config}")
             continue
 
         print(f"Testing {asset_config}")
@@ -49,10 +50,11 @@ def test_assets(input_dirs: List[Path],
         test_env = BASE_ENVIRONMENT
         pip_requirements = asset_config.test_pip_requirements_with_path
         if pip_requirements:
-            test_env = f"{asset_config.type.value}/{asset_config.name}"
-            print(f"Creating isolated conda environment using pip requirements in {pip_requirements}")
+            test_env = ISOLATED_ENVIRONMENT
+            print("Creating isolated conda environment")
             p = run(["conda", "create", "-n", test_env, "--clone", BASE_ENVIRONMENT, "-y"])
             # TODO: Check p
+            print("Using pip to install packages")
             p = run(["conda", "run", "-n", test_env, "pip", "install", "-r", pip_requirements], cwd=asset_config.file_path)
 
 

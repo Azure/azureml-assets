@@ -85,7 +85,7 @@ class AssetConfig(Config):
         self._validate()
 
     def __str__(self) -> str:
-        return f"{self.name} {self.version}"
+        return f"{self.type.value} {self.name} {self.version}"
 
     def _validate(self):
         Config._validate_enum('type', self._type, AssetType, True)

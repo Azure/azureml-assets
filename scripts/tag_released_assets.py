@@ -23,7 +23,7 @@ def tag_released_assets(input_directory: Path,
     tag_refs = []
     for asset_config in find_assets(input_directory, asset_config_filename):
         tag = get_release_tag_name(asset_config)
-        message = f"Release {asset_config.type.value} {asset_config.name} {asset_config.version}"
+        message = f"Release {asset_config}"
 
         print(f"Creating tag {tag}")
         tag_refs.append(repo.create_tag(tag, message=message))
