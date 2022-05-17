@@ -1,0 +1,7 @@
+name: test-asset-1
+version: auto
+type: component
+spec: spec.yaml
+test:
+  enabled: true
+  pip_requirements: tests/requirements.txt
