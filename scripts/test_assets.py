@@ -55,7 +55,7 @@ def test_assets(input_dirs: List[Path],
             p = run(["conda", "create", "-n", test_env, "--clone", BASE_ENVIRONMENT, "-y", "-q"])
             # TODO: Check p
             print("Using pip to install packages")
-            p = run(["conda", "run", "-n", test_env, "pip", "install", "-r", pip_requirements, "-q"], cwd=asset_config.file_path)
+            p = run(["conda", "run", "-n", test_env, "pip", "install", "-r", pip_requirements, "--progress-bar", "off"], cwd=asset_config.file_path)
 
 
 if __name__ == '__main__':
