@@ -48,7 +48,7 @@ def test_assets(input_dirs: List[Path],
             base_created = True
 
         test_env = BASE_ENVIRONMENT
-        pip_requirements = asset_config.test_pip_requirements_with_path
+        pip_requirements = asset_config.test_pip_requirements
         if pip_requirements:
             test_env = ISOLATED_ENVIRONMENT
             print("Creating isolated conda environment")
