@@ -44,7 +44,7 @@ def test_assets(input_dirs: List[Path],
 
         if not base_created:
             # Create base environment, which must succeed
-            run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "pytest"], check=True)
+            run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "pytest"], check=True)
             base_created = True
 
         test_env = BASE_ENVIRONMENT
@@ -52,10 +52,10 @@ def test_assets(input_dirs: List[Path],
         if pip_requirements:
             test_env = ISOLATED_ENVIRONMENT
             print("Creating isolated conda environment")
-            p = run(["conda", "create", "-n", test_env, "--clone", BASE_ENVIRONMENT, "-y"])
+            p = run(["conda", "create", "-n", test_env, "--clone", BASE_ENVIRONMENT, "-y", "-q"])
             # TODO: Check p
             print("Using pip to install packages")
-            p = run(["conda", "run", "-n", test_env, "pip", "install", "-r", pip_requirements], cwd=asset_config.file_path)
+            p = run(["conda", "run", "-n", test_env, "pip", "install", "-r", pip_requirements, "-q"], cwd=asset_config.file_path)
 
 
 if __name__ == '__main__':
