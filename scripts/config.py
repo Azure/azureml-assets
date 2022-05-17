@@ -78,7 +78,7 @@ class AssetConfig(Config):
     extra_config: environment.yaml
     test:
       enabled: true
-      requirements: tests/requirements.txt
+      pip_requirements: tests/requirements.txt
     """
     def __init__(self, file_name: Path):
         super().__init__(file_name)
@@ -179,13 +179,13 @@ class AssetConfig(Config):
         return self._test.get('enabled', False)
 
     @property
-    def test_requirements(self) -> Path:
-        return self._test.get('requirements')
+    def test_pip_requirements(self) -> Path:
+        return self._test.get('pip_requirements')
 
     @property
-    def test_requirements_with_path(self) -> Path:
-        requirements = self.test_requirements
-        return self._append_to_file_path(requirements) if requirements else None
+    def test_pip_requirements_with_path(self) -> Path:
+        pip_requirements = self.test_pip_requirements
+        return self._append_to_file_path(pip_requirements) if pip_requirements else None
 
 
 DEFAULT_CONTEXT_DIR = "context"

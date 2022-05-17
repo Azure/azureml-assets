@@ -15,6 +15,7 @@ SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 TEST_PHRASE = "hello world!"
+BASE_ENVIRONMENT = "base_env"
 
 
 def test_image(asset_config: AssetConfig, image_name: str) -> Tuple[int, str]:
@@ -31,11 +32,28 @@ def test_image(asset_config: AssetConfig, image_name: str) -> Tuple[int, str]:
 def test_assets(input_dirs: List[Path],
                 asset_config_filename: str,
                 changed_files: List[Path]):
+    base_created = False
     for asset_config in find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
-        if asset_config.test_enabled:
-            print(f"Will test {asset_config}")
-        else:
-            print(f"Will not test {asset_config}")
+        # Skip assets without testing enabled
+        if not asset_config.test_enabled:
+            logger.log_debug(f"Will not test {asset_config}")
+            continue
+
+        print(f"Testing {asset_config}")
+
+        if not base_created:
+            # Create base environment, which must succeed
+            run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "pytest"], check=True)
+            base_created = True
+
+        test_env = BASE_ENVIRONMENT
+        pip_requirements = asset_config.test_pip_requirements_with_path
+        if pip_requirements:
+            test_env = f"{asset_config.type.value}/{asset_config.name}"
+            print(f"Creating isolated conda environment using pip requirements in {pip_requirements}")
+            p = run(["conda", "create", "-n", test_env, "--clone", BASE_ENVIRONMENT, "-y"])
+            # TODO: Check p
+            p = run(["conda", "run", "-n", test_env, "pip", "install", "-r", pip_requirements], cwd=asset_config.file_path)
 
 
 if __name__ == '__main__':
