@@ -48,7 +48,7 @@ jobs:
       
       - name: Test all assets
         id: test-all-assets
-        if: steps.changed-files.outputs.any_modified == 'false'
+        if: steps.changed-files.outputs.any_modified != 'true'
         run: python -u $scripts_dir/test_assets.py -i . -a $asset_config_filename
 
       - name: Test changed assets
