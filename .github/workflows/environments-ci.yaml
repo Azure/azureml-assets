@@ -80,4 +80,4 @@ jobs:
 
       - name: Test images
         if: steps.build-all-images.outputs.success_count > 0 || steps.build-changed-images.outputs.success_count > 0
-        run: python -u $scripts_dir/test.py -i '${{ runner.temp }}'/$built_dir -a $asset_config_filename -O ${{ matrix.os }}
+        run: python -u $scripts_dir/test_images.py -i '${{ runner.temp }}'/$built_dir -a $asset_config_filename -O ${{ matrix.os }}

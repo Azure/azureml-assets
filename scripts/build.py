@@ -74,17 +74,12 @@ def build_images(input_dirs: List[Path],
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find environments under image root directories
         futures = []
-        for asset_config in find_assets(input_dirs, asset_config_filename, AssetType.ENVIRONMENT):
+        for asset_config in find_assets(input_dirs, asset_config_filename, AssetType.ENVIRONMENT, changed_files):
             env_config = EnvironmentConfig(asset_config.extra_config_with_path)
 
             # Filter by OS
             if os_to_build and env_config.os.value != os_to_build:
                 print(f"Skipping build of image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_build}")
-                continue
-
-            # If provided, skip directories with no changed files
-            if changed_files and not any([f for f in changed_files if asset_config.file_path in f]):
-                print(f"Skipping build of image for {asset_config.name}: No files in its directory were changed")
                 continue
 
             # Pin versions

@@ -69,19 +69,16 @@ VERSION_AUTO = "auto"
 
 class AssetConfig(Config):
     """
-    Examples:
+    Example:
 
     name: my-asset
-    version: 1
+    version: 1 # Can also be set to auto to auto-increment version
     type: environment
     spec: spec.yaml
     extra_config: environment.yaml
-
-    name: my-other-asset
-    version: auto
-    type: environment
-    spec: spec.yaml
-    extra_config: environment.yaml
+    test:
+      enabled: true
+      requirements: tests/requirements.txt
     """
     def __init__(self, file_name: Path):
         super().__init__(file_name)
@@ -172,6 +169,23 @@ class AssetConfig(Config):
     def extra_config_with_path(self) -> Path:
         config = self.extra_config
         return self._append_to_file_path(config) if config else None
+
+    @property
+    def _test(self) -> Dict[str, str]:
+        return self._yaml.get('test', {})
+
+    @property
+    def test_enabled(self) -> bool:
+        return self._test.get('enabled', False)
+
+    @property
+    def test_requirements(self) -> Path:
+        return self._test.get('requirements')
+
+    @property
+    def test_requirements_with_path(self) -> Path:
+        requirements = self.test_requirements
+        return self._append_to_file_path(requirements) if requirements else None
 
 
 DEFAULT_CONTEXT_DIR = "context"

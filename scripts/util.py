@@ -123,13 +123,15 @@ def apply_version_template(version: str, template: str = None) -> str:
 
 def find_assets(input_dirs: Union[List[Path], Path],
                 asset_config_filename: str,
-                types: Union[List[AssetType], AssetType] = None) -> List[AssetConfig]:
+                types: Union[List[AssetType], AssetType] = None,
+                changed_files: List[Path] = None) -> List[AssetConfig]:
     """Search directories for assets.
 
     Args:
         input_dirs (Union[List[Path], Path]): Directories to search in.
         asset_config_filename (str): Asset config filename to search for.
         types (Union[List[AssetType], AssetType], optional): AssetTypes to search for. Will not filter if unspecified.
+        changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs. Will not filter if unspecified.
 
     Returns:
         List[AssetConfig]: Assets found.
@@ -142,8 +144,16 @@ def find_assets(input_dirs: Union[List[Path], Path],
     assets = []
     for asset_config_file in find_asset_config_files(input_dirs, asset_config_filename):
         asset_config = AssetConfig(asset_config_file)
-        if not types or asset_config.type in types:
-            assets.append(asset_config)
+
+        # If specified, skip types not included in filter
+        if types and asset_config.type not in types:
+            continue
+
+        # If specified, skip assets with no changed files
+        if changed_files and not any([f for f in changed_files if asset_config.file_path in f.parents]):
+            continue
+
+        assets.append(asset_config)
     return assets
 
 
