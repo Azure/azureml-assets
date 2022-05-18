@@ -15,6 +15,7 @@ on:
 env:
   scripts_dir: scripts
   asset_config_filename: asset.yaml
+  pytest_reports_dir: pytest
 
 defaults:
   run:
@@ -49,9 +50,17 @@ jobs:
       - name: Test all assets
         id: test-all-assets
         if: steps.changed-files.outputs.any_modified != 'true'
-        run: python -u $scripts_dir/test_assets.py -i . -a $asset_config_filename
+        run: python -u $scripts_dir/test_assets.py -i . -a $asset_config_filename -r ${{ runner.temp }}/$pytest_reports_dir
 
       - name: Test changed assets
         id: test-changed-assets
         if: steps.changed-files.outputs.any_modified == 'true'
-        run: python -u $scripts_dir/test_assets.py -i . -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
+        run: python -u $scripts_dir/test_assets.py -i . -a $asset_config_filename -r ${{ runner.temp }}/$pytest_reports_dir -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
+      
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        if: always()
+        with:
+          #check_name: Unit Test Results
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ runner.temp }}/${{ pytest_reports_dir }}/**/*.xml

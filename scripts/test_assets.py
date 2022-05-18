@@ -32,7 +32,8 @@ def test_image(asset_config: AssetConfig, image_name: str) -> Tuple[int, str]:
 
 def test_assets(input_dirs: List[Path],
                 asset_config_filename: str,
-                changed_files: List[Path]):
+                changed_files: List[Path],
+                reports_dir: Path = None):
     base_created = False
     for asset_config in find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
         # Skip assets without testing enabled
@@ -63,7 +64,11 @@ def test_assets(input_dirs: List[Path],
 
         # Run pytest
         print("Running pytest")
-        p = run(["conda", "run", "-n", test_env, "pytest"], cwd=asset_config.file_path)
+        cmd = ["conda", "run", "-n", test_env, "pytest"]
+        if reports_dir:
+            report_file = reports_dir / asset_config.type.value / f"{asset_config.name}.xml"
+            cmd.append(f"--junitxml={report_file}")
+        p = run(cmd, cwd=asset_config.file_path)
 
         logger.end_group()
 
@@ -73,13 +78,18 @@ if __name__ == '__main__':
     parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing environments to test")
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter assets")
+    parser.add_argument("-r", "--reports-dir", help="Directory for pytest reports")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
     changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
 
+    # Convert reports dir to Path
+    reports_dir = Path(args.reports_dir) if args.report_dir else None
+
     # Test assets
     test_assets(input_dirs=input_dirs,
                 asset_config_filename=args.asset_config_filename,
-                changed_files=changed_files)
+                changed_files=changed_files,
+                reports_dir=reports_dir)
