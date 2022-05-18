@@ -3,5 +3,6 @@ version: auto
 type: component
 spec: spec.yaml
 test:
-  enabled: true
-  pip_requirements: tests/requirements.txt
+  pytest:
+    enabled: true
+    pip_requirements: tests/requirements.txt
