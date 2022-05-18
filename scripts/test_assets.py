@@ -36,7 +36,7 @@ def test_assets(input_dirs: List[Path],
     base_created = False
     for asset_config in find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
         # Skip assets without testing enabled
-        if not asset_config.test_enabled:
+        if not asset_config.pytest_enabled:
             logger.log_debug(f"Testing is not enabled for {asset_config}")
             continue
 
@@ -44,20 +44,23 @@ def test_assets(input_dirs: List[Path],
 
         if not base_created:
             # Create base environment, which must succeed
-            run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "pytest"], check=True)
+            run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "pytest==7.1.1"], check=True)
             base_created = True
 
+        # Create isolated environment if packages will be installed
         test_env = BASE_ENVIRONMENT
-        pip_requirements = asset_config.test_pip_requirements
-        if pip_requirements:
+        pytest_pip_requirements = asset_config.pytest_pip_requirements
+        if pytest_pip_requirements:
             test_env = ISOLATED_ENVIRONMENT
             print("Creating isolated conda environment")
             p = run(["conda", "create", "-n", test_env, "--clone", BASE_ENVIRONMENT, "-y", "-q"])
             # TODO: Check p
             print("Using pip to install packages")
-            p = run(["conda", "run", "-n", test_env, "pip", "install", "-r", pip_requirements, "--progress-bar", "off"], cwd=asset_config.file_path)
-            print("Running pytest")
-            p = run(["conda", "run", "-n", test_env, "pytest"], cwd=asset_config.file_path)
+            p = run(["conda", "run", "-n", test_env, "pip", "install", "-r", pytest_pip_requirements, "--progress-bar", "off"], cwd=asset_config.file_path)
+
+        # Run pytest
+        print("Running pytest")
+        p = run(["conda", "run", "-n", test_env, "pytest"], cwd=asset_config.file_path)
 
 
 if __name__ == '__main__':

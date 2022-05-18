@@ -77,8 +77,9 @@ class AssetConfig(Config):
     spec: spec.yaml
     extra_config: environment.yaml
     test:
-      enabled: true
-      pip_requirements: tests/requirements.txt
+      pytest:
+        enabled: true
+        pip_requirements: tests/requirements.txt
     """
     def __init__(self, file_name: Path):
         super().__init__(file_name)
@@ -171,20 +172,24 @@ class AssetConfig(Config):
         return self._append_to_file_path(config) if config else None
 
     @property
-    def _test(self) -> Dict[str, str]:
+    def _test(self) -> Dict[str, object]:
         return self._yaml.get('test', {})
 
     @property
-    def test_enabled(self) -> bool:
-        return self._test.get('enabled', False)
+    def _test_pytest(self) -> Dict[str, object]:
+        return self._test.get('pytest', {})
 
     @property
-    def test_pip_requirements(self) -> Path:
-        return self._test.get('pip_requirements')
+    def pytest_enabled(self) -> bool:
+        return self._test_pytest.get('enabled', False)
 
     @property
-    def test_pip_requirements_with_path(self) -> Path:
-        pip_requirements = self.test_pip_requirements
+    def pytest_pip_requirements(self) -> Path:
+        return self._test_pytest.get('pip_requirements')
+
+    @property
+    def pytest_pip_requirements_with_path(self) -> Path:
+        pip_requirements = self.pytest_pip_requirements
         return self._append_to_file_path(pip_requirements) if pip_requirements else None
 
 
