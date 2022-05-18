@@ -40,12 +40,15 @@ def test_assets(input_dirs: List[Path],
             logger.log_debug(f"Testing is not enabled for {asset_config}")
             continue
 
-        print(f"Testing {asset_config}")
-
+        
         if not base_created:
+            logger.start_group("Create base environment")
             # Create base environment, which must succeed
             run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "pytest==7.1.1"], check=True)
             base_created = True
+            logger.end_group()
+
+        logger.start_group(f"Test {asset_config}")
 
         # Create isolated environment if packages will be installed
         test_env = BASE_ENVIRONMENT
@@ -62,6 +65,7 @@ def test_assets(input_dirs: List[Path],
         print("Running pytest")
         p = run(["conda", "run", "-n", test_env, "pytest"], cwd=asset_config.file_path)
 
+        logger.end_group()
 
 if __name__ == '__main__':
     # Handle command-line args
