@@ -86,7 +86,7 @@ if __name__ == '__main__':
     changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
 
     # Convert reports dir to Path
-    reports_dir = Path(args.reports_dir) if args.report_dir else None
+    reports_dir = Path(args.reports_dir) if args.reports_dir else None
 
     # Test assets
     test_assets(input_dirs=input_dirs,
