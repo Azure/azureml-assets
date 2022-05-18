@@ -1,3 +1,3 @@
 name: train_image_classification_model
 type: component
-spec: spec.yml
+spec: spec.yaml
