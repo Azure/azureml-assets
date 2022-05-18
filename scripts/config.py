@@ -80,6 +80,7 @@ class AssetConfig(Config):
       pytest:
         enabled: true
         pip_requirements: tests/requirements.txt
+        tests_dir: tests
     """
     def __init__(self, file_name: Path):
         super().__init__(file_name)
@@ -191,6 +192,15 @@ class AssetConfig(Config):
     def pytest_pip_requirements_with_path(self) -> Path:
         pip_requirements = self.pytest_pip_requirements
         return self._append_to_file_path(pip_requirements) if pip_requirements else None
+
+    @property
+    def pytest_tests_dir(self) -> Path:
+        return self._test_pytest.get('tests_dir', ".") if self.pytest_enabled else None
+
+    @property
+    def pytest_tests_dir_with_path(self) -> Path:
+        tests_dir = self.pytest_tests_dir
+        return self._append_to_file_path(tests_dir) if tests_dir else None
 
 
 DEFAULT_CONTEXT_DIR = "context"
