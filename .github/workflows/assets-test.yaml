@@ -63,4 +63,4 @@ jobs:
         with:
           #check_name: Unit Test Results
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: ${{ runner.temp }}/${{ pytest_reports_dir }}/**/*.xml
+          files: ${{ runner.temp }}/${{ env.pytest_reports_dir }}/**/*.xml
