@@ -14,7 +14,6 @@ from util import find_assets
 SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
-PYTEST_SPEC = "pytest==7.1.1"
 BASE_ENVIRONMENT = "base_env"
 ISOLATED_ENVIRONMENT = "isolated_env"
 
@@ -52,6 +51,7 @@ def test_asset(asset_config: AssetConfig, env_name: str, reports_dir: str = None
 
 def test_assets(input_dirs: List[Path],
                 asset_config_filename: str,
+                package_versions: Path,
                 changed_files: List[Path],
                 reports_dir: Path = None):
     base_created = False
@@ -65,7 +65,7 @@ def test_assets(input_dirs: List[Path],
         if not base_created:
             # Create base environment, which must succeed
             logger.start_group("Create base environment")
-            run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", PYTEST_SPEC], check=True)
+            run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "-f", package_versions], check=True)
             base_created = True
             logger.end_group()
 
@@ -102,19 +102,18 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing environments to test")
     parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
+    parser.add_argument("-p", "--package-versions-file", required=True, type=Path, help="File with package versions for the base conda environment")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter assets")
-    parser.add_argument("-r", "--reports-dir", help="Directory for pytest reports")
+    parser.add_argument("-r", "--reports-dir", type=Path, help="Directory for pytest reports")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
     changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
 
-    # Convert reports dir to Path
-    reports_dir = Path(args.reports_dir) if args.reports_dir else None
-
     # Test assets
     test_assets(input_dirs=input_dirs,
                 asset_config_filename=args.asset_config_filename,
+                package_versions_file=args.package_versions_file,
                 changed_files=changed_files,
-                reports_dir=reports_dir)
+                reports_dir=args.reports_dir)
