@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       asset_dirs:
-        description: Asset directory
+        description: Asset directories
         default: .,!test,!scripts
         required: true
 

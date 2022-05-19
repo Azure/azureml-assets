@@ -10,9 +10,16 @@ on:
     paths-ignore:
       - .github/**
       - scripts/**
+      - test/**
   workflow_dispatch:
+    inputs:
+      asset_dirs:
+        description: Asset directories
+        default: .,!test,!scripts
+        required: true
 
 env:
+  default_asset_dirs: .,!test,!scripts
   scripts_dir: scripts
   asset_config_filename: asset.yaml
 
@@ -40,4 +47,4 @@ jobs:
         run: pip install -r $scripts_dir/requirements.txt
       
       - name: Validate assets
-        run: python -u $scripts_dir/validate_assets.py -i . -a $asset_config_filename
+        run: python -u $scripts_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename
