@@ -114,6 +114,6 @@ if __name__ == '__main__':
     # Test assets
     test_assets(input_dirs=input_dirs,
                 asset_config_filename=args.asset_config_filename,
-                package_versions_file=args.package_versions_file,
+                package_versions=args.package_versions_file,
                 changed_files=changed_files,
                 reports_dir=args.reports_dir)
