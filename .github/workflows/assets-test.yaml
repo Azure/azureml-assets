@@ -14,11 +14,11 @@ on:
     inputs:
       asset_dirs:
         description: Asset directory
-        default: .,!test/**,!scripts/**
+        default: .,!test,!scripts
         required: true
 
 env:
-  default_asset_dirs: .,!test/**,!scripts/**
+  default_asset_dirs: .,!test,!scripts
   scripts_dir: scripts
   asset_config_filename: asset.yaml
   pytest_reports_dir: pytest

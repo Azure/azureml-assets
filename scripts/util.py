@@ -125,7 +125,7 @@ def find_assets(input_dirs: Union[List[Path], Path],
                 asset_config_filename: str,
                 types: Union[List[AssetType], AssetType] = None,
                 changed_files: List[Path] = None,
-                exclude_globs: List[str] = None) -> List[AssetConfig]:
+                exclude_dirs: List[Path] = None) -> List[AssetConfig]:
     """Search directories for assets.
 
     Args:
@@ -133,7 +133,7 @@ def find_assets(input_dirs: Union[List[Path], Path],
         asset_config_filename (str): Asset config filename to search for.
         types (Union[List[AssetType], AssetType], optional): AssetTypes to search for. Will not filter if unspecified.
         changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs. Will not filter if unspecified.
-        exclude_globs (List[str], optional): Glob patterns that match directories/files that should be excluded from the search.
+        exclude_dirs (Union[List[Path], Path], optional): Directories that should be excluded from the search.
 
     Returns:
         List[AssetConfig]: Assets found.
@@ -142,22 +142,24 @@ def find_assets(input_dirs: Union[List[Path], Path],
         input_dirs = [input_dirs]
     if types is not None and type(types) is not list:
         types = [types]
+    if exclude_dirs and type(exclude_dirs) is not list:
+        exclude_dirs = [exclude_dirs]
 
     # Exclude any dirs that start with EXCLUDE_DIR_PREFIX
     new_input_dirs = []
-    new_excludes = []
+    new_exclude_dirs = []
     for input_dir in input_dirs:
         input_dir_str = str(input_dir)
         if input_dir_str.startswith(EXCLUDE_DIR_PREFIX):
-            new_excludes.append(input_dir_str[len(EXCLUDE_DIR_PREFIX):])
+            new_exclude_dirs.append(Path(input_dir_str[len(EXCLUDE_DIR_PREFIX):]))
         else:
             new_input_dirs.append(input_dir)
-    if new_excludes:
+    if new_exclude_dirs:
         input_dirs = new_input_dirs
-        if exclude_globs:
-            exclude_globs.extend(new_excludes)
+        if exclude_dirs:
+            exclude_dirs.extend(new_exclude_dirs)
         else:
-            exclude_globs = new_excludes
+            exclude_dirs = new_exclude_dirs
 
     # Find and filter assets
     assets = []
@@ -172,8 +174,8 @@ def find_assets(input_dirs: Union[List[Path], Path],
         if changed_files and not any([f for f in changed_files if asset_config.file_path in f.parents]):
             continue
 
-        # If specified, skip excluded directories/files
-        if exclude_globs and any([g for g in exclude_globs if asset_config.file_name_with_path.match(g)]):
+        # If specified, skip excluded directories
+        if exclude_dirs and any([d for d in exclude_dirs if d in asset_config.file_path.parents]):
             continue
 
         assets.append(asset_config)
