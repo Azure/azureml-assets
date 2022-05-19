@@ -24,6 +24,10 @@ class Config:
         return self._file_name
 
     @property
+    def file_name_with_path(self) -> str:
+        return self._append_to_file_path(self.file_name)
+
+    @property
     def file_path(self) -> Path:
         return self._file_path
 
@@ -63,6 +67,7 @@ class AssetType(Enum):
     COMPONENT = 'component'
     ENVIRONMENT = 'environment'
     MODEL = 'model'
+
 
 VERSION_AUTO = "auto"
 
