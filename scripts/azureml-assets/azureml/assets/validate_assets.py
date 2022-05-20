@@ -10,7 +10,7 @@ from azureml.assets.util import logger
 
 
 def validate_assets(input_dirs: List[Path],
-                    asset_config_filename: str):
+                    asset_config_filename: str) -> bool:
     # Find assets under input dirs
     asset_count = 0
     error_count = 0
@@ -49,8 +49,7 @@ def validate_assets(input_dirs: List[Path],
             error_count += 1
 
     print(f"Found {error_count} error(s) in {asset_count} asset(s)")
-    if error_count > 0:
-        sys.exit(1)
+    return error_count == 0
 
 
 if __name__ == '__main__':
@@ -64,5 +63,7 @@ if __name__ == '__main__':
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
 
     # Validate assets
-    validate_assets(input_dirs=input_dirs,
-                    asset_config_filename=args.asset_config_filename)
+    success = validate_assets(input_dirs=input_dirs,
+                              asset_config_filename=args.asset_config_filename)
+    if not success:
+        sys.exit(1)

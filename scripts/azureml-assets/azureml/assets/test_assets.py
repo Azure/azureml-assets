@@ -53,7 +53,7 @@ def test_assets(input_dirs: List[Path],
                 asset_config_filename: str,
                 package_versions: Path,
                 changed_files: List[Path],
-                reports_dir: Path = None):
+                reports_dir: Path = None) -> bool:
     base_created = False
     counters = Counter()
     for asset_config in util.find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
@@ -94,7 +94,8 @@ def test_assets(input_dirs: List[Path],
 
     if counters[FAILED_COUNT] > 0:
         logger.log_error(f"{counters[FAILED_COUNT]} asset(s) failed to test")
-        sys.exit(1)
+        return False
+    return True
 
 
 if __name__ == '__main__':
@@ -112,8 +113,10 @@ if __name__ == '__main__':
     changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
 
     # Test assets
-    test_assets(input_dirs=input_dirs,
-                asset_config_filename=args.asset_config_filename,
-                package_versions=args.package_versions_file,
-                changed_files=changed_files,
-                reports_dir=args.reports_dir)
+    success = test_assets(input_dirs=input_dirs,
+                          asset_config_filename=args.asset_config_filename,
+                          package_versions=args.package_versions_file,
+                          changed_files=changed_files,
+                          reports_dir=args.reports_dir)
+    if not success:
+        sys.exit(1)

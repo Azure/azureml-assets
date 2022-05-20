@@ -68,7 +68,7 @@ def build_images(input_dirs: List[Path],
                  tag_with_version: bool,
                  os_to_build: str = None,
                  resource_group: str = None,
-                 registry: str = None):
+                 registry: str = None) -> bool:
     counters = Counter()
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find environments under image root directories
@@ -119,7 +119,8 @@ def build_images(input_dirs: List[Path],
 
     if counters[FAILED_COUNT] > 0:
         logger.log_error(f"{counters[FAILED_COUNT]} environment image(s) failed to build")
-        sys.exit(1)
+        return False
+    return True
 
 
 if __name__ == '__main__':
@@ -147,14 +148,16 @@ if __name__ == '__main__':
     changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
 
     # Build images
-    build_images(input_dirs=input_dirs,
-                 asset_config_filename=args.asset_config_filename,
-                 output_directory=args.output_directory,
-                 build_logs_dir=args.build_logs_dir,
-                 pin_versions=args.pin_versions,
-                 max_parallel=args.max_parallel,
-                 changed_files=changed_files,
-                 tag_with_version=args.tag_with_version,
-                 os_to_build=args.os_to_build,
-                 resource_group=args.resource_group,
-                 registry=args.registry)
+    success = build_images(input_dirs=input_dirs,
+                           asset_config_filename=args.asset_config_filename,
+                           output_directory=args.output_directory,
+                           build_logs_dir=args.build_logs_dir,
+                           pin_versions=args.pin_versions,
+                           max_parallel=args.max_parallel,
+                           changed_files=changed_files,
+                           tag_with_version=args.tag_with_version,
+                           os_to_build=args.os_to_build,
+                           resource_group=args.resource_group,
+                           registry=args.registry)
+    if not success:
+        sys.exit(1)

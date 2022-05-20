@@ -31,7 +31,7 @@ def test_image(asset_config: assets.AssetConfig, image_name: str) -> Tuple[int, 
 def test_images(input_dirs: List[Path],
                 asset_config_filename: str,
                 output_directory: Path,
-                os_to_test: str = None):
+                os_to_test: str = None) -> bool:
     counters = Counter()
     for asset_config in util.find_assets(input_dirs, asset_config_filename, assets.AssetType.ENVIRONMENT):
         env_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
@@ -58,7 +58,8 @@ def test_images(input_dirs: List[Path],
 
     if counters[FAILED_COUNT] > 0:
         logger.log_error(f"{counters[FAILED_COUNT]} environment image(s) failed to test")
-        sys.exit(1)
+        return False
+    return True
 
 
 if __name__ == '__main__':
@@ -74,7 +75,9 @@ if __name__ == '__main__':
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
 
     # Test images
-    test_images(input_dirs=input_dirs,
-                asset_config_filename=args.asset_config_filename,
-                output_directory=args.output_directory,
-                os_to_test=args.os_to_test)
+    success = test_images(input_dirs=input_dirs,
+                          asset_config_filename=args.asset_config_filename,
+                          output_directory=args.output_directory,
+                          os_to_test=args.os_to_test)
+    if not success:
+        sys.exit(1)
