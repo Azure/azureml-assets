@@ -1,0 +1,5 @@
+name: test-asset-1
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
