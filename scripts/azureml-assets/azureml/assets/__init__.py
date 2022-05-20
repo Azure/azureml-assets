@@ -16,3 +16,4 @@ from .update_assets import (
     release_tag_exists,
 )
 from .update_spec import update as update_spec
+from .validate_assets import validate_assets
