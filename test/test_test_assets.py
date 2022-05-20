@@ -4,6 +4,7 @@ import pytest
 import azureml.assets as assets
 
 RESOURCES_DIR = Path("resources")
+TEST_REQUIREMENTS_FILE = Path("../scripts/test-requirements.txt")
 
 
 @pytest.mark.parametrize(
@@ -16,5 +17,5 @@ def test_test_assets(test_subdir: str, expected: bool):
     assert assets.test_assets(
         this_dir / RESOURCES_DIR / test_subdir,
         assets.DEFAULT_ASSET_FILENAME,
-        this_dir / "../scripts/test-requirements.txt",
+        this_dir / TEST_REQUIREMENTS_FILE,
         []) == expected
