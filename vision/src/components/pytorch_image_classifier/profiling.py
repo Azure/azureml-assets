@@ -316,7 +316,7 @@ class LogDiskIOBlock(object):
 class LogTimeOfIterator():
     """This class is intended to "wrap" an existing Iterator
     and log metrics for each next() call"""
-    def __init__(self, wrapped_sequence:Any, name:str, enabled:bool=True):
+    def __init__(self, wrapped_sequence:Any, name:str, enabled:bool=True, async_collector:dict=None):
         self.wrapped_sequence = wrapped_sequence
         self.wrapped_iterator = None
 
@@ -325,6 +325,7 @@ class LogTimeOfIterator():
         self.name = name
         self.iterator_times = []
         self.metrics = {}
+        self.async_collector = async_collector
 
         self._logger = logging.getLogger(__name__)
     
@@ -359,6 +360,11 @@ class LogTimeOfIterator():
         self.metrics[f"{self.name}.count"] = len(self.iterator_times)
         self.metrics[f"{self.name}.time.sum"] = sum(self.iterator_times)
         self.metrics[f"{self.name}.time.first"] = self.iterator_times[0]
-        self._logger.info(f"MLFLOW: {self.metrics}")
 
-        mlflow.log_metrics(self.metrics)
+        if self.async_collector is not None:
+            self._logger.info(f"Async MLFLOW: {self.metrics}")
+            for k in self.metrics:
+                self.async_collector[k] = self.metrics[k]
+        else:
+            self._logger.info(f"MLFLOW: {self.metrics}")
+            mlflow.log_metrics(self.metrics)
