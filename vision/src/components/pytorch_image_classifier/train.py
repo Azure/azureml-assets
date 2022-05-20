@@ -297,7 +297,7 @@ class PyTorchDistributedModelTrainingSequence:
 
             # PROFILER: here we're introducing a layer on top of data loader to capture its performance
             # in pratice, we'd just use for images, targets in tqdm(self.training_data_loader)
-            for images, targets in LogTimeOfIterator(tqdm(self.validation_data_loader), "validation_data_loader", enabled=self.self_is_main_node, async_collector=epoch_eval_metrics):
+            for images, targets in LogTimeOfIterator(tqdm(self.validation_data_loader), "validation_data_loader", async_collector=epoch_eval_metrics):
                 with record_function("eval.to_device"):
                     images = images.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
@@ -347,7 +347,7 @@ class PyTorchDistributedModelTrainingSequence:
 
         # PROFILER: here we're introducing a layer on top of data loader to capture its performance
         # in pratice, we'd just use for images, targets in tqdm(self.training_data_loader)
-        for images, targets in LogTimeOfIterator(tqdm(self.training_data_loader), "training_data_loader", enabled=self.self_is_main_node, async_collector=epoch_train_metrics):
+        for images, targets in LogTimeOfIterator(tqdm(self.training_data_loader), "training_data_loader", async_collector=epoch_train_metrics):
             # PROFILER: record_function will report to the profiler (if enabled)
             # here a specific wall time for a given block of code
             with record_function("train.to_device"):
