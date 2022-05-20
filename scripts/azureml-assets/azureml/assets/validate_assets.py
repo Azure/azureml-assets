@@ -6,6 +6,7 @@ from typing import List
 
 import azureml.assets as assets
 import azureml.assets.util as util
+from azureml.assets.config import ValidationException
 from azureml.assets.util import logger
 
 
@@ -37,7 +38,13 @@ def validate_assets(input_dirs: List[Path],
 
         # Validate spec
         try:
-            _ = assets.Spec(asset_config.spec_with_path)
+            spec = assets.Spec(asset_config.spec_with_path)
+
+            # Ensure name and version aren't inconsistent
+            if not assets.Config._contains_template(spec.name) and asset_config.name != spec.name:
+                raise ValidationException(f"Asset and spec name mismatch: {asset_config.name} != {spec.name}")
+            if not assets.Config._contains_template(spec.version) and asset_config.version != spec.version:
+                raise ValidationException(f"Asset and spec version mismatch: {asset_config.version} != {spec.version}")
         except Exception as e:
             logger.log_error(f"Validation of {asset_config.spec_with_path} failed: {e}")
             error_count += 1
