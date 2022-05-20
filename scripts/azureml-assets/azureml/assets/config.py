@@ -64,31 +64,32 @@ class AssetType(Enum):
     ENVIRONMENT = 'environment'
     MODEL = 'model'
 
+
+DEFAULT_ASSET_FILENAME = "asset.yaml"
 VERSION_AUTO = "auto"
 
 
 class AssetConfig(Config):
     """
-    Examples:
+    Example:
 
     name: my-asset
-    version: 1
+    version: 1 # Can also be set to auto to auto-increment version
     type: environment
     spec: spec.yaml
     extra_config: environment.yaml
-
-    name: my-other-asset
-    version: auto
-    type: environment
-    spec: spec.yaml
-    extra_config: environment.yaml
+    test:
+      pytest:
+        enabled: true
+        pip_requirements: tests/requirements.txt
+        tests_dir: tests
     """
     def __init__(self, file_name: Path):
         super().__init__(file_name)
         self._validate()
 
     def __str__(self) -> str:
-        return f"{self.name} {self.version}"
+        return f"{self.type.value} {self.name} {self.version}"
 
     def _validate(self):
         Config._validate_enum('type', self._type, AssetType, True)
@@ -172,6 +173,36 @@ class AssetConfig(Config):
     def extra_config_with_path(self) -> Path:
         config = self.extra_config
         return self._append_to_file_path(config) if config else None
+
+    @property
+    def _test(self) -> Dict[str, object]:
+        return self._yaml.get('test', {})
+
+    @property
+    def _test_pytest(self) -> Dict[str, object]:
+        return self._test.get('pytest', {})
+
+    @property
+    def pytest_enabled(self) -> bool:
+        return self._test_pytest.get('enabled', False)
+
+    @property
+    def pytest_pip_requirements(self) -> Path:
+        return self._test_pytest.get('pip_requirements')
+
+    @property
+    def pytest_pip_requirements_with_path(self) -> Path:
+        pip_requirements = self.pytest_pip_requirements
+        return self._append_to_file_path(pip_requirements) if pip_requirements else None
+
+    @property
+    def pytest_tests_dir(self) -> Path:
+        return self._test_pytest.get('tests_dir', ".") if self.pytest_enabled else None
+
+    @property
+    def pytest_tests_dir_with_path(self) -> Path:
+        tests_dir = self.pytest_tests_dir
+        return self._append_to_file_path(tests_dir) if tests_dir else None
 
 
 DEFAULT_CONTEXT_DIR = "context"

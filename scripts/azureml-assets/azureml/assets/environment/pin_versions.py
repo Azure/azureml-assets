@@ -1,8 +1,7 @@
 import argparse
 from pathlib import Path
 
-from pin_image_versions import pin_images
-from pin_package_versions import pin_packages
+import azureml.assets.environment as environment
 
 
 def transform_file(input_file: Path, output_file: Path = None):
@@ -11,8 +10,8 @@ def transform_file(input_file: Path, output_file: Path = None):
         contents = f.read()
 
     # Pin images and packages
-    contents = pin_images(contents)
-    contents = pin_packages(contents)
+    contents = environment.pin_images(contents)
+    contents = environment.pin_packages(contents)
 
     # Write to stdout or output_file
     if output_file == "-":

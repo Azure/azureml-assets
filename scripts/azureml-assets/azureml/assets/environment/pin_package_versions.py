@@ -1,6 +1,5 @@
 import argparse
 import re
-from ci_logger import logger
 from pathlib import Path
 from pip._internal.index.collector import LinkCollector
 from pip._internal.index.package_finder import PackageFinder
@@ -8,6 +7,8 @@ from pip._internal.models.search_scope import SearchScope
 from pip._internal.models.selection_prefs import SelectionPreferences
 from pip._internal.network.session import PipSession
 from typing import List
+
+from azureml.assets.util import logger
 
 LATEST_PYPI_VERSION = re.compile(r"([^\"'\s]+)([=~]=)\{\{latest-pypi-version\}\}")
 PYPI_URL = "https://pypi.org/simple"

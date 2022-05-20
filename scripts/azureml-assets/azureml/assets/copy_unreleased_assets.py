@@ -1,24 +1,23 @@
 import argparse
 from pathlib import Path
 
-from ci_logger import logger
-from config import AssetConfig, Spec
-from update_assets import release_tag_exists
-from util import copy_asset_to_output_dir, find_assets
+import azureml.assets as assets
+import azureml.assets.util as util
+from azureml.assets.util import logger
 
 COPIED_COUNT = "copied_count"
 
 
-def copy_unreleased_asset(asset_config: AssetConfig,
+def copy_unreleased_asset(asset_config: assets.AssetConfig,
                           release_directory_root: Path,
                           output_directory_root: Path) -> str:
-    if release_tag_exists(asset_config, release_directory_root):
+    if assets.release_tag_exists(asset_config, release_directory_root):
         # Skip a released version
         return None
 
     # Copy asset to output directory
-    copy_asset_to_output_dir(asset_config, output_directory_root)
-    return Spec(asset_config.spec_with_path).version
+    util.copy_asset_to_output_dir(asset_config, output_directory_root)
+    return assets.Spec(asset_config.spec_with_path).version
 
 
 def copy_unreleased_assets(release_directory_root: Path,
@@ -27,7 +26,7 @@ def copy_unreleased_assets(release_directory_root: Path,
     # Find assets under release dir
     asset_count = 0
     copied_count = 0
-    for asset_config in find_assets(release_directory_root, asset_config_filename):
+    for asset_config in util.find_assets(release_directory_root, asset_config_filename):
         asset_count += 1
 
         # Copy asset if tag doesn't exist
@@ -48,7 +47,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
     parser.add_argument("-o", "--output-directory", required=True, type=Path, help="Directory to which unreleased assets will be written")
-    parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
     args = parser.parse_args()
 
     # Release assets

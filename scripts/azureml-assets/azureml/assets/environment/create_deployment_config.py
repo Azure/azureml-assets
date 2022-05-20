@@ -4,9 +4,9 @@ import os
 from git import Repo
 from pathlib import Path
 
-from config import AssetConfig, AssetType, EnvironmentConfig, PublishLocation, Spec
-from ci_logger import logger
-from util import apply_tag_template, apply_version_template, find_assets, get_asset_release_dir
+import azureml.assets as assets
+import azureml.assets.util as util
+from azureml.assets.util import logger
 
 ENV_DEF_FILE_TEMPLATE = "envs/{name}.json"
 
@@ -28,20 +28,20 @@ def create_deployment_config(input_directory: Path,
                              version_template: str = None,
                              tag_template: str = None):
     deployment_config = {}
-    for asset_config in find_assets(input_directory, asset_config_filename, AssetType.ENVIRONMENT):
-        env_config = EnvironmentConfig(asset_config.extra_config_with_path)
+    for asset_config in util.find_assets(input_directory, asset_config_filename, assets.AssetType.ENVIRONMENT):
+        env_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
 
         # Skip if not publishing to MCR
-        if env_config.publish_location != PublishLocation.MCR:
+        if env_config.publish_location != assets.PublishLocation.MCR:
             logger.log_warning(f"Skipping {asset_config.name} because it's not published to MCR")
             continue
 
         # Apply tag template to image name
-        spec = Spec(asset_config.spec_with_path)
-        full_image_name = apply_tag_template(spec.image, tag_template)
+        spec = assets.Spec(asset_config.spec_with_path)
+        full_image_name = util.apply_tag_template(spec.image, tag_template)
 
         # Apply version template
-        version = apply_version_template(asset_config.version, version_template)
+        version = util.apply_version_template(asset_config.version, version_template)
 
         # Add to deployment config
         env_def_file = ENV_DEF_FILE_TEMPLATE.format(name=asset_config.name)
@@ -54,7 +54,7 @@ def create_deployment_config(input_directory: Path,
         }
 
         # Determine build context path in repo
-        asset_release_subdir = get_asset_release_dir(asset_config, release_directory_root)
+        asset_release_subdir = util.get_asset_release_dir(asset_config, release_directory_root)
         asset_release_dir = asset_release_subdir.relative_to(release_directory_root)
         build_context_path = Path(asset_release_dir, env_config.context_dir).as_posix()
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory containing environment assets")
-    parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
     parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
     parser.add_argument("-o", "--deployment-config", required=True, type=Path, help="Path to deployment config file")
     parser.add_argument("-v", "--version-template", help="Template to apply to versions from spec files "
