@@ -1,9 +1,6 @@
 name: scripts-test
 
 on:
-  push:
-    branches:
-      - elesel/add-global-testing
   pull_request:
     branches:
       - main
