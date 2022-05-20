@@ -1,10 +1,9 @@
 import argparse
 import json
-import os
 from pathlib import Path
 
-from config import AssetConfig, AssetType, EnvironmentConfig, PublishLocation, Spec
-from util import find_assets
+import azureml.assets as assets
+import azureml.assets.util as util
 
 
 def create_import_config(input_directory: Path,
@@ -15,15 +14,15 @@ def create_import_config(input_directory: Path,
                          registry_username: str = None,
                          registry_password: str = None):
     images = []
-    for asset_config in find_assets(input_directory, asset_config_filename, AssetType.ENVIRONMENT):
-        env_config = EnvironmentConfig(asset_config.extra_config_with_path)
+    for asset_config in util.find_assets(input_directory, asset_config_filename, assets.AssetType.ENVIRONMENT):
+        env_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
 
         # Skip if not publishing to MCR
-        if env_config.publish_location != PublishLocation.MCR:
+        if env_config.publish_location != assets.PublishLocation.MCR:
             continue
 
         # Get source image name
-        version = Spec(asset_config.spec_with_path).version
+        version = assets.Spec(asset_config.spec_with_path).version
         source_image_name = env_config.get_image_name_with_tag(version)
 
         # Form destination image name and tag
@@ -59,7 +58,7 @@ if __name__ == "__main__":
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory containing environment assets")
-    parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
     parser.add_argument("-o", "--import-config", required=True, type=Path, help="Path to import config file")
     parser.add_argument("-A", "--registry-address", required=True, help="Address of registry login server")
     parser.add_argument("-t", "--tag", help="Destination tag to use instead of asset version and latest")

@@ -1,15 +1,15 @@
 import argparse
 from pathlib import Path
 
-from config import AssetConfig, AssetType, EnvironmentConfig, PublishLocation
-from template import render
+import azureml.assets as assets
+import azureml.assets.util as util
 
 
-def update(asset_config: AssetConfig, output_file: Path = None, version: str = None):
+def update(asset_config: assets.AssetConfig, output_file: Path = None, version: str = None):
     """Update template tags in an asset's spec file using data from the asset config and any extra configs.
 
     Args:
-        asset_config (AssetConfig): AssetConfig object
+        asset_config (assets.AssetConfig): AssetConfig object
         output_file (str, optional): File to which updated spec file will be written. If unspecified, the original spec file will be updated.
         version (str, optional): Version to use instead of the one in the asset config file.
     """
@@ -22,9 +22,9 @@ def update(asset_config: AssetConfig, output_file: Path = None, version: str = N
     }
 
     # Augment with with type-specific data
-    if asset_config.type == AssetType.ENVIRONMENT:
-        environment_config = EnvironmentConfig(asset_config.extra_config_with_path)
-        if environment_config.publish_location == PublishLocation.MCR:
+    if asset_config.type == assets.AssetType.ENVIRONMENT:
+        environment_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+        if environment_config.publish_location == assets.PublishLocation.MCR:
             data['image'] = {
                 'name': environment_config.image_name,
                 'publish': {
@@ -34,7 +34,7 @@ def update(asset_config: AssetConfig, output_file: Path = None, version: str = N
 
     # Load spec template and render
     with open(asset_config.spec_with_path) as f:
-        contents = render(f.read(), data)
+        contents = util.render(f.read(), data)
 
     # Write spec
     if output_file == "-":

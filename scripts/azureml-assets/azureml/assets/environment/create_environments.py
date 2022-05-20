@@ -4,8 +4,8 @@ import requests
 from pathlib import Path
 from urllib.parse import urljoin
 
-from ci_logger import logger
-from util import apply_tag_template, apply_version_template
+import azureml.assets.util as util
+from azureml.assets.util import logger
 
 ENV_URL_TEMPLATE = "environment/1.0/environments/{environment}/versions/{version}/registry/{registry}"
 
@@ -57,10 +57,10 @@ def create_environments(deployment_config_file_path: Path,
                 env_def_with_metadata = json.loads(f.read())
 
             # Apply tag template to image name
-            full_image_name = apply_tag_template(value['publish']['fullImageName'], tag_template)
+            full_image_name = util.apply_tag_template(value['publish']['fullImageName'], tag_template)
 
             # Apply version template
-            version = apply_version_template(version, version_template)
+            version = util.apply_version_template(version, version_template)
 
             # Create environment
             success = create_environment(base_url=base_url, name=name, version=version, registry=registry,

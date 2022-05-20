@@ -2,8 +2,8 @@ import argparse
 from git import Repo
 from pathlib import Path
 
-from update_assets import get_release_tag_name
-from util import find_assets
+import azureml.assets as assets
+import azureml.assets.util as util
 
 
 def tag_released_assets(input_directory: Path,
@@ -21,8 +21,8 @@ def tag_released_assets(input_directory: Path,
 
     # Create tags locally
     tag_refs = []
-    for asset_config in find_assets(input_directory, asset_config_filename):
-        tag = get_release_tag_name(asset_config)
+    for asset_config in util.find_assets(input_directory, asset_config_filename):
+        tag = assets.get_release_tag_name(asset_config)
         message = f"Release {asset_config}"
 
         print(f"Creating tag {tag}")
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory containing released assets")
-    parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
     parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
     parser.add_argument("-u", "--username", help="Username for git push")
     parser.add_argument("-e", "--email", help="Email for git push")

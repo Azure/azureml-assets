@@ -5,56 +5,55 @@ from git import Repo
 from pathlib import Path
 from typing import List
 
-from ci_logger import logger
-from config import AssetConfig, AssetType, EnvironmentConfig, Spec
-from pin_versions import transform_file
-from update_spec import update as update_spec
-from util import are_dir_trees_equal, copy_replace_dir, find_assets, get_asset_output_dir, get_asset_release_dir
+import azureml.assets as assets
+import azureml.assets.environment as environment
+import azureml.assets.util as util
+from azureml.assets.util import logger
 
 RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
 HAS_UPDATES = "has_updates"
 ENV_OS_UPDATES = "env_os_updates"
 
 
-def pin_env_files(env_config: EnvironmentConfig):
+def pin_env_files(env_config: assets.EnvironmentConfig):
     for file_to_pin in env_config.template_files_with_path:
         if file_to_pin.exists():
-            transform_file(file_to_pin)
+            environment.transform_file(file_to_pin)
         else:
             logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
 
-def get_release_tag_name(asset_config: AssetConfig):
-    version = Spec(asset_config.spec_with_path).version
+def get_release_tag_name(asset_config: assets.AssetConfig):
+    version = assets.Spec(asset_config.spec_with_path).version
     return RELEASE_TAG_VERSION_TEMPLATE.format(type=asset_config.type.value, name=asset_config.name,
                                                version=version)
 
 
-def release_tag_exists(asset_config: AssetConfig, release_directory_root: Path) -> bool:
+def release_tag_exists(asset_config: assets.AssetConfig, release_directory_root: Path) -> bool:
     # Check git repo for version-specific tag
     repo = Repo(release_directory_root)
     tag = get_release_tag_name(asset_config)
     return tag in repo.tags
 
 
-def update_asset(asset_config: AssetConfig,
+def update_asset(asset_config: assets.AssetConfig,
                  release_directory_root: Path,
                  copy_only: bool,
                  skip_unreleased: bool,
                  output_directory_root: Path = None) -> str:
     # Determine asset's release directory
-    release_dir = get_asset_release_dir(asset_config, release_directory_root)
+    release_dir = util.get_asset_release_dir(asset_config, release_directory_root)
 
     # Define output directory, which may be different from the release directory
     if output_directory_root:
-        output_directory = get_asset_output_dir(asset_config, output_directory_root)
+        output_directory = util.get_asset_output_dir(asset_config, output_directory_root)
     else:
         output_directory = release_dir
 
     # Simpler operation that just copies the directory
     if copy_only:
-        copy_replace_dir(asset_config.file_path, output_directory)
-        spec = Spec(asset_config.spec_with_path)
+        util.copy_replace_dir(asset_config.file_path, output_directory)
+        spec = assets.Spec(asset_config.spec_with_path)
         return spec.version
 
     # Get version from main branch, set a few defaults
@@ -66,7 +65,7 @@ def update_asset(asset_config: AssetConfig,
 
     # Check existing release dir
     if release_dir.exists():
-        release_asset_config = AssetConfig(release_dir / asset_config.file_name)
+        release_asset_config = assets.AssetConfig(release_dir / asset_config.file_name)
         release_version = release_asset_config.version
 
         if not auto_version:
@@ -101,25 +100,25 @@ def update_asset(asset_config: AssetConfig,
         temp_dir_path = Path(temp_dir)
         # Copy asset to temp directory and pin image/package versions
         shutil.copytree(asset_config.file_path, temp_dir_path, dirs_exist_ok=True)
-        temp_asset_config = AssetConfig(temp_dir_path / asset_config.file_name)
-        if asset_config.type is AssetType.ENVIRONMENT:
-            temp_env_config = EnvironmentConfig(temp_asset_config.extra_config_with_path)
+        temp_asset_config = assets.AssetConfig(temp_dir_path / asset_config.file_name)
+        if asset_config.type is assets.AssetType.ENVIRONMENT:
+            temp_env_config = assets.EnvironmentConfig(temp_asset_config.extra_config_with_path)
             pin_env_files(temp_env_config)
 
         # Compare temporary version with one in release
         if check_contents:
-            update_spec(temp_asset_config, version=release_version)
-            dirs_equal = are_dir_trees_equal(temp_dir_path, release_dir)
+            assets.update_spec(temp_asset_config, version=release_version)
+            dirs_equal = util.are_dir_trees_equal(temp_dir_path, release_dir)
             if dirs_equal:
                 return None
 
         # Copy and replace any existing directory
-        copy_replace_dir(temp_asset_config.file_path, output_directory)
+        util.copy_replace_dir(temp_asset_config.file_path, output_directory)
 
         # Update version in spec by copying clean spec and updating it
         shutil.copyfile(asset_config.spec_with_path, output_directory / asset_config.spec)
-        output_asset_config = AssetConfig(output_directory / asset_config.file_name)
-        update_spec(output_asset_config, version=str(new_version))
+        output_asset_config = assets.AssetConfig(output_directory / asset_config.file_name)
+        assets.update_spec(output_asset_config, version=str(new_version))
 
         return new_version
 
@@ -134,7 +133,7 @@ def update_assets(input_dirs: List[Path],
     asset_count = 0
     updated_count = 0
     updated_os = set()
-    for asset_config in find_assets(input_dirs, asset_config_filename):
+    for asset_config in util.find_assets(input_dirs, asset_config_filename):
         asset_count += 1
 
         # Update asset if it's changed
@@ -148,8 +147,8 @@ def update_assets(input_dirs: List[Path],
             updated_count += 1
 
             # Track updated environments by OS
-            if asset_config.type is AssetType.ENVIRONMENT:
-                temp_env_config = EnvironmentConfig(asset_config.extra_config_with_path)
+            if asset_config.type is assets.AssetType.ENVIRONMENT:
+                temp_env_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
                 updated_os.add(temp_env_config.os.value)
         else:
             logger.log_debug(f"No changes detected for {asset_config.type.value} {asset_config.name}")
@@ -164,7 +163,7 @@ if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing assets")
-    parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
     parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
     parser.add_argument("-o", "--output-directory", type=Path, help="Directory to which new/updated assets will be written, defaults to release directory")
     parser.add_argument("-c", "--copy-only", action="store_true", help="Just copy assets into the release directory")

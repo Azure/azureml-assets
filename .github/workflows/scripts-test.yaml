@@ -13,6 +13,7 @@ on:
 
 env:
   scripts_dir: scripts
+  scripts_azureml_assets_dir: scripts/azureml-assets
   test_dir: test
   pytest_reports_dir: pytest
 
@@ -37,7 +38,7 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -r $scripts_dir/requirements.txt -r $scripts_dir/test_requirements.txt
+        run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test_requirements.txt
       
       - name: Test scripts
         run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml $test_dir

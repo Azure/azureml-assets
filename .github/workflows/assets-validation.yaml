@@ -20,7 +20,8 @@ on:
 
 env:
   default_asset_dirs: .,!test,!scripts
-  scripts_dir: scripts
+  scripts_azureml_assets_dir: scripts/azureml-assets
+  scripts_assets_dir: scripts/azureml-assets/azureml/assets
   asset_config_filename: asset.yaml
 
 defaults:
@@ -44,7 +45,7 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -r $scripts_dir/requirements.txt
+        run: pip install -e $scripts_azureml_assets_dir
       
       - name: Validate assets
-        run: python -u $scripts_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename
+        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename

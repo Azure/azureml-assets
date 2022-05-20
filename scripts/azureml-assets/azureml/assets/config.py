@@ -65,6 +65,7 @@ class AssetType(Enum):
     MODEL = 'model'
 
 
+DEFAULT_ASSET_FILENAME = "asset.yaml"
 VERSION_AUTO = "auto"
 
 

@@ -1,11 +1,12 @@
 import argparse
 import sys
-from ci_logger import logger
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
 from typing import List
+
+from azureml.assets.util import logger
 
 TAG_DATETIME_FORMAT = "%Y%m%d%H%M%S"
 

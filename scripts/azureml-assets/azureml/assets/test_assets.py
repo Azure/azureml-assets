@@ -7,9 +7,9 @@ from subprocess import run
 from timeit import default_timer as timer
 from typing import List
 
-from ci_logger import logger
-from config import AssetConfig
-from util import find_assets
+import azureml.assets as assets
+import azureml.assets.util as util
+from azureml.assets.util import logger
 
 SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
@@ -18,7 +18,7 @@ BASE_ENVIRONMENT = "base_env"
 ISOLATED_ENVIRONMENT = "isolated_env"
 
 
-def create_isolated_environment(asset_config: AssetConfig, env_name: str) -> bool:
+def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str) -> bool:
     print("Creating isolated conda environment")
     p = run(["conda", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"])
     if p.returncode != 0:
@@ -30,7 +30,7 @@ def create_isolated_environment(asset_config: AssetConfig, env_name: str) -> boo
     return p.returncode == 0
 
 
-def test_asset(asset_config: AssetConfig, env_name: str, reports_dir: str = None) -> bool:
+def test_asset(asset_config: assets.AssetConfig, env_name: str, reports_dir: str = None) -> bool:
     print("Running pytest")
     start = timer()
 
@@ -56,7 +56,7 @@ def test_assets(input_dirs: List[Path],
                 reports_dir: Path = None):
     base_created = False
     counters = Counter()
-    for asset_config in find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
+    for asset_config in util.find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
         # Skip assets without testing enabled
         if not asset_config.pytest_enabled:
             logger.log_debug(f"Testing is not enabled for {asset_config}")
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing environments to test")
-    parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
     parser.add_argument("-p", "--package-versions-file", required=True, type=Path, help="File with package versions for the base conda environment")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter assets")
     parser.add_argument("-r", "--reports-dir", type=Path, help="Directory for pytest reports")

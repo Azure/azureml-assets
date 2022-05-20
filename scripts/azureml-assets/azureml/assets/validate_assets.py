@@ -4,9 +4,9 @@ from collections import defaultdict
 from pathlib import Path
 from typing import List
 
-from ci_logger import logger
-from config import AssetConfig, AssetType, EnvironmentConfig, Spec
-from util import find_asset_config_files
+import azureml.assets as assets
+import azureml.assets.util as util
+from azureml.assets.util import logger
 
 
 def validate_assets(input_dirs: List[Path],
@@ -15,12 +15,12 @@ def validate_assets(input_dirs: List[Path],
     asset_count = 0
     error_count = 0
     asset_dirs = defaultdict(list)
-    for asset_config_path in find_asset_config_files(input_dirs, asset_config_filename):
+    for asset_config_path in util.find_asset_config_files(input_dirs, asset_config_filename):
         asset_count += 1
 
         # Load config
         try:
-            asset_config = AssetConfig(asset_config_path)
+            asset_config = assets.AssetConfig(asset_config_path)
         except Exception as e:
             logger.log_error(f"Validation of {asset_config_path} failed: {e}")
             error_count += 1
@@ -28,16 +28,16 @@ def validate_assets(input_dirs: List[Path],
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
         # Validate specific asset types
-        if asset_config.type is AssetType.ENVIRONMENT:
+        if asset_config.type is assets.AssetType.ENVIRONMENT:
             try:
-                _ = EnvironmentConfig(asset_config.extra_config_with_path)
+                _ = assets.EnvironmentConfig(asset_config.extra_config_with_path)
             except Exception as e:
                 logger.log_error(f"Validation of {asset_config.extra_config_with_path} failed: {e}")
                 error_count += 1
 
         # Validate spec
         try:
-            _ = Spec(asset_config.spec_with_path)
+            _ = assets.Spec(asset_config.spec_with_path)
         except Exception as e:
             logger.log_error(f"Validation of {asset_config.spec_with_path} failed: {e}")
             error_count += 1
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing assets")
-    parser.add_argument("-a", "--asset-config-filename", default="asset.yaml", help="Asset config file name to search for")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
