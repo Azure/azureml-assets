@@ -1,8 +1,7 @@
-name: test-asset-2
+name: test-asset-1
 version: auto
 type: component
 spec: spec.yaml
 test:
   pytest:
     enabled: true
-    pip_requirements: tests/requirements.txt

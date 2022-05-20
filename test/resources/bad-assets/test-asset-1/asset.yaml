@@ -5,4 +5,3 @@ spec: spec.yaml
 test:
   pytest:
     enabled: true
-    pip_requirements: tests/requirements.txt
