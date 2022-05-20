@@ -58,7 +58,7 @@ jobs:
         id: changed-scripts
         uses: tj-actions/changed-files@v18.6
         with:
-          files: ${{ env.scripts_dir }}
+          files: ${{ env.scripts_environment_dir }}
           separator: ','
       
       - name: Use Python 3.8 or newer
