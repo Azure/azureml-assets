@@ -181,19 +181,11 @@ def find_assets(input_dirs: Union[List[Path], Path],
 
     # Find and filter assets
     found_assets = []
-    for asset_config_file in find_asset_config_files(input_dirs, asset_config_filename, exclude_dirs):
+    for asset_config_file in find_asset_config_files(input_dirs, asset_config_filename, changed_files, exclude_dirs):
         asset_config = assets.AssetConfig(asset_config_file)
 
         # If specified, skip types not included in filter
         if types and asset_config.type not in types:
-            continue
-
-        # If specified, skip assets with no changed files
-        if changed_files and not any([f for f in changed_files if asset_config.file_path in f.parents]):
-            continue
-
-        # If specified, skip excluded directories
-        if exclude_dirs and any([d for d in exclude_dirs if d in asset_config.file_path.parents]):
             continue
 
         found_assets.append(asset_config)
