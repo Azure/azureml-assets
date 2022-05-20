@@ -1,7 +1,7 @@
 import filecmp
 import shutil
 from pathlib import Path
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import azureml.assets as assets
 
@@ -121,29 +121,24 @@ def apply_version_template(version: str, template: str = None) -> str:
     return template.format(version=version)
 
 
-def find_assets(input_dirs: Union[List[Path], Path],
-                asset_config_filename: str,
-                types: Union[List[assets.AssetType], assets.AssetType] = None,
-                changed_files: List[Path] = None,
-                exclude_dirs: List[Path] = None) -> List[assets.AssetConfig]:
-    """Search directories for assets.
+def _convert_excludes(input_dirs: Union[List[Path], Path],
+                      exclude_dirs: List[Path] = None) -> Tuple[List[Path], List[Path]]:
+    """Extract directories to exclude from input_dirs and add them to exclude_dirs.
 
     Args:
         input_dirs (Union[List[Path], Path]): Directories to search in.
-        asset_config_filename (str): Asset config filename to search for.
-        types (Union[List[assets.AssetType], assets.AssetType], optional): AssetTypes to search for. Will not filter if unspecified.
-        changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs. Will not filter if unspecified.
-        exclude_dirs (Union[List[Path], Path], optional): Directories that should be excluded from the search.
+        exclude_dirs (List[Path], optional): Directories that should be excluded from the search.
 
     Returns:
-        List[assets.AssetConfig]: Assets found.
+        Tuple[List[Path], List[Path]]: _description_
     """
     if type(input_dirs) is not list:
         input_dirs = [input_dirs]
-    if types is not None and type(types) is not list:
-        types = [types]
-    if exclude_dirs and type(exclude_dirs) is not list:
-        exclude_dirs = [exclude_dirs]
+    if exclude_dirs is not None:
+        if type(exclude_dirs) is not list:
+            exclude_dirs = [exclude_dirs]
+    else:
+        exclude_dirs = []
 
     # Exclude any dirs that start with EXCLUDE_DIR_PREFIX
     new_input_dirs = []
@@ -161,9 +156,32 @@ def find_assets(input_dirs: Union[List[Path], Path],
         else:
             exclude_dirs = new_exclude_dirs
 
+    return input_dirs, exclude_dirs
+
+
+def find_assets(input_dirs: Union[List[Path], Path],
+                asset_config_filename: str,
+                types: Union[List[assets.AssetType], assets.AssetType] = None,
+                changed_files: List[Path] = None,
+                exclude_dirs: List[Path] = None) -> List[assets.AssetConfig]:
+    """Search directories for assets.
+
+    Args:
+        input_dirs (Union[List[Path], Path]): Directories to search in.
+        asset_config_filename (str): Asset config filename to search for.
+        types (Union[List[assets.AssetType], assets.AssetType], optional): AssetTypes to search for. Will not filter if unspecified.
+        changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs. Will not filter if unspecified.
+        exclude_dirs (Union[List[Path], Path], optional): Directories that should be excluded from the search.
+
+    Returns:
+        List[assets.AssetConfig]: Assets found.
+    """
+    if types is not None and type(types) is not list:
+        types = [types]
+
     # Find and filter assets
     found_assets = []
-    for asset_config_file in find_asset_config_files(input_dirs, asset_config_filename):
+    for asset_config_file in find_asset_config_files(input_dirs, asset_config_filename, exclude_dirs):
         asset_config = assets.AssetConfig(asset_config_file)
 
         # If specified, skip types not included in filter
@@ -183,20 +201,32 @@ def find_assets(input_dirs: Union[List[Path], Path],
 
 
 def find_asset_config_files(input_dirs: Union[List[Path], Path],
-                            asset_config_filename: str) -> List[Path]:
+                            asset_config_filename: str,
+                            changed_files: List[Path] = None,
+                            exclude_dirs: List[Path] = None) -> List[Path]:
     """Search directories for asset config files.
 
     Args:
         input_dirs (Union[List[Path], Path]): Directories to search in.
         asset_config_filename (str): Asset config filename to search for.
+        changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs. Will not filter if unspecified.
+        exclude_dirs (Union[List[Path], Path], optional): Directories that should be excluded from the search.
 
     Returns:
         List[Path]: Asset config files found.
     """
-    if type(input_dirs) is not list:
-        input_dirs = [input_dirs]
+    input_dirs, exclude_dirs = _convert_excludes(input_dirs, exclude_dirs)
 
     found_assets = []
     for input_dir in input_dirs:
-        found_assets.extend(input_dir.rglob(asset_config_filename))
+        for file in input_dir.rglob(asset_config_filename):
+            # If specified, skip assets with no changed files
+            if changed_files and not any([f for f in changed_files if file.parent in f.parents]):
+                continue
+
+            # If specified, skip excluded directories
+            if exclude_dirs and any([d for d in exclude_dirs if d in file.parents]):
+                continue
+
+            found_assets.append(file)
     return found_assets
