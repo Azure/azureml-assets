@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(utils._make_arg('training_data'), type=str)
-    parser.add_argument(utils._make_arg('validation_data'), type=str) # TODO: test if validation data not present
+    parser.add_argument(utils._make_arg('validation_data'), type=str)
     args, _ = parser.parse_known_args()
     args_dict = vars(args)
 
