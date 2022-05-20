@@ -2,9 +2,10 @@ import argparse
 import json
 import re
 import urllib.parse
-from ci_logger import logger
 from pathlib import Path
 from urllib.request import Request, urlopen
+
+from azureml.assets.util import logger
 
 LATEST_TAG = "latest"
 LATEST_IMAGE_TAG = re.compile(r"([^\"'\s]+):\{\{latest-image-tag\}\}")

@@ -1,12 +1,12 @@
 import filecmp
-import os
 import shutil
 from pathlib import Path
 from typing import List, Union
 
-from config import AssetConfig, AssetType
+import azureml.assets as assets
 
 RELEASE_SUBDIR = "latest"
+EXCLUDE_DIR_PREFIX = "!"
 
 
 # See https://stackoverflow.com/questions/4187564/recursively-compare-two-directories-to-ensure-they-have-the-same-files-and-subdi
@@ -51,11 +51,11 @@ def copy_replace_dir(source: Path, dest: Path):
     shutil.copytree(source, dest)
 
 
-def get_asset_output_dir(asset_config: AssetConfig, output_directory_root: Path) -> Path:
+def get_asset_output_dir(asset_config: assets.AssetConfig, output_directory_root: Path) -> Path:
     """Generate the output directory for a given asset.
 
     Args:
-        asset_config (AssetConfig): Asset config
+        asset_config (assets.AssetConfig): Asset config
         output_directory_root (Path): Output directory root
 
     Returns:
@@ -64,11 +64,11 @@ def get_asset_output_dir(asset_config: AssetConfig, output_directory_root: Path)
     return Path(output_directory_root, asset_config.type.value, asset_config.name)
 
 
-def get_asset_release_dir(asset_config: AssetConfig, release_directory_root: Path) -> Path:
+def get_asset_release_dir(asset_config: assets.AssetConfig, release_directory_root: Path) -> Path:
     """Generate the release directory for a given asset.
 
     Args:
-        asset_config (AssetConfig): Asset config
+        asset_config (assets.AssetConfig): Asset config
         release_directory_root (Path): Release directory root
 
     Returns:
@@ -77,11 +77,11 @@ def get_asset_release_dir(asset_config: AssetConfig, release_directory_root: Pat
     return get_asset_output_dir(asset_config, release_directory_root / RELEASE_SUBDIR)
 
 
-def copy_asset_to_output_dir(asset_config: AssetConfig, output_directory_root: Path):
+def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory_root: Path):
     """Copy asset directory to output directory.
 
     Args:
-        asset_config (AssetConfig): Asset config to copy
+        asset_config (assets.AssetConfig): Asset config to copy
         output_directory_root (Path): Output directory root
     """
     output_directory = get_asset_output_dir(asset_config, output_directory_root)
@@ -123,28 +123,63 @@ def apply_version_template(version: str, template: str = None) -> str:
 
 def find_assets(input_dirs: Union[List[Path], Path],
                 asset_config_filename: str,
-                types: Union[List[AssetType], AssetType] = None) -> List[AssetConfig]:
+                types: Union[List[assets.AssetType], assets.AssetType] = None,
+                changed_files: List[Path] = None,
+                exclude_dirs: List[Path] = None) -> List[assets.AssetConfig]:
     """Search directories for assets.
 
     Args:
         input_dirs (Union[List[Path], Path]): Directories to search in.
         asset_config_filename (str): Asset config filename to search for.
-        types (Union[List[AssetType], AssetType], optional): AssetTypes to search for. Will not filter if unspecified.
+        types (Union[List[assets.AssetType], assets.AssetType], optional): AssetTypes to search for. Will not filter if unspecified.
+        changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs. Will not filter if unspecified.
+        exclude_dirs (Union[List[Path], Path], optional): Directories that should be excluded from the search.
 
     Returns:
-        List[AssetConfig]: Assets found.
+        List[assets.AssetConfig]: Assets found.
     """
     if type(input_dirs) is not list:
         input_dirs = [input_dirs]
     if types is not None and type(types) is not list:
         types = [types]
+    if exclude_dirs and type(exclude_dirs) is not list:
+        exclude_dirs = [exclude_dirs]
 
-    assets = []
+    # Exclude any dirs that start with EXCLUDE_DIR_PREFIX
+    new_input_dirs = []
+    new_exclude_dirs = []
+    for input_dir in input_dirs:
+        input_dir_str = str(input_dir)
+        if input_dir_str.startswith(EXCLUDE_DIR_PREFIX):
+            new_exclude_dirs.append(Path(input_dir_str[len(EXCLUDE_DIR_PREFIX):]))
+        else:
+            new_input_dirs.append(input_dir)
+    if new_exclude_dirs:
+        input_dirs = new_input_dirs
+        if exclude_dirs:
+            exclude_dirs.extend(new_exclude_dirs)
+        else:
+            exclude_dirs = new_exclude_dirs
+
+    # Find and filter assets
+    found_assets = []
     for asset_config_file in find_asset_config_files(input_dirs, asset_config_filename):
-        asset_config = AssetConfig(asset_config_file)
-        if not types or asset_config.type in types:
-            assets.append(asset_config)
-    return assets
+        asset_config = assets.AssetConfig(asset_config_file)
+
+        # If specified, skip types not included in filter
+        if types and asset_config.type not in types:
+            continue
+
+        # If specified, skip assets with no changed files
+        if changed_files and not any([f for f in changed_files if asset_config.file_path in f.parents]):
+            continue
+
+        # If specified, skip excluded directories
+        if exclude_dirs and any([d for d in exclude_dirs if d in asset_config.file_path.parents]):
+            continue
+
+        found_assets.append(asset_config)
+    return found_assets
 
 
 def find_asset_config_files(input_dirs: Union[List[Path], Path],
@@ -161,9 +196,7 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
     if type(input_dirs) is not list:
         input_dirs = [input_dirs]
 
-    assets = []
+    found_assets = []
     for input_dir in input_dirs:
-        for root, _, files in os.walk(input_dir):
-            if asset_config_filename in files:
-                assets.append(Path(root) / asset_config_filename)
-    return assets
+        found_assets.extend(input_dir.rglob(asset_config_filename))
+    return found_assets

@@ -12,16 +12,19 @@ on:
   workflow_dispatch:
     inputs:
       asset_dirs:
-        description: Asset directory
-        default: .
+        description: Asset directories
+        default: .,!test,!scripts
         required: true
 
 concurrency: ${{ github.workflow }}
 
 env:
+  default_asset_dirs: .,!test,!scripts
   main_dir: main
   release_dir: release
-  scripts_dir: scripts
+  scripts_azureml_assets_dir: scripts/azureml-assets
+  scripts_assets_dir: scripts/azureml-assets/azureml/assets
+  scripts_environment_dir: scripts/azureml-assets/azureml/assets/environment
   changed_assets_artifact: changed-assets
   releasable_assets_artifact: releasable-assets
   asset_config_filename: asset.yaml
@@ -56,12 +59,13 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -r $main_dir/$scripts_dir/requirements.txt
+        run: pip install -e $main_dir/$scripts_azureml_assets_dir
       
       # TODO: Consider using Git to detect changes
       - name: Find updated assets
         id: find-updated-assets
-        run: python -u $main_dir/$scripts_dir/update_assets.py -i "$main_dir/${{ github.event.inputs.asset_dirs || '.' }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
+        run: python -u $azureml_assets_dir/update_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
+        working-directory: ${{ env.main_dir }}
 
       - name: Upload changed assets
         uses: actions/upload-artifact@v3
@@ -122,11 +126,11 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -r $main_dir/$scripts_dir/requirements.txt
+        run: pip install -e $main_dir/$scripts_azureml_assets_dir
       
       - name: Build images
         id: build-images
-        run: python -u $main_dir/$scripts_dir/build.py -i '${{ runner.temp }}'/$changed_assets_artifact -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name
+        run: python -u $main_dir/$scripts_environment_dir/build.py -i '${{ runner.temp }}'/$changed_assets_artifact -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name
         continue-on-error: true
 
       - name: Upload build logs
@@ -139,7 +143,7 @@ jobs:
       - name: Test images
         id: test-images
         if: steps.build-images.outputs.success_count > 0
-        run: python -u $main_dir/$scripts_dir/test.py -i '${{ runner.temp }}'/$built_dir -a $asset_config_filename -o '${{ runner.temp }}'/$tested_dir -O ${{ matrix.os }}
+        run: python -u $main_dir/$scripts_environment_dir/test_images.py -i '${{ runner.temp }}'/$built_dir -a $asset_config_filename -o '${{ runner.temp }}'/$tested_dir -O ${{ matrix.os }}
         continue-on-error: true
       
       - name: Upload tested assets
@@ -204,11 +208,11 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -r $main_dir/$scripts_dir/requirements.txt
+        run: pip install -e $main_dir/$scripts_azureml_assets_dir
       
       # TODO: This is overkill, just copy directories without involving this script
       - name: Update release branch
-        run: python -u $main_dir/$scripts_dir/update_assets.py -i ${{ runner.temp }}/$_artifact -r $release_dir -c
+        run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$_artifact -r $release_dir -c
   
       - name: Create commit and push
         run: |
