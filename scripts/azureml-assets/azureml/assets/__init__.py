@@ -1,6 +1,7 @@
 from .config import (
     AssetConfig,
     AssetType,
+    Config,
     DEFAULT_ASSET_FILENAME,
     EnvironmentConfig,
     Os,
