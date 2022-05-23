@@ -33,15 +33,15 @@ def validate_assets(input_dirs: List[Path],
         if asset_config.type is assets.AssetType.ENVIRONMENT:
             try:
                 environment_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+
+                # Store fully qualified image name
+                image_name = environment_config.image_name
+                if environment_config.publish_location:
+                    image_name = f"{environment_config.publish_location.value}/{image_name}"
+                image_names[image_name].append(asset_config.file_path)
             except Exception as e:
                 logger.log_error(f"Validation of {asset_config.extra_config_with_path} failed: {e}")
                 error_count += 1
-
-            # Store fully qualified image name
-            image_name = environment_config.image_name
-            if environment_config.publish_location:
-                image_name = f"{environment_config.publish_location.value}/{image_name}"
-            image_names[image_name].append(asset_config.file_path)
 
         # Validate spec
         try:
