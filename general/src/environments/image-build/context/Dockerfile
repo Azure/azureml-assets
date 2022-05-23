@@ -1,13 +1,15 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.1-cudnn8-ubuntu20.04:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/openmpi3.1.2-ubuntu18.04:{{latest-image-tag}}
 
 WORKDIR /
 
-ENV CONDA_PREFIX=/azureml-envs/tensorflow-2.8
+ENV CONDA_PREFIX=/azureml-envs/image-build
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
-# This is needed for mpi to locate libpython
-ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+# Install docker
+RUN apt-get update && apt-get install -y \
+    docker.io \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
 COPY conda_dependencies.yaml conda_dependencies.yaml

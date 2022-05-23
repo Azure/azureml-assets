@@ -1,0 +1,11 @@
+image:
+  name: azureml/curated/aifx-pytorch-1.10
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+  publish:
+    location: mcr
+    visibility: unlisted

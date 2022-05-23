@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.1-cudnn8-ubuntu20.04:{{latest
 
 WORKDIR /
 
-ENV CONDA_PREFIX=/azureml-envs/tensorflow-2.8
+ENV CONDA_PREFIX=/azureml-envs/tensorflow-2.5
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
@@ -11,7 +11,7 @@ ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 # Create conda environment
 COPY conda_dependencies.yaml conda_dependencies.yaml
-RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml && \
+RUN HOROVOD_WITH_TENSORFLOW=1 conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml && \
     rm conda_dependencies.yaml && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
