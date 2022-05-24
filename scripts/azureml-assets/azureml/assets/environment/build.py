@@ -83,7 +83,12 @@ def build_images(input_dirs: List[Path],
 
             # Pin versions
             if pin_versions:
-                assets.pin_env_files(env_config)
+                try:
+                    assets.pin_env_files(env_config)
+                except Exception as e:
+                    logger.log_error(f"Failed to pin versions for {asset_config.name}: {e}")
+                    counters[FAILED_COUNT] += 1
+                    continue
 
             # Tag with version from spec
             if tag_with_version:

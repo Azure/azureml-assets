@@ -18,7 +18,10 @@ ENV_OS_UPDATES = "env_os_updates"
 def pin_env_files(env_config: assets.EnvironmentConfig):
     for file_to_pin in env_config.template_files_with_path:
         if file_to_pin.exists():
-            environment.transform_file(file_to_pin)
+            try:
+                environment.transform_file(file_to_pin)
+            except Exception as e:
+                raise Exception(f"Failed to pin versions in {file_to_pin}: {e}")
         else:
             logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
