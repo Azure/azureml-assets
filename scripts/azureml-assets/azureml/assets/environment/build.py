@@ -15,6 +15,7 @@ import azureml.assets.util as util
 from azureml.assets.util import logger
 
 TASK_FILENAME = "_acr_build_task.yaml"
+STEP_TIMEOUT_SECONDS = 60 * 90
 SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
@@ -29,6 +30,7 @@ def create_acr_task(image_name: str,
     # Start task with just the build step
     task = {
         'version': 'v1.1.0',
+        'stepTimeout': STEP_TIMEOUT_SECONDS,
         'steps': [{
             'id': "build",
             'build': f"-t $Registry/{image_name} -f {dockerfile} ."
