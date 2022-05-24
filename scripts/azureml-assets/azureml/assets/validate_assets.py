@@ -68,7 +68,7 @@ def validate_assets(input_dirs: List[Path],
             logger.log_error(f"{image_name} found in multiple assets: {dirs}")
             error_count += 1
 
-    print(f"Found {error_count} error(s) in {asset_count} asset(s)")
+    logger.print(f"Found {error_count} error(s) in {asset_count} asset(s)")
     return error_count == 0
 
 

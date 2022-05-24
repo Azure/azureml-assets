@@ -4,6 +4,7 @@ from pathlib import Path
 
 import azureml.assets as assets
 import azureml.assets.util as util
+from azureml.assets.util import logger
 
 
 def tag_released_assets(input_directory: Path,
@@ -25,12 +26,12 @@ def tag_released_assets(input_directory: Path,
         tag = assets.get_release_tag_name(asset_config)
         message = f"Release {asset_config}"
 
-        print(f"Creating tag {tag}")
+        logger.print(f"Creating tag {tag}")
         tag_refs.append(repo.create_tag(tag, message=message))
 
     # Push tags
     for tag_ref in tag_refs:
-        print(f"Pushing tag {tag_ref}")
+        logger.print(f"Pushing tag {tag_ref}")
         repo.remotes.origin.push(tag_ref).raise_if_error()
 
 

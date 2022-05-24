@@ -26,7 +26,7 @@ def build_image(asset_config: assets.AssetConfig,
                 build_os: str = None,
                 resource_group: str = None,
                 registry: str = None) -> Tuple[assets.AssetConfig, int, str]:
-    print(f"Building image for {asset_config.name}")
+    logger.print(f"Building image for {asset_config.name}")
     start = timer()
     if registry is not None:
         # Build on ACR
@@ -39,7 +39,7 @@ def build_image(asset_config: assets.AssetConfig,
             stdout=PIPE,
             stderr=STDOUT)
     end = timer()
-    print(f"Image for {asset_config.name} built in {timedelta(seconds=end-start)}")
+    logger.print(f"Image for {asset_config.name} built in {timedelta(seconds=end-start)}")
     os.makedirs(build_log.parent, exist_ok=True)
     with open(build_log, "w") as f:
         f.write(p.stdout.decode())
@@ -78,7 +78,7 @@ def build_images(input_dirs: List[Path],
 
             # Filter by OS
             if os_to_build and env_config.os.value != os_to_build:
-                print(f"Skipping build of image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_build}")
+                logger.print(f"Skipping build of image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_build}")
                 continue
 
             # Pin versions
@@ -107,7 +107,7 @@ def build_images(input_dirs: List[Path],
         for future in as_completed(futures):
             (asset_config, return_code, output) = future.result()
             logger.start_group(f"{asset_config.name} build log")
-            print(output)
+            logger.print(output)
             logger.end_group()
             if return_code != 0:
                 logger.log_error(f"Build of image for {asset_config.name} failed with exit status {return_code}", "Build failure")
