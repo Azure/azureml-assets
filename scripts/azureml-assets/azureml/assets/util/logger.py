@@ -1,7 +1,7 @@
 import os
-import threading 
+import threading
 
-STDOUT_LOCK = threading.Lock
+_stdout_lock = threading.Lock()
 
 
 class Logger:
@@ -24,7 +24,7 @@ class Logger:
         pass
 
     def print(self, message: str):
-        with STDOUT_LOCK:
+        with _stdout_lock:
             print(message)
 
 
