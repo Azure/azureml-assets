@@ -71,8 +71,8 @@ def build_image(asset_config: assets.AssetConfig,
     if registry is not None:
         # Build on ACR
         cmd = ["az", "acr"]
-        common_args = ["-g", resource_group, "-r", registry, "--file", dockerfile, "--platform", build_os, "--image", image_name]
-        if not test_command and push:
+        common_args = ["-g", resource_group, "-r", registry, "--platform", build_os]
+        if not (test_command and push):
             # Simple build and push
             cmd.append("build")
             cmd.extend(common_args)
