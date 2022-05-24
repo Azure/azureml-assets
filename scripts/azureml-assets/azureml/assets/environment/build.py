@@ -72,7 +72,7 @@ def build_image(asset_config: assets.AssetConfig,
         # Build on ACR
         cmd = ["az", "acr"]
         common_args = ["-g", resource_group, "-r", registry, "--platform", build_os]
-        if not (test_command and push):
+        if not test_command and push:
             # Simple build and push
             cmd.append("build")
             cmd.extend(common_args)
