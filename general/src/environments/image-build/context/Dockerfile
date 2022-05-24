@@ -15,5 +15,4 @@ RUN apt-get update && apt-get install -y \
 COPY conda_dependencies.yaml conda_dependencies.yaml
 RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml && \
     rm conda_dependencies.yaml && \
-    conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y

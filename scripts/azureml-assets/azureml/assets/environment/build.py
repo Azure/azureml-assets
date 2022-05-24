@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import yaml
 from collections import Counter
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import timedelta
@@ -13,9 +14,46 @@ import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
+TASK_FILENAME = "_acr_build_task.yaml"
 SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
+
+
+def create_acr_task(image_name: str,
+                    build_context_dir: Path,
+                    dockerfile: str,
+                    task_filename: str,
+                    test_command: str = None,
+                    push: bool = False):
+    # Start task with just the build step
+    task = {
+        'version': 'v1.1.0',
+        'steps': [{
+            'id': "build",
+            'build': f"-t $Registry/{image_name} -f {dockerfile} ."
+        }]}
+
+    # Add test command if provided
+    if test_command:
+        task['steps'].append({
+            'id': 'test',
+            'cmd': f"$Registry/{image_name} {test_command}"
+        })
+
+    # Add push step if requested
+    if push:
+        task['steps'].append({
+            'id': 'push',
+            'push': f"$Registry/{image_name}"
+        })
+
+    # Write YAML file to disk
+    task_file = build_context_dir / task_filename
+    with open(task_file, "w") as f:
+        yaml.dump(task, f)
+
+    return task_file
 
 
 def build_image(asset_config: assets.AssetConfig,
@@ -25,12 +63,26 @@ def build_image(asset_config: assets.AssetConfig,
                 build_log: Path,
                 build_os: str = None,
                 resource_group: str = None,
-                registry: str = None) -> Tuple[assets.AssetConfig, int, str]:
+                registry: str = None,
+                test_command: str = None,
+                push: bool = False) -> Tuple[assets.AssetConfig, int, str]:
     logger.print(f"Building image for {asset_config.name}")
     start = timer()
     if registry is not None:
         # Build on ACR
-        cmd = ["az", "acr", "build", "-g", resource_group, "-r", registry, "--file", dockerfile, "--platform", build_os, "--image", image_name, "."]
+        cmd = ["az", "acr"]
+        common_args = ["-g", resource_group, "-r", registry, "--file", dockerfile, "--platform", build_os, "--image", image_name]
+        if not test_command and push:
+            # Simple build and push
+            cmd.append("build")
+            cmd.extend(common_args)
+            cmd.extend(["--file", dockerfile, "--image", image_name, "."])
+        else:
+            # Use ACR task
+            create_acr_task(image_name, build_context_dir, dockerfile, TASK_FILENAME, test_command, push)
+            cmd.append("run")
+            cmd.extend(common_args)
+            cmd.extend(["-f", TASK_FILENAME, "."])
     else:
         # Build locally
         cmd = ["docker", "build", "--file", dockerfile, "--progress", "plain", "--tag", image_name, "."]
@@ -68,7 +120,9 @@ def build_images(input_dirs: List[Path],
                  tag_with_version: bool,
                  os_to_build: str = None,
                  resource_group: str = None,
-                 registry: str = None) -> bool:
+                 registry: str = None,
+                 test_command: str = None,
+                 push: bool = False) -> bool:
     counters = Counter()
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find environments under image root directories
@@ -101,7 +155,7 @@ def build_images(input_dirs: List[Path],
             build_log = build_logs_dir / f"{asset_config.name}.log"
             futures.append(pool.submit(build_image, asset_config, image_name,
                                        env_config.context_dir_with_path, env_config.dockerfile, build_log,
-                                       env_config.os.value, resource_group, registry))
+                                       env_config.os.value, resource_group, registry, test_command, push))
 
         # Wait for builds to complete
         for future in as_completed(futures):
@@ -142,11 +196,17 @@ if __name__ == '__main__':
     parser.add_argument("-g", "--resource-group", help="Resource group containing the container registry")
     parser.add_argument("-P", "--pin-versions", action="store_true", help="Pin images/packages to latest versions")
     parser.add_argument("-t", "--tag-with-version", action="store_true", help="Tag image names using the version in the asset's spec file")
+    parser.add_argument("-T", "--test-command", help="If building on ACR, command used to test image, relative to build context root")
+    parser.add_argument("-u", "--push", action="store_true", help="If building on ACR, push after building and (optionally) testing")
     args = parser.parse_args()
 
     # Ensure dependent args are present
     if args.registry and not args.resource_group:
         parser.error("If --registry is specified then --resource-group is also required")
+    if args.test_command and not (args.registry and args.resource_group):
+        parser.error("--test-command requires both --registry and --resource-group")
+    if args.push and not (args.registry and args.resource_group):
+        parser.error("--push requires both --registry and --resource-group")
 
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
@@ -163,6 +223,8 @@ if __name__ == '__main__':
                            tag_with_version=args.tag_with_version,
                            os_to_build=args.os_to_build,
                            resource_group=args.resource_group,
-                           registry=args.registry)
+                           registry=args.registry,
+                           test_command=args.test_command,
+                           push=args.push)
     if not success:
         sys.exit(1)
