@@ -75,12 +75,12 @@ jobs:
         with:
           creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
 
-      - name: Build all images
+      - name: Build and test all images
         id: build-all-images
         if: steps.changed-scripts.outputs.any_modified == 'true'
         run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g ${{ secrets.RESOURCE_GROUP }} -r ${{ secrets.BUILD_CONTAINER_REGISTRY }} -T 'python -V'
 
-      - name: Build changed images
+      - name: Build and test changed images
         id: build-changed-images
         if: steps.changed-scripts.outputs.any_modified == 'false'
         run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g ${{ secrets.RESOURCE_GROUP }} -r ${{ secrets.BUILD_CONTAINER_REGISTRY }} -T 'python -V' -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
@@ -91,7 +91,3 @@ jobs:
         with:
           name: ${{ env.build_logs_artifact_name }}
           path: ${{ runner.temp }}/${{ env.build_logs_artifact_name }}
-
-      #- name: Test images
-      #  if: steps.build-all-images.outputs.success_count > 0 || steps.build-changed-images.outputs.success_count > 0
-      #  run: python -u $scripts_environment_dir/test_images.py -i '${{ runner.temp }}'/$built_dir -a $asset_config_filename -O ${{ matrix.os }}
