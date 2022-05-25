@@ -267,7 +267,7 @@ class EnvironmentConfig(Config):
             Config._validate_enum('publish.location', self._publish_location, PublishLocation, True)
             Config._validate_enum('publish.visibility', self._publish_visibility, PublishVisibility, True)
 
-        if ".." in self.context_dir:
+        if self.context_dir and ".." in self.context_dir:
             raise ValidationException(f"Invalid context.dir property: {self.context_dir} refers to a parent directory")
 
     @property
