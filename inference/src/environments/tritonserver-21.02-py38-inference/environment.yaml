@@ -1,0 +1,19 @@
+image:
+  name: azureml/curated/lightgbm-3.2-ubuntu18.04-py37-cpu
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda_dependencies.yaml
+  publish:
+    location: mcr
+    visibility: public
+environment:
+  metadata:
+    Purpose:
+      HasTrainingSupport: false
+      HasInferencingSupport: true
+    Runtime:
+      Python: "3.8"
