@@ -91,7 +91,3 @@ jobs:
         with:
           name: ${{ env.build_logs_artifact_name }}
           path: ${{ runner.temp }}/${{ env.build_logs_artifact_name }}
-
-      #- name: Test images
-      #  if: steps.build-all-images.outputs.success_count > 0 || steps.build-changed-images.outputs.success_count > 0
-      #  run: python -u $scripts_environment_dir/test_images.py -i '${{ runner.temp }}'/$built_dir -a $asset_config_filename -O ${{ matrix.os }}
