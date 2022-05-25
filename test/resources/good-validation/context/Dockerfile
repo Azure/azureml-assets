@@ -8,7 +8,7 @@ ENV CONDA_PREFIX /azureml-envs/tensorflow-2.8
 ENV CONDA_DEFAULT_ENV /azureml-envs/tensorflow-2.8
 
 # Create conda environment
-RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml
+RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q
 
 # Prepend path to AzureML conda environment
 ENV PATH $CONDA_PREFIX/bin:$PATH
