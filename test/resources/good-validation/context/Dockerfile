@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.1-cudnn8-ubuntu20.04:{{latest
 
 WORKDIR /
 
-COPY conda_dependencies.yaml conda_dependencies.yaml
+COPY conda_dependencies.yaml .
 
 ENV CONDA_PREFIX /azureml-envs/tensorflow-2.8
 ENV CONDA_DEFAULT_ENV /azureml-envs/tensorflow-2.8

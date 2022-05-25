@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create conda environment
-COPY conda_dependencies.yaml conda_dependencies.yaml
+COPY conda_dependencies.yaml .
 RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml && \
     rm conda_dependencies.yaml && \
     conda clean -a -y

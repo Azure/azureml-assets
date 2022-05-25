@@ -10,8 +10,13 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 # Create conda environment
-COPY conda_dependencies.yaml conda_dependencies.yaml
+COPY conda_dependencies.yaml .
 RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml && \
     rm conda_dependencies.yaml && \
-    conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
+
+# Install pip dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt && \
+    rm requirements.txt
+    
