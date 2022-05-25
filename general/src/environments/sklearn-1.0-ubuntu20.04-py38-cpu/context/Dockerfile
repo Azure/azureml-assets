@@ -15,17 +15,3 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
-
-# Install pip dependencies
-RUN pip install 'matplotlib~=3.5.0' \
-                'psutil~=5.8.0' \
-                'tqdm~=4.62.0' \
-                'pandas~=1.3.0' \
-                'scipy~=1.7.0' \
-                'numpy~=1.21.0' \
-                'ipykernel~=6.0' \
-                'azureml-core=={{latest-pypi-version}}' \
-                'azureml-defaults=={{latest-pypi-version}}' \
-                'azureml-mlflow=={{latest-pypi-version}}' \
-                'azureml-telemetry=={{latest-pypi-version}}' \
-                'scikit-learn~=1.0.0'
