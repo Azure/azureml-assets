@@ -1,15 +1,6 @@
 image:
-  name: azureml/curated/lightgbm-3.2-ubuntu18.04-py37-cpu
+  name: "mcr.microsoft.com/azureml/tritonserver-21.02-py38-inference:20210817.v1"
   os: linux
-  context:
-    dir: context
-    dockerfile: Dockerfile
-    template_files:
-    - Dockerfile
-    - conda_dependencies.yaml
-  publish:
-    location: mcr
-    visibility: public
 environment:
   metadata:
     Purpose:

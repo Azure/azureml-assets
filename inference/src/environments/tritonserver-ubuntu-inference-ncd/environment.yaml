@@ -1,4 +1,5 @@
 image:
+  # TODO: Replace with MCR-based image
   name: "nvcr.io/nvidia/tritonserver:22.03-py3"
   os: linux
 environment:
