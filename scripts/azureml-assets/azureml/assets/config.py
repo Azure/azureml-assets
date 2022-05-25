@@ -329,7 +329,7 @@ class EnvironmentConfig(Config):
         return self._publish.get('location')
 
     @property
-    def publish_location(self) -> str:
+    def publish_location(self) -> PublishLocation:
         location = self._publish_location
         return PublishLocation(location) if location else None
 

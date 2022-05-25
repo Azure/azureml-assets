@@ -3,6 +3,7 @@ from pathlib import Path
 
 import azureml.assets as assets
 import azureml.assets.util as util
+from azureml.assets.util import logger
 
 
 def update(asset_config: assets.AssetConfig, output_file: Path = None, version: str = None):
@@ -38,7 +39,7 @@ def update(asset_config: assets.AssetConfig, output_file: Path = None, version: 
 
     # Write spec
     if output_file == "-":
-        print(contents)
+        logger.print(contents)
     else:
         if output_file is None:
             output_file = asset_config.spec_with_path

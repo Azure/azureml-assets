@@ -99,7 +99,7 @@ def create_deployment_config(input_directory: Path,
     # Create deployment config file
     with open(deployment_config_file_path, 'w') as f:
         json.dump(deployment_config, f, indent=4)
-    print(f"Created deployment config file at {deployment_config_file_path}")
+    logger.print(f"Created deployment config file at {deployment_config_file_path}")
 
 
 if __name__ == "__main__":

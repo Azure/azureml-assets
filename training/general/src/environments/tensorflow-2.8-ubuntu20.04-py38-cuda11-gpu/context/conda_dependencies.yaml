@@ -1,3 +1,4 @@
+name: tensorflow-2.8
 channels:
 - anaconda
 - conda-forge
@@ -19,4 +20,3 @@ dependencies:
   - tensorboard~=2.8.0
   - tensorflow-gpu~=2.8.0
   - tensorflow-datasets~=4.5.0
-name: tensorflow-2.8

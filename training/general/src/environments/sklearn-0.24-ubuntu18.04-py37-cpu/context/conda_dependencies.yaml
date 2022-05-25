@@ -1,0 +1,20 @@
+name: sklearn-0.24.1
+channels:
+- anaconda
+- conda-forge
+dependencies:
+- python=3.7
+- pip=20.2.4
+- pip:
+  - matplotlib>=3.3,<3.4
+  - psutil>=5.8,<5.9
+  - tqdm>=4.59,<4.60
+  - pandas>=1.1,<1.2
+  - scipy>=1.5,<1.6
+  - numpy>=1.10,<1.20
+  - ipykernel~=6.0
+  - azureml-core=={{latest-pypi-version}}
+  - azureml-defaults=={{latest-pypi-version}}
+  - azureml-mlflow=={{latest-pypi-version}}
+  - azureml-telemetry=={{latest-pypi-version}}
+  - scikit-learn==0.24.1
