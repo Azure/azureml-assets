@@ -43,7 +43,7 @@ def create_environments(deployment_config_file_path: Path,
     # Iterate over environments
     errors = False
     for name, values in deployment_config.items():
-        print(f"Creating environment {name} in {registry}")
+        logger.print(f"Creating environment {name} in {registry}")
 
         # Coerce values into a list
         values_list = values if isinstance(values, list) else [values]

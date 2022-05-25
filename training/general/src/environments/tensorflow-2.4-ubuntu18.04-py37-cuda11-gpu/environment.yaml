@@ -1,0 +1,33 @@
+image:
+  name: azureml/curated/tensorflow-2.4-ubuntu18.04-py37-cuda11-gpu
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda_dependencies.yaml
+  publish:
+    location: mcr
+    visibility: public
+environment:
+  metadata:
+    Cuda:
+      CudaVersion: "11.0.3"
+      CuDnnVersion: "8.0.5.39"
+      NcclVersion: "2.9.6"
+    MachineLearningFramework:
+      name: TensorFlow
+      version: "2.4"
+    Mpi:
+      name: OpenMpi
+      version: "4.1.0"
+    Purpose:
+      HasTrainingSupport: true
+      HasInferencingSupport: false
+    Runtime:
+      name: Python
+      version: "3.7"
+    Os:
+      name: Ubuntu
+      version: "18.04"

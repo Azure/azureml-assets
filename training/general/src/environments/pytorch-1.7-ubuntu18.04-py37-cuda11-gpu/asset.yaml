@@ -1,0 +1,5 @@
+name: pytorch-1.7-ubuntu18.04-py37-cuda11-gpu
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml

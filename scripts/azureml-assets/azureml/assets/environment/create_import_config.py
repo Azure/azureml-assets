@@ -4,6 +4,7 @@ from pathlib import Path
 
 import azureml.assets as assets
 import azureml.assets.util as util
+from azureml.assets.util import logger
 
 
 def create_import_config(input_directory: Path,
@@ -51,7 +52,7 @@ def create_import_config(input_directory: Path,
     import_config = {'images': images}
     with open(import_config_file_path, 'w') as f:
         json.dump(import_config, f, indent=2)
-    print(f"Created import config file at {import_config_file_path}")
+    logger.print(f"Created import config file at {import_config_file_path}")
 
 
 if __name__ == "__main__":

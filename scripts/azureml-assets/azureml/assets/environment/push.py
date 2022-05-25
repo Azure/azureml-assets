@@ -26,13 +26,13 @@ def push_image(image_name: str, all_tags: bool = False):
     args.append(image_name)
 
     # Push
-    print(f"Pushing {image_name}")
+    logger.print(f"Pushing {image_name}")
     start = timer()
     p = run(args,
             stdout=PIPE,
             stderr=STDOUT)
     end = timer()
-    print(f"{image_name} pushed in {timedelta(seconds=end-start)}")
+    logger.print(f"{image_name} pushed in {timedelta(seconds=end-start)}")
     return (image_name, p.returncode, p.stdout.decode())
 
 
@@ -42,7 +42,7 @@ def push_images(image_names: List[str], target_image_prefix: str, tags: List[str
         for image_name in image_names:
             # Tag image
             target_image_base_name = f"{target_image_prefix}{image_name}"
-            print(f"Tagging {target_image_base_name} as {tags}")
+            logger.print(f"Tagging {target_image_base_name} as {tags}")
             for tag in tags:
                 target_image_name = f"{target_image_base_name}:{tag}"
                 (return_code, output) = tag_image(image_name, target_image_name)
@@ -56,7 +56,7 @@ def push_images(image_names: List[str], target_image_prefix: str, tags: List[str
         for future in as_completed(futures):
             (image_name, return_code, output) = future.result()
             logger.start_group(f"{image_name} push log")
-            print(output)
+            logger.print(output)
             logger.end_group()
             if return_code != 0:
                 logger.log_error(f"Push of {image_name} failed with exit status {return_code}", "Push failure")

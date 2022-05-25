@@ -1,0 +1,5 @@
+name: aifx-pytorch-1.11
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
