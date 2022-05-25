@@ -12,6 +12,6 @@ azureml-telemetry=={{latest-pypi-version}}
 tensorboard==2.6.0
 tensorflow-gpu==2.6.0
 onnxruntime-gpu>=1.7,<1.10
-horovod[pytorch]==0.23
+horovod==0.23
 future==0.18.2
 torch-tb-profiler==0.3.1

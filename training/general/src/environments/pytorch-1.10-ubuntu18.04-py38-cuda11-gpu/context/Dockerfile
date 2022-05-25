@@ -17,5 +17,6 @@ RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
 
 # Install pip dependencies
 COPY requirements.txt .
-RUN HOROVOD_WITH_PYTORCH=1 HOROVOD_NCCL_LINK=SHARED conda run -p $CONDA_PREFIX pip install --no-cache-dir -r requirements.txt --progress-bar off && \
+# FIXME: This should be conda run -p $CONDA_PREFIX pip install ...
+RUN pip install --no-cache-dir -r requirements.txt --progress-bar off && \
     rm requirements.txt
