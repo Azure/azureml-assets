@@ -20,7 +20,7 @@ ISOLATED_ENVIRONMENT = "isolated_env"
 
 def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str) -> bool:
     logger.print("Creating isolated conda environment")
-    p = run(["conda", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"], shell=True)
+    p = run(["conda", "env", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"], shell=True)
     if p.returncode != 0:
         return False
 
