@@ -41,8 +41,13 @@ jobs:
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
       
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
+
       - name: Test scripts
-        run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir $test_dir
+        run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group ${{ secrets.RESOURCE_GROUP }} --registry ${{ secrets.BUILD_CONTAINER_REGISTRY }} $test_dir
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action/composite@v1
