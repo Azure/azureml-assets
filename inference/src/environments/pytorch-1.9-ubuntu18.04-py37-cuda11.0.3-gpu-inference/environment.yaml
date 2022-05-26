@@ -1,0 +1,21 @@
+image:
+  name: "mcr.microsoft.com/azureml/pytorch-1.9-ubuntu18.04-py37-cuda11.0.3-gpu-inference:{{latest-image-tag}}"
+  os: linux
+environment:
+  metadata:
+    Cuda:
+      CudaVersion: "11.0.3"
+      CuDnnVersion: "8.0.5.39"
+      NcclVersion: "2.9.6"
+    MachineLearningFramework:
+      name: PyTorch
+      version: "1.9"
+    Purpose:
+      HasTrainingSupport: false
+      HasInferencingSupport: true
+    Runtime:
+      name: Python
+      version: "3.7"
+    Os:
+      name: Ubuntu
+      version: "18.04"

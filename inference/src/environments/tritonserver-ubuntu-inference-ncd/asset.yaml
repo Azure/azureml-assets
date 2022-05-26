@@ -1,0 +1,5 @@
+name: tritonserver-ubuntu-inference-ncd
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml

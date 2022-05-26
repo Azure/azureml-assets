@@ -42,6 +42,11 @@ def test_images(input_dirs: List[Path],
             logger.print(f"Not testing image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_test}")
             continue
 
+        # Skip images without build context
+        if not env_config.build_enabled:
+            logger.print(f"Not testing image for {asset_config.name}: No build context specified")
+            continue
+
         # Test image
         (return_code, output) = test_image(asset_config, env_config.image_name)
         if return_code != 0 or not output.startswith(TEST_PHRASE):

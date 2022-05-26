@@ -1,0 +1,15 @@
+image:
+  name: "mcr.microsoft.com/azureml/minimal-ubuntu18.04-py37-cpu-inference:{{latest-image-tag}}"
+  os: linux
+environment:
+  metadata:
+    MachineLearningFramework: {}
+    Purpose:
+      HasTrainingSupport: false
+      HasInferencingSupport: true
+    Runtime:
+      name: Python
+      version: "3.7"
+    Os:
+      name: Ubuntu
+      version: "18.04"

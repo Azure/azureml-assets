@@ -11,6 +11,7 @@ from timeit import default_timer as timer
 from typing import List, Tuple
 
 import azureml.assets as assets
+import azureml.assets.environment as environment
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
@@ -137,6 +138,24 @@ def build_images(input_dirs: List[Path],
             # Filter by OS
             if os_to_build and env_config.os.value != os_to_build:
                 logger.print(f"Skipping build of image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_build}")
+                continue
+
+            # Skip environments without build context
+            if not env_config.build_enabled:
+                logger.print(f"Skipping build of image for {asset_config.name}: No build context specified")
+
+                # Replace template tags in environment config
+                if assets.Config._contains_template(env_config.image_name):
+                    try:
+                        environment.transform_file(env_config)
+                    except Exception as e:
+                        logger.log_error(f"Failed to replace template tags in {env_config.file_name_with_path}: {e}")
+                        counters[FAILED_COUNT] += 1
+                        continue
+
+                # Copy file to output directory without building
+                if output_directory:
+                    util.copy_asset_to_output_dir(asset_config, output_directory)
                 continue
 
             # Pin versions
