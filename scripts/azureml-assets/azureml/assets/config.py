@@ -328,7 +328,8 @@ class EnvironmentConfig(Config):
 
     @property
     def template_files_with_path(self) -> List[Path]:
-        return [self._append_to_context_path(f) for f in self.template_files]
+        files = [self._append_to_context_path(f) for f in self.template_files]
+        return [f for f in files if f is not None]
 
     @property
     def _publish(self) -> Dict[str, str]:
