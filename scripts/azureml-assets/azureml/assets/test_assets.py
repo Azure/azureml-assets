@@ -25,6 +25,9 @@ def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str)
         return False
 
     logger.print("Using pip to install packages")
+    cmd = ["conda", "run", "-n", env_name, "pip", "install", "-r", asset_config.pytest_pip_requirements,
+             "--progress-bar", "off"]
+    print(f"cmd={cmd}")
     p = run(["conda", "run", "-n", env_name, "pip", "install", "-r", asset_config.pytest_pip_requirements,
              "--progress-bar", "off"], cwd=asset_config.file_path, shell=True)
     return p.returncode == 0
@@ -65,6 +68,8 @@ def test_assets(input_dirs: List[Path],
         if not base_created:
             # Create base environment, which must succeed
             logger.start_group("Create base environment")
+            cmd = ["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions]
+            print(f"cmd={cmd}")
             run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions], check=True, shell=True)
             base_created = True
             logger.end_group()
