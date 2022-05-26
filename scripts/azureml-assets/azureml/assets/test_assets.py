@@ -20,16 +20,13 @@ ISOLATED_ENVIRONMENT = "isolated_env"
 
 def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str) -> bool:
     logger.print("Creating isolated conda environment")
-    p = run(["conda", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"], shell=True)
+    p = run(["conda", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"])
     if p.returncode != 0:
         return False
 
     logger.print("Using pip to install packages")
-    cmd = ["conda", "run", "-n", env_name, "pip", "install", "-r", asset_config.pytest_pip_requirements,
-             "--progress-bar", "off"]
-    print(f"cmd={cmd}")
     p = run(["conda", "run", "-n", env_name, "pip", "install", "-r", asset_config.pytest_pip_requirements,
-             "--progress-bar", "off"], cwd=asset_config.file_path, shell=True)
+             "--progress-bar", "off"], cwd=asset_config.file_path)
     return p.returncode == 0
 
 
@@ -46,7 +43,7 @@ def test_asset(asset_config: assets.AssetConfig, env_name: str, reports_dir: str
     cmd.append(asset_config.pytest_tests_dir)
 
     # Run tests
-    p = run(cmd, cwd=asset_config.file_path, shell=True)
+    p = run(cmd, cwd=asset_config.file_path)
     end = timer()
     logger.print(f"Test(s) completed in {timedelta(seconds=end-start)}")
     return p.returncode == 0
@@ -68,9 +65,7 @@ def test_assets(input_dirs: List[Path],
         if not base_created:
             # Create base environment, which must succeed
             logger.start_group("Create base environment")
-            cmd = ["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions]
-            print(f"cmd={cmd}")
-            run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions], check=True, shell=True)
+            run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions], check=True)
             base_created = True
             logger.end_group()
 
