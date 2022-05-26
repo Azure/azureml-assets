@@ -20,7 +20,7 @@ ISOLATED_ENVIRONMENT = "isolated_env"
 
 def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str) -> bool:
     logger.print("Creating isolated conda environment")
-    p = run(["conda", "env", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"], shell=True)
+    p = run(["conda", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"], shell=True)
     if p.returncode != 0:
         return False
 
@@ -65,7 +65,7 @@ def test_assets(input_dirs: List[Path],
         if not base_created:
             # Create base environment, which must succeed
             logger.start_group("Create base environment")
-            run(["conda", "env", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions], check=True, shell=True)
+            run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions], check=True, shell=True)
             base_created = True
             logger.end_group()
 
