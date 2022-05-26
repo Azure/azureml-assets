@@ -26,6 +26,7 @@ jobs:
   test:
     name: Test scripts
     runs-on: ubuntu-latest
+    environment: BuiltinRegistryDev
 
     steps:
       - name: Clone branch
