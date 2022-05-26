@@ -67,7 +67,7 @@ inputs:
     optional: true
     min: 1
   weight_decay:
-    description: Value of weight decay for optimizer.
+    description: Value of weight decay used by the optimizer.
     type: number
     default: 0.0001
     min: 0
