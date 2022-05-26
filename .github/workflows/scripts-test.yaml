@@ -3,7 +3,7 @@ name: scripts-test
 on:
   push:
     branches:
-      - elesel/better-test-scripts
+      - elesel/better-script-tests
   pull_request:
     branches:
       - main
