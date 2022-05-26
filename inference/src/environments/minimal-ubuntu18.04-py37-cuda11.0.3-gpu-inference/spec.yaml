@@ -1,0 +1,19 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  A GPU-enabled Minimal curated environment for Inference and containing additional python packages.
+
+name: "{{asset.name}}"
+display_name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+image: "{{image.name}}"
+
+os_type: linux
+
+tags:
+  Inference: "True"
+  Python: "3.7"
+  CUDA: "11.0.3"
+  cuDNN: "8.0.5.39"
+  OS: Ubuntu18.04
