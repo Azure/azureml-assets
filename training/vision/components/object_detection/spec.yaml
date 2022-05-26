@@ -37,12 +37,12 @@ inputs:
     default: 'sgd'
     enum: ['sgd', 'adam', 'adamw']  
 
-code: ./src
+code: ../src
 
 environment: azureml:AzureML-AutoML-DNN-Vision-GPU:89
 
 command: >-
-  python run.py
+  python -m object_detection.run
   --training_data ${{inputs.training_data}}
   [--validation_data ${{inputs.validation_data}}]
   --model_name  ${{inputs.model_name}}
