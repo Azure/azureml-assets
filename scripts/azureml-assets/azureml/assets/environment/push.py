@@ -14,7 +14,8 @@ TAG_DATETIME_FORMAT = "%Y%m%d%H%M%S"
 def tag_image(image_name: str, target_image_name: str):
     p = run(["docker", "tag", image_name, target_image_name],
             stdout=PIPE,
-            stderr=STDOUT)
+            stderr=STDOUT,
+            shell=True)
     return (p.returncode, p.stdout.decode())
 
 
@@ -30,7 +31,8 @@ def push_image(image_name: str, all_tags: bool = False):
     start = timer()
     p = run(args,
             stdout=PIPE,
-            stderr=STDOUT)
+            stderr=STDOUT,
+            shell=True)
     end = timer()
     logger.print(f"{image_name} pushed in {timedelta(seconds=end-start)}")
     return (image_name, p.returncode, p.stdout.decode())

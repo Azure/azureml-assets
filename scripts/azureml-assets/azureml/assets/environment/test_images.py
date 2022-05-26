@@ -22,7 +22,8 @@ def test_image(asset_config: assets.AssetConfig, image_name: str) -> Tuple[int, 
     start = timer()
     p = run(["docker", "run", "--entrypoint", "python", image_name, "-c", f"print(\"{TEST_PHRASE}\")"],
             stdout=PIPE,
-            stderr=STDOUT)
+            stderr=STDOUT,
+            shell=True)
     end = timer()
     logger.print(f"Image for {asset_config.name} tested in {timedelta(seconds=end-start)}")
     return (p.returncode, p.stdout.decode())

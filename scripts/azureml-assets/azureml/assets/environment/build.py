@@ -91,7 +91,8 @@ def build_image(asset_config: assets.AssetConfig,
     p = run(cmd,
             cwd=build_context_dir,
             stdout=PIPE,
-            stderr=STDOUT)
+            stderr=STDOUT,
+            shell=True)
     end = timer()
     logger.print(f"Image for {asset_config.name} built in {timedelta(seconds=end-start)}")
     os.makedirs(build_log.parent, exist_ok=True)
@@ -104,7 +105,8 @@ def build_image(asset_config: assets.AssetConfig,
 def get_image_digest(image_name: str):
     p = run(["docker", "image", "inspect", image_name, "--format=\"{{index .Id}}\""],
             stdout=PIPE,
-            stderr=STDOUT)
+            stderr=STDOUT,
+            shell=True)
     if p.returncode == 0:
         return p.stdout.decode()
     else:
