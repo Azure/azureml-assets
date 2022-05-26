@@ -1,0 +1,49 @@
+name: scripts-test
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - scripts/**
+  workflow_dispatch:
+
+env:
+  scripts_dir: scripts
+  scripts_azureml_assets_dir: scripts/azureml-assets
+  test_dir: test
+  resources_dir: test/resources
+  pytest_reports_dir: pytest
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    name: Test scripts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Use Python 3.8 or newer
+        uses: actions/setup-python@v3
+        with:
+          python-version: '>=3.8'
+    
+      - name: Install dependencies
+        run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
+      
+      - name: Test scripts
+        run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir $test_dir
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ runner.temp }}/${{ env.pytest_reports_dir }}/*.xml

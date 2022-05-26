@@ -293,9 +293,11 @@ class PyTorchDistributedModelTrainingSequence:
             num_total_images = 0
             running_loss = 0.0
 
+            epoch_eval_metrics = {}
+
             # PROFILER: here we're introducing a layer on top of data loader to capture its performance
             # in pratice, we'd just use for images, targets in tqdm(self.training_data_loader)
-            for images, targets in LogTimeOfIterator(tqdm(self.validation_data_loader), "validation_data_loader", enabled=self.self_is_main_node):
+            for images, targets in LogTimeOfIterator(tqdm(self.validation_data_loader), "validation_data_loader", async_collector=epoch_eval_metrics):
                 with record_function("eval.to_device"):
                     images = images.to(
                         self.device, non_blocking=self.dataloading_config.non_blocking
@@ -326,7 +328,11 @@ class PyTorchDistributedModelTrainingSequence:
                     num_correct += torch.sum(correct).item()
                     num_total_images += len(images)
 
-        return running_loss, num_correct, num_total_images
+        epoch_eval_metrics["running_loss"] = running_loss
+        epoch_eval_metrics["num_correct"] = num_correct
+        epoch_eval_metrics["num_samples"] = num_total_images
+
+        return epoch_eval_metrics
 
     def _epoch_train(self, epoch, optimizer, criterion):
         """Called during train() for running the train phase of one epoch."""
@@ -337,9 +343,11 @@ class PyTorchDistributedModelTrainingSequence:
         num_total_images = 0
         running_loss = 0.0
 
+        epoch_train_metrics = {}
+
         # PROFILER: here we're introducing a layer on top of data loader to capture its performance
         # in pratice, we'd just use for images, targets in tqdm(self.training_data_loader)
-        for images, targets in LogTimeOfIterator(tqdm(self.training_data_loader), "training_data_loader", enabled=self.self_is_main_node):
+        for images, targets in LogTimeOfIterator(tqdm(self.training_data_loader), "training_data_loader", async_collector=epoch_train_metrics):
             # PROFILER: record_function will report to the profiler (if enabled)
             # here a specific wall time for a given block of code
             with record_function("train.to_device"):
@@ -380,7 +388,11 @@ class PyTorchDistributedModelTrainingSequence:
                 loss.backward()
                 optimizer.step()
 
-        return running_loss, num_correct, num_total_images
+        epoch_train_metrics["running_loss"] = running_loss
+        epoch_train_metrics["num_correct"] = num_correct
+        epoch_train_metrics["num_samples"] = num_total_images
+
+        return epoch_train_metrics
 
     def train(self, epochs:int=None, checkpoints_dir:str=None):
         """Trains the model.
@@ -417,39 +429,44 @@ class PyTorchDistributedModelTrainingSequence:
         for epoch in range(epochs):
             self.logger.info(f"Starting epoch={epoch}")
 
+            # we'll collect metrics we want to report for this epoch
+            epoch_metrics = {}
+
             # start timer for epoch time metric
             epoch_train_start = time.time()
 
             # TRAIN: loop on training set and return metrics
-            running_loss, num_correct, num_samples = self._epoch_train(
+            epoch_train_metrics = self._epoch_train(
                 epoch, optimizer, criterion
             )
-            epoch_train_loss = running_loss / num_samples
-            epoch_train_acc = num_correct / num_samples
+            self.logger.info(f"Epoch metrics: {epoch_train_metrics}")
 
             # stop timer
-            epoch_train_time = time.time() - epoch_train_start
+            epoch_metrics["epoch_train_time"] = time.time() - epoch_train_start
 
-            # report metric values in stdout
-            self.logger.info(
-                f"MLFLOW: epoch_train_loss={epoch_train_loss} epoch_train_acc={epoch_train_acc} epoch={epoch}"
-            )
+            # record metrics of interest
+            epoch_metrics["training_data_loader.count"] = epoch_train_metrics["training_data_loader.count"]
+            epoch_metrics["training_data_loader.time.sum"] = epoch_train_metrics["training_data_loader.time.sum"]
+            epoch_metrics["training_data_loader.time.first"] = epoch_train_metrics["training_data_loader.time.first"]
+            epoch_metrics["epoch_train_loss"] = epoch_train_metrics["running_loss"] / epoch_train_metrics["num_samples"]
+            epoch_metrics["epoch_train_acc"] = epoch_train_metrics["num_correct"] / epoch_train_metrics["num_samples"]
 
             # start timer for epoch time metric
             epoch_eval_start = time.time()
 
-            # MLFLOW / DISTRIBUTED: report metrics only from main node
-            if self.self_is_main_node:
-                mlflow.log_metric("epoch_train_loss", epoch_train_loss, step=epoch)
-                mlflow.log_metric("epoch_train_acc", epoch_train_acc, step=epoch)
-
             # EVAL: run evaluation on validation set and return metrics
-            running_loss, num_correct, num_samples = self._epoch_eval(epoch, criterion)
-            epoch_valid_loss = running_loss / num_samples
-            epoch_valid_acc = num_correct / num_samples
+            epoch_eval_metrics = self._epoch_eval(epoch, criterion)
+            self.logger.info(f"Epoch metrics: {epoch_train_metrics}")
 
             # stop timer
-            epoch_eval_time = time.time() - epoch_eval_start
+            epoch_metrics["epoch_eval_time"] = time.time() - epoch_eval_start
+
+            # record metrics of interest
+            epoch_metrics["validation_data_loader.count"] = epoch_eval_metrics["validation_data_loader.count"]
+            epoch_metrics["validation_data_loader.time.sum"] = epoch_eval_metrics["validation_data_loader.time.sum"]
+            epoch_metrics["validation_data_loader.time.first"] = epoch_eval_metrics["validation_data_loader.time.first"]
+            epoch_metrics["epoch_valid_loss"] = epoch_eval_metrics["running_loss"] / epoch_eval_metrics["num_samples"]
+            epoch_metrics["epoch_valid_acc"] = epoch_eval_metrics["num_correct"] / epoch_eval_metrics["num_samples"]
 
             # start timer for epoch time metric
             epoch_utility_start = time.time()
@@ -462,31 +479,17 @@ class PyTorchDistributedModelTrainingSequence:
 
             # DISTRIBUTED: export checkpoint only from main node
             if self.self_is_main_node and checkpoints_dir is not None:
-                self.checkpoint_save(self.model, optimizer, checkpoints_dir, epoch=epoch, loss=epoch_valid_loss)
+                self.checkpoint_save(self.model, optimizer, checkpoints_dir, epoch=epoch, loss=epoch_metrics["epoch_valid_loss"])
 
-            # stop timer
-            epoch_utility_time = time.time() - epoch_utility_start
-
+            # report metric values in stdout
             self.logger.info(
-                f"MLFLOW: epoch_valid_loss={epoch_valid_loss} epoch_valid_acc={epoch_valid_acc} epoch={epoch}"
-            )
-            self.logger.info(
-                f"MLFLOW: epoch_train_time={epoch_train_time} epoch={epoch}"
-            )
-            self.logger.info(
-                f"MLFLOW: epoch_eval_time={epoch_eval_time} epoch={epoch}"
-            )
-            self.logger.info(
-                f"MLFLOW: epoch_utility_time={epoch_utility_time} epoch={epoch}"
+                f"MLFLOW: metrics={epoch_metrics} epoch={epoch}"
             )
 
             # MLFLOW / DISTRIBUTED: report metrics only from main node
             if self.self_is_main_node:
-                mlflow.log_metric("epoch_valid_loss", epoch_valid_loss, step=epoch)
-                mlflow.log_metric("epoch_valid_acc", epoch_valid_acc, step=epoch)
-                mlflow.log_metric("epoch_train_time", epoch_train_time, step=epoch)
-                mlflow.log_metric("epoch_eval_time", epoch_eval_time, step=epoch)
-                mlflow.log_metric("epoch_utility_time", epoch_utility_time, step=epoch)
+                mlflow.log_metrics(epoch_metrics)
+                mlflow.log_metric("epoch_utility_time", time.time() - epoch_utility_start, step=epoch)
 
 
     def runtime_error_report(self, runtime_exception):
