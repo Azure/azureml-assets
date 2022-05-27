@@ -9,7 +9,7 @@ RESOURCES_DIR = Path("resources/environment/build")
 
 
 def test_build_assets(build_subdir_expected_pair: Tuple[str, bool], resource_group: str, registry: str):
-    this_dir = Path(__file__).parent.parent
+    this_dir = Path(__file__).parent
     test_subdir, expected = build_subdir_expected_pair
 
     with tempfile.TemporaryDirectory() as temp_dir:
