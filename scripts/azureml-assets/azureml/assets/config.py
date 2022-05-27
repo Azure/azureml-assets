@@ -41,7 +41,7 @@ class Config:
 
     @staticmethod
     def _contains_template(value: str):
-        return TEMPLATE_CHECK.match(value) is not None
+        return TEMPLATE_CHECK.search(value) is not None
 
     @staticmethod
     def _validate_exists(property_name: str, property_value: object):
