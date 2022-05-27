@@ -105,7 +105,6 @@ jobs:
       matrix: ${{ fromJson(needs.identify-updated-assets.outputs.build_matrix) }}
     env:
       build_logs_artifact_name: build-logs
-      built_dir: built-environments
       tested_dir: tested-environments
 
     steps:
@@ -136,7 +135,7 @@ jobs:
       
       - name: Build and test images
         id: build-images
-        run: python -u $main_dir/$scripts_environment_dir/build.py -i '${{ runner.temp }}'/$changed_assets_artifact -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name -g ${{ secrets.RESOURCE_GROUP }} -r ${{ secrets.BUILD_CONTAINER_REGISTRY }} -T 'python -V'
+        run: python -u $main_dir/$scripts_environment_dir/build.py -i '${{ runner.temp }}'/$changed_assets_artifact -a $asset_config_filename -o '${{ runner.temp }}'/$tested_dir -O ${{ matrix.os }} -l '${{ runner.temp }}'/$build_logs_artifact_name -g ${{ secrets.RESOURCE_GROUP }} -r ${{ secrets.BUILD_CONTAINER_REGISTRY }} -T 'python -V'
         continue-on-error: true
       
       - name: Upload build logs
