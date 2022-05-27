@@ -12,18 +12,6 @@ def test_build_assets(build_subdir_expected_pair: Tuple[str, bool], resource_gro
     this_dir = Path(__file__).parent
     test_subdir, expected = build_subdir_expected_pair
 
-    print(f"Contents of {this_dir}:")
-    for child in this_dir.iterdir():
-        print(child)
-    
-    for p in ["resources", "resources/environment", "resources/environment/build"]:
-        p_path = this_dir / p
-        print(f"{p_path} exists: {p_path.exists()}")
-    
-    input_dir = this_dir / RESOURCES_DIR / test_subdir
-    print(f"input_dir={input_dir}")
-    print(f"input_dir exists={input_dir.exists()}")
-
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
         assert environment.build_images(
