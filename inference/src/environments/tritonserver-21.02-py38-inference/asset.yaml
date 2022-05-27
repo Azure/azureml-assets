@@ -1,5 +1,0 @@
-name: tritonserver-21.02-py38-inference
-version: auto
-type: environment
-spec: spec.yaml
-extra_config: environment.yaml
