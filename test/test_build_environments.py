@@ -1,6 +1,6 @@
 import tempfile
 from pathlib import Path
-from typing import List, Tuple
+from typing import Tuple
 
 import azureml.assets as assets
 import azureml.assets.environment as environment
@@ -8,9 +8,9 @@ import azureml.assets.environment as environment
 RESOURCES_DIR = Path("resources/environment/build")
 
 
-def test_build_assets(subdir_expected_pair: Tuple[str, bool], resource_group: str, registry: str):
+def test_build_assets(build_subdir_expected_pair: Tuple[str, bool], resource_group: str, registry: str):
     this_dir = Path(__file__).parent.parent
-    test_subdir, expected = subdir_expected_pair
+    test_subdir, expected = build_subdir_expected_pair
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)

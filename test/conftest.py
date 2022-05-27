@@ -11,3 +11,13 @@ def pytest_generate_tests(metafunc):
     registry_value = metafunc.config.option.registry
     if 'registry' in metafunc.fixturenames and registry_value is not None:
         metafunc.parametrize('registry', [registry_value])
+
+    if 'build_subdir_expected_pair' in metafunc.fixturenames:
+        metafunc.parametrize('build_subdir_expected_pair', [
+            ("build-bad", False),
+            ("build-test-bad", False),
+            ("build-test-good", True),
+            ("pre-built-good", True),
+            ("pre-built-latest-bad", False),
+            ("pre-built-latest-good", True),
+        ])
