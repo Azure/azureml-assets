@@ -99,12 +99,12 @@ def build_image(asset_config: assets.AssetConfig,
                 cwd=build_context_dir,
                 stdout=PIPE,
                 stderr=STDOUT)
-        end = timer()
-        logger.print(f"Image for {asset_config.name} built in {timedelta(seconds=end-start)}")
-        os.makedirs(build_log.parent, exist_ok=True)
-        with open(build_log, "w") as f:
-            f.write(p.stdout.decode())
-        return (asset_config, p.returncode, p.stdout.decode())
+    end = timer()
+    logger.print(f"Image for {asset_config.name} built in {timedelta(seconds=end-start)}")
+    os.makedirs(build_log.parent, exist_ok=True)
+    with open(build_log, "w") as f:
+        f.write(p.stdout.decode())
+    return (asset_config, p.returncode, p.stdout.decode())
 
 
 # Doesn't support ACR yet
