@@ -143,7 +143,8 @@ def build_images(input_dirs: List[Path],
                 logger.print(f"Skipping build of image for {asset_config.name}: No build context specified")
 
                 # Replace template tags in environment config
-                if assets.Config._contains_template(env_config.image_name):
+                if pin_versions and assets.Config._contains_template(env_config.image_name):
+                    print(f"Pinning image name for {asset_config.name}")
                     try:
                         environment.transform_file(env_config)
                     except Exception as e:

@@ -5,7 +5,7 @@ from typing import List, Tuple
 import azureml.assets as assets
 import azureml.assets.environment as environment
 
-RESOURCES_DIR = Path("resources/environment")
+RESOURCES_DIR = Path("resources/environment/build")
 
 
 def test_build_assets(subdir_expected_pair: Tuple[str, bool], resource_group: str, registry: str):
