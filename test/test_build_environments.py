@@ -15,6 +15,10 @@ def test_build_assets(build_subdir_expected_pair: Tuple[str, bool], resource_gro
     print(f"Contents of {this_dir}:")
     for child in this_dir.iterdir():
         print(child)
+    
+    resources_dir = this_dir / RESOURCES_DIR
+    print(f"resources_dir={resources_dir}")
+    print(f"resources_dir exists={resources_dir.exists()}")
 
     input_dir = this_dir / RESOURCES_DIR / test_subdir
     print(f"input_dir={input_dir}")
