@@ -28,9 +28,7 @@ def update(asset_config: assets.AssetConfig, output_file: Path = None, version: 
         data['image'] = {'name': environment_config.image_name}
         if environment_config.publish_location == assets.PublishLocation.MCR:
             data['image']['publish'] = {
-                'publish': {
-                    'hostname': environment_config.publish_location_hostname
-                }
+                'hostname': environment_config.publish_location_hostname
             }
 
     # Load spec template and render
