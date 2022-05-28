@@ -25,9 +25,9 @@ def update(asset_config: assets.AssetConfig, output_file: Path = None, version: 
     # Augment with with type-specific data
     if asset_config.type == assets.AssetType.ENVIRONMENT:
         environment_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+        data['image'] = {'name': environment_config.image_name}
         if environment_config.publish_location == assets.PublishLocation.MCR:
-            data['image'] = {
-                'name': environment_config.image_name,
+            data['image']['publish'] = {
                 'publish': {
                     'hostname': environment_config.publish_location_hostname
                 }
