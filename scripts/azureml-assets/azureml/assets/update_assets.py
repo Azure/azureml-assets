@@ -16,7 +16,14 @@ ENV_OS_UPDATES = "env_os_updates"
 
 
 def pin_env_files(env_config: assets.EnvironmentConfig):
-    for file_to_pin in env_config.template_files_with_path:
+    files_to_pin = env_config.template_files_with_path
+
+    # Replace template tags in environment config
+    if assets.Config._contains_template(env_config.image_name):
+        files_to_pin.append(env_config.file_name_with_path)
+
+    # Replace template tags in files to pin
+    for file_to_pin in files_to_pin:
         if file_to_pin.exists():
             try:
                 environment.transform_file(file_to_pin)
