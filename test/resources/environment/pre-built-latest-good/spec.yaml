@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
-  A TritonServer curated environment for Inference.
+  Test environment.
 
 name: "{{asset.name}}"
 display_name: "{{asset.name}}"
@@ -10,10 +10,3 @@ version: "{{asset.version}}"
 image: "{{image.name}}"
 
 os_type: linux
-
-tags:
-  Inference: "True"
-  Python: "3.8"
-  TritonServer: "21.02"
-  CUDA: "11.2.0"
-  cuDNN: "8.0.5"

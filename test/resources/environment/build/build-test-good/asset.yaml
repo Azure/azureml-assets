@@ -1,4 +1,4 @@
-name: tritonserver-21.02-py38-inference
+name: build-test-good
 version: auto
 type: environment
 spec: spec.yaml

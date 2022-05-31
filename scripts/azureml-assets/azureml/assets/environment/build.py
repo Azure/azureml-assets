@@ -1,6 +1,8 @@
 import argparse
 import os
+import shutil
 import sys
+import tempfile
 import yaml
 from collections import Counter
 from concurrent.futures import as_completed, ThreadPoolExecutor
@@ -71,28 +73,32 @@ def build_image(asset_config: assets.AssetConfig,
                 push: bool = False) -> Tuple[assets.AssetConfig, int, str]:
     logger.print(f"Building image for {asset_config.name}")
     start = timer()
-    if registry is not None:
-        # Build on ACR
-        cmd = ["az", "acr"]
-        common_args = ["-g", resource_group, "-r", registry, "--platform", build_os]
-        if not test_command and push:
-            # Simple build and push
-            cmd.append("build")
-            cmd.extend(common_args)
-            cmd.extend(["--file", dockerfile, "--image", image_name, "."])
+    with tempfile.TemporaryDirectory() as temp_dir:
+        if registry is not None:
+            # Build on ACR
+            cmd = ["az", "acr"]
+            common_args = ["-g", resource_group, "-r", registry, "--platform", build_os]
+            if not test_command and push:
+                # Simple build and push
+                cmd.append("build")
+                cmd.extend(common_args)
+                cmd.extend(["--file", dockerfile, "--image", image_name, "."])
+            else:
+                # Use ACR task from build context in temp dir
+                temp_dir_path = Path(temp_dir)
+                shutil.copytree(build_context_dir, temp_dir_path, dirs_exist_ok=True)
+                build_context_dir = temp_dir_path
+                create_acr_task(image_name, build_context_dir, dockerfile, TASK_FILENAME, test_command, push)
+                cmd.append("run")
+                cmd.extend(common_args)
+                cmd.extend(["-f", TASK_FILENAME, "."])
         else:
-            # Use ACR task
-            create_acr_task(image_name, build_context_dir, dockerfile, TASK_FILENAME, test_command, push)
-            cmd.append("run")
-            cmd.extend(common_args)
-            cmd.extend(["-f", TASK_FILENAME, "."])
-    else:
-        # Build locally
-        cmd = ["docker", "build", "--file", dockerfile, "--progress", "plain", "--tag", image_name, "."]
-    p = run(cmd,
-            cwd=build_context_dir,
-            stdout=PIPE,
-            stderr=STDOUT)
+            # Build locally
+            cmd = ["docker", "build", "--file", dockerfile, "--progress", "plain", "--tag", image_name, "."]
+        p = run(cmd,
+                cwd=build_context_dir,
+                stdout=PIPE,
+                stderr=STDOUT)
     end = timer()
     logger.print(f"Image for {asset_config.name} built in {timedelta(seconds=end-start)}")
     os.makedirs(build_log.parent, exist_ok=True)
@@ -138,24 +144,6 @@ def build_images(input_dirs: List[Path],
                 logger.print(f"Skipping build of image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_build}")
                 continue
 
-            # Skip environments without build context
-            if not env_config.build_enabled:
-                logger.print(f"Skipping build of image for {asset_config.name}: No build context specified")
-
-                # Replace template tags in environment config
-                if assets.Config._contains_template(env_config.image_name):
-                    try:
-                        environment.transform_file(env_config)
-                    except Exception as e:
-                        logger.log_error(f"Failed to replace template tags in {env_config.file_name_with_path}: {e}")
-                        counters[FAILED_COUNT] += 1
-                        continue
-
-                # Copy file to output directory without building
-                if output_directory:
-                    util.copy_asset_to_output_dir(asset_config, output_directory)
-                continue
-
             # Pin versions
             if pin_versions:
                 try:
@@ -164,6 +152,15 @@ def build_images(input_dirs: List[Path],
                     logger.log_error(f"Failed to pin versions for {asset_config.name}: {e}")
                     counters[FAILED_COUNT] += 1
                     continue
+
+            # Skip environments without build context
+            if not env_config.build_enabled:
+                logger.print(f"Skipping build of image for {asset_config.name}: No build context specified")
+
+                # Copy file to output directory without building
+                if output_directory:
+                    util.copy_asset_to_output_dir(asset_config, output_directory)
+                continue
 
             # Tag with version from spec
             if tag_with_version:
