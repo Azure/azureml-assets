@@ -7,9 +7,14 @@ name: "{{asset.name}}"
 display_name: "{{asset.name}}"
 version: "{{asset.version}}"
 
-image: "{{image.publish.hostname}}/{{image.name}}:{{asset.version}}"
+build:
+  path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
+
+properties:
+  azureml.imagename: "{{image.publish.hostname}}/{{image.name}}:{{asset.version}}"
 
 tags:
   lightgbm: "3.2"

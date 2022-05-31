@@ -11,6 +11,9 @@ image: "{{image.name}}"
 
 os_type: linux
 
+properties:
+  azureml.imagename: "{{image.name}}"
+
 tags:
   Inference: "True"
   No code deploy only: "True"
