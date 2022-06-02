@@ -5,6 +5,7 @@ from azureml.automl.core.shared.constants import MLTableDataLabel, MLTableLitera
 from azureml.automl.dnn.vision.common import utils
 from azureml.automl.dnn.vision.common.constants import SettingsLiterals
 from azureml.automl.dnn.vision.object_detection import runner
+from azureml.core import Run
 
 from common.telemetry_utils import create_component_telemetry_wrapper
 
@@ -14,6 +15,7 @@ def run():
     parser = argparse.ArgumentParser()
     parser.add_argument(utils._make_arg('training_data'), type=str)
     parser.add_argument(utils._make_arg('validation_data'), type=str)
+    parser.add_argument(utils._make_arg('model_output'), type=str)
     args, _ = parser.parse_known_args()
     args_dict = vars(args)
 
@@ -32,6 +34,9 @@ def run():
 
     settings = {SettingsLiterals.TASK_TYPE: Tasks.IMAGE_OBJECT_DETECTION}
     runner.run(settings, mltable_data_json=mltable_data_json)
+
+    run = Run.get_context()
+    run.download_files(prefix='outputs/mlflow-model', output_directory=args_dict['model_output'], append_prefix=False)
 
 
 if __name__ == "__main__":
