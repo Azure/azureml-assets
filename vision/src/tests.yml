@@ -1,0 +1,2 @@
+classification_random:
+    path: "./pipelines/canary/classification_random.yml"
