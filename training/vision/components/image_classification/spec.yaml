@@ -1,20 +1,20 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-description: Trains an image classification model for multiclass.
+description: Trains an image classification model.
 
 name: train_image_classification_model
 display_name: Train Image Classification Model
-version: 3
+version: 1
 
 inputs:
   training_data:
     type: mltable
-    optional: False
+    optional: false
     description: Training data
   validation_data:
     type: mltable
-    optional: True
+    optional: true
     description: Validation data
   model_name:
     type: string
@@ -38,12 +38,12 @@ inputs:
     default: sgd
     enum: ['sgd', 'adam', 'adamw'] 
   training_batch_size:
-    description: Training batch size.
+    description: Training batch size
     type: integer
     optional: true
     min: 1
   validation_batch_size:
-    description: Validation batch size.
+    description: Validation batch size
     type: integer
     optional: true
     min: 1
@@ -55,31 +55,33 @@ inputs:
     max: 1
   train_crop_size:
     type: integer
-    optional: True
-    description: Image crop size that's input to your neural network for training dataset. Notes:seresnext doesn't take an arbitrary size.ViT-variants should have the same valid_crop_size and train_crop_size.Training run may get into CUDA OOM if the size is too big.
+    default: 224
+    description: "Image crop size that's input to your neural network for training dataset. Notes: seresnext doesn't take an arbitrary size. ViT-variants should have the same valid_crop_size and train_crop_size. Training run may get into CUDA OOM if the size is too big."
     min: 1
   valid_crop_size:
     type: integer
-    optional: True
-    description: Image crop size that's input to your neural network for validation dataset. Note:seresnext doesn't take an arbitrary size. ViT-variants should have the same valid_crop_size and train_crop_size.Training run may get into CUDA OOM if the size is too big.
+    default: 224
+    description: "Image crop size that's input to your neural network for validation dataset. Note: seresnext doesn't take an arbitrary size. ViT-variants should have the same valid_crop_size and train_crop_size. Training run may get into CUDA OOM if the size is too big."
     min: 1
   valid_resize_size:
     type: integer
-    optional: True
-    description: Image size to which to resize before cropping for validation dataset. Note:seresnext doesn't take an arbitrary size. Training run may get into CUDA OOM if the size is too big.
+    default: 256
+    description: "Image size to which to resize before cropping for validation dataset. Note: seresnext doesn't take an arbitrary size. Training run may get into CUDA OOM if the size is too big."
     min: 1
-
+  multilabel:
+    type: boolean
+    default: false
+    description: Set true for multilabel image classification
 
 
 outputs:
-  best_model:
+  model:
+    description: Trained model.
     type: mlflow_model
 
 code: ../src
 
-environment:
-  image: mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.1-cudnn8-ubuntu18.04:20220412.v1
-  conda_file: ./conda.yaml
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:89
 
 
 command: >-
@@ -93,9 +95,11 @@ command: >-
   [--training_batch_size ${{inputs.training_batch_size}}]
   [--validation_batch_size ${{inputs.validation_batch_size}}]
   --weight_decay ${{inputs.weight_decay}}
-  [--train_crop_size ${{inputs.train_crop_size}}] 
-  [--valid_crop_size ${{inputs.valid_crop_size}}] 
-  [--valid_resize_size ${{inputs.valid_resize_size}}]
+  --train_crop_size ${{inputs.train_crop_size}}
+  --valid_crop_size ${{inputs.valid_crop_size}}
+  --valid_resize_size ${{inputs.valid_resize_size}}
+  --multilabel ${{inputs.multilabel}}
+  --model_output ${{outputs.model}}
 
 distribution:
   type: pytorch
