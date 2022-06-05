@@ -30,9 +30,11 @@ def runClassificationComponent(task_type):
             }
 
         mltable_data_json = json.dumps(mltable_data_dict)
-
         settings = {SettingsLiterals.TASK_TYPE: task_type}
-        runner.run(settings, mltable_data_json=mltable_data_json)
+        multilabel = False
+        if task_type == Tasks.IMAGE_CLASSIFICATION_MULTILABEL:
+            multilabel=True
+        runner.run(settings, mltable_data_json=mltable_data_json,multilabel=multilabel)
 
         run = Run.get_context()
         run.download_files(prefix='outputs/mlflow-model', output_directory=args_dict['model_output'], append_prefix=False)
