@@ -1,8 +1,8 @@
 import argparse
 import json
 import os
-from git import Repo
 from pathlib import Path
+from typing import Dict
 
 import azureml.assets as assets
 import azureml.assets.util as util
@@ -13,12 +13,80 @@ SPEC_FILE_TEMPLATE = "{name}.yaml"
 GIT_URL_TEMPLATE = "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
 
 
+def create_ems_payload(asset_config: assets.AssetConfig, env_config: assets.EnvironmentConfig, spec: assets.Spec,
+                       template_data: Dict[str, object], full_image_name: str):
+
+    # Start environment definition's docker section
+    docker_section = {
+        'platform': {
+            'os': env_config.os.value.title(),
+            'architecture': "amd64"
+        }
+    }
+    if env_config.build_enabled:
+        # Add buildContext section to environment definition
+        docker_section['buildContext'] = {
+            'locationType': 'git',
+            'location': util.render(GIT_URL_TEMPLATE, template_data),
+            'dockerfilePath': env_config.dockerfile
+        }
+    else:
+        # Use existing image name
+        docker_section['baseImage'] = full_image_name
+    
+    # Create payload
+    payload = {
+        'metadata': {
+            'tags': spec.tags,
+            'description': spec.description,
+            'attributes': env_config.environment_metadata,
+        },
+        'definition': {
+            'name': asset_config.name,
+            'python': {
+                'userManagedDependencies': True
+            },
+            'docker': docker_section
+        }
+    }
+
+    return payload
+
+
+def create_mfe_payload(env_config: assets.EnvironmentConfig, spec: assets.Spec, template_data: Dict[str, object],
+                       full_image_name: str):    
+    # Start payload
+    payload = {
+        'properties': {
+            'description': spec.description,
+            'tags': spec.tags,
+            'osType': env_config.os.value,
+            'properties': {
+                'azureml.imagename': full_image_name
+            }
+        }
+    }
+
+    # Add image details
+    if env_config.build_enabled:
+        # Add build section to payload
+        payload['properties']['build'] = {
+            'path': util.render(GIT_URL_TEMPLATE, template_data),
+            'dockerfilePath': env_config.dockerfile
+        }
+    else:
+        # Use existing image name
+        payload['properties']['image'] = full_image_name
+
+    return payload
+
+
 def create_deployment_config(input_directory: Path,
                              asset_config_filename: str,
                              release_directory_root: Path,
                              deployment_config_file_path: Path,
                              envs_dirname: Path,
-                             specs_dirname: Path,
+                             specs_dirname: Path = None,
                              version_template: str = None,
                              tag_template: str = None):
     deployment_config = {}
@@ -44,64 +112,38 @@ def create_deployment_config(input_directory: Path,
 
         # Add to deployment config
         env_def_file = envs_dirname / ENV_DEF_FILE_TEMPLATE.format(name=asset_config.name)
-        new_spec_file = specs_dirname / SPEC_FILE_TEMPLATE.format(name=asset_config.name)
-        deployment_config[asset_config.name] = {
+        config = {
             'version': version,
             'path': env_def_file,
-            'spec_path': new_spec_file,
             'publish': {
                 'fullImageName': full_image_name,
             }
         }
+        new_spec_file = None
+        if specs_dirname:
+            new_spec_file = specs_dirname / SPEC_FILE_TEMPLATE.format(name=asset_config.name)
+            config['spec_path'] = new_spec_file
+        deployment_config[asset_config.name] = config
 
         # Create template data, used to render git URL below
         data = assets.create_template_data(asset_config=asset_config, release_directory_root=release_directory_root,
                                            include_commit_hash=True)
 
-        # Start environment definition's docker section
-        docker_section = {
-            'platform': {
-                'os': env_config.os.value.title(),
-                'architecture': "amd64"
-            }
-        }
-        if env_config.build_enabled:
-            # Add buildContext section to environment definition
-            docker_section['buildContext'] = {
-                'locationType': 'git',
-                'location': util.render(GIT_URL_TEMPLATE, data),
-                'dockerfilePath': env_config.dockerfile
-            }
-        else:
-            # Use existing image name
-            docker_section['baseImage'] = full_image_name
-        
-        # Create EnvironmentDefinitionWithSetMetadataDto object
-        env_def_with_metadata = {
-            'metadata': {
-                'tags': spec.tags,
-                'description': spec.description,
-                'attributes': env_config.environment_metadata,
-            },
-            'definition': {
-                'name': asset_config.name,
-                'python': {
-                    'userManagedDependencies': True
-                },
-                'docker': docker_section
-            }
-        }
+        # Create payload
+        env_def_with_metadata = create_mfe_payload(env_config=env_config, spec=spec, data=data,
+                                                   full_image_name=full_image_name)
 
-        # Store environment definition file
+        # Store payload
         env_def_file_path = deployment_config_file_path.parent / env_def_file
         os.makedirs(env_def_file_path.parent, exist_ok=True)
         with open(env_def_file_path, 'w') as f:
             json.dump(env_def_with_metadata, f, indent=4)
 
         # Store spec file
-        new_spec_file_path = deployment_config_file_path.parent / new_spec_file
-        os.makedirs(new_spec_file_path.parent, exist_ok=True)
-        assets.update_spec(asset_config=asset_config, output_file=new_spec_file_path, data=data)
+        if new_spec_file:
+            new_spec_file_path = deployment_config_file_path.parent / new_spec_file
+            os.makedirs(new_spec_file_path.parent, exist_ok=True)
+            assets.update_spec(asset_config=asset_config, output_file=new_spec_file_path, data=data)
 
     # Create deployment config file
     with open(deployment_config_file_path, 'w') as f:
@@ -117,7 +159,7 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
     parser.add_argument("-o", "--deployment-config", required=True, type=Path, help="Path to deployment config file")
     parser.add_argument("-e", "--environment-definitions-dir", default=Path("envs"), type=Path, help="Name of directory that will contain environment definitions")
-    parser.add_argument("-s", "--spec-files-dirname", default=Path("specs"), type=Path, help="Name of directory that will contain environment spec files")
+    parser.add_argument("-s", "--spec-files-dirname", type=Path, help="Name of directory that will contain environment spec files")
     parser.add_argument("-v", "--version-template", help="Template to apply to versions from spec files "
                         "file, example: '{version}.dev1'")
     parser.add_argument("-T", "--tag-template", help="Template to apply to image name tags from spec files "
