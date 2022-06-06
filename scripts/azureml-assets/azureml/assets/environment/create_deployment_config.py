@@ -130,7 +130,7 @@ def create_deployment_config(input_directory: Path,
                                            include_commit_hash=True)
 
         # Create payload
-        env_def_with_metadata = create_mfe_payload(env_config=env_config, spec=spec, data=data,
+        env_def_with_metadata = create_mfe_payload(env_config=env_config, spec=spec, template_data=data,
                                                    full_image_name=full_image_name)
 
         # Store payload
