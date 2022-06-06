@@ -114,7 +114,7 @@ def create_deployment_config(input_directory: Path,
         env_def_file = envs_dirname / ENV_DEF_FILE_TEMPLATE.format(name=asset_config.name)
         config = {
             'version': version,
-            'path': env_def_file,
+            'path': env_def_file.as_posix(),
             'publish': {
                 'fullImageName': full_image_name,
             }
@@ -122,7 +122,7 @@ def create_deployment_config(input_directory: Path,
         new_spec_file = None
         if specs_dirname:
             new_spec_file = specs_dirname / SPEC_FILE_TEMPLATE.format(name=asset_config.name)
-            config['spec_path'] = new_spec_file
+            config['spec_path'] = new_spec_file.as_posix()
         deployment_config[asset_config.name] = config
 
         # Create template data, used to render git URL below
