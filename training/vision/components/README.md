@@ -35,4 +35,4 @@ Input data (both training and validation data) is formatted as JSONL. Refer to [
 
 ## End-to-End Example
 
-You can see an end-to-end example [here](azureml-examples). The example prepares real input image data, trains an object detection model, and then inferences using the trained model.
+You can see an end-to-end example [here](https://github.com/Azure/azureml-examples/tree/main/vision-built-in-component/cli/jobs/training/vision/object-detection-using-built-in-component). The example prepares real input image data, trains an object detection model, and then inferences using the trained model.
