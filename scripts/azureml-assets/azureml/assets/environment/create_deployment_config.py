@@ -171,6 +171,6 @@ if __name__ == "__main__":
                              release_directory_root=args.release_directory,
                              deployment_config_file_path=args.deployment_config,
                              envs_dirname=args.environment_definitions_dir,
-                             specs_dirname=args.new_spec_files_dirname,
+                             specs_dirname=args.spec_files_dirname,
                              version_template=args.version_template,
                              tag_template=args.tag_template)
