@@ -4,15 +4,11 @@ description: >-
   An MLFlow curated environment for Inference and containing additional python packages.
 
 name: "{{asset.name}}"
-display_name: "{{asset.name}}"
 version: "{{asset.version}}"
 
 image: "{{image.name}}"
 
 os_type: linux
-
-properties:
-  azureml.imagename: "{{image.name}}"
 
 tags:
   Inference: "True"
