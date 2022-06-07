@@ -96,9 +96,7 @@ outputs:
 
 code: .
 
-#environment: azureml:nvidia_pytorch:22.04-py3
-#environment: azureml:nvidia_pytorch:22.02-py3-mod9
-environment: "azureml:azure_ptca:stable-sccl-ubuntu2004-cu113-py38-torch1101-dev4"
+environment: azureml:nvidia_pytorch:22.04-py3
 
 command: >-
   python train.py 
