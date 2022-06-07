@@ -19,9 +19,9 @@ There are built-in components to train models for the following types of tasks:
 1. **Instance segmentation** &ndash; Identify objects in images at the pixel level, drawing a polygon around each object.
 
 You can refer to the YAML definitions of the components below. YAML definitions contain the component name, inputs, and other schema information:
-1. [Image classification](training/vision/components/image_classification/spec.yaml)
+1. [Image classification](image_classification/spec.yaml)
 1. [Object detection](object_detection/spec.yaml)
-1. [Instance segmentation](training/vision/components/instance_segmentation/spec.yaml)
+1. [Instance segmentation](instance_segmentation/spec.yaml)
 
 
 ## Formatting Input
