@@ -31,4 +31,4 @@ Input datasets (both training and validation datasets) are formatted as JSONL fi
 
 ## End-to-End Example
 
-You can see an end-to-end example [here](https://github.com/Azure/azureml-examples/tree/main/vision-built-in-component/cli/jobs/training/vision/object-detection-using-built-in-component). The example prepares real input image data, trains an object detection model, and then inferences using the trained model.
+You can see an end-to-end example [here](https://github.com/Azure/azureml-examples/tree/vision-components-preview/cli/jobs/training/vision/object-detection-using-built-in-component). The example prepares real input image data, trains an object detection model, and then inferences using the trained model.
