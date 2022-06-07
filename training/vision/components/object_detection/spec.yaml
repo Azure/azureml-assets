@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-description: Trains an object detection model. Refer to [this document](https://github.com/Azure/azureml-assets/tree/main/training/vision/components/README.md) for more information.
+description: Trains an object detection model. Refer to [this document](training/vision/components/README.md) for more information.
 
 name: train_object_detection_model
 display_name: Train Object Detection Model
