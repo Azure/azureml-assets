@@ -4,7 +4,6 @@ description: >-
   The No-Code deployment environment for the NVIDIA Triton server. 
 
 name: "{{asset.name}}"
-display_name: "{{asset.name}}"
 version: "{{asset.version}}"
 
 image: "{{image.name}}"

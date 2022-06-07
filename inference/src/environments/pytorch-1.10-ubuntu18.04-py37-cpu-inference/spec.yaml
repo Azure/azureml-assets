@@ -4,7 +4,6 @@ description: >-
   A PyTorch curated environment for Inference and containing additional python packages.
 
 name: "{{asset.name}}"
-display_name: "{{asset.name}}"
 version: "{{asset.version}}"
 
 image: "{{image.name}}"

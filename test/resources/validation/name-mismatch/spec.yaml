@@ -4,7 +4,6 @@ description: >-
   An environment for deep learning with Tensorflow containing the Azure ML SDK and additional python packages.
 
 name: test-asset-2
-display_name: "{{asset.name}}"
 version: "{{asset.version}}"
 
 image: "{{image.publish.hostname}}/{{image.name}}:{{asset.version}}"

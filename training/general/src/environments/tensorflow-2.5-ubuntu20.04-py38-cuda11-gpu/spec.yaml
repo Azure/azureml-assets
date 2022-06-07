@@ -4,10 +4,11 @@ description: >-
   An environment for deep learning with Tensorflow containing the Azure ML SDK and additional python packages.
 
 name: "{{asset.name}}"
-display_name: "{{asset.name}}"
 version: "{{asset.version}}"
 
-image: "{{image.publish.hostname}}/{{image.name}}:{{asset.version}}"
+build:
+  path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
 

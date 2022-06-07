@@ -15,5 +15,5 @@ from .update_assets import (
     pin_env_files,
     release_tag_exists,
 )
-from .update_spec import update as update_spec
+from .update_spec import create_template_data, update as update_spec
 from .validate_assets import validate_assets
