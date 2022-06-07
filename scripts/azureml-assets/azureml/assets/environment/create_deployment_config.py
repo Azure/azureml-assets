@@ -70,7 +70,7 @@ def create_mfe_payload(env_config: assets.EnvironmentConfig, spec: assets.Spec, 
     if env_config.build_enabled:
         # Add build section to payload
         properties['build'] = {
-            'path': util.render(GIT_URL_TEMPLATE, template_data),
+            'contextUri': util.render(GIT_URL_TEMPLATE, template_data),
             'dockerfilePath': env_config.dockerfile
         }
     else:
