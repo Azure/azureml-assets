@@ -55,28 +55,30 @@ def create_ems_payload(asset_config: assets.AssetConfig, env_config: assets.Envi
 
 def create_mfe_payload(env_config: assets.EnvironmentConfig, spec: assets.Spec, template_data: Dict[str, object],
                        full_image_name: str):    
-    # Start payload
-    payload = {
+    # Start properties
+    properties = {
+        'description': spec.description,
+        'osType': env_config.os.value,
         'properties': {
-            'description': spec.description,
-            'tags': spec.tags,
-            'osType': env_config.os.value,
-            'properties': {
-                'azureml.imagename': full_image_name
-            }
+            'azureml.imagename': full_image_name
         }
     }
+    if spec.tags:
+        properties['tags'] = spec.tags
 
     # Add image details
     if env_config.build_enabled:
         # Add build section to payload
-        payload['properties']['build'] = {
+        properties['build'] = {
             'path': util.render(GIT_URL_TEMPLATE, template_data),
             'dockerfilePath': env_config.dockerfile
         }
     else:
         # Use existing image name
-        payload['properties']['image'] = full_image_name
+        properties['image'] = full_image_name
+
+    # Create payload
+    payload = { 'properties': properties }
 
     return payload
 
