@@ -16,7 +16,7 @@ There are built-in components to train models for the following types of tasks:
 
 1. **Object detection** &ndash; Identify objects in images and locate each object with a bounding box - e.g. locate all dogs and cats in an image and draw a bounding box around each.
 
-1. **Instance segmentation** &ndash; Tasks to identify objects in an image at the pixel level, drawing a polygon around each object in the image.
+1. **Instance segmentation** &ndash; Identify objects in images at the pixel level, drawing a polygon around each object.
 
 You can refer to the YAML definitions of the components below. YAML definitions contain the component name, inputs, and other schema information:
 1. [Image classification](https://github.com/Azure/azureml-assets/blob/main/training/vision/components/image_classification/spec.yaml)
