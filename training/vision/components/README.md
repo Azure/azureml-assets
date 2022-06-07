@@ -14,7 +14,7 @@ There are built-in components to train models for the following types of tasks:
 
 1. **Image classification** &ndash; Images are classified with one or more labels from a set of classes - e.g. each image can be labeled as 'cat', 'dog', and/or 'duck'
 
-1. **Object detection** &ndash; Identify objects in images and locate each object with a bounding box e.g. locate all dogs and cats in an image and draw a bounding box around each.
+1. **Object detection** &ndash; Identify objects in images and locate each object with a bounding box - e.g. locate all dogs and cats in an image and draw a bounding box around each.
 
 1. **Instance segmentation** &ndash; Tasks to identify objects in an image at the pixel level, drawing a polygon around each object in the image.
 
