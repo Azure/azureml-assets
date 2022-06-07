@@ -1,13 +1,13 @@
-# Vision Components
+# Benchmark Components
 
-This subfolders hosts the code for AzureML assets related to vision machine learning scenarios.
+This subfolders hosts the code for AzureML assets related to benchmark typical machine learning scenarios.
 
 ## Structure of this subfolder
 
 | Directory         | Description                                                                          |
 |:------------------|:-------------------------------------------------------------------------------------|
 | `src/components/` | Python code for the components.                                                      |
-| `src/jobs/`       | AzureML CLI jobs for various vision-related tasks.                                   |
+| `src/jobs/`       | AzureML CLI jobs for various benchmark-related tasks.                                   |
 | `src/pipelines/`  | AzureML Python SDK code of Azure ML pipelines using components in various scenarios. |
 | `tests/`          | Unit tests for the components                                                        |
 

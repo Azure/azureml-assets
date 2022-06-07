@@ -1,4 +1,4 @@
-name: vision-ci
+name: benchmark-ci
 on:
   # can be triggered manually
   workflow_dispatch:
@@ -12,7 +12,7 @@ on:
     branches:
       - main
     paths:
-      - vision/**
+      - benchmark/**
       - scripts/setup.sh
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: vision/
+        working-directory: benchmark/
 
     steps:
 
@@ -50,12 +50,12 @@ jobs:
       with:
         check_name: Unit Test Results for Build
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        files: vision/test-build-result.xml
+        files: benchmark/test-build-result.xml
 
     - name: Code Coverage Summary Report
       uses: irongut/CodeCoverageSummary@v1.0.2
       with:
-        filename: vision/coverage.xml
+        filename: benchmark/coverage.xml
         badge: true
         format: 'markdown'
         output: 'both'
@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: vision/
+        working-directory: benchmark/
 
     environment: BuiltinRegistryDev
     # timeout-minutes: 30 # TBD
@@ -100,32 +100,3 @@ jobs:
       run: >-
         az ml environment create -f ./assets/environments/nvidia/env.yml
         az ml job create -f ./src/pipelines/canary/classification_random.yml --stream
-
-
-  publish:
-    # If everything ok, published the component in a dev workspace
-    name: "Publish vision components from main branch"
-    runs-on: ubuntu-latest
-    needs: [test, canary]
-    # runs only from main branch
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-
-    - name: check out repo
-      uses: actions/checkout@v2
-
-    - name: azure login
-      uses: azure/login@v1
-      with:
-        creds: ${{secrets.BUILTINREGISTRYDEVSECRET}}
-
-    - name: setup
-      run: bash setup.sh
-      working-directory: scripts
-      continue-on-error: true
-
-    - name: run job
-      run: |
-        az ml component create --file spec.yaml
-      working-directory: vision/src/components/torchvision_finetune
