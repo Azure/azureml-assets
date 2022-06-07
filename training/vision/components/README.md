@@ -26,7 +26,7 @@ You can refer to the YAML definitions of the components below. YAML definitions 
 
 ## Formatting Input
 
-Input datasets (both training and validation datasets) are formatted as JSONL files. Refer to [this document](https://docs.microsoft.com/en-us/azure/machine-learning/reference-automl-images-schema) to learn how to format input data for each type. (Note: the article concerns formatting for AutoML, but the input format is the same for AutoML and the built-in components.)
+Input datasets (both training and validation datasets) are formatted as JSONL files. Refer to [this document](https://docs.microsoft.com/en-us/azure/machine-learning/reference-automl-images-schema) to learn how to format input data for each component type. (Note: the article concerns formatting for AutoML, but the input format is the same for AutoML and the built-in components.)
 
 
 ## End-to-End Example
