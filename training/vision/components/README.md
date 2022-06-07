@@ -20,7 +20,7 @@ There are built-in components to train models for the following types of tasks:
 
 You can refer to the YAML definitions of the components below. YAML definitions contain the component name, inputs, and other schema information:
 1. [Image classification](training/vision/components/image_classification/spec.yaml)
-1. [Object detection](training/vision/components/object_detection/spec.yaml)
+1. [Object detection](object_detection/spec.yaml)
 1. [Instance segmentation](training/vision/components/instance_segmentation/spec.yaml)
 
 
