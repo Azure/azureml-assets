@@ -3,22 +3,18 @@
 
 ## Overview
 
-Using built-in components, you can train a vision model without writing any code. All that's required is labeled input data. You run the component on labeled input data, and you get a model back. If you want, you can also select the model you want to train, model hyperparameters, etc.
+Using built-in components, you can train a computer vision model without writing any code. All that's required to train a model is labeled input data. The component runs on the labeled input data, and it outputs a trained model.
+
+Components also expose knobs that can tune their behavior. If desired, you can specify which model a component trains (like yolov5, fasterrcnn_resnet50_fpn, etc), model hyperparameters (like learning rate and batch size), and other settings.
 
 
 ## Available Components
 
-![Sample Dataset](https://docs.microsoft.com/en-us/azure/machine-learning/media/concept-automated-ml/automl-computer-vision-tasks.png)
-
-Image is from http://cs231n.stanford.edu/slides/2021/lecture_15.pdf.
-
 There are built-in components to train models for the following types of tasks:
 
-1. **Image classification** &ndash; Tasks where an image is classified with one or more labels from a set of classes - e.g. each image can be labeled as 'cat', 'dog', and/or 'duck'
-See YAML definition
+1. **Image classification** &ndash; Images are classified with one or more labels from a set of classes - e.g. each image can be labeled as 'cat', 'dog', and/or 'duck'
 
-1. **Object detection** &ndash; Tasks to identify objects in an image and locate each object with a bounding box e.g. locate all dogs and cats in an image and draw a bounding box around each.
-See YAML definition
+1. **Object detection** &ndash; Identify objects in images and locate each object with a bounding box e.g. locate all dogs and cats in an image and draw a bounding box around each.
 
 1. **Instance segmentation** &ndash; Tasks to identify objects in an image at the pixel level, drawing a polygon around each object in the image.
 
@@ -30,7 +26,7 @@ You can refer to the YAML definitions of the components below. YAML definitions 
 
 ## Formatting Input
 
-Input data (both training and validation data) is formatted as JSONL. Refer to [this document](https://docs.microsoft.com/en-us/azure/machine-learning/reference-automl-images-schema) to learn how to format input data for each type. (Note: the article concerns formatting for AutoML, but the input format is the same for AutoML and the built-in components.)
+Input datasets (both training and validation datasets) are formatted as JSONL files. Refer to [this document](https://docs.microsoft.com/en-us/azure/machine-learning/reference-automl-images-schema) to learn how to format input data for each type. (Note: the article concerns formatting for AutoML, but the input format is the same for AutoML and the built-in components.)
 
 
 ## End-to-End Example
