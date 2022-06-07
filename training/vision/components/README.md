@@ -5,7 +5,7 @@
 
 Using built-in components, you can train a computer vision model without writing any code. All that's required to train a model is labeled input data.
 
-Components also expose knobs to tune their behavior. If desired, you can specify which model a component trains (like YOLOv5, Faster R-CNN with a ResNet-50-FPN backbone, etc.), model hyperparameters (like learning rate and batch size), and other settings.
+Components expose knobs to tune their behavior. If desired, you can specify which model a component trains (like YOLOv5, Faster R-CNN with a ResNet-50-FPN backbone, etc.), model hyperparameters (like learning rate and batch size), and other settings.
 
 
 ## Available Components
