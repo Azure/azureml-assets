@@ -18,13 +18,13 @@ TEST_PHRASE = "hello world!"
 
 
 def test_image(asset_config: assets.AssetConfig, image_name: str) -> Tuple[int, str]:
-    print(f"Testing image for {asset_config.name}")
+    logger.print(f"Testing image for {asset_config.name}")
     start = timer()
     p = run(["docker", "run", "--entrypoint", "python", image_name, "-c", f"print(\"{TEST_PHRASE}\")"],
             stdout=PIPE,
             stderr=STDOUT)
     end = timer()
-    print(f"Image for {asset_config.name} tested in {timedelta(seconds=end-start)}")
+    logger.print(f"Image for {asset_config.name} tested in {timedelta(seconds=end-start)}")
     return (p.returncode, p.stdout.decode())
 
 
@@ -38,7 +38,12 @@ def test_images(input_dirs: List[Path],
 
         # Filter by OS
         if os_to_test and env_config.os.value != os_to_test:
-            print(f"Not testing image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_test}")
+            logger.print(f"Not testing image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_test}")
+            continue
+
+        # Skip images without build context
+        if not env_config.build_enabled:
+            logger.print(f"Not testing image for {asset_config.name}: No build context specified")
             continue
 
         # Test image

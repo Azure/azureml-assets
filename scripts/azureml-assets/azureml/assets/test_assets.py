@@ -19,19 +19,19 @@ ISOLATED_ENVIRONMENT = "isolated_env"
 
 
 def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str) -> bool:
-    print("Creating isolated conda environment")
+    logger.print("Creating isolated conda environment")
     p = run(["conda", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"])
     if p.returncode != 0:
         return False
 
-    print("Using pip to install packages")
+    logger.print("Using pip to install packages")
     p = run(["conda", "run", "-n", env_name, "pip", "install", "-r", asset_config.pytest_pip_requirements,
              "--progress-bar", "off"], cwd=asset_config.file_path)
     return p.returncode == 0
 
 
 def test_asset(asset_config: assets.AssetConfig, env_name: str, reports_dir: str = None) -> bool:
-    print("Running pytest")
+    logger.print("Running pytest")
     start = timer()
 
     # Build command line
@@ -45,7 +45,7 @@ def test_asset(asset_config: assets.AssetConfig, env_name: str, reports_dir: str
     # Run tests
     p = run(cmd, cwd=asset_config.file_path)
     end = timer()
-    print(f"Test(s) completed in {timedelta(seconds=end-start)}")
+    logger.print(f"Test(s) completed in {timedelta(seconds=end-start)}")
     return p.returncode == 0
 
 

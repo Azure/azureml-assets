@@ -15,7 +15,10 @@ def get_latest_image_suffix(image: str):
     (hostname, repo) = image.split("/", 1)
 
     # Retrieve tags
-    response = urlopen(f"https://{hostname}/v2/{repo}/tags/list")
+    try:
+        response = urlopen(f"https://{hostname}/v2/{repo}/tags/list")
+    except Exception as e:
+        raise Exception(f"Failed to retrieve tags for {repo}: {e}")
     tags = json.loads(response.read().decode("utf-8")).get("tags", [])
 
     # Ensure latest is present
@@ -36,7 +39,10 @@ def get_latest_image_suffix(image: str):
         request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
                           method="HEAD",
                           headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
-        response = urlopen(request)
+        try:
+            response = urlopen(request)
+        except Exception as e:
+            raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
         digest = response.info()['Docker-Content-Digest']
 
         if tag == LATEST_TAG:
@@ -80,7 +86,7 @@ def transform_file(input_file: Path, output_file: Path = None):
 
     # Write to stdout or output_file
     if output_file == "-":
-        print(contents)
+        logger.print(contents)
     else:
         if output_file is None:
             output_file = input_file

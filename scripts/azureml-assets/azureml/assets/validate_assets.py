@@ -16,6 +16,7 @@ def validate_assets(input_dirs: List[Path],
     asset_count = 0
     error_count = 0
     asset_dirs = defaultdict(list)
+    image_names = defaultdict(list)
     for asset_config_path in util.find_asset_config_files(input_dirs, asset_config_filename):
         asset_count += 1
 
@@ -31,7 +32,13 @@ def validate_assets(input_dirs: List[Path],
         # Validate specific asset types
         if asset_config.type is assets.AssetType.ENVIRONMENT:
             try:
-                _ = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+                environment_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+
+                # Store fully qualified image name
+                image_name = environment_config.image_name
+                if environment_config.publish_location:
+                    image_name = f"{environment_config.publish_location.value}/{image_name}"
+                image_names[image_name].append(asset_config.file_path)
             except Exception as e:
                 logger.log_error(f"Validation of {asset_config.extra_config_with_path} failed: {e}")
                 error_count += 1
@@ -55,7 +62,13 @@ def validate_assets(input_dirs: List[Path],
             logger.log_error(f"{type_and_name} found in multiple asset YAMLs: {dirs}")
             error_count += 1
 
-    print(f"Found {error_count} error(s) in {asset_count} asset(s)")
+    # Ensure unique image names
+    for image_name, dirs in image_names.items():
+        if len(dirs) > 1:
+            logger.log_error(f"{image_name} found in multiple assets: {dirs}")
+            error_count += 1
+
+    logger.print(f"Found {error_count} error(s) in {asset_count} asset(s)")
     return error_count == 0
 
 

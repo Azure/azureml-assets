@@ -90,7 +90,7 @@ def transform_file(input_file: Path, output_file: Path = None):
 
     # Write to stdout or output_file
     if output_file == "-":
-        print(contents)
+        logger.print(contents)
     else:
         if output_file is None:
             output_file = input_file

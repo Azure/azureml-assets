@@ -1,0 +1,15 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  The No-Code deployment environment for the NVIDIA Triton server. 
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+image: "{{image.name}}"
+
+os_type: linux
+
+tags:
+  Inference: "True"
+  No code deploy only: "True"

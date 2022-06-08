@@ -16,12 +16,17 @@ class Config:
     def __init__(self, file_name: Path):
         with open(file_name) as f:
             self._yaml = safe_load(f)
+        self._file_name_with_path = file_name
         self._file_name = file_name.name
         self._file_path = file_name.parent
 
     @property
     def file_name(self) -> str:
         return self._file_name
+
+    @property
+    def file_name_with_path(self) -> Path:
+        return self._file_name_with_path
 
     @property
     def file_path(self) -> Path:
@@ -36,7 +41,7 @@ class Config:
 
     @staticmethod
     def _contains_template(value: str):
-        return TEMPLATE_CHECK.match(value) is not None
+        return TEMPLATE_CHECK.search(value) is not None
 
     @staticmethod
     def _validate_exists(property_name: str, property_value: object):
@@ -207,7 +212,6 @@ class AssetConfig(Config):
         return self._append_to_file_path(tests_dir) if tests_dir else None
 
 
-DEFAULT_CONTEXT_DIR = "context"
 DEFAULT_DOCKERFILE = "Dockerfile"
 DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
 
@@ -239,14 +243,14 @@ class EnvironmentConfig(Config):
     Example:
 
     image:
-      name: azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu
+      name: azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu # Can include registry hostname and template tags
       os: linux
-      context:
+      context: # If not specified, image won't be built
         dir: context
         dockerfile: Dockerfile
         pin_version_files:
         - Dockerfile
-      publish:
+      publish: # If not specified, image won't be published
         location: mcr
         visibility: public
     environment:
@@ -267,7 +271,7 @@ class EnvironmentConfig(Config):
             Config._validate_enum('publish.location', self._publish_location, PublishLocation, True)
             Config._validate_enum('publish.visibility', self._publish_visibility, PublishVisibility, True)
 
-        if ".." in self.context_dir:
+        if self.context_dir and ".." in self.context_dir:
             raise ValidationException(f"Invalid context.dir property: {self.context_dir} refers to a parent directory")
 
     @property
@@ -294,15 +298,21 @@ class EnvironmentConfig(Config):
         return self._image.get('context', {})
 
     @property
+    def build_enabled(self) -> bool:
+        return bool(self._context)
+
+    @property
     def context_dir(self) -> str:
-        return self._context.get('dir', DEFAULT_CONTEXT_DIR)
+        return self._context.get('dir')
 
     @property
     def context_dir_with_path(self) -> Path:
-        return self._append_to_file_path(self.context_dir)
+        dir = self.context_dir
+        return self._append_to_file_path(dir) if dir else None
 
     def _append_to_context_path(self, relative_path: Path) -> Path:
-        return self.context_dir_with_path / relative_path
+        dir = self.context_dir_with_path
+        return dir / relative_path if dir else None
 
     @property
     def dockerfile(self) -> str:
@@ -318,7 +328,8 @@ class EnvironmentConfig(Config):
 
     @property
     def template_files_with_path(self) -> List[Path]:
-        return [self._append_to_context_path(f) for f in self.template_files]
+        files = [self._append_to_context_path(f) for f in self.template_files]
+        return [f for f in files if f is not None]
 
     @property
     def _publish(self) -> Dict[str, str]:
@@ -329,7 +340,7 @@ class EnvironmentConfig(Config):
         return self._publish.get('location')
 
     @property
-    def publish_location(self) -> str:
+    def publish_location(self) -> PublishLocation:
         location = self._publish_location
         return PublishLocation(location) if location else None
 

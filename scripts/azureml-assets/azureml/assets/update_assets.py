@@ -16,9 +16,19 @@ ENV_OS_UPDATES = "env_os_updates"
 
 
 def pin_env_files(env_config: assets.EnvironmentConfig):
-    for file_to_pin in env_config.template_files_with_path:
+    files_to_pin = env_config.template_files_with_path
+
+    # Replace template tags in environment config
+    if assets.Config._contains_template(env_config.image_name):
+        files_to_pin.append(env_config.file_name_with_path)
+
+    # Replace template tags in files to pin
+    for file_to_pin in files_to_pin:
         if file_to_pin.exists():
-            environment.transform_file(file_to_pin)
+            try:
+                environment.transform_file(file_to_pin)
+            except Exception as e:
+                raise Exception(f"Failed to pin versions in {file_to_pin}: {e}")
         else:
             logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
@@ -143,7 +153,7 @@ def update_assets(input_dirs: List[Path],
                                    skip_unreleased=skip_unreleased,
                                    output_directory_root=output_directory_root)
         if new_version:
-            print(f"Updated {asset_config.type.value} {asset_config.name} to version {new_version}")
+            logger.print(f"Updated {asset_config.type.value} {asset_config.name} to version {new_version}")
             updated_count += 1
 
             # Track updated environments by OS
@@ -152,7 +162,7 @@ def update_assets(input_dirs: List[Path],
                 updated_os.add(temp_env_config.os.value)
         else:
             logger.log_debug(f"No changes detected for {asset_config.type.value} {asset_config.name}")
-    print(f"{updated_count} of {asset_count} asset(s) updated")
+    logger.print(f"{updated_count} of {asset_count} asset(s) updated")
 
     # Set variables
     logger.set_output(HAS_UPDATES, "true" if updated_count > 0 else "false")
