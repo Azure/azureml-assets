@@ -58,10 +58,10 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="Path to folder containing training images",
     )
     group.add_argument(
-        "--annotations",
+        "--masks",
         type=str,
         required=True,
-        help="path to folder containing image annotations",
+        help="path to folder containing segmentation masks",
     )
 
     group = parser.add_argument_group(f"Training Outputs")
@@ -109,7 +109,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         type=int,
         required=False,
         default=160,
-        help="Size of input images (resized)"
+        help="Size of input images (resized, default: 160)"
     )
     group.add_argument(
         "--model_arch_pretrained",
@@ -202,7 +202,7 @@ def run(args):
     # DATA
     train_gen, val_gen = build_image_segmentation_datasets(
         images_dir = args.images,
-        annotations_dir = args.annotations,
+        annotations_dir = args.masks,
         val_samples = 1000,
         input_size = args.model_input_size,
         batch_size = args.batch_size
@@ -222,7 +222,7 @@ def run(args):
         # Configure the model for training.
         # We use the "sparse" version of categorical_crossentropy
         # because our target data is integers.
-        model.compile(optimizer=args.optimizer, loss=args.loss)
+        model.compile(optimizer=args.optimizer, loss=args.loss, run_eagerly=True)
 
     callbacks = [
         # keras.callbacks.ModelCheckpoint("segmentation.h5", save_best_only=True)
