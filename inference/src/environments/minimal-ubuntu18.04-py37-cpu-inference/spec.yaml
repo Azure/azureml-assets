@@ -1,0 +1,17 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  A minimal environment for Inference, does not contain any framework and additional python packages.
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+image: "{{image.name}}"
+
+os_type: linux
+
+tags:
+  Inference: "True"
+  Python: "3.7"
+  Framework: None
+  Python Packages: None
