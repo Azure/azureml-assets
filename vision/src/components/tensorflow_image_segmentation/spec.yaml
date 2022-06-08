@@ -1,0 +1,97 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+description: >-
+  Fine-tunes a pre-trained pytorch model for image classification.
+  Inputs should be provided as distinct directories containing distinct images
+  as we're using [ImageFolder](http://pytorch.org/vision/main/generated/torchvision.datasets.ImageFolder.html) to load data.
+
+name: pytorch_image_classifier
+display_name: Image Classification Model (PyTorch)
+version: 1.0.4
+
+inputs:
+  # data loading
+  images:
+    type: path
+    description: "Path to folder containing training images."
+  masks:
+    type: path
+    description: "Path to folder containing masks."
+  
+  # data loading
+  batch_size:
+    type: integer
+    min: 1
+    optional: true
+    description: "Train/valid data loading batch size (default: 64)"
+
+  # model
+  model_arch:
+    type: string
+    optional: true
+    description: "Which model architecture to use (default: resnet18)"
+  model_arch_pretrained:
+    type: boolean
+    optional: true
+    description: "Use pretrained model (default: true)"
+  model_input_size:
+    type: integer
+    optional: true
+    description: "Size of input images (resized, default: 160)"
+
+  # training
+  num_epochs:
+    type: integer
+    optional: true
+    description: "Number of epochs to train for (default: 1)"
+  optimizer:
+    type: string
+    optional: true
+    description: "default: rmsprop"
+  loss:
+    type: string
+    optional: true
+    description: "default: sparse_categorical_crossentropy"
+
+  distributed_strategy:
+    type: string
+    optional: true
+    description: "tensorflow.distributed strategy (default: MultiWorkerMirroredStrategy)"
+
+outputs:
+  checkpoints: 
+    type: path
+    description: "Path to export checkpoints"
+  trained_model: 
+    type: path
+    description: "Path to the final model"
+
+code: .
+
+environment: azureml:nvidia_tensorflow:22.05-tf2-py3-dev2
+
+command: >-
+  python train.py 
+  --images ${{inputs.images}}
+  --masks ${{inputs.masks}}
+
+  [--batch_size ${{inputs.batch_size}}]
+
+  [--model_arch ${{inputs.model_arch}}]
+  [--model_arch_pretrained ${{inputs.model_arch_pretrained}}]
+  [--model_input_size ${{inputs.model_input_size}}]
+
+  [--num_epochs ${{inputs.num_epochs}}]
+  [--optimizer ${{inputs.optimizer}}]
+  [--loss ${{inputs.loss}}]
+
+  --model_output ${{outputs.trained_model}}
+  --checkpoints ${{outputs.checkpoints}}
+
+  [--distributed_strategy ${{inputs.distributed_strategy}}]
+
+distribution:
+  # NOTE: using type:pytorch will use all the right env variables for pytorch init_process_group
+  type: tensorflow
+  worker_count: 1
