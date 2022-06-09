@@ -36,19 +36,32 @@ def are_dir_trees_equal(dir1: Path, dir2: Path) -> bool:
     return True
 
 
-def copy_replace_dir(source: Path, dest: Path):
+def copy_replace_dir(source: Path, dest: Path, paths: List[Path] = None):
     """Copy a directory tree, replacing any existing one.
 
     Args:
         source (Path): Source directory
         dest (Path): Destination directory
+        paths (List[Paths], optional): Specific paths to copy, relative to the source directory
     """
     # Delete destination directory
     if dest.exists():
         shutil.rmtree(dest)
 
     # Copy source to destination directory
-    shutil.copytree(source, dest)
+    if not paths:
+        # Easy, copy everything
+        shutil.copytree(source, dest)
+    else:
+        # Copy only selected paths
+        for path in paths:
+            source_path = source / path
+            dest_path = dest / path
+            if source_path.is_dir():
+                Path.mkdir(dest_path, parents=True, exist_ok=True)
+            else:
+                Path.mkdir(dest_path.parent, parents=True, exist_ok=True)
+                shutil.copyfile(source_path, dest_path)
 
 
 def get_asset_output_dir(asset_config: assets.AssetConfig, output_directory_root: Path) -> Path:
@@ -85,7 +98,9 @@ def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory_
         output_directory_root (Path): Output directory root
     """
     output_directory = get_asset_output_dir(asset_config, output_directory_root)
-    copy_replace_dir(asset_config.file_path, output_directory)
+
+    common_dir, relative_release_paths = find_common_directory(asset_config.release_paths)
+    copy_replace_dir(source=common_dir, dest=output_directory, paths=relative_release_paths)
 
 
 def apply_tag_template(full_image_name: str, template: str = None) -> str:
@@ -222,3 +237,44 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
 
             found_assets.append(file)
     return found_assets
+
+
+def find_common_directory(paths: List[Path]) -> Tuple[Path, List[Path]]:
+    """Find lowest common directory for a list of Paths.
+
+    Args:
+        paths (List[Path]): Paths to consider.
+
+    Returns:
+        Tuple[Path, List[Path]]: Common directory and updated Paths which are relative to it.
+    """
+    lowest_common_dirs = None
+    paths_resolved = [p.resolve() for p in paths]
+    for path in paths_resolved:
+        # Create list of dirs
+        path_resolved_parents = list(path.parents)
+        if path.is_dir():
+            dirs = [path]
+            dirs.extend(path_resolved_parents)
+        else:
+            dirs = path_resolved_parents
+        dirs.reverse()
+
+        if lowest_common_dirs is None:
+            # Starting point
+            lowest_common_dirs = dirs
+        else:
+            # Find and store common directory
+            min_len = min([len(lowest_common_dirs), len(dirs)])
+            for i in range(min_len - 1, 0, -1):
+                if lowest_common_dirs[i].samefile(dirs[i]):
+                    lowest_common_dirs = lowest_common_dirs[0:i + 1]
+                    break
+            else:
+                raise Exception(f"Unable to find a common path between {lowest_common_dirs[-1]} and {dirs[-1]}")
+
+    # Assemble output
+    lowest_common_dir = lowest_common_dirs[-1]
+    relative_paths = [p.relative_to(lowest_common_dir) for p in paths_resolved]
+
+    return lowest_common_dir, relative_paths
