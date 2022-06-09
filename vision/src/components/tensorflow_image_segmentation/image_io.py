@@ -12,7 +12,7 @@ import random
 from tensorflow import keras
 import numpy as np
 from tensorflow.keras.preprocessing.image import load_img
-
+import tensorflow
 
 class ImageSegmentationSequence(keras.utils.Sequence):
     """Helper to iterate over the data (as Numpy arrays)."""
@@ -42,6 +42,12 @@ class ImageSegmentationSequence(keras.utils.Sequence):
             # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
             y[j] -= 1
         return x, y
+
+    def generator(self):
+        """ Returns generator """
+        # see https://www.tensorflow.org/api_docs/python/tf/data/Dataset#from_generator
+        for idx in range(self.__len__()):
+            yield self.__getitem__(idx)
 
 
 def build_image_segmentation_datasets(
@@ -107,11 +113,25 @@ def build_image_segmentation_datasets(
         train_input_img_paths,
         train_target_img_paths
     )
+    train_dataset = tensorflow.data.Dataset.from_generator(
+        train_gen.generator,
+        output_signature=(
+            tensorflow.TensorSpec(shape=(batch_size,input_size,input_size,3), dtype=tensorflow.int32),
+            tensorflow.TensorSpec(shape=(batch_size,input_size,input_size,1), dtype=tensorflow.uint8)
+        )
+    )
     val_gen = ImageSegmentationSequence(
         batch_size,
         (input_size, input_size),
         val_input_img_paths,
         val_target_img_paths
     )
+    val_dataset = tensorflow.data.Dataset.from_generator(
+        val_gen.generator,
+        output_signature=(
+            tensorflow.TensorSpec(shape=(batch_size,input_size,input_size,3), dtype=tensorflow.int32),
+            tensorflow.TensorSpec(shape=(batch_size,input_size,input_size,1), dtype=tensorflow.uint8)
+        )
+    )
 
-    return train_gen, val_gen
+    return train_dataset, val_dataset
