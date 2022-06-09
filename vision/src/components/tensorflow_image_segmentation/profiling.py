@@ -10,6 +10,126 @@ import logging
 import mlflow
 import tempfile
 from typing import Any
+from tensorflow import keras
+
+class _DevCustomCallbacks:
+    def __init__(self):
+        self.epoch_stats = []
+        self.batch_stats = []
+        self.batch_interval_stats = []
+
+        self.epoch_start = time.time()
+        self.batch_start = time.time()
+        self.train_start = time.time()
+        self.logger = logging.getLogger(__name__)
+
+    def on_epoch_begin(self, epoch, logs):
+        print("on_epoch_begin", epoch, logs)
+        self.current_epoch = epoch
+        self.epoch_start = time.time()
+
+    def on_epoch_end(self, epoch, logs):
+        print("on_epoch_end", epoch, logs)
+        epoch_time = time.time() - self.epoch_start
+        logging.getLogger(__name__).info(f"MLFLOW: epoch_time={epoch_time}")
+        mlflow.log_metric("epoch_time", epoch_time)
+
+    def on_batch_begin(self, batch, logs):
+        print("on_batch_begin", batch, logs)
+        if self.current_batch and batch > self.current_batch:
+            # record interval
+            self.batch_interval_stats.append(time.time() - self.batch_end)
+            print("batch_interval_stats", self.batch_interval_stats)
+        self.current_batch = batch
+        self.batch_begin = time.time()
+
+    def on_batch_end(self, batch, logs):
+        print("on_batch_end", batch, logs)
+        self.batch_end = time.time()
+        self.batch_stats.append(self.batch_end - self.batch_begin)
+        print("batch_stats", self.batch_stats)
+
+    def on_train_begin(self, logs):
+        print("on_train_begin", logs)
+        self.train_start = time.time()
+
+    def on_train_end(self, logs):
+        print("on_train_end", logs)
+        mlflow.log_metric("training_time", time.time() - self.train_start)
+
+
+class CustomCallbacks(keras.callbacks.Callback):
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+
+        self.metrics = {}
+        self.train_start = None
+        self.epoch_start = None
+        self.test_start = None
+
+    def _flush(self):
+        mlflow.log_metrics(self.metrics)
+        self.metrics = {}
+
+    def on_epoch_begin(self, epoch, logs=None):
+        keys = list(logs.keys())
+        self.logger.info("Start epoch {} of training; got log keys: {}".format(epoch, keys))
+        self.epoch_start = time.time()
+
+    def on_epoch_end(self, epoch, logs=None):
+        keys = list(logs.keys())
+        self.logger.info("End epoch {} of training; got log keys: {}".format(epoch, keys))
+        self.metrics['epoch_time'] = time.time() - self.epoch_start
+        self.metrics['epoch_train_time'] = self.metrics['epoch_time'] - self.metrics['epoch_eval_time']
+        self._flush()
+
+    def on_test_begin(self, logs=None):
+        keys = list(logs.keys())
+        self.logger.info("Start testing; got log keys: {}".format(keys))
+        self.test_start = time.time()
+
+    def on_test_end(self, logs=None):
+        keys = list(logs.keys())
+        self.logger.info("Stop testing; got log keys: {}".format(keys))
+        self.metrics['epoch_eval_time'] = time.time() - self.test_start
+
+    def on_train_begin(self, logs=None):
+        keys = list(logs.keys())
+        self.logger.info("Starting training; got log keys: {}".format(keys))
+
+    def on_train_end(self, logs=None):
+        keys = list(logs.keys())
+        self.logger.info("Stop training; got log keys: {}".format(keys))
+
+    # def on_predict_begin(self, logs=None):
+    #     keys = list(logs.keys())
+    #     print("Start predicting; got log keys: {}".format(keys))
+
+    # def on_predict_end(self, logs=None):
+    #     keys = list(logs.keys())
+    #     print("Stop predicting; got log keys: {}".format(keys))
+
+
+    # def on_train_batch_end(self, batch, logs=None):
+    #     keys = list(logs.keys())
+    #     print("...Training: end of batch {}; got log keys: {}".format(batch, keys))
+
+    # def on_test_batch_begin(self, batch, logs=None):
+    #     keys = list(logs.keys())
+    #     print("...Evaluating: start of batch {}; got log keys: {}".format(batch, keys))
+
+    # def on_test_batch_end(self, batch, logs=None):
+    #     keys = list(logs.keys())
+    #     print("...Evaluating: end of batch {}; got log keys: {}".format(batch, keys))
+
+    # def on_predict_batch_begin(self, batch, logs=None):
+    #     keys = list(logs.keys())
+    #     print("...Predicting: start of batch {}; got log keys: {}".format(batch, keys))
+
+    # def on_predict_batch_end(self, batch, logs=None):
+    #     keys = list(logs.keys())
+    #     print("...Predicting: end of batch {}; got log keys: {}".format(batch, keys))
+
 
 class LogTimeBlock(object):
     """ This class should be used to time a code block.
@@ -90,7 +210,7 @@ class LogDiskIOBlock(object):
             self.start_disk_counters = psutil.Process(self.process_id).io_counters()
 
         except ModuleNotFoundError:
-            self.logger.critical("import psutil failed, cannot display disk stats.")
+            self._logger.critical("import psutil failed, cannot display disk stats.")
 
     def __exit__(self, exc_type, value, traceback):
         """ Stops the timer and stores accordingly
@@ -104,7 +224,7 @@ class LogDiskIOBlock(object):
         try:
             import psutil
         except ModuleNotFoundError:
-            self.logger.critical("import psutil failed, cannot display disk stats.")
+            self._logger.critical("import psutil failed, cannot display disk stats.")
             return
 
         run_time = time.time() - self.start_time
