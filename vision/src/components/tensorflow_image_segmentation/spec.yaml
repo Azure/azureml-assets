@@ -25,6 +25,14 @@ inputs:
     min: 1
     optional: true
     description: "Train/valid data loading batch size (default: 64)"
+  num_workers:
+    type: integer
+    optional: true
+    description: "Num workers for data loader (default: -1 => all cpus available)"
+  prefetch_factor:
+    type: integer
+    optional: true
+    description: "Data loader prefetch factor (default: 2)"
 
   # model
   model_arch:
@@ -77,6 +85,8 @@ command: >-
   --masks ${{inputs.masks}}
 
   [--batch_size ${{inputs.batch_size}}]
+  [--num_workers ${{inputs.num_workers}}]
+  [--prefetch_factor ${{inputs.prefetch_factor}}]
 
   [--model_arch ${{inputs.model_arch}}]
   [--model_arch_pretrained ${{inputs.model_arch_pretrained}}]
