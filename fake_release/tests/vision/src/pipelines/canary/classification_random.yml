@@ -18,22 +18,4 @@ jobs:
       width: 300
       height: 300
 
-  train:
-    type: command
-    component: azureml://registries/{registry_name}/components/pytorch_image_classifier/version/1.0.4 
-    compute: azureml:gpu-cluster
-    resources:
-      instance_count: 1 # number of nodes
-    distribution:
-      type: pytorch
-      process_count_per_instance: 1 # number of gpus
-
-    inputs:
-      train_images: ${{parent.jobs.generate.outputs.output_train}}
-      valid_images: ${{parent.jobs.generate.outputs.output_valid}}
-      num_epochs: 3
-      batch_size: 16
-      num_workers: 5
-      prefetch_factor: 4
-      enable_profiling: false
 # </jobs>
