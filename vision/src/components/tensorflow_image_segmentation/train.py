@@ -220,6 +220,7 @@ class TensorflowDistributedModelTrainingSequence:
         # DISTRIBUTED CONFIG
         self.strategy = None
         self.nodes = None
+        self.devices = []
         self.gpus = None
         self.distributed_available = False
         self.self_is_main_node = True
@@ -248,20 +249,27 @@ class TensorflowDistributedModelTrainingSequence:
         if "TF_CONFIG" not in os.environ:
             self.logger.critical("TF_CONFIG cannot be found in os.environ, defaulting back to non-distributed training")
             self.nodes = 1
-            self.gpus = len(tensorflow.config.list_physical_devices('GPU'))
-            self.distributed_available = False
-            self.self_is_main_node = True
+            self.devices = [ device.name for device in tensorflow.config.list_physical_devices('GPU') ]
+            self.gpus = len(self.devices)
+            self.worker_id = 0
         else:
             tf_config = json.loads(os.environ['TF_CONFIG'])
+            self.logger.info(f"Found TF_CONFIG = {tf_config}")
             self.nodes = len(tf_config['cluster']['worker'])
-            self.gpus = len(tensorflow.config.list_physical_devices('GPU'))
-            self.distributed_available = False
-            self.self_is_main_node = True
+            self.devices = [ device.name for device in tensorflow.config.list_physical_devices('GPU') ]
+            self.gpus = len(self.devices)
+            self.worker_id = tf_config['task']['index']
+
+        self.distributed_available = ((self.nodes * self.gpus) > 1)
+        self.self_is_main_node = (self.worker_id == 0)
+
+        self.logger.info(f"Distribution settings: nodes={self.nodes}, gpus={self.gpus}, distributed_available={self.distributed_available}, self_is_main_node={self.self_is_main_node}")
 
         if args.disable_cuda:
             self.logger.warning(f"Cuda disabled by replacing current CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')} by '-1'")
             os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
             self.gpus = 0
+            self.devices = []
         elif args.num_gpus:
             # TODO: force down the number of gpus
             pass
@@ -270,9 +278,12 @@ class TensorflowDistributedModelTrainingSequence:
         if self.nodes > 1:
             # multiple nodes
             self.strategy = distribute.MultiWorkerMirroredStrategy()
-        else:
+        elif self.gpus > 1:
             # single node, multi gpu
             self.strategy = distribute.MirroredStrategy()
+        else:
+            # single node, single gpu
+            self.strategy = distribute.OneDeviceStrategy(device="GPU:0")
 
         # DISTRIBUTED: in distributed mode, you want to report parameters
         # only from main process (rank==0) to avoid conflict
@@ -285,7 +296,7 @@ class TensorflowDistributedModelTrainingSequence:
                 #"cuda_available": not(args.disable_cuda),
                 "disable_cuda": self.training_config.disable_cuda,
                 "distributed": self.distributed_available,
-                "distributed_strategy": self.strategy.__class__.__name__,
+                "distributed_strategy": "none" if self.strategy is None else self.strategy.__class__.__name__,
 
                 # data loading params
                 "batch_size": self.dataloading_config.batch_size,
@@ -312,6 +323,12 @@ class TensorflowDistributedModelTrainingSequence:
         """Creates and sets up dataloaders for training/validation datasets."""
         self.training_dataset = training_dataset
         self.validation_dataset = validation_dataset
+
+        self.training_dataset = self.training_dataset.shard(num_shards=self.nodes, index=self.worker_id)
+        #self.validation_dataset = self.validation_dataset.shard(num_shards=self.nodes, index=self.worker_id)
+
+        self.training_dataset = self.training_dataset.batch(self.dataloading_config.batch_size)
+        self.validation_dataset = self.validation_dataset.batch(self.dataloading_config.batch_size)
 
         if self.dataloading_config.prefetch_factor < 0:
             # by default, use AUTOTUNE
@@ -406,8 +423,7 @@ def run(args):
             images_dir = args.images,
             annotations_dir = args.masks,
             val_samples = 1000,
-            input_size = args.model_input_size,
-            batch_size = args.batch_size
+            input_size = args.model_input_size
         )
 
         training_handler.setup_datasets(train_dataset, val_dataset)
