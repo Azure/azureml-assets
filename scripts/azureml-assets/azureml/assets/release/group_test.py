@@ -22,7 +22,7 @@ group_post = ''
 yaml = ruamel.yaml.YAML()
 with open(tests_dir.__str__()+"/tests.yml") as fp:
     data = yaml.load(fp)
-    if data[test_group][subscription_id] is not None:
+    if data[test_group]['subscription_id'] is not None:
         subscription_id = data[test_group]['subscription_id']
     if data[test_group]['resource_group_name'] is not None:
         resource_group_name = data[test_group]['resource_group_name']
