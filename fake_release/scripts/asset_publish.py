@@ -70,9 +70,9 @@ print('finished preprocessing test files')
 yaml = ruamel.yaml.YAML()
 for x in os.listdir(component_dir.__str__()):
     print("Registering "+x)
-    with open(component_dir.__str__()+"/"+x) as fp:
+    with open(component_dir.__str__()+"/"+x+'/'+'asset.yaml') as fp:
         data = yaml.load(fp)
     spec_file = data['spec']
-    print(f"az ml component create --file {x}/{spec_file} --registry {registry_name} --version {componentVersionWithBuildId} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' ")
-    subprocess.check_call(f"az ml component create --file {x}/{spec_file} --registry {registry_name} --version {componentVersionWithBuildId} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' --debug")
+    print(f"az ml component create --file {component_dir.__str__()}/{x}/{spec_file} --registry {registry_name} --version {componentVersionWithBuildId} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' ")
+    subprocess.check_call(f"az ml component create --file {component_dir.__str__()}/{x}/{spec_file} --registry {registry_name} --version {componentVersionWithBuildId} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' --debug")
 print('All assets published')
