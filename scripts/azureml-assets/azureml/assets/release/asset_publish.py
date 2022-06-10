@@ -73,6 +73,8 @@ for x in os.listdir(component_dir.__str__()):
     with open(component_dir.__str__()+"/"+x+'/'+'asset.yaml') as fp:
         data = yaml.load(fp)
     spec_file = data['spec']
-    print(f"az ml component create --file {component_dir.__str__()}/{x}/{spec_file} --registry {registry_name} --version {componentVersionWithBuildId} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' ")
-    subprocess.check_call(f"az ml component create --file {component_dir.__str__()}/{x}/{spec_file} --registry {registry_name} --version {componentVersionWithBuildId} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' --debug")
+    spec_path = Path(component_dir.__str__()+'/'+x+'/'+spec_file)
+    print("Does spec path exist: "+os.path.exists(spec_path))
+    print(f"az ml component create --file {spec_path} --registry {registry_name} --version {componentVersionWithBuildId} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' ")
+    subprocess.check_call(f"az ml component create --file {spec_path} --registry {registry_name} --version {componentVersionWithBuildId} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' --debug")
 print('All assets published')
