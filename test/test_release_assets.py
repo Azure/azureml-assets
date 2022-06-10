@@ -18,7 +18,6 @@ RESOURCES_DIR = Path("resources/release")
             "environment.yaml",
             "../src/context/conda_dependencies.yaml",
             "../src/context/Dockerfile",
-            "../src/context/include_me"
         ]),
         ("environment-in-subdir", [
             "asset.yaml",
@@ -53,8 +52,7 @@ def test_release_paths(test_subdir: str, expected: List[Path]):
             "spec.yaml",
             "environment.yaml",
             "../src/context/conda_dependencies.yaml",
-            "../src/context/Dockerfile",
-            "../src/context/include_me"
+            "../src/context/Dockerfile"
         ])),
         ("environment-in-subdir", 
             (".", [
