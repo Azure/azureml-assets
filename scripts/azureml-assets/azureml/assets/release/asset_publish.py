@@ -60,7 +60,8 @@ print("publishing assets")
 
 timestamp = datetime.datetime.now()
 
-componentVersionWithBuildId="ev2."+registry_name+"."+timestamp
+componentVersionWithBuildId="ev2."+registry_name+"."+timestamp.__str__()
+print("generated componentVersionWithBuildId: " + componentVersionWithBuildId)
 print('starting locating test files')
 test_jobs = test_files_location(tests_dir)
 print('starting preprocessing test files')
