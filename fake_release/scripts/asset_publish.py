@@ -20,26 +20,41 @@ workspace = args.workspace
 component_dir = args.component_directory
 tests_dir = args.tests_directory
 
-def test_files_preprocess(DIR: Path, full_version: str):
+def test_files_location(DIR: Path):
+    test_jobs = []
     yaml = ruamel.yaml.YAML()
     for x in os.listdir(DIR.__str__()):
-        print("processing test file: " + x)
-        with open(x) as fp:
+        print("processing test folder: " + x)
+        area_folder = DIR.__str__() + "/" + x
+        with open(area_folder+'/tests.yml') as fp:
             data = yaml.load(fp)
-        for job in data["jobs"]:
-            print("processing asset"+data["jobs"][job]["component"])
-            original_asset = data["jobs"][job]["component"]
-            new_asset = process_asset_id(original_asset, full_version)
-            data["jobs"][job]["component"] = new_asset
-            print(data["jobs"][job]["component"])
-        with open(DIR.__str__()+"/"+x, "w") as file:
-            yaml.dump(data, file)
+            for test_group in data:
+                for test_job in data[test_group]['jobs']:
+                    test_jobs.append(area_folder + '/' + data[test_group]['jobs'][test_job]['job'])
+    return test_jobs
 
 def process_asset_id(asset_id, full_version):
     list = asset_id.split("/")
     list[-1] += full_version
     list[-5] = registry_name
     return "/".join(list)
+
+def test_files_preprocess(test_jobs, full_version):
+    yaml = ruamel.yaml.YAML()
+    for test_job in test_jobs:
+        print("processing test job: " + test_job)
+        with open(test_job) as fp:
+            data = yaml.load(fp)
+            for job in data["jobs"]:
+                print("processing asset"+data["jobs"][job]["component"])
+                original_asset = data["jobs"][job]["component"]
+                new_asset = process_asset_id(original_asset, full_version)
+                data["jobs"][job]["component"] = new_asset
+                print(data["jobs"][job]["component"])
+            with open(test_job, "w") as file:
+                yaml.dump(data, file)
+
+
 
 print("publishing assets")
 
@@ -49,7 +64,11 @@ subprocess.call('export AZURE_ML_CLI_PRIVATE_FEATURES_ENABLED=true')
 subprocess.call('az ml -h')
 
 componentVersionWithBuildId="ev2."+registry_name+"."+timestamp
-test_files_preprocess(tests_dir, componentVersionWithBuildId)
+print('starting locating test files')
+test_jobs = test_files_location(tests_dir)
+print('starting preprocessing test files')
+test_files_preprocess(test_jobs, componentVersionWithBuildId)
+print('finished preprocessing test files')
 yaml = ruamel.yaml.YAML()
 for x in os.listdir(component_dir.__str__()):
     print("Registering "+x)
