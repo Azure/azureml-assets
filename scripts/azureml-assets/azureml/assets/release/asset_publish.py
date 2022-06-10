@@ -35,7 +35,7 @@ def test_files_location(DIR: Path):
 
 def process_asset_id(asset_id, full_version):
     list = asset_id.split("/")
-    list[-1] += full_version
+    list[-1] += '-'+full_version
     list[-5] = registry_name
     return "/".join(list)
 
@@ -75,6 +75,10 @@ for x in os.listdir(component_dir.__str__()):
     spec_file = data['spec']
     spec_path = Path(component_dir.__str__()+'/'+x+'/'+spec_file)
     print("Does spec path exist: "+os.path.exists(spec_path).__str__())
-    print(f"az ml component create --file {spec_path} --registry {registry_name} --version {componentVersionWithBuildId} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' ")
-    subprocess.check_call(f"az ml component create --file {spec_path} --registry {registry_name} --version {componentVersionWithBuildId} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' --debug")
+    final_version =''
+    with open(spec_path) as fp:
+        spec_data = yaml.load(fp)
+        final_version = spec_data['version']+'-'+componentVersionWithBuildId
+    print(f"az ml component create --file {spec_path} --registry {registry_name} --version {final_version} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' ")
+    subprocess.check_call(f"az ml component create --file {spec_path} --registry {registry_name} --version {final_version} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' --debug")
 print('All assets published')
