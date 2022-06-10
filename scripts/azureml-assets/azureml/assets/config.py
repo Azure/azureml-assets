@@ -332,9 +332,9 @@ class AssetConfig(Config):
     """
     def __init__(self, file_name: Path):
         super().__init__(file_name)
-        self._validate()
         self._spec = None
         self._extra_config = None
+        self._validate()
 
     def __str__(self) -> str:
         return f"{self.type.value} {self.name} {self.version}"
