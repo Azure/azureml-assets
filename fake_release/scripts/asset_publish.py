@@ -80,6 +80,6 @@ for x in os.listdir(component_dir.__str__()):
         spec_data = yaml.load(fp)
         final_version = spec_data['version'].__str__()+'-'+componentVersionWithBuildId
         print("final version: "+final_version)
-    print(f"az ml component create --file {spec_path} --registry {registry_name} --version {final_version} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' ")
-    subprocess.check_call(f"az ml component create --file {spec_path} --registry {registry_name} --version {final_version} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' --debug", shell=True)
+    print(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' ")
+    subprocess.check_call(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace}  --resource-group {resource_group} --set environment='azureml://registries/CuratedRegistry/environments/AzureML-minimal-ubuntu18.04-py37-cpu-inference/versions/34' --debug", shell=True)
 print('All assets published')
