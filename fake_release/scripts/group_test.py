@@ -1,5 +1,6 @@
 import argparse
 from asyncio import subprocess
+import subprocess
 from pathlib import Path
 from azureml.core import Workspace
 from azure.ai.ml import MLClient
