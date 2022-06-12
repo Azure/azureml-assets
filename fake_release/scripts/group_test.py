@@ -45,7 +45,7 @@ with open(tests_dir.__str__()+"/tests.yml") as fp:
     for job in data[test_group]['jobs']:
         if data[test_group]['jobs'][job]['pre'] is not None:
             print(f"Running pre script for {job}")
-            subprocess.check_call(f"python {data[test_group]['jobs'][job]['pre']}", shell=True)
+            subprocess.check_call(f"python {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", shell=True)
         print(f'Loading test job {job}')
         test_job = load_job(tests_dir.__str__()+"/"+data[test_group]['jobs'][job]['job'])
         print(f'Running test job {job}')
