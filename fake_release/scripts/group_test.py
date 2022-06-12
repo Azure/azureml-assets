@@ -30,9 +30,9 @@ with open(tests_dir.__str__()+"/tests.yml") as fp:
     if data[test_group]['workspace_name'] is not None:
         workspace_name = data[test_group]['workspace_name']
     if data[test_group]['pre'] is not None:
-        group_pre = data[test_group]['pre']
+        group_pre = tests_dir.__str__()+'/'+data[test_group]['pre']
     if data[test_group]['post'] is not None:
-        group_post = data[test_group]['post']
+        group_post = tests_dir.__str__()+'/'+data[test_group]['post']
     
 ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group_name, workspace_name)
 submitted_job_list = []
