@@ -1,0 +1,76 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+experiment_name: "tensorflow_dev"
+
+# <inputs_and_outputs>
+inputs:
+  images:
+    type: uri_folder
+    mode: download # pick ro_mount, rw_mount or download
+    path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images
+    # path: azureml://datastores/workspaceblobstore/paths/azureml-vision-datasets/places2/train//**
+  masks:
+    type: uri_folder
+    mode: download # pick ro_mount, rw_mount or download
+    path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/trimaps
+    # path: azureml://datastores/workspaceblobstore/paths/azureml-vision-datasets/places2/valid/**
+# </inputs_and_outputs>
+
+# <jobs>
+settings:
+  default_datastore: azureml:workspaceblobstore
+  continue_on_step_failure: true
+
+jobs:
+  train:
+    type: command
+    component: file:../../components/tensorflow_image_segmentation/spec.yaml
+    # compute: azureml:gpu-cluster
+    # compute: azureml:gpu-m60-4
+    # compute: azureml:gpu-v100-32g
+    compute: azureml:gpu-a100-80g
+    resources:
+      instance_count: 2 # number of nodes
+    distribution:
+      type: tensorflow
+      worker_count: 2 # ???
+
+    # NOTE: set env var if needed
+    environment_variables:
+      NCCL_DEBUG: "INFO" # adjusts the level of info from NCCL tests
+
+      # NCCL_TOPO_FILE: "/opt/microsoft/ndv4-topo.xml" # Use specific topology file for A100
+
+      # NCCL_IB_PCI_RELAXED_ORDERING: "1" # Relaxed Ordering can greatly help the performance of Infiniband networks in virtualized environments.
+      # NCCL_IB_DISABLE: "1" # force disable infiniband (if set to "1")
+      # NCCL_NET_PLUGIN: "none" # to force NET/Plugin off (no rdma/sharp plugin at all)
+      # NCCL_NET: "Socket" # to force node-to-node comm to use Socket (slow)
+      # NCCL_SOCKET_IFNAME: "eth0" # to force Socket comm to use eth0 (use NCCL_NET=Socket)
+
+      # UCX_IB_PCI_RELAXED_ORDERING: "on"
+      # UCX_TLS: "tcp"
+      # UCX_NET_DEVICES: "eth0" # if you have Error: Failed to resolve UCX endpoint...
+
+      # CUDA_DEVICE_ORDER: "PCI_BUS_ID" # ordering of gpus
+
+      # TORCH_DISTRIBUTED_DEBUG: "DETAIL"
+
+    inputs:
+      # data inputs
+      images: ${{parent.inputs.images}}
+      masks: ${{parent.inputs.masks}}
+
+      # data loading
+      batch_size: 128
+      prefetch_factor: 10
+
+      # model
+      model_arch: "unet"
+      model_input_size: 160
+      #distributed_strategy: "MirroredStrategy"
+
+      # training
+      num_epochs: 7
+      
+# </jobs>
