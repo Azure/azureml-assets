@@ -34,7 +34,7 @@ def test_images(input_dirs: List[Path],
                 os_to_test: str = None) -> bool:
     counters = Counter()
     for asset_config in util.find_assets(input_dirs, asset_config_filename, assets.AssetType.ENVIRONMENT):
-        env_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+        env_config = asset_config.environment_config_as_object()
 
         # Filter by OS
         if os_to_test and env_config.os.value != os_to_test:
@@ -47,7 +47,7 @@ def test_images(input_dirs: List[Path],
             continue
 
         # Test image
-        (return_code, output) = test_image(asset_config, env_config.image_name)
+        return_code, output = test_image(asset_config, env_config.image_name)
         if return_code != 0 or not output.startswith(TEST_PHRASE):
             logger.log_error(f"Testing of image for {asset_config.name} failed: {output}", title="Testing failure")
             counters[FAILED_COUNT] += 1

@@ -137,7 +137,7 @@ def build_images(input_dirs: List[Path],
         # Find environments under image root directories
         futures = []
         for asset_config in util.find_assets(input_dirs, asset_config_filename, assets.AssetType.ENVIRONMENT, changed_files):
-            env_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+            env_config = asset_config.environment_config_as_object()
 
             # Filter by OS
             if os_to_build and env_config.os.value != os_to_build:
@@ -164,7 +164,7 @@ def build_images(input_dirs: List[Path],
 
             # Tag with version from spec
             if tag_with_version:
-                version = assets.Spec(asset_config.spec_with_path).version
+                version = asset_config.spec_as_object().version
                 image_name = env_config.get_image_name_with_tag(version)
             else:
                 image_name = env_config.image_name

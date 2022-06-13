@@ -17,7 +17,7 @@ def copy_unreleased_asset(asset_config: assets.AssetConfig,
 
     # Copy asset to output directory
     util.copy_asset_to_output_dir(asset_config, output_directory_root)
-    return assets.Spec(asset_config.spec_with_path).version
+    return asset_config.spec_as_object().version
 
 
 def copy_unreleased_assets(release_directory_root: Path,
