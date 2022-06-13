@@ -52,6 +52,7 @@ with open(tests_dir.__str__()+"/tests.yml") as fp:
         print(f'Running test job {job}')
         test_job = ml_client.jobs.create_or_update(test_job)
         print(f'Submitted test job {job}')
+        print(f"Job id: {test_job.id}")
         submitted_job_list.append(test_job)
 
 # TO-DO: job post and group post scripts will be run after all jobs are completed
@@ -59,6 +60,7 @@ with open(tests_dir.__str__()+"/tests.yml") as fp:
 while(len(submitted_job_list)):
     for job in submitted_job_list:
         returned_job = ml_client.jobs.get(job.name)
+        print(f'The status of test job {job.name} is {returned_job.status}')
         if(returned_job.status == "Completed"):
             succeeded_jobs.append(returned_job.display_name)
             submitted_job_list.remove(job)
@@ -69,7 +71,7 @@ while(len(submitted_job_list)):
 print(f"Totally {len(succeeded_jobs)+len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
 
 #
-#if(len(failed_jobs)>0):
-#    failed_job_str = ", ".join(failed_jobs)
-#    raise Exception(f"{failed_jobs.count} jobs failed. {failed_job_str}.")
+if(len(failed_jobs)>0):
+    failed_job_str = ", ".join(failed_jobs)
+    raise Exception(f"{failed_jobs.count} jobs failed. {failed_job_str}.")
 
