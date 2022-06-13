@@ -24,8 +24,8 @@ for area in os.listdir(tests_dir.__str__()):
         for test_group in data:
             p = subprocess.Popen("python -u group_test.py -i "+tests_dir.__str__()+"/"+area+" -g "+test_group, stdout=PIPE, shell=True)
             stdout = p.communicate()
-            print(stdout)
-            final_report[area].append(stdout[-1].decode('utf-8'))
+            print(stdout[0].decode('utf-8'))
+            final_report[area].append(stdout[0].decode('utf-8'))
 
 red_flag = False
 for area in final_report:
