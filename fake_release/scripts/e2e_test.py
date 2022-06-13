@@ -16,17 +16,23 @@ args = parser.parse_args()
 tests_dir = args.input_dir
 final_report = {}
 
+print("Start executing E2E tests script")
 for area in os.listdir(tests_dir.__str__()):
+    print(f"now processing area: {area}")
     final_report[area] = []
     yaml = ruamel.yaml.YAML()
     with open(tests_dir.__str__()+'/'+area+"/tests.yml") as fp:
         data = yaml.load(fp)
         for test_group in data:
+            print(f"now processing test group: {test_group}")
             p = subprocess.Popen("python -u group_test.py -i "+tests_dir.__str__()+"/"+area+" -g "+test_group, stdout=PIPE, shell=True)
             stdout = p.communicate()
             print(stdout[0].decode('utf-8'))
             final_report[area].append(stdout[0].decode('utf-8'))
+            print(f"finished processing test group: {test_group}")
+        print(f"finished processing area: {area}")
 
+print("Finished all tests")
 red_flag = False
 for area in final_report:
     for group_test_report in final_report[area]:
