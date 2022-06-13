@@ -1,21 +1,24 @@
+import difflib
 import filecmp
 import shutil
 from pathlib import Path
 from typing import List, Tuple, Union
 
 import azureml.assets as assets
+from azureml.assets.util import logger
 
 RELEASE_SUBDIR = "latest"
 EXCLUDE_DIR_PREFIX = "!"
 
 
 # See https://stackoverflow.com/questions/4187564/recursively-compare-two-directories-to-ensure-they-have-the-same-files-and-subdi
-def are_dir_trees_equal(dir1: Path, dir2: Path) -> bool:
+def are_dir_trees_equal(dir1: Path, dir2: Path, enable_logging: bool = False) -> bool:
     """Compare two directories recursively based on files names and content.
 
     Args:
         dir1 (Path): First directory
         dir2 (Path): Second directory
+        enable_logging (bool, optional): Enable logging for mismatches
 
     Returns:
         bool: True if the directory trees are the same and there were no errors
@@ -23,17 +26,44 @@ def are_dir_trees_equal(dir1: Path, dir2: Path) -> bool:
     """
 
     dirs_cmp = filecmp.dircmp(dir1, dir2)
-    if dirs_cmp.left_only or dirs_cmp.right_only or dirs_cmp.funny_files:
+    if dirs_cmp.left_only:
+        _log_diff(f"Compared {dir1} and {dir2} and found these only in {dir1}: {dirs_cmp.left_only}", enable_logging)
         return False
-    (_, mismatch, errors) = filecmp.cmpfiles(dir1, dir2, dirs_cmp.common_files, shallow=False)
-    if mismatch or errors:
+    if dirs_cmp.right_only:
+        _log_diff(f"Compared {dir1} and {dir2} and found these only in {dir2}: {dirs_cmp.right_only}", enable_logging)
+        return False
+    if dirs_cmp.funny_files:
+        _log_diff(f"Compared {dir1} and {dir2} and couldn't compare these: {dirs_cmp.funny_files}", enable_logging)
+        return False
+    (_, differences, errors) = filecmp.cmpfiles(dir1, dir2, dirs_cmp.common_files, shallow=False)
+    if differences:
+        _log_diff(f"Compared {dir1} and {dir2} and found differences in: {differences}", enable_logging)
+        for file in differences:
+            _log_file_diff(dir1 / file, dir2 / file, enable_logging)
+        return False
+    if errors:
+        _log_diff(f"Compared {dir1} and {dir2} and couldn't compare these: {errors}", enable_logging)
         return False
     for common_dir in dirs_cmp.common_dirs:
         new_dir1 = dir1 / common_dir
         new_dir2 = dir2 / common_dir
-        if not are_dir_trees_equal(new_dir1, new_dir2):
+        if not are_dir_trees_equal(new_dir1, new_dir2, enable_logging):
             return False
     return True
+
+
+def _log_diff(message: str, enabled: bool):
+    if enabled:
+        logger.log_warning(message)
+
+
+def _log_file_diff(file1: Path, file2: Path, enabled: bool):
+    if enabled:
+        with open(file1, "r") as file1_obj, open(file2, "r") as file2_obj:
+            file1_contents = file1_obj.readlines()
+            file2_contents = file2_obj.readlines()
+            diff = difflib.unified_diff(file1_contents, file2_contents, str(file1), str(file2))
+            logger.print("".join(diff))
 
 
 def copy_replace_dir(source: Path, dest: Path, paths: List[Path] = None):
@@ -175,7 +205,7 @@ def _convert_excludes(input_dirs: Union[List[Path], Path],
 
 
 def find_assets(input_dirs: Union[List[Path], Path],
-                asset_config_filename: str,
+                asset_config_filename: str = assets.DEFAULT_ASSET_FILENAME,
                 types: Union[List[assets.AssetType], assets.AssetType] = None,
                 changed_files: List[Path] = None,
                 exclude_dirs: List[Path] = None) -> List[assets.AssetConfig]:
@@ -183,7 +213,7 @@ def find_assets(input_dirs: Union[List[Path], Path],
 
     Args:
         input_dirs (Union[List[Path], Path]): Directories to search in.
-        asset_config_filename (str): Asset config filename to search for.
+        asset_config_filename (str, optional): Asset config filename to search for.
         types (Union[List[assets.AssetType], assets.AssetType], optional): AssetTypes to search for. Will not filter if unspecified.
         changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs. Will not filter if unspecified.
         exclude_dirs (Union[List[Path], Path], optional): Directories that should be excluded from the search.

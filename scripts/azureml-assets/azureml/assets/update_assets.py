@@ -109,24 +109,26 @@ def update_asset(asset_config: assets.AssetConfig,
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
         # Copy asset to temp directory and pin image/package versions
-        util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=temp_dir_path)
+        util.copy_asset_to_output_dir(asset_config=asset_config, output_directory_root=temp_dir_path)
         temp_asset_config = util.find_assets(input_dirs=temp_dir_path, asset_config_filename=asset_config.file_name)[0]
         temp_env_config = temp_asset_config.environment_config_as_object()
         if temp_env_config:
             pin_env_files(temp_env_config)
 
+        temp_asset_dir = util.get_asset_output_dir(asset_config=asset_config, output_directory_root=temp_dir_path)
+        
         # Compare temporary version with one in release
         if check_contents:
             assets.update_spec(temp_asset_config, version=release_version)
-            dirs_equal = util.are_dir_trees_equal(temp_dir_path, release_dir)
+            dirs_equal = util.are_dir_trees_equal(temp_asset_dir, release_dir)
             if dirs_equal:
                 return None
 
         # Copy and replace any existing directory
-        util.copy_replace_dir(source=temp_dir_path, dest=output_directory)
+        util.copy_replace_dir(source=temp_asset_dir, dest=output_directory)
 
         # Update version in spec by copying clean spec and updating it
-        asset_config_relative_path = temp_asset_config.file_name_with_path.relative_to(temp_dir_path)
+        asset_config_relative_path = temp_asset_config.file_name_with_path.relative_to(temp_asset_dir)
         output_asset_config = assets.AssetConfig(output_directory / asset_config_relative_path)
         shutil.copyfile(asset_config.spec_with_path, output_asset_config.spec_with_path)
         assets.update_spec(output_asset_config, version=str(new_version))

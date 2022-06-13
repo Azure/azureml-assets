@@ -3,7 +3,7 @@ import pytest
 
 import azureml.assets as assets
 
-RESOURCES_DIR = Path("resources/validation")
+RESOURCES_DIR = Path("resources/validate")
 
 
 @pytest.mark.parametrize(
