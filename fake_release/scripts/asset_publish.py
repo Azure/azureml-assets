@@ -18,6 +18,7 @@ args = parser.parse_args()
 registry_name = args.registry_name
 resource_group = args.resource_group
 workspace = args.workspace
+tests_dir = args.tests_directory
 component_dir = args.component_directory
 
 def test_files_location(DIR: Path):
