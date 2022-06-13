@@ -49,6 +49,7 @@ with open(tests_dir.__str__()+"/tests.yml") as fp:
             subprocess.check_call(f"python {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", shell=True)
         print(f'Loading test job {job}')
         test_job = azure.ai.ml.load_job(tests_dir.__str__()+"/"+data[test_group]['jobs'][job]['job'])
+        print(test_job)
         print(f'Running test job {job}')
         ml_client.jobs.create_or_update(test_job)
         submitted_job_list.append(test_job)
