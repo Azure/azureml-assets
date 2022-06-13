@@ -12,13 +12,14 @@ EXCLUDE_DIR_PREFIX = "!"
 
 
 # See https://stackoverflow.com/questions/4187564/recursively-compare-two-directories-to-ensure-they-have-the-same-files-and-subdi
-def are_dir_trees_equal(dir1: Path, dir2: Path, enable_logging: bool = False) -> bool:
+def are_dir_trees_equal(dir1: Path, dir2: Path, enable_logging: bool = False, ignore_eol: bool = True) -> bool:
     """Compare two directories recursively based on files names and content.
 
     Args:
         dir1 (Path): First directory
         dir2 (Path): Second directory
         enable_logging (bool, optional): Enable logging for mismatches
+        ignore_eol (bool, optional): Ignore EOL differences when comparing files
 
     Returns:
         bool: True if the directory trees are the same and there were no errors
@@ -38,9 +39,15 @@ def are_dir_trees_equal(dir1: Path, dir2: Path, enable_logging: bool = False) ->
     (_, differences, errors) = filecmp.cmpfiles(dir1, dir2, dirs_cmp.common_files, shallow=False)
     if differences:
         _log_diff(f"Compared {dir1} and {dir2} and found differences in: {differences}", enable_logging)
+        non_eol_differences = []
         for file in differences:
-            _log_file_diff(dir1 / file, dir2 / file, enable_logging)
-        return False
+            if _are_files_equal_ignore_eol(dir1 / file, dir2 / file):
+                _log_diff(f"Ignoring differences for {file} because they're only related to EOLs", enable_logging)
+            else:
+                _log_file_diff(dir1 / file, dir2 / file, enable_logging)
+                non_eol_differences.append(file)
+        if non_eol_differences:
+            return False
     if errors:
         _log_diff(f"Compared {dir1} and {dir2} and couldn't compare these: {errors}", enable_logging)
         return False
@@ -64,6 +71,19 @@ def _log_file_diff(file1: Path, file2: Path, enabled: bool):
             file2_contents = file2_obj.readlines()
             diff = difflib.unified_diff(file1_contents, file2_contents, str(file1), str(file2))
             logger.print("".join(diff))
+
+
+def _are_files_equal_ignore_eol(file1: Path, file2: Path) -> bool:
+    with open(file1, "r") as file1_obj, open(file2, "r") as file2_obj:
+        while True:
+            line1 = file1_obj.readline()
+            line2 = file2_obj.readline()
+            line1 = line1.rstrip("\n\r") if line1 else None
+            line2 = line2.rstrip("\n\r") if line2 else None
+            if line1 != line2:
+                return False
+            if line1 is None and line2 is None:
+                return True
 
 
 def copy_replace_dir(source: Path, dest: Path, paths: List[Path] = None):

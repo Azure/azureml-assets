@@ -50,10 +50,10 @@ def test_validate_assets(test_subdir: str, create_tag: bool):
             repo.create_tag(assets.get_release_tag_name(asset_config))
 
         # Create updatable expected dir
-        shutil.copytree(expected_dir, temp_expected_path, dirs_exist_ok=True)
-        expected_asset_configs = util.find_assets(input_dirs=temp_expected_path)
-        if expected_asset_configs:
-            assets.pin_env_files(expected_asset_configs[0].environment_config_as_object())
+        if expected_dir.exists():
+            shutil.copytree(expected_dir, temp_expected_path, dirs_exist_ok=True)
+            expected_asset_config = util.find_assets(input_dirs=temp_expected_path)[0]
+            assets.pin_env_files(expected_asset_config.environment_config_as_object())
         
         assets.update_assets(input_dirs=main_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME, 
                              release_directory_root=temp_release_path, copy_only=False, skip_unreleased=False,
