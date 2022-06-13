@@ -13,12 +13,12 @@ parser.add_argument("-g", "--resource-group", required=True, type=str, help="the
 parser.add_argument("-w", "--workspace", required=True, type=str, help="the workspace name")
 parser.add_argument("-c", "--component-directory", required=True, type=Path, help="the component directory")
 parser.add_argument("-t", "--tests-directory", required=True, type=Path, help="the tests directory")
+parser.add_argument("-v", "--version", required=False, type=str, help="the version")
 args = parser.parse_args()
 registry_name = args.registry_name
 resource_group = args.resource_group
 workspace = args.workspace
 component_dir = args.component_directory
-tests_dir = args.tests_directory
 
 def test_files_location(DIR: Path):
     test_jobs = []
@@ -59,6 +59,7 @@ def test_files_preprocess(test_jobs, full_version):
 print("publishing assets")
 
 timestamp = '-'.join(datetime.datetime.now().__str__().split(" "))
+timestamp = timestamp.split(":")[0]
 
 componentVersionWithBuildId="ev2."+registry_name+"."+timestamp
 print("generated componentVersionWithBuildId: " + componentVersionWithBuildId)
