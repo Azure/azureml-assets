@@ -9,7 +9,7 @@ settings:
 jobs:
   generate:
     type: command
-    component: azureml://registries/{registry_name}/components/generate_random_image_classes/version/1
+    component: azureml://registries/{registry_name}/components/generate_random_image_classes/versions/1
     compute: azureml:cpu-cluster
     inputs:
       classes: 4
