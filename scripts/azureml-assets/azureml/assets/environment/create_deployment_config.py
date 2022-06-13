@@ -93,8 +93,8 @@ def create_deployment_config(input_directory: Path,
                              tag_template: str = None):
     deployment_config = {}
     for asset_config in util.find_assets(input_directory, asset_config_filename, assets.AssetType.ENVIRONMENT):
-        env_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
-        spec = assets.Spec(asset_config.spec_with_path)
+        env_config = asset_config.environment_config_as_object()
+        spec = asset_config.spec_as_object()
 
         if env_config.build_enabled:
             # Skip if not publishing to MCR

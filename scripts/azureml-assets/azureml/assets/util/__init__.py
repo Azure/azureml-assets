@@ -8,6 +8,7 @@ from .util import (
     copy_replace_dir,
     find_asset_config_files,
     find_assets,
+    find_common_directory,
     get_asset_output_dir,
     get_asset_release_dir,
 )

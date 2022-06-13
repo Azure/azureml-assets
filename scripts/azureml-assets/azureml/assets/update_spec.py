@@ -34,7 +34,7 @@ def create_template_data(asset_config: assets.AssetConfig, release_directory_roo
 
     # Augment with type-specific data
     if asset_config.type == assets.AssetType.ENVIRONMENT:
-        environment_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+        environment_config = asset_config.environment_config_as_object()
         data['image'] = {'name': environment_config.image_name}
         if environment_config.build_enabled:
             data['image']['dockerfile'] = {
