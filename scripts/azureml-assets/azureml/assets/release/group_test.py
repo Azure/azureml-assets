@@ -2,7 +2,6 @@ import argparse
 from asyncio import subprocess
 import subprocess
 from pathlib import Path
-from azureml.core import Workspace
 import azure.ai.ml 
 from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
