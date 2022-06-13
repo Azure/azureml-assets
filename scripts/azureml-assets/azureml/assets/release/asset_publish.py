@@ -59,10 +59,10 @@ def test_files_preprocess(test_jobs, full_version):
 
 print("publishing assets")
 
-timestamp = '-'.join(datetime.datetime.now().__str__().split(" "))
-timestamp = timestamp.split(":")[0]
 
-componentVersionWithBuildId="ev2."+registry_name+"."+timestamp
+timestamp = '-'.join(datetime.datetime.now().__str__().split(" "))
+# componentVersionWithBuildId="ev2."+registry_name+"."+timestamp
+componentVersionWithBuildId = timestamp
 print("generated componentVersionWithBuildId: " + componentVersionWithBuildId)
 print('starting locating test files')
 test_jobs = test_files_location(tests_dir)
