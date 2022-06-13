@@ -61,6 +61,7 @@ print("publishing assets")
 
 
 timestamp = '-'.join(datetime.datetime.now().__str__().split(" "))
+timestamp = ''.join(timestamp.split(".")[0].split(":")[0:-2])
 # componentVersionWithBuildId="ev2."+registry_name+"."+timestamp
 componentVersionWithBuildId = timestamp
 print("generated componentVersionWithBuildId: " + componentVersionWithBuildId)
