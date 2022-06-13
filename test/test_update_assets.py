@@ -40,6 +40,8 @@ def test_validate_assets(test_subdir: str, create_tag: bool):
                 continue
             rel_path = path.relative_to(temp_release_path)
             repo.index.add(str(rel_path))
+        repo.git.config("user.email", "<>")
+        repo.git.config("user.name", "Unit Test")
         repo.git.commit("-m", "Initial commit")
 
         # Create tag
