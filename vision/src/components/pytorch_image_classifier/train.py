@@ -22,6 +22,7 @@ import argparse
 import traceback
 from tqdm import tqdm
 from distutils.util import strtobool
+import random
 
 import mlflow
 
@@ -744,7 +745,13 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         default=None,
         help="Check https://pytorch.org/docs/stable/multiprocessing.html",
     )
-
+    group.add_argument(
+        "--model_load_retries",
+        type=int,
+        required=False,
+        default=1,
+        help="Enable retires when loading the model.",
+    )
     return parser
 
 
@@ -784,10 +791,19 @@ def run(args):
     training_handler.setup_datasets(train_dataset, valid_dataset, labels)
 
     with LogTimeBlock("load_model", enabled=training_handler.self_is_main_node):
-        # creates the model architecture
-        model = load_model(
-            args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
-        )
+        for _ in range(args.model_load_retries):
+            try:        
+                # creates the model architecture
+                model = load_model(
+                    args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
+                )
+                break
+            except Exception:
+                typ, val, tb = sys.exc_info()
+                logger.error(traceback.format_exception(typ, val, tb))
+                time.sleep(random.randint(0,30))
+        else:
+            raise Exception("Failed to load model")
 
     # sets the model for distributed training
     training_handler.setup_model(model)
