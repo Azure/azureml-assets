@@ -159,7 +159,7 @@ def build_images(input_dirs: List[Path],
 
                 # Copy file to output directory without building
                 if output_directory:
-                    util.copy_asset_to_output_dir(asset_config, output_directory)
+                    util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory, add_subdir=True)
                 continue
 
             # Tag with version from spec
@@ -188,7 +188,7 @@ def build_images(input_dirs: List[Path],
                 logger.log_debug(f"Successfully built image for {asset_config.name}")
                 counters[SUCCESS_COUNT] += 1
                 if output_directory:
-                    util.copy_asset_to_output_dir(asset_config, output_directory)
+                    util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory, add_subdir=True)
 
     # Set variables
     for counter_name in COUNTERS:

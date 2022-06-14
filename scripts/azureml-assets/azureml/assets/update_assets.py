@@ -62,7 +62,7 @@ def update_asset(asset_config: assets.AssetConfig,
 
     # Simpler operation that just copies the directory
     if copy_only:
-        util.copy_replace_dir(source=asset_config.file_path, dest=output_directory)
+        util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory)
         return asset_config.spec_as_object().version
 
     # Get version from main branch, set a few defaults
@@ -109,7 +109,7 @@ def update_asset(asset_config: assets.AssetConfig,
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
         # Copy asset to temp directory and pin image/package versions
-        util.copy_asset_to_output_dir(asset_config=asset_config, output_directory_root=temp_dir_path)
+        util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=temp_dir_path, add_subdir=True)
         temp_asset_config = util.find_assets(input_dirs=temp_dir_path, asset_config_filename=asset_config.file_name)[0]
         temp_env_config = temp_asset_config.environment_config_as_object()
         if temp_env_config:
