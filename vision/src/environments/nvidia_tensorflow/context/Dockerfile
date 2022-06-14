@@ -1,5 +1,5 @@
 # check release notes https://docs.nvidia.com/deeplearning/frameworks/tensorflow-release-notes/index.html
-FROM nvcr.io/nvidia/tensorflow:22.05-tf2-py3
+FROM nvcr.io/nvidia/tensorflow:22.02-tf2-py3
 
 ##############################################################################
 # NCCL TESTS
