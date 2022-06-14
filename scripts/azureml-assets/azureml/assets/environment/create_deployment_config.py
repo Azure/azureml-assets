@@ -96,14 +96,10 @@ def create_deployment_config(input_directory: Path,
         env_config = asset_config.environment_config_as_object()
         spec = asset_config.spec_as_object()
 
-        if env_config.build_enabled:
-            # Skip if not publishing to MCR
-            if env_config.publish_location != assets.PublishLocation.MCR:
-                logger.log_warning(f"Skipping {asset_config.name} because it's not published to MCR")
-                continue
-
+        if env_config.build_enabled and env_config.publish_location == assets.PublishLocation.MCR:
             # Apply tag template to image name
-            full_image_name = util.apply_tag_template(spec.image, tag_template)
+            image = spec.image or env_config.image_name
+            full_image_name = util.apply_tag_template(image, tag_template)
         else:
             # Use image name as-is
             logger.log_warning(f"Not applying tag template to {asset_config.name} because it's a pre-published image")
