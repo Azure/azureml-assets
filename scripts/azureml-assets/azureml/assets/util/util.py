@@ -1,21 +1,25 @@
+import difflib
 import filecmp
 import shutil
 from pathlib import Path
 from typing import List, Tuple, Union
 
 import azureml.assets as assets
+from azureml.assets.util import logger
 
 RELEASE_SUBDIR = "latest"
 EXCLUDE_DIR_PREFIX = "!"
 
 
 # See https://stackoverflow.com/questions/4187564/recursively-compare-two-directories-to-ensure-they-have-the-same-files-and-subdi
-def are_dir_trees_equal(dir1: Path, dir2: Path) -> bool:
+def are_dir_trees_equal(dir1: Path, dir2: Path, enable_logging: bool = False, ignore_eol: bool = True) -> bool:
     """Compare two directories recursively based on files names and content.
 
     Args:
         dir1 (Path): First directory
         dir2 (Path): Second directory
+        enable_logging (bool, optional): Enable logging for mismatches
+        ignore_eol (bool, optional): Ignore EOL differences when comparing files
 
     Returns:
         bool: True if the directory trees are the same and there were no errors
@@ -23,32 +27,91 @@ def are_dir_trees_equal(dir1: Path, dir2: Path) -> bool:
     """
 
     dirs_cmp = filecmp.dircmp(dir1, dir2)
-    if dirs_cmp.left_only or dirs_cmp.right_only or dirs_cmp.funny_files:
+    if dirs_cmp.left_only:
+        _log_diff(f"Compared {dir1} and {dir2} and found these only in {dir1}: {dirs_cmp.left_only}", enable_logging)
         return False
-    (_, mismatch, errors) = filecmp.cmpfiles(dir1, dir2, dirs_cmp.common_files, shallow=False)
-    if mismatch or errors:
+    if dirs_cmp.right_only:
+        _log_diff(f"Compared {dir1} and {dir2} and found these only in {dir2}: {dirs_cmp.right_only}", enable_logging)
+        return False
+    if dirs_cmp.funny_files:
+        _log_diff(f"Compared {dir1} and {dir2} and couldn't compare these: {dirs_cmp.funny_files}", enable_logging)
+        return False
+    (_, differences, errors) = filecmp.cmpfiles(dir1, dir2, dirs_cmp.common_files, shallow=False)
+    if differences:
+        _log_diff(f"Compared {dir1} and {dir2} and found differences in: {differences}", enable_logging)
+        non_eol_differences = []
+        for file in differences:
+            if _are_files_equal_ignore_eol(dir1 / file, dir2 / file):
+                _log_diff(f"Ignoring differences for {file} because they're only related to EOLs", enable_logging)
+            else:
+                _log_file_diff(dir1 / file, dir2 / file, enable_logging)
+                non_eol_differences.append(file)
+        if non_eol_differences:
+            return False
+    if errors:
+        _log_diff(f"Compared {dir1} and {dir2} and couldn't compare these: {errors}", enable_logging)
         return False
     for common_dir in dirs_cmp.common_dirs:
         new_dir1 = dir1 / common_dir
         new_dir2 = dir2 / common_dir
-        if not are_dir_trees_equal(new_dir1, new_dir2):
+        if not are_dir_trees_equal(new_dir1, new_dir2, enable_logging):
             return False
     return True
 
 
-def copy_replace_dir(source: Path, dest: Path):
+def _log_diff(message: str, enabled: bool):
+    if enabled:
+        logger.log_warning(message)
+
+
+def _log_file_diff(file1: Path, file2: Path, enabled: bool):
+    if enabled:
+        with open(file1, "r") as file1_obj, open(file2, "r") as file2_obj:
+            file1_contents = file1_obj.readlines()
+            file2_contents = file2_obj.readlines()
+            diff = difflib.unified_diff(file1_contents, file2_contents, str(file1), str(file2))
+            logger.print("".join(diff))
+
+
+def _are_files_equal_ignore_eol(file1: Path, file2: Path) -> bool:
+    with open(file1, "r") as file1_obj, open(file2, "r") as file2_obj:
+        while True:
+            line1 = file1_obj.readline()
+            line2 = file2_obj.readline()
+            line1 = line1.rstrip("\n\r") if line1 else None
+            line2 = line2.rstrip("\n\r") if line2 else None
+            if line1 != line2:
+                return False
+            if line1 is None and line2 is None:
+                return True
+
+
+def copy_replace_dir(source: Path, dest: Path, paths: List[Path] = None):
     """Copy a directory tree, replacing any existing one.
 
     Args:
         source (Path): Source directory
         dest (Path): Destination directory
+        paths (List[Paths], optional): Specific paths to copy, relative to the source directory
     """
     # Delete destination directory
     if dest.exists():
         shutil.rmtree(dest)
 
     # Copy source to destination directory
-    shutil.copytree(source, dest)
+    if not paths:
+        # Easy, copy everything
+        shutil.copytree(source, dest)
+    else:
+        # Copy only selected paths
+        for path in paths:
+            source_path = source / path
+            dest_path = dest / path
+            if source_path.is_dir():
+                Path.mkdir(dest_path, parents=True, exist_ok=True)
+            else:
+                Path.mkdir(dest_path.parent, parents=True, exist_ok=True)
+                shutil.copyfile(source_path, dest_path)
 
 
 def get_asset_output_dir(asset_config: assets.AssetConfig, output_directory_root: Path) -> Path:
@@ -77,15 +140,19 @@ def get_asset_release_dir(asset_config: assets.AssetConfig, release_directory_ro
     return get_asset_output_dir(asset_config, release_directory_root / RELEASE_SUBDIR)
 
 
-def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory_root: Path):
+def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory: Path, add_subdir: bool = False):
     """Copy asset directory to output directory.
 
     Args:
         asset_config (assets.AssetConfig): Asset config to copy
         output_directory_root (Path): Output directory root
+        add_subdir (bool, optional): Add asset-specific subdirectories to output_directory
     """
-    output_directory = get_asset_output_dir(asset_config, output_directory_root)
-    copy_replace_dir(asset_config.file_path, output_directory)
+    if add_subdir:
+        output_directory = output_directory / get_asset_output_dir(asset_config, output_directory)
+
+    common_dir, relative_release_paths = find_common_directory(asset_config.release_paths)
+    copy_replace_dir(source=common_dir, dest=output_directory, paths=relative_release_paths)
 
 
 def apply_tag_template(full_image_name: str, template: str = None) -> str:
@@ -160,7 +227,7 @@ def _convert_excludes(input_dirs: Union[List[Path], Path],
 
 
 def find_assets(input_dirs: Union[List[Path], Path],
-                asset_config_filename: str,
+                asset_config_filename: str = assets.DEFAULT_ASSET_FILENAME,
                 types: Union[List[assets.AssetType], assets.AssetType] = None,
                 changed_files: List[Path] = None,
                 exclude_dirs: List[Path] = None) -> List[assets.AssetConfig]:
@@ -168,7 +235,7 @@ def find_assets(input_dirs: Union[List[Path], Path],
 
     Args:
         input_dirs (Union[List[Path], Path]): Directories to search in.
-        asset_config_filename (str): Asset config filename to search for.
+        asset_config_filename (str, optional): Asset config filename to search for.
         types (Union[List[assets.AssetType], assets.AssetType], optional): AssetTypes to search for. Will not filter if unspecified.
         changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs. Will not filter if unspecified.
         exclude_dirs (Union[List[Path], Path], optional): Directories that should be excluded from the search.
@@ -222,3 +289,44 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
 
             found_assets.append(file)
     return found_assets
+
+
+def find_common_directory(paths: List[Path]) -> Tuple[Path, List[Path]]:
+    """Find lowest common directory for a list of Paths.
+
+    Args:
+        paths (List[Path]): Paths to consider.
+
+    Returns:
+        Tuple[Path, List[Path]]: Common directory and updated Paths which are relative to it.
+    """
+    lowest_common_dirs = None
+    paths_resolved = [p.resolve() for p in paths]
+    for path in paths_resolved:
+        # Create list of dirs
+        path_resolved_parents = list(path.parents)
+        if path.is_dir():
+            dirs = [path]
+            dirs.extend(path_resolved_parents)
+        else:
+            dirs = path_resolved_parents
+        dirs.reverse()
+
+        if lowest_common_dirs is None:
+            # Starting point
+            lowest_common_dirs = dirs
+        else:
+            # Find and store common directory
+            min_len = min([len(lowest_common_dirs), len(dirs)])
+            for i in range(min_len - 1, 0, -1):
+                if lowest_common_dirs[i].samefile(dirs[i]):
+                    lowest_common_dirs = lowest_common_dirs[0:i + 1]
+                    break
+            else:
+                raise Exception(f"Unable to find a common path between {lowest_common_dirs[-1]} and {dirs[-1]}")
+
+    # Assemble output
+    lowest_common_dir = lowest_common_dirs[-1]
+    relative_paths = [p.relative_to(lowest_common_dir) for p in paths_resolved]
+
+    return lowest_common_dir, relative_paths
