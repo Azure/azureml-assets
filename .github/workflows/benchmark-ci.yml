@@ -39,8 +39,12 @@ jobs:
         pip install flake8==3.9.1 pytest~=6.2 pytest-cov~=2.11
         pip install -r requirements.txt
 
+        # Fix: force protobuf downgrade to avoid exception
+        pip install protobuf==3.19.4
+
     - name: Test with pytest
       run: >-
+
         python -m pytest tests/ -v
         --junitxml=test-build-result.xml
         --cov=src/ --cov-report xml:coverage.xml --cov-report term-missing
