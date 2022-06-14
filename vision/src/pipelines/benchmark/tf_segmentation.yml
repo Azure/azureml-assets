@@ -63,7 +63,7 @@ jobs:
 
       # data loading
       batch_size: 128
-      prefetch_factor: 10
+      prefetch_factor: -1 # -1 => AUTOTUNE
 
       # model
       model_arch: "unet"
