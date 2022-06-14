@@ -169,6 +169,7 @@ def apply_tag_template(full_image_name: str, template: str = None) -> str:
         return full_image_name
 
     components = full_image_name.rsplit(":", 1)
+    assert len(components) == 2
     components[-1] = template.format(tag=components[-1])
     return ":".join(components)
 
