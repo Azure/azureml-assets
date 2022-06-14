@@ -73,5 +73,5 @@ print(f"Totally {len(succeeded_jobs)+len(failed_jobs)} jobs have been run. {len(
 #
 if(len(failed_jobs)>0):
     failed_job_str = ", ".join(failed_jobs)
-    print(f"{failed_jobs.count} jobs failed. {failed_job_str}.")
+    print(f"{len(failed_jobs)} jobs failed. {failed_job_str}.")
 
