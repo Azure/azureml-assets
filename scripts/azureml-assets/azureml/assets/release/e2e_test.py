@@ -35,6 +35,7 @@ for area in os.listdir(tests_dir.__str__()):
 print("Finished all tests")
 red_flag = False
 for area in final_report:
+    print(f"now printing report area: {area}")
     for group_test_report in final_report[area]:
         print(area+ ': ' +group_test_report)
         if "failed" in group_test_report:
