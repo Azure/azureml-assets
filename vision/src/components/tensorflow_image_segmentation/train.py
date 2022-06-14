@@ -325,7 +325,7 @@ class TensorflowDistributedModelTrainingSequence:
         self.validation_dataset = validation_dataset
 
         self.training_dataset = self.training_dataset.shard(num_shards=self.nodes, index=self.worker_id)
-        #self.validation_dataset = self.validation_dataset.shard(num_shards=self.nodes, index=self.worker_id)
+        self.validation_dataset = self.validation_dataset.shard(num_shards=self.nodes, index=self.worker_id)
 
         self.training_dataset = self.training_dataset.batch(self.dataloading_config.batch_size)
         self.validation_dataset = self.validation_dataset.batch(self.dataloading_config.batch_size)
