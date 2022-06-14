@@ -137,7 +137,7 @@ def build_images(input_dirs: List[Path],
         # Find environments under image root directories
         futures = []
         for asset_config in util.find_assets(input_dirs, asset_config_filename, assets.AssetType.ENVIRONMENT, changed_files):
-            env_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+            env_config = asset_config.environment_config_as_object()
 
             # Filter by OS
             if os_to_build and env_config.os.value != os_to_build:
@@ -159,12 +159,12 @@ def build_images(input_dirs: List[Path],
 
                 # Copy file to output directory without building
                 if output_directory:
-                    util.copy_asset_to_output_dir(asset_config, output_directory)
+                    util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory, add_subdir=True)
                 continue
 
             # Tag with version from spec
             if tag_with_version:
-                version = assets.Spec(asset_config.spec_with_path).version
+                version = asset_config.spec_as_object().version
                 image_name = env_config.get_image_name_with_tag(version)
             else:
                 image_name = env_config.image_name
@@ -188,7 +188,7 @@ def build_images(input_dirs: List[Path],
                 logger.log_debug(f"Successfully built image for {asset_config.name}")
                 counters[SUCCESS_COUNT] += 1
                 if output_directory:
-                    util.copy_asset_to_output_dir(asset_config, output_directory)
+                    util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory, add_subdir=True)
 
     # Set variables
     for counter_name in COUNTERS:
