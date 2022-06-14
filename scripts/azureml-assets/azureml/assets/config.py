@@ -209,7 +209,30 @@ class EnvironmentConfig(Config):
         return self._image.get('name')
 
     def get_image_name_with_tag(self, tag: str) -> str:
-        return self._image.get('name') + f":{tag}"
+        return f"{self.image_name}:{tag}"
+
+    def get_full_image_name(self, default_tag: str = None) -> str:
+        image = self.image_name
+
+        # Only add tag if there's not already one in image name
+        if default_tag and ":" not in image:
+            image = f"{image}:{default_tag}"
+
+        # Add hostname if publishing, otherwise it should already be in image
+        hostname = self.publish_location_hostname
+        if hostname:
+            image = f"{hostname}/{image}"
+        return image
+    
+    def get_image_name_for_promotion(self, tag: str = None) -> str:
+        # Only promotion to MCR is supported
+        if self.publish_location != PublishLocation.MCR:
+            return None
+
+        image = f"{self.publish_visibility.value}/{self.image_name}"    
+        if tag:
+            image += f":{tag}"
+        return image
 
     @property
     def _os(self) -> str:
