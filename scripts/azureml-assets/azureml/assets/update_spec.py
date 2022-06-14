@@ -26,15 +26,18 @@ def create_template_data(asset_config: assets.AssetConfig, release_directory_roo
         
         # Add to data
         repo = Repo(release_directory_root)
+        remote_url = repo.remotes.origin.url
+        if not remote_url.endswith(".git"):
+            remote_url = remote_url.rstrip("/") + ".git"
         data['asset']['repo'] = {
-            'url': repo.remotes.origin.url
+            'url': remote_url
         }
         if include_commit_hash:
             data['asset']['repo']['commit_hash'] = repo.head.commit.hexsha
 
     # Augment with type-specific data
     if asset_config.type == assets.AssetType.ENVIRONMENT:
-        environment_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+        environment_config = asset_config.environment_config_as_object()
         data['image'] = {'name': environment_config.image_name}
         if environment_config.build_enabled:
             data['image']['dockerfile'] = {
