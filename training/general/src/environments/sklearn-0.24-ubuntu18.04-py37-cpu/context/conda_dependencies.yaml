@@ -1,4 +1,4 @@
-name: sklearn-0.24.1
+name: sklearn-0.24
 channels:
 - anaconda
 - conda-forge
