@@ -12,13 +12,23 @@ version: 1.0.4
 
 inputs:
   # data loading
-  images:
+  train_images:
     type: path
     description: "Path to folder containing training images."
-  masks:
+  train_masks:
     type: path
     description: "Path to folder containing masks."
-  
+  test_images:
+    type: path
+    description: "Path to folder containing testing images."
+  test_masks:
+    type: path
+    description: "Path to folder containing masks."
+  images_filename_pattern:
+    type: string
+  masks_filename_pattern:
+    type: string
+
   # data loading
   batch_size:
     type: integer
@@ -47,6 +57,8 @@ inputs:
     type: integer
     optional: true
     description: "Size of input images (resized, default: 160)"
+  num_classes:
+    type: integer
 
   # training
   num_epochs:
@@ -81,14 +93,19 @@ environment: azureml:nvidia_tensorflow:22.05-tf2-py3-dev2
 
 command: >-
   python train.py 
-  --images ${{inputs.images}}
-  --masks ${{inputs.masks}}
+  --train_images ${{inputs.train_images}}
+  --train_masks ${{inputs.train_masks}}
+  --test_images ${{inputs.test_images}}
+  --test_masks ${{inputs.test_masks}}
+  --images_filename_pattern "${{inputs.images_filename_pattern}}"
+  --masks_filename_pattern "${{inputs.masks_filename_pattern}}"
 
   [--batch_size ${{inputs.batch_size}}]
   [--num_workers ${{inputs.num_workers}}]
   [--prefetch_factor ${{inputs.prefetch_factor}}]
 
   [--model_arch ${{inputs.model_arch}}]
+  --num_classes ${{inputs.num_classes}}
   [--model_arch_pretrained ${{inputs.model_arch_pretrained}}]
   [--model_input_size ${{inputs.model_input_size}}]
 
