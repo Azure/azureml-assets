@@ -15,5 +15,3 @@ RUN HOROVOD_WITH_TENSORFLOW=1 conda env create -p $CONDA_PREFIX -f conda_depende
     rm conda_dependencies.yaml && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.8 pip=20.2.4

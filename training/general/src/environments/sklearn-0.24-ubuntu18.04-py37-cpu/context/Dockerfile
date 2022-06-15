@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/azureml/openmpi3.1.2-ubuntu18.04:{{latest-image-tag}}
 
 WORKDIR /
 
-ENV CONDA_PREFIX=/azureml-envs/sklearn-0.24.1
+ENV CONDA_PREFIX=/azureml-envs/sklearn-0.24
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 

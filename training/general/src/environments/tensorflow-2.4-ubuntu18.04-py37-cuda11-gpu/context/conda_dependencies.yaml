@@ -1,4 +1,4 @@
-name: sklearn-0.24.1
+name: tensorflow-2.4
 channels:
 - anaconda
 - conda-forge
@@ -21,4 +21,5 @@ dependencies:
   - tensorflow-gpu==2.4.1
   - tensorflow-datasets==4.3.0
   - onnxruntime-gpu>=1.7,<1.8
+  - protobuf~=3.20
   - horovod[tensorflow-gpu]==0.21.3
