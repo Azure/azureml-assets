@@ -21,6 +21,7 @@ import traceback
 from tqdm import tqdm
 from distutils.util import strtobool
 import random
+import tempfile
 
 import mlflow
 import numpy as np
@@ -43,7 +44,7 @@ from profiling import LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
 from profiling import CustomCallbacks
 
 
-from image_io import build_image_segmentation_datasets
+from image_io import ImageAndMaskSequenceDataset
 from model import get_model_metadata, load_model
 
 
@@ -54,13 +55,39 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
 
     group = parser.add_argument_group(f"Training Inputs")
     group.add_argument(
-        "--images",
+        "--train_images",
         type=str,
         required=True,
         help="Path to folder containing training images",
     )
     group.add_argument(
-        "--masks",
+        "--images_filename_pattern",
+        type=str,
+        required=False,
+        default="(.*).jpg",
+        help="Regex used to find and match images with masks (matched on group(1))",
+    )
+    group.add_argument(
+        "--train_masks",
+        type=str,
+        required=True,
+        help="path to folder containing segmentation masks",
+    )
+    group.add_argument(
+        "--masks_filename_pattern",
+        type=str,
+        required=False,
+        default="(.*).png",
+        help="Regex used to find and match images with masks (matched on group(1))",
+    )
+    group.add_argument(
+        "--test_images",
+        type=str,
+        required=True,
+        help="Path to folder containing testing images",
+    )
+    group.add_argument(
+        "--test_masks",
         type=str,
         required=True,
         help="path to folder containing segmentation masks",
@@ -126,6 +153,12 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         required=False,
         default=160,
         help="Size of input images (resized, default: 160)"
+    )
+    group.add_argument(
+        "--num_classes",
+        type=int,
+        required=True,
+        help="Number of classes"
     )
     group.add_argument(
         "--model_arch_pretrained",
@@ -324,26 +357,6 @@ class TensorflowDistributedModelTrainingSequence:
         self.training_dataset = training_dataset
         self.validation_dataset = validation_dataset
 
-        self.training_dataset = self.training_dataset.shard(num_shards=self.nodes, index=self.worker_id)
-        self.validation_dataset = self.validation_dataset.shard(num_shards=self.nodes, index=self.worker_id)
-
-        self.training_dataset = self.training_dataset.batch(self.dataloading_config.batch_size)
-        self.validation_dataset = self.validation_dataset.batch(self.dataloading_config.batch_size)
-
-        if self.dataloading_config.prefetch_factor < 0:
-            # by default, use AUTOTUNE
-            self.training_dataset = self.training_dataset.prefetch(buffer_size=tensorflow.data.AUTOTUNE)
-            self.validation_dataset = self.validation_dataset.prefetch(buffer_size=tensorflow.data.AUTOTUNE)
-        elif self.dataloading_config.prefetch_factor > 0:
-            self.training_dataset = self.training_dataset.prefetch(buffer_size=self.dataloading_config.prefetch_factor)
-            self.validation_dataset = self.validation_dataset.prefetch(buffer_size=self.dataloading_config.prefetch_factor)
-
-        # # Disable AutoShard.
-        options = tensorflow.data.Options()
-        options.experimental_distribute.auto_shard_policy = tensorflow.data.experimental.AutoShardPolicy.OFF
-        self.training_dataset = self.training_dataset.with_options(options)
-        self.validation_dataset = self.validation_dataset.with_options(options)
-
         # Distribute input using the `experimental_distribute_dataset`.
         # training_dataset = strategy.experimental_distribute_dataset(training_dataset)
         # validation_dataset = strategy.experimental_distribute_dataset(validation_dataset)
@@ -419,11 +432,40 @@ def run(args):
 
     # DATA
     with LogTimeBlock("build_image_datasets", enabled=True), LogDiskIOBlock("build_image_datasets", enabled=True):
-        train_dataset, val_dataset = build_image_segmentation_datasets(
-            images_dir = args.images,
-            annotations_dir = args.masks,
-            val_samples = 1000,
-            input_size = args.model_input_size
+        train_dataset_helper = ImageAndMaskSequenceDataset(
+            images_dir = args.train_images,
+            masks_dir = args.train_masks,
+            images_filename_pattern = args.images_filename_pattern,
+            masks_filename_pattern = args.masks_filename_pattern,
+        )
+
+        train_dataset = train_dataset_helper.dataset(
+            input_size = args.model_input_size,
+            num_classes = args.num_classes,
+            num_shards = training_handler.nodes,
+            shard_index = training_handler.worker_id,
+            cache="disk",
+            batch_size = args.batch_size,
+            prefetch_factor = args.prefetch_factor,
+            prefetch_workers = None
+        )
+
+        test_dataset_helper = ImageAndMaskSequenceDataset(
+            images_dir = args.test_images,
+            masks_dir = args.test_masks,
+            images_filename_pattern = args.images_filename_pattern,
+            masks_filename_pattern = args.masks_filename_pattern,
+        )
+
+        val_dataset = test_dataset_helper.dataset(
+            input_size = args.model_input_size,
+            num_classes = args.num_classes,
+            num_shards = training_handler.nodes,
+            shard_index = training_handler.worker_id,
+            cache="disk",
+            batch_size = args.batch_size,
+            prefetch_factor = args.prefetch_factor,
+            prefetch_workers = None
         )
 
         training_handler.setup_datasets(train_dataset, val_dataset)
@@ -437,7 +479,7 @@ def run(args):
             model = load_model(
                 model_arch=args.model_arch,
                 input_size=args.model_input_size,
-                num_classes=3
+                num_classes=args.num_classes
             )
 
             # Configure the model for training.

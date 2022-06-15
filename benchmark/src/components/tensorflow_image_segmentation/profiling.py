@@ -81,6 +81,9 @@ class CustomCallbacks(keras.callbacks.Callback):
         self.logger.info("End epoch {} of training; got log keys: {}".format(epoch, keys))
         self.metrics['epoch_time'] = time.time() - self.epoch_start
         self.metrics['epoch_train_time'] = self.metrics['epoch_time'] - self.metrics['epoch_eval_time']
+        for key in logs:
+            self.metrics[key] = logs[key]
+
         self._flush()
 
     def on_test_begin(self, logs=None):

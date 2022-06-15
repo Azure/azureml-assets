@@ -8,122 +8,155 @@ import os
 import logging
 import glob
 import random
+import re
+import tempfile
 
 from tensorflow import keras
 import numpy as np
 from tensorflow.keras.preprocessing.image import load_img
 import tensorflow
 
-class ImageSegmentationSequence(keras.utils.Sequence):
-    """Helper to iterate over the data (as Numpy arrays)."""
 
-    def __init__(self, img_size, input_img_paths, target_img_paths):
-        self.img_size = img_size
-        self.input_img_paths = input_img_paths
-        self.target_img_paths = target_img_paths
+class ImageAndMaskHelper():
+    def __init__(self,
+                 images_dir,
+                 masks_dir,
+                 images_filename_pattern,
+                 masks_filename_pattern):
+                #  images_filename_pattern="(.*)_leftImg8bit.png",
+                #  masks_filename_pattern="(.*)_gtFine_labelIds.png"):
+        self.images_dir = images_dir
+        self.masks_dir = masks_dir
+        self.images_filename_pattern = re.compile(images_filename_pattern)
+        self.masks_filename_pattern = re.compile(masks_filename_pattern)
+        self.logger = logging.getLogger(__name__)
+
+        # paths as tuples
+        self.image_masks_pairs = []
+        # paths as slices
+        self.images = []
+        self.masks = []
+
+    def build_pair_list(self):
+        parsing_stats = {
+            "masks_not_matching" : 0,
+            "images_not_matching" : 0,
+            "images_without_masks" : 0
+        }
+        # search for all masks matching file name pattern
+        masks_paths = []
+        for file_path in glob.glob(self.masks_dir+"/**/*", recursive=True):
+            matches = self.masks_filename_pattern.match(os.path.basename(file_path))
+            if matches:
+                masks_paths.append(
+                    (
+                        matches.group(1),
+                        file_path
+                    )
+                )
+            else:
+                parsing_stats["masks_not_matching"] += 1
+        masks_paths = dict(masks_paths) # turn list of tuples into a map
+
+        images_paths = []
+        for file_path in glob.glob(self.images_dir+"/**/*", recursive=True):
+            matches = self.images_filename_pattern.match(os.path.basename(file_path))
+            if matches:
+                images_paths.append(
+                    (
+                        matches.group(1),
+                        file_path
+                    )
+                )
+            else:
+                parsing_stats["images_not_matching"] += 1
+
+        self.images = []
+        self.masks = []
+        self.image_masks_pairs = []
+        for image_key, image_path in images_paths:
+            if image_key in masks_paths:
+                self.images.append(image_path)
+                self.masks.append(masks_paths[image_key])
+                self.image_masks_pairs.append(
+                    (
+                        image_path,
+                        masks_paths[image_key]
+                    )
+                )
+            else:
+                self.logger.debug(f"Image {image_path} doesn't have a corresponding mask.")
+                parsing_stats["images_without_masks"] += 1
+
+        parsing_stats["found_pairs"] = len(self.image_masks_pairs)
+
+        self.logger.info(f"Finished parsing images/masks paths: {parsing_stats}")
+
+        return self.image_masks_pairs
 
     def __len__(self):
-        return len(self.target_img_paths)
+        return len(self.image_masks_pairs)
 
-    def __getitem__(self, idx):
-        """Returns tuple (input, target) correspond to batch #idx."""
-        image = np.array(load_img(self.input_img_paths[idx], target_size=self.img_size))
 
-        mask = np.array(load_img(self.target_img_paths[idx], target_size=self.img_size, color_mode="grayscale"))
+class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
+    @staticmethod
+    def loading_function(image_path, mask_path, target_size):
+        #logging.getLogger(__name__).info(f"Actually loading image {image_path}")
+        image = np.array(load_img(image_path, target_size=(target_size,target_size)))
+
+        mask = np.array(load_img(mask_path, target_size=(target_size,target_size), color_mode="grayscale"))
         mask = np.expand_dims(mask, 2)
         # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
         mask -= 1
+        #mask = np.clip(mask, 0, self.num_classes)
 
-        assert image.shape == self.img_size + (3,)
-        assert mask.shape == self.img_size + (1,)
+        #assert image.shape == self.img_size + (3,)
+        #assert mask.shape == self.img_size + (1,)
 
         return image, mask
+    
+    def dataset(self, input_size=160, training=False, num_shards=1, shard_index=0, cache=None, batch_size=64, prefetch_factor=2, prefetch_workers=5, num_classes=3):
+        image_and_mask_path_list = self.build_pair_list()
 
-    def generator(self):
-        """ Returns generator """
-        # see https://www.tensorflow.org/api_docs/python/tf/data/Dataset#from_generator
-        for idx in range(self.__len__()):
-            yield self.__getitem__(idx)
+        def _generator():
+            """ Returns generator """
+            # see https://www.tensorflow.org/api_docs/python/tf/data/Dataset#from_generator
+            for image_path, mask_path in image_and_mask_path_list:
+                yield ImageAndMaskSequenceDataset.loading_function(image_path, mask_path, input_size)
 
+        # https://cs230.stanford.edu/blog/datapipeline/#best-practices
+        with tensorflow.device("CPU"):
+            _dataset = tensorflow.data.Dataset.from_generator(
+                _generator,
+                output_signature=(
+                    tensorflow.TensorSpec(shape=(input_size,input_size,3), dtype=tensorflow.int32),
+                    tensorflow.TensorSpec(shape=(input_size,input_size,1), dtype=tensorflow.uint8)
+                )
+            )
 
-def build_image_segmentation_datasets(
-    images_dir: str,
-    annotations_dir: str,
-    val_samples: int = 1000,
-    input_size: int = 160,
-    image_extension: str = "jpg",
-    annotations_extension: str = "png"
-):
-    """
-    Args:
-        train_images_dir (str): path to the directory containing training images
-        valid_images_dir (str): path to the directory containing validation images
-        annotations_dir (str): path to the directory containing annotations
-        input_size (int): input size expected by the model
+            #self.training_dataset = self.training_dataset.shard(num_shards=self.nodes, index=self.worker_id)
+            #self.validation_dataset = self.validation_dataset.shard(num_shards=self.nodes, index=self.worker_id)
 
-    Returns:
-        train_dataset (ImageSegmentationSequence): training dataset
-        valid_dataset (ImageSegmentationSequence): validation dataset
-    """
-    logger = logging.getLogger(__name__)
+            #self.training_dataset = self.training_dataset.map(load_function, num_parallel_calls=self.dataloading_config.num_workers)
+            #self.validation_dataset = self.validation_dataset.map(load_function, num_parallel_calls=self.dataloading_config.num_workers)
 
-    logger.info(
-        f"Creating train/val datasets from {images_dir}"
-    )
+            if cache == "disk":
+                _dataset = _dataset.cache(tempfile.NamedTemporaryFile().name)
+            elif cache == "memory":
+                _dataset = _dataset.cache()
 
-    input_img_paths = sorted(
-        [
-            os.path.join(images_dir, fname)
-            for fname in os.listdir(images_dir)
-            if fname.lower().endswith(image_extension)
-        ]
-    )
-    annotations_img_paths = sorted(
-        [
-            os.path.join(annotations_dir, fname)
-            for fname in os.listdir(annotations_dir)
-            if fname.lower().endswith(annotations_extension) and not fname.startswith(".")
-        ]
-    )
+            #_dataset = _dataset.shuffle(len(shard_image_masks_pairs))
+            _dataset = _dataset.batch(batch_size)
 
-    logger.info(
-        f"{len(input_img_paths)} images found in {images_dir}"
-    )
-    for input_path, target_path in zip(input_img_paths[:10], annotations_img_paths[:10]):
-        logger.info(f"img[]: {input_path} => {target_path}")
+            if prefetch_factor < 0:
+                # by default, use AUTOTUNE
+                _dataset = _dataset.prefetch(buffer_size=tensorflow.data.AUTOTUNE)
+            elif prefetch_factor > 0:
+                _dataset = _dataset.prefetch(buffer_size=prefetch_factor)
 
-    # Split our img paths into a training and a validation set
-    random.Random(1337).shuffle(input_img_paths)
-    random.Random(1337).shuffle(annotations_img_paths)
-    train_input_img_paths = input_img_paths[:-val_samples]
-    train_target_img_paths = annotations_img_paths[:-val_samples]
-    val_input_img_paths = input_img_paths[-val_samples:]
-    val_target_img_paths = annotations_img_paths[-val_samples:]
+            # # Disable AutoShard.
+            options = tensorflow.data.Options()
+            options.experimental_distribute.auto_shard_policy = tensorflow.data.experimental.AutoShardPolicy.OFF
+            _dataset = _dataset.with_options(options)
 
-    # Instantiate data Sequences for each split
-    train_gen = ImageSegmentationSequence(
-        (input_size, input_size),
-        train_input_img_paths,
-        train_target_img_paths
-    )
-    train_dataset = tensorflow.data.Dataset.from_generator(
-        train_gen.generator,
-        output_signature=(
-            tensorflow.TensorSpec(shape=(input_size,input_size,3), dtype=tensorflow.int32),
-            tensorflow.TensorSpec(shape=(input_size,input_size,1), dtype=tensorflow.uint8)
-        )
-    )
-    val_gen = ImageSegmentationSequence(
-        (input_size, input_size),
-        val_input_img_paths,
-        val_target_img_paths
-    )
-    val_dataset = tensorflow.data.Dataset.from_generator(
-        val_gen.generator,
-        output_signature=(
-            tensorflow.TensorSpec(shape=(input_size,input_size,3), dtype=tensorflow.int32),
-            tensorflow.TensorSpec(shape=(input_size,input_size,1), dtype=tensorflow.uint8)
-        )
-    )
-
-    return train_dataset, val_dataset
+        return _dataset
