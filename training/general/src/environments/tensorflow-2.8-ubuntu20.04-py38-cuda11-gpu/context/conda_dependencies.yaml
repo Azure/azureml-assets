@@ -20,3 +20,4 @@ dependencies:
   - tensorboard~=2.8.0
   - tensorflow-gpu~=2.8.0
   - tensorflow-datasets~=4.5.0
+  - horovod[tensorflow-gpu]~=0.23.0
