@@ -114,14 +114,21 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
         #assert mask.shape == self.img_size + (1,)
 
         return image, mask
-    
+
     def dataset(self, input_size=160, training=False, num_shards=1, shard_index=0, cache=None, batch_size=64, prefetch_factor=2, prefetch_workers=5, num_classes=3):
         image_and_mask_path_list = self.build_pair_list()
+
+        # apply shard filter internally, not using tf.data.shard intentionnally
+        shard_image_masks_pairs = [
+            entry for index, entry in enumerate(image_and_mask_path_list) if index % num_shards == shard_index
+        ]
+
+        self.logger.info(f"Shard ({shard_index} / {num_shards}) reduced image dataset to {len(shard_image_masks_pairs)}")
 
         def _generator():
             """ Returns generator """
             # see https://www.tensorflow.org/api_docs/python/tf/data/Dataset#from_generator
-            for image_path, mask_path in image_and_mask_path_list:
+            for image_path, mask_path in shard_image_masks_pairs:
                 yield ImageAndMaskSequenceDataset.loading_function(image_path, mask_path, input_size)
 
         # https://cs230.stanford.edu/blog/datapipeline/#best-practices
