@@ -64,7 +64,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--images_filename_pattern",
         type=str,
         required=False,
-        default="(.*).jpg",
+        default="(.*)\\.jpg",
         help="Regex used to find and match images with masks (matched on group(1))",
     )
     group.add_argument(
@@ -77,7 +77,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--masks_filename_pattern",
         type=str,
         required=False,
-        default="(.*).png",
+        default="(.*)\\.png",
         help="Regex used to find and match images with masks (matched on group(1))",
     )
     group.add_argument(
