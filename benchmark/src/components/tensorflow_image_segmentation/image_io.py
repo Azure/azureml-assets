@@ -131,11 +131,6 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
         with tensorflow.device("CPU"):
             _dataset = tensorflow.data.Dataset.from_tensor_slices((self.images, self.masks))
 
-            # Disable AutoShard.
-            options = tensorflow.data.Options()
-            options.experimental_distribute.auto_shard_policy = tensorflow.data.experimental.AutoShardPolicy.OFF
-            _dataset = _dataset.with_options(options)
-
             # Set our own sharding
             _dataset = _dataset.shard(num_shards=num_shards, index=shard_index)
             _dataset = _dataset.shuffle(len(self.images))
@@ -154,5 +149,10 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
                 _dataset = _dataset.cache(tempfile.NamedTemporaryFile().name)
             elif cache == "memory":
                 _dataset = _dataset.cache()
-            
+
+            # Disable AutoShard.
+            options = tensorflow.data.Options()
+            options.experimental_distribute.auto_shard_policy = tensorflow.data.experimental.AutoShardPolicy.OFF
+            _dataset = _dataset.with_options(options)
+
         return _dataset
