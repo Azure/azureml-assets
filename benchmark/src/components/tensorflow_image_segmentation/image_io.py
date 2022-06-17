@@ -22,13 +22,15 @@ class ImageAndMaskHelper():
                  images_dir,
                  masks_dir,
                  images_filename_pattern,
-                 masks_filename_pattern):
+                 masks_filename_pattern,
+                 images_type="png"):
                 #  images_filename_pattern="(.*)_leftImg8bit.png",
                 #  masks_filename_pattern="(.*)_gtFine_labelIds.png"):
         self.images_dir = images_dir
         self.masks_dir = masks_dir
-        self.images_filename_pattern = re.compile(images_filename_pattern)
+        self.images_filename_pattern = images_filename_pattern
         self.masks_filename_pattern = re.compile(masks_filename_pattern)
+        self.images_type = images_type
         self.logger = logging.getLogger(__name__)
 
         # paths as tuples
@@ -44,9 +46,11 @@ class ImageAndMaskHelper():
             "images_without_masks" : 0
         }
         # search for all masks matching file name pattern
+        masks_filename_pattern = re.compile(self.masks_filename_pattern)
+
         masks_paths = []
         for file_path in glob.glob(self.masks_dir+"/**/*", recursive=True):
-            matches = self.masks_filename_pattern.match(os.path.basename(file_path))
+            matches = masks_filename_pattern.match(os.path.basename(file_path))
             if matches:
                 masks_paths.append(
                     (
@@ -58,9 +62,10 @@ class ImageAndMaskHelper():
                 parsing_stats["masks_not_matching"] += 1
         masks_paths = dict(masks_paths) # turn list of tuples into a map
 
+        images_filename_pattern = re.compile(self.images_filename_pattern)
         images_paths = []
         for file_path in glob.glob(self.images_dir+"/**/*", recursive=True):
-            matches = self.images_filename_pattern.match(os.path.basename(file_path))
+            matches = images_filename_pattern.match(os.path.basename(file_path))
             if matches:
                 images_paths.append(
                     (
@@ -100,59 +105,43 @@ class ImageAndMaskHelper():
 
 class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
     @staticmethod
-    def loading_function(image_path, mask_path, target_size):
-        #logging.getLogger(__name__).info(f"Actually loading image {image_path}")
-        image = np.array(load_img(image_path, target_size=(target_size,target_size)))
+    def loading_function(image_path, mask_path, target_size, image_type="png"):
+        logging.getLogger(__name__).info(f"Actually loading image {image_path}")
+        image_content = tensorflow.io.read_file(image_path)
+        if image_type == "jpg":
+            image = tensorflow.image.decode_jpeg(image_content, channels=3)
+        else:
+            image = tensorflow.image.decode_png(image_content, channels=3)
+        image = tensorflow.image.resize(image, [target_size, target_size])
+        image = tensorflow.image.convert_image_dtype(image, tensorflow.float32)
 
-        mask = np.array(load_img(mask_path, target_size=(target_size,target_size), color_mode="grayscale"))
-        mask = np.expand_dims(mask, 2)
-        # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
+        mask_content = tensorflow.io.read_file(mask_path)
+        mask = tensorflow.image.decode_png(mask_content, channels=1, dtype=tensorflow.dtypes.uint8)
+        mask = tensorflow.image.resize(mask, [target_size, target_size], antialias=False)
+        mask = tensorflow.math.round(mask)
         mask -= 1
-        #mask = np.clip(mask, 0, self.num_classes)
-
-        #assert image.shape == self.img_size + (3,)
-        #assert mask.shape == self.img_size + (1,)
+        #mask = tensorflow.image.convert_image_dtype(mask, tensorflow.uint8)
 
         return image, mask
 
     def dataset(self, input_size=160, training=False, num_shards=1, shard_index=0, cache=None, batch_size=64, prefetch_factor=2, prefetch_workers=5, num_classes=3):
-        image_and_mask_path_list = self.build_pair_list()
-
-        # apply shard filter internally, not using tf.data.shard intentionnally
-        shard_image_masks_pairs = [
-            entry for index, entry in enumerate(image_and_mask_path_list) if index % num_shards == shard_index
-        ]
-
-        self.logger.info(f"Shard ({shard_index} / {num_shards}) reduced image dataset to {len(shard_image_masks_pairs)}")
-
-        def _generator():
-            """ Returns generator """
-            # see https://www.tensorflow.org/api_docs/python/tf/data/Dataset#from_generator
-            for image_path, mask_path in shard_image_masks_pairs:
-                yield ImageAndMaskSequenceDataset.loading_function(image_path, mask_path, input_size)
+        self.build_pair_list()
 
         # https://cs230.stanford.edu/blog/datapipeline/#best-practices
         with tensorflow.device("CPU"):
-            _dataset = tensorflow.data.Dataset.from_generator(
-                _generator,
-                output_signature=(
-                    tensorflow.TensorSpec(shape=(input_size,input_size,3), dtype=tensorflow.int32),
-                    tensorflow.TensorSpec(shape=(input_size,input_size,1), dtype=tensorflow.uint8)
-                )
-            )
+            _dataset = tensorflow.data.Dataset.from_tensor_slices((self.images, self.masks))
 
-            #self.training_dataset = self.training_dataset.shard(num_shards=self.nodes, index=self.worker_id)
-            #self.validation_dataset = self.validation_dataset.shard(num_shards=self.nodes, index=self.worker_id)
+            # Disable AutoShard.
+            options = tensorflow.data.Options()
+            options.experimental_distribute.auto_shard_policy = tensorflow.data.experimental.AutoShardPolicy.OFF
+            _dataset = _dataset.with_options(options)
 
-            #self.training_dataset = self.training_dataset.map(load_function, num_parallel_calls=self.dataloading_config.num_workers)
-            #self.validation_dataset = self.validation_dataset.map(load_function, num_parallel_calls=self.dataloading_config.num_workers)
+            # Set our own sharding
+            _dataset = _dataset.shard(num_shards=num_shards, index=shard_index)
+            _dataset = _dataset.shuffle(len(self.images))
 
-            if cache == "disk":
-                _dataset = _dataset.cache(tempfile.NamedTemporaryFile().name)
-            elif cache == "memory":
-                _dataset = _dataset.cache()
+            _dataset = _dataset.map(lambda i,m: ImageAndMaskSequenceDataset.loading_function(i,m,input_size,image_type=self.images_type), num_parallel_calls=prefetch_workers)
 
-            #_dataset = _dataset.shuffle(len(shard_image_masks_pairs))
             _dataset = _dataset.batch(batch_size)
 
             if prefetch_factor < 0:
@@ -161,9 +150,9 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
             elif prefetch_factor > 0:
                 _dataset = _dataset.prefetch(buffer_size=prefetch_factor)
 
-            # # Disable AutoShard.
-            options = tensorflow.data.Options()
-            options.experimental_distribute.auto_shard_policy = tensorflow.data.experimental.AutoShardPolicy.OFF
-            _dataset = _dataset.with_options(options)
-
+            if cache == "disk":
+                _dataset = _dataset.cache(tempfile.NamedTemporaryFile().name)
+            elif cache == "memory":
+                _dataset = _dataset.cache()
+            
         return _dataset

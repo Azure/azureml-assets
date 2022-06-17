@@ -68,6 +68,14 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="Regex used to find and match images with masks (matched on group(1))",
     )
     group.add_argument(
+        "--images_type",
+        type=str,
+        required=False,
+        choices=["png", "jpg"],
+        default="png",
+        help="png (default) or jpg",
+    )
+    group.add_argument(
         "--train_masks",
         type=str,
         required=True,
@@ -169,42 +177,6 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="Number of classes"
     )
     group.add_argument(
-        "--model_arch_pretrained",
-        type=strtobool,
-        required=False,
-        default=True,
-        help="Use pretrained model (default: true)",
-    )
-    group.add_argument(
-        "--disable_cuda",
-        type=strtobool,
-        required=False,
-        default=False,
-        help="set True to force use of cpu (local testing).",
-    )
-    group.add_argument(
-        "--num_gpus",
-        type=int,
-        required=False,
-        default=None,
-        help="limit the number of gpus to use (default: None).",
-    )
-    group.add_argument(
-        "--distributed_strategy",
-        type=str,
-        required=False,
-        # see https://www.tensorflow.org/guide/distributed_training
-        choices=[
-            "MirroredStrategy",
-            #"TPUStrategy",
-            "MultiWorkerMirroredStrategy",
-            #"CentralStorageStrategy",
-            #"ParameterServerStrategy"
-        ],
-        default="MirroredStrategy",
-        help="Which distributed strategy to use.",
-    )
-    group.add_argument(
         "--num_epochs",
         type=int,
         required=False,
@@ -231,7 +203,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
     #     help="Learning rate of optimizer",
     # )
 
-    group = parser.add_argument_group(f"System Parameters")
+    group = parser.add_argument_group(f"Training Backend Parameters")
     # group.add_argument(
     #     "--enable_profiling",
     #     type=strtobool,
@@ -239,6 +211,36 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
     #     default=False,
     #     help="Enable pytorch profiler.",
     # )
+    group.add_argument(
+        "--disable_cuda",
+        type=strtobool,
+        required=False,
+        default=False,
+        help="set True to force use of cpu (local testing).",
+    )
+    group.add_argument(
+        "--num_gpus",
+        type=int,
+        required=False,
+        default=None,
+        help="limit the number of gpus to use (default: None).",
+    )
+    group.add_argument(
+        "--distributed_strategy",
+        type=str,
+        required=False,
+        # see https://www.tensorflow.org/guide/distributed_training
+        choices=[
+            "Auto",
+            "MirroredStrategy",
+            "MultiWorkerMirroredStrategy",
+            #"CentralStorageStrategy",
+            #"ParameterServerStrategy".
+            #"Horovod"
+        ],
+        default="Auto", # will auto identify
+        help="Which distributed strategy to use.",
+    )
 
     return parser
 
@@ -290,30 +292,39 @@ class TensorflowDistributedModelTrainingSequence:
         if "TF_CONFIG" not in os.environ:
             self.logger.critical("TF_CONFIG cannot be found in os.environ, defaulting back to non-distributed training")
             self.nodes = 1
-            self.devices = [ device.name for device in tensorflow.config.list_physical_devices('GPU') ]
-            self.gpus = len(self.devices)
+            self.gpus = len(tensorflow.config.list_physical_devices('GPU'))
+            self.devices = [ f"GPU:{i}" for i in range(self.gpus) ]
+            #self.devices = [ device.name for device in tensorflow.config.list_physical_devices('GPU') ]
             self.worker_id = 0
         else:
             tf_config = json.loads(os.environ['TF_CONFIG'])
             self.logger.info(f"Found TF_CONFIG = {tf_config}")
             self.nodes = len(tf_config['cluster']['worker'])
-            self.devices = [ device.name for device in tensorflow.config.list_physical_devices('GPU') ]
-            self.gpus = len(self.devices)
+            self.gpus = len(tensorflow.config.list_physical_devices('GPU'))
+            self.devices = [ f"GPU:{i}" for i in range(self.gpus) ]
+            #self.devices = [ device.name for device in tensorflow.config.list_physical_devices('GPU') ]
             self.worker_id = tf_config['task']['index']
-
-        self.distributed_available = ((self.nodes * self.gpus) > 1)
-        self.self_is_main_node = (self.worker_id == 0)
-
-        self.logger.info(f"Distribution settings: nodes={self.nodes}, gpus={self.gpus}, distributed_available={self.distributed_available}, self_is_main_node={self.self_is_main_node}")
 
         if args.disable_cuda:
             self.logger.warning(f"Cuda disabled by replacing current CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')} by '-1'")
             os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
             self.gpus = 0
             self.devices = []
-        elif args.num_gpus:
+        elif args.num_gpus == 0:
+            self.logger.warning(f"Because you set --num_gpus=0, cuda is disabled by replacing current CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')} by '-1'")
+            os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
+            self.gpus = 0
+            self.devices = []
+        elif args.num_gpus and args.num_gpus > 0:
             # TODO: force down the number of gpus
-            pass
+            self.gpus = args.num_gpus
+            self.devices = [ f"GPU:{i}" for i in range (args.num_gpus) ]
+            os.environ['CUDA_VISIBLE_DEVICES'] = ",".join(list(range(self.gpus)))
+
+        self.distributed_available = ((self.nodes * self.gpus) > 1)
+        self.self_is_main_node = (self.worker_id == 0)
+
+        self.logger.info(f"Distribution settings: nodes={self.nodes}, gpus={self.gpus}, devices={self.devices}, distributed_available={self.distributed_available}, self_is_main_node={self.self_is_main_node}")
 
         # Identify strategy
         if self.nodes > 1:
@@ -321,7 +332,7 @@ class TensorflowDistributedModelTrainingSequence:
             self.strategy = distribute.MultiWorkerMirroredStrategy()
         elif self.gpus > 1:
             # single node, multi gpu
-            self.strategy = distribute.MirroredStrategy()
+            self.strategy = distribute.MirroredStrategy(devices=self.devices)
         else:
             # single node, single gpu
             self.strategy = distribute.OneDeviceStrategy(device="GPU:0")
@@ -464,6 +475,7 @@ def run(args):
             masks_dir = args.train_masks,
             images_filename_pattern = args.images_filename_pattern,
             masks_filename_pattern = args.masks_filename_pattern,
+            images_type = args.images_type
         )
 
         train_dataset = train_dataset_helper.dataset(
@@ -482,6 +494,7 @@ def run(args):
             masks_dir = args.test_masks,
             images_filename_pattern = args.images_filename_pattern,
             masks_filename_pattern = args.masks_filename_pattern,
+            images_type = "png" # masks need to be in png
         )
 
         val_dataset = test_dataset_helper.dataset(
