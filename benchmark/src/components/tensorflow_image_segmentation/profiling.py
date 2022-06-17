@@ -11,51 +11,7 @@ import mlflow
 import tempfile
 from typing import Any
 from tensorflow import keras
-
-class _DevCustomCallbacks:
-    def __init__(self):
-        self.epoch_stats = []
-        self.batch_stats = []
-        self.batch_interval_stats = []
-
-        self.epoch_start = time.time()
-        self.batch_start = time.time()
-        self.train_start = time.time()
-        self.logger = logging.getLogger(__name__)
-
-    def on_epoch_begin(self, epoch, logs):
-        print("on_epoch_begin", epoch, logs)
-        self.current_epoch = epoch
-        self.epoch_start = time.time()
-
-    def on_epoch_end(self, epoch, logs):
-        print("on_epoch_end", epoch, logs)
-        epoch_time = time.time() - self.epoch_start
-        logging.getLogger(__name__).info(f"MLFLOW: epoch_time={epoch_time}")
-        mlflow.log_metric("epoch_time", epoch_time)
-
-    def on_batch_begin(self, batch, logs):
-        print("on_batch_begin", batch, logs)
-        if self.current_batch and batch > self.current_batch:
-            # record interval
-            self.batch_interval_stats.append(time.time() - self.batch_end)
-            print("batch_interval_stats", self.batch_interval_stats)
-        self.current_batch = batch
-        self.batch_begin = time.time()
-
-    def on_batch_end(self, batch, logs):
-        print("on_batch_end", batch, logs)
-        self.batch_end = time.time()
-        self.batch_stats.append(self.batch_end - self.batch_begin)
-        print("batch_stats", self.batch_stats)
-
-    def on_train_begin(self, logs):
-        print("on_train_begin", logs)
-        self.train_start = time.time()
-
-    def on_train_end(self, logs):
-        print("on_train_end", logs)
-        mlflow.log_metric("training_time", time.time() - self.train_start)
+import tensorflow
 
 
 class CustomCallbacks(keras.callbacks.Callback):
@@ -68,8 +24,8 @@ class CustomCallbacks(keras.callbacks.Callback):
         self.test_start = None
 
     def _flush(self):
+        self.logger.info(f"MLFLOW: metrics={self.metrics}")
         mlflow.log_metrics(self.metrics)
-        self.metrics = {}
 
     def on_epoch_begin(self, epoch, logs=None):
         keys = list(logs.keys())
@@ -112,18 +68,21 @@ class CustomCallbacks(keras.callbacks.Callback):
     #     keys = list(logs.keys())
     #     print("Stop predicting; got log keys: {}".format(keys))
 
+    # def on_train_batch_begin(self, batch, logs=None):
+    #     keys = list(logs.keys())
+    #     self.logger.info("...Training: start of batch {}; got log keys: {}".format(batch, keys))
 
     # def on_train_batch_end(self, batch, logs=None):
     #     keys = list(logs.keys())
-    #     print("...Training: end of batch {}; got log keys: {}".format(batch, keys))
+    #     self.logger.info("...Training: end of batch {}; got log keys: {}".format(batch, keys))
 
     # def on_test_batch_begin(self, batch, logs=None):
     #     keys = list(logs.keys())
-    #     print("...Evaluating: start of batch {}; got log keys: {}".format(batch, keys))
+    #     self.logger.info("...Evaluating: start of batch {}; got log keys: {}".format(batch, keys))
 
     # def on_test_batch_end(self, batch, logs=None):
     #     keys = list(logs.keys())
-    #     print("...Evaluating: end of batch {}; got log keys: {}".format(batch, keys))
+    #     self.logger.info("...Evaluating: end of batch {}; got log keys: {}".format(batch, keys))
 
     # def on_predict_batch_begin(self, batch, logs=None):
     #     keys = list(logs.keys())
@@ -259,8 +218,22 @@ class LogTimeOfIterator():
 
         self._logger = logging.getLogger(__name__)
     
+    def as_tf_dataset(self):
+        """Constructs this as a tensorflow dataset"""
+        def _generator():
+            return self
+
+        return tensorflow.data.Dataset.from_generator(
+            _generator,
+            # works only if wrapped_sequence is already a tf.data.Dataset
+            output_signature = self.wrapped_sequence.element_spec
+        )
+
     def __iter__(self):
         """Creates the iterator"""
+        self.metrics = {}
+        self.iterator_times = []
+
         if self.enabled:
             start_time = time.time()
             # if enabled, creates iterator from wrapped_sequence
