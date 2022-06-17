@@ -384,8 +384,26 @@ class TensorflowDistributedModelTrainingSequence:
         if epochs is None:
             epochs = self.training_config.num_epochs
 
+        custom_callback_handler = CustomCallbacks()
+
+        # PROFILER: use this class to log time taken by the dataset iterator itself
+        self.training_dataset = LogTimeOfIterator(
+            self.training_dataset,
+            "training_data_loader",
+            enabled = self.self_is_main_node, # only enable this on the first process/node
+            async_collector = custom_callback_handler.metrics # metrics will be added to the callback handler collector
+        ).as_tf_dataset() # returns a TF dataset
+
+        # PROFILER: use this class to log time taken by the dataset iterator itself
+        self.validation_dataset = LogTimeOfIterator(
+            self.validation_dataset,
+            "validation_data_loader",
+            enabled = self.self_is_main_node, # only enable this on the first process/node
+            async_collector = custom_callback_handler.metrics # metrics will be added to the callback handler collector
+        ).as_tf_dataset() # returns a TF dataset
+
         callbacks = [
-            CustomCallbacks()
+            custom_callback_handler,
             # keras.callbacks.ModelCheckpoint("segmentation.h5", save_best_only=True)
         ]
 
