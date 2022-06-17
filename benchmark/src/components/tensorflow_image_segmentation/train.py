@@ -137,7 +137,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         type=int,
         required=False,
         default=-1,
-        help="Num workers for data loader (default: -1 => all cpus available)",
+        help="Num workers for data loader (default: AUTOTUNE)",
     )
     group.add_argument(
         "--prefetch_factor",
@@ -281,9 +281,9 @@ class TensorflowDistributedModelTrainingSequence:
 
         # verify parameter default values
         if self.dataloading_config.num_workers is None:
-            self.dataloading_config.num_workers = 0
+            self.dataloading_config.num_workers = tensorflow.data.AUTOTUNE
         if self.dataloading_config.num_workers < 0:
-            self.dataloading_config.num_workers = self.cpu_count
+            self.dataloading_config.num_workers = tensorflow.data.AUTOTUNE
         if self.dataloading_config.num_workers == 0:
             self.logger.warning("You specified num_workers=0, forcing prefetch_factor to be discarded.")
             self.dataloading_config.prefetch_factor = 0
@@ -485,8 +485,8 @@ def run(args):
             shard_index = training_handler.worker_id,
             cache=args.cache,
             batch_size = args.batch_size,
-            prefetch_factor = args.prefetch_factor,
-            prefetch_workers = None
+            prefetch_factor = training_handler.dataloading_config.prefetch_factor,
+            prefetch_workers = training_handler.dataloading_config.num_workers
         )
 
         test_dataset_helper = ImageAndMaskSequenceDataset(
@@ -504,8 +504,8 @@ def run(args):
             shard_index = training_handler.worker_id,
             cache=args.cache,
             batch_size = args.batch_size,
-            prefetch_factor = args.prefetch_factor,
-            prefetch_workers = None
+            prefetch_factor = training_handler.dataloading_config.prefetch_factor,
+            prefetch_workers = training_handler.dataloading_config.num_workers
         )
 
         training_handler.setup_datasets(train_dataset, val_dataset)
