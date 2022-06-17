@@ -319,7 +319,7 @@ class TensorflowDistributedModelTrainingSequence:
             # TODO: force down the number of gpus
             self.gpus = args.num_gpus
             self.devices = [ f"GPU:{i}" for i in range (args.num_gpus) ]
-            os.environ['CUDA_VISIBLE_DEVICES'] = ",".join(list(range(self.gpus)))
+            os.environ['CUDA_VISIBLE_DEVICES'] = ",".join([ str(i) for i in range(self.gpus) ])
 
         self.distributed_available = ((self.nodes * self.gpus) > 1)
         self.self_is_main_node = (self.worker_id == 0)
