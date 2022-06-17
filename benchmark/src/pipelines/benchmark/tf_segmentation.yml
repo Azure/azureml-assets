@@ -5,16 +5,26 @@ experiment_name: "tensorflow_dev"
 
 # <inputs_and_outputs>
 inputs:
-  images:
+  train_images:
     type: uri_folder
     mode: download # pick ro_mount, rw_mount or download
+    #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/cityscapes/leftImg8bit/train
     path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images
-    # path: azureml://datastores/workspaceblobstore/paths/azureml-vision-datasets/places2/train//**
-  masks:
+  train_masks:
     type: uri_folder
     mode: download # pick ro_mount, rw_mount or download
+    #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/cityscapes/gtFine/train
     path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/trimaps
-    # path: azureml://datastores/workspaceblobstore/paths/azureml-vision-datasets/places2/valid/**
+  test_images:
+    type: uri_folder
+    mode: download # pick ro_mount, rw_mount or download
+    #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/cityscapes/leftImg8bit/test
+    path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images
+  test_masks:
+    type: uri_folder
+    mode: download # pick ro_mount, rw_mount or download
+    #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/cityscapes/gtFine/test
+    path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/trimaps
 # </inputs_and_outputs>
 
 # <jobs>
@@ -28,13 +38,13 @@ jobs:
     component: file:../../components/tensorflow_image_segmentation/spec.yaml
     # compute: azureml:gpu-cluster
     # compute: azureml:gpu-m60-4
-    # compute: azureml:gpu-v100-32g
-    compute: azureml:gpu-a100-80g
+    compute: azureml:gpu-v100-32g
+    # compute: azureml:gpu-a100-80g
     resources:
-      instance_count: 2 # number of nodes
+      instance_count: 1 # number of nodes
     distribution:
       type: tensorflow
-      worker_count: 2 # ???
+      worker_count: 1 # ???
 
     # NOTE: set env var if needed
     environment_variables:
@@ -58,12 +68,21 @@ jobs:
 
     inputs:
       # data inputs
-      images: ${{parent.inputs.images}}
-      masks: ${{parent.inputs.masks}}
+      train_images: ${{parent.inputs.train_images}}
+      train_masks: ${{parent.inputs.train_masks}}
+      test_images: ${{parent.inputs.test_images}}
+      test_masks: ${{parent.inputs.test_masks}}
+
+      # oxford pets
+      images_type: "jpg"
+      images_filename_pattern: "(.*)\\.jpg"
+      masks_filename_pattern: "(.*)\\.png"
+      num_classes: 3
 
       # data loading
-      batch_size: 128
+      batch_size: 64
       prefetch_factor: -1 # -1 => AUTOTUNE
+      # cache: "memory"
 
       # model
       model_arch: "unet"
@@ -71,6 +90,7 @@ jobs:
       #distributed_strategy: "MirroredStrategy"
 
       # training
-      num_epochs: 7
+      num_epochs: 100
+      num_gpus: 1
       
 # </jobs>

@@ -2,12 +2,11 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 type: command
 
 description: >-
-  Fine-tunes a pre-trained pytorch model for image classification.
-  Inputs should be provided as distinct directories containing distinct images
-  as we're using [ImageFolder](http://pytorch.org/vision/main/generated/torchvision.datasets.ImageFolder.html) to load data.
+  Trains an image segmentation model using tensorflow.
 
-name: pytorch_image_classifier
-display_name: Image Classification Model (PyTorch)
+
+name: tensorflow_image_segmentation
+display_name: Image Segmentation (Tensorflow)
 version: 1.0.4
 
 inputs:
@@ -26,6 +25,10 @@ inputs:
     description: "Path to folder containing masks."
   images_filename_pattern:
     type: string
+  images_type:
+    type: string
+    optional: true
+    description: "jpg or png (default: png)"
   masks_filename_pattern:
     type: string
 
@@ -52,11 +55,7 @@ inputs:
   model_arch:
     type: string
     optional: true
-    description: "Which model architecture to use (default: resnet18)"
-  model_arch_pretrained:
-    type: boolean
-    optional: true
-    description: "Use pretrained model (default: true)"
+    description: "Which model architecture to use (default: unet)"
   model_input_size:
     type: integer
     optional: true
@@ -78,6 +77,10 @@ inputs:
     optional: true
     description: "default: sparse_categorical_crossentropy"
 
+  num_gpus:
+    type: integer
+    optional: true
+    description: "Force down the number of gpus used for this training"
   distributed_strategy:
     type: string
     optional: true
@@ -111,12 +114,13 @@ command: >-
 
   [--model_arch ${{inputs.model_arch}}]
   --num_classes ${{inputs.num_classes}}
-  [--model_arch_pretrained ${{inputs.model_arch_pretrained}}]
   [--model_input_size ${{inputs.model_input_size}}]
 
   [--num_epochs ${{inputs.num_epochs}}]
   [--optimizer ${{inputs.optimizer}}]
   [--loss ${{inputs.loss}}]
+
+  [--num_gpus ${{inputs.num_gpus}}]
 
   --model_output ${{outputs.trained_model}}
   --checkpoints ${{outputs.checkpoints}}
