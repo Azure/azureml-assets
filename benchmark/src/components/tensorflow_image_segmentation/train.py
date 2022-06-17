@@ -138,6 +138,14 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         default=-1,
         help="Data loader prefetch factor (default: AUTOTUNE)",
     )
+    group.add_argument(
+        "--cache",
+        type=str,
+        required=False,
+        choices=["disk", "memory"],
+        default=None,
+        help="Use cache either on DISK or in MEMORY",
+    )
 
     group = parser.add_argument_group(f"Model/Training Parameters")
     group.add_argument(
@@ -336,6 +344,7 @@ class TensorflowDistributedModelTrainingSequence:
                 "num_workers": self.dataloading_config.num_workers,
                 "cpu_count": self.cpu_count,
                 "prefetch_factor": self.dataloading_config.prefetch_factor,
+                "cache": self.dataloading_config.cache,
 
                 # training params
                 "model_arch": self.training_config.model_arch,
@@ -462,7 +471,7 @@ def run(args):
             num_classes = args.num_classes,
             num_shards = training_handler.nodes,
             shard_index = training_handler.worker_id,
-            cache="disk",
+            cache=args.cache,
             batch_size = args.batch_size,
             prefetch_factor = args.prefetch_factor,
             prefetch_workers = None
@@ -480,7 +489,7 @@ def run(args):
             num_classes = args.num_classes,
             num_shards = training_handler.nodes,
             shard_index = training_handler.worker_id,
-            cache="disk",
+            cache=args.cache,
             batch_size = args.batch_size,
             prefetch_factor = args.prefetch_factor,
             prefetch_workers = None

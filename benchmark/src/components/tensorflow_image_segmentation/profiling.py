@@ -220,14 +220,17 @@ class LogTimeOfIterator():
     
     def as_tf_dataset(self):
         """Constructs this as a tensorflow dataset"""
-        def _generator():
-            return self
+        if self.enabled:
+            def _generator():
+                return self
 
-        return tensorflow.data.Dataset.from_generator(
-            _generator,
-            # works only if wrapped_sequence is already a tf.data.Dataset
-            output_signature = self.wrapped_sequence.element_spec
-        )
+            return tensorflow.data.Dataset.from_generator(
+                _generator,
+                # works only if wrapped_sequence is already a tf.data.Dataset
+                output_signature = self.wrapped_sequence.element_spec
+            )
+        else:
+            return self.wrapped_sequence
 
     def __iter__(self):
         """Creates the iterator"""

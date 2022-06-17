@@ -43,6 +43,10 @@ inputs:
     type: integer
     optional: true
     description: "Data loader prefetch factor (default: 2)"
+  cache:
+    type: string
+    optional: true
+    description: "Use cache (disk or memory)"
 
   # model
   model_arch:
@@ -103,6 +107,7 @@ command: >-
   [--batch_size ${{inputs.batch_size}}]
   [--num_workers ${{inputs.num_workers}}]
   [--prefetch_factor ${{inputs.prefetch_factor}}]
+  [--cache ${{inputs.cache}}]
 
   [--model_arch ${{inputs.model_arch}}]
   --num_classes ${{inputs.num_classes}}
