@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
 
-experiment_name: "tensorflow_dev"
+experiment_name: "tensorflow_unet_pets_rc2"
 
 # <inputs_and_outputs>
 inputs:
@@ -36,10 +36,7 @@ jobs:
   train:
     type: command
     component: file:../../components/tensorflow_image_segmentation/spec.yaml
-    # compute: azureml:gpu-cluster
-    # compute: azureml:gpu-m60-4
-    compute: azureml:gpu-v100-32g
-    # compute: azureml:gpu-a100-80g
+    compute: azureml:gpu-cluster
     resources:
       instance_count: 1 # number of nodes
     distribution:
@@ -81,16 +78,16 @@ jobs:
 
       # data loading
       batch_size: 64
-      prefetch_factor: -1 # -1 => AUTOTUNE
+      num_workers: -1 # AUTOTUNE
+      prefetch_factor: -1 # AUTOTUNE
       # cache: "memory"
 
       # model
       model_arch: "unet"
       model_input_size: 160
-      #distributed_strategy: "MirroredStrategy"
 
       # training
-      num_epochs: 100
+      num_epochs: 15
       num_gpus: 1
-      
+
 # </jobs>
