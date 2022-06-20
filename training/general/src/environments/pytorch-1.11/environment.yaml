@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/pytorch-1.10-ubuntu18.04-py38-cuda11-gpu
+  name: azureml/curated/pytorch-1.11
   os: linux
   context:
     dir: context
@@ -13,9 +13,9 @@ image:
 environment:
   metadata:
     Cuda:
-      CudaVersion: "11.1.1"
-      CuDnnVersion: "8.0.5.39"
-      NcclVersion: "2.8.4"
+      CudaVersion: "11.3"
+      CuDnnVersion: "8.2.0"
+      NcclVersion: "2.9.9"
     MachineLearningFramework:
       name: PyTorch
       version: "1.11"
@@ -30,4 +30,4 @@ environment:
       version: "3.8"
     Os:
       name: Ubuntu
-      version: "18.04"
+      version: "20.04"
