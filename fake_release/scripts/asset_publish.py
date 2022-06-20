@@ -50,9 +50,10 @@ def test_files_preprocess(test_jobs, full_version):
             for job in data["jobs"]:
                 print("processing asset"+data["jobs"][job]["component"])
                 original_asset = data["jobs"][job]["component"]
-                new_asset = process_asset_id(original_asset, full_version)
-                data["jobs"][job]["component"] = new_asset
-                print(data["jobs"][job]["component"])
+                if original_asset.__str__().startswith("azureml"):
+                    new_asset = process_asset_id(original_asset, full_version)
+                    data["jobs"][job]["component"] = new_asset
+                    print(data["jobs"][job]["component"])
             with open(test_job, "w") as file:
                 yaml.dump(data, file)
 
@@ -72,7 +73,7 @@ test_files_preprocess(test_jobs, componentVersionWithBuildId)
 print('finished preprocessing test files')
 yaml = ruamel.yaml.YAML()
 for x in os.listdir(component_dir.__str__()):
-    if x is not "src":
+    if x != "src":
         print("Registering "+x)
         with open(component_dir.__str__()+"/"+x+'/'+'asset.yaml') as fp:
             data = yaml.load(fp)
