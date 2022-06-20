@@ -1,5 +1,0 @@
-name: mlflow-ubuntu18.04-py37-cpu-inference
-version: auto
-type: environment
-spec: spec.yaml
-extra_config: environment.yaml
