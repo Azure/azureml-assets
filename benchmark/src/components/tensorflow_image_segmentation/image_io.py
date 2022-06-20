@@ -106,7 +106,7 @@ class ImageAndMaskHelper():
 class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
     @staticmethod
     def loading_function(image_path, mask_path, target_size, image_type="png"):
-        logging.getLogger(__name__).info(f"Actually loading image {image_path}")
+        #logging.getLogger(__name__).info(f"Actually loading image {image_path}")
         image_content = tensorflow.io.read_file(image_path)
         if image_type == "jpg":
             image = tensorflow.image.decode_jpeg(image_content, channels=3)

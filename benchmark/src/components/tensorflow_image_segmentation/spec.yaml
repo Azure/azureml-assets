@@ -81,10 +81,10 @@ inputs:
     type: integer
     optional: true
     description: "Force down the number of gpus used for this training"
-  distributed_strategy:
+  distributed_backend:
     type: string
     optional: true
-    description: "tensorflow.distributed strategy (default: MultiWorkerMirroredStrategy)"
+    description: "Which backend (ring, nccl, auto) for MultiWorkerMirroredStrategy collective communication."
 
 outputs:
   checkpoints: 
@@ -125,7 +125,7 @@ command: >-
   --model_output ${{outputs.trained_model}}
   --checkpoints ${{outputs.checkpoints}}
 
-  [--distributed_strategy ${{inputs.distributed_strategy}}]
+  [--distributed_backend ${{inputs.distributed_backend}}]
 
 distribution:
   # NOTE: using type:pytorch will use all the right env variables for pytorch init_process_group
