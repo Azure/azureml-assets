@@ -84,7 +84,7 @@ jobs:
 
       - name: Convert test files and scripts
         id: convert-test-files-and-scripts
-        run: python -u $scripts_assets_dir/release/test_file_convert.py -i $main_dir/training -r $release_dir -a training
+        run: python -u $scripts_assets_dir/release/test_file_convert.py -i $training -r $release_dir -a training
         working-directory: ${{ env.main_dir }}
 
       - name: Convert e2e test scripts
