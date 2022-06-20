@@ -43,5 +43,5 @@ vision:
     jobs:
         object-detection-using-built-in-component: 
             job: "./vision/jobs/object-detection-using-built-in-component/pipeline.yml"
-            pre: "./vision/jobs/object-detection-using-built-in-component/prepare_data.py"
+            pre: "./vision/jobs/object-detection-using-built-in-component/prepare_data.py --workspace-name registry-builtin-ci-dev --resource-group registry-builtin-dev --subscription 4f26493f-21d2-4726-92ea-1ddd550b1d27"
 
