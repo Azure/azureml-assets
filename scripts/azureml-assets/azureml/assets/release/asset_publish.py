@@ -20,6 +20,7 @@ resource_group = args.resource_group
 workspace = args.workspace
 tests_dir = args.tests_directory
 component_dir = args.component_directory
+passed_version = args.version
 
 def test_files_location(DIR: Path):
     test_jobs = []
@@ -60,10 +61,9 @@ def test_files_preprocess(test_jobs, full_version):
 print("publishing assets")
 
 
-timestamp = '-'.join(datetime.datetime.now().__str__().split(" "))
-timestamp = ''.join(timestamp.split(".")[0].split(":")[0:-1])
-# componentVersionWithBuildId="ev2."+registry_name+"."+timestamp
-componentVersionWithBuildId = timestamp
+#timestamp = '-'.join(datetime.datetime.now().__str__().split(" "))
+#timestamp = ''.join(timestamp.split(".")[0].split(":")[0:-1])
+componentVersionWithBuildId=registry_name+"."+passed_version
 print("generated componentVersionWithBuildId: " + componentVersionWithBuildId)
 print('starting locating test files')
 test_jobs = test_files_location(tests_dir)
