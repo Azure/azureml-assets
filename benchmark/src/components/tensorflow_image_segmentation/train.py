@@ -231,15 +231,23 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         required=False,
         # see https://www.tensorflow.org/guide/distributed_training
         choices=[
-            "Auto",
-            "MirroredStrategy",
-            "MultiWorkerMirroredStrategy",
-            #"CentralStorageStrategy",
-            #"ParameterServerStrategy".
-            #"Horovod"
+            "Tensorflow",
+            "Horovod",
+        ],
+        default="Tensorflow", # will auto identify
+        help="Which distributed strategy to use.",
+    )
+    group.add_argument(
+        "--distributed_backend",
+        type=str,
+        required=False,
+        choices=[
+            "auto",
+            "ring",
+            "nccl",
         ],
         default="Auto", # will auto identify
-        help="Which distributed strategy to use.",
+        help="Which backend (ring, nccl, auto) for MultiWorkerMirroredStrategy collective communication.",
     )
 
     return parser
@@ -329,13 +337,35 @@ class TensorflowDistributedModelTrainingSequence:
         # Identify strategy
         if self.nodes > 1:
             # multiple nodes
-            self.strategy = distribute.MultiWorkerMirroredStrategy()
+            self.logger.info("Using MultiWorkerMirroredStrategy as distributed_strategy")
+
+            if self.training_config.distributed_backend.lower() == "nccl":
+                self.logger.info("Using CommunicationImplementation.NCCL as distributed_backend")
+                communication_options = tensorflow.distribute.experimental.CommunicationOptions(
+                    implementation=tensorflow.distribute.experimental.CommunicationImplementation.NCCL
+                )
+            elif self.training_config.distributed_backend.lower() == "ring":
+                self.logger.info("Using CommunicationImplementation.RING as distributed_backend")
+                communication_options = tensorflow.distribute.experimental.CommunicationOptions(
+                    implementation=tensorflow.distribute.experimental.CommunicationImplementation.RING
+                )
+            else:
+                self.logger.info("Using CommunicationImplementation.AUTO as distributed_backend")
+                communication_options = tensorflow.distribute.experimental.CommunicationOptions(
+                    implementation=tensorflow.distribute.experimental.CommunicationImplementation.AUTO
+                )
+            self.strategy = distribute.MultiWorkerMirroredStrategy(communication_options=communication_options)
+            self.training_config.distributed_strategy = self.strategy.__class__.__name__
         elif self.gpus > 1:
             # single node, multi gpu
+            self.logger.info(f"Using MirroredStrategy(devices={self.devices}) as distributed_strategy")
             self.strategy = distribute.MirroredStrategy(devices=self.devices)
+            self.training_config.distributed_strategy = self.strategy.__class__.__name__
         else:
             # single node, single gpu
+            self.logger.info(f"Using OneDeviceStrategy(devices=GPU:0) as distributed_strategy")
             self.strategy = distribute.OneDeviceStrategy(device="GPU:0")
+            self.training_config.distributed_strategy = self.strategy.__class__.__name__
 
         # DISTRIBUTED: in distributed mode, you want to report parameters
         # only from main process (rank==0) to avoid conflict
@@ -348,7 +378,8 @@ class TensorflowDistributedModelTrainingSequence:
                 #"cuda_available": not(args.disable_cuda),
                 "disable_cuda": self.training_config.disable_cuda,
                 "distributed": self.distributed_available,
-                "distributed_strategy": "none" if self.strategy is None else self.strategy.__class__.__name__,
+                "distributed_strategy": self.training_config.distributed_strategy,
+                "distributed_backend": self.training_config.distributed_backend,
 
                 # data loading params
                 "batch_size": self.dataloading_config.batch_size,
@@ -406,21 +437,21 @@ class TensorflowDistributedModelTrainingSequence:
 
         custom_callback_handler = CustomCallbacks()
 
-        # PROFILER: use this class to log time taken by the dataset iterator itself
-        self.training_dataset = LogTimeOfIterator(
-            self.training_dataset,
-            "training_data_loader",
-            enabled = self.self_is_main_node, # only enable this on the first process/node
-            async_collector = custom_callback_handler.metrics # metrics will be added to the callback handler collector
-        ).as_tf_dataset() # returns a TF dataset
+        # # PROFILER: use this class to log time taken by the dataset iterator itself
+        # self.training_dataset = LogTimeOfIterator(
+        #     self.training_dataset,
+        #     "training_data_loader",
+        #     enabled = self.self_is_main_node, # only enable this on the first process/node
+        #     async_collector = custom_callback_handler.metrics # metrics will be added to the callback handler collector
+        # ).as_tf_dataset() # returns a TF dataset
 
-        # PROFILER: use this class to log time taken by the dataset iterator itself
-        self.validation_dataset = LogTimeOfIterator(
-            self.validation_dataset,
-            "validation_data_loader",
-            enabled = self.self_is_main_node, # only enable this on the first process/node
-            async_collector = custom_callback_handler.metrics # metrics will be added to the callback handler collector
-        ).as_tf_dataset() # returns a TF dataset
+        # # PROFILER: use this class to log time taken by the dataset iterator itself
+        # self.validation_dataset = LogTimeOfIterator(
+        #     self.validation_dataset,
+        #     "validation_data_loader",
+        #     enabled = self.self_is_main_node, # only enable this on the first process/node
+        #     async_collector = custom_callback_handler.metrics # metrics will be added to the callback handler collector
+        # ).as_tf_dataset() # returns a TF dataset
 
         callbacks = [
             custom_callback_handler,
