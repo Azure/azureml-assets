@@ -139,16 +139,16 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
 
             _dataset = _dataset.batch(batch_size)
 
+            if cache == "disk":
+                _dataset = _dataset.cache(tempfile.NamedTemporaryFile().name)
+            elif cache == "memory":
+                _dataset = _dataset.cache()
+
             if prefetch_factor < 0:
                 # by default, use AUTOTUNE
                 _dataset = _dataset.prefetch(buffer_size=tensorflow.data.AUTOTUNE)
             elif prefetch_factor > 0:
                 _dataset = _dataset.prefetch(buffer_size=prefetch_factor)
-
-            if cache == "disk":
-                _dataset = _dataset.cache(tempfile.NamedTemporaryFile().name)
-            elif cache == "memory":
-                _dataset = _dataset.cache()
 
             # Disable AutoShard.
             options = tensorflow.data.Options()
