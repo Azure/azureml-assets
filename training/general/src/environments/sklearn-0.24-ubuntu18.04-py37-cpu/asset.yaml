@@ -1,5 +1,0 @@
-name: sklearn-0.24-ubuntu18.04-py37-cpu
-version: auto
-type: environment
-spec: spec.yaml
-extra_config: environment.yaml
