@@ -23,15 +23,15 @@ group_post = ''
 yaml = ruamel.yaml.YAML()
 with open(tests_dir.__str__()+"/tests.yml") as fp:
     data = yaml.load(fp)
-    if data[test_group]['subscription_id'] is not None:
+    if 'subscription_id' in data[test_group]:
         subscription_id = data[test_group]['subscription_id']
-    if data[test_group]['resource_group_name'] is not None:
+    if 'resource_group_name' in data[test_group]:
         resource_group_name = data[test_group]['resource_group_name']
-    if data[test_group]['workspace_name'] is not None:
+    if 'workspace_name' in data[test_group]:
         workspace_name = data[test_group]['workspace_name']
-    if data[test_group]['pre'] is not None:
+    if 'pre' in data[test_group]:
         group_pre = tests_dir.__str__()+'/'+data[test_group]['pre']
-    if data[test_group]['post'] is not None:
+    if 'post' in data[test_group]:
         group_post = tests_dir.__str__()+'/'+data[test_group]['post']
     
 ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group_name, workspace_name)
@@ -43,7 +43,7 @@ subprocess.check_call(f"python {group_pre}", shell=True)
 with open(tests_dir.__str__()+"/tests.yml") as fp:
     data = yaml.load(fp)
     for job in data[test_group]['jobs']:
-        if data[test_group]['jobs'][job]['pre'] is not None:
+        if 'pre' in data[test_group]['jobs'][job]:
             print(f"Running pre script for {job}")
             subprocess.check_call(f"python {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", shell=True)
         print(f'Loading test job {job}')
