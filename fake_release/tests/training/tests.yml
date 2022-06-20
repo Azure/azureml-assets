@@ -1,0 +1,47 @@
+#schema 
+# test_group_name:
+#   workspace_name: workspace_name
+#   resource_group_name: resource_group_name
+#   subscription_id: subscription_id
+#   pre: path
+#   post: path
+#   includes: [path 1,
+#              path 2,
+#              ...]
+#   jobs:
+#       job_name:
+#           job: path
+#           pre: path
+#           post: path
+#       job_name:
+#           job: path
+#           pre: path
+#           post: path
+#       ...
+# test_group_name:
+#   pre: path
+#   post: path
+#   includes: [path 1,
+#              path 2,
+#              ...]
+#   jobs:
+#       job_name:
+#           job: path
+#           pre: path
+#           post: path
+#       job_name:
+#           job: path
+#           pre: path
+#           post: path
+# ...
+
+vision:
+    workspace_name: "registry-builtin-ci-dev"
+    resource_group_name: "registry-builtin-dev"
+    subscription_id: "4f26493f-21d2-4726-92ea-1ddd550b1d27"
+    includes: ["./vision/jobs/object-detection-using-built-in-component/"]
+    jobs:
+        object-detection-using-built-in-component: 
+            job: "./vision/jobs/object-detection-using-built-in-component/pipeline.yml"
+            pre: "./vision/jobs/object-detection-using-built-in-component/prepare_data.py"
+

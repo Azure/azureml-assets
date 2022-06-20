@@ -206,7 +206,7 @@ jobs:
       
       # TODO: This is overkill, just copy directories without involving this script
       - name: Update release branch
-        run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$_artifact -r $release_dir -c
+        run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
   
       - name: Create commit and push
         run: |
