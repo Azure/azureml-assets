@@ -18,14 +18,26 @@ import tensorflow
 
 
 class ImageAndMaskHelper():
+    """Helps locating images and masks for training a segmentation model"""
     def __init__(self,
-                 images_dir,
-                 masks_dir,
-                 images_filename_pattern,
-                 masks_filename_pattern,
-                 images_type="png"):
-                #  images_filename_pattern="(.*)_leftImg8bit.png",
-                #  masks_filename_pattern="(.*)_gtFine_labelIds.png"):
+                 images_dir:str,
+                 masks_dir:str,
+                 images_filename_pattern:str,
+                 masks_filename_pattern:str,
+                 images_type:str="png"):
+        """Initialize the helper class.
+
+        Args:
+            images_dir (str) : path to the images
+            masks_dir (str) : path to the masks
+            images_filename_pattern (str) : regex to locate images in images_dir
+            masks_filename_pattern (str) : regex to locate masks in masks_dir (and match images based on group(1))
+            images_type (str) : type of the images in images_dir (jpg or png)
+        
+        Notes:
+            masks have to be PNG
+            masks and images are matched based on group(1) of their respective patterns.
+        """
         self.images_dir = images_dir
         self.masks_dir = masks_dir
         self.images_filename_pattern = images_filename_pattern
@@ -40,6 +52,11 @@ class ImageAndMaskHelper():
         self.masks = []
 
     def build_pair_list(self):
+        """Builds a list of pairs of paths to image/mask.
+
+        Returns:
+            image_masks_pairs (List[tuple(str, str)])
+        """
         parsing_stats = {
             "masks_not_matching" : 0,
             "images_not_matching" : 0,
@@ -59,9 +76,11 @@ class ImageAndMaskHelper():
                     )
                 )
             else:
+                # keep some stats
                 parsing_stats["masks_not_matching"] += 1
         masks_paths = dict(masks_paths) # turn list of tuples into a map
 
+        # search for all images matching file name pattern
         images_filename_pattern = re.compile(self.images_filename_pattern)
         images_paths = []
         for file_path in glob.glob(self.images_dir+"/**/*", recursive=True):
@@ -74,11 +93,14 @@ class ImageAndMaskHelper():
                     )
                 )
             else:
+                # keep some stats
                 parsing_stats["images_not_matching"] += 1
 
-        self.images = []
-        self.masks = []
-        self.image_masks_pairs = []
+        # now match images and masks
+        self.images = [] # list of images
+        self.masks = [] # list of masks (ordered like self.images)
+        self.image_masks_pairs = [] # list of tuples
+
         for image_key, image_path in images_paths:
             if image_key in masks_paths:
                 self.images.append(image_path)
@@ -91,6 +113,7 @@ class ImageAndMaskHelper():
                 )
             else:
                 self.logger.debug(f"Image {image_path} doesn't have a corresponding mask.")
+                # keep some stats
                 parsing_stats["images_without_masks"] += 1
 
         parsing_stats["found_pairs"] = len(self.image_masks_pairs)
@@ -104,8 +127,10 @@ class ImageAndMaskHelper():
 
 
 class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
+    """Creates a tensorflow.data.Dataset out of a list of images/masks"""
     @staticmethod
     def loading_function(image_path, mask_path, target_size, image_type="png"):
+        """Function called using tf map() for loading images into tensors"""
         #logging.getLogger(__name__).info(f"Actually loading image {image_path}")
         image_content = tensorflow.io.read_file(image_path)
         if image_type == "jpg":
@@ -125,6 +150,8 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
         return image, mask
 
     def dataset(self, input_size=160, training=False, num_shards=1, shard_index=0, cache=None, batch_size=64, prefetch_factor=2, prefetch_workers=5, num_classes=3):
+        """Created a tf dataset"""
+        # builds the list of pairs
         self.build_pair_list()
 
         # https://cs230.stanford.edu/blog/datapipeline/#best-practices

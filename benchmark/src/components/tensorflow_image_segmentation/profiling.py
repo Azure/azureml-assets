@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 """
-This script provides some helper code to help with profiling.
+This script provides some helper code to help with profiling tensorflow training.
 """
 import os
 import time
@@ -15,6 +15,7 @@ import tensorflow
 
 
 class CustomCallbacks(keras.callbacks.Callback):
+    """To use during model.fit()"""
     def __init__(self, enabled=True):
         self.logger = logging.getLogger(__name__)
 
@@ -61,38 +62,6 @@ class CustomCallbacks(keras.callbacks.Callback):
     def on_train_end(self, logs=None):
         keys = list(logs.keys())
         self.logger.info("Stop training; got log keys: {}".format(keys))
-
-    # def on_predict_begin(self, logs=None):
-    #     keys = list(logs.keys())
-    #     print("Start predicting; got log keys: {}".format(keys))
-
-    # def on_predict_end(self, logs=None):
-    #     keys = list(logs.keys())
-    #     print("Stop predicting; got log keys: {}".format(keys))
-
-    # def on_train_batch_begin(self, batch, logs=None):
-    #     keys = list(logs.keys())
-    #     self.logger.info("...Training: start of batch {}; got log keys: {}".format(batch, keys))
-
-    # def on_train_batch_end(self, batch, logs=None):
-    #     keys = list(logs.keys())
-    #     self.logger.info("...Training: end of batch {}; got log keys: {}".format(batch, keys))
-
-    # def on_test_batch_begin(self, batch, logs=None):
-    #     keys = list(logs.keys())
-    #     self.logger.info("...Evaluating: start of batch {}; got log keys: {}".format(batch, keys))
-
-    # def on_test_batch_end(self, batch, logs=None):
-    #     keys = list(logs.keys())
-    #     self.logger.info("...Evaluating: end of batch {}; got log keys: {}".format(batch, keys))
-
-    # def on_predict_batch_begin(self, batch, logs=None):
-    #     keys = list(logs.keys())
-    #     print("...Predicting: start of batch {}; got log keys: {}".format(batch, keys))
-
-    # def on_predict_batch_end(self, batch, logs=None):
-    #     keys = list(logs.keys())
-    #     print("...Predicting: end of batch {}; got log keys: {}".format(batch, keys))
 
 
 class LogTimeBlock(object):

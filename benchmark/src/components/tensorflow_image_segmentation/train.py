@@ -571,6 +571,9 @@ def run(args):
                 num_classes=args.num_classes
             )
 
+            # print model summary to stdout
+            model.summary()
+
             # Configure the model for training.
             # We use the "sparse" version of categorical_crossentropy
             # because our target data is integers.
