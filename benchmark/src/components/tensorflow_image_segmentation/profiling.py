@@ -15,17 +15,19 @@ import tensorflow
 
 
 class CustomCallbacks(keras.callbacks.Callback):
-    def __init__(self):
+    def __init__(self, enabled=True):
         self.logger = logging.getLogger(__name__)
 
         self.metrics = {}
         self.train_start = None
         self.epoch_start = None
         self.test_start = None
+        self.enabled = enabled
 
     def _flush(self):
         self.logger.info(f"MLFLOW: metrics={self.metrics}")
-        mlflow.log_metrics(self.metrics)
+        if self.enabled:
+            mlflow.log_metrics(self.metrics)
 
     def on_epoch_begin(self, epoch, logs=None):
         keys = list(logs.keys())
