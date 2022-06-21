@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # ignore local data
-data/
+# data/
 
 # ignore mlflow local dumps
 mlruns/
