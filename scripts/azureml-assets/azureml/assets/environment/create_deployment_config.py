@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+from enum import Enum
 from pathlib import Path
 from typing import Dict
 
@@ -11,6 +12,11 @@ from azureml.assets.util import logger
 ENV_DEF_FILE_TEMPLATE = "{name}.json"
 SPEC_FILE_TEMPLATE = "{name}.yaml"
 GIT_URL_TEMPLATE = "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
+
+
+class PayloadFormat(Enum):
+    EMS = 'ems'
+    MFE = 'mfe'
 
 
 def create_ems_payload(asset_config: assets.AssetConfig, env_config: assets.EnvironmentConfig, spec: assets.Spec,
@@ -49,6 +55,9 @@ def create_ems_payload(asset_config: assets.AssetConfig, env_config: assets.Envi
             'docker': docker_section
         }
     }
+    
+    # Remove null values
+    payload['metadata'] = {k: v for k, v in payload['metadata'].items() if v is not None}
 
     return payload
 
@@ -88,6 +97,7 @@ def create_deployment_config(input_directory: Path,
                              release_directory_root: Path,
                              deployment_config_file_path: Path,
                              envs_dirname: Path,
+                             payload_format: PayloadFormat,
                              specs_dirname: Path = None,
                              version_template: str = None,
                              tag_template: str = None):
@@ -96,14 +106,14 @@ def create_deployment_config(input_directory: Path,
         env_config = asset_config.environment_config_as_object()
         spec = asset_config.spec_as_object()
 
-        if env_config.build_enabled and env_config.publish_location == assets.PublishLocation.MCR:
-            # Apply tag template to image name
-            image = spec.image or env_config.image_name
-            full_image_name = util.apply_tag_template(image, tag_template)
-        else:
-            # Use image name as-is
-            logger.log_warning(f"Not applying tag template to {asset_config.name} because it's a pre-published image")
-            full_image_name = env_config.image_name
+        # Determine full image name
+        full_image_name = env_config.get_full_image_name(asset_config.version)
+        if tag_template:
+            if env_config.build_enabled and env_config.publish_location == assets.PublishLocation.MCR:
+                # Apply tag template to image name
+                full_image_name = util.apply_tag_template(full_image_name, tag_template)
+            else:
+                logger.log_warning(f"Not applying tag template to {asset_config.name} because it's a pre-published image")
 
         # Apply version template
         version = util.apply_version_template(asset_config.version, version_template)
@@ -128,14 +138,18 @@ def create_deployment_config(input_directory: Path,
                                            include_commit_hash=True)
 
         # Create payload
-        env_def_with_metadata = create_mfe_payload(env_config=env_config, spec=spec, template_data=data,
-                                                   full_image_name=full_image_name)
+        if payload_format == PayloadFormat.MFE:
+            payload = create_mfe_payload(env_config=env_config, spec=spec, template_data=data,
+                                         full_image_name=full_image_name)
+        else:
+            payload = create_ems_payload(asset_config=asset_config, env_config=env_config, spec=spec,
+                                         template_data=data, full_image_name=full_image_name)
 
         # Store payload
         env_def_file_path = deployment_config_file_path.parent / env_def_file
         os.makedirs(env_def_file_path.parent, exist_ok=True)
         with open(env_def_file_path, 'w') as f:
-            json.dump(env_def_with_metadata, f, indent=4)
+            json.dump(payload, f, indent=4)
 
         # Store spec file
         if new_spec_file:
@@ -158,17 +172,20 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--deployment-config", required=True, type=Path, help="Path to deployment config file")
     parser.add_argument("-e", "--environment-definitions-dir", default=Path("envs"), type=Path, help="Name of directory that will contain environment definitions")
     parser.add_argument("-s", "--spec-files-dirname", type=Path, help="Name of directory that will contain environment spec files")
-    parser.add_argument("-v", "--version-template", help="Template to apply to versions from spec files "
-                        "file, example: '{version}.dev1'")
-    parser.add_argument("-T", "--tag-template", help="Template to apply to image name tags from spec files "
-                        "config file, example: '{tag}.dev1'")
+    parser.add_argument("-v", "--version-template", help="Template to apply to versions, for example: '{version}.dev1'")
+    parser.add_argument("-T", "--tag-template", help="Template to apply to image name tags, for example: '{tag}.dev1'")
+    parser.add_argument("-f", "--payload-format", default="mfe", choices=[i.value for i in list(PayloadFormat)], help="Environment payload format")
     args = parser.parse_args()
+
+    # Convert types
+    payload_format = PayloadFormat(args.payload_format)
 
     create_deployment_config(input_directory=args.input_directory,
                              asset_config_filename=args.asset_config_filename,
                              release_directory_root=args.release_directory,
                              deployment_config_file_path=args.deployment_config,
                              envs_dirname=args.environment_definitions_dir,
+                             payload_format=payload_format,
                              specs_dirname=args.spec_files_dirname,
                              version_template=args.version_template,
                              tag_template=args.tag_template)
