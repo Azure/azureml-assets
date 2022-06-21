@@ -26,13 +26,9 @@ def create_import_config(input_directory: Path,
         version = asset_config.spec_as_object().version
         source_image_name = env_config.get_image_name_with_tag(version)
 
-        # Form destination image name and tag
-        destination_image_name = f"{env_config.publish_visibility.value}/{env_config.image_name}"
-        image_tag = version
-
         # Generate target image names
-        destination_tags = [tag] if tag is not None else [image_tag, "latest"]
-        destination_images = [f"{destination_image_name}:{tag}" for tag in destination_tags]
+        destination_tags = [tag] if tag is not None else [version, "latest"]
+        destination_images = [env_config.get_image_name_for_promotion(tag) for tag in destination_tags]
 
         # Store image info
         source = {

@@ -50,7 +50,7 @@ def create_acr_task(image_name: str,
     if push:
         task['steps'].append({
             'id': 'push',
-            'push': f"$Registry/{image_name}"
+            'push': [f"$Registry/{image_name}"]
         })
 
     # Write YAML file to disk

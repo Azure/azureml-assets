@@ -1,4 +1,5 @@
 # check release notes https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/index.html
+# DisableDockerDetector "Nvidia registry preferred over MCR mirror"
 FROM nvcr.io/nvidia/pytorch:22.04-py3
 
 ##############################################################################
