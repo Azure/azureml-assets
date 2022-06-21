@@ -1,8 +1,5 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT license.
-
 """
-This script provides code to load and setup a variety of models from multiple libraries.
+This script provides code to load and setup a tensorflow segmentation model
 """
 from tensorflow.keras import layers
 from tensorflow import keras
@@ -23,6 +20,8 @@ def get_model_metadata(model_arch: str):
 
 
 def _get_unet_model(input_size, num_classes):
+    """Constructs a UNET architecture model for segmentation"""
+    # this code comes from https://keras.io/examples/vision/oxford_pets_image_segmentation/
     inputs = keras.Input(shape=input_size + (3,))
 
     ### [First half of the network: downsampling inputs] ###
@@ -85,6 +84,5 @@ def load_model(model_arch: str, input_size: int, num_classes:int):
         raise NotImplementedError(f"model_arch={model_arch} is not implemented yet.")
 
     model = _get_unet_model((input_size, input_size), num_classes)
-    model.summary()
 
     return model
