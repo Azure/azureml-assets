@@ -6,6 +6,7 @@ import azure.ai.ml
 from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
 import ruamel.yaml
+import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests folder")
@@ -45,7 +46,12 @@ with open(tests_dir.__str__()+"/tests.yml") as fp:
     for job in data[test_group]['jobs']:
         if 'pre' in data[test_group]['jobs'][job]:
             print(f"Running pre script for {job}")
-            subprocess.check_call(f"python {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", shell=True)
+            proc = subprocess.Popen(f"python {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            proc.wait()
+            (stdout, stderr) = proc.communicate()
+            if proc.returncode != 0:
+                print(stderr)
+                sys.exit(f"pre script of {job} is failed")
         print(f'Loading test job {job}')
         test_job = azure.ai.ml.load_job(tests_dir.__str__()+"/"+data[test_group]['jobs'][job]['job'])
         print(test_job)

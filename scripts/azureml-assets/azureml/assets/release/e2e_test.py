@@ -42,5 +42,5 @@ for area in final_report:
             red_flag = True
 
 # fail the build if any test failed
-#if(red_flag):
-#    raise Exception("one or more test groups failed")
+if(red_flag):
+    raise Exception("one or more test groups failed")
