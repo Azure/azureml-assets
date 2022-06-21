@@ -26,11 +26,9 @@ import tempfile
 import mlflow
 import numpy as np
 
-# the long list of tensorflow imports
-import tensorflow
+# tensorflow imports
+import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow import distribute
 
 # add path to here, if necessary
 COMPONENT_ROOT = os.path.abspath(
@@ -289,9 +287,9 @@ class TensorflowDistributedModelTrainingSequence:
 
         # verify parameter default values
         if self.dataloading_config.num_workers is None:
-            self.dataloading_config.num_workers = tensorflow.data.AUTOTUNE
+            self.dataloading_config.num_workers = tf.data.AUTOTUNE
         if self.dataloading_config.num_workers < 0:
-            self.dataloading_config.num_workers = tensorflow.data.AUTOTUNE
+            self.dataloading_config.num_workers = tf.data.AUTOTUNE
         if self.dataloading_config.num_workers == 0:
             self.logger.warning("You specified num_workers=0, forcing prefetch_factor to be discarded.")
             self.dataloading_config.prefetch_factor = 0
@@ -300,72 +298,35 @@ class TensorflowDistributedModelTrainingSequence:
         if "TF_CONFIG" not in os.environ:
             self.logger.critical("TF_CONFIG cannot be found in os.environ, defaulting back to non-distributed training")
             self.nodes = 1
-            self.gpus = len(tensorflow.config.list_physical_devices('GPU'))
-            self.devices = [ f"GPU:{i}" for i in range(self.gpus) ]
-            #self.devices = [ device.name for device in tensorflow.config.list_physical_devices('GPU') ]
+            #self.devices = [ device.name for device in tf.config.list_physical_devices('GPU') ]
             self.worker_id = 0
         else:
             tf_config = json.loads(os.environ['TF_CONFIG'])
             self.logger.info(f"Found TF_CONFIG = {tf_config}")
             self.nodes = len(tf_config['cluster']['worker'])
-            self.gpus = len(tensorflow.config.list_physical_devices('GPU'))
-            self.devices = [ f"GPU:{i}" for i in range(self.gpus) ]
-            #self.devices = [ device.name for device in tensorflow.config.list_physical_devices('GPU') ]
+            #self.devices = [ device.name for device in tf.config.list_physical_devices('GPU') ]
             self.worker_id = tf_config['task']['index']
 
+
+        # Reduce number of GPUs artificially if requested
         if args.disable_cuda:
-            self.logger.warning(f"Cuda disabled by replacing current CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')} by '-1'")
-            os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
+            self.logger.warning(f"CUDA disabled because --disable_cuda True")
             self.gpus = 0
-            self.devices = []
         elif args.num_gpus == 0:
-            self.logger.warning(f"Because you set --num_gpus=0, cuda is disabled by replacing current CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES')} by '-1'")
-            os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
+            self.logger.warning(f"CUDA disabled because --num_gpus=0")
             self.gpus = 0
-            self.devices = []
         elif args.num_gpus and args.num_gpus > 0:
             # TODO: force down the number of gpus
             self.gpus = args.num_gpus
-            self.devices = [ f"GPU:{i}" for i in range (args.num_gpus) ]
-            os.environ['CUDA_VISIBLE_DEVICES'] = ",".join([ str(i) for i in range(self.gpus) ])
+            self.logger.warning(f"Because you set --num_gpus={args.num_gpus}, retricting to first {self.gpus} physical devices")
 
-        self.distributed_available = ((self.nodes * self.gpus) > 1)
+        # Check if we need distributed at all
+        self.distributed_available = (self.nodes > 1) or ((self.nodes * self.gpus) > 1) # if multi-node (CPU or GPU) or multi-gpu
         self.self_is_main_node = (self.worker_id == 0)
+        self.logger.info(f"Distribution settings: nodes={self.nodes}, gpus={self.gpus}, distributed_available={self.distributed_available}, self_is_main_node={self.self_is_main_node}")
 
-        self.logger.info(f"Distribution settings: nodes={self.nodes}, gpus={self.gpus}, devices={self.devices}, distributed_available={self.distributed_available}, self_is_main_node={self.self_is_main_node}")
-
-        # Identify strategy
-        if self.nodes > 1:
-            # multiple nodes
-            self.logger.info("Using MultiWorkerMirroredStrategy as distributed_strategy")
-
-            if self.training_config.distributed_backend.lower() == "nccl":
-                self.logger.info("Using CommunicationImplementation.NCCL as distributed_backend")
-                communication_options = tensorflow.distribute.experimental.CommunicationOptions(
-                    implementation=tensorflow.distribute.experimental.CommunicationImplementation.NCCL
-                )
-            elif self.training_config.distributed_backend.lower() == "ring":
-                self.logger.info("Using CommunicationImplementation.RING as distributed_backend")
-                communication_options = tensorflow.distribute.experimental.CommunicationOptions(
-                    implementation=tensorflow.distribute.experimental.CommunicationImplementation.RING
-                )
-            else:
-                self.logger.info("Using CommunicationImplementation.AUTO as distributed_backend")
-                communication_options = tensorflow.distribute.experimental.CommunicationOptions(
-                    implementation=tensorflow.distribute.experimental.CommunicationImplementation.AUTO
-                )
-            self.strategy = distribute.MultiWorkerMirroredStrategy(communication_options=communication_options)
-            self.training_config.distributed_strategy = self.strategy.__class__.__name__
-        elif self.gpus > 1:
-            # single node, multi gpu
-            self.logger.info(f"Using MirroredStrategy(devices={self.devices}) as distributed_strategy")
-            self.strategy = distribute.MirroredStrategy(devices=self.devices)
-            self.training_config.distributed_strategy = self.strategy.__class__.__name__
-        else:
-            # single node, single gpu
-            self.logger.info(f"Using OneDeviceStrategy(devices=GPU:0) as distributed_strategy")
-            self.strategy = distribute.OneDeviceStrategy(device="GPU:0")
-            self.training_config.distributed_strategy = self.strategy.__class__.__name__
+        # Setting up TF distributed is a whole story
+        self._setup_distribution_strategy()
 
         # DISTRIBUTED: in distributed mode, you want to report parameters
         # only from main process (rank==0) to avoid conflict
@@ -395,14 +356,71 @@ class TensorflowDistributedModelTrainingSequence:
 
             if not self.training_config.disable_cuda:
                 # add some gpu properties
-                logged_params['cuda_device_count'] = len(tensorflow.config.list_physical_devices('GPU'))
+                logged_params['cuda_device_count'] = len(tf.config.list_physical_devices('GPU'))
 
             mlflow.log_params(logged_params)
 
+    def _setup_distribution_strategy(self):
+        """ DISTRIBUTED: this takes care of initializing the distribution strategy.
+
+        Tensorflow uses a different "strategy" for each use case:
+        - multi-node => MultiWorkerMirroredStrategy
+        - single-node multi-gpu => MirroredStrategy
+        - single-node single-gpu => OneDeviceStrategy
+
+        Each comes with its own initialization process."""
+        if self.nodes > 1: # MULTI-NODE
+            self.logger.info("Using MultiWorkerMirroredStrategy as distributed_strategy")
+
+            # first we need to define the communication options (backend)
+            if self.training_config.distributed_backend.lower() == "nccl":
+                self.logger.info("Setting CommunicationImplementation.NCCL as distributed_backend")
+                communication_options = tf.distribute.experimental.CommunicationOptions(
+                    implementation=tf.distribute.experimental.CommunicationImplementation.NCCL
+                )
+            elif self.training_config.distributed_backend.lower() == "ring":
+                self.logger.info("Setting CommunicationImplementation.RING as distributed_backend")
+                communication_options = tf.distribute.experimental.CommunicationOptions(
+                    implementation=tf.distribute.experimental.CommunicationImplementation.RING
+                )
+            else:
+                self.logger.info("Setting CommunicationImplementation.AUTO as distributed_backend")
+                communication_options = tf.distribute.experimental.CommunicationOptions(
+                    implementation=tf.distribute.experimental.CommunicationImplementation.AUTO
+                )
+            
+            # second, we can artificially limit the number of gpus by using tf.config.set_visible_devices()
+            self.devices = tf.config.list_physical_devices('GPU')[:self.gpus] # artificially limit visible GPU
+            self.devices += tf.config.list_physical_devices('CPU') # but add all CPU
+            self.logger.info(f"Setting tf.config.set_visible_devices(devices={self.devices})")
+            tf.config.set_visible_devices(devices=self.devices)
+
+            # finally we can initialize the strategy
+            self.logger.info(f"Initialize MultiWorkerMirroredStrategy()...")
+            self.strategy = tf.distribute.MultiWorkerMirroredStrategy(communication_options=communication_options)
+
+            # we're storing the name of the strategy to log as a parameter
+            self.training_config.distributed_strategy = self.strategy.__class__.__name__
+
+        elif self.gpus > 1: # SINGLE-NODE MULTI-GPU
+            self.devices = [ f"GPU:{i}" for i in range(self.gpus) ] # artificially limit number of gpus (if requested)
+            self.logger.info(f"Using MirroredStrategy(devices={self.devices}) as distributed_strategy")
+
+            # names of devices for MirroredStrategy must be GPU:N
+            self.strategy = tf.distribute.MirroredStrategy(devices=self.devices)
+            self.training_config.distributed_strategy = self.strategy.__class__.__name__
+
+        else: # SINGLE-NODE SINGLE-GPU
+            self.devices = [ f"GPU:{i}" for i in range(self.gpus) ]
+            self.logger.info(f"Using OneDeviceStrategy(devices=GPU:0) as distributed_strategy")
+            self.strategy = tf.distribute.OneDeviceStrategy(device="GPU:0")
+            self.training_config.distributed_strategy = self.strategy.__class__.__name__
+
+
     def setup_datasets(
         self,
-        training_dataset: tensorflow.data.Dataset,
-        validation_dataset: tensorflow.data.Dataset
+        training_dataset: tf.data.Dataset,
+        validation_dataset: tf.data.Dataset
     ):
         """Creates and sets up dataloaders for training/validation datasets."""
         self.training_dataset = training_dataset
@@ -435,7 +453,7 @@ class TensorflowDistributedModelTrainingSequence:
         if epochs is None:
             epochs = self.training_config.num_epochs
 
-        custom_callback_handler = CustomCallbacks()
+        custom_callback_handler = CustomCallbacks(enabled=self.self_is_main_node)
 
         # # PROFILER: use this class to log time taken by the dataset iterator itself
         # self.training_dataset = LogTimeOfIterator(
