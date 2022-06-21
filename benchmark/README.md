@@ -43,7 +43,8 @@ This subfolders hosts the code for AzureML assets related to benchmark typical m
 2. Create the required environments
 
     ```bash
-    az ml environment create --file ./src/environments/nvidia/env.yml
+    az ml environment create --file ./src/environments/nvidia_pytorch/env.yml
+    az ml environment create --file ./src/environments/nvidia_tensorflow/env.yml
     ```
 
 ### Run a test pipeline (no datasets)
