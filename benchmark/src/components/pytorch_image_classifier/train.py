@@ -43,7 +43,7 @@ COMPONENT_ROOT = os.path.abspath(
 )
 if COMPONENT_ROOT not in sys.path:
     logging.info(f"Adding {COMPONENT_ROOT} to path")
-    sys.path.append(str(COMPONENT_ROOT))
+    sys.path.insert(0, str(COMPONENT_ROOT))
 
 # internal imports
 from model import MODEL_ARCH_LIST, get_model_metadata, load_model

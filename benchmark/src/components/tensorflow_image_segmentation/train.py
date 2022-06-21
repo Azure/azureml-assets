@@ -36,11 +36,10 @@ COMPONENT_ROOT = os.path.abspath(
 )
 if COMPONENT_ROOT not in sys.path:
     logging.info(f"Adding {COMPONENT_ROOT} to path")
-    sys.path.append(str(COMPONENT_ROOT))
+    sys.path.insert(0, str(COMPONENT_ROOT))
 
 from profiling import LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
 from profiling import CustomCallbacks
-
 
 from image_io import ImageAndMaskSequenceDataset
 from model import get_model_metadata, load_model
