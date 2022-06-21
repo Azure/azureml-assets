@@ -5,9 +5,8 @@ from tensorflow.keras import layers
 from tensorflow import keras
 
 MODEL_ARCH_MAP = {
-    # TorchVision models
-    "unet": {"input_size": 160, "library": "keras"},
-} 
+    "unet": {"library": "keras"},
+}
 
 MODEL_ARCH_LIST = list(MODEL_ARCH_MAP.keys())
 

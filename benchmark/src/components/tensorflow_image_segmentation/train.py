@@ -319,6 +319,8 @@ class TensorflowDistributedModelTrainingSequence:
             # TODO: force down the number of gpus
             self.gpus = args.num_gpus
             self.logger.warning(f"Because you set --num_gpus={args.num_gpus}, retricting to first {self.gpus} physical devices")
+        else:
+            self.gpus = len(tf.config.list_physical_devices('GPU'))
 
         # Check if we need distributed at all
         self.distributed_available = (self.nodes > 1) or ((self.nodes * self.gpus) > 1) # if multi-node (CPU or GPU) or multi-gpu
