@@ -44,7 +44,7 @@ Here's the list of things you do when you are getting started:
   * Use aka.ms links, before this repo is public, you could create your sample in [azureml-examples](https://github.com/Azure/azureml-examples/tree/main).
   * We will create official docs in doc.microsoft.com later.
 * Once everything is ready, create [asset.yaml](https://github.com/Azure/azureml-assets/blob/release/latest/component/train_object_detection_model/object_detection/asset.yaml) file.
-* Test job
+* Test jobs
   * Provide test jobs, these will be running before we publish the asset to production.
 * Your asset will first be published to azureml-dev and azureml-staging. You could test the component from those two registries first.
 * Once everything is ready, submit a review request in this repo. We will help you publish the component.
