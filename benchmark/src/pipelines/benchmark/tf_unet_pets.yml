@@ -8,22 +8,18 @@ inputs:
   train_images:
     type: uri_folder
     mode: download # pick ro_mount, rw_mount or download
-    #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/cityscapes/leftImg8bit/train
     path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images
   train_masks:
     type: uri_folder
     mode: download # pick ro_mount, rw_mount or download
-    #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/cityscapes/gtFine/train
     path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/trimaps
   test_images:
     type: uri_folder
     mode: download # pick ro_mount, rw_mount or download
-    #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/cityscapes/leftImg8bit/test
     path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images
   test_masks:
     type: uri_folder
     mode: download # pick ro_mount, rw_mount or download
-    #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/cityscapes/gtFine/test
     path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/trimaps
 # </inputs_and_outputs>
 
@@ -41,7 +37,7 @@ jobs:
       instance_count: 1 # number of nodes
     distribution:
       type: tensorflow
-      worker_count: 1 # ???
+      worker_count: 1 # needs to match instance_count (!)
 
     # NOTE: set env var if needed
     environment_variables:
@@ -60,8 +56,6 @@ jobs:
       # UCX_NET_DEVICES: "eth0" # if you have Error: Failed to resolve UCX endpoint...
 
       # CUDA_DEVICE_ORDER: "PCI_BUS_ID" # ordering of gpus
-
-      # TORCH_DISTRIBUTED_DEBUG: "DETAIL"
 
     inputs:
       # data inputs
@@ -88,7 +82,7 @@ jobs:
 
       # training
       num_epochs: 20
-      # num_gpus: 2 # to artificially limit number of gpus
       distributed_backend: "nccl"
+      # num_gpus: 2 # to artificially limit number of gpus
 
 # </jobs>
