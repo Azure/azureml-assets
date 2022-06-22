@@ -39,19 +39,15 @@ ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group_n
 submitted_job_list = []
 succeeded_jobs = []
 failed_jobs = []
-subprocess.check_call(f"python {group_pre}", shell=True)
+if len(group_pre)>0:
+    subprocess.check_call(f"python {group_pre}", shell=True)
 
 with open(tests_dir.__str__()+"/tests.yml") as fp:
     data = yaml.load(fp)
     for job in data[test_group]['jobs']:
         if 'pre' in data[test_group]['jobs'][job]:
             print(f"Running pre script for {job}")
-            proc = subprocess.Popen(f"python {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            proc.wait()
-            (stdout, stderr) = proc.communicate()
-            if proc.returncode != 0:
-                print(stderr)
-                sys.exit(f"pre script of {job} is failed")
+            proc = subprocess.check_call(f"python {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", shell=True)
         print(f'Loading test job {job}')
         test_job = azure.ai.ml.load_job(tests_dir.__str__()+"/"+data[test_group]['jobs'][job]['job'])
         print(test_job)
