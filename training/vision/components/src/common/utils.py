@@ -66,4 +66,4 @@ def get_local_rank() -> int:
 def validate_running_on_gpu_compute() -> None:
     if not torch.cuda.is_available() or torch.cuda.device_count() == 0:
         raise AutoMLVisionValidationException(
-            "This component requires compute that contains one or more GPUs.")
+            "This component requires compute that contains one or more GPU.")
