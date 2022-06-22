@@ -31,7 +31,7 @@ def random_images_and_masks(temporary_dir):
         a = np.random.rand(300, 300, 3) * 255
         im_out = Image.fromarray(a.astype("uint8")).convert("RGB")
 
-        a = np.random.rand(300, 300) * n_classes
+        a = np.random.randint(0, n_classes, size=(300, 300)) + 1 # pets collection starts index at 1
         msk_out = Image.fromarray(a.astype("uint8"))
 
         image_path = os.path.join(
@@ -88,6 +88,7 @@ def test_components_pytorch_image_classifier_single_node(
         "--num_workers", "1",  # single thread pre-fetching
         "--prefetch_factor", "2",  # will be discarded if num_workers=0
         "--model_arch", model_arch,
+        "--model_input_size", "160",
         "--num_epochs", "2",
         "--model_output", model_dir,
         "--checkpoints", checkpoints_dir,
