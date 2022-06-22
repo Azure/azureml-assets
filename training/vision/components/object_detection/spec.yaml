@@ -73,9 +73,14 @@ inputs:
     min: 0
     max: 1
 
+outputs:
+  model:
+    description: Trained model.
+    type: mlflow_model
+
 code: ../src
 
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:89
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:91
 
 command: >-
   python -m object_detection.run
@@ -92,7 +97,7 @@ command: >-
   [--training_batch_size ${{inputs.training_batch_size}}]
   [--validation_batch_size ${{inputs.validation_batch_size}}]
   --weight_decay ${{inputs.weight_decay}}
-
+  --model_output ${{outputs.model}}
 
 distribution:
   type: pytorch

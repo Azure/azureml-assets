@@ -5,12 +5,11 @@ description: Trains an image classification model.
 
 name: train_image_classification_model
 display_name: Train Image Classification Model
-version: 1
+version: 0.0.1-preview
 
 inputs:
   training_data:
     type: mltable
-    optional: false
     description: Training data
   validation_data:
     type: mltable
@@ -20,7 +19,7 @@ inputs:
     type: string
     description: Model name
     default: vitb16r224
-    enum: ['resnet18','resnet34','resnet50','resnet101','resnet152','resnest50','resnest101','mobilenetv2','seresnext','vitb16r224','vits16r224','vitl16r224']
+    enum: ['mobilenetv2', 'resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'resnest50', 'resnest101', 'seresnext', 'vits16r224', 'vitb16r224', 'vitl16r224']
   learning_rate:
     description: Initial learning rate
     type: number
@@ -30,13 +29,13 @@ inputs:
   number_of_epochs:
     description: Number of training epochs
     type: integer
-    optional: true
+    default: 15
     min: 1
   optimizer:
     description: Type of optimizer
     type: string
     default: sgd
-    enum: ['sgd', 'adam', 'adamw'] 
+    enum: ['sgd', 'adam', 'adamw']
   training_batch_size:
     description: Training batch size
     type: integer
@@ -71,8 +70,7 @@ inputs:
   multilabel:
     type: boolean
     default: false
-    description: Set true for multilabel image classification
-
+    description: Whether a single image can have multiple labels.
 
 outputs:
   model:
@@ -81,8 +79,7 @@ outputs:
 
 code: ../src
 
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:89
-
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:91
 
 command: >-
   python -m image_classification.run
@@ -90,7 +87,7 @@ command: >-
   [--validation_data ${{inputs.validation_data}}]
   --model_name  ${{inputs.model_name}}
   [--learning_rate  ${{inputs.learning_rate}}]
-  [--number_of_epochs ${{inputs.number_of_epochs}}]
+  --number_of_epochs ${{inputs.number_of_epochs}}
   --optimizer ${{inputs.optimizer}}
   [--training_batch_size ${{inputs.training_batch_size}}]
   [--validation_batch_size ${{inputs.validation_batch_size}}]
