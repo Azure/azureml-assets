@@ -16,23 +16,19 @@ def create_import_config(input_directory: Path,
                          registry_password: str = None):
     images = []
     for asset_config in util.find_assets(input_directory, asset_config_filename, assets.AssetType.ENVIRONMENT):
-        env_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+        env_config = asset_config.environment_config_as_object()
 
         # Skip if not publishing to MCR
         if env_config.publish_location != assets.PublishLocation.MCR:
             continue
 
         # Get source image name
-        version = assets.Spec(asset_config.spec_with_path).version
+        version = asset_config.spec_as_object().version
         source_image_name = env_config.get_image_name_with_tag(version)
 
-        # Form destination image name and tag
-        destination_image_name = f"{env_config.publish_visibility.value}/{env_config.image_name}"
-        image_tag = version
-
         # Generate target image names
-        destination_tags = [tag] if tag is not None else [image_tag, "latest"]
-        destination_images = [f"{destination_image_name}:{tag}" for tag in destination_tags]
+        destination_tags = [tag] if tag is not None else [version, "latest"]
+        destination_images = [env_config.get_image_name_for_promotion(tag) for tag in destination_tags]
 
         # Store image info
         source = {

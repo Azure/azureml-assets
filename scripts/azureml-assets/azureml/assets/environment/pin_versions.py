@@ -6,7 +6,7 @@ from azureml.assets.util import logger
 
 
 def transform_file(input_file: Path, output_file: Path = None):
-    # Read Dockerfile
+    # Read file
     with open(input_file) as f:
         contents = f.read()
 

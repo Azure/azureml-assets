@@ -32,7 +32,7 @@ def validate_assets(input_dirs: List[Path],
         # Validate specific asset types
         if asset_config.type is assets.AssetType.ENVIRONMENT:
             try:
-                environment_config = assets.EnvironmentConfig(asset_config.extra_config_with_path)
+                environment_config = asset_config.environment_config_as_object()
 
                 # Store fully qualified image name
                 image_name = environment_config.image_name
@@ -45,7 +45,7 @@ def validate_assets(input_dirs: List[Path],
 
         # Validate spec
         try:
-            spec = assets.Spec(asset_config.spec_with_path)
+            spec = asset_config.spec_as_object()
 
             # Ensure name and version aren't inconsistent
             if not assets.Config._contains_template(spec.name) and asset_config.name != spec.name:

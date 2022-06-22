@@ -1,0 +1,3 @@
+image:
+  name: "mcr.microsoft.com/cbl-mariner/base/core:{{latest-image-tag}}"
+  os: linux

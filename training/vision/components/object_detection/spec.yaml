@@ -1,11 +1,11 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-description: Trains an object detection model.
+description: Trains an object detection model. [Learn More](https://aka.ms/built-in-vision-components)
 
 name: train_object_detection_model
 display_name: Train Object Detection Model
-version: 1
+version: 0.0.1-preview
 
 inputs:
   training_data:
@@ -80,7 +80,7 @@ outputs:
 
 code: ../src
 
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:91
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:89
 
 command: >-
   python -m object_detection.run

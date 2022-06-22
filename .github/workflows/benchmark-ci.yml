@@ -1,0 +1,106 @@
+name: benchmark-ci
+on:
+  # can be triggered manually
+  workflow_dispatch:
+    inputs:
+      test_run:
+        description: 'Run canary e2e (approx 10 mins) ? (y/n)'
+        required: true
+        default: 'n'
+  # build triggered for every PR to main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - benchmark/**
+      - scripts/setup.sh
+
+jobs:
+  test:
+    name: "Runs all pytest unit tests"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark/
+
+    steps:
+
+    - name: check out repo
+      uses: actions/checkout@v2
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip==21.3.1
+        pip install flake8==3.9.1 pytest~=6.2 pytest-cov~=2.11
+        pip install -r requirements.txt
+
+        # Fix: force protobuf downgrade to avoid exception
+        pip install protobuf==3.19.4
+
+    - name: Test with pytest
+      run: >-
+
+        python -m pytest tests/ -v
+        --junitxml=test-build-result.xml
+        --cov=src/ --cov-report xml:coverage.xml --cov-report term-missing
+
+    - name: Publish test results
+      uses: EnricoMi/publish-unit-test-result-action/composite@v1
+      with:
+        check_name: Unit Test Results for Build
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        files: benchmark/test-build-result.xml
+
+    - name: Code Coverage Summary Report
+      uses: irongut/CodeCoverageSummary@v1.0.2
+      with:
+        filename: benchmark/coverage.xml
+        badge: true
+        format: 'markdown'
+        output: 'both'
+
+    - name: Add Coverage PR Comment
+      uses: marocchino/sticky-pull-request-comment@v2
+      if: github.event_name == 'pull_request'
+      with:
+        recreate: true
+        path: code-coverage-results.md
+
+
+  canary:
+    # Tests running a sample pipeline end-to-end
+    # and wait for completion
+    name: "Run canary pipeline e2e"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: benchmark/
+
+    environment: BuiltinRegistryDev
+    # timeout-minutes: 30 # TBD
+    steps:
+
+    - name: check out repo
+      uses: actions/checkout@v2
+
+    - name: Install AzureML cli v2
+      run: |
+        az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.59687177-py3-none-any.whl --yes
+        az configure --defaults group=${{secrets.RESOURCE_GROUP}} workspace=${{secrets.WORKSPACE_NAME}}
+
+    - name: azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZ_CREDS_BUILTINREGISTRYDEV}}
+
+    - name : Run canary pipeline e2e [classification_random]
+      # runs only if (from main branch) or (triggered manually)
+      if: ${{ (github.ref == 'refs/heads/main') || (github.event.inputs.test_run == 'y') }}
+      run: >-
+        az ml environment create -f ./assets/environments/nvidia/env.yml
+        az ml job create -f ./src/pipelines/canary/classification_random.yml --stream
