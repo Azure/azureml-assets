@@ -42,7 +42,7 @@ def random_images_and_masks(temporary_dir):
         mask_path = os.path.join(
             image_dataset_path, "random_image_{}.png".format(i)
         )
-        im_out.save(mask_path)
+        msk_out.save(mask_path)
 
     return image_dataset_path
 
