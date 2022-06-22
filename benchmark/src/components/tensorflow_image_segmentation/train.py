@@ -228,10 +228,13 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         required=False,
         # see https://www.tensorflow.org/guide/distributed_training
         choices=[
-            "Tensorflow",
-            "Horovod",
+            "auto",
+            "multiworkermirroredstrategy",
+            "mirroredstrategy",
+            "onedevicestrategy",
+            "horovod",
         ],
-        default="Tensorflow", # will auto identify
+        default="auto", # will auto identify
         help="Which distributed strategy to use.",
     )
     group.add_argument(
@@ -370,7 +373,17 @@ class TensorflowDistributedModelTrainingSequence:
         - single-node single-gpu => OneDeviceStrategy
 
         Each comes with its own initialization process."""
-        if self.nodes > 1: # MULTI-NODE
+        # Identify the right strategy depending on params + context
+        if self.training_config.distributed_strategy == "auto":
+            # Auto detect
+            if self.nodes > 1: # MULTI-NODE
+                self.training_config.distributed_strategy = "multiworkermirroredstrategy"
+            elif self.gpus > 1: # SINGLE-NODE MULTI-GPU
+                self.training_config.distributed_strategy = "mirroredstrategy"
+            else: # SINGLE-NODE SINGLE-GPU
+                self.training_config.distributed_strategy = "onedevicestrategy"
+
+        if self.training_config.distributed_strategy == "multiworkermirroredstrategy":
             self.logger.info("Using MultiWorkerMirroredStrategy as distributed_strategy")
 
             # first we need to define the communication options (backend)
@@ -403,7 +416,7 @@ class TensorflowDistributedModelTrainingSequence:
             # we're storing the name of the strategy to log as a parameter
             self.training_config.distributed_strategy = self.strategy.__class__.__name__
 
-        elif self.gpus > 1: # SINGLE-NODE MULTI-GPU
+        elif self.training_config.distributed_strategy == "mirroredstrategy":
             self.devices = [ f"GPU:{i}" for i in range(self.gpus) ] # artificially limit number of gpus (if requested)
             self.logger.info(f"Using MirroredStrategy(devices={self.devices}) as distributed_strategy")
 
@@ -411,11 +424,14 @@ class TensorflowDistributedModelTrainingSequence:
             self.strategy = tf.distribute.MirroredStrategy(devices=self.devices)
             self.training_config.distributed_strategy = self.strategy.__class__.__name__
 
-        else: # SINGLE-NODE SINGLE-GPU
+        elif self.training_config.distributed_strategy == "onedevicestrategy":
             self.devices = [ f"GPU:{i}" for i in range(self.gpus) ]
             self.logger.info(f"Using OneDeviceStrategy(devices=GPU:0) as distributed_strategy")
             self.strategy = tf.distribute.OneDeviceStrategy(device="GPU:0")
             self.training_config.distributed_strategy = self.strategy.__class__.__name__
+        
+        else:
+            raise ValueError(f"distributed_strategy={self.training_config.distributed_strategy} is not recognized.")
 
 
     def setup_datasets(
