@@ -4,7 +4,7 @@ Tests running the pytorch_image_classifier/model/ loader
 import pytest
 import torch
 
-from components.pytorch_image_classifier.model import (
+from components.pytorch_image_classifier.torch_helper.model import (
     MODEL_ARCH_LIST,
     get_model_metadata,
     load_model,

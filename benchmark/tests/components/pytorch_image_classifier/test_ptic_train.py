@@ -12,7 +12,7 @@ import numpy as np
 from PIL import Image
 
 from components.pytorch_image_classifier import train
-from components.pytorch_image_classifier.model import MODEL_ARCH_LIST
+from components.pytorch_image_classifier.torch_helper.model import MODEL_ARCH_LIST
 
 # IMPORTANT: see conftest.py for fixtures
 
