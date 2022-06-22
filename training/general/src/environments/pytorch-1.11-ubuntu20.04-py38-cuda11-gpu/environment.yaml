@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/pytorch-1.11
+  name: azureml/curated/pytorch-1.11-ubuntu20.04-py38-cuda11-gpu
   os: linux
   context:
     dir: context
