@@ -41,14 +41,13 @@ from transformers.utils import ModelOutput
 COMPONENT_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), ".")
 )
-if COMPONENT_ROOT not in sys.path:
-    logging.info(f"Adding {COMPONENT_ROOT} to path")
-    sys.path.insert(0, str(COMPONENT_ROOT))
+logging.info(f"Adding {COMPONENT_ROOT} to path")
+sys.path.insert(0, str(COMPONENT_ROOT))
 
 # internal imports
 from model import MODEL_ARCH_LIST, get_model_metadata, load_model
 from image_io import build_image_datasets
-from pt_profiling import PyTorchProfilerHandler, LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
+from profiling import PyTorchProfilerHandler, LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
 
 
 class PyTorchDistributedModelTrainingSequence:

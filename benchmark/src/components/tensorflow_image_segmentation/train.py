@@ -34,12 +34,11 @@ from tensorflow import keras
 COMPONENT_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), ".")
 )
-if COMPONENT_ROOT not in sys.path:
-    logging.info(f"Adding {COMPONENT_ROOT} to path")
-    sys.path.insert(0, str(COMPONENT_ROOT))
+logging.info(f"Adding {COMPONENT_ROOT} to path")
+sys.path.insert(0, str(COMPONENT_ROOT))
 
-from tf_profiling import LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
-from tf_profiling import CustomCallbacks
+from profiling import LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
+from profiling import CustomCallbacks
 
 from image_io import ImageAndMaskSequenceDataset
 from model import get_model_metadata, load_model
