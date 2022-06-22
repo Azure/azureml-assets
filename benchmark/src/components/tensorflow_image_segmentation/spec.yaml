@@ -81,6 +81,10 @@ inputs:
     type: integer
     optional: true
     description: "Force down the number of gpus used for this training"
+  distributed_strategy:
+    type: string
+    optional: true
+    description: "Force strategy (default: auto)"
   distributed_backend:
     type: string
     optional: true
@@ -125,6 +129,7 @@ command: >-
   --model_output ${{outputs.trained_model}}
   --checkpoints ${{outputs.checkpoints}}
 
+  [--distributed_strategy ${{inputs.distributed_strategy}}]
   [--distributed_backend ${{inputs.distributed_backend}}]
 
 distribution:

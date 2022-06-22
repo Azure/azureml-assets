@@ -64,7 +64,7 @@ jobs:
       test_images: ${{parent.inputs.test_images}}
       test_masks: ${{parent.inputs.test_masks}}
 
-      # oxford pets
+      # oxford pets specifics
       images_type: "jpg"
       images_filename_pattern: "(.*)\\.jpg"
       masks_filename_pattern: "(.*)\\.png"
@@ -82,7 +82,10 @@ jobs:
 
       # training
       num_epochs: 20
-      distributed_backend: "nccl"
+
+      # distributed settings
+      # distributed_strategy: "multiworkermirroredstrategy" # force strategy (default: auto)
+      # distributed_backend: "nccl" # force communication backend (default: auto)
       # num_gpus: 2 # to artificially limit number of gpus
 
 # </jobs>
