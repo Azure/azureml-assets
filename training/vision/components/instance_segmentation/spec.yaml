@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-description: Trains an instance segmentation model.
+description: Trains an instance segmentation model. [Learn More](https://aka.ms/built-in-vision-components)
 
 name: train_instance_segmentation_model
 display_name: Train Instance Segmentation Model
