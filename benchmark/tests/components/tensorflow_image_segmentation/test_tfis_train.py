@@ -12,7 +12,7 @@ import numpy as np
 from PIL import Image
 
 from components.tensorflow_image_segmentation import train
-from components.tensorflow_image_segmentation.model import MODEL_ARCH_LIST
+from components.tensorflow_image_segmentation.tf_helper.model import MODEL_ARCH_LIST
 
 # IMPORTANT: see conftest.py for fixtures
 
@@ -72,9 +72,6 @@ def test_components_pytorch_image_classifier_single_node(
         temporary_dir, "tensorflow_image_segmentation_checkpoints"
     )
 
-    # script modifies path, so we're saving it to restore
-    saved_sys_path = sys.path.copy()
-
     # create test arguments for the script
     # fmt: off
     script_args = [
@@ -98,7 +95,7 @@ def test_components_pytorch_image_classifier_single_node(
     # fmt: on
 
     # replaces sys.argv with test arguments and run main
-    with patch.object(sys, "argv", script_args), patch.object(sys, "path", saved_sys_path):
+    with patch.object(sys, "argv", script_args):
         train.main()
 
     # those mlflow calls must be unique in the script

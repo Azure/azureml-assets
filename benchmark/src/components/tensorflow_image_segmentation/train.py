@@ -38,11 +38,11 @@ if COMPONENT_ROOT not in sys.path:
     logging.info(f"Adding {COMPONENT_ROOT} to path")
     sys.path.append(str(COMPONENT_ROOT))
 
-from profiling import LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
-from profiling import CustomCallbacks
+from tf_helper.profiling import LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
+from tf_helper.profiling import CustomCallbacks
 
-from image_io import ImageAndMaskSequenceDataset
-from model import get_model_metadata, load_model
+from tf_helper.image_io import ImageAndMaskSequenceDataset
+from tf_helper.model import get_model_metadata, load_model
 
 
 def build_arguments_parser(parser: argparse.ArgumentParser = None):
