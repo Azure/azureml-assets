@@ -7,7 +7,7 @@ on:
       - elesel/fix-changed-asset-detection
     paths-ignore:
       - .github/**
-      - scripts/**
+      #- scripts/**
   schedule:
     - cron: '30 6 * * *'
   workflow_dispatch:
