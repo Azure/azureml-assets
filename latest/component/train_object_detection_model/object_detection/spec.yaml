@@ -1,0 +1,103 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+description: Trains an object detection model. [Learn More](https://aka.ms/built-in-vision-components)
+
+name: train_object_detection_model
+display_name: Train Object Detection Model
+version: 0.0.1-preview
+
+inputs:
+  training_data:
+    description: Training data
+    type: mltable
+  validation_data:
+    description: Validation data
+    type: mltable
+    optional: true
+  model_name:
+    description: Model name
+    type: string
+    default: yolov5
+    enum: ['yolov5', 'fasterrcnn_resnet18_fpn', 'fasterrcnn_resnet34_fpn', 'fasterrcnn_resnet50_fpn', 'fasterrcnn_resnet101_fpn', 'fasterrcnn_resnet152_fpn', 'retinanet_resnet50_fpn']
+  learning_rate:
+    description: Initial learning rate
+    type: number
+    optional: true
+    min: 0
+    max: 1
+  number_of_epochs:
+    description: Number of training epochs
+    type: integer
+    optional: true
+    min: 1
+  optimizer:
+    description: Type of optimizer
+    type: string
+    default: sgd
+    enum: ['sgd', 'adam', 'adamw']  
+  yolov5_model_size:
+    description: '(This setting only applies when training the yolov5 model.) Model size for yolov5. Note: training run may get into CUDA OOM if the model size is too big.'
+    type: string
+    default: medium
+    enum: ['small', 'medium', 'large', 'xlarge']
+  yolov5_img_size:
+    description: '(This setting only applies when training the yolov5 model.) Image size for train and validation. Note: training run may get into CUDA OOM if the model size is too big.'
+    type: integer
+    default: 640
+    min: 1
+  min_size:
+    description: '(This setting only applies when not training the yolov5 model.) Minimum size of the image to be rescaled before feeding it to the backbone. Note: training run may get into CUDA OOM if the size is too big.'
+    type: integer
+    default: 600
+    min: 1
+  max_size:
+    description: '(This setting only applies when not training the yolov5 models.) Maximum size of the image to be rescaled before feeding it to the backbone. Note: training run may get into CUDA OOM if the size is too big.'
+    type: integer
+    default: 1333
+    min: 1
+  training_batch_size:
+    description: Training batch size.
+    type: integer
+    optional: true
+    min: 1
+  validation_batch_size:
+    description: Validation batch size.
+    type: integer
+    optional: true
+    min: 1
+  weight_decay:
+    description: Value of weight decay used by the optimizer.
+    type: number
+    default: 0.0001
+    min: 0
+    max: 1
+
+outputs:
+  model:
+    description: Trained model.
+    type: mlflow_model
+
+code: ../src
+
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:91
+
+command: >-
+  python -m object_detection.run
+  --training_data ${{inputs.training_data}}
+  [--validation_data ${{inputs.validation_data}}]
+  --model_name  ${{inputs.model_name}}
+  [--learning_rate  ${{inputs.learning_rate}}]
+  [--number_of_epochs ${{inputs.number_of_epochs}}]
+  --optimizer ${{inputs.optimizer}}
+  --model_size ${{inputs.yolov5_model_size}}
+  --img_size ${{inputs.yolov5_img_size}}
+  --min_size ${{inputs.min_size}}
+  --max_size ${{inputs.max_size}}
+  [--training_batch_size ${{inputs.training_batch_size}}]
+  [--validation_batch_size ${{inputs.validation_batch_size}}]
+  --weight_decay ${{inputs.weight_decay}}
+  --model_output ${{outputs.model}}
+
+distribution:
+  type: pytorch
