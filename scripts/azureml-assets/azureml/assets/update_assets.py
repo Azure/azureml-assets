@@ -120,7 +120,7 @@ def update_asset(asset_config: assets.AssetConfig,
         # Compare temporary version with one in release
         if check_contents:
             assets.update_spec(temp_asset_config, version=release_version)
-            dirs_equal = util.are_dir_trees_equal(temp_asset_dir, release_dir)
+            dirs_equal = util.are_dir_trees_equal(temp_asset_dir, release_dir, enable_logging=True)
             if dirs_equal:
                 return None
 
