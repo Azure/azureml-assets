@@ -64,7 +64,7 @@ jobs:
       # TODO: Consider using Git to detect changes
       - name: Find updated assets
         id: find-updated-assets
-        run: python -u $scripts_assets_dir/update_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
+        run: python -u $scripts_assets_dir/update_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -r ${{ github.workspace }}/$release_dir -o ${{ runner.temp }}/$changed_assets_artifact
         working-directory: ${{ env.main_dir }}
 
       - name: Upload changed assets
