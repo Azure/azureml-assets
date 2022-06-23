@@ -1,0 +1,91 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+description: Trains an instance segmentation model. [Learn More](https://aka.ms/built-in-vision-components)
+
+name: train_instance_segmentation_model
+display_name: Train Instance Segmentation Model
+version: 0.0.1-preview
+
+inputs:
+  training_data:
+    description: Training data
+    type: mltable
+  validation_data:
+    description: Validation data
+    type: mltable
+    optional: true
+  model_name:
+    description: Model name
+    type: string
+    default: maskrcnn_resnet50_fpn
+    enum: ['maskrcnn_resnet18_fpn', 'maskrcnn_resnet34_fpn', 'maskrcnn_resnet50_fpn', 'maskrcnn_resnet101_fpn', 'maskrcnn_resnet152_fpn']
+  learning_rate:
+    description: Initial learning rate
+    type: number
+    default: 0.005
+    min: 0
+    max: 1
+  number_of_epochs:
+    description: Number of training epochs
+    type: integer
+    default: 15
+    min: 1
+  optimizer:
+    description: Type of optimizer
+    type: string
+    default: sgd
+    enum: ['sgd', 'adam', 'adamw']  
+  min_size:
+    description: 'Minimum size of the image to be rescaled before feeding it to the backbone. Note: training run may get into CUDA OOM if the size is too big.'
+    type: integer
+    default: 600
+    min: 1
+  max_size:
+    description: 'Maximum size of the image to be rescaled before feeding it to the backbone. Note: training run may get into CUDA OOM if the size is too big.'
+    type: integer
+    default: 1333
+    min: 1
+  training_batch_size:
+    description: Training batch size.
+    type: integer
+    default: 2
+    min: 1
+  validation_batch_size:
+    description: Validation batch size.
+    type: integer
+    default: 1
+    min: 1
+  weight_decay:
+    description: Value of weight decay used by the optimizer.
+    type: number
+    default: 0.0001
+    min: 0
+    max: 1
+
+outputs:
+  model:
+    type: mlflow_model
+    description: Trained model.
+
+code: ../src
+ 
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:91
+
+command: >-
+  python -m instance_segmentation.run
+  --training_data ${{inputs.training_data}}
+  [--validation_data ${{inputs.validation_data}}]
+  --model_name  ${{inputs.model_name}}
+  --learning_rate  ${{inputs.learning_rate}}
+  --number_of_epochs ${{inputs.number_of_epochs}}
+  --optimizer ${{inputs.optimizer}}
+  --min_size ${{inputs.min_size}}
+  --max_size ${{inputs.max_size}}
+  --training_batch_size ${{inputs.training_batch_size}}
+  --validation_batch_size ${{inputs.validation_batch_size}}
+  --weight_decay ${{inputs.weight_decay}}
+  --model_output ${{outputs.model}}
+
+distribution:
+  type: pytorch
