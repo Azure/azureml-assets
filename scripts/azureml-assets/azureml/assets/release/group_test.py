@@ -7,47 +7,47 @@ from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
 import ruamel.yaml
 import sys
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests folder")
 parser.add_argument("-g", "--test-group", required=True, type=str, help="test group name")
+parser.add_argument("s", "--subscription", required=True, type=str, help="Subscription ID")
+parser.add_argument("r", "--resource-group", required=True, type=str, help="Resource group name")
+parser.add_argument("w", "--workspace-name", required=True, type=str, help="Workspace name")
 args = parser.parse_args()
 tests_dir = args.input_dir
 test_group = args.test_group
+subscription_id = args.subscription
+resource_group = args.resource_group
+workspace = args.workspace_name
 # default workspace info
-workspace_name: "registry-builtin-ci-dev"
-resource_group_name: "registry-builtin-dev"
-subscription_id: "4f26493f-21d2-4726-92ea-1ddd550b1d27"
 group_pre = ''
 group_post = ''
 
 yaml = ruamel.yaml.YAML()
 with open(tests_dir.__str__()+"/tests.yml") as fp:
     data = yaml.load(fp)
-    if 'subscription_id' in data[test_group]:
-        subscription_id = data[test_group]['subscription_id']
-    if 'resource_group_name' in data[test_group]:
-        resource_group_name = data[test_group]['resource_group_name']
-    if 'workspace_name' in data[test_group]:
-        workspace_name = data[test_group]['workspace_name']
     if 'pre' in data[test_group]:
         group_pre = tests_dir.__str__()+'/'+data[test_group]['pre']
     if 'post' in data[test_group]:
         group_post = tests_dir.__str__()+'/'+data[test_group]['post']
-    
-ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group_name, workspace_name)
+
+my_env = os.environ.copy()
+my_env["PATH"] = "/usr/sbin:/sbin:" + my_env["PATH"]
+ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)
 submitted_job_list = []
 succeeded_jobs = []
 failed_jobs = []
 if len(group_pre)>0:
-    subprocess.check_call(f"python {group_pre}", shell=True)
+    subprocess.check_call(f"python {group_pre}", env=my_env, shell=True)
 
 with open(tests_dir.__str__()+"/tests.yml") as fp:
     data = yaml.load(fp)
     for job in data[test_group]['jobs']:
         if 'pre' in data[test_group]['jobs'][job]:
             print(f"Running pre script for {job}")
-            proc = subprocess.check_call(f"python {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", shell=True)
+            proc = subprocess.check_call(f"python {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", env=my_env, shell=True)
         print(f'Loading test job {job}')
         test_job = azure.ai.ml.load_job(tests_dir.__str__()+"/"+data[test_group]['jobs'][job]['job'])
         print(test_job)
