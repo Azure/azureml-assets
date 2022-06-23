@@ -34,7 +34,6 @@ with open(tests_dir.__str__()+"/tests.yml") as fp:
         group_post = tests_dir.__str__()+'/'+data[test_group]['post']
 
 my_env = os.environ.copy()
-my_env["PATH"] = "/usr/sbin:/sbin:" + my_env["PATH"]
 ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)
 submitted_job_list = []
 succeeded_jobs = []

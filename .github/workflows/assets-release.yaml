@@ -81,9 +81,6 @@ jobs:
           path: |
             ${{ runner.temp }}/${{ env.changed_assets_artifact }}
             !${{ runner.temp }}/${{ env.changed_assets_artifact }}/environment
-      
-    outputs:
-      updated_env_count: ${{ steps.find-updated-assets.outputs.updated_env_count }}
 
       - name: Convert test files and scripts
         id: convert-test-files-and-scripts
@@ -97,6 +94,9 @@ jobs:
           python -u $scripts_assets_dir/release/scripts_file_convert.py -i $scripts_assets_dir/release/e2e_test.py -r $release_dir
           python -u $scripts_assets_dir/release/scripts_file_convert.py -i $scripts_assets_dir/release/group_test.py -r $release_dir
         working-directory: ${{ env.main_dir }}
+
+    outputs:
+      updated_env_count: ${{ steps.find-updated-assets.outputs.updated_env_count }}
 
   build-images:
     name: Build and test images
