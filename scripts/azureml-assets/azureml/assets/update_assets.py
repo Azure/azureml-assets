@@ -94,6 +94,8 @@ def update_asset(asset_config: assets.AssetConfig,
             logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
                                f"version {release_version} hasn't been released yet")
             return None
+    else:
+        logger.print(f"Release directory {release_dir} doesn't exist")
 
     # Determine new version
     if not auto_version:
