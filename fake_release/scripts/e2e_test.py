@@ -16,9 +16,9 @@ from azure.identity import DefaultAzureCredential
 # Handle command-line args
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests folder")
-parser.add_argument("s", "--subscription", required=True, type=str, help="Subscription ID")
-parser.add_argument("r", "--resource-group", required=True, type=str, help="Resource group name")
-parser.add_argument("w", "--workspace-name", required=True, type=str, help="Workspace name")
+parser.add_argument("-s", "--subscription", required=True, type=str, help="Subscription ID")
+parser.add_argument("-r", "--resource-group", required=True, type=str, help="Resource group name")
+parser.add_argument("-w", "--workspace-name", required=True, type=str, help="Workspace name")
 args = parser.parse_args()
 tests_dir = args.input_dir
 subscription_id = args.subscription
