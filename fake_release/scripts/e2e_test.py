@@ -30,7 +30,7 @@ ml_client = MLClient(
 )
 cpu_cluster_low_pri = AmlCompute(
     name="cpu-cluster",
-    size="STANDARD_D1",
+    size="Standard_DS3_v2",
     min_instances=0,
     max_instances=2,
     idle_time_before_scale_down=120,
