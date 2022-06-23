@@ -138,9 +138,9 @@ if __name__ == "__main__":
         description="Prepare data for image classification"
     )
 
-    parser.add_argument("--subscription", type=str, help="Subscription ID")
-    parser.add_argument("--resource-group", type=str, help="Resource group name")
-    parser.add_argument("--workspace-name", type=str, help="Workspace name")
+    parser.add_argument("--subscription", required=False, type=str, help="Subscription ID")
+    parser.add_argument("--resource-group", required=False, type=str, help="Resource group name")
+    parser.add_argument("--workspace-name", required=False, type=str, help="Workspace name")
 
     args, unknown = parser.parse_known_args()
     args_dict = vars(args)
@@ -151,9 +151,9 @@ if __name__ == "__main__":
         ml_client = MLClient.from_config(credential)
     except Exception as ex:
         # Enter details of your AML workspace
-        subscription_id = args.subscription
-        resource_group = args.resource_group
-        workspace = args.workspace_name
+        subscription_id = os.environ.get('subscription_id') # args.subscription
+        resource_group = os.environ.get('resource_group') # args.resource_group
+        workspace = os.environ.get('workspace') # args.workspace_name
         ml_client = MLClient(credential, subscription_id, resource_group, workspace)
 
     upload_data_and_create_jsonl_files(ml_client=ml_client)
