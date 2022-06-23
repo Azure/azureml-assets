@@ -80,7 +80,7 @@ outputs:
 
 code: ../src
 
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:89
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:91
 
 command: >-
   python -m object_detection.run
