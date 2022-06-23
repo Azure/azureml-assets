@@ -4,15 +4,15 @@ from azureml.automl.dnn.vision.object_detection import runner
 from azureml.core import Run
 
 from common import utils
-from common.settings import ObjectDetectionSettings
+from common.settings import InstanceSegmentationSettings
 
 
-@utils.create_component_telemetry_wrapper(Tasks.IMAGE_OBJECT_DETECTION)
+@utils.create_component_telemetry_wrapper(Tasks.IMAGE_INSTANCE_SEGMENTATION)
 def run():
-    component_settings = ObjectDetectionSettings.create_from_parsing_current_cmd_line_args()
+    component_settings = InstanceSegmentationSettings.create_from_parsing_current_cmd_line_args()
     mltable_data_json = utils.create_mltable_json(component_settings)
     runner.run(
-        {SettingsLiterals.TASK_TYPE: Tasks.IMAGE_OBJECT_DETECTION},
+        {SettingsLiterals.TASK_TYPE: Tasks.IMAGE_INSTANCE_SEGMENTATION},
         mltable_data_json=mltable_data_json)
     run = Run.get_context()
     run.download_files(
