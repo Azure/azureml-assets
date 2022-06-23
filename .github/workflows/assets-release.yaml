@@ -63,24 +63,27 @@ jobs:
       # TODO: Consider using Git to detect changes
       - name: Find updated assets
         id: find-updated-assets
-        run: python -u $scripts_assets_dir/update_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -r $release_dir -o ${{ runner.temp }}/$changed_assets_artifact
+        run: python -u $scripts_assets_dir/update_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -r ${{ github.workspace }}/$release_dir -o ${{ runner.temp }}/$changed_assets_artifact
         working-directory: ${{ env.main_dir }}
 
       - name: Upload changed assets
         uses: actions/upload-artifact@v3
-        if: steps.find-updated-assets.outputs.has_updates
+        if: steps.find-updated-assets.outputs.updated_count > 0
         with:
           name: ${{ env.changed_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.changed_assets_artifact }}
       
       - name: Upload non-testable assets
         uses: actions/upload-artifact@v3
-        if: steps.find-updated-assets.outputs.has_updates
+        if: steps.find-updated-assets.outputs.updated_count > 0
         with:
           name: ${{ env.releasable_assets_artifact }}
           path: |
             ${{ runner.temp }}/${{ env.changed_assets_artifact }}
             !${{ runner.temp }}/${{ env.changed_assets_artifact }}/environment
+      
+    outputs:
+      updated_env_count: ${{ steps.find-updated-assets.outputs.updated_env_count }}
 
       - name: Convert test files and scripts
         id: convert-test-files-and-scripts
@@ -97,6 +100,7 @@ jobs:
 
   build-images:
     name: Build and test images
+    if: needs.identify-updated-assets.outputs.updated_env_count > 0
     runs-on: ubuntu-latest
     needs: identify-updated-assets
     environment: BuiltinRegistryDev

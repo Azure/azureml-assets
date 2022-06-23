@@ -46,9 +46,9 @@ if COMPONENT_ROOT not in sys.path:
     sys.path.append(str(COMPONENT_ROOT))
 
 # internal imports
-from model import MODEL_ARCH_LIST, get_model_metadata, load_model
-from image_io import build_image_datasets
-from profiling import PyTorchProfilerHandler, LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
+from torch_helper.model import MODEL_ARCH_LIST, get_model_metadata, load_model
+from torch_helper.image_io import build_image_datasets
+from torch_helper.profiling import PyTorchProfilerHandler, LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
 
 
 class PyTorchDistributedModelTrainingSequence:
