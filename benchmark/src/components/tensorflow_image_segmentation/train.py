@@ -339,7 +339,7 @@ class TensorflowDistributedModelTrainingSequence:
             logged_params = {
                 # log some distribution params
                 "nodes": self.nodes,
-                "gpus": self.gpus,
+                "instance_per_node": self.gpus,
                 #"cuda_available": not(args.disable_cuda),
                 "disable_cuda": self.training_config.disable_cuda,
                 "distributed": self.distributed_available,
@@ -356,6 +356,7 @@ class TensorflowDistributedModelTrainingSequence:
                 # training params
                 "model_arch": self.training_config.model_arch,
                 "model_input_size": self.training_config.model_input_size,
+                "num_classes": self.training_config.num_classes,
             }
 
             if not self.training_config.disable_cuda:
