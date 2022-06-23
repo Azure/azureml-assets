@@ -77,25 +77,15 @@ def update_asset(asset_config: assets.AssetConfig,
         release_asset_config = util.find_assets(input_dirs=release_dir,
                                                 asset_config_filename=asset_config.file_name)[0]
         release_version = release_asset_config.version
-
-        if not auto_version:
-            # Explicit versioning, just check version
-            if main_version == release_version:
-                # No version change
-                return None
-        else:
-            # Auto versioning, will need to check contents
-            check_contents = True
+        check_contents = True
 
         # See if the asset version is unreleased
         pending_release = not release_tag_exists(release_asset_config, release_directory_root)
-        if pending_release and (not auto_version or skip_unreleased):
-            # Skip the non-released asset version
+        if pending_release and ((not auto_version and main_version != release_version) or skip_unreleased):
+            # Skip the unreleased asset version
             logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
                                f"version {release_version} hasn't been released yet")
             return None
-    else:
-        logger.print(f"Release directory {release_dir} doesn't exist")
 
     # Determine new version
     if not auto_version:
@@ -158,7 +148,7 @@ def update_assets(input_dirs: List[Path],
                                    skip_unreleased=skip_unreleased,
                                    output_directory_root=output_directory_root)
         if new_version:
-            logger.print(f"Updated {asset_config.type.value} {asset_config.name} to version {new_version}")
+            logger.print(f"Updated {asset_config.type.value} {asset_config.name} version {new_version}")
             updated_count += 1
 
             # Track updated environments by OS
