@@ -3,11 +3,10 @@ name: assets-release
 on:
   push:
     branches:
-      #- main
-      - elesel/fix-changed-asset-detection
-    #paths-ignore:
-    #  - .github/**
-    #  - scripts/**
+      - main
+    paths-ignore:
+      - .github/**
+      - scripts/**
   schedule:
     - cron: '30 6 * * *'
   workflow_dispatch:
