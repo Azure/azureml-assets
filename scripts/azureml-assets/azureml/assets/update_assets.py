@@ -1,6 +1,7 @@
 import argparse
 import shutil
 import tempfile
+from collections import Counter
 from git import Repo
 from pathlib import Path
 from typing import List
@@ -11,8 +12,10 @@ import azureml.assets.util as util
 from azureml.assets.util import logger
 
 RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
-HAS_UPDATES = "has_updates"
-ENV_OS_UPDATES = "env_os_updates"
+ASSET_COUNT = "asset_count"
+UPDATED_COUNT = "updated_count"
+UPDATED_ENV_COUNT = "updated_env_count"
+COUNTERS = [ASSET_COUNT, UPDATED_COUNT, UPDATED_ENV_COUNT]
 
 
 def pin_env_files(env_config: assets.EnvironmentConfig):
@@ -77,20 +80,12 @@ def update_asset(asset_config: assets.AssetConfig,
         release_asset_config = util.find_assets(input_dirs=release_dir,
                                                 asset_config_filename=asset_config.file_name)[0]
         release_version = release_asset_config.version
-
-        if not auto_version:
-            # Explicit versioning, just check version
-            if main_version == release_version:
-                # No version change
-                return None
-        else:
-            # Auto versioning, will need to check contents
-            check_contents = True
+        check_contents = True
 
         # See if the asset version is unreleased
         pending_release = not release_tag_exists(release_asset_config, release_directory_root)
-        if pending_release and (not auto_version or skip_unreleased):
-            # Skip the non-released asset version
+        if pending_release and ((not auto_version and main_version != release_version) or skip_unreleased):
+            # Skip the unreleased asset version
             logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
                                f"version {release_version} hasn't been released yet")
             return None
@@ -143,11 +138,9 @@ def update_assets(input_dirs: List[Path],
                   skip_unreleased: bool,
                   output_directory_root: Path = None):
     # Find assets under input dirs
-    asset_count = 0
-    updated_count = 0
-    updated_os = set()
+    counters = Counter()
     for asset_config in util.find_assets(input_dirs, asset_config_filename):
-        asset_count += 1
+        counters[ASSET_COUNT] += 1
 
         # Update asset if it's changed
         new_version = update_asset(asset_config=asset_config,
@@ -156,20 +149,19 @@ def update_assets(input_dirs: List[Path],
                                    skip_unreleased=skip_unreleased,
                                    output_directory_root=output_directory_root)
         if new_version:
-            logger.print(f"Updated {asset_config.type.value} {asset_config.name} to version {new_version}")
-            updated_count += 1
+            logger.print(f"Updated {asset_config.type.value} {asset_config.name} version {new_version}")
+            counters[UPDATED_COUNT] += 1
 
             # Track updated environments by OS
             if asset_config.type is assets.AssetType.ENVIRONMENT:
-                temp_env_config = asset_config.environment_config_as_object()
-                updated_os.add(temp_env_config.os.value)
+                counters[UPDATED_ENV_COUNT] += 1
         else:
             logger.log_debug(f"No changes detected for {asset_config.type.value} {asset_config.name}")
-    logger.print(f"{updated_count} of {asset_count} asset(s) updated")
+    logger.print(f"{counters[UPDATED_COUNT]} of {counters[ASSET_COUNT]} asset(s) updated")
 
     # Set variables
-    logger.set_output(HAS_UPDATES, "true" if updated_count > 0 else "false")
-    logger.set_output(ENV_OS_UPDATES, ",".join(updated_os))
+    for counter_name in COUNTERS:
+        logger.set_output(counter_name, counters[counter_name])
 
 
 if __name__ == '__main__':
