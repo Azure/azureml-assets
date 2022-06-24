@@ -85,7 +85,7 @@ jobs:
 
       # distributed settings
       # distributed_strategy: "multiworkermirroredstrategy" # force strategy (default: auto)
-      # distributed_backend: "nccl" # force communication backend (default: auto)
-      # num_gpus: 2 # to artificially limit number of gpus
+      distributed_backend: "nccl" # force communication backend (default: auto)
+      # num_gpus: 1 # to artificially limit number of gpus
 
 # </jobs>
