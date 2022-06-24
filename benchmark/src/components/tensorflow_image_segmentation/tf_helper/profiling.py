@@ -16,14 +16,21 @@ import tensorflow
 
 class CustomCallbacks(keras.callbacks.Callback):
     """To use during model.fit()"""
-    def __init__(self, enabled=True):
+    def __init__(self, enabled=True, script_start_time=None):
         self.logger = logging.getLogger(__name__)
 
         self.metrics = {}
+        self.script_start_time = script_start_time
         self.train_start = None
         self.epoch_start = None
+        self.epoch_end = None
         self.test_start = None
         self.enabled = enabled
+
+    def log_start_fit(self):
+        self.epoch_end = time.time()
+        if self.script_start_time:
+            mlflow.log_metric("start_to_fit_time", self.epoch_end - self.script_start_time)
 
     def _flush(self):
         self.logger.info(f"MLFLOW: metrics={self.metrics}")
@@ -31,6 +38,7 @@ class CustomCallbacks(keras.callbacks.Callback):
             mlflow.log_metrics(self.metrics)
 
     def on_epoch_begin(self, epoch, logs=None):
+        self.metrics['epoch_init_time'] = time.time() - self.epoch_end
         keys = list(logs.keys())
         self.logger.info("Start epoch {} of training; got log keys: {}".format(epoch, keys))
         self.epoch_start = time.time()
@@ -42,6 +50,8 @@ class CustomCallbacks(keras.callbacks.Callback):
         self.metrics['epoch_train_time'] = self.metrics['epoch_time'] - self.metrics['epoch_eval_time']
         for key in logs:
             self.metrics[key] = logs[key]
+
+        self.epoch_end = time.time()
 
         self._flush()
 

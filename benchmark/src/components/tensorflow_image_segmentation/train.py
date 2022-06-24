@@ -44,6 +44,7 @@ from tf_helper.profiling import CustomCallbacks
 from tf_helper.image_io import ImageAndMaskSequenceDataset
 from tf_helper.model import get_model_metadata, load_model
 
+SCRIPT_START_TIME = time.time()
 
 def build_arguments_parser(parser: argparse.ArgumentParser = None):
     """Builds the argument parser for CLI settings"""
@@ -471,7 +472,7 @@ class TensorflowDistributedModelTrainingSequence:
         if epochs is None:
             epochs = self.training_config.num_epochs
 
-        custom_callback_handler = CustomCallbacks(enabled=self.self_is_main_node)
+        custom_callback_handler = CustomCallbacks(enabled=self.self_is_main_node, script_start_time=SCRIPT_START_TIME)
 
         # # PROFILER: use this class to log time taken by the dataset iterator itself
         # self.training_dataset = LogTimeOfIterator(
@@ -493,6 +494,8 @@ class TensorflowDistributedModelTrainingSequence:
             custom_callback_handler,
             # keras.callbacks.ModelCheckpoint("segmentation.h5", save_best_only=True)
         ]
+
+        custom_callback_handler.log_start_fit()
 
         # Train the model, doing validation at the end of each epoch.
         self.model.fit(
