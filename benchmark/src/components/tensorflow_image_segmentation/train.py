@@ -465,7 +465,7 @@ class TensorflowDistributedModelTrainingSequence:
         # map(): actually load the data using loading function
         _dataset = _dataset.map(training_dataset_loading_function, num_parallel_calls=self.training_config.num_workers)
 
-        if self.training_config.cache == "memory"
+        if self.training_config.cache == "memory":
             _dataset = _dataset.cache()
 
         # shuffle(): create a random order
@@ -497,7 +497,7 @@ class TensorflowDistributedModelTrainingSequence:
         _dataset = _dataset.map(validation_dataset_loading_function, num_parallel_calls=self.training_config.num_workers)
         _dataset = _dataset.batch(self.training_config.batch_size)
 
-        if self.training_config.cache == "memory"
+        if self.training_config.cache == "memory":
             _dataset = _dataset.cache()
 
         options = tf.data.Options()
