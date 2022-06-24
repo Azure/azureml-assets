@@ -264,6 +264,8 @@ class TensorflowDistributedModelTrainingSequence:
 
         # DATA
         self.training_dataset = None
+        self.training_dataset_length = None
+        self.training_steps_per_epoch = None
         self.validation_dataset = None
 
         # MODEL
@@ -443,15 +445,70 @@ class TensorflowDistributedModelTrainingSequence:
     def setup_datasets(
         self,
         training_dataset: tf.data.Dataset,
-        validation_dataset: tf.data.Dataset
+        training_dataset_loading_function: callable,
+        validation_dataset: tf.data.Dataset,
+        validation_dataset_loading_function: callable,
+        training_dataset_length,
     ):
-        """Creates and sets up dataloaders for training/validation datasets."""
-        self.training_dataset = training_dataset
-        self.validation_dataset = validation_dataset
+        """Creates the data loading pipelines training/validation datasets."""
 
-        # Distribute input using the `experimental_distribute_dataset`.
-        # training_dataset = strategy.experimental_distribute_dataset(training_dataset)
-        # validation_dataset = strategy.experimental_distribute_dataset(validation_dataset)
+        ### 1. Initialize TRAINING dataset ###
+
+        # shard(): this node will have a unique subset of data
+        _dataset = training_dataset.shard(num_shards=self.nodes, index=self.worker_id)
+
+        # shuffle(): create a random order
+        _dataset = _dataset.shuffle(training_dataset_length)
+
+        # repeat(): create an infinitely long dataset, required to use experimental_distribute_dataset()
+        # will require steps_per_epoch argument in model.fit()
+        _dataset = _dataset.repeat()
+
+        # map(): actually load the data using loading function
+        _dataset = _dataset.map(training_dataset_loading_function, num_parallel_calls=self.training_config.num_workers)
+
+        # batch(): create batches
+        _dataset = _dataset.batch(self.training_config.batch_size)
+       
+        # disable auto-sharding (since we use shard() ourselves)
+        options = tf.data.Options()
+        options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF # Disable AutoShard.
+        _dataset = _dataset.with_options(options)
+
+        # store internally as training_dataset
+        self.training_dataset = _dataset
+        self.training_dataset_length = training_dataset_length
+        self.training_steps_per_epoch = training_dataset_length // self.training_config.batch_size
+        self.logger.info(f"Training dataset is set (len={self.training_dataset_length}, batch_size{self.training_config.batch_size}, steps_per_epoch={self.training_steps_per_epoch})")
+
+        ### 2. Initialize VALIDATION dataset ###
+        # NOTE: we do not use shuffle() or repeat() here, they are not necessary
+        _dataset = validation_dataset.shard(num_shards=self.nodes, index=self.worker_id)
+        _dataset = _dataset.map(validation_dataset_loading_function, num_parallel_calls=self.training_config.num_workers)
+        _dataset = _dataset.batch(self.training_config.batch_size)
+
+        options = tf.data.Options()
+        options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF # Disable AutoShard.
+        _dataset = _dataset.with_options(options)
+        self.validation_dataset = _dataset
+        self.logger.info(f"Validation dataset is set (batch_size{self.training_config.batch_size})")
+
+
+        ### 3. Set the TRAINING dataset for distributed training using experimental_distribute_dataset
+        # see https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/MultiWorkerMirroredStrategy#experimental_distribute_dataset
+        if self.training_config.distributed_strategy == "MirroredStrategy" or self.training_config.distributed_strategy == "MultiWorkerMirroredStrategy":
+            self.logger.info(f"Using {self.training_config.distributed_strategy}.experimental_distribute_dataset()")
+
+            # see https://www.tensorflow.org/api_docs/python/tf/distribute/InputOptions
+            input_options = tf.distribute.InputOptions(
+                experimental_fetch_to_device=True,
+                experimental_replication_mode=tf.distribute.InputReplicationMode.PER_WORKER,
+                experimental_place_dataset_on_device=False,
+                experimental_per_replica_buffer_size=self.training_config.prefetch_factor
+            )
+
+            self.training_dataset = self.strategy.experimental_distribute_dataset(self.training_dataset, options=input_options)
+
 
     def setup_model(self, model):
         """Configures a model for training."""
@@ -478,22 +535,6 @@ class TensorflowDistributedModelTrainingSequence:
 
         custom_callback_handler = CustomCallbacks(enabled=self.self_is_main_node, script_start_time=SCRIPT_START_TIME)
 
-        # # PROFILER: use this class to log time taken by the dataset iterator itself
-        # self.training_dataset = LogTimeOfIterator(
-        #     self.training_dataset,
-        #     "training_data_loader",
-        #     enabled = self.self_is_main_node, # only enable this on the first process/node
-        #     async_collector = custom_callback_handler.metrics # metrics will be added to the callback handler collector
-        # ).as_tf_dataset() # returns a TF dataset
-
-        # # PROFILER: use this class to log time taken by the dataset iterator itself
-        # self.validation_dataset = LogTimeOfIterator(
-        #     self.validation_dataset,
-        #     "validation_data_loader",
-        #     enabled = self.self_is_main_node, # only enable this on the first process/node
-        #     async_collector = custom_callback_handler.metrics # metrics will be added to the callback handler collector
-        # ).as_tf_dataset() # returns a TF dataset
-
         callbacks = [
             custom_callback_handler,
             # keras.callbacks.ModelCheckpoint("segmentation.h5", save_best_only=True)
@@ -501,10 +542,14 @@ class TensorflowDistributedModelTrainingSequence:
 
         custom_callback_handler.log_start_fit()
 
+        # tf.data.experimental.enable_debug_mode()
+        # tf.config.run_functions_eagerly(True)
+
         # Train the model, doing validation at the end of each epoch.
         self.model.fit(
             self.training_dataset,
             epochs=epochs,
+            steps_per_epoch=self.training_steps_per_epoch,
             validation_data=self.validation_dataset,
             callbacks=callbacks
         )
@@ -552,16 +597,9 @@ def run(args):
             images_type = args.images_type
         )
 
-        train_dataset = train_dataset_helper.dataset(
-            input_size = args.model_input_size,
-            num_classes = args.num_classes,
-            num_shards = training_handler.nodes,
-            shard_index = training_handler.worker_id,
-            cache=args.cache,
-            batch_size = args.batch_size,
-            prefetch_factor = training_handler.dataloading_config.prefetch_factor,
-            prefetch_workers = training_handler.dataloading_config.num_workers
-        )
+        # the helper returns a dataset containing paths to images
+        # and a loading function to use map() for loading the data
+        train_dataset, train_loading_function = train_dataset_helper.dataset(input_size = args.model_input_size)
 
         test_dataset_helper = ImageAndMaskSequenceDataset(
             images_dir = args.test_images,
@@ -571,18 +609,17 @@ def run(args):
             images_type = "png" # masks need to be in png
         )
 
-        val_dataset = test_dataset_helper.dataset(
-            input_size = args.model_input_size,
-            num_classes = args.num_classes,
-            num_shards = training_handler.nodes,
-            shard_index = training_handler.worker_id,
-            cache=args.cache,
-            batch_size = args.batch_size,
-            prefetch_factor = training_handler.dataloading_config.prefetch_factor,
-            prefetch_workers = training_handler.dataloading_config.num_workers
-        )
+        # the helper returns a dataset containing paths to images
+        # and a loading function to use map() for loading the data
+        val_dataset, val_loading_function = test_dataset_helper.dataset(input_size = args.model_input_size)
 
-        training_handler.setup_datasets(train_dataset, val_dataset)
+        training_handler.setup_datasets(
+            train_dataset,
+            train_loading_function,
+            val_dataset,
+            val_loading_function,
+            training_dataset_length=len(train_dataset_helper) # used to shuffle and repeat dataset
+        )
 
     # Free up RAM in case the model definition cells were run multiple times
     keras.backend.clear_session()
@@ -605,7 +642,7 @@ def run(args):
             model.compile(
                 optimizer=args.optimizer,
                 loss=args.loss,
-                metrics=['accuracy']
+                metrics=['accuracy'],
                 # run_eagerly=True
             )
 
