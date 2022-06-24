@@ -22,6 +22,7 @@ from tqdm import tqdm
 from distutils.util import strtobool
 import random
 import tempfile
+import math
 
 import mlflow
 import numpy as np
@@ -451,11 +452,21 @@ class TensorflowDistributedModelTrainingSequence:
         training_dataset_length,
     ):
         """Creates the data loading pipelines training/validation datasets."""
+        # let's log a couple more params
+        data_params = {}
 
         ### 1. Initialize TRAINING dataset ###
+        data_params['train_dataset_length'] = training_dataset_length
+        data_params['train_dataset_shard_length'] = training_dataset_length / self.nodes
 
         # shard(): this node will have a unique subset of data
         _dataset = training_dataset.shard(num_shards=self.nodes, index=self.worker_id)
+
+        # map(): actually load the data using loading function
+        _dataset = _dataset.map(training_dataset_loading_function, num_parallel_calls=self.training_config.num_workers)
+
+        if self.training_config.cache == "memory"
+            _dataset = _dataset.cache()
 
         # shuffle(): create a random order
         _dataset = _dataset.shuffle(training_dataset_length)
@@ -464,11 +475,9 @@ class TensorflowDistributedModelTrainingSequence:
         # will require steps_per_epoch argument in model.fit()
         _dataset = _dataset.repeat()
 
-        # map(): actually load the data using loading function
-        _dataset = _dataset.map(training_dataset_loading_function, num_parallel_calls=self.training_config.num_workers)
-
         # batch(): create batches
         _dataset = _dataset.batch(self.training_config.batch_size)
+        data_params['train_dataset_batches'] = math.ceil(data_params['train_dataset_shard_length'] / self.training_config.batch_size)
        
         # disable auto-sharding (since we use shard() ourselves)
         options = tf.data.Options()
@@ -478,7 +487,8 @@ class TensorflowDistributedModelTrainingSequence:
         # store internally as training_dataset
         self.training_dataset = _dataset
         self.training_dataset_length = training_dataset_length
-        self.training_steps_per_epoch = training_dataset_length // self.training_config.batch_size
+        self.training_steps_per_epoch = data_params['train_dataset_batches']
+        data_params["steps_per_epoch"] = self.training_steps_per_epoch
         self.logger.info(f"Training dataset is set (len={self.training_dataset_length}, batch_size{self.training_config.batch_size}, steps_per_epoch={self.training_steps_per_epoch})")
 
         ### 2. Initialize VALIDATION dataset ###
@@ -486,6 +496,9 @@ class TensorflowDistributedModelTrainingSequence:
         _dataset = validation_dataset.shard(num_shards=self.nodes, index=self.worker_id)
         _dataset = _dataset.map(validation_dataset_loading_function, num_parallel_calls=self.training_config.num_workers)
         _dataset = _dataset.batch(self.training_config.batch_size)
+
+        if self.training_config.cache == "memory"
+            _dataset = _dataset.cache()
 
         options = tf.data.Options()
         options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF # Disable AutoShard.
@@ -509,6 +522,8 @@ class TensorflowDistributedModelTrainingSequence:
 
             self.training_dataset = self.strategy.experimental_distribute_dataset(self.training_dataset, options=input_options)
 
+        if self.self_is_main_node:
+            mlflow.log_params(data_params)
 
     def setup_model(self, model):
         """Configures a model for training."""
