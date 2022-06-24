@@ -9,7 +9,6 @@ import logging
 import glob
 import random
 import re
-import tempfile
 
 from tensorflow import keras
 import numpy as np
@@ -149,37 +148,14 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
 
         return image, mask
 
-    def dataset(self, input_size=160, training=False, num_shards=1, shard_index=0, cache=None, batch_size=64, prefetch_factor=2, prefetch_workers=5, num_classes=3):
-        """Created a tf dataset"""
+    def dataset(self, input_size=160):
+        """Creates a tf dataset and a loading function."""
         # builds the list of pairs
         self.build_pair_list()
 
         # https://cs230.stanford.edu/blog/datapipeline/#best-practices
         with tensorflow.device("CPU"):
             _dataset = tensorflow.data.Dataset.from_tensor_slices((self.images, self.masks))
+            _loading_function = lambda i,m: ImageAndMaskSequenceDataset.loading_function(i,m,input_size,image_type=self.images_type)
 
-            # Set our own sharding
-            _dataset = _dataset.shard(num_shards=num_shards, index=shard_index)
-            _dataset = _dataset.shuffle(len(self.images))
-
-            _dataset = _dataset.map(lambda i,m: ImageAndMaskSequenceDataset.loading_function(i,m,input_size,image_type=self.images_type), num_parallel_calls=prefetch_workers)
-
-            _dataset = _dataset.batch(batch_size)
-
-            if cache == "disk":
-                _dataset = _dataset.cache(tempfile.NamedTemporaryFile().name)
-            elif cache == "memory":
-                _dataset = _dataset.cache()
-
-            if prefetch_factor < 0:
-                # by default, use AUTOTUNE
-                _dataset = _dataset.prefetch(buffer_size=tensorflow.data.AUTOTUNE)
-            elif prefetch_factor > 0:
-                _dataset = _dataset.prefetch(buffer_size=prefetch_factor)
-
-            # Disable AutoShard.
-            options = tensorflow.data.Options()
-            options.experimental_distribute.auto_shard_policy = tensorflow.data.experimental.AutoShardPolicy.OFF
-            _dataset = _dataset.with_options(options)
-
-        return _dataset
+        return _dataset, _loading_function
