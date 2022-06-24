@@ -202,13 +202,13 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
     # )
 
     group = parser.add_argument_group(f"Training Backend Parameters")
-    # group.add_argument(
-    #     "--enable_profiling",
-    #     type=strtobool,
-    #     required=False,
-    #     default=False,
-    #     help="Enable pytorch profiler.",
-    # )
+    group.add_argument(
+        "--enable_profiling",
+        type=strtobool,
+        required=False,
+        default=False,
+        help="Enable tensorflow profiler.",
+    )
     group.add_argument(
         "--disable_cuda",
         type=strtobool,
@@ -341,7 +341,6 @@ class TensorflowDistributedModelTrainingSequence:
                 # log some distribution params
                 "nodes": self.nodes,
                 "instance_per_node": self.gpus,
-                #"cuda_available": not(args.disable_cuda),
                 "disable_cuda": self.training_config.disable_cuda,
                 "distributed": self.distributed_available,
                 "distributed_strategy": self.training_config.distributed_strategy,
@@ -357,12 +356,17 @@ class TensorflowDistributedModelTrainingSequence:
                 # training params
                 "model_arch": self.training_config.model_arch,
                 "model_input_size": self.training_config.model_input_size,
+                "model_arch_pretrained": False, # TODO
                 "num_classes": self.training_config.num_classes,
+
+                # profiling
+                "enable_profiling": False, # TODO
             }
 
             if not self.training_config.disable_cuda:
                 # add some gpu properties
                 logged_params['cuda_device_count'] = len(tf.config.list_physical_devices('GPU'))
+                logged_params['cuda_available'] = (logged_params['cuda_device_count'] > 0)
 
             mlflow.log_params(logged_params)
 
