@@ -490,7 +490,7 @@ class TensorflowDistributedModelTrainingSequence:
         _dataset = training_dataset.shard(num_shards=self.nodes, index=self.worker_id)
 
         # shuffle(): create a random order
-        _dataset = _dataset.shuffle(training_dataset_length / self.nodes)
+        _dataset = _dataset.shuffle(training_dataset_length // self.nodes)
 
         # map(): actually load the data using loading function
         _dataset = _dataset.map(
