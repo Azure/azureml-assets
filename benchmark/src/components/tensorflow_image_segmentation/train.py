@@ -489,27 +489,25 @@ class TensorflowDistributedModelTrainingSequence:
         # shard(): this node will have a unique subset of data
         _dataset = training_dataset.shard(num_shards=self.nodes, index=self.worker_id)
 
+        # shuffle(): create a random order
+        _dataset = _dataset.shuffle(training_dataset_length / self.nodes)
+
         # map(): actually load the data using loading function
         _dataset = _dataset.map(
             training_dataset_loading_function,
             num_parallel_calls=self.training_config.num_workers,
         )
 
+        # batch(): create batches
+        _dataset = _dataset.batch(self.training_config.batch_size)
+
+        # cache if you ask nicely
         if self.training_config.cache == "memory":
             _dataset = _dataset.cache()
-
-        # shuffle(): create a random order
-        _dataset = _dataset.shuffle(training_dataset_length)
 
         # repeat(): create an infinitely long dataset, required to use experimental_distribute_dataset()
         # will require steps_per_epoch argument in model.fit()
         _dataset = _dataset.repeat()
-
-        # batch(): create batches
-        _dataset = _dataset.batch(self.training_config.batch_size)
-        data_params["train_dataset_batches"] = math.ceil(
-            data_params["train_dataset_shard_length"] / self.training_config.batch_size
-        )
 
         # disable auto-sharding (since we use shard() ourselves)
         options = tf.data.Options()
@@ -521,7 +519,10 @@ class TensorflowDistributedModelTrainingSequence:
         # store internally as training_dataset
         self.training_dataset = _dataset
         self.training_dataset_length = training_dataset_length
-        self.training_steps_per_epoch = data_params["train_dataset_batches"]
+        self.training_steps_per_epoch = math.ceil(
+            # counts how many batches in this shard
+            data_params["train_dataset_shard_length"] / self.training_config.batch_size
+        )
         data_params["steps_per_epoch"] = self.training_steps_per_epoch
         self.logger.info(
             f"Training dataset is set (len={self.training_dataset_length}, batch_size{self.training_config.batch_size}, steps_per_epoch={self.training_steps_per_epoch})"
