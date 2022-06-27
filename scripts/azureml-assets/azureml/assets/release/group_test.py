@@ -49,7 +49,7 @@ with open(tests_dir.__str__()+"/tests.yml") as fp:
     for job in data[test_group]['jobs']:
         if 'pre' in data[test_group]['jobs'][job]:
             print(f"Running pre script for {job}")
-            proc = subprocess.check_call(f"python {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", env=my_env, shell=True)
+            proc = subprocess.check_call(f"python3 {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", env=my_env, shell=True)
         print(f'Loading test job {job}')
         test_job = azure.ai.ml.load_job(tests_dir.__str__()+"/"+data[test_group]['jobs'][job]['job'])
         print(test_job)
