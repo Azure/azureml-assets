@@ -7,7 +7,7 @@ import datetime
 import ruamel.yaml
 import subprocess
 from subprocess import Popen,PIPE
-import azure.ai.ml 
+# import azure.ai.ml 
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import ComputeInstance, AmlCompute
 from azure.identity import DefaultAzureCredential
