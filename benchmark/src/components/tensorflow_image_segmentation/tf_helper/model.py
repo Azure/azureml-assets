@@ -10,6 +10,7 @@ MODEL_ARCH_MAP = {
 
 MODEL_ARCH_LIST = list(MODEL_ARCH_MAP.keys())
 
+
 def get_model_metadata(model_arch: str):
     """Returns the model metadata"""
     if model_arch in MODEL_ARCH_MAP:
@@ -77,7 +78,8 @@ def _get_unet_model(input_size, num_classes):
     model = keras.Model(inputs, outputs)
     return model
 
-def load_model(model_arch: str, input_size: int, num_classes:int):
+
+def load_model(model_arch: str, input_size: int, num_classes: int):
     """Loads a model from a given arch and sets it up for training"""
     if model_arch not in MODEL_ARCH_MAP:
         raise NotImplementedError(f"model_arch={model_arch} is not implemented yet.")
