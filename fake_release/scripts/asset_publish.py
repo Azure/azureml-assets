@@ -37,7 +37,8 @@ def test_files_location(DIR: Path):
 
 def process_asset_id(asset_id, full_version):
     list = asset_id.split("/")
-    list[-1] += '-'+full_version
+    if len(full_version) >0:
+        list[-1] += '-'+full_version
     list[-5] = registry_name
     return "/".join(list)
 
@@ -62,9 +63,9 @@ def test_files_preprocess(test_jobs, full_version):
 print("publishing assets")
 
 
-#timestamp = '-'.join(datetime.datetime.now().__str__().split(" "))
-#timestamp = ''.join(timestamp.split(".")[0].split(":")[0:-1])
-componentVersionWithBuildId=registry_name+"."+passed_version
+componentVersionWithBuildId = ""
+if registry_name != "azureml":
+    componentVersionWithBuildId=registry_name+"."+passed_version
 print("generated componentVersionWithBuildId: " + componentVersionWithBuildId)
 print('starting locating test files')
 test_jobs = test_files_location(tests_dir)
