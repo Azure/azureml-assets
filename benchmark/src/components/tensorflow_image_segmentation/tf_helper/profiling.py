@@ -16,6 +16,7 @@ import tensorflow
 
 class CustomCallbacks(keras.callbacks.Callback):
     """To use during model.fit()"""
+
     def __init__(self, enabled=True, script_start_time=None):
         self.logger = logging.getLogger(__name__)
 
@@ -30,7 +31,9 @@ class CustomCallbacks(keras.callbacks.Callback):
     def log_start_fit(self):
         self.epoch_end = time.time()
         if self.script_start_time:
-            mlflow.log_metric("start_to_fit_time", self.epoch_end - self.script_start_time)
+            mlflow.log_metric(
+                "start_to_fit_time", self.epoch_end - self.script_start_time
+            )
 
     def _flush(self):
         self.logger.info(f"MLFLOW: metrics={self.metrics}")
@@ -38,16 +41,22 @@ class CustomCallbacks(keras.callbacks.Callback):
             mlflow.log_metrics(self.metrics)
 
     def on_epoch_begin(self, epoch, logs=None):
-        self.metrics['epoch_init_time'] = time.time() - self.epoch_end
+        self.metrics["epoch_init_time"] = time.time() - self.epoch_end
         keys = list(logs.keys())
-        self.logger.info("Start epoch {} of training; got log keys: {}".format(epoch, keys))
+        self.logger.info(
+            "Start epoch {} of training; got log keys: {}".format(epoch, keys)
+        )
         self.epoch_start = time.time()
 
     def on_epoch_end(self, epoch, logs=None):
         keys = list(logs.keys())
-        self.logger.info("End epoch {} of training; got log keys: {}".format(epoch, keys))
-        self.metrics['epoch_time'] = time.time() - self.epoch_start
-        self.metrics['epoch_train_time'] = self.metrics['epoch_time'] - self.metrics['epoch_eval_time']
+        self.logger.info(
+            "End epoch {} of training; got log keys: {}".format(epoch, keys)
+        )
+        self.metrics["epoch_time"] = time.time() - self.epoch_start
+        self.metrics["epoch_train_time"] = (
+            self.metrics["epoch_time"] - self.metrics["epoch_eval_time"]
+        )
         for key in logs:
             self.metrics[key] = logs[key]
 
@@ -63,7 +72,7 @@ class CustomCallbacks(keras.callbacks.Callback):
     def on_test_end(self, logs=None):
         keys = list(logs.keys())
         self.logger.info("Stop testing; got log keys: {}".format(keys))
-        self.metrics['epoch_eval_time'] = time.time() - self.test_start
+        self.metrics["epoch_eval_time"] = time.time() - self.test_start
 
     def on_train_begin(self, logs=None):
         keys = list(logs.keys())
@@ -75,7 +84,7 @@ class CustomCallbacks(keras.callbacks.Callback):
 
 
 class LogTimeBlock(object):
-    """ This class should be used to time a code block.
+    """This class should be used to time a code block.
     The time diff is computed from __enter__ to __exit__.
     Example
     -------
@@ -94,8 +103,8 @@ class LogTimeBlock(object):
         kwargs (dict): any keyword will be added  as properties to metrics for logging (work in progress)
         """
         # kwargs
-        self.step = kwargs.get('step', None)
-        self.enabled = kwargs.get('enabled', True)
+        self.step = kwargs.get("step", None)
+        self.enabled = kwargs.get("enabled", True)
 
         # internal variables
         self.name = name
@@ -103,23 +112,25 @@ class LogTimeBlock(object):
         self._logger = logging.getLogger(__name__)
 
     def __enter__(self):
-        """ Starts the timer, gets triggered at beginning of code block """
+        """Starts the timer, gets triggered at beginning of code block"""
         if not self.enabled:
             return
-        self.start_time = time.time() # starts "timer"
+        self.start_time = time.time()  # starts "timer"
 
     def __exit__(self, exc_type, value, traceback):
-        """ Stops the timer and stores accordingly
+        """Stops the timer and stores accordingly
         gets triggered at beginning of code block.
-        
+
         Note:
             arguments are by design for with statements.
         """
         if not self.enabled:
             return
-        run_time = time.time() - self.start_time # stops "timer"
+        run_time = time.time() - self.start_time  # stops "timer"
 
-        self._logger.info(f"--- time elapsed: {self.name} = {run_time:2f} s [step={self.step}]")
+        self._logger.info(
+            f"--- time elapsed: {self.name} = {run_time:2f} s [step={self.step}]"
+        )
         mlflow.log_metric(self.name + ".time", run_time)
 
 
@@ -132,18 +143,18 @@ class LogDiskIOBlock(object):
         kwargs (dict): any keyword will be added  as properties to metrics for logging (work in progress)
         """
         # kwargs
-        self.step = kwargs.get('step', None)
-        self.enabled = kwargs.get('enabled', True)
+        self.step = kwargs.get("step", None)
+        self.enabled = kwargs.get("enabled", True)
 
         # internal variables
         self.name = name
-        self.process_id = os.getpid() # focus on current process
+        self.process_id = os.getpid()  # focus on current process
         self.start_time = None
         self.start_disk_counters = None
         self._logger = logging.getLogger(__name__)
 
     def __enter__(self):
-        """ Get initial values, gets triggered at beginning of code block """
+        """Get initial values, gets triggered at beginning of code block"""
         if not self.enabled:
             return
         try:
@@ -156,9 +167,9 @@ class LogDiskIOBlock(object):
             self._logger.critical("import psutil failed, cannot display disk stats.")
 
     def __exit__(self, exc_type, value, traceback):
-        """ Stops the timer and stores accordingly
+        """Stops the timer and stores accordingly
         gets triggered at beginning of code block.
-        
+
         Note:
             arguments are by design for with statements.
         """
@@ -174,19 +185,32 @@ class LogDiskIOBlock(object):
 
         disk_io_metrics = {}
         end_disk_counters = psutil.Process(self.process_id).io_counters()
-        disk_io_metrics[f"{self.name}.disk.read"] = (end_disk_counters.read_bytes - self.start_disk_counters.read_bytes) / (1024 * 1024)
-        disk_io_metrics[f"{self.name}.disk.write"] = (end_disk_counters.write_bytes - self.start_disk_counters.write_bytes) / (1024 * 1024)
+        disk_io_metrics[f"{self.name}.disk.read"] = (
+            end_disk_counters.read_bytes - self.start_disk_counters.read_bytes
+        ) / (1024 * 1024)
+        disk_io_metrics[f"{self.name}.disk.write"] = (
+            end_disk_counters.write_bytes - self.start_disk_counters.write_bytes
+        ) / (1024 * 1024)
 
-        self._logger.info(f"--- time elapsed: {self.name} = {run_time:2f} s [step={self.step}]")
+        self._logger.info(
+            f"--- time elapsed: {self.name} = {run_time:2f} s [step={self.step}]"
+        )
         self._logger.info(f"--- disk_io_metrics: {disk_io_metrics}s [step={self.step}]")
 
         mlflow.log_metrics(disk_io_metrics)
 
 
-class LogTimeOfIterator():
+class LogTimeOfIterator:
     """This class is intended to "wrap" an existing Iterator
     and log metrics for each next() call"""
-    def __init__(self, wrapped_sequence:Any, name:str, enabled:bool=True, async_collector:dict=None):
+
+    def __init__(
+        self,
+        wrapped_sequence: Any,
+        name: str,
+        enabled: bool = True,
+        async_collector: dict = None,
+    ):
         self.wrapped_sequence = wrapped_sequence
         self.wrapped_iterator = None
 
@@ -198,17 +222,18 @@ class LogTimeOfIterator():
         self.async_collector = async_collector
 
         self._logger = logging.getLogger(__name__)
-    
+
     def as_tf_dataset(self):
         """Constructs this as a tensorflow dataset"""
         if self.enabled:
+
             def _generator():
                 return self
 
             return tensorflow.data.Dataset.from_generator(
                 _generator,
                 # works only if wrapped_sequence is already a tf.data.Dataset
-                output_signature = self.wrapped_sequence.element_spec
+                output_signature=self.wrapped_sequence.element_spec,
             )
         else:
             return self.wrapped_sequence

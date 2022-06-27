@@ -553,7 +553,8 @@ class TensorflowDistributedModelTrainingSequence:
         # see https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/MultiWorkerMirroredStrategy#experimental_distribute_dataset
         if (
             self.training_config.distributed_strategy == "MirroredStrategy"
-            or self.training_config.distributed_strategy == "MultiWorkerMirroredStrategy"
+            or self.training_config.distributed_strategy
+            == "MultiWorkerMirroredStrategy"
         ):
             self.logger.info(
                 f"Using {self.training_config.distributed_strategy}.experimental_distribute_dataset()"
