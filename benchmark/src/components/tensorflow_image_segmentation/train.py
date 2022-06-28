@@ -772,6 +772,8 @@ def main(cli_args=None):
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
+    tf.get_logger().setLevel('INFO')
+
     # create argument parser
     parser = build_arguments_parser()
 
