@@ -41,8 +41,8 @@ inputs:
 
     # data loading
     batch_size: 64
-    num_workers: -1 # int or -1 (AUTOTUNE)
-    prefetch_factor: -1 # int or -1 (AUTOTUNE)
+    num_workers: 5 # int or -1 (AUTOTUNE)
+    prefetch_factor: 8 # int or -1 (AUTOTUNE)
     cache: "none" # "none" or "memory"
 
     # model
