@@ -148,9 +148,9 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--cache",
         type=str,
         required=False,
-        choices=["disk", "memory"],
-        default=None,
-        help="Use cache either on DISK or in MEMORY",
+        choices=["none", "disk", "memory"],
+        default="none",
+        help="Use cache either on DISK or in MEMORY, or NONE",
     )
 
     group = parser.add_argument_group(f"Model/Training Parameters")
@@ -164,8 +164,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
     group.add_argument(
         "--model_input_size",
         type=int,
-        required=False,
-        default=160,
+        required=True,
         help="Size of input images (resized, default: 160)",
     )
     group.add_argument(
@@ -217,8 +216,8 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--num_gpus",
         type=int,
         required=False,
-        default=None,
-        help="limit the number of gpus to use (default: None).",
+        default=-1,
+        help="limit the number of gpus to use (default: -1 for no limit).",
     )
     group.add_argument(
         "--distributed_strategy",
@@ -326,7 +325,7 @@ class TensorflowDistributedModelTrainingSequence:
             self.logger.warning(
                 f"Because you set --num_gpus={args.num_gpus}, retricting to first {self.gpus} physical devices"
             )
-        else:
+        else: # if args.num_gpus < 0
             self.gpus = len(tf.config.list_physical_devices("GPU"))
 
         # Check if we need distributed at all
