@@ -364,7 +364,7 @@ class TensorflowDistributedModelTrainingSequence:
                 "model_arch_pretrained": False,  # TODO
                 "num_classes": self.training_config.num_classes,
                 # profiling
-                "enable_profiling": False,  # TODO
+                "enable_profiling": self.training_config.enable_profiling,  # TODO
             }
 
             if not self.training_config.disable_cuda:
@@ -612,6 +612,22 @@ class TensorflowDistributedModelTrainingSequence:
             # keras.callbacks.ModelCheckpoint("segmentation.h5", save_best_only=True)
         ]
 
+        if self.training_config.enable_profiling:
+            self.logger.info("Adding Tensorboard logging (enable_profiling=True)")
+            # Profile from batches 10 to 15
+            os.makedirs("outputs/tensorboard/", exist_ok=True)
+            # see https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/TensorBoard
+            callbacks.append(
+                tf.keras.callbacks.TensorBoard(
+                    log_dir="outputs/tensorboard/",
+                    write_graph=True,
+                    write_images=False,
+                    write_steps_per_second=True,
+                    update_freq="epoch",
+                    profile_batch=(10, 15)
+                )
+            )
+
         custom_callback_handler.log_start_fit()
 
         # tf.data.experimental.enable_debug_mode()
@@ -777,6 +793,10 @@ def main(cli_args=None):
 
     # runs on cli arguments
     args = parser.parse_args(cli_args)  # if None, runs on sys.argv
+
+    # correct type for strtobool
+    args.enable_profiling = bool(args.enable_profiling)
+    args.disable_cuda = bool(args.disable_cuda)
 
     # run the run function
     run(args)
