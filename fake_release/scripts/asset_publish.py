@@ -88,5 +88,8 @@ for x in os.listdir(component_dir.__str__()):
                 final_version = spec_data['version'].__str__()+'-'+componentVersionWithBuildId
             print("final version: "+final_version)
         print(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group} ")
-        subprocess.check_call(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace}  --resource-group {resource_group} --debug", shell=True)
+        try:
+            subprocess.check_call(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace}  --resource-group {resource_group}", shell=True)
+        except:
+            print(f"catch error creating component {x}")
 print('All assets published')
