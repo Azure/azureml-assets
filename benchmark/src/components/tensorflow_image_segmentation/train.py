@@ -637,7 +637,7 @@ class TensorflowDistributedModelTrainingSequence:
                     write_images=False,
                     write_steps_per_second=True,
                     update_freq="epoch",
-                    profile_batch=(0, self.steps_per_epoch) # Profile from batches 10 to 15
+                    profile_batch=(0, self.training_steps_per_epoch) # Profile from batches 10 to 15
                 )
             )
 
