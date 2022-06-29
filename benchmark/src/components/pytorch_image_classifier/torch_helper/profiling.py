@@ -51,7 +51,7 @@ def markdown_trace_handler(dir_name: str, rank: int = 0):
     return _handler_fn
 
 
-def csv_trace_handler(dir_name: str, rank: int = 0):
+def json_trace_handler(dir_name: str, rank: int = 0):
     """This handler can be used inside torch.profiler call to output
     tables in JSON format"""
 
@@ -69,7 +69,7 @@ def csv_trace_handler(dir_name: str, rank: int = 0):
         )
 
         logging.getLogger(__name__).info(
-            f"Exporting profiler trace as csv at {file_name}"
+            f"Exporting profiler trace as json at {file_name}"
         )
 
         event_list = prof.key_averages()
@@ -183,11 +183,11 @@ class PyTorchProfilerHandler:
             ))
 
             # export in JSON
-            csv_logs_export = os.path.join(
+            json_logs_export = os.path.join(
                 self.profiler_output_tmp_dir.name, "json"
             )
-            trace_handlers.append(csv_trace_handler(
-                csv_logs_export, rank=self.rank
+            trace_handlers.append(json_trace_handler(
+                json_logs_export, rank=self.rank
             ))
 
             # export stacks in txt
