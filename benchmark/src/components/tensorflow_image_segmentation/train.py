@@ -280,6 +280,9 @@ class TensorflowDistributedModelTrainingSequence:
         self.dataloading_config = None
         self.training_config = None
 
+        # PROFILER
+        self.profiler_output_tmp_dir = None
+
     def setup_config(self, args):
         """Sets internal variables using provided CLI arguments (see build_arguments_parser()).
         In particular, sets device(cuda) and multinode parameters."""
@@ -612,21 +615,31 @@ class TensorflowDistributedModelTrainingSequence:
             # keras.callbacks.ModelCheckpoint("segmentation.h5", save_best_only=True)
         ]
 
+        # PROFILER
         if self.training_config.enable_profiling:
-            self.logger.info("Adding Tensorboard logging (enable_profiling=True)")
-            # Profile from batches 10 to 15
-            os.makedirs("outputs/tensorboard/", exist_ok=True)
-            # see https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/TensorBoard
-            callbacks.append(
-                tf.keras.callbacks.TensorBoard(
-                    log_dir="outputs/tensorboard/",
-                    write_graph=True,
-                    write_images=False,
-                    write_steps_per_second=True,
-                    update_freq="epoch",
-                    profile_batch=(10, 15)
-                )
+            self.profiler_output_tmp_dir = tempfile.TemporaryDirectory()
+            self.logger.info(
+                f"Starting profiler (enable_profiling=True) with tmp dir {self.profiler_output_tmp_dir.name}."
             )
+
+            options = tf.profiler.experimental.ProfilerOptions(
+                host_tracer_level = 3,
+                python_tracer_level = 1,
+                device_tracer_level = 1
+            )
+            tf.profiler.experimental.start(self.profiler_output_tmp_dir.name, options = options)
+
+            # see https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/TensorBoard
+            # callbacks.append(
+            #     tf.keras.callbacks.TensorBoard(
+            #         log_dir=self.profiler_output_tmp_dir.name,
+            #         write_graph=True,
+            #         write_images=False,
+            #         write_steps_per_second=True,
+            #         update_freq="epoch",
+            #         profile_batch=(10, 15) # Profile from batches 10 to 15
+            #     )
+            # )
 
         custom_callback_handler.log_start_fit()
 
@@ -641,6 +654,25 @@ class TensorflowDistributedModelTrainingSequence:
             validation_data=self.validation_dataset,
             callbacks=callbacks,
         )
+
+        # PROFILER
+        if self.training_config.enable_profiling:
+            self.logger.info(f"Stopping profiler.")
+            tf.profiler.experimental.stop()
+
+            # log via mlflow
+            self.logger.info(
+                f"MLFLOW log {self.profiler_output_tmp_dir.name} as an artifact."
+            )
+            mlflow.log_artifacts(
+                self.profiler_output_tmp_dir.name, artifact_path="profiler"
+            )
+
+            self.logger.info(
+                f"Clean up profiler temp dir {self.profiler_output_tmp_dir.name}"
+            )
+            self.profiler_output_tmp_dir.cleanup()
+
 
     def runtime_error_report(self, runtime_exception):
         """Call this when catching a critical exception.
