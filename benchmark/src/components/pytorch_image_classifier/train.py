@@ -26,6 +26,8 @@ import random
 
 import mlflow
 
+SCRIPT_START_TIME = time.time() # just to measure time to start
+
 # the long list of torch imports
 import torch
 import torch.nn as nn
@@ -184,6 +186,7 @@ class PyTorchDistributedModelTrainingSequence:
                 # data loading params
                 "batch_size": self.dataloading_config.batch_size,
                 "num_workers": self.dataloading_config.num_workers,
+                "cache": False, # not implemented in PyTorch, but logging for consistency
                 "cpu_count": self.cpu_count,
                 "prefetch_factor": self.dataloading_config.prefetch_factor,
                 "persistent_workers": self.dataloading_config.persistent_workers,
@@ -224,11 +227,18 @@ class PyTorchDistributedModelTrainingSequence:
         """Creates and sets up dataloaders for training/validation datasets."""
         self.labels = labels
 
+        # log some params on the datasets
+        data_params = {}
+
         # DISTRIBUTED: you need to use a DistributedSampler that wraps your dataset
         # it will draw a different sample on each node/process to distribute data sampling
         self.training_data_sampler = DistributedSampler(
             training_dataset, num_replicas=self.world_size, rank=self.world_rank
         )
+
+        # logging into mlflow
+        data_params["train_dataset_length"] = len(training_dataset) # length of the entire dataset
+        data_params["train_dataset_shard_length"] = len(self.training_data_sampler) # length of the dataset for this process/node
 
         # setting up DataLoader with the right arguments
         optional_data_loading_kwargs = {}
@@ -249,6 +259,7 @@ class PyTorchDistributedModelTrainingSequence:
             # all other args
             **optional_data_loading_kwargs
         )
+        data_params["steps_per_epoch"] = len(self.training_data_loader) # logging that into mlflow
 
         # DISTRIBUTED: we don't need a sampler for validation set
         # it is used as-is in every node/process
@@ -259,9 +270,12 @@ class PyTorchDistributedModelTrainingSequence:
             pin_memory=self.dataloading_config.pin_memory,
         )
 
+        data_params["num_classes"] = len(labels) # logging that into mlflow
+
+        self.logger.info(f"MLFLOW: data_params={data_params}")
         if self.self_is_main_node:
             # MLFLOW: report relevant parameters using mlflow
-            mlflow.log_params({"num_classes": len(labels)})
+            mlflow.log_params(data_params)
 
 
     def setup_model(self, model):
@@ -269,19 +283,27 @@ class PyTorchDistributedModelTrainingSequence:
         self.logger.info(f"Setting up model to use device {self.device}")
         self.model = model.to(self.device)
 
+        # log some params on the model
+        model_params = {}
+
         # DISTRIBUTED: the model needs to be wrapped in a DistributedDataParallel class
         if self.multinode_available:
             self.logger.info(f"Setting up model to use DistributedDataParallel.")
             self.model = torch.nn.parallel.DistributedDataParallel(self.model)
+            model_params["distributed_strategy"] = "DistributedDataParallel"
+        else:
+            model_params["distributed_strategy"] = None
 
         # fun: log the number of parameters
         params_count = 0
         for param in model.parameters():
             if param.requires_grad:
                 params_count += param.numel()
-        self.logger.info("MLFLOW: model_param_count={:.2f} (millions)".format(round(params_count/1e6, 2)))
+        model_params["model_param_count"] = round(params_count/1e6, 2)
+
+        self.logger.info(f"MLFLOW: model_params={model_params}")
         if self.self_is_main_node:
-            mlflow.log_params({"model_param_count": round(params_count/1e6, 2)})
+            mlflow.log_params(model_params)
 
         return self.model
 
@@ -426,6 +448,9 @@ class PyTorchDistributedModelTrainingSequence:
         if self.self_is_main_node and checkpoints_dir is not None:
             # saving checkpoint before training
             self.checkpoint_save(self.model, optimizer, checkpoints_dir, epoch=-1, loss=0.0)
+
+        # just log how much time it takes to get to this point
+        mlflow.log_metric("start_to_fit_time", time.time() - SCRIPT_START_TIME)
 
         # DISTRIBUTED: you'll node that this loop has nothing specifically "distributed"
         # that's because most of the changes are in the backend (DistributedDataParallel)
