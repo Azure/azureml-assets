@@ -6,12 +6,14 @@ This script provides some helper code to help with pytorch profiling.
 """
 import os
 import time
+import json
 import logging
 import torch
 import mlflow
 import tempfile
 from torch.profiler import profile, record_function, ProfilerActivity
 from typing import Any
+from torch.autograd import DeviceType
 
 def markdown_trace_handler(dir_name: str, rank: int = 0):
     """This handler can be used inside torch.profiler call to output
@@ -27,7 +29,7 @@ def markdown_trace_handler(dir_name: str, rank: int = 0):
         # Note: trying to identify a unique name for the file
         file_name = os.path.join(
             dir_name,
-            f"stacks_rank{rank}_step{prof.step_num}_t{int(time.time() * 1000)}.ms",
+            f"stacks_rank{rank}_step{prof.step_num}_t{int(time.time() * 1000)}.md",
         )
 
         logging.getLogger(__name__).info(
@@ -45,6 +47,54 @@ def markdown_trace_handler(dir_name: str, rank: int = 0):
 
         with open(file_name, "w") as out_file:
             out_file.write("\n".join(markdown))
+
+    return _handler_fn
+
+
+def csv_trace_handler(dir_name: str, rank: int = 0):
+    """This handler can be used inside torch.profiler call to output
+    tables in JSON format"""
+
+    def _handler_fn(prof) -> None:
+        if not os.path.isdir(dir_name):
+            try:
+                os.makedirs(dir_name, exist_ok=True)
+            except Exception:
+                raise RuntimeError("Can't create directory: " + dir_name)
+
+        # Note: trying to identify a unique name for the file
+        file_name = os.path.join(
+            dir_name,
+            f"stacks_rank{rank}_step{prof.step_num}_t{int(time.time() * 1000)}.json",
+        )
+
+        logging.getLogger(__name__).info(
+            f"Exporting profiler trace as csv at {file_name}"
+        )
+
+        event_list = prof.key_averages()
+
+        with open(file_name, "w") as out_file:
+            for event in event_list:
+                out_file.write(json.dumps(
+                    {
+                        "key": event.key,
+                        "count": event.count,
+                        "node_id": event.node_id,
+                        "cpu_time_total": event.cpu_time_total,
+                        "cuda_time_total": event.cuda_time_total,
+                        "self_cpu_time_total": event.self_cpu_time_total,
+                        "self_cuda_time_total": event.self_cuda_time_total,
+                        "cpu_memory_usage": event.cpu_memory_usage,
+                        "cuda_memory_usage": event.cuda_memory_usage,
+                        "self_cpu_memory_usage": event.self_cpu_memory_usage,
+                        "self_cuda_memory_usage": event.self_cuda_memory_usage,
+                        "device_type": "CUDA" if event.device_type == DeviceType.CUDA else "CPU",
+                        "is_legacy": event.is_legacy,
+                        "flops": event.flops
+                    }
+                ))
+                out_file.write("\n")
 
     return _handler_fn
 
@@ -130,6 +180,14 @@ class PyTorchProfilerHandler:
             )
             trace_handlers.append(markdown_trace_handler(
                 markdown_logs_export, rank=self.rank
+            ))
+
+            # export in JSON
+            csv_logs_export = os.path.join(
+                self.profiler_output_tmp_dir.name, "json"
+            )
+            trace_handlers.append(csv_trace_handler(
+                csv_logs_export, rank=self.rank
             ))
 
             # export stacks in txt
