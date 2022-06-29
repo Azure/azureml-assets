@@ -630,16 +630,16 @@ class TensorflowDistributedModelTrainingSequence:
             tf.profiler.experimental.start(self.profiler_output_tmp_dir.name, options = options)
 
             # see https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/TensorBoard
-            # callbacks.append(
-            #     tf.keras.callbacks.TensorBoard(
-            #         log_dir=self.profiler_output_tmp_dir.name,
-            #         write_graph=True,
-            #         write_images=False,
-            #         write_steps_per_second=True,
-            #         update_freq="epoch",
-            #         profile_batch=(10, 15) # Profile from batches 10 to 15
-            #     )
-            # )
+            callbacks.append(
+                tf.keras.callbacks.TensorBoard(
+                    log_dir=self.profiler_output_tmp_dir.name,
+                    write_graph=True,
+                    write_images=False,
+                    write_steps_per_second=True,
+                    update_freq="epoch",
+                    profile_batch=(0, self.steps_per_epoch) # Profile from batches 10 to 15
+                )
+            )
 
         custom_callback_handler.log_start_fit()
 
