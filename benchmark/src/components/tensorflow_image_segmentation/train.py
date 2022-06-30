@@ -323,7 +323,6 @@ class TensorflowDistributedModelTrainingSequence:
             self.logger.warning(f"CUDA disabled because --num_gpus=0")
             self.gpus = 0
         elif args.num_gpus and args.num_gpus > 0:
-            # TODO: force down the number of gpus
             self.gpus = args.num_gpus
             self.logger.warning(
                 f"Because you set --num_gpus={args.num_gpus}, retricting to first {self.gpus} physical devices"
@@ -351,7 +350,7 @@ class TensorflowDistributedModelTrainingSequence:
                 # log some distribution params
                 "nodes": self.nodes,
                 "instance_per_node": self.gpus,
-                "disable_cuda": self.training_config.disable_cuda,
+                "disable_cuda": bool(self.training_config.disable_cuda),
                 "distributed": self.distributed_available,
                 "distributed_strategy": self.training_config.distributed_strategy,
                 "distributed_backend": self.training_config.distributed_backend,
@@ -367,7 +366,7 @@ class TensorflowDistributedModelTrainingSequence:
                 "model_arch_pretrained": False,  # TODO
                 "num_classes": self.training_config.num_classes,
                 # profiling
-                "enable_profiling": self.training_config.enable_profiling,  # TODO
+                "enable_profiling": bool(self.training_config.enable_profiling),
             }
 
             if not self.training_config.disable_cuda:
