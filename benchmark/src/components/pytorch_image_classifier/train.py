@@ -857,6 +857,9 @@ def run(args):
     # properly teardown distributed resources
     training_handler.close()
 
+    # logging total time
+    mlflow.log_metric("wall_time", time.time() - SCRIPT_START_TIME)
+
     # MLFLOW: finalize mlflow (once in entire script)
     mlflow.end_run()
 

@@ -755,6 +755,9 @@ def run(args):
             register_as=args.register_model_as,
         )
 
+    # logging total time
+    mlflow.log_metric("wall_time", time.time() - SCRIPT_START_TIME)
+
     # MLFLOW: finalize mlflow (once in entire script)
     mlflow.end_run()
 
