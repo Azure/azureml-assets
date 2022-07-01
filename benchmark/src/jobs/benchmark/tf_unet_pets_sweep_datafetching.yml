@@ -7,7 +7,7 @@ description: >-
     Trains an image segmentation model using tensorflow.
 
 tags:
-    version: 1.0.5
+    version: 1.0.6
     env: "nvidia/tensorflow:22.02" # use tag to record env in mlflow
 
 compute: azureml:gpu-cluster
@@ -111,7 +111,7 @@ inputs:
     model_input_size: 320
 
     # training
-    num_epochs: 10
+    num_epochs: 7
     optimizer: "rmsprop"
     loss: "sparse_categorical_crossentropy"
 
@@ -131,21 +131,25 @@ outputs:
 
 ### SWEEP SETTINGS ###
 
-sampling_algorithm: random
+sampling_algorithm: bayesian
 
 search_space:
     batch_size:
         type: choice
-        values: [32, 64, 96, 128, 192, 256]
+        values: [16, 32, 64, 128, 256, 512, 1024]
     num_workers:
-        type: choice
-        values: [-1, 0, 2, 4, 6, 8, 10, 12, 14, 16]
+        type: quniform # (round(uniform(min, max) / q) * q)
+        min_value: 0
+        max_value: 16
+        q: 2
     prefetch_factor:
-        type: choice
-        values: [0, 2, 4, 6, 8, 10, 12, 14, 16]
+        type: quniform # (round(uniform(min, max) / q) * q)
+        min_value: 0
+        max_value: 16
+        q: 2
     cache:
         type: choice
-        values: ["none", "memory"]
+        values: ["none"]
 
 objective:
     goal: minimize
@@ -153,5 +157,5 @@ objective:
 
 limits:
     max_total_trials: 1000
-    max_concurrent_trials: 12
-    timeout: 3600
+    max_concurrent_trials: 4
+    timeout: 10800
