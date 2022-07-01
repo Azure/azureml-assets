@@ -119,8 +119,8 @@ class PyTorchDistributedModelTrainingSequence:
         if self.dataloading_config.multiprocessing_sharing_strategy:
             torch.multiprocessing.set_sharing_strategy(self.dataloading_config.multiprocessing_sharing_strategy)
 
-        self.logger.info(f"Current torch.backends.cudnn.benchmark={torch.backends.cudnn.benchmark}, setting it to {bool(self.training_config.enable_benchmark)}")
-        torch.backends.cudnn.benchmark = bool(self.training_config.enable_benchmark)
+        self.logger.info(f"Current torch.backends.cudnn.benchmark={torch.backends.cudnn.benchmark}, setting it to {bool(self.training_config.cudnn_autotuner)}")
+        torch.backends.cudnn.benchmark = bool(self.training_config.cudnn_autotuner)
 
         # DISTRIBUTED: detect multinode config
         # depending on the Azure ML distribution.type, different environment variables will be provided
@@ -204,7 +204,7 @@ class PyTorchDistributedModelTrainingSequence:
 
                 # profiling params
                 "enable_profiling": self.training_config.enable_profiling,
-                "cudnn.benchmark": bool(self.training_config.enable_benchmarking)
+                "cudnn.benchmark": bool(self.training_config.cudnn_autotuner)
             }
 
             if not self.training_config.disable_cuda and torch.cuda.is_available():
@@ -759,7 +759,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
 
     group = parser.add_argument_group(f"System Parameters")
     group.add_argument(
-        "--enable_benchmark",
+        "--cudnn_autotuner",
         type=strtobool,
         required=False,
         default=True,
