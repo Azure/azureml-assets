@@ -79,7 +79,7 @@ def main(cli_args=None):
     parser.add_argument(
         "--export_type", required=False, type=str, choices=["jpg", "png"], default="jpg"
     )
-    parser.add_argument("--dataset", required=True, choices=["CIFAR10", "CIFAR100", "MNIST"])
+    parser.add_argument("--dataset", required=True, choices=["CIFAR10", "CIFAR100", "MNIST", "ImageNet"])
     parser.add_argument(
         "--download_dir",
         required=False,
