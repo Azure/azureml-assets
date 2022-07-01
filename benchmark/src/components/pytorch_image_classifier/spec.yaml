@@ -77,6 +77,10 @@ inputs:
     description: "Name to register final model in MLFlow"
 
   # system parameters
+  cudnn_autotuner:
+    type: boolean
+    default: true
+    description: "Enabled cudnn benchmarking on first epoch"
   enable_profiling:
     type: boolean
     default: false
@@ -121,6 +125,7 @@ command: >-
   --checkpoints ${{outputs.checkpoints}}
   [--register_model_as ${{inputs.register_model_as}}]
 
+  --cudnn_autotuner ${{inputs.cudnn_autotuner}}
   --enable_profiling ${{inputs.enable_profiling}}
   [--multiprocessing_sharing_strategy ${{inputs.multiprocessing_sharing_strategy}}]
 
