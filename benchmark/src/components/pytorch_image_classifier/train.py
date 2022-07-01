@@ -204,7 +204,7 @@ class PyTorchDistributedModelTrainingSequence:
 
                 # profiling params
                 "enable_profiling": self.training_config.enable_profiling,
-                "cudnn.benchmark": bool(self.training_config.cudnn_autotuner)
+                "cudnn_autotuner": bool(self.training_config.cudnn_autotuner)
             }
 
             if not self.training_config.disable_cuda and torch.cuda.is_available():
