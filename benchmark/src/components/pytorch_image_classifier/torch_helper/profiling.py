@@ -179,6 +179,10 @@ class PyTorchProfilerHandler:
             self.logger.info(f"Profiler not started (enabled=False).")
             self.profiler = None
 
+            # forcefully turn off profiling to be sure
+            torch.autograd.profiler.profile(False)
+            torch.autograd.profiler.emit_nvtx(False)
+
         return self.profiler
 
     def stop_profiler(self) -> None:
