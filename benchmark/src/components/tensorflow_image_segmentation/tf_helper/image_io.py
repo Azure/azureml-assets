@@ -119,7 +119,7 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
     """Creates a tensorflow.data.Dataset out of a list of images/masks"""
 
     @staticmethod
-    def loading_function(image_path, mask_path, target_size, image_type="png"):
+    def loading_function(image_path, mask_path, target_size, num_classes, image_type="png", ):
         """Function called using tf map() for loading images into tensors"""
         # logging.getLogger(__name__).info(f"Actually loading image {image_path}")
         image_content = tensorflow.io.read_file(image_path)
@@ -138,12 +138,16 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
             mask, [target_size, target_size], antialias=False
         )
         mask = tensorflow.math.round(mask)
-        mask -= 1
+        mask = tensorflow.clip_by_value(
+            mask,
+            clip_value_min=0,
+            clip_value_max=(num_classes-1)
+        )
         # mask = tensorflow.image.convert_image_dtype(mask, tensorflow.uint8)
 
         return image, mask
 
-    def dataset(self, input_size=160):
+    def dataset(self, num_classes, input_size=160):
         """Creates a tf dataset and a loading function."""
         # builds the list of pairs
         self.build_pair_list()
@@ -155,7 +159,7 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
             )
             _loading_function = (
                 lambda i, m: ImageAndMaskSequenceDataset.loading_function(
-                    i, m, input_size, image_type=self.images_type
+                    i, m, input_size, num_classes, image_type=self.images_type
                 )
             )
 

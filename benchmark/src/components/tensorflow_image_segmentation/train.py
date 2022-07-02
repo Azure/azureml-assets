@@ -484,13 +484,13 @@ class TensorflowDistributedModelTrainingSequence:
 
         ### 1. Initialize TRAINING dataset ###
         data_params["train_dataset_length"] = training_dataset_length
-        data_params["train_dataset_shard_length"] = training_dataset_length / self.nodes
+        data_params["train_dataset_shard_length"] = math.ceil(training_dataset_length / self.nodes)
 
         # shard(): this node will have a unique subset of data
         _dataset = training_dataset.shard(num_shards=self.nodes, index=self.worker_id)
 
         # shuffle(): create a random order
-        _dataset = _dataset.shuffle(training_dataset_length // self.nodes)
+        _dataset = _dataset.shuffle(data_params["train_dataset_shard_length"])
 
         # map(): actually load the data using loading function
         _dataset = _dataset.map(
@@ -679,6 +679,7 @@ def run(args):
         # the helper returns a dataset containing paths to images
         # and a loading function to use map() for loading the data
         train_dataset, train_loading_function = train_dataset_helper.dataset(
+            num_classes=args.num_classes+1,
             input_size=args.model_input_size
         )
 
@@ -693,6 +694,7 @@ def run(args):
         # the helper returns a dataset containing paths to images
         # and a loading function to use map() for loading the data
         val_dataset, val_loading_function = test_dataset_helper.dataset(
+            num_classes=args.num_classes+1,
             input_size=args.model_input_size
         )
 
@@ -715,7 +717,7 @@ def run(args):
             model = load_model(
                 model_arch=args.model_arch,
                 input_size=args.model_input_size,
-                num_classes=args.num_classes,
+                num_classes=(args.num_classes + 1), # n+1 as undefined class
             )
 
             # print model summary to stdout
@@ -724,11 +726,26 @@ def run(args):
             # Configure the model for training.
             # We use the "sparse" version of categorical_crossentropy
             # because our target data is integers.
+
+            if args.loss == "sparse_softmax_cross_entropy_with_logits":
+                def _custom_loss(target, output):
+                    target = tf.reshape(target, [-1])
+                    output_shape = tf.shape(output)
+                    output = tf.reshape(output, [output_shape[-1], -1])
+                    valid_mask = tf.math.less_equal(target, args.num_classes)
+                    target = target[valid_mask]
+                    output = output[valid_mask]
+                    return tf.nn.softmax_cross_entropy_with_logits(labels=target, logits=output)
+                loss_func = _custom_loss
+            else:
+                loss_func = args.loss # use name
+
             model.compile(
                 optimizer=args.optimizer,
-                loss=args.loss,
-                metrics=["accuracy"],
+                loss=loss_func,
+                metrics=["accuracy"], # tf.keras.metrics.MeanIoU(num_classes=(args.num_classes+1))],
                 # run_eagerly=True
+                #options = tf.compat.v1.RunOptions(report_tensor_allocations_upon_oom=True)
             )
 
     # sets the model for distributed training
