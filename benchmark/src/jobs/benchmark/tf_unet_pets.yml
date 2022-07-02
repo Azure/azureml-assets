@@ -1,0 +1,134 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+code: ../../components/tensorflow_image_segmentation/
+
+display_name: "tf_unet"
+experiment_name: "tensorflow_unet_pets"
+description: >-
+    Trains an image segmentation model using tensorflow.
+
+tags:
+    version: 1.0.5
+    env: "nvidia/tensorflow:22.02" # use tag to record env in mlflow
+
+########################
+### INPUTS / OUTPUTS ###
+########################
+
+inputs:
+    # data inputs
+    train_images:
+        type: uri_folder
+        mode: download # pick ro_mount, rw_mount or download
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images
+    train_masks:
+        type: uri_folder
+        mode: download # pick ro_mount, rw_mount or download
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/trimaps
+    test_images:
+        type: uri_folder
+        mode: download # pick ro_mount, rw_mount or download
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images
+    test_masks:
+        type: uri_folder
+        mode: download # pick ro_mount, rw_mount or download
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/trimaps
+
+    # oxford pets specifics
+    images_type: "jpg"
+    images_filename_pattern: "(.*)\\.jpg"
+    masks_filename_pattern: "(.*)\\.png"
+    num_classes: 3
+
+    # data loading
+    batch_size: 64
+    num_workers: 5 # int or -1 (AUTOTUNE)
+    prefetch_factor: 8 # int or -1 (AUTOTUNE)
+    cache: "none" # "none" or "memory"
+
+    # model
+    model_arch: "unet"
+    model_input_size: 160
+
+    # training
+    num_epochs: 20
+    optimizer: "rmsprop"
+    loss: "sparse_categorical_crossentropy"
+
+    # distributed settings
+    enable_profiling: False
+    disable_cuda: False # to force disabling CUDA/GPU
+    num_gpus: -1 # put n>=0 to artificially limit number of gpus
+    distributed_strategy: "auto" # "auto" (recommended)
+    distributed_backend: "nccl" # "auto", "ring" or "nccl" (recommended)
+
+outputs:
+    checkpoints: # Path to export checkpoints
+        type: uri_folder
+    trained_model: # Path to the final model
+        type: uri_folder
+
+
+###############
+### COMMAND ###
+###############
+
+command: >-
+    python train.py 
+    --train_images ${{inputs.train_images}}
+    --train_masks ${{inputs.train_masks}}
+    --test_images ${{inputs.test_images}}
+    --test_masks ${{inputs.test_masks}}
+    --images_filename_pattern "${{inputs.images_filename_pattern}}"
+    --masks_filename_pattern "${{inputs.masks_filename_pattern}}"
+    --batch_size ${{inputs.batch_size}}
+    --num_workers ${{inputs.num_workers}}
+    --prefetch_factor ${{inputs.prefetch_factor}}
+    --cache ${{inputs.cache}}
+    --model_arch ${{inputs.model_arch}}
+    --num_classes ${{inputs.num_classes}}
+    --model_input_size ${{inputs.model_input_size}}
+    --num_epochs ${{inputs.num_epochs}}
+    --optimizer ${{inputs.optimizer}}
+    --loss ${{inputs.loss}}
+    --num_gpus ${{inputs.num_gpus}}
+    --model_output ${{outputs.trained_model}}
+    --checkpoints ${{outputs.checkpoints}}
+    --distributed_strategy ${{inputs.distributed_strategy}}
+    --distributed_backend ${{inputs.distributed_backend}}
+
+
+###################
+### ENVIRONMENT ###
+###################
+
+environment: azureml:nvidia_tensorflow:22.02-tf2-py3-dev2
+
+# NOTE: set env var if needed
+environment_variables:
+    NCCL_DEBUG: "INFO" # adjusts the level of info from NCCL tests
+
+    # NCCL_TOPO_FILE: "/opt/microsoft/ndv4-topo.xml" # Use specific topology file for A100
+    # NCCL_IB_PCI_RELAXED_ORDERING: "1" # Relaxed Ordering can greatly help the performance of Infiniband networks in virtualized environments.
+    # NCCL_IB_DISABLE: "1" # force disable infiniband (if set to "1")
+    # NCCL_NET_PLUGIN: "none" # to force NET/Plugin off (no rdma/sharp plugin at all)
+    # NCCL_NET: "Socket" # to force node-to-node comm to use Socket (slow)
+    # NCCL_SOCKET_IFNAME: "eth0" # to force Socket comm to use eth0 (use NCCL_NET=Socket)
+    # UCX_IB_PCI_RELAXED_ORDERING: "on"
+    # UCX_TLS: "tcp"
+    # UCX_NET_DEVICES: "eth0" # if you have Error: Failed to resolve UCX endpoint...
+    # CUDA_DEVICE_ORDER: "PCI_BUS_ID" # ordering of gpus
+
+
+###############
+### COMPUTE ###
+###############
+
+compute: azureml:gpu-cluster
+resources:
+    instance_count: 1 # number of nodes
+distribution:
+    # NOTE: using type:tensorflow will use all the right env variables (ex: TF_CONFIG)
+    type: tensorflow
+    worker_count: 1 # needs to match instance_count (!)
+
+# </jobs>
