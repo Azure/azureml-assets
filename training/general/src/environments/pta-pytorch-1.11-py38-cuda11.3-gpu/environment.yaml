@@ -1,0 +1,12 @@
+image:
+  name: azureml/curated/pta-pytorch-1.11-py38-cuda11.3-gpu
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - requirements.txt
+  publish:
+    location: mcr
+    visibility: public
