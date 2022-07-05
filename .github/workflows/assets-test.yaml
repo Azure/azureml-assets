@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - ericadebarge/modify_testing_workflow
     paths-ignore:
       - .github/**
       - scripts/**
@@ -51,6 +52,11 @@ jobs:
     
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+            creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
       
       - name: Test all assets
         id: test-all-assets
