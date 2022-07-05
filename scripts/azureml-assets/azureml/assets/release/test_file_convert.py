@@ -29,10 +29,8 @@ parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir pat
 parser.add_argument("-a", "--test-area", required=True, type=str, help="the test area name")
 parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
 args = parser.parse_args()
-area_name = args.test_area  
-tests_folder_dir = args.release_directory.__str__()+"/tests/"+area_name
-if os.path.exists(tests_folder_dir) == False:
-    os.makedirs(tests_folder_dir)
+tests_folder_dir = args.release_directory / "tests" / args.test_area
+Path.mkdir(tests_folder_dir, parents=True, exist_ok=True)
 src_dir = args.input_dir
 copy_replace_file(Path(src_dir.__str__()+"/tests.yml"), Path(tests_folder_dir.__str__()+'/tests.yml'))
 
