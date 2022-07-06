@@ -252,7 +252,7 @@ class PyTorchDistributedModelTrainingSequence:
             # Then we shuffle it using SubsetRandomSampler
             self.training_data_sampler = torch.utils.data.SubsetRandomSampler(
                 # subset of indices for THIS process using round robin
-                [ i for i in range(len(training_dataset)) if i % self.world_rank == 0 ]
+                [ i for i in range(len(training_dataset)) if i % self.world_size == self.world_rank ]
             )
         else:
             raise NotImplementedError(f"--distributed_sampling {self.training_config.distributed_sampling} is not implemented.")
@@ -747,7 +747,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         type=str,
         required=False,
         choices=["distributedsampler", "subsetrandomsampler"],
-        default="distributedsampler",
+        default="subsetrandomsampler",
         help="Which sampling strategy (default: distributedsampler).",
     )
     group.add_argument(
