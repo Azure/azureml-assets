@@ -1,41 +1,8 @@
-#schema 
-# test_group_name:
-#   pre: path
-#   post: path
-#   includes: [path 1,
-#              path 2,
-#              ...]
-#   jobs:
-#       job_name:
-#           job: path
-#           pre: path
-#           post: path
-#       job_name:
-#           job: path
-#           pre: path
-#           post: path
-#       ...
-# test_group_name:
-#   pre: path
-#   post: path
-#   includes: [path 1,
-#              path 2,
-#              ...]
-#   jobs:
-#       job_name:
-#           job: path
-#           pre: path
-#           post: path
-#       job_name:
-#           job: path
-#           pre: path
-#           post: path
-# ...
-
 vision:
-    includes: ["./vision/jobs/object-detection-using-built-in-component/"]
-    jobs:
-        object-detection-using-built-in-component: 
-            job: "./vision/jobs/object-detection-using-built-in-component/pipeline.yml"
-            pre: "./vision/jobs/object-detection-using-built-in-component/prepare_data.py"
+  includes: 
+  - "./vision/jobs/object-detection-using-built-in-component/"
+  jobs:
+    object-detection-using-built-in-component: 
+      job: "./vision/jobs/object-detection-using-built-in-component/pipeline.yml"
+      pre: "./vision/jobs/object-detection-using-built-in-component/prepare_data.py"
 

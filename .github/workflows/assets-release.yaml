@@ -82,19 +82,6 @@ jobs:
             ${{ runner.temp }}/${{ env.changed_assets_artifact }}
             !${{ runner.temp }}/${{ env.changed_assets_artifact }}/environment
 
-      - name: Convert test files and scripts
-        id: convert-test-files-and-scripts
-        run: python -u $scripts_assets_dir/release/test_file_convert.py -i training -r $release_dir -a training
-        working-directory: ${{ env.main_dir }}
-
-      - name: Convert e2e test scripts
-        id: convert-e2e-test-scripts
-        run: | 
-          python -u $scripts_assets_dir/release/scripts_file_convert.py -i $scripts_assets_dir/release/asset_publish.py -r $release_dir
-          python -u $scripts_assets_dir/release/scripts_file_convert.py -i $scripts_assets_dir/release/e2e_test.py -r $release_dir
-          python -u $scripts_assets_dir/release/scripts_file_convert.py -i $scripts_assets_dir/release/group_test.py -r $release_dir
-        working-directory: ${{ env.main_dir }}
-
     outputs:
       updated_env_count: ${{ steps.find-updated-assets.outputs.updated_env_count }}
 
@@ -215,6 +202,17 @@ jobs:
       - name: Update release branch
         run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
   
+      - name: Convert test files and scripts
+        run: python -u $scripts_assets_dir/release/test_file_convert.py -i training -r $release_dir -a training
+        working-directory: ${{ env.main_dir }}
+
+      - name: Convert e2e test scripts
+        run: | 
+          python -u $scripts_assets_dir/release/scripts_file_convert.py -i $scripts_assets_dir/release/asset_publish.py -r $release_dir
+          python -u $scripts_assets_dir/release/scripts_file_convert.py -i $scripts_assets_dir/release/e2e_test.py -r $release_dir
+          python -u $scripts_assets_dir/release/scripts_file_convert.py -i $scripts_assets_dir/release/group_test.py -r $release_dir
+        working-directory: ${{ env.main_dir }}
+
       - name: Create commit and push
         run: |
           if [[ -z $(git status -s) ]]; then
