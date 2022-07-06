@@ -27,14 +27,15 @@ shutil.copy(src_dir / yaml_name , tests_folder_dir / yaml_name)
 with open(src_dir/ yaml_name) as fp:
     data = yaml.load(fp, Loader=yaml.FullLoader)
     for test_group in data:
-        for include_file in data[test_group]['includes']:
-            if (src_dir / include_file).is_dir():
-                print("copying folder: "+include_file)
-                copy_replace_dir((src_dir / include_file), (tests_folder_dir / include_file))
-            else:
-                print("copying file: "+include_file)
-                Path.mkdir(tests_folder_dir / Path(include_file).parent, parents=True, exist_ok=True)
-                shutil.copy((src_dir / include_file), (tests_folder_dir / include_file))
+        if data[test_group].get('includes') != None:
+            for include_file in data[test_group].get('includes'):
+                if (src_dir / include_file).is_dir():
+                    print("copying folder: "+include_file)
+                    copy_replace_dir((src_dir / include_file), (tests_folder_dir / include_file))
+                else:
+                    print("copying file: "+include_file)
+                    Path.mkdir(tests_folder_dir / Path(include_file).parent, parents=True, exist_ok=True)
+                    shutil.copy((src_dir / include_file), (tests_folder_dir / include_file))
 
 
             
