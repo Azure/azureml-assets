@@ -31,6 +31,7 @@ jobs:
   test:
     name: Test assets
     runs-on: ubuntu-latest
+    environment: BuiltinRegistryDev
 
     steps:
       - name: Clone branch
