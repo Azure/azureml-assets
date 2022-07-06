@@ -34,7 +34,6 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision
 from torch.optim import lr_scheduler
-from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader
 from torch.profiler import record_function
 from transformers.utils import ModelOutput
@@ -184,6 +183,7 @@ class PyTorchDistributedModelTrainingSequence:
                 "disable_cuda": self.training_config.disable_cuda,
                 "distributed": self.multinode_available,
                 "distributed_backend": self.distributed_backend,
+                "distributed_sampling" : self.training_config.distributed_sampling,
 
                 # data loading params
                 "batch_size": self.dataloading_config.batch_size,
@@ -231,11 +231,29 @@ class PyTorchDistributedModelTrainingSequence:
         # log some params on the datasets
         data_params = {}
 
-        # DISTRIBUTED: you need to use a DistributedSampler that wraps your dataset
-        # it will draw a different sample on each node/process to distribute data sampling
-        self.training_data_sampler = DistributedSampler(
-            training_dataset, num_replicas=self.world_size, rank=self.world_rank
-        )
+        # DISTRIBUTED: there can be multiple ways to sample the data on each process/node
+        if self.training_config.distributed_sampling == "distributedsampler":
+            # DistributedSampler will draw a different sample on each node/process to distribute data sampling
+            # When using set_epoch(), it will add the epoch number to the seed to regenerate a new shuffling.
+            # Due to internal partitioning in the sampler, 1 image will not be assigned to 2 distinct gpus during a given epoch.
+            # But due to reshuffling between epochs, that 1 image might be seen by another gpu next epoch.
+            # This might not be great when using mounted inputs in which you want to limit the subset
+            # of data loaded in a given node.
+            # see https://pytorch.org/docs/stable/_modules/torch/utils/data/distributed.html#DistributedSampler
+            self.training_data_sampler = torch.utils.data.DistributedSampler(
+                training_dataset,
+                num_replicas=self.world_size,
+                rank=self.world_rank,
+                seed=0, # default is 0
+                shuffle=True
+            )
+        elif self.training_config.distributed_sampling == "subsetrandomsampler":
+            self.training_data_sampler = torch.utils.data.SubsetRandomSampler(
+                # subset of indices for THIS process using round robin
+                [ i for i in range(len(training_dataset)) if i % self.world_rank == 0 ]
+            )
+        else:
+            raise NotImplementedError(f"--distributed_sampling {self.training_config.distributed_sampling} is not implemented.")
 
         # logging into mlflow
         data_params["train_dataset_length"] = len(training_dataset) # length of the entire dataset
@@ -363,7 +381,11 @@ class PyTorchDistributedModelTrainingSequence:
     def _epoch_train(self, epoch, optimizer, criterion):
         """Called during train() for running the train phase of one epoch."""
         self.model.train()
-        self.training_data_sampler.set_epoch(epoch)
+
+        # DISTRIBUTED: set epoch in DistributedSampler
+        if self.training_config.distributed_sampling == "distributedsampler":
+            self.logger.info(f"Setting epoch in DistributedSampler to {epoch}")
+            self.training_data_sampler.set_epoch(epoch)
 
         num_correct = 0
         num_total_images = 0
@@ -717,6 +739,14 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         choices=["nccl", "mpi"],
         default="nccl",
         help="Which distributed backend to use.",
+    )
+    group.add_argument(
+        "--distributed_sampling",
+        type=str,
+        required=False,
+        choices=["distributedsampler", "subsetrandomsampler"],
+        default="distributedsampler",
+        help="Which sampling strategy (default: distributedsampler).",
     )
     group.add_argument(
         "--disable_cuda",
