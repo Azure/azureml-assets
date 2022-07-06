@@ -248,6 +248,8 @@ class PyTorchDistributedModelTrainingSequence:
                 shuffle=True
             )
         elif self.training_config.distributed_sampling == "subsetrandomsampler":
+            # In the strategy below, we first build a round robin partition for this process/gpu
+            # Then we shuffle it using SubsetRandomSampler
             self.training_data_sampler = torch.utils.data.SubsetRandomSampler(
                 # subset of indices for THIS process using round robin
                 [ i for i in range(len(training_dataset)) if i % self.world_rank == 0 ]
