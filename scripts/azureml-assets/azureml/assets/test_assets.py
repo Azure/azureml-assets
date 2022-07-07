@@ -53,9 +53,6 @@ def test_assets(input_dirs: List[Path],
                 asset_config_filename: str,
                 package_versions: Path,
                 changed_files: List[Path],
-                workspace: str,
-                sub_id: str,
-                resource_group: str,
                 reports_dir: Path = None) -> bool:
     base_created = False
     counters = Counter()
@@ -69,7 +66,7 @@ def test_assets(input_dirs: List[Path],
             # Create base environment, which must succeed
             logger.start_group("Create base environment")
             run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions], check=True)
-            run(["conda", "env", "config", "vars", "set", f"workspace={workspace} sub_id={sub_id} resource_group={resource_group}", "-n", BASE_ENVIRONMENT, "-y", "-q"])
+            # run(["conda", "env", "config", "vars", "set", f"workspace={workspace} sub_id={sub_id} resource_group={resource_group}", "-n", BASE_ENVIRONMENT, "-y", "-q"])
             base_created = True
             logger.end_group()
 
@@ -110,9 +107,9 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--package-versions-file", required=True, type=Path, help="File with package versions for the base conda environment")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter assets")
     parser.add_argument("-r", "--reports-dir", type=Path, help="Directory for pytest reports")
-    parser.add_argument("-w", "--workspace", help="Default workspace name to be used in tests")
-    parser.add_argument("-s", "--sub-id", help="Default subscriptionId to be used in tests")
-    parser.add_argument("-g", "--resource-group", help="Default resource group to be used in tests")
+    #parser.add_argument("-w", "--workspace", help="Default workspace name to be used in tests")
+    #parser.add_argument("-s", "--sub-id", help="Default subscriptionId to be used in tests")
+    #parser.add_argument("-g", "--resource-group", help="Default resource group to be used in tests")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
@@ -124,9 +121,6 @@ if __name__ == '__main__':
                           asset_config_filename=args.asset_config_filename,
                           package_versions=args.package_versions_file,
                           changed_files=changed_files,
-                          workspace=args.workspace,
-                          sub_id=args.sub_id,
-                          resource_group=args.resource_group,
                           reports_dir=args.reports_dir)
     if not success:
         sys.exit(1)

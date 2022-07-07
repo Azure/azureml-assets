@@ -65,12 +65,12 @@ jobs:
       - name: Test all assets
         id: test-all-assets
         if: steps.changed-files.outputs.any_modified != 'true'
-        run: python -u $scripts_assets_dir/test_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir -w env.workspace -s env.sub_id -g env.resource_group
+        run: python -u $scripts_assets_dir/test_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir
 
       - name: Test changed assets
         id: test-changed-assets
         if: steps.changed-files.outputs.any_modified == 'true'
-        run: python -u $scripts_assets_dir/test_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}" -w env.workspace -s env.sub_id -g env.resource_group
+        run: python -u $scripts_assets_dir/test_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
       
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action/composite@v1
