@@ -14,6 +14,9 @@ env:
   test_dir: test
   resources_dir: test/resources
   pytest_reports_dir: pytest
+  workspace: ${{ secrets.ASSETS_TEST_WORKSPACE_NAME }}
+  sub_id: ${{ secrets.ASSETS_TEST_WORKSPACE_SUBSCRIPTION_ID }}
+  resource_group: ${{ secrets.ASSETS_TEST_WORKSPACE_RESOURCE_GROUP }}
 
 defaults:
   run:
