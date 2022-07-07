@@ -53,10 +53,10 @@ def test_assets(input_dirs: List[Path],
                 asset_config_filename: str,
                 package_versions: Path,
                 changed_files: List[Path],
-                reports_dir: Path = None,
                 workspace: str,
                 sub_id: str,
-                resource_group: str) -> bool:
+                resource_group: str,
+                reports_dir: Path = None) -> bool:
     base_created = False
     counters = Counter()
     for asset_config in util.find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
@@ -124,10 +124,10 @@ if __name__ == '__main__':
     success = test_assets(input_dirs=input_dirs,
                           asset_config_filename=args.asset_config_filename,
                           package_versions=args.package_versions_file,
-                          changed_files=changed_files,
-                          reports_dir=args.reports_dir,
+                          changed_files=changed_files
                           workspace=workspace,
                           sub_id=sub_id,
-                          resource_group=resource_group)
+                          resource_group=resource_group,
+                          reports_dir=args.reports_dir)
     if not success:
         sys.exit(1)
