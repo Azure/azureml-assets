@@ -1,0 +1,65 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+code: ../components/preprocessing/
+
+display_name: "dev"
+experiment_name: "data_multiplication"
+description: >-
+    Trains an image segmentation model using tensorflow.
+
+tags:
+    version: 1.0.0
+
+########################
+### INPUTS / OUTPUTS ###
+########################
+
+inputs:
+    # data inputs
+    input_folder:
+        type: uri_folder
+        mode: download # pick ro_mount, rw_mount or download
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/places2/train
+        #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation
+    multiply: 250
+    increment: 0
+
+outputs:
+    output_folder: # Path to export checkpoints
+        type: uri_folder
+        mode: upload # pick ro_mount, rw_mount or download
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/artificial/places2_multiplied/train
+        #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/artificial/pets_segmentation_250
+
+
+###############
+### COMMAND ###
+###############
+
+command: >-
+    python multiply_folder_dataset.py 
+    --input ${{inputs.input_folder}}
+    --output ${{outputs.output_folder}}
+    --multiply ${{inputs.multiply}}
+    --increment ${{inputs.increment}}
+
+
+###################
+### ENVIRONMENT ###
+###################
+
+environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu@latest
+
+
+###############
+### COMPUTE ###
+###############
+
+compute: azureml:cpu-cluster-lg
+resources:
+    instance_count: 16 # number of nodes
+distribution:
+    # NOTE: using type:tensorflow will use all the right env variables (ex: TF_CONFIG)
+    type: mpi
+    process_count_per_instance: 1 # number of processes per node
+
+# </jobs>
