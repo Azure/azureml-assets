@@ -205,7 +205,7 @@ jobs:
       - name: Convert test files and scripts
         run: python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i training -r $release_dir -a training
 
-      - name: Convert e2e test scripts
+      - name: Copy e2e test scripts
         run: | 
           mkdir -p $release_dir/scripts
           cp $main_dir/$scripts_assets_dir/release/{asset_publish,e2e_test,group_test}.py $release_dir/scripts
