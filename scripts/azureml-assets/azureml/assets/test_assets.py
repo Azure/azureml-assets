@@ -69,7 +69,7 @@ def test_assets(input_dirs: List[Path],
             # Create base environment, which must succeed
             logger.start_group("Create base environment")
             run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions], check=True)
-            run(["conda", "env", "config", "vars", "set", f"workspace={workspace} sub_Id={sub_id} resource_group={resource_group}", "-n", BASE_ENVIRONMENT, "-y", "-q"])
+            run(["conda", "env", "config", "vars", "set", f"workspace={workspace} sub_id={sub_id} resource_group={resource_group}", "-n", BASE_ENVIRONMENT, "-y", "-q"])
             base_created = True
             logger.end_group()
 
@@ -124,9 +124,9 @@ if __name__ == '__main__':
                           asset_config_filename=args.asset_config_filename,
                           package_versions=args.package_versions_file,
                           changed_files=changed_files,
-                          workspace=workspace,
-                          sub_id=sub_id,
-                          resource_group=resource_group,
+                          workspace=args.workspace,
+                          sub_id=args.sub_id,
+                          resource_group=args.resource_group,
                           reports_dir=args.reports_dir)
     if not success:
         sys.exit(1)
