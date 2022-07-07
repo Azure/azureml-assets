@@ -26,8 +26,8 @@ inputs:
 outputs:
     output_folder: # Path to export checkpoints
         type: uri_folder
-        mode: upload # pick ro_mount, rw_mount or download
-        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/artificial/places2_multiplied/train
+        mode: rw_mount # pick ro_mount, rw_mount or download
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/artificial/places2_multiplied_250/train
         #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/artificial/pets_segmentation_250
 
 
