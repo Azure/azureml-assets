@@ -70,7 +70,6 @@ def test_assets(input_dirs: List[Path],
             logger.start_group("Create base environment")
             run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions], check=True)
             run(["conda", "env", "config", "vars", "set", f"workspace={workspace} sub_Id={sub_id} resource_group={resource_group}", "-n", BASE_ENVIRONMENT, "-y", "-q"])
-            conda env config vars set my_var=value
             base_created = True
             logger.end_group()
 
