@@ -148,9 +148,9 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--cache",
         type=str,
         required=False,
-        choices=["disk", "memory"],
-        default=None,
-        help="Use cache either on DISK or in MEMORY",
+        choices=["none", "disk", "memory"],
+        default="none",
+        help="Use cache either on DISK or in MEMORY, or NONE",
     )
 
     group = parser.add_argument_group(f"Model/Training Parameters")
@@ -164,9 +164,8 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
     group.add_argument(
         "--model_input_size",
         type=int,
-        required=False,
-        default=160,
-        help="Size of input images (resized, default: 160)",
+        required=True,
+        help="Size of input images (resized)",
     )
     group.add_argument(
         "--num_classes", type=int, required=True, help="Number of classes"
@@ -217,8 +216,8 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--num_gpus",
         type=int,
         required=False,
-        default=None,
-        help="limit the number of gpus to use (default: None).",
+        default=-1,
+        help="limit the number of gpus to use (default: -1 for no limit).",
     )
     group.add_argument(
         "--distributed_strategy",
@@ -281,6 +280,9 @@ class TensorflowDistributedModelTrainingSequence:
         self.dataloading_config = None
         self.training_config = None
 
+        # PROFILER
+        self.profiler_output_tmp_dir = None
+
     def setup_config(self, args):
         """Sets internal variables using provided CLI arguments (see build_arguments_parser()).
         In particular, sets device(cuda) and multinode parameters."""
@@ -321,12 +323,11 @@ class TensorflowDistributedModelTrainingSequence:
             self.logger.warning(f"CUDA disabled because --num_gpus=0")
             self.gpus = 0
         elif args.num_gpus and args.num_gpus > 0:
-            # TODO: force down the number of gpus
             self.gpus = args.num_gpus
             self.logger.warning(
                 f"Because you set --num_gpus={args.num_gpus}, retricting to first {self.gpus} physical devices"
             )
-        else:
+        else: # if args.num_gpus < 0
             self.gpus = len(tf.config.list_physical_devices("GPU"))
 
         # Check if we need distributed at all
@@ -349,7 +350,7 @@ class TensorflowDistributedModelTrainingSequence:
                 # log some distribution params
                 "nodes": self.nodes,
                 "instance_per_node": self.gpus,
-                "disable_cuda": self.training_config.disable_cuda,
+                "disable_cuda": bool(self.training_config.disable_cuda),
                 "distributed": self.distributed_available,
                 "distributed_strategy": self.training_config.distributed_strategy,
                 "distributed_backend": self.training_config.distributed_backend,
@@ -365,7 +366,7 @@ class TensorflowDistributedModelTrainingSequence:
                 "model_arch_pretrained": False,  # TODO
                 "num_classes": self.training_config.num_classes,
                 # profiling
-                "enable_profiling": False,  # TODO
+                "enable_profiling": bool(self.training_config.enable_profiling),
             }
 
             if not self.training_config.disable_cuda:
@@ -613,6 +614,32 @@ class TensorflowDistributedModelTrainingSequence:
             # keras.callbacks.ModelCheckpoint("segmentation.h5", save_best_only=True)
         ]
 
+        # PROFILER
+        if self.training_config.enable_profiling:
+            self.profiler_output_tmp_dir = tempfile.TemporaryDirectory()
+            self.logger.info(
+                f"Starting profiler (enable_profiling=True) with tmp dir {self.profiler_output_tmp_dir.name}."
+            )
+
+            options = tf.profiler.experimental.ProfilerOptions(
+                host_tracer_level = 3,
+                python_tracer_level = 1,
+                device_tracer_level = 1
+            )
+            tf.profiler.experimental.start(self.profiler_output_tmp_dir.name, options = options)
+
+            # see https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/TensorBoard
+            callbacks.append(
+                tf.keras.callbacks.TensorBoard(
+                    log_dir=self.profiler_output_tmp_dir.name,
+                    write_graph=True,
+                    write_images=False,
+                    write_steps_per_second=True,
+                    update_freq="epoch",
+                    profile_batch=(0, self.training_steps_per_epoch) # Profile from batches 10 to 15
+                )
+            )
+
         custom_callback_handler.log_start_fit()
 
         # tf.data.experimental.enable_debug_mode()
@@ -626,6 +653,25 @@ class TensorflowDistributedModelTrainingSequence:
             validation_data=self.validation_dataset,
             callbacks=callbacks,
         )
+
+        # PROFILER
+        if self.training_config.enable_profiling:
+            self.logger.info(f"Stopping profiler.")
+            tf.profiler.experimental.stop()
+
+            # log via mlflow
+            self.logger.info(
+                f"MLFLOW log {self.profiler_output_tmp_dir.name} as an artifact."
+            )
+            mlflow.log_artifacts(
+                self.profiler_output_tmp_dir.name, artifact_path="profiler"
+            )
+
+            self.logger.info(
+                f"Clean up profiler temp dir {self.profiler_output_tmp_dir.name}"
+            )
+            self.profiler_output_tmp_dir.cleanup()
+
 
     def runtime_error_report(self, runtime_exception):
         """Call this when catching a critical exception.
@@ -776,11 +822,17 @@ def main(cli_args=None):
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
+    tf.get_logger().setLevel('INFO')
+
     # create argument parser
     parser = build_arguments_parser()
 
     # runs on cli arguments
     args = parser.parse_args(cli_args)  # if None, runs on sys.argv
+
+    # correct type for strtobool
+    args.enable_profiling = bool(args.enable_profiling)
+    args.disable_cuda = bool(args.disable_cuda)
 
     # run the run function
     run(args)
