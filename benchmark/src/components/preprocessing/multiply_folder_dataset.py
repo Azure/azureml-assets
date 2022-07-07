@@ -36,6 +36,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--increment",
         type=int,
         required=False,
+        default=0,
         help="Add to index on output files when multiplying.",
     )
 
@@ -43,6 +44,8 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
 
 
 def multiply_files(file_paths, source, target, multiplication_factor, increment=0):
+    files_created = 0
+
     for i in range(multiplication_factor):
         for entry in tqdm(file_paths):
             if os.path.isfile(entry):
@@ -60,11 +63,18 @@ def multiply_files(file_paths, source, target, multiplication_factor, increment=
                 output_file_path = os.path.join(full_output_dir, file_name.stem + f"_{i+increment}" + file_name.suffix)
 
                 # create output dir
-                os.makedirs(full_output_dir, exist_ok=True)
+                if not os.path.isdir(full_output_dir):
+                    logging.getLogger(__name__).info(f"Creating output subfolder {full_output_dir}")
+                    os.makedirs(full_output_dir, exist_ok=True)
 
                 #print(f"{entry} => {output_file_path}")
-                shutil.copy(entry, output_file_path)
+                if not os.path.isfile(output_file_path):
+                    shutil.copy(entry, output_file_path)
+                    files_created += 1
+
         logging.getLogger(__name__).info(f"Achieved multication {i}")
+
+    return files_created
 
 def run(args):
     """Run the script using CLI arguments"""
@@ -91,7 +101,8 @@ def run(args):
     logger.info(f"Process file list len={len(filtered_files_list)}")
     mlflow.log_metric("process_file_count", len(filtered_files_list))
 
-    multiply_files(filtered_files_list, args.input, args.output, args.multiply, increment=args.increment)
+    files_created = multiply_files(filtered_files_list, args.input, args.output, args.multiply, increment=args.increment)
+    mlflow.log_metric("files_created", files_created)
 
     mlflow.end_run()
 
