@@ -50,7 +50,7 @@ if COMPONENT_ROOT not in sys.path:
 from torch_helper.model import MODEL_ARCH_LIST, get_model_metadata, load_model
 from torch_helper.image_io import build_image_datasets
 from torch_helper.profiling import PyTorchProfilerHandler, LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
-
+from torch_helper.nvml import get_nvml_params
 
 class PyTorchDistributedModelTrainingSequence:
     """Generic class to run the sequence for training a PyTorch model
@@ -208,14 +208,7 @@ class PyTorchDistributedModelTrainingSequence:
             }
 
             if not self.training_config.disable_cuda and torch.cuda.is_available():
-                # add some gpu properties
-                logged_params['cuda_device_count'] = torch.cuda.device_count()
-                cuda_device_properties = torch.cuda.get_device_properties(self.device)
-                logged_params['cuda_device_name'] = cuda_device_properties.name
-                logged_params['cuda_device_major'] = cuda_device_properties.major
-                logged_params['cuda_device_minor'] = cuda_device_properties.minor
-                logged_params['cuda_device_memory'] = cuda_device_properties.total_memory
-                logged_params['cuda_device_processor_count'] = cuda_device_properties.multi_processor_count
+                logged_params.update(get_nvml_params()) # add some gpu properties
                 self.logger.info(f"CUDA: get_gencode_flags() returns: {torch.cuda.get_gencode_flags()}")
                 self.logger.info(f"CUDA: get_arch_list() returns: {torch.cuda.get_arch_list()}")
 
