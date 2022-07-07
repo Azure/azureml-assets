@@ -89,6 +89,9 @@ inputs:
     type: string
     optional: true
     description: "Check https://pytorch.org/docs/stable/multiprocessing.html"
+  distributed_sampling:
+    type: string
+    optional: true
 
 outputs:
   checkpoints: 
@@ -128,6 +131,7 @@ command: >-
   --cudnn_autotuner ${{inputs.cudnn_autotuner}}
   --enable_profiling ${{inputs.enable_profiling}}
   [--multiprocessing_sharing_strategy ${{inputs.multiprocessing_sharing_strategy}}]
+  [--distributed_sampling ${{inputs.distributed_sampling}}]
 
 distribution:
   # NOTE: using type:pytorch will use all the right env variables for pytorch init_process_group
