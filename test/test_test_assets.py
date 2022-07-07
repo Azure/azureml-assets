@@ -15,8 +15,8 @@ def test_test_assets(test_subdir: str, expected: bool):
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("sub_id")
-	resource_group = os.environ.get("resource_group")
-	workspace_name = os.environ.get("workspace")
+    resource_group = os.environ.get("resource_group")
+    workspace_name = os.environ.get("workspace")
 
     assert assets.test_assets(
         this_dir / RESOURCES_DIR / test_subdir,
