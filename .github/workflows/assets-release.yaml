@@ -207,10 +207,8 @@ jobs:
 
       - name: Convert e2e test scripts
         run: | 
-          python -u $scripts_assets_dir/release/scripts_file_convert.py -i $scripts_assets_dir/release/asset_publish.py -r $release_dir
-          python -u $scripts_assets_dir/release/scripts_file_convert.py -i $scripts_assets_dir/release/e2e_test.py -r $release_dir
-          python -u $scripts_assets_dir/release/scripts_file_convert.py -i $scripts_assets_dir/release/group_test.py -r $release_dir
-        working-directory: ${{ env.main_dir }}
+          mkdir -p $release_dir/scripts
+          cp $main_dir/$scripts_assets_dir/release/{asset_publish,e2e_test,group_test}.py $release_dir/scripts
 
       - name: Create commit and push
         run: |
