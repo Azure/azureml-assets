@@ -6,3 +6,5 @@ extra_config: environment.yaml
 test:
   pytest:
     enabled: true
+    pip_requirements: test/requirements.txt
+    tests_dir: test
