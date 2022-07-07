@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 import argparse
 import re
 from pathlib import Path

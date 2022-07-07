@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 import re
 from enum import Enum
 from pathlib import Path

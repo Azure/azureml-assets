@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 from .logger import logger
 from .template import render
 from .util import (
