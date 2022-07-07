@@ -123,7 +123,7 @@ if __name__ == '__main__':
     success = test_assets(input_dirs=input_dirs,
                           asset_config_filename=args.asset_config_filename,
                           package_versions=args.package_versions_file,
-                          changed_files=changed_files
+                          changed_files=changed_files,
                           workspace=workspace,
                           sub_id=sub_id,
                           resource_group=resource_group,
