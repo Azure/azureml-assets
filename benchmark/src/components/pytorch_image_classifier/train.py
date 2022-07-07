@@ -216,6 +216,8 @@ class PyTorchDistributedModelTrainingSequence:
                 logged_params['cuda_device_minor'] = cuda_device_properties.minor
                 logged_params['cuda_device_memory'] = cuda_device_properties.total_memory
                 logged_params['cuda_device_processor_count'] = cuda_device_properties.multi_processor_count
+                self.logger.info(f"CUDA: get_gencode_flags() returns: {torch.cuda.get_gencode_flags()}")
+                self.logger.info(f"CUDA: get_arch_list() returns: {torch.cuda.get_arch_list()}")
 
             mlflow.log_params(logged_params)
 
