@@ -46,7 +46,7 @@ def get_nvml_params() -> dict:
 
         try:
             cuda_device_attributes = pynvml.nvmlDeviceGetAttributes(device_handle)
-            machine_params["cuda_processor_count"] = cuda_device_attributes.multiprocessorCount
+            machine_params["cuda_device_processor_count"] = cuda_device_attributes.multiprocessorCount
         except pynvml.nvml.NVMLError_NotSupported:
             logger.warning("nvmlDeviceGetAttributes() not supported.")
 
