@@ -1,3 +1,4 @@
+import azure
 from azure.ai.ml import MLClient
 from azure.ai.ml import command, MpiDistribution
 from azure.identity import DefaultAzureCredential
