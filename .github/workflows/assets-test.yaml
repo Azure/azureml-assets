@@ -22,6 +22,9 @@ env:
   asset_config_filename: asset.yaml
   pytest_reports_dir: pytest
   package_versions_file: scripts/test-requirements.txt
+  workspace_name: ${{ secrets.ASSETS_TEST_WORKSPACE_NAME }}
+  workspace_sub_id: ${{ secrets.ASSETS_TEST_WORKSPACE_SUBSCRIPTION_ID }}
+  workspace_resource_group: ${{ secrets.ASSETS_TEST_WORKSPACE_RESOURCE_GROUP }}
 
 defaults:
   run:
