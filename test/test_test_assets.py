@@ -25,5 +25,5 @@ def test_test_assets(test_subdir: str, expected: bool):
         this_dir / TEST_REQUIREMENTS_FILE,
         [],
         workspace_name,
-        sub_id,
+        subscription_id,
         resource_group) == expected
