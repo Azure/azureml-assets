@@ -95,6 +95,7 @@ command: >-
     --checkpoints ${{outputs.checkpoints}}
     --distributed_strategy ${{inputs.distributed_strategy}}
     --distributed_backend ${{inputs.distributed_backend}}
+    --enable_profiling ${{inputs.enable_profiling}}
 
 
 ###################
