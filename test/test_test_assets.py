@@ -23,7 +23,8 @@ def test_test_assets(test_subdir: str, expected: bool):
         this_dir / RESOURCES_DIR / test_subdir,
         assets.DEFAULT_ASSET_FILENAME,
         this_dir / TEST_REQUIREMENTS_FILE,
-        [],
-        workspace_name,
-        subscription_id,
-        resource_group) == expected
+        []) == expected
+
+    assert subscription_id != None
+    assert resource_group != None
+    assert workspace_name != None
