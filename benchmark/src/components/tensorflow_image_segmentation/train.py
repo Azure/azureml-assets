@@ -165,7 +165,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         "--model_input_size",
         type=int,
         required=True,
-        help="Size of input images (resized, default: 160)",
+        help="Size of input images (resized)",
     )
     group.add_argument(
         "--num_classes", type=int, required=True, help="Number of classes"
