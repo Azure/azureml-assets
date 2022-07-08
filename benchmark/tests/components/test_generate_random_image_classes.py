@@ -6,7 +6,7 @@ import sys
 from unittest.mock import patch
 import glob
 
-from components.generate_random_image_classes import run
+from generate_random_image_classes import run
 
 # IMPORTANT: see conftest.py for fixtures
 
