@@ -7,6 +7,7 @@ This scripts leverages pynvml to get important properties about the GPUs
 """
 import logging
 import math
+import traceback
 
 def get_nvml_params() -> dict:
     """Uses pynvml to get all VM related parameters to log"""
@@ -15,11 +16,11 @@ def get_nvml_params() -> dict:
     # if pynvml isn't there, do not fail
     try:
         import pynvml
+        pynvml.nvmlInit()
     except:
-        logger.critical("Cannot get CUDA machine parameters because importing pynvml failed.")
+        logger.critical(f"Cannot get CUDA machine parameters because importing pynvml failed.\n\n{traceback.format_exc()}")
         return {}
 
-    pynvml.nvmlInit()
 
     machine_params = {
         "cuda_driver_version": pynvml.nvmlSystemGetCudaDriverVersion_v2(),
