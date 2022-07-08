@@ -12,10 +12,10 @@ jobs:
     inputs:
       training_data:
         type: mltable
-        path: ./data/training-mltable-folder
+        path: ./resources/training-mltable-folder
       validation_data:
         type: mltable
-        path: ./data/validation-mltable-folder
+        path: ./resources/validation-mltable-folder
     resources:
       instance_count: 1
 

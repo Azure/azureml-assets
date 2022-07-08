@@ -12,7 +12,7 @@ from azure.ai.ml.entities import Data
 from azure.ai.ml.constants import AssetTypes
 
 
-data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
+data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources')
 
 
 def create_jsonl_files(uri_folder_data_path):

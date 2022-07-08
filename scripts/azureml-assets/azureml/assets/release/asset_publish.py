@@ -2,10 +2,8 @@ from asyncio import subprocess
 import argparse
 from pathlib import Path
 import os
-import sys
-import datetime
 import subprocess
-import ruamel.yaml
+import yaml
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--registry-name", required=True, type=str, help="the registry name")
@@ -22,14 +20,13 @@ tests_dir = args.tests_directory
 component_dir = args.component_directory
 passed_version = args.version
 
-def test_files_location(DIR: Path):
+def test_files_location(dir: Path):
     test_jobs = []
-    yaml = ruamel.yaml.YAML()
-    for x in os.listdir(DIR.__str__()):
+    for x in dir.iterdir():
         print("processing test folder: " + x)
-        area_folder = DIR.__str__() + "/" + x
-        with open(area_folder+'/tests.yml') as fp:
-            data = yaml.load(fp)
+        area_folder = dir /  x
+        with open(area_folder / 'tests.yml') as fp:
+            data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data:
                 for test_job in data[test_group]['jobs']:
                     test_jobs.append(area_folder + '/' + data[test_group]['jobs'][test_job]['job'])
@@ -43,11 +40,10 @@ def process_asset_id(asset_id, full_version):
     return "/".join(list)
 
 def test_files_preprocess(test_jobs, full_version):
-    yaml = ruamel.yaml.YAML()
     for test_job in test_jobs:
         print("processing test job: " + test_job)
         with open(test_job) as fp:
-            data = yaml.load(fp)
+            data = yaml.load(fp, Loader=yaml.FullLoader)
             for job in data["jobs"]:
                 print("processing asset"+data["jobs"][job]["component"])
                 original_asset = data["jobs"][job]["component"]
@@ -56,7 +52,7 @@ def test_files_preprocess(test_jobs, full_version):
                     data["jobs"][job]["component"] = new_asset
                     print(data["jobs"][job]["component"])
             with open(test_job, "w") as file:
-                yaml.dump(data, file)
+                yaml.dump(data, file, default_flow_style=False)
 
 
 
@@ -72,18 +68,17 @@ test_jobs = test_files_location(tests_dir)
 print('starting preprocessing test files')
 test_files_preprocess(test_jobs, componentVersionWithBuildId)
 print('finished preprocessing test files')
-yaml = ruamel.yaml.YAML()
-for x in os.listdir(component_dir.__str__()):
+for x in component_dir.iterdir():
     if x != "src":
         print("Registering "+x)
-        with open(component_dir.__str__()+"/"+x+'/'+'asset.yaml') as fp:
-            data = yaml.load(fp)
+        with open(component_dir / x / 'asset.yaml') as fp:
+            data = yaml.load(fp, Loader=yaml.FullLoader)
         spec_file = data['spec']
-        spec_path = Path(component_dir.__str__()+'/'+x+'/'+spec_file)
-        print("Does spec path exist: "+os.path.exists(spec_path).__str__())
+        spec_path = Path(component_dir / x / spec_file)
+        print("Does spec path exist: "+spec_path.is_file().__str__())
         final_version =''
         with open(spec_path) as fp:
-            spec_data = yaml.load(fp)
+            spec_data = data = yaml.load(fp, Loader=yaml.FullLoader)
             if registry_name != "azureml":
                 final_version = spec_data['version'].__str__()+'-'+componentVersionWithBuildId
             print("final version: "+final_version)

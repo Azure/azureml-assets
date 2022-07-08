@@ -15,8 +15,8 @@ if __name__ == "__main__":
 
     # Download images to score
     download_url = "https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjects.zip"
-    data_file = "data/odFridgeObjects.zip"
-    os.mkdir("data")
+    data_file = "resources/odFridgeObjects.zip"
+    os.mkdir("resources")
     print("Downloading images...")
     urllib.request.urlretrieve(download_url, filename=data_file)
     print("Download completed")
@@ -24,13 +24,13 @@ if __name__ == "__main__":
     # Extract downloaded images
     with ZipFile(data_file, "r") as zip:
         print("Extracting downloaded images...")
-        zip.extractall(path="./data")
+        zip.extractall(path="./resources")
 
     # Images to score
     test_image_paths = [
-        "./data/odFridgeObjects/images/1.jpg",
-        "./data/odFridgeObjects/images/2.jpg",
-        "./data/odFridgeObjects/images/3.jpg",
+        "./resources/odFridgeObjects/images/1.jpg",
+        "./resources/odFridgeObjects/images/2.jpg",
+        "./resources/odFridgeObjects/images/3.jpg",
     ]
 
     # Define helper method to read the bytes of a file from disk
