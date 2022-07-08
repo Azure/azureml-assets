@@ -12,7 +12,6 @@ Using your editor, search for those strings to get an idea of how to implement:
 - MLFLOW : how to implement mlflow reporting of metrics and artifacts
 - PROFILER : how to implement pytorch profiler
 """
-import os
 import sys
 import time
 import logging

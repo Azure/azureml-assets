@@ -1,6 +1,5 @@
 import os
 import sys
-import logging
 import pytest
 import tempfile
 from unittest.mock import Mock
