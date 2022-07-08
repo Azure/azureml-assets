@@ -66,7 +66,6 @@ def test_assets(input_dirs: List[Path],
             # Create base environment, which must succeed
             logger.start_group("Create base environment")
             run(["conda", "create", "-n", BASE_ENVIRONMENT, "-y", "-q", "--file", package_versions], check=True)
-            # run(["conda", "env", "config", "vars", "set", f"workspace={workspace} sub_id={sub_id} resource_group={resource_group}", "-n", BASE_ENVIRONMENT, "-y", "-q"])
             base_created = True
             logger.end_group()
 
@@ -107,9 +106,6 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--package-versions-file", required=True, type=Path, help="File with package versions for the base conda environment")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter assets")
     parser.add_argument("-r", "--reports-dir", type=Path, help="Directory for pytest reports")
-    #parser.add_argument("-w", "--workspace", help="Default workspace name to be used in tests")
-    #parser.add_argument("-s", "--sub-id", help="Default subscriptionId to be used in tests")
-    #parser.add_argument("-g", "--resource-group", help="Default resource group to be used in tests")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
