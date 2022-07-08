@@ -23,7 +23,7 @@ settings:
 jobs:
   train:
     type: command
-    component: file:../../components/pytorch_image_classifier/spec.yaml
+    component: file:../../scripts/pytorch_image_classifier/spec.yaml
     compute: azureml:gpu-cluster
     resources:
       instance_count: 1 # number of nodes

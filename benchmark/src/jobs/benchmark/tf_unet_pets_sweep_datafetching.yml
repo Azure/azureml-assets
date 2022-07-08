@@ -14,7 +14,7 @@ compute: azureml:gpu-cluster
 
 
 trial:
-    code: ../../components/tensorflow_image_segmentation/
+    code: ../../scripts/tensorflow_image_segmentation/
 
     ### COMMAND ###
 
