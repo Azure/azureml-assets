@@ -70,7 +70,7 @@ print('starting preprocessing test files')
 test_files_preprocess(test_jobs, componentVersionWithBuildId)
 print('finished preprocessing test files')
 for x in component_dir.iterdir():
-    if x != "src":
+    if x.name != "src":
         print("Registering " + x.name)
         with open(x / 'asset.yaml') as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
