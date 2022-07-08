@@ -1,0 +1,79 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+import argparse
+from asyncio import subprocess
+from pathlib import Path
+import azure.ai.ml
+from azure.ai.ml import MLClient
+from azure.identity import DefaultAzureCredential
+import yaml
+import os
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests folder")
+parser.add_argument("-g", "--test-group", required=True, type=str, help="test group name")
+parser.add_argument("-s", "--subscription", required=True, type=str, help="Subscription ID")
+parser.add_argument("-r", "--resource-group", required=True, type=str, help="Resource group name")
+parser.add_argument("-w", "--workspace-name", required=True, type=str, help="Workspace name")
+args = parser.parse_args()
+tests_dir = args.input_dir
+test_group = args.test_group
+subscription_id = args.subscription
+resource_group = args.resource_group
+workspace = args.workspace_name
+# default workspace info
+group_pre = ''
+group_post = ''
+
+with open(tests_dir.__str__()+"/tests.yml") as fp:
+    data = yaml.load(fp, Loader=yaml.FullLoader)
+    if 'pre' in data[test_group]:
+        group_pre = tests_dir.__str__()+'/'+data[test_group]['pre']
+    if 'post' in data[test_group]:
+        group_post = tests_dir.__str__()+'/'+data[test_group]['post']
+
+my_env = os.environ.copy()
+my_env['subscription_id'] = subscription_id
+my_env['resource_group'] = resource_group
+my_env['workspace'] = workspace
+ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)
+submitted_job_list = []
+succeeded_jobs = []
+failed_jobs = []
+if len(group_pre) > 0:
+    subprocess.check_call(f"python {group_pre}", env=my_env, shell=True)
+
+with open(tests_dir.__str__()+"/tests.yml") as fp:
+    data = yaml.load(fp, Loader=yaml.FullLoader)
+    for job in data[test_group]['jobs']:
+        if 'pre' in data[test_group]['jobs'][job]:
+            print(f"Running pre script for {job}")
+            proc = subprocess.check_call(f"python3 {tests_dir.__str__()+'/'+data[test_group]['jobs'][job]['pre']}", env=my_env, shell=True)
+        print(f'Loading test job {job}')
+        test_job = azure.ai.ml.load_job(tests_dir.__str__()+"/"+data[test_group]['jobs'][job]['job'])
+        print(test_job)
+        print(f'Running test job {job}')
+        test_job = ml_client.jobs.create_or_update(test_job)
+        print(f'Submitted test job {job}')
+        print(f"Job id: {test_job.id}")
+        submitted_job_list.append(test_job)
+
+# TO-DO: job post and group post scripts will be run after all jobs are completed
+
+while(len(submitted_job_list)):
+    for job in submitted_job_list:
+        returned_job = ml_client.jobs.get(job.name)
+        print(f'The status of test job {job.name} is {returned_job.status}')
+        if(returned_job.status == "Completed"):
+            succeeded_jobs.append(returned_job.display_name)
+            submitted_job_list.remove(job)
+        elif(returned_job.status == "Failed"):
+            failed_jobs.append(returned_job.display_name)
+            submitted_job_list.remove(job)
+print(f"Totally {len(succeeded_jobs)+len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
+
+#
+if(len(failed_jobs) > 0):
+    failed_job_str = ", ".join(failed_jobs)
+    print(f"{len(failed_jobs)} jobs failed. {failed_job_str}.")
