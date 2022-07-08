@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 import argparse
 import json
 import requests
@@ -71,7 +75,7 @@ def create_environments(deployment_config_file_path: Path,
 
     # Final messages
     if errors:
-        raise Exception("Errors occurred while creating environments") 
+        raise Exception("Errors occurred while creating environments")
 
 
 if __name__ == "__main__":

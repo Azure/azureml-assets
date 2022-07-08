@@ -4,7 +4,6 @@ on a randomly generated small dataset.
 """
 import os
 import sys
-import tempfile
 import pytest
 from unittest.mock import patch
 
@@ -12,7 +11,6 @@ import numpy as np
 from PIL import Image
 
 from components.tensorflow_image_segmentation import train
-from components.tensorflow_image_segmentation.tf_helper.model import MODEL_ARCH_LIST
 
 # IMPORTANT: see conftest.py for fixtures
 
@@ -31,7 +29,7 @@ def random_images_and_masks(temporary_dir):
         a = np.random.rand(300, 300, 3) * 255
         im_out = Image.fromarray(a.astype("uint8")).convert("RGB")
 
-        a = np.random.randint(0, n_classes, size=(300, 300)) + 1 # pets collection starts index at 1
+        a = np.random.randint(0, n_classes, size=(300, 300)) + 1  # pets collection starts index at 1
         msk_out = Image.fromarray(a.astype("uint8"))
 
         image_path = os.path.join(
@@ -52,6 +50,7 @@ def random_images_and_masks(temporary_dir):
 TEST_MODEL_ARCH_LIST = [
     "unet"
 ]
+
 
 # we only care about patching those specific mlflow methods
 @patch("mlflow.end_run")  # we can have only 1 start/end per test session

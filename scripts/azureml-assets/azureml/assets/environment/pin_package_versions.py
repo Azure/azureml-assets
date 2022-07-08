@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 import argparse
 import re
 from pathlib import Path
@@ -37,7 +41,6 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
             selection_prefs=selection_prefs,
             use_deprecated_html5lib=False
         )
-
 
 
 def get_latest_package_version(package: str,

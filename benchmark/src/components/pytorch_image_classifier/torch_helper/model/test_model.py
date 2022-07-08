@@ -5,10 +5,10 @@
 Creates a super simple 32x32 CNN model for testing.
 From the CIFAR10 tutorial https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 """
-import logging
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 
 class Net(nn.Module):
     def __init__(self, output_dimension):
@@ -23,11 +23,12 @@ class Net(nn.Module):
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
-        x = torch.flatten(x, 1) # flatten all dimensions except batch
+        x = torch.flatten(x, 1)  # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
+
 
 def load_test_model(
     model_arch: str, output_dimension: int = 1, pretrained: bool = True
