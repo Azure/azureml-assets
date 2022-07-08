@@ -31,7 +31,7 @@ settings:
 jobs:
   train:
     type: command
-    component: file:../../scripts/tensorflow_image_segmentation/spec.yaml
+    component: file:../../components/tensorflow_image_segmentation/spec.yaml
     compute: azureml:gpu-cluster
     resources:
       instance_count: 1 # number of nodes

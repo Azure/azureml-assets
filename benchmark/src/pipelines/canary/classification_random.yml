@@ -9,7 +9,7 @@ settings:
 jobs:
   generate:
     type: command
-    component: file:../../scripts/generate_random_image_classes/spec.yaml
+    component: file:../../components/generate_random_image_classes/spec.yaml
     compute: azureml:cpu-cluster
     inputs:
       classes: 4
@@ -20,7 +20,7 @@ jobs:
 
   train:
     type: command
-    component: file:../../scripts/pytorch_benchmark/image_classification_spec.yaml
+    component: file:../../components/pytorch_benchmark/image_classification_spec.yaml
     compute: azureml:gpu-cluster
     resources:
       instance_count: 1 # number of nodes
