@@ -10,7 +10,7 @@ from unittest.mock import patch
 import numpy as np
 from PIL import Image
 
-from scripts.pytorch_benchmark import image_classifier
+from components.pytorch_benchmark import image_classifier
 
 # IMPORTANT: see conftest.py for fixtures
 

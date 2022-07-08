@@ -4,7 +4,7 @@ Tests running the pytorch_benchmark/helper/model/ loader
 import pytest
 import torch
 
-from scripts.pytorch_benchmark.classification.model import (
+from components.pytorch_benchmark.classification.model import (
     MODEL_ARCH_LIST,
     get_model_metadata,
     load_model,
@@ -15,7 +15,7 @@ from scripts.pytorch_benchmark.classification.model import (
 
 @pytest.mark.parametrize("model_arch", MODEL_ARCH_LIST)
 def test_model_loader(model_arch):
-    """Tests src/scripts/pytorch_benchmark/helper/model/"""
+    """Tests src/components/pytorch_benchmark/helper/model/"""
     model_metadata = get_model_metadata(model_arch)
 
     assert model_metadata is not None
