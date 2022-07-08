@@ -3,6 +3,7 @@
 # ---------------------------------------------------------
 
 import argparse
+import sys
 from pathlib import Path
 
 COPYRIGHT = [
@@ -12,7 +13,7 @@ COPYRIGHT = [
 ]
 
 
-def main(testpath: Path):
+def test(testpath: Path) -> bool:
     badfiles = []
     ignore = [Path(p) for p in []]
 
@@ -42,4 +43,7 @@ if __name__ == '__main__':
     parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory to validate")
     args = parser.parse_args()
 
-    main(args.input_directory)
+    success = test(args.input_directory)
+
+    if not success:
+        sys.exit(1)

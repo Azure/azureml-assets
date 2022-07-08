@@ -4,6 +4,7 @@
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 from typing import Dict, List, Tuple
@@ -82,7 +83,7 @@ def inherit_flake_rules(rootpath: Path, testpath: Path) -> Dict[str, List[str]]:
     return flake_rules
 
 
-def test(rootpath: Path, testpath: Path):
+def test(rootpath: Path, testpath: Path) -> bool:
     test_path_flake_rules = inherit_flake_rules(rootpath, testpath)
 
     flake_rules_files = testpath.rglob(FLAKE_RULES_FILE)
@@ -123,4 +124,7 @@ if __name__ == '__main__':
     elif not input_directory.is_relative_to(root_directory):
         parser.error(f"{root_directory} is not a parent directory of {input_directory}")
 
-    test(root_directory, input_directory)
+    success = test(root_directory, input_directory)
+
+    if not success:
+        sys.exit(1)
