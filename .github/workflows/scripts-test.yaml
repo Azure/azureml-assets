@@ -1,13 +1,11 @@
 name: scripts-test
 
 on:
-  push:
-    branches:
-      - elesel/check-scripts
   pull_request:
     branches:
       - main
     paths:
+      - "**.py"
       - scripts/**
   workflow_dispatch:
 
