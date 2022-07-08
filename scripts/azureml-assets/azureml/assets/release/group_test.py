@@ -3,13 +3,11 @@
 # ---------------------------------------------------------
 import argparse
 from asyncio import subprocess
-import subprocess
 from pathlib import Path
-import azure.ai.ml 
+import azure.ai.ml
 from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
-import ruamel.yaml
-import sys
+import yaml
 import os
 
 parser = argparse.ArgumentParser()
@@ -28,9 +26,8 @@ workspace = args.workspace_name
 group_pre = ''
 group_post = ''
 
-yaml = ruamel.yaml.YAML()
 with open(tests_dir.__str__()+"/tests.yml") as fp:
-    data = yaml.load(fp)
+    data = yaml.load(fp, Loader=yaml.FullLoader)
     if 'pre' in data[test_group]:
         group_pre = tests_dir.__str__()+'/'+data[test_group]['pre']
     if 'post' in data[test_group]:
@@ -44,11 +41,11 @@ ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, 
 submitted_job_list = []
 succeeded_jobs = []
 failed_jobs = []
-if len(group_pre)>0:
+if len(group_pre) > 0:
     subprocess.check_call(f"python {group_pre}", env=my_env, shell=True)
 
 with open(tests_dir.__str__()+"/tests.yml") as fp:
-    data = yaml.load(fp)
+    data = yaml.load(fp, Loader=yaml.FullLoader)
     for job in data[test_group]['jobs']:
         if 'pre' in data[test_group]['jobs'][job]:
             print(f"Running pre script for {job}")
@@ -73,12 +70,10 @@ while(len(submitted_job_list)):
             submitted_job_list.remove(job)
         elif(returned_job.status == "Failed"):
             failed_jobs.append(returned_job.display_name)
-            submitted_job_list.remove(job)
-        
+            submitted_job_list.remove(job)  
 print(f"Totally {len(succeeded_jobs)+len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
 
 #
-if(len(failed_jobs)>0):
+if(len(failed_jobs) > 0):
     failed_job_str = ", ".join(failed_jobs)
     print(f"{len(failed_jobs)} jobs failed. {failed_job_str}.")
-

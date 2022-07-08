@@ -4,8 +4,6 @@
 from asyncio import subprocess
 import argparse
 from pathlib import Path
-import os
-import subprocess
 import yaml
 
 parser = argparse.ArgumentParser()
@@ -23,11 +21,12 @@ tests_dir = args.tests_directory
 component_dir = args.component_directory
 passed_version = args.version
 
+
 def test_files_location(dir: Path):
     test_jobs = []
     for x in dir.iterdir():
         print("processing test folder: " + x)
-        area_folder = dir /  x
+        area_folder = dir / x
         with open(area_folder / 'tests.yml') as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data:
@@ -35,12 +34,14 @@ def test_files_location(dir: Path):
                     test_jobs.append(area_folder + '/' + data[test_group]['jobs'][test_job]['job'])
     return test_jobs
 
+
 def process_asset_id(asset_id, full_version):
     list = asset_id.split("/")
     if len(full_version) >0:
         list[-1] += '-'+full_version
     list[-5] = registry_name
     return "/".join(list)
+
 
 def test_files_preprocess(test_jobs, full_version):
     for test_job in test_jobs:
@@ -58,13 +59,11 @@ def test_files_preprocess(test_jobs, full_version):
                 yaml.dump(data, file, default_flow_style=False)
 
 
-
 print("publishing assets")
-
 
 componentVersionWithBuildId = ""
 if registry_name != "azureml":
-    componentVersionWithBuildId=registry_name+"."+passed_version
+    componentVersionWithBuildId=registry_name + "." + passed_version
 print("generated componentVersionWithBuildId: " + componentVersionWithBuildId)
 print('starting locating test files')
 test_jobs = test_files_location(tests_dir)
@@ -79,7 +78,7 @@ for x in component_dir.iterdir():
         spec_file = data['spec']
         spec_path = Path(component_dir / x / spec_file)
         print("Does spec path exist: "+spec_path.is_file().__str__())
-        final_version =''
+        final_version = ''
         with open(spec_path) as fp:
             spec_data = data = yaml.load(fp, Loader=yaml.FullLoader)
             if registry_name != "azureml":
@@ -88,6 +87,6 @@ for x in component_dir.iterdir():
         print(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group} ")
         try:
             subprocess.check_call(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace}  --resource-group {resource_group}", shell=True)
-        except:
-            print(f"catch error creating component {x}")
+        except Exception as ex:
+            print(f"catch error creating component {x} with exception {ex}")
 print('All assets published')

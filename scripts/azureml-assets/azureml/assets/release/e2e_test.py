@@ -5,14 +5,11 @@ from asyncio import subprocess
 import argparse
 from pathlib import Path
 import os
-import sys
-import datetime
-import ruamel.yaml
+import yaml
 import subprocess
-from subprocess import Popen,PIPE
-import azure.ai.ml 
+from subprocess import PIPE
 from azure.ai.ml import MLClient
-from azure.ai.ml.entities import ComputeInstance, AmlCompute
+from azure.ai.ml.entities import AmlCompute
 from azure.identity import DefaultAzureCredential
 
 
@@ -53,12 +50,11 @@ print("Start executing E2E tests script")
 for area in os.listdir(tests_dir.__str__()):
     print(f"now processing area: {area}")
     final_report[area] = []
-    yaml = ruamel.yaml.YAML()
     with open(tests_dir.__str__()+'/'+area+"/tests.yml") as fp:
-        data = yaml.load(fp)
+        data = yaml.load(fp, Loader=yaml.FullLoader)
         for test_group in data:
             print(f"now processing test group: {test_group}")
-            p = subprocess.Popen("python3 -u group_test.py -i "+tests_dir.__str__()+"/"+area+" -g "+test_group+ " -s "+subscription_id+ " -r "+resource_group+ " -w "+workspace, stdout=PIPE, shell=True)
+            p = subprocess.Popen("python3 -u group_test.py -i "+ tests_dir.__str__() + "/" + area + " -g " + test_group + " -s " + subscription_id + " -r " + resource_group + " -w " + workspace, stdout=PIPE, shell=True)
             stdout = p.communicate()
             print(stdout[0].decode('utf-8'))
             final_report[area].append(stdout[0].decode('utf-8'))
@@ -70,7 +66,7 @@ red_flag = False
 for area in final_report:
     print(f"now printing report area: {area}")
     for group_test_report in final_report[area]:
-        print(area+ ': ' +group_test_report)
+        print(area + ': ' + group_test_report)
         if "failed" in group_test_report:
             red_flag = True
 

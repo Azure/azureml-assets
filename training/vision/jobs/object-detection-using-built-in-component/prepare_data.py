@@ -151,9 +151,10 @@ if __name__ == "__main__":
         ml_client = MLClient.from_config(credential)
     except Exception as ex:
         # Enter details of your AML workspace
-        subscription_id = os.environ.get('subscription_id') # args.subscription
-        resource_group = os.environ.get('resource_group') # args.resource_group
-        workspace = os.environ.get('workspace') # args.workspace_name
+        print(ex)
+        subscription_id = os.environ.get('subscription_id')
+        resource_group = os.environ.get('resource_group')
+        workspace = os.environ.get('workspace')
         ml_client = MLClient(credential, subscription_id, resource_group, workspace)
 
     upload_data_and_create_jsonl_files(ml_client=ml_client)

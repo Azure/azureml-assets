@@ -1,12 +1,11 @@
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
-from asyncio import subprocess
 from pathlib import Path
-import sys
 import yaml
 import shutil
 import argparse
+
 
 def copy_replace_dir(source: Path, dest: Path):
     # Delete destination directory
@@ -14,6 +13,7 @@ def copy_replace_dir(source: Path, dest: Path):
         shutil.rmtree(dest)
     # Copy source to destination directory
     shutil.copytree(source, dest)
+
 
 # Handle command-line args
 parser = argparse.ArgumentParser()
@@ -26,7 +26,7 @@ tests_folder = args.release_directory / "tests" / args.test_area
 Path.mkdir(tests_folder, parents=True, exist_ok=True)
 src_dir = args.input_dir
 src_yaml = src_dir / yaml_name
-shutil.copy(src_yaml , tests_folder / yaml_name)
+shutil.copy(src_yaml, tests_folder / yaml_name)
 
 with open(src_yaml) as fp:
     data = yaml.load(fp, Loader=yaml.FullLoader)
@@ -35,8 +35,8 @@ with open(src_yaml) as fp:
             target_path = tests_folder / include_file
             if (src_dir / include_file).is_dir():
                 print(f"copying folder: {include_file}")
-                copy_replace_dir(src_dir / include_file, target_path )
+                copy_replace_dir(src_dir / include_file, target_path)
             else:
                 print(f"copying file: {include_file}")
                 Path.mkdir(target_path .parent, parents=True, exist_ok=True)
-                shutil.copy(src_dir / include_file, target_path )
+                shutil.copy(src_dir / include_file, target_path)
