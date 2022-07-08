@@ -38,7 +38,7 @@ def main(testpath: Path):
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory containing scripts to validate")
+    parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory to validate")
     args = parser.parse_args()
 
     main(args.input_directory)

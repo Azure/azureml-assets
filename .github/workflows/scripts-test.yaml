@@ -44,6 +44,9 @@ jobs:
 
       - name: Check for copyright notice
         run: python $scripts_validation_dir/copyright_validation.py -i $scripts_dir
+      
+      - name: Check code health
+        run: python $scripts_validation_dir/code_health.py -i $scripts_dir
 
   test:
     name: Test scripts
