@@ -13,8 +13,6 @@ import time
 import json
 import logging
 import torch
-import mlflow
-import tempfile
 from torch.autograd import DeviceType
 
 
@@ -79,30 +77,36 @@ def json_trace_handler(dir_name: str, rank: int = 0):
 
         with open(file_name, "w") as out_file:
             for event in event_list:
-                out_file.write(json.dumps(
-                    {
-                        "key": event.key,
-                        "count": event.count,
-                        "node_id": event.node_id,
-                        "cpu_time_total": event.cpu_time_total,
-                        "cuda_time_total": event.cuda_time_total,
-                        "self_cpu_time_total": event.self_cpu_time_total,
-                        "self_cuda_time_total": event.self_cuda_time_total,
-                        "cpu_memory_usage": event.cpu_memory_usage,
-                        "cuda_memory_usage": event.cuda_memory_usage,
-                        "self_cpu_memory_usage": event.self_cpu_memory_usage,
-                        "self_cuda_memory_usage": event.self_cuda_memory_usage,
-                        "device_type": "CUDA" if event.device_type == DeviceType.CUDA else "CPU",
-                        "is_legacy": event.is_legacy,
-                        "flops": event.flops
-                    }
-                ))
+                out_file.write(
+                    json.dumps(
+                        {
+                            "key": event.key,
+                            "count": event.count,
+                            "node_id": event.node_id,
+                            "cpu_time_total": event.cpu_time_total,
+                            "cuda_time_total": event.cuda_time_total,
+                            "self_cpu_time_total": event.self_cpu_time_total,
+                            "self_cuda_time_total": event.self_cuda_time_total,
+                            "cpu_memory_usage": event.cpu_memory_usage,
+                            "cuda_memory_usage": event.cuda_memory_usage,
+                            "self_cpu_memory_usage": event.self_cpu_memory_usage,
+                            "self_cuda_memory_usage": event.self_cuda_memory_usage,
+                            "device_type": "CUDA"
+                            if event.device_type == DeviceType.CUDA
+                            else "CPU",
+                            "is_legacy": event.is_legacy,
+                            "flops": event.flops,
+                        }
+                    )
+                )
                 out_file.write("\n")
 
     return _handler_fn
 
 
-def export_stack_trace_handler(dir_name: str, rank: int = 0, metrics=["self_cuda_time_total"]):
+def export_stack_trace_handler(
+    dir_name: str, rank: int = 0, metrics=["self_cuda_time_total"]
+):
     """This handler can be used inside torch.profiler call to output
     tables in markdown format"""
 
@@ -131,6 +135,7 @@ def export_stack_trace_handler(dir_name: str, rank: int = 0, metrics=["self_cuda
 
 def composite_trace_handler(handler_list):
     """This can call multiple trace handlers inside one"""
+
     def _handler_fn(prof) -> None:
         for handler in handler_list:
             handler(prof)
@@ -145,35 +150,22 @@ def get_default_trace_handler(dir_name: str, rank: int = 0):
     trace_handlers = []
 
     # export in markdown
-    markdown_logs_export = os.path.join(
-        dir_name, "markdown"
-    )
-    trace_handlers.append(markdown_trace_handler(
-        markdown_logs_export, rank=rank
-    ))
+    markdown_logs_export = os.path.join(dir_name, "markdown")
+    trace_handlers.append(markdown_trace_handler(markdown_logs_export, rank=rank))
 
     # export in JSON
-    json_logs_export = os.path.join(
-        dir_name, "json"
-    )
-    trace_handlers.append(json_trace_handler(
-        json_logs_export, rank=rank
-    ))
+    json_logs_export = os.path.join(dir_name, "json")
+    trace_handlers.append(json_trace_handler(json_logs_export, rank=rank))
 
     # export stacks in txt
-    stacks_logs_export = os.path.join(
-        dir_name, "stacks"
-    )
-    stack_metrics = [
-        "self_cpu_time_total"
-    ]
+    stacks_logs_export = os.path.join(dir_name, "stacks")
+    stack_metrics = ["self_cpu_time_total"]
     if torch.cuda.is_available():
         stack_metrics.append("self_cuda_time_total")
 
-    trace_handlers.append(export_stack_trace_handler(
-        stacks_logs_export, rank=rank,
-        metrics=stack_metrics
-    ))
+    trace_handlers.append(
+        export_stack_trace_handler(stacks_logs_export, rank=rank, metrics=stack_metrics)
+    )
 
     # export tensorboard
     # NOTE: removed due to segfault in pytorch 1.11.0

@@ -15,31 +15,23 @@ Using your editor, search for those strings to get an idea of how to implement:
 import os
 import sys
 import time
-import json
 import logging
 import argparse
 import traceback
-from tqdm import tqdm
 from distutils.util import strtobool
 import random
-
 import mlflow
-
-SCRIPT_START_TIME = time.time()  # just to measure time to start
 
 # the long list of torch imports
 import torch
-import torch.nn as nn
-import torch.optim as optim
+
 # from torch.optim import lr_scheduler
-from torch.utils.data import DataLoader
 from torch.profiler import record_function
-from transformers.utils import ModelOutput
+
+SCRIPT_START_TIME = time.time()  # just to measure time to start
 
 # add path to here, if necessary
-SCRIPTS_ROOT = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..")
-)
+SCRIPTS_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if SCRIPTS_ROOT not in sys.path:
     logging.info(f"Adding {SCRIPTS_ROOT} to path")
     sys.path.append(str(SCRIPTS_ROOT))
@@ -85,12 +77,16 @@ def run(args):
     training_handler.start_profiler()
 
     # report the time and disk usage during this code block
-    with LogTimeBlock("build_image_datasets", enabled=training_handler.self_is_main_node), LogDiskIOBlock("build_image_datasets", enabled=training_handler.self_is_main_node):
+    with LogTimeBlock(
+        "build_image_datasets", enabled=training_handler.self_is_main_node
+    ), LogDiskIOBlock(
+        "build_image_datasets", enabled=training_handler.self_is_main_node
+    ):
         # build the image folder datasets
         train_dataset, valid_dataset, labels = build_image_datasets(
             train_images_dir=args.train_images,
             valid_images_dir=args.valid_images,
-            input_size=get_model_metadata(args.model_arch)['input_size']
+            input_size=get_model_metadata(args.model_arch)["input_size"],
         )
 
     # creates data loaders from datasets for distributed training
@@ -101,7 +97,9 @@ def run(args):
             try:
                 # creates the model architecture
                 model = load_model(
-                    args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
+                    args.model_arch,
+                    output_dimension=len(labels),
+                    pretrained=args.model_arch_pretrained,
                 )
                 break
             except Exception:

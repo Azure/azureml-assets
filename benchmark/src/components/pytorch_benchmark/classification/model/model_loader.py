@@ -25,19 +25,29 @@ MODEL_ARCH_MAP = {
     "densenet169": {"input_size": 224, "library": "torchvision"},
     "densenet201": {"input_size": 224, "library": "torchvision"},
     "densenet161": {"input_size": 224, "library": "torchvision"},
-
     # Swin HuggingFace models
     "microsoft/swin-tiny-patch4-window7-224": {"input_size": 224, "library": "swin"},
     "microsoft/swin-small-patch4-window7-224": {"input_size": 224, "library": "swin"},
     "microsoft/swin-base-patch4-window7-224": {"input_size": 224, "library": "swin"},
-    "microsoft/swin-base-patch4-window7-224-in22k": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-base-patch4-window7-224-in22k": {
+        "input_size": 224,
+        "library": "swin",
+    },
     "microsoft/swin-large-patch4-window7-224": {"input_size": 224, "library": "swin"},
-    "microsoft/swin-large-patch4-window7-224-in22k": {"input_size": 224, "library": "swin"},
+    "microsoft/swin-large-patch4-window7-224-in22k": {
+        "input_size": 224,
+        "library": "swin",
+    },
     "microsoft/swin-base-patch4-window12-384": {"input_size": 384, "library": "swin"},
-    "microsoft/swin-base-patch4-window12-384-in22k": {"input_size": 384, "library": "swin"},
+    "microsoft/swin-base-patch4-window12-384-in22k": {
+        "input_size": 384,
+        "library": "swin",
+    },
     "microsoft/swin-large-patch4-window12-384": {"input_size": 384, "library": "swin"},
-    "microsoft/swin-large-patch4-window12-384-in22k": {"input_size": 384, "library": "swin"},
-
+    "microsoft/swin-large-patch4-window12-384-in22k": {
+        "input_size": 384,
+        "library": "swin",
+    },
     # test model (super small)
     "test": {"input_size": 32, "library": "test"},
 }
