@@ -5,12 +5,14 @@ on:
     branches:
       - main
     paths:
+      - "**.py"
       - scripts/**
   workflow_dispatch:
 
 env:
   scripts_dir: scripts
   scripts_azureml_assets_dir: scripts/azureml-assets
+  scripts_validation_dir: scripts/validation
   test_dir: test
   resources_dir: test/resources
   pytest_reports_dir: pytest
@@ -23,9 +25,34 @@ defaults:
     shell: bash
 
 jobs:
+  check-syntax:
+    name: Check syntax
+    runs-on: ubuntu-latest 
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      
+      - name: Use Python 3.8 or newer
+        uses: actions/setup-python@v3
+        with:
+          python-version: '>=3.8'
+      
+      - name: Install dependencies
+        run: pip install -r $scripts_dir/script-check-requirements.txt
+
+      - name: Check for copyright notice
+        run: python $scripts_validation_dir/copyright_validation.py -i $scripts_dir $test_dir
+      
+      - name: Check code health
+        run: python $scripts_validation_dir/code_health.py -i .
+
   test:
     name: Test scripts
     runs-on: ubuntu-latest
+    needs: check-syntax
     environment: BuiltinRegistryDev
 
     steps:

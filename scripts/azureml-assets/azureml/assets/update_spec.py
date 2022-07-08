@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 import argparse
 from git import Repo
 from pathlib import Path
@@ -23,7 +27,7 @@ def create_template_data(asset_config: assets.AssetConfig, release_directory_roo
         # Determine build context path in repo
         asset_release_subdir = util.get_asset_release_dir(asset_config, release_directory_root)
         asset_release_dir = asset_release_subdir.relative_to(release_directory_root)
-        
+
         # Add to data
         repo = Repo(release_directory_root)
         remote_url = repo.remotes.origin.url

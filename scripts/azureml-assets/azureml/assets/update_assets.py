@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 import argparse
 import shutil
 import tempfile
@@ -111,7 +115,7 @@ def update_asset(asset_config: assets.AssetConfig,
             pin_env_files(temp_env_config)
 
         temp_asset_dir = util.get_asset_output_dir(asset_config=asset_config, output_directory_root=temp_dir_path)
-        
+
         # Compare temporary version with one in release
         if check_contents:
             assets.update_spec(temp_asset_config, version=release_version)
