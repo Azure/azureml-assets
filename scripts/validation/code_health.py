@@ -25,7 +25,7 @@ def run_flake8(testpath: Path, flake_rules: Dict[str, List[str]]) -> Tuple[int, 
     cmd = [
         "flake8",
         f"--max-line-length={max_line_length}",
-        testpath
+        str(testpath)
     ]
     if exclude:
         cmd.insert(1, "--exclude={}".format(",".join(exclude)))
@@ -86,16 +86,16 @@ def inherit_flake_rules(rootpath: Path, testpath: Path) -> Dict[str, List[str]]:
 def test(rootpath: Path, testpath: Path) -> bool:
     test_path_flake_rules = inherit_flake_rules(rootpath, testpath)
 
-    flake_rules_files = testpath.rglob(FLAKE_RULES_FILE)
-    custom = [p.parent for p in flake_rules_files]
+    flake_rules_files = list(testpath.rglob(FLAKE_RULES_FILE))
+    dirs = [p.parent for p in flake_rules_files]
 
-    if testpath not in custom:
-        custom.append(testpath)
+    if not testpath == dirs:
+        dirs.insert(0, testpath)
 
     output = []
-    for path in custom:
+    for path in dirs:
         flake_rules = {}
-        flake_rules[EXCLUDE] = [p.parent for p in flake_rules_files if p.parent != path]
+        flake_rules[EXCLUDE] = [str(f.parent) for f in flake_rules_files if f.parent != path]
         inherited_rules = inherit_flake_rules(testpath, path)
         flake_rules = combine_rules(combine_rules(flake_rules, test_path_flake_rules),
                                     combine_rules(inherited_rules, load_rules(path)))

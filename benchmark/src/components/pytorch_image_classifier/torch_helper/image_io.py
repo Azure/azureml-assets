@@ -7,10 +7,8 @@ using the COCO dataset https://cocodataset.org/.
 """
 import os
 import logging
-import csv
 import glob
 
-import torch
 import torchvision
 
 
@@ -22,13 +20,13 @@ def find_image_subfolder(current_root):
 
     Args:
         current_root (str): a given directory
-    
+
     Returns:
         image_folder (str): the subfolder containing multiple subdirs
     """
     if not os.path.isdir(current_root):
         raise FileNotFoundError(f"While identifying the image folder, provided current_root={current_root} is not a directory.")
-    
+
     sub_directories = glob.glob(os.path.join(current_root, "*"))
     if len(sub_directories) == 1:
         # let's do it recursively

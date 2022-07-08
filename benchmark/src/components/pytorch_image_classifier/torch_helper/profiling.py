@@ -10,8 +10,9 @@ import logging
 import torch
 import mlflow
 import tempfile
-from torch.profiler import profile, record_function, ProfilerActivity
+from torch.profiler import ProfilerActivity
 from typing import Any
+
 
 def markdown_trace_handler(dir_name: str, rank: int = 0):
     """This handler can be used inside torch.profiler call to output
@@ -58,7 +59,7 @@ def composite_trace_handler(handler_list):
     return _handler_fn
 
 
-def export_stack_trace_handler(dir_name: str, rank: int=0, metrics=["self_cuda_time_total"]):
+def export_stack_trace_handler(dir_name: str, rank: int = 0, metrics=["self_cuda_time_total"]):
     """This handler can be used inside torch.profiler call to output
     tables in markdown format"""
 
@@ -117,7 +118,7 @@ class PyTorchProfilerHandler:
             ## profiler activities CPU/GPU
             activities = [ProfilerActivity.CPU]
             if torch.cuda.is_available():
-                self.logger.info(f"Enabling CUDA in profiler.")
+                self.logger.info("Enabling CUDA in profiler.")
                 activities.append(ProfilerActivity.CUDA)
 
             ## handlers for exporting profile at each step
@@ -170,13 +171,13 @@ class PyTorchProfilerHandler:
                 with_flops=True,
                 profile_memory=True,
                 activities=activities,
-                with_stack=True, # needed to export stacks
+                with_stack=True,  # needed to export stacks
                 on_trace_ready=trace_handler,
             )
             self.profiler.start()
 
         else:
-            self.logger.info(f"Profiler not started (enabled=False).")
+            self.logger.info("Profiler not started (enabled=False).")
             self.profiler = None
 
             # forcefully turn off profiling to be sure
@@ -188,7 +189,7 @@ class PyTorchProfilerHandler:
     def stop_profiler(self) -> None:
         """Stops the pytorch profiler and logs the outputs using mlflow"""
         if self.profiler:
-            self.logger.info(f"Stopping profiler.")
+            self.logger.info("Stopping profiler.")
             self.profiler.stop()
 
             # log via mlflow
@@ -207,6 +208,7 @@ class PyTorchProfilerHandler:
             self.logger.info(
                 "Not stopping profiler as it was not started in the first place."
             )
+
 
 class LogTimeBlock(object):
     """ This class should be used to time a code block.
@@ -240,18 +242,18 @@ class LogTimeBlock(object):
         """ Starts the timer, gets triggered at beginning of code block """
         if not self.enabled:
             return
-        self.start_time = time.time() # starts "timer"
+        self.start_time = time.time()  # starts "timer"
 
     def __exit__(self, exc_type, value, traceback):
         """ Stops the timer and stores accordingly
         gets triggered at beginning of code block.
-        
+
         Note:
             arguments are by design for with statements.
         """
         if not self.enabled:
             return
-        run_time = time.time() - self.start_time # stops "timer"
+        run_time = time.time() - self.start_time  # stops "timer"
 
         self._logger.info(f"--- time elapsed: {self.name} = {run_time:2f} s [step={self.step}]")
         mlflow.log_metric(self.name + ".time", run_time)
@@ -271,7 +273,7 @@ class LogDiskIOBlock(object):
 
         # internal variables
         self.name = name
-        self.process_id = os.getpid() # focus on current process
+        self.process_id = os.getpid()  # focus on current process
         self.start_time = None
         self.start_disk_counters = None
         self._logger = logging.getLogger(__name__)
@@ -292,7 +294,7 @@ class LogDiskIOBlock(object):
     def __exit__(self, exc_type, value, traceback):
         """ Stops the timer and stores accordingly
         gets triggered at beginning of code block.
-        
+
         Note:
             arguments are by design for with statements.
         """
@@ -320,7 +322,7 @@ class LogDiskIOBlock(object):
 class LogTimeOfIterator():
     """This class is intended to "wrap" an existing Iterator
     and log metrics for each next() call"""
-    def __init__(self, wrapped_sequence:Any, name:str, enabled:bool=True, async_collector:dict=None):
+    def __init__(self, wrapped_sequence: Any, name: str, enabled: bool = True, async_collector: dict = None):
         self.wrapped_sequence = wrapped_sequence
         self.wrapped_iterator = None
 
@@ -332,7 +334,7 @@ class LogTimeOfIterator():
         self.async_collector = async_collector
 
         self._logger = logging.getLogger(__name__)
-    
+
     def __iter__(self):
         """Creates the iterator"""
         if self.enabled:

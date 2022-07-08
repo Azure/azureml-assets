@@ -43,10 +43,10 @@ jobs:
         run: pip install -r $scripts_dir/script-check-requirements.txt
 
       - name: Check for copyright notice
-        run: python $scripts_validation_dir/copyright_validation.py -i $scripts_dir
+        run: python $scripts_validation_dir/copyright_validation.py -i $scripts_dir $test_dir
       
       - name: Check code health
-        run: python $scripts_validation_dir/code_health.py -i $scripts_dir
+        run: python $scripts_validation_dir/code_health.py -i .
 
   test:
     name: Test scripts

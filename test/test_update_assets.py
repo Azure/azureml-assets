@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 import pytest
 import shutil
 import tempfile
@@ -31,7 +35,7 @@ def test_validate_assets(test_subdir: str, create_tag: bool):
         temp_release_path = Path(temp_dir1)
         temp_output_path = Path(temp_dir2)
         temp_expected_path = Path(temp_dir3)
-        
+
         # Create fake release branch
         shutil.copytree(release_dir, temp_release_path, dirs_exist_ok=True)
         repo = Repo.init(temp_release_path)
@@ -54,8 +58,8 @@ def test_validate_assets(test_subdir: str, create_tag: bool):
             shutil.copytree(expected_dir, temp_expected_path, dirs_exist_ok=True)
             expected_asset_config = util.find_assets(input_dirs=temp_expected_path)[0]
             assets.pin_env_files(expected_asset_config.environment_config_as_object())
-        
-        assets.update_assets(input_dirs=main_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME, 
+
+        assets.update_assets(input_dirs=main_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME,
                              release_directory_root=temp_release_path, copy_only=False, skip_unreleased=False,
                              output_directory_root=temp_output_path)
 

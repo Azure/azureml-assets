@@ -18,10 +18,7 @@ import json
 import logging
 import argparse
 import traceback
-from tqdm import tqdm
 from distutils.util import strtobool
-import random
-import tempfile
 import math
 
 import mlflow
@@ -37,11 +34,11 @@ if COMPONENT_ROOT not in sys.path:
     logging.info(f"Adding {COMPONENT_ROOT} to path")
     sys.path.append(str(COMPONENT_ROOT))
 
-from tf_helper.profiling import LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
+from tf_helper.profiling import LogTimeBlock, LogDiskIOBlock
 from tf_helper.profiling import CustomCallbacks
 
 from tf_helper.image_io import ImageAndMaskSequenceDataset
-from tf_helper.model import get_model_metadata, load_model
+from tf_helper.model import load_model
 
 SCRIPT_START_TIME = time.time()
 
@@ -51,7 +48,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
     if parser is None:
         parser = argparse.ArgumentParser()
 
-    group = parser.add_argument_group(f"Training Inputs")
+    group = parser.add_argument_group("Training Inputs")
     group.add_argument(
         "--train_images",
         type=str,
@@ -99,7 +96,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="path to folder containing segmentation masks",
     )
 
-    group = parser.add_argument_group(f"Training Outputs")
+    group = parser.add_argument_group("Training Outputs")
     group.add_argument(
         "--model_output",
         type=str,
@@ -122,7 +119,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="Name to register final model in MLFlow",
     )
 
-    group = parser.add_argument_group(f"Data Loading Parameters")
+    group = parser.add_argument_group("Data Loading Parameters")
     group.add_argument(
         "--batch_size",
         type=int,
@@ -153,7 +150,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="Use cache either on DISK or in MEMORY",
     )
 
-    group = parser.add_argument_group(f"Model/Training Parameters")
+    group = parser.add_argument_group("Model/Training Parameters")
     group.add_argument(
         "--model_arch",
         type=str,
@@ -198,7 +195,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
     #     help="Learning rate of optimizer",
     # )
 
-    group = parser.add_argument_group(f"Training Backend Parameters")
+    group = parser.add_argument_group("Training Backend Parameters")
     group.add_argument(
         "--enable_profiling",
         type=strtobool,
@@ -315,10 +312,10 @@ class TensorflowDistributedModelTrainingSequence:
 
         # Reduce number of GPUs artificially if requested
         if args.disable_cuda:
-            self.logger.warning(f"CUDA disabled because --disable_cuda True")
+            self.logger.warning("CUDA disabled because --disable_cuda True")
             self.gpus = 0
         elif args.num_gpus == 0:
-            self.logger.warning(f"CUDA disabled because --num_gpus=0")
+            self.logger.warning("CUDA disabled because --num_gpus=0")
             self.gpus = 0
         elif args.num_gpus and args.num_gpus > 0:
             # TODO: force down the number of gpus
@@ -437,7 +434,7 @@ class TensorflowDistributedModelTrainingSequence:
             tf.config.set_visible_devices(devices=self.devices)
 
             # finally we can initialize the strategy
-            self.logger.info(f"Initialize MultiWorkerMirroredStrategy()...")
+            self.logger.info("Initialize MultiWorkerMirroredStrategy()...")
             self.strategy = tf.distribute.MultiWorkerMirroredStrategy(
                 communication_options=communication_options
             )
@@ -460,7 +457,7 @@ class TensorflowDistributedModelTrainingSequence:
         elif self.training_config.distributed_strategy == "onedevicestrategy":
             self.devices = [f"GPU:{i}" for i in range(self.gpus)]
             self.logger.info(
-                f"Using OneDeviceStrategy(devices=GPU:0) as distributed_strategy"
+                "Using OneDeviceStrategy(devices=GPU:0) as distributed_strategy"
             )
             self.strategy = tf.distribute.OneDeviceStrategy(device="GPU:0")
             self.training_config.distributed_strategy = self.strategy.__class__.__name__
@@ -550,7 +547,7 @@ class TensorflowDistributedModelTrainingSequence:
             f"Validation dataset is set (batch_size{self.training_config.batch_size})"
         )
 
-        ### 3. Set the TRAINING dataset for distributed training using experimental_distribute_dataset
+        ### 3. Set the TRAINING dataset for distributed training using experimental_distribute_dataset ###
         # see https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/MultiWorkerMirroredStrategy#experimental_distribute_dataset
         if (
             self.training_config.distributed_strategy == "MirroredStrategy"

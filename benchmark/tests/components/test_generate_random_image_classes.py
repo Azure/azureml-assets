@@ -3,17 +3,13 @@ Tests running the generate_random_image_classes/run.py script.
 """
 import os
 import sys
-import tempfile
-import pytest
 from unittest.mock import patch
 import glob
-
-import numpy as np
-from PIL import Image
 
 from components.generate_random_image_classes import run
 
 # IMPORTANT: see conftest.py for fixtures
+
 
 def test_generate_random_image_classes(temporary_dir):
     """Tests src/components/generate_random_image_classes/run.py"""
@@ -38,9 +34,9 @@ def test_generate_random_image_classes(temporary_dir):
 
     assert os.path.isdir(random_train_images)
     assert len(
-        [ file_path for file_path in glob.glob(random_train_images + "/**", recursive=True) if os.path.isfile(file_path) ]
+        [file_path for file_path in glob.glob(random_train_images + "/**", recursive=True) if os.path.isfile(file_path)]
     ) == 400
     assert os.path.isdir(random_valid_images)
     assert len(
-        [ file_path for file_path in glob.glob(random_valid_images + "/**", recursive=True) if os.path.isfile(file_path) ]
+        [file_path for file_path in glob.glob(random_valid_images + "/**", recursive=True) if os.path.isfile(file_path)]
     ) == 20
