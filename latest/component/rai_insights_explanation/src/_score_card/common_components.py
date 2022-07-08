@@ -213,7 +213,7 @@ def get_fi_bar_plot(data):
         x_data,
         tickappend=tickappend,
         xrange=x_range,
-        x_title="Feature Importance",
+        x_title=x_title,
     )
 
 

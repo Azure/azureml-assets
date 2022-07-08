@@ -7,13 +7,12 @@ import json
 import logging
 import os
 import shutil
-from typing import Any
 
 from azureml.core import Run
 
-from responsibleai import RAIInsights, __version__ as responsibleai_version
+from responsibleai import RAIInsights
 
-from constants import DashboardInfo, PropertyKeyValues
+from constants import DashboardInfo
 from arg_helpers import get_from_args, json_empty_is_none_parser
 from rai_component_utilities import load_dataset, fetch_model_id, load_mlflow_model
 

@@ -3,7 +3,6 @@
 # ---------------------------------------------------------
 
 import argparse
-import json
 import logging
 
 from responsibleai import RAIInsights

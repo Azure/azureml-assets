@@ -3,7 +3,7 @@ import plotly.io as pio
 import base64
 
 from statistics import mean
-from domonic.html import div, h3, h2, h1, p, img, table, td, th, tr, thead, tbody
+from domonic.html import div, h3, h2, p, img, table, td, th, tr, thead, tbody
 from . import common_components as cc
 
 metric_name_lookup = {
