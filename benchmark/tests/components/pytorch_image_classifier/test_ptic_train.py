@@ -4,7 +4,6 @@ on a randomly generated small dataset.
 """
 import os
 import sys
-import tempfile
 import pytest
 from unittest.mock import patch
 
@@ -12,7 +11,6 @@ import numpy as np
 from PIL import Image
 
 from components.pytorch_image_classifier import train
-from components.pytorch_image_classifier.torch_helper.model import MODEL_ARCH_LIST
 
 # IMPORTANT: see conftest.py for fixtures
 
@@ -47,6 +45,7 @@ TEST_MODEL_ARCH_LIST = [
     "resnet18",
     "resnet34",
 ]
+
 
 # we only care about patching those specific mlflow methods
 @patch("mlflow.end_run")  # we can have only 1 start/end per test session
@@ -141,9 +140,9 @@ def test_components_pytorch_image_classifier_second_of_two_nodes(
     random_image_in_folder_classes,
 ):
     """Tests src/components/pytorch_image_classifier/train.py"""
-    model_dir = os.path.join(
-        temporary_dir, "pytorch_image_classifier_distributed_model"
-    )
+    # model_dir = os.path.join(
+    #     temporary_dir, "pytorch_image_classifier_distributed_model"
+    # )
 
     torch_ddp_mock.side_effect = lambda model: model  # ddp would return just the model
 

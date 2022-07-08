@@ -6,12 +6,15 @@ This script provides some helper code to help with pytorch profiling.
 """
 import os
 import time
+import json
 import logging
 import torch
 import mlflow
 import tempfile
-from torch.profiler import profile, record_function, ProfilerActivity
+from torch.profiler import ProfilerActivity
 from typing import Any
+from torch.autograd import DeviceType
+
 
 def markdown_trace_handler(dir_name: str, rank: int = 0):
     """This handler can be used inside torch.profiler call to output
@@ -27,7 +30,7 @@ def markdown_trace_handler(dir_name: str, rank: int = 0):
         # Note: trying to identify a unique name for the file
         file_name = os.path.join(
             dir_name,
-            f"stacks_rank{rank}_step{prof.step_num}_t{int(time.time() * 1000)}.ms",
+            f"stacks_rank{rank}_step{prof.step_num}_t{int(time.time() * 1000)}.md",
         )
 
         logging.getLogger(__name__).info(
@@ -49,6 +52,54 @@ def markdown_trace_handler(dir_name: str, rank: int = 0):
     return _handler_fn
 
 
+def json_trace_handler(dir_name: str, rank: int = 0):
+    """This handler can be used inside torch.profiler call to output
+    tables in JSON format"""
+
+    def _handler_fn(prof) -> None:
+        if not os.path.isdir(dir_name):
+            try:
+                os.makedirs(dir_name, exist_ok=True)
+            except Exception:
+                raise RuntimeError("Can't create directory: " + dir_name)
+
+        # Note: trying to identify a unique name for the file
+        file_name = os.path.join(
+            dir_name,
+            f"stacks_rank{rank}_step{prof.step_num}_t{int(time.time() * 1000)}.json",
+        )
+
+        logging.getLogger(__name__).info(
+            f"Exporting profiler trace as json at {file_name}"
+        )
+
+        event_list = prof.key_averages()
+
+        with open(file_name, "w") as out_file:
+            for event in event_list:
+                out_file.write(json.dumps(
+                    {
+                        "key": event.key,
+                        "count": event.count,
+                        "node_id": event.node_id,
+                        "cpu_time_total": event.cpu_time_total,
+                        "cuda_time_total": event.cuda_time_total,
+                        "self_cpu_time_total": event.self_cpu_time_total,
+                        "self_cuda_time_total": event.self_cuda_time_total,
+                        "cpu_memory_usage": event.cpu_memory_usage,
+                        "cuda_memory_usage": event.cuda_memory_usage,
+                        "self_cpu_memory_usage": event.self_cpu_memory_usage,
+                        "self_cuda_memory_usage": event.self_cuda_memory_usage,
+                        "device_type": "CUDA" if event.device_type == DeviceType.CUDA else "CPU",
+                        "is_legacy": event.is_legacy,
+                        "flops": event.flops
+                    }
+                ))
+                out_file.write("\n")
+
+    return _handler_fn
+
+
 def composite_trace_handler(handler_list):
     """This can call multiple trace handlers inside one"""
     def _handler_fn(prof) -> None:
@@ -58,7 +109,7 @@ def composite_trace_handler(handler_list):
     return _handler_fn
 
 
-def export_stack_trace_handler(dir_name: str, rank: int=0, metrics=["self_cuda_time_total"]):
+def export_stack_trace_handler(dir_name: str, rank: int = 0, metrics=["self_cuda_time_total"]):
     """This handler can be used inside torch.profiler call to output
     tables in markdown format"""
 
@@ -117,7 +168,7 @@ class PyTorchProfilerHandler:
             ## profiler activities CPU/GPU
             activities = [ProfilerActivity.CPU]
             if torch.cuda.is_available():
-                self.logger.info(f"Enabling CUDA in profiler.")
+                self.logger.info("Enabling CUDA in profiler.")
                 activities.append(ProfilerActivity.CUDA)
 
             ## handlers for exporting profile at each step
@@ -130,6 +181,14 @@ class PyTorchProfilerHandler:
             )
             trace_handlers.append(markdown_trace_handler(
                 markdown_logs_export, rank=self.rank
+            ))
+
+            # export in JSON
+            json_logs_export = os.path.join(
+                self.profiler_output_tmp_dir.name, "json"
+            )
+            trace_handlers.append(json_trace_handler(
+                json_logs_export, rank=self.rank
             ))
 
             # export stacks in txt
@@ -170,21 +229,25 @@ class PyTorchProfilerHandler:
                 with_flops=True,
                 profile_memory=True,
                 activities=activities,
-                with_stack=True, # needed to export stacks
+                with_stack=True,  # needed to export stacks
                 on_trace_ready=trace_handler,
             )
             self.profiler.start()
 
         else:
-            self.logger.info(f"Profiler not started (enabled=False).")
+            self.logger.info("Profiler not started (enabled=False).")
             self.profiler = None
+
+            # forcefully turn off profiling to be sure
+            torch.autograd.profiler.profile(False)
+            torch.autograd.profiler.emit_nvtx(False)
 
         return self.profiler
 
     def stop_profiler(self) -> None:
         """Stops the pytorch profiler and logs the outputs using mlflow"""
         if self.profiler:
-            self.logger.info(f"Stopping profiler.")
+            self.logger.info("Stopping profiler.")
             self.profiler.stop()
 
             # log via mlflow
@@ -203,6 +266,7 @@ class PyTorchProfilerHandler:
             self.logger.info(
                 "Not stopping profiler as it was not started in the first place."
             )
+
 
 class LogTimeBlock(object):
     """ This class should be used to time a code block.
@@ -236,18 +300,18 @@ class LogTimeBlock(object):
         """ Starts the timer, gets triggered at beginning of code block """
         if not self.enabled:
             return
-        self.start_time = time.time() # starts "timer"
+        self.start_time = time.time()  # starts "timer"
 
     def __exit__(self, exc_type, value, traceback):
         """ Stops the timer and stores accordingly
         gets triggered at beginning of code block.
-        
+
         Note:
             arguments are by design for with statements.
         """
         if not self.enabled:
             return
-        run_time = time.time() - self.start_time # stops "timer"
+        run_time = time.time() - self.start_time  # stops "timer"
 
         self._logger.info(f"--- time elapsed: {self.name} = {run_time:2f} s [step={self.step}]")
         mlflow.log_metric(self.name + ".time", run_time)
@@ -267,7 +331,7 @@ class LogDiskIOBlock(object):
 
         # internal variables
         self.name = name
-        self.process_id = os.getpid() # focus on current process
+        self.process_id = os.getpid()  # focus on current process
         self.start_time = None
         self.start_disk_counters = None
         self._logger = logging.getLogger(__name__)
@@ -288,7 +352,7 @@ class LogDiskIOBlock(object):
     def __exit__(self, exc_type, value, traceback):
         """ Stops the timer and stores accordingly
         gets triggered at beginning of code block.
-        
+
         Note:
             arguments are by design for with statements.
         """
@@ -316,7 +380,7 @@ class LogDiskIOBlock(object):
 class LogTimeOfIterator():
     """This class is intended to "wrap" an existing Iterator
     and log metrics for each next() call"""
-    def __init__(self, wrapped_sequence:Any, name:str, enabled:bool=True, async_collector:dict=None):
+    def __init__(self, wrapped_sequence: Any, name: str, enabled: bool = True, async_collector: dict = None):
         self.wrapped_sequence = wrapped_sequence
         self.wrapped_iterator = None
 
@@ -328,7 +392,7 @@ class LogTimeOfIterator():
         self.async_collector = async_collector
 
         self._logger = logging.getLogger(__name__)
-    
+
     def __iter__(self):
         """Creates the iterator"""
         if self.enabled:

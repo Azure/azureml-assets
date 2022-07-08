@@ -12,6 +12,7 @@ from components.pytorch_image_classifier.torch_helper.model import (
 
 # IMPORTANT: see conftest.py for fixtures
 
+
 @pytest.mark.parametrize("model_arch", MODEL_ARCH_LIST)
 def test_model_loader(model_arch):
     """Tests src/components/pytorch_image_classifier/model/"""
