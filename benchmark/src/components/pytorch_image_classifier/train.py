@@ -16,7 +16,6 @@ import os
 import sys
 import time
 import json
-import pickle
 import logging
 import argparse
 import traceback
@@ -26,14 +25,13 @@ import random
 
 import mlflow
 
-SCRIPT_START_TIME = time.time() # just to measure time to start
+SCRIPT_START_TIME = time.time()  # just to measure time to start
 
 # the long list of torch imports
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torchvision
-from torch.optim import lr_scheduler
+# from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 from torch.profiler import record_function
 from transformers.utils import ModelOutput
@@ -47,7 +45,7 @@ if COMPONENT_ROOT not in sys.path:
     sys.path.append(str(COMPONENT_ROOT))
 
 # internal imports
-from torch_helper.model import MODEL_ARCH_LIST, get_model_metadata, load_model
+from torch_helper.model import get_model_metadata, load_model
 from torch_helper.image_io import build_image_datasets
 from torch_helper.profiling import PyTorchProfilerHandler, LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
 from torch_helper.nvml import get_nvml_params
@@ -155,7 +153,7 @@ class PyTorchDistributedModelTrainingSequence:
             )
             self.device = torch.device(self.local_rank)
         else:
-            self.logger.info(f"Setting up torch.device for cpu")
+            self.logger.info("Setting up torch.device for cpu")
             self.device = torch.device("cpu")
 
         if self.multinode_available:
@@ -169,7 +167,7 @@ class PyTorchDistributedModelTrainingSequence:
                 world_size=self.world_size,
             )
         else:
-            self.logger.info(f"Not running in multinode, so not initializing process group.")
+            self.logger.info("Not running in multinode, so not initializing process group.")
 
         # DISTRIBUTED: in distributed mode, you want to report parameters
         # only from main process (rank==0) to avoid conflict
@@ -183,12 +181,12 @@ class PyTorchDistributedModelTrainingSequence:
                 "disable_cuda": self.training_config.disable_cuda,
                 "distributed": self.multinode_available,
                 "distributed_backend": self.distributed_backend,
-                "distributed_sampling" : self.training_config.distributed_sampling,
+                "distributed_sampling": self.training_config.distributed_sampling,
 
                 # data loading params
                 "batch_size": self.dataloading_config.batch_size,
                 "num_workers": self.dataloading_config.num_workers,
-                "cache": False, # not implemented in PyTorch, but logging for consistency
+                "cache": False,  # not implemented in PyTorch, but logging for consistency
                 "cpu_count": self.cpu_count,
                 "prefetch_factor": self.dataloading_config.prefetch_factor,
                 "persistent_workers": self.dataloading_config.persistent_workers,
@@ -239,7 +237,7 @@ class PyTorchDistributedModelTrainingSequence:
                 training_dataset,
                 num_replicas=self.world_size,
                 rank=self.world_rank,
-                seed=0, # default is 0
+                seed=0,  # default is 0
                 shuffle=True
             )
         elif self.training_config.distributed_sampling == "subsetrandomsampler":
@@ -247,18 +245,18 @@ class PyTorchDistributedModelTrainingSequence:
             # Then we shuffle it using SubsetRandomSampler
             self.training_data_sampler = torch.utils.data.SubsetRandomSampler(
                 # subset of indices for THIS process using round robin
-                [ i for i in range(len(training_dataset)) if i % self.world_size == self.world_rank ]
+                [i for i in range(len(training_dataset)) if i % self.world_size == self.world_rank]
             )
         else:
             raise NotImplementedError(f"--distributed_sampling {self.training_config.distributed_sampling} is not implemented.")
 
         # logging into mlflow
-        data_params["train_dataset_length"] = len(training_dataset) # length of the entire dataset
-        data_params["train_dataset_shard_length"] = len(self.training_data_sampler) # length of the dataset for this process/node
+        data_params["train_dataset_length"] = len(training_dataset)  # length of the entire dataset
+        data_params["train_dataset_shard_length"] = len(self.training_data_sampler)  # length of the dataset for this process/node
 
         # setting up DataLoader with the right arguments
         optional_data_loading_kwargs = {}
-        
+
         if self.dataloading_config.num_workers > 0:
             # NOTE: this option _ONLY_ applies if num_workers > 0
             # or else DataLoader will except
@@ -275,7 +273,7 @@ class PyTorchDistributedModelTrainingSequence:
             # all other args
             **optional_data_loading_kwargs
         )
-        data_params["steps_per_epoch"] = len(self.training_data_loader) # logging that into mlflow
+        data_params["steps_per_epoch"] = len(self.training_data_loader)  # logging that into mlflow
 
         # DISTRIBUTED: we don't need a sampler for validation set
         # it is used as-is in every node/process
@@ -286,13 +284,12 @@ class PyTorchDistributedModelTrainingSequence:
             pin_memory=self.dataloading_config.pin_memory,
         )
 
-        data_params["num_classes"] = len(labels) # logging that into mlflow
+        data_params["num_classes"] = len(labels)  # logging that into mlflow
 
         self.logger.info(f"MLFLOW: data_params={data_params}")
         if self.self_is_main_node:
             # MLFLOW: report relevant parameters using mlflow
             mlflow.log_params(data_params)
-
 
     def setup_model(self, model):
         """Configures a model for training."""
@@ -304,7 +301,7 @@ class PyTorchDistributedModelTrainingSequence:
 
         # DISTRIBUTED: the model needs to be wrapped in a DistributedDataParallel class
         if self.multinode_available:
-            self.logger.info(f"Setting up model to use DistributedDataParallel.")
+            self.logger.info("Setting up model to use DistributedDataParallel.")
             self.model = torch.nn.parallel.DistributedDataParallel(self.model)
             model_params["distributed_strategy"] = "DistributedDataParallel"
         else:
@@ -315,7 +312,7 @@ class PyTorchDistributedModelTrainingSequence:
         for param in model.parameters():
             if param.requires_grad:
                 params_count += param.numel()
-        model_params["model_param_count"] = round(params_count/1e6, 2)
+        model_params["model_param_count"] = round(params_count / 1e6, 2)
 
         self.logger.info(f"MLFLOW: model_params={model_params}")
         if self.self_is_main_node:
@@ -344,7 +341,7 @@ class PyTorchDistributedModelTrainingSequence:
                         self.device, non_blocking=self.dataloading_config.non_blocking
                     )
                     targets = targets.to(
-                            self.device, non_blocking=self.dataloading_config.non_blocking
+                        self.device, non_blocking=self.dataloading_config.non_blocking
                     )
 
                 with record_function("eval.forward"):
@@ -400,9 +397,9 @@ class PyTorchDistributedModelTrainingSequence:
                     self.device, non_blocking=self.dataloading_config.non_blocking
                 )
                 targets = targets.to(
-                        self.device, non_blocking=self.dataloading_config.non_blocking
+                    self.device, non_blocking=self.dataloading_config.non_blocking
                 )
-                
+
             with record_function("train.forward"):
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -439,7 +436,7 @@ class PyTorchDistributedModelTrainingSequence:
 
         return epoch_train_metrics
 
-    def train(self, epochs:int=None, checkpoints_dir:str=None):
+    def train(self, epochs: int = None, checkpoints_dir: str = None):
         """Trains the model.
 
         Args:
@@ -455,14 +452,14 @@ class PyTorchDistributedModelTrainingSequence:
             lr=self.training_config.learning_rate,
             momentum=self.training_config.momentum,
             nesterov=True,
-            #weight_decay=1e-4,
+            # weight_decay=1e-4,
         )
 
-        #criterion = nn.BCEWithLogitsLoss()
+        # criterion = nn.BCEWithLogitsLoss()
         criterion = nn.CrossEntropyLoss()
 
         # Decay LR by a factor of 0.1 every 7 epochs
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+        # scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
         # DISTRIBUTED: export checkpoint only from main node
         if self.self_is_main_node and checkpoints_dir is not None:
@@ -539,7 +536,6 @@ class PyTorchDistributedModelTrainingSequence:
                 mlflow.log_metrics(epoch_metrics)
                 mlflow.log_metric("epoch_utility_time", time.time() - epoch_utility_start, step=epoch)
 
-
     def runtime_error_report(self, runtime_exception):
         """Call this when catching a critical exception.
         Will print all sorts of relevant information to the log."""
@@ -551,8 +547,8 @@ class PyTorchDistributedModelTrainingSequence:
             self.logger.critical("import psutil failed, cannot display virtual memory stats.")
 
         if torch.cuda.is_available():
-            self.logger.critical("Cuda memory summary:\n"+str(torch.cuda.memory_summary(device=None, abbreviated=False)))
-            self.logger.critical("Cuda memory snapshot:\n"+json.dumps(torch.cuda.memory_snapshot(), indent="    "))
+            self.logger.critical("Cuda memory summary:\n" + str(torch.cuda.memory_summary(device=None, abbreviated=False)))
+            self.logger.critical("Cuda memory snapshot:\n" + json.dumps(torch.cuda.memory_snapshot(), indent="    "))
         else:
             self.logger.critical("Cuda is not available, cannot report cuda memory allocation.")
 
@@ -565,8 +561,7 @@ class PyTorchDistributedModelTrainingSequence:
             # DISTRIBUTED: this will teardown the distributed process group
             torch.distributed.destroy_process_group()
         else:
-            self.logger.info(f"Not running in multinode, so not destroying process group.")
-
+            self.logger.info("Not running in multinode, so not destroying process group.")
 
     #################
     ### MODEL I/O ###
@@ -597,7 +592,6 @@ class PyTorchDistributedModelTrainingSequence:
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss
             }, model_output_path)
-
 
     def save(self, output_dir: str, name: str = "dev", register_as: str = None) -> None:
         # DISTRIBUTED: you want to save the model only from the main node/process
@@ -633,7 +627,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
     if parser is None:
         parser = argparse.ArgumentParser()
 
-    group = parser.add_argument_group(f"Training Inputs")
+    group = parser.add_argument_group("Training Inputs")
     group.add_argument(
         "--train_images",
         type=str,
@@ -647,7 +641,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="path to folder containing validation images",
     )
 
-    group = parser.add_argument_group(f"Training Outputs")
+    group = parser.add_argument_group("Training Outputs")
     group.add_argument(
         "--model_output",
         type=str,
@@ -670,7 +664,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="Name to register final model in MLFlow",
     )
 
-    group = parser.add_argument_group(f"Data Loading Parameters")
+    group = parser.add_argument_group("Data Loading Parameters")
     group.add_argument(
         "--batch_size",
         type=int,
@@ -714,7 +708,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="Use non-blocking transfer to device (default: False)",
     )
 
-    group = parser.add_argument_group(f"Model/Training Parameters")
+    group = parser.add_argument_group("Model/Training Parameters")
     group.add_argument(
         "--model_arch",
         type=str,
@@ -784,7 +778,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="Momentum of optimizer",
     )
 
-    group = parser.add_argument_group(f"System Parameters")
+    group = parser.add_argument_group("System Parameters")
     group.add_argument(
         "--cudnn_autotuner",
         type=strtobool,
@@ -854,7 +848,7 @@ def run(args):
 
     with LogTimeBlock("load_model", enabled=training_handler.self_is_main_node):
         for _ in range(args.model_load_retries):
-            try:        
+            try:
                 # creates the model architecture
                 model = load_model(
                     args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
@@ -863,7 +857,7 @@ def run(args):
             except Exception:
                 typ, val, tb = sys.exc_info()
                 logger.error(traceback.format_exception(typ, val, tb))
-                time.sleep(random.randint(0,30))
+                time.sleep(random.randint(0, 30))
         else:
             raise Exception("Failed to load model")
 
@@ -874,7 +868,7 @@ def run(args):
     # NOTE: num_epochs is provided in args
     try:
         training_handler.train(checkpoints_dir=args.checkpoints)
-    except RuntimeError as runtime_exception: # if runtime error occurs (ex: cuda out of memory)
+    except RuntimeError as runtime_exception:  # if runtime error occurs (ex: cuda out of memory)
         # then print some runtime error report in the logs
         training_handler.runtime_error_report(runtime_exception)
         # re-raise
@@ -901,7 +895,6 @@ def run(args):
     mlflow.end_run()
 
     logger.info("run() completed")
-
 
 
 def main(cli_args=None):

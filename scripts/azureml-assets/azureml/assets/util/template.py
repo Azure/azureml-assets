@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 TAG_PREFIX = "{{"
 TAG_SUFFIX = "}}"
 TAG_SEPARATOR = "."

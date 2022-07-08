@@ -1,3 +1,8 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
+import os
 from pathlib import Path
 import pytest
 
@@ -14,8 +19,16 @@ TEST_REQUIREMENTS_FILE = Path("../scripts/test-requirements.txt")
 def test_test_assets(test_subdir: str, expected: bool):
     this_dir = Path(__file__).parent
 
+    subscription_id = os.environ.get("sub_id")
+    resource_group = os.environ.get("resource_group")
+    workspace_name = os.environ.get("workspace")
+
     assert assets.test_assets(
         this_dir / RESOURCES_DIR / test_subdir,
         assets.DEFAULT_ASSET_FILENAME,
         this_dir / TEST_REQUIREMENTS_FILE,
         []) == expected
+
+    assert subscription_id is not None
+    assert resource_group is not None
+    assert workspace_name is not None

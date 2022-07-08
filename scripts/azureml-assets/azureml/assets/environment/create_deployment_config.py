@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 import argparse
 import json
 import os
@@ -39,7 +43,7 @@ def create_ems_payload(asset_config: assets.AssetConfig, env_config: assets.Envi
     else:
         # Use existing image name
         docker_section['baseImage'] = full_image_name
-    
+
     # Create payload
     payload = {
         'metadata': {
@@ -55,7 +59,7 @@ def create_ems_payload(asset_config: assets.AssetConfig, env_config: assets.Envi
             'docker': docker_section
         }
     }
-    
+
     # Remove null values
     payload['metadata'] = {k: v for k, v in payload['metadata'].items() if v is not None}
 
@@ -63,7 +67,7 @@ def create_ems_payload(asset_config: assets.AssetConfig, env_config: assets.Envi
 
 
 def create_mfe_payload(env_config: assets.EnvironmentConfig, spec: assets.Spec, template_data: Dict[str, object],
-                       full_image_name: str):    
+                       full_image_name: str):
     # Start properties
     properties = {
         'description': spec.description,
@@ -87,7 +91,7 @@ def create_mfe_payload(env_config: assets.EnvironmentConfig, spec: assets.Spec, 
         properties['image'] = full_image_name
 
     # Create payload
-    payload = { 'properties': properties }
+    payload = {'properties': properties}
 
     return payload
 

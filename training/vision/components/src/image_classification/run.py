@@ -9,7 +9,7 @@ from common.settings import ClassificationSettings
 
 def run(task, component_settings):
     @utils.create_component_telemetry_wrapper(task)
-    def run_component(task): 
+    def run_component(task):
         mltable_data_json = utils.create_mltable_json(component_settings)
         runner.run(
             {SettingsLiterals.TASK_TYPE: task},

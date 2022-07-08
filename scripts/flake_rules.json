@@ -1,0 +1,12 @@
+{
+  "pep8": {
+    "ignore-file": [
+      "azureml-assets/azureml/assets/__init__.py:F401",
+      "azureml-assets/azureml/assets/environment/__init__.py:F401",
+      "azureml-assets/azureml/assets/util/__init__.py:F401"
+    ],
+    "justifications": [
+      "__init__.py - namespace level files excluded from validation"
+    ]
+  }
+}
