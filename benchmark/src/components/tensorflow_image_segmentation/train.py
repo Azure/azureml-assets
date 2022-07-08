@@ -13,6 +13,7 @@ Using your editor, search for those strings to get an idea of how to implement:
 """
 import os
 import sys
+import tempfile
 import time
 import json
 import logging
@@ -324,7 +325,7 @@ class TensorflowDistributedModelTrainingSequence:
             self.logger.warning(
                 f"Because you set --num_gpus={args.num_gpus}, retricting to first {self.gpus} physical devices"
             )
-        else: # if args.num_gpus < 0
+        else:  # if args.num_gpus < 0
             self.gpus = len(tf.config.list_physical_devices("GPU"))
 
         # Check if we need distributed at all
@@ -619,11 +620,11 @@ class TensorflowDistributedModelTrainingSequence:
             )
 
             options = tf.profiler.experimental.ProfilerOptions(
-                host_tracer_level = 3,
-                python_tracer_level = 1,
-                device_tracer_level = 1
+                host_tracer_level=3,
+                python_tracer_level=1,
+                device_tracer_level=1
             )
-            tf.profiler.experimental.start(self.profiler_output_tmp_dir.name, options = options)
+            tf.profiler.experimental.start(self.profiler_output_tmp_dir.name, options=options)
 
             # see https://www.tensorflow.org/api_docs/python/tf/keras/callbacks/TensorBoard
             callbacks.append(
@@ -633,7 +634,7 @@ class TensorflowDistributedModelTrainingSequence:
                     write_images=False,
                     write_steps_per_second=True,
                     update_freq="epoch",
-                    profile_batch=(0, self.training_steps_per_epoch) # Profile from batches 10 to 15
+                    profile_batch=(0, self.training_steps_per_epoch)  # Profile from batches 10 to 15
                 )
             )
 
@@ -653,7 +654,7 @@ class TensorflowDistributedModelTrainingSequence:
 
         # PROFILER
         if self.training_config.enable_profiling:
-            self.logger.info(f"Stopping profiler.")
+            self.logger.info("Stopping profiler.")
             tf.profiler.experimental.stop()
 
             # log via mlflow
@@ -668,7 +669,6 @@ class TensorflowDistributedModelTrainingSequence:
                 f"Clean up profiler temp dir {self.profiler_output_tmp_dir.name}"
             )
             self.profiler_output_tmp_dir.cleanup()
-
 
     def runtime_error_report(self, runtime_exception):
         """Call this when catching a critical exception.

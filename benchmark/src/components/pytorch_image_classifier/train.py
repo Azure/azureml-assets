@@ -181,7 +181,7 @@ class PyTorchDistributedModelTrainingSequence:
                 "disable_cuda": self.training_config.disable_cuda,
                 "distributed": self.multinode_available,
                 "distributed_backend": self.distributed_backend,
-                "distributed_sampling" : self.training_config.distributed_sampling,
+                "distributed_sampling": self.training_config.distributed_sampling,
 
                 # data loading params
                 "batch_size": self.dataloading_config.batch_size,
@@ -244,7 +244,7 @@ class PyTorchDistributedModelTrainingSequence:
                 training_dataset,
                 num_replicas=self.world_size,
                 rank=self.world_rank,
-                seed=0, # default is 0
+                seed=0,  # default is 0
                 shuffle=True
             )
         elif self.training_config.distributed_sampling == "subsetrandomsampler":
@@ -252,7 +252,7 @@ class PyTorchDistributedModelTrainingSequence:
             # Then we shuffle it using SubsetRandomSampler
             self.training_data_sampler = torch.utils.data.SubsetRandomSampler(
                 # subset of indices for THIS process using round robin
-                [ i for i in range(len(training_dataset)) if i % self.world_size == self.world_rank ]
+                [i for i in range(len(training_dataset)) if i % self.world_size == self.world_rank]
             )
         else:
             raise NotImplementedError(f"--distributed_sampling {self.training_config.distributed_sampling} is not implemented.")
