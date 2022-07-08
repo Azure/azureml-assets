@@ -25,7 +25,7 @@ passed_version = args.version
 def test_files_location(dir: Path):
     test_jobs = []
     for x in dir.iterdir():
-        print("processing test folder: " + x)
+        print("processing test folder: " + x.__str__())
         area_folder = dir / x
         with open(area_folder / 'tests.yml') as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
