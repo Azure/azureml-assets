@@ -25,6 +25,6 @@ def test_test_assets(test_subdir: str, expected: bool):
         this_dir / TEST_REQUIREMENTS_FILE,
         []) == expected
 
-    assert subscription_id != None
-    assert resource_group != None
-    assert workspace_name != None
+    assert subscription_id is not None
+    assert resource_group is not None
+    assert workspace_name is not None
