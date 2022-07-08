@@ -6,7 +6,6 @@ import argparse
 from pathlib import Path
 import os
 import yaml
-import subprocess
 from subprocess import PIPE
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import AmlCompute
@@ -54,7 +53,7 @@ for area in os.listdir(tests_dir.__str__()):
         data = yaml.load(fp, Loader=yaml.FullLoader)
         for test_group in data:
             print(f"now processing test group: {test_group}")
-            p = subprocess.Popen("python3 -u group_test.py -i "+ tests_dir.__str__() + "/" + area + " -g " + test_group + " -s " + subscription_id + " -r " + resource_group + " -w " + workspace, stdout=PIPE, shell=True)
+            p = subprocess.Popen("python3 -u group_test.py -i " + tests_dir.__str__() + "/" + area + " -g " + test_group + " -s " + subscription_id + " -r " + resource_group + " -w " + workspace, stdout=PIPE, shell=True)
             stdout = p.communicate()
             print(stdout[0].decode('utf-8'))
             final_report[area].append(stdout[0].decode('utf-8'))
