@@ -10,7 +10,7 @@ from unittest.mock import patch
 import numpy as np
 from PIL import Image
 
-from components.tensorflow_image_segmentation import train
+from tensorflow_image_segmentation import train
 
 # IMPORTANT: see conftest.py for fixtures
 

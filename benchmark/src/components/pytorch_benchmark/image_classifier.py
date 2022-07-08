@@ -25,17 +25,6 @@ import mlflow
 # the long list of torch imports
 import torch
 
-# from torch.optim import lr_scheduler
-from torch.profiler import record_function
-
-SCRIPT_START_TIME = time.time()  # just to measure time to start
-
-# add path to here, if necessary
-SCRIPTS_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if SCRIPTS_ROOT not in sys.path:
-    logging.info(f"Adding {SCRIPTS_ROOT} to path")
-    sys.path.append(str(SCRIPTS_ROOT))
-
 # internal imports
 ## non-specific helper code
 from common.profiling import LogTimeBlock, LogDiskIOBlock
@@ -46,6 +35,8 @@ from pytorch_benchmark.helper.training import PyTorchDistributedModelTrainingSeq
 ## classification specific code
 from pytorch_benchmark.classification.model import get_model_metadata, load_model
 from pytorch_benchmark.classification.io import build_image_datasets
+
+SCRIPT_START_TIME = time.time()  # just to measure time to start
 
 
 def run(args):

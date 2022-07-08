@@ -4,7 +4,7 @@ Tests running the pytorch_benchmark/helper/model/ loader
 import pytest
 import torch
 
-from components.pytorch_benchmark.classification.model import (
+from pytorch_benchmark.classification.model import (
     MODEL_ARCH_LIST,
     get_model_metadata,
     load_model,
