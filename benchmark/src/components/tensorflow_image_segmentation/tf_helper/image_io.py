@@ -7,12 +7,8 @@ This script contains methods to hangle inputs for tensorflow model training.
 import os
 import logging
 import glob
-import random
 import re
 
-from tensorflow import keras
-import numpy as np
-from tensorflow.keras.preprocessing.image import load_img
 import tensorflow
 
 

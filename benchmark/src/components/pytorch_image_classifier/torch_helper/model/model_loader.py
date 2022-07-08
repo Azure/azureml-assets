@@ -44,6 +44,7 @@ MODEL_ARCH_MAP = {
 
 MODEL_ARCH_LIST = list(MODEL_ARCH_MAP.keys())
 
+
 def get_model_metadata(model_arch: str):
     """Returns the model metadata"""
     if model_arch in MODEL_ARCH_MAP:

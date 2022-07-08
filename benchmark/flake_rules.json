@@ -1,0 +1,17 @@
+{
+  "pep8": {
+    "ignore": [
+      "E266",
+      "W503"
+    ],
+    "ignore-file": [
+      "src/components/pytorch_image_classifier/train.py:E402",
+      "src/components/pytorch_image_classifier/torch_helper/model/__init__.py:F401",
+      "src/components/tensorflow_image_segmentation/train.py:E402"
+    ],
+    "justifications": [
+      "__init__.py - namespace level files excluded from validation",
+      "E402 - allow module level imports for specific files"
+    ]
+  }
+}
