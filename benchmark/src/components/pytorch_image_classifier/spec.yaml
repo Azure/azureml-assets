@@ -77,6 +77,10 @@ inputs:
     description: "Name to register final model in MLFlow"
 
   # system parameters
+  cudnn_autotuner:
+    type: boolean
+    default: true
+    description: "Enabled cudnn benchmarking on first epoch"
   enable_profiling:
     type: boolean
     default: false
@@ -85,6 +89,9 @@ inputs:
     type: string
     optional: true
     description: "Check https://pytorch.org/docs/stable/multiprocessing.html"
+  distributed_sampling:
+    type: string
+    optional: true
 
 outputs:
   checkpoints: 
@@ -96,7 +103,7 @@ outputs:
 
 code: .
 
-environment: azureml:nvidia_pytorch:22.04-py3
+environment: azureml:nvidia_pytorch:22.06-py3
 
 command: >-
   python train.py 
@@ -121,8 +128,10 @@ command: >-
   --checkpoints ${{outputs.checkpoints}}
   [--register_model_as ${{inputs.register_model_as}}]
 
+  --cudnn_autotuner ${{inputs.cudnn_autotuner}}
   --enable_profiling ${{inputs.enable_profiling}}
   [--multiprocessing_sharing_strategy ${{inputs.multiprocessing_sharing_strategy}}]
+  [--distributed_sampling ${{inputs.distributed_sampling}}]
 
 distribution:
   # NOTE: using type:pytorch will use all the right env variables for pytorch init_process_group
