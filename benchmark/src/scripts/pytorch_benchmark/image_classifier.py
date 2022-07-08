@@ -45,11 +45,16 @@ if SCRIPTS_ROOT not in sys.path:
     sys.path.append(str(SCRIPTS_ROOT))
 
 # internal imports
-from common.profiling import LogTimeBlock, LogDiskIOBlock # non-pt-specific helper code
-from pytorch_benchmark.helper.profiling import PyTorchProfilerHandler # pt profiler code
+## non-specific helper code
+from common.profiling import LogTimeBlock, LogDiskIOBlock
+
+## pytorch generic helping code
+from pytorch_benchmark.helper.profiling import PyTorchProfilerHandler 
+from pytorch_benchmark.helper.training import PyTorchDistributedModelTrainingSequence
+
+## classification specific code
 from pytorch_benchmark.classification.model import get_model_metadata, load_model
 from pytorch_benchmark.classification.io import build_image_datasets
-from pytorch_benchmark.helper.training import PyTorchDistributedModelTrainingSequence
 
 
 def build_arguments_parser(parser: argparse.ArgumentParser = None):

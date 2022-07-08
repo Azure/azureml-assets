@@ -37,7 +37,8 @@ from torch.profiler import record_function
 from transformers.utils import ModelOutput
 
 # internal imports
-from .profiling import PyTorchProfilerHandler, LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
+from .profiling import PyTorchProfilerHandler
+from common.profiling import LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
 
 class PyTorchDistributedModelTrainingSequence:
     """Generic class to run the sequence for training a PyTorch model
