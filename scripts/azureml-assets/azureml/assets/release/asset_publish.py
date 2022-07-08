@@ -25,7 +25,7 @@ passed_version = args.version
 def test_files_location(dir: Path):
     test_jobs = []
     for x in dir.iterdir():
-        print("processing test folder: " + x.__str__())
+        print("processing test folder: " + x.name)
         with open(x / 'tests.yml') as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data:
@@ -71,11 +71,11 @@ test_files_preprocess(test_jobs, componentVersionWithBuildId)
 print('finished preprocessing test files')
 for x in component_dir.iterdir():
     if x != "src":
-        print("Registering "+x)
-        with open(component_dir / x / 'asset.yaml') as fp:
+        print("Registering " + x.name)
+        with open(x / 'asset.yaml') as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
         spec_file = data['spec']
-        spec_path = Path(component_dir / x / spec_file)
+        spec_path = x / spec_file
         print("Does spec path exist: "+spec_path.is_file().__str__())
         final_version = ''
         with open(spec_path) as fp:
