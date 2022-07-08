@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 """
-This script implements a Distributed PyTorch training sequence.
+This script implements a Distributed PyTorch training sequence for image classification.
 
 IMPORTANT: We have tagged the code with the following expressions to walk you through
 the key implementation details.
@@ -49,12 +49,105 @@ if SCRIPTS_ROOT not in sys.path:
 from common.profiling import LogTimeBlock, LogDiskIOBlock
 
 ## pytorch generic helping code
-from pytorch_benchmark.helper.profiling import PyTorchProfilerHandler 
 from pytorch_benchmark.helper.training import PyTorchDistributedModelTrainingSequence
 
 ## classification specific code
 from pytorch_benchmark.classification.model import get_model_metadata, load_model
 from pytorch_benchmark.classification.io import build_image_datasets
+
+
+def run(args):
+    """Run the script using CLI arguments.
+    IMPORTANT: for the list of arguments, check build_argument_parser() function below.
+
+    This function will demo the main steps for training PyTorch using a generic
+    sequence provided as helper code.
+
+    Args:
+        args (argparse.Namespace): arguments parsed from CLI
+
+    Returns:
+        None
+    """
+    logger = logging.getLogger(__name__)
+    logger.info(f"Running with arguments: {args}")
+
+    # MLFLOW: initialize mlflow (once in entire script)
+    mlflow.start_run()
+
+    # use a handler for the training sequence
+    training_handler = PyTorchDistributedModelTrainingSequence()
+
+    # sets cuda and distributed config
+    training_handler.setup_config(args)
+
+    # here we use a helper class to enable profiling
+    training_handler.start_profiler()
+
+    # report the time and disk usage during this code block
+    with LogTimeBlock("build_image_datasets", enabled=training_handler.self_is_main_node), LogDiskIOBlock("build_image_datasets", enabled=training_handler.self_is_main_node):
+        # build the image folder datasets
+        train_dataset, valid_dataset, labels = build_image_datasets(
+            train_images_dir=args.train_images,
+            valid_images_dir=args.valid_images,
+            input_size=get_model_metadata(args.model_arch)['input_size']
+        )
+
+    # creates data loaders from datasets for distributed training
+    training_handler.setup_datasets(train_dataset, valid_dataset, labels)
+
+    with LogTimeBlock("load_model", enabled=training_handler.self_is_main_node):
+        for _ in range(args.model_load_retries):
+            try:
+                # creates the model architecture
+                model = load_model(
+                    args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
+                )
+                break
+            except Exception:
+                typ, val, tb = sys.exc_info()
+                logger.error(traceback.format_exception(typ, val, tb))
+                time.sleep(random.randint(0, 30))
+        else:
+            raise Exception("Failed to load model")
+
+    # sets the model for distributed training
+    training_handler.setup_model(model)
+
+    # just log how much time it takes to get to this point
+    mlflow.log_metric("start_to_fit_time", time.time() - SCRIPT_START_TIME)
+
+    # runs training sequence
+    # NOTE: num_epochs is provided in args
+    try:
+        training_handler.train(checkpoints_dir=args.checkpoints)
+    except RuntimeError as runtime_exception:  # if runtime error occurs (ex: cuda out of memory)
+        # then print some runtime error report in the logs
+        training_handler.runtime_error_report(runtime_exception)
+        # re-raise
+        raise runtime_exception
+
+    # stops profiling (and save in mlflow)
+    training_handler.stop_profiler()
+
+    # saves final model
+    if args.model_output:
+        training_handler.save(
+            args.model_output,
+            name=f"epoch-{args.num_epochs}",
+            register_as=args.register_model_as,
+        )
+
+    # properly teardown distributed resources
+    training_handler.close()
+
+    # logging total time
+    mlflow.log_metric("wall_time", time.time() - SCRIPT_START_TIME)
+
+    # MLFLOW: finalize mlflow (once in entire script)
+    mlflow.end_run()
+
+    logger.info("run() completed")
 
 
 def build_arguments_parser(parser: argparse.ArgumentParser = None):
@@ -244,92 +337,6 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         help="Enable retires when loading the model.",
     )
     return parser
-
-
-def run(args):
-    """Run the script using CLI arguments"""
-    logger = logging.getLogger(__name__)
-    logger.info(f"Running with arguments: {args}")
-
-    # MLFLOW: initialize mlflow (once in entire script)
-    mlflow.start_run()
-
-    # use a handler for the training sequence
-    training_handler = PyTorchDistributedModelTrainingSequence()
-
-    # sets cuda and distributed config
-    training_handler.setup_config(args)
-
-    # PROFILER: here we use a helper class to enable profiling
-    # see profiling.py for the implementation details
-    training_profiler = PyTorchProfilerHandler(
-        enabled=bool(args.enable_profiling),
-        rank=training_handler.world_rank,
-    )
-    # PROFILER: set profiler in trainer to call profiler.step() during training
-    training_handler.profiler = training_profiler.start_profiler()
-
-    # report the time and disk usage during this code block
-    with LogTimeBlock("build_image_datasets", enabled=training_handler.self_is_main_node), LogDiskIOBlock("build_image_datasets", enabled=training_handler.self_is_main_node):
-        # build the image folder datasets
-        train_dataset, valid_dataset, labels = build_image_datasets(
-            train_images_dir=args.train_images,
-            valid_images_dir=args.valid_images,
-            input_size=get_model_metadata(args.model_arch)['input_size']
-        )
-
-    # creates data loaders from datasets for distributed training
-    training_handler.setup_datasets(train_dataset, valid_dataset, labels)
-
-    with LogTimeBlock("load_model", enabled=training_handler.self_is_main_node):
-        for _ in range(args.model_load_retries):
-            try:
-                # creates the model architecture
-                model = load_model(
-                    args.model_arch, output_dimension=len(labels), pretrained=args.model_arch_pretrained
-                )
-                break
-            except Exception:
-                typ, val, tb = sys.exc_info()
-                logger.error(traceback.format_exception(typ, val, tb))
-                time.sleep(random.randint(0, 30))
-        else:
-            raise Exception("Failed to load model")
-
-    # sets the model for distributed training
-    training_handler.setup_model(model)
-
-    # runs training sequence
-    # NOTE: num_epochs is provided in args
-    try:
-        training_handler.train(checkpoints_dir=args.checkpoints)
-    except RuntimeError as runtime_exception:  # if runtime error occurs (ex: cuda out of memory)
-        # then print some runtime error report in the logs
-        training_handler.runtime_error_report(runtime_exception)
-        # re-raise
-        raise runtime_exception
-
-    # stops profiling (and save in mlflow)
-    training_profiler.stop_profiler()
-
-    # saves final model
-    if args.model_output:
-        training_handler.save(
-            args.model_output,
-            name=f"epoch-{args.num_epochs}",
-            register_as=args.register_model_as,
-        )
-
-    # properly teardown distributed resources
-    training_handler.close()
-
-    # logging total time
-    mlflow.log_metric("wall_time", time.time() - SCRIPT_START_TIME)
-
-    # MLFLOW: finalize mlflow (once in entire script)
-    mlflow.end_run()
-
-    logger.info("run() completed")
 
 
 def main(cli_args=None):

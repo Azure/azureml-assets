@@ -2,7 +2,8 @@
 # Licensed under the MIT license.
 
 """
-This script implements a Distributed PyTorch training sequence.
+This script implements a "textbook" Distributed PyTorch training sequence.
+You can use it for various scenarios.
 
 IMPORTANT: We have tagged the code with the following expressions to walk you through
 the key implementation details.
@@ -12,20 +13,23 @@ Using your editor, search for those strings to get an idea of how to implement:
 - MLFLOW : how to implement mlflow reporting of metrics and artifacts
 - PROFILER : how to implement pytorch profiler
 """
+# generic python imports
 import os
 import sys
 import time
 import json
 import logging
 import argparse
+import tempfile
 import traceback
 from tqdm import tqdm
 from distutils.util import strtobool
 import random
 
+# MLFLOW: import the mlflow lib, if running in AzureML
+# this will lead your metrics to log into AzureML without
+# any further modification
 import mlflow
-
-SCRIPT_START_TIME = time.time()  # just to measure time to start
 
 # the long list of torch imports
 import torch
@@ -37,8 +41,11 @@ from torch.profiler import record_function
 from transformers.utils import ModelOutput
 
 # internal imports
-from .profiling import PyTorchProfilerHandler
+# pytorch specific code for profiling
+from .profiling import get_default_trace_handler
+# non-specific code to help with profiling
 from common.profiling import LogTimeBlock, LogDiskIOBlock, LogTimeOfIterator
+
 
 class PyTorchDistributedModelTrainingSequence:
     """Generic class to run the sequence for training a PyTorch model
@@ -75,7 +82,7 @@ class PyTorchDistributedModelTrainingSequence:
 
         # PROFILER
         self.profiler = None
-        self.profiler_output_tmp_dir = None
+        self.profiler_output_dir = None
 
     #####################
     ### SETUP METHODS ###
@@ -209,6 +216,7 @@ class PyTorchDistributedModelTrainingSequence:
 
             mlflow.log_params(logged_params)
 
+
     def setup_datasets(
         self,
         training_dataset: torch.utils.data.Dataset,
@@ -316,6 +324,83 @@ class PyTorchDistributedModelTrainingSequence:
             mlflow.log_params(model_params)
 
         return self.model
+
+    ################
+    ### PROFILER ###
+    ################
+
+    def start_profiler(self):
+        """Setup and start the pytorch profiler.
+
+        Returns:
+            profiler (torch.profiler): the profiler
+        """
+        if self.training_config.enable_profiling:
+            # use a temp dir to store the outputs of the profiler
+            self.profiler_output_dir = tempfile.TemporaryDirectory()
+            self.logger.info(
+                f"Starting profiler (enabled=True) with tmp dir {self.profiler_output_dir.name}."
+            )
+
+            # add profiler activities (CPU/GPU)
+            activities = [torch.profiler.ProfilerActivity.CPU]
+            if torch.cuda.is_available():
+                self.logger.info("Enabling CUDA in profiler.")
+                activities.append(torch.profiler.ProfilerActivity.CUDA)
+
+            # create a function that will be called every time
+            # a "trace" is ready (see on_trace_ready)
+            trace_handler = get_default_trace_handler(
+                dir_name=self.profiler_output_dir.name,
+                rank=self.world_rank
+            )
+
+            # setup profiler to process every single step
+            profiler_schedule = torch.profiler.schedule(wait=0, warmup=0, active=1)
+
+            # initialize profiler
+            self.profiler = torch.profiler.profile(
+                schedule=profiler_schedule,
+                record_shapes=True,
+                with_flops=True,
+                profile_memory=True,
+                activities=activities,
+                with_stack=True,  # needed to export stacks
+                on_trace_ready=trace_handler,
+            )
+            self.profiler.start()
+
+        else:
+            self.logger.info("Profiler not started (enabled=False).")
+            self.profiler = None
+
+            # forcefully turn off profiling to be sure
+            torch.autograd.profiler.profile(False)
+            torch.autograd.profiler.emit_nvtx(False)
+
+    def stop_profiler(self) -> None:
+        """Stops the pytorch profiler and logs the outputs using mlflow"""
+        if self.profiler:
+            self.logger.info("Stopping profiler.")
+            self.profiler.stop()
+
+            # log via mlflow
+            self.logger.info(
+                f"MLFLOW log {self.profiler_output_dir.name} as an artifact."
+            )
+            mlflow.log_artifacts(
+                self.profiler_output_dir.name, artifact_path="profiler"
+            )
+
+            self.logger.info(
+                f"Clean up profiler temp dir {self.profiler_output_dir.name}"
+            )
+            self.profiler_output_dir.cleanup()
+        else:
+            self.logger.info(
+                "Not stopping profiler as it was not started in the first place."
+            )
+
 
     ########################
     ### TRAINING METHODS ###
@@ -462,9 +547,6 @@ class PyTorchDistributedModelTrainingSequence:
         if self.self_is_main_node and checkpoints_dir is not None:
             # saving checkpoint before training
             self.checkpoint_save(self.model, optimizer, checkpoints_dir, epoch=-1, loss=0.0)
-
-        # just log how much time it takes to get to this point
-        mlflow.log_metric("start_to_fit_time", time.time() - SCRIPT_START_TIME)
 
         # DISTRIBUTED: you'll node that this loop has nothing specifically "distributed"
         # that's because most of the changes are in the backend (DistributedDataParallel)
