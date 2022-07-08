@@ -26,12 +26,11 @@ def test_files_location(dir: Path):
     test_jobs = []
     for x in dir.iterdir():
         print("processing test folder: " + x.__str__())
-        area_folder = dir / x
-        with open(area_folder / 'tests.yml') as fp:
+        with open(x / 'tests.yml') as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data:
                 for test_job in data[test_group]['jobs']:
-                    test_jobs.append(area_folder + '/' + data[test_group]['jobs'][test_job]['job'])
+                    test_jobs.append(x.__str__() + '/' + data[test_group]['jobs'][test_job]['job'])
     return test_jobs
 
 
