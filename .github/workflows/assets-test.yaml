@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - main
-      - ericadebarge/modify_testing_workflow
     paths-ignore:
       - .github/**
       - scripts/**
