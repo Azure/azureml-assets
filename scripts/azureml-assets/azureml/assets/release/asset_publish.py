@@ -23,6 +23,7 @@ component_dir = args.component_directory
 passed_version = args.version
 subprocess
 
+
 def test_files_location(dir: Path):
     test_jobs = []
     for x in dir.iterdir():
