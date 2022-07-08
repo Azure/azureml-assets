@@ -32,7 +32,8 @@ def main(testpath: Path):
         print("File(s) missing copyright header:")
         for line in badfiles:
             print(line)
-        raise Exception("Missing copyright headers.")
+        return False
+    return True
 
 
 if __name__ == '__main__':

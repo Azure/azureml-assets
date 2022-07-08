@@ -104,7 +104,8 @@ def test(rootpath: Path, testpath: Path):
         print("flake8 errors:")
         for line in output:
             print(line)
-        raise Exception("Code is unhealthy.")
+        return False
+    return True
 
 
 if __name__ == '__main__':
