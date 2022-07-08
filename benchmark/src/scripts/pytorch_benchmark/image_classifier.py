@@ -47,8 +47,8 @@ if SCRIPTS_ROOT not in sys.path:
 # internal imports
 from common.profiling import LogTimeBlock, LogDiskIOBlock # non-pt-specific helper code
 from pytorch_benchmark.helper.profiling import PyTorchProfilerHandler # pt profiler code
-from pytorch_benchmark.helper.classification.model import get_model_metadata, load_model
-from pytorch_benchmark.helper.classification.io import build_image_datasets
+from pytorch_benchmark.classification.model import get_model_metadata, load_model
+from pytorch_benchmark.classification.io import build_image_datasets
 from pytorch_benchmark.helper.training import PyTorchDistributedModelTrainingSequence
 
 
