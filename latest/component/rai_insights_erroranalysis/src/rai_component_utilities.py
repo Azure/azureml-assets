@@ -11,7 +11,6 @@ import tempfile
 import uuid
 
 from typing import Any, Dict
-from zipfile import Path
 
 import pandas as pd
 

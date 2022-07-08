@@ -113,7 +113,7 @@ def _get_model_performance_explanation_text(metric, data):
         return div(
             h3("{}% Precision".format(score_value)),
             p(
-                '{}% of data points predicted as "{}", are likely to actually be ""'.format(
+                '{}% of data points predicted as "{}", are likely to actually be "{}"'.format(
                     score_value, pos_label, neg_label
                 )
             ),

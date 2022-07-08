@@ -6,14 +6,10 @@ import argparse
 import json
 import logging
 
-from pathlib import Path
-from shutil import copyfile
-
 from responsibleai import RAIInsights
-
 from azureml.core import Run
 
-from constants import RAIToolType, DashboardInfo
+from constants import RAIToolType
 from rai_component_utilities import (
     create_rai_insights_from_port_path,
     save_to_output_port,

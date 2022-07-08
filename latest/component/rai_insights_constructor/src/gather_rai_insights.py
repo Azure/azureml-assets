@@ -6,7 +6,6 @@ import argparse
 import json
 import logging
 from pathlib import Path
-import shutil
 import tempfile
 
 from typing import Dict
@@ -16,7 +15,7 @@ from azureml.core import Run
 from responsibleai import RAIInsights
 from responsibleai.serialization_utilities import serialize_json_safe
 
-from constants import DashboardInfo, RAIToolType
+from constants import RAIToolType
 from rai_component_utilities import (
     create_rai_tool_directories,
     create_rai_insights_from_port_path,
