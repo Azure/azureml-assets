@@ -17,7 +17,6 @@ from timeit import default_timer as timer
 from typing import List, Tuple
 
 import azureml.assets as assets
-import azureml.assets.environment as environment
 import azureml.assets.util as util
 from azureml.assets.util import logger
 

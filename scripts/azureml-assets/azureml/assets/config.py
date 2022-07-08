@@ -123,7 +123,7 @@ class Spec(Config):
     @property
     def image(self) -> str:
         return self._yaml.get('image')
-    
+
     @property
     def code_dir(self) -> str:
         return self._yaml.get('code')
@@ -227,13 +227,13 @@ class EnvironmentConfig(Config):
         if hostname:
             image = f"{hostname}/{image}"
         return image
-    
+
     def get_image_name_for_promotion(self, tag: str = None) -> str:
         # Only promotion to MCR is supported
         if self.publish_location != PublishLocation.MCR:
             return None
 
-        image = f"{self.publish_visibility.value}/{self.image_name}"    
+        image = f"{self.publish_visibility.value}/{self.image_name}"
         if tag:
             image += f":{tag}"
         return image
@@ -374,13 +374,13 @@ class AssetConfig(Config):
             Config._validate_exists('version', self.version)
         if self.type == AssetType.ENVIRONMENT:
             Config._validate_exists('extra_config', self.extra_config)
-        
+
         if not self.spec_with_path.exists():
             raise ValidationException(f"spec file {self.spec} not found")
 
         if self.extra_config and not self.extra_config_with_path.exists():
             raise ValidationException(f"extra_config file {self.extra_config} not found")
-    
+
         include_paths = self._release_paths_includes_with_path
         if include_paths:
             missing = [p for p in include_paths if not p.exists()]

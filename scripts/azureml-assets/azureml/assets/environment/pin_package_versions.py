@@ -43,7 +43,6 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
         )
 
 
-
 def get_latest_package_version(package: str,
                                package_finder: PackageFinder,
                                include_pre: bool = False) -> str:

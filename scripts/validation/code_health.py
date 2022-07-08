@@ -48,7 +48,7 @@ def load_rules(testpath: Path) -> Dict[str, List[str]]:
     if flake_rules_file.exists():
         with open(flake_rules_file) as f:
             flake_rules = json.load(f).get('pep8', {})
-    
+
     # Handle relative paths
     if IGNORE_FILE in flake_rules:
         file_ignore = []
