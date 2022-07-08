@@ -2,6 +2,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
 from asyncio import subprocess
+from subprocess import check_call
 import argparse
 from pathlib import Path
 import yaml
@@ -20,7 +21,7 @@ workspace = args.workspace
 tests_dir = args.tests_directory
 component_dir = args.component_directory
 passed_version = args.version
-
+subprocess
 
 def test_files_location(dir: Path):
     test_jobs = []
@@ -85,7 +86,7 @@ for x in component_dir.iterdir():
             print("final version: "+final_version)
         print(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group} ")
         try:
-            subprocess.check_call(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace}  --resource-group {resource_group}", shell=True)
+            check_call(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace}  --resource-group {resource_group}", shell=True)
         except Exception as ex:
             print(f"catch error creating component {x} with exception {ex}")
 print('All assets published')
