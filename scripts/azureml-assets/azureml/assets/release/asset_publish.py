@@ -50,9 +50,9 @@ def test_files_preprocess(test_jobs, full_version):
         with open(test_job) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for job in data["jobs"]:
-                print("processing asset"+data["jobs"][job]["component"])
                 original_asset = data["jobs"][job]["component"]
-                if original_asset.__str__().startswith("azureml"):
+                print(f"processing asset {original_asset}")
+                if original_asset.startswith("azureml"):
                     new_asset = process_asset_id(original_asset, full_version)
                     data["jobs"][job]["component"] = new_asset
                     print(data["jobs"][job]["component"])
