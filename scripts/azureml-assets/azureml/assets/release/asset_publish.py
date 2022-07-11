@@ -46,7 +46,7 @@ def process_asset_id(asset_id, full_version):
 
 def test_files_preprocess(test_jobs, full_version):
     for test_job in test_jobs:
-        print("processing test job: " + test_job)
+        print(f"processing test job: {test_job}")
         with open(test_job) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for job in data["jobs"]:
