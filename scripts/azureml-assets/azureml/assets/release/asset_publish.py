@@ -30,9 +30,9 @@ def test_files_location(dir: Path):
         print("processing test folder: " + x.name)
         with open(x / 'tests.yml') as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
-            for test_group in data:
-                for test_job in data[test_group]['jobs']:
-                    test_jobs.append(x.__str__() + '/' + data[test_group]['jobs'][test_job]['job'])
+            for test_group in data.values():
+                for test_job in test_group['jobs'].values():
+                    test_jobs.append((x / test_job['job']).as_posix())
     return test_jobs
 
 
