@@ -1,13 +1,12 @@
 # imports
-import os
 import mlflow
 import argparse
 
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+
 
 # define functions
 def main(args):

@@ -46,4 +46,4 @@ def test_sklearn_1_1():
 
     returned_job = ml_client.create_or_update(job)
 
-    asset returned_job is not None
+    assert returned_job is not None
