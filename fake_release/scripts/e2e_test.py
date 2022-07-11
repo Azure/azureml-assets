@@ -1,7 +1,7 @@
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
-from asyncio import subprocess
+# from asyncio import subprocess
 import argparse
 from pathlib import Path
 import os
@@ -24,7 +24,7 @@ subscription_id = args.subscription
 resource_group = args.resource_group
 workspace = args.workspace_name
 final_report = {}
-subprocess
+# subprocess
 ml_client = MLClient(
     DefaultAzureCredential(), subscription_id, resource_group, workspace
 )

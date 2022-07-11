@@ -1,7 +1,7 @@
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
-from asyncio import subprocess
+# from asyncio import subprocess
 from subprocess import check_call
 import argparse
 from pathlib import Path
@@ -21,7 +21,7 @@ workspace = args.workspace
 tests_dir = args.tests_directory
 component_dir = args.component_directory
 passed_version = args.version
-subprocess
+# subprocess
 
 
 def test_files_location(dir: Path):
@@ -30,9 +30,9 @@ def test_files_location(dir: Path):
         print("processing test folder: " + x.name)
         with open(x / 'tests.yml') as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
-            for test_group in data:
-                for test_job in data[test_group]['jobs']:
-                    test_jobs.append(x.__str__() + '/' + data[test_group]['jobs'][test_job]['job'])
+            for test_group in data.values():
+                for test_job in test_group['jobs'].values():
+                    test_jobs.append((x / test_job['job']).as_posix())
     return test_jobs
 
 
@@ -46,13 +46,13 @@ def process_asset_id(asset_id, full_version):
 
 def test_files_preprocess(test_jobs, full_version):
     for test_job in test_jobs:
-        print("processing test job: " + test_job)
+        print(f"processing test job: {test_job}")
         with open(test_job) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for job in data["jobs"]:
-                print("processing asset"+data["jobs"][job]["component"])
                 original_asset = data["jobs"][job]["component"]
-                if original_asset.__str__().startswith("azureml"):
+                print(f"processing asset {original_asset}")
+                if original_asset.startswith("azureml"):
                     new_asset = process_asset_id(original_asset, full_version)
                     data["jobs"][job]["component"] = new_asset
                     print(data["jobs"][job]["component"])
@@ -83,7 +83,7 @@ for x in component_dir.iterdir():
         with open(spec_path) as fp:
             spec_data = data = yaml.load(fp, Loader=yaml.FullLoader)
             if registry_name != "azureml":
-                final_version = spec_data['version'].__str__()+'-'+componentVersionWithBuildId
+                final_version = spec_data['version'] + '-' + componentVersionWithBuildId
             print("final version: "+final_version)
         print(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group} ")
         try:

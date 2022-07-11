@@ -1,7 +1,7 @@
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
-from asyncio import subprocess
+# from asyncio import subprocess
 from subprocess import check_call
 import argparse
 from pathlib import Path
@@ -21,7 +21,7 @@ workspace = args.workspace
 tests_dir = args.tests_directory
 component_dir = args.component_directory
 passed_version = args.version
-subprocess
+# subprocess
 
 
 def test_files_location(dir: Path):
