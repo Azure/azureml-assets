@@ -83,7 +83,7 @@ for x in component_dir.iterdir():
         with open(spec_path) as fp:
             spec_data = data = yaml.load(fp, Loader=yaml.FullLoader)
             if registry_name != "azureml":
-                final_version = spec_data['version'].__str__()+'-'+componentVersionWithBuildId
+                final_version = spec_data['version'] + '-' + componentVersionWithBuildId
             print("final version: "+final_version)
         print(f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group} ")
         try:
