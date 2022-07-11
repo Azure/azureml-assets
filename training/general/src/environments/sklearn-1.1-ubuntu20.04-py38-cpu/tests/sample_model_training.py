@@ -2,36 +2,25 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
 
-import os
+from pathlib import Path
 import pytest
 from azure.ai.ml import MLClient
-from azure.ai.ml import command, MpiDistribution
+from azure.ai.ml import command, Input
 from azure.identity import DefaultAzureCredential
 
 from azureml.core import Environment, Workspace
 
-import azureml.assets as assets
-
-CONTEXT_DIR = Path("../context")
 DOCKERFILE = Path("../context/Dockerfile")
 CONDA_SPEC = Path("../context/conda_dependencies.yaml")
 
-def test_sklearn_1_1():
 
-    #retrieve default workspace?
-    # create environment doing Environment.from_dockerfile(name, dockerfile, conda_specification=None, pip_requirements=None)
-    #register env with the workspace
-    #build the environment
-    #run the sample in the built environment
-        #follow the example from the ipynb file
-        #add the cpu cluster to the assets-test workflow
-        #run the job and validate that it was successful
+def test_sklearn_1_1():
     subscription_id = os.environ.get("sub_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
 
     ml_client = MLClient(
-        DefaultAzureCredential(), subscription_id, resource_group, workspace
+        DefaultAzureCredential(), subscription_id, resource_group, workspace_name
     )
 
     env = Environment.from_dockerfile("sklearn1_1", DOCKERFILE, CONDA_SPEC)
@@ -56,3 +45,5 @@ def test_sklearn_1_1():
     )
 
     returned_job = ml_client.create_or_update(job)
+
+    asset returned_job is not None
