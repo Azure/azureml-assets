@@ -2,8 +2,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
 
+import os
 from pathlib import Path
-import pytest
 from azure.ai.ml import MLClient
 from azure.ai.ml import command, Input
 from azure.identity import DefaultAzureCredential
