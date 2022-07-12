@@ -26,7 +26,7 @@ def test_sklearn_1_1():
     )
 
     env = Environment.from_dockerfile("sklearn1_1", this_dir / DOCKERFILE, this_dir / CONDA_SPEC)
-    ws = Workspace.get(workspace_name, subscription_id, resource_group)
+    ws = Workspace.get(name=workspace_name, subscription_id=subscription_id, resource_group=resource_group)
     env = env.register(ws)
 
     # create the command
