@@ -203,7 +203,7 @@ jobs:
         run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
   
       - name: Convert test files and scripts
-        run: python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i training -r $release_dir -a training
+        run: python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i $main_dir/training -r $release_dir -a training
 
       - name: Copy e2e test scripts
         run: | 
