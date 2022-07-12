@@ -15,6 +15,8 @@ CONDA_SPEC = Path("../context/conda_dependencies.yaml")
 
 
 def test_sklearn_1_1():
+    this_dir = Path(__file__).parent
+
     subscription_id = os.environ.get("sub_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
@@ -23,7 +25,7 @@ def test_sklearn_1_1():
         DefaultAzureCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env = Environment.from_dockerfile("sklearn1_1", DOCKERFILE, CONDA_SPEC)
+    env = Environment.from_dockerfile("sklearn1_1", this_dir / DOCKERFILE, this_dir / CONDA_SPEC)
     ws = Workspace.get(workspace_name, subscription_id, resource_group)
     env = env.register(ws)
 
