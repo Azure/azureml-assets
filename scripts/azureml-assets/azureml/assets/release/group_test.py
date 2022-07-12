@@ -32,9 +32,9 @@ if __name__ == '__main__':
     with open(tests_dir / TEST_YML) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
         if 'pre' in data[test_group]:
-            group_pre = tests_dir.__str__()+'/'+data[test_group]['pre']
+            group_pre = tests_dir / data[test_group]['pre']
         if 'post' in data[test_group]:
-            group_post = tests_dir.__str__()+'/'+data[test_group]['post']
+            group_post = tests_dir / data[test_group]['post']
 
     my_env = os.environ.copy()
     my_env['subscription_id'] = subscription_id
