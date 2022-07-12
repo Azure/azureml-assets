@@ -78,7 +78,7 @@ if __name__ == '__main__':
     for component in components:  # component_dir.iterdir():
         print("Registering " + component.name)
         final_version = component.version
-        spec_path = component.spec
+        spec_path = component.spec_with_path
         if registry_name != "azureml":
             final_version = final_version + '-' + component_version_with_buildId
         print("final version: "+final_version)
