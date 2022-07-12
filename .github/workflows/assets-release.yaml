@@ -207,8 +207,9 @@ jobs:
 
       - name: Copy e2e test scripts
         run: | 
+          if [ -d $release_dir/scripts ]; then rm -Rf $release_dir/scripts; fi
           mkdir -p $release_dir/scripts
-          cp $main_dir/$scripts_assets_dir/release/{asset_publish,e2e_test,group_test}.py $release_dir/scripts
+          cp -r $main_dir/$scripts_assets_dir $release_dir/scripts
 
       - name: Create commit and push
         run: |

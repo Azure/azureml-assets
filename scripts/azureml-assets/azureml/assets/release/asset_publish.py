@@ -5,8 +5,8 @@ from subprocess import check_call
 import argparse
 from pathlib import Path
 import yaml
-import azureml.assets as assets
-import azureml.assets.util as util
+import assets
+import assets.util as util
 TEST_YML = "tests.yml"
 PROD_REGISTRY_NAME = "azureml"
 def test_files_location(dir: Path):
