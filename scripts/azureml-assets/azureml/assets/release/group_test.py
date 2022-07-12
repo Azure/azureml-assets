@@ -44,7 +44,7 @@ if __name__ == '__main__':
     submitted_job_list = []
     succeeded_jobs = []
     failed_jobs = []
-    if len(group_pre) > 0:
+    if group_pre:
         check_call(f"python {group_pre}", env=my_env, shell=True)
 
     with open(tests_dir / TEST_YML) as fp:
