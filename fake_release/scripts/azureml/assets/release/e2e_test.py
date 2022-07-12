@@ -65,7 +65,7 @@ if __name__ == '__main__':
         print(f"now printing report area: {area}")
         for group_test_report in final_report[area]:
             print(area + ': ' + group_test_report)
-            if group_test_report.endswith('0'):
+            if group_test_report.endswith('1'):
                 failures = True
 
     # fail the build if any test failed
