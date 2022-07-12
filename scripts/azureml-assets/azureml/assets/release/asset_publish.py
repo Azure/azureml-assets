@@ -9,6 +9,8 @@ import assets
 import assets.util as util
 TEST_YML = "tests.yml"
 PROD_REGISTRY_NAME = "azureml"
+
+
 def test_files_location(dir: Path):
     test_jobs = []
     for test in dir.iterdir():
@@ -21,7 +23,7 @@ def test_files_location(dir: Path):
     return test_jobs
 
 
-def process_asset_id(asset_id, full_version):
+def process_asset_id(asset_id, full_version, registry_name):
     list = asset_id.split("/")
     list_len = len(list)
     if len(full_version) > 0:
@@ -30,7 +32,7 @@ def process_asset_id(asset_id, full_version):
     return "/".join(list)
 
 
-def test_files_preprocess(test_jobs, full_version):
+def test_files_preprocess(test_jobs, full_version, registry_name):
     for test_job in test_jobs:
         print(f"processing test job: {test_job}")
         with open(test_job) as fp:
@@ -39,11 +41,12 @@ def test_files_preprocess(test_jobs, full_version):
                 original_asset = data["jobs"][job]["component"]
                 print(f"processing asset {original_asset}")
                 if original_asset.startswith("azureml:"):
-                    new_asset = process_asset_id(original_asset, full_version)
+                    new_asset = process_asset_id(original_asset, full_version, registry_name)
                     data["jobs"][job]["component"] = new_asset
                     print(f"New Asset ID: {data['jobs'][job]['component']}")
             with open(test_job, "w") as file:
                 yaml.dump(data, file, default_flow_style=False)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -69,10 +72,10 @@ if __name__ == '__main__':
     print('starting locating test files')
     test_jobs = test_files_location(tests_dir)
     print('starting preprocessing test files')
-    test_files_preprocess(test_jobs, component_version_with_buildId)
+    test_files_preprocess(test_jobs, component_version_with_buildId, registry_name)
     print('finished preprocessing test files')
     components = util.find_assets(input_dirs=component_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
-    for component in components: #component_dir.iterdir():
+    for component in components:  # component_dir.iterdir():
         print("Registering " + component.name)
         final_version = component.version
         spec_path = component.spec

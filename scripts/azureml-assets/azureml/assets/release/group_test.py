@@ -26,8 +26,8 @@ if __name__ == '__main__':
     resource_group = args.resource_group
     workspace = args.workspace_name
     # default workspace info
-    group_pre = ''
-    group_post = ''
+    group_pre = None
+    group_post = None
 
     with open(tests_dir / TEST_YML) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
@@ -80,4 +80,4 @@ if __name__ == '__main__':
         failed_job_str = ", ".join(failed_jobs)
         print(f"{len(failed_jobs)} jobs failed. {failed_job_str}.")
         sys.exit(1)
-    
+

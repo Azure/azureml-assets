@@ -5,7 +5,7 @@ import argparse
 from pathlib import Path
 import sys
 import yaml
-from subprocess import Popen, PIPE
+from subprocess import run, PIPE
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import AmlCompute
 from azure.identity import DefaultAzureCredential
@@ -52,23 +52,23 @@ if __name__ == '__main__':
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data:
                 print(f"now processing test group: {test_group}")
-                p = Popen(f"python3 -u group_test.py -i {tests_dir / area} -g {test_group} -s {subscription_id} -r {resource_group} -w {workspace}", stdout=PIPE, shell=True)
-                stdout = p.communicate()
-                print(stdout[0].decode('utf-8'))
-                final_report[area].append(stdout[0].decode('utf-8'))
+                p = run(f"python3 -u group_test.py -i {tests_dir / area} -g {test_group} -s {subscription_id} -r {resource_group} -w {workspace}", shell=True)
+                return_code = p.returncode
+                print(return_code)
+                final_report[area].append(f"test group {test_group} returned {return_code}")
                 print(f"finished processing test group: {test_group}")
             print(f"finished processing area: {area}")
 
     print("Finished all tests")
-    red_flag = False
+    failures = False
     for area in final_report:
         print(f"now printing report area: {area}")
         for group_test_report in final_report[area]:
             print(area + ': ' + group_test_report)
-            if "failed" in group_test_report:
-                red_flag = True
+            if group_test_report.endswith('0'):
+                failures = True
 
     # fail the build if any test failed
-    if(red_flag):
+    if(failures):
         print("One or more tests failed")
         sys.exit(1)
