@@ -215,13 +215,14 @@ jobs:
 
       - name: Create commit and push
         run: |
-          if [[ -z $(git status -s) ]]; then
-            echo "No updates to the release branch"
-            exit 0
-          fi
           git config user.email "<>"
           git config user.name "$GITHUB_WORKFLOW"
           git add -A .
           git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           git push
         working-directory: ${{ env.release_dir }}
+
+#           if [[ -z $(git status -s) ]]; then
+#            echo "No updates to the release branch"
+#            exit 0
+#          fi
