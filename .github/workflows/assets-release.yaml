@@ -21,7 +21,7 @@ concurrency: ${{ github.workflow }}
 env:
   default_asset_dirs: .,!test,!scripts
   main_dir: main
-  release_dir: release
+  release_dir: chuyuan/fake_release
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
   scripts_environment_dir: scripts/azureml-assets/azureml/assets/environment
