@@ -80,4 +80,3 @@ if __name__ == '__main__':
         failed_job_str = ", ".join(failed_jobs)
         print(f"{len(failed_jobs)} jobs failed. {failed_job_str}.")
         sys.exit(1)
-

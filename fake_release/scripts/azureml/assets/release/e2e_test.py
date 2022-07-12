@@ -5,7 +5,7 @@ import argparse
 from pathlib import Path
 import sys
 import yaml
-from subprocess import run, PIPE
+from subprocess import run
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import AmlCompute
 from azure.identity import DefaultAzureCredential
@@ -46,18 +46,18 @@ if __name__ == '__main__':
     ml_client.begin_create_or_update(gpu_cluster_low_pri)
     print("Start executing E2E tests script")
     for area in tests_dir.iterdir():
-        print(f"now processing area: {area}")
-        final_report[area] = []
-        with open(tests_dir / area / "tests.yml") as fp:
+        print(f"now processing area: {area.name}")
+        final_report[area.name] = []
+        with open(area / "tests.yml") as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data:
                 print(f"now processing test group: {test_group}")
-                p = run(f"python3 -u group_test.py -i {tests_dir / area} -g {test_group} -s {subscription_id} -r {resource_group} -w {workspace}", shell=True)
+                p = run(f"python3 -u group_test.py -i {area} -g {test_group} -s {subscription_id} -r {resource_group} -w {workspace}", shell=True)
                 return_code = p.returncode
                 print(return_code)
-                final_report[area].append(f"test group {test_group} returned {return_code}")
+                final_report[area.name].append(f"test group {test_group} returned {return_code}")
                 print(f"finished processing test group: {test_group}")
-            print(f"finished processing area: {area}")
+            print(f"finished processing area: {area.name}")
 
     print("Finished all tests")
     failures = False
