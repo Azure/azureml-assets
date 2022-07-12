@@ -81,5 +81,3 @@ if __name__ == '__main__':
         print(f"{len(failed_jobs)} jobs failed. {failed_job_str}.")
         sys.exit(1)
     
-    sys.exit(0)
-    
