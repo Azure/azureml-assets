@@ -168,12 +168,12 @@ jobs:
     needs: check-release-assets
     
     steps:
-      - name: Download releasable assets
-        id: download-artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ env.releasable_assets_artifact }}
-          path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
+    #  - name: Download releasable assets
+    #    id: download-artifact
+    #    uses: actions/download-artifact@v3
+    #    with:
+    #      name: ${{ env.releasable_assets_artifact }}
+    #      path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
       
       - name: Clone branch
         uses: actions/checkout@v3
