@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     # TO-DO: job post and group post scripts will be run after all jobs are completed
 
-    while(submitted_job_list):
+    while submitted_job_list:
         for job in submitted_job_list:
             returned_job = ml_client.jobs.get(job.name)
             print(f'The status of test job {job.name} is {returned_job.status}')
@@ -74,10 +74,9 @@ if __name__ == '__main__':
             elif returned_job.status == "Failed":
                 failed_jobs.append(returned_job.display_name)
                 submitted_job_list.remove(job)
-    print(f"Totally {len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
+    print(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
 
-    #
-    if(failed_jobs):
+    if failed_jobs:
         failed_job_str = ", ".join(failed_jobs)
         print(f"{len(failed_jobs)} jobs failed. {failed_job_str}.")
         sys.exit(1)
