@@ -207,7 +207,9 @@ jobs:
 
       - name: Copy e2e test scripts
         run: | 
-          if [ -d $release_dir/scripts ]; then rm -Rf $release_dir/scripts; fi
+          if [ -d $release_dir/scripts ]; then 
+            rm -Rf $release_dir/scripts 
+          fi
           mkdir -p $release_dir/scripts
           cp -r $main_dir/$scripts_azureml_assets_dir $release_dir/scripts
 
