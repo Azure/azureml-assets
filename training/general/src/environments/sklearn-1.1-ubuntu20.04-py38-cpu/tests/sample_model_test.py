@@ -51,7 +51,7 @@ def test_sklearn_1_1():
                 path="https://azuremlexamples.blob.core.windows.net/datasets/diabetes.csv",
             )
         },
-        environment=env_name,
+        environment="${{env_name}}@latest",
         compute=os.environ.get("cpu_cluster"),
         display_name="sklearn-diabetes-example",
         # description,
