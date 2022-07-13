@@ -24,7 +24,7 @@ def test_sklearn_1_1():
     workspace_name = os.environ.get("workspace")
 
     ml_client = MLClient(
-        DefaultAzureCredential(), subscription_id, resource_group, workspace_name
+        AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
     # env = Environment.from_dockerfile("sklearn1_1", this_dir / DOCKERFILE, this_dir / CONDA_SPEC)
