@@ -7,7 +7,7 @@ from pathlib import Path
 from azure.ai.ml import MLClient
 from azure.ai.ml import command, Input
 from azure.ai.ml.entities import Environment, BuildContext
-from azure.identity import InteractiveBrowserCredential
+from azure.identity import DefaultAzureCredential
 
 # from azureml.core import Environment, Workspace
 
@@ -24,7 +24,7 @@ def test_sklearn_1_1():
     workspace_name = os.environ.get("workspace")
 
     ml_client = MLClient(
-        InteractiveBrowserCredential(), subscription_id, resource_group, workspace_name
+        DefaultAzureCredential(), subscription_id, resource_group, workspace_name
     )
 
     # env = Environment.from_dockerfile("sklearn1_1", this_dir / DOCKERFILE, this_dir / CONDA_SPEC)
