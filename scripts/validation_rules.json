@@ -8,5 +8,15 @@
     "justifications": [
       "__init__.py - namespace level files excluded from validation"
     ]
+  },
+  "doc": {
+    "exclude": [
+      "azureml-assets/azureml/assets/__init__.py",
+      "azureml-assets/azureml/assets/environment/__init__.py",
+      "azureml-assets/azureml/assets/util/__init__.py"
+    ],
+    "justifications": [
+      "__init__.py - namespace level files excluded from validation"
+    ]
   }
 }

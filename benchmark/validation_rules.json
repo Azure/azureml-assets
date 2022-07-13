@@ -13,5 +13,13 @@
       "__init__.py - namespace level files excluded from validation",
       "E402 - allow module level imports for specific files"
     ]
+  },
+  "doc": {
+    "exclude": [
+      "."
+    ],
+    "justifications": [
+      ". - not enabled yet"
+    ]
   }
 }

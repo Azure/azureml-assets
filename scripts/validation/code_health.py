@@ -9,7 +9,7 @@ from pathlib import Path
 from subprocess import run, PIPE, STDOUT
 from typing import Dict, List, Tuple
 
-FLAKE_RULES_FILE = "flake_rules.json"
+VALIDATION_RULES_FILE = "validation_rules.json"
 DEFAULT_MAX_LINE_LENGTH = 10000
 IGNORE = "ignore"
 IGNORE_FILE = "ignore-file"
@@ -17,11 +17,11 @@ EXCLUDE = "exclude"
 MAX_LINE_LENGTH = "max-line-length"
 
 
-def run_flake8(testpath: Path, flake_rules: Dict[str, List[str]]) -> Tuple[int, str]:
-    ignore = flake_rules.get(IGNORE, [])
-    file_ignore = flake_rules.get(IGNORE_FILE, [])
-    exclude = flake_rules.get(EXCLUDE, [])
-    max_line_length = flake_rules.get(MAX_LINE_LENGTH, DEFAULT_MAX_LINE_LENGTH)
+def run_flake8(testpath: Path, rules: Dict[str, List[str]]) -> Tuple[int, str]:
+    ignore = rules.get(IGNORE, [])
+    file_ignore = rules.get(IGNORE_FILE, [])
+    exclude = rules.get(EXCLUDE, [])
+    max_line_length = rules.get(MAX_LINE_LENGTH, DEFAULT_MAX_LINE_LENGTH)
     cmd = [
         "flake8",
         f"--max-line-length={max_line_length}",
@@ -43,24 +43,24 @@ def run_flake8(testpath: Path, flake_rules: Dict[str, List[str]]) -> Tuple[int, 
 
 
 def load_rules(testpath: Path) -> Dict[str, List[str]]:
-    flake_rules_file = testpath / FLAKE_RULES_FILE
-    flake_rules = {}
-    if flake_rules_file.exists():
-        with open(flake_rules_file) as f:
-            flake_rules = json.load(f).get('pep8', {})
+    rules_file = testpath / VALIDATION_RULES_FILE
+    rules = {}
+    if rules_file.exists():
+        with open(rules_file) as f:
+            rules = json.load(f).get('pep8', {})
 
     # Handle relative paths
-    if IGNORE_FILE in flake_rules:
-        file_ignore = []
-        for pair in flake_rules[IGNORE_FILE]:
-            file, rules = pair.split(":")
+    if IGNORE_FILE in rules:
+        ignore_file = []
+        for pair in rules[IGNORE_FILE]:
+            file, file_rules = pair.split(":")
             file_resolved = str(testpath / file)
-            file_ignore.append(f"{file_resolved}:{rules}")
-        flake_rules[IGNORE_FILE] = file_ignore
-    if EXCLUDE in flake_rules:
-        flake_rules[EXCLUDE] = [str(testpath / p) for p in flake_rules[EXCLUDE]]
+            ignore_file.append(f"{file_resolved}:{file_rules}")
+        rules[IGNORE_FILE] = ignore_file
+    if EXCLUDE in rules:
+        rules[EXCLUDE] = [str(testpath / p) for p in rules[EXCLUDE]]
 
-    return flake_rules
+    return rules
 
 
 def combine_rules(rule_a: Dict[str, List[str]], rule_b: Dict[str, List[str]]) -> Dict[str, List[str]]:
@@ -74,36 +74,36 @@ def combine_rules(rule_a: Dict[str, List[str]], rule_b: Dict[str, List[str]]) ->
     return rule
 
 
-def inherit_flake_rules(rootpath: Path, testpath: Path) -> Dict[str, List[str]]:
-    flake_rules = {}
+def inherit_rules(rootpath: Path, testpath: Path) -> Dict[str, List[str]]:
+    rules = {}
     upperpath = testpath
     while upperpath != rootpath:
         upperpath = upperpath.parent
-        flake_rules = combine_rules(flake_rules, load_rules(upperpath))
-    return flake_rules
+        rules = combine_rules(rules, load_rules(upperpath))
+    return rules
 
 
 def test(rootpath: Path, testpath: Path) -> bool:
-    test_path_flake_rules = inherit_flake_rules(rootpath, testpath)
+    testpath_rules = inherit_rules(rootpath, testpath)
 
-    flake_rules_files = list(testpath.rglob(FLAKE_RULES_FILE))
-    dirs = [p.parent for p in flake_rules_files]
+    rules_files = list(testpath.rglob(VALIDATION_RULES_FILE))
+    dirs = [p.parent for p in rules_files]
 
-    if not testpath == dirs:
+    if testpath not in dirs:
         dirs.insert(0, testpath)
 
-    output = []
+    errors = []
     for path in dirs:
-        flake_rules = {}
-        flake_rules[EXCLUDE] = [str(f.parent) for f in flake_rules_files if f.parent != path]
-        inherited_rules = inherit_flake_rules(testpath, path)
-        flake_rules = combine_rules(combine_rules(flake_rules, test_path_flake_rules),
-                                    combine_rules(inherited_rules, load_rules(path)))
-        output.extend([line for line in run_flake8(path, flake_rules).split("\n") if len(line) > 0])
+        rules = {}
+        rules[EXCLUDE] = [str(d) for d in dirs if d != path and not path.is_relative_to(d)]
+        inherited_rules = inherit_rules(testpath, path)
+        rules = combine_rules(combine_rules(rules, testpath_rules),
+                              combine_rules(inherited_rules, load_rules(path)))
+        errors.extend([line for line in run_flake8(path, rules).splitlines() if len(line) > 0])
 
-    if len(output) > 0:
+    if len(errors) > 0:
         print("flake8 errors:")
-        for line in output:
+        for line in errors:
             print(line)
         return False
     return True
