@@ -54,7 +54,7 @@ def test_sklearn_1_1():
         environment=f"{env_name}@latest",
         compute=os.environ.get("cpu_cluster"),
         display_name="sklearn-diabetes-example",
-        # description,
+        description="A test run of the sklearn 1_1 curated environment",
         # experiment_name
     )
 
