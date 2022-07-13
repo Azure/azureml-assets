@@ -62,6 +62,7 @@ jobs:
         uses: azure/login@v1
         with:
             creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
+            enable-AzPSSession: true
       
       - name: Test all assets
         id: test-all-assets
