@@ -14,6 +14,7 @@ from azure.identity import AzureCliCredential
 # DOCKERFILE = Path("../context/Dockerfile")
 # CONDA_SPEC = Path("../context/conda_dependencies.yaml")
 BUILD_CONTEXT = Path("../context")
+JOB_SOURCE_CODE = "src"
 
 
 def test_sklearn_1_1():
@@ -42,7 +43,7 @@ def test_sklearn_1_1():
 
     # create the command
     job = command(
-        code="./src",  # local path where the code is stored
+        code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
         command="python main.py --diabetes-csv ${{inputs.diabetes}}",
         inputs={
             "diabetes": Input(
