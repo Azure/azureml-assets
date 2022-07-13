@@ -55,7 +55,7 @@ def test_sklearn_1_1():
         compute=os.environ.get("cpu_cluster"),
         display_name="sklearn-diabetes-example",
         description="A test run of the sklearn 1_1 curated environment",
-        experiment_name="sklearn1_1_experiment"
+        experiment_name="sklearnExperiment"
     )
 
     returned_job = ml_client.create_or_update(job)
