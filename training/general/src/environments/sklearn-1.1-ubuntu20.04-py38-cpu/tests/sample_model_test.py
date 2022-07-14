@@ -9,10 +9,6 @@ from azure.ai.ml import command, Input
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
-# from azureml.core import Environment, Workspace
-
-# DOCKERFILE = Path("../context/Dockerfile")
-# CONDA_SPEC = Path("../context/conda_dependencies.yaml")
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 
@@ -27,10 +23,6 @@ def test_sklearn_1_1():
     ml_client = MLClient(
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
-
-    # env = Environment.from_dockerfile("sklearn1_1", this_dir / DOCKERFILE, this_dir / CONDA_SPEC)
-    # ws = Workspace.get(name=workspace_name, subscription_id=subscription_id, resource_group=resource_group)
-    # env = env.register(ws)
 
     env_name = "sklearn1_1"
 
