@@ -84,6 +84,9 @@ def test_assets(input_dirs: List[Path],
             created = create_isolated_environment(asset_config, test_env)
             success = success and created
 
+        env_config = asset_config.environment_config_as_object()
+        assets.pin_env_files(env_config)
+
         # Run pytest
         if success:
             tested = test_asset(asset_config, test_env, reports_dir)
