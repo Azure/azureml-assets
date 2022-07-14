@@ -25,10 +25,9 @@ def test_files_location(dir: Path):
 
 def process_asset_id(asset_id, full_version, registry_name):
     list = asset_id.split("/")
-    list_len = len(list)
-    if len(full_version) > 0:
-        list[list_len - 1] += '-'+full_version
-    list[list_len - 5] = registry_name
+    if full_version != "":
+        list[-1] += '-'+full_version
+    list[-5] = registry_name
     return "/".join(list)
 
 
