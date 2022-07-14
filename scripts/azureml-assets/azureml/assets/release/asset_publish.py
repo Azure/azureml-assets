@@ -75,7 +75,7 @@ if __name__ == '__main__':
     test_files_preprocess(test_jobs, component_version_with_buildId, registry_name)
     print('finished preprocessing test files')
     components = util.find_assets(input_dirs=component_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
-    for component in components:  # component_dir.iterdir():
+    for component in components:
         print("Registering " + component.name)
         final_version = component.version
         spec_path = component.spec_with_path

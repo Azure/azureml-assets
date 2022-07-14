@@ -33,11 +33,12 @@ if __name__ == '__main__':
         data = yaml.load(fp, Loader=yaml.FullLoader)
         for test_group in data:
             for include_file in data[test_group].get('includes', []):
+                src_path = src_dir / include_file
                 target_path = tests_folder / include_file
-                if (src_dir / include_file).is_dir():
+                if src_path.is_dir():
                     print(f"copying folder: {include_file}")
-                    copy_replace_dir(src_dir / include_file, target_path)
+                    copy_replace_dir(src_path, target_path)
                 else:
                     print(f"copying file: {include_file}")
                     Path.mkdir(target_path .parent, parents=True, exist_ok=True)
-                    shutil.copy(src_dir / include_file, target_path)
+                    shutil.copy(src_path, target_path)

@@ -69,6 +69,6 @@ if __name__ == '__main__':
                 failures = True
 
     # fail the build if any test failed
-    if(failures):
+    if failures:
         print("One or more tests failed")
         sys.exit(1)
