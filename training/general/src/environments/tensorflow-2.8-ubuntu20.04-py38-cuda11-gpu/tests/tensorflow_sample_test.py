@@ -13,7 +13,7 @@ BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 
 
-def test_sklearn_1_1():
+def test_tensorflow_2_8():
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("sub_id")
