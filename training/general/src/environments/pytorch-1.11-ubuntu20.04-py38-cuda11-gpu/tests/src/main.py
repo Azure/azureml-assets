@@ -1,5 +1,4 @@
 # imports
-import os
 import mlflow
 import argparse
 
@@ -8,13 +7,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 
 from network import SimpleMLP
+
 
 # <functions>
 # define functions
@@ -101,7 +100,7 @@ def train_model(args, X_train, X_test, y_train, y_test):
 
         # compute and log loss
         loss = loss_fn(y_pred, torch.max(y_train, 1)[1])
-        mlflow.log_metric(f"loss", loss.item(), step=epoch)
+        mlflow.log_metric("loss", loss.item(), step=epoch)
 
         # torch stuff
         optimizer.zero_grad()
