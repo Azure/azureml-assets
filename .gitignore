@@ -128,9 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# ignore local data
-data/
-
 # ignore mlflow local dumps
 mlruns/
 
