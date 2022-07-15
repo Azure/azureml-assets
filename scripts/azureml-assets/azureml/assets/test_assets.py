@@ -85,8 +85,10 @@ def test_assets(input_dirs: List[Path],
             success = success and created
 
         env_config = asset_config.environment_config_as_object()
-        logger.print(f"env_config is {env_config}")
-        assets.pin_env_files(env_config)
+        logger.print(f"env_config_as_object is {env_config}")
+        extra_config = asset_config.extra_config
+        logger.print(f"extra_config is {extra_config}")
+        assets.pin_env_files(extra_config)
 
         # Run pytest
         if success:
