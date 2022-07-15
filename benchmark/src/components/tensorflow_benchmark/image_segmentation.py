@@ -11,19 +11,12 @@ Using your editor, search for those strings to get an idea of how to implement:
 - DISTRIBUTED : how to implement distributed tensorflow
 - MLFLOW : how to implement mlflow reporting of metrics and artifacts
 """
-import os
-import sys
-import tempfile
 import time
-import json
 import logging
 import argparse
-import traceback
 from distutils.util import strtobool
-import math
 
 import mlflow
-import numpy as np
 
 # tensorflow imports
 import tensorflow as tf
@@ -35,7 +28,6 @@ from common.profiling import LogTimeBlock, LogDiskIOBlock
 
 ## tensorflow generic helping code
 from tensorflow_benchmark.helper.training import TensorflowDistributedModelTrainingSequence
-from tensorflow_benchmark.helper.profiling import CustomCallbacks, LogTimeOfTensorFlowIterator
 
 ## classification specific code
 from tensorflow_benchmark.segmentation.model import load_model

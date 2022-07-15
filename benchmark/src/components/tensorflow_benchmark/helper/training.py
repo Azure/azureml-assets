@@ -12,14 +12,10 @@ Using your editor, search for those strings to get an idea of how to implement:
 - MLFLOW : how to implement mlflow reporting of metrics and artifacts
 """
 import os
-import sys
 import tempfile
-import time
 import json
 import logging
-import argparse
 import traceback
-from distutils.util import strtobool
 import math
 
 import mlflow
@@ -27,7 +23,6 @@ import numpy as np
 
 # tensorflow imports
 import tensorflow as tf
-from tensorflow import keras
 
 from .profiling import CustomCallbacks
 

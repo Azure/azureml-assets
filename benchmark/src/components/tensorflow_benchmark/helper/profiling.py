@@ -4,11 +4,9 @@
 """
 This script provides some helper code to help with profiling tensorflow training.
 """
-import os
 import time
 import logging
 import mlflow
-from typing import Any
 from tensorflow import keras
 import tensorflow
 
@@ -24,7 +22,7 @@ class CustomCallbacks(keras.callbacks.Callback):
         self.metrics = {}
         self.train_start = None
         self.epoch_start = None
-        self.epoch_end = time.time() # required for 1st epoch_init_time
+        self.epoch_end = time.time()  # required for 1st epoch_init_time
         self.test_start = None
         self.enabled = enabled
 
