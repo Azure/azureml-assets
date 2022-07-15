@@ -4,7 +4,7 @@ Tests running the pytorch_image_classifier/model/ loader
 import pytest
 import tensorflow as tf
 
-from components.tensorflow_image_segmentation.tf_helper.model import (
+from tensorflow_image_segmentation.tf_helper.model import (
     MODEL_ARCH_LIST,
     get_model_metadata,
     load_model,
