@@ -36,6 +36,7 @@ from tensorflow_benchmark.segmentation.io import ImageAndMaskSequenceDataset
 
 SCRIPT_START_TIME = time.time()  # just to measure time to start
 
+
 def run(args):
     """Run the script using CLI arguments"""
     logger = logging.getLogger(__name__)
