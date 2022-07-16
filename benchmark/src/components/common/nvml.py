@@ -16,11 +16,15 @@ def get_nvml_params() -> dict:
     # if pynvml isn't there, do not fail
     try:
         import pynvml
-        pynvml.nvmlInit()
     except:
         logger.critical(f"Cannot get CUDA machine parameters because importing pynvml failed.\n\n{traceback.format_exc()}")
         return {}
 
+    try:
+        pynvml.nvmlInit()
+    except:
+        logger.critical(f"Cannot get CUDA machine parameters because pynvml.nvmlInit() failed.\n\n{traceback.format_exc()}")
+        return {}
 
     machine_params = {
         "cuda_driver_version": pynvml.nvmlSystemGetCudaDriverVersion_v2(),
@@ -41,7 +45,7 @@ def get_nvml_params() -> dict:
 
         try:
             cuda_device_memory = pynvml.nvmlDeviceGetMemoryInfo(device_handle)
-            machine_params["cuda_device_memory"] = str(round(cuda_device_memory.total // (1024 * 1024 * 1024))) + "G"
+            machine_params["cuda_device_memory"] = str((cuda_device_memory.total // (1024 * 1024 * 1024))) + "G"
         except pynvml.nvml.NVMLError_NotSupported:
             logger.warning("nvmlDeviceGetMemoryInfo() not supported.")
 
