@@ -98,7 +98,8 @@ outputs:
     type: path
     description: "Path to the final model"
 
-code: .
+# code should point to parent folder containing pytorch_benchmark/ and common/
+code: ../
 
 environment: azureml:nvidia_tensorflow:22.02-tf2-py3-mod3
 
