@@ -36,7 +36,7 @@ def test_pytorch_1_11():
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
-        command="pip install -r requirements.txt && python main.py --iris-csv ${{inputs.iris_csv}} --epochs ${{inputs.epochs}} --lr ${{inputs.lr}}",
+        command="python main.py --iris-csv ${{inputs.iris_csv}} --epochs ${{inputs.epochs}} --lr ${{inputs.lr}}",
         inputs={
             "iris_csv": Input(
                 type="uri_file",
