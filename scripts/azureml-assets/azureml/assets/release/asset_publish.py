@@ -82,7 +82,7 @@ if __name__ == '__main__':
    
     asset_set = util.find_assets(input_dirs=component_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
     for asset in asset_set:
-        if registry_name == PROD_REGISTRY_NAME & asset.name not in whitelist:
+        if registry_name == PROD_REGISTRY_NAME and asset.name not in whitelist:
             print(f"Skipping registering asset {asset.name} because it is not in the whitelist")
             continue
         else:
