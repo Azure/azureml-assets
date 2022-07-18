@@ -101,7 +101,7 @@ outputs:
 # code should point to parent folder containing pytorch_benchmark/ and common/
 code: ../
 
-environment: azureml:nvidia_tensorflow:22.02-tf2-py3-dev2
+environment: azureml:nvidia_tensorflow:22.02-tf2-py3-mod3
 
 command: >-
   python train.py 
