@@ -25,6 +25,7 @@ import numpy as np
 import tensorflow as tf
 
 from .profiling import CustomCallbacks
+from common.nvml import get_nvml_params
 
 
 class TensorflowDistributedModelTrainingSequence:
@@ -146,12 +147,8 @@ class TensorflowDistributedModelTrainingSequence:
                 "enable_profiling": bool(self.training_config.enable_profiling),
             }
 
-            if not self.training_config.disable_cuda:
-                # add some gpu properties
-                logged_params["cuda_device_count"] = len(
-                    tf.config.list_physical_devices("GPU")
-                )
-                logged_params["cuda_available"] = logged_params["cuda_device_count"] > 0
+            logged_params.update(get_nvml_params())  # add some gpu properties
+            logged_params["cuda_available"] = logged_params.get("cuda_device_count", 0) > 0
 
             mlflow.log_params(logged_params)
 
