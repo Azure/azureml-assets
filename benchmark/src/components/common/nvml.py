@@ -16,13 +16,13 @@ def get_nvml_params() -> dict:
     # if pynvml isn't there, do not fail
     try:
         import pynvml
-    except BaseException as e:
+    except BaseException:
         logger.critical(f"Cannot get CUDA machine parameters because importing pynvml failed.\n\n{traceback.format_exc()}")
         return {}
 
     try:
         pynvml.nvmlInit()
-    except BaseException as e:
+    except BaseException:
         logger.critical(f"Cannot get CUDA machine parameters because pynvml.nvmlInit() failed.\n\n{traceback.format_exc()}")
         return {}
 
