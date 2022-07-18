@@ -210,7 +210,7 @@ class PyTorchDistributedModelTrainingSequence:
             }
 
             if not self.training_config.disable_cuda and torch.cuda.is_available():
-                logged_params.update(get_nvml_params()) # add some gpu properties
+                logged_params.update(get_nvml_params())  # add some gpu properties
                 self.logger.info(f"CUDA: get_gencode_flags() returns: {torch.cuda.get_gencode_flags()}")
                 self.logger.info(f"CUDA: get_arch_list() returns: {torch.cuda.get_arch_list()}")
 
