@@ -86,10 +86,7 @@ def test_assets(input_dirs: List[Path],
 
         if asset_config.type is assets.AssetType.ENVIRONMENT:
             env_config = asset_config.environment_config_as_object()
-            if env_config is not None:
-                assets.pin_env_files(env_config)
-            else:
-                logger.log_debug(f"Asset {asset_config} of type {assets.AssetType.ENVIRONMENT} is missing an environment yaml")
+            assets.pin_env_files(env_config)
 
         # Run pytest
         if success:
