@@ -6,8 +6,8 @@ This scripts leverages pynvml to get important properties about the GPUs
 (to log them as mlflow parameters).
 """
 import logging
-import math
 import traceback
+
 
 def get_nvml_params() -> dict:
     """Uses pynvml to get all VM related parameters to log"""
@@ -16,13 +16,13 @@ def get_nvml_params() -> dict:
     # if pynvml isn't there, do not fail
     try:
         import pynvml
-    except:
+    except BaseException as e:
         logger.critical(f"Cannot get CUDA machine parameters because importing pynvml failed.\n\n{traceback.format_exc()}")
         return {}
 
     try:
         pynvml.nvmlInit()
-    except:
+    except BaseException as e:
         logger.critical(f"Cannot get CUDA machine parameters because pynvml.nvmlInit() failed.\n\n{traceback.format_exc()}")
         return {}
 
@@ -58,6 +58,7 @@ def get_nvml_params() -> dict:
     pynvml.nvmlShutdown()
 
     return machine_params
+
 
 if __name__ == "__main__":
     # for local testing

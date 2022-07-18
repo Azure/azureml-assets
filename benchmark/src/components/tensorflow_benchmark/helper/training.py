@@ -27,6 +27,7 @@ import tensorflow as tf
 from .profiling import CustomCallbacks
 from common.nvml import get_nvml_params
 
+
 class TensorflowDistributedModelTrainingSequence:
     """Generic class to run the sequence for training a Tensorflow model
     using distributed training."""
@@ -146,7 +147,7 @@ class TensorflowDistributedModelTrainingSequence:
                 "enable_profiling": bool(self.training_config.enable_profiling),
             }
 
-            logged_params.update(get_nvml_params()) # add some gpu properties
+            logged_params.update(get_nvml_params())  # add some gpu properties
             logged_params["cuda_available"] = logged_params.get("cuda_device_count", 0) > 0
 
             mlflow.log_params(logged_params)
