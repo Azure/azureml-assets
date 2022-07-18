@@ -5,7 +5,8 @@ from pathlib import Path
 import yaml
 import shutil
 import argparse
-
+import azureml.assets as assets
+import azureml.assets.util as util
 
 def copy_replace_dir(source: Path, dest: Path):
     # Delete destination directory
@@ -13,6 +14,22 @@ def copy_replace_dir(source: Path, dest: Path):
         shutil.rmtree(dest)
     # Copy source to destination directory
     shutil.copytree(source, dest)
+
+def process_test_files(src_yaml:Path):
+    with open(src_yaml) as fp:
+        data = yaml.load(fp, Loader=yaml.FullLoader)
+        for test_group in data.values():
+            for test_job in test_group['jobs'].values():
+                with open(test_job) as tj:
+                    tj_yaml = yaml.load(tj, Loader=yaml.FullLoader)
+                    for job in tj_yaml["jobs"]:
+                        original_asset = tj_yaml["jobs"][job]["component"]
+                        if original_asset.endswith("spec.yml"):
+                            asset_name = assets.AssetConfig(original_asset).name
+                            tj_yaml["jobs"][job]["component"] = asset_name
+                            print(f"Find Asset name: {tj_yaml['jobs'][job]['component']}")
+                with open(test_job, "w") as file:
+                    yaml.dump(tj_yaml, file, default_flow_style=False)
 
 
 if __name__ == '__main__':
@@ -27,6 +44,7 @@ if __name__ == '__main__':
     Path.mkdir(tests_folder, parents=True, exist_ok=True)
     src_dir = args.input_dir
     src_yaml = src_dir / yaml_name
+    process_test_files(src_yaml)
     shutil.copy(src_yaml, tests_folder / yaml_name)
 
     with open(src_yaml) as fp:
