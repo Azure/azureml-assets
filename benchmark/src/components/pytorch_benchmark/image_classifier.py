@@ -33,14 +33,14 @@ if ROOT_FOLDER_PATH not in sys.path:
 
 # internal imports
 ## non-specific helper code
-from common.profiling import LogTimeBlock, LogDiskIOBlock
+from common.profiling import LogTimeBlock, LogDiskIOBlock  # noqa : E402
 
 ## pytorch generic helping code
-from pytorch_benchmark.helper.training import PyTorchDistributedModelTrainingSequence
+from pytorch_benchmark.helper.training import PyTorchDistributedModelTrainingSequence  # noqa : E402
 
 ## classification specific code
-from pytorch_benchmark.classification.model import get_model_metadata, load_model
-from pytorch_benchmark.classification.io import build_image_datasets
+from pytorch_benchmark.classification.model import get_model_metadata, load_model  # noqa : E402
+from pytorch_benchmark.classification.io import build_image_datasets  # noqa : E402
 
 SCRIPT_START_TIME = time.time()  # just to measure time to start
 
