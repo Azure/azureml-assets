@@ -4,13 +4,14 @@ Tests running the pytorch_image_classifier/model/ loader
 import pytest
 import tensorflow as tf
 
-from components.tensorflow_image_segmentation.tf_helper.model import (
+from tensorflow_benchmark.segmentation.model import (
     MODEL_ARCH_LIST,
     get_model_metadata,
     load_model,
 )
 
 # IMPORTANT: see conftest.py for fixtures
+
 
 @pytest.mark.parametrize("model_arch", MODEL_ARCH_LIST)
 def test_model_loader(model_arch):

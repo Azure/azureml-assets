@@ -21,6 +21,11 @@ env:
   asset_config_filename: asset.yaml
   pytest_reports_dir: pytest
   package_versions_file: scripts/test-requirements.txt
+  workspace: ${{ secrets.ASSETS_TEST_WORKSPACE_NAME }}
+  sub_id: ${{ secrets.ASSETS_TEST_WORKSPACE_SUBSCRIPTION_ID }}
+  resource_group: ${{ secrets.ASSETS_TEST_WORKSPACE_RESOURCE_GROUP }}
+  cpu_cluster: ${{ secrets.ASSETS_TEST_WORKSPACE_CPU_CLUSTER }}
+  gpu_cluster: ${{ secrets.ASSETS_TEST_WORKSPACE_GPU_CLUSTER }}
 
 defaults:
   run:
@@ -30,6 +35,7 @@ jobs:
   test:
     name: Test assets
     runs-on: ubuntu-latest
+    environment: BuiltinRegistryDev
 
     steps:
       - name: Clone branch
@@ -51,6 +57,11 @@ jobs:
     
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+            creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
       
       - name: Test all assets
         id: test-all-assets

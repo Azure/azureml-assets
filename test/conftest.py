@@ -1,3 +1,7 @@
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
+
 def pytest_addoption(parser):
     parser.addoption("--resource-group", action="store")
     parser.addoption("--registry", action="store")
@@ -15,6 +19,8 @@ def pytest_generate_tests(metafunc):
     if 'build_subdir_expected_pair' in metafunc.fixturenames:
         metafunc.parametrize('build_subdir_expected_pair', [
             ("build-bad", False),
+            ("build-latest-regex-bad", False),
+            ("build-latest-regex-good", True),
             ("build-test-bad", False),
             ("build-test-good", True),
             ("pre-built-good", True),
