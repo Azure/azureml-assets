@@ -36,6 +36,7 @@ trial:
         --num_epochs ${{inputs.num_epochs}}
         --optimizer ${{inputs.optimizer}}
         --loss ${{inputs.loss}}
+        --metrics ${{inputs.metric}}
         --num_gpus ${{inputs.num_gpus}}
         --model_output ${{outputs.trained_model}}
         --checkpoints ${{outputs.checkpoints}}
@@ -113,7 +114,8 @@ inputs:
     # training
     num_epochs: 7
     optimizer: "rmsprop"
-    loss: "sparse_categorical_crossentropy"
+    loss: "categorical_crossentropy"
+    metric: "meaniou"
 
     # distributed settings
     enable_profiling: False
