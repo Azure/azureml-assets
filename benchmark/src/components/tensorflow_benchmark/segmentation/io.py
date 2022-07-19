@@ -117,33 +117,56 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
     @staticmethod
     def loading_function(image_path, mask_path, target_size, num_classes, image_type="png", ):
         """Function called using tf map() for loading images into tensors"""
-        # logging.getLogger(__name__).info(f"Actually loading image {image_path}")
+        # we have to use read_file() because the path is given from a tensor (from_tensor_slices())
         image_content = tensorflow.io.read_file(image_path)
+
+        # then apply the right decoding function depending on type
+        # NOTE: do NOT use image.decode_image() because the resulting image
+        # will not have a shape and resize() will except
         if image_type == "jpg":
             image = tensorflow.image.decode_jpeg(image_content, channels=3)
         else:
             image = tensorflow.image.decode_png(image_content, channels=3)
+
+        # then resize and convert to expected type
         image = tensorflow.image.resize(image, [target_size, target_size])
         image = tensorflow.image.convert_image_dtype(image, tensorflow.float32)
 
+        # we have to use read_file() because the path is given from a tensor (from_tensor_slices())
         mask_content = tensorflow.io.read_file(mask_path)
+
+        # then we apply the right decoding function
         mask = tensorflow.image.decode_png(
             mask_content, channels=1, dtype=tensorflow.dtypes.uint8
         )
+
+        # resizing the mask to the size expected by model
         mask = tensorflow.image.resize(
             mask, [target_size, target_size], antialias=False
         )
+        # resizing produces floats and not uint8
         mask = tensorflow.math.round(mask)
+
+        # we also need to make this 1 dimensional
+        mask = tensorflow.math.reduce_max(mask, axis=2)
+
+        # and reduce the indices to the number of classes
         mask = tensorflow.clip_by_value(
             mask,
-            clip_value_min=0,
-            clip_value_max=(num_classes-1)
+            clip_value_min=0,  # i >= min
+            clip_value_max=(num_classes-1)  # i <= max
         )
+
+        # then cast it back to uint9
+        mask = tensorflow.cast(mask, dtype=tensorflow.dtypes.uint8)
+
+        # and apply one_hot encoding
+        # mask = tensorflow.one_hot(mask, depth=num_classes)
         # mask = tensorflow.image.convert_image_dtype(mask, tensorflow.uint8)
 
         return image, mask
 
-    def dataset(self, num_classes, input_size=160):
+    def dataset(self, num_classes, input_size):
         """Creates a tf dataset and a loading function."""
         # builds the list of pairs
         self.build_pair_list()
