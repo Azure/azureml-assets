@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
-code: ../../components/tensorflow_image_segmentation/
+code: ../../components/
 
 display_name: "tf_unet"
 experiment_name: "tensorflow_unet_pets"
@@ -73,7 +73,7 @@ outputs:
 ###############
 
 command: >-
-    python train.py 
+    python tensorflow_benchmark/image_segmentation.py 
     --train_images ${{inputs.train_images}}
     --train_masks ${{inputs.train_masks}}
     --test_images ${{inputs.test_images}}
@@ -95,13 +95,14 @@ command: >-
     --checkpoints ${{outputs.checkpoints}}
     --distributed_strategy ${{inputs.distributed_strategy}}
     --distributed_backend ${{inputs.distributed_backend}}
+    --enable_profiling ${{inputs.enable_profiling}}
 
 
 ###################
 ### ENVIRONMENT ###
 ###################
 
-environment: azureml:nvidia_tensorflow:22.02-tf2-py3-dev2
+environment: azureml:nvidia_tensorflow:22.02-tf2-py3-mod3
 
 # NOTE: set env var if needed
 environment_variables:

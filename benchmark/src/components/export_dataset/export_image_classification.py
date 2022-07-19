@@ -7,11 +7,10 @@ To run:
 """
 import torchvision
 
+import argparse
 import os
 from tqdm import tqdm
-import numpy as np
-from PIL import Image
-import argparse
+
 
 def run(args):
     """Download datasets from torchvision"""

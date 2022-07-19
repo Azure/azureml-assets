@@ -25,7 +25,8 @@ RUN python -m pip install   azureml-defaults==1.41.0 \
                             mlflow==1.25.1 \
                             azureml-mlflow==1.41.0 \
                             transformers==4.18.0 \
-                            psutil==5.9.0
+                            psutil==5.9.0 \
+                            pynvml==11.4.1
 
 # add ndv4-topo.xml
 RUN mkdir /opt/microsoft/

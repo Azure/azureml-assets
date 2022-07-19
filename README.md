@@ -46,6 +46,11 @@ Here's the list of things you do when you are getting started:
 * Once everything is ready, create [asset.yaml](https://github.com/Azure/azureml-assets/blob/release/latest/component/train_object_detection_model/object_detection/asset.yaml) file.
 * Test jobs
   * Provide test jobs, these will be running before we publish the asset to production.
+  * You will need to have a `tests.yml` inside your folder to indicate which files will be involved during the test and you may also indicate any pre or post scripts need to be executed during the whole process of testing. The details of `tests.yml` requirement can be found in [Wiki](https://github.com/Azure/azureml-assets/wiki/Adding-Test-Job) of this repository.
+  * For now, we ask you to use **Asset ID** for components referencing in the yml files of testing jobs. In the future, we will allow you to use local references.
+  * An example of Asset ID:
+  `azureml://registries/azureml-dev/{asset_type}/{asset_name}/version/{version}`
+  please double check the `asset_name` and `version` are the same as what indicated in your `spec.yml`. Otherwise, the test jobs will definitely fail due to the null referencing.
 * Your asset will first be published to azureml-dev and azureml-staging. You could test the component from those two registries first.
 * Once everything is ready, submit a review request in this repo. We will help you publish the component.
 

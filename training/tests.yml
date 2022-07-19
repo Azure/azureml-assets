@@ -1,0 +1,8 @@
+vision:
+  includes: 
+  - "./vision/jobs/object-detection-using-built-in-component/"
+  jobs:
+    object-detection-using-built-in-component: 
+      job: "./vision/jobs/object-detection-using-built-in-component/pipeline.yml"
+      pre: "./vision/jobs/object-detection-using-built-in-component/prepare_data.py"
+
