@@ -12,7 +12,7 @@ outputs:
   images:
     type: uri_folder
     mode: upload
-    path: azureml://datastores/workspaceblobstore/paths/azureml-vision-datasets/dogs/
+    path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/dogs/
 
 environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu@latest
 
