@@ -14,12 +14,12 @@ compute: azureml:gpu-cluster
 
 
 trial:
-    code: ../../components/tensorflow_image_segmentation/
+    code: ../../components/
 
     ### COMMAND ###
 
     command: >-
-        python train.py 
+        python tensorflow_benchmark/image_segmentation.py 
         --train_images ${{inputs.train_images}}
         --train_masks ${{inputs.train_masks}}
         --test_images ${{inputs.test_images}}

@@ -11,6 +11,8 @@ Using your editor, search for those strings to get an idea of how to implement:
 - DISTRIBUTED : how to implement distributed tensorflow
 - MLFLOW : how to implement mlflow reporting of metrics and artifacts
 """
+import os
+import sys
 import time
 import logging
 import argparse
@@ -22,16 +24,22 @@ import mlflow
 import tensorflow as tf
 from tensorflow import keras
 
+# fix to AzureML PYTHONPATH
+ROOT_FOLDER_PATH = os.path.join(os.path.dirname(__file__), "..")
+if ROOT_FOLDER_PATH not in sys.path:
+    print(f"Adding root folder to PYTHONPATH: {ROOT_FOLDER_PATH}")
+    sys.path.append(ROOT_FOLDER_PATH)
+
 # internal imports
 ## non-specific helper code
-from common.profiling import LogTimeBlock, LogDiskIOBlock
+from common.profiling import LogTimeBlock, LogDiskIOBlock  # noqa : E402
 
 ## tensorflow generic helping code
-from tensorflow_benchmark.helper.training import TensorflowDistributedModelTrainingSequence
+from tensorflow_benchmark.helper.training import TensorflowDistributedModelTrainingSequence  # noqa : E402
 
 ## classification specific code
-from tensorflow_benchmark.segmentation.model import load_model
-from tensorflow_benchmark.segmentation.io import ImageAndMaskSequenceDataset
+from tensorflow_benchmark.segmentation.model import load_model  # noqa : E402
+from tensorflow_benchmark.segmentation.io import ImageAndMaskSequenceDataset  # noqa : E402
 
 
 SCRIPT_START_TIME = time.time()  # just to measure time to start
