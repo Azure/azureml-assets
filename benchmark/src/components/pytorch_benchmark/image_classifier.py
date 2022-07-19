@@ -12,6 +12,7 @@ Using your editor, search for those strings to get an idea of how to implement:
 - MLFLOW : how to implement mlflow reporting of metrics and artifacts
 - PROFILER : how to implement pytorch profiler
 """
+import os
 import sys
 import time
 import logging
@@ -24,16 +25,22 @@ import mlflow
 # the long list of torch imports
 import torch
 
+# fix to AzureML PYTHONPATH
+ROOT_FOLDER_PATH = os.path.join(os.path.dirname(__file__), "..")
+if ROOT_FOLDER_PATH not in sys.path:
+    print(f"Adding root folder to PYTHONPATH: {ROOT_FOLDER_PATH}")
+    sys.path.append(ROOT_FOLDER_PATH)
+
 # internal imports
 ## non-specific helper code
-from common.profiling import LogTimeBlock, LogDiskIOBlock
+from common.profiling import LogTimeBlock, LogDiskIOBlock  # noqa : E402
 
 ## pytorch generic helping code
-from pytorch_benchmark.helper.training import PyTorchDistributedModelTrainingSequence
+from pytorch_benchmark.helper.training import PyTorchDistributedModelTrainingSequence  # noqa : E402
 
 ## classification specific code
-from pytorch_benchmark.classification.model import get_model_metadata, load_model
-from pytorch_benchmark.classification.io import build_image_datasets
+from pytorch_benchmark.classification.model import get_model_metadata, load_model  # noqa : E402
+from pytorch_benchmark.classification.io import build_image_datasets  # noqa : E402
 
 SCRIPT_START_TIME = time.time()  # just to measure time to start
 
