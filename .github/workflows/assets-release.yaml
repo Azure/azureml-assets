@@ -81,7 +81,7 @@ jobs:
           path: |
             ${{ runner.temp }}/${{ env.changed_assets_artifact }}
             !${{ runner.temp }}/${{ env.changed_assets_artifact }}/environment
-      
+
     outputs:
       updated_env_count: ${{ steps.find-updated-assets.outputs.updated_env_count }}
 
@@ -163,12 +163,13 @@ jobs:
 
   release-assets:
     name: Release assets
-    if: always() && needs.check-release-assets.outputs.has_releasable_assets != '' && github.ref == 'refs/heads/main'
+    if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: check-release-assets
     
     steps:
       - name: Download releasable assets
+        if: needs.check-release-assets.outputs.has_releasable_assets != ''
         id: download-artifact
         uses: actions/download-artifact@v3
         with:
@@ -202,6 +203,17 @@ jobs:
       - name: Update release branch
         run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
   
+      - name: Convert test files and scripts
+        run: python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i $main_dir/training -r $release_dir -a training
+
+      - name: Copy e2e test scripts
+        run: | 
+          if [ -d $release_dir/scripts ]; then 
+            rm -Rf $release_dir/scripts 
+          fi
+          mkdir -p $release_dir/scripts
+          cp -r $main_dir/$scripts_azureml_assets_dir $release_dir/scripts
+
       - name: Create commit and push
         run: |
           if [[ -z $(git status -s) ]]; then
@@ -214,3 +226,4 @@ jobs:
           git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           git push
         working-directory: ${{ env.release_dir }}
+

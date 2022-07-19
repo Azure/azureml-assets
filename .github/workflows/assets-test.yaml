@@ -24,6 +24,8 @@ env:
   workspace: ${{ secrets.ASSETS_TEST_WORKSPACE_NAME }}
   sub_id: ${{ secrets.ASSETS_TEST_WORKSPACE_SUBSCRIPTION_ID }}
   resource_group: ${{ secrets.ASSETS_TEST_WORKSPACE_RESOURCE_GROUP }}
+  cpu_cluster: ${{ secrets.ASSETS_TEST_WORKSPACE_CPU_CLUSTER }}
+  gpu_cluster: ${{ secrets.ASSETS_TEST_WORKSPACE_GPU_CLUSTER }}
 
 defaults:
   run:
