@@ -29,7 +29,6 @@ def are_dir_trees_equal(dir1: Path, dir2: Path, enable_logging: bool = False, ig
         bool: True if the directory trees are the same and there were no errors
             while accessing the directories or files, False otherwise.
     """
-
     dirs_cmp = filecmp.dircmp(dir1, dir2)
     if dirs_cmp.left_only:
         _log_diff(f"Compared {dir1} and {dir2} and found these only in {dir1}: {dirs_cmp.left_only}", enable_logging)

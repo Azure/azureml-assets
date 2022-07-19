@@ -4,23 +4,48 @@ import re
 import sys
 from pathlib import Path
 from subprocess import run, PIPE, STDOUT
-from typing import Dict, List
+from typing import List, Set
 
-VALIDATION_RULES_FILE = "validation_rules.json"
-IGNORE = "ignore"
-EXCLUDE = "exclude"
+RULES_FILENAME = "validation_rules.json"
 FILE_NAME_PATTERN = re.compile(r"^(.+):\d+\s+")
 
 
-def run_docstyle(testpath: Path, rules: Dict[str, List[str]]):
-    ignore = rules.get(IGNORE, [])
+class Rules:
+    ROOT_KEY = "doc"
+    IGNORE = "ignore"
+    EXCLUDE = "exclude"
+    FORCE = "force"
 
+    def __init__(self, file_name: Path = None):
+        if file_name is not None and file_name.exists():
+            # Load rules from file
+            with open(file_name) as f:
+                rules = json.load(f).get(self.ROOT_KEY, {})
+                self.ignore = set(rules.get(self.IGNORE, []))
+                self.exclude = {file_name.parent / p for p in rules.get(self.EXCLUDE, [])}
+                self.force = set(rules.get(self.FORCE, []))
+        else:
+            # Initialize empty
+            self.ignore = set()
+            self.exclude = set()
+            self.force = set()
+
+    def __or__(self, other: "Rules") -> "Rules":
+        rules = Rules()
+        rules.ignore = self.ignore | other.ignore
+        rules.exclude = self.exclude | other.exclude
+        rules.force = self.force | other.force
+        return rules
+
+
+def run_docstyle(testpath: Path, rules: Rules):
     cmd = [
         "pydocstyle",
         r"--match=.*\.py",
-        testpath
+        str(testpath)
     ]
 
+    ignore = rules.ignore - rules.force
     if ignore:
         cmd.insert(1, "--ignore={}".format(",".join(ignore)))
 
@@ -32,10 +57,9 @@ def run_docstyle(testpath: Path, rules: Dict[str, List[str]]):
     return p.stdout.decode()
 
 
-def filter_docstyle_output(output: str, rules: Dict[str, List[str]]) -> List[str]:
+def filter_docstyle_output(output: str, rules: Rules) -> List[str]:
     lines = [line for line in output.splitlines() if len(line) > 0]
     if lines:
-        excludes = [Path(e) for e in rules[EXCLUDE]]
         filtered_lines = []
         for i in range(0, len(lines) - 1, 2):
             line = lines[i]
@@ -44,7 +68,7 @@ def filter_docstyle_output(output: str, rules: Dict[str, List[str]]) -> List[str
                 raise Exception(f"Unable to extract filename from {line}")
             file = Path(match.group(1))
             file_is_excluded = False
-            for exclude in excludes:
+            for exclude in rules.exclude:
                 if file == exclude or (exclude.is_dir() and file.is_relative_to(exclude)):
                     file_is_excluded = True
                     break
@@ -56,57 +80,31 @@ def filter_docstyle_output(output: str, rules: Dict[str, List[str]]) -> List[str
     return lines
 
 
-def load_rules(testpath: Path, force: List[str] = []) -> Dict[str, List[str]]:
-    validation_rules_file = testpath / VALIDATION_RULES_FILE
-    rules = {}
-    if validation_rules_file.exists():
-        with open(validation_rules_file) as f:
-            rules = json.load(f).get('doc', {})
-
-    # Filter out any ignored rules that are forced
-    if IGNORE in rules and force:
-        rules[IGNORE] = [r for r in rules[IGNORE] if r not in force]
-
-    # Handle relative paths
-    if EXCLUDE in rules:
-        rules[EXCLUDE] = [str(testpath / p) for p in rules[EXCLUDE]]
-
-    return rules
-
-
-def combine_rules(rule_a: Dict[str, List[str]], rule_b: Dict[str, List[str]]) -> Dict[str, List[str]]:
-    rule = {}
-    rule[IGNORE] = rule_a.get(IGNORE, []) + rule_b.get(IGNORE, [])
-    rule[EXCLUDE] = rule_a.get(EXCLUDE, []) + rule_b.get(EXCLUDE, [])
-
-    return rule
-
-
-def inherit_rules(rootpath: Path, testpath: Path, force: List[str] = []) -> Dict[str, List[str]]:
-    rules = {}
+def inherit_rules(rootpath: Path, testpath: Path) -> Rules:
+    rules = Rules()
     upperpath = testpath
     while upperpath != rootpath:
         upperpath = upperpath.parent
-        rules = combine_rules(rules, load_rules(upperpath, force))
+        rules |= Rules(upperpath / RULES_FILENAME)
     return rules
 
 
-def test(rootpath: Path, testpath: Path, force: List[str] = []) -> bool:
-    testpath_rules = inherit_rules(rootpath, testpath, force)
+def test(rootpath: Path, testpath: Path, force: Set[str] = {}) -> bool:
+    testpath_rules = inherit_rules(rootpath, testpath)
 
-    validation_rules_files = list(testpath.rglob(VALIDATION_RULES_FILE))
-    dirs = [p.parent for p in validation_rules_files]
+    rules_files = list(testpath.rglob(RULES_FILENAME))
+    dirs = [p.parent for p in rules_files]
 
     if testpath not in dirs:
         dirs.insert(0, testpath)
 
     errors = []
     for path in dirs:
-        rules = {}
-        rules[EXCLUDE] = [str(d) for d in dirs if d != path and not path.is_relative_to(d)]
-        inherited_rules = inherit_rules(testpath, path, force)
-        rules = combine_rules(combine_rules(rules, testpath_rules),
-                              combine_rules(inherited_rules, load_rules(path, force)))
+        rules = Rules()
+        rules.exclude = {d for d in dirs if d != path and not path.is_relative_to(d)}
+        rules.force = force
+        rules |= testpath_rules | inherit_rules(testpath, path) | Rules(path / RULES_FILENAME)
+
         output = run_docstyle(path, rules)
         filtered_output = filter_docstyle_output(output, rules)
         errors.extend(filtered_output)
@@ -136,7 +134,7 @@ if __name__ == '__main__':
         parser.error(f"{root_directory} is not a parent directory of {input_directory}")
 
     # Parse forced rules
-    force = [r.strip() for r in args.force.split(",") if not r.isspace()]
+    force = {r.strip() for r in args.force.split(",") if not r.isspace()}
 
     success = test(root_directory, input_directory, force)
 
