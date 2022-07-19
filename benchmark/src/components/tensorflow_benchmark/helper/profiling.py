@@ -44,12 +44,17 @@ class CustomCallbacks(keras.callbacks.Callback):
         self.logger.info(
             "End epoch {} of training; got log keys: {}".format(epoch, keys)
         )
-        self.metrics["epoch_time"] = time.time() - self.epoch_start
+        epoch_time = time.time() - self.epoch_start
         self.metrics["epoch_train_time"] = (
-            self.metrics["epoch_time"] - self.metrics["epoch_eval_time"]
+            epoch_time - self.metrics["epoch_eval_time"]
         )
+        # add epoch metrics
         for key in logs:
-            self.metrics[key] = logs[key]
+            # align with our naming conventions
+            if key.startswith("val"):
+                self.metrics[f"epoch_valid_{key[3:]}"] = logs[key]
+            else:
+                self.metrics[f"epoch_train_{key}"] = logs[key]
 
         self.epoch_end = time.time()
 
