@@ -161,7 +161,7 @@ class ImageAndMaskSequenceDataset(ImageAndMaskHelper):
         mask = tensorflow.cast(mask, dtype=tensorflow.dtypes.uint8)
 
         # and apply one_hot encoding
-        # mask = tensorflow.one_hot(mask, depth=num_classes)
+        mask = tensorflow.one_hot(mask, depth=num_classes)
         # mask = tensorflow.image.convert_image_dtype(mask, tensorflow.uint8)
 
         return image, mask
