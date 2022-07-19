@@ -18,9 +18,12 @@ def copy_replace_dir(source: Path, dest: Path):
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests.yml")
-    parser.add_argument("-a", "--test-area", required=True, type=str, help="the test area name")
-    parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
+    parser.add_argument("-i", "--input-dir", required=True, type=Path,
+                        help="dir path of tests.yml")
+    parser.add_argument("-a", "--test-area", required=True, type=str,
+                        help="the test area name")
+    parser.add_argument("-r", "--release-directory", required=True, type=Path,
+                        help="Directory to which the release branch has been cloned")
     args = parser.parse_args()
     yaml_name = "tests.yml"
     tests_folder = args.release_directory / "tests" / args.test_area

@@ -121,8 +121,10 @@ def test(rootpath: Path, testpath: Path) -> bool:
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory to validate")
-    parser.add_argument("-r", "--root-directory", type=Path, help="Root directory containing flake8 rules, must be a parent of --input-directory")
+    parser.add_argument("-i", "--input-directory", required=True, type=Path,
+                        help="Directory to validate")
+    parser.add_argument("-r", "--root-directory", type=Path,
+                        help="Root directory containing flake8 rules, must be a parent of --input-directory")
     args = parser.parse_args()
 
     # Handle directories

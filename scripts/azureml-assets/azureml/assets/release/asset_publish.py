@@ -81,7 +81,8 @@ if __name__ == '__main__':
         if registry_name != "azureml":
             final_version = final_version + '-' + component_version_with_buildId
         print("final version: "+final_version)
-        cmd = f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group}"
+        cmd = f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} " \
+              f"--workspace {workspace} --resource-group {resource_group}"
         print(cmd)
         try:
             check_call(cmd, shell=True)
