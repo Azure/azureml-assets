@@ -74,6 +74,7 @@ def run(args):
         # the helper returns a dataset containing paths to images
         # and a loading function to use map() for loading the data
         train_dataset, train_loading_function = train_dataset_helper.dataset(
+            num_classes=args.num_classes+1,
             input_size=args.model_input_size
         )
 
@@ -88,6 +89,7 @@ def run(args):
         # the helper returns a dataset containing paths to images
         # and a loading function to use map() for loading the data
         val_dataset, val_loading_function = test_dataset_helper.dataset(
+            num_classes=args.num_classes+1,
             input_size=args.model_input_size
         )
 
@@ -110,19 +112,34 @@ def run(args):
             model = load_model(
                 model_arch=args.model_arch,
                 input_size=args.model_input_size,
-                num_classes=args.num_classes,
+                num_classes=(args.num_classes + 1) # n+1 as undefined class
             )
 
             # print model summary to stdout
             model.summary()
 
+            if args.loss == "dev":
+                loss_func = args.loss  # use name, keras will figure it out (or except)
+            else:
+                loss_func = args.loss  # use name, keras will figure it out (or except)
+
+            train_metrics = []
+            for metric_name in args.metrics:
+                if metric_name.lower() == "meaniou":
+                    train_metrics.append(
+                        tf.keras.metrics.MeanIoU(num_classes=(args.num_classes+1))
+                    )
+                else:
+                    train_metrics.append(metric_name)
+
+            logger.info(f"Compiling model to use: loss={loss_func} metrics={train_metrics}")
             # Configure the model for training.
             # We use the "sparse" version of categorical_crossentropy
             # because our target data is integers.
             model.compile(
                 optimizer=args.optimizer,
-                loss=args.loss,
-                metrics=["accuracy"],
+                loss=loss_func,
+                metrics=train_metrics,
                 # run_eagerly=True
             )
 
@@ -305,6 +322,12 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
         type=str,
         required=False,
         default="sparse_categorical_crossentropy",
+    )
+    group.add_argument(
+        "--metrics",
+        nargs='+',
+        required=False,
+        default=["accuracy"]
     )
     # group.add_argument(
     #     "--learning_rate",
