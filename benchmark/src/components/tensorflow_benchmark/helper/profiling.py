@@ -51,8 +51,8 @@ class CustomCallbacks(keras.callbacks.Callback):
         # add epoch metrics
         for key in logs:
             # align with our naming conventions
-            if key.startswith("val"):
-                self.metrics[f"epoch_valid_{key[3:]}"] = logs[key]
+            if key.startswith("val_"):
+                self.metrics[f"epoch_valid_{key[4:]}"] = logs[key]
             else:
                 self.metrics[f"epoch_train_{key}"] = logs[key]
 
