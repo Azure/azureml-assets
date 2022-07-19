@@ -12,6 +12,7 @@ Using your editor, search for those strings to get an idea of how to implement:
 - MLFLOW : how to implement mlflow reporting of metrics and artifacts
 - PROFILER : how to implement pytorch profiler
 """
+import os
 import sys
 import time
 import logging
@@ -23,6 +24,12 @@ import mlflow
 
 # the long list of torch imports
 import torch
+
+# fix to AzureML PYTHONPATH
+ROOT_FOLDER_PATH = os.path.join(os.path.dirname(__file__), "..")
+if ROOT_FOLDER_PATH not in sys.path:
+    print(f"Adding root folder to PYTHONPATH: {ROOT_FOLDER_PATH}")
+    sys.path.append(ROOT_FOLDER_PATH)
 
 # internal imports
 ## non-specific helper code

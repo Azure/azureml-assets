@@ -11,6 +11,8 @@ Using your editor, search for those strings to get an idea of how to implement:
 - DISTRIBUTED : how to implement distributed tensorflow
 - MLFLOW : how to implement mlflow reporting of metrics and artifacts
 """
+import os
+import sys
 import time
 import logging
 import argparse
@@ -21,6 +23,12 @@ import mlflow
 # tensorflow imports
 import tensorflow as tf
 from tensorflow import keras
+
+# fix to AzureML PYTHONPATH
+ROOT_FOLDER_PATH = os.path.join(os.path.dirname(__file__), "..")
+if ROOT_FOLDER_PATH not in sys.path:
+    print(f"Adding root folder to PYTHONPATH: {ROOT_FOLDER_PATH}")
+    sys.path.append(ROOT_FOLDER_PATH)
 
 # internal imports
 ## non-specific helper code
