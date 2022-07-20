@@ -69,7 +69,7 @@ if __name__ == '__main__':
     asset_ids = {}
     print("publishing assets")
 
-    if registry_name == PROD_REGISTRY_NAME:
+    if True: # registry_name == PROD_REGISTRY_NAME:
         whitelist = []
         with open(whitelist_dir) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
@@ -81,11 +81,11 @@ if __name__ == '__main__':
    
     asset_set = util.find_assets(input_dirs=component_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
     for asset in asset_set:
-        if registry_name == PROD_REGISTRY_NAME and asset.name not in whitelist:
+        if True and asset.name not in whitelist: # registry_name == PROD_REGISTRY_NAME 
             print(f"Skipping registering asset {asset.name} because it is not in the whitelist")
             continue
         else:
-            if asset.name == "train_object_detection_model": # just for test
+            if asset.name.startswith("train"): # just for test
                 print(f"Registering {asset.name}")
                 final_version = asset.version
                 spec_path = asset.spec_with_path
