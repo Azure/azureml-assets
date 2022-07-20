@@ -140,9 +140,7 @@ class TensorflowDistributedModelTrainingSequence:
                 "cache": self.dataloading_config.cache,
                 # training params
                 "model_arch": self.training_config.model_arch,
-                "model_input_size": self.training_config.model_input_size,
                 "model_arch_pretrained": False,  # TODO
-                "num_classes": self.training_config.num_classes,
                 # profiling
                 "enable_profiling": bool(self.training_config.enable_profiling),
             }
