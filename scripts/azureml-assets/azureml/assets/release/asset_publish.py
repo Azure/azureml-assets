@@ -85,19 +85,20 @@ if __name__ == '__main__':
             print(f"Skipping registering asset {asset.name} because it is not in the whitelist")
             continue
         else:
-            print(f"Registering {asset.name}")
-            final_version = asset.version
-            spec_path = asset.spec_with_path
-            if registry_name != PROD_REGISTRY_NAME:
-                final_version = final_version + '-' + asset_version_with_buildId
-            print(f"final version: {final_version}")
-            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name, asset_type=asset.type, asset_name=asset.name, version=final_version)
-            cmd = f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group}"
-            print(cmd)
-            try:
-                check_call(cmd, shell=True)
-            except Exception as ex:
-                print(f"catch error creating {asset.type}: {asset.name} with exception {ex}")
+            if asset.name == "train_object_detection_model": # just for test
+                print(f"Registering {asset.name}")
+                final_version = asset.version
+                spec_path = asset.spec_with_path
+                if registry_name != PROD_REGISTRY_NAME:
+                    final_version = final_version + '-' + asset_version_with_buildId
+                print(f"final version: {final_version}")
+                asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name, asset_type=asset.type.value, asset_name=asset.name, version=final_version)
+                cmd = f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group}"
+                print(cmd)
+                try:
+                    check_call(cmd, shell=True)
+                except Exception as ex:
+                    print(f"catch error creating {asset.type}: {asset.name} with exception {ex}")
     print('All assets published')
 
     print('starting locating test files')
