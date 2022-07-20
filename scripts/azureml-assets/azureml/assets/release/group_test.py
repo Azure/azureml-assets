@@ -54,7 +54,9 @@ if __name__ == '__main__':
                 print(f"Running pre script for {job}")
                 proc = check_call(f"python3 {tests_dir / job_data['pre']}", env=my_env, shell=True)
             print(f'Loading test job {job}')
-            test_job = azure.ai.ml.load_job(tests_dir / job_data['job'])
+            job_path = tests_dir / job_data['job']
+            print(f'job path {job_path}')
+            test_job = azure.ai.ml.load_job(job_path)
             print(test_job)
             print(f'Running test job {job}')
             test_job = ml_client.jobs.create_or_update(test_job)
