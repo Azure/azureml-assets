@@ -39,14 +39,13 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
         with open(test_job) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for job in data["jobs"]:
-                original_asset = data["jobs"][job]["component"]
-                asset_name = (Path(original_asset).parent()).name()
+                asset_name = data["jobs"][job]["component"]
                 print(f"processing asset {asset_name}")
                 if asset_name in asset_ids:
                     data["jobs"][job]["component"] = asset_ids.get(asset_name)
                     print(f"New Asset ID: {data['jobs'][job]['component']}")
             with open(test_job, "w") as file:
-                yaml.dump(data, file, default_flow_style=False)
+                yaml.dump(data, file, default_flow_style=False, sort_keys=False)
 
 
 if __name__ == '__main__':
