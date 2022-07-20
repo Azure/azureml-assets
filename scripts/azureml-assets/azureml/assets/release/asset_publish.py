@@ -85,7 +85,7 @@ if __name__ == '__main__':
             print(f"Skipping registering asset {asset.name} because it is not in the whitelist")
             continue
         else:
-            if asset.name.startswith("train"): # just for test
+            if True: # just for test
                 print(f"Registering {asset.name}")
                 final_version = asset.version
                 spec_path = asset.spec_with_path
