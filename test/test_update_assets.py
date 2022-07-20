@@ -31,7 +31,9 @@ def test_validate_assets(test_subdir: str, create_tag: bool):
     expected_dir = test_dir / "expected"
 
     # Temp directory helps keep the original release directory clean
-    with tempfile.TemporaryDirectory(prefix="release-") as temp_dir1, tempfile.TemporaryDirectory(prefix="output-") as temp_dir2, tempfile.TemporaryDirectory(prefix="expected-") as temp_dir3:
+    with tempfile.TemporaryDirectory(prefix="release-") as temp_dir1, \
+            tempfile.TemporaryDirectory(prefix="output-") as temp_dir2, \
+            tempfile.TemporaryDirectory(prefix="expected-") as temp_dir3:
         temp_release_path = Path(temp_dir1)
         temp_output_path = Path(temp_dir2)
         temp_expected_path = Path(temp_dir3)

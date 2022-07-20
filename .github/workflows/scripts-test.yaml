@@ -48,6 +48,9 @@ jobs:
       
       - name: Check code health
         run: python $scripts_validation_dir/code_health.py -i .
+      
+      - name: Check code documentation
+        run: python $scripts_validation_dir/doc_style.py -i .
 
   test:
     name: Test scripts

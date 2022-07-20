@@ -139,12 +139,14 @@ def build_images(input_dirs: List[Path],
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find environments under image root directories
         futures = []
-        for asset_config in util.find_assets(input_dirs, asset_config_filename, assets.AssetType.ENVIRONMENT, changed_files):
+        for asset_config in util.find_assets(input_dirs, asset_config_filename, assets.AssetType.ENVIRONMENT,
+                                             changed_files):
             env_config = asset_config.environment_config_as_object()
 
             # Filter by OS
             if os_to_build and env_config.os.value != os_to_build:
-                logger.print(f"Skipping build of image for {asset_config.name}: Operating system {env_config.os.value} != {os_to_build}")
+                logger.print(f"Skipping build of image for {asset_config.name}: "
+                             f"Operating system {env_config.os.value} != {os_to_build}")
                 continue
 
             # Pin versions
@@ -162,7 +164,8 @@ def build_images(input_dirs: List[Path],
 
                 # Copy file to output directory without building
                 if output_directory:
-                    util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory, add_subdir=True)
+                    util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory,
+                                                  add_subdir=True)
                 continue
 
             # Tag with version from spec
@@ -185,13 +188,15 @@ def build_images(input_dirs: List[Path],
             logger.print(output)
             logger.end_group()
             if return_code != 0:
-                logger.log_error(f"Build of image for {asset_config.name} failed with exit status {return_code}", "Build failure")
+                logger.log_error(f"Build of image for {asset_config.name} failed with exit status {return_code}",
+                                 "Build failure")
                 counters[FAILED_COUNT] += 1
             else:
                 logger.log_debug(f"Successfully built image for {asset_config.name}")
                 counters[SUCCESS_COUNT] += 1
                 if output_directory:
-                    util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory, add_subdir=True)
+                    util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory,
+                                                  add_subdir=True)
 
     # Set variables
     for counter_name in COUNTERS:
@@ -206,19 +211,32 @@ def build_images(input_dirs: List[Path],
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing environments to build")
-    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
-    parser.add_argument("-o", "--output-directory", type=Path, help="Directory to which successfully built environments will be written")
-    parser.add_argument("-l", "--build-logs-dir", required=True, type=Path, help="Directory to receive build logs")
-    parser.add_argument("-p", "--max-parallel", type=int, default=25, help="Maximum number of images to build at the same time")
-    parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter images")
-    parser.add_argument("-O", "--os-to-build", choices=[i.value for i in list(assets.Os)], help="Only build environments based on this OS")
-    parser.add_argument("-r", "--registry", help="Container registry on which to build images")
-    parser.add_argument("-g", "--resource-group", help="Resource group containing the container registry")
-    parser.add_argument("-P", "--pin-versions", action="store_true", help="Pin images/packages to latest versions")
-    parser.add_argument("-t", "--tag-with-version", action="store_true", help="Tag image names using the version in the asset's spec file")
-    parser.add_argument("-T", "--test-command", help="If building on ACR, command used to test image, relative to build context root")
-    parser.add_argument("-u", "--push", action="store_true", help="If building on ACR, push after building and (optionally) testing")
+    parser.add_argument("-i", "--input-dirs", required=True,
+                        help="Comma-separated list of directories containing environments to build")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
+                        help="Asset config file name to search for")
+    parser.add_argument("-o", "--output-directory", type=Path,
+                        help="Directory to which successfully built environments will be written")
+    parser.add_argument("-l", "--build-logs-dir", required=True, type=Path,
+                        help="Directory to receive build logs")
+    parser.add_argument("-p", "--max-parallel", type=int, default=25,
+                        help="Maximum number of images to build at the same time")
+    parser.add_argument("-c", "--changed-files",
+                        help="Comma-separated list of changed files, used to filter images")
+    parser.add_argument("-O", "--os-to-build", choices=[i.value for i in list(assets.Os)],
+                        help="Only build environments based on this OS")
+    parser.add_argument("-r", "--registry",
+                        help="Container registry on which to build images")
+    parser.add_argument("-g", "--resource-group",
+                        help="Resource group containing the container registry")
+    parser.add_argument("-P", "--pin-versions", action="store_true",
+                        help="Pin images/packages to latest versions")
+    parser.add_argument("-t", "--tag-with-version", action="store_true",
+                        help="Tag image names using the version in the asset's spec file")
+    parser.add_argument("-T", "--test-command",
+                        help="If building on ACR, command used to test image, relative to build context root")
+    parser.add_argument("-u", "--push", action="store_true",
+                        help="If building on ACR, push after building and (optionally) testing")
     args = parser.parse_args()
 
     # Ensure dependent args are present

@@ -40,8 +40,10 @@ def test(testpaths: List[Path], excludes: List[Path] = []) -> bool:
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-directories", required=True, type=Path, nargs='+', help="Directories to validate")
-    parser.add_argument("-e", "--excludes", default=[], type=Path, nargs='+', help="Directories to exclude")
+    parser.add_argument("-i", "--input-directories", required=True, type=Path, nargs='+',
+                        help="Directories to validate")
+    parser.add_argument("-e", "--excludes", default=[], type=Path, nargs='+',
+                        help="Directories to exclude")
     args = parser.parse_args()
 
     success = test(args.input_directories, args.excludes)
