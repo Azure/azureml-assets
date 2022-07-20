@@ -92,7 +92,7 @@ if __name__ == '__main__':
                 if registry_name != PROD_REGISTRY_NAME:
                     final_version = final_version + '-' + asset_version_with_buildId
                 print(f"final version: {final_version}")
-                asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name, asset_type=asset.type.value, asset_name=asset.name, version=final_version)
+                asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name, asset_type=f"{asset.type.value}s", asset_name=asset.name, version=final_version)
                 cmd = f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group}"
                 print(cmd)
                 try:
