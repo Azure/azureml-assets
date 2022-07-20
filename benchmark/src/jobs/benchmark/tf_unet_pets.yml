@@ -19,19 +19,19 @@ inputs:
     train_images:
         type: uri_folder
         mode: download # pick ro_mount, rw_mount or download
-        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/oxford_iit_pets/images
     train_masks:
         type: uri_folder
         mode: download # pick ro_mount, rw_mount or download
-        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/trimaps
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/oxford_iit_pets/annotations/trimaps
     test_images:
         type: uri_folder
         mode: download # pick ro_mount, rw_mount or download
-        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/oxford_iit_pets/images
     test_masks:
         type: uri_folder
         mode: download # pick ro_mount, rw_mount or download
-        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/trimaps
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/oxford_iit_pets/annotations/trimaps
 
     # oxford pets specifics
     images_type: "jpg"
