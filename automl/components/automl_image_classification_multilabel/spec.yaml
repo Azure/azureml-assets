@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/AutoMLComponent.json
 name: microsoft.azureml.automl.image.classification.multilabel.component
-display_name: AutoML Image Classification Multilabel
+display_name: AutoML Image Classification Multilabel (Private Preview)
 description: Component that executes an AutoML Image Classification Multilabel task model training in a pipeline.
-version: 1.0 # anonymous components have fixed version.
+version: 0.0.1-preview
 type: automl
 task: image_classification_multilabel

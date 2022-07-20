@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/AutoMLComponent.json
 name: microsoft.azureml.automl.regression.component
-display_name: AutoML Regression
+display_name: AutoML Regression (Private Preview)
 description: Component that executes an AutoML Regression task model training in a pipeline.
-version: 1.0 # anonymous components have fixed version.
+version: 0.0.1-preview
 type: automl
 task: regression
