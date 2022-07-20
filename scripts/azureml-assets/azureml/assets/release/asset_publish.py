@@ -39,14 +39,13 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
         with open(test_job) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for job in data["jobs"]:
-                original_asset = data["jobs"][job]["component"]
-                asset_name = (Path(original_asset).parent()).name()
+                asset_name = data["jobs"][job]["component"]
                 print(f"processing asset {asset_name}")
                 if asset_name in asset_ids:
                     data["jobs"][job]["component"] = asset_ids.get(asset_name)
                     print(f"New Asset ID: {data['jobs'][job]['component']}")
             with open(test_job, "w") as file:
-                yaml.dump(data, file, default_flow_style=False)
+                yaml.dump(data, file, default_flow_style=False, sort_keys=False)
 
 
 if __name__ == '__main__':
@@ -82,7 +81,7 @@ if __name__ == '__main__':
    
     asset_set = util.find_assets(input_dirs=component_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
     for asset in asset_set:
-        if registry_name == PROD_REGISTRY_NAME and asset.name not in whitelist:
+        if registry_name == PROD_REGISTRY_NAME & asset.name not in whitelist:
             print(f"Skipping registering asset {asset.name} because it is not in the whitelist")
             continue
         else:

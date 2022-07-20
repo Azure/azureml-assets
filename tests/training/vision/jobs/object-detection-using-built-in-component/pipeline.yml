@@ -8,7 +8,7 @@ compute: azureml:gpu-cluster
 jobs:
   train:
     type: command
-    component: azureml://registries/azureml-staging/components/train_object_detection_model/versions/0.0.1-preview
+    component: train_object_detection_model
     inputs:
       training_data:
         type: mltable
