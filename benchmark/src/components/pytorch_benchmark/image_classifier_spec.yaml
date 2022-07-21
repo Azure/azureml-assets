@@ -107,7 +107,7 @@ code: ../
 environment: azureml:nvidia_pytorch:22.06-py3-mod2
 
 command: >-
-  python train.py 
+  python pytorch_benchmark/image_classifier.py 
   --train_images ${{inputs.train_images}}
   --valid_images ${{inputs.valid_images}}
 
