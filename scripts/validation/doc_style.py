@@ -162,9 +162,9 @@ if __name__ == '__main__':
     force = {r.strip() for r in args.force.split(",") if not r.isspace()}
 
     success = _test(rootpath=root_directory,
-                   testpath=input_directory,
-                   force=force,
-                   changed_files=changed_files)
+                    testpath=input_directory,
+                    force=force,
+                    changed_files=changed_files)
 
     if not success:
         sys.exit(1)
