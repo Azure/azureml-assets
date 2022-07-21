@@ -1,5 +1,5 @@
 """
-Tests running the pytorch_benchmark/helper/model/ loader
+Tests running the pytorch_benchmark/helper/model/ loader.
 """
 import pytest
 import torch
@@ -22,7 +22,7 @@ TEST_MODEL_ARCH_LIST = [
 
 @pytest.mark.parametrize("model_arch", TEST_MODEL_ARCH_LIST)
 def test_model_loader(model_arch):
-    """Tests src/components/pytorch_benchmark/helper/model/"""
+    "Tests src/components/pytorch_benchmark/helper/model/"
     model_metadata = get_model_metadata(model_arch)
 
     assert model_metadata is not None
@@ -38,7 +38,7 @@ def test_model_loader(model_arch):
 
 
 def test_model_loader_failure():
-    """Test asking for a model that deosn't exist"""
+    "Test asking for a model that deosn't exist"
     with pytest.raises(NotImplementedError):
         get_model_metadata("not_a_model")
 
