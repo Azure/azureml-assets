@@ -69,7 +69,7 @@ if __name__ == '__main__':
     asset_ids = {}
     print("publishing assets")
 
-    if True: # registry_name == PROD_REGISTRY_NAME:
+    if registry_name == PROD_REGISTRY_NAME:
         whitelist = []
         with open(whitelist_dir) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
@@ -81,24 +81,23 @@ if __name__ == '__main__':
    
     asset_set = util.find_assets(input_dirs=component_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
     for asset in asset_set:
-        if True and asset.name not in whitelist: # registry_name == PROD_REGISTRY_NAME 
+        if registry_name == PROD_REGISTRY_NAME  and asset.name not in whitelist:
             print(f"Skipping registering asset {asset.name} because it is not in the whitelist")
             continue
         else:
-            if True: # just for test
-                print(f"Registering {asset.name}")
-                final_version = asset.version
-                spec_path = asset.spec_with_path
-                if registry_name != PROD_REGISTRY_NAME:
-                    final_version = final_version + '-' + asset_version_with_buildId
-                print(f"final version: {final_version}")
-                asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name, asset_type=f"{asset.type.value}s", asset_name=asset.name, version=final_version)
-                cmd = f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group}"
-                print(cmd)
-                try:
-                    check_call(cmd, shell=True)
-                except Exception as ex:
-                    print(f"catch error creating {asset.type}: {asset.name} with exception {ex}")
+            print(f"Registering {asset.name}")
+            final_version = asset.version
+            spec_path = asset.spec_with_path
+            if registry_name != PROD_REGISTRY_NAME:
+                final_version = final_version + '-' + asset_version_with_buildId
+            print(f"final version: {final_version}")
+            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name, asset_type=f"{asset.type.value}s", asset_name=asset.name, version=final_version)
+            cmd = f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group}"
+            print(cmd)
+            try:
+                check_call(cmd, shell=True)
+            except Exception as ex:
+                print(f"catch error creating {asset.type}: {asset.name} with exception {ex}")
     print('All assets published')
 
     print('starting locating test files')
