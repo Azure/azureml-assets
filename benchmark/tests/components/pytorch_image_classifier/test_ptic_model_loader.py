@@ -5,15 +5,21 @@ import pytest
 import torch
 
 from pytorch_benchmark.classification.model import (
-    MODEL_ARCH_LIST,
     get_model_metadata,
     load_model,
 )
 
 # IMPORTANT: see conftest.py for fixtures
 
+# IMPORTANT: we have to restrict the list of models for unit test
+# because github actions runners have 7GB RAM only and will OOM
+TEST_MODEL_ARCH_LIST = [
+    "test",
+    "resnet18",
+    "resnet34",
+]
 
-@pytest.mark.parametrize("model_arch", MODEL_ARCH_LIST)
+@pytest.mark.parametrize("model_arch", TEST_MODEL_ARCH_LIST)
 def test_model_loader(model_arch):
     """Tests src/components/pytorch_benchmark/helper/model/"""
     model_metadata = get_model_metadata(model_arch)
