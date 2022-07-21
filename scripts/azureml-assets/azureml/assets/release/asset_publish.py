@@ -105,4 +105,3 @@ if __name__ == '__main__':
     print('starting preprocessing test files')
     test_files_preprocess(test_jobs, asset_ids)
     print('finished preprocessing test files')
-    

@@ -35,6 +35,15 @@ jobs:
         with:
           fetch-depth: 2
       
+      - name: Get changed Python scripts
+        id: changed-scripts
+        uses: tj-actions/changed-files@v23.2
+        with:
+          files_separator: ','
+          separator: ','
+          files: |
+            **/*.py
+      
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
         with:
@@ -48,6 +57,11 @@ jobs:
       
       - name: Check code health
         run: python $scripts_validation_dir/code_health.py -i .
+      
+      # TODO: Remove "if" property, -c argument, and changed-scripts step above
+      - name: Check code documentation
+        if: steps.changed-scripts.outputs.any_modified == 'true'
+        run: python $scripts_validation_dir/doc_style.py -i . -c "${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}"
 
   test:
     name: Test scripts

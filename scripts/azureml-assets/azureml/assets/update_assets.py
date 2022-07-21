@@ -171,12 +171,18 @@ def update_assets(input_dirs: List[Path],
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing assets")
-    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
-    parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
-    parser.add_argument("-o", "--output-directory", type=Path, help="Directory to which new/updated assets will be written, defaults to release directory")
-    parser.add_argument("-c", "--copy-only", action="store_true", help="Just copy assets into the release directory")
-    parser.add_argument("-s", "--skip-unreleased", action="store_true", help="Skip unreleased dynamically-versioned assets in the release branch")
+    parser.add_argument("-i", "--input-dirs", required=True,
+                        help="Comma-separated list of directories containing assets")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
+                        help="Asset config file name to search for")
+    parser.add_argument("-r", "--release-directory", required=True, type=Path,
+                        help="Directory to which the release branch has been cloned")
+    parser.add_argument("-o", "--output-directory", type=Path,
+                        help="Directory to which new/updated assets will be written, defaults to release directory")
+    parser.add_argument("-c", "--copy-only", action="store_true",
+                        help="Just copy assets into the release directory")
+    parser.add_argument("-s", "--skip-unreleased", action="store_true",
+                        help="Skip unreleased dynamically-versioned assets in the release branch")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists

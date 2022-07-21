@@ -1,7 +1,4 @@
-"""
-Tests running the pytorch_image_classifier/train.py script
-on a randomly generated small dataset.
-"""
+"""Tests running the pytorch_benchmark/image_classifier.py script on a randomly generated small dataset."""
 import os
 import sys
 import pytest
@@ -10,13 +7,14 @@ from unittest.mock import patch
 import numpy as np
 from PIL import Image
 
-from components.pytorch_image_classifier import train
+from pytorch_benchmark import image_classifier
 
 # IMPORTANT: see conftest.py for fixtures
 
 
 @pytest.fixture()
 def random_image_in_folder_classes(temporary_dir):
+    """Generate random image for classification test."""
     image_dataset_path = os.path.join(temporary_dir, "image_in_folders")
     os.makedirs(image_dataset_path, exist_ok=False)
 
@@ -43,7 +41,6 @@ def random_image_in_folder_classes(temporary_dir):
 TEST_MODEL_ARCH_LIST = [
     "test",
     "resnet18",
-    "resnet34",
 ]
 
 
@@ -62,7 +59,7 @@ def test_components_pytorch_image_classifier_single_node(
     temporary_dir,
     random_image_in_folder_classes,
 ):
-    """Tests src/components/pytorch_image_classifier/train.py"""
+    """Tests src/components/pytorch_benchmark/image_classifier.py."""
     model_dir = os.path.join(temporary_dir, "pytorch_image_classifier_model")
     checkpoints_dir = os.path.join(
         temporary_dir, "pytorch_image_classifier_checkpoints"
@@ -71,7 +68,7 @@ def test_components_pytorch_image_classifier_single_node(
     # create test arguments for the script
     # fmt: off
     script_args = [
-        "train.py",
+        "image_classifier.py",
         "--train_images", random_image_in_folder_classes,
         "--valid_images", random_image_in_folder_classes,  # using same data for train/valid
         "--batch_size", "16",
@@ -91,7 +88,7 @@ def test_components_pytorch_image_classifier_single_node(
 
     # replaces sys.argv with test arguments and run main
     with patch.object(sys, "argv", script_args):
-        train.main()
+        image_classifier.main()
 
     # those mlflow calls must be unique in the script
     mlflow_start_run_mock.assert_called_once()
@@ -139,7 +136,7 @@ def test_components_pytorch_image_classifier_second_of_two_nodes(
     temporary_dir,
     random_image_in_folder_classes,
 ):
-    """Tests src/components/pytorch_image_classifier/train.py"""
+    """Tests src/components/pytorch_benchmark/image_classifier.py."""
     # model_dir = os.path.join(
     #     temporary_dir, "pytorch_image_classifier_distributed_model"
     # )
@@ -170,7 +167,7 @@ def test_components_pytorch_image_classifier_second_of_two_nodes(
         # create test arguments for the script
         # fmt: off
         script_args = [
-            "train.py",
+            "image_classifier.py",
             "--train_images", random_image_in_folder_classes,
             "--valid_images", random_image_in_folder_classes,  # using same data for train/valid
             "--distributed_backend", backend,
@@ -188,7 +185,7 @@ def test_components_pytorch_image_classifier_second_of_two_nodes(
 
         # replaces sys.argv with test arguments and run main
         with patch.object(sys, "argv", script_args):
-            train.main()
+            image_classifier.main()
 
     # those mlflow calls must be unique in the script
     mlflow_start_run_mock.assert_called_once()

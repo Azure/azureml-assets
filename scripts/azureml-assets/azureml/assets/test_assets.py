@@ -84,6 +84,10 @@ def test_assets(input_dirs: List[Path],
             created = create_isolated_environment(asset_config, test_env)
             success = success and created
 
+        if asset_config.type is assets.AssetType.ENVIRONMENT:
+            env_config = asset_config.environment_config_as_object()
+            assets.pin_env_files(env_config)
+
         # Run pytest
         if success:
             tested = test_asset(asset_config, test_env, reports_dir)
@@ -105,9 +109,12 @@ def test_assets(input_dirs: List[Path],
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing environments to test")
-    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
-    parser.add_argument("-p", "--package-versions-file", required=True, type=Path, help="File with package versions for the base conda environment")
+    parser.add_argument("-i", "--input-dirs", required=True,
+                        help="Comma-separated list of directories containing environments to test")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
+                        help="Asset config file name to search for")
+    parser.add_argument("-p", "--package-versions-file", required=True, type=Path,
+                        help="File with package versions for the base conda environment")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter assets")
     parser.add_argument("-r", "--reports-dir", type=Path, help="Directory for pytest reports")
     args = parser.parse_args()

@@ -14,12 +14,12 @@ compute: azureml:gpu-cluster
 
 
 trial:
-    code: ../../components/tensorflow_image_segmentation/
+    code: ../../components/
 
     ### COMMAND ###
 
     command: >-
-        python train.py 
+        python tensorflow_benchmark/image_segmentation.py 
         --train_images ${{inputs.train_images}}
         --train_masks ${{inputs.train_masks}}
         --test_images ${{inputs.test_images}}
@@ -44,7 +44,7 @@ trial:
 
     ### ENVIRONMENT ###
 
-    environment: azureml:nvidia_tensorflow:22.02-tf2-py3-dev2
+    environment: azureml:nvidia_tensorflow:22.02-tf2-py3-mod3
 
     # NOTE: set env var if needed
     environment_variables:
@@ -80,19 +80,19 @@ inputs:
     train_images:
         type: uri_folder
         mode: download # pick ro_mount, rw_mount or download
-        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/oxford_iit_pets/images
     train_masks:
         type: uri_folder
         mode: download # pick ro_mount, rw_mount or download
-        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/trimaps
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/oxford_iit_pets/annotations/trimaps
     test_images:
         type: uri_folder
         mode: download # pick ro_mount, rw_mount or download
-        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/oxford_iit_pets/images
     test_masks:
         type: uri_folder
         mode: download # pick ro_mount, rw_mount or download
-        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/trimaps
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/oxford_iit_pets/annotations/trimaps
 
     # oxford pets specifics
     images_type: "jpg"
