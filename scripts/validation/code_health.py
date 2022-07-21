@@ -2,6 +2,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
 
+"""Check code health using flake8."""
+
 import argparse
 import json
 import sys
@@ -12,7 +14,7 @@ from typing import Dict, List, Set, Tuple
 RULES_FILENAME = "validation_rules.json"
 
 
-class Rules:
+class _Rules:
     ROOT_KEY = "pep8"
     IGNORE = "ignore"
     IGNORE_FILE = "ignore-file"
@@ -50,8 +52,8 @@ class Rules:
     def get_effective_max_line_length(self) -> int:
         return self.max_line_length or self.DEFAULT_MAX_LINE_LENGTH
 
-    def __or__(self, other: "Rules") -> "Rules":
-        rules = Rules()
+    def __or__(self, other: "_Rules") -> "_Rules":
+        rules = _Rules()
         rules.ignore = self.ignore | other.ignore
         for key in self.ignore_file.keys() | other.ignore_file.keys():
             rules.ignore_file[key] = self.ignore_file.get(key, set()) | other.ignore_file.get(key, set())
@@ -60,7 +62,7 @@ class Rules:
         return rules
 
 
-def run_flake8(testpath: Path, rules: Rules) -> Tuple[int, str]:
+def _run_flake8(testpath: Path, rules: _Rules) -> Tuple[int, str]:
     cmd = [
         "flake8",
         f"--max-line-length={rules.get_effective_max_line_length()}",
@@ -84,18 +86,18 @@ def run_flake8(testpath: Path, rules: Rules) -> Tuple[int, str]:
     return p.stdout.decode()
 
 
-def inherit_rules(rootpath: Path, testpath: Path) -> Rules:
+def _inherit_rules(rootpath: Path, testpath: Path) -> _Rules:
     # Process paths from rootpath to testpath, to ensure max_line_length is calculated properly
     paths = [p for p in testpath.parents if p == rootpath or p.is_relative_to(rootpath)]
     paths.reverse()
-    rules = Rules()
+    rules = _Rules()
     for path in paths:
-        rules |= Rules(path / RULES_FILENAME)
+        rules |= _Rules(path / RULES_FILENAME)
     return rules
 
 
-def test(rootpath: Path, testpath: Path) -> bool:
-    testpath_rules = inherit_rules(rootpath, testpath)
+def _test(rootpath: Path, testpath: Path) -> bool:
+    testpath_rules = _inherit_rules(rootpath, testpath)
 
     rules_files = list(testpath.rglob(RULES_FILENAME))
     dirs = [p.parent for p in rules_files]
@@ -105,10 +107,10 @@ def test(rootpath: Path, testpath: Path) -> bool:
 
     errors = []
     for path in dirs:
-        rules = Rules()
+        rules = _Rules()
         rules.exclude = {d for d in dirs if d != path and not path.is_relative_to(d)}
-        rules |= testpath_rules | inherit_rules(testpath, path) | Rules(path / RULES_FILENAME)
-        errors.extend([line for line in run_flake8(path, rules).splitlines() if len(line) > 0])
+        rules |= testpath_rules | _inherit_rules(testpath, path) | _Rules(path / RULES_FILENAME)
+        errors.extend([line for line in _run_flake8(path, rules).splitlines() if len(line) > 0])
 
     if len(errors) > 0:
         print("flake8 errors:")
@@ -135,7 +137,7 @@ if __name__ == '__main__':
     elif not input_directory.is_relative_to(root_directory):
         parser.error(f"{root_directory} is not a parent directory of {input_directory}")
 
-    success = test(root_directory, input_directory)
+    success = _test(root_directory, input_directory)
 
     if not success:
         sys.exit(1)

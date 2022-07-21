@@ -13,12 +13,10 @@
     "exclude": [
       "azureml/assets/__init__.py",
       "azureml/assets/environment/__init__.py",
-      "azureml/assets/util/__init__.py",
-      "."
+      "azureml/assets/util/__init__.py"
     ],
     "justifications": [
-      "__init__.py - namespace level files excluded from validation",
-      ". - not enabled yet"
+      "__init__.py - namespace level files excluded from validation"
     ]
   }
 }
