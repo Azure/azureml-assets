@@ -2,6 +2,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
 
+"""Check docstrings using pydocstyle."""
+
 import argparse
 import json
 import re
@@ -14,7 +16,7 @@ RULES_FILENAME = "validation_rules.json"
 FILE_NAME_PATTERN = re.compile(r"^(.+):\d+\s+")
 
 
-class Rules:
+class _Rules:
     ROOT_KEY = "doc"
     IGNORE = "ignore"
     EXCLUDE = "exclude"
@@ -34,15 +36,15 @@ class Rules:
             self.exclude = set()
             self.force = set()
 
-    def __or__(self, other: "Rules") -> "Rules":
-        rules = Rules()
+    def __or__(self, other: "_Rules") -> "_Rules":
+        rules = _Rules()
         rules.ignore = self.ignore | other.ignore
         rules.exclude = self.exclude | other.exclude
         rules.force = self.force | other.force
         return rules
 
 
-def run_docstyle(testpath: Path, rules: Rules):
+def _run_docstyle(testpath: Path, rules: _Rules):
     cmd = [
         "pydocstyle",
         r"--match=.*\.py",
@@ -61,7 +63,7 @@ def run_docstyle(testpath: Path, rules: Rules):
     return p.stdout.decode()
 
 
-def filter_docstyle_output(output: str, rules: Rules, changed_files: List[Path]) -> List[str]:
+def _filter_docstyle_output(output: str, rules: _Rules, changed_files: List[Path]) -> List[str]:
     lines = [line for line in output.splitlines() if len(line) > 0]
     if lines:
         # Iterate over every other line, since pydocstyle splits output across two lines
@@ -95,17 +97,17 @@ def filter_docstyle_output(output: str, rules: Rules, changed_files: List[Path])
     return lines
 
 
-def inherit_rules(rootpath: Path, testpath: Path) -> Rules:
-    rules = Rules()
+def _inherit_rules(rootpath: Path, testpath: Path) -> _Rules:
+    rules = _Rules()
     upperpath = testpath
     while upperpath != rootpath:
         upperpath = upperpath.parent
-        rules |= Rules(upperpath / RULES_FILENAME)
+        rules |= _Rules(upperpath / RULES_FILENAME)
     return rules
 
 
-def test(rootpath: Path, testpath: Path, force: Set[str], changed_files: List[Path]) -> bool:
-    testpath_rules = inherit_rules(rootpath, testpath)
+def _test(rootpath: Path, testpath: Path, force: Set[str], changed_files: List[Path]) -> bool:
+    testpath_rules = _inherit_rules(rootpath, testpath)
 
     rules_files = list(testpath.rglob(RULES_FILENAME))
     dirs = [p.parent for p in rules_files]
@@ -115,13 +117,13 @@ def test(rootpath: Path, testpath: Path, force: Set[str], changed_files: List[Pa
 
     errors = []
     for path in dirs:
-        rules = Rules()
+        rules = _Rules()
         rules.exclude = {d for d in dirs if d != path and not path.is_relative_to(d)}
         rules.force = force
-        rules |= testpath_rules | inherit_rules(testpath, path) | Rules(path / RULES_FILENAME)
+        rules |= testpath_rules | _inherit_rules(testpath, path) | _Rules(path / RULES_FILENAME)
 
-        output = run_docstyle(path, rules)
-        filtered_output = filter_docstyle_output(output, rules, changed_files)
+        output = _run_docstyle(path, rules)
+        filtered_output = _filter_docstyle_output(output, rules, changed_files)
         errors.extend(filtered_output)
 
     if len(errors) > 0:
@@ -159,7 +161,7 @@ if __name__ == '__main__':
     # Parse forced rules
     force = {r.strip() for r in args.force.split(",") if not r.isspace()}
 
-    success = test(rootpath=root_directory,
+    success = _test(rootpath=root_directory,
                    testpath=input_directory,
                    force=force,
                    changed_files=changed_files)

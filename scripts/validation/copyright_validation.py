@@ -2,6 +2,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
 
+"""Ensure copyright header is at the top of Python scripts."""
+
 import argparse
 import sys
 from pathlib import Path
@@ -14,7 +16,7 @@ COPYRIGHT = [
 ]
 
 
-def test(testpaths: List[Path], excludes: List[Path] = []) -> bool:
+def _test(testpaths: List[Path], excludes: List[Path] = []) -> bool:
     badfiles = []
     for testpath in testpaths:
         for file in testpath.rglob("*.py"):
@@ -46,7 +48,7 @@ if __name__ == '__main__':
                         help="Directories to exclude")
     args = parser.parse_args()
 
-    success = test(args.input_directories, args.excludes)
+    success = _test(args.input_directories, args.excludes)
 
     if not success:
         sys.exit(1)
