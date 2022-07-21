@@ -81,7 +81,7 @@ if __name__ == '__main__':
    
     asset_set = util.find_assets(input_dirs=component_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
     for asset in asset_set:
-        if registry_name == PROD_REGISTRY_NAME & asset.name not in whitelist:
+        if registry_name == PROD_REGISTRY_NAME  and asset.name not in whitelist:
             print(f"Skipping registering asset {asset.name} because it is not in the whitelist")
             continue
         else:
@@ -91,7 +91,7 @@ if __name__ == '__main__':
             if registry_name != PROD_REGISTRY_NAME:
                 final_version = final_version + '-' + asset_version_with_buildId
             print(f"final version: {final_version}")
-            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name, asset_type=asset.type, asset_name=asset.name, version=final_version)
+            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name, asset_type=f"{asset.type.value}s", asset_name=asset.name, version=final_version)
             cmd = f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group}"
             print(cmd)
             try:
@@ -105,3 +105,4 @@ if __name__ == '__main__':
     print('starting preprocessing test files')
     test_files_preprocess(test_jobs, asset_ids)
     print('finished preprocessing test files')
+    

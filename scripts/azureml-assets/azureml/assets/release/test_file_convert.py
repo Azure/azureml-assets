@@ -8,12 +8,14 @@ import argparse
 import azureml.assets as assets
 import azureml.assets.util as util
 
+
 def copy_replace_dir(source: Path, dest: Path):
     # Delete destination directory
     if dest.exists():
         shutil.rmtree(dest)
     # Copy source to destination directory
     shutil.copytree(source, dest)
+
 
 def process_test_files(src_yaml:Path):
     with open(src_yaml) as fp:
