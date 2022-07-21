@@ -1,9 +1,6 @@
 name: scripts-test
 
 on:
-  push:
-    branches:
-      - elesel/enforce-pep257
   pull_request:
     branches:
       - main
