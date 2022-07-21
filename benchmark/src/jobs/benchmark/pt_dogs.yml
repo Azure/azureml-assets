@@ -10,6 +10,7 @@ tags:
     version: 1.0.5
     env: "nvidia/pytorch:22.06" # use tag to record env in mlflow
 
+
 ########################
 ### INPUTS / OUTPUTS ###
 ########################
@@ -53,12 +54,13 @@ outputs:
     trained_model: 
         type: uri_folder
 
+
 ###############
 ### COMMAND ###
 ###############
 
 command: >-
-    python train.py 
+    python pytorch_benchmark/image_classifier.py 
     --train_images ${{inputs.train_images}}
     --valid_images ${{inputs.valid_images}}
     --distributed_sampling ${{inputs.distributed_sampling}}
@@ -77,6 +79,7 @@ command: >-
     --checkpoints ${{outputs.checkpoints}}
     --cudnn_autotuner ${{inputs.cudnn_autotuner}}
     --enable_profiling ${{inputs.enable_profiling}}
+
 
 ###################
 ### ENVIRONMENT ###
