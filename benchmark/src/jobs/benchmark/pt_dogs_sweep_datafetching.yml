@@ -1,0 +1,157 @@
+$schema: https://azuremlschemas.azureedge.net/latest/sweepJob.schema.json
+type: sweep
+
+display_name: "pt_dogs_sweep_datafetching"
+experiment_name: "pt_image_classif_dogs"
+description: >-
+    Trains an image classification model (dogs) using pytorch.
+
+tags:
+    version: 1.0.5
+    env: "nvidia/pytorch:22.06" # use tag to record env in mlflow
+
+compute: azureml:gpu-cluster
+
+
+trial:
+    code: ../../components/
+
+    ### COMMAND ###
+
+    command: >-
+        python train.py 
+        --train_images ${{inputs.train_images}}
+        --valid_images ${{inputs.valid_images}}
+        --distributed_sampling ${{inputs.distributed_sampling}}
+        --batch_size ${{inputs.batch_size}}
+        --num_workers ${{inputs.num_workers}}
+        --prefetch_factor ${{inputs.prefetch_factor}}
+        --persistent_workers ${{inputs.persistent_workers}}
+        --pin_memory ${{inputs.pin_memory}}
+        --non_blocking ${{inputs.non_blocking}}
+        --model_arch ${{inputs.model_arch}}
+        --model_arch_pretrained ${{inputs.model_arch_pretrained}}
+        --num_epochs ${{inputs.num_epochs}}
+        --learning_rate ${{inputs.learning_rate}}
+        --momentum ${{inputs.momentum}}
+        --model_output ${{outputs.trained_model}}
+        --checkpoints ${{outputs.checkpoints}}
+        --cudnn_autotuner ${{inputs.cudnn_autotuner}}
+        --enable_profiling ${{inputs.enable_profiling}}
+
+    ### ENVIRONMENT ###
+
+    environment: azureml:nvidia_pytorch:22.06-py3-mod2
+
+    # NOTE: set env var if needed
+    environment_variables:
+        NCCL_DEBUG: "INFO" # adjusts the level of info from NCCL tests
+
+        # NCCL_TOPO_FILE: "/opt/microsoft/ndv4-topo.xml" # Use specific topology file for A100
+
+        # NCCL_IB_PCI_RELAXED_ORDERING: "1" # Relaxed Ordering can greatly help the performance of Infiniband networks in virtualized environments.
+        # NCCL_IB_DISABLE: "1" # force disable infiniband (if set to "1")
+        # NCCL_NET_PLUGIN: "none" # to force NET/Plugin off (no rdma/sharp plugin at all)
+        # NCCL_NET: "Socket" # to force node-to-node comm to use Socket (slow)
+        # NCCL_SOCKET_IFNAME: "eth0" # to force Socket comm to use eth0 (use NCCL_NET=Socket)
+
+        # UCX_IB_PCI_RELAXED_ORDERING: "on"
+        # UCX_TLS: "tcp"
+        # UCX_NET_DEVICES: "eth0" # if you have Error: Failed to resolve UCX endpoint...
+
+        # CUDA_DEVICE_ORDER: "PCI_BUS_ID" # ordering of gpus
+
+        # TORCH_DISTRIBUTED_DEBUG: "DETAIL"
+
+    ### DISTRIBUTION ###
+
+    resources:
+        instance_count: 1 # number of nodes
+
+    distribution:
+        # NOTE: using type:pytorch will use all the right env variables for pytorch init_process_group
+        type: pytorch
+        process_count_per_instance: 1 # number of gpus
+
+########################
+### INPUTS / OUTPUTS ###
+########################
+
+inputs:
+    # data inputs
+    train_images:
+        type: uri_folder
+        mode: download # pick ro_mount, rw_mount or download
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/dogs/**
+    valid_images:
+        type: uri_folder
+        mode: download # pick ro_mount, rw_mount or download
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/dogs/**
+
+    # data loading
+    # distributed_sampling: "subsetrandomsampler"
+    # batch_size: 64
+    # num_workers: 0 # pre-fetching currently blocked due to dpv2 container settings
+    # prefetch_factor: 0  # pre-fetching currently blocked due to dpv2 container settings
+    # persistent_workers: true
+    # pin_memory: true
+    # non_blocking: false
+
+    # model
+    model_arch: "resnet18"
+    model_arch_pretrained: true
+
+    # training
+    num_epochs: 7
+    learning_rate: 0.001
+    momentum: 0.9
+    
+    # profiling & optimizations
+    enable_profiling: false
+    cudnn_autotuner: true
+
+outputs:
+    checkpoints: 
+        type: uri_folder
+    trained_model: 
+        type: uri_folder
+
+### SWEEP SETTINGS ###
+
+sampling_algorithm: bayesian
+
+search_space:
+    distributed_sampling:
+        type: choice
+        values: ["subsetrandomsampler", "distributedsampler"]
+    batch_size:
+        type: choice
+        values: [16, 32, 64, 128, 256, 512, 1024]
+    num_workers:
+        type: quniform # (round(uniform(min, max) / q) * q)
+        min_value: 0
+        max_value: 16
+        q: 2
+    prefetch_factor:
+        type: quniform # (round(uniform(min, max) / q) * q)
+        min_value: 0
+        max_value: 16
+        q: 2
+    persistent_workers:
+        type: choice
+        values: ["true", "false"]
+    pin_memory:
+        type: choice
+        values: ["true", "false"]
+    non_blocking:
+        type: choice
+        values: ["true", "false"]
+
+objective:
+    goal: minimize
+    primary_metric: epoch_train_time
+
+limits:
+    max_total_trials: 1000
+    max_concurrent_trials: 4
+    timeout: 10800
