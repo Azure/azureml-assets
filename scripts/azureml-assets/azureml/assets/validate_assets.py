@@ -79,8 +79,10 @@ def validate_assets(input_dirs: List[Path],
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing assets")
-    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
+    parser.add_argument("-i", "--input-dirs", required=True,
+                        help="Comma-separated list of directories containing assets")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
+                        help="Asset config file name to search for")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists

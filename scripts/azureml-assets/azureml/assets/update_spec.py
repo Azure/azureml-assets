@@ -67,9 +67,11 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
     Args:
         asset_config (assets.AssetConfig): AssetConfig object.
         release_directory_root (Path, optional): Directory to which the release branch has been cloned.
-        output_file (Path, optional): File to which updated spec file will be written. If unspecified, the original spec file will be updated.
+        output_file (Path, optional): File to which updated spec file will be written.
+                                      If unspecified, the original spec file will be updated.
         version (str, optional): Version to use instead of the one in the asset config file.
-        include_commit_hash (bool, optional): Whether to include the commit hash in the data available for template replacemnt.
+        include_commit_hash (bool, optional): Whether to include the commit hash in the data available for
+                                              template replacemnt.
         data (Dict[str, object], optional): If provided, use this data instead of calling create_template_data().
     """
     # Reuse or create data
@@ -92,9 +94,12 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--asset-config", required=True, type=Path, help="Asset config file that points to the spec file to update")
-    parser.add_argument("-r", "--release-directory", type=Path, help="Directory to which the release branch has been cloned")
-    parser.add_argument("-o", "--output", type=Path, help="File to which output will be written. Defaults to the original spec file if not specified.")
+    parser.add_argument("-a", "--asset-config", required=True, type=Path,
+                        help="Asset config file that points to the spec file to update")
+    parser.add_argument("-r", "--release-directory", type=Path,
+                        help="Directory to which the release branch has been cloned")
+    parser.add_argument("-o", "--output", type=Path,
+                        help="File to which output will be written. Defaults to the original spec file.")
     args = parser.parse_args()
 
     update(asset_config=args.asset_config, release_directory_root=args.release_directory, output_file=args.output)
