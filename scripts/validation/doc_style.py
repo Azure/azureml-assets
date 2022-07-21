@@ -2,6 +2,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
 
+"""Check docstrings using pydocstyle."""
+
 import argparse
 import json
 import re
@@ -14,7 +16,7 @@ RULES_FILENAME = "validation_rules.json"
 FILE_NAME_PATTERN = re.compile(r"^(.+):\d+\s+")
 
 
-class Rules:
+class _Rules:
     ROOT_KEY = "doc"
     IGNORE = "ignore"
     EXCLUDE = "exclude"
@@ -34,15 +36,15 @@ class Rules:
             self.exclude = set()
             self.force = set()
 
-    def __or__(self, other: "Rules") -> "Rules":
-        rules = Rules()
+    def __or__(self, other: "_Rules") -> "_Rules":
+        rules = _Rules()
         rules.ignore = self.ignore | other.ignore
         rules.exclude = self.exclude | other.exclude
         rules.force = self.force | other.force
         return rules
 
 
-def run_docstyle(testpath: Path, rules: Rules):
+def _run_docstyle(testpath: Path, rules: _Rules):
     cmd = [
         "pydocstyle",
         r"--match=.*\.py",
@@ -61,22 +63,33 @@ def run_docstyle(testpath: Path, rules: Rules):
     return p.stdout.decode()
 
 
-def filter_docstyle_output(output: str, rules: Rules) -> List[str]:
+def _filter_docstyle_output(output: str, rules: _Rules, changed_files: List[Path]) -> List[str]:
     lines = [line for line in output.splitlines() if len(line) > 0]
     if lines:
+        # Iterate over every other line, since pydocstyle splits output across two lines
         filtered_lines = []
         for i in range(0, len(lines) - 1, 2):
+            # Parse filename
             line = lines[i]
             match = FILE_NAME_PATTERN.match(line)
             if not match:
                 raise Exception(f"Unable to extract filename from {line}")
             file = Path(match.group(1))
-            file_is_excluded = False
+
+            # Determine whether file should be included in output
+            include_file = True
             for exclude in rules.exclude:
+                # Check if file is explicitly excluded or in an excluded dir
                 if file == exclude or (exclude.is_dir() and file.is_relative_to(exclude)):
-                    file_is_excluded = True
+                    include_file = False
                     break
-            if not file_is_excluded:
+
+            # Include only changed files, if specified
+            if include_file and changed_files is not None and file not in changed_files:
+                include_file = False
+
+            # Store lines if file is included
+            if include_file:
                 filtered_lines.append(line)
                 filtered_lines.append(lines[i + 1])
         lines = filtered_lines
@@ -84,17 +97,17 @@ def filter_docstyle_output(output: str, rules: Rules) -> List[str]:
     return lines
 
 
-def inherit_rules(rootpath: Path, testpath: Path) -> Rules:
-    rules = Rules()
+def _inherit_rules(rootpath: Path, testpath: Path) -> _Rules:
+    rules = _Rules()
     upperpath = testpath
     while upperpath != rootpath:
         upperpath = upperpath.parent
-        rules |= Rules(upperpath / RULES_FILENAME)
+        rules |= _Rules(upperpath / RULES_FILENAME)
     return rules
 
 
-def test(rootpath: Path, testpath: Path, force: Set[str] = {}) -> bool:
-    testpath_rules = inherit_rules(rootpath, testpath)
+def _test(rootpath: Path, testpath: Path, force: Set[str], changed_files: List[Path]) -> bool:
+    testpath_rules = _inherit_rules(rootpath, testpath)
 
     rules_files = list(testpath.rglob(RULES_FILENAME))
     dirs = [p.parent for p in rules_files]
@@ -104,13 +117,13 @@ def test(rootpath: Path, testpath: Path, force: Set[str] = {}) -> bool:
 
     errors = []
     for path in dirs:
-        rules = Rules()
+        rules = _Rules()
         rules.exclude = {d for d in dirs if d != path and not path.is_relative_to(d)}
         rules.force = force
-        rules |= testpath_rules | inherit_rules(testpath, path) | Rules(path / RULES_FILENAME)
+        rules |= testpath_rules | _inherit_rules(testpath, path) | _Rules(path / RULES_FILENAME)
 
-        output = run_docstyle(path, rules)
-        filtered_output = filter_docstyle_output(output, rules)
+        output = _run_docstyle(path, rules)
+        filtered_output = _filter_docstyle_output(output, rules, changed_files)
         errors.extend(filtered_output)
 
     if len(errors) > 0:
@@ -130,6 +143,8 @@ if __name__ == '__main__':
                         help="Root directory containing docstyle rules, must be a parent of --input-directory")
     parser.add_argument("-f", "--force", default="",
                         help="Comma-separated list of rules that can't be ignored")
+    parser.add_argument("-c", "--changed-files",
+                        help="Comma-separated list of changed files, used to filter assets")
     args = parser.parse_args()
 
     # Handle directories
@@ -140,10 +155,16 @@ if __name__ == '__main__':
     elif not input_directory.is_relative_to(root_directory):
         parser.error(f"{root_directory} is not a parent directory of {input_directory}")
 
+    # Convert comma-separated values to lists
+    changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else None
+
     # Parse forced rules
     force = {r.strip() for r in args.force.split(",") if not r.isspace()}
 
-    success = test(root_directory, input_directory, force)
+    success = _test(rootpath=root_directory,
+                    testpath=input_directory,
+                    force=force,
+                    changed_files=changed_files)
 
     if not success:
         sys.exit(1)
