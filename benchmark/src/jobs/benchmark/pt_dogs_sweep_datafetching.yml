@@ -22,13 +22,13 @@ trial:
         python train.py 
         --train_images ${{inputs.train_images}}
         --valid_images ${{inputs.valid_images}}
-        --distributed_sampling ${{inputs.distributed_sampling}}
-        --batch_size ${{inputs.batch_size}}
-        --num_workers ${{inputs.num_workers}}
-        --prefetch_factor ${{inputs.prefetch_factor}}
-        --persistent_workers ${{inputs.persistent_workers}}
-        --pin_memory ${{inputs.pin_memory}}
-        --non_blocking ${{inputs.non_blocking}}
+        --distributed_sampling ${{search_space.distributed_sampling}}
+        --batch_size ${{search_space.batch_size}}
+        --num_workers ${{search_space.num_workers}}
+        --prefetch_factor ${{search_space.prefetch_factor}}
+        --persistent_workers ${{search_space.persistent_workers}}
+        --pin_memory ${{search_space.pin_memory}}
+        --non_blocking ${{search_space.non_blocking}}
         --model_arch ${{inputs.model_arch}}
         --model_arch_pretrained ${{inputs.model_arch_pretrained}}
         --num_epochs ${{inputs.num_epochs}}
