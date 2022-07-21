@@ -59,7 +59,7 @@ def test_components_pytorch_image_classifier_single_node(
     temporary_dir,
     random_image_in_folder_classes,
 ):
-    """Tests src/components/pytorch_benchmark/image_classifier.py"""
+    """Tests src/components/pytorch_benchmark/image_classifier.py."""
     model_dir = os.path.join(temporary_dir, "pytorch_image_classifier_model")
     checkpoints_dir = os.path.join(
         temporary_dir, "pytorch_image_classifier_checkpoints"
@@ -136,7 +136,7 @@ def test_components_pytorch_image_classifier_second_of_two_nodes(
     temporary_dir,
     random_image_in_folder_classes,
 ):
-    """Tests src/components/pytorch_benchmark/image_classifier.py"""
+    """Tests src/components/pytorch_benchmark/image_classifier.py."""
     # model_dir = os.path.join(
     #     temporary_dir, "pytorch_image_classifier_distributed_model"
     # )
