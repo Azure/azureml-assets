@@ -43,7 +43,6 @@ def random_image_in_folder_classes(temporary_dir):
 TEST_MODEL_ARCH_LIST = [
     "test",
     "resnet18",
-    "resnet34",
 ]
 
 
