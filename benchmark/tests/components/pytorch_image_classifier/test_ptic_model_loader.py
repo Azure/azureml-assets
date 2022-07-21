@@ -19,6 +19,7 @@ TEST_MODEL_ARCH_LIST = [
     "resnet34",
 ]
 
+
 @pytest.mark.parametrize("model_arch", TEST_MODEL_ARCH_LIST)
 def test_model_loader(model_arch):
     """Tests src/components/pytorch_benchmark/helper/model/"""
