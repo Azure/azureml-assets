@@ -168,14 +168,6 @@ jobs:
     needs: check-release-assets
     
     steps:
-      - name: Download releasable assets
-        if: needs.check-release-assets.outputs.has_releasable_assets != ''
-        id: download-artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ env.releasable_assets_artifact }}
-          path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
-      
       - name: Clone branch
         uses: actions/checkout@v3
         with:
@@ -227,3 +219,10 @@ jobs:
           git push
         working-directory: ${{ env.release_dir }}
 
+#      - name: Download releasable assets
+#        if: needs.check-release-assets.outputs.has_releasable_assets != ''
+#        id: download-artifact
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: ${{ env.releasable_assets_artifact }}
+#          path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
