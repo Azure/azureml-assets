@@ -29,7 +29,8 @@ def process_test_files(src_yaml:Path):
                         original_asset = tj_yaml["jobs"][job]["component"].split(":")[1]
                         if Path(original_asset).stem == 'spec':
                             print(test_job_path.parent / original_asset)
-                            asset_name = util.find_assets(input_dirs=test_job_path.parent / Path(original_asset).parent, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)[0].name
+                            asset_folder = test_job_path.parent / Path(original_asset).parent
+                            asset_name = util.find_assets(input_dirs=asset_folder, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)[0].name
                             tj_yaml["jobs"][job]["component"] = asset_name
                             print(f"Find Asset name: {tj_yaml['jobs'][job]['component']}")
                 with open(test_job_path, "w") as file:

@@ -64,7 +64,7 @@ if __name__ == '__main__':
     tests_dir = args.tests_directory
     component_dir = args.component_directory
     passed_version = args.version
-    whitelist_dir= args.whitelist
+    whitelist_dir = args.whitelist
     whitelist = None
     asset_ids = {}
     print("publishing assets")
@@ -78,10 +78,9 @@ if __name__ == '__main__':
 
     asset_version_with_buildId = registry_name + "." + passed_version
     print("generated componentVersionWithBuildId: " + asset_version_with_buildId)
-   
     asset_set = util.find_assets(input_dirs=component_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
     for asset in asset_set:
-        if registry_name == PROD_REGISTRY_NAME  and asset.name not in whitelist:
+        if registry_name == PROD_REGISTRY_NAME and asset.name not in whitelist:
             print(f"Skipping registering asset {asset.name} because it is not in the whitelist")
             continue
         else:
@@ -91,8 +90,12 @@ if __name__ == '__main__':
             if registry_name != PROD_REGISTRY_NAME:
                 final_version = final_version + '-' + asset_version_with_buildId
             print(f"final version: {final_version}")
-            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name, asset_type=f"{asset.type.value}s", asset_name=asset.name, version=final_version)
-            cmd = f"az ml component create --file {spec_path} --registry-name {registry_name} --version {final_version} --workspace {workspace} --resource-group {resource_group}"
+            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name, 
+            asset_type=f"{asset.type.value}s", 
+            asset_name=asset.name, 
+            version=final_version)
+            cmd_temp = Template("az ml component create --file $f --registry-name $r --version $v --workspace $w --resource-group $g")
+            cmd = cmd_temp.substitute(f=spec_path, r=registry_name, v=final_version, w=workspace, g=resource_group)
             print(cmd)
             try:
                 check_call(cmd, shell=True)
