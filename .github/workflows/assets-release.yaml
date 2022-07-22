@@ -178,7 +178,7 @@ jobs:
         uses: actions/checkout@v3
         # if: steps.download-artifact.outputs.download-path
         with:
-          ref: fake_release
+          ref: chuyuan/fake_release
           fetch-depth: 0
           path: ${{ env.release_dir }}
 
