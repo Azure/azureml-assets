@@ -27,7 +27,7 @@ def process_test_files(src_yaml: Path):
                 test_job_path = src_yaml.parent / test_job['job']
                 with open(test_job_path) as tj:
                     tj_yaml = yaml.load(tj, Loader=yaml.FullLoader)
-                    for job in tj_yaml["jobs"].items():
+                    for job_name, job in tj_yaml["jobs"].items():
                         original_asset = job["component"].split(":")[1]
                         if Path(original_asset).stem == 'spec':
                             print(test_job_path.parent / original_asset)
@@ -36,7 +36,7 @@ def process_test_files(src_yaml: Path):
                                 input_dirs=asset_folder,
                                 asset_config_filename=assets.DEFAULT_ASSET_FILENAME)[0].name
                             job["component"] = asset_name
-                            print(f"Find Asset name: {job['component']}")
+                            print(f"for jb {job_name}, find Asset name: {job['component']}")
                 with open(test_job_path, "w") as file:
                     yaml.dump(
                         tj_yaml,

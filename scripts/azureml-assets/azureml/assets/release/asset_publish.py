@@ -34,12 +34,12 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
         print(f"processing test job: {test_job}")
         with open(test_job) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
-            for job in data["jobs"].items():
+            for job_name, job in data["jobs"].items():
                 asset_name = job["component"]
                 print(f"processing asset {asset_name}")
                 if asset_name in asset_ids:
                     job["component"] = asset_ids.get(asset_name)
-                    print(f"New Asset ID: {job['component']}")
+                    print(f"for job {job_name}, the new asset id: {job['component']}")
             with open(test_job, "w") as file:
                 yaml.dump(
                     data,
