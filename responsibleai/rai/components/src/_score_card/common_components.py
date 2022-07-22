@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import plotly.graph_objects as go
 import base64
 import plotly.io as pio

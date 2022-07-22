@@ -22,6 +22,10 @@ def _test(testpaths: List[Path], excludes: List[Path] = []) -> bool:
             if file.parent in excludes:
                 continue
 
+            # Ignore zero-length files
+            if file.stat().st_size == 0:
+                continue
+
             # Read copyright
             with open(file, encoding="utf8") as f:
                 for i in range(0, len(COPYRIGHT)):
