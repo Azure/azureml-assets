@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
 """Ensure copyright header is at the top of Python scripts."""
 
@@ -10,9 +9,8 @@ from pathlib import Path
 from typing import List
 
 COPYRIGHT = [
-    "# ---------------------------------------------------------",
-    "# Copyright (c) Microsoft Corporation. All rights reserved.",
-    "# ---------------------------------------------------------"
+    "# Copyright (c) Microsoft Corporation.",
+    "# Licensed under the MIT License."
 ]
 
 
