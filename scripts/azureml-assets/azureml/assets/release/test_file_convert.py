@@ -1,7 +1,7 @@
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
-"""python scripts for test files converting in GitHub Actions."""
+"""Python scripts for test files converting in GitHub Actions."""
 from pathlib import Path
 import yaml
 import shutil
@@ -11,7 +11,7 @@ import azureml.assets.util as util
 
 
 def copy_replace_dir(source: Path, dest: Path):
-    """copy and replace the source dir to dest dir."""
+    """Copy and replace the source dir to dest dir."""
     if dest.exists():
         shutil.rmtree(dest)
     # Copy source to destination directory
@@ -19,7 +19,7 @@ def copy_replace_dir(source: Path, dest: Path):
 
 
 def process_test_files(src_yaml: Path):
-    """process the test files and replace the local reference to the asset with the asset name for later use."""
+    """Process the test files and replace the local reference to the asset with the asset name for later use."""
     with open(src_yaml) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
         for test_group in data.values():
@@ -27,17 +27,16 @@ def process_test_files(src_yaml: Path):
                 test_job_path = src_yaml.parent / test_job['job']
                 with open(test_job_path) as tj:
                     tj_yaml = yaml.load(tj, Loader=yaml.FullLoader)
-                    for job in tj_yaml["jobs"]:
-                        original_asset = tj_yaml["jobs"][job]["component"].split(":")[1]
+                    for job in tj_yaml["jobs"].items():
+                        original_asset = job["component"].split(":")[1]
                         if Path(original_asset).stem == 'spec':
                             print(test_job_path.parent / original_asset)
                             asset_folder = test_job_path.parent / Path(original_asset).parent
                             asset_name = util.find_assets(
                                 input_dirs=asset_folder,
                                 asset_config_filename=assets.DEFAULT_ASSET_FILENAME)[0].name
-                            tj_yaml["jobs"][job]["component"] = asset_name
-                            print(
-                                f"Find Asset name: {tj_yaml['jobs'][job]['component']}")
+                            job["component"] = asset_name
+                            print(f"Find Asset name: {job['component']}")
                 with open(test_job_path, "w") as file:
                     yaml.dump(
                         tj_yaml,
@@ -73,13 +72,14 @@ if __name__ == '__main__':
         for test_group in data:
             for include_file in data[test_group].get('includes', []):
                 target_path = tests_folder / include_file
-                if (src_dir / include_file).is_dir():
+                src_path = src_dir / include_file
+                if (src_path).is_dir():
                     print(f"copying folder: {include_file}")
-                    copy_replace_dir(src_dir / include_file, target_path)
+                    copy_replace_dir(src_path, target_path)
                 else:
                     print(f"copying file: {include_file}")
                     Path.mkdir(
-                        target_path .parent,
+                        target_path.parent,
                         parents=True,
                         exist_ok=True)
-                    shutil.copy(src_dir / include_file, target_path)
+                    shutil.copy(src_path, target_path)
