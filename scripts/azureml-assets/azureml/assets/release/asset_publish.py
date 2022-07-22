@@ -1,7 +1,7 @@
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
-""" python script to publish assets """
+""" python script to publish assets."""
 from subprocess import check_call
 import argparse
 from pathlib import Path
@@ -16,6 +16,7 @@ PROD_REGISTRY_NAME = "azureml"
 
 
 def test_files_location(dir: Path):
+    """find test files in the directory."""
     test_jobs = []
     for test in dir.iterdir():
         print("processing test folder: " + test.name)
@@ -28,6 +29,7 @@ def test_files_location(dir: Path):
 
 
 def test_files_preprocess(test_jobs, asset_ids: dict):
+    """preprocess test files to generate asset ids."""
     for test_job in test_jobs:
         print(f"processing test job: {test_job}")
         with open(test_job) as fp:
