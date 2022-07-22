@@ -1,6 +1,7 @@
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
+"""Python script used to run the end to end test jobs."""
 import argparse
 from pathlib import Path
 import sys
@@ -52,7 +53,8 @@ if __name__ == '__main__':
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data:
                 print(f"now processing test group: {test_group}")
-                p = run(f"python3 -u group_test.py -i {area} -g {test_group} -s {subscription_id} -r {resource_group} -w {workspace}", shell=True)
+                p = run(f"python3 -u group_test.py -i {area} -g {test_group} -s {subscription_id} -r {resource_group} "
+                        f"-w {workspace}", shell=True)
                 return_code = p.returncode
                 print(return_code)
                 final_report[area.name].append(f"test group {test_group} returned {return_code}")
@@ -69,6 +71,6 @@ if __name__ == '__main__':
                 failures = True
 
     # fail the build if any test failed
-    if(failures):
+    if failures:
         print("One or more tests failed")
         sys.exit(1)

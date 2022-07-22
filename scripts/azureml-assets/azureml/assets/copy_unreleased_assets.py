@@ -49,9 +49,12 @@ def copy_unreleased_assets(release_directory_root: Path,
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
-    parser.add_argument("-o", "--output-directory", required=True, type=Path, help="Directory to which unreleased assets will be written")
-    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
+    parser.add_argument("-r", "--release-directory", required=True, type=Path,
+                        help="Directory to which the release branch has been cloned")
+    parser.add_argument("-o", "--output-directory", required=True, type=Path,
+                        help="Directory to which unreleased assets will be written")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
+                        help="Asset config file name to search for")
     args = parser.parse_args()
 
     # Release assets
