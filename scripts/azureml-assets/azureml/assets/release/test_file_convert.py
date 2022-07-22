@@ -17,7 +17,7 @@ def copy_replace_dir(source: Path, dest: Path):
     shutil.copytree(source, dest)
 
 
-def process_test_files(src_yaml:Path):
+def process_test_files(src_yaml: Path):
     with open(src_yaml) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
         for test_group in data.values():
@@ -30,11 +30,18 @@ def process_test_files(src_yaml:Path):
                         if Path(original_asset).stem == 'spec':
                             print(test_job_path.parent / original_asset)
                             asset_folder = test_job_path.parent / Path(original_asset).parent
-                            asset_name = util.find_assets(input_dirs=asset_folder, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)[0].name
+                            asset_name = util.find_assets(
+                                input_dirs=asset_folder,
+                                asset_config_filename=assets.DEFAULT_ASSET_FILENAME)[0].name
                             tj_yaml["jobs"][job]["component"] = asset_name
-                            print(f"Find Asset name: {tj_yaml['jobs'][job]['component']}")
+                            print(
+                                f"Find Asset name: {tj_yaml['jobs'][job]['component']}")
                 with open(test_job_path, "w") as file:
-                    yaml.dump(tj_yaml, file, default_flow_style=False, sort_keys=False)
+                    yaml.dump(
+                        tj_yaml,
+                        file,
+                        default_flow_style=False,
+                        sort_keys=False)
 
 
 if __name__ == '__main__':
@@ -44,8 +51,12 @@ if __name__ == '__main__':
                         help="dir path of tests.yml")
     parser.add_argument("-a", "--test-area", required=True, type=str,
                         help="the test area name")
-    parser.add_argument("-r", "--release-directory", required=True, type=Path,
-                        help="Directory to which the release branch has been cloned")
+    parser.add_argument(
+        "-r",
+        "--release-directory",
+        required=True,
+        type=Path,
+        help="Directory to which the release branch has been cloned")
     args = parser.parse_args()
     yaml_name = "tests.yml"
     tests_folder = args.release_directory / "tests" / args.test_area
@@ -65,5 +76,8 @@ if __name__ == '__main__':
                     copy_replace_dir(src_dir / include_file, target_path)
                 else:
                     print(f"copying file: {include_file}")
-                    Path.mkdir(target_path .parent, parents=True, exist_ok=True)
+                    Path.mkdir(
+                        target_path .parent,
+                        parents=True,
+                        exist_ok=True)
                     shutil.copy(src_dir / include_file, target_path)

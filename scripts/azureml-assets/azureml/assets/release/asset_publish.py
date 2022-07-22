@@ -8,7 +8,8 @@ import yaml
 import azureml.assets as assets
 import azureml.assets.util as util
 from string import Template
-ASSET_ID_TEMPLATE = Template("azureml://registries/$registries_name/$asset_type/$asset_name/versions/$version")
+ASSET_ID_TEMPLATE = Template(
+    "azureml://registries/$registries_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PROD_REGISTRY_NAME = "azureml"
 
@@ -25,14 +26,6 @@ def test_files_location(dir: Path):
     return test_jobs
 
 
-def process_asset_id(asset_id, full_version, registry_name):
-    list = asset_id.split("/")
-    if full_version != "":
-        list[-1] += '-'+full_version
-    list[-5] = registry_name
-    return "/".join(list)
-
-
 def test_files_preprocess(test_jobs, asset_ids: dict):
     for test_job in test_jobs:
         print(f"processing test job: {test_job}")
@@ -45,18 +38,56 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
                     data["jobs"][job]["component"] = asset_ids.get(asset_name)
                     print(f"New Asset ID: {data['jobs'][job]['component']}")
             with open(test_job, "w") as file:
-                yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+                yaml.dump(
+                    data,
+                    file,
+                    default_flow_style=False,
+                    sort_keys=False)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--registry-name", required=True, type=str, help="the registry name")
-    parser.add_argument("-g", "--resource-group", required=True, type=str, help="the resource group name")
-    parser.add_argument("-w", "--workspace", required=True, type=str, help="the workspace name")
-    parser.add_argument("-c", "--component-directory", required=True, type=Path, help="the component directory")
-    parser.add_argument("-t", "--tests-directory", required=True, type=Path, help="the tests directory")
-    parser.add_argument("-v", "--version", required=False, type=str, help="the version")
-    parser.add_argument("-l", "--whitelist", required=False, help="the path of the whitelist file")
+    parser.add_argument(
+        "-r",
+        "--registry-name",
+        required=True,
+        type=str,
+        help="the registry name")
+    parser.add_argument(
+        "-g",
+        "--resource-group",
+        required=True,
+        type=str,
+        help="the resource group name")
+    parser.add_argument(
+        "-w",
+        "--workspace",
+        required=True,
+        type=str,
+        help="the workspace name")
+    parser.add_argument(
+        "-c",
+        "--component-directory",
+        required=True,
+        type=Path,
+        help="the component directory")
+    parser.add_argument(
+        "-t",
+        "--tests-directory",
+        required=True,
+        type=Path,
+        help="the tests directory")
+    parser.add_argument(
+        "-v",
+        "--version",
+        required=False,
+        type=str,
+        help="the version")
+    parser.add_argument(
+        "-l",
+        "--whitelist",
+        required=False,
+        help="the path of the whitelist file")
     args = parser.parse_args()
     registry_name = args.registry_name
     resource_group = args.resource_group
@@ -78,10 +109,13 @@ if __name__ == '__main__':
 
     asset_version_with_buildId = registry_name + "." + passed_version
     print("generated componentVersionWithBuildId: " + asset_version_with_buildId)
-    asset_set = util.find_assets(input_dirs=component_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
+    asset_set = util.find_assets(
+        input_dirs=component_dir,
+        asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
     for asset in asset_set:
         if registry_name == PROD_REGISTRY_NAME and asset.name not in whitelist:
-            print(f"Skipping registering asset {asset.name} because it is not in the whitelist")
+            print(
+                f"Skipping registering asset {asset.name} because it is not in the whitelist")
             continue
         else:
             print(f"Registering {asset.name}")
@@ -90,17 +124,24 @@ if __name__ == '__main__':
             if registry_name != PROD_REGISTRY_NAME:
                 final_version = final_version + '-' + asset_version_with_buildId
             print(f"final version: {final_version}")
-            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name, 
-            asset_type=f"{asset.type.value}s", 
-            asset_name=asset.name, 
-            version=final_version)
-            cmd_temp = Template("az ml component create --file $f --registry-name $r --version $v --workspace $w --resource-group $g")
-            cmd = cmd_temp.substitute(f=spec_path, r=registry_name, v=final_version, w=workspace, g=resource_group)
+            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registries_name=registry_name,
+                                                                 asset_type=f"{asset.type.value}s",
+                                                                 asset_name=asset.name,
+                                                                 version=final_version)
+            cmd_temp = Template(
+                "az ml component create --file $f --registry-name $r --version $v --workspace $w --resource-group $g")
+            cmd = cmd_temp.substitute(
+                f=spec_path,
+                r=registry_name,
+                v=final_version,
+                w=workspace,
+                g=resource_group)
             print(cmd)
             try:
                 check_call(cmd, shell=True)
             except Exception as ex:
-                print(f"catch error creating {asset.type}: {asset.name} with exception {ex}")
+                print(
+                    f"catch error creating {asset.type}: {asset.name} with exception {ex}")
     print('All assets published')
 
     print('starting locating test files')
