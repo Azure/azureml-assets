@@ -1,3 +1,4 @@
+"""python scripts for test files converting in GitHub Actions"""
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
@@ -10,7 +11,7 @@ import azureml.assets.util as util
 
 
 def copy_replace_dir(source: Path, dest: Path):
-    # Delete destination directory
+    """copy and replace the source dir to dest dir"""
     if dest.exists():
         shutil.rmtree(dest)
     # Copy source to destination directory
@@ -18,6 +19,7 @@ def copy_replace_dir(source: Path, dest: Path):
 
 
 def process_test_files(src_yaml: Path):
+    """process the test files and replace the local reference to the asset with the asset name for later use"""
     with open(src_yaml) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
         for test_group in data.values():

@@ -1,3 +1,4 @@
+"""python script used to run the end to end test jobs"""
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------

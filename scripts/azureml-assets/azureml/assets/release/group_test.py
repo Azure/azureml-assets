@@ -1,3 +1,4 @@
+"""python script to run group tests"""
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------

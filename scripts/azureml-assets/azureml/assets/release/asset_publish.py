@@ -1,3 +1,4 @@
+""" python script to publish assets """
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
