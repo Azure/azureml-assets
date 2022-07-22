@@ -1,7 +1,7 @@
-"""python scripts for test files converting in GitHub Actions"""
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
+"""python scripts for test files converting in GitHub Actions"""
 from pathlib import Path
 import yaml
 import shutil

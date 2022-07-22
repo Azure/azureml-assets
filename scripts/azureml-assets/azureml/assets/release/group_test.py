@@ -1,7 +1,7 @@
-"""python script to run group tests"""
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
+"""python script to run group tests"""
 import argparse
 from subprocess import check_call
 from pathlib import Path

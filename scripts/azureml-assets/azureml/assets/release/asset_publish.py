@@ -1,7 +1,7 @@
-""" python script to publish assets """
 # ---------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
+""" python script to publish assets """
 from subprocess import check_call
 import argparse
 from pathlib import Path
