@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from azureml.automl.core.shared.constants import Tasks
 from azureml.automl.dnn.vision.common.constants import SettingsLiterals
 from azureml.automl.dnn.vision.classification import runner

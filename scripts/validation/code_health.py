@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
 """Check code health using flake8."""
 
