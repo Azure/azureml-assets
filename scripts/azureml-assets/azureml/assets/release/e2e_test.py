@@ -1,7 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
-"""Python script used to run the end to end test jobs."""
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 import argparse
 from pathlib import Path
 import sys
