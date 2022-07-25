@@ -2,11 +2,13 @@ $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
 display_name: object-detection-using-bulit-in-component
 description: Trains an object detection model using a built-in component.
+
 compute: azureml:gpu-cluster
+
 jobs:
   train:
     type: command
-    component: train_object_detection_model
+    component: azureml://registries/azureml-staging/components/train_object_detection_model/versions/0.0.1-preview
     inputs:
       training_data:
         type: mltable
@@ -16,6 +18,7 @@ jobs:
         path: ./resources/validation-mltable-folder
     resources:
       instance_count: 1
+
   predict:
     type: command
     component: file:./predict.yml
