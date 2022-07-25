@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Tests running the pytorch_benchmark/image_classifier.py script on a randomly generated small dataset."""
 import os
 import sys

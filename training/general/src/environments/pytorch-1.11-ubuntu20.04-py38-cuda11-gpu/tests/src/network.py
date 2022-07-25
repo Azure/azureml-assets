@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 # imports
 import torch.nn as nn
 import torch.nn.functional as F

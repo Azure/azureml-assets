@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Tests running the pytorch_benchmark/helper/model/ loader."""
 import pytest
 import torch
