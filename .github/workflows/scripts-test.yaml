@@ -37,7 +37,7 @@ jobs:
       
       - name: Get changed Python scripts
         id: changed-scripts
-        uses: tj-actions/changed-files@v23.2
+        uses: tj-actions/changed-files@v24
         with:
           files_separator: ','
           separator: ','
@@ -60,8 +60,8 @@ jobs:
       
       # TODO: Remove "if" property, -c argument, and changed-scripts step above
       - name: Check code documentation
-        if: steps.changed-scripts.outputs.any_modified == 'true'
-        run: python $scripts_validation_dir/doc_style.py -i . -c "${{ steps.changed-scripts.outputs.all_changed_and_modified_files }}"
+        if: steps.changed-scripts.outputs.all_modified_files != ''
+        run: python $scripts_validation_dir/doc_style.py -i . -c "${{ steps.changed-scripts.outputs.all_modified_files }}"
 
   test:
     name: Test scripts
