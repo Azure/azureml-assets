@@ -1,0 +1,14 @@
+azure-ai-ml==0.1.0b4
+azure.identity==1.10.0
+# data science
+numpy
+scipy
+pandas>=1.2.0
+adlfs>=2021.8.1
+scikit-learn
+torch
+torchvision
+
+# tracking
+mlflow
+azureml-mlflow

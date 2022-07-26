@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """
 This script exports the CIFAR10 dataset to save it as distinct JPG files
 each under their respective class subdirectory.

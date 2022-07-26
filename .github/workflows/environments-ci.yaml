@@ -41,7 +41,7 @@ jobs:
       
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v18.6
+        uses: tj-actions/changed-files@v24
         with:
           files_separator: ','
           separator: ','
@@ -61,7 +61,7 @@ jobs:
 
       - name: Build and test changed images
         id: build-changed-images
-        run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g ${{ secrets.RESOURCE_GROUP }} -r ${{ secrets.BUILD_CONTAINER_REGISTRY }} -T 'python -V' -c "${{ steps.changed-files.outputs.all_changed_and_modified_files }}"
+        run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g ${{ secrets.RESOURCE_GROUP }} -r ${{ secrets.BUILD_CONTAINER_REGISTRY }} -T 'python -V' -c "${{ steps.changed-files.outputs.all_modified_files }}"
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3
