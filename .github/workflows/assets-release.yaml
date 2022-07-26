@@ -226,3 +226,4 @@ jobs:
           git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           git push
         working-directory: ${{ env.release_dir }}
+
