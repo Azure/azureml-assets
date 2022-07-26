@@ -49,3 +49,10 @@ jobs:
       
       - name: Validate assets
         run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename
+
+      - name: Check test coverage
+        run: |
+        mkdir -p $scripts_assets_dir/temp_folder
+        python -u $scripts_assets_dir/release/test_file_convert.py -i main/training -r $scripts_assets_dir/temp_folder -a training
+
+
