@@ -48,53 +48,14 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-r",
-        "--registry-name",
-        required=True,
-        type=str,
-        help="the registry name")
-    parser.add_argument(
-        "-g",
-        "--resource-group",
-        required=True,
-        type=str,
-        help="the resource group name")
-    parser.add_argument(
-        "-s",
-        "--subscription-id",
-        required=True,
-        type=str,
-        help="the subscription-id")
-    parser.add_argument(
-        "-w",
-        "--workspace",
-        required=True,
-        type=str,
-        help="the workspace name")
-    parser.add_argument(
-        "-a",
-        "--assets-directory",
-        required=True,
-        type=Path,
-        help="the assets directory")
-    parser.add_argument(
-        "-t",
-        "--tests-directory",
-        required=True,
-        type=Path,
-        help="the tests directory")
-    parser.add_argument(
-        "--version-suffix",
-        required=False,
-        type=str,
-        help="the version suffix")
-    parser.add_argument(
-        "-l",
-        "--publish-list",
-        required=False,
-        type=Path,
-        help="the path of the publish list file")
+    parser.add_argument("-r", "--registry-name", required=True, type=str, help="the registry name")
+    parser.add_argument("-g", "--resource-group", required=True, type=str, help="the resource group name")
+    parser.add_argument("-s", "--subscription-id", required=True, type=str, help="the subscription-id")
+    parser.add_argument("-w", "--workspace", required=True, type=str, help="the workspace name")
+    parser.add_argument("-a", "--assets-directory", required=True, type=Path, help="the assets directory")
+    parser.add_argument("-t", "--tests-directory", required=True, type=Path, help="the tests directory")
+    parser.add_argument("--version-suffix", required=False, type=str, help="the version suffix")
+    parser.add_argument("-l", "--publish-list", required=False, type=Path, help="the path of the publish list file")
     args = parser.parse_args()
     registry_name = args.registry_name
     subscription_id = args.subscription_id
