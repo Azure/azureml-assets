@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+"""Python scripts for test files converting in GitHub Actions."""
 from pathlib import Path
 import yaml
 import shutil

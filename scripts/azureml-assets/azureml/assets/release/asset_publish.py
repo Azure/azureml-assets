@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+"""Python script to publish assets."""
 from subprocess import check_call
 import argparse
 from pathlib import Path
