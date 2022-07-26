@@ -110,9 +110,7 @@ if __name__ == '__main__':
 
     if publish_list_dir:
         with open(publish_list_dir) as fp:
-            data = yaml.load(fp, Loader=yaml.FullLoader)
-            for asset_type in data:
-                publish_list[asset_type] = data.get(asset_type, [])
+            publish_list = yaml.load(fp, Loader=yaml.FullLoader)
 
     assets_set = util.find_assets(
         input_dirs=component_dir,
