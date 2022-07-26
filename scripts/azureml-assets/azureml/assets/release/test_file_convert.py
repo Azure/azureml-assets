@@ -29,12 +29,12 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
                     tj_yaml = yaml.load(tj, Loader=yaml.FullLoader)
                     for job_name, job in tj_yaml["jobs"].items():
                         if job["component"].split(":")[0] == 'file':
-                        # only process the local file asset
+                            # only process the local file asset
                             original_asset = job["component"].split(":")[1]
                             asset_folder = test_job_path.parent / Path(original_asset).parent
                             local_assets = util.find_assets(
                                 input_dirs=asset_folder,
-                                asset_config_filename=assets.DEFAULT_ASSET_FILENAME)    
+                                asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
                             if len(local_assets) > 0 and local_assets[0].name in assets_name_list:
                                 job["component"] = local_assets[0].name
                                 covered_assets.append(local_assets[0].name)

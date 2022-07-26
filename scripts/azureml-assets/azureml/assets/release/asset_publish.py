@@ -111,13 +111,15 @@ if __name__ == '__main__':
         with open(publish_list_dir) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for asset_type in data:
-                publish_list[asset_type] = data.get(asset_type,[])
+                publish_list[asset_type] = data.get(asset_type, [])
 
     assets_set = util.find_assets(
         input_dirs=component_dir,
         asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
     for asset in assets_set:
-        if '*' not in publish_list.get(asset.type.value, []) and asset.name not in publish_list.get(asset.type.value, []):
+        if '*' not in publish_list.get(asset.type.value,
+                                       []) and asset.name not in publish_list.get(asset.type.value,
+                                                                                  []):
             print(
                 f"Skipping registering asset {asset.name} because it is not in the publish list")
             continue
