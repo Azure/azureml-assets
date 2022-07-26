@@ -108,7 +108,7 @@ if __name__ == '__main__':
     asset_ids = {}
     print("publishing assets")
 
-    if args.publish_list:
+    if publish_list_dir:
         with open(publish_list_dir) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for asset_type in data:
