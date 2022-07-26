@@ -56,11 +56,7 @@ if __name__ == '__main__':
                         help="dir path of tests.yml")
     parser.add_argument("-a", "--test-area", required=True, type=str,
                         help="the test area name")
-    parser.add_argument(
-        "-r",
-        "--release-directory",
-        required=True,
-        type=Path,
+    parser.add_argument("-r", "--release-directory", required=True, type=Path,
         help="Directory to which the release branch has been cloned")
     args = parser.parse_args()
     yaml_name = "tests.yml"
