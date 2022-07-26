@@ -118,9 +118,8 @@ if __name__ == '__main__':
         input_dirs=component_dir,
         asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
     for asset in assets_set:
-        if '*' not in publish_list.get(asset.type.value,
-                                       []) and asset.name not in publish_list.get(asset.type.value,
-                                                                                  []):
+        asset_names = publish_list.get(asset.type.value, [])
+        if not ('*' in asset_names or asset.name in asset_names):
             print(
                 f"Skipping registering asset {asset.name} because it is not in the publish list")
             continue
