@@ -54,6 +54,6 @@ jobs:
         run: mkdir -p temp_folder
 
       - name: Check test coverage
-        run: python -u $scripts_assets_dir/release/test_file_convert.py -i main/training -r temp_folder -a training
+        run: python -u $scripts_assets_dir/release/test_file_convert.py -i training -r temp_folder -a training
 
 
