@@ -84,7 +84,7 @@ if __name__ == '__main__':
             for include_file in data[test_group].get('includes', []):
                 target_path = tests_folder / include_file
                 src_path = src_dir / include_file
-                if (src_path).is_dir():
+                if src_path.is_dir():
                     logger.print(f"copying folder: {include_file}")
                     copy_replace_dir(src_path, target_path)
                 else:
