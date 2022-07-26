@@ -135,7 +135,8 @@ if __name__ == '__main__':
                                                              version=final_version)
         # switch case for asset type
         if asset.type == assets.AssetType.COMPONENT:
-            cmd = f"az ml component create --subscription{subscription_id} --file {spec_path} --registry-name {registry_name} " \
+            cmd = f"az ml component create --subscription{subscription_id} " \
+                f"--file {spec_path} --registry-name {registry_name} " \
                 f"--version {final_version} --workspace {workspace} --resource-group {resource_group}"
             print(cmd)
             try:
