@@ -1,0 +1,4 @@
+component:
+- train_object_detection_model
+- train_instance_segmentation_model
+- train_image_classification_model
