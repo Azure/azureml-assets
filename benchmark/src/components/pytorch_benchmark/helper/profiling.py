@@ -169,7 +169,7 @@ def get_default_trace_handler(dir_name: str, rank: int = 0):
 
     # export tensorboard
     # NOTE: removed due to segfault in pytorch 1.11.0
-    if version.parse(torch.__version__) > version.parse("1.11.1"):
+    if version.parse(torch.__version__) >= version.parse("1.11.1"):
         tensorboard_logs_export = os.path.join(
             dir_name, "tensorboard_logs"
         )
