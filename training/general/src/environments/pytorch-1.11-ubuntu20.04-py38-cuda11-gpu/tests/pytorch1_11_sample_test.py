@@ -16,7 +16,6 @@ JOB_SOURCE_CODE = "src"
 
 def test_pytorch_1_11():
     """Tests a sample job using pytorch 1.11 as the environment."""
-
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("sub_id")
