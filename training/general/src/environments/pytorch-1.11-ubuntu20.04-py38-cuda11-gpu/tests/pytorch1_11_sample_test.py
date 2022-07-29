@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+""" Tests running a sample job in the pytorch 1.11 environment"""
 import os
 import polling
 from pathlib import Path
@@ -13,6 +14,7 @@ BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 
 
+"""Test of sample job using pytorch 1.11 as the environment"""
 def test_pytorch_1_11():
     this_dir = Path(__file__).parent
 
