@@ -56,8 +56,8 @@ def test_pytorch_1_11():
 
     polling.poll(
         lambda: returned_job.status == "Completed",
-        timeout=600, # 10 minute timeout
-        step=30 # poll every 30 seconds
+        timeout=600,  # 10 minute timeout
+        step=30       # poll every 30 seconds
     )
 
     assert returned_job is not None
