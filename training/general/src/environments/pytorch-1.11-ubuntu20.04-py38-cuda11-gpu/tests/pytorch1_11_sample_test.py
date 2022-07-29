@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import polling
 from pathlib import Path
 from azure.ai.ml import MLClient
 from azure.ai.ml import command, Input
@@ -53,4 +54,11 @@ def test_pytorch_1_11():
 
     returned_job = ml_client.create_or_update(job)
 
+    polling.poll(
+        lambda: returned_job.status == "Completed",
+        timeout=600 # 10 minute timeout
+        step=30 # poll every 30 seconds
+    )
+
     assert returned_job is not None
+    assert returned_job.status == "Completed"
