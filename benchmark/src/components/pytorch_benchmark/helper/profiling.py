@@ -16,6 +16,7 @@ import torch
 from torch.autograd import DeviceType
 from packaging import version
 
+
 def markdown_trace_handler(dir_name: str, rank: int = 0):
     """This handler can be used inside torch.profiler call to output
     tables in markdown format"""
@@ -173,16 +174,18 @@ def get_default_trace_handler(dir_name: str, rank: int = 0):
 
     # export tensorboard
     if version.parse(torch.__version__) >= version.parse("1.11.1"):
-        logger.info("Setting up profiler to export tensorboard traces using tensorboard_trace_handler")
-        tensorboard_logs_export = os.path.join(
-            dir_name, "tensorboard_logs"
+        logger.info(
+            "Setting up profiler to export tensorboard traces using tensorboard_trace_handler"
         )
-        trace_handlers.append(torch.profiler.tensorboard_trace_handler(
-            tensorboard_logs_export
-        ))
+        tensorboard_logs_export = os.path.join(dir_name, "tensorboard_logs")
+        trace_handlers.append(
+            torch.profiler.tensorboard_trace_handler(tensorboard_logs_export)
+        )
     else:
         # NOTE: tensorboard_trace_handler segfaults in pytorch 1.11.0
-        logger.warning("You're using a version of torch before 1.11.1, which introduces a bug fix to tensorboard_trace_handler. We will NOT export tensorboard traces.")
+        logger.warning(
+            "You're using a version of torch before 1.11.1, which introduces a bug fix to tensorboard_trace_handler. We will NOT export tensorboard traces."
+        )
 
     # profiler takes 1 handler, we're composing all above in a single handler
     trace_handler = composite_trace_handler(trace_handlers)
