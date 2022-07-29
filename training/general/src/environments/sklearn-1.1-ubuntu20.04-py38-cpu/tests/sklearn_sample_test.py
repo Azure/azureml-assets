@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Tests running a sample job in the sklearn 1.1 environment."""
 import os
+import polling
 from pathlib import Path
 from azure.ai.ml import MLClient
 from azure.ai.ml import command, Input
@@ -13,6 +15,7 @@ JOB_SOURCE_CODE = "src"
 
 
 def test_sklearn_1_1():
+    """Tests a sample job using sklearn 1.1 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("sub_id")
@@ -51,4 +54,11 @@ def test_sklearn_1_1():
 
     returned_job = ml_client.create_or_update(job)
 
+    polling.poll(
+        lambda: returned_job.status == "Completed",
+        timeout=600,  # 10 minute timeout
+        step=30       # poll every 30 seconds
+    )
+
     assert returned_job is not None
+    assert returned_job.status == "Completed"
