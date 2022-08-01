@@ -3,7 +3,7 @@
 
 """Tests running a sample job in the tensorflow 2.8 environment."""
 import os
-import polling
+# import polling
 from pathlib import Path
 from azure.ai.ml import MLClient
 from azure.ai.ml import command
