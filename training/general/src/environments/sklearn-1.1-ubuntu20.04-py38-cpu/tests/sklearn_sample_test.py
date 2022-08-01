@@ -55,7 +55,7 @@ def test_sklearn_1_1():
     returned_job = ml_client.create_or_update(job)
 
     polling.poll(
-        lambda: returned_job.status == "Completed",
+        lambda: returned_job.status == "Completed" || returned_job.status == "Failed",
         timeout=1200,  # 20 minute timeout
         step=30       # poll every 30 seconds
     )
