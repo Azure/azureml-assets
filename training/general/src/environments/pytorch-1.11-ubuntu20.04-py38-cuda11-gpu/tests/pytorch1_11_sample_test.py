@@ -58,7 +58,7 @@ def test_pytorch_1_11():
 
     polling.poll(
         lambda: returned_job.status == "Completed",
-        timeout=1200,  # 10 minute timeout
+        timeout=1200,  # 20 minute timeout
         step=30       # poll every 30 seconds
     )
 
