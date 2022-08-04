@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Sample training"""
+"""Sample training."""
 # imports
 import mlflow
 import argparse
@@ -23,7 +23,7 @@ from network import SimpleMLP
 # <functions>
 # define functions
 def main(args):
-    """Run and evaluate model"""
+    """Run and evaluate model."""
     # read in data
     df = pd.read_csv(args.iris_csv)
 
@@ -45,7 +45,7 @@ def main(args):
 
 
 def process_data(df, random_state):
-    """Process data"""
+    """Process data."""
     # split dataframe into X and y
     X = df.drop(["species"], axis=1)
     y = df["species"]
@@ -92,7 +92,7 @@ def process_data(df, random_state):
 
 
 def train_model(args, X_train, X_test, y_train, y_test):
-    """Train a model"""
+    """Train a model."""
     # log parameters
     mlflow.log_param("learning_rate", args.lr)
     mlflow.log_param("epochs", args.epochs)
@@ -120,7 +120,7 @@ def train_model(args, X_train, X_test, y_train, y_test):
 
 
 def evaluate_model(model, X_train, X_test, y_train, y_test):
-    """Evaluate the model"""
+    """Evaluate the model."""
     # compute and log training accuracy
     y_pred = model(X_train)
     y_pred = torch.max(y_pred, 1)[1]
@@ -135,7 +135,7 @@ def evaluate_model(model, X_train, X_test, y_train, y_test):
 
 
 def parse_args():
-    """Parse arguments"""
+    """Parse arguments."""
     # setup arg parser
     parser = argparse.ArgumentParser()
 
