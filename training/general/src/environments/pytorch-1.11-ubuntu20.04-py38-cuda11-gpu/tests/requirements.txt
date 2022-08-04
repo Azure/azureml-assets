@@ -1,6 +1,6 @@
 azure-ai-ml==0.1.0b4
 azure.identity==1.10.0
-polling==0.3.2
+polling2==0.5.0
 # data science
 numpy
 scipy
