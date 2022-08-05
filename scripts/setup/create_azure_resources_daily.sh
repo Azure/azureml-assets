@@ -12,7 +12,7 @@ echo "Installing Azure CLI extension for Azure Machine Learning..."
 az extension add -n ml -y
 
 echo "Creating resource group ${RESOURCE_GROUP_NAME}..."
-az group create -n $RESOURCE_GROUP_NAME -l $LOCATION
+az group show -n $RESOURCE_GROUP_NAME || az group create -n $RESOURCE_GROUP_NAME -l $LOCATION
 
 exit
 
