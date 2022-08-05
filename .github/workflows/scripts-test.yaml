@@ -1,6 +1,9 @@
 name: scripts-test
 
 on:
+  push:
+    branches:
+      - elesel/use-testing-sub
   pull_request:
     branches:
       - main
@@ -19,6 +22,10 @@ env:
   workspace: ${{ secrets.ASSETS_TEST_WORKSPACE_NAME }}
   sub_id: ${{ secrets.ASSETS_TEST_WORKSPACE_SUBSCRIPTION_ID }}
   resource_group: ${{ secrets.ASSETS_TEST_WORKSPACE_RESOURCE_GROUP }}
+
+permissions:
+  id-token: write
+  contents: read
 
 defaults:
   run:
@@ -67,7 +74,7 @@ jobs:
     name: Test scripts
     runs-on: ubuntu-latest
     needs: check-syntax
-    environment: BuiltinRegistryDev
+    environment: Testing
 
     steps:
       - name: Clone branch
@@ -86,7 +93,10 @@ jobs:
       - name: Log in to Azure
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
+          #creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Test scripts
         run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group ${{ secrets.RESOURCE_GROUP }} --registry ${{ secrets.BUILD_CONTAINER_REGISTRY }} $test_dir
