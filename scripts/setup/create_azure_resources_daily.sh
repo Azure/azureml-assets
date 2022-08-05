@@ -16,6 +16,12 @@ az configure --defaults group=$RESOURCE_GROUP workspace=$WORKSPACE location=$LOC
 echo "Creating Azure Machine Learning workspace..."
 az ml workspace show -n $WORKSPACE | az ml workspace create -n $WORKSPACE
 
+echo "Creating CPU compute cluster..."
+az ml compute create --name cpu-cluster --size Standard_DS3_v2 --min-instances 0 --max-instances 10 --type AmlCompute
+
+echo "Creating GPU compute cluster..."
+az ml compute create --name gpu-cluster --size Standard_NC24 --min-instances 0 --max-instances 10 --type AmlCompute
+
 exit
 
 echo "Setting up workspace..."
@@ -24,4 +30,4 @@ bash -x setup-workspace.sh
 echo "Setting up extra workspaces..."
 bash -x create-workspace-extras.sh
 
-# TODO: Output resource group name, workspace name
+# TODO: Output resource group name, workspace name, names of compute instances
