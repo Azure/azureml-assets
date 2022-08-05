@@ -1,5 +1,5 @@
 # Globals
-LOCATION="eastus"
+LOCATION="westus"
 DATESTAMP=$(date "+%Y%m%d")
 RESOURCE_GROUP="azureml-assets-${DATESTAMP}"
 WORKSPACE="azureml-assets-ws-${DATESTAMP}"
@@ -20,7 +20,7 @@ echo "Creating CPU compute cluster..."
 az ml compute create --name cpu-cluster --size Standard_DS3_v2 --min-instances 0 --max-instances 10 --type AmlCompute
 
 echo "Creating GPU compute cluster..."
-az ml compute create --name gpu-cluster --size Standard_NC24 --min-instances 0 --max-instances 10 --type AmlCompute
+az ml compute create --name gpu-cluster --size Standard_NC6 --min-instances 0 --max-instances 10 --type AmlCompute
 
 exit
 
