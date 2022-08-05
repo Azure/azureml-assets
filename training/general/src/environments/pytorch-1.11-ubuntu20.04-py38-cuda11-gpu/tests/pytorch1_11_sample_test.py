@@ -57,8 +57,7 @@ def test_pytorch_1_11():
     returned_job = ml_client.create_or_update(job)
 
     polling2.poll(
-        target=returned_job,
-        check_success=lambda x: (x.status == "Completed" or x.status == "Failed"),
+        lambda: (returned_job.status == "Completed" or returned_job.status == "Failed"),
         step=30,       # poll every 30 seconds
         timeout=1200  # 20 minute timeout
     )
