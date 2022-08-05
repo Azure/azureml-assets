@@ -15,6 +15,7 @@ on:
 env:
   scripts_dir: scripts
   scripts_azureml_assets_dir: scripts/azureml-assets
+  scripts_setup_dir: scripts/setup
   scripts_validation_dir: scripts/validation
   test_dir: test
   resources_dir: test/resources
@@ -93,17 +94,19 @@ jobs:
       - name: Log in to Azure
         uses: azure/login@v1
         with:
-          #creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Test scripts
-        run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group ${{ secrets.RESOURCE_GROUP }} --registry ${{ secrets.BUILD_CONTAINER_REGISTRY }} $test_dir
+      - name: Create Azure resources
+        run: $scripts_setup_dir/create_azure_resources_daily.sh
 
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v1
-        if: always()
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: ${{ runner.temp }}/${{ env.pytest_reports_dir }}/*.xml
+      # - name: Test scripts
+      #   run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group ${{ secrets.RESOURCE_GROUP }} --registry ${{ secrets.BUILD_CONTAINER_REGISTRY }} $test_dir
+
+      # - name: Publish test results
+      #   uses: EnricoMi/publish-unit-test-result-action/composite@v1
+      #   if: always()
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     files: ${{ runner.temp }}/${{ env.pytest_reports_dir }}/*.xml
