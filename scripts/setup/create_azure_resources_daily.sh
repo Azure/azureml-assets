@@ -1,29 +1,27 @@
 # Globals
 LOCATION="eastus"
-RESOURCE_GROUP_PREFIX="azureml-assets"
-DATESTAMP=$(date "+%Y-%m-%d")
-RESOURCE_GROUP_NAME="${RESOURCE_GROUP_PREFIX}-${DATESTAMP}"
-
-echo "Retrieving subscription information..."
-SUBSCRIPTION_NAME=$(az account show --query name -o tsv | tr -d '\n\r')
-SUBSCRIPTION_ID=$(az account show --query id -o tsv | tr -d '\n\r')
+DATESTAMP=$(date "+%Y%m%d")
+RESOURCE_GROUP="azureml-assets-${DATESTAMP}"
+WORKSPACE="azureml-assets-ws-${DATESTAMP}"
 
 echo "Installing Azure CLI extension for Azure Machine Learning..."
 az extension add -n ml -y
 
-echo "Creating resource group ${RESOURCE_GROUP_NAME}..."
-az group show -n $RESOURCE_GROUP_NAME || az group create -n $RESOURCE_GROUP_NAME -l $LOCATION
-
-exit
-
-echo "Creating Azure Machine Learning workspace..."
-az ml workspace create -n $WORKSPACE -g $GROUP -l $LOCATION
+echo "Creating resource group ${RESOURCE_GROUP}..."
+az group show -n $RESOURCE_GROUP || az group create -n $RESOURCE_GROUP -l $LOCATION
 
 echo "Configuring Azure CLI defaults..."
-az configure --defaults group=$GROUP workspace=$WORKSPACE location=$LOCATION
+az configure --defaults group=$RESOURCE_GROUP workspace=$WORKSPACE location=$LOCATION
+
+echo "Creating Azure Machine Learning workspace..."
+az ml workspace show -n $WORKSPACE | az ml workspace create
+
+exit
 
 echo "Setting up workspace..."
 bash -x setup-workspace.sh
 
 echo "Setting up extra workspaces..."
 bash -x create-workspace-extras.sh
+
+# TODO: Output resource group name, workspace name
