@@ -14,7 +14,7 @@ echo "Configuring Azure CLI defaults..."
 az configure --defaults group=$RESOURCE_GROUP workspace=$WORKSPACE location=$LOCATION
 
 echo "Creating Azure Machine Learning workspace..."
-az ml workspace show -n $WORKSPACE | az ml workspace create
+az ml workspace show -n $WORKSPACE | az ml workspace create -n $WORKSPACE
 
 exit
 
