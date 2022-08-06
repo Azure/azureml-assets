@@ -1,5 +1,5 @@
 # Globals
-LOCATION="centralus"
+LOCATION="eastus"
 DATESTAMP=$(date "+%Y%m%d")
 RESOURCE_GROUP="azureml-assets-${DATESTAMP}"
 WORKSPACE="azureml-assets-ws-${DATESTAMP}"
