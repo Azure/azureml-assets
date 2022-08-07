@@ -3,6 +3,8 @@ LOCATION="eastus"
 DATESTAMP=$(date "+%Y%m%d")
 RESOURCE_GROUP="azureml-assets-${DATESTAMP}"
 WORKSPACE="azureml-assets-ws-${DATESTAMP}"
+CPU_CLUSTER="cpu-cluster"
+GPU_CLUSTER="gpu-cluster"
 
 echo "Installing Azure CLI extension for Azure Machine Learning..."
 az extension add -n ml -y
@@ -17,10 +19,10 @@ echo "Creating Azure Machine Learning workspace..."
 az ml workspace show -n $WORKSPACE | az ml workspace create -n $WORKSPACE
 
 echo "Creating CPU compute cluster..."
-az ml compute create --name cpu-cluster --size Standard_DS3_v2 --min-instances 0 --max-instances 10 --type AmlCompute
+az ml compute show --name $CPU_CLUSTER | az ml compute create --name $CPU_CLUSTER --size Standard_DS3_v2 --min-instances 0 --max-instances 10 --type AmlCompute
 
 echo "Creating GPU compute cluster..."
-az ml compute create --name gpu-cluster --size Standard_NC6 --min-instances 0 --max-instances 10 --type AmlCompute
+az ml compute show --name $GPU_CLUSTER | az ml compute create --name gpu-cluster --size Standard_NC6 --min-instances 0 --max-instances 10 --type AmlCompute
 
 exit
 
