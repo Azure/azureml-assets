@@ -22,14 +22,6 @@ echo "Creating CPU compute cluster..."
 az ml compute show --name $CPU_CLUSTER | az ml compute create --name $CPU_CLUSTER --size Standard_DS3_v2 --min-instances 0 --max-instances 10 --type AmlCompute
 
 echo "Creating GPU compute cluster..."
-az ml compute show --name $GPU_CLUSTER | az ml compute create --name gpu-cluster --size Standard_NC6 --min-instances 0 --max-instances 10 --type AmlCompute
-
-exit
-
-echo "Setting up workspace..."
-bash -x setup-workspace.sh
-
-echo "Setting up extra workspaces..."
-bash -x create-workspace-extras.sh
+az ml compute show --name $GPU_CLUSTER | az ml compute create --name $GPU_CLUSTER --size Standard_NC6 --min-instances 0 --max-instances 10 --type AmlCompute
 
 # TODO: Output resource group name, workspace name, names of compute instances
