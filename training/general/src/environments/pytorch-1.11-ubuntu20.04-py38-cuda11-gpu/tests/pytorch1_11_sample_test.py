@@ -9,6 +9,7 @@ from azure.ai.ml import MLClient
 from azure.ai.ml import command, Input
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
+from selenium.common.exceptions import TimeoutException
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
