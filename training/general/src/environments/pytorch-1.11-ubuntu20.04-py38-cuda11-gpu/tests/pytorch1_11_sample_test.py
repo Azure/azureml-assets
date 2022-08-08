@@ -64,7 +64,7 @@ def test_pytorch_1_11():
             step=30,       # poll every 30 seconds
             timeout=1200  # 20 minute timeout
         )
-    except:
+    except TimeoutException:
         print("in except")
         print("status of returned job is " + returned_job.status)
 
