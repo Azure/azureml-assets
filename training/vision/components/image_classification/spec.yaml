@@ -4,7 +4,7 @@ type: command
 description: Trains an image classification model. [Learn More](https://aka.ms/built-in-vision-components)
 
 name: train_image_classification_model
-display_name: Train Image Classification Model
+display_name: Train Image Classification Model (Private Preview)
 version: 0.0.1-preview
 
 inputs:
@@ -79,7 +79,7 @@ outputs:
 
 code: ../src
 
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:91
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:98
 
 command: >-
   python -m image_classification.run
