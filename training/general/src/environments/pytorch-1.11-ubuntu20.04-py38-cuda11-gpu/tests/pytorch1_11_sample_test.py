@@ -9,7 +9,7 @@ from azure.ai.ml import MLClient
 from azure.ai.ml import command, Input
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
-from selenium.common.exceptions import TimeoutException
+from polling2 import TimeoutException
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
@@ -49,7 +49,7 @@ def test_pytorch_1_11():
             "lr": 0.1,
         },
         environment=f"{env_name}@latest",
-        compute=os.environ.get("cpu_cluster"),
+        compute=os.environ.get("gpu_cluster"),
         display_name="pytorch-iris-example",
         description="Train a neural network with PyTorch on the Iris dataset.",
         experiment_name="pytorch111Experiment"
@@ -70,4 +70,4 @@ def test_pytorch_1_11():
         print("status of returned job is " + returned_job.status)
 
     assert returned_job is not None
-    # assert returned_job.status == "Completed"
+    assert returned_job.status == "Completed"
