@@ -16,7 +16,7 @@ And, we are supporting tasks, namely:
 3. Named Entity Recognition (NER)
 4. Regression
 
-Since there are differences in properties used by above tasks, we are going to register each of the high level components for each task. So, in total we will have 16 components.
+Since there are differences in properties used by above tasks, we are going to register the high level components for each task.
 
 eg: preprocess_classification_multi_label will be component doing pre-processing for multi label classification task
 
@@ -29,9 +29,10 @@ Command component specific environment will be shared, which will contain follow
 
 
 ### Why should this asset be built-in?
-Finertuning components will be used by customers as we move to public and therefore requires support of built-in registry.
+The goal is to offer fine tuning of large scale models to 1P and 3P users, leveraging the distributed training capabilities in AzureML.
 
 ### Support model (what teams will be on the hook for bug fixes and security patches)?
+- PM (Swati Gharse: swatig@)
 - Finetuning (Naveen Gaur: nagaur@)
 - SDK (Sasidhar Kasturi: sasik@)
 
