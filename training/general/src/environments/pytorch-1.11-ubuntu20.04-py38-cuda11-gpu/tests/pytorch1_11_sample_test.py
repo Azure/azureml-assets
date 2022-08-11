@@ -70,4 +70,4 @@ def test_pytorch_1_11():
         print("status of returned job is " + returned_job.status)
 
     assert returned_job is not None
-    # assert returned_job.status == "Completed"
+    assert returned_job.status == "Completed"
