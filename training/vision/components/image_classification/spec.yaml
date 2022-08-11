@@ -5,7 +5,7 @@ description: Trains an image classification model. [Learn More](https://aka.ms/b
 
 name: train_image_classification_model
 display_name: Train Image Classification Model (Private Preview)
-version: 0.0.1-preview
+version: 0.0.2-preview
 
 inputs:
   training_data:
