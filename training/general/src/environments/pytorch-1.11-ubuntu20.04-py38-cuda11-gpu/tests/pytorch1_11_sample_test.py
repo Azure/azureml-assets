@@ -58,7 +58,6 @@ def test_pytorch_1_11():
     returned_job = ml_client.create_or_update(job)
 
     try:
-        print("in try")
         # poll status of job
         polling2.poll(
             lambda: (returned_job.status == "Completed" or returned_job.status == "Failed"),
