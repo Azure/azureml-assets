@@ -29,3 +29,4 @@ dependencies:
   - onnxruntime-gpu>=1.7,<1.10
   - future==0.18.2
   - torch-tb-profiler==0.3.1
+  - msrest==0.6.21
