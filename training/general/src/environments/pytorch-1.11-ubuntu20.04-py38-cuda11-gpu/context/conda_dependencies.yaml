@@ -20,7 +20,7 @@ dependencies:
   - scipy>=1.5,<1.8
   - numpy>=1.10,<1.22
   - ipykernel~=6.0
-  - azureml-core=={{latest-pypi-version}}
+  - azure-core<1.23.0
   - azureml-defaults=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
