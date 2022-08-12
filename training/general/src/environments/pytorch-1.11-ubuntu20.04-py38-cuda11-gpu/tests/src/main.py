@@ -3,6 +3,7 @@
 
 """Sample training."""
 # imports
+# flake8: noqa
 import mlflow
 import argparse
 
@@ -12,10 +13,10 @@ import torch.nn.functional as F
 
 import pandas as pd
 
-import sklearn as skl
-from skl.metrics import accuracy_score
-from skl.preprocessing import LabelEncoder, StandardScaler
-from skl.model_selection import train_test_split
+import sklearn
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split
 
 from network import SimpleMLP
 
