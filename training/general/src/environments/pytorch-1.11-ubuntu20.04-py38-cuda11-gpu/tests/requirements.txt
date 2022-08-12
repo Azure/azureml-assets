@@ -9,8 +9,6 @@ adlfs>=2021.8.1
 scikit-learn
 torch
 torchvision
-selenium
 
 # tracking
 mlflow
-azureml-mlflow
