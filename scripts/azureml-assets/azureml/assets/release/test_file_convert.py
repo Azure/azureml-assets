@@ -75,20 +75,25 @@ def _convert_excludes(input_dirs: Union[List[Path], Path],
     # Exclude any dirs that start with EXCLUDE_DIR_PREFIX
     new_input_dirs = []
     new_exclude_dirs = []
+
     for input_dir in input_dirs:
         input_dir_str = str(input_dir)
-        if input_dir_str.startswith(EXCLUDE_DIR_PREFIX):
+        if input_dir_str == '.':
+            for current_folder in Path(input_dir_str).iterdir():
+                if current_folder.is_dir() and current_folder not in exclude_dirs:
+                    new_input_dirs.append(current_folder)
+        elif input_dir_str.startswith(EXCLUDE_DIR_PREFIX):
             new_exclude_dirs.append(Path(input_dir_str[len(EXCLUDE_DIR_PREFIX):]))
         else:
             new_input_dirs.append(input_dir)
+
     if new_exclude_dirs:
-        input_dirs = new_input_dirs
         if exclude_dirs:
             exclude_dirs.extend(new_exclude_dirs)
         else:
             exclude_dirs = new_exclude_dirs
 
-    return input_dirs, exclude_dirs
+    return new_input_dirs, exclude_dirs
 
 
 if __name__ == '__main__':
@@ -101,9 +106,12 @@ if __name__ == '__main__':
     # Convert comma-separated values to lists
 
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
-
-    print(f"found_areas: {input_dirs}")
-    for src_dir in input_dirs :
+    src_dirs, exclude_dirs = _convert_excludes(input_dirs)
+    print(f"found_areas: {src_dirs}")
+    print(f"exclude_areas: {exclude_dirs}")
+    for src_dir in src_dirs :
+        if src_dir in exclude_dirs:
+            continue
         test_area = src_dir.name
         logger.print(f"Processing test area: {test_area}")
 
