@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 """Python scripts for test files converting in GitHub Actions."""
 from pathlib import Path
-import sys
 import yaml
 import shutil
 import argparse
@@ -13,6 +12,7 @@ from typing import List, Tuple, Union
 
 EXCLUDE_DIR_PREFIX = "!"
 TEST_YAML_NAME = "tests.yml"
+
 
 def copy_replace_dir(source: Path, dest: Path):
     """Copy and replace the source dir to dest dir."""
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     src_dirs, exclude_dirs = _convert_excludes(input_dirs)
     print(f"found_areas: {src_dirs}")
     print(f"exclude_areas: {exclude_dirs}")
-    for src_dir in src_dirs :
+    for src_dir in src_dirs:
         if src_dir in exclude_dirs:
             continue
         test_area = src_dir.name

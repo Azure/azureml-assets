@@ -7,7 +7,7 @@ version: 1
 
 code: ../src
 
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:98
+environment: azureml://registries/azureml/environments/sklearn-1.1-ubuntu20.04-py38-cpu/versions/6
 
 command: >-
   ls
