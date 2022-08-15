@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 """Python scripts for test files converting in GitHub Actions."""
 from pathlib import Path
+import sys
 import yaml
 import shutil
 import argparse
@@ -53,16 +54,22 @@ if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests.yml")
-    parser.add_argument("-a", "--test-area", required=True, type=str, help="the test area name")
     parser.add_argument("-r", "--release-directory", required=True, type=Path,
                         help="Directory to which the release branch has been cloned")
     args = parser.parse_args()
+    src_dir = args.input_dir
+    test_area = src_dir.name
+    logger.print(f"Processing test area: {test_area}")
     yaml_name = "tests.yml"
+    if (src_dir / yaml_name).exists() == False:
+        logger.log_warning(f"Cannot find {yaml_name} in the test area {test_area}.")
+        sys.exit(0)
+
     # supported asset types could be extended in the future
     supported_asset_types = [assets.AssetType.COMPONENT]
-    tests_folder = args.release_directory / "tests" / args.test_area
+    tests_folder = args.release_directory / "tests" / test_area
     Path.mkdir(tests_folder, parents=True, exist_ok=True)
-    src_dir = args.input_dir
+
     assets_list = util.find_assets(src_dir, assets.DEFAULT_ASSET_FILENAME)
     assets_names = [asset.name for asset in assets_list if asset.type in supported_asset_types]
     src_yaml = src_dir / yaml_name

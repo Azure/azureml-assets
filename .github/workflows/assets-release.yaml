@@ -205,8 +205,7 @@ jobs:
   
       - name: Convert test files and scripts
         run: |
-          python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i $main_dir/training -r $release_dir -a training
-          python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i $main_dir/sample -r $release_dir -a sample
+          python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -r $release_dir
 
       - name: Copy e2e test scripts
         run: | 

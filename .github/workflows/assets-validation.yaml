@@ -53,7 +53,6 @@ jobs:
       - name: Check test coverage
         run: |
           mkdir -p ${{ runner.temp }}/test_coverage
-          python -u $scripts_assets_dir/release/test_file_convert.py -i training -r ${{ runner.temp }}/test_coverage -a training
-          python -u $scripts_assets_dir/release/test_file_convert.py -i sample -r ${{ runner.temp }}/test_coverage -a sample
+          python -u $scripts_assets_dir/release/test_file_convert.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -r ${{ runner.temp }}/test_coverage
 
 
