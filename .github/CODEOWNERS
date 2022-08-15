@@ -2,3 +2,4 @@
 /benchmark/ @azure/aims
 /responsibleai/ @azure/aml-rai
 /training/ @azure/aml-training 
+/sample/ @quchuyuan 

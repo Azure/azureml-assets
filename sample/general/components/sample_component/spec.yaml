@@ -7,8 +7,7 @@ version: 1
 
 code: ../src
 
-environment: 
-  image: python
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:98
 
 command: >-
-  python hello.py
+  ls
