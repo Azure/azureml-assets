@@ -109,7 +109,7 @@ if __name__ == '__main__':
 
         if not (src_dir / TEST_YAML_NAME).exists():
             logger.log_warning(f"Cannot find {TEST_YAML_NAME} in the test area {test_area}.")
-            sys.exit(0)
+            continue
 
         # supported asset types could be extended in the future
         supported_asset_types = [assets.AssetType.COMPONENT]

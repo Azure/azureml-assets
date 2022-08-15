@@ -20,7 +20,7 @@ on:
 
 env:
   default_asset_dirs: .,!test,!scripts
-  default_test_dirs: benchmark,responsibleai,rfc,sample,training
+  default_test_dirs: responsibleai,rfc,sample,training
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
   asset_config_filename: asset.yaml
