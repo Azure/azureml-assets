@@ -53,45 +53,49 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests.yml")
+    parser.add_argument("-i", "--input-dirs", required=True, type=Path, help="dir path of tests.yml")
     parser.add_argument("-r", "--release-directory", required=True, type=Path,
                         help="Directory to which the release branch has been cloned")
     args = parser.parse_args()
-    src_dir = args.input_dir
-    test_area = src_dir.name
-    logger.print(f"Processing test area: {test_area}")
-    yaml_name = "tests.yml"
-    if (src_dir / yaml_name).exists() == False:
-        logger.log_warning(f"Cannot find {yaml_name} in the test area {test_area}.")
-        sys.exit(0)
+    # Convert comma-separated values to lists
+    input_dirs = [Path(d) for d in args.input_dirs.split(",")]
+    src_dirs, exclude_dirs = util._convert_excludes(input_dirs)
+    print(f"src_dirs: {src_dirs}")
+    for src_dir in src_dirs:
+        test_area = src_dir.name
+        logger.print(f"Processing test area: {test_area}")
+        yaml_name = "tests.yml"
+        if not (src_dir / yaml_name).exists():
+            logger.log_warning(f"Cannot find {yaml_name} in the test area {test_area}.")
+            sys.exit(0)
 
-    # supported asset types could be extended in the future
-    supported_asset_types = [assets.AssetType.COMPONENT]
-    tests_folder = args.release_directory / "tests" / test_area
-    Path.mkdir(tests_folder, parents=True, exist_ok=True)
+        # supported asset types could be extended in the future
+        supported_asset_types = [assets.AssetType.COMPONENT]
+        tests_folder = args.release_directory / "tests" / test_area
+        Path.mkdir(tests_folder, parents=True, exist_ok=True)
 
-    assets_list = util.find_assets(src_dir, assets.DEFAULT_ASSET_FILENAME)
-    assets_names = [asset.name for asset in assets_list if asset.type in supported_asset_types]
-    src_yaml = src_dir / yaml_name
-    covered_assets = process_test_files(src_yaml, assets_names)
-    uncovered_assets = [asset for asset in assets_names if asset not in covered_assets]
-    if len(uncovered_assets) > 0:
-        logger.log_warning(f"The following assets are not covered by the test: {uncovered_assets}")
-    shutil.copy(src_yaml, tests_folder / yaml_name)
+        assets_list = util.find_assets(src_dir, assets.DEFAULT_ASSET_FILENAME)
+        assets_names = [asset.name for asset in assets_list if asset.type in supported_asset_types]
+        src_yaml = src_dir / yaml_name
+        covered_assets = process_test_files(src_yaml, assets_names)
+        uncovered_assets = [asset for asset in assets_names if asset not in covered_assets]
+        if len(uncovered_assets) > 0:
+            logger.log_warning(f"The following assets are not covered by the test: {uncovered_assets}")
+        shutil.copy(src_yaml, tests_folder / yaml_name)
 
-    with open(src_yaml) as fp:
-        data = yaml.load(fp, Loader=yaml.FullLoader)
-        for test_group in data:
-            for include_file in data[test_group].get('includes', []):
-                target_path = tests_folder / include_file
-                src_path = src_dir / include_file
-                if src_path.is_dir():
-                    logger.print(f"copying folder: {include_file}")
-                    copy_replace_dir(src_path, target_path)
-                else:
-                    logger.print(f"copying file: {include_file}")
-                    Path.mkdir(
-                        target_path.parent,
-                        parents=True,
-                        exist_ok=True)
-                    shutil.copy(src_path, target_path)
+        with open(src_yaml) as fp:
+            data = yaml.load(fp, Loader=yaml.FullLoader)
+            for test_group in data:
+                for include_file in data[test_group].get('includes', []):
+                    target_path = tests_folder / include_file
+                    src_path = src_dir / include_file
+                    if src_path.is_dir():
+                        logger.print(f"copying folder: {include_file}")
+                        copy_replace_dir(src_path, target_path)
+                    else:
+                        logger.print(f"copying file: {include_file}")
+                        Path.mkdir(
+                            target_path.parent,
+                            parents=True,
+                            exist_ok=True)
+                        shutil.copy(src_path, target_path)
