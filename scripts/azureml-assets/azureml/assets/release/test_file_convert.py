@@ -101,16 +101,9 @@ if __name__ == '__main__':
     # Convert comma-separated values to lists
 
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
-    found_areas = []
-    src_dirs, exclude_dirs = _convert_excludes(input_dirs)
-    for src_dir in src_dirs :
-        for file in src_dir.rglob(TEST_YAML_NAME):
-            if exclude_dirs and any([d for d in exclude_dirs if d in file.parents]):
-                continue
-        found_areas.append(file.parent)
 
-    print(f"found_areas: {found_areas}")
-    for src_dir in found_areas :
+    print(f"found_areas: {input_dirs}")
+    for src_dir in input_dirs :
         test_area = src_dir.name
         logger.print(f"Processing test area: {test_area}")
 
