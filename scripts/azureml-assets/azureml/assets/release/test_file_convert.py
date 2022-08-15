@@ -12,7 +12,7 @@ from azureml.assets.util import logger
 from typing import List, Tuple, Union
 
 EXCLUDE_DIR_PREFIX = "!"
-
+TEST_YAML_NAME = "tests.yml"
 
 def copy_replace_dir(source: Path, dest: Path):
     """Copy and replace the source dir to dest dir."""
@@ -99,17 +99,23 @@ if __name__ == '__main__':
                         help="Directory to which the release branch has been cloned")
     args = parser.parse_args()
     # Convert comma-separated values to lists
+
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
+    found_areas = []
     src_dirs, exclude_dirs = _convert_excludes(input_dirs)
-    print(f"src_dirs: {src_dirs}")
     for src_dir in src_dirs :
-        if src_dir in exclude_dirs:
-            continue
+        for file in src_dir.rglob(TEST_YAML_NAME):
+            if exclude_dirs and any([d for d in exclude_dirs if d in file.parents]):
+                continue
+        found_areas.append(file.parent)
+
+    print(f"found_areas: {found_areas}")
+    for src_dir in found_areas :
         test_area = src_dir.name
         logger.print(f"Processing test area: {test_area}")
-        yaml_name = "tests.yml"
-        if not (src_dir / yaml_name).exists():
-            logger.log_warning(f"Cannot find {yaml_name} in the test area {test_area}.")
+
+        if not (src_dir / TEST_YAML_NAME).exists():
+            logger.log_warning(f"Cannot find {TEST_YAML_NAME} in the test area {test_area}.")
             sys.exit(0)
 
         # supported asset types could be extended in the future
@@ -119,12 +125,12 @@ if __name__ == '__main__':
 
         assets_list = util.find_assets(src_dir, assets.DEFAULT_ASSET_FILENAME)
         assets_names = [asset.name for asset in assets_list if asset.type in supported_asset_types]
-        src_yaml = src_dir / yaml_name
+        src_yaml = src_dir / TEST_YAML_NAME
         covered_assets = process_test_files(src_yaml, assets_names)
         uncovered_assets = [asset for asset in assets_names if asset not in covered_assets]
         if len(uncovered_assets) > 0:
             logger.log_warning(f"The following assets are not covered by the test: {uncovered_assets}")
-        shutil.copy(src_yaml, tests_folder / yaml_name)
+        shutil.copy(src_yaml, tests_folder / TEST_YAML_NAME)
 
         with open(src_yaml) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
