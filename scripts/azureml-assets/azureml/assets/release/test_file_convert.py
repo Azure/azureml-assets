@@ -55,15 +55,7 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
 
 def _convert_excludes(input_dirs: Union[List[Path], Path],
                       exclude_dirs: List[Path] = None) -> Tuple[List[Path], List[Path]]:
-    """Extract directories to exclude from input_dirs and add them to exclude_dirs.
-
-    Args:
-        input_dirs (Union[List[Path], Path]): Directories to search in.
-        exclude_dirs (List[Path], optional): Directories that should be excluded from the search.
-
-    Returns:
-        Tuple[List[Path], List[Path]]: _description_
-    """
+    """Extract directories to exclude from input_dirs and add them to exclude_dirs."""
     if type(input_dirs) is not list:
         input_dirs = [input_dirs]
     if exclude_dirs is not None:
