@@ -9,6 +9,9 @@ import argparse
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
+from typing import List, Tuple, Union
+
+EXCLUDE_DIR_PREFIX = "!"
 
 
 def copy_replace_dir(source: Path, dest: Path):
@@ -50,6 +53,44 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
     return covered_assets
 
 
+def _convert_excludes(input_dirs: Union[List[Path], Path],
+                      exclude_dirs: List[Path] = None) -> Tuple[List[Path], List[Path]]:
+    """Extract directories to exclude from input_dirs and add them to exclude_dirs.
+
+    Args:
+        input_dirs (Union[List[Path], Path]): Directories to search in.
+        exclude_dirs (List[Path], optional): Directories that should be excluded from the search.
+
+    Returns:
+        Tuple[List[Path], List[Path]]: _description_
+    """
+    if type(input_dirs) is not list:
+        input_dirs = [input_dirs]
+    if exclude_dirs is not None:
+        if type(exclude_dirs) is not list:
+            exclude_dirs = [exclude_dirs]
+    else:
+        exclude_dirs = []
+
+    # Exclude any dirs that start with EXCLUDE_DIR_PREFIX
+    new_input_dirs = []
+    new_exclude_dirs = []
+    for input_dir in input_dirs:
+        input_dir_str = str(input_dir)
+        if input_dir_str.startswith(EXCLUDE_DIR_PREFIX):
+            new_exclude_dirs.append(Path(input_dir_str[len(EXCLUDE_DIR_PREFIX):]))
+        else:
+            new_input_dirs.append(input_dir)
+    if new_exclude_dirs:
+        input_dirs = new_input_dirs
+        if exclude_dirs:
+            exclude_dirs.extend(new_exclude_dirs)
+        else:
+            exclude_dirs = new_exclude_dirs
+
+    return input_dirs, exclude_dirs
+
+
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
@@ -59,9 +100,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
-    src_dirs, exclude_dirs = util._convert_excludes(input_dirs)
+    src_dirs, exclude_dirs = _convert_excludes(input_dirs)
     print(f"src_dirs: {src_dirs}")
-    for src_dir in src_dirs:
+    for src_dir in src_dirs :
+        if src_dir in exclude_dirs:
+            continue
         test_area = src_dir.name
         logger.print(f"Processing test area: {test_area}")
         yaml_name = "tests.yml"
