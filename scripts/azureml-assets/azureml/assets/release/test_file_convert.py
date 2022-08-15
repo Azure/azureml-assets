@@ -53,7 +53,7 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-dirs", required=True, type=Path, help="dir path of tests.yml")
+    parser.add_argument("-i", "--input-dirs", required=True, help="dir path of test areas")
     parser.add_argument("-r", "--release-directory", required=True, type=Path,
                         help="Directory to which the release branch has been cloned")
     args = parser.parse_args()
