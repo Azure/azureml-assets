@@ -123,19 +123,19 @@ if __name__ == '__main__':
             logger.log_warning(f"The following assets are not covered by the test: {uncovered_assets}")
         shutil.copy(src_yaml, tests_folder / TEST_YAML_NAME)
 
-            with open(src_yaml) as fp:
-                data = yaml.load(fp, Loader=yaml.FullLoader)
-                for test_group in data:
-                    for include_file in data[test_group].get('includes', []):
-                        target_path = tests_folder / include_file
-                        src_path = src_dir / include_file
-                        if src_path.is_dir():
-                            logger.print(f"copying folder: {include_file}")
-                            copy_replace_dir(src_path, target_path)
-                        else:
-                            logger.print(f"copying file: {include_file}")
-                            Path.mkdir(
-                                target_path.parent,
-                                parents=True,
-                                exist_ok=True)
-                            shutil.copy(src_path, target_path)
+        with open(src_yaml) as fp:
+            data = yaml.load(fp, Loader=yaml.FullLoader)
+            for test_group in data:
+                for include_file in data[test_group].get('includes', []):
+                    target_path = tests_folder / include_file
+                    src_path = src_dir / include_file
+                    if src_path.is_dir():
+                        logger.print(f"copying folder: {include_file}")
+                        copy_replace_dir(src_path, target_path)
+                    else:
+                        logger.print(f"copying file: {include_file}")
+                        Path.mkdir(
+                            target_path.parent,
+                            parents=True,
+                            exist_ok=True)
+                        shutil.copy(src_path, target_path)
