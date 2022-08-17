@@ -99,8 +99,9 @@ if __name__ == '__main__':
 
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
     src_dirs, exclude_dirs = _convert_excludes(input_dirs)
+    print(f"exclude_dirs: {exclude_dirs}")
     for src_dir in src_dirs:
-        if src_dir in exclude_dirs:
+        if src_dir.name in exclude_dirs:
             continue
         test_area = src_dir.name
         logger.print(f"Processing test area: {test_area}")
