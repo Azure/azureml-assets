@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+description: Hello World component example
+display_name: Hello-World-Test-Pipeline
+jobs:
+  hello_python_world_job:
+    type: command
+    component: sample_component
+    compute: azureml:cpu-cluster
