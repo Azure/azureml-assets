@@ -70,7 +70,7 @@ def _convert_excludes(input_dirs: Union[List[Path], Path],
 
     for input_dir in input_dirs:
         input_dir_str = str(input_dir)
-        if input_dir_str == '.':
+        if input_dir_str == '.' or input_dir.parent:
             for current_folder in Path(input_dir_str).iterdir():
                 if current_folder.is_dir() and current_folder not in exclude_dirs:
                     new_input_dirs.append(current_folder)
