@@ -4,7 +4,7 @@ type: command
 description: Trains an image classification model. [Learn More](https://aka.ms/built-in-vision-components)
 
 name: train_image_classification_model
-display_name: Train Image Classification Model (Private Preview)
+display_name: Train Image Classification Model
 version: 0.0.2-preview
 
 inputs:

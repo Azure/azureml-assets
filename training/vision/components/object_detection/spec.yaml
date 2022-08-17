@@ -4,7 +4,7 @@ type: command
 description: Trains an object detection model. [Learn More](https://aka.ms/built-in-vision-components)
 
 name: train_object_detection_model
-display_name: Train Object Detection Model (Private Preview)
+display_name: Train Object Detection Model
 version: 0.0.2-preview
 
 inputs:
