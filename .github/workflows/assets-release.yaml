@@ -20,6 +20,7 @@ concurrency: ${{ github.workflow }}
 
 env:
   default_asset_dirs: .,!test,!scripts
+  default_test_dirs: .,!test,!scripts,!.git,!.github
   main_dir: main
   release_dir: release
   scripts_azureml_assets_dir: scripts/azureml-assets
@@ -204,7 +205,8 @@ jobs:
         run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
   
       - name: Convert test files and scripts
-        run: python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i $main_dir/training -r $release_dir -a training
+        run: |
+          python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i "${{ env.default_test_dirs }}" -r $release_dir
 
       - name: Copy e2e test scripts
         run: | 
