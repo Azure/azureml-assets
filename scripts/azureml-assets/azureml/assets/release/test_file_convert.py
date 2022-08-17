@@ -83,7 +83,7 @@ def _convert_excludes(input_dirs: Union[List[Path], Path],
         if exclude_dirs:
             exclude_dirs.extend(new_exclude_dirs)
         else:
-            exclude_dirs = new_exclude_dirs
+            exclude_dirs = [dir.name for dir in new_exclude_dirs]
 
     return new_input_dirs, exclude_dirs
 
