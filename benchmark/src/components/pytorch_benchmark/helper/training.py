@@ -125,26 +125,31 @@ class PyTorchDistributedModelTrainingSequence:
         # depending on the Azure ML distribution.type, different environment variables will be provided
         # to configure DistributedDataParallel
         self.distributed_backend = args.distributed_backend
-        if self.distributed_backend == "nccl":
+        if 'OMPI_COMM_WORLD_SIZE' in os.environ:
+            self.logger.info('MPI Configuration used.')
+            # Note: Distributed pytorch package doesn't have MPI built in.
+            # MPI is only included if you build PyTorch from source on a host that has MPI installed.
+            self.world_size = int(os.environ.get("OMPI_COMM_WORLD_SIZE", "1"))
+            self.world_rank = int(os.environ.get("OMPI_COMM_WORLD_RANK", "0"))
+            self.local_world_size = int(os.environ.get("OMPI_COMM_WORLD_LOCAL_SIZE", "1"))
+            self.local_rank = int(os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK", "0"))
+
+            if int(os.environ.get('OMPI_MCA_orte_num_nodes', '1')) > 1:
+                os.environ["MASTER_ADDR"], os.environ["MASTER_PORT"] = os.environ["AZ_BATCH_MASTER_NODE"].split(":")
+            else:    
+                os.environ['MASTER_ADDR'] = os.environ.get('AZ_BATCHAI_JOB_MASTER_NODE_IP', 'localhost')
+                os.environ['MASTER_PORT'] = os.environ.get('MASTER_PORT', '6105')
+
+            self.multinode_available = self.world_size > 1
+            self.self_is_main_node = self.world_rank == 0
+        elif 'WORLD_SIZE' in os.environ:
+            self.logger.info('Pytorch Configuration used.')
             self.world_size = int(os.environ.get("WORLD_SIZE", "1"))
             self.world_rank = int(os.environ.get("RANK", "0"))
             self.local_world_size = int(os.environ.get("LOCAL_WORLD_SIZE", "1"))
             self.local_rank = int(os.environ.get("LOCAL_RANK", "0"))
             self.multinode_available = self.world_size > 1
             self.self_is_main_node = self.world_rank == 0
-
-        elif self.distributed_backend == "mpi":
-            # Note: Distributed pytorch package doesn't have MPI built in.
-            # MPI is only included if you build PyTorch from source on a host that has MPI installed.
-            self.world_size = int(os.environ.get("OMPI_COMM_WORLD_SIZE", "1"))
-            self.world_rank = int(os.environ.get("OMPI_COMM_WORLD_RANK", "0"))
-            self.local_world_size = int(
-                os.environ.get("OMPI_COMM_WORLD_LOCAL_SIZE", "1")
-            )
-            self.local_rank = int(os.environ.get("OMPI_COMM_WORLD_LOCAL_RANK", "0"))
-            self.multinode_available = self.world_size > 1
-            self.self_is_main_node = self.world_rank == 0
-
         else:
             raise NotImplementedError(
                 f"distributed_backend={self.distributed_backend} is not implemented yet."
