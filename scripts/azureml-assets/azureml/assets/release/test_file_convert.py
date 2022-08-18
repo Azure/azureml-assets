@@ -70,12 +70,12 @@ def _convert_excludes(input_dirs: Union[List[Path], Path],
 
     for input_dir in input_dirs:
         input_dir_str = str(input_dir)
-        if input_dir_str.startswith(EXCLUDE_DIR_PREFIX):
-            new_exclude_dirs.append(Path(input_dir_str[len(EXCLUDE_DIR_PREFIX):]))
-        elif input_dir_str == '.' or input_dir.parent:
+        if input_dir_str == '.':
             for current_folder in Path(input_dir_str).iterdir():
                 if current_folder.is_dir() and current_folder not in exclude_dirs:
                     new_input_dirs.append(current_folder)
+        elif input_dir_str.startswith(EXCLUDE_DIR_PREFIX):
+            new_exclude_dirs.append(Path(input_dir_str[len(EXCLUDE_DIR_PREFIX):]))
         else:
             new_input_dirs.append(input_dir)
 
@@ -83,7 +83,7 @@ def _convert_excludes(input_dirs: Union[List[Path], Path],
         if exclude_dirs:
             exclude_dirs.extend(new_exclude_dirs)
         else:
-            exclude_dirs = [dir.name for dir in new_exclude_dirs]
+            exclude_dirs = new_exclude_dirs
 
     return new_input_dirs, exclude_dirs
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
     src_dirs, exclude_dirs = _convert_excludes(input_dirs)
     for src_dir in src_dirs:
-        if src_dir.name in exclude_dirs:
+        if src_dir in exclude_dirs:
             continue
         test_area = src_dir.name
         logger.print(f"Processing test area: {test_area}")
