@@ -1,6 +1,14 @@
 ### What are the assets being proposed?
+**Component**
   Model Evaluation component
-  
+
+**Environment**
+  Custom Environment for Model Evaluation
+  Command component specific environment will be shared, which will contain following assets: 
+
+  1. Dockerfile
+  2. env.yaml
+
   
 ### Why should this asset be built-in?
 
