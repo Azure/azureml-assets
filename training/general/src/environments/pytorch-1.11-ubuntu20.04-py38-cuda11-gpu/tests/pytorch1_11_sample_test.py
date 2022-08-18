@@ -58,11 +58,13 @@ def test_pytorch_1_11():
 
     returned_job = ml_client.create_or_update(job)
 
+    print("job just created and status is " + returned_job.status)
+
     try:
         polling2.poll(
             lambda: (returned_job.status == "Completed" or returned_job.status == "Failed"),
             step=30,       # poll every 30 seconds
-            timeout=1200  # 20 minute timeout
+            timeout=1800  # 20 minute timeout
         )
     except TimeoutException:
         print("in except")
