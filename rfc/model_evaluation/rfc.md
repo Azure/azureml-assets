@@ -1,15 +1,8 @@
-# Overview
-RFC (Request For Comment) folder is used for creating specs that's relatively big, such as new asset proposals etc.
-
-# New Asset Proposal Request
-If you know the owning area, organize this folder by <area name>/xxx.md
-In the markdown, please create a new PR answering the following questions.
-
-* What are the assets being proposed?
-  Model Evaluation DPV2 component
+### What are the assets being proposed?
+  Model Evaluation component
   
   
-•	Why should this asset be built-in?
+### Why should this asset be built-in?
 
 Model Evaluation would be a part of DPV2 which allows user to run Model Evaluation for Any Machine Learning model on Azure ML.  In order for us to make the functionality of model evaluation available as generic functionality at Azure Machine Learning level, this component should be available as built-in componenet which users should be able to use it as drag and drop in designer.
 
@@ -27,10 +20,10 @@ Sample Usage: run_sdk.py
 
 
 
-•	Support model (what teams will be on the hook for bug fixes and security patches)?
+### Support model (what teams will be on the hook for bug fixes and security patches)?
 PM (Sharmeelee Bijlani)
 Dev Lead (Shipra Jain, Anup Shirgaonkar)
 
-•	A high-level description of the implementation for each asset.
+### A high-level description of the implementation for each asset.
 
 Model Evaluation would be a part of DPV2 which allows user to run Model Evaluation for Any Machine Learning model on Azure ML.  In order for us to make the functionality of model evaluation available as generic functionality at Azure Machine Learning level, this component should be available as built-in componenet which users should be able to use it as drag and drop in designer.
