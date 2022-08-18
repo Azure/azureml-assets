@@ -1,0 +1,82 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: microsoft_gllm_classification_single_label_model_deploy_component
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: LLM Single Label Classification Model Deploy
+description: Component to deploy finetuned model for single label classification task
+
+environment: azureml:gllm-ptca-aifx-stable-ubuntu2004-cu113-py38-torch1110:0.0.1
+
+code: ../../scripts/deploy
+
+inputs:
+  # Output of finetuning component
+  model_checkpoint_dir:
+    type: uri_folder
+    optional: false
+
+  name_for_registered_model:
+    type: string
+    default: inferencemodel
+
+  endpoint_name:
+    type: string
+    default: inference-end-point
+
+  # TODO Add list of computes in enum
+  instance_type:
+    type: string
+    default: Standard_F4s_v2
+
+  instance_count:
+    type: integer
+    default: 1
+
+  # Lora, Deepspeed and ORT Params
+  apply_ort:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will use the ONNXRunTime training
+
+  apply_deepspeed:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will enable deepspeed for training
+
+  deepspeed_config:
+    type: uri_file
+    optional: true
+    description: If apply_deepspeed is set to True, this file will be used as deepspeed config
+
+  # Sequence Classification task Parameters
+  sentence1_key:
+    type: string
+    optional: true
+
+  sentence2_key:
+    type: string
+    optional: true
+
+  label_key:
+    type: string
+    optional: true
+
+  # Inference Parameters
+  valid_batch_size:
+    type: integer
+    default: 4
+    optional: true
+
+command: >-
+  python deploy.py --model_checkpoint_dir ${{inputs.model_checkpoint_dir}} --endpoint_name ${{inputs.endpoint_name}}  --name_for_registered_model ${{inputs.name_for_registered_model}} --instance_type ${{inputs.instance_type}} --instance_count ${{inputs.instance_count}} [--sentence1_key ${{inputs.sentence1_key}}] [--sentence2_key ${{inputs.sentence2_key}}] [--label_key ${{inputs.label_key}}] [--valid_batch_size ${{inputs.valid_batch_size}}] [--apply_ort ${{inputs.apply_ort}}] [--apply_deepspeed ${{inputs.apply_deepspeed}}] [--deepspeed_config ${{inputs.deepspeed_config}}]

@@ -1,0 +1,130 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: microsoft_gllm_classification_multi_label_model_finetune_component
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: LLM Multilabel Classification Model Finetune
+description: Component to finetune model for multilabel classification task
+
+environment: azureml:gllm-ptca-aifx-stable-ubuntu2004-cu113-py38-torch1110:0.0.1
+
+code: ../../scripts/finetune
+
+distribution:
+  type: pytorch
+
+inputs:
+  # Lora parameters
+  apply_lora:
+    type: string
+    enum:
+      - 'true'
+      - 'false'
+    default: 'false'
+    optional: true
+
+  lora_alpha:
+    type: integer
+    default: 128
+    optional: true
+
+  lora_r:
+    type: integer
+    default: 8
+    optional: true
+
+  lora_dropout:
+    type: number
+    default: 0.0
+    optional: true
+
+  # Training parameters
+  epochs:
+    type: integer
+    default: 1
+    optional: true
+
+  max_steps:
+    type: integer
+    default: -1
+    optional: true
+    description: (
+      "If set to a positive number, the total number of training steps to perform. Overrides `epochs`."
+      "In case of using a finite iterable dataset the training may stop before reaching the set number of steps"
+      "when all data is exhausted")
+
+  learning_rate:
+    type: number
+    default: 0.00002
+    optional: true
+
+  train_batch_size:
+    type: integer
+    default: 1
+    optional: true
+
+  valid_batch_size:
+    type: integer
+    default: 1
+    optional: true
+
+  auto_find_batch_size:
+    type: string
+    enum:
+      - 'true'
+      - 'false'
+    default: 'false'
+    optional: true
+    description: (
+            "Flag to enable auto finding of batch size. If the provided `train_batch_size` goes into Out Of Memory (OOM)"
+            "enabling auto_find_batch_size will find the correct batch size by iteratively reducing `train_batch_size` by a"
+            "factor of 2 till the OOM is fixed")
+
+  optimizer:
+    type: string
+    default: adamw_hf
+    optional: true
+    enum:
+      - adamw_hf
+      - adamw_torch
+      # - adamw_apex_fused
+      - adafactor
+
+  # ORT Parameters
+  apply_ort:
+    type: string
+    enum:
+      - 'true'
+      - 'false'
+    default: 'false'
+    optional: true
+
+  # Deepspeed Parameters
+  apply_deepspeed:
+    type: string
+    enum:
+      - 'true'
+      - 'false'
+    default: 'false'
+    optional: true
+
+
+  deepspeed_config:
+    type: uri_file
+    optional: true
+
+  # Dataset parameters
+  dataset_path:
+    type: uri_folder
+    optional: false
+    description: output folder of preprocessor containing encoded train.jsonl valid.jsonl and the model pretrained info
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: Output dir to save the finetune model and other metadata
+
+command: >-
+  python finetune.py [--apply_lora ${{inputs.apply_lora}}] [--lora_alpha ${{inputs.lora_alpha}}] [--lora_r ${{inputs.lora_r}}] [--lora_dropout ${{inputs.lora_dropout}}] [--epochs ${{inputs.epochs}}] [--max_steps ${{inputs.max_steps}}] [--lr ${{inputs.learning_rate}}] [--optimizer ${{inputs.optimizer}}] [--train_batch_size ${{inputs.train_batch_size}}] [--valid_batch_size ${{inputs.valid_batch_size}}] [--auto_find_batch_size ${{inputs.auto_find_batch_size}}] [--apply_ort ${{inputs.apply_ort}}] [--apply_deepspeed ${{inputs.apply_deepspeed}}] [--deepspeed_config ${{inputs.deepspeed_config}}] --dataset_path ${{inputs.dataset_path}} --output_dir ${{outputs.output_dir}}
