@@ -59,8 +59,8 @@ def test_pytorch_1_11():
     returned_job = ml_client.create_or_update(job)
 
     print("job just created and status is " + returned_job.status)
-    print("the type of the job is " + type(job))
-    print("the type of the returned job is " + type(returned_job))
+    print("the type of the job is " + str(type(job)))
+    print("the type of the returned job is " + str(type(returned_job)))
 
     try:
         polling2.poll(
