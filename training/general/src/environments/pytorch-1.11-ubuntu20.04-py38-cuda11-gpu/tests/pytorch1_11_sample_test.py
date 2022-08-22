@@ -64,9 +64,9 @@ def test_pytorch_1_11():
 
     try:
         polling2.poll(
-            lambda: (returned_job.status == "Completed" or returned_job.status == "Failed"),
+            lambda: (ml_client.jobs.get(returned_job.name).status == "Completed" or ml_client.jobs.get(returned_job.name).status == "Failed"),
             step=30,       # poll every 30 seconds
-            timeout=600  # 20 minute timeout
+            timeout=1200  # 20 minute timeout
         )
     except TimeoutException:
         print("in except")
