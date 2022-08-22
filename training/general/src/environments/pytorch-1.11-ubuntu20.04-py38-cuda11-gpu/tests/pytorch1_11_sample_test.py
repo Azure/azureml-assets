@@ -58,18 +58,12 @@ def test_pytorch_1_11():
 
     returned_job = ml_client.create_or_update(job)
 
-    print("job just created and status is " + ml_client.jobs.get(returned_job.name).status)
-
-    try:
-        polling2.poll(
-            lambda: (ml_client.jobs.get(returned_job.name).status == "Completed"
-                     or ml_client.jobs.get(returned_job.name).status == "Failed"),
-            step=30,       # poll every 30 seconds
-            timeout=1500  # 25 minute timeout
-        )
-    except TimeoutException:
-        print("in except")
-        print("status of returned job is " + ml_client.jobs.get(returned_job.name).status)
+    polling2.poll(
+        lambda: (ml_client.jobs.get(returned_job.name).status == "Completed"
+                    or ml_client.jobs.get(returned_job.name).status == "Failed"),
+        step=30,       # poll every 30 seconds
+        timeout=1500  # 25 minute timeout
+    )
 
     assert returned_job is not None
     assert ml_client.jobs.get(returned_job.name).status == "Completed"
