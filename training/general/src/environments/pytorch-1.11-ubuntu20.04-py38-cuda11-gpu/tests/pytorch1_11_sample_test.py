@@ -65,7 +65,7 @@ def test_pytorch_1_11():
     try:
         polling2.poll(
             lambda: (ml_client.jobs.get(returned_job.name).status == "Completed"
-                    or ml_client.jobs.get(returned_job.name).status == "Failed"),
+                or ml_client.jobs.get(returned_job.name).status == "Failed"),
             step=30,       # poll every 30 seconds
             timeout=1200  # 20 minute timeout
         )
