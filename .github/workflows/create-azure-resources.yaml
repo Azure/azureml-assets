@@ -15,11 +15,21 @@ on:
       subscription-id:
         required: true
     outputs:
-      resource_group: ${{ jobs.create-resources.outputs.resource_group }}
-      container_registry: ${{ jobs.create-resources.outputs.container_registry }}
-      workspace: ${{ jobs.create-resources.outputs.workspace }}
-      cpu_cluster: ${{ jobs.create-resources.outputs.cpu_cluster }}
-      gpu_cluster: ${{ jobs.create-resources.outputs.gpu_cluster }}
+      resource_group:
+        description: The resource group to be used for testing
+        value: ${{ jobs.create-resources.outputs.resource_group }}
+      container_registry:
+        description: The container registry to be used for testing
+        value: ${{ jobs.create-resources.outputs.container_registry }}
+      workspace: 
+        description: The workspace to be used for testing
+        value: ${{ jobs.create-resources.outputs.workspace }}
+      cpu_cluster: 
+        description: The CPU cluster to be used for testing
+        value: ${{ jobs.create-resources.outputs.cpu_cluster }}
+      gpu_cluster: 
+        description: The GPU cluster to be used for testing
+        value: ${{ jobs.create-resources.outputs.gpu_cluster }}
 
 env:
   scripts_dir: scripts
