@@ -32,6 +32,8 @@ defaults:
 jobs:
   create-azure-resources:
     uses: ./.github/workflows/create-azure-resources.yaml
+    with:
+      environment: Testing
     secrets: inherit
 
   check-syntax:
