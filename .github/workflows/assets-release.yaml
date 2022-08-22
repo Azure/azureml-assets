@@ -164,7 +164,7 @@ jobs:
 
   release-assets:
     name: Release assets
-    if: always() # && github.ref == 'refs/heads/main'
+    if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: check-release-assets
     
