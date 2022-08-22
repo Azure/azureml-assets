@@ -101,12 +101,6 @@ jobs:
         run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
       
       - name: Test scripts
-        env:
-          resource_group: ${{ needs.create-azure-resources.outputs.resource_group }}
-          container_registry: ${{ needs.create-azure-resources.outputs.container_registry }}
-          workspace: ${{ needs.create-azure-resources.outputs.workspace }}
-          cpu_cluster: ${{ needs.create-azure-resources.outputs.cpu_cluster }}
-          gpu_cluster: ${{ needs.create-azure-resources.outputs.gpu_cluster }}
         run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
 
       # - name: Publish test results
