@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
     working_root = args.working_root if args.working_root else Path(".")
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
-    src_dirs, exclude_dirs = _convert_excludes(input_dirs)
+    src_dirs, exclude_dirs = _convert_excludes(input_dirs, working_root=working_root)
     print(f"src_dirs: {src_dirs}")
     print(f"exclude_dirs: {exclude_dirs}")
     for src_dir in src_dirs:
