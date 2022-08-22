@@ -83,7 +83,13 @@ jobs:
     needs:
       - create-azure-resources
       - check-syntax
-    
+    env:
+      resource_group: ${{ needs.create-azure-resources.outputs.resource_group }}
+      container_registry: ${{ needs.create-azure-resources.outputs.container_registry }}
+      workspace: ${{ needs.create-azure-resources.outputs.workspace }}
+      cpu_cluster: ${{ needs.create-azure-resources.outputs.cpu_cluster }}
+      gpu_cluster: ${{ needs.create-azure-resources.outputs.gpu_cluster }}
+
     steps:
       - name: Clone branch
         uses: actions/checkout@v3

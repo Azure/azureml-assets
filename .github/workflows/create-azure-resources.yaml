@@ -33,6 +33,12 @@ jobs:
     name: Create Azure resources
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
+    outputs:
+      resource_group: ${{ steps.create-resources.outputs.resource_group }}
+      container_registry: ${{ steps.create-resources.outputs.container_registry }}
+      workspace: ${{ steps.create-resources.outputs.workspace }}
+      cpu_cluster: ${{ steps.create-resources.outputs.cpu_cluster }}
+      gpu_cluster: ${{ steps.create-resources.outputs.gpu_cluster }}
 
     steps:
       - name: Clone branch
@@ -56,4 +62,5 @@ jobs:
           subscription-id: ${{ secrets.subscription-id }}
 
       - name: Create Azure resources
+        id: create-resources
         run: bash $scripts_setup_dir/create_azure_resources_daily.sh
