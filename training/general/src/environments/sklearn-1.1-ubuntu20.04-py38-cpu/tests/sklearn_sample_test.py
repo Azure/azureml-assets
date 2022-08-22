@@ -56,7 +56,7 @@ def test_sklearn_1_1():
 
     polling2.poll(
         lambda: (ml_client.jobs.get(returned_job.name).status == "Completed"
-                    or ml_client.jobs.get(returned_job.name).status == "Failed"),
+                 or ml_client.jobs.get(returned_job.name).status == "Failed"),
         step=30,       # poll every 30 seconds
         timeout=1500  # 25 minute timeout
     )
