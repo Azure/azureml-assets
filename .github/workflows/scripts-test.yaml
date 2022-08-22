@@ -34,7 +34,10 @@ jobs:
     uses: ./.github/workflows/create-azure-resources.yaml
     with:
       environment: Testing
-    secrets: inherit
+    secrets:
+      client-id: ${{ secrets.AZURE_CLIENT_ID }}
+      tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
   check-syntax:
     name: Check syntax
