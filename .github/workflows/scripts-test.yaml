@@ -102,7 +102,7 @@ jobs:
         run: bash $scripts_setup_dir/create_azure_resources_daily.sh
 
       - name: Test scripts
-        run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group ${{ secrets.RESOURCE_GROUP }} --registry ${{ secrets.BUILD_CONTAINER_REGISTRY }} $test_dir
+        run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
 
       # - name: Publish test results
       #   uses: EnricoMi/publish-unit-test-result-action/composite@v1
