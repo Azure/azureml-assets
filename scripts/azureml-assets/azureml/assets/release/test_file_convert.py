@@ -78,7 +78,7 @@ def _convert_excludes(input_dirs: Union[List[Path], Path],
                 if current_folder.is_dir() and current_folder not in exclude_dirs:
                     new_input_dirs.append(current_folder)
         else:
-            new_input_dirs.append(input_dir)
+            new_input_dirs.append(working_root / input_dir)
 
     if new_exclude_dirs:
         if exclude_dirs:
