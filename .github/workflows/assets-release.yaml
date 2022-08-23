@@ -25,9 +25,16 @@ env:
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
   scripts_environment_dir: scripts/azureml-assets/azureml/assets/environment
+  scripts_setup_dir: scripts/setup
   changed_assets_artifact: changed-assets
   releasable_assets_artifact: releasable-assets
   asset_config_filename: asset.yaml
+
+permissions:
+  # Required to clone repo and push
+  contents: write
+  # Required for OIDC login to Azure
+  id-token: write
 
 defaults:
   run:
@@ -90,7 +97,7 @@ jobs:
     if: needs.identify-updated-assets.outputs.updated_env_count > 0
     runs-on: ubuntu-latest
     needs: identify-updated-assets
-    environment: BuiltinRegistryDev
+    environment: Testing
 
     env:
       build_logs_artifact_name: build-logs
@@ -117,14 +124,17 @@ jobs:
       - name: Install dependencies
         run: pip install -e $main_dir/$scripts_azureml_assets_dir
 
-      - name: Log in to Azure
-        uses: azure/login@v1
+      - name: Log in to Azure and create resources
+        uses: ./.github/actions/create-azure-resources
         with:
-          creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
       
       - name: Build and test images
         id: build-images
-        run: python -u $main_dir/$scripts_environment_dir/build.py -i '${{ runner.temp }}'/$changed_assets_artifact -a $asset_config_filename -o '${{ runner.temp }}'/$tested_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -g ${{ secrets.RESOURCE_GROUP }} -r ${{ secrets.BUILD_CONTAINER_REGISTRY }} -T 'python -V'
+        run: python -u $main_dir/$scripts_environment_dir/build.py -i '${{ runner.temp }}'/$changed_assets_artifact -a $asset_config_filename -o '${{ runner.temp }}'/$tested_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -g $resource_group -r $container_registry -T 'python -V'
         continue-on-error: true
       
       - name: Upload build logs
