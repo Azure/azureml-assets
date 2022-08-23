@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Tests running a sample job in the sklearn 1.1 environment."""
 import os
+import time
 from pathlib import Path
 from azure.ai.ml import MLClient
 from azure.ai.ml import command, Input
@@ -10,9 +12,11 @@ from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
+MAX_POLLS = 50
 
 
 def test_sklearn_1_1():
+    """Tests a sample job using sklearn 1.1 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("sub_id")
@@ -50,5 +54,16 @@ def test_sklearn_1_1():
     )
 
     returned_job = ml_client.create_or_update(job)
-
     assert returned_job is not None
+
+    number_of_polls = 0
+    # timeout is 25 minutes
+    while (number_of_polls < MAX_POLLS):
+        current_status = ml_client.jobs.get(returned_job.name).status
+        if (current_status == "Completed" or current_status == "Failed"):
+            break
+
+        time.sleep(30)  # sleep 30 seconds
+        number_of_polls += 1
+
+    assert ml_client.jobs.get(returned_job.name).status == "Completed"
