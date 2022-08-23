@@ -101,7 +101,7 @@ jobs:
     - name: check out repo
       uses: actions/checkout@v2
     
-    - name: Install AzureML cli v2
+    - name: Install AzureML CLI v2
       run: |
         az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.59687177-py3-none-any.whl --yes
 
