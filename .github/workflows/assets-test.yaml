@@ -24,11 +24,12 @@ env:
   package_versions_file: scripts/test-requirements.txt
 
 permissions:
+  # Required to clone repo
+  contents: read
   # Required for OIDC login to Azure
   id-token: write
   # Required for EnricoMi/publish-unit-test-result-action/composite
   checks: write
-  contents: read
   issues: read
   pull-requests: write
 
