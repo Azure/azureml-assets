@@ -1,6 +1,9 @@
 name: assets-test
 
 on:
+  push:
+    branches:
+      - elesel/use-testing-sub
   pull_request:
     branches:
       - main
@@ -18,14 +21,14 @@ env:
   default_asset_dirs: .,!test,!scripts
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
+  scripts_setup_dir: scripts/setup
   asset_config_filename: asset.yaml
   pytest_reports_dir: pytest
   package_versions_file: scripts/test-requirements.txt
-  workspace: ${{ secrets.ASSETS_TEST_WORKSPACE_NAME }}
-  subscription_id: ${{ secrets.ASSETS_TEST_WORKSPACE_SUBSCRIPTION_ID }}
-  resource_group: ${{ secrets.ASSETS_TEST_WORKSPACE_RESOURCE_GROUP }}
-  cpu_cluster: ${{ secrets.ASSETS_TEST_WORKSPACE_CPU_CLUSTER }}
-  gpu_cluster: ${{ secrets.ASSETS_TEST_WORKSPACE_GPU_CLUSTER }}
+
+permissions:
+  id-token: write
+  contents: read
 
 defaults:
   run:
@@ -58,10 +61,13 @@ jobs:
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
 
-      - name: Log in to Azure
-        uses: azure/login@v1
+      - name: Create Azure resources
+        uses: ./.github/actions/create-azure-resources
         with:
-            creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
       
       - name: Test all assets
         id: test-all-assets
