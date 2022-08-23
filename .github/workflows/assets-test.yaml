@@ -1,9 +1,6 @@
 name: assets-test
 
 on:
-  push:
-    branches:
-      - elesel/use-testing-sub
   pull_request:
     branches:
       - main
@@ -66,7 +63,7 @@ jobs:
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
 
-      - name: Create Azure resources
+      - name: Login to Azure and create resources
         uses: ./.github/actions/create-azure-resources
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -75,12 +72,12 @@ jobs:
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
       
       - name: Test all assets
-        #if: steps.changed-files.outputs.all_modified_files == ''
+        if: steps.changed-files.outputs.all_modified_files == ''
         run: python -u $scripts_assets_dir/test_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir
 
-      #- name: Test changed assets
-      #  if: steps.changed-files.outputs.all_modified_files != ''
-      #  run: python -u $scripts_assets_dir/test_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir -c "${{ steps.changed-files.outputs.all_modified_files }}"
+      - name: Test changed assets
+        if: steps.changed-files.outputs.all_modified_files != ''
+        run: python -u $scripts_assets_dir/test_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir -c "${{ steps.changed-files.outputs.all_modified_files }}"
       
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action/composite@v1

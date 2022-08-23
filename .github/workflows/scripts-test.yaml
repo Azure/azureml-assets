@@ -1,9 +1,6 @@
 name: scripts-test
 
 on:
-  push:
-    branches:
-      - elesel/use-testing-sub
   pull_request:
     branches:
       - main
@@ -93,7 +90,7 @@ jobs:
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
       
-      - name: Create Azure resources
+      - name: Login to Azure and create resources
         uses: ./.github/actions/create-azure-resources
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}

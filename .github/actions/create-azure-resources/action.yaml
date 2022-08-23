@@ -1,4 +1,4 @@
-name: Create Azure resources
+name: Login to Azure and create resources
 description: Login to Azure and create resources used for testing
 inputs:
   client-id:
