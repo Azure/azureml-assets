@@ -118,5 +118,5 @@ jobs:
       # runs only if (from main branch) or (triggered manually)
       if: ${{ (github.ref == 'refs/heads/main') || (github.event.inputs.test_run == 'y') }}
       run: |
-        az ml environment create -f ./assets/environments/nvidia/env.yml
+        az ml environment create -f ./src/environments/nvidia_pytorch/env.yml
         az ml job create -f ./src/pipelines/canary/classification_random.yml --stream
