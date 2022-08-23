@@ -74,7 +74,8 @@ jobs:
 
       - name: Build and test changed images
         id: build-changed-images
-        run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g $resource_group -r $container_registry -T 'python -V' -c "${{ steps.changed-files.outputs.all_modified_files }}"
+        #run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g $resource_group -r $container_registry -T 'python -V' -c "${{ steps.changed-files.outputs.all_modified_files }}"
+        run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g $resource_group -r $container_registry -T 'python -V'
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3
