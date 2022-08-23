@@ -101,10 +101,6 @@ jobs:
     - name: check out repo
       uses: actions/checkout@v2
     
-    - name: Install AzureML CLI v2
-      run: |
-        az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.59687177-py3-none-any.whl --yes
-
     - name: Log in to Azure and create resources
       uses: ./.github/actions/create-azure-resources
       with:
@@ -112,6 +108,10 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         scripts-setup-dir: ${{ env.scripts_setup_dir }}
+
+    - name: Install AzureML CLI v2
+      run: |
+        az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.59687177-py3-none-any.whl --yes
 
     - name : Run canary pipeline e2e [classification_random]
       # runs only if (from main branch) or (triggered manually)
