@@ -67,10 +67,11 @@ if __name__ == '__main__':
     while submitted_job_list:
         for job in submitted_job_list:
             returned_job = ml_client.jobs.get(job.name)
+            print(f'The status of test job {job.name} is {returned_job.status}')
             if returned_job.status == "Completed":
                 succeeded_jobs.append(returned_job.display_name)
                 submitted_job_list.remove(job)
-            elif returned_job.status == "Failed" or returned_job.status == "Cancelled":
+            elif returned_job.status == "Failed":
                 failed_jobs.append(returned_job.display_name)
                 submitted_job_list.remove(job)
     print(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
