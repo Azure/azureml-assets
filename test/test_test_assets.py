@@ -18,7 +18,7 @@ TEST_REQUIREMENTS_FILE = Path("../scripts/test-requirements.txt")
 def test_test_assets(test_subdir: str, expected: bool):
     this_dir = Path(__file__).parent
 
-    subscription_id = os.environ.get("sub_id")
+    subscription_id = os.environ.get("subscription_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
 
