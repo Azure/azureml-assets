@@ -54,8 +54,7 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
 
 
 def _convert_excludes(input_dirs: Union[List[Path], Path],
-                      exclude_dirs: List[Path] = None,
-                      working_root: Path = Path(".")) -> Tuple[List[Path], List[Path]]:
+                      exclude_dirs: List[Path] = None) -> Tuple[List[Path], List[Path]]:
     """Extract directories to exclude from input_dirs and add them to exclude_dirs."""
     if type(input_dirs) is not list:
         input_dirs = [input_dirs]
@@ -71,12 +70,12 @@ def _convert_excludes(input_dirs: Union[List[Path], Path],
 
     for input_dir in input_dirs:
         input_dir_str = str(input_dir)
-        if input_dir_str.startswith(EXCLUDE_DIR_PREFIX):
-            new_exclude_dirs.append(working_root / Path(input_dir_str[len(EXCLUDE_DIR_PREFIX):]))
-        elif input_dir_str == '.':
-            for current_folder in working_root.iterdir():
+        if input_dir_str == '.':
+            for current_folder in Path(input_dir_str).iterdir():
                 if current_folder.is_dir() and current_folder not in exclude_dirs:
                     new_input_dirs.append(current_folder)
+        elif input_dir_str.startswith(EXCLUDE_DIR_PREFIX):
+            new_exclude_dirs.append(Path(input_dir_str[len(EXCLUDE_DIR_PREFIX):]))
         else:
             new_input_dirs.append(input_dir)
 
@@ -93,17 +92,13 @@ if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dirs", required=True, help="dir path of test areas")
-    parser.add_argument("-w", "--working-root", type=Path, required=False, help="dir path of working root")
     parser.add_argument("-r", "--release-directory", required=True, type=Path,
                         help="Directory to which the release branch has been cloned")
     args = parser.parse_args()
     # Convert comma-separated values to lists
 
-    working_root = args.working_root if args.working_root else Path(".")
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
-    src_dirs, exclude_dirs = _convert_excludes(input_dirs, working_root=working_root)
-    print(f"src_dirs: {src_dirs}")
-    print(f"exclude_dirs: {exclude_dirs}")
+    src_dirs, exclude_dirs = _convert_excludes(input_dirs)
     for src_dir in src_dirs:
         if src_dir in exclude_dirs:
             continue
