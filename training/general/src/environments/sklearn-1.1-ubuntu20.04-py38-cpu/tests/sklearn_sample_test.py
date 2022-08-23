@@ -3,7 +3,7 @@
 
 """Tests running a sample job in the sklearn 1.1 environment."""
 import os
-import polling2
+import time
 from pathlib import Path
 from azure.ai.ml import MLClient
 from azure.ai.ml import command, Input
@@ -53,13 +53,16 @@ def test_sklearn_1_1():
     )
 
     returned_job = ml_client.create_or_update(job)
-
-    polling2.poll(
-        lambda: (ml_client.jobs.get(returned_job.name).status == "Completed"
-                 or ml_client.jobs.get(returned_job.name).status == "Failed"),
-        step=30,       # poll every 30 seconds
-        timeout=1500  # 25 minute timeout
-    )
-
     assert returned_job is not None
+
+    number_of_polls = 0
+    # timeout is 25 minutes
+    while (number_of_polls < MAX_POLLS):
+        current_status = ml_client.jobs.get(returned_job.name).status
+        if (current_status == "Completed" or current_status == "Failed"):
+            break
+
+        time.sleep(30)  # sleep 30 seconds
+        number_of_polls += 1
+
     assert ml_client.jobs.get(returned_job.name).status == "Completed"
