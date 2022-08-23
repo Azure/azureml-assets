@@ -22,8 +22,13 @@ env:
   pytest_reports_dir: pytest
 
 permissions:
+  # Required for OIDC login to Azure
   id-token: write
+  # Required for EnricoMi/publish-unit-test-result-action/composite
+  checks: write
   contents: read
+  issues: read
+  pull-requests: write
 
 defaults:
   run:
