@@ -108,9 +108,9 @@ def run(args):
 
     # sets the model for distributed training
     training_handler.setup_model(model)
-
-    # just log how much time it takes to get to this point
-    mlflow.log_metric("start_to_fit_time", time.time() - SCRIPT_START_TIME)
+    if training_handler.self_is_main_node:
+        # just log how much time it takes to get to this point
+        mlflow.log_metric("start_to_fit_time", time.time() - SCRIPT_START_TIME)
 
     # runs training sequence
     # NOTE: num_epochs is provided in args
@@ -135,9 +135,9 @@ def run(args):
 
     # properly teardown distributed resources
     training_handler.close()
-
-    # logging total time
-    mlflow.log_metric("wall_time", time.time() - SCRIPT_START_TIME)
+    if training_handler.self_is_main_node:
+        # logging total time
+        mlflow.log_metric("wall_time", time.time() - SCRIPT_START_TIME)
 
     # MLFLOW: finalize mlflow (once in entire script)
     mlflow.end_run()
