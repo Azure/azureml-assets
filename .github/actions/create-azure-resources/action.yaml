@@ -1,0 +1,29 @@
+name: Create Azure resources
+description: Login to Azure and create resources used for testing
+inputs:
+  client-id:
+    description: Client ID of the service principal
+    required: true
+  tenant-id:
+    description: Tenant ID of the service principal
+    required: true
+  subscription-id:
+    description: Subscription to use for resources
+    required: true
+  scripts-setup-dir:
+    description: Directory containing the create_azure_resources_daily.sh script
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Log in to Azure
+      uses: azure/login@v1
+      with:
+        client-id: ${{ inputs.client-id }}
+        tenant-id: ${{ inputs.tenant-id }}
+        subscription-id: ${{ inputs.subscription-id }}
+
+    - name: Create Azure resources
+      shell: bash
+      run: bash ${{ inputs.scripts-setup-dir }}/create_azure_resources_daily.sh

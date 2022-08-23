@@ -21,20 +21,15 @@ env:
   resources_dir: test/resources
   pytest_reports_dir: pytest
 
+permissions:
+  id-token: write
+  contents: read
+
 defaults:
   run:
     shell: bash
 
 jobs:
-  create-azure-resources:
-    uses: ./.github/workflows/create-azure-resources.yaml
-    with:
-      environment: Testing
-    secrets:
-      client-id: ${{ secrets.AZURE_CLIENT_ID }}
-      tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
   check-syntax:
     name: Check syntax
     runs-on: ubuntu-latest 
@@ -76,15 +71,8 @@ jobs:
   test:
     name: Test scripts
     runs-on: ubuntu-latest
-    needs:
-      - create-azure-resources
-      - check-syntax
-    env:
-      resource_group: ${{ needs.create-azure-resources.outputs.resource_group }}
-      container_registry: ${{ needs.create-azure-resources.outputs.container_registry }}
-      workspace: ${{ needs.create-azure-resources.outputs.workspace }}
-      cpu_cluster: ${{ needs.create-azure-resources.outputs.cpu_cluster }}
-      gpu_cluster: ${{ needs.create-azure-resources.outputs.gpu_cluster }}
+    needs: check-syntax
+    environment: Testing
 
     steps:
       - name: Clone branch
@@ -99,6 +87,14 @@ jobs:
     
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
+      
+      - name: Create Azure resources
+        uses: actions/create-azure-resources
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
       
       - name: Test scripts
         run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir

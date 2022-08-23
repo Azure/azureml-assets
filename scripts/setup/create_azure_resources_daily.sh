@@ -53,9 +53,11 @@ else
     fi
 fi
 
-# Create output parameters
-echo "::set-output name=resource_group::${resource_group}"
-echo "::set-output name=container_registry::${container_registry}"
-echo "::set-output name=workspace::${workspace}"
-echo "::set-output name=cpu_cluster::${cpu_cluster}"
-echo "::set-output name=gpu_cluster::${gpu_cluster}"
+# Create environment variables
+cat << EOF >> $GITHUB_ENV
+resource_group=${resource_group}
+container_registry=${container_registry}
+workspace=${workspace}
+cpu_cluster=${cpu_cluster}
+gpu_cluster=${gpu_cluster}
+EOF
