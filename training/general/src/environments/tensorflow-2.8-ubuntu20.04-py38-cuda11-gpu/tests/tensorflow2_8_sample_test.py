@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test a curated environment."""
+
 import os
 from pathlib import Path
 from azure.ai.ml import MLClient
@@ -13,6 +15,7 @@ JOB_SOURCE_CODE = "src"
 
 
 def test_tensorflow_2_8():
+    """Test a curated environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
