@@ -12,6 +12,7 @@ from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
+MAX_POLLS = 50
 
 
 def test_tensorflow_2_9():
