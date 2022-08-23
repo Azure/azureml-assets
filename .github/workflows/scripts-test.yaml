@@ -90,7 +90,7 @@ jobs:
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
       
-      - name: Login to Azure and create resources
+      - name: Log in to Azure and create resources
         uses: ./.github/actions/create-azure-resources
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}

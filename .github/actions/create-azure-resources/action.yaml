@@ -1,5 +1,5 @@
-name: Login to Azure and create resources
-description: Login to Azure and create resources used for testing
+name: Log in to Azure and create resources
+description: Log in to Azure and create resources used for testing
 inputs:
   client-id:
     description: Client ID of the service principal
