@@ -8,6 +8,7 @@ dependencies:
 - pandas~=1.3.0
 - scipy~=1.7.0
 - numpy~=1.21.0
+- protobuf=3.20
 - pip:
   - matplotlib~=3.5.0
   - psutil~=5.8.0

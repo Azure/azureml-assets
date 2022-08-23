@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Test a curated environment."""
-
+"""Tests running a sample job in the pytorch 1.11 environment."""
 import os
+import time
 from pathlib import Path
 from azure.ai.ml import MLClient
 from azure.ai.ml import command, Input
@@ -12,10 +12,11 @@ from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
+MAX_POLLS = 50
 
 
 def test_pytorch_1_11():
-    """Test a curated environment."""
+    """Tests a sample job using pytorch 1.11 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -38,7 +39,8 @@ def test_pytorch_1_11():
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
-        command="python main.py --iris-csv ${{inputs.iris_csv}} --epochs ${{inputs.epochs}} --lr ${{inputs.lr}}",
+        command="pip install -r requirements.txt && python main.py --iris-csv ${{inputs.iris_csv}} "
+                "--epochs ${{inputs.epochs}} --lr ${{inputs.lr}}",
         inputs={
             "iris_csv": Input(
                 type="uri_file",
@@ -48,12 +50,23 @@ def test_pytorch_1_11():
             "lr": 0.1,
         },
         environment=f"{env_name}@latest",
-        compute=os.environ.get("cpu_cluster"),
+        compute=os.environ.get("gpu_cluster"),
         display_name="pytorch-iris-example",
         description="Train a neural network with PyTorch on the Iris dataset.",
         experiment_name="pytorch111Experiment"
     )
 
     returned_job = ml_client.create_or_update(job)
-
     assert returned_job is not None
+
+    number_of_polls = 0
+    # timeout is 25 minutes
+    while (number_of_polls < MAX_POLLS):
+        current_status = ml_client.jobs.get(returned_job.name).status
+        if (current_status == "Completed" or current_status == "Failed"):
+            break
+
+        time.sleep(30)  # sleep 30 seconds
+        number_of_polls += 1
+
+    assert ml_client.jobs.get(returned_job.name).status == "Completed"

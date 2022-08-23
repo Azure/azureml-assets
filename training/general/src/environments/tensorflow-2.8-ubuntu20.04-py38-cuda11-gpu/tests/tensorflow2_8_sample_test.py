@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Test a curated environment."""
-
+"""Tests running a sample job in the tensorflow 2.8 environment."""
 import os
+import time
 from pathlib import Path
 from azure.ai.ml import MLClient
 from azure.ai.ml import command
@@ -12,10 +12,11 @@ from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
+MAX_POLLS = 50
 
 
 def test_tensorflow_2_8():
-    """Test a curated environment."""
+    """Tests a sample job using tensorflow 2.8 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -47,5 +48,16 @@ def test_tensorflow_2_8():
     )
 
     returned_job = ml_client.create_or_update(job)
-
     assert returned_job is not None
+
+    number_of_polls = 0
+    # timeout is 25 minutes
+    while (number_of_polls < MAX_POLLS):
+        current_status = ml_client.jobs.get(returned_job.name).status
+        if (current_status == "Completed" or current_status == "Failed"):
+            break
+
+        time.sleep(30)  # sleep 30 seconds
+        number_of_polls += 1
+
+    assert ml_client.jobs.get(returned_job.name).status == "Completed"
