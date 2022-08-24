@@ -43,46 +43,46 @@ Parameters:
 #### Additional Parameters :
 
 1. Mode Dependent:
-  - `label_column_name` : String  
+  - `label_column_name` : String   
     Target column name in test data. Required for mode = score/compute_metrics
-  - `prediction_column_name` : String  
+  - `prediction_column_name` : String   
     Predictions column name in test data. Required for mode = compute_metrics
   
 2. Task Dependent:
   - Classification  
-    a. `metrics` : Optional[List[String]]  
-    List of metric names to be computed. If not provided we choose the default set.
-    b. `class_labels`: Optional[List[Any]]
-    List of labels for entire data (all the data train/test/validation)
-    c. `train_labels:` : Optional[List[Any]]
-    List of labels used during training.
-    d. `sample_weight` : Optional[List[Float]] 
-    Weights for the samples (Does not need to match sample weights on the fitted model)
-    e. `y_transformer` : Optional[String] 
-    Name of transformer (label transformer) file in data_folder. (Only sklearn based transformers are supported for now)
-    f. `use_binary`: Optional[bool]
-    Boolean argument on whether to use binary classification metrics or not
-    g. `positive_label` : Optional[Any]
-    Class designed as positive class in binary classification metrics.
-    h. `multilabel`: Optional[bool]
-    Whether the classification type is multilabel or single label.
+    a. `metrics` : Optional[List[String]]    
+    List of metric names to be computed. If not provided we choose the default set.  
+    b. `class_labels`: Optional[List[Any]]  
+    List of labels for entire data (all the data train/test/validation)  
+    c. `train_labels:` : Optional[List[Any]]  
+    List of labels used during training.  
+    d. `sample_weight` : Optional[List[Float]]   
+    Weights for the samples (Does not need to match sample weights on the fitted model)  
+    e. `y_transformer` : Optional[String]   
+    Name of transformer (label transformer) file in data_folder. (Only sklearn based transformers are supported for now)  
+    f. `use_binary`: Optional[bool]   
+    Boolean argument on whether to use binary classification metrics or not  
+    g. `positive_label` : Optional[Any]  
+    Class designed as positive class in binary classification metrics.  
+    h. `multilabel`: Optional[bool]  
+    Whether the classification type is multilabel or single label.  
 
   - Regression  
-    a. `metrics` : Optional[List[String]]  
-    List of metric names to be computed. If not provided we choose the default set.
-    b. `y_max`: Optional[Float]
-    The max target value.
-    c. `y_min`: Optional[Float]
-    The min target value.
-    d. `y_std`: Optional[Float]
-    The standard deviation of targets value.
-    e. `sample_weight` : Optional[List[Float]] 
-    Weights for the samples (Does not need to match sample weights on the fitted model)
-    f. `bin_info`: Optional[Dict[str, float]]
-    The binning information for true values. This should be calculated from make_dataset_bins. Required for  
-    calculating non-scalar metrics.
+    a. `metrics` : Optional[List[String]]    
+    List of metric names to be computed. If not provided we choose the default set.  
+    b. `y_max`: Optional[Float]  
+    The max target value.  
+    c. `y_min`: Optional[Float]  
+    The min target value.  
+    d. `y_std`: Optional[Float]  
+    The standard deviation of targets value.  
+    e. `sample_weight` : Optional[List[Float]]   
+    Weights for the samples (Does not need to match sample weights on the fitted model)   
+    f. `bin_info`: Optional[Dict[str, float]]   
+    The binning information for true values. This should be calculated from make_dataset_bins. Required for   
+    calculating non-scalar metrics.  
 
-    
+
 ### Support model (what teams will be on the hook for bug fixes and security patches)?
 PM (Sharmeelee Bijlani)
 Dev Lead (Shipra Jain, Anup Shirgaonkar)
