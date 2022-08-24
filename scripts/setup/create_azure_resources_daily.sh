@@ -27,7 +27,7 @@ else
     echo "Checking ${resource_name}"
     if ! az acr show -n $container_registry --output none >/dev/null 2>&1; then
         echo "Creating ${resource_name}"
-        az acr create -n $container_registry --sku Basic
+        az acr create -n $container_registry --sku Basic --admin-enabled
     fi
     container_registry_id=$(az acr show -n $container_registry --query "id" -o tsv | tr -d '\n\r')
     
