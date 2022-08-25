@@ -24,7 +24,7 @@ Sample Usage: [run_sdk.py](https://microsoft.sharepoint.com/:u:/t/SDAutoML/EZfUQ
   
 > Azure ML CLI  : Similarly, Model evaluation job can also be created using Azure ML CLI. A User has to create a Pipeline job YAML with component as ‘azureml:model_evaluation:<version>’ and specify all other input parameters including Test data which is passed as URI_FOLDER.   
   
- Sample YAML: [model_evaluation_job.yml](https://microsoft.sharepoint.com/:u:/t/SDAutoML/EQWoVaptR05FiWmAHv3bCHIBHpLkEpGW8yz_wu2HV-nfJA?e=ecjFzG)  
+ Sample YAML: [model_evaluation_job.yml](https://microsoft.sharepoint.com/:u:/t/SDAutoML/EazUe_t9YbBDmvbW6gS-y4cBb1dvvKfZbWaB9RoZ8M_VEg?e=2dyLxU)  
 
   
 > Designer (UI)  : The model evaluation component will be available in Designer which allows user to drag and drop the component along with Test Data and filling in the rest of the component parameters and create a model evaluation job using UI.
