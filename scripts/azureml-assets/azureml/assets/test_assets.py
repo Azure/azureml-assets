@@ -109,7 +109,7 @@ if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dirs", required=True,
-                        help="Comma-separated list of directories containing environments to test")
+                        help="Comma-separated list of directories containing assets to test")
     parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
                         help="Asset config file name to search for")
     parser.add_argument("-p", "--package-versions-file", required=True, type=Path,
