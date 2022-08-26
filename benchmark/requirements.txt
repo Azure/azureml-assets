@@ -1,6 +1,6 @@
 # for local testing (cpu)
 torchvision==0.13.1
-torch==1.12.0
+torch==1.12.1
 transformers==4.18.0
 tensorflow==2.9.1
 
