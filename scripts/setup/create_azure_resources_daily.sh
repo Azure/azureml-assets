@@ -35,7 +35,8 @@ else
     echo "Checking ${resource_name}"
     if ! az ml workspace show -n $workspace --output none >/dev/null 2>&1; then
         echo "Creating ${resource_name}"
-        az ml workspace create -n $workspace --container-registry $container_registry_id
+        #az ml workspace create -n $workspace --container-registry $container_registry_id
+        az ml workspace create -n $workspace
     fi
 
     resource_name="compute cluster ${cpu_cluster}"
