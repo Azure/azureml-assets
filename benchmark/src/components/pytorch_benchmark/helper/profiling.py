@@ -1,8 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-This script provides some helper code to help with pytorch profiling.
+"""This script provides some helper code to help with pytorch profiling.
+
 In particular, it provides functions to save "traces" within the profiler
 on_trace_ready callback.
 
@@ -18,8 +18,7 @@ from packaging import version
 
 
 def markdown_trace_handler(dir_name: str, rank: int = 0):
-    """This handler can be used inside torch.profiler call to output
-    tables in markdown format"""
+    """Use inside torch.profiler call to output tables in markdown format."""
 
     def _handler_fn(prof) -> None:
         if not os.path.isdir(dir_name):
@@ -54,8 +53,7 @@ def markdown_trace_handler(dir_name: str, rank: int = 0):
 
 
 def json_trace_handler(dir_name: str, rank: int = 0):
-    """This handler can be used inside torch.profiler call to output
-    tables in JSON format"""
+    """Use inside torch.profiler call to output tables in JSON format."""
 
     def _handler_fn(prof) -> None:
         if not os.path.isdir(dir_name):
@@ -108,8 +106,7 @@ def json_trace_handler(dir_name: str, rank: int = 0):
 def export_stack_trace_handler(
     dir_name: str, rank: int = 0, metrics=["self_cuda_time_total"]
 ):
-    """This handler can be used inside torch.profiler call to output
-    tables in markdown format"""
+    """Use inside torch.profiler call to output tables in markdown format."""
 
     def _handler_fn(prof) -> None:
         if not os.path.isdir(dir_name):
@@ -135,8 +132,7 @@ def export_stack_trace_handler(
 
 
 def composite_trace_handler(handler_list):
-    """This can call multiple trace handlers inside one"""
-
+    """Combine multiple trace handlers inside one."""
     def _handler_fn(prof) -> None:
         for handler in handler_list:
             handler(prof)
@@ -145,7 +141,7 @@ def composite_trace_handler(handler_list):
 
 
 def get_default_trace_handler(dir_name: str, rank: int = 0):
-    """Creates a trace handler with everything good in this script"""
+    """Create a trace handler with everything good in this script."""
     # add handlers for exporting traces at each step (see on_trace_ready)
     # we're creating a list to export in multiple formats
     trace_handlers = []
