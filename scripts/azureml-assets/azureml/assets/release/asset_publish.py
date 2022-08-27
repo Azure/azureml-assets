@@ -56,6 +56,7 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--tests-directory", required=True, type=Path, help="the tests directory")
     parser.add_argument("--version-suffix", required=False, type=str, help="the version suffix")
     parser.add_argument("-l", "--publish-list", required=False, type=Path, help="the path of the publish list file")
+    parser.add_argument("-d", "--debug", type=bool, default=False, help="debug mode")
     args = parser.parse_args()
     registry_name = args.registry_name
     subscription_id = args.subscription_id
@@ -65,6 +66,7 @@ if __name__ == '__main__':
     component_dir = args.assets_directory
     passed_version = args.version_suffix
     publish_list_dir = args.publish_list
+    debug_mode = args.debug
     publish_list = {}
     asset_ids = {}
     print("publishing assets")
@@ -97,12 +99,16 @@ if __name__ == '__main__':
             cmd = f"az ml component create --subscription {subscription_id} " \
                 f"--file {spec_path} --registry-name {registry_name} " \
                 f"--version {final_version} --workspace {workspace} --resource-group {resource_group}"
+            if debug_mode:
+                cmd += " --debug> output.txt 2>&1"
             print(cmd)
             try:
                 check_call(cmd, shell=True)
             except Exception as ex:
                 print(
                     f"catch error creating {asset.type.value}: {asset.name} with exception {ex}")
+            if debug_mode:
+                check_call("cat output.txt | sed 's/Bearer.*$//'", shell=True)
         # TO-DO: add other asset types
         else:
             print(f"unsupported asset type: {asset.type.value}")

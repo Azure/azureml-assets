@@ -206,7 +206,7 @@ jobs:
   
       - name: Convert test files and scripts
         run: |
-          python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i "${{ env.default_test_dirs }}" -r $release_dir
+          python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i "${{ env.default_test_dirs }}" -r $release_dir -w $main_dir
 
       - name: Copy e2e test scripts
         run: | 
