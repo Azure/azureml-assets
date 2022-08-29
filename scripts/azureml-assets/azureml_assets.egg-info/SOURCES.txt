@@ -3,6 +3,7 @@ azureml/__init__.py
 azureml/assets/__init__.py
 azureml/assets/config.py
 azureml/assets/copy_unreleased_assets.py
+azureml/assets/create_asset_test_matrix.py
 azureml/assets/tag_released_assets.py
 azureml/assets/test_assets.py
 azureml/assets/update_assets.py
