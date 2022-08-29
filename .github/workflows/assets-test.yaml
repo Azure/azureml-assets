@@ -18,24 +18,31 @@ env:
   default_asset_dirs: .,!test,!scripts
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
+  scripts_setup_dir: scripts/setup
   asset_config_filename: asset.yaml
   pytest_reports_dir: pytest
+  pytest_reports_artifact: pytest-reports
   package_versions_file: scripts/test-requirements.txt
-  workspace: ${{ secrets.ASSETS_TEST_WORKSPACE_NAME }}
-  sub_id: ${{ secrets.ASSETS_TEST_WORKSPACE_SUBSCRIPTION_ID }}
-  resource_group: ${{ secrets.ASSETS_TEST_WORKSPACE_RESOURCE_GROUP }}
-  cpu_cluster: ${{ secrets.ASSETS_TEST_WORKSPACE_CPU_CLUSTER }}
-  gpu_cluster: ${{ secrets.ASSETS_TEST_WORKSPACE_GPU_CLUSTER }}
+
+permissions:
+  # Required to clone repo
+  contents: read
+  # Required for OIDC login to Azure
+  id-token: write
+  # Required for EnricoMi/publish-unit-test-result-action
+  checks: write
+  issues: read
+  pull-requests: write
 
 defaults:
   run:
     shell: bash
 
 jobs:
-  test:
-    name: Test assets
+  setup:
+    name: Set up tests
     runs-on: ubuntu-latest
-    environment: BuiltinRegistryDev
+    environment: Testing
 
     steps:
       - name: Clone branch
@@ -58,24 +65,82 @@ jobs:
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
 
-      - name: Log in to Azure
-        uses: azure/login@v1
-        with:
-            creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
-      
-      - name: Test all assets
-        id: test-all-assets
-        if: steps.changed-files.outputs.all_modified_files == ''
-        run: python -u $scripts_assets_dir/test_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir
+      - name: Create test matrix for changed assets
+        id: create-test-matrix
+        run: python -u $scripts_assets_dir/create_asset_test_matrix.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}"
 
-      - name: Test changed assets
-        id: test-changed-assets
-        if: steps.changed-files.outputs.all_modified_files != ''
-        run: python -u $scripts_assets_dir/test_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir -c "${{ steps.changed-files.outputs.all_modified_files }}"
+      - name: Login to Azure and create resources
+        if: steps.create-test-matrix.outputs.test_count > 0
+        uses: ./.github/actions/create-azure-resources
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
+    
+    outputs:
+      test_count: ${{ steps.create-test-matrix.outputs.test_count }}
+      matrix: ${{ steps.create-test-matrix.outputs.matrix }}
       
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+  test:
+    name: Test 
+    if: needs.setup.outputs.test_count > 0
+    runs-on: ubuntu-latest
+    needs: setup
+    environment: Testing
+    strategy:
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      
+      - name: Use Python 3.8 or newer
+        uses: actions/setup-python@v3
+        with:
+          python-version: '>=3.8'
+    
+      - name: Install dependencies
+        run: pip install -e $scripts_azureml_assets_dir
+
+      - name: Login to Azure and create resources
+        uses: ./.github/actions/create-azure-resources
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
+      
+      - name: Test asset
+        run: python -u $scripts_assets_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir
+        
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
         if: always()
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: ${{ runner.temp }}/${{ env.pytest_reports_dir }}/**/*.xml
+          name: ${{ env.pytest_reports_artifact }}
+          path: ${{ runner.temp }}/${{ env.pytest_reports_dir }}
+
+  report:
+    name: Publish test results
+    if: always()
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Download test results
+        id: download-artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.pytest_reports_artifact }}
+          path: ${{ runner.temp }}/${{ env.pytest_reports_artifact }}
+        continue-on-error: true
+
+      - name: Publish test results
+        if: steps.download-artifact.outputs.download-path != ''
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          check_name: Test Results for ${{ github.workflow }}
+          files: ${{ runner.temp }}/${{ env.pytest_reports_artifact }}/**/*.xml
