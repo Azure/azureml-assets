@@ -75,7 +75,7 @@ jobs:
 
       # TODO: Do this only if there are assets to test
       - name: Login to Azure and create resources
-        if: create-test-matrix.outputs.test_count > 0
+        if: steps.create-test-matrix.outputs.test_count > 0
         uses: ./.github/actions/create-azure-resources
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -84,8 +84,8 @@ jobs:
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
     
     outputs:
-      test_count: ${{ create-test-matrix.outputs.test_count }}
-      matrix: ${{ create-test-matrix.outputs.matrix }}
+      test_count: ${{ steps.create-test-matrix.outputs.test_count }}
+      matrix: ${{ steps.create-test-matrix.outputs.matrix }}
       
   test:
     name: Test 
