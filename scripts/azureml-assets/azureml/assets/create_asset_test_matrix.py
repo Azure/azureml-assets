@@ -32,7 +32,7 @@ def create_test_matrix(input_dirs: List[Path],
 
         # TODO: Store asset and create matrix
         logger.log_debug(f"Need to add {asset_config} to testing matrix")
-        asset_config_files.append(asset_config.file_path)
+        asset_config_files.append(str(asset_config.file_path))
         counters[TEST_COUNT] += 1
 
     # Set variables
