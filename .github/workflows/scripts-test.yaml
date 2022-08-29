@@ -23,7 +23,7 @@ permissions:
   contents: read
   # Required for OIDC login to Azure
   id-token: write
-  # Required for EnricoMi/publish-unit-test-result-action/composite
+  # Required for EnricoMi/publish-unit-test-result-action
   checks: write
   issues: read
   pull-requests: write
@@ -103,8 +103,8 @@ jobs:
         run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
 
       - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          check_name: Test Results for ${{ env.GITHUB_WORKFLOW}}
           files: ${{ runner.temp }}/${{ env.pytest_reports_dir }}/*.xml
