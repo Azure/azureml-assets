@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test assets via pytest."""
+
 import argparse
 import sys
 from collections import Counter
@@ -22,6 +24,15 @@ ISOLATED_ENVIRONMENT = "isolated_env"
 
 
 def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str) -> bool:
+    """Create isolated conda environment.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config for which to create the environment.
+        env_name (str): conda environment name.
+
+    Returns:
+        bool: True if successfully created, false otherwise.
+    """
     logger.print("Creating isolated conda environment")
     p = run(["conda", "create", "-n", env_name, "--clone", BASE_ENVIRONMENT, "-y", "-q"])
     if p.returncode != 0:
@@ -34,6 +45,16 @@ def create_isolated_environment(asset_config: assets.AssetConfig, env_name: str)
 
 
 def test_asset(asset_config: assets.AssetConfig, env_name: str, reports_dir: str = None) -> bool:
+    """Test an asset using pytest.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config to be tested.
+        env_name (str): conda environment name.
+        reports_dir (str, optional): Directory to receive a JUnit report. Defaults to None.
+
+    Returns:
+        bool: True if tests passed, false otherwise.
+    """
     logger.print("Running pytest")
     start = timer()
 
@@ -57,6 +78,18 @@ def test_assets(input_dirs: List[Path],
                 package_versions: Path,
                 changed_files: List[Path],
                 reports_dir: Path = None) -> bool:
+    """Test assets.
+
+    Args:
+        input_dirs (List[Path]): Directories to search for assets.
+        asset_config_filename (str): Asset config filename to search input_dirs for.
+        package_versions (Path): File containing packages to install in base conda environment.
+        changed_files (List[Path]): List of changed files used to select only assets.
+        reports_dir (Path, optional): Directory to receive a JUnit report. Defaults to None.
+
+    Returns:
+        bool: True if tests passed, false otherwise.
+    """
     base_created = False
     counters = Counter()
     for asset_config in util.find_assets(input_dirs, asset_config_filename, changed_files=changed_files):

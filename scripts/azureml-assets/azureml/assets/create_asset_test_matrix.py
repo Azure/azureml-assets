@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Create a test matrix for GitHub workflow job."""
+
 import argparse
 import json
 from collections import Counter
@@ -18,7 +20,14 @@ MATRIX = "matrix"
 
 def create_test_matrix(input_dirs: List[Path],
                        asset_config_filename: str,
-                       changed_files: List[Path]) -> bool:
+                       changed_files: List[Path]):
+    """Create test matrix.
+
+    Args:
+        input_dirs (List[Path]): Directories to search for assets.
+        asset_config_filename (str): Asset config filename to search input_dirs for.
+        changed_files (List[Path]): List of changed files used to select only assets.
+    """
     counters = Counter()
     asset_config_files = []
     for asset_config in util.find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
