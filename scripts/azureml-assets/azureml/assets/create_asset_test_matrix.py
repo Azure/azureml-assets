@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import argparse
+import json
 import sys
 from collections import Counter
 from pathlib import Path
@@ -13,6 +14,7 @@ from azureml.assets.util import logger
 
 TEST_COUNT = "test_count"
 COUNTERS = [TEST_COUNT]
+MATRIX = "matrix"
 
 
 def create_test_matrix(input_dirs: List[Path],
@@ -21,6 +23,7 @@ def create_test_matrix(input_dirs: List[Path],
                        changed_files: List[Path],
                        reports_dir: Path = None) -> bool:
     counters = Counter()
+    asset_config_files = []
     for asset_config in util.find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
         # Skip assets without testing enabled
         if not asset_config.pytest_enabled:
@@ -29,15 +32,13 @@ def create_test_matrix(input_dirs: List[Path],
 
         # TODO: Store asset and create matrix
         logger.log_debug(f"Need to add {asset_config} to testing matrix")
+        asset_config_files.append(asset_config.file_path)
         counters[TEST_COUNT] += 1
 
     # Set variables
     for counter_name in COUNTERS:
         logger.set_output(counter_name, counters[counter_name])
-
-    # TODO: Output matrix
-
-    return True
+    logger.set_output(MATRIX, json.dumps({'asset_config_path': asset_config_files}))
 
 
 if __name__ == '__main__':
@@ -58,10 +59,8 @@ if __name__ == '__main__':
     changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
 
     # Test assets
-    success = create_test_matrix(input_dirs=input_dirs,
-                                 asset_config_filename=args.asset_config_filename,
-                                 package_versions=args.package_versions_file,
-                                 changed_files=changed_files,
-                                 reports_dir=args.reports_dir)
-    if not success:
-        sys.exit(1)
+    create_test_matrix(input_dirs=input_dirs,
+                       asset_config_filename=args.asset_config_filename,
+                       package_versions=args.package_versions_file,
+                       changed_files=changed_files,
+                       reports_dir=args.reports_dir)
