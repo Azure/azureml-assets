@@ -51,7 +51,7 @@ def test_tensorflow_2_8():
     assert returned_job is not None
 
     # Poll until final status is reached, or timed out
-    timeout = time.time() + TIMEOUT_MINUTES
+    timeout = time.time() + (TIMEOUT_MINUTES * 60)
     while time.time() <= timeout:
         current_status = ml_client.jobs.get(returned_job.name).status
         if current_status in ["Completed", "Failed"]:
