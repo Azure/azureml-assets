@@ -3,7 +3,6 @@
 
 import argparse
 import json
-import sys
 from collections import Counter
 from pathlib import Path
 from typing import List
@@ -19,9 +18,7 @@ MATRIX = "matrix"
 
 def create_test_matrix(input_dirs: List[Path],
                        asset_config_filename: str,
-                       package_versions: Path,
-                       changed_files: List[Path],
-                       reports_dir: Path = None) -> bool:
+                       changed_files: List[Path]) -> bool:
     counters = Counter()
     asset_config_files = []
     for asset_config in util.find_assets(input_dirs, asset_config_filename, changed_files=changed_files):
@@ -48,10 +45,7 @@ if __name__ == '__main__':
                         help="Comma-separated list of directories containing assets to test")
     parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
                         help="Asset config file name to search for")
-    parser.add_argument("-p", "--package-versions-file", required=True, type=Path,
-                        help="File with package versions for the base conda environment")
     parser.add_argument("-c", "--changed-files", help="Comma-separated list of changed files, used to filter assets")
-    parser.add_argument("-r", "--reports-dir", type=Path, help="Directory for pytest reports")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
@@ -61,6 +55,4 @@ if __name__ == '__main__':
     # Test assets
     create_test_matrix(input_dirs=input_dirs,
                        asset_config_filename=args.asset_config_filename,
-                       package_versions=args.package_versions_file,
-                       changed_files=changed_files,
-                       reports_dir=args.reports_dir)
+                       changed_files=changed_files)
