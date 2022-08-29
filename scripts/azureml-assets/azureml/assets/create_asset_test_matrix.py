@@ -30,8 +30,8 @@ def create_test_matrix(input_dirs: List[Path],
             logger.log_debug(f"Testing is not enabled for {asset_config}")
             continue
 
-        # TODO: Store asset and create matrix
-        logger.log_debug(f"Need to add {asset_config} to testing matrix")
+        # Store asset and create matrix
+        logger.log_debug(f"Adding {asset_config.file_path} to testing matrix")
         asset_config_files.append(str(asset_config.file_path))
         counters[TEST_COUNT] += 1
 

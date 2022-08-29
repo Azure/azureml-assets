@@ -21,6 +21,7 @@ env:
   scripts_setup_dir: scripts/setup
   asset_config_filename: asset.yaml
   pytest_reports_dir: pytest
+  pytest_reports_artifact: pytest-reports
   package_versions_file: scripts/test-requirements.txt
 
 permissions:
@@ -121,18 +122,31 @@ jobs:
       - name: Test asset
         run: python -u $scripts_assets_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir
         
-      # TODO: Upload results
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ${{ env.pytest_reports_artifact }}
+          path: ${{ runner.temp }}/${{ env.pytest_reports_dir }}
 
-  # report:
-  #   name: Test assets
-  #   runs-on: ubuntu-latest
-  #   needs: test
+  report:
+    name: Publish test results
+    if: always()
+    runs-on: ubuntu-latest
+    needs: test
 
-      # TODO: Download results
+    steps:
+      - name: Download test results
+        id: download-artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.pytest_reports_artifact }}
+          path: ${{ runner.temp }}/${{ env.pytest_reports_artifact }}
+        continue-on-error: true
 
-      # - name: Publish test results
-      #   uses: EnricoMi/publish-unit-test-result-action/composite@v1
-      #   if: always()
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     files: ${{ runner.temp }}/${{ env.pytest_reports_dir }}/**/*.xml
+      - name: Publish test results
+        if: steps.download-artifact.outputs.download-path != ''
+        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ runner.temp }}/${{ env.pytest_reports_artifact }}/**/*.xml
