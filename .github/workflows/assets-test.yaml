@@ -142,5 +142,5 @@ jobs:
         if: steps.download-artifact.outputs.download-path != ''
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          check_name: Test Results for ${{ env.GITHUB_WORKFLOW}}
+          check_name: Test Results for ${{ github.workflow }}
           files: ${{ runner.temp }}/${{ env.pytest_reports_artifact }}/**/*.xml

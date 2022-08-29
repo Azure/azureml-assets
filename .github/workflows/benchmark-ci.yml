@@ -65,7 +65,7 @@ jobs:
     - name: Publish test results
       uses: EnricoMi/publish-unit-test-result-action@v2
       with:
-        check_name: Test Results for ${{ env.GITHUB_WORKFLOW}}
+        check_name: Test Results for ${{ github.workflow }}
         files: benchmark/test-build-result.xml
 
     - name: Code Coverage Summary Report
