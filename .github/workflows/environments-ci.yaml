@@ -17,7 +17,14 @@ env:
   default_asset_dirs: .,!test,!scripts
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_environment_dir: scripts/azureml-assets/azureml/assets/environment
+  scripts_setup_dir: scripts/setup
   asset_config_filename: asset.yaml
+
+permissions:
+  # Required to clone repo
+  contents: read
+  # Required for OIDC login to Azure
+  id-token: write
 
 defaults:
   run:
@@ -27,7 +34,7 @@ jobs:
   build-images:
     name: Build and test images
     runs-on: ubuntu-latest
-    environment: BuiltinRegistryDev
+    environment: Testing
 
     env:
       build_logs_artifact_name: build-logs
@@ -54,14 +61,17 @@ jobs:
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
       
-      - name: Log in to Azure
-        uses: azure/login@v1
+      - name: Log in to Azure and create resources
+        uses: ./.github/actions/create-azure-resources
         with:
-          creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
 
       - name: Build and test changed images
         id: build-changed-images
-        run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g ${{ secrets.RESOURCE_GROUP }} -r ${{ secrets.BUILD_CONTAINER_REGISTRY }} -T 'python -V' -c "${{ steps.changed-files.outputs.all_modified_files }}"
+        run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g $resource_group -r $container_registry -T 'python -V' -c "${{ steps.changed-files.outputs.all_modified_files }}"
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3

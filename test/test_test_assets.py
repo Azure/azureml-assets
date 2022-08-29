@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test azureml.assets.test_assets() function."""
+
 import os
 from pathlib import Path
 import pytest
@@ -16,9 +18,10 @@ TEST_REQUIREMENTS_FILE = Path("../scripts/test-requirements.txt")
     [("good-assets-with-requirements", True), ("bad-assets", False), ("mixed-assets", False)]
 )
 def test_test_assets(test_subdir: str, expected: bool):
+    """Test azureml.assets.test_assets() function."""
     this_dir = Path(__file__).parent
 
-    subscription_id = os.environ.get("sub_id")
+    subscription_id = os.environ.get("subscription_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
 

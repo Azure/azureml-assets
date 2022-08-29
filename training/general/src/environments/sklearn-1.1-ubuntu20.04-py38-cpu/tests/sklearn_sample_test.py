@@ -12,14 +12,14 @@ from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
-MAX_POLLS = 50
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 
 
 def test_sklearn_1_1():
     """Tests a sample job using sklearn 1.1 as the environment."""
     this_dir = Path(__file__).parent
 
-    subscription_id = os.environ.get("sub_id")
+    subscription_id = os.environ.get("subscription_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
 
@@ -56,14 +56,12 @@ def test_sklearn_1_1():
     returned_job = ml_client.create_or_update(job)
     assert returned_job is not None
 
-    number_of_polls = 0
-    # timeout is 25 minutes
-    while (number_of_polls < MAX_POLLS):
+    # Poll until final status is reached, or timed out
+    timeout = time.time() + (TIMEOUT_MINUTES * 60)
+    while time.time() <= timeout:
         current_status = ml_client.jobs.get(returned_job.name).status
-        if (current_status == "Completed" or current_status == "Failed"):
+        if current_status in ["Completed", "Failed"]:
             break
-
         time.sleep(30)  # sleep 30 seconds
-        number_of_polls += 1
 
-    assert ml_client.jobs.get(returned_job.name).status == "Completed"
+    assert current_status == "Completed"
