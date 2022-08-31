@@ -1,6 +1,0 @@
-Metadata-Version: 2.1
-Name: azureml-assets
-Version: 0.0.1
-Summary: Scripts that support Azure Machine Learning assets.
-Author: Microsoft Corp
-Requires-Python: >=3.6,< 4.0
