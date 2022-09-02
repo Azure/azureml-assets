@@ -62,9 +62,20 @@ def test_pytorch_1_11():
     # Poll until final status is reached, or timed out
     timeout = time.time() + (TIMEOUT_MINUTES * 60)
     while time.time() <= timeout:
-        current_status = ml_client.jobs.get(returned_job.name).status
+        job = ml_client.jobs.get(returned_job.name)
+        current_status = job.status
         if current_status in ["Completed", "Failed"]:
             break
         time.sleep(30)  # sleep 30 seconds
 
+    if current_status == "Failed":
+        try:
+            print(f"Failed: Error = {job.Error}")
+        except Exception:
+            pass
+
+        try:
+            print(f"Failed: error = {job.error}")
+        except Exception:
+            pass
     assert current_status == "Completed"
