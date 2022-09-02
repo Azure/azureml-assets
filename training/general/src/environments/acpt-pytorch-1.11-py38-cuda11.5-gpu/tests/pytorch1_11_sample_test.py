@@ -27,12 +27,12 @@ def test_pytorch_1_11():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "pytorch1_11"
+    env_name = "acpt-pytorch-1_11-py38-cuda11_5"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
         name=env_name,
-        description="Pytorch 1.11 environment created from a Docker context.",
+        description="Pytorch 1.11 with acpt environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
@@ -53,7 +53,7 @@ def test_pytorch_1_11():
         compute=os.environ.get("gpu_cluster"),
         display_name="pytorch-iris-example",
         description="Train a neural network with PyTorch on the Iris dataset.",
-        experiment_name="pytorch111Experiment"
+        experiment_name="pytorch111_With_ACPT_Cuda115_Experiment"
     )
 
     returned_job = ml_client.create_or_update(job)
