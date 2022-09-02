@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: microsoft_gllm_regression_model_finetune_component
+name: microsoft_gllm_summarization_single_label_model_finetune_component
 version: 0.0.1
 type: command
 
 is_deterministic: True
 
-display_name: LLM Regression Finetune
-description: Component to finetune model for regression task
+display_name: LLM Single Label Summarization Model Finetune
+description: Component to finetune model for single label summarization task
 
 environment: azureml:gllm-ptca-aifx-stable-ubuntu2004-cu113-py38-torch1110:0.0.1
 

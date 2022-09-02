@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: microsoft_gllm_classification_single_label_data_preprocess_component
+name: microsoft_gllm_summarization_single_label_data_preprocess_component
 version: 0.0.1
 type: command
 
 is_deterministic: True
 
-display_name: LLM Single Label Classification Data preprocess
-description: Component to preprocess data for single label classification task
+display_name: LLM Single Label Summarization Data preprocess
+description: Component to preprocess data for single label summarization task
 
 environment: azureml:gllm-ptca-aifx-stable-ubuntu2004-cu113-py38-torch1110:0.0.1
 
@@ -49,6 +49,10 @@ inputs:
     type: string
     optional: true
 
+  sentence2_key:
+    type: string
+    optional: true
+
   label_key:
     type: string
     optional: true
@@ -85,4 +89,4 @@ outputs:
     description: folder to store preprocessed outputs of input data
 
 command: >-
-  python preprocess.py --task_name SingleLabelClassification --model_name_or_path ${{inputs.language_model}} [--sentence1_key ${{inputs.sentence1_key}}] [--label_key ${{inputs.label_key}}] [--max_seq_length ${{inputs.max_seq_length}}] [--pad_to_max_length ${{inputs.pad_to_max_length}}] --train_file_path ${{inputs.train_file_path}} --valid_file_path ${{inputs.valid_file_path}} --output_dir ${{outputs.output_dir}}
+  python preprocess.py --task_name SingleLabelClassification --model_name_or_path ${{inputs.language_model}} [--sentence1_key ${{inputs.sentence1_key}}] [--sentence2_key ${{inputs.sentence2_key}}] [--label_key ${{inputs.label_key}}] [--max_seq_length ${{inputs.max_seq_length}}] [--pad_to_max_length ${{inputs.pad_to_max_length}}] --train_file_path ${{inputs.train_file_path}} --valid_file_path ${{inputs.valid_file_path}} --output_dir ${{outputs.output_dir}}
