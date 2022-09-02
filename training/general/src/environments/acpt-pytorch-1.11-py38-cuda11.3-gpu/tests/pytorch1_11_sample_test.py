@@ -53,7 +53,7 @@ def test_pytorch_1_11():
         compute=os.environ.get("gpu_cluster"),
         display_name="pytorch-iris-example",
         description="Train a neural network with PyTorch on the Iris dataset.",
-        experiment_name="pytorch111_With_ACPT_Cuda113_Experiment"
+        experiment_name="pytorch111_ACPT_Cuda113_Experiment"
     )
 
     returned_job = ml_client.create_or_update(job)
