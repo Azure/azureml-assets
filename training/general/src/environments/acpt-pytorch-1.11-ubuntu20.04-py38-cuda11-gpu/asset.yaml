@@ -1,4 +1,4 @@
-name: acpt-pytorch-1.11-py38-cuda11.3-gpu
+name: acpt-pytorch-1.11-py38-cuda11.5-gpu
 version: auto
 type: environment
 spec: spec.yaml
