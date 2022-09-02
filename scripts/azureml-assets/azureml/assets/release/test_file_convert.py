@@ -8,6 +8,10 @@ import argparse
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
+from typing import List, Tuple, Union
+
+EXCLUDE_DIR_PREFIX = "!"
+TEST_YAML_NAME = "tests.yml"
 
 
 def copy_replace_dir(source: Path, dest: Path):
@@ -49,42 +53,89 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
     return covered_assets
 
 
+def _convert_excludes(input_dirs: Union[List[Path], Path],
+                      exclude_dirs: List[Path] = None) -> Tuple[List[Path], List[Path]]:
+    """Extract directories to exclude from input_dirs and add them to exclude_dirs."""
+    if type(input_dirs) is not list:
+        input_dirs = [input_dirs]
+    if exclude_dirs is not None:
+        if type(exclude_dirs) is not list:
+            exclude_dirs = [exclude_dirs]
+    else:
+        exclude_dirs = []
+
+    # Exclude any dirs that start with EXCLUDE_DIR_PREFIX
+    new_input_dirs = []
+    new_exclude_dirs = []
+
+    for input_dir in input_dirs:
+        input_dir_str = str(input_dir)
+        if input_dir_str == '.':
+            for current_folder in Path(input_dir_str).iterdir():
+                if current_folder.is_dir() and current_folder not in exclude_dirs:
+                    new_input_dirs.append(current_folder)
+        elif input_dir_str.startswith(EXCLUDE_DIR_PREFIX):
+            new_exclude_dirs.append(Path(input_dir_str[len(EXCLUDE_DIR_PREFIX):]))
+        else:
+            new_input_dirs.append(input_dir)
+
+    if new_exclude_dirs:
+        if exclude_dirs:
+            exclude_dirs.extend(new_exclude_dirs)
+        else:
+            exclude_dirs = new_exclude_dirs
+
+    return new_input_dirs, exclude_dirs
+
+
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests.yml")
-    parser.add_argument("-a", "--test-area", required=True, type=str, help="the test area name")
+    parser.add_argument("-i", "--input-dirs", required=True, help="dir path of test areas")
     parser.add_argument("-r", "--release-directory", required=True, type=Path,
                         help="Directory to which the release branch has been cloned")
     args = parser.parse_args()
-    yaml_name = "tests.yml"
-    # supported asset types could be extended in the future
-    supported_asset_types = [assets.AssetType.COMPONENT]
-    tests_folder = args.release_directory / "tests" / args.test_area
-    Path.mkdir(tests_folder, parents=True, exist_ok=True)
-    src_dir = args.input_dir
-    assets_list = util.find_assets(src_dir, assets.DEFAULT_ASSET_FILENAME)
-    assets_names = [asset.name for asset in assets_list if asset.type in supported_asset_types]
-    src_yaml = src_dir / yaml_name
-    covered_assets = process_test_files(src_yaml, assets_names)
-    uncovered_assets = [asset for asset in assets_names if asset not in covered_assets]
-    if len(uncovered_assets) > 0:
-        logger.log_warning(f"The following assets are not covered by the test: {uncovered_assets}")
-    shutil.copy(src_yaml, tests_folder / yaml_name)
+    # Convert comma-separated values to lists
 
-    with open(src_yaml) as fp:
-        data = yaml.load(fp, Loader=yaml.FullLoader)
-        for test_group in data:
-            for include_file in data[test_group].get('includes', []):
-                target_path = tests_folder / include_file
-                src_path = src_dir / include_file
-                if src_path.is_dir():
-                    logger.print(f"copying folder: {include_file}")
-                    copy_replace_dir(src_path, target_path)
-                else:
-                    logger.print(f"copying file: {include_file}")
-                    Path.mkdir(
-                        target_path.parent,
-                        parents=True,
-                        exist_ok=True)
-                    shutil.copy(src_path, target_path)
+    input_dirs = [Path(d) for d in args.input_dirs.split(",")]
+    src_dirs, exclude_dirs = _convert_excludes(input_dirs)
+    for src_dir in src_dirs:
+        if src_dir in exclude_dirs:
+            continue
+        test_area = src_dir.name
+        logger.print(f"Processing test area: {test_area}")
+
+        if not (src_dir / TEST_YAML_NAME).exists():
+            logger.log_warning(f"Cannot find {TEST_YAML_NAME} in the test area {test_area}.")
+            continue
+
+        # supported asset types could be extended in the future
+        supported_asset_types = [assets.AssetType.COMPONENT]
+        tests_folder = args.release_directory / "tests" / test_area
+        Path.mkdir(tests_folder, parents=True, exist_ok=True)
+
+        assets_list = util.find_assets(src_dir, assets.DEFAULT_ASSET_FILENAME)
+        assets_names = [asset.name for asset in assets_list if asset.type in supported_asset_types]
+        src_yaml = src_dir / TEST_YAML_NAME
+        covered_assets = process_test_files(src_yaml, assets_names)
+        uncovered_assets = [asset for asset in assets_names if asset not in covered_assets]
+        if len(uncovered_assets) > 0:
+            logger.log_warning(f"The following assets are not covered by the test: {uncovered_assets}")
+        shutil.copy(src_yaml, tests_folder / TEST_YAML_NAME)
+
+        with open(src_yaml) as fp:
+            data = yaml.load(fp, Loader=yaml.FullLoader)
+            for test_group in data:
+                for include_file in data[test_group].get('includes', []):
+                    target_path = tests_folder / include_file
+                    src_path = src_dir / include_file
+                    if src_path.is_dir():
+                        logger.print(f"copying folder: {include_file}")
+                        copy_replace_dir(src_path, target_path)
+                    else:
+                        logger.print(f"copying file: {include_file}")
+                        Path.mkdir(
+                            target_path.parent,
+                            parents=True,
+                            exist_ok=True)
+                        shutil.copy(src_path, target_path)
