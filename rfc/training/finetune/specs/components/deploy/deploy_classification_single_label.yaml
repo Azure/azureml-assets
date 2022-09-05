@@ -64,6 +64,10 @@ inputs:
     type: string
     optional: true
 
+  sentence2_key:
+    type: string
+    optional: true
+
   label_key:
     type: string
     optional: true
@@ -75,4 +79,4 @@ inputs:
     optional: true
 
 command: >-
-  python deploy.py --model_checkpoint_dir ${{inputs.model_checkpoint_dir}} --endpoint_name ${{inputs.endpoint_name}}  --name_for_registered_model ${{inputs.name_for_registered_model}} --instance_type ${{inputs.instance_type}} --instance_count ${{inputs.instance_count}} [--sentence1_key ${{inputs.sentence1_key}}] [--label_key ${{inputs.label_key}}] [--valid_batch_size ${{inputs.valid_batch_size}}] [--apply_ort ${{inputs.apply_ort}}] [--apply_deepspeed ${{inputs.apply_deepspeed}}] [--deepspeed_config ${{inputs.deepspeed_config}}]
+  python deploy.py --model_checkpoint_dir ${{inputs.model_checkpoint_dir}} --endpoint_name ${{inputs.endpoint_name}}  --name_for_registered_model ${{inputs.name_for_registered_model}} --instance_type ${{inputs.instance_type}} --instance_count ${{inputs.instance_count}} [--sentence1_key ${{inputs.sentence1_key}}] [--sentence2_key ${{inputs.sentence2_key}}] [--label_key ${{inputs.label_key}}] [--valid_batch_size ${{inputs.valid_batch_size}}] [--apply_ort ${{inputs.apply_ort}}] [--apply_deepspeed ${{inputs.apply_deepspeed}}] [--deepspeed_config ${{inputs.deepspeed_config}}]
