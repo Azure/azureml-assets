@@ -92,9 +92,8 @@ inputs:
       # - adamw_apex_fused
       - adafactor
 
-  # Deepspeed Parameters
-
-  apply_deepspeed:
+  # ORT Parameters
+  apply_ort:
     type: string
     enum:
       - 'true'
@@ -102,8 +101,8 @@ inputs:
     default: 'false'
     optional: true
 
-  # ORT Parameters
-  apply_ort:
+  # Deepspeed Parameters
+  apply_deepspeed:
     type: string
     enum:
       - 'true'
