@@ -8,6 +8,7 @@ import requests
 import json
 from string import Template
 import azureml.assets as assets
+from azureml.assets.util import logger
 from collections import defaultdict
 
 ASSET_ID_TEMPLATE = Template(
@@ -30,7 +31,8 @@ def delete_single_version(base_url: str, asset_id: str, token: str):
     payload=json.dumps({"id": asset_id }) # "azureml://registries/azureml-dev/components/pytorch_image_classifier/versions/1.0.4"
     headers={'Authorization': f'Bearer {token}',  'Content-Type': 'application/json'}
     response=requests.request("DELETE", target_url, headers=headers, data=payload)
-    print(response.text)
+    if response.status_code != 202:
+        logger.log_warning(f"Deletion failed for {asset_id}")
 
 
 def delete_all_versions(base_url: str, asset_name: str, asset_type: str, token: str, subscription: str, resource_group: str, registry: str):
@@ -44,10 +46,12 @@ def delete_all_versions(base_url: str, asset_name: str, asset_type: str, token: 
     container_id = CONTAINER_ASSET_ID_TEMPLATE.substitute(asset_name=asset_name, asset_type=f'{asset_type}s', registry_name=registry)
     delete_single_version(base_url, container_id, token)
 
-def check_latest_version(base_url: str, asset_name: str, asset_version: str, asset_type: str, token: str, subscription: str, resource_group: str, registry: str):
+def is_latest_version(base_url: str, asset_name: str, asset_version: str, asset_type: str, token: str, subscription: str, resource_group: str, registry: str):
     version_list = list_all_version(base_url, asset_name, asset_type, token, subscription, resource_group, registry)
-    print(f'version_list: {version_list}')
-    print(len(version_list)>0 and asset_version == version_list[0])
+    if len(version_list) == 0:
+        logger.log_warning(f"No versions are found for published {asset_type}: {asset_name}. Please check.")
+    elif asset_version == version_list[0]:
+        logger.log_warning(f"{asset_type}: {asset_name} with version {asset_version} cannot be deleted because it is the default version")
     return len(version_list)>0 and asset_version == version_list[0]
 
 def list_all_version(base_url: str, asset_name: str, asset_type: str, token: str, subscription: str, resource_group: str, registry: str):
@@ -88,10 +92,11 @@ if __name__ == '__main__':
                 if asset['version'] == '*':
                     delete_all_versions(url, asset['name'], asset_type, token, subscription_id, resource_group, registry_name)
                 else:
-                    if not check_latest_version(url, asset['name'], asset['version'], asset_type, token, subscription_id, resource_group, registry_name):
-                        asset_id = construct_asset_id(asset['name'], asset['version'], asset_type, registry_name)
-                        print(f'delete asset: {asset_id}')
-                        delete_single_version(url, asset_id, token)
+                    if is_latest_version(url, asset['name'], asset['version'], asset_type, token, subscription_id, resource_group, registry_name):
+                        continue
+                    asset_id = construct_asset_id(asset['name'], asset['version'], asset_type, registry_name)
+                    print(f'delete asset: {asset_id}')
+                    delete_single_version(url, asset_id, token)
         
         # TO-DO: add other asset types
         else:
