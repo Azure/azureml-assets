@@ -4,7 +4,7 @@ description: >-
   An environment for tasks such as regression, clustering, and classification with Scikit-learn. Contains the Azure ML SDK and additional python packages.
 
 name: "sklearn-1.1-ubuntu20.04-py38-cpu"
-version: "7"
+version: "8"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
