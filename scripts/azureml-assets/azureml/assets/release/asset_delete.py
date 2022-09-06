@@ -13,6 +13,9 @@ from collections import defaultdict
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 
+CONTAINER_ASSET_ID_TEMPLATE = Template(
+    "azureml://registries/$registry_name/$asset_type/$asset_name")
+
 VERSION_CHECK_TEMPLATE = Template("$base_url/mferp/managementfrontend/subscriptions/$subscription/resourceGroups/$resource_group/providers/Microsoft.MachineLearningServices/registries/$registry/$asset_type/$asset_name/versions?api-version=2021-10-01-dataplanepreview")
     
 def construct_asset_id(asset_name: str, asset_version: str, asset_type: str, registry_name: str):
@@ -38,6 +41,8 @@ def delete_all_versions(base_url: str, asset_name: str, asset_type: str, token: 
     default_version = version_list[0]
     asset_id = construct_asset_id(asset_name, default_version, asset_type, registry)
     delete_single_version(base_url, asset_id, token)
+    container_id = CONTAINER_ASSET_ID_TEMPLATE.substitute(asset_name=asset_name, asset_type=f'{asset_type}s', registry_name=registry)
+    delete_single_version(base_url, container_id, token)
 
 def check_latest_version(base_url: str, asset_name: str, asset_version: str, asset_type: str, token: str, subscription: str, resource_group: str, registry: str):
     version_list = list_all_version(base_url, asset_name, asset_type, token, subscription, resource_group, registry)
