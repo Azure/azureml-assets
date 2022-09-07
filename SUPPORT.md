@@ -1,5 +1,7 @@
 # Support
 
+Materials in this repo are provided under the MIT License; use of the materials to access and use Azure services is subject to the applicable service terms (see https://azure.microsoft.com/en-us/support/legal/). 
+
 ## How to file issues and get help  
 
 This project uses GitHub Issues to track bugs and feature requests. Please search the existing 
