@@ -238,7 +238,6 @@ jobs:
           commit-message: Update release branch
           branch: release-update
           delete-branch: true
-          branch-suffix: timestamp
           title: Automated update of release branch
           body: Updates made by [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          team-reviewers: azure/aml-assets
+          team-reviewers: Azure/aml-assets
