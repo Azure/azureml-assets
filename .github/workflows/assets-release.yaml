@@ -175,9 +175,7 @@ jobs:
 
   release-assets:
     name: Release assets
-    # TODO: Restore
-    # if: always() && github.ref == 'refs/heads/main'
-    if: always()
+    if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: check-release-assets
     
@@ -228,8 +226,6 @@ jobs:
           fi
           mkdir -p $release_dir/scripts
           cp -r $main_dir/$scripts_azureml_assets_dir $release_dir/scripts
-          # TODO: Remove the line below
-          rm -f $release_dir/test2.txt
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
