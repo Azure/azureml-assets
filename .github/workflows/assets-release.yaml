@@ -225,16 +225,30 @@ jobs:
           mkdir -p $release_dir/scripts
           cp -r $main_dir/$scripts_azureml_assets_dir $release_dir/scripts
 
-      - name: Create commit and push
-        run: |
-          if [[ -z $(git status -s) ]]; then
-            echo "No updates to the release branch"
-            exit 0
-          fi
-          git config user.email "<>"
-          git config user.name "$GITHUB_WORKFLOW"
-          git add -A .
-          git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          git push
-        working-directory: ${{ env.release_dir }}
+      # TODO: Bail if no updates were made to the branch
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          path: ${{ env.release_dir }}
+          commit-message: Update release branch
+          branch: release-update
+          delete-branch: true
+          branch-suffix: timestamp
+          title: Automated update of release branch
+          body: Updates made by [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          team-reviewers: azure/aml-assets
+
+      # - name: Create commit and push
+      #   run: |
+      #     if [[ -z $(git status -s) ]]; then
+      #       echo "No updates to the release branch"
+      #       exit 0
+      #     fi
+      #     git config user.email "<>"
+      #     git config user.name "$GITHUB_WORKFLOW"
+      #     git add -A .
+      #     git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+      #     git push
+      #   working-directory: ${{ env.release_dir }}
 
