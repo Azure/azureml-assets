@@ -123,7 +123,6 @@ if __name__ == '__main__':
         for asset_type, asset_list in deletion_yaml.items():
             for asset in asset_list:
                 deletion_list[asset_type].append({'name': asset['name'], 'version': asset['version']})
-    print(f'deletion_list: {deletion_list}')
 
     for asset_type in deletion_list:
         if asset_type in SUPPORTED_ASSET_TYPES:
