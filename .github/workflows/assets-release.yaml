@@ -229,8 +229,7 @@ jobs:
           mkdir -p $release_dir/scripts
           cp -r $main_dir/$scripts_azureml_assets_dir $release_dir/scripts
           # TODO: Remove the line below
-          rm -f $release_dir/test.txt
-          date +%s > $release_dir/test2.txt
+          rm -f $release_dir/test2.txt
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
