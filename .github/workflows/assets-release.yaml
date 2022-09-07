@@ -229,7 +229,7 @@ jobs:
           mkdir -p $release_dir/scripts
           cp -r $main_dir/$scripts_azureml_assets_dir $release_dir/scripts
           # TODO: Remove the line below
-          echo "Test" > $release_dir/test.txt
+          date +%s > $release_dir/test.txt
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
@@ -240,4 +240,4 @@ jobs:
           delete-branch: true
           title: Automated update of release branch
           body: Updates made by [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          team-reviewers: Azure/aml-assets
+          reviewers: Azure/aml-assets
