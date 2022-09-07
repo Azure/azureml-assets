@@ -210,7 +210,7 @@ jobs:
       - name: Install dependencies
         run: pip install -e $main_dir/$scripts_azureml_assets_dir
       
-      # TODO: This is overkill, just copy directories without involving this script
+      # TODO: This may be overkill, consider copying directories without involving this script
       - name: Update release branch
         if: steps.download-artifact.outputs.download-path
         run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
@@ -226,8 +226,8 @@ jobs:
           fi
           mkdir -p $release_dir/scripts
           cp -r $main_dir/$scripts_azureml_assets_dir $release_dir/scripts
-
-      # TODO: Bail if no updates were made to the branch
+          # TODO: Remove the line below
+          echo "Test" > $release_dir/test.txt
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
@@ -240,17 +240,3 @@ jobs:
           title: Automated update of release branch
           body: Updates made by [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
           team-reviewers: azure/aml-assets
-
-      # - name: Create commit and push
-      #   run: |
-      #     if [[ -z $(git status -s) ]]; then
-      #       echo "No updates to the release branch"
-      #       exit 0
-      #     fi
-      #     git config user.email "<>"
-      #     git config user.name "$GITHUB_WORKFLOW"
-      #     git add -A .
-      #     git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-      #     git push
-      #   working-directory: ${{ env.release_dir }}
-
