@@ -36,7 +36,7 @@ permissions:
   contents: write
   # Required for OIDC login to Azure
   id-token: write
-  # Required to create pull requests
+  # Required to create/update pull requests
   pull-requests: write
 
 defaults:
@@ -238,6 +238,5 @@ jobs:
           commit-message: Update release branch
           branch: release-update
           delete-branch: true
-          title: Automated update of release branch
-          body: Updates made by [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          reviewers: Azure/aml-assets
+          title: Update release branch
+          body: Automated updates made by [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
