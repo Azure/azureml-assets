@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test update_assets script."""
+
 import pytest
 import shutil
 import tempfile
@@ -23,7 +25,14 @@ RESOURCES_DIR = Path("resources/update")
         ("manual-version-unreleased-skip", True, False),
     ]
 )
-def test_validate_assets(test_subdir: str, skip_unreleased: bool, create_tag: bool):
+def test_update_assets(test_subdir: str, skip_unreleased: bool, create_tag: bool):
+    """Test update_assets function.
+
+    Args:
+        test_subdir (str): Test subdirectory
+        skip_unreleased (bool): Value to pass to update_assets
+        create_tag (bool): Create release tag in temp repo
+    """
     this_dir = Path(__file__).parent
     test_dir = this_dir / RESOURCES_DIR / test_subdir
     main_dir = test_dir / "main"
