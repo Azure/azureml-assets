@@ -26,6 +26,7 @@ VERSION_CHECK_TEMPLATE = Template(
 
 
 def construct_asset_id(asset_name: str, asset_version: str, asset_type: str, registry_name: str):
+    """Construct asset id."""
     return ASSET_ID_TEMPLATE.substitute(
         registry_name=registry_name,
         asset_type=f'{asset_type}s',
@@ -34,6 +35,7 @@ def construct_asset_id(asset_name: str, asset_version: str, asset_type: str, reg
 
 
 def delete_single_version(base_url: str, asset_id: str, token: str):
+    """Delete single version asset with direct call to api."""
     target_url = f'{base_url}/assetstore/v1.0/delete'
     payload = json.dumps({"id": asset_id})
     headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
@@ -51,6 +53,7 @@ def delete_all_versions(
         subscription: str,
         resource_group: str,
         registry: str):
+    """Delete all versions and the container of an asset."""
     version_list = list_all_version(base_url, asset_name, asset_type, token, subscription, resource_group, registry)
     if len(version_list) == 0:
         logger.log_warning(f"No versions are found for published {asset_type}: {asset_name}. Please check.")
@@ -75,6 +78,7 @@ def is_latest_version(
         subscription: str,
         resource_group: str,
         registry: str):
+    """Check if the asset is the latest version."""
     version_list = list_all_version(base_url, asset_name, asset_type, token, subscription, resource_group, registry)
     if len(version_list) == 0:
         logger.log_warning(f"No versions are found for published {asset_type}: {asset_name}. Please check.")
@@ -93,6 +97,7 @@ def list_all_version(
         subscription: str,
         resource_group: str,
         registry: str):
+    """List all versions of an asset."""
     target_url = VERSION_CHECK_TEMPLATE.substitute(
         base_url=base_url,
         subscription=subscription,

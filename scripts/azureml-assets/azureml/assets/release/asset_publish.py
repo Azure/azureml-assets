@@ -88,7 +88,7 @@ if __name__ == '__main__':
         final_version = asset.version
         spec_path = asset.spec_with_path
         if args.version_suffix:
-            final_version = final_version + passed_version
+            final_version = final_version + '-' + passed_version
         print(f"final version: {final_version}")
         asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registry_name=registry_name,
                                                              asset_type=f"{asset.type.value}s",
