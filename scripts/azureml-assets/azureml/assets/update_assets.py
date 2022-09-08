@@ -179,7 +179,7 @@ def update_assets(input_dirs: List[Path],
                   copy_only: bool,
                   skip_unreleased: bool,
                   output_directory_root: Path = None):
-    """Updated assets to prepare for release.
+    """Update assets to prepare for release.
 
     Args:
         input_dirs (List[Path]): List of directories to search for assets.
