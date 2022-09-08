@@ -1,3 +1,6 @@
+# Preview
+**Features contained in this repository are in private preview. Preview versions are provided without a service level agreement, and they are not recommended for production workloads. Certain features might not be supported or might have constrained capabilities. For more information, see [Supplemental Terms of Use for Microsoft Azure Previews](https://azure.microsoft.com/en-us/support/legal/preview-supplemental-terms/).**
+
 # Overview
 This repo is the home for built-in registry assets for Azure Machine Learning. The term "assets" currently includes [components](https://docs.microsoft.com/en-us/azure/machine-learning/concept-component) and [environments](https://docs.microsoft.com/en-us/azure/machine-learning/concept-environments). For more information on registries, please refer to [their documentation](https://github.com/Azure/azureml-previews/tree/main/previews/registries).
 
@@ -8,7 +11,7 @@ Once an asset is in a public registry, all Azure ML customers will have access t
 |-------|-----------|--------------|---------------------|----------------|-------|
 | Under Development | None | Source code is in repo, being developed against your own workspace/registry. Not in  public registry. | | | |
 | Private Preview | In early testing | In public registry | (Private Preview) | #.#.#-preview | By end of Private Preview, asset *could be deleted* if not moving forward. |
-| Public Preview | Relatively stable | In public registry |(Public Preview) | #.#.#-preview | By end of Public Preview, asset *can't be deleted*, but can be archived (see below). |
+| Public Preview | Relatively stable | In public registry | (Public Preview) | #.#.#-preview | By end of Public Preview, asset *can't be deleted*, but can be archived (see below). |
 | General Availability | Stable, will have long-term support | In public registry | | #.#.# | **No interface breaking changes are allowed**. If there are breaking changes, create another asset. |
 | Archived | No longer supported | In public registry, but unlisted | (Archived) | | |
 
@@ -19,7 +22,7 @@ Once an asset is in a public registry, all Azure ML customers will have access t
 # Adding New Assets
 Here are a some notes to help you get started:
 * First create the asset in your workspace. The asset schema is the same, whether it's in a workspace or registry.
-* [Get familliar with registries](https://github.com/Azure/azureml-previews/tree/main/previews/registries). Develop the asset in your own registry and get it working there first. 
+* [Get familiar with registries](https://github.com/Azure/azureml-registries/tree/main/registries). Develop the asset in your own registry and get it working there first. 
 * Here is an example component: https://github.com/Azure/azureml-assets/tree/main/training/vision/components/object_detection
 * Information on creating environments is in the [wiki](https://github.com/Azure/azureml-assets/wiki/Environments)
 * Folder structure:
