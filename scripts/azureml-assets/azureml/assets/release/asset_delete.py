@@ -20,7 +20,9 @@ CONTAINER_ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name")
 
 VERSION_CHECK_TEMPLATE = Template(
-    "$base_url/mferp/managementfrontend/subscriptions/$subscription/resourceGroups/$resource_group/providers/Microsoft.MachineLearningServices/registries/$registry/$asset_type/$asset_name/versions?api-version=2021-10-01-dataplanepreview")
+    "$base_url/mferp/managementfrontend/subscriptions/$subscription/resourceGroups/$resource_group/" \
+    "providers/Microsoft.MachineLearningServices/registries/$registry/$asset_type/$asset_name/" \
+    "versions?api-version=2021-10-01-dataplanepreview")
 
 
 def construct_asset_id(asset_name: str, asset_version: str, asset_type: str, registry_name: str):
@@ -75,7 +77,8 @@ def is_latest_version(
         logger.log_warning(f"No versions are found for published {asset_type}: {asset_name}. Please check.")
     elif asset_version == version_list[0]:
         logger.log_warning(
-            f"{asset_type}: {asset_name} with version {asset_version} cannot be deleted because it is the default version")
+            f"{asset_type}: {asset_name} with version {asset_version} cannot be deleted " \
+                "because it is the default version")
     return len(version_list) > 0 and asset_version == version_list[0]
 
 
