@@ -13,7 +13,7 @@ from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
-TIMEOUT_MINUTES = os.environ.get("timeout_minutes", .25)
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 
 
 def test_pytorch_1_11():
@@ -78,5 +78,9 @@ def test_pytorch_1_11():
 
     if current_status == "Failed":
         print("Job failed!")
+        print("Dumping job")
         dumper.dump(job)
+        list_results = list(ml_client.jobs.list(returned_job.name))
+        print("Dumping list")
+        dumper.dump(list_results)
     assert current_status == "Completed"
