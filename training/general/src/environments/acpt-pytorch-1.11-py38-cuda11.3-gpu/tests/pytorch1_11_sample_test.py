@@ -45,7 +45,9 @@ def test_pytorch_1_11():
         inputs={
             "iris_csv": Input(
                 type="uri_file",
-                path="https://azuremlexamples.blob.core.windows.net/datasets/iris.csv",
+                path="https://azuremlexamples.blob.core.windows.net/datasets/does_not_exist.csv",
+                # TODO: Restore
+                # path="https://azuremlexamples.blob.core.windows.net/datasets/iris.csv",
             ),
             "epochs": 10,
             "lr": 0.1,
@@ -68,6 +70,8 @@ def test_pytorch_1_11():
         if current_status in ["Completed", "Failed"]:
             break
         time.sleep(30)  # sleep 30 seconds
+    else:
+        raise Exception("Timed out while waiting for job to complete. Job took over {TIME")
 
     if current_status == "Failed":
         print("Job failed!")
