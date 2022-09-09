@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """Tests running a sample job in the pytorch 1.11 environment."""
+import dumper
 import os
 import time
 from pathlib import Path
@@ -69,13 +70,6 @@ def test_pytorch_1_11():
         time.sleep(30)  # sleep 30 seconds
 
     if current_status == "Failed":
-        try:
-            print(f"Failed: Error = {job.Error}")
-        except Exception:
-            pass
-
-        try:
-            print(f"Failed: error = {job.error}")
-        except Exception:
-            pass
+        print("Job failed!")
+        dumper.dump(job)
     assert current_status == "Completed"
