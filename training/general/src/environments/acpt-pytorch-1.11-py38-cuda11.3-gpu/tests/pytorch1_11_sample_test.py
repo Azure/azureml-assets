@@ -13,7 +13,7 @@ from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
-TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", .25)
 
 
 def test_pytorch_1_11():
@@ -71,7 +71,10 @@ def test_pytorch_1_11():
             break
         time.sleep(30)  # sleep 30 seconds
     else:
-        raise Exception("Timed out while waiting for job to complete. Job took over {TIME")
+        # Timeout
+        ml_client.jobs.cancel(returned_job.name)
+        raise Exception(f"Test aborted because the job took longer than {TIMEOUT_MINUTES} minutes. "
+                        f"Last status was {current_status}.")
 
     if current_status == "Failed":
         print("Job failed!")
