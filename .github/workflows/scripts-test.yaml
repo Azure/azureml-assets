@@ -5,25 +5,77 @@ on:
     branches:
       - main
     paths:
+      - "**.py"
       - scripts/**
   workflow_dispatch:
 
 env:
   scripts_dir: scripts
   scripts_azureml_assets_dir: scripts/azureml-assets
+  scripts_setup_dir: scripts/setup
+  scripts_validation_dir: scripts/validation
   test_dir: test
   resources_dir: test/resources
   pytest_reports_dir: pytest
+
+permissions:
+  # Required to clone repo
+  contents: read
+  # Required for OIDC login to Azure
+  id-token: write
+  # Required for EnricoMi/publish-unit-test-result-action
+  checks: write
+  issues: read
+  pull-requests: write
 
 defaults:
   run:
     shell: bash
 
 jobs:
+  check-syntax:
+    name: Check syntax
+    runs-on: ubuntu-latest 
+
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      
+      - name: Get changed Python scripts
+        id: changed-scripts
+        uses: tj-actions/changed-files@v24
+        with:
+          files_separator: ','
+          separator: ','
+          files: |
+            **/*.py
+      
+      - name: Use Python 3.8 or newer
+        uses: actions/setup-python@v3
+        with:
+          python-version: '>=3.8'
+      
+      - name: Install dependencies
+        run: pip install -r $scripts_dir/script-check-requirements.txt
+
+      - name: Check for copyright notice
+        run: python $scripts_validation_dir/copyright_validation.py -i .
+      
+      - name: Check code health
+        run: python $scripts_validation_dir/code_health.py -i .
+      
+      # TODO: Remove "if" property, -c argument, and changed-scripts step above
+      - name: Check code documentation
+        if: steps.changed-scripts.outputs.all_modified_files != ''
+        run: python $scripts_validation_dir/doc_style.py -i . -c "${{ steps.changed-scripts.outputs.all_modified_files }}"
+
   test:
     name: Test scripts
     runs-on: ubuntu-latest
-    environment: BuiltinRegistryDev
+    needs: check-syntax
+    environment: Testing
 
     steps:
       - name: Clone branch
@@ -39,17 +91,20 @@ jobs:
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
       
-      - name: Log in to Azure
-        uses: azure/login@v1
+      - name: Log in to Azure and create resources
+        uses: ./.github/actions/create-azure-resources
         with:
-          creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
-
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
+      
       - name: Test scripts
-        run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group ${{ secrets.RESOURCE_GROUP }} --registry ${{ secrets.BUILD_CONTAINER_REGISTRY }} $test_dir
+        run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
 
       - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          check_name: Test Results for ${{ github.workflow }}
           files: ${{ runner.temp }}/${{ env.pytest_reports_dir }}/*.xml

@@ -1,18 +1,19 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """
 Tests running the pytorch_image_classifier/train.py script
 on a randomly generated small dataset.
 """
 import os
 import sys
-import tempfile
 import pytest
 from unittest.mock import patch
 
 import numpy as np
 from PIL import Image
 
-from components.tensorflow_image_segmentation import train
-from components.tensorflow_image_segmentation.tf_helper.model import MODEL_ARCH_LIST
+from tensorflow_benchmark import image_segmentation
 
 # IMPORTANT: see conftest.py for fixtures
 
@@ -31,7 +32,7 @@ def random_images_and_masks(temporary_dir):
         a = np.random.rand(300, 300, 3) * 255
         im_out = Image.fromarray(a.astype("uint8")).convert("RGB")
 
-        a = np.random.randint(0, n_classes, size=(300, 300)) + 1 # pets collection starts index at 1
+        a = np.random.randint(0, n_classes, size=(300, 300)) + 1  # pets collection starts index at 1
         msk_out = Image.fromarray(a.astype("uint8"))
 
         image_path = os.path.join(
@@ -53,12 +54,13 @@ TEST_MODEL_ARCH_LIST = [
     "unet"
 ]
 
+
 # we only care about patching those specific mlflow methods
 @patch("mlflow.end_run")  # we can have only 1 start/end per test session
 @patch("mlflow.log_params")  # patched to avoid conflict in parameters
 @patch("mlflow.start_run")  # we can have only 1 start/end per test session
 @pytest.mark.parametrize("model_arch", TEST_MODEL_ARCH_LIST)
-def test_components_pytorch_image_classifier_single_node(
+def test_components_tensorflow_image_classification_single_node(
     mlflow_start_run_mock,
     mlflow_log_params_mock,
     mlflow_end_run_mock,
@@ -66,7 +68,7 @@ def test_components_pytorch_image_classifier_single_node(
     temporary_dir,
     random_images_and_masks,
 ):
-    """Tests src/components/pytorch_image_classifier/train.py"""
+    """Tests src/components/tensorflow_benchmark/image_segmentation.py"""
     model_dir = os.path.join(temporary_dir, "tensorflow_image_segmentation_model")
     checkpoints_dir = os.path.join(
         temporary_dir, "tensorflow_image_segmentation_checkpoints"
@@ -75,7 +77,7 @@ def test_components_pytorch_image_classifier_single_node(
     # create test arguments for the script
     # fmt: off
     script_args = [
-        "train.py",
+        "image_segmentation.py",
         "--train_images", random_images_and_masks,
         "--images_filename_pattern", "(.*)\\.jpg",
         "--images_type", "jpg",
@@ -97,7 +99,7 @@ def test_components_pytorch_image_classifier_single_node(
 
     # replaces sys.argv with test arguments and run main
     with patch.object(sys, "argv", script_args):
-        train.main()
+        image_segmentation.main()
 
     # those mlflow calls must be unique in the script
     mlflow_start_run_mock.assert_called_once()

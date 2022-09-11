@@ -1,0 +1,23 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+
+command: |
+  tar xvfm ${{inputs.images_archive}} --no-same-owner -C ${{outputs.images_and_annotations}} &&
+  tar xvfm ${{inputs.annotations_archive}} --no-same-owner -C ${{outputs.images_and_annotations}}
+
+inputs:
+  images_archive:
+    type: uri_file
+    path: https://www.robots.ox.ac.uk/~vgg/data/pets/data/images.tar.gz
+  annotations_archive:
+    type: uri_file
+    path: https://www.robots.ox.ac.uk/~vgg/data/pets/data/annotations.tar.gz
+
+outputs:
+  images_and_annotations:
+    type: uri_folder
+    mode: upload
+    path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/oxford_iit_pets/
+
+environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu@latest
+
+compute: azureml:cpu-cluster
