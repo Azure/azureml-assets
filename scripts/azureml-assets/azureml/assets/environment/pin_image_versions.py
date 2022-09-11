@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import argparse
 import json
 import re
@@ -23,8 +26,8 @@ def get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
         # Retrieve digest
         encoded_tag = urllib.parse.quote(tag, safe="")
         request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
-                        method="HEAD",
-                        headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
+                          method="HEAD",
+                          headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
         try:
             response = urlopen(request)
         except Exception as e:
@@ -55,7 +58,7 @@ def get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
     # Filter tags and sort in descending order because this should be faster
     tags_sorted = sorted([t for t in tags if t != LATEST_TAG and
                          (regex is None or regex.search(t) is not None)], reverse=True)
-    
+
     # Handle regex
     if regex is not None:
         # Use the most recent matching tag
@@ -90,7 +93,7 @@ def pin_images(contents: str) -> str:
             break
         repo = match.group(1)
         regex = match.group(2)
-        message = f"Finding latest image tag/digest for {repo}"        
+        message = f"Finding latest image tag/digest for {repo}"
         if regex is not None:
             message += f" matching {regex}"
             regex = re.compile(regex)
@@ -122,8 +125,10 @@ def transform_file(input_file: Path, output_file: Path = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input", type=Path, help="File containing images to pin to latest versions", required=True)
-    parser.add_argument("-o", "--output", type=Path, help="File to which output will be written. Defaults to the input file if not specified.")
+    parser.add_argument("-i", "--input", type=Path,
+                        help="File containing images to pin to latest versions", required=True)
+    parser.add_argument("-o", "--output", type=Path,
+                        help="File to which output will be written. Defaults to the input file.")
     args = parser.parse_args()
 
     output = args.output or args.input

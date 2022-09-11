@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import argparse
 from pathlib import Path
 
@@ -26,8 +29,10 @@ def transform_file(input_file: Path, output_file: Path = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input", type=Path, help="File containing images/packages to pin to latest versions", required=True)
-    parser.add_argument("-o", "--output", type=Path, help="File to which output will be written. Defaults to the input file if not specified.")
+    parser.add_argument("-i", "--input", type=Path,
+                        help="File containing images/packages to pin to latest versions", required=True)
+    parser.add_argument("-o", "--output", type=Path,
+                        help="File to which output will be written. Defaults to the input file.")
     args = parser.parse_args()
 
     output = args.output or args.input

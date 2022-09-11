@@ -1,23 +1,25 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """
 Creates random images.
 """
 import os
-import sys
-import tempfile
 
 import numpy as np
 from PIL import Image
 import argparse
 
+
 def generate(path, samples, classes, width, height):
     os.makedirs(path, exist_ok=True)
 
     for i in range(samples):
-        a = np.random.rand(width,height,3) * 255
+        a = np.random.rand(width, height, 3) * 255
         im_out = Image.fromarray(a.astype('uint8')).convert('RGB')
 
         class_dir = "class_{}".format(i % classes)
-        
+
         image_path = os.path.join(
             path,
             class_dir,
@@ -27,7 +29,7 @@ def generate(path, samples, classes, width, height):
         im_out.save(image_path)
 
 
-def main(cli_args:list = None) -> None:
+def main(cli_args: list = None) -> None:
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument(
         "--output_train",
@@ -75,6 +77,7 @@ def main(cli_args:list = None) -> None:
 
     # generate validation set
     generate(args.output_valid, args.valid_samples, args.classes, args.width, args.height)
+
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from azureml.automl.core.shared.constants import Tasks
 from azureml.automl.dnn.vision.common.constants import SettingsLiterals
 from azureml.automl.dnn.vision.classification import runner
@@ -9,7 +12,7 @@ from common.settings import ClassificationSettings
 
 def run(task, component_settings):
     @utils.create_component_telemetry_wrapper(task)
-    def run_component(task): 
+    def run_component(task):
         mltable_data_json = utils.create_mltable_json(component_settings)
         runner.run(
             {SettingsLiterals.TASK_TYPE: task},

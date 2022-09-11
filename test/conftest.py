@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 def pytest_addoption(parser):
     parser.addoption("--resource-group", action="store")
     parser.addoption("--registry", action="store")

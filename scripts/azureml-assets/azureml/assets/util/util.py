@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import difflib
 import filecmp
 import shutil
@@ -11,7 +14,7 @@ RELEASE_SUBDIR = "latest"
 EXCLUDE_DIR_PREFIX = "!"
 
 
-# See https://stackoverflow.com/questions/4187564/recursively-compare-two-directories-to-ensure-they-have-the-same-files-and-subdi
+# See https://stackoverflow.com/questions/4187564
 def are_dir_trees_equal(dir1: Path, dir2: Path, enable_logging: bool = False, ignore_eol: bool = True) -> bool:
     """Compare two directories recursively based on files names and content.
 
@@ -25,7 +28,6 @@ def are_dir_trees_equal(dir1: Path, dir2: Path, enable_logging: bool = False, ig
         bool: True if the directory trees are the same and there were no errors
             while accessing the directories or files, False otherwise.
     """
-
     dirs_cmp = filecmp.dircmp(dir1, dir2)
     if dirs_cmp.left_only:
         _log_diff(f"Compared {dir1} and {dir2} and found these only in {dir1}: {dirs_cmp.left_only}", enable_logging)
@@ -237,8 +239,8 @@ def find_assets(input_dirs: Union[List[Path], Path],
     Args:
         input_dirs (Union[List[Path], Path]): Directories to search in.
         asset_config_filename (str, optional): Asset config filename to search for.
-        types (Union[List[assets.AssetType], assets.AssetType], optional): AssetTypes to search for. Will not filter if unspecified.
-        changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs. Will not filter if unspecified.
+        types (Union[List[assets.AssetType], assets.AssetType], optional): AssetTypes to search for.
+        changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs.
         exclude_dirs (Union[List[Path], Path], optional): Directories that should be excluded from the search.
 
     Returns:
@@ -269,7 +271,7 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
     Args:
         input_dirs (Union[List[Path], Path]): Directories to search in.
         asset_config_filename (str): Asset config filename to search for.
-        changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs. Will not filter if unspecified.
+        changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs.
         exclude_dirs (Union[List[Path], Path], optional): Directories that should be excluded from the search.
 
     Returns:

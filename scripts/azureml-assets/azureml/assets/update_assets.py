@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Update assets to prepare for release."""
+
 import argparse
 import shutil
 import tempfile
@@ -19,6 +24,14 @@ COUNTERS = [ASSET_COUNT, UPDATED_COUNT, UPDATED_ENV_COUNT]
 
 
 def pin_env_files(env_config: assets.EnvironmentConfig):
+    """Pin versions in environment files marked as templates.
+
+    Args:
+        env_config (assets.EnvironmentConfig): Environment config
+
+    Raises:
+        Exception: Any failures to pin
+    """
     files_to_pin = env_config.template_files_with_path
 
     # Replace template tags in environment config
@@ -36,13 +49,30 @@ def pin_env_files(env_config: assets.EnvironmentConfig):
             logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
 
-def get_release_tag_name(asset_config: assets.AssetConfig):
+def get_release_tag_name(asset_config: assets.AssetConfig) -> str:
+    """Generate the Git release tag for an asset.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config
+
+    Returns:
+        str: Release tag
+    """
     version = asset_config.spec_as_object().version
     return RELEASE_TAG_VERSION_TEMPLATE.format(type=asset_config.type.value, name=asset_config.name,
                                                version=version)
 
 
 def release_tag_exists(asset_config: assets.AssetConfig, release_directory_root: Path) -> bool:
+    """Check repo for an asset's release tag.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config
+        release_directory_root (Path): Release branch location
+
+    Returns:
+        bool: True if the tag exists, False otherwise
+    """
     # Check git repo for version-specific tag
     repo = Repo(release_directory_root)
     tag = get_release_tag_name(asset_config)
@@ -54,6 +84,18 @@ def update_asset(asset_config: assets.AssetConfig,
                  copy_only: bool,
                  skip_unreleased: bool,
                  output_directory_root: Path = None) -> str:
+    """Update asset to prepare for release.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config
+        release_directory_root (Path): Release branch location
+        copy_only (bool): Only copy assets, don't actually update
+        skip_unreleased (bool): Skip unreleased explicitly-versioned assets
+        output_directory_root (Path, optional): Output directory for updated assets, otherwise update them in-place
+
+    Returns:
+        str: Version of updated asset, or None if not updated
+    """
     # Determine asset's release directory
     release_dir = util.get_asset_release_dir(asset_config, release_directory_root)
 
@@ -84,7 +126,7 @@ def update_asset(asset_config: assets.AssetConfig,
 
         # See if the asset version is unreleased
         pending_release = not release_tag_exists(release_asset_config, release_directory_root)
-        if pending_release and ((not auto_version and main_version != release_version) or skip_unreleased):
+        if pending_release and not auto_version and main_version != release_version and skip_unreleased:
             # Skip the unreleased asset version
             logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
                                f"version {release_version} hasn't been released yet")
@@ -111,7 +153,7 @@ def update_asset(asset_config: assets.AssetConfig,
             pin_env_files(temp_env_config)
 
         temp_asset_dir = util.get_asset_output_dir(asset_config=asset_config, output_directory_root=temp_dir_path)
-        
+
         # Compare temporary version with one in release
         if check_contents:
             assets.update_spec(temp_asset_config, version=release_version)
@@ -137,6 +179,16 @@ def update_assets(input_dirs: List[Path],
                   copy_only: bool,
                   skip_unreleased: bool,
                   output_directory_root: Path = None):
+    """Update assets to prepare for release.
+
+    Args:
+        input_dirs (List[Path]): List of directories to search for assets.
+        asset_config_filename (str): Asset config filename to search for
+        release_directory_root (Path): Release directory location
+        copy_only (bool): Only copy assets, don't actually update
+        skip_unreleased (bool): Skip unreleased explicitly-versioned assets
+        output_directory_root (Path, optional): Output directory for updated assets, otherwise update them in-place
+    """
     # Find assets under input dirs
     counters = Counter()
     for asset_config in util.find_assets(input_dirs, asset_config_filename):
@@ -167,12 +219,18 @@ def update_assets(input_dirs: List[Path],
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-dirs", required=True, help="Comma-separated list of directories containing assets")
-    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
-    parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
-    parser.add_argument("-o", "--output-directory", type=Path, help="Directory to which new/updated assets will be written, defaults to release directory")
-    parser.add_argument("-c", "--copy-only", action="store_true", help="Just copy assets into the release directory")
-    parser.add_argument("-s", "--skip-unreleased", action="store_true", help="Skip unreleased dynamically-versioned assets in the release branch")
+    parser.add_argument("-i", "--input-dirs", required=True,
+                        help="Comma-separated list of directories containing assets")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
+                        help="Asset config file name to search for")
+    parser.add_argument("-r", "--release-directory", required=True, type=Path,
+                        help="Directory to which the release branch has been cloned")
+    parser.add_argument("-o", "--output-directory", type=Path,
+                        help="Directory to which new/updated assets will be written, defaults to release directory")
+    parser.add_argument("-c", "--copy-only", action="store_true",
+                        help="Just copy assets into the release directory")
+    parser.add_argument("-s", "--skip-unreleased", action="store_true",
+                        help="Skip unreleased explicitly-versioned assets in the release branch")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists

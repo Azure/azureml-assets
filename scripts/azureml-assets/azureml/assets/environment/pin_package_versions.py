@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import argparse
 import re
 from pathlib import Path
@@ -37,7 +40,6 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
             selection_prefs=selection_prefs,
             use_deprecated_html5lib=False
         )
-
 
 
 def get_latest_package_version(package: str,
@@ -100,8 +102,10 @@ def transform_file(input_file: Path, output_file: Path = None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input", type=Path, help="File containing packages to pin to latest versions", required=True)
-    parser.add_argument("-o", "--output", type=Path, help="File to which output will be written. Defaults to the input file if not specified.")
+    parser.add_argument("-i", "--input", type=Path,
+                        help="File containing packages to pin to latest versions", required=True)
+    parser.add_argument("-o", "--output", type=Path,
+                        help="File to which output will be written. Defaults to the input file.")
     args = parser.parse_args()
 
     output = args.output or args.input

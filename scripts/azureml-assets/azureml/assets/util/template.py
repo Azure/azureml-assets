@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 TAG_PREFIX = "{{"
 TAG_SUFFIX = "}}"
 TAG_SEPARATOR = "."
