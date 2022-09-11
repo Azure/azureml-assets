@@ -1,0 +1,50 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+
+display_name: "resize"
+experiment_name: "data_multiplication"
+description: >-
+    Resize an entire image dataset using mogrify/imagemagick.
+
+tags:
+    version: 1.0.0
+
+########################
+### INPUTS / OUTPUTS ###
+########################
+
+inputs:
+    # data inputs
+    input_folder:
+        type: uri_folder
+        mode: download # pick ro_mount, rw_mount or download
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation/images/
+
+outputs:
+    output_folder: # Path to export checkpoints
+        type: uri_folder
+        mode: rw_mount # pick ro_mount, rw_mount or download
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/artificial/pets_segmentation_size2024/images/
+
+
+###############
+### COMMAND ###
+###############
+
+# modify the command below to suit your purpose
+command: "parallel mogrify -verbose -resize 2048x2048 -format png -path ${{outputs.output_folder}} ::: ${{inputs.input_folder}}/*.jpg"
+
+###################
+### ENVIRONMENT ###
+###################
+
+# To use this environment, please first use az ml environment
+environment: file:../environments/imagemagick/env.yml # azureml:imagemagick@latest
+
+
+###############
+### COMPUTE ###
+###############
+
+compute: azureml:cpu-cluster-lg
+
+# </jobs>
