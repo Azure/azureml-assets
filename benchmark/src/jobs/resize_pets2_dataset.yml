@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
 
-display_name: "resize"
+display_name: "resize pets dataset"
 experiment_name: "data_multiplication"
 description: >-
     Resize an entire image dataset using mogrify/imagemagick.
