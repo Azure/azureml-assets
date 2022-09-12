@@ -5,8 +5,8 @@
 import os
 import time
 from pathlib import Path
-from azure.ai.ml import MLClient
-from azure.ai.ml import command, Input
+from azure.ai.ml import command, Input, MLClient
+from azure.ai.ml._restclient.models import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
@@ -59,12 +59,21 @@ def test_pytorch_1_11():
     returned_job = ml_client.create_or_update(job)
     assert returned_job is not None
 
-    # Poll until final status is reached, or timed out
+    # Poll until final status is reached or timed out
     timeout = time.time() + (TIMEOUT_MINUTES * 60)
     while time.time() <= timeout:
-        current_status = ml_client.jobs.get(returned_job.name).status
-        if current_status in ["Completed", "Failed"]:
+        job = ml_client.jobs.get(returned_job.name)
+        status = job.status
+        if status in [JobStatus.COMPLETED, JobStatus.FAILED]:
             break
         time.sleep(30)  # sleep 30 seconds
+    else:
+        # Timeout
+        ml_client.jobs.cancel(returned_job.name)
+        raise Exception(f"Test aborted because the job took longer than {TIMEOUT_MINUTES} minutes. "
+                        f"Last status was {status}.")
 
-    assert current_status == "Completed"
+    if status == JobStatus.FAILED:
+        ml_client.jobs.stream(returned_job.name)
+
+    assert status == JobStatus.COMPLETED
