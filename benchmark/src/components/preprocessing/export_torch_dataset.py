@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-This script exports the CIFAR10 dataset to save it as distinct JPG files
-each under their respective class subdirectory.
+"""This script exports the CIFAR10 dataset to save it as actual files.
+
+It writes them each under their respective class subdirectory.
 
 To run:
 > pip install tqdm torchvision numpy pillow
@@ -16,8 +16,7 @@ from tqdm import tqdm
 
 
 def run(args):
-    """Download datasets from torchvision"""
-
+    """Download datasets from torchvision."""
     dataset_module = getattr(torchvision.datasets, args.dataset)
 
     print("*** Downloading datasets locally")
@@ -72,7 +71,7 @@ def run(args):
 
 
 def main(cli_args=None):
-    """Parses CLI args and call run()"""
+    """Parse CLI args and call run."""
     parser = argparse.ArgumentParser(__doc__)
 
     parser.add_argument(

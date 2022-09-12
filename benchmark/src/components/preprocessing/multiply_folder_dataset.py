@@ -3,7 +3,6 @@
 
 """This script multiplies a folder by copying the files and adding suffixes."""
 import os
-import sys
 import argparse
 import logging
 import glob
@@ -12,8 +11,9 @@ import mlflow
 import shutil
 from tqdm import tqdm
 
+
 def build_arguments_parser(parser: argparse.ArgumentParser = None):
-    """Builds the argument parser for CLI settings"""
+    """Build the argument parser for CLI settings."""
     if parser is None:
         parser = argparse.ArgumentParser()
 
@@ -48,6 +48,7 @@ def build_arguments_parser(parser: argparse.ArgumentParser = None):
 
 
 def multiply_files(file_paths, source, target, multiplication_factor, increment=0):
+    """Multiply a given folder."""
     files_created = 0
 
     for i in range(multiplication_factor):
@@ -71,7 +72,6 @@ def multiply_files(file_paths, source, target, multiplication_factor, increment=
                     logging.getLogger(__name__).info(f"Creating output subfolder {full_output_dir}")
                     os.makedirs(full_output_dir, exist_ok=True)
 
-                #print(f"{entry} => {output_file_path}")
                 if not os.path.isfile(output_file_path):
                     shutil.copy(entry, output_file_path)
                     files_created += 1
@@ -80,8 +80,9 @@ def multiply_files(file_paths, source, target, multiplication_factor, increment=
 
     return files_created
 
+
 def run(args):
-    """Run the script using CLI arguments"""
+    """Run the script using CLI arguments."""
     logger = logging.getLogger(__name__)
     logger.info(f"Running with arguments: {args}")
 
@@ -114,7 +115,7 @@ def run(args):
 
 
 def main(cli_args=None):
-    """Main function of the script."""
+    """Parse cli arguments and run script."""
     # initialize root logger
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
