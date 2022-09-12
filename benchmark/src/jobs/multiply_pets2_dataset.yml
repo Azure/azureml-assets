@@ -18,7 +18,6 @@ inputs:
     input_folder:
         type: uri_folder
         mode: download # pick ro_mount, rw_mount or download
-        #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/places2/train
         path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/pets_segmentation
     multiply: 500
     increment: 0
@@ -27,8 +26,7 @@ outputs:
     output_folder: # Path to export checkpoints
         type: uri_folder
         mode: upload # pick ro_mount, rw_mount or download
-        #path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/artificial/places2_multiplied_250/train
-        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/artificial/pets_segmentation/x250/increment0
+        path: azureml://datastores/dlbenchmarkdatablobstandard/paths/azureml-vision-datasets/artificial/pets_segmentation/x500/increment0
 
 
 ###############
