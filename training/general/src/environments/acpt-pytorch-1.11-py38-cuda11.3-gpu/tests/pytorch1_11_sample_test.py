@@ -77,6 +77,9 @@ def test_pytorch_1_11():
 
     if status == JobStatus.FAILED:
         print("Job failed, streaming its logs:")
-        ml_client.jobs.stream(returned_job.name)
+        try:
+            ml_client.jobs.stream(returned_job.name)
+        except Exception:
+            pass
 
     assert status == JobStatus.COMPLETED
