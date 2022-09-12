@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This script multiplies a folder by copying the files and adding suffixes."""
 import os
 import sys
 import argparse
