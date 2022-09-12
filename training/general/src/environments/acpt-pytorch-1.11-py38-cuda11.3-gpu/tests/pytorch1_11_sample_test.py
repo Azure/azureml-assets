@@ -2,12 +2,11 @@
 # Licensed under the MIT License.
 
 """Tests running a sample job in the pytorch 1.11 environment."""
-import dumper
 import os
 import time
 from pathlib import Path
-from azure.ai.ml import MLClient
-from azure.ai.ml import command, Input
+from azure.ai.ml import command, Input, MLClient
+from azure.ai.ml._restclient.models import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
@@ -62,25 +61,22 @@ def test_pytorch_1_11():
     returned_job = ml_client.create_or_update(job)
     assert returned_job is not None
 
-    # Poll until final status is reached, or timed out
+    # Poll until final status is reached or timed out
     timeout = time.time() + (TIMEOUT_MINUTES * 60)
     while time.time() <= timeout:
         job = ml_client.jobs.get(returned_job.name)
-        current_status = job.status
-        if current_status in ["Completed", "Failed"]:
+        status = job.status
+        if status in [JobStatus.COMPLETED, JobStatus.FAILED]:
             break
         time.sleep(30)  # sleep 30 seconds
     else:
         # Timeout
         ml_client.jobs.cancel(returned_job.name)
         raise Exception(f"Test aborted because the job took longer than {TIMEOUT_MINUTES} minutes. "
-                        f"Last status was {current_status}.")
+                        f"Last status was {status}.")
 
-    if current_status == "Failed":
-        print("Job failed!")
-        print("Dumping job")
-        dumper.dump(job)
-        list_results = list(ml_client.jobs.list(returned_job.name))
-        print("Dumping list")
-        dumper.dump(list_results)
-    assert current_status == "Completed"
+    if status == JobStatus.FAILED:
+        print("Job failed, streaming its logs:")
+        ml_client.jobs.stream(returned_job.name)
+
+    assert status == JobStatus.COMPLETED
