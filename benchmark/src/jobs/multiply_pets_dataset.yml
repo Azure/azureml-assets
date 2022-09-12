@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
 code: ../components/preprocessing/
 
-display_name: "multiply pets2"
+display_name: "multiply pets"
 experiment_name: "data_multiplication"
 description: >-
     Trains an image segmentation model using tensorflow.
