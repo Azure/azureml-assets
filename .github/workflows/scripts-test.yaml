@@ -16,7 +16,7 @@ env:
   scripts_validation_dir: scripts/validation
   test_dir: test
   resources_dir: test/resources
-  pytest_reports_dir: pytest
+  pytest_reports: pytest-reports
 
 permissions:
   # Required to clone repo
@@ -100,17 +100,11 @@ jobs:
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
       
       - name: Test scripts
-        run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
-      
-      - name: Check tests output file
-        if: always()
-        run: |
-          ls -lR ${{ runner.temp }}/$pytest_reports_dir
-          cat ${{ runner.temp }}/$pytest_reports_dir/test-result.xml
+        run: pytest --junitxml=$pytest_reports/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           check_name: Test Results for ${{ github.workflow }}
-          files: ${{ runner.temp }}/${{ env.pytest_reports_dir }}/*.xml
+          junit_files: ${{ env.pytest_reports }}/**/*.xml
