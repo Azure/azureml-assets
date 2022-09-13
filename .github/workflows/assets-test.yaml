@@ -89,6 +89,7 @@ jobs:
     environment: Testing
     strategy:
       matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+      fail-fast: false
 
     steps:
       - name: Clone branch
