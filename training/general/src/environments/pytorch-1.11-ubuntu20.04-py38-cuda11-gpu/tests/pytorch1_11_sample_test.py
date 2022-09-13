@@ -77,10 +77,10 @@ def test_pytorch_1_11():
     if status == JobStatus.FAILED:
         ml_client.jobs.download(returned_job.name)
         if STD_LOG.exists():
-            print(f"[BEGIN {STD_LOG}")
+            print(f"*** BEGIN {STD_LOG} ***")
             with open(STD_LOG, "r") as f:
                 print(f.read(), end="")
-            print(f"[END {STD_LOG}")
+            print(f"*** END {STD_LOG} ***")
         ml_client.jobs.stream(returned_job.name)
 
     assert status == JobStatus.COMPLETED
