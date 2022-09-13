@@ -103,7 +103,10 @@ jobs:
         run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
       
       - name: Check tests output file
-        run: ls -lR ${{ runner.temp }}/$pytest_reports_dir
+        if: always()
+        run: |
+          ls -lR ${{ runner.temp }}/$pytest_reports_dir
+          cat ${{ runner.temp }}/$pytest_reports_dir/test-result.xml
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
