@@ -13,6 +13,7 @@ from azure.identity import AzureCliCredential
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
+STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
 def test_tensorflow_2_9():
@@ -65,6 +66,12 @@ def test_tensorflow_2_9():
                         f"Last status was {status}.")
 
     if status == JobStatus.FAILED:
+        ml_client.jobs.download(returned_job.name)
+        if STD_LOG.exists():
+            print(f"*** BEGIN {STD_LOG} ***")
+            with open(STD_LOG, "r") as f:
+                print(f.read(), end="")
+            print(f"*** END {STD_LOG} ***")
         ml_client.jobs.stream(returned_job.name)
 
     assert status == JobStatus.COMPLETED
