@@ -73,7 +73,9 @@ if __name__ == '__main__':
 
     if publish_list_dir:
         with open(publish_list_dir) as fp:
-            publish_list = yaml.load(fp, Loader=yaml.FullLoader)
+            config = yaml.load(fp, Loader=yaml.FullLoader)
+            publish_list = config['allowlist']
+            print(f"allow list: {publish_list}")
 
     assets_set = util.find_assets(
         input_dirs=component_dir,
@@ -88,7 +90,7 @@ if __name__ == '__main__':
         final_version = asset.version
         spec_path = asset.spec_with_path
         if args.version_suffix:
-            final_version = final_version + passed_version
+            final_version = final_version + '-' + passed_version
         print(f"final version: {final_version}")
         asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registry_name=registry_name,
                                                              asset_type=f"{asset.type.value}s",
