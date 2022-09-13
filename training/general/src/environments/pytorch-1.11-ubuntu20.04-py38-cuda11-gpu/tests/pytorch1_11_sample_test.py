@@ -81,6 +81,7 @@ def test_pytorch_1_11():
             with open(STD_LOG, "r") as f:
                 print(f.read(), end="")
             print(f"*** END {STD_LOG} ***")
-        ml_client.jobs.stream(returned_job.name)
+        else:
+            ml_client.jobs.stream(returned_job.name)
 
     assert status == JobStatus.COMPLETED
