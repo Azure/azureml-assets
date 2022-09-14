@@ -51,7 +51,7 @@ jobs:
         run: echo "continue=${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork == (github.event_name == 'pull_request_target') }}"" >> $GITHUB_ENV
       
       - name: Check PR origin
-        if: env.continue && github.event.pull_request.head.repo.fork && ! contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}')
+        if: env.continue && github.event.pull_request.head.repo.fork && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}')
         run: |
           echo "::error::This PR was created from a fork and requires the ${{ env.fork_required_label }} to run this check."
           exit 1
@@ -69,7 +69,7 @@ jobs:
           echo "testing_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       
       - name: Set branch refs for non-forked PR
-        if: ! github.event.pull_request.head.repo.fork
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         run: |
           echo "main_ref=${{ github.ref }}" >> $GITHUB_ENV
           echo "testing_ref=${{ github.ref }}" >> $GITHUB_ENV
