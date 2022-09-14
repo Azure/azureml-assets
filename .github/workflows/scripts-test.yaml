@@ -55,6 +55,8 @@ jobs:
         run: |
           echo "github.event_name=${{ github.event_name }}"
           echo "github.event.pull_request.head.repo.fork=${{ github.event.pull_request.head.repo.fork }}"
+          echo "github.event.pull_request.head.repo.fork == '' is ${{ github.event.pull_request.head.repo.fork == '' }}"
+          echo "github.event.pull_request.head.repo.fork == null is ${{ github.event.pull_request.head.repo.fork == null }}"
           echo "::error::This PR was created from a fork and requires the '${{ env.fork_required_label }}' label to run this check."
           exit 1
       
