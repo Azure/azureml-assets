@@ -57,19 +57,19 @@ jobs:
           exit 1
       
       - name: Check secrets
-        if: continue
+        if: env.continue
         env:
           has_secrets: ${{ secrets.AZURE_CLIENT_ID != null }}
         run: echo "continue=$has_secrets" >> $GITHUB_ENV
 
       - name: Set branch refs for forked PR
-        if: github.event.pull_request.head.repo.fork
+        if: env.continue && github.event.pull_request.head.repo.fork
         run: |
           echo "main_ref=${{ github.ref }}" >> $GITHUB_ENV
           echo "testing_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       
       - name: Set branch refs for non-forked PR
-        if: ${{ !github.event.pull_request.head.repo.fork }}
+        if: env.continue && !github.event.pull_request.head.repo.fork
         run: |
           echo "main_ref=${{ github.ref }}" >> $GITHUB_ENV
           echo "testing_ref=${{ github.ref }}" >> $GITHUB_ENV
