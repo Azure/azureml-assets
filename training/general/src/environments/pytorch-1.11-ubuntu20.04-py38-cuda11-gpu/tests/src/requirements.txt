@@ -10,3 +10,7 @@ torchvision
 # tracking
 mlflow
 azureml-mlflow
+
+# compatibility
+azure-core>=1.23.0
+typing-extensions>=4.0.1
