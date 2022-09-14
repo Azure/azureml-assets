@@ -6,6 +6,16 @@ on:
       - main
     paths:
       - scripts/**
+  pull_request_target:
+    branches:
+      - main
+    paths:
+      - scripts/**
+    types:
+      - opened
+      - labeled
+      - synchronize
+      - reopened
   workflow_dispatch:
 
 env:
@@ -15,6 +25,7 @@ env:
   test_dir: test
   resources_dir: test/resources
   pytest_reports: pytest-reports
+  fork_required_label: "safe to test"
 
 permissions:
   # Required to clone repo
@@ -31,10 +42,48 @@ defaults:
     shell: bash
 
 jobs:
+  check-execution-context:
+    name: Check execution context
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check event type
+        run: echo "continue=${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork == (github.event_name == 'pull_request_target') }}"" >> $GITHUB_ENV
+      
+      - name: Check PR origin
+        if: env.continue && github.event.pull_request.head.repo.fork && ! contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}')
+        run: |
+          echo "::error::This PR was created from a fork and requires the ${{ env.fork_required_label }} to run this check."
+          exit 1
+      
+      - name: Check secrets
+        if: continue
+        env:
+          has_secrets: ${{ secrets.AZURE_CLIENT_ID != null }}
+        run: echo "continue=$has_secrets" >> $GITHUB_ENV
+
+      - name: Set branch refs for forked PR
+        if: github.event.pull_request.head.repo.fork
+        run: |
+          echo "main_ref=${{ github.ref }}" >> $GITHUB_ENV
+          echo "testing_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+      
+      - name: Set branch refs for non-forked PR
+        if: ! github.event.pull_request.head.repo.fork
+        run: |
+          echo "main_ref=${{ github.ref }}" >> $GITHUB_ENV
+          echo "testing_ref=${{ github.ref }}" >> $GITHUB_ENV
+      
+    outputs:
+      continue: ${{ env.continue }}
+      main_ref: ${{ env.main_ref }}
+      testing_ref: ${{ env.testing_ref }}
+
   test:
     name: Test scripts
+    if: needs.check-execution-context.outputs.continue
     runs-on: ubuntu-latest
-    needs: check-syntax
+    needs: check-execution-context
     environment: Testing
 
     steps:
