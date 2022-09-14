@@ -20,8 +20,7 @@ env:
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
   scripts_setup_dir: scripts/setup
   asset_config_filename: asset.yaml
-  pytest_reports_dir: pytest
-  pytest_reports_artifact: pytest-reports
+  pytest_reports: pytest-reports
   package_versions_file: scripts/test-requirements.txt
 
 permissions:
@@ -90,6 +89,7 @@ jobs:
     environment: Testing
     strategy:
       matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+      fail-fast: false
 
     steps:
       - name: Clone branch
@@ -114,14 +114,14 @@ jobs:
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
       
       - name: Test asset
-        run: python -u $scripts_assets_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $package_versions_file -r ${{ runner.temp }}/$pytest_reports_dir
+        run: python -u $scripts_assets_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $package_versions_file -r ${{ github.workspace }}/$pytest_reports
         
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ${{ env.pytest_reports_artifact }}
-          path: ${{ runner.temp }}/${{ env.pytest_reports_dir }}
+          name: ${{ env.pytest_reports }}
+          path: ${{ env.pytest_reports }}
 
   report:
     name: Publish test results
@@ -134,8 +134,8 @@ jobs:
         id: download-artifact
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.pytest_reports_artifact }}
-          path: ${{ runner.temp }}/${{ env.pytest_reports_artifact }}
+          name: ${{ env.pytest_reports }}
+          path: ${{ env.pytest_reports }}
         continue-on-error: true
 
       - name: Publish test results
@@ -143,4 +143,4 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           check_name: Test Results for ${{ github.workflow }}
-          files: ${{ runner.temp }}/${{ env.pytest_reports_artifact }}/**/*.xml
+          junit_files: ${{ env.pytest_reports }}/**/*.xml
