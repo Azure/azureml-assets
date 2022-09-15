@@ -124,7 +124,7 @@ jobs:
       
       - name: Test scripts
         run: pytest --junitxml=$GITHUB_WORKSPACE/$pytest_reports/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
-        working-directory: $untrusted_dir
+        working-directory: ${{ env.untrusted_dir }}
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
