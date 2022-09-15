@@ -69,7 +69,7 @@ jobs:
           echo "testing_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       
       - name: Set branch refs for non-forked PR
-        if: env.continue && github.event.pull_request.head.repo.fork !== true
+        if: env.continue && github.event.pull_request.head.repo.fork != true
         run: |
           echo "main_ref=${{ github.ref }}" >> $GITHUB_ENV
           echo "testing_ref=${{ github.ref }}" >> $GITHUB_ENV
