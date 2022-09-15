@@ -39,7 +39,7 @@ jobs:
 
     steps:
       - name: Check execution context
-        uses: Azure/azureml-assets/.github/actions/check-execution-context@elesel/make-execution-context-job-reusable
+        uses: Azure/azureml-assets/.github/actions/check-execution-context@main
       
     outputs:
       continue: ${{ fromJSON(env.continue) }}
