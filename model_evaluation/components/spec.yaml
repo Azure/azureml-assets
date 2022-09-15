@@ -1,0 +1,45 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: model_evaluation
+display_name: AzureML Model Evaluation
+version: 0.0.1-preview
+type: command
+
+inputs:
+  mode:
+    type: string
+    default: score
+    enum: [score, predict, compute_metrics]
+  task:
+    type: string
+    default: classification
+    enum: [classification, regression, forecasting, token_classification]
+  test_data: 
+    type: mltable
+    mode: eval_mount
+  evaluation_config:
+    type: mltable
+    mode: eval_mount
+    optional: true
+  mlflow_model:
+    type: mlflow_model 
+    optional: true
+  #ADDED TO ACCOMMODATE CURRENT DESIGNER
+  model_uri:
+    type: string
+    optional: true
+
+outputs:
+  evaluation_result:
+    type: uri_folder
+
+code: ./code
+environment: azureml:AML_Model_Evaluation_Env@latest
+command: >-
+  python model_test.py
+  --data ${{inputs.test_data}}
+  --task ${{inputs.task}}
+  --mode ${{inputs.mode}}
+  --output ${{outputs.evaluation_result}}
+  [[--model-uri ${{inputs.model_uri}}]]
+  [[--config-file-name ${{inputs.evaluation_config}}]]
+  [[--mlflow-model ${{inputs.mlflow_model}}]]
