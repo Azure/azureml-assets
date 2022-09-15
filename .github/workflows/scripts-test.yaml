@@ -25,7 +25,6 @@ env:
   test_dir: test
   resources_dir: test/resources
   pytest_reports: pytest-reports
-  fork_required_label: "safe to test"
 
 permissions:
   # Required to clone repo
@@ -50,11 +49,10 @@ jobs:
       - name: Check event type
         run: echo "continue=${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork == (github.event_name == 'pull_request_target') }}" >> $GITHUB_ENV
       
-      - name: Check PR origin
-        if: env.continue && github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, 'safe to test')
-        #if: env.continue && github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}')
+      - name: Check PR labels if forked
+        if: env.continue && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, 'safe to test')
         run: |
-          echo "::error::This PR was created from a fork and requires the '${{ env.fork_required_label }}' label to run this check."
+          echo "::error::This PR was created from a fork and requires the 'safe to test' label to run this check."
           exit 1
       
       - name: Check secrets
@@ -63,13 +61,13 @@ jobs:
           has_secrets: ${{ secrets.AZURE_CLIENT_ID != null }}
         run: echo "continue=$has_secrets" >> $GITHUB_ENV
 
-      - name: Set branch refs for forked PR
+      - name: Set branch refs - forked PR
         if: env.continue && github.event.pull_request.head.repo.fork == true
         run: |
           echo "main_ref=${{ github.ref }}" >> $GITHUB_ENV
           echo "testing_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       
-      - name: Set branch refs for non-forked PR
+      - name: Set branch refs - not a forked PR
         if: env.continue && github.event.pull_request.head.repo.fork != true
         run: |
           echo "main_ref=${{ github.ref }}" >> $GITHUB_ENV
@@ -102,7 +100,7 @@ jobs:
         run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
       
       - name: Log in to Azure and create resources
-        uses: ./.github/actions/create-azure-resources
+        uses: Azure/azureml-assets/create-azure-resources@main
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
