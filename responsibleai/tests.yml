@@ -1,0 +1,8 @@
+tabular_rai_insight:
+  includes:
+    - "./tabular/jobs/"
+  jobs:
+    raiinsight_pipeline:
+      pre: "./tabular/jobs/prepare.py"
+      job: "./tabular/jobs/pipeline_boston_analyze.yml"
+      
