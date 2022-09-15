@@ -50,33 +50,9 @@ jobs:
       - name: Check event type
         run: echo "continue=${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork == (github.event_name == 'pull_request_target') }}" >> $GITHUB_ENV
       
-      - name: Test
-        if: env.continue
-        run: |
-          echo "continue=${{ env.continue }}"
-      
-      - name: Test
-        if: github.event.pull_request.head.repo.fork == true
-        run: |
-          echo "github.event.pull_request.head.repo.fork == true is ${{ github.event.pull_request.head.repo.fork == true }}"
-      
-      - name: Test
-        if: ${{ !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') }}
-        run: |
-          echo "!contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') is ${{ !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') }}"
-
-      - name: Test
-        if: github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}')
-        run: |
-          echo "github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') is ${{ github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') }}"
-
       - name: Check PR origin
-        if: env.continue && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}')
+        if: env.continue && github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}')
         run: |
-          echo "github.event_name=${{ github.event_name }}"
-          echo "github.event.pull_request.head.repo.fork=${{ github.event.pull_request.head.repo.fork }}"
-          echo "github.event.pull_request.head.repo.fork == '' is ${{ github.event.pull_request.head.repo.fork == '' }}"
-          echo "github.event.pull_request.head.repo.fork == null is ${{ github.event.pull_request.head.repo.fork == null }}"
           echo "::error::This PR was created from a fork and requires the '${{ env.fork_required_label }}' label to run this check."
           exit 1
       
@@ -93,7 +69,7 @@ jobs:
           echo "testing_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       
       - name: Set branch refs for non-forked PR
-        if: env.continue && (github.event.pull_request.head.repo.fork == null || github.event.pull_request.head.repo.fork == false)
+        if: env.continue && github.event.pull_request.head.repo.fork !== true
         run: |
           echo "main_ref=${{ github.ref }}" >> $GITHUB_ENV
           echo "testing_ref=${{ github.ref }}" >> $GITHUB_ENV
