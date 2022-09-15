@@ -50,6 +50,21 @@ jobs:
       - name: Check event type
         run: echo "continue=${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork == (github.event_name == 'pull_request_target') }}" >> $GITHUB_ENV
       
+      - name: Test
+        if: env.continue
+        run: |
+          echo "continue=${{ env.continue }}"
+      
+      - name: Test
+        if: github.event.pull_request.head.repo.fork == true
+        run: |
+          echo "github.event.pull_request.head.repo.fork == true is ${{ github.event.pull_request.head.repo.fork == true }}"
+      
+      - name: Test
+        if: ${{ !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') }}
+        run: |
+          echo "!contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') is ${{ !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') }}"
+
       - name: Check PR origin
         if: env.continue && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}')
         run: |
