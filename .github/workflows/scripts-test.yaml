@@ -101,7 +101,7 @@ jobs:
           path: ${{ env.trusted_dir }}
       
       - name: Clone testing branch
-        if: env.testing_ref == null
+        if: env.testing_ref != null
         uses: actions/checkout@v3
         with:
           ref: ${{ env.testing_ref }}
