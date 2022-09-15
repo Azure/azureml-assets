@@ -5,18 +5,18 @@ on:
     branches:
       - main
     paths:
-      - "**.py"
       - scripts/**
+  pull_request_target:
+    branches:
+      - main
+    paths:
+      - scripts/**
+    types:
+      - opened
+      - labeled
+      - synchronize
+      - reopened
   workflow_dispatch:
-
-env:
-  scripts_dir: scripts
-  scripts_azureml_assets_dir: scripts/azureml-assets
-  scripts_setup_dir: scripts/setup
-  scripts_validation_dir: scripts/validation
-  test_dir: test
-  resources_dir: test/resources
-  pytest_reports: pytest-reports
 
 permissions:
   # Required to clone repo
@@ -33,55 +33,80 @@ defaults:
     shell: bash
 
 jobs:
-  check-syntax:
-    name: Check syntax
-    runs-on: ubuntu-latest 
+  check-execution-context:
+    name: Check execution context
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Clone branch
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
+      - name: Check event type
+        run: echo "continue=${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork == (github.event_name == 'pull_request_target') }}" >> $GITHUB_ENV
       
-      - name: Get changed Python scripts
-        id: changed-scripts
-        uses: tj-actions/changed-files@v24
-        with:
-          files_separator: ','
-          separator: ','
-          files: |
-            **/*.py
+      - name: Check PR labels if forked
+        if: env.continue && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, 'safe to test')
+        run: |
+          echo "::error::This PR was created from a fork and requires the 'safe to test' label to run this check."
+          exit 1
       
-      - name: Use Python 3.8 or newer
-        uses: actions/setup-python@v3
-        with:
-          python-version: '>=3.8'
-      
-      - name: Install dependencies
-        run: pip install -r $scripts_dir/script-check-requirements.txt
+      - name: Check secrets
+        if: env.continue
+        env:
+          has_secrets: ${{ secrets.AZURE_CLIENT_ID != null }}
+        run: echo "continue=$has_secrets" >> $GITHUB_ENV
 
-      - name: Check for copyright notice
-        run: python $scripts_validation_dir/copyright_validation.py -i .
+      - name: Set branch refs for untrusted branch
+        if: env.continue && github.event.pull_request.head.repo.fork == true
+        run: |
+          echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
+          echo "testing_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       
-      - name: Check code health
-        run: python $scripts_validation_dir/code_health.py -i .
+      - name: Set branch ref for trusted branch
+        if: env.continue && github.event.pull_request.head.repo.fork != true
+        run: |
+          echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
       
-      # TODO: Remove "if" property, -c argument, and changed-scripts step above
-      - name: Check code documentation
-        if: steps.changed-scripts.outputs.all_modified_files != ''
-        run: python $scripts_validation_dir/doc_style.py -i . -c "${{ steps.changed-scripts.outputs.all_modified_files }}"
+    outputs:
+      continue: ${{ env.continue }}
+      trusted_ref: ${{ env.trusted_ref }}
+      testing_ref: ${{ env.testing_ref }}
 
   test:
     name: Test scripts
+    if: needs.check-execution-context.outputs.continue
     runs-on: ubuntu-latest
-    needs: check-syntax
+    needs: check-execution-context
     environment: Testing
 
+    env:
+      scripts_dir: scripts
+      scripts_azureml_assets_dir: scripts/azureml-assets
+      scripts_setup_dir: scripts/setup
+      test_dir: test
+      resources_dir: test/resources
+      pytest_reports: pytest-reports
+      trusted_dir: trusted
+      testing_dir: testing
+      trusted_ref: ${{ needs.check-execution-context.outputs.trusted_ref }}
+      testing_ref: ${{ needs.check-execution-context.outputs.testing_ref }}
+
     steps:
-      - name: Clone branch
+      - name: Collapse branches
+        if: env.testing_ref == null
+        run: echo "testing_dir=$trusted_dir" >> $GITHUB_ENV
+
+      - name: Clone trusted branch
         uses: actions/checkout@v3
         with:
-          fetch-depth: 2
+          ref: ${{ env.trusted_ref }}
+          fetch-depth: 0
+          path: ${{ env.trusted_dir }}
+      
+      - name: Clone testing branch
+        if: env.testing_ref != null
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.testing_ref }}
+          fetch-depth: 0
+          path: ${{ env.testing_dir }}
 
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -89,18 +114,19 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
+        run: pip install -e $trusted_dir/$scripts_azureml_assets_dir -r $trusted_dir/$scripts_dir/test-requirements.txt
       
       - name: Log in to Azure and create resources
-        uses: ./.github/actions/create-azure-resources
+        uses: Azure/azureml-assets/.github/actions/create-azure-resources@main
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          scripts-setup-dir: ${{ env.scripts_setup_dir }}
+          scripts-setup-dir: ${{ env.trusted_dir }}/${{ env.scripts_setup_dir }}
       
       - name: Test scripts
-        run: pytest --junitxml=$pytest_reports/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
+        run: pytest --junitxml=$GITHUB_WORKSPACE/$pytest_reports/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
+        working-directory: ${{ env.testing_dir }}
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
