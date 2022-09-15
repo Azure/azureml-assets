@@ -123,7 +123,8 @@ jobs:
           scripts-setup-dir: ${{ env.trusted_dir }}/${{ env.scripts_setup_dir }}
       
       - name: Test scripts
-        run: pytest --junitxml=$pytest_reports/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $untrusted_dir/$test_dir
+        run: pytest --junitxml=$GITHUB_WORKSPACE/$pytest_reports/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
+        working-directory: $untrusted_dir
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
