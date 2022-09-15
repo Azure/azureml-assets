@@ -1,0 +1,29 @@
+name: Check execution context
+description: Check workflow execution context for PRs and manual runs
+    
+runs:
+  using: composite
+  steps:
+    - name: Check event type
+      shell: bash
+      run: echo "continue=${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork == (github.event_name == 'pull_request_target') }}" >> $GITHUB_ENV
+    
+    - name: Check PR labels if forked
+      if: fromJSON(env.continue) && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, 'safe to test')
+      shell: bash
+      run: |
+        echo "::error::This PR was created from a fork and requires the 'safe to test' label to run this check."
+        exit 1
+    
+    - name: Set branch refs for untrusted branch
+      if: fromJSON(env.continue) && github.event.pull_request.head.repo.fork == true
+      shell: bash
+      run: |
+        echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
+        echo "testing_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+    
+    - name: Set branch ref for trusted branch
+      if: fromJSON(env.continue) && github.event.pull_request.head.repo.fork != true
+      shell: bash
+      run: |
+        echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
