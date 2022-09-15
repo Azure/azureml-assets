@@ -101,7 +101,7 @@ jobs:
           path: ${{ env.testing_dir }}
           files_separator: ','
           separator: ','
-          sha: ${{ env.testing_ref || git.sha }}
+          sha: ${{ env.testing_ref || github.sha }}
 
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
