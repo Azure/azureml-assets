@@ -42,30 +42,30 @@ jobs:
         run: echo "continue=${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork == (github.event_name == 'pull_request_target') }}" >> $GITHUB_ENV
       
       - name: Check PR labels if forked
-        if: env.continue && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, 'safe to test')
+        if: fromJSON(env.continue) && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, 'safe to test')
         run: |
           echo "::error::This PR was created from a fork and requires the 'safe to test' label to run this check."
           exit 1
       
       - name: Check secrets
-        if: env.continue
+        if: fromJSON(env.continue)
         env:
           has_secrets: ${{ secrets.AZURE_CLIENT_ID != null }}
         run: echo "continue=$has_secrets" >> $GITHUB_ENV
 
       - name: Set branch refs for untrusted branch
-        if: env.continue && github.event.pull_request.head.repo.fork == true
+        if: fromJSON(env.continue) && github.event.pull_request.head.repo.fork == true
         run: |
           echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
           echo "testing_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       
       - name: Set branch ref for trusted branch
-        if: env.continue && github.event.pull_request.head.repo.fork != true
+        if: fromJSON(env.continue) && github.event.pull_request.head.repo.fork != true
         run: |
           echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
       
     outputs:
-      continue: ${{ env.continue }}
+      continue: ${{ fromJSON(env.continue) }}
       trusted_ref: ${{ env.trusted_ref }}
       testing_ref: ${{ env.testing_ref }}
 
