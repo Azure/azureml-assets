@@ -25,6 +25,8 @@ env:
   test_dir: test
   resources_dir: test/resources
   pytest_reports: pytest-reports
+  trusted_dir: trusted
+  untrusted_dir: untrusted
 
 permissions:
   # Required to clone repo
@@ -64,19 +66,19 @@ jobs:
       - name: Set branch refs - forked PR
         if: env.continue && github.event.pull_request.head.repo.fork == true
         run: |
-          echo "main_ref=${{ github.ref }}" >> $GITHUB_ENV
-          echo "testing_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+          echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
+          echo "untrusted_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       
       - name: Set branch refs - not a forked PR
         if: env.continue && github.event.pull_request.head.repo.fork != true
         run: |
-          echo "main_ref=${{ github.ref }}" >> $GITHUB_ENV
-          echo "testing_ref=${{ github.ref }}" >> $GITHUB_ENV
+          echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
+          echo "untrusted_ref=${{ github.ref }}" >> $GITHUB_ENV
       
     outputs:
       continue: ${{ env.continue }}
-      main_ref: ${{ env.main_ref }}
-      testing_ref: ${{ env.testing_ref }}
+      trusted_ref: ${{ env.trusted_ref }}
+      untrusted_ref: ${{ env.untrusted_ref }}
 
   test:
     name: Test scripts
@@ -85,11 +87,24 @@ jobs:
     needs: check-execution-context
     environment: Testing
 
+    env:
+      trusted_ref: ${{ needs.check-execution-context.outputs.trusted_ref }}
+      untrusted_ref: ${{ needs.check-execution-context.outputs.untrusted_ref }}
+
     steps:
-      - name: Clone branch
+      - name: Clone trusted branch
         uses: actions/checkout@v3
         with:
-          fetch-depth: 2
+          ref: ${{ env.trusted_ref }}
+          fetch-depth: 0
+          path: ${{ env.trusted_dir }}
+      
+      - name: Clone branch to test
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.untrusted_ref }}
+          fetch-depth: 0
+          path: ${{ env.untrusted_dir }}
 
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -97,18 +112,18 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
+        run: pip install -e $trusted_dir/$scripts_azureml_assets_dir -r $trusted_dir/$scripts_dir/test-requirements.txt
       
       - name: Log in to Azure and create resources
-        uses: Azure/azureml-assets/create-azure-resources@main
+        uses: ./${{ env.trusted_dir }}/.github/actions/create-azure-resources
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          scripts-setup-dir: ${{ env.scripts_setup_dir }}
+          scripts-setup-dir: ${{ env.trusted_dir }}/${{ env.scripts_setup_dir }}
       
       - name: Test scripts
-        run: pytest --junitxml=$pytest_reports/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
+        run: pytest --junitxml=$pytest_reports/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $untrusted_dir/$test_dir
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
