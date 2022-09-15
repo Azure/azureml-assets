@@ -18,16 +18,6 @@ on:
       - reopened
   workflow_dispatch:
 
-env:
-  scripts_dir: scripts
-  scripts_azureml_assets_dir: scripts/azureml-assets
-  scripts_setup_dir: scripts/setup
-  test_dir: test
-  resources_dir: test/resources
-  pytest_reports: pytest-reports
-  trusted_dir: trusted
-  untrusted_dir: untrusted
-
 permissions:
   # Required to clone repo
   contents: read
@@ -67,18 +57,17 @@ jobs:
         if: env.continue && github.event.pull_request.head.repo.fork == true
         run: |
           echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
-          echo "untrusted_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
+          echo "testing_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       
-      - name: Set branch refs for trusted branch
+      - name: Set branch ref for trusted branch
         if: env.continue && github.event.pull_request.head.repo.fork != true
         run: |
           echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
-          echo "untrusted_ref=${{ github.ref }}" >> $GITHUB_ENV
       
     outputs:
       continue: ${{ env.continue }}
       trusted_ref: ${{ env.trusted_ref }}
-      untrusted_ref: ${{ env.untrusted_ref }}
+      testing_ref: ${{ env.testing_ref }}
 
   test:
     name: Test scripts
@@ -88,13 +77,21 @@ jobs:
     environment: Testing
 
     env:
+      scripts_dir: scripts
+      scripts_azureml_assets_dir: scripts/azureml-assets
+      scripts_setup_dir: scripts/setup
+      test_dir: test
+      resources_dir: test/resources
+      pytest_reports: pytest-reports
+      trusted_dir: trusted
+      testing_dir: testing
       trusted_ref: ${{ needs.check-execution-context.outputs.trusted_ref }}
-      untrusted_ref: ${{ needs.check-execution-context.outputs.untrusted_ref }}
+      testing_ref: ${{ needs.check-execution-context.outputs.testing_ref }}
 
     steps:
       - name: Collapse branches
-        if: env.trusted_ref == env.untrusted_ref
-        run: echo "untrusted_dir=$trusted_dir" >> $GITHUB_ENV
+        if: env.testing_ref == null
+        run: echo "testing_dir=$trusted_dir" >> $GITHUB_ENV
 
       - name: Clone trusted branch
         uses: actions/checkout@v3
@@ -103,13 +100,13 @@ jobs:
           fetch-depth: 0
           path: ${{ env.trusted_dir }}
       
-      - name: Clone branch to test
-        if: env.trusted_ref != env.untrusted_ref
+      - name: Clone testing branch
+        if: env.testing_ref == null
         uses: actions/checkout@v3
         with:
-          ref: ${{ env.untrusted_ref }}
+          ref: ${{ env.testing_ref }}
           fetch-depth: 0
-          path: ${{ env.untrusted_dir }}
+          path: ${{ env.testing_dir }}
 
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -129,7 +126,7 @@ jobs:
       
       - name: Test scripts
         run: pytest --junitxml=$GITHUB_WORKSPACE/$pytest_reports/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
-        working-directory: ${{ env.untrusted_dir }}
+        working-directory: ${{ env.testing_dir }}
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
