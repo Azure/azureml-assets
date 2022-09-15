@@ -47,12 +47,6 @@ jobs:
           echo "::error::This PR was created from a fork and requires the 'safe to test' label to run this check."
           exit 1
       
-      - name: Check secrets
-        if: fromJSON(env.continue)
-        env:
-          has_secrets: ${{ secrets.AZURE_CLIENT_ID != null }}
-        run: echo "continue=$has_secrets" >> $GITHUB_ENV
-
       - name: Set branch refs for untrusted branch
         if: fromJSON(env.continue) && github.event.pull_request.head.repo.fork == true
         run: |
