@@ -63,13 +63,13 @@ jobs:
           has_secrets: ${{ secrets.AZURE_CLIENT_ID != null }}
         run: echo "continue=$has_secrets" >> $GITHUB_ENV
 
-      - name: Set branch refs - forked PR
+      - name: Set branch refs for untrusted branch
         if: env.continue && github.event.pull_request.head.repo.fork == true
         run: |
           echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
           echo "untrusted_ref=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       
-      - name: Set branch refs - not a forked PR
+      - name: Set branch refs for trusted branch
         if: env.continue && github.event.pull_request.head.repo.fork != true
         run: |
           echo "trusted_ref=${{ github.ref }}" >> $GITHUB_ENV
@@ -92,6 +92,10 @@ jobs:
       untrusted_ref: ${{ needs.check-execution-context.outputs.untrusted_ref }}
 
     steps:
+      - name: Collapse branches
+        if: env.trusted_ref == env.untrusted_ref
+        run: echo "untrusted_dir=$trusted_dir" >> $GITHUB_ENV
+
       - name: Clone trusted branch
         uses: actions/checkout@v3
         with:
@@ -100,6 +104,7 @@ jobs:
           path: ${{ env.trusted_dir }}
       
       - name: Clone branch to test
+        if: env.trusted_ref != env.untrusted_ref
         uses: actions/checkout@v3
         with:
           ref: ${{ env.untrusted_ref }}
