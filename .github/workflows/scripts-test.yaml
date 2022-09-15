@@ -65,6 +65,11 @@ jobs:
         run: |
           echo "!contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') is ${{ !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') }}"
 
+      - name: Test
+        if: github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}')
+        run: |
+          echo "github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') is ${{ github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}') }}"
+
       - name: Check PR origin
         if: env.continue && github.event.pull_request.head.repo.fork == true && !contains(github.event.pull_request.labels.*.name, '${{ env.fork_required_label }}')
         run: |
