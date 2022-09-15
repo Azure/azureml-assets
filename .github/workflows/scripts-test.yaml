@@ -18,16 +18,6 @@ on:
       - reopened
   workflow_dispatch:
 
-permissions:
-  # Required to clone repo
-  contents: read
-  # Required for OIDC login to Azure
-  id-token: write
-  # Required for EnricoMi/publish-unit-test-result-action
-  checks: write
-  issues: read
-  pull-requests: write
-
 defaults:
   run:
     shell: bash
@@ -36,6 +26,10 @@ jobs:
   check-execution-context:
     name: Check execution context
     runs-on: ubuntu-latest
+
+    permissions:
+      # Required to clone repo
+      contents: read
 
     steps:
       - name: Check execution context
@@ -52,6 +46,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: check-execution-context
     environment: Testing
+
+    permissions:
+      # Required to clone repo
+      contents: read
+      # Required for OIDC login to Azure
+      id-token: write
+      # Required for EnricoMi/publish-unit-test-result-action
+      checks: write
+      issues: read
+      pull-requests: write
 
     env:
       scripts_dir: scripts
