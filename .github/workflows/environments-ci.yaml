@@ -87,7 +87,7 @@ jobs:
         if: env.testing_ref != null
         uses: actions/checkout@v3
         with:
-          ref: ${{ env.testing_ref }}
+          ref: refs/pull/${{ github.event.number }}/merge
           fetch-depth: 2
           path: ${{ env.testing_dir }}
       
@@ -98,8 +98,6 @@ jobs:
           path: ${{ env.testing_dir }}
           files_separator: ','
           separator: ','
-          sha: ${{ env.testing_ref || github.sha }}
-          use_fork_point: ${{ env.testing_ref != null }}
       
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
