@@ -35,6 +35,8 @@ jobs:
       checks: write
       issues: read
       pull-requests: write
+      # Required for marocchino/sticky-pull-request-comment
+      discussions: write
 
     defaults:
       run:
