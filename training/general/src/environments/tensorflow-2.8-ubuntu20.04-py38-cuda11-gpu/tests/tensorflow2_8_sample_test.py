@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the tensorflow 2.8 environment."""
+"""Tests running a sample job in the tensorflow 2.8 environment test."""
 import os
 import time
 from pathlib import Path
