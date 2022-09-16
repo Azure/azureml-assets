@@ -29,21 +29,7 @@ defaults:
 
 jobs:
   check-execution-context:
-    name: Check execution context
-    runs-on: ubuntu-latest
-
-    permissions:
-      # Required to clone repo
-      contents: read
-
-    steps:
-      - name: Check execution context
-        uses: Azure/azureml-assets/.github/actions/check-execution-context@main
-      
-    outputs:
-      continue: ${{ env.continue }}
-      trusted_ref: ${{ env.trusted_ref }}
-      testing_ref: ${{ env.testing_ref }}
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
   build-images:
     name: Build and test images
@@ -66,25 +52,13 @@ jobs:
       asset_config_filename: asset.yaml
       build_logs_artifact_name: build-logs
       built_dir: built-environments
-      testing_ref: ${{ needs.check-execution-context.outputs.testing_ref }}
 
     steps:
-      - name: Clone trusted branch
-        if: env.testing_ref == null
-        uses: actions/checkout@v3
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
           fetch-depth: 2
-      
-      - name: Clone testing branch
-        if: env.testing_ref != null
-        uses: actions/checkout@v3
-        with:
-          ref: refs/pull/${{ github.event.number }}/merge
-          fetch-depth: 2
-      
-      - name: Retrieve merge commit hash
-        if: env.testing_ref != null
-        run: echo "merge_commit_hash=$(git log -1 --format='%H')" >> $GITHUB_ENV
       
       - name: Get changed files
         id: changed-files
