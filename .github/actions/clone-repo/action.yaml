@@ -2,7 +2,7 @@ name: Close repository
 description: Clone repository
 inputs:
   forked-pr:
-    description: Operating from a forked PR
+    description: Whether the event is operating from a forked PR
     required: true
   fetch-depth:
     description: Fetch depth for actions/checkout
