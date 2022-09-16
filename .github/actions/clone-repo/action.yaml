@@ -12,19 +12,19 @@ runs:
   using: composite
   steps:
     - name: Clone branch
-      if: "!fromJSON(inputs.forked_pr)"
+      if: "!fromJSON(inputs.forked-pr)"
       uses: actions/checkout@v3
       with:
         fetch-depth: ${{ inputs.fetch-depth }}
     
     - name: Clone forked PR
-      if: fromJSON(inputs.forked_pr)
+      if: fromJSON(inputs.forked-pr)
       uses: actions/checkout@v3
       with:
         ref: refs/pull/${{ github.event.number }}/merge
         fetch-depth: ${{ inputs.fetch-depth }}
     
     - name: Retrieve merge commit hash
-      if: fromJSON(inputs.forked_pr)
+      if: fromJSON(inputs.forked-pr)
       shell: bash
       run: echo "merge_commit_hash=$(git log -1 --format='%H')" >> $GITHUB_ENV
