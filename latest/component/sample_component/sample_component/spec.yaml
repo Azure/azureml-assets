@@ -3,12 +3,11 @@ type: command
 
 name: sample_component
 display_name: Hello_Python_World
-version: 1
+version: 0.0.1
 
 code: ../src
 
-environment: 
-  image: python
+environment: azureml://registries/azureml/environments/sklearn-1.1-ubuntu20.04-py38-cpu/versions/6
 
 command: >-
-  python hello.py
+  ls
