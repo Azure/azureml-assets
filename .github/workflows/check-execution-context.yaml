@@ -3,8 +3,12 @@ name: Check execution context
 on:
   workflow_call:
     outputs:
-      continue: ${{ jobs.check-execution-context.outputs.continue }}
-      forked_pr: ${{ jobs.check-execution-context.outputs.forked_pr }}
+      continue:
+        description: Whether futher jobs should contine
+        value: ${{ jobs.check-execution-context.outputs.continue }}
+      forked_pr:
+        description: Whether the event is operating from a forked PR
+        value: ${{ jobs.check-execution-context.outputs.forked_pr }}
 
 defaults:
   run:
