@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Check code health using flake8. test"""
+"""Check code health using flake8 test."""
 
 import argparse
 import json
