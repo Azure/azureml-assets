@@ -24,21 +24,7 @@ defaults:
 
 jobs:
   check-execution-context:
-    name: Check execution context
-    runs-on: ubuntu-latest
-
-    permissions:
-      # Required to clone repo
-      contents: read
-
-    steps:
-      - name: Check execution context
-        uses: Azure/azureml-assets/.github/actions/check-execution-context@main
-      
-    outputs:
-      continue: ${{ env.continue }}
-      trusted_ref: ${{ env.trusted_ref }}
-      testing_ref: ${{ env.testing_ref }}
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
   test:
     name: Test scripts
@@ -64,18 +50,12 @@ jobs:
       test_dir: test
       resources_dir: test/resources
       pytest_reports: pytest-reports
-      testing_ref: ${{ needs.check-execution-context.outputs.testing_ref }}
 
     steps:
-      - name: Clone trusted branch
-        if: env.testing_ref == null
-        uses: actions/checkout@v3
-      
-      - name: Clone testing branch
-        if: env.testing_ref != null
-        uses: actions/checkout@v3
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
-          ref: refs/pull/${{ github.event.number }}/merge
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
 
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3

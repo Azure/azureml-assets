@@ -38,21 +38,7 @@ defaults:
 
 jobs:
   check-execution-context:
-    name: Check execution context
-    runs-on: ubuntu-latest
-
-    permissions:
-      # Required to clone repo
-      contents: read
-
-    steps:
-      - name: Check execution context
-        uses: Azure/azureml-assets/.github/actions/check-execution-context@main
-      
-    outputs:
-      continue: ${{ env.continue }}
-      trusted_ref: ${{ env.trusted_ref }}
-      testing_ref: ${{ env.testing_ref }}
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
   setup:
     name: Set up tests
@@ -69,25 +55,13 @@ jobs:
     
     env:
       default_asset_dirs: .,!test,!scripts
-      testing_ref: ${{ needs.check-execution-context.outputs.testing_ref }}
 
     steps:
-      - name: Clone trusted branch
-        if: env.testing_ref == null
-        uses: actions/checkout@v3
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
           fetch-depth: 2
-      
-      - name: Clone testing branch
-        if: env.testing_ref != null
-        uses: actions/checkout@v3
-        with:
-          ref: refs/pull/${{ github.event.number }}/merge
-          fetch-depth: 2
-      
-      - name: Retrieve merge commit hash
-        if: env.testing_ref != null
-        run: echo "merge_commit_hash=$(git log -1 --format='%H')" >> $GITHUB_ENV
       
       - name: Get changed files
         id: changed-files
@@ -126,7 +100,9 @@ jobs:
     name: Test 
     if: needs.setup.outputs.test_count > 0
     runs-on: ubuntu-latest
-    needs: setup
+    needs:
+      - setup
+      - check-execution-context
     environment: Testing
     strategy:
       matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
@@ -140,18 +116,12 @@ jobs:
     
     env:
       package_versions_file: scripts/test-requirements.txt
-      testing_ref: ${{ needs.check-execution-context.outputs.testing_ref }}
 
     steps:
-      - name: Clone trusted branch
-        if: env.testing_ref == null
-        uses: actions/checkout@v3
-      
-      - name: Clone testing branch
-        if: env.testing_ref != null
-        uses: actions/checkout@v3
+      - name: Clone branch
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
-          ref: refs/pull/${{ github.event.number }}/merge
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
       
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
