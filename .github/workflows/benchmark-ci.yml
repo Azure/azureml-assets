@@ -23,10 +23,14 @@ on:
         default: 'n'
 
 jobs:
+  check-execution-context:
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+
   test:
     name: Run all pytest unit tests
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: fromJSON(needs.check-execution-context.outputs.continue)
     runs-on: ubuntu-latest
+    needs: check-execution-context
     
     permissions:
       # Required to clone repo
@@ -44,7 +48,9 @@ jobs:
 
     steps:
     - name: Clone branch
-      uses: actions/checkout@v3
+      uses: Azure/azureml-assets/.github/actions/clone-repo@main
+      with:
+        forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
 
     - name: Set up Python 3.8
       uses: actions/setup-python@v2
@@ -86,9 +92,6 @@ jobs:
       with:
         recreate: true
         path: code-coverage-results.md
-
-  check-execution-context:
-    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
   canary:
     # Tests running a sample pipeline end-to-end and wait for completion
