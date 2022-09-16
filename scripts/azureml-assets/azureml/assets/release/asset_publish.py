@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 import azureml.assets as assets
 import azureml.assets.util as util
+from azureml.assets.util import logger
 from string import Template
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -17,7 +18,7 @@ def test_files_location(dir: Path):
     """Find test files in the directory."""
     test_jobs = []
     for test in dir.iterdir():
-        print("processing test folder: " + test.name)
+        logger.print("processing test folder: " + test.name)
         with open(test / TEST_YML) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data.values():
@@ -29,15 +30,15 @@ def test_files_location(dir: Path):
 def test_files_preprocess(test_jobs, asset_ids: dict):
     """Preprocess test files to generate asset ids."""
     for test_job in test_jobs:
-        print(f"processing test job: {test_job}")
+        logger.print(f"processing test job: {test_job}")
         with open(test_job) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for job_name, job in data["jobs"].items():
                 asset_name = job["component"]
-                print(f"processing asset {asset_name}")
+                logger.print(f"processing asset {asset_name}")
                 if asset_name in asset_ids:
                     job["component"] = asset_ids.get(asset_name)
-                    print(f"for job {job_name}, the new asset id: {job['component']}")
+                    logger.print(f"for job {job_name}, the new asset id: {job['component']}")
             with open(test_job, "w") as file:
                 yaml.dump(
                     data,
@@ -74,24 +75,29 @@ if __name__ == '__main__':
     if publish_list_dir:
         with open(publish_list_dir) as fp:
             config = yaml.load(fp, Loader=yaml.FullLoader)
-            publish_list = config['allowlist']
-            print(f"allow list: {publish_list}")
+            publish_list = config['create']
+            if publish_list is None:
+                logger.log_warning("The deletion list is empty.")
+                exit(0)
+            logger.print(f"create list: {publish_list}")
 
     assets_set = util.find_assets(
         input_dirs=component_dir,
         asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
+    
+    failure_list = []
     for asset in assets_set:
         asset_names = publish_list.get(asset.type.value, [])
         if not ('*' in asset_names or asset.name in asset_names):
-            print(
+            logger.print(
                 f"Skipping registering asset {asset.name} because it is not in the publish list")
             continue
-        print(f"Registering {asset.name}")
+        logger.print(f"Registering {asset.name}")
         final_version = asset.version
         spec_path = asset.spec_with_path
         if args.version_suffix:
             final_version = final_version + '-' + passed_version
-        print(f"final version: {final_version}")
+        logger.print(f"final version: {final_version}")
         asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registry_name=registry_name,
                                                              asset_type=f"{asset.type.value}s",
                                                              asset_name=asset.name,
@@ -107,17 +113,19 @@ if __name__ == '__main__':
             try:
                 check_call(cmd, shell=True)
             except Exception as ex:
-                print(
+                logger.log_warning(
                     f"catch error creating {asset.type.value}: {asset.name} with exception {ex}")
+                failure_list.append(asset.name)
             if debug_mode:
                 check_call("cat output.txt | sed 's/Bearer.*$//'", shell=True)
         # TO-DO: add other asset types
         else:
-            print(f"unsupported asset type: {asset.type.value}")
-    print('All assets published')
+            logger.log_warning(f"unsupported asset type: {asset.type.value}")
+    if len(failure_list) > 0:
+        logger.log_warning(f"following assets failed to publish: {failure_list}")
 
-    print('starting locating test files')
+    logger.print('starting locating test files')
     test_jobs = test_files_location(tests_dir)
-    print('starting preprocessing test files')
+    logger.print('starting preprocessing test files')
     test_files_preprocess(test_jobs, asset_ids)
-    print('finished preprocessing test files')
+    logger.print('finished preprocessing test files')
