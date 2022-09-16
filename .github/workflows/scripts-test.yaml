@@ -85,7 +85,7 @@ jobs:
         if: env.testing_ref != null
         uses: actions/checkout@v3
         with:
-          ref: ${{ env.testing_ref }}
+          ref: refs/pull/${{ github.event.number }}/merge
           fetch-depth: 0
           path: ${{ env.testing_dir }}
 
