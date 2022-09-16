@@ -69,22 +69,14 @@ jobs:
     
     env:
       default_asset_dirs: .,!test,!scripts
-      trusted_dir: trusted
-      testing_dir: testing
-      trusted_ref: ${{ needs.check-execution-context.outputs.trusted_ref }}
       testing_ref: ${{ needs.check-execution-context.outputs.testing_ref }}
 
     steps:
-      - name: Collapse branches
-        if: env.testing_ref == null
-        run: echo "testing_dir=$trusted_dir" >> $GITHUB_ENV
-
       - name: Clone trusted branch
+        if: env.testing_ref == null
         uses: actions/checkout@v3
         with:
-          ref: ${{ env.trusted_ref }}
           fetch-depth: 2
-          path: ${{ env.trusted_dir }}
       
       - name: Clone testing branch
         if: env.testing_ref != null
@@ -92,15 +84,18 @@ jobs:
         with:
           ref: refs/pull/${{ github.event.number }}/merge
           fetch-depth: 2
-          path: ${{ env.testing_dir }}
+      
+      - name: Retrieve merge commit hash
+        if: env.testing_ref != null
+        run: echo "merge_commit_hash=$(git log -1 --format='%H')" >> $GITHUB_ENV
       
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v24
         with:
-          path: ${{ env.testing_dir }}
           files_separator: ','
           separator: ','
+          sha: ${{ env.merge_commit_hash || github.sha }}
 
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -108,21 +103,20 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -e $trusted_dir/$scripts_azureml_assets_dir
+        run: pip install -e $scripts_azureml_assets_dir
 
       - name: Create test matrix for changed assets
         id: create-test-matrix
-        run: python -u $GITHUB_WORKSPACE/$trusted_dir/$scripts_assets_dir/create_asset_test_matrix.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}"
-        working-directory: ${{ env.testing_dir }}
+        run: python -u $scripts_assets_dir/create_asset_test_matrix.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}"
 
       - name: Login to Azure and create resources
         if: steps.create-test-matrix.outputs.test_count > 0
-        uses: Azure/azureml-assets/.github/actions/create-azure-resources@main
+        uses: ./.github/actions/create-azure-resources
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          scripts-setup-dir: ${{ env.trusted_dir }}/${{ env.scripts_setup_dir }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
     
     outputs:
       test_count: ${{ steps.create-test-matrix.outputs.test_count }}
@@ -146,30 +140,18 @@ jobs:
     
     env:
       package_versions_file: scripts/test-requirements.txt
-      trusted_dir: trusted
-      testing_dir: testing
-      trusted_ref: ${{ needs.check-execution-context.outputs.trusted_ref }}
       testing_ref: ${{ needs.check-execution-context.outputs.testing_ref }}
 
     steps:
-      - name: Collapse branches
-        if: env.testing_ref == null
-        run: echo "testing_dir=$trusted_dir" >> $GITHUB_ENV
-
       - name: Clone trusted branch
+        if: env.testing_ref == null
         uses: actions/checkout@v3
-        with:
-          ref: ${{ env.trusted_ref }}
-          fetch-depth: 0
-          path: ${{ env.trusted_dir }}
       
       - name: Clone testing branch
         if: env.testing_ref != null
         uses: actions/checkout@v3
         with:
-          ref: ${{ env.testing_ref }}
-          fetch-depth: 0
-          path: ${{ env.testing_dir }}
+          ref: refs/pull/${{ github.event.number }}/merge
       
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -177,19 +159,18 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -e $trusted_dir/$scripts_azureml_assets_dir
+        run: pip install -e $scripts_azureml_assets_dir
 
       - name: Log in to Azure and create resources
-        uses: Azure/azureml-assets/.github/actions/create-azure-resources@main
+        uses: ./.github/actions/create-azure-resources
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          scripts-setup-dir: ${{ env.trusted_dir }}/${{ env.scripts_setup_dir }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
       
       - name: Test asset
-        run: python -u $GITHUB_WORKSPACE/$trusted_dir/$scripts_assets_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $package_versions_file -r $GITHUB_WORKSPACE/$pytest_reports
-        working-directory: ${{ env.testing_dir }}
+        run: python -u $scripts_assets_dir/test_assets.py -i "${{ matrix.asset_config_path }}" -a $asset_config_filename -p $package_versions_file -r $pytest_reports
 
       - name: Upload test results
         uses: actions/upload-artifact@v3

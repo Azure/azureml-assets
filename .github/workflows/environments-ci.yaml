@@ -66,22 +66,14 @@ jobs:
       asset_config_filename: asset.yaml
       build_logs_artifact_name: build-logs
       built_dir: built-environments
-      trusted_dir: trusted
-      testing_dir: testing
-      trusted_ref: ${{ needs.check-execution-context.outputs.trusted_ref }}
       testing_ref: ${{ needs.check-execution-context.outputs.testing_ref }}
 
     steps:
-      - name: Collapse branches
-        if: env.testing_ref == null
-        run: echo "testing_dir=$trusted_dir" >> $GITHUB_ENV
-
       - name: Clone trusted branch
+        if: env.testing_ref == null
         uses: actions/checkout@v3
         with:
-          ref: ${{ env.trusted_ref }}
           fetch-depth: 2
-          path: ${{ env.trusted_dir }}
       
       - name: Clone testing branch
         if: env.testing_ref != null
@@ -89,15 +81,18 @@ jobs:
         with:
           ref: refs/pull/${{ github.event.number }}/merge
           fetch-depth: 2
-          path: ${{ env.testing_dir }}
+      
+      - name: Retrieve merge commit hash
+        if: env.testing_ref != null
+        run: echo "merge_commit_hash=$(git log -1 --format='%H')" >> $GITHUB_ENV
       
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v24
         with:
-          path: ${{ env.testing_dir }}
           files_separator: ','
           separator: ','
+          sha: ${{ env.merge_commit_hash || github.sha }}
       
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -105,20 +100,19 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -e $trusted_dir/$scripts_azureml_assets_dir
+        run: pip install -e $scripts_azureml_assets_dir
       
       - name: Log in to Azure and create resources
-        uses: Azure/azureml-assets/.github/actions/create-azure-resources@main
+        uses: ./.github/actions/create-azure-resources
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          scripts-setup-dir: ${{ env.trusted_dir }}/${{ env.scripts_setup_dir }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
 
       - name: Build and test changed images
         id: build-changed-images
-        run: python -u $GITHUB_WORKSPACE/$trusted_dir/$scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g $resource_group -r $container_registry -T 'python -V' -c "${{ steps.changed-files.outputs.all_modified_files }}"
-        working-directory: ${{ env.testing_dir }}
+        run: python -u $scripts_environment_dir/build.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -o '${{ runner.temp }}'/$built_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -P -g $resource_group -r $container_registry -T 'python -V' -c "${{ steps.changed-files.outputs.all_modified_files }}"
 
       - name: Upload build logs
         uses: actions/upload-artifact@v3
