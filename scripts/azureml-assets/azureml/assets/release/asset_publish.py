@@ -84,7 +84,7 @@ if __name__ == '__main__':
     assets_set = util.find_assets(
         input_dirs=component_dir,
         asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
-    
+
     failure_list = []
     for asset in assets_set:
         asset_names = publish_list.get(asset.type.value, [])
