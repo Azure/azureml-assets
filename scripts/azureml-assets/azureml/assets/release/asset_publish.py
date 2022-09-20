@@ -75,9 +75,9 @@ if __name__ == '__main__':
     if publish_list_dir:
         with open(publish_list_dir) as fp:
             config = yaml.load(fp, Loader=yaml.FullLoader)
-            publish_list = config['create']
-            if publish_list is None:
-                logger.log_warning("The deletion list is empty.")
+            publish_list = config.get('create', {})
+            if not publish_list:
+                logger.log_warning("The create list is empty.")
                 exit(0)
             logger.print(f"create list: {publish_list}")
 
