@@ -1,0 +1,29 @@
+$schema: http://azureml/sdk-2-0/CommandComponent.json
+name: microsoft_azureml_rai_tabular_score_card
+display_name: Generate rai insight score card (Private preview)
+description: Generate rai insight score card [Learn More](https://github.com/Azure/RAI-vNext-Preview)
+version: 0.0.1-preview
+type: command
+
+inputs:
+  dashboard:
+    type: path
+  pdf_generation_config:
+    type: path
+  predefined_cohorts_json:
+    type: path
+    optional: true
+outputs:
+  scorecard:
+    type: path
+
+environment: azureml://registries/azureml/environments/AzureML-responsibleai-0.20-ubuntu20.04-py38-cpu/versions/4
+
+code: ../src/
+
+command: >-
+  python create_score_card.py
+  --rai_insights_dashboard ${{inputs.dashboard}}
+  --pdf_generation_config ${{inputs.pdf_generation_config}}
+  $[[--predefined_cohorts_json ${{inputs.predefined_cohorts_json}}]]
+  --pdf_output_path ${{outputs.scorecard}}
