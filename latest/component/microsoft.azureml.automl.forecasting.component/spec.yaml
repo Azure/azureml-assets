@@ -1,7 +1,0 @@
-$schema: http://azureml/sdk-2-0/AutoMLComponent.json
-name: microsoft.azureml.automl.forecasting.component
-display_name: AutoML Forecasting (Private Preview)
-description: Component that executes an AutoML Forecasting task model training in a pipeline.
-version: 0.0.1-preview
-type: automl
-task: forecasting
