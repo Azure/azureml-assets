@@ -7,6 +7,7 @@ from pathlib import Path
 import azure.ai.ml
 from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
+from collections import defaultdict
 import yaml
 import os
 import sys
@@ -19,12 +20,14 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--subscription", required=True, type=str, help="Subscription ID")
     parser.add_argument("-r", "--resource-group", required=True, type=str, help="Resource group name")
     parser.add_argument("-w", "--workspace-name", required=True, type=str, help="Workspace name")
+    parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
     args = parser.parse_args()
     tests_dir = args.input_dir
     test_group = args.test_group
     subscription_id = args.subscription
     resource_group = args.resource_group
     workspace = args.workspace_name
+    coverage_report = args.coverage_report
     # default workspace info
     group_pre = None
     group_post = None
@@ -44,6 +47,8 @@ if __name__ == '__main__':
     submitted_job_list = []
     succeeded_jobs = []
     failed_jobs = []
+    test_coverage = defaultdict(list)
+    covered_assets = []
     if group_pre:
         check_call(f"python {group_pre}", env=my_env, shell=True)
 
@@ -58,6 +63,7 @@ if __name__ == '__main__':
             print(test_job)
             print(f'Running test job {job}')
             test_job = ml_client.jobs.create_or_update(test_job)
+            test_coverage[test_job].append(job_data["assets"])
             print(f'Submitted test job {job}')
             print(f"Job id: {test_job.id}")
             submitted_job_list.append(test_job)
@@ -70,10 +76,18 @@ if __name__ == '__main__':
             if returned_job.status == "Completed":
                 succeeded_jobs.append(returned_job.display_name)
                 submitted_job_list.remove(job)
+                covered_assets.append(test_coverage.get(job,[]))
             elif returned_job.status == "Failed" or returned_job.status == "Cancelled":
                 failed_jobs.append(returned_job.display_name)
                 submitted_job_list.remove(job)
     print(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
+
+    if coverage_report:
+        with open(coverage_report,'r') as yf:
+            cover_yaml = yaml.safe_load(yf) 
+            cover_yaml.update(covered_assets)
+        with open(coverage_report,'w') as yf:
+            yaml.safe_dump(cover_yaml, yf)
 
     if failed_jobs:
         failed_job_str = ", ".join(failed_jobs)

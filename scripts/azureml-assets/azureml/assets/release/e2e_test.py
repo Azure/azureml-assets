@@ -17,11 +17,13 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--subscription", required=True, type=str, help="Subscription ID")
     parser.add_argument("-r", "--resource-group", required=True, type=str, help="Resource group name")
     parser.add_argument("-w", "--workspace-name", required=True, type=str, help="Workspace name")
+    parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
     args = parser.parse_args()
     tests_dir = args.input_dir
     subscription_id = args.subscription
     resource_group = args.resource_group
     workspace = args.workspace_name
+    coverage_report = args.coverage_report
     final_report = {}
     ml_client = MLClient(
         DefaultAzureCredential(), subscription_id, resource_group, workspace
@@ -52,8 +54,11 @@ if __name__ == '__main__':
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data:
                 print(f"now processing test group: {test_group}")
-                p = run(f"python3 -u group_test.py -i {area} -g {test_group} -s {subscription_id} -r {resource_group} "
-                        f"-w {workspace}", shell=True)
+                cmd = f"python3 -u group_test.py -i {area} -g {test_group} -s {subscription_id} -r {resource_group} "\
+                        f"-w {workspace}"
+                if coverage_report:
+                    cmd += f" -c {coverage_report}"
+                p = run(cmd, shell=True)
                 return_code = p.returncode
                 print(return_code)
                 final_report[area.name].append(f"test group {test_group} returned {return_code}")
