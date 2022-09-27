@@ -3,15 +3,36 @@
 """Python script to run group tests."""
 import argparse
 from subprocess import check_call
+from subprocess import run
 from pathlib import Path
 import azure.ai.ml
 from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
 from collections import defaultdict
+import concurrent.futures
 import yaml
 import os
 import sys
 TEST_YML = "tests.yml"
+
+
+def run_pytest_job(job:Path, my_env:dict):
+    """Run single pytest job"""
+    p = run(f"pytest -q {job}", env=my_env, shell=True)
+    return_code = p.returncode
+    return return_code
+    
+    
+    
+def run_pytest_jobs(pytest_jobs:dict):
+    """Run multiple pytest jobs concurrently"""
+    submitted_jobs = defaultdict(list)
+    executor = concurrent.futures.ThreadPoolExecutor
+    for job in pytest_jobs.keys():
+        future = executor.submit(run_pytest_job(job))
+        submitted_jobs[future] = pytest_jobs[job]
+    return submitted_jobs
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -49,25 +70,36 @@ if __name__ == '__main__':
     failed_jobs = []
     test_coverage = defaultdict(list)
     covered_assets = []
+    
     if group_pre:
         check_call(f"python {group_pre}", env=my_env, shell=True)
-
+        
+    pytest_jobs = defaultdict(list) # pytest job path -> assets coverage dict
     with open(tests_dir / TEST_YML) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
         for job, job_data in data[test_group]['jobs'].items():
-            if 'pre' in job_data:
-                print(f"Running pre script for {job}")
-                proc = check_call(f"python3 {tests_dir / job_data['pre']}", env=my_env, shell=True)
-            print(f'Loading test job {job}')
-            test_job = azure.ai.ml.load_job(tests_dir / job_data['job'])
-            print(test_job)
-            print(f'Running test job {job}')
-            test_job = ml_client.jobs.create_or_update(test_job)
-            test_coverage[test_job].append(job_data["assets"])
-            print(f'Submitted test job {job}')
-            print(f"Job id: {test_job.id}")
-            submitted_job_list.append(test_job)
-
+            if 'pytest_job' in job_data:
+                pytest_jobs[tests_dir / job_data['pytest_job']] = job_data["assets"]
+                continue
+            else: 
+                if 'pre' in job_data:
+                    print(f"Running pre script for {job}")
+                    proc = check_call(f"python3 {tests_dir / job_data['pre']}", env=my_env, shell=True)
+                print(f'Loading test job {job}')
+                test_job = azure.ai.ml.load_job(tests_dir / job_data['job'])
+                print(test_job)
+                print(f'Running test job {job}')
+                test_job = ml_client.jobs.create_or_update(test_job)
+                test_coverage[test_job] = job_data["assets"]
+                print(f'Submitted test job {job}')
+                print(f"Job id: {test_job.id}")
+                submitted_job_list.append(test_job)
+    
+    #Run pytest jobs       
+    submitted_pytest_jobs = run_pytest_jobs(pytest_jobs)
+    
+    # TO-DO: Process pytest results
+    
     # TO-DO: job post and group post scripts will be run after all jobs are completed
 
     while submitted_job_list:
