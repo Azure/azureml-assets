@@ -26,6 +26,7 @@ def run_pytest_job(job:Path, my_env:dict):
     
 def run_pytest_jobs(pytest_jobs:dict, my_env:dict):
     """Run multiple pytest jobs concurrently"""
+    print("Start running pytest jobs")
     submitted_jobs = defaultdict(list)
     executor = concurrent.futures.ThreadPoolExecutor
     for job in pytest_jobs.keys():
@@ -85,7 +86,6 @@ if __name__ == '__main__':
         for job, job_data in data[test_group]['jobs'].items():
             if 'pytest_job' in job_data:
                 pytest_jobs[tests_dir / job_data['pytest_job']] = job_data["assets"]
-                continue
             else: 
                 if 'pre' in job_data:
                     print(f"Running pre script for {job}")
@@ -100,6 +100,7 @@ if __name__ == '__main__':
                 print(f"Job id: {test_job.id}")
                 submitted_job_list.append(test_job)
     
+    print(f"pytest_jobs {pytest_jobs}")
     # Run pytest jobs       
     submitted_pytest_jobs = run_pytest_jobs(pytest_jobs, my_env)
     
