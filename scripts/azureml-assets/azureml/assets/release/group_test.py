@@ -24,12 +24,12 @@ def run_pytest_job(job:Path, my_env:dict):
     
     
     
-def run_pytest_jobs(pytest_jobs:dict):
+def run_pytest_jobs(pytest_jobs:dict, my_env:dict):
     """Run multiple pytest jobs concurrently"""
     submitted_jobs = defaultdict(list)
     executor = concurrent.futures.ThreadPoolExecutor
     for job in pytest_jobs.keys():
-        future = executor.submit(run_pytest_job(job))
+        future = executor.submit(run_pytest_job, job, my_env)
         submitted_jobs[future] = pytest_jobs[job]
     return submitted_jobs
 
@@ -42,6 +42,8 @@ if __name__ == '__main__':
     parser.add_argument("-r", "--resource-group", required=True, type=str, help="Resource group name")
     parser.add_argument("-w", "--workspace-name", required=True, type=str, help="Workspace name")
     parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
+    parser.add_argument("-v", "--version-suffix", required=False, type=str, help="version-suffix")
+    parser.add_argument("-t", "--token", required=True, type=str, help="the Bearer token")
     args = parser.parse_args()
     tests_dir = args.input_dir
     test_group = args.test_group
@@ -64,6 +66,9 @@ if __name__ == '__main__':
     my_env['subscription_id'] = subscription_id
     my_env['resource_group'] = resource_group
     my_env['workspace'] = workspace
+    my_env['token'] = args.token
+    if args.version_suffix:
+        my_env['version_suffix'] = args.version_suffix
     ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)
     submitted_job_list = []
     succeeded_jobs = []
@@ -95,13 +100,23 @@ if __name__ == '__main__':
                 print(f"Job id: {test_job.id}")
                 submitted_job_list.append(test_job)
     
-    #Run pytest jobs       
-    submitted_pytest_jobs = run_pytest_jobs(pytest_jobs)
+    # Run pytest jobs       
+    submitted_pytest_jobs = run_pytest_jobs(pytest_jobs, my_env)
     
-    # TO-DO: Process pytest results
-    
-    # TO-DO: job post and group post scripts will be run after all jobs are completed
+    # Process pytest results
+    while submitted_pytest_jobs:
+        for job in submitted_pytest_jobs.keys():
+            if job.done():
+                if job.result() == 0:
+                    succeeded_jobs.append(job)
+                    covered_assets.extend(submitted_pytest_jobs[job])
+                else:
+                    failed_jobs.append(job)
+                del submitted_pytest_jobs[job]
 
+    # TO-DO: job post and group post scripts will be run after all jobs are completed
+    
+    # process pipeline jobs results
     while submitted_job_list:
         for job in submitted_job_list:
             returned_job = ml_client.jobs.get(job.name)
@@ -112,6 +127,7 @@ if __name__ == '__main__':
             elif returned_job.status == "Failed" or returned_job.status == "Cancelled":
                 failed_jobs.append(returned_job.display_name)
                 submitted_job_list.remove(job)
+
     print(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
 
     if coverage_report:
@@ -122,6 +138,5 @@ if __name__ == '__main__':
             yaml.safe_dump(cover_yaml, yf)
 
     if failed_jobs:
-        failed_job_str = ", ".join(failed_jobs)
-        print(f"{len(failed_jobs)} jobs failed. {failed_job_str}.")
+        print(f"{len(failed_jobs)} jobs failed. {failed_jobs}.")
         sys.exit(1)

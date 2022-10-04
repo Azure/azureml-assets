@@ -64,7 +64,7 @@ if __name__ == '__main__':
     resource_group = args.resource_group
     workspace = args.workspace
     tests_dir = args.tests_directory
-    component_dir = args.assets_directory
+    asset_dir = args.assets_directory
     passed_version = args.version_suffix
     publish_list_dir = args.publish_list
     debug_mode = args.debug
@@ -82,7 +82,7 @@ if __name__ == '__main__':
             logger.print(f"create list: {publish_list}")
 
     assets_set = util.find_assets(
-        input_dirs=component_dir,
+        input_dirs=asset_dir,
         asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
 
     failure_list = []
