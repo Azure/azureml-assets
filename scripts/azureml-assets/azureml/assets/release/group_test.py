@@ -13,6 +13,7 @@ import concurrent.futures
 import yaml
 import os
 import sys
+from azureml.assets.util import logger
 TEST_YML = "tests.yml"
 
 
@@ -91,7 +92,13 @@ if __name__ == '__main__':
                     print(f"Running pre script for {job}")
                     proc = check_call(f"python3 {tests_dir / job_data['pre']}", env=my_env, shell=True)
                 print(f'Loading test job {job}')
-                test_job = azure.ai.ml.load_job(tests_dir / job_data['job'])
+                try:
+                    test_job = azure.ai.ml.load_job(tests_dir / job_data['job'])
+                except Exception as ex:
+                    logger.log_warning(
+                        f"catch error submitting {job_data['job']} with exception {ex}")
+                    failed_jobs.append(job)
+                    continue
                 print(test_job)
                 print(f'Running test job {job}')
                 test_job = ml_client.jobs.create_or_update(test_job)
