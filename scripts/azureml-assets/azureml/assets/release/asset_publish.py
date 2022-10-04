@@ -64,7 +64,7 @@ if __name__ == '__main__':
     resource_group = args.resource_group
     workspace = args.workspace
     tests_dir = args.tests_directory
-    component_dir = args.assets_directory
+    asset_dir = args.assets_directory
     passed_version = args.version_suffix
     publish_list_dir = args.publish_list
     debug_mode = args.debug
@@ -75,16 +75,16 @@ if __name__ == '__main__':
     if publish_list_dir:
         with open(publish_list_dir) as fp:
             config = yaml.load(fp, Loader=yaml.FullLoader)
-            publish_list = config['create']
-            if publish_list is None:
-                logger.log_warning("The deletion list is empty.")
+            publish_list = config.get('create', {})
+            if not publish_list:
+                logger.log_warning("The create list is empty.")
                 exit(0)
             logger.print(f"create list: {publish_list}")
 
     assets_set = util.find_assets(
-        input_dirs=component_dir,
+        input_dirs=asset_dir,
         asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
-    
+
     failure_list = []
     for asset in assets_set:
         asset_names = publish_list.get(asset.type.value, [])
