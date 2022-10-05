@@ -20,6 +20,7 @@ TEST_YML = "tests.yml"
 def run_pytest_job(job:Path, my_env:dict):
     """Run single pytest job"""
     p = run(f"pytest -q {job}", env=my_env, shell=True)
+    print(f"return result: {p}")
     return_code = p.returncode
     return return_code
     
