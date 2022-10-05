@@ -145,8 +145,10 @@ if __name__ == '__main__':
     print(f"covered_assets {covered_assets}")
     if coverage_report:
         with open(coverage_report,'r') as yf:
-            cover_yaml = yaml.safe_load(yf) 
-            cover_yaml.update(covered_assets)
+            cover_yaml = yaml.safe_load(yf)
+            if not cover_yaml:
+                cover_yaml = [] 
+            cover_yaml.extend(covered_assets)
         with open(coverage_report,'w') as yf:
             yaml.safe_dump(cover_yaml, yf)
 
