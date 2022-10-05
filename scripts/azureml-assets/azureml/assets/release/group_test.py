@@ -34,6 +34,7 @@ def run_pytest_jobs(pytest_jobs:dict, my_env:dict):
         arr = [job, my_env]
         future = executor.submit(lambda p: run_pytest_job(*p), arr)
         submitted_jobs[future] = pytest_jobs[job]
+    print(f"submitted jobs: {submitted_jobs}")
     return submitted_jobs
 
 
@@ -111,7 +112,7 @@ if __name__ == '__main__':
     print(f"pytest_jobs {pytest_jobs}")
     # Run pytest jobs       
     submitted_pytest_jobs = run_pytest_jobs(pytest_jobs, my_env)
-    
+    print(f"submitted_pytest_jobs {submitted_pytest_jobs}")
     # Process pytest results
     while submitted_pytest_jobs:
         for job in submitted_pytest_jobs.keys():
