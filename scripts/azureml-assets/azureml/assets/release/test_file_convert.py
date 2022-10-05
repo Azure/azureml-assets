@@ -29,6 +29,8 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
         data = yaml.load(fp, Loader=yaml.FullLoader)
     for test_group in data.values():
         for test_job in test_group['jobs'].values():
+            if "pytest_job" in test_job:
+                continue
             test_job_path = src_yaml.parent / test_job['job']
             with open(test_job_path) as tj:
                 tj_yaml = yaml.load(tj, Loader=yaml.FullLoader)
