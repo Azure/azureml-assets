@@ -33,6 +33,7 @@ def run_pytest_jobs(pytest_jobs:dict, my_env:dict):
     for job in pytest_jobs.keys():
         arr = [job, my_env]
         future = executor.submit(lambda p: run_pytest_job(*p), arr)
+        print(f"submitted future: {future}")
         submitted_jobs[future] = pytest_jobs[job]
     print(f"submitted jobs: {submitted_jobs}")
     return submitted_jobs
