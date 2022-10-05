@@ -129,3 +129,4 @@ if __name__ == '__main__':
     logger.print('starting preprocessing test files')
     test_files_preprocess(test_jobs, asset_ids)
     logger.print('finished preprocessing test files')
+    

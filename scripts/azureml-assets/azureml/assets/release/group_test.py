@@ -13,6 +13,7 @@ import concurrent.futures
 import yaml
 import os
 import sys
+from azureml.assets.util import logger
 TEST_YML = "tests.yml"
 
 
@@ -23,13 +24,14 @@ def run_pytest_job(job:Path, my_env:dict):
     return return_code
     
     
-    
 def run_pytest_jobs(pytest_jobs:dict, my_env:dict):
     """Run multiple pytest jobs concurrently"""
+    print("Start running pytest jobs")
     submitted_jobs = defaultdict(list)
-    executor = concurrent.futures.ThreadPoolExecutor
+    executor = concurrent.futures.ThreadPoolExecutor()
     for job in pytest_jobs.keys():
-        future = executor.submit(run_pytest_job, job, my_env)
+        arr = [job, my_env]
+        future = executor.submit(lambda p: run_pytest_job(*p), arr)
         submitted_jobs[future] = pytest_jobs[job]
     return submitted_jobs
 
@@ -51,6 +53,7 @@ if __name__ == '__main__':
     resource_group = args.resource_group
     workspace = args.workspace_name
     coverage_report = args.coverage_report
+
     # default workspace info
     group_pre = None
     group_post = None
@@ -66,7 +69,7 @@ if __name__ == '__main__':
     my_env['subscription_id'] = subscription_id
     my_env['resource_group'] = resource_group
     my_env['workspace'] = workspace
-    my_env['token'] = args.token
+    my_env['token'] = args.token.strip('"')
     if args.version_suffix:
         my_env['version_suffix'] = args.version_suffix
     ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)
@@ -85,27 +88,31 @@ if __name__ == '__main__':
         for job, job_data in data[test_group]['jobs'].items():
             if 'pytest_job' in job_data:
                 pytest_jobs[tests_dir / job_data['pytest_job']] = job_data["assets"]
-                continue
             else: 
                 if 'pre' in job_data:
-                    print(f"Running pre script for {job}")
+                    logger.print(f"Running pre script for {job}")
                     proc = check_call(f"python3 {tests_dir / job_data['pre']}", env=my_env, shell=True)
                 print(f'Loading test job {job}')
-                test_job = azure.ai.ml.load_job(tests_dir / job_data['job'])
-                print(test_job)
-                print(f'Running test job {job}')
+                try:
+                    test_job = azure.ai.ml.load_job(tests_dir / job_data['job'])
+                except Exception as ex:
+                    logger.log_warning(
+                        f"catch error submitting {job_data['job']} with exception {ex}")
+                    failed_jobs.append(job)
+                    continue
+                logger.print(f'Running test job {job}')
                 test_job = ml_client.jobs.create_or_update(test_job)
-                test_coverage[test_job] = job_data["assets"]
-                print(f'Submitted test job {job}')
-                print(f"Job id: {test_job.id}")
+                test_coverage[test_job] = job_data.get("assets",[])
+                logger.print(f'Submitted test job {job}')
+                logger.print(f"Job id: {test_job.id}")
                 submitted_job_list.append(test_job)
     
     # Run pytest jobs       
     submitted_pytest_jobs = run_pytest_jobs(pytest_jobs, my_env)
-    
+
     # Process pytest results
     while submitted_pytest_jobs:
-        for job in submitted_pytest_jobs.keys():
+        for job in submitted_pytest_jobs.copy().keys():
             if job.done():
                 if job.result() == 0:
                     succeeded_jobs.append(job)
@@ -130,13 +137,16 @@ if __name__ == '__main__':
 
     print(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
 
+    logger.print(f"covered_assets {covered_assets}")
     if coverage_report:
         with open(coverage_report,'r') as yf:
-            cover_yaml = yaml.safe_load(yf) 
-            cover_yaml.update(covered_assets)
+            cover_yaml = yaml.safe_load(yf)
+            if not cover_yaml:
+                cover_yaml = [] 
+            cover_yaml.extend(covered_assets)
         with open(coverage_report,'w') as yf:
             yaml.safe_dump(cover_yaml, yf)
 
     if failed_jobs:
-        print(f"{len(failed_jobs)} jobs failed. {failed_jobs}.")
+        logger.log_warning(f"{len(failed_jobs)} jobs failed. {failed_jobs}.")
         sys.exit(1)
