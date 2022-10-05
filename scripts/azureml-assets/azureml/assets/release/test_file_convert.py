@@ -32,7 +32,7 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
             test_job_path = src_yaml.parent / test_job['job']
             with open(test_job_path) as tj:
                 tj_yaml = yaml.load(tj, Loader=yaml.FullLoader)
-                covered_assets=[]
+                covered_assets = []
                 for job_name, job in tj_yaml["jobs"].items():
                     if job["component"].split(":")[0] == 'file':
                         # only process the local file asset
@@ -46,7 +46,7 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
                             covered_assets.append(local_assets[0].name)
                             logger.print(f"for job {job_name}, find Asset name: {job['component']}")
             test_job["assets"] = covered_assets
-            # save test job yaml        
+            # save test job yaml
             with open(test_job_path, "w") as file:
                 yaml.dump(
                     tj_yaml,

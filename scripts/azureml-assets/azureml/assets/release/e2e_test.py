@@ -59,7 +59,7 @@ if __name__ == '__main__':
             for test_group in data:
                 print(f"now processing test group: {test_group}")
                 cmd = f"python3 -u group_test.py -i {area} -g {test_group} -s {subscription_id} -r {resource_group} "\
-                        f"-w {workspace} -t {token}"
+                    f"-w {workspace} -t {token}"
                 if coverage_report:
                     cmd += f" -c {coverage_report}"
                 if version_suffix:
