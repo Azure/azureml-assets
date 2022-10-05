@@ -102,7 +102,7 @@ if __name__ == '__main__':
                     continue
                 logger.print(f'Running test job {job}')
                 test_job = ml_client.jobs.create_or_update(test_job)
-                test_coverage[test_job] = job_data["assets"]
+                test_coverage[test_job] = job_data.get("assets",[])
                 logger.print(f'Submitted test job {job}')
                 logger.print(f"Job id: {test_job.id}")
                 submitted_job_list.append(test_job)
