@@ -8,3 +8,7 @@ general:
       pytest_job: "./general/jobs/sample_pytest.py"
       assets:
       - sample_component
+    sample_pytest2: 
+      pytest_job: "./general/jobs/sample_pytest_2.py"
+      assets:
+      - sample_component

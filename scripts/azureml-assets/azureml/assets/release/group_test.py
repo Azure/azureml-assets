@@ -117,7 +117,7 @@ if __name__ == '__main__':
     print(f"submitted_pytest_jobs {submitted_pytest_jobs}")
     # Process pytest results
     while submitted_pytest_jobs:
-        for job in submitted_pytest_jobs.keys():
+        for job in submitted_pytest_jobs.copy().keys():
             if job.done():
                 if job.result() == 0:
                     succeeded_jobs.append(job)
@@ -142,6 +142,7 @@ if __name__ == '__main__':
 
     print(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
 
+    print(f"covered_assets {covered_assets}")
     if coverage_report:
         with open(coverage_report,'r') as yf:
             cover_yaml = yaml.safe_load(yf) 
