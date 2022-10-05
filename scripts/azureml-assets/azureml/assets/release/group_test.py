@@ -29,7 +29,7 @@ def run_pytest_jobs(pytest_jobs:dict, my_env:dict):
     """Run multiple pytest jobs concurrently"""
     print("Start running pytest jobs")
     submitted_jobs = defaultdict(list)
-    executor = concurrent.futures.ThreadPoolExecutor
+    executor = concurrent.futures.ThreadPoolExecutor()
     for job in pytest_jobs.keys():
         arr = [job, my_env]
         future = executor.submit(lambda p: run_pytest_job(*p), arr)
