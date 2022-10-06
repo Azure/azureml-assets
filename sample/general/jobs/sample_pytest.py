@@ -16,7 +16,7 @@ def submit_pytest_job():
     ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)
     parent = Path(__file__).resolve().parent
     test_job = azure.ai.ml.load_job(parent / 'pipeline.yml')
-    print(f'Running test job pipeline.yml')
+    print('Running test job pipeline.yml')
     test_job = ml_client.jobs.create_or_update(test_job)
 
     submitted_job_list = [test_job]
