@@ -95,13 +95,13 @@ if __name__ == '__main__':
                 print(f'Loading test job {job}')
                 try:
                     test_job = azure.ai.ml.load_job(tests_dir / job_data['job'])
+                    logger.print(f'Running test job {job}')
+                    test_job = ml_client.jobs.create_or_update(test_job)
                 except Exception as ex:
                     logger.log_warning(
                         f"catch error submitting {job_data['job']} with exception {ex}")
                     failed_jobs.append(job)
                     continue
-                logger.print(f'Running test job {job}')
-                test_job = ml_client.jobs.create_or_update(test_job)
                 test_coverage[test_job] = job_data.get("assets", [])
                 logger.print(f'Submitted test job {job}')
                 logger.print(f"Job id: {test_job.id}")
@@ -130,7 +130,7 @@ if __name__ == '__main__':
             if returned_job.status == "Completed":
                 succeeded_jobs.append(returned_job.display_name)
                 submitted_job_list.remove(job)
-                covered_assets.append(test_coverage.get(job, []))
+                covered_assets.extend(test_coverage.get(job, []))
             elif returned_job.status == "Failed" or returned_job.status == "Cancelled":
                 failed_jobs.append(returned_job.display_name)
                 submitted_job_list.remove(job)

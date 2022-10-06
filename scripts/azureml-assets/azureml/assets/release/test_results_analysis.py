@@ -7,6 +7,7 @@ from azureml.assets.util import logger
 import argparse
 import azureml.assets as assets
 import azureml.assets.util as util
+SUPPORTED_ASSET_TYPES = [assets.AssetType.COMPONENT.value]
 
 
 def test_results_analysis(config_file: Path, results_file: Path, asset_dir: Path):
@@ -20,13 +21,16 @@ def test_results_analysis(config_file: Path, results_file: Path, asset_dir: Path
     with open(config_file) as fp:
         config = yaml.load(fp, Loader=yaml.FullLoader)
         create_list = config.get('create', {})
-        for assets_list in create_list.values():
+        for assets_type in create_list.keys():
+            if assets_type not in SUPPORTED_ASSET_TYPES:
+                continue
+            assets_list = create_list[assets_type]
             if len(assets_list) == 1 and assets_list[0] == '*':
                 assets_set = util.find_assets(
-                    input_dirs=asset_dir,
+                    input_dirs=asset_dir / assets_type,
                     asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
                 assets_list = [asset.name for asset in assets_set]
-                logger.print(f"find all assets: {assets_list}")
+                logger.print(f"find all {assets_type}s: {assets_list}")
             for asset in assets_list:
                 if asset in valid_assets:
                     covered_assets.append(asset)
