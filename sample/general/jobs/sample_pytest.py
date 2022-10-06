@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 import azure.ai.ml
 from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
@@ -26,6 +28,7 @@ def submit_pytest_job():
             elif returned_job.status == "Failed" or returned_job.status == "Cancelled":
                 submitted_job_list.remove(job)
                 return False
+
 
 def test_answer():
     assert submit_pytest_job() == True
