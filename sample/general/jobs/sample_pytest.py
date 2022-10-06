@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+"""Pytest sample for demo."""
 import azure.ai.ml
 from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
@@ -8,6 +9,7 @@ from pathlib import Path
 
 
 def submit_pytest_job():
+    """Function to submit a job."""
     subscription_id = os.environ.get('subscription_id')
     resource_group = os.environ.get('resource_group')
     workspace = os.environ.get('workspace')
@@ -31,4 +33,5 @@ def submit_pytest_job():
 
 
 def test_answer():
-    assert submit_pytest_job() == True
+    """Function to check the job result."""
+    assert submit_pytest_job()
