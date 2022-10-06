@@ -30,6 +30,7 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
     for test_group in data.values():
         for test_job in test_group['jobs'].values():
             if "pytest_job" in test_job:
+                all_covered_assets.extend(test_job['assets'])
                 continue
             test_job_path = src_yaml.parent / test_job['job']
             with open(test_job_path) as tj:
