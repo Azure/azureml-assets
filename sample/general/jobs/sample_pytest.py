@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 def submit_pytest_job():
-    """submit a job."""
+    """Submit a job."""
     subscription_id = os.environ.get('subscription_id')
     resource_group = os.environ.get('resource_group')
     workspace = os.environ.get('workspace')
