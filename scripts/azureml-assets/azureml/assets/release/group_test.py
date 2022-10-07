@@ -18,14 +18,14 @@ TEST_YML = "tests.yml"
 
 
 def run_pytest_job(job: Path, my_env: dict):
-    """Run single pytest job"""
+    """Run single pytest job."""
     p = run(f"pytest -q {job}", env=my_env, shell=True)
     return_code = p.returncode
     return return_code
 
 
 def run_pytest_jobs(pytest_jobs: dict, my_env: dict):
-    """Run multiple pytest jobs concurrently"""
+    """Run multiple pytest jobs concurrently."""
     print("Start running pytest jobs")
     submitted_jobs = defaultdict(list)
     executor = concurrent.futures.ThreadPoolExecutor()

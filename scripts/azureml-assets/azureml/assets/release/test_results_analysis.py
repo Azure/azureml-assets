@@ -11,7 +11,7 @@ SUPPORTED_ASSET_TYPES = [assets.AssetType.COMPONENT.value]
 
 
 def test_results_analysis(config_file: Path, results_file: Path, asset_dir: Path):
-    """Compare test results with create list"""
+    """Compare test results with create list."""
     valid_assets = []
     with open(results_file) as fp:
         valid_assets = yaml.load(fp, Loader=yaml.FullLoader)
