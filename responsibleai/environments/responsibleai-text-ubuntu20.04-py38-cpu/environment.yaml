@@ -1,0 +1,29 @@
+image:
+  name: azureml/curated/responsibleai-text-ubuntu20.04-py38-cpu
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda_dependencies.yaml
+  publish:
+    location: mcr
+    visibility: public
+environment:
+  metadata:
+    MachineLearningFramework:
+      name: ResponsibleAI
+      version: "0.22"
+    Mpi:
+      name: OpenMpi
+      version: "4.1.0"
+    Purpose:
+      HasTrainingSupport: true
+      HasInferencingSupport: false
+    Runtime:
+      name: Python
+      version: "3.8"
+    Os:
+      name: Ubuntu
+      version: "20.04"
