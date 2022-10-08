@@ -1,38 +1,81 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Check code health using flake8."""
 
 import argparse
 import json
 import sys
 from pathlib import Path
 from subprocess import run, PIPE, STDOUT
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 
-FLAKE_RULES_FILE = "flake_rules.json"
-DEFAULT_MAX_LINE_LENGTH = 10000
-IGNORE = "ignore"
-IGNORE_FILE = "ignore-file"
-EXCLUDE = "exclude"
-MAX_LINE_LENGTH = "max-line-length"
+RULES_FILENAME = "validation_rules.json"
 
 
-def run_flake8(testpath: Path, flake_rules: Dict[str, List[str]]) -> Tuple[int, str]:
-    ignore = flake_rules.get(IGNORE, [])
-    file_ignore = flake_rules.get(IGNORE_FILE, [])
-    exclude = flake_rules.get(EXCLUDE, [])
-    max_line_length = flake_rules.get(MAX_LINE_LENGTH, DEFAULT_MAX_LINE_LENGTH)
+class _Rules:
+    ROOT_KEY = "pep8"
+    IGNORE = "ignore"
+    IGNORE_FILE = "ignore-file"
+    EXCLUDE = "exclude"
+    MAX_LINE_LENGTH = "max-line-length"
+    DEFAULT_MAX_LINE_LENGTH = 10000
+
+    def __init__(self, file_name: Path = None):
+        if file_name is not None and file_name.exists():
+            parent_path = file_name.parent
+            # Load rules from file
+            with open(file_name) as f:
+                rules = json.load(f).get(self.ROOT_KEY, {})
+                self.ignore = set(rules.get(self.IGNORE, []))
+                self.ignore_file = self._parse_ignore_file(parent_path, rules.get(self.IGNORE_FILE, []))
+                self.exclude = {parent_path / p for p in rules.get(self.EXCLUDE, [])}
+                self.max_line_length = rules.get(self.MAX_LINE_LENGTH)
+        else:
+            # Initialize empty
+            self.ignore = set()
+            self.ignore_file = {}
+            self.exclude = set()
+            self.max_line_length = None
+
+    @staticmethod
+    def _parse_ignore_file(parent_path: Path, ignore_file: List[str]) -> Dict[str, Set[str]]:
+        results = {}
+        for pair in ignore_file:
+            file, file_rules = pair.split(":")
+            file = parent_path / file
+            file_rules = {r.strip() for r in file_rules.split(",") if not r.isspace()}
+            results[file] = file_rules
+        return results
+
+    def get_effective_max_line_length(self) -> int:
+        return self.max_line_length or self.DEFAULT_MAX_LINE_LENGTH
+
+    def __or__(self, other: "_Rules") -> "_Rules":
+        rules = _Rules()
+        rules.ignore = self.ignore | other.ignore
+        for key in self.ignore_file.keys() | other.ignore_file.keys():
+            rules.ignore_file[key] = self.ignore_file.get(key, set()) | other.ignore_file.get(key, set())
+        rules.exclude = self.exclude | other.exclude
+        rules.max_line_length = other.max_line_length or self.max_line_length
+        return rules
+
+
+def _run_flake8(testpath: Path, rules: _Rules) -> Tuple[int, str]:
     cmd = [
         "flake8",
-        f"--max-line-length={max_line_length}",
+        f"--max-line-length={rules.get_effective_max_line_length()}",
         str(testpath)
     ]
-    if exclude:
-        cmd.insert(1, "--exclude={}".format(",".join(exclude)))
-    if file_ignore:
-        cmd.insert(1, "--per-file-ignores={}".format(",".join(file_ignore)))
-    if ignore:
-        cmd.insert(1, "--ignore={}".format(",".join(ignore)))
+    if rules.exclude:
+        cmd.insert(1, "--exclude={}".format(",".join([str(e) for e in rules.exclude])))
+    if rules.ignore_file:
+        file_ignore_list = []
+        for file, ignores in rules.ignore_file.items():
+            file_ignore_list.extend([f"{file}:{i}" for i in ignores])
+        cmd.insert(1, "--per-file-ignores={}".format(",".join(file_ignore_list)))
+    if rules.ignore:
+        cmd.insert(1, "--ignore={}".format(",".join(rules.ignore)))
 
     print(f"Running {cmd}")
     p = run(cmd,
@@ -42,68 +85,35 @@ def run_flake8(testpath: Path, flake_rules: Dict[str, List[str]]) -> Tuple[int, 
     return p.stdout.decode()
 
 
-def load_rules(testpath: Path) -> Dict[str, List[str]]:
-    flake_rules_file = testpath / FLAKE_RULES_FILE
-    flake_rules = {}
-    if flake_rules_file.exists():
-        with open(flake_rules_file) as f:
-            flake_rules = json.load(f).get('pep8', {})
-
-    # Handle relative paths
-    if IGNORE_FILE in flake_rules:
-        file_ignore = []
-        for pair in flake_rules[IGNORE_FILE]:
-            file, rules = pair.split(":")
-            file_resolved = str(testpath / file)
-            file_ignore.append(f"{file_resolved}:{rules}")
-        flake_rules[IGNORE_FILE] = file_ignore
-    if EXCLUDE in flake_rules:
-        flake_rules[EXCLUDE] = [str(testpath / p) for p in flake_rules[EXCLUDE]]
-
-    return flake_rules
+def _inherit_rules(rootpath: Path, testpath: Path) -> _Rules:
+    # Process paths from rootpath to testpath, to ensure max_line_length is calculated properly
+    paths = [p for p in testpath.parents if p == rootpath or p.is_relative_to(rootpath)]
+    paths.reverse()
+    rules = _Rules()
+    for path in paths:
+        rules |= _Rules(path / RULES_FILENAME)
+    return rules
 
 
-def combine_rules(rule_a: Dict[str, List[str]], rule_b: Dict[str, List[str]]) -> Dict[str, List[str]]:
-    rule = {}
-    rule[IGNORE] = rule_a.get(IGNORE, []) + rule_b.get(IGNORE, [])
-    rule[IGNORE_FILE] = rule_a.get(IGNORE_FILE, []) + rule_b.get(IGNORE_FILE, [])
-    rule[EXCLUDE] = rule_a.get(EXCLUDE, []) + rule_b.get(EXCLUDE, [])
-    rule[MAX_LINE_LENGTH] = min(rule_a.get(MAX_LINE_LENGTH, DEFAULT_MAX_LINE_LENGTH),
-                                rule_b.get(MAX_LINE_LENGTH, DEFAULT_MAX_LINE_LENGTH))
+def _test(rootpath: Path, testpath: Path) -> bool:
+    testpath_rules = _inherit_rules(rootpath, testpath)
 
-    return rule
+    rules_files = list(testpath.rglob(RULES_FILENAME))
+    dirs = [p.parent for p in rules_files]
 
-
-def inherit_flake_rules(rootpath: Path, testpath: Path) -> Dict[str, List[str]]:
-    flake_rules = {}
-    upperpath = testpath
-    while upperpath != rootpath:
-        upperpath = upperpath.parent
-        flake_rules = combine_rules(flake_rules, load_rules(upperpath))
-    return flake_rules
-
-
-def test(rootpath: Path, testpath: Path) -> bool:
-    test_path_flake_rules = inherit_flake_rules(rootpath, testpath)
-
-    flake_rules_files = list(testpath.rglob(FLAKE_RULES_FILE))
-    dirs = [p.parent for p in flake_rules_files]
-
-    if not testpath == dirs:
+    if testpath not in dirs:
         dirs.insert(0, testpath)
 
-    output = []
+    errors = []
     for path in dirs:
-        flake_rules = {}
-        flake_rules[EXCLUDE] = [str(f.parent) for f in flake_rules_files if f.parent != path]
-        inherited_rules = inherit_flake_rules(testpath, path)
-        flake_rules = combine_rules(combine_rules(flake_rules, test_path_flake_rules),
-                                    combine_rules(inherited_rules, load_rules(path)))
-        output.extend([line for line in run_flake8(path, flake_rules).split("\n") if len(line) > 0])
+        rules = _Rules()
+        rules.exclude = {d for d in dirs if d != path and not path.is_relative_to(d)}
+        rules |= testpath_rules | _inherit_rules(testpath, path) | _Rules(path / RULES_FILENAME)
+        errors.extend([line for line in _run_flake8(path, rules).splitlines() if len(line) > 0])
 
-    if len(output) > 0:
+    if len(errors) > 0:
         print("flake8 errors:")
-        for line in output:
+        for line in errors:
             print(line)
         return False
     return True
@@ -112,8 +122,10 @@ def test(rootpath: Path, testpath: Path) -> bool:
 if __name__ == '__main__':
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory to validate")
-    parser.add_argument("-r", "--root-directory", type=Path, help="Root directory containing flake8 rules, must be a parent of --input-directory")
+    parser.add_argument("-i", "--input-directory", required=True, type=Path,
+                        help="Directory to validate")
+    parser.add_argument("-r", "--root-directory", type=Path,
+                        help="Root directory containing flake8 rules, must be a parent of --input-directory")
     args = parser.parse_args()
 
     # Handle directories
@@ -124,7 +136,7 @@ if __name__ == '__main__':
     elif not input_directory.is_relative_to(root_directory):
         parser.error(f"{root_directory} is not a parent directory of {input_directory}")
 
-    success = test(root_directory, input_directory)
+    success = _test(root_directory, input_directory)
 
     if not success:
         sys.exit(1)

@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
 import argparse
 from git import Repo
@@ -42,9 +41,12 @@ def tag_released_assets(input_directory: Path,
 if __name__ == "__main__":
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory containing released assets")
-    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME, help="Asset config file name to search for")
-    parser.add_argument("-r", "--release-directory", required=True, type=Path, help="Directory to which the release branch has been cloned")
+    parser.add_argument("-i", "--input-directory", required=True, type=Path,
+                        help="Directory containing released assets")
+    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
+                        help="Asset config file name to search for")
+    parser.add_argument("-r", "--release-directory", required=True, type=Path,
+                        help="Directory to which the release branch has been cloned")
     parser.add_argument("-u", "--username", help="Username for git push")
     parser.add_argument("-e", "--email", help="Email for git push")
     args = parser.parse_args()

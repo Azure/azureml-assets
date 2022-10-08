@@ -20,6 +20,7 @@ on:
 
 env:
   default_asset_dirs: .,!test,!scripts
+  default_test_dirs: .,!test,!scripts,!.git,!.github
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
   asset_config_filename: asset.yaml
@@ -36,8 +37,6 @@ jobs:
     steps:
       - name: Clone branch
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
       
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -49,3 +48,10 @@ jobs:
       
       - name: Validate assets
         run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename
+
+      - name: Check test coverage
+        run: |
+          mkdir -p ${{ runner.temp }}/test_coverage
+          python -u $scripts_assets_dir/release/test_file_convert.py -i "${{ env.default_test_dirs }}" -r ${{ runner.temp }}/test_coverage
+
+

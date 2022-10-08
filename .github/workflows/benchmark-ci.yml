@@ -1,32 +1,56 @@
 name: benchmark-ci
 on:
-  # can be triggered manually
+  pull_request:
+    branches:
+      - main
+    paths:
+      - benchmark/**
+  pull_request_target:
+    branches:
+      - main
+    paths:
+      - benchmark/**
+    types:
+      - opened
+      - labeled
+      - synchronize
+      - reopened
   workflow_dispatch:
     inputs:
       test_run:
         description: 'Run canary e2e (approx 10 mins) ? (y/n)'
         required: true
         default: 'n'
-  # build triggered for every PR to main
-  pull_request:
-    branches:
-      - main
-    paths:
-      - benchmark/**
-      - scripts/setup.sh
 
 jobs:
+  check-execution-context:
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
+
   test:
-    name: "Runs all pytest unit tests"
+    name: Run all pytest unit tests
+    if: fromJSON(needs.check-execution-context.outputs.continue)
     runs-on: ubuntu-latest
+    needs: check-execution-context
+    
+    permissions:
+      # Required to clone repo
+      contents: read
+      # Required for EnricoMi/publish-unit-test-result-action
+      checks: write
+      issues: read
+      pull-requests: write
+      # Required for marocchino/sticky-pull-request-comment
+      discussions: write
+
     defaults:
       run:
         working-directory: benchmark/
 
     steps:
-
-    - name: check out repo
-      uses: actions/checkout@v2
+    - name: Clone branch
+      uses: Azure/azureml-assets/.github/actions/clone-repo@main
+      with:
+        forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
 
     - name: Set up Python 3.8
       uses: actions/setup-python@v2
@@ -44,16 +68,14 @@ jobs:
 
     - name: Test with pytest
       run: >-
-
         python -m pytest tests/ -v
         --junitxml=test-build-result.xml
         --cov=src/ --cov-report xml:coverage.xml --cov-report term-missing
 
     - name: Publish test results
-      uses: EnricoMi/publish-unit-test-result-action/composite@v1
+      uses: EnricoMi/publish-unit-test-result-action@v2
       with:
-        check_name: Unit Test Results for Build
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        check_name: Test Results for ${{ github.workflow }}
         files: benchmark/test-build-result.xml
 
     - name: Code Coverage Summary Report
@@ -61,8 +83,8 @@ jobs:
       with:
         filename: benchmark/coverage.xml
         badge: true
-        format: 'markdown'
-        output: 'both'
+        format: markdown
+        output: both
 
     - name: Add Coverage PR Comment
       uses: marocchino/sticky-pull-request-comment@v2
@@ -71,36 +93,48 @@ jobs:
         recreate: true
         path: code-coverage-results.md
 
-
   canary:
-    # Tests running a sample pipeline end-to-end
-    # and wait for completion
-    name: "Run canary pipeline e2e"
+    # Tests running a sample pipeline end-to-end and wait for completion
+    name: Run canary pipeline e2e
+    if: fromJSON(needs.check-execution-context.outputs.continue) && (github.ref == 'refs/heads/main' || github.event.inputs.test_run == 'y')
     runs-on: ubuntu-latest
+    needs: check-execution-context
+    environment: Testing
+
+    permissions:
+      # Required to clone repo
+      contents: read
+      # Required for OIDC login to Azure
+      id-token: write
+      
     defaults:
       run:
         working-directory: benchmark/
 
-    environment: BuiltinRegistryDev
+    env:
+      scripts_setup_dir: scripts/setup
+
     # timeout-minutes: 30 # TBD
     steps:
-
-    - name: check out repo
-      uses: actions/checkout@v2
-
-    - name: Install AzureML cli v2
-      run: |
-        az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.59687177-py3-none-any.whl --yes
-        az configure --defaults group=${{secrets.RESOURCE_GROUP}} workspace=${{secrets.WORKSPACE_NAME}}
-
-    - name: azure login
-      uses: azure/login@v1
+    - name: Clone branch
+      uses: Azure/azureml-assets/.github/actions/clone-repo@main
       with:
-        creds: ${{secrets.AZ_CREDS_BUILTINREGISTRYDEV}}
+        forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
+    
+    - name: Log in to Azure and create resources
+      uses: ./.github/actions/create-azure-resources
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        scripts-setup-dir: ${{ env.scripts_setup_dir }}
+
+    - name: Install AzureML CLI v2
+      run: |
+        az extension remove --name ml
+        az extension add --source https://azuremlsdktestpypi.blob.core.windows.net/wheels/sdk-cli-v2/ml-0.0.59687177-py3-none-any.whl --yes
 
     - name : Run canary pipeline e2e [classification_random]
-      # runs only if (from main branch) or (triggered manually)
-      if: ${{ (github.ref == 'refs/heads/main') || (github.event.inputs.test_run == 'y') }}
-      run: >-
-        az ml environment create -f ./assets/environments/nvidia/env.yml
+      run: |
+        az ml environment create -f ./src/environments/nvidia_pytorch/env.yml
         az ml job create -f ./src/pipelines/canary/classification_random.yml --stream
