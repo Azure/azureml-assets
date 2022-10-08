@@ -1,0 +1,22 @@
+name: responsibleai
+channels:
+- anaconda
+- conda-forge
+dependencies:
+- python=3.8
+- pip=21.3.1
+- pip:
+  - responsibleai~=0.22.0
+  - raiwidgets~=0.22.0
+  - pyarrow
+  - markupsafe<=2.0.1
+  - itsdangerous==2.0.1
+  - mlflow
+  - scikit-learn<1.1
+  - pdfkit==1.0.0
+  - plotly==5.6.0
+  - kaleido==0.2.1
+  - azureml-core=={{latest-pypi-version}}
+  - azureml-dataset-runtime=={{latest-pypi-version}}
+  - azureml-mlflow=={{latest-pypi-version}}
+  - azureml-telemetry=={{latest-pypi-version}}

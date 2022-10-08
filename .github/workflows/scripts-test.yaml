@@ -5,61 +5,57 @@ on:
     branches:
       - main
     paths:
-      - "**.py"
       - scripts/**
+  pull_request_target:
+    branches:
+      - main
+    paths:
+      - scripts/**
+    types:
+      - opened
+      - labeled
+      - synchronize
+      - reopened
   workflow_dispatch:
-
-env:
-  scripts_dir: scripts
-  scripts_azureml_assets_dir: scripts/azureml-assets
-  scripts_validation_dir: scripts/validation
-  test_dir: test
-  resources_dir: test/resources
-  pytest_reports_dir: pytest
-  workspace: ${{ secrets.ASSETS_TEST_WORKSPACE_NAME }}
-  sub_id: ${{ secrets.ASSETS_TEST_WORKSPACE_SUBSCRIPTION_ID }}
-  resource_group: ${{ secrets.ASSETS_TEST_WORKSPACE_RESOURCE_GROUP }}
 
 defaults:
   run:
     shell: bash
 
 jobs:
-  check-syntax:
-    name: Check syntax
-    runs-on: ubuntu-latest 
-
-    steps:
-      - name: Clone branch
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-      
-      - name: Use Python 3.8 or newer
-        uses: actions/setup-python@v3
-        with:
-          python-version: '>=3.8'
-      
-      - name: Install dependencies
-        run: pip install -r $scripts_dir/script-check-requirements.txt
-
-      - name: Check for copyright notice
-        run: python $scripts_validation_dir/copyright_validation.py -i $scripts_dir $test_dir
-      
-      - name: Check code health
-        run: python $scripts_validation_dir/code_health.py -i .
+  check-execution-context:
+    uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
   test:
     name: Test scripts
+    if: fromJSON(needs.check-execution-context.outputs.continue)
     runs-on: ubuntu-latest
-    needs: check-syntax
-    environment: BuiltinRegistryDev
+    needs: check-execution-context
+    environment: Testing
+
+    permissions:
+      # Required to clone repo
+      contents: read
+      # Required for OIDC login to Azure
+      id-token: write
+      # Required for EnricoMi/publish-unit-test-result-action
+      checks: write
+      issues: read
+      pull-requests: write
+
+    env:
+      scripts_dir: scripts
+      scripts_azureml_assets_dir: scripts/azureml-assets
+      scripts_setup_dir: scripts/setup
+      test_dir: test
+      resources_dir: test/resources
+      pytest_reports: pytest-reports
 
     steps:
       - name: Clone branch
-        uses: actions/checkout@v3
+        uses: Azure/azureml-assets/.github/actions/clone-repo@main
         with:
-          fetch-depth: 2
+          forked-pr: ${{ needs.check-execution-context.outputs.forked_pr }}
 
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -69,17 +65,20 @@ jobs:
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
       
-      - name: Log in to Azure
-        uses: azure/login@v1
+      - name: Log in to Azure and create resources
+        uses: ./.github/actions/create-azure-resources
         with:
-          creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
-
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
+      
       - name: Test scripts
-        run: pytest --junitxml=${{ runner.temp }}/$pytest_reports_dir/test-result.xml --ignore=$resources_dir --resource-group ${{ secrets.RESOURCE_GROUP }} --registry ${{ secrets.BUILD_CONTAINER_REGISTRY }} $test_dir
+        run: pytest --junitxml=$pytest_reports/test-result.xml --ignore=$resources_dir --resource-group $resource_group --registry $container_registry $test_dir
 
       - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: ${{ runner.temp }}/${{ env.pytest_reports_dir }}/*.xml
+          check_name: Test Results for ${{ github.workflow }}
+          junit_files: ${{ env.pytest_reports }}/**/*.xml

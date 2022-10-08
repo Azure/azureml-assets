@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
 import re
 from enum import Enum
@@ -173,7 +172,7 @@ class EnvironmentConfig(Config):
     Example:
 
     image:
-      name: azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu # Can include registry hostname and template tags
+      name: azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu # Can include registry hostname & template tags
       os: linux
       context: # If not specified, image won't be built
         dir: context
@@ -414,7 +413,8 @@ class AssetConfig(Config):
         if not Config._is_set(name):
             name = self.spec_as_object().name
             if Config._contains_template(name):
-                raise ValidationException(f"Tried to read asset name from spec, but it includes a template tag: {name}")
+                raise ValidationException(f"Tried to read asset name from spec, "
+                                          f"but it includes a template tag: {name}")
         return name
 
     @property
@@ -439,7 +439,8 @@ class AssetConfig(Config):
                 if self.auto_version:
                     version = None
                 else:
-                    raise ValidationException(f"Tried to read asset version from spec, but it includes a template tag: {version}")
+                    raise ValidationException(f"Tried to read asset version from spec, "
+                                              f"but it includes a template tag: {version}")
         return str(version) if version is not None else None
 
     @property

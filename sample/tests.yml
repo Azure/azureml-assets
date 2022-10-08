@@ -1,0 +1,6 @@
+general:
+  includes: 
+  - "./general/jobs/"
+  jobs:
+    test-pipeline: 
+      job: "./general/jobs/pipeline.yml"

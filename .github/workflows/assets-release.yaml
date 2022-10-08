@@ -20,14 +20,24 @@ concurrency: ${{ github.workflow }}
 
 env:
   default_asset_dirs: .,!test,!scripts
+  default_test_dirs: .,!test,!scripts,!.git,!.github
   main_dir: main
   release_dir: release
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
   scripts_environment_dir: scripts/azureml-assets/azureml/assets/environment
+  scripts_setup_dir: scripts/setup
   changed_assets_artifact: changed-assets
   releasable_assets_artifact: releasable-assets
   asset_config_filename: asset.yaml
+
+permissions:
+  # Required to clone repo and push
+  contents: write
+  # Required for OIDC login to Azure
+  id-token: write
+  # Required to create/update pull requests
+  pull-requests: write
 
 defaults:
   run:
@@ -90,7 +100,7 @@ jobs:
     if: needs.identify-updated-assets.outputs.updated_env_count > 0
     runs-on: ubuntu-latest
     needs: identify-updated-assets
-    environment: BuiltinRegistryDev
+    environment: Testing
 
     env:
       build_logs_artifact_name: build-logs
@@ -107,7 +117,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
-          path: ${{ env.main_dir }}
       
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
@@ -115,16 +124,19 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -e $main_dir/$scripts_azureml_assets_dir
+        run: pip install -e $scripts_azureml_assets_dir
 
-      - name: Log in to Azure
-        uses: azure/login@v1
+      - name: Log in to Azure and create resources
+        uses: ./.github/actions/create-azure-resources
         with:
-          creds: ${{ secrets.AZ_CREDS_BUILTINREGISTRYDEV }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
       
       - name: Build and test images
         id: build-images
-        run: python -u $main_dir/$scripts_environment_dir/build.py -i '${{ runner.temp }}'/$changed_assets_artifact -a $asset_config_filename -o '${{ runner.temp }}'/$tested_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -g ${{ secrets.RESOURCE_GROUP }} -r ${{ secrets.BUILD_CONTAINER_REGISTRY }} -T 'python -V'
+        run: python -u $scripts_environment_dir/build.py -i '${{ runner.temp }}'/$changed_assets_artifact -a $asset_config_filename -o '${{ runner.temp }}'/$tested_dir -l '${{ runner.temp }}'/$build_logs_artifact_name -g $resource_group -r $container_registry -T 'python -V'
         continue-on-error: true
       
       - name: Upload build logs
@@ -184,7 +196,6 @@ jobs:
 
       - name: Clone release branch
         uses: actions/checkout@v3
-        if: steps.download-artifact.outputs.download-path
         with:
           ref: release
           fetch-depth: 0
@@ -199,12 +210,14 @@ jobs:
       - name: Install dependencies
         run: pip install -e $main_dir/$scripts_azureml_assets_dir
       
-      # TODO: This is overkill, just copy directories without involving this script
+      # TODO: This may be overkill, consider copying directories without involving this script
       - name: Update release branch
+        if: steps.download-artifact.outputs.download-path
         run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
   
       - name: Convert test files and scripts
-        run: python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i $main_dir/training -r $release_dir -a training
+        run: |
+          python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i "${{ env.default_test_dirs }}" -r $release_dir -w $main_dir
 
       - name: Copy e2e test scripts
         run: | 
@@ -214,16 +227,12 @@ jobs:
           mkdir -p $release_dir/scripts
           cp -r $main_dir/$scripts_azureml_assets_dir $release_dir/scripts
 
-      - name: Create commit and push
-        run: |
-          if [[ -z $(git status -s) ]]; then
-            echo "No updates to the release branch"
-            exit 0
-          fi
-          git config user.email "<>"
-          git config user.name "$GITHUB_WORKFLOW"
-          git add -A .
-          git commit -m "Release $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          git push
-        working-directory: ${{ env.release_dir }}
-
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          path: ${{ env.release_dir }}
+          commit-message: Update release branch
+          branch: release-update
+          delete-branch: true
+          title: Update release branch
+          body: Automated updates made by [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
