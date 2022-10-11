@@ -1,0 +1,112 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: AzureML_Translation_Evaluation
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Evaluation for Translation
+description: Component to inference model for translation task
+
+environment: azureml:azml-train-finetune-ptca-aifx-stable-ubuntu2004-cu113-py38-torch1110:0.0.1
+
+code: ../../scripts/inference
+
+distribution:
+  type: pytorch
+
+inputs:
+  # Translation task arguments
+  source_lang:
+    type: string
+    optional: true
+    description: key for source language text in an example
+
+  target_lang:
+    type: string
+    optional: true
+    description: key for target language text in an example
+
+  tok_prefix:
+    type: string
+    optional: true
+    description: Tokenization prefix that gets prepended to document before tokenization. Check HF documentation if the model requires this
+
+  # Tokenizer settings
+  max_seq_length:
+    type: integer
+    default: -1
+    optional: true
+    description: Max tokens of source language text, default value will be max seq length of pretrained model tokenizer
+
+  max_target_length:
+    type: integer
+    default: -1
+    optional: true
+    description: Max tokens of translated text, default value will be the same value as max_seq_length
+
+  pad_to_max_length:
+    type: string
+    default: true
+    optional: true
+    description: ( "If true, all samples get padded to `max_seq_length`. using model_max_length" "If false, will pad the samples dynamically when batching to the maximum length in the batch.")
+
+  # Inference Parameters
+  batch_size:
+    type: integer
+    default: 1
+    optional: true
+
+  precision:
+    type: string
+    enum:
+      - "32"
+      - "16"
+    default: "32"
+    optional: true
+    description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
+
+  # Deepspeed and ORT Params
+  apply_ort:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will use the ONNXRunTime training
+
+  apply_deepspeed:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will enable deepspeed for training
+
+  deepspeed_config:
+    type: uri_file
+    optional: true
+    description: If apply_deepspeed is set to True, if provided, this file will be used as deepspeed config else default deep speed config is used. Check the code section for the default config.
+
+  # Output of finetune component
+  model_path:
+    type: uri_folder
+    optional: true
+    description: folder containing model checkpointing and model related metadata
+
+  # Dataset Parameters
+  test_file_path:
+    type: uri_file
+    optional: false
+    description: Test file path
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: Output dir to save the finetune model and other metadata
+
+command: >-
+  python inference.py $[[--source_lang ${{inputs.source_lang}}]] $[[--target_lang ${{inputs.target_lang}}]] $[[--tok_prefix ${{inputs.tok_prefix}}]] $[[--max_seq_length ${{inputs.max_seq_length}}]] $[[--max_target_length ${{inputs.max_target_length}}]] $[[--pad_to_max_length ${{inputs.pad_to_max_length}}]] $[[--batch_size ${{inputs.batch_size}}]] $[[--precision ${{inputs.precision}}]] $[[--apply_ort ${{inputs.apply_ort}}]] $[[--apply_deepspeed ${{inputs.apply_deepspeed}}]] $[[--deepspeed_config ${{inputs.deepspeed_config}}]] $[[--model_path ${{inputs.model_path}}]] --test_file_path ${{inputs.test_file_path}} --output_dir ${{outputs.output_dir}}
+
