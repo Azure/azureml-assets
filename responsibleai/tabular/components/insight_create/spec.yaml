@@ -1,8 +1,8 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: microsoft_azureml_rai_tabular_insight_constructor
-display_name: RAI Insights Dashboard Constructor (Private preview)
-description: RAI Insights Dashboard Constructor [Learn More](https://github.com/Azure/RAI-vNext-Preview)
-version: 0.0.1-preview
+display_name: RAI Insights Dashboard Constructor
+description: RAI Insights Dashboard Constructor [Learn More](https://aka.ms/RAIComponents)
+version: 0.1.0
 type: command
 inputs:
   title:
@@ -38,7 +38,7 @@ outputs:
   rai_insights_dashboard:
     type: path
 code: ../src/
-environment: azureml://registries/azureml-dev/environments/AzureML-responsibleai-0.18-ubuntu20.04-py38-cpu/versions/10
+environment: azureml://registries/azureml/environments/AzureML-responsibleai-0.20-ubuntu20.04-py38-cpu/versions/4
 command: >-
   python create_rai_insights.py
   --title '${{inputs.title}}'
