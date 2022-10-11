@@ -16,7 +16,7 @@ outputs:
     type: mlflow_model
     mode: rw_mount
 
-compute: azureml:cpucluster
+compute: azureml:cpu-cluster
 
 jobs:
   train_model:
