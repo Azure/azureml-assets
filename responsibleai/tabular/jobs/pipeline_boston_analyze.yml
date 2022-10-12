@@ -6,10 +6,10 @@ inputs:
   target_column_name: 'y'
   my_training_data:
     type: mltable
-    path: ./data/boston_train
+    path: ./resources/boston_train
   my_test_data:
     type: mltable
-    path: ./data/boston_test
+    path: ./resources/boston_test
 
 outputs: 
   boston_model:
