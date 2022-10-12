@@ -10,11 +10,13 @@ import tempfile
 import uuid
 import re
 
-from typing import Any, Dict, Optional
-
 import pandas as pd
 
 import mlflow
+
+import mltable
+
+from typing import Any, Dict, Optional
 
 from azureml.core import Model, Run, Workspace
 
@@ -76,12 +78,6 @@ def load_mlflow_model(
 
 
 def load_mltable(mltable_path: str) -> pd.DataFrame:
-    import pip
-
-    pip.main(["install", "--no-deps", "mltable==0.1.0b3"])
-
-    import mltable
-
     _logger.info("Loading MLTable: {0}".format(mltable_path))
     df: pd.DataFrame = None
     try:
@@ -253,6 +249,9 @@ def add_properties_to_gather_run(
         PropertyKeyValues.RAI_INSIGHTS_TRAIN_DATASET_ID_KEY: dashboard_info[
             DashboardInfo.RAI_INSIGHTS_TRAIN_DATASET_ID_KEY
         ],
+        PropertyKeyValues.RAI_INSIGHTS_DASHBOARD_TITLE_KEY: dashboard_info[
+            DashboardInfo.RAI_INSIGHTS_DASHBOARD_TITLE_KEY
+        ],
     }
 
     _logger.info("Appending tool present information")
@@ -303,7 +302,7 @@ def get_train_dataset_id(run):
 
 
 def get_test_dataset_id(run):
-    get_dataset_name_version(run, "test_dataset")
+    return get_dataset_name_version(run, "test_dataset")
 
 
 def get_dataset_name_version(run, dataset_input_name):

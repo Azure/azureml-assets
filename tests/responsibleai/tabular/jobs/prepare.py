@@ -8,8 +8,8 @@ from sklearn.model_selection import train_test_split
 
 
 def fetch_and_write_boston_dataset():
-    train_path = "./data/boston_train/"
-    test_path = "./data/boston_test/"
+    train_path = "./resources/boston_train/"
+    test_path = "./resources/boston_test/"
 
     data = load_boston()
     target_feature = "y"
