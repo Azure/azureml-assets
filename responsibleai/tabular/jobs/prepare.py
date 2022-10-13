@@ -6,10 +6,12 @@ import pandas as pd
 from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 
+data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources')
+
 
 def fetch_and_write_boston_dataset():
-    train_path = "./resources/boston_train/"
-    test_path = "./resources/boston_test/"
+    train_path = os.path.join(data_dir, "boston_train")
+    test_path = os.path.join(data_dir, "boston_test")
 
     data = load_boston()
     target_feature = "y"
