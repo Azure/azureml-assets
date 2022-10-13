@@ -55,7 +55,7 @@ def decode_json(content):
 
 @swallow_all_exceptions(logger)
 def init():
-    """Add function is called when the container is initialized/started, typically after create/update of the deployment."""
+    """Add function when the container is initialized/started, typically after create/update of the deployment."""
     global DEPLOY_OBJ
 
     env_var = json.loads(os.environ[SaveFileConstants.DeploymentSaveKey])
