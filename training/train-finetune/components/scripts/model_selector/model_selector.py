@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-File containing function for model selector component.
-"""
+"""File containing function for model selector component."""
 
 from azureml.train.finetune.core.drivers.model_selector import model_downloader
 import argparse
@@ -16,10 +14,7 @@ logger = get_logger_app()
 
 
 def get_common_parser():
-    """
-    Adds arguments and returns the parser. Here we add all the arguments for all the tasks.
-    Those arguments that are not relevant for the input task should be ignored
-    """
+    """Add arguments and returns the parser. Here we add all the arguments for all the tasks."""
     parser = argparse.ArgumentParser(description="Model selector for hugging face models", allow_abbrev=False)
 
     parser.add_argument(

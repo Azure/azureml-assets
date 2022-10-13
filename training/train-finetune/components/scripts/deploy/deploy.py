@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-File defining function for deploy component.
-"""
+"""File defining function for deploy component."""
 
 import os
 import json
@@ -45,7 +43,6 @@ logger = get_logger_app()
 
 def get_task_parser(task_metadata):
     """Parse all arguments."""
-
     parser = argparse.ArgumentParser(task_metadata.hf_task_name, allow_abbrev=False)
     for item in task_metadata.arg_parse_data:
         arg_name = item["dest"]
@@ -62,8 +59,7 @@ def get_task_parser(task_metadata):
 
 @swallow_all_exceptions(logger)
 def get_environment_variables():
-    """Gets the environment variables."""
-
+    """Get the environment variables."""
     common_parser = argparse.ArgumentParser(description="Inference sub component", allow_abbrev=False)
     # inputs to Deployment script
     # NOTE The input arguments slightly varies compared to inference as the `test_file_name`
@@ -213,8 +209,7 @@ def get_environment_variables():
 # TODO Need to upgrade v1 to v2 when available
 @swallow_all_exceptions(logger)
 def main():
-    """Main function."""
-
+    """Add main function."""
     # parse arguments
     parser = argparse.ArgumentParser(description="Deploy component", allow_abbrev=False)
     parser.add_argument(

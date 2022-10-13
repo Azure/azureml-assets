@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-File containing function for score.
-"""
+"""File containing function for score."""
 
 import os
 import json
@@ -25,9 +23,7 @@ DEPLOY_OBJ = None
 
 
 class _JSONEncoder(json.JSONEncoder):
-    """
-    custom `JSONEncoder` to make sure float and int64 ar converted
-    """
+    """custom `JSONEncoder` to make sure float and int64 ar converted."""
 
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -41,9 +37,7 @@ class _JSONEncoder(json.JSONEncoder):
 
 
 def encode_json(content):
-    """
-    encodes json with custom `JSONEncoder`
-    """
+    """Encode json with custom `JSONEncoder`."""
     return json.dumps(
         content,
         ensure_ascii=False,
@@ -55,18 +49,13 @@ def encode_json(content):
 
 
 def decode_json(content):
-    """
-    decode the json content
-    """
+    """Decode the json content."""
     return json.loads(content)
 
 
 @swallow_all_exceptions(logger)
 def init():
-    """
-    This function is called when the container is initialized/started, typically after create/update of the deployment.
-    You can write the logic here to perform init operations like caching the model in memory
-    """
+    """Add function is called when the container is initialized/started, typically after create/update of the deployment."""
     global DEPLOY_OBJ
 
     env_var = json.loads(os.environ[SaveFileConstants.DeploymentSaveKey])

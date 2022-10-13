@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-File containing function for preprocess component.
-"""
+"""File containing function for preprocess component."""
 
 import os
 import json
@@ -47,10 +45,7 @@ def get_task_parser(task_metadata):
 
 
 def get_common_parser():
-    """
-    Adds arguments and returns the parser. Here we add all the arguments for all the tasks.
-    Those arguments that are not relevant for the input task should be ignored
-    """
+    """Add arguments and returns the parser. Here we add all the arguments for all the tasks."""
     parser = argparse.ArgumentParser(description="Preprocessing for hugging face models", allow_abbrev=False)
 
     # NOTE Only train and validation datasets are used for finetuning

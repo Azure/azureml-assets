@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-File containing function for finetune component.
-"""
+"""File containing function for finetune component."""
 
 import os
 import json
@@ -27,10 +25,7 @@ logger = get_logger_app()
 
 
 def get_parser():
-    """
-    Gets the parser object.
-    """
-
+    """Get the parser object."""
     parser = argparse.ArgumentParser(description="Sequence classification with Lora support")
 
     # Model optimization settings

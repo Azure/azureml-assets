@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-File containing function for inference component.
-"""
+"""File containing function for inference component."""
 
 import os
 import argparse
@@ -34,9 +32,7 @@ def get_task_parser(task_metadata):
 
 
 def get_common_parser():
-    """
-    Gets the common parser object.
-    """
+    """Get the common parser object."""
     parser = argparse.ArgumentParser(description="Inference component", allow_abbrev=False)
 
     # NOTE Task, Model and Lora parameters are read from finetuning args
