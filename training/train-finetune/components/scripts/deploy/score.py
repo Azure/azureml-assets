@@ -86,10 +86,7 @@ def init():
 
 @swallow_all_exceptions(logger)
 def run(raw_data):
-    """
-    This function is called for every invocation of the endpoint to perform the actual scoring/prediction.
-    `raw_data` is the raw request body data.
-    """
+    """Run function is called for every invocation of the endpoint to perform the actual scoring/prediction."""
     try:
         data = decode_json(raw_data)
         # pop inputs for pipeline
