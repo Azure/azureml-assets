@@ -349,8 +349,8 @@ if __name__ == "__main__":
     logger.info(f"Saved as mlflow model: {args.save_as_mlflow_model}")
 
     if not isinstance(args.evaluation_steps_interval, float) or \
-        args.evaluation_steps_interval < 0.0 or args.evaluation_steps_interval > 1.0:
-            args.evaluation_steps_interval = 0.0
+            args.evaluation_steps_interval < 0.0 or args.evaluation_steps_interval > 1.0:
+        args.evaluation_steps_interval = 0.0
     else:
         logger.info(f"evaluation_steps_interval: {args.evaluation_steps_interval}")
 

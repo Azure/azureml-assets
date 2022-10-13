@@ -113,4 +113,3 @@ def run(raw_data):
         predictions = {"msg": "failed", "error": str(e)}
         logger.error("Exception: \n", exc_info=True)
     return encode_json(predictions)
-    
