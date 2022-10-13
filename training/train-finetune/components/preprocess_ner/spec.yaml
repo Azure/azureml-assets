@@ -1,0 +1,73 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: azureml_tokenclassification_datapreprocessing
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: DataPreProcessing for TokenClassification
+description: Component to preprocess data for named entity recognition task
+
+environment: azureml:azml-train-finetune-curated-acpt-pytorch-111-py38-cuda113-gpu:0.0.1
+
+code: ../scripts/preprocess
+
+inputs:
+  # Token Classification task arguments
+  token_key:
+    type: string
+    optional: true
+    description: token key name
+
+  tag_key:
+    type: string
+    optional: true
+    description: tag key name
+
+  label_all_tokens:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "true"
+    optional: true
+    description: If all the tokens of an entity are labelled
+
+  # Tokenizer settings
+  max_seq_length:
+    type: integer
+    default: -1
+    optional: true
+    description: Max tokens of single example, default value will be max seq length of pretrained model tokenizer
+
+  pad_to_max_length:
+    type: string
+    default: true
+    optional: true
+    description: ( "If true, all samples get padded to `max_seq_length`. using model_max_length" "If false, will pad the samples dynamically when batching to the maximum length in the batch.")
+
+  # Inputs
+  train_file_path:
+    type: uri_file
+    optional: false
+    description: Enter the train file path
+
+  valid_file_path:
+    type: uri_file
+    optional: false
+    description: Enter the train file path
+
+  # Dataset parameters
+  model_path:
+    type: uri_folder
+    optional: false
+    description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: folder to store preprocessed outputs of input data
+
+command: >-
+  python preprocess.py --task_name NamedEntityRecognition $[[--token_key ${{inputs.token_key}}]] $[[--tag_key ${{inputs.tag_key}}]] $[[--label_all_tokens ${{inputs.label_all_tokens}}]] $[[--max_seq_length ${{inputs.max_seq_length}}]] $[[--pad_to_max_length ${{inputs.pad_to_max_length}}]]  --train_file_path ${{inputs.train_file_path}} --valid_file_path ${{inputs.valid_file_path}} --model_path ${{inputs.model_path}} --output_dir ${{outputs.output_dir}}
+

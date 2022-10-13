@@ -1,0 +1,75 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: azureml_translation_datapreprocessing
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: DataPreProcessing for Translation
+description: Component to preprocess data for translation task
+
+environment: azureml:azml-train-finetune-curated-acpt-pytorch-111-py38-cuda113-gpu:0.0.1
+
+code: ../scripts/preprocess
+
+inputs:
+  # Translation task arguments
+  source_lang:
+    type: string
+    optional: true
+    description: key for source language text in an example
+
+  target_lang:
+    type: string
+    optional: true
+    description: key for target language text in an example
+
+  tok_prefix:
+    type: string
+    optional: true
+    description: Tokenization prefix that gets prepended to document before tokenization. Check HF documentation if the model requires this
+
+  # Tokenizer settings
+  max_seq_length:
+    type: integer
+    default: -1
+    optional: true
+    description: Max tokens of source language text, default value will be max seq length of pretrained model tokenizer
+
+  max_target_length:
+    type: integer
+    default: -1
+    optional: true
+    description: Max tokens of translated text, default value will be the same value as max_seq_length
+
+  pad_to_max_length:
+    type: string
+    default: true
+    optional: true
+    description: ( "If true, all samples get padded to `max_seq_length`. using model_max_length" "If false, will pad the samples dynamically when batching to the maximum length in the batch.")
+
+  # Inputs
+  train_file_path:
+    type: uri_file
+    optional: false
+    description: Enter the train file path
+
+  valid_file_path:
+    type: uri_file
+    optional: false
+    description: Enter the train file path
+
+  # Dataset parameters
+  model_path:
+    type: uri_folder
+    optional: false
+    description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: folder to store preprocessed outputs of input data
+
+command: >-
+  python preprocess.py --task_name Translation $[[--source_lang ${{inputs.source_lang}}]] $[[--target_lang ${{inputs.target_lang}}]] $[[--tok_prefix ${{inputs.tok_prefix}}]] $[[--max_seq_length ${{inputs.max_seq_length}}]] $[[--max_target_length ${{inputs.max_target_length}}]] $[[--pad_to_max_length ${{inputs.pad_to_max_length}}]] --train_file_path ${{inputs.train_file_path}} --valid_file_path ${{inputs.valid_file_path}} --model_path ${{inputs.model_path}} --output_dir ${{outputs.output_dir}}
+

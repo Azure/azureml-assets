@@ -1,0 +1,94 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: azureml_textclassificationsinglelabel_evaluation
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Evaluation for TextClassificationSingleLabel
+description: Component to inference model for single label classification task
+
+environment: azureml:azml-train-finetune-curated-acpt-pytorch-111-py38-cuda113-gpu:0.0.1
+
+code: ../scripts/inference
+
+distribution:
+  type: pytorch
+
+inputs:
+  # Sequence Classification task Parameters
+  sentence1_key:
+    type: string
+    optional: true
+    description: sentence1 key name
+
+  sentence2_key:
+    type: string
+    optional: true
+    description: sentence2 key name
+
+  label_key:
+    type: string
+    optional: true
+    description: label key name
+
+  # Inference Parameters
+  batch_size:
+    type: integer
+    default: 1
+    optional: true
+    description: batch size for pre-process
+
+  precision:
+    type: string
+    enum:
+      - "32"
+      - "16"
+    default: "32"
+    optional: true
+    description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
+
+  # Deepspeed and ORT Params
+  apply_ort:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will use the ONNXRunTime training
+
+  apply_deepspeed:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will enable deepspeed for training
+
+  deepspeed_config:
+    type: uri_file
+    optional: true
+    description: If apply_deepspeed is set to True, this file will be used as deepspeed config
+
+  # Output of finetune component
+  model_path:
+    type: uri_folder
+    optional: true
+    description: folder containing model checkpointing and model related metadata
+
+  # Dataset Parameters
+  test_file_path:
+    type: uri_file
+    optional: false
+    description: Test file path
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: Output dir to save the finetune model and other metadata
+
+command: >-
+  python inference.py $[[--sentence1_key ${{inputs.sentence1_key}}]] $[[--sentence2_key ${{inputs.sentence2_key}}]] $[[--label_key ${{inputs.label_key}}]] $[[--batch_size ${{inputs.batch_size}}]] $[[--precision ${{inputs.precision}}]] $[[--apply_ort ${{inputs.apply_ort}}]] $[[--apply_deepspeed ${{inputs.apply_deepspeed}}]] $[[--deepspeed_config ${{inputs.deepspeed_config}}]] $[[--model_path ${{inputs.model_path}}]] --test_file_path ${{inputs.test_file_path}} --output_dir ${{outputs.output_dir}}
+

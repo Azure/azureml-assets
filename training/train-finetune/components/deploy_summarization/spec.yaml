@@ -1,0 +1,114 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: azureml_summarization_deploy
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Deploy for Summarization
+description: Component to deploy finetuned model for summarization task
+
+environment: azureml:azml-train-finetune-deploy-curated-acpt-pytorch-111-py38-cuda113-gpu:0.0.1
+
+code: ../scripts/deploy
+
+inputs:
+  # Output of finetuning component
+  model_checkpoint_dir:
+    type: uri_folder
+    optional: false
+
+  name_for_registered_model:
+    type: string
+    default: inferencemodel
+
+  endpoint_name:
+    type: string
+    default: inference-end-point
+
+  # TODO Add list of computes in enum
+  instance_type:
+    type: string
+    default: Standard_F4s_v2
+
+  instance_count:
+    type: integer
+    default: 1
+
+  # Summarization task arguments
+  document_key:
+    type: string
+    optional: true
+    description: Key for document in an example
+
+  summary_key:
+    type: string
+    optional: true
+    description: Key for document summary in an example
+
+  tok_prefix:
+    type: string
+    optional: true
+    description: Tokenization prefix that gets prepended to document before tokenization. Check HF documentation if the model requires this
+
+  # Tokenizer settings
+  max_seq_length:
+    type: integer
+    default: -1
+    optional: true
+    description: Max tokens of document, default value will be max seq length of pretrained model tokenizer
+
+  max_target_length:
+    type: integer
+    default: -1
+    optional: true
+    description: Max tokens of summary, default value will be the same value as max_seq_length
+
+  pad_to_max_length:
+    type: string
+    default: true
+    optional: true
+    description: ( "If true, all samples get padded to `max_seq_length`. using model_max_length" "If false, will pad the samples dynamically when batching to the maximum length in the batch.")
+
+  # Inference Parameters
+  batch_size:
+    type: integer
+    default: 1
+    optional: true
+
+  precision:
+    type: string
+    enum:
+      - "32"
+      - "16"
+    default: "32"
+    optional: true
+    description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
+
+  # Lora, Deepspeed and ORT Params
+  apply_ort:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will use the ONNXRunTime training
+
+  apply_deepspeed:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will enable deepspeed for training
+
+  deepspeed_config:
+    type: uri_file
+    optional: true
+    description: If apply_deepspeed is set to True, if provided, this file will be used as deepspeed config else default deep speed config is used. Check the code section for the default config.
+
+command: >-
+  python deploy.py --model_checkpoint_dir ${{inputs.model_checkpoint_dir}} --endpoint_name ${{inputs.endpoint_name}} --name_for_registered_model ${{inputs.name_for_registered_model}}  --instance_type ${{inputs.instance_type}} --instance_count ${{inputs.instance_count}} $[[--document_key ${{inputs.document_key}}]] $[[--summary_key ${{inputs.summary_key}}]] $[[--tok_prefix ${{inputs.tok_prefix}}]] $[[--max_seq_length ${{inputs.max_seq_length}}]] $[[--max_target_length ${{inputs.max_target_length}}]] $[[--pad_to_max_length ${{inputs.pad_to_max_length}}]] $[[--batch_size ${{inputs.batch_size}}]] $[[--precision ${{inputs.precision}}]] $[[--apply_ort ${{inputs.apply_ort}}]] $[[--apply_deepspeed ${{inputs.apply_deepspeed}}]] $[[--deepspeed_config ${{inputs.deepspeed_config}}]]
+
