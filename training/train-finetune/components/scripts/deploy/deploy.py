@@ -11,7 +11,7 @@ import argparse
 import datetime
 from azure.ai.ml import MLClient
 from azure.core.exceptions import HttpResponseError
-from azureml.core import Workspace, Run, Environment
+from azureml.core import Workspace, Run
 from azureml.core.model import Model as Model_v1
 from azure.ai.ml.entities import (
     Model as Model_v2,
@@ -376,14 +376,11 @@ def main():
         models_list = ml_client.models.list(name=args.name_for_registered_model)
         try:
             models_list = [m for m in models_list]
-        except:
+        except Exception:
             models_list = []
         model_versions_list = [0]
         for model in models_list:
-            try:
-                model_versions_list.append(int(model.version))
-            except:
-                pass
+            model_versions_list.append(int(model.version))
         model_version = str(max(model_versions_list) + 1)
         model = Model_v2(
             name=args.name_for_registered_model,

@@ -9,24 +9,22 @@ import os
 import json
 import argparse
 
-from azureml.core import Run
-
 # from azureml.gllm.utils.metrics import get_metric
 from azureml.train.finetune.core.constants import task_definitions
 from azureml.train.finetune.core.drivers.finetune import run_finetune
 
 from azureml.train.finetune.core.utils.logging_utils import get_logger_app
 from azureml.train.finetune.core.constants.constants import SaveFileConstants
-from azureml.train.finetune.core.utils.error_handling.exceptions import ValidationException, ArgumentException
+from azureml.train.finetune.core.utils.error_handling.exceptions import ValidationException
 from azureml.train.finetune.core.utils.error_handling.error_definitions import PathNotFound
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
-import json
 # from utils.decorators import swallow_all_exceptions
 
 # Refer this logging issue
 # https://github.com/Azure/azure-sdk-for-python/issues/23563
 
 logger = get_logger_app()
+
 
 def get_parser():
     """
@@ -65,7 +63,8 @@ def get_parser():
     parser.add_argument("--lora_alpha", type=int, default=128, help="lora attn alpha")
     parser.add_argument("--lora_dropout", type=float, default=0.0, help="lora dropout value")
     parser.add_argument("--lora_r", default=8, type=int, help="lora dimension")
-    parser.add_argument("--merge_lora_weights", type=str, default="false", help="if set to true, the lora trained weights will be merged to base model before saving")
+    parser.add_argument("--merge_lora_weights", type=str, default="false", help="if set to true, \
+                        the lora trained weights will be merged to base model before saving")
 
     # Training settings
     parser.add_argument("--epochs", default=5, type=int, help="training epochs")
@@ -264,6 +263,7 @@ def get_parser():
 
     return parser
 
+
 if __name__ == "__main__":
     parser = get_parser()
     args, unknown_args_ = parser.parse_known_args()
@@ -312,9 +312,9 @@ if __name__ == "__main__":
     if isinstance(args.auto_find_batch_size, str):
         args.auto_find_batch_size = args.auto_find_batch_size.lower() == "true"
     if isinstance(args.save_as_mlflow_model, str):
-        args.save_as_mlflow_model =  args.save_as_mlflow_model.lower() == "true"
+        args.save_as_mlflow_model = args.save_as_mlflow_model.lower() == "true"
     if isinstance(args.merge_lora_weights, str):
-        args.merge_lora_weights =  args.merge_lora_weights.lower() == "true"
+        args.merge_lora_weights = args.merge_lora_weights.lower() == "true"
 
     # convert str to bool
     if isinstance(args.apply_deepspeed, str):
@@ -322,7 +322,7 @@ if __name__ == "__main__":
 
     if args.apply_deepspeed and args.deepspeed_config is None:
         args.deepspeed_config = "./zero1.json"
-    
+
     if args.save_as_mlflow_model:
         args.sentence1_key = preprocess_args.get("sentence1_key", None)
         args.sentence2_key = preprocess_args.get("sentence2_key", None)
@@ -350,7 +350,7 @@ if __name__ == "__main__":
 
     if not isinstance(args.evaluation_steps_interval, float) or \
         args.evaluation_steps_interval < 0.0 or args.evaluation_steps_interval > 1.0:
-        args.evaluation_steps_interval = 0.0
+            args.evaluation_steps_interval = 0.0
     else:
         logger.info(f"evaluation_steps_interval: {args.evaluation_steps_interval}")
 

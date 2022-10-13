@@ -8,7 +8,6 @@ File containing function for score.
 import os
 import json
 import argparse
-import traceback
 
 import numpy as np
 
@@ -16,8 +15,8 @@ from azureml.train.finetune.core.constants.constants import SaveFileConstants
 from azureml.train.finetune.core.drivers.deployment import Deployment
 from azureml.train.finetune.core.utils.logging_utils import get_logger_app
 from azureml.train.finetune.core.utils.decorators import swallow_all_exceptions
-from azureml.train.finetune.core.utils.error_handling.exceptions import ServiceException, ResourceException
-from azureml.train.finetune.core.utils.error_handling.error_definitions import DeploymentFailed, PredictionFailed
+from azureml.train.finetune.core.utils.error_handling.exceptions import ResourceException
+from azureml.train.finetune.core.utils.error_handling.error_definitions import DeploymentFailed
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 logger = get_logger_app()
@@ -112,5 +111,6 @@ def run(raw_data):
         # as it need to continously serve online requests
         # traceback.print_exc()
         predictions = {"msg": "failed", "error": str(e)}
-        logger.error(f"Exception: \n", exc_info=True)
+        logger.error("Exception: \n", exc_info=True)
     return encode_json(predictions)
+    

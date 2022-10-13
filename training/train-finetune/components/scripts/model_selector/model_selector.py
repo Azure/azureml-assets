@@ -5,7 +5,6 @@
 File containing function for model selector component.
 """
 
-from importlib import import_module
 from azureml.train.finetune.core.drivers.model_selector import model_downloader
 import argparse
 from azureml.train.finetune.core.utils.logging_utils import get_logger_app
