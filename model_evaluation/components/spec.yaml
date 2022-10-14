@@ -1,6 +1,38 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: model_evaluation
 display_name: AzureML Model Evaluation
+description: "
+  AzureML Component for Model Evaluation. See Full docs here: <placeholder for doc link>\
+  inputs:  \
+  mode:  \
+    type: string  \  
+    values: [predict, compute_metrics, score]  \
+    default: score  \
+    description: predict - Inference Only  \  
+                  compute_metrics - Score predictions (predictions already provided)  
+                  score - Inference + computing metrics  
+  task:  
+    type: string  
+    enum: [classification, regression, forecasting, ner]  
+    description: Task Type  
+  test_data:   
+    type: mltable  
+    description: Test Data (should contain label_column_name and prediction_column_name depending on mode)  
+  evaluation_config:  
+    type: mltable  
+    optional: true  
+    description: Additional parameters required for evaluation. See How to create a config here : <placeholder for doc link>
+  mlflow_model:  
+    type: mlflow_model   
+    optional: true  
+    description: Mlflow Model (could be a registered model or part of another pipeline  
+  model_uri:  
+    type: string  
+    optional: true  
+    description: The location, in URI format, of the MLflow model, for example:  
+                      - ``runs:/<mlflow_run_id>/run-relative/path/to/model``  
+                      - ``models:/<model_name>/<model_version>``  
+                      - ``models:/<model_name>/<stage>``"  
 version: 0.0.1-preview
 type: command
 
@@ -9,37 +41,49 @@ inputs:
     type: string
     default: score
     enum: [score, predict, compute_metrics]
+    description: "predict - Inference Only
+                  compute_metrics - Score predictions (predictions already provided)
+                  score - Inference + computing metrics"
   task:
     type: string
     default: classification
-    enum: [classification, regression, forecasting, token_classification]
+    enum: [classification, regression, token_classification]
+    description: "Task type"
   test_data: 
     type: mltable
     mode: eval_mount
+    description: "Test Data (should contain label_column_name and prediction_column_name depending on mode)"
   evaluation_config:
     type: mltable
     mode: eval_mount
     optional: true
+    description: "Additional parameters required for evaluation. See How to create a config here : <placeholder for doc link>"
   mlflow_model:
     type: mlflow_model 
     optional: true
+    description: "Mlflow Model (could be a registered model or part of another pipeline"
   #ADDED TO ACCOMMODATE CURRENT DESIGNER
   model_uri:
     type: string
     optional: true
+    description: "The location, in URI format, of the MLflow model, for example:
+                      - ``runs:/<mlflow_run_id>/run-relative/path/to/model``
+                      - ``models:/<model_name>/<model_version>``
+                      - ``models:/<model_name>/<stage>``"
 
 outputs:
   evaluation_result:
     type: uri_folder
 
-code: ./code
-environment: azureml:AML_Model_Evaluation_Env@latest
+code: ../src
+environment: azureml:AzureML_Model_Evaluation_Env@latest
 command: >-
   python model_test.py
   --data ${{inputs.test_data}}
   --task ${{inputs.task}}
   --mode ${{inputs.mode}}
   --output ${{outputs.evaluation_result}}
-  [[--model-uri ${{inputs.model_uri}}]]
-  [[--config-file-name ${{inputs.evaluation_config}}]]
-  [[--mlflow-model ${{inputs.mlflow_model}}]]
+  $[[--config-file-name ${{inputs.evaluation_config}}]]
+  $[[--mlflow-model ${{inputs.mlflow_model}}]]
+  $[[--model-uri ${{inputs.model_uri}}]]
+  
