@@ -46,7 +46,9 @@ class PropertyKeyValues:
     # Dashboard id
     RAI_INSIGHTS_DASHBOARD_ID_KEY = "_azureml.responsibleai.rai_insights.dashboard_id"
     # Dashboard title
-    RAI_INSIGHTS_DASHBOARD_TITLE_KEY = "_azureml.responsibleai.rai_insights.dashboard_title"
+    RAI_INSIGHTS_DASHBOARD_TITLE_KEY = (
+        "_azureml.responsibleai.rai_insights.dashboard_title"
+    )
 
     # RAI insight score card key
     RAI_INSIGHTS_SCORE_CARD_TITLE_KEY = (
