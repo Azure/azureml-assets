@@ -24,15 +24,25 @@ def run_pytest_job(job: Path, my_env: dict):
     return return_code
 
 
-def run_pytest_jobs(pytest_jobs: dict, my_env: dict):
+def run_pytest_jobs_old(pytest_jobs: dict, my_env: dict):
     """Run multiple pytest jobs concurrently."""
-    print("Start running pytest jobs")
+    logger.print("Start running pytest jobs")
     submitted_jobs = defaultdict(list)
     executor = concurrent.futures.ThreadPoolExecutor()
     for job in pytest_jobs.keys():
         arr = [job, my_env]
         future = executor.submit(lambda p: run_pytest_job(*p), arr)
         submitted_jobs[future] = pytest_jobs[job]
+    return submitted_jobs
+
+def run_pytest_jobs(pytest_jobs: dict, my_env: dict):
+    """Run multiple pytest jobs concurrently."""
+    logger.print("Start running pytest jobs")
+    submitted_jobs = defaultdict(list)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [executor.submit(run_pytest_job, job, my_env) for job in pytest_jobs.keys()]
+        for future in concurrent.futures.as_completed(futures):
+            submitted_jobs[future] = pytest_jobs[job]
     return submitted_jobs
 
 
@@ -111,16 +121,23 @@ if __name__ == '__main__':
     submitted_pytest_jobs = run_pytest_jobs(pytest_jobs, my_env)
 
     # Process pytest results
-    while submitted_pytest_jobs:
-        for job in submitted_pytest_jobs.copy().keys():
-            if job.done():
-                if job.result() == 0:
-                    succeeded_jobs.append(job)
-                    covered_assets.extend(submitted_pytest_jobs[job])
-                else:
-                    failed_jobs.append(job)
-                del submitted_pytest_jobs[job]
+    # while submitted_pytest_jobs:
+    #    for job in submitted_pytest_jobs.copy().keys():
+    #        if job.done():
+    #            if job.result() == 0:
+    #                succeeded_jobs.append(job)
+    #                covered_assets.extend(submitted_pytest_jobs[job])
+    #            else:
+    #                failed_jobs.append(job)
+    #            del submitted_pytest_jobs[job]
 
+    for job in submitted_pytest_jobs.keys():
+        if job.result() == 0:
+            succeeded_jobs.append(job)
+            covered_assets.extend(submitted_pytest_jobs[job])
+        else:
+            failed_jobs.append(job)
+            
     # TO-DO: job post and group post scripts will be run after all jobs are completed
 
     # process pipeline jobs results

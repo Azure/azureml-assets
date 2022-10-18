@@ -38,7 +38,6 @@ def test_results_analysis(config_file: Path, results_file: Path, asset_dir: Path
                     uncovered_assets.append(asset)
 
     logger.print(f"covered assets: {covered_assets}")
-    logger.print(f"uncovered assets: {uncovered_assets}")
     if len(uncovered_assets) > 0:
         logger.log_warning(
             "Not all assets in next stage create list are covered by completed test jobs."

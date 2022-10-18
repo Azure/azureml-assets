@@ -6,6 +6,7 @@ from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
 import os
 from pathlib import Path
+import time
 
 
 def submit_pytest_job():
@@ -22,12 +23,13 @@ def submit_pytest_job():
     submitted_job_list = [test_job]
 
     while submitted_job_list:
+        time.sleep(10)
         for job in submitted_job_list:
             returned_job = ml_client.jobs.get(job.name)
             if returned_job.status == "Completed":
                 submitted_job_list.remove(job)
                 return True
-            elif returned_job.status == "Failed" or returned_job.status == "Cancelled":
+            elif returned_job.status in ["Failed", "Cancelled"]:
                 submitted_job_list.remove(job)
                 return False
 
