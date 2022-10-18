@@ -20,18 +20,13 @@ def submit_pytest_job():
     print('Running test job pipeline.yml')
     test_job = ml_client.jobs.create_or_update(test_job)
 
-    submitted_job_list = [test_job]
-
-    while submitted_job_list:
+    while True:
         time.sleep(10)
-        for job in submitted_job_list:
-            returned_job = ml_client.jobs.get(job.name)
-            if returned_job.status == "Completed":
-                submitted_job_list.remove(job)
-                return True
-            elif returned_job.status in ["Failed", "Cancelled"]:
-                submitted_job_list.remove(job)
-                return False
+        returned_job = ml_client.jobs.get(test_job.name)
+        if returned_job.status == "Completed":
+            return True
+        elif returned_job.status in ["Failed", "Cancelled"]:
+            return False
 
 
 def test_answer():
