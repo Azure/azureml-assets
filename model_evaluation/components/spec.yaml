@@ -47,7 +47,7 @@ inputs:
   task:
     type: string
     default: classification
-    enum: [classification, regression, token_classification]
+    enum: [classification, regression, text-ner]
     description: "Task type"
   test_data: 
     type: mltable

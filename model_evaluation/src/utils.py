@@ -1,4 +1,5 @@
 import os
+from re import L
 import traceback
 import numpy as np
 import pandas as pd
@@ -15,15 +16,15 @@ from run_utils import TestRun
 from logging_utilities import get_logger, log_traceback
 from azureml.metrics.azureml_classification_metrics import AzureMLClassificationMetrics
 from azureml.metrics.azureml_regression_metrics import AzureMLRegressionMetrics
+from azureml.metrics.azureml_text_ner_metrics import AzureMLTextNERMetrics
 from azureml.metrics import _scoring_utilities, constants as metrics_constants
 from azureml.telemetry.activity import log_activity
 from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 from mltable import load
 #FUTURE IMPORTS
-#NER Metrics
 #Forecasting Metrics
 
-from exceptions import DataValidationException, ModelEvaluationException
+from exceptions import DataValidationException, ModelEvaluationException, DataLoaderException
 
 logger = get_logger(name=__name__)
 
@@ -52,6 +53,8 @@ class Evaluator:
             self.evaluator = AzureMLClassificationMetrics(**metrics_config)
         if task_type == TASK.REGRESSION:
             self.evaluator = AzureMLRegressionMetrics(**metrics_config)
+        if task_type == TASK.NER:
+            self.evaluator = AzureMLTextNERMetrics(**metrics_config)
         
     def evaluate(self, y_test, y_pred):
         return self.evaluator.compute(y_test=y_test, y_pred=y_pred)
@@ -115,7 +118,7 @@ def evaluate_predictions(y_test, y_pred, task_type, metrics_config):
     keys = artifacts.keys()
     for k in keys:
         json_content = artifacts[k]
-        json_artifact = JsonEvaluationArtifact(uri=mlflow.get_artifact_uri(k), content=json_content)
+        json_artifact = JsonEvaluationArtifact(uri=aml_mlflow.get_artifact_uri(k), content=json_content)
         artifacts[k] = json_artifact
     result = EvaluationResult(metrics=metrics, artifacts=artifacts)
     
@@ -124,10 +127,12 @@ def evaluate_predictions(y_test, y_pred, task_type, metrics_config):
 
 class ArgumentsSet:
     def __init__(self, task_type) -> None:
-        if task_type == "classification":
+        if task_type == TASK.CLASSIFICATION:
             self.args_set = self.classification
-        if task_type == "regression":
+        if task_type == TASK.REGRESSION:
             self.args_set = self.regression
+        if task_type == TASK.NER:
+            self.args_set = self.text_ner
         
     @property
     def classification(self):
@@ -156,6 +161,14 @@ class ArgumentsSet:
             "sample_weight": "np.asarray(val)",
             "enable_metric_confidence": "bool(val)",
             "confidence_metrics": "list(val)"
+        }
+        return args_map
+    
+    @property
+    def text_ner(self):
+        args_map = {
+            "metrics": "list(val)",
+            "train_label_list": "list(val)"
         }
         return args_map
 
@@ -259,9 +272,17 @@ def _validate_ner_line(line):
             message="Invalid Label format"
         )
 
-def read_conll(filepath, labels=None):
-    with open(filepath) as f:
-        data = f.read()
+def read_conll(stream_info, labels=None):
+    logger.info(type(stream_info))
+    if isinstance(stream_info, str):
+        with open(stream_info, "r") as f:
+            data = f.read()
+    elif hasattr(stream_info, "open"):
+        f = stream_info.open()
+        data = str(f.read())
+        f.close()
+    else:
+        raise DataLoaderException("Invalid MLTABLE File for ConLL formatted data. See Sample Here : https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-text-ner-conll/validation-mltable-folder/MLTable")
     data = data.replace("-DOCSTART- O\n\n", "")
     data = data.split("\n\n")
     
@@ -273,7 +294,7 @@ def read_conll(filepath, labels=None):
         toks = sentence.split("\n")
         cur_sentence, cur_target = [], []
         for splits in toks:
-            _validate_ner_line(sentence)
+            #_validate_ner_line(sentence)
             item = splits.split(" ")
             cur_sentence.append(item[0])
             lab = item[-1].strip()

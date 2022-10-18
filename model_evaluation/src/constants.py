@@ -1,6 +1,7 @@
 MLFLOW_MODEL_TYPE_MAP = {
     "classification":"classifier",
-    "regression": "regressor"
+    "regression": "regressor", 
+    "text-ner": "text-ner"
 }
 
 PREDICTIONS_COLUMN_NAME = "predictions"
@@ -12,8 +13,10 @@ MLTABLE_FILE_NAME = "MLTable"
 class TASK:
     CLASSIFICATION = "classification"
     REGRESSION = "regression"
-    NER = "token_classification"
+    NER = "text-ner"
     FORECASTING = "forecasting"
+
+ALL_TASKS = [TASK.CLASSIFICATION, TASK.REGRESSION, TASK.NER, TASK.FORECASTING]
 
 class TelemetryConstants:
     COMPONENT_NAME = "model_evaluation"

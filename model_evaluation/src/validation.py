@@ -2,7 +2,7 @@ from distutils.log import error
 import os
 from unittest.mock import NonCallableMagicMock
 from exceptions import ModelEvaluationException, ModelValidationException, DataValidationException, ArgumentValidationException
-from constants import TRANSFORMER_KEY, MLTABLE_FILE_NAME
+from constants import TRANSFORMER_KEY, MLTABLE_FILE_NAME, ALL_TASKS, TASK
 from logging_utilities import get_logger, log_traceback
 from utils import read_config, assert_and_raise
 
@@ -61,7 +61,7 @@ def _validate_data(args):
         )
         filepath = args.config_file_name
         label_column_name, prediction_column_name, metrics_config = read_config(filepath, args.task)
-        if args.mode != "predict":
+        if args.mode != "predict" and args.task != TASK.NER:
             assert_and_raise(
                 condition=label_column_name is not None,
                 exception_cls=DataValidationException,
@@ -77,9 +77,9 @@ def _validate_data(args):
 
 def _validate_task(args):
     assert_and_raise(
-        condition=args.task in ["regression", "forecasting", "classification", "ner"],
+        condition=args.task in ALL_TASKS,
         exception_cls=ArgumentValidationException,
-        message="Invalid task type. It should be either classification, regression or forecasting"
+        message="Invalid task type. It should be either classification, regression, forecasting or NER"
     )
 
 def _validate_mode(args):

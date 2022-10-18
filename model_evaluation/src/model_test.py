@@ -7,14 +7,20 @@ import constants
 
 
 from pathlib import Path
-from exceptions import ModelEvaluationException, PredictException, ComputeMetricsException, ScoringException, DataLoaderException, ModelValidationException
+from exceptions import (ModelEvaluationException, 
+                        PredictException, 
+                        ComputeMetricsException, 
+                        ScoringException, 
+                        DataLoaderException, 
+                        ModelValidationException)
 from logging_utilities import custom_dimensions, get_logger, log_activity, log_traceback
 from utils import (read_config, 
                     read_data, 
                     evaluate_predictions,
                     setup_model_dependencies,
                     validate_and_transform_multilabel,
-                    read_conll)
+                    read_conll,
+                    assert_and_raise)
 from run_utils import TestRun
 from validation import validate_args, validate_Xy
 
@@ -45,23 +51,35 @@ class ModelEvaluationRunner:
             self.label_column_name, self.prediction_column_name, self.metrics_config = read_config(config_file, self.task)
         self._is_multilabel = self.metrics_config.get("multilabel", False) 
         self.custom_dimensions = custom_dimensions
-        self._has_multiple_output = self._is_multilabel or self.mode == "token_classification"
+        self._has_multiple_output = self._is_multilabel or self.task == constants.TASK.NER
 
     def load_data(self):
         X_test, y_test, y_pred = None, None, None
         conll = False
-        if self.mode == "token_classification":
+        if self.task == constants.TASK.NER:
             from mltable import load
             df = load(self.test_data).to_pandas_dataframe()
-            if df.shape[0] == 1 and df.shape[1] == 1:    
-                labels = self.metrics_config.get("labels_list", [])
-                X_test, y_test, labels = read_conll(self.test_data, labels=labels)
-                self.metrics_config["labels_list"] = labels
+            if df.shape[0] == 1 and df.shape[1] == 1:
+                assert_and_raise(
+                    condition="Path" in df.columns,
+                    exception_cls=DataLoaderException,
+                    message="Invalid MLTABLE file."
+                )
+                labels = self.metrics_config.get("train_label_list", [])
+                X_test, y_test, labels = read_conll(df.Path.iloc[0], labels=labels)
+                self.metrics_config["train_label_list"] = labels
                 conll = True
+                
         if not conll:
             X_test, y_test, y_pred = read_data(self.test_data, self.label_column_name, self.prediction_column_name)
+            if self._is_multilabel and self.metrics_config.get("train_label_list") is None:
+                unique_labels = set()
+                for labels in y_test:
+                    for label in labels:
+                        unique_labels.add(label)
+                self.metrics_config["train_label_list"] = list(unique_labels)
 
-        if self.task == "regression":
+        if self.task == constants.TASK.REGRESSION:
             import numpy as np
             if y_test is not None:
                 y_test = y_test.astype(np.float64)
@@ -192,7 +210,7 @@ def test_model():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-uri", type=str, dest="model_uri", required=False, default="")
     parser.add_argument("--mlflow-model", type=str, dest="mlflow_model", required=False, default=None)
-    parser.add_argument("--task", type=str, dest="task", choices=["classification", "regression", "forecasting", "ner"])
+    parser.add_argument("--task", type=str, dest="task", choices=constants.ALL_TASKS)
     parser.add_argument("--data", type=str, dest="data")
     parser.add_argument("--mode", type=str, choices=["score", "predict", "compute_metrics"], default="score")
     parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default="")
