@@ -40,8 +40,9 @@ def run_pytest_jobs(pytest_jobs: dict, my_env: dict):
     logger.print("Start running pytest jobs")
     submitted_jobs = defaultdict(list)
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        futures = [executor.submit(run_pytest_job, job, my_env) for job in pytest_jobs.keys()]
-        for future in concurrent.futures.as_completed(futures):
+        futures_to_job = {executor.submit(run_pytest_job, job, my_env): job for job in pytest_jobs.keys()}
+        for future in concurrent.futures.as_completed(futures_to_job):
+            job = futures_to_job[future]
             submitted_jobs[future] = pytest_jobs[job]
     return submitted_jobs
 
