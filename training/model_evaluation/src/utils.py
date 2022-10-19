@@ -244,6 +244,8 @@ def read_config(conf_folder, task_type):
 
     metrics_args = ArgumentsSet(task_type=task_type)
     metrics_config = {}
+    #train_label_list = data.get("train_label_list", None)
+    #metrics_config["train_label_list"] = train_label_list
     for arg, func in metrics_args.args_set.items():
         val = data.get(arg, None)
         if val is not None:
