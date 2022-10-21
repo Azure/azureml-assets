@@ -23,7 +23,7 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
     """
     link_collector = LinkCollector(
         session=PipSession(),
-        search_scope=SearchScope([], index_urls),
+        search_scope=SearchScope([], index_urls, False),  # Third parameter Requires pip 22.3
     )
     selection_prefs = SelectionPreferences(
         allow_yanked=True,
