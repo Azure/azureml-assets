@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Set up azureml-assets package."""
+
 from setuptools import setup, find_packages
 
 setup(
