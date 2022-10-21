@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Replace template tags related to Python packages."""
+
 import argparse
 import re
 from pathlib import Path
@@ -18,12 +20,10 @@ PYPI_URL = "https://pypi.org/simple"
 
 
 def create_package_finder(index_urls: List[str]) -> PackageFinder:
-    """
-    Create a pip PackageFinder.
-    """
+    """Create a pip PackageFinder."""
     link_collector = LinkCollector(
         session=PipSession(),
-        search_scope=SearchScope([], index_urls),
+        search_scope=SearchScope([], index_urls, False),  # Third parameter Requires pip 22.3
     )
     selection_prefs = SelectionPreferences(
         allow_yanked=True,
@@ -45,6 +45,16 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
 def get_latest_package_version(package: str,
                                package_finder: PackageFinder,
                                include_pre: bool = False) -> str:
+    """Get the latest version of a Python package.
+
+    Args:
+        package (str): Package name.
+        package_finder (PackageFinder): PackageFinder to use.
+        include_pre (bool, optional): Include pre-release packages. Defaults to False.
+
+    Returns:
+        str: Latest package version.
+    """
     for _ in range(5):
         try:
             candidates = package_finder.find_all_candidates(package)
@@ -66,6 +76,14 @@ def get_latest_package_version(package: str,
 
 
 def pin_packages(contents: str) -> str:
+    """Replace Python package template tags in a string.
+
+    Args:
+        contents (str): String (likely multi-line) containing tempate tags.
+
+    Returns:
+        str: Updated string.
+    """
     # Process pip template tags
     package_finder = create_package_finder([PYPI_URL])
     while True:
@@ -83,6 +101,12 @@ def pin_packages(contents: str) -> str:
 
 
 def transform_file(input_file: Path, output_file: Path = None):
+    """Replace Python package template tags in a file.
+
+    Args:
+        input_file (Path): Input file.
+        output_file (Path, optional): Output file. If not specific, input file will be updated in place.
+    """
     # Read file
     with open(input_file) as f:
         contents = f.read()
