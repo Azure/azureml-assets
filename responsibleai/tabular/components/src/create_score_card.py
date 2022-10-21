@@ -12,19 +12,15 @@ from responsibleai import __version__ as responsibleai_version
 
 from _score_card._rai_insight_data import RaiInsightData, PdfDataGen
 
-# from _score_card.generate_pdf import (
-#     RegressionComponents,
-#     ClassificationComponents,
-#     to_pdf,
-#     get_full_html,
-# )
-
 from _score_card.common_components import to_pdf, get_full_html
 import _score_card.regression_components as RegressionComponents
 import _score_card.classification_components as ClassificationComponents
 
 from constants import DashboardInfo, PropertyKeyValues, RAIToolType
-from rai_component_utilities import load_dashboard_info_file
+from rai_component_utilities import (
+    load_dashboard_info_file,
+    create_rai_insights_from_port_path,
+)
 from _telemetry._loggerfactory import _LoggerFactory, track
 
 threshold_reg = re.compile(r"([<>=]{1,2})([0-9.]+)")
@@ -154,6 +150,7 @@ def main(args):
     _logger.info("Constructor info: {0}".format(dashboard_info))
 
     insight_data = RaiInsightData(args.rai_insights_dashboard)
+
     with open(args.pdf_generation_config, "r") as json_file:
         config = json.load(json_file)
 

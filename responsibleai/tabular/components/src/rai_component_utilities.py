@@ -11,9 +11,7 @@ import uuid
 import re
 
 import pandas as pd
-
 import mlflow
-
 import mltable
 
 from typing import Any, Dict, Optional
@@ -23,6 +21,8 @@ from azureml.core import Model, Run, Workspace
 from responsibleai import RAIInsights, __version__ as responsibleai_version
 
 from constants import DashboardInfo, PropertyKeyValues, RAIToolType
+
+from InferenceEndpointModel import InferenceEndpointModel, download_mlflow_model_artifacts
 
 assetid_re = re.compile(
     r"azureml://locations/(?P<location>.*)/workspaces/(?P<workspaceid>.*)/(?P<assettype>.*)/(?P<assetname>.*)/versions/(?P<assetversion>.*)"
@@ -66,16 +66,24 @@ def fetch_model_id(model_info_path: str):
 
 def load_mlflow_model(
     workspace: Workspace,
-    model_id: Optional[str] = None,
+    task_type: str,
+    model_id: str,
     model_path: Optional[str] = None,
 ) -> Any:
-    model_uri = model_path
-    if model_id:
-        model = Model._get(workspace, id=model_id)
-        mlflow.set_tracking_uri(workspace.get_mlflow_tracking_uri())
-        model_uri = "models:/{}/{}".format(model.name, model.version)
-    return mlflow.pyfunc.load_model(model_uri)._model_impl
+    tracking_uri = workspace.get_mlflow_tracking_uri()
+    model = Model._get(workspace, id=model_id)
+    model_uri = "models:/{}/{}".format(model.name, model.version)
 
+    if not model_path:
+        model_path = download_mlflow_model_artifacts(tracking_uri, model_uri)
+
+    return InferenceEndpointModel(
+        model_type=task_type,
+        model_path=model_path,
+        model_uri=model_uri,
+        mlflow_tracking_uri=tracking_uri,
+        wrapped_model_path="./wrapped_model"
+        )
 
 def load_mltable(mltable_path: str) -> pd.DataFrame:
     _logger.info("Loading MLTable: {0}".format(mltable_path))
@@ -278,7 +286,7 @@ def create_rai_insights_from_port_path(my_run: Run, port_path: str) -> RAIInsigh
     _logger.info("Loading model")
     model_id = config[DashboardInfo.RAI_INSIGHTS_MODEL_ID_KEY]
     _logger.info("Loading model: {0}".format(model_id))
-    model_estimator = load_mlflow_model(my_run.experiment.workspace, model_id)
+    model_estimator = load_mlflow_model(workspace=my_run.experiment.workspace, task_type=constructor_args["task_type"], model_id=model_id)
 
     _logger.info("Creating RAIInsights object")
     rai_i = RAIInsights(

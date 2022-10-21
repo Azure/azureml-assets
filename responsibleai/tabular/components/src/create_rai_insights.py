@@ -136,13 +136,13 @@ def main(args):
         model_id = fetch_model_id(args.model_info_path)
         _logger.info("Loading model: {0}".format(model_id))
         model_estimator = load_mlflow_model(
-            my_run.experiment.workspace, model_id=model_id
+            workspace=my_run.experiment.workspace, task_type=args.task_type, model_id=model_id
         )
     elif args.model_input and args.model_info:
         model_id = args.model_info
         _logger.info("Loading model: {0}".format(model_id))
         model_estimator = load_mlflow_model(
-            my_run.experiment.workspace, model_path=args.model_input
+            workspace=my_run.experiment.workspace, task_type=args.task_type, model_path=args.model_input, model_id=model_id
         )
 
     constructor_args = create_constructor_arg_dict(args)
@@ -152,6 +152,9 @@ def main(args):
     _ = RAIInsights(
         model=model_estimator, train=train_df, test=test_df, **constructor_args
     )
+
+    # import time
+    # time.sleep(72000)
 
     _logger.info("Saving JSON for tool components")
     output_dict = {
