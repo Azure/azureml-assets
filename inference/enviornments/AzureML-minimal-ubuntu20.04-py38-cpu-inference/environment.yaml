@@ -1,0 +1,26 @@
+image:
+  name: azureml/curated/AzureML-minimal-ubuntu20.04-py38-cpu-inference
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda_dependencies.yaml
+  publish:
+    location: mcr
+    visibility: public
+environment:
+  metadata:
+    MachineLearningFramework:
+      name: minimal
+      version: ""
+    Purpose:
+      HasTrainingSupport: false
+      HasInferencingSupport: true
+    Runtime:
+      name: Python
+      version: "3.8.13"
+    Os:
+      name: Ubuntu
+      version: "20.04"

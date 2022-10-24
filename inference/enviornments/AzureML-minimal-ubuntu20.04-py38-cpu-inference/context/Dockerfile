@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/azureml/inference-base-2004:{{latest-image-tag}}
+
+RUN conda create -n minimal \
+    python=3.8.13 pip=20.2.4
+
+ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/minimal
+
+# Prepend path to AzureML conda environment
+ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+
+ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+
+# Create conda environment
+COPY conda_dependencies.yaml .
+RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
+    rm conda_dependencies.yaml && \
+    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
+    conda clean -a -y
+
+CMD [ "runsvdir", "/var/runit" ]
