@@ -88,14 +88,14 @@ if __name__ == '__main__':
     tests_dir = args.tests_directory
     assets_dir = args.assets_directory
     passed_version = args.version_suffix
-    publish_list_dir = args.publish_list
+    publish_list_file = args.publish_list
     debug_mode = args.debug
     asset_ids = {}
     logger.print("publishing assets")
 
     # Load publishing list from deploy config
-    if publish_list_dir:
-        with open(publish_list_dir) as fp:
+    if publish_list_file:
+        with open(publish_list_file) as fp:
             config = yaml.load(fp, Loader=yaml.FullLoader)
             publish_list = config.get('create', {})
     else:
