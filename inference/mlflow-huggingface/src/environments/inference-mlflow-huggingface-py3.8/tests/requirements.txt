@@ -1,0 +1,5 @@
+pytest==5.4.3
+requests==2.27.1
+azure-ai-ml==0.1.0b7
+azure-identity==1.11.0
+docker

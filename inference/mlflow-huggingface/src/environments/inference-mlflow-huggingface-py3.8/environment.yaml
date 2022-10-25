@@ -1,0 +1,14 @@
+image:                          
+  name: azureml/curated/inference-mlflow-huggingface-py3.8    
+  os: linux                     
+  context:                      
+    dir: context                
+    dockerfile: Dockerfile      
+    template_files:             
+    - Dockerfile 
+    - env.yaml
+    - mlflow_hf_score.py
+    - generate_notice.sh              
+  publish:                      
+    location: mcr               
+    visibility: staging          
