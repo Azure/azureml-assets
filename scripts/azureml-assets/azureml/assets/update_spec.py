@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Update spec files."""
+
 import argparse
 from git import Repo
 from pathlib import Path
@@ -13,6 +15,17 @@ from azureml.assets.util import logger
 
 def create_template_data(asset_config: assets.AssetConfig, release_directory_root: Path = None, version: str = None,
                          include_commit_hash: bool = False) -> Dict[str, object]:
+    """Create template data from config files.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config file.
+        release_directory_root (Path, optional): Release directory. Defaults to None.
+        version (str, optional): Version to use instead of one from asset config. Defaults to None.
+        include_commit_hash (bool, optional): Retrieve and make commit hash available. Defaults to False.
+
+    Returns:
+        Dict[str, object]: Template data.
+    """
     # Start with common items
     data = {
         'asset': {
@@ -43,6 +56,9 @@ def create_template_data(asset_config: assets.AssetConfig, release_directory_roo
         environment_config = asset_config.environment_config_as_object()
         data['image'] = {'name': environment_config.image_name}
         if environment_config.build_enabled:
+            data['image']['context'] = {
+                'path': environment_config.context_dir
+            }
             data['image']['dockerfile'] = {
                 'path': environment_config.dockerfile
             }
