@@ -21,6 +21,17 @@ PYPI_URL = "https://pypi.org/simple"
 
 def create_package_finder(index_urls: List[str]) -> PackageFinder:
     """Create a pip PackageFinder."""
+    try:
+        link_collector = LinkCollector(
+            session=PipSession(),
+            search_scope=SearchScope([], index_urls),
+        )
+    except TypeError:
+        # Handle pip>=22.3
+        link_collector = LinkCollector(
+            session=PipSession(),
+            search_scope=SearchScope([], index_urls, False),  
+        )
     link_collector = LinkCollector(
         session=PipSession(),
         search_scope=SearchScope([], index_urls, False),  # Third parameter Requires pip 22.3
