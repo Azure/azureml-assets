@@ -5,7 +5,7 @@ import os
 import threading
 
 _stdout_lock = threading.Lock()
-
+_output_lock = threading.Lock()
 
 class Logger:
     def log_debug(self, message: str, title: str = None):
@@ -48,7 +48,9 @@ class GitHubLogger(Logger):
         self.print("::endgroup::")
 
     def set_output(self, name: str, value: str):
-        self.print(f"::set-output name={name}::{value}")
+        output_filename = os.environ["GITHUB_OUTPUT"]
+        with _output_lock, open(output_filename, "a") as f:
+            f.write(f"{name}={value}\n")
 
     def _log(self, log_level: str, message: str, title: str = None):
         title_string = f" title={title}" if title is not None else ""
