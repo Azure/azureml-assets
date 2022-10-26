@@ -30,7 +30,7 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
         # Handle pip>=22.3
         link_collector = LinkCollector(
             session=PipSession(),
-            search_scope=SearchScope([], index_urls, False),  
+            search_scope=SearchScope([], index_urls, False),
         )
     link_collector = LinkCollector(
         session=PipSession(),
