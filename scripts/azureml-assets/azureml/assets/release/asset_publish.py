@@ -123,10 +123,29 @@ if __name__ == '__main__':
         elif asset.type == assets.AssetType.MODEL:
             #component dir has model.yml and asset.yml. model.yml contains the model name, asset.yml contains the path and the commit of the model
             logger.print("The model path is " + spec_path)
-            model_file = spec_path + "/model.yml"
-            asset_file = spec_path + "/asset.yml"
-            with open('config.yml', 'r') as file:
-                prime_service = yaml.safe_load(file) 
+            
+            model_yml_file = spec_path + "/model.yml"
+            with open(model_yml_file,'r') as file:
+                model_file = yaml.safe_load(file)
+              
+            asset_yaml_file = spec_path + "/asset.yml"
+            with open(asset_yml_file, 'r') as file:
+                asset_file =yaml.safe_load(file)
+            
+            model_path = asset_file.package.path
+            model_commit = asset_file.package.commit if asset_file.package.commit else None
+            model_name = model_file.name
+            
+            model_dir = model_name
+            model_publish_utils = model_publish_utils(model_name, model_dir)
+            
+            model_publish_utils.git_clone_model(model_path, model_commit)
+            model_publish_utils.save_mlfow_model()
+            
+            model_publish_utils.save_path_in_yaml()
+            
+#             with open('config.yml', 'r') as file:
+#                 prime_service = yaml.safe_load(file) 
             cmd = f"az ml model create --subscription {subscription_id} " \
                 f"--file {spec_path} --registry-name {registry_name} " \
                 f"--version {final_version} --workspace {workspace} --resource-group {resource_group}"
