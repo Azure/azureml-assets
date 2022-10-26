@@ -12,6 +12,7 @@ _output_lock = threading.Lock()
 
 class Logger:
     """Base logger class."""
+
     def log_debug(self, message: str, title: str = None):
         """Log a debug message.
 
@@ -72,6 +73,7 @@ class Logger:
 
 class GitHubLogger(Logger):
     """Logger running under a GitHub agent."""
+
     def log_debug(self, message: str, title: str = None):
         """Log a debug message.
 
@@ -129,6 +131,7 @@ class GitHubLogger(Logger):
 
 class AzureDevOpsLogger(Logger):
     """Logger running under an Azure DevOps agent."""
+
     def log_debug(self, message: str, title: str = None):
         """Log a debug message.
 
@@ -186,6 +189,8 @@ class AzureDevOpsLogger(Logger):
 
 
 class ConsoleLogger(Logger):
+    """Logger running at the console."""
+
     def log_debug(self, message: str, title: str = None):
         """Log a debug message.
 
