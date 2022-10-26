@@ -32,10 +32,6 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
             session=PipSession(),
             search_scope=SearchScope([], index_urls, False),
         )
-    link_collector = LinkCollector(
-        session=PipSession(),
-        search_scope=SearchScope([], index_urls, False),  # Third parameter Requires pip 22.3
-    )
     selection_prefs = SelectionPreferences(
         allow_yanked=True,
     )
