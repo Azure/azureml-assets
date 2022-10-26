@@ -7,6 +7,7 @@ import threading
 _stdout_lock = threading.Lock()
 _output_lock = threading.Lock()
 
+
 class Logger:
     def log_debug(self, message: str, title: str = None):
         pass
