@@ -17,8 +17,8 @@ dependencies:
     - scikit-learn
     - mlflow
     - azureml-mlflow
-    - responsibleai~=0.22.0
-    - raiwidgets~=0.22.0
+    - responsibleai~=0.23.0
+    - raiwidgets~=0.23.0
     # Limit markupsafe version is a workaround to resolve the issue from markupsafe's breaking change: https://github.com/aws/aws-sam-cli/issues/3661
     - markupsafe<2.1.0
     # Workaround to fix import failure related to itsdangerous's latest release: https://stackoverflow.com/questions/71189819/python-docker-importerror-cannot-import-name-json-from-itsdangerous
@@ -30,6 +30,6 @@ dependencies:
     - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-text/responsibleai_text-0.0.7-py3-none-any.whl
     - https://publictestdatasets.blob.core.windows.net/packages/pypi/azureml-model-serializer/azureml_model_serializer-0.0.2-py3-none-any.whl
     - click<8.0.0
-    - mltable==0.1.0b3
+    - mltable==0.1.0b4
     - transformers>=4.17.0
     - ml-wrappers==0.2.2
