@@ -3,6 +3,7 @@
 """Python script to publish assets."""
 from subprocess import check_call
 import argparse
+import shutil
 from pathlib import Path
 import yaml
 import azureml.assets as assets
@@ -51,9 +52,9 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--registry-name", required=True, type=str, help="the registry name")
-    parser.add_argument("-g", "--resource-group", required=True, type=str, help="the resource group name")
-    parser.add_argument("-s", "--subscription-id", required=False, type=str, help="the subscription-id")
-    parser.add_argument("-w", "--workspace", required=False, type=str, help="the workspace name")
+    parser.add_argument("-s", "--subscription-id", required=True, type=str, help="the subscription ID")
+    parser.add_argument("-g", "--resource-group", type=str, help="the resource group name")
+    parser.add_argument("-w", "--workspace", type=str, help="the workspace name")
     parser.add_argument("-a", "--assets-directory", required=True, type=Path, help="the assets directory")
     parser.add_argument("-t", "--tests-directory", required=False, type=Path, help="the tests directory")
     parser.add_argument("--version-suffix", required=False, type=str, help="the version suffix")
