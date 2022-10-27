@@ -124,10 +124,9 @@ if __name__ == '__main__':
             model_publish_utils = model_publish_utils(spec_path)
             model_publish_utils.create_model_artifact()
             model_path = spec_path + "/model.yml"
-            # cmd = f"az ml model create --subscription {subscription_id} " \
-            #     f"--file {spec_path} --registry-name {registry_name} " \
-            #     f"--version {final_version} --workspace {workspace} --resource-group {resource_group}"
-            cmd = f"az ml model create --file {model_path} --registry-name {registry_name} --resource-group {resource_group}"
+            cmd = f"az ml model create --subscription {subscription_id} " \
+                f"--file {model_path} --registry-name {registry_name} " \
+                f"--version {final_version} --workspace {workspace} --resource-group {resource_group}"
             if debug_mode:
                 cmd += " --debug> output.txt 2>&1"
             print(cmd)
