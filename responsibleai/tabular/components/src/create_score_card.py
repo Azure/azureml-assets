@@ -11,14 +11,6 @@ from azureml.core import Run
 from responsibleai import __version__ as responsibleai_version
 
 from _score_card._rai_insight_data import RaiInsightData, PdfDataGen
-
-# from _score_card.generate_pdf import (
-#     RegressionComponents,
-#     ClassificationComponents,
-#     to_pdf,
-#     get_full_html,
-# )
-
 from _score_card.common_components import to_pdf, get_full_html
 import _score_card.regression_components as RegressionComponents
 import _score_card.classification_components as ClassificationComponents
@@ -177,9 +169,23 @@ def main(args):
 
     if not args.local:
         run = Run.get_context()
+        run_details = run.get_details()
+        ws = run.experiment.workspace
+        wsid = f"/subscriptions/{ws.subscription_id}/resourceGroups/{ws.resource_group}/providers/Microsoft.MachineLearningServices/workspaces/{ws.name}"
+        dashboard_link = "https://ml.azure.com/model/analysis/{}/{}/?wsid={}".format(
+            dashboard_info[DashboardInfo.RAI_INSIGHTS_MODEL_ID_KEY],
+            dashboard_info[DashboardInfo.RAI_INSIGHTS_GATHER_RUN_ID_KEY],
+            wsid,
+        )
+
         config["runinfo"] = {
-            "submittedBy": run.get_details()["submittedBy"],
-            "startTimeUtc": run.get_details()["startTimeUtc"],
+            "submittedBy": run_details["submittedBy"],
+            "startTimeUtc": run_details["startTimeUtc"],
+            "dashboard_link": dashboard_link,
+            "model_id": dashboard_info[DashboardInfo.RAI_INSIGHTS_MODEL_ID_KEY],
+            "dashboard_title": dashboard_info[
+                DashboardInfo.RAI_INSIGHTS_DASHBOARD_TITLE_KEY
+            ],
         }
 
     if config["Model"]["ModelType"].lower() == "regression":
