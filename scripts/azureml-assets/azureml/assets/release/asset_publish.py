@@ -142,7 +142,7 @@ if __name__ == '__main__':
             if debug_mode:
                 # Capture and redact output
                 results = run(cmd, stdout=PIPE, stderr=STDOUT)
-                redacted_output = re.sub(r"Bearer.*", "", results.stdout.decode())
+                redacted_output = re.sub(r"Bearer.*", "", results.stdout.decode("utf-8", "ignore"))
                 logger.print(redacted_output)
             else:
                 results = run(cmd)
