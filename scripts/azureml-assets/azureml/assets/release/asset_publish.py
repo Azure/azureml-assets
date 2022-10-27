@@ -14,6 +14,7 @@ from subprocess import PIPE, run, STDOUT
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
+from azureml.assets.release.model_publish_utils import model_publish_utils
 
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -123,12 +124,19 @@ if __name__ == '__main__':
                                                              asset_name=asset.name,
                                                              version=final_version)
         # Handle specific asset types
-        if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
+        if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT, assets.AssetType.MODEL]:
+
+            if asset.type == assets.AssetType.MODEL:
+                model_publish_utils = model_publish_utils(str(asset.spec_with_path))
+                model_publish_utils.create_model_artifact()
+
+            asset_path = str(asset.spec_with_path) + "./model.yml" if asset.type == assets.AssetType.MODEL else str(asset.spec_with_path)
+
             # Assemble command
             cmd = [
                 shutil.which("az"), "ml", asset.type.value, "create",
                 "--subscription", subscription_id,
-                "--file", str(asset.spec_with_path),
+                "--file", asset_path,
                 "--registry-name", registry_name,
                 "--version", final_version
                 ]
@@ -151,6 +159,11 @@ if __name__ == '__main__':
             if results.returncode != 0:
                 logger.log_warning(f"Error creating {asset}")
                 failure_list.append(asset)
+            
+            if asset.type == assets.AssetType.MODEL:
+                model_publish_utils.delete_model_artifact()
+            
+
         else:
             logger.log_warning(f"unsupported asset type: {asset.type.value}")
 
