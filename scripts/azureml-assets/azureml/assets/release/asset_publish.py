@@ -5,6 +5,7 @@
 
 import argparse
 import re
+import shutil
 import yaml
 from pathlib import Path
 from string import Template
@@ -71,9 +72,9 @@ def _str2bool(v: str) -> bool:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--registry-name", required=True, type=str, help="the registry name")
-    parser.add_argument("-g", "--resource-group", required=True, type=str, help="the resource group name")
     parser.add_argument("-s", "--subscription-id", required=True, type=str, help="the subscription ID")
-    parser.add_argument("-w", "--workspace", required=True, type=str, help="the workspace name")
+    parser.add_argument("-g", "--resource-group", type=str, help="the resource group name")
+    parser.add_argument("-w", "--workspace", type=str, help="the workspace name")
     parser.add_argument("-a", "--assets-directory", required=True, type=Path, help="the assets directory")
     parser.add_argument("-t", "--tests-directory", required=True, type=Path, help="the tests directory")
     parser.add_argument("-v", "--version-suffix", type=str, help="the version suffix")
@@ -125,10 +126,16 @@ if __name__ == '__main__':
         if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
             # Assemble command
             cmd = [
-                "az", "ml", asset.type.value, "create", "--subscription", subscription_id,
-                "--file", asset.spec_with_path, "--registry-name", registry_name,
-                "--version", final_version, "--workspace", workspace, "--resource-group", resource_group
+                shutil.which("az"), "ml", asset.type.value, "create",
+                "--subscription", subscription_id,
+                "--file", str(asset.spec_with_path),
+                "--registry-name", registry_name,
+                "--version", final_version
                 ]
+            if resource_group:
+                cmd.extend(["--resource-group", resource_group])
+            if workspace:
+                cmd.extend(["--workspace", workspace])
             print(cmd)
 
             # Run command
