@@ -114,6 +114,7 @@ environment_variables:
 compute: azureml:gpu-cluster
 resources:
     instance_count: 1 # number of nodes
+    shm_size: 64g # shared memory size in GB
 
 distribution:
     # NOTE: using type:pytorch will use all the right env variables for pytorch init_process_group
