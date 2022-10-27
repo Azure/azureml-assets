@@ -1,19 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
 """Python script to publish assets."""
-
+from subprocess import check_call
 import argparse
-import re
-import yaml
 from pathlib import Path
-from string import Template
-from subprocess import PIPE, run, STDOUT
-
+import yaml
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
-
+from azureml.assets.release.model_publish_utils import model_publish_utils
+from string import Template
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
@@ -52,107 +48,128 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
                     sort_keys=False)
 
 
-def _str2bool(v: str) -> bool:
-    """
-    Parse boolean-ish values.
-
-    See https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
-    """
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--registry-name", required=True, type=str, help="the registry name")
     parser.add_argument("-g", "--resource-group", required=True, type=str, help="the resource group name")
-    parser.add_argument("-s", "--subscription-id", required=True, type=str, help="the subscription ID")
+    parser.add_argument("-s", "--subscription-id", required=True, type=str, help="the subscription-id")
     parser.add_argument("-w", "--workspace", required=True, type=str, help="the workspace name")
     parser.add_argument("-a", "--assets-directory", required=True, type=Path, help="the assets directory")
     parser.add_argument("-t", "--tests-directory", required=True, type=Path, help="the tests directory")
-    parser.add_argument("-v", "--version-suffix", type=str, help="the version suffix")
-    parser.add_argument("-l", "--publish-list", type=Path, help="the path of the publish list file")
-    parser.add_argument("-d", "--debug", type=_str2bool, nargs='?', const=True, default=False, help="debug mode")
+    parser.add_argument("--version-suffix", required=False, type=str, help="the version suffix")
+    parser.add_argument("-l", "--publish-list", required=False, type=Path, help="the path of the publish list file")
+    parser.add_argument("-d", "--debug", type=bool, default=False, help="debug mode")
     args = parser.parse_args()
-
     registry_name = args.registry_name
     subscription_id = args.subscription_id
     resource_group = args.resource_group
     workspace = args.workspace
     tests_dir = args.tests_directory
-    assets_dir = args.assets_directory
+    component_dir = args.assets_directory
     passed_version = args.version_suffix
-    publish_list_file = args.publish_list
+    publish_list_dir = args.publish_list
     debug_mode = args.debug
+    publish_list = {}
     asset_ids = {}
-    logger.print("publishing assets")
+    print("publishing assets")
 
-    # Load publishing list from deploy config
-    if publish_list_file:
-        with open(publish_list_file) as fp:
+    if publish_list_dir:
+        with open(publish_list_dir) as fp:
             config = yaml.load(fp, Loader=yaml.FullLoader)
             publish_list = config.get('create', {})
-    else:
-        publish_list = {}
+            if not publish_list:
+                logger.log_warning("The create list is empty.")
+                exit(0)
+            logger.print(f"create list: {publish_list}")
 
-    # Check publishing list
-    if not publish_list:
-        logger.log_warning("The create list is empty.")
-        exit(0)
-    logger.print(f"create list: {publish_list}")
+    assets_set = util.find_assets(
+        input_dirs=component_dir,
+        asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
 
     failure_list = []
-    for asset in util.find_assets(input_dirs=assets_dir):
+    for asset in assets_set:
         asset_names = publish_list.get(asset.type.value, [])
         if not ('*' in asset_names or asset.name in asset_names):
             logger.print(
                 f"Skipping registering asset {asset.name} because it is not in the publish list")
             continue
-        logger.print(f"Registering {asset}")
-        final_version = asset.version + '-' + passed_version if passed_version else asset.version
+        logger.print(f"Registering {asset.name}")
+        final_version = asset.version
+        spec_path = asset.spec_with_path
+        if args.version_suffix:
+            final_version = final_version + '-' + passed_version
         logger.print(f"final version: {final_version}")
         asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(registry_name=registry_name,
                                                              asset_type=f"{asset.type.value}s",
                                                              asset_name=asset.name,
                                                              version=final_version)
-        # Handle specific asset types
-        if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
-            # Assemble command
-            cmd = [
-                "az", "ml", asset.type.value, "create", "--subscription", subscription_id,
-                "--file", asset.spec_with_path, "--registry-name", registry_name,
-                "--version", final_version, "--workspace", workspace, "--resource-group", resource_group
-                ]
-            print(cmd)
-
-            # Run command
+        # switch case for asset type
+        if asset.type == assets.AssetType.COMPONENT:
+            cmd = f"az ml component create --subscription {subscription_id} " \
+                f"--file {spec_path} --registry-name {registry_name} " \
+                f"--version {final_version} --workspace {workspace} --resource-group {resource_group}"
             if debug_mode:
-                # Capture and redact output
-                results = run(cmd, stdout=PIPE, stderr=STDOUT, shell=True, text=True)
-                redacted_output = re.sub(r"Bearer.*", "", results.stdout)
-                logger.print(redacted_output)
-            else:
-                results = run(cmd, shell=True)
+                cmd += " --debug> output.txt 2>&1"
+            print(cmd)
+            try:
+                check_call(cmd, shell=True)
+            except Exception as ex:
+                logger.log_warning(
+                    f"catch error creating {asset.type.value}: {asset.name} with exception {ex}")
+                failure_list.append(asset.name)
+            if debug_mode:
+                check_call("cat output.txt | sed 's/Bearer.*$//'", shell=True)
 
-            # Check command result
-            if results.returncode != 0:
-                logger.log_warning(f"Error creating {asset}")
-                failure_list.append(asset)
+        elif asset.type == assets.AssetType.MODEL:
+            #component dir has model.yml and asset.yml. model.yml contains the model name, asset.yml contains the path and the commit of the model
+            logger.print("The model path is " + spec_path)
+            
+            model_yml_file = spec_path + "/model.yml"
+            with open(model_yml_file,'r') as file:
+                model_file = yaml.safe_load(file)
+              
+            asset_yaml_file = spec_path + "/asset.yml"
+            with open(asset_yml_file, 'r') as file:
+                asset_file =yaml.safe_load(file)
+            
+            model_path = asset_file.package.path
+            model_commit = asset_file.package.commit if asset_file.package.commit else None
+            model_name = model_file.name
+            
+            model_dir = model_name
+            model_publish_utils = model_publish_utils(model_name, model_dir)
+            
+            model_publish_utils.git_clone_model(model_path, model_commit)
+            model_publish_utils.save_mlfow_model()
+            
+            model_publish_utils.save_path_in_yaml()
+            
+#             with open('config.yml', 'r') as file:
+#                 prime_service = yaml.safe_load(file) 
+            cmd = f"az ml model create --subscription {subscription_id} " \
+                f"--file {spec_path} --registry-name {registry_name} " \
+                f"--version {final_version} --workspace {workspace} --resource-group {resource_group}"
+            if debug_mode:
+                cmd += " --debug> output.txt 2>&1"
+            print(cmd)
+            try:
+                check_call(cmd, shell=True)
+            except Exception as ex:
+                logger.log_warning(
+                    f"catch error creating {asset.type.value}: {asset.name} with exception {ex}")
+                failure_list.append(asset.name)
+            if debug_mode:
+                check_call("cat output.txt | sed 's/Bearer.*$//'", shell=True)
+                
+        # TO-DO: add other asset types
         else:
             logger.log_warning(f"unsupported asset type: {asset.type.value}")
 
     if len(failure_list) > 0:
         logger.log_warning(f"following assets failed to publish: {failure_list}")
 
-    logger.print('locating test files')
+    logger.print('starting locating test files')
     test_jobs = test_files_location(tests_dir)
-
-    logger.print('preprocessing test files')
+    logger.print('starting preprocessing test files')
     test_files_preprocess(test_jobs, asset_ids)
     logger.print('finished preprocessing test files')
