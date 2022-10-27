@@ -52,10 +52,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--registry-name", required=True, type=str, help="the registry name")
     parser.add_argument("-g", "--resource-group", required=True, type=str, help="the resource group name")
-    parser.add_argument("-s", "--subscription-id", required=True, type=str, help="the subscription-id")
-    parser.add_argument("-w", "--workspace", required=True, type=str, help="the workspace name")
+    parser.add_argument("-s", "--subscription-id", required=False, type=str, help="the subscription-id")
+    parser.add_argument("-w", "--workspace", required=False, type=str, help="the workspace name")
     parser.add_argument("-a", "--assets-directory", required=True, type=Path, help="the assets directory")
-    parser.add_argument("-t", "--tests-directory", required=True, type=Path, help="the tests directory")
+    parser.add_argument("-t", "--tests-directory", required=False, type=Path, help="the tests directory")
     parser.add_argument("--version-suffix", required=False, type=str, help="the version suffix")
     parser.add_argument("-l", "--publish-list", required=False, type=Path, help="the path of the publish list file")
     parser.add_argument("-d", "--debug", type=bool, default=False, help="debug mode")
@@ -121,34 +121,13 @@ if __name__ == '__main__':
                 check_call("cat output.txt | sed 's/Bearer.*$//'", shell=True)
 
         elif asset.type == assets.AssetType.MODEL:
-            #component dir has model.yml and asset.yml. model.yml contains the model name, asset.yml contains the path and the commit of the model
-            logger.print("The model path is " + spec_path)
-            
-            model_yml_file = spec_path + "/model.yml"
-            with open(model_yml_file,'r') as file:
-                model_file = yaml.safe_load(file)
-              
-            asset_yaml_file = spec_path + "/asset.yml"
-            with open(asset_yml_file, 'r') as file:
-                asset_file =yaml.safe_load(file)
-            
-            model_path = asset_file.package.path
-            model_commit = asset_file.package.commit if asset_file.package.commit else None
-            model_name = model_file.name
-            
-            model_dir = model_name
-            model_publish_utils = model_publish_utils(model_name, model_dir)
-            
-            model_publish_utils.git_clone_model(model_path, model_commit)
-            model_publish_utils.save_mlfow_model()
-            
-            model_publish_utils.save_path_in_yaml()
-            
-#             with open('config.yml', 'r') as file:
-#                 prime_service = yaml.safe_load(file) 
-            cmd = f"az ml model create --subscription {subscription_id} " \
-                f"--file {spec_path} --registry-name {registry_name} " \
-                f"--version {final_version} --workspace {workspace} --resource-group {resource_group}"
+            model_publish_utils = model_publish_utils(spec_path)
+            model_publish_utils.create_model_artifact()
+            model_path = spec_path + "/model.yml"
+            # cmd = f"az ml model create --subscription {subscription_id} " \
+            #     f"--file {spec_path} --registry-name {registry_name} " \
+            #     f"--version {final_version} --workspace {workspace} --resource-group {resource_group}"
+            cmd = f"az ml model create --file {model_path} --registry-name {registry_name} --resource-group {resource_group}"
             if debug_mode:
                 cmd += " --debug> output.txt 2>&1"
             print(cmd)
@@ -160,6 +139,7 @@ if __name__ == '__main__':
                 failure_list.append(asset.name)
             if debug_mode:
                 check_call("cat output.txt | sed 's/Bearer.*$//'", shell=True)
+            model_publish_utils.delete_model_artifact()
                 
         # TO-DO: add other asset types
         else:
