@@ -141,11 +141,11 @@ if __name__ == '__main__':
             # Run command
             if debug_mode:
                 # Capture and redact output
-                results = run(cmd, stdout=PIPE, stderr=STDOUT, shell=True, text=True)
+                results = run(cmd, stdout=PIPE, stderr=STDOUT, text=True)
                 redacted_output = re.sub(r"Bearer.*", "", results.stdout)
                 logger.print(redacted_output)
             else:
-                results = run(cmd, shell=True)
+                results = run(cmd)
 
             # Check command result
             if results.returncode != 0:
