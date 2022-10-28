@@ -136,6 +136,9 @@ def track(
                     try:
                         return func(*args, **kwargs)
                     except Exception as e:
+                        # local logger
+                        if type(al) == type(logger):
+                            raise
                         al.activity_info["exception_type"] = str(type(e))
                         al.activity_info["stacktrace"] = "\n".join(
                             _extract_and_filter_stack(e, traceback.extract_stack())

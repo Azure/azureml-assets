@@ -10,6 +10,7 @@ class DashboardInfo:
 
     RAI_INSIGHTS_MODEL_ID_KEY = "model_id"
     RAI_INSIGHTS_RUN_ID_KEY = "rai_insights_parent_run_id"
+    RAI_INSIGHTS_GATHER_RUN_ID_KEY = "rai_insights_gather_run_id"
     RAI_INSIGHTS_CONSTRUCTOR_ARGS_KEY = "constructor_args"
     RAI_INSIGHTS_PARENT_FILENAME = "rai_insights.json"
     RAI_INSIGHTS_TRAIN_DATASET_ID_KEY = "train_dataset_id"
@@ -46,7 +47,9 @@ class PropertyKeyValues:
     # Dashboard id
     RAI_INSIGHTS_DASHBOARD_ID_KEY = "_azureml.responsibleai.rai_insights.dashboard_id"
     # Dashboard title
-    RAI_INSIGHTS_DASHBOARD_TITLE_KEY = "_azureml.responsibleai.rai_insights.dashboard_title"
+    RAI_INSIGHTS_DASHBOARD_TITLE_KEY = (
+        "_azureml.responsibleai.rai_insights.dashboard_title"
+    )
 
     # RAI insight score card key
     RAI_INSIGHTS_SCORE_CARD_TITLE_KEY = (
