@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
-name: AzureML_Model_Evaluation_Env
+name: model-evaluation
 version: 1
 build:
   path: context/

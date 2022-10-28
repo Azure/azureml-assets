@@ -76,7 +76,7 @@ outputs:
     type: uri_folder
 
 code: ../src
-environment: azureml:AzureML_Model_Evaluation_Env@latest
+environment: azureml:model-evaluation@latest
 command: >-
   python model_test.py
   --data ${{inputs.test_data}}
