@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import os
 import argparse
 import json
 import logging
@@ -14,7 +15,7 @@ from azureml.core import Run
 from responsibleai import RAIInsights
 from responsibleai.serialization_utilities import serialize_json_safe
 
-from constants import RAIToolType
+from constants import DashboardInfo, RAIToolType
 from rai_component_utilities import (
     create_rai_tool_directories,
     create_rai_insights_from_port_path,
@@ -22,7 +23,6 @@ from rai_component_utilities import (
     load_dashboard_info_file,
     add_properties_to_gather_run,
     print_dir_tree,
-    copy_dashboard_info_file,
 )
 
 from _telemetry._loggerfactory import _LoggerFactory, track
@@ -130,8 +130,15 @@ def main(args):
         _logger.info("Object loaded")
 
         rai_i.save(args.dashboard)
-        # Copy dashboard info file
-        copy_dashboard_info_file(args.constructor, args.dashboard)
+
+        # update dashboard info with gather job run id and write
+        dashboard_info[DashboardInfo.RAI_INSIGHTS_GATHER_RUN_ID_KEY] = str(my_run.id)
+        output_file = os.path.join(
+            args.dashboard, DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
+        )
+        with open(output_file, "w") as of:
+            json.dump(dashboard_info, of)
+
         _logger.info("Saved dashboard to oputput")
 
         rai_data = rai_i.get_data()
