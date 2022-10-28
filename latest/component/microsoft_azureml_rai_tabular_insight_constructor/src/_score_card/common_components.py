@@ -5,7 +5,22 @@ import plotly.graph_objects as go
 import base64
 import plotly.io as pio
 import pdfkit
-from domonic.html import div, h3, h1, p, img, table, td, tr, thead, tbody, span, ul, li
+from domonic.html import (
+    a,
+    div,
+    h3,
+    h1,
+    p,
+    img,
+    table,
+    td,
+    tr,
+    thead,
+    tbody,
+    span,
+    ul,
+    li,
+)
 
 
 def get_full_html(htmlbody):
@@ -594,6 +609,16 @@ def get_model_overview(data):
                 )
             )
         )
+        heading.append(
+            p(
+                "Source RAI dashboard: ",
+                a(
+                    data["runinfo"]["dashboard_title"],
+                    _href=data["runinfo"]["dashboard_link"],
+                ),
+            )
+        )
+        heading.append(p(f"Model id: {data['runinfo']['model_id']}"))
 
     model_overview_container = div(
         div(heading, _class="header"),

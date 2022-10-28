@@ -10,11 +10,9 @@ import tempfile
 import uuid
 import re
 
-import pandas as pd
-
 import mlflow
-
 import mltable
+import pandas as pd
 
 from typing import Any, Dict, Optional
 
