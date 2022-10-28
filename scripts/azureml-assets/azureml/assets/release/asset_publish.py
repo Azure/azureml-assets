@@ -137,6 +137,8 @@ if __name__ == '__main__':
                 cmd.extend(["--resource-group", resource_group])
             if workspace:
                 cmd.extend(["--workspace", workspace])
+            if debug_mode:
+                cmd.append("--debug")
             print(cmd)
 
             # Run command
