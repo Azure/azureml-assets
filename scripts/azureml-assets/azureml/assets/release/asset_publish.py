@@ -124,19 +124,13 @@ if __name__ == '__main__':
                                                              asset_name=asset.name,
                                                              version=final_version)
         # Handle specific asset types
-        if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT, assets.AssetType.MODEL]:
-
-            if asset.type == assets.AssetType.MODEL:
-                model_publish_utils = model_publish_utils(str(asset.spec_with_path))
-                model_publish_utils.create_model_artifact()
-
-            asset_path = str(asset.spec_with_path) + "./model.yml" if asset.type == assets.AssetType.MODEL else str(asset.spec_with_path)
+        if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
 
             # Assemble command
             cmd = [
                 shutil.which("az"), "ml", asset.type.value, "create",
                 "--subscription", subscription_id,
-                "--file", asset_path,
+                "--file", str(asset.spec_with_path),
                 "--registry-name", registry_name,
                 "--version", final_version
                 ]
@@ -160,8 +154,35 @@ if __name__ == '__main__':
                 logger.log_warning(f"Error creating {asset}")
                 failure_list.append(asset)
             
-            if asset.type == assets.AssetType.MODEL:
-                model_publish_utils.delete_model_artifact()
+        elif asset.type == assets.AssetType.MODEL:
+            
+            # Assemble command
+            cmd = [
+                shutil.which("az"), "ml", asset.type.value, "create",
+                "--subscription", subscription_id,
+                "--file", str(asset.spec_with_path),
+                "--registry-name", registry_name,
+                "--version", final_version
+                ]
+            if resource_group:
+                cmd.extend(["--resource-group", resource_group])
+            if workspace:
+                cmd.extend(["--workspace", workspace])
+            print(cmd)
+
+            # Run command
+            if debug_mode:
+                # Capture and redact output
+                results = run(cmd, stdout=PIPE, stderr=STDOUT, shell=True, text=True)
+                redacted_output = re.sub(r"Bearer.*", "", results.stdout)
+                logger.print(redacted_output)
+            else:
+                results = run(cmd, shell=True)
+            
+            # Check command result
+            if results.returncode != 0:
+                logger.log_warning(f"Error creating {asset}")
+                failure_list.append(asset)
             
 
         else:

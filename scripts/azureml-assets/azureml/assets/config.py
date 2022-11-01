@@ -5,7 +5,20 @@ import re
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List
-from yaml import safe_load
+from yaml import safe_load, dump
+from subprocess import PIPE, run, STDOUT
+from util import logger
+import azureml.evaluate.mlflow as mlflow
+from mlflow.models import ModelSignature
+from sqlalchemy import true
+from transformers import  AutoTokenizer, AutoConfig, pipeline
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoModelForMaskedLM,
+    AutoModelForTokenClassification,
+    AutoModelForQuestionAnswering,
+    AutoModelWithLMHead
+)
 
 
 class ValidationException(Exception):
@@ -139,6 +152,138 @@ class Spec(Config):
         if code_dir:
             release_paths.extend(Config._expand_path(code_dir))
         return release_paths
+
+
+class ModelConfig(Config):
+    """
+
+    Example:
+
+        name: bert-base-uncased
+        path: # should be string or should contain package details
+            package: # if package not specificed , path would be be used like os path object.
+                url: https://huggingface.co/bert-base-uncased
+                commit_hash: 5546055f03398095e385d7dc625e636cc8910bf2
+        publish:
+            type: mlflow_model # could be one of (custom_model, mlflow_model, triton_model)
+            flavors: hftransformers # flavors should be specificed only for mlflow_model
+            tags: # tags published to the registry
+                isv : huggingface
+                task: fill-mask
+    """
+
+    @property
+    def name(self) ->str: 
+        return self._yaml.get("name")
+
+    @property
+    def path(self) -> object:
+        return self._yaml.get("path")
+
+    @property
+    def package(self) -> Dict[str,str]:
+        return self.path.get("package") if type(self.path()!="str") else None
+        
+    @property
+    def commit_hash(self) -> str:
+        return self.package.get("commit_hash") if self.package() !=None else None
+
+    @property
+    def url(self) -> str:
+        return self.package.get("url") if self.package() !=None else None
+
+    @property
+    def publish(self) -> Dict[str,object]:
+        return self._yaml.get("publish")
+
+    @property
+    def type(self) -> str:
+        return self.publish.get("type")
+    
+    @property
+    def flavors(self) -> str:
+        return self.publish.get("flavors") if self.publish.get("flavors") else None
+
+    @property
+    def tags(self) -> Dict[str,str]:
+        return self.publish("tags") if self.publish.get("tags") else {}
+    
+    @property
+    def task_name(self) -> str:
+        return self.tags.get("task") if self.tags.get("task") else None
+
+    @property
+    def model_dir(self) -> str:
+        return "/tmp/" + self.name()
+    
+    def _download_model(self) -> None:
+
+        cmd = f'git clone {self.url} {self.model_dir}'
+        run(cmd)
+        if self.commit_hash:
+            run(f'cd {self.model_dir}')
+            run(f'git reset --hard {self.commit_hash}')
+    
+    def _convert_to_mlflow_hftransformers(self):
+        config = AutoConfig.from_pretrained(self.name)
+        misc_conf = {"task_type": self.task_name}
+        task_model_mapping = {
+            "multiclass": AutoModelForSequenceClassification,
+            "multilabel": AutoModelForSequenceClassification,
+            "fill-mask": AutoModelForMaskedLM,
+            "ner": AutoModelForTokenClassification,
+            "question-answering": AutoModelForQuestionAnswering,
+            "summarization": AutoModelWithLMHead,
+            "text-generation": AutoModelWithLMHead,
+            "text-classification": AutoModelForSequenceClassification
+        }
+        if self.task_name in task_model_mapping:
+            model = task_model_mapping[self.task_name].from_pretrained(self.name, config=config)
+        elif "translation" in self.task_name:
+            model = AutoModelWithLMHead.from_pretrained(self.name, config=config)
+        else:
+            logging.error("Invalid Task Name")
+        tokenizer = AutoTokenizer.from_pretrained(self.name, config=config)
+        sign_dict = {"inputs": '[{"name": "input_string", "type": "string"}]', "outputs": '[{"type": "string"}]'}
+        if self.task_name == "question-answering":
+            sign_dict["inputs"] = '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]'
+        signature = ModelSignature.from_dict(sign_dict)
+        self.mlflow_model_dir = self.model_dir + '/' + self.name + "-mlflow"
+        mlflow.hftransformers.save_model(model, f"{self.mlflow_model_dir}", tokenizer, config, misc_conf, signature=signature) 
+
+    def _convert_to_mlflow_package(self):
+        return None       
+
+    def _covert_into_mlflow_model(self):
+        if self.flavors == "hftransformers":
+            self._convert_to_mlflow_hftransformers()
+        #TODO add support for pyfunc. Pyfunc requires custom env file.
+        else :
+            self._convert_to_mlflow_package()
+
+    def prepare(self) -> str :
+        """
+        Prepares the model. Downloads the model if required and converts the models to specified
+        publish type.
+
+        Return: returns the local path to the model.
+        """
+        if (type(self.path) == str):
+            return self.path
+
+        self._download_model(self.url, self.commit_hash, self.model_dir)
+
+        if self.type is 'mlflow_model':
+            self._covert_into_mlflow_model(self.model_dir)        
+        return self.model_dir
+
+    def clean(self):
+        """
+            Deletes the Model Artifact after the model has been pushed to the registry
+        """
+        print("Deleting model files from disk")
+        cmd = f'rm -rf {self.model_dir}'
+        run(cmd)
 
 
 DEFAULT_DOCKERFILE = "Dockerfile"
@@ -346,7 +491,7 @@ class AssetConfig(Config):
     version: 1 # Can also be set to auto to auto-increment version
     type: environment
     spec: spec.yaml
-    extra_config: environment.yaml
+    extra_config: environment.yaml or model.yaml
     release_paths: # Additional dirs/files to include in release
     - ../src
     - !../src/test # Exclude by ! prefix
@@ -371,7 +516,7 @@ class AssetConfig(Config):
         Config._validate_exists('name', self.name)
         if not self.auto_version:
             Config._validate_exists('version', self.version)
-        if self.type == AssetType.ENVIRONMENT:
+        if self.type == AssetType.ENVIRONMENT or self.type == AssetType.MODEL:
             Config._validate_exists('extra_config', self.extra_config)
 
         if not self.spec_with_path.exists():
@@ -473,9 +618,11 @@ class AssetConfig(Config):
         if force_reload or self._extra_config is None:
             if self.type == AssetType.ENVIRONMENT:
                 self._extra_config = EnvironmentConfig(self.extra_config_with_path)
+            elif self.type == AssetType.MODEL:
+                self._extra_config = ModelConfig(self.extra_config_with_path)
         return self._extra_config
 
-    def environment_config_as_object(self, force_reload: bool = False) -> EnvironmentConfig:
+    def environment_config_as_object(self, force_reload: bool = False) :
         return self.extra_config_as_object(force_reload)
 
     @property
