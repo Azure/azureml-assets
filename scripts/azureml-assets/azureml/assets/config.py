@@ -158,7 +158,7 @@ class ModelConfig(Config):
     """
 
     Example:
-
+    
         name: bert-base-uncased
         path: # should be string or should contain package details
             package: # if package not specificed , path would be be used like os path object.
@@ -166,8 +166,8 @@ class ModelConfig(Config):
                 commit_hash: 5546055f03398095e385d7dc625e636cc8910bf2
         publish:
             type: mlflow_model # could be one of (custom_model, mlflow_model, triton_model)
-            flavors: hftransformers # flavors should be specificed only for mlflow_model
-            tags: # tags published to the registry
+            flavor: hftransformers # flavors should be specificed only for mlflow_model and model would be published in this flavor
+            tags: # Key value pairs which will be published as tags in the registry 
                 isv : huggingface
                 task: fill-mask
     """
@@ -201,8 +201,8 @@ class ModelConfig(Config):
         return self.publish.get("type")
     
     @property
-    def flavors(self) -> str:
-        return self.publish.get("flavors") if self.publish.get("flavors") else None
+    def flavor(self) -> str:
+        return self.publish.get("flavor") if self.publish.get("flavor") else None
 
     @property
     def tags(self) -> Dict[str,str]:
@@ -242,7 +242,7 @@ class ModelConfig(Config):
         elif "translation" in self.task_name:
             model = AutoModelWithLMHead.from_pretrained(self.name, config=config)
         else:
-            logging.error("Invalid Task Name")
+            logger.error("Invalid Task Name")
         tokenizer = AutoTokenizer.from_pretrained(self.name, config=config)
         sign_dict = {"inputs": '[{"name": "input_string", "type": "string"}]', "outputs": '[{"type": "string"}]'}
         if self.task_name == "question-answering":
@@ -255,7 +255,7 @@ class ModelConfig(Config):
         return None       
 
     def _covert_into_mlflow_model(self):
-        if self.flavors == "hftransformers":
+        if self.flavor == "hftransformers":
             self._convert_to_mlflow_hftransformers()
         #TODO add support for pyfunc. Pyfunc requires custom env file.
         else :
@@ -281,9 +281,10 @@ class ModelConfig(Config):
         """
             Deletes the Model Artifact after the model has been pushed to the registry
         """
-        print("Deleting model files from disk")
-        cmd = f'rm -rf {self.model_dir}'
-        run(cmd)
+        if self.model_dir != None:
+            print("Deleting model files from disk")
+            cmd = f'rm -rf {self.model_dir}'
+            run(cmd)
 
 
 DEFAULT_DOCKERFILE = "Dockerfile"

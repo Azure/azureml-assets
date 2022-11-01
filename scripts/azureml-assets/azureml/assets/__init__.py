@@ -6,6 +6,7 @@ from .config import (
     AssetType,
     Config,
     DEFAULT_ASSET_FILENAME,
+    ModelConfig,
     EnvironmentConfig,
     Os,
     PublishLocation,

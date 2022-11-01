@@ -10,7 +10,6 @@ import yaml
 from pathlib import Path
 from string import Template
 from subprocess import PIPE, run, STDOUT
-
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
@@ -155,7 +154,9 @@ if __name__ == '__main__':
                 failure_list.append(asset)
             
         elif asset.type == assets.AssetType.MODEL:
-            
+
+            model_config = asset.extra_config_as_object()
+            model_config.prepare()
             # Assemble command
             cmd = [
                 shutil.which("az"), "ml", asset.type.value, "create",
@@ -183,6 +184,8 @@ if __name__ == '__main__':
             if results.returncode != 0:
                 logger.log_warning(f"Error creating {asset}")
                 failure_list.append(asset)
+
+            model_config.clean()
             
 
         else:
