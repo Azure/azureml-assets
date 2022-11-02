@@ -174,7 +174,7 @@ def build_images(input_dirs: List[Path],
                  registry: str = None,
                  test_command: str = None,
                  push: bool = False) -> bool:
-    """Build Docker images in parallel, either locally or via ACR. 
+    """Build Docker images in parallel, either locally or via ACR.
 
     Args:
         input_dirs (List[Path]): Input directories where environments are located.
