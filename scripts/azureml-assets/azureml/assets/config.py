@@ -269,21 +269,22 @@ class EnvironmentConfig(Config):
 
     Example:
         image:
-        name: azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu # Can include registry hostname & template tags
-        os: linux
-        context: # If not specified, image won't be built
+          # Image name can include registry hostname & template tags
+          name: azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu
+          os: linux
+          context: # If not specified, image won't be built
             dir: context
             dockerfile: Dockerfile
             pin_version_files:
             - Dockerfile
-        publish: # If not specified, image won't be published
+          publish: # If not specified, image won't be published
             location: mcr
             visibility: public
         environment:
-        metadata:
+          metadata:
             os:
-            name: Ubuntu
-            version: "20.04"
+              name: Ubuntu
+              version: "20.04"
     """
 
     def __init__(self, file_name: Path):
@@ -517,7 +518,7 @@ class AssetConfig(Config):
         - ../src
         - !../src/test # Exclude by ! prefix
         test:
-        pytest:
+          pytest:
             enabled: true
             pip_requirements: tests/requirements.txt
             tests_dir: tests
