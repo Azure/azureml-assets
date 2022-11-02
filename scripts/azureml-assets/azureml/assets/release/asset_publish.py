@@ -52,6 +52,31 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
                     default_flow_style=False,
                     sort_keys=False)
 
+def model_prepare(path, url, commit_hash, model_dir) -> str :
+        """
+        Prepares the model. Downloads the model if required and converts the models to specified
+        publish type.
+
+        Return: returns the local path to the model.
+        """
+        if (type(path) == str):
+            return path
+
+        model_publish_utils.download_model(url, commit_hash, model_dir)
+
+        if type is 'mlflow_model':
+            model_publish_utils.covert_into_mlflow_model(model_dir)        
+        return model_dir
+
+def model_clean(model_dir):
+        """
+            Deletes the Model Artifact after the model has been pushed to the registry
+        """
+        if model_dir != None:
+            print("Deleting model files from disk")
+            cmd = f'rm -rf {model_dir}'
+            run(cmd)
+
 
 def _str2bool(v: str) -> bool:
     """
@@ -156,7 +181,8 @@ if __name__ == '__main__':
         elif asset.type == assets.AssetType.MODEL:
 
             model_config = asset.extra_config_as_object()
-            model_config.prepare()
+            model_dir = '/tmp/' + model_config.name 
+            model_prepare(model_config.path, model_config.package_url, model_config.package_commit_hash, model_dir)
             # Assemble command
             cmd = [
                 shutil.which("az"), "ml", asset.type.value, "create",
@@ -185,7 +211,7 @@ if __name__ == '__main__':
                 logger.log_warning(f"Error creating {asset}")
                 failure_list.append(asset)
 
-            model_config.clean()
+            model_clean(model_dir)
             
 
         else:
