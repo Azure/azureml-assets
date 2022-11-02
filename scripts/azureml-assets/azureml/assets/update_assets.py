@@ -148,9 +148,10 @@ def update_asset(asset_config: assets.AssetConfig,
         # Copy asset to temp directory and pin image/package versions
         util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=temp_dir_path, add_subdir=True)
         temp_asset_config = util.find_assets(input_dirs=temp_dir_path, asset_config_filename=asset_config.file_name)[0]
-        temp_env_config = temp_asset_config.environment_config_as_object()
-        if temp_env_config:
-            pin_env_files(temp_env_config)
+        if temp_asset_config.type == assets.AssetType.ENVIRONMENT:
+            temp_env_config = temp_asset_config.extra_config_as_object()
+            if temp_env_config:
+                pin_env_files(temp_env_config)
 
         temp_asset_dir = util.get_asset_output_dir(asset_config=asset_config, output_directory_root=temp_dir_path)
 
@@ -205,7 +206,7 @@ def update_assets(input_dirs: List[Path],
             counters[UPDATED_COUNT] += 1
 
             # Track updated environments by OS
-            if asset_config.type is assets.AssetType.ENVIRONMENT:
+            if asset_config.type == assets.AssetType.ENVIRONMENT:
                 counters[UPDATED_ENV_COUNT] += 1
         else:
             logger.log_debug(f"No changes detected for {asset_config.type.value} {asset_config.name}")
