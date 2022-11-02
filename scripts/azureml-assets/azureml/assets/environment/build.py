@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Build environment images."""
+
 import argparse
 import os
 import shutil
@@ -31,7 +33,20 @@ def create_acr_task(image_name: str,
                     dockerfile: str,
                     task_filename: str,
                     test_command: str = None,
-                    push: bool = False):
+                    push: bool = False) -> Path:
+    """Create ACR build task file.
+
+    Args:
+        image_name (str): Image name.
+        build_context_dir (Path): Build context directory.
+        dockerfile (str): Dockerfile name.
+        task_filename (str): File to which the task will be written.
+        test_command (str, optional): Command used to test the image. Defaults to None.
+        push (bool, optional): Push the image to the ACR. Defaults to False.
+
+    Returns:
+        Path: The task file.
+    """
     # Start task with just the build step
     task = {
         'version': 'v1.1.0',
@@ -73,6 +88,23 @@ def build_image(asset_config: assets.AssetConfig,
                 registry: str = None,
                 test_command: str = None,
                 push: bool = False) -> Tuple[assets.AssetConfig, int, str]:
+    """Build a Docker image locally or via ACR task.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config.
+        image_name (str): Image name.
+        build_context_dir (Path): Build context directory.
+        dockerfile (str): Dockerfile name.
+        build_log (Path): File to which the build log will be written.
+        build_os (str, optional): Operating system used to build the image on ACR. Defaults to None.
+        resource_group (str, optional): Resource group of the ACR. Defaults to None.
+        registry (str, optional): ACR name. Defaults to None.
+        test_command (str, optional): Command used to test the image. Defaults to None.
+        push (bool, optional): Push the image to the ACR. Defaults to False.
+
+    Returns:
+        Tuple[assets.AssetConfig, int, str]: Asset config, return code, and contents of stdout.
+    """
     logger.print(f"Building image for {asset_config.name}")
     start = timer()
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -110,7 +142,15 @@ def build_image(asset_config: assets.AssetConfig,
 
 
 # Doesn't support ACR yet
-def get_image_digest(image_name: str):
+def get_image_digest(image_name: str) -> str:
+    """Get image digest for a local image.
+
+    Args:
+        image_name (str): Image name.
+
+    Returns:
+        str: Image digest.
+    """
     p = run(["docker", "image", "inspect", image_name, "--format=\"{{index .Id}}\""],
             stdout=PIPE,
             stderr=STDOUT)
@@ -134,13 +174,33 @@ def build_images(input_dirs: List[Path],
                  registry: str = None,
                  test_command: str = None,
                  push: bool = False) -> bool:
+    """Build Docker images in parallel, either locally or via ACR.
+
+    Args:
+        input_dirs (List[Path]): Input directories where environments are located.
+        asset_config_filename (str): Asset config filename to search for.
+        output_directory (Path): Directory to which assets successfully built will be copied.
+        build_logs_dir (Path): Directory to receive build logs.
+        pin_versions (bool): Pin image versions.
+        max_parallel (int): Maximum number of images to build in parallel.
+        changed_files (List[Path]): List of changed files, used to filter environments.
+        tag_with_version (bool): Tag image with asset version.
+        os_to_build (str, optional): Operating system to build on via ACR. Defaults to None.
+        resource_group (str, optional): Resource group name for ACR builds. Defaults to None.
+        registry (str, optional): ACR name. Defaults to None.
+        test_command (str, optional): Command used to test images. Defaults to None.
+        push (bool, optional): Push images to ACR. Defaults to False.
+
+    Returns:
+        bool: True if all images were build successfully, otherwise False.
+    """
     counters = Counter()
     with ThreadPoolExecutor(max_parallel) as pool:
         # Find environments under image root directories
         futures = []
         for asset_config in util.find_assets(input_dirs, asset_config_filename, assets.AssetType.ENVIRONMENT,
                                              changed_files):
-            env_config = asset_config.environment_config_as_object()
+            env_config = asset_config.extra_config_as_object()
 
             # Filter by OS
             if os_to_build and env_config.os.value != os_to_build:
