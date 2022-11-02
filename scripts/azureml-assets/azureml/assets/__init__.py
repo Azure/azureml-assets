@@ -7,6 +7,8 @@ from .config import (
     Config,
     DEFAULT_ASSET_FILENAME,
     ModelConfig,
+    ModelFlavor,
+    ModelType,
     EnvironmentConfig,
     Os,
     PublishLocation,

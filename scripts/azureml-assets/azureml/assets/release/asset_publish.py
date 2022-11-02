@@ -13,7 +13,7 @@ from subprocess import PIPE, run, STDOUT
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
-from azureml.assets.release.model_publish_utils import model_publish_utils
+from azureml.assets.release.model_publish_utils import ModelUtils, MLFlowModelUtils
 
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -52,30 +52,44 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
                     default_flow_style=False,
                     sort_keys=False)
 
-def model_prepare(path, url, commit_hash, model_dir) -> str :
-        """
-        Prepares the model. Downloads the model if required and converts the models to specified
-        publish type.
+def update_spec_file(spec_file: Path, path: Path):
+    "update the yaml file after getting the model has been prepared"
+    with open(spec_file) as f:
+        model_file = yaml.safe_load(f)
+    model_file['path'] = path
+    with open(spec_file, 'w') as f:
+        yaml.dump(model_file, f)
 
-        Return: returns the local path to the model.
-        """
-        if (type(path) == str):
-            return path
+def model_prepare(model_config : assets.ModelConfig, spec_file: Path) -> str :
+    """
+    Prepares the model. Downloads the model if required and converts the models to specified
+    publish type.
 
-        model_publish_utils.download_model(url, commit_hash, model_dir)
+    Return: returns the local path to the model.
+    """
+    if (model_config.path_local_path):
+        return None
 
-        if type is 'mlflow_model':
-            model_publish_utils.covert_into_mlflow_model(model_dir)        
-        return model_dir
+    model_dir = '/tmp/' + model_config.name
+    model_utils = ModelUtils(model_url= model_config.package_url, model_commit_hash= model_config.package_commit_hash, model_dir=model_dir)
+    model_utils.download_model()
+    update_spec_file(spec_file, model_dir)
+    if model_config.type.value is 'mlflow_model':
+        mlflow_dir = model_config.name  +'mlflow'
+        mlflow_utils = MLFlowModelUtils(name = model_config.name, task = model_config.task_name, flavor = model_config.flavor.value, model_dir = model_dir)
+        mlflow_utils.covert_into_mlflow_model()
+        update_spec_file(spec_file, model_dir + '/' + mlflow_dir)        
+    return model_dir
 
-def model_clean(model_dir):
-        """
-            Deletes the Model Artifact after the model has been pushed to the registry
-        """
-        if model_dir != None:
-            print("Deleting model files from disk")
-            cmd = f'rm -rf {model_dir}'
-            run(cmd)
+
+def model_clean(model_dir: Path):
+    """
+        Deletes the Model Artifact after the model has been pushed to the registry
+    """
+    if model_dir != None:
+        print("Deleting model files from disk")
+        cmd = f'rm -rf {model_dir}'
+        run(cmd, shell=True)
 
 
 def _str2bool(v: str) -> bool:
@@ -180,16 +194,16 @@ if __name__ == '__main__':
             
         elif asset.type == assets.AssetType.MODEL:
 
-            model_config = asset.extra_config_as_object()
-            model_dir = '/tmp/' + model_config.name 
-            model_prepare(model_config.path, model_config.package_url, model_config.package_commit_hash, model_dir)
+            model_config = asset.model_config_as_object()
+            model_dir = model_prepare(model_config, asset.spec_with_path)
             # Assemble command
             cmd = [
                 shutil.which("az"), "ml", asset.type.value, "create",
                 "--subscription", subscription_id,
                 "--file", str(asset.spec_with_path),
                 "--registry-name", registry_name,
-                "--version", final_version
+                "--version", final_version,
+                "--tags", model_config.tags
                 ]
             if resource_group:
                 cmd.extend(["--resource-group", resource_group])

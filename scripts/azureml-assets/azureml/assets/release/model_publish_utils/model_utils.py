@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from subprocess import run, PIPE, Popen
+from subprocess import run
 
 class ModelUtils:
 
@@ -12,7 +12,6 @@ class ModelUtils:
 
     def download_model(self) -> None:
         cmd = f'git clone {self.model_url} {self.model_dir}'
-        run(cmd)
+        run(cmd, shell= True)
         if self.model_commit_hash:
-            run(f'cd {self.model_dir}')
-            run(f'git reset --hard {self.model_commit_hash}')
+            run(f'git reset --hard {self.model_commit_hash}', cwd={self.model_dir}, shell= True)

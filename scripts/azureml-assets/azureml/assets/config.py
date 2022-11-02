@@ -6,7 +6,7 @@ import re
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List
-from yaml import safe_load, 
+from yaml import safe_load
 
 
 class ValidationException(Exception):
@@ -141,6 +141,14 @@ class Spec(Config):
             release_paths.extend(Config._expand_path(code_dir))
         return release_paths
 
+class ModelType(Enum):
+    MLFLOW = 'mlflow_model'
+    CUSTOM = 'custom_model'
+    TRITON = 'triton_model'
+
+class ModelFlavor(Enum):
+    HFTRANSFORMERS = 'hftransformers'
+    PYTORCH = 'pytorch'
 
 class ModelConfig(Config):
     """
@@ -158,7 +166,7 @@ class ModelConfig(Config):
         flavor: hftransformers # flavor should be specificed only for mlflow_model
         tags: # tags published to the registry
             isv : huggingface
-            task: fill-mask
+            task_name: fill-mask
     """
     def __init__(self, file_name: Path):
         super().__init__(file_name)
@@ -166,50 +174,63 @@ class ModelConfig(Config):
 
     def _validate(self):
         Config._validate_exists('model.name', self.name)
+        Config._validate_enum('model.flavor', self.flavor, ModelFlavor, True)
+        Config._validate_enum('model.type', self.type, ModelType, True)
 
     @property
     def name(self) ->str: 
-        return self._yaml.get("name")
+        return self._yaml.get('name')
 
     @property
     def _path(self) -> object:
-        return self._yaml.get("path")
+        return self._yaml.get('path')
 
     @property
-    def path_local_path(self) -> object:
+    def path_local_path(self) -> str:
         return self._path.get('local_path')
 
     @property
     def _path_package(self) -> Dict[str,str]:
-        return self._path.get("package") if type(self._path()!="str") else None
+        return self._path.get('package') 
         
     @property
     def package_commit_hash(self) -> str:
-        return self._path_package.get("commit_hash") if self._path_package() !=None else None
+        return self._path_package.get('commit_hash') if self._path_package.get('commit_hash') else None
 
     @property
     def package_url(self) -> str:
-        return self._package.get("url") if self._package() !=None else None
+        return self._path_package.get('url')
 
     @property
     def _publish(self) -> Dict[str,object]:
-        return self._yaml.get("publish")
+        return self._yaml.get('publish')
 
     @property
-    def type(self) -> str:
-        return self.publish.get("type")
+    def _type(self) -> str:
+        return self._publish.get('type')
     
     @property
-    def flavor(self) -> str:
-        return self.publish.get("flavor") if self.publish.get("flavor") else None
+    def type(self) -> ModelType:
+        type = self._type
+        return ModelType(type) if type else None
+    
+    @property
+    def _flavor(self) -> str:
+        return self._publish.get('flavor') if self._publish.get('flavor') else None
+
+    @property
+    def flavor(self) -> ModelFlavor:
+        flavor = self._flavor
+        return ModelFlavor(flavor) if flavor else None
 
     @property
     def tags(self) -> Dict[str,str]:
-        return self.publish("tags") if self.publish.get("tags") else {}
+        return self._publish.get('tags') if self._publish.get('tags') else {}
     
+    #task_name can be fill_mask, multiclass, multilabel, ner, question-answering, summarization, text-generation, text-classification
     @property
     def task_name(self) -> str:
-        return self.tags.get("task") if self.publish.get("task") else None
+        return self.tags.get('task_name') if self.publish.get('task_name') else None
 
   
 DEFAULT_DOCKERFILE = "Dockerfile"
@@ -548,7 +569,10 @@ class AssetConfig(Config):
                 self._extra_config = ModelConfig(self.extra_config_with_path)
         return self._extra_config
 
-    def environment_config_as_object(self, force_reload: bool = False) :
+    def environment_config_as_object(self, force_reload: bool = False) -> EnvironmentConfig:
+        return self.extra_config_as_object(force_reload)
+    
+    def model_config_as_object(self, force_reload:bool = False) -> ModelConfig:
         return self.extra_config_as_object(force_reload)
 
     @property

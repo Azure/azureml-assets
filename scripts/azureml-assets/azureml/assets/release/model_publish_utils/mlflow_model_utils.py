@@ -17,10 +17,11 @@ from transformers import (
 
 class MLFlowModelUtils:
 
-    def __init__(self, name, task_name, model_dir):
+    def __init__(self, name, task_name, flavor, model_dir):
         self.name = name
         self.task_name = task_name
         self.model_dir = model_dir
+        self.flavor = flavor
 
     def _convert_to_mlflow_hftransformers(self):
         config = AutoConfig.from_pretrained(self.name)
@@ -46,7 +47,7 @@ class MLFlowModelUtils:
         if self.task_name == "question-answering":
             sign_dict["inputs"] = '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]'
         signature = ModelSignature.from_dict(sign_dict)
-        self.mlflow_model_dir = self.model_dir + '/' + self.name + "-mlflow"
+        self.mlflow_model_dir = self.name + "-mlflow"
         mlflow.hftransformers.save_model(model, f"{self.mlflow_model_dir}", tokenizer, config, misc_conf, signature=signature) 
 
     def _convert_to_mlflow_package(self):
