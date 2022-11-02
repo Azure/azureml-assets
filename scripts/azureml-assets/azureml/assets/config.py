@@ -665,7 +665,7 @@ class AssetConfig(Config):
         config = self.extra_config
         return self._append_to_file_path(config) if config else None
 
-    def extra_config_as_object(self, force_reload: bool = False) -> Config:
+    def extra_config_as_object(self, force_reload: bool = False) -> EnvironmentConfig:
         """Retrieve extra config file as an object.
 
         Args:
@@ -678,25 +678,13 @@ class AssetConfig(Config):
             Spec: Extra config object.
         """
         if force_reload or self._extra_config is None:
-            if self.type == AssetType.ENVIRONMENT:
-                self._extra_config = EnvironmentConfig(self.extra_config_with_path)
-            else:
-                raise Exception(f"extra_config loading for asset type {self.type.value} is unimplemented")
+            extra_config_with_path = self.extra_config_with_path
+            if extra_config_with_path:
+                if self.type == AssetType.ENVIRONMENT:
+                    self._extra_config = EnvironmentConfig(extra_config_with_path)
+                else:
+                    raise Exception(f"extra_config loading for asset type {self.type.value} is unimplemented")
         return self._extra_config
-
-    def environment_config_as_object(self, force_reload: bool = False) -> EnvironmentConfig:
-        """Retrieve an environment config object.
-
-        Args:
-            force_reload (bool, optional): If cached, reload the environment config file. Defaults to False.
-
-        Returns:
-            EnvironmentConfig: Environment config object.
-        """
-        if self.type == AssetType.ENVIRONMENT:
-            return self.extra_config_as_object(force_reload)
-        else:
-            raise Exception("Environment configs are only available for environment assets")
 
     @property
     def _release_paths(self) -> List[str]:

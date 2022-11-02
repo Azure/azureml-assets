@@ -140,7 +140,7 @@ def build_images(input_dirs: List[Path],
         futures = []
         for asset_config in util.find_assets(input_dirs, asset_config_filename, assets.AssetType.ENVIRONMENT,
                                              changed_files):
-            env_config = asset_config.environment_config_as_object()
+            env_config = asset_config.extra_config_as_object()
 
             # Filter by OS
             if os_to_build and env_config.os.value != os_to_build:

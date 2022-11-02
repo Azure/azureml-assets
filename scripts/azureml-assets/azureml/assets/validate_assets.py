@@ -33,9 +33,9 @@ def validate_assets(input_dirs: List[Path],
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
         # Validate specific asset types
-        if asset_config.type is assets.AssetType.ENVIRONMENT:
+        if asset_config.type == assets.AssetType.ENVIRONMENT:
             try:
-                environment_config = asset_config.environment_config_as_object()
+                environment_config = asset_config.extra_config_as_object()
 
                 # Store fully qualified image name
                 image_name = environment_config.image_name
