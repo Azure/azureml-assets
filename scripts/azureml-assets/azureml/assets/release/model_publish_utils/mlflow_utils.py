@@ -15,10 +15,10 @@ from transformers import (
 
 
 class MLFlowModelUtils:
-    def __init__(self, name, task_name, flavor, model_dir):
+    def __init__(self, name, task_name, flavor, mlflow_model_dir):
         self.name = name
         self.task_name = task_name
-        self.model_dir = model_dir
+        self.mlflow_model_dir = mlflow_model_dir
         self.flavor = flavor
 
     def _convert_to_mlflow_hftransformers(self):
@@ -52,15 +52,18 @@ class MLFlowModelUtils:
                 "inputs"
             ] = '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]'
         signature = ModelSignature.from_dict(sign_dict)
-        self.mlflow_model_dir = self.name + "-mlflow"
-        hf_mlflow.hftransformers.save_model(
-            model,
-            f"{self.mlflow_model_dir}",
-            tokenizer,
-            config,
-            misc_conf,
-            signature=signature,
-        )
+
+        try:
+            hf_mlflow.hftransformers.save_model(
+                model,
+                f"{self.mlflow_model_dir}",
+                tokenizer,
+                config,
+                misc_conf,
+                signature=signature,
+            )
+        except MemoryError:
+            logging.error("Memory Error")
 
     def _convert_to_mlflow_package(self):
         return None

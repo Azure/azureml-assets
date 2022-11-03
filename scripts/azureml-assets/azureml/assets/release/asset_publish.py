@@ -8,6 +8,7 @@ import re
 import shutil
 import sys
 import yaml
+from typing import List
 from pathlib import Path
 from string import Template
 from subprocess import PIPE, run, STDOUT
@@ -83,15 +84,15 @@ def model_prepare(model_config: assets.ModelConfig, spec_file: Path) -> str:
     model_utils.download_model()
     update_spec_file(spec_file, model_dir)
     if model_config.type.value == "mlflow_model":
-        mlflow_dir = model_config.name + "mlflow"
+        mlflow_dir = model_dir + "/" + model_config.name + "mlflow"
         mlflow_utils = MLFlowModelUtils(
             name=model_config.name,
             task=model_config.task_name,
             flavor=model_config.flavor.value,
-            model_dir=model_dir,
+            model_dir=mlflow_dir,
         )
         mlflow_utils.covert_into_mlflow_model()
-        update_spec_file(spec_file, model_dir + "/" + mlflow_dir)
+        update_spec_file(spec_file, mlflow_dir)
     return model_dir
 
 
@@ -103,6 +104,32 @@ def model_clean(model_dir: Path):
         print("Deleting model files from disk")
         cmd = f"rm -rf {model_dir}"
         run(cmd, shell=True)
+
+
+def run_command(cmd: str, failure_list: List, debug_mode: bool = None):
+    """
+    Runs the az cli command for pushing the model to registry
+    """
+    if debug_mode:
+        # Capture and redact output
+        results = run(
+            cmd,
+            stdout=PIPE,
+            stderr=STDOUT,
+            encoding=sys.stdout.encoding,
+            errors="ignore",
+        )
+        redacted_output = re.sub(r"Bearer.*", "", results.stdout)
+        logger.print(redacted_output)
+    else:
+        results = run(cmd)
+
+    # Check command result
+    if results.returncode != 0:
+        logger.log_warning(f"Error creating {asset}")
+        failure_list.append(asset)
+
+    return results
 
 
 def _str2bool(v: str) -> bool:
@@ -230,18 +257,11 @@ if __name__ == "__main__":
             print(cmd)
 
             # Run command
-            if debug_mode:
-                # Capture and redact output
-                results = run(cmd, stdout=PIPE, stderr=STDOUT, encoding=sys.stdout.encoding, errors="ignore")
-                redacted_output = re.sub(r"Bearer.*", "", results.stdout)
-                logger.print(redacted_output)
-            else:
-                results = run(cmd)
-
-            # Check command result
-            if results.returncode != 0:
-                logger.log_warning(f"Error creating {asset}")
-                failure_list.append(asset)
+            results = run_command(
+                cmd,
+                failure_list,
+                debug_mode
+            )
 
         elif asset.type == assets.AssetType.MODEL:
 
@@ -271,18 +291,11 @@ if __name__ == "__main__":
             print(cmd)
 
             # Run command
-            if debug_mode:
-                # Capture and redact output
-                results = run(cmd, stdout=PIPE, stderr=STDOUT, shell=True, text=True)
-                redacted_output = re.sub(r"Bearer.*", "", results.stdout)
-                logger.print(redacted_output)
-            else:
-                results = run(cmd, shell=True)
-
-            # Check command result
-            if results.returncode != 0:
-                logger.log_warning(f"Error creating {asset}")
-                failure_list.append(asset)
+            results = run_command(
+                cmd,
+                failure_list,
+                debug_mode,
+            )
 
             model_clean(model_dir)
 
