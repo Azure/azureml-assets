@@ -6,6 +6,7 @@
 import argparse
 import re
 import shutil
+import sys
 import yaml
 from pathlib import Path
 from string import Template
@@ -224,16 +225,18 @@ if __name__ == "__main__":
                 cmd.extend(["--resource-group", resource_group])
             if workspace:
                 cmd.extend(["--workspace", workspace])
+            if debug_mode:
+                cmd.append("--debug")
             print(cmd)
 
             # Run command
             if debug_mode:
                 # Capture and redact output
-                results = run(cmd, stdout=PIPE, stderr=STDOUT, shell=True, text=True)
+                results = run(cmd, stdout=PIPE, stderr=STDOUT, encoding=sys.stdout.encoding, errors="ignore")
                 redacted_output = re.sub(r"Bearer.*", "", results.stdout)
                 logger.print(redacted_output)
             else:
-                results = run(cmd, shell=True)
+                results = run(cmd)
 
             # Check command result
             if results.returncode != 0:

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Validate assets."""
+
 import argparse
 import sys
 from collections import defaultdict
@@ -15,6 +17,18 @@ from azureml.assets.util import logger
 
 def validate_assets(input_dirs: List[Path],
                     asset_config_filename: str) -> bool:
+    """Validate assets.
+
+    Args:
+        input_dirs (List[Path]): Directories containing assets.
+        asset_config_filename (str): Asset config filename to search for.
+
+    Raises:
+        ValidationException: If validation fails.
+
+    Returns:
+        bool: True if assets were successfully validated, otherwise False.
+    """
     # Find assets under input dirs
     asset_count = 0
     error_count = 0
@@ -33,9 +47,9 @@ def validate_assets(input_dirs: List[Path],
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
         # Validate specific asset types
-        if asset_config.type is assets.AssetType.ENVIRONMENT:
+        if asset_config.type == assets.AssetType.ENVIRONMENT:
             try:
-                environment_config = asset_config.environment_config_as_object()
+                environment_config = asset_config.extra_config_as_object()
 
                 # Store fully qualified image name
                 image_name = environment_config.image_name

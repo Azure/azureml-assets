@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Asset config classes."""
+
 import re
 from enum import Enum
 from pathlib import Path
@@ -9,7 +11,7 @@ from yaml import safe_load
 
 
 class ValidationException(Exception):
-    """Validation errors"""
+    """Validation errors."""
 
 
 TEMPLATE_CHECK = re.compile(r"\{\{.*\}\}")
@@ -17,7 +19,14 @@ EXCLUDE_PREFIX = "!"
 
 
 class Config:
+    """Base class for asset configs."""
+
     def __init__(self, file_name: Path):
+        """Create base config object.
+
+        Args:
+            file_name (Path): Location of config file.
+        """
         with open(file_name) as f:
             self._yaml = safe_load(f)
         self._file_name_with_path = file_name
@@ -26,40 +35,86 @@ class Config:
 
     @property
     def file_name(self) -> str:
+        """Name of config file."""
         return self._file_name
 
     @property
     def file_name_with_path(self) -> Path:
+        """Location of config file."""
         return self._file_name_with_path
 
     @property
     def file_path(self) -> Path:
+        """Directory containing config file."""
         return self._file_path
 
     @property
     def release_paths(self) -> List[Path]:
+        """Files that are required to create this asset."""
         return [self.file_name_with_path]
 
     def _append_to_file_path(self, relative_path: Path) -> Path:
+        """Append a relative path to the directory containing the config file.
+
+        Args:
+            relative_path (Path): Path to append.
+
+        Returns:
+            Path: New path, relative to the directory containing the config file.
+        """
         return self.file_path / relative_path
 
     @staticmethod
     def _is_set(value: object):
+        """Determine whether an object is not None.
+
+        Args:
+            value (object): Object to test.
+
+        Returns:
+            _type_: True if not None, otherwise False.
+        """
         return value is not None
 
     @staticmethod
     def _contains_template(value: str):
+        """Determine whether a string contains any templates.
+
+        Args:
+            value (str): String to test.
+
+        Returns:
+            _type_: True if a template is found, otherwise False.
+        """
         return TEMPLATE_CHECK.search(value) is not None
 
     @staticmethod
     def _validate_exists(property_name: str, property_value: object):
+        """Ensure a property is set.
+
+        Args:
+            property_name (str): Property name, used only in exception message.
+            property_value (object): Property value.
+
+        Raises:
+            ValidationException: If the property value isn't set.
+        """
         if not Config._is_set(property_value):
             raise ValidationException(f"Missing {property_name} property")
 
     @staticmethod
-    def _validate_enum(
-        property_name: str, property_value: object, enum: Enum, required=False
-    ):
+    def _validate_enum(property_name: str, property_value: object, enum: Enum, required=False):
+        """Ensure an enum value is set and is expected.
+
+        Args:
+            property_name (str): Property name, used only in exception message.
+            property_value (object): Property value.
+            enum (Enum): Enum object to test against.
+            required (bool, optional): True if property_value must be set. Defaults to False.
+
+        Raises:
+            ValidationException: If required and not set, or if value is unexpected.
+        """
         # Ensure property exists
         if required:
             Config._validate_exists(property_name, property_value)
@@ -76,6 +131,18 @@ class Config:
 
     @staticmethod
     def _expand_path(path: Path) -> List[Path]:
+        """Convert a path to a list of files it contains.
+
+        Args:
+            path (Path): File or directory to expand.
+
+        Raises:
+            ValidationException: If the path doesn't exist.
+
+        Returns:
+            List[Path]: If path is a file or empty directory, just return it.
+                        Otherwise, return the files contained by the directory.
+        """
         if not path.exists():
             raise ValidationException(f"{path} not found")
         if path.is_dir():
@@ -86,59 +153,80 @@ class Config:
 
 
 class Spec(Config):
-    """
-    Example:
+    """Load and access spec file properties.
 
-    name: my-asset
-    version: 1
+    Example:
+        name: my-asset
+        version: 1
     """
 
     def __init__(self, file_name: str):
+        """Create spec object.
+
+        Args:
+            file_name (str): Spec file to load and validate.
+        """
         super().__init__(file_name)
         self._validate()
 
     def __str__(self) -> str:
+        """Asset name and version."""
         return f"{self.name} {self.version}"
 
     def _validate(self):
-        Config._validate_exists("name", self.name)
-        Config._validate_exists("version", self.version)
+        """Validate spec contents.
+
+        Only basic validation is performed. Conformance with an asset's JSON schema is not tested.
+
+        Raises:
+            ValidationException: If validation failed.
+        """
+        Config._validate_exists('name', self.name)
+        Config._validate_exists('version', self.version)
 
         if self.code_dir and not self.code_dir_with_path.exists():
             raise ValidationException(f"code directory {self.code_dir} not found")
 
     @property
     def name(self) -> str:
-        return self._yaml.get("name")
+        """Asset name."""
+        return self._yaml.get('name')
 
     @property
     def version(self) -> str:
-        version = self._yaml.get("version")
+        """Asset version."""
+        version = self._yaml.get('version')
         return str(version) if version is not None else None
 
     @property
     def description(self) -> str:
-        return self._yaml.get("description")
+        """Asset description."""
+        return self._yaml.get('description')
 
     @property
     def tags(self) -> Dict[str, str]:
-        return self._yaml.get("tags")
+        """Asset tags."""
+        return self._yaml.get('tags')
 
     @property
     def image(self) -> str:
-        return self._yaml.get("image")
+        """Environment image."""
+        return self._yaml.get('image')
 
     @property
     def code_dir(self) -> str:
-        return self._yaml.get("code")
+        """Component code directory."""
+        return self._yaml.get('code')
 
     @property
     def code_dir_with_path(self) -> Path:
+        """Component code directory, relative to spec file's parent directory."""
         dir = self.code_dir
         return self._append_to_file_path(dir) if dir else None
 
     @property
     def release_paths(self) -> List[Path]:
+        """Files that are required to create this asset."""
         release_paths = super().release_paths
         code_dir = self.code_dir_with_path
         if code_dir:
@@ -250,19 +338,25 @@ DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
 
 
 class Os(Enum):
-    LINUX = "linux"
-    WINDOWS = "windows"
+    """Operating system types."""
+
+    LINUX = 'linux'
+    WINDOWS = 'windows'
 
 
 class PublishLocation(Enum):
-    MCR = "mcr"
+    """Image publishing locations."""
+
+    MCR = 'mcr'
 
 
 class PublishVisibility(Enum):
-    PUBLIC = "public"
-    INTERNAL = "internal"
-    STAGING = "staging"
-    UNLISTED = "unlisted"
+    """Image publishing visibility types."""
+
+    PUBLIC = 'public'
+    INTERNAL = 'internal'
+    STAGING = 'staging'
+    UNLISTED = 'unlisted'
 
 
 # Associates publish locations with their hostnames
@@ -270,34 +364,45 @@ PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: "mcr.microsoft.com"}
 
 
 class EnvironmentConfig(Config):
-    """
-    Example:
+    """Environment config.
 
-    image:
-      name: azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu # Can include registry hostname & template tags
-      os: linux
-      context: # If not specified, image won't be built
-        dir: context
-        dockerfile: Dockerfile
-        pin_version_files:
-        - Dockerfile
-      publish: # If not specified, image won't be published
-        location: mcr
-        visibility: public
-    environment:
-      metadata:
-        os:
-          name: Ubuntu
-          version: "20.04"
+    Example:
+        image:
+          # Image name can include registry hostname & template tags
+          name: azureml/curated/tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu
+          os: linux
+          context: # If not specified, image won't be built
+            dir: context
+            dockerfile: Dockerfile
+            pin_version_files:
+            - Dockerfile
+          publish: # If not specified, image won't be published
+            location: mcr
+            visibility: public
+        environment:
+          metadata:
+            os:
+              name: Ubuntu
+              version: "20.04"
     """
 
     def __init__(self, file_name: Path):
+        """Create environment config object.
+
+        Args:
+            file_name (Path): Environment config file to load and validate.
+        """
         super().__init__(file_name)
         self._validate()
 
     def _validate(self):
-        Config._validate_exists("image.name", self.image_name)
-        Config._validate_enum("image.os", self._os, Os, True)
+        """Validate environment config.
+
+        Raises:
+            ValidationException: If validation fails.
+        """
+        Config._validate_exists('image.name', self.image_name)
+        Config._validate_enum('image.os', self._os, Os, True)
 
         if self._publish:
             Config._validate_enum(
@@ -314,16 +419,34 @@ class EnvironmentConfig(Config):
 
     @property
     def _image(self) -> Dict[str, object]:
-        return self._yaml.get("image", {})
+        """Raw 'image' value."""
+        return self._yaml.get('image', {})
 
     @property
     def image_name(self) -> str:
-        return self._image.get("name")
+        """Image name."""
+        return self._image.get('name')
 
     def get_image_name_with_tag(self, tag: str) -> str:
+        """Get image name with provided tag.
+
+        Args:
+            tag (str): Tag to append to image name.
+
+        Returns:
+            str: Image name with tag.
+        """
         return f"{self.image_name}:{tag}"
 
     def get_full_image_name(self, default_tag: str = None) -> str:
+        """Get fully qualified image name, including registry hostname.
+
+        Args:
+            default_tag (str, optional): Tag to add if there's not already one in the image name. Defaults to None.
+
+        Returns:
+            str: Fully qualified image name.
+        """
         image = self.image_name
 
         # Only add tag if there's not already one in image name
@@ -337,6 +460,14 @@ class EnvironmentConfig(Config):
         return image
 
     def get_image_name_for_promotion(self, tag: str = None) -> str:
+        """Get image name used for promotion to publishing location.
+
+        Args:
+            tag (str, optional): Tag to append. Defaults to None.
+
+        Returns:
+            str: Image name for publishing.
+        """
         # Only promotion to MCR is supported
         if self.publish_location != PublishLocation.MCR:
             return None
@@ -348,52 +479,74 @@ class EnvironmentConfig(Config):
 
     @property
     def _os(self) -> str:
-        return self._image.get("os")
+        """Raw 'os' value."""
+        return self._image.get('os')
 
     @property
     def os(self) -> Os:
+        """Operating system."""
         return Os(self._os)
 
     @property
     def _context(self) -> Dict[str, object]:
-        return self._image.get("context", {})
+        """Raw 'context' value."""
+        return self._image.get('context', {})
 
     @property
     def build_enabled(self) -> bool:
+        """Whether image should be built."""
         return bool(self._context)
 
     @property
     def context_dir(self) -> str:
-        return self._context.get("dir")
+        """Raw 'context.dir' value."""
+        return self._context.get('dir')
 
     @property
     def context_dir_with_path(self) -> Path:
+        """Context dir appended to environment config's parent directory."""
         dir = self.context_dir
         return self._append_to_file_path(dir) if dir else None
 
     def _append_to_context_path(self, relative_path: Path) -> Path:
+        """Append path to build context directory.
+
+        Args:
+            relative_path (Path): Path to append.
+
+        Returns:
+            Path: New path.
+        """
         dir = self.context_dir_with_path
         return dir / relative_path if dir else None
 
     @property
     def dockerfile(self) -> str:
-        return self._context.get("dockerfile", DEFAULT_DOCKERFILE)
+        """Raw 'dockerfile' location.
+
+        Defaults to Dockerfile if not specified in environment config.
+        """
+        return self._context.get('dockerfile', DEFAULT_DOCKERFILE)
 
     @property
     def dockerfile_with_path(self) -> Path:
+        """Dockerfile path appended to build context directory."""
         return self._append_to_context_path(self.dockerfile)
 
     @property
     def template_files(self) -> List[str]:
-        return self._context.get("template_files", DEFAULT_TEMPLATE_FILES)
+        """Files containing templates that should be replaced prior to release."""
+        return self._context.get('template_files', DEFAULT_TEMPLATE_FILES)
 
     @property
     def template_files_with_path(self) -> List[Path]:
+        """Paths to files containing templates that should be replaced prior to release."""
         files = [self._append_to_context_path(f) for f in self.template_files]
         return [f for f in files if f is not None]
 
     @property
     def release_paths(self) -> List[Path]:
+        """Files that are required to create this asset."""
         release_paths = super().release_paths
         context_dir = self.context_dir_with_path
         if context_dir:
@@ -402,19 +555,23 @@ class EnvironmentConfig(Config):
 
     @property
     def _publish(self) -> Dict[str, str]:
-        return self._image.get("publish", {})
+        """Raw 'image.publish' value."""
+        return self._image.get('publish', {})
 
     @property
     def _publish_location(self) -> str:
-        return self._publish.get("location")
+        """Raw 'image.location' value."""
+        return self._publish.get('location')
 
     @property
     def publish_location(self) -> PublishLocation:
+        """Image publishing location."""
         location = self._publish_location
         return PublishLocation(location) if location else None
 
     @property
     def publish_location_hostname(self) -> str:
+        """Hostname of the registry to which an image will be published."""
         location = self._publish_location
         return (
             PUBLISH_LOCATION_HOSTNAMES[PublishLocation(location)] if location else None
@@ -422,27 +579,33 @@ class EnvironmentConfig(Config):
 
     @property
     def _publish_visibility(self) -> str:
-        return self._publish.get("visibility")
+        """Raw 'publish.visibility' value."""
+        return self._publish.get('visibility')
 
     @property
     def publish_visibility(self) -> PublishVisibility:
+        """Image's publishing visiblity type."""
         visiblity = self._publish_visibility
         return PublishVisibility(visiblity) if visiblity else None
 
     @property
     def _environment(self) -> Dict[str, object]:
-        return self._yaml.get("environment", {})
+        """Raw 'environment' value."""
+        return self._yaml.get('environment', {})
 
     @property
     def environment_metadata(self) -> Dict[str, object]:
-        return self._environment.get("metadata")
+        """Raw 'metadata' value."""
+        return self._environment.get('metadata')
 
 
 class AssetType(Enum):
-    CODE = "code"
-    COMPONENT = "component"
-    ENVIRONMENT = "environment"
-    MODEL = "model"
+    """Asset type."""
+
+    CODE = 'code'
+    COMPONENT = 'component'
+    ENVIRONMENT = 'environment'
+    MODEL = 'model'
 
 
 DEFAULT_ASSET_FILENAME = "asset.yaml"
@@ -450,37 +613,48 @@ VERSION_AUTO = "auto"
 
 
 class AssetConfig(Config):
-    """
-    Example:
+    """Asset config file.
 
-    name: my-asset
-    version: 1 # Can also be set to auto to auto-increment version
-    type: environment
-    spec: spec.yaml
-    extra_config: environment.yaml or model.yaml
-    release_paths: # Additional dirs/files to include in release
-    - ../src
-    - !../src/test # Exclude by ! prefix
-    test:
-      pytest:
-        enabled: true
-        pip_requirements: tests/requirements.txt
-        tests_dir: tests
+    Example:
+        name: my-asset
+        version: 1 # Can also be set to auto to auto-increment version
+        type: environment
+        spec: spec.yaml
+        extra_config: environment.yaml
+        release_paths: # Additional dirs/files to include in release
+        - ../src
+        - !../src/test # Exclude by ! prefix
+        test:
+          pytest:
+            enabled: true
+            pip_requirements: tests/requirements.txt
+            tests_dir: tests
     """
 
     def __init__(self, file_name: Path):
+        """Create asset config object.
+
+        Args:
+            file_name (Path): File to load and validate.
+        """
         super().__init__(file_name)
         self._spec = None
         self._extra_config = None
         self._validate()
 
     def __str__(self) -> str:
+        """Asset type, name, and version."""
         return f"{self.type.value} {self.name} {self.version}"
 
     def _validate(self):
-        Config._validate_enum("type", self._type, AssetType, True)
-        Config._validate_exists("spec", self.spec)
-        Config._validate_exists("name", self.name)
+        """Validate asset config.
+
+        Raises:
+            ValidationException: If validation fails.
+        """
+        Config._validate_enum('type', self._type, AssetType, True)
+        Config._validate_exists('spec', self.spec)
+        Config._validate_exists('name', self.name)
         if not self.auto_version:
             Config._validate_exists("version", self.version)
         if self.type == AssetType.ENVIRONMENT or self.type == AssetType.MODEL:
@@ -502,15 +676,18 @@ class AssetConfig(Config):
 
     @property
     def _type(self) -> str:
-        return self._yaml.get("type")
+        """Raw 'type' value."""
+        return self._yaml.get('type')
 
     @property
     def type(self) -> AssetType:
+        """Asset type."""
         return AssetType(self._type)
 
     @property
     def _name(self) -> str:
-        return self._yaml.get("name")
+        """Raw 'name' value."""
+        return self._yaml.get('name')
 
     @property
     def name(self) -> str:
@@ -535,7 +712,8 @@ class AssetConfig(Config):
 
     @property
     def _version(self) -> str:
-        return self._yaml.get("version")
+        """Raw 'version' value."""
+        return self._yaml.get('version')
 
     @property
     def version(self) -> str:
@@ -563,69 +741,83 @@ class AssetConfig(Config):
 
     @property
     def auto_version(self) -> bool:
+        """Whether auto versioning is enabled."""
         return self._version == VERSION_AUTO
 
     @property
     def spec(self) -> str:
-        return self._yaml.get("spec")
+        """Raw 'spec' value."""
+        return self._yaml.get('spec')
 
     @property
     def spec_with_path(self) -> Path:
+        """Asset's spec file."""
         return self._append_to_file_path(self.spec)
 
     def spec_as_object(self, force_reload: bool = False) -> Spec:
+        """Retrieve asset's spec file as an object.
+
+        Args:
+            force_reload (bool, optional): If cached, reload the spec file. Defaults to False.
+
+        Returns:
+            Spec: Asset's spec object.
+        """
         if force_reload or self._spec is None:
             self._spec = Spec(self.spec_with_path)
         return self._spec
 
     @property
     def extra_config(self) -> str:
-        return self._yaml.get("extra_config")
+        """Raw 'extra_config' value."""
+        return self._yaml.get('extra_config')
 
     @property
     def extra_config_with_path(self) -> Path:
+        """Extra config file appended to asset config file's parent directory."""
         config = self.extra_config
         return self._append_to_file_path(config) if config else None
 
-    def extra_config_as_object(self, force_reload: bool = False) -> Config:
+    def extra_config_as_object(self, force_reload: bool = False) -> EnvironmentConfig:
+        """Retrieve extra config file as an object.
+
+        Args:
+            force_reload (bool, optional): If cached, reload the extra config file. Defaults to False.
+
+        Raises:
+            Exception: If loading an extra_config for the asset type is unimplemented.
+
+        Returns:
+            Spec: Extra config object.
+        """
         if force_reload or self._extra_config is None:
-            if self.type == AssetType.ENVIRONMENT:
-                self._extra_config = EnvironmentConfig(self.extra_config_with_path)
-            elif self.type == AssetType.MODEL:
-                self._extra_config = ModelConfig(self.extra_config_with_path)
+            extra_config_with_path = self.extra_config_with_path
+            if extra_config_with_path:
+                if self.type == AssetType.ENVIRONMENT:
+                    self._extra_config = EnvironmentConfig(extra_config_with_path)
+                else:
+                    raise Exception(f"extra_config loading for asset type {self.type.value} is unimplemented")
         return self._extra_config
-
-    def environment_config_as_object(
-        self, force_reload: bool = False
-    ) -> EnvironmentConfig:
-        return self.extra_config_as_object(force_reload)
-
-    def model_config_as_object(self, force_reload: bool = False) -> ModelConfig:
-        return self.extra_config_as_object(force_reload)
 
     @property
     def _release_paths(self) -> List[str]:
-        return self._yaml.get("release_paths", [])
+        """Raw 'release_paths' value."""
+        return self._yaml.get('release_paths', [])
 
     @property
     def _release_paths_includes_with_path(self) -> Path:
-        return [
-            self._append_to_file_path(p)
-            for p in self._release_paths
-            if not p.startswith(EXCLUDE_PREFIX)
-        ]
+        """Files that are required to create this asset, excluding those that start with !."""
+        return [self._append_to_file_path(p) for p in self._release_paths if not p.startswith(EXCLUDE_PREFIX)]
 
     @property
     def _release_paths_excludes_with_path(self) -> Path:
-        paths = [
-            p[len(EXCLUDE_PREFIX) :]
-            for p in self._release_paths
-            if p.startswith(EXCLUDE_PREFIX)
-        ]
+        """Files that are required to create this asset, filtered to those that start with !."""
+        paths = [p[len(EXCLUDE_PREFIX):] for p in self._release_paths if p.startswith(EXCLUDE_PREFIX)]
         return [self._append_to_file_path(p) for p in paths]
 
     @property
     def release_paths(self) -> List[Path]:
+        """Files that are required to create this asset."""
         release_paths = super().release_paths
 
         # Collect files from spec
@@ -659,30 +851,37 @@ class AssetConfig(Config):
 
     @property
     def _test(self) -> Dict[str, object]:
-        return self._yaml.get("test", {})
+        """Raw 'test' value."""
+        return self._yaml.get('test', {})
 
     @property
     def _test_pytest(self) -> Dict[str, object]:
-        return self._test.get("pytest", {})
+        """Raw 'test.pytest' value."""
+        return self._test.get('pytest', {})
 
     @property
     def pytest_enabled(self) -> bool:
-        return self._test_pytest.get("enabled", False)
+        """Whether pytests are enabled for the asset."""
+        return self._test_pytest.get('enabled', False)
 
     @property
     def pytest_pip_requirements(self) -> Path:
-        return self._test_pytest.get("pip_requirements")
+        """Pip requirements file for pytest."""
+        return self._test_pytest.get('pip_requirements')
 
     @property
     def pytest_pip_requirements_with_path(self) -> Path:
+        """Pip requirements file for pytest, appended to parent directory of asset config."""
         pip_requirements = self.pytest_pip_requirements
         return self._append_to_file_path(pip_requirements) if pip_requirements else None
 
     @property
     def pytest_tests_dir(self) -> Path:
-        return self._test_pytest.get("tests_dir", ".") if self.pytest_enabled else None
+        """Directory containing pytest scripts."""
+        return self._test_pytest.get('tests_dir', ".") if self.pytest_enabled else None
 
     @property
     def pytest_tests_dir_with_path(self) -> Path:
+        """Directory containing pytest scripts, appended to parent directory of asset config."""
         tests_dir = self.pytest_tests_dir
         return self._append_to_file_path(tests_dir) if tests_dir else None

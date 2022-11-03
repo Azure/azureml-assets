@@ -20,3 +20,4 @@ dependencies:
   - tensorboard~=2.9.0
   - tensorflow-gpu~=2.9.0
   - tensorflow-datasets~=4.5.0
+  - debugpy~=1.6.3
