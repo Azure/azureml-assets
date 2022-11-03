@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import py_compile
 import re
 from enum import Enum
 from pathlib import Path
@@ -10,7 +9,7 @@ from yaml import safe_load
 
 
 class ValidationException(Exception):
-    """ Validation errors """
+    """Validation errors"""
 
 
 TEMPLATE_CHECK = re.compile(r"\{\{.*\}\}")
@@ -58,7 +57,9 @@ class Config:
             raise ValidationException(f"Missing {property_name} property")
 
     @staticmethod
-    def _validate_enum(property_name: str, property_value: object, enum: Enum, required=False):
+    def _validate_enum(
+        property_name: str, property_value: object, enum: Enum, required=False
+    ):
         # Ensure property exists
         if required:
             Config._validate_exists(property_name, property_value)
@@ -68,8 +69,10 @@ class Config:
         # Validate value is expected
         enum_vals = [i.value for i in list(enum)]
         if property_value not in enum_vals:
-            raise ValidationException(f"Invalid {property_name} property: {property_value}"
-                                      f" is not one of {enum_vals}")
+            raise ValidationException(
+                f"Invalid {property_name} property: {property_value}"
+                f" is not one of {enum_vals}"
+            )
 
     @staticmethod
     def _expand_path(path: Path) -> List[Path]:
@@ -89,6 +92,7 @@ class Spec(Config):
     name: my-asset
     version: 1
     """
+
     def __init__(self, file_name: str):
         super().__init__(file_name)
         self._validate()
@@ -97,36 +101,36 @@ class Spec(Config):
         return f"{self.name} {self.version}"
 
     def _validate(self):
-        Config._validate_exists('name', self.name)
-        Config._validate_exists('version', self.version)
+        Config._validate_exists("name", self.name)
+        Config._validate_exists("version", self.version)
 
         if self.code_dir and not self.code_dir_with_path.exists():
             raise ValidationException(f"code directory {self.code_dir} not found")
 
     @property
     def name(self) -> str:
-        return self._yaml.get('name')
+        return self._yaml.get("name")
 
     @property
     def version(self) -> str:
-        version = self._yaml.get('version')
+        version = self._yaml.get("version")
         return str(version) if version is not None else None
 
     @property
     def description(self) -> str:
-        return self._yaml.get('description')
+        return self._yaml.get("description")
 
     @property
     def tags(self) -> Dict[str, str]:
-        return self._yaml.get('tags')
+        return self._yaml.get("tags")
 
     @property
     def image(self) -> str:
-        return self._yaml.get('image')
+        return self._yaml.get("image")
 
     @property
     def code_dir(self) -> str:
-        return self._yaml.get('code')
+        return self._yaml.get("code")
 
     @property
     def code_dir_with_path(self) -> Path:
@@ -141,14 +145,17 @@ class Spec(Config):
             release_paths.extend(Config._expand_path(code_dir))
         return release_paths
 
+
 class ModelType(Enum):
-    MLFLOW = 'mlflow_model'
-    CUSTOM = 'custom_model'
-    TRITON = 'triton_model'
+    MLFLOW = "mlflow_model"
+    CUSTOM = "custom_model"
+    TRITON = "triton_model"
+
 
 class ModelFlavor(Enum):
-    HFTRANSFORMERS = 'hftransformers'
-    PYTORCH = 'pytorch'
+    HFTRANSFORMERS = "hftransformers"
+    PYTORCH = "pytorch"
+
 
 class ModelConfig(Config):
     """
@@ -168,55 +175,60 @@ class ModelConfig(Config):
             isv : huggingface
             task_name: fill-mask
     """
+
     def __init__(self, file_name: Path):
         super().__init__(file_name)
         self._validate()
 
     def _validate(self):
-        Config._validate_exists('model.name', self.name)
-        Config._validate_enum('model.flavor', self.flavor, ModelFlavor, True)
-        Config._validate_enum('model.type', self.type, ModelType, True)
+        Config._validate_exists("model.name", self.name)
+        Config._validate_enum("model.flavor", self.flavor, ModelFlavor, True)
+        Config._validate_enum("model.type", self.type, ModelType, True)
 
     @property
-    def name(self) ->str: 
-        return self._yaml.get('name')
+    def name(self) -> str:
+        return self._yaml.get("name")
 
     @property
     def _path(self) -> object:
-        return self._yaml.get('path')
+        return self._yaml.get("path")
 
     @property
     def path_local_path(self) -> str:
-        return self._path.get('local_path')
+        return self._path.get("local_path")
 
     @property
-    def _path_package(self) -> Dict[str,str]:
-        return self._path.get('package') 
-        
+    def _path_package(self) -> Dict[str, str]:
+        return self._path.get("package")
+
     @property
     def package_commit_hash(self) -> str:
-        return self._path_package.get('commit_hash') if self._path_package.get('commit_hash') else None
+        return (
+            self._path_package.get("commit_hash")
+            if self._path_package.get("commit_hash")
+            else None
+        )
 
     @property
     def package_url(self) -> str:
-        return self._path_package.get('url')
+        return self._path_package.get("url")
 
     @property
-    def _publish(self) -> Dict[str,object]:
-        return self._yaml.get('publish')
+    def _publish(self) -> Dict[str, object]:
+        return self._yaml.get("publish")
 
     @property
     def _type(self) -> str:
-        return self._publish.get('type')
-    
+        return self._publish.get("type")
+
     @property
     def type(self) -> ModelType:
         type = self._type
         return ModelType(type) if type else None
-    
+
     @property
     def _flavor(self) -> str:
-        return self._publish.get('flavor') if self._publish.get('flavor') else None
+        return self._publish.get("flavor") if self._publish.get("flavor") else None
 
     @property
     def flavor(self) -> ModelFlavor:
@@ -224,39 +236,37 @@ class ModelConfig(Config):
         return ModelFlavor(flavor) if flavor else None
 
     @property
-    def tags(self) -> Dict[str,str]:
-        return self._publish.get('tags') if self._publish.get('tags') else {}
-    
-    #task_name can be fill_mask, multiclass, multilabel, ner, question-answering, summarization, text-generation, text-classification
+    def tags(self) -> Dict[str, str]:
+        return self._publish.get("tags") if self._publish.get("tags") else {}
+
+    # task_name can be fill_mask, multiclass, multilabel, ner, question-answering, summarization, text-generation, text-classification
     @property
     def task_name(self) -> str:
-        return self.tags.get('task_name') if self.publish.get('task_name') else None
+        return self.tags.get("task_name") if self.publish.get("task_name") else None
 
-  
+
 DEFAULT_DOCKERFILE = "Dockerfile"
 DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
 
 
 class Os(Enum):
-    LINUX = 'linux'
-    WINDOWS = 'windows'
+    LINUX = "linux"
+    WINDOWS = "windows"
 
 
 class PublishLocation(Enum):
-    MCR = 'mcr'
+    MCR = "mcr"
 
 
 class PublishVisibility(Enum):
-    PUBLIC = 'public'
-    INTERNAL = 'internal'
-    STAGING = 'staging'
-    UNLISTED = 'unlisted'
+    PUBLIC = "public"
+    INTERNAL = "internal"
+    STAGING = "staging"
+    UNLISTED = "unlisted"
 
 
 # Associates publish locations with their hostnames
-PUBLISH_LOCATION_HOSTNAMES = {
-    PublishLocation.MCR: 'mcr.microsoft.com'
-}
+PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: "mcr.microsoft.com"}
 
 
 class EnvironmentConfig(Config):
@@ -280,28 +290,35 @@ class EnvironmentConfig(Config):
           name: Ubuntu
           version: "20.04"
     """
+
     def __init__(self, file_name: Path):
         super().__init__(file_name)
         self._validate()
 
     def _validate(self):
-        Config._validate_exists('image.name', self.image_name)
-        Config._validate_enum('image.os', self._os, Os, True)
+        Config._validate_exists("image.name", self.image_name)
+        Config._validate_enum("image.os", self._os, Os, True)
 
         if self._publish:
-            Config._validate_enum('publish.location', self._publish_location, PublishLocation, True)
-            Config._validate_enum('publish.visibility', self._publish_visibility, PublishVisibility, True)
+            Config._validate_enum(
+                "publish.location", self._publish_location, PublishLocation, True
+            )
+            Config._validate_enum(
+                "publish.visibility", self._publish_visibility, PublishVisibility, True
+            )
 
         if self.context_dir and not self.context_dir_with_path.exists():
-            raise ValidationException(f"context.dir directory {self.context_dir} not found")
+            raise ValidationException(
+                f"context.dir directory {self.context_dir} not found"
+            )
 
     @property
     def _image(self) -> Dict[str, object]:
-        return self._yaml.get('image', {})
+        return self._yaml.get("image", {})
 
     @property
     def image_name(self) -> str:
-        return self._image.get('name')
+        return self._image.get("name")
 
     def get_image_name_with_tag(self, tag: str) -> str:
         return f"{self.image_name}:{tag}"
@@ -331,7 +348,7 @@ class EnvironmentConfig(Config):
 
     @property
     def _os(self) -> str:
-        return self._image.get('os')
+        return self._image.get("os")
 
     @property
     def os(self) -> Os:
@@ -339,7 +356,7 @@ class EnvironmentConfig(Config):
 
     @property
     def _context(self) -> Dict[str, object]:
-        return self._image.get('context', {})
+        return self._image.get("context", {})
 
     @property
     def build_enabled(self) -> bool:
@@ -347,7 +364,7 @@ class EnvironmentConfig(Config):
 
     @property
     def context_dir(self) -> str:
-        return self._context.get('dir')
+        return self._context.get("dir")
 
     @property
     def context_dir_with_path(self) -> Path:
@@ -360,7 +377,7 @@ class EnvironmentConfig(Config):
 
     @property
     def dockerfile(self) -> str:
-        return self._context.get('dockerfile', DEFAULT_DOCKERFILE)
+        return self._context.get("dockerfile", DEFAULT_DOCKERFILE)
 
     @property
     def dockerfile_with_path(self) -> Path:
@@ -368,7 +385,7 @@ class EnvironmentConfig(Config):
 
     @property
     def template_files(self) -> List[str]:
-        return self._context.get('template_files', DEFAULT_TEMPLATE_FILES)
+        return self._context.get("template_files", DEFAULT_TEMPLATE_FILES)
 
     @property
     def template_files_with_path(self) -> List[Path]:
@@ -385,11 +402,11 @@ class EnvironmentConfig(Config):
 
     @property
     def _publish(self) -> Dict[str, str]:
-        return self._image.get('publish', {})
+        return self._image.get("publish", {})
 
     @property
     def _publish_location(self) -> str:
-        return self._publish.get('location')
+        return self._publish.get("location")
 
     @property
     def publish_location(self) -> PublishLocation:
@@ -399,11 +416,13 @@ class EnvironmentConfig(Config):
     @property
     def publish_location_hostname(self) -> str:
         location = self._publish_location
-        return PUBLISH_LOCATION_HOSTNAMES[PublishLocation(location)] if location else None
+        return (
+            PUBLISH_LOCATION_HOSTNAMES[PublishLocation(location)] if location else None
+        )
 
     @property
     def _publish_visibility(self) -> str:
-        return self._publish.get('visibility')
+        return self._publish.get("visibility")
 
     @property
     def publish_visibility(self) -> PublishVisibility:
@@ -412,18 +431,18 @@ class EnvironmentConfig(Config):
 
     @property
     def _environment(self) -> Dict[str, object]:
-        return self._yaml.get('environment', {})
+        return self._yaml.get("environment", {})
 
     @property
     def environment_metadata(self) -> Dict[str, object]:
-        return self._environment.get('metadata')
+        return self._environment.get("metadata")
 
 
 class AssetType(Enum):
-    CODE = 'code'
-    COMPONENT = 'component'
-    ENVIRONMENT = 'environment'
-    MODEL = 'model'
+    CODE = "code"
+    COMPONENT = "component"
+    ENVIRONMENT = "environment"
+    MODEL = "model"
 
 
 DEFAULT_ASSET_FILENAME = "asset.yaml"
@@ -448,6 +467,7 @@ class AssetConfig(Config):
         pip_requirements: tests/requirements.txt
         tests_dir: tests
     """
+
     def __init__(self, file_name: Path):
         super().__init__(file_name)
         self._spec = None
@@ -458,19 +478,21 @@ class AssetConfig(Config):
         return f"{self.type.value} {self.name} {self.version}"
 
     def _validate(self):
-        Config._validate_enum('type', self._type, AssetType, True)
-        Config._validate_exists('spec', self.spec)
-        Config._validate_exists('name', self.name)
+        Config._validate_enum("type", self._type, AssetType, True)
+        Config._validate_exists("spec", self.spec)
+        Config._validate_exists("name", self.name)
         if not self.auto_version:
-            Config._validate_exists('version', self.version)
+            Config._validate_exists("version", self.version)
         if self.type == AssetType.ENVIRONMENT or self.type == AssetType.MODEL:
-            Config._validate_exists('extra_config', self.extra_config)
+            Config._validate_exists("extra_config", self.extra_config)
 
         if not self.spec_with_path.exists():
             raise ValidationException(f"spec file {self.spec} not found")
 
         if self.extra_config and not self.extra_config_with_path.exists():
-            raise ValidationException(f"extra_config file {self.extra_config} not found")
+            raise ValidationException(
+                f"extra_config file {self.extra_config} not found"
+            )
 
         include_paths = self._release_paths_includes_with_path
         if include_paths:
@@ -480,7 +502,7 @@ class AssetConfig(Config):
 
     @property
     def _type(self) -> str:
-        return self._yaml.get('type')
+        return self._yaml.get("type")
 
     @property
     def type(self) -> AssetType:
@@ -488,7 +510,7 @@ class AssetConfig(Config):
 
     @property
     def _name(self) -> str:
-        return self._yaml.get('name')
+        return self._yaml.get("name")
 
     @property
     def name(self) -> str:
@@ -505,13 +527,15 @@ class AssetConfig(Config):
         if not Config._is_set(name):
             name = self.spec_as_object().name
             if Config._contains_template(name):
-                raise ValidationException(f"Tried to read asset name from spec, "
-                                          f"but it includes a template tag: {name}")
+                raise ValidationException(
+                    f"Tried to read asset name from spec, "
+                    f"but it includes a template tag: {name}"
+                )
         return name
 
     @property
     def _version(self) -> str:
-        return self._yaml.get('version')
+        return self._yaml.get("version")
 
     @property
     def version(self) -> str:
@@ -531,8 +555,10 @@ class AssetConfig(Config):
                 if self.auto_version:
                     version = None
                 else:
-                    raise ValidationException(f"Tried to read asset version from spec, "
-                                              f"but it includes a template tag: {version}")
+                    raise ValidationException(
+                        f"Tried to read asset version from spec, "
+                        f"but it includes a template tag: {version}"
+                    )
         return str(version) if version is not None else None
 
     @property
@@ -541,7 +567,7 @@ class AssetConfig(Config):
 
     @property
     def spec(self) -> str:
-        return self._yaml.get('spec')
+        return self._yaml.get("spec")
 
     @property
     def spec_with_path(self) -> Path:
@@ -554,7 +580,7 @@ class AssetConfig(Config):
 
     @property
     def extra_config(self) -> str:
-        return self._yaml.get('extra_config')
+        return self._yaml.get("extra_config")
 
     @property
     def extra_config_with_path(self) -> Path:
@@ -569,23 +595,33 @@ class AssetConfig(Config):
                 self._extra_config = ModelConfig(self.extra_config_with_path)
         return self._extra_config
 
-    def environment_config_as_object(self, force_reload: bool = False) -> EnvironmentConfig:
+    def environment_config_as_object(
+        self, force_reload: bool = False
+    ) -> EnvironmentConfig:
         return self.extra_config_as_object(force_reload)
-    
-    def model_config_as_object(self, force_reload:bool = False) -> ModelConfig:
+
+    def model_config_as_object(self, force_reload: bool = False) -> ModelConfig:
         return self.extra_config_as_object(force_reload)
 
     @property
     def _release_paths(self) -> List[str]:
-        return self._yaml.get('release_paths', [])
+        return self._yaml.get("release_paths", [])
 
     @property
     def _release_paths_includes_with_path(self) -> Path:
-        return [self._append_to_file_path(p) for p in self._release_paths if not p.startswith(EXCLUDE_PREFIX)]
+        return [
+            self._append_to_file_path(p)
+            for p in self._release_paths
+            if not p.startswith(EXCLUDE_PREFIX)
+        ]
 
     @property
     def _release_paths_excludes_with_path(self) -> Path:
-        paths = [p[len(EXCLUDE_PREFIX):] for p in self._release_paths if p.startswith(EXCLUDE_PREFIX)]
+        paths = [
+            p[len(EXCLUDE_PREFIX) :]
+            for p in self._release_paths
+            if p.startswith(EXCLUDE_PREFIX)
+        ]
         return [self._append_to_file_path(p) for p in paths]
 
     @property
@@ -607,26 +643,35 @@ class AssetConfig(Config):
         # Handle excludes
         exclude_paths = self._release_paths_excludes_with_path
         if exclude_paths:
-            release_paths = [f for f in release_paths if not any(
-                             [p for p in exclude_paths if p.exists() and (p.samefile(f) or p in f.parents)])]
+            release_paths = [
+                f
+                for f in release_paths
+                if not any(
+                    [
+                        p
+                        for p in exclude_paths
+                        if p.exists() and (p.samefile(f) or p in f.parents)
+                    ]
+                )
+            ]
 
         return release_paths
 
     @property
     def _test(self) -> Dict[str, object]:
-        return self._yaml.get('test', {})
+        return self._yaml.get("test", {})
 
     @property
     def _test_pytest(self) -> Dict[str, object]:
-        return self._test.get('pytest', {})
+        return self._test.get("pytest", {})
 
     @property
     def pytest_enabled(self) -> bool:
-        return self._test_pytest.get('enabled', False)
+        return self._test_pytest.get("enabled", False)
 
     @property
     def pytest_pip_requirements(self) -> Path:
-        return self._test_pytest.get('pip_requirements')
+        return self._test_pytest.get("pip_requirements")
 
     @property
     def pytest_pip_requirements_with_path(self) -> Path:
@@ -635,7 +680,7 @@ class AssetConfig(Config):
 
     @property
     def pytest_tests_dir(self) -> Path:
-        return self._test_pytest.get('tests_dir', ".") if self.pytest_enabled else None
+        return self._test_pytest.get("tests_dir", ".") if self.pytest_enabled else None
 
     @property
     def pytest_tests_dir_with_path(self) -> Path:
