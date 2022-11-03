@@ -257,11 +257,7 @@ if __name__ == "__main__":
             print(cmd)
 
             # Run command
-            results = run_command(
-                cmd,
-                failure_list,
-                debug_mode
-            )
+            results = run_command(cmd, failure_list, debug_mode)
 
         elif asset.type == assets.AssetType.MODEL:
 
