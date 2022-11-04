@@ -38,13 +38,13 @@ def run_pytest_jobs_old(pytest_jobs: dict, my_env: dict):
 def run_pytest_jobs(pytest_jobs: dict, my_env: dict):
     """Run multiple pytest jobs concurrently."""
     logger.print("Start running pytest jobs")
-    submitted_jobs = defaultdict(list)
+    jobs = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         futures_to_job = {executor.submit(run_pytest_job, job, my_env): job for job in pytest_jobs.keys()}
         for future in concurrent.futures.as_completed(futures_to_job):
             job = futures_to_job[future]
-            submitted_jobs[future] = pytest_jobs[job]
-    return submitted_jobs
+            jobs[future] = pytest_jobs[job]
+    return jobs
 
 
 if __name__ == '__main__':
@@ -132,35 +132,30 @@ if __name__ == '__main__':
     #                failed_jobs.append(job)
     #            del submitted_pytest_jobs[job]
 
-    for job in submitted_pytest_jobs.keys():
+    for job, assets in submitted_pytest_jobs.items():
         if job.result() == 0:
             succeeded_jobs.append(job)
-            covered_assets.extend(submitted_pytest_jobs[job])
+            covered_assets.extend(assets)
         else:
             failed_jobs.append(job)
             
     # TO-DO: job post and group post scripts will be run after all jobs are completed
 
     # process pipeline jobs results
-    while submitted_job_list:
-        for job in submitted_job_list:
-            returned_job = ml_client.jobs.get(job.name)
-            if returned_job.status == "Completed":
-                succeeded_jobs.append(returned_job.display_name)
-                submitted_job_list.remove(job)
-                covered_assets.extend(test_coverage.get(job, []))
-            elif returned_job.status == "Failed" or returned_job.status == "Cancelled":
-                failed_jobs.append(returned_job.display_name)
-                submitted_job_list.remove(job)
+    for job in submitted_job_list:
+        returned_job = ml_client.jobs.get(job.name)
+        if returned_job.status == "Completed":
+            succeeded_jobs.append(returned_job.display_name)
+            covered_assets.extend(test_coverage.get(job, []))
+        elif returned_job.status in ["Failed", "Cancelled"]:
+            failed_jobs.append(returned_job.display_name)
 
     print(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
 
     logger.print(f"covered_assets {covered_assets}")
     if coverage_report:
         with open(coverage_report, 'r') as yf:
-            cover_yaml = yaml.safe_load(yf)
-            if not cover_yaml:
-                cover_yaml = []
+            cover_yaml = yaml.safe_load(yf) or []
             cover_yaml.extend(covered_assets)
         with open(coverage_report, 'w') as yf:
             yaml.safe_dump(cover_yaml, yf)
