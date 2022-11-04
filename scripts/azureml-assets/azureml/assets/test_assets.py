@@ -116,8 +116,8 @@ def test_assets(input_dirs: List[Path],
             created = create_isolated_environment(asset_config, test_env)
             success = success and created
 
-        if asset_config.type is assets.AssetType.ENVIRONMENT:
-            env_config = asset_config.environment_config_as_object()
+        if asset_config.type == assets.AssetType.ENVIRONMENT:
+            env_config = asset_config.extra_config_as_object()
             assets.pin_env_files(env_config)
 
         # Run pytest

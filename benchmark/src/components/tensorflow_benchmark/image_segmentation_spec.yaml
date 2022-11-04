@@ -112,26 +112,26 @@ command: >-
   --images_filename_pattern "${{inputs.images_filename_pattern}}"
   --masks_filename_pattern "${{inputs.masks_filename_pattern}}"
 
-  [--batch_size ${{inputs.batch_size}}]
-  [--num_workers ${{inputs.num_workers}}]
-  [--prefetch_factor ${{inputs.prefetch_factor}}]
-  [--cache ${{inputs.cache}}]
+  $[[--batch_size ${{inputs.batch_size}}]]
+  $[[--num_workers ${{inputs.num_workers}}]]
+  $[[--prefetch_factor ${{inputs.prefetch_factor}}]]
+  $[[--cache ${{inputs.cache}}]]
 
-  [--model_arch ${{inputs.model_arch}}]
+  $[[--model_arch ${{inputs.model_arch}}]]
   --num_classes ${{inputs.num_classes}}
-  [--model_input_size ${{inputs.model_input_size}}]
+  $[[--model_input_size ${{inputs.model_input_size}}]]
 
-  [--num_epochs ${{inputs.num_epochs}}]
-  [--optimizer ${{inputs.optimizer}}]
-  [--loss ${{inputs.loss}}]
+  $[[--num_epochs ${{inputs.num_epochs}}]]
+  $[[--optimizer ${{inputs.optimizer}}]]
+  $[[--loss ${{inputs.loss}}]]
 
-  [--num_gpus ${{inputs.num_gpus}}]
+  $[[--num_gpus ${{inputs.num_gpus}}]]
 
   --model_output ${{outputs.trained_model}}
   --checkpoints ${{outputs.checkpoints}}
 
-  [--distributed_strategy ${{inputs.distributed_strategy}}]
-  [--distributed_backend ${{inputs.distributed_backend}}]
+  $[[--distributed_strategy ${{inputs.distributed_strategy}}]]
+  $[[--distributed_backend ${{inputs.distributed_backend}}]]
 
 distribution:
   # NOTE: using type:tensorflow will use all the right env variables (ex: TF_CONFIG)
