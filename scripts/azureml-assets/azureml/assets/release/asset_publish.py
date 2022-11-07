@@ -159,7 +159,7 @@ def _str2bool(v: str) -> bool:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--registry-name", required=True, type=str, help="the registry name")
-    parser.add_argument("-s", "--subscription-id", type=str, help="the subscription ID")
+    parser.add_argument("-s", "--subscription-id", required=True, type=str, help="the subscription ID")
     parser.add_argument("-g", "--resource-group", type=str, help="the resource group name")
     parser.add_argument("-w", "--workspace", type=str, help="the workspace name")
     parser.add_argument(
@@ -169,7 +169,7 @@ if __name__ == "__main__":
         type=Path,
         help="the assets directory",
     )
-    parser.add_argument("-t", "--tests-directory", type=Path, help="the tests directory")
+    parser.add_argument("-t", "--tests-directory", required=True, type=Path, help="the tests directory")
     parser.add_argument("-v", "--version-suffix", type=str, help="the version suffix")
     parser.add_argument("-l", "--publish-list", type=Path, help="the path of the publish list file")
     parser.add_argument(
@@ -264,8 +264,8 @@ if __name__ == "__main__":
                     "ml",
                     asset.type.value,
                     "create",
-                    # "--subscription",
-                    # subscription_id,
+                    "--subscription",
+                    subscription_id,
                     "--file",
                     str(asset.spec_with_path),
                     "--registry-name",
