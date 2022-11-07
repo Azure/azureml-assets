@@ -35,6 +35,7 @@ def run_pytest_jobs_old(pytest_jobs: dict, my_env: dict):
         submitted_jobs[future] = pytest_jobs[job]
     return submitted_jobs
 
+
 def run_pytest_jobs(pytest_jobs: dict, my_env: dict):
     """Run multiple pytest jobs concurrently."""
     logger.print("Start running pytest jobs")
@@ -138,7 +139,7 @@ if __name__ == '__main__':
             covered_assets.extend(assets)
         else:
             failed_jobs.append(job)
-            
+   
     # TO-DO: job post and group post scripts will be run after all jobs are completed
 
     # process pipeline jobs results

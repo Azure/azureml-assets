@@ -58,8 +58,8 @@ if __name__ == '__main__':
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data:
                 print(f"now processing test group: {test_group}")
-                cmd = ["python3", "-u", "group_test.py", "-i", area, "-g", test_group, "-s", subscription_id, "-r", "resource_group",
-                    "-w", workspace, "-t", token]
+                cmd = ["python3", "-u", "group_test.py", "-i", area, "-g", test_group, "-s", subscription_id,
+                        "-r", "resource_group", "-w", workspace, "-t", token]
                 if coverage_report:
                     cmd.extend(["-c", coverage_report])
                 if version_suffix:
