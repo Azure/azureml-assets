@@ -327,7 +327,7 @@ class ModelConfig(Config):
     def tags(self) -> Dict[str, str]:
         return self._publish.get("tags") if self._publish.get("tags") else {}
 
-    # task_name can be fill_mask, multiclass, multilabel, ner, question-answering, 
+    # task_name can be fill_mask, multiclass, multilabel, ner, question-answering,
     # summarization, text-generation, text-classification
     @property
     def task_name(self) -> str:
