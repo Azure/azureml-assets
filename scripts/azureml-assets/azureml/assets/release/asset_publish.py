@@ -76,6 +76,7 @@ def model_prepare(model_config: assets.ModelConfig, spec_file: Path) -> str:
         return None
 
     model_dir = "/tmp/" + model_config.name
+
     model_utils = ModelUtils(
         model_url=model_config.package_url,
         model_commit_hash=model_config.package_commit_hash,
@@ -103,7 +104,10 @@ def model_clean(model_dir: Path):
     if model_dir is not None:
         print("Deleting model files from disk")
         cmd = f"rm -rf {model_dir}"
-        run(cmd, shell=True)
+        try:
+            run(cmd, shell=True)
+        except Exception as e:
+            logger.print("Failed to Delete model from disk. Encountered error: " + e)
 
 
 def run_command(cmd: str, failure_list: List, debug_mode: bool = None):

@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import logging
-import azureml.evaluate.mlflow as hf_mlflow
 from mlflow.models import ModelSignature
 from transformers import AutoTokenizer, AutoConfig
 from transformers import (
@@ -12,6 +11,7 @@ from transformers import (
     AutoModelForQuestionAnswering,
     AutoModelWithLMHead,
 )
+import azureml.evaluate.mlflow as hf_mlflow
 
 
 class MLFlowModelUtils:
@@ -62,8 +62,8 @@ class MLFlowModelUtils:
                 misc_conf,
                 signature=signature,
             )
-        except MemoryError:
-            logging.error("Memory Error")
+        except Exception as e:
+            logging.error("Unable to transform model as MLFlow model due to error: " + e)
 
     def _convert_to_mlflow_package(self):
         return None

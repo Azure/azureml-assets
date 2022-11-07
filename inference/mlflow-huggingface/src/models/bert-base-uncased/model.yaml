@@ -1,0 +1,12 @@
+name: bert-base-uncased
+path:
+  package:
+    commit_hash: 5546055f03398095e385d7dc625e636cc8910bf2
+    url: https://huggingface.co/bert-base-uncased
+publish:
+  flavor: hftransformers
+  tags:
+    ISV: HuggingFace
+    Owner: System
+    task: fill-mask
+  type: mlflow_model
