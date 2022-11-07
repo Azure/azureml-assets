@@ -1,0 +1,79 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+experiment_name: llm_finetuning
+compute: azureml:gpu-cluster
+
+display_name: gpt2_single_classification_finetuning
+
+settings:
+  # pipeline level settings to not use cached output for all child nodes
+  force_rerun: true
+
+inputs:
+  data:
+    path: azureml:conll2003v2:1
+    type: uri_folder
+  cola_train:
+    path: azueml:cola_train:1
+    type: uri_file
+  cola_valid:
+    path: azueml:cola_validation:1
+    type: uri_file
+  cola_test:
+    path: azueml:cola_validation:1
+    type: uri_file
+
+jobs:
+  pre_processor:
+    type: command
+    component: azureml://registries/llm-test-registry/components/microsoft_gllm_classification_single_label_data_preprocess_component/versions/0.0.1
+
+    train_file_path: ${{parent.inputs.cola_train}}
+    valid_file_path: ${{parent.inputs.cola_valid}}
+    language_model: gpt2
+    sentence1_key: sentence1
+    label_key: label
+    outputs:
+      output_dir:
+        type: uri_folder
+
+  finetuning:
+    type: command
+    component: azureml://registries/llm-test-registry/components/microsoft_gllm_classification_single_label_model_finetune_component/versions/0.0.1
+
+    distribution:
+      type: pytorch
+      process_count_per_instance: 2
+    resources:
+      instance_count: 2
+    inputs:
+      dataset_path: ${{parent.jobs.pre_processor.outputs.output_dir}}
+    outputs:
+      output_dir:
+        type: uri_folder
+
+  inference:
+    type: command
+    component: azureml://registries/llm-test-registry/components/microsoft_gllm_classification_single_label_model_inference_component/versions/0.0.1
+
+    distribution:
+      type: pytorch
+      process_count_per_instance: 2
+    resources:
+      instance_count: 2    
+    inputs:
+      model_path: ${{parent.jobs.finetuning.outputs.output_dir}}
+      sentence1_key: sentence1
+      test_file_path: ${{parent.inputs.cola_test}}
+    outputs:
+      output_dir:
+        type: uri_folder
+
+  deployment:
+    type: command
+    component: azureml://registries/llm-test-registry/components/microsoft_gllm_classification_single_label_model_deploy_component/versions/0.0.1
+    inputs:
+      model_checkpoint_dir: ${{parent.jobs.finetuning.outputs.output_dir}}
+      name_for_registered_model: inferencemodel
+      sentence1_key: sentence1
