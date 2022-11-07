@@ -21,12 +21,12 @@ def submit_pytest_job():
     test_job = ml_client.jobs.create_or_update(test_job)
 
     while True:
-        time.sleep(10)
         returned_job = ml_client.jobs.get(test_job.name)
         if returned_job.status == "Completed":
             return True
         elif returned_job.status in ["Failed", "Cancelled"]:
             return False
+        time.sleep(10)
 
 
 def test_answer():

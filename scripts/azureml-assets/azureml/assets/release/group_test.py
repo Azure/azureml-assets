@@ -80,7 +80,7 @@ if __name__ == '__main__':
     my_env['subscription_id'] = subscription_id
     my_env['resource_group'] = resource_group
     my_env['workspace'] = workspace
-    my_env['token'] = args.token.strip('"')
+    my_env['token'] = args.token
     if args.version_suffix:
         my_env['version_suffix'] = args.version_suffix
     ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)
@@ -119,7 +119,7 @@ if __name__ == '__main__':
                 submitted_job_list.append(test_job)
 
     # Run pytest jobs
-    submitted_pytest_jobs = run_pytest_jobs(pytest_jobs, my_env)
+    pytest_job_results = run_pytest_jobs(pytest_jobs, my_env)
 
     # Process pytest results
     # while submitted_pytest_jobs:
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     #                failed_jobs.append(job)
     #            del submitted_pytest_jobs[job]
 
-    for job, assets in submitted_pytest_jobs.items():
+    for job, assets in pytest_job_results.items():
         if job.result() == 0:
             succeeded_jobs.append(job)
             covered_assets.extend(assets)
