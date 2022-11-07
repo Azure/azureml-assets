@@ -278,7 +278,6 @@ class ModelConfig(Config):
     def _validate(self):
         """Validate the yaml file."""
         Config._validate_exists("model.name", self.name)
-        Config._validate_enum("model.flavor", self._flavor, ModelFlavor, True)
         Config._validate_enum("model.type", self._type, ModelType, True)
 
     @property
@@ -304,7 +303,7 @@ class ModelConfig(Config):
     @property
     def package_commit_hash(self) -> str:
         """Model commit hash from package."""
-        return self._path_package.get("commit_hash") if self._path_package.get("commit_hash") else None
+        return self._path_package.get("commit_hash", None)
 
     @property
     def package_url(self) -> str:
@@ -330,7 +329,7 @@ class ModelConfig(Config):
     @property
     def _flavor(self) -> str:
         """Model Flavor."""
-        return self._publish.get("flavor") if self._publish.get("flavor") else None
+        return self._publish.get("flavor", None)
 
     @property
     def flavor(self) -> ModelFlavor:
@@ -341,7 +340,7 @@ class ModelConfig(Config):
     @property
     def tags(self) -> Dict[str, str]:
         """Tags to add on Model artifact while publishing to registry."""
-        return self._publish.get("tags") if self._publish.get("tags") else {}
+        return self._publish.get("tags", {})
 
     # task_name can be fill_mask, multiclass, multilabel, ner, question-answering,
     # summarization, text-generation, text-classification

@@ -19,9 +19,7 @@ import azureml.assets.util as util
 from azureml.assets.util import logger
 
 
-ASSET_ID_TEMPLATE = Template(
-    "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version"
-)
+ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 
 
@@ -50,9 +48,7 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
                 logger.print(f"processing asset {asset_name}")
                 if asset_name in asset_ids:
                     job["component"] = asset_ids.get(asset_name)
-                    logger.print(
-                        f"for job {job_name}, the new asset id: {job['component']}"
-                    )
+                    logger.print(f"for job {job_name}, the new asset id: {job['component']}")
             with open(test_job, "w") as file:
                 yaml.dump(data, file, default_flow_style=False, sort_keys=False)
 
@@ -66,7 +62,7 @@ def update_spec_file(spec_file: Path, path: Path):
         yaml.dump(model_file, f)
 
 
-def model_prepare(model_config: assets.ModelConfig, spec_file: Path) -> str:
+def model_prepare(model_config: assets.ModelConfig, spec_file: Path) -> object:
     """Prepare Model."""
     """
     Prepare the model. Download the model if required.
@@ -74,9 +70,11 @@ def model_prepare(model_config: assets.ModelConfig, spec_file: Path) -> str:
 
     Return: returns the local path to the model.
     """
+    result = {"download_success": False, "model_dir": None}
 
     if model_config.path_local_path:
-        return None
+        update_spec_file(spec_file, os.path.abspath(model_config.path_local_path))
+        return result["model_dir"]
 
     model_dir = "./tmp/" + model_config.name
 
@@ -85,21 +83,26 @@ def model_prepare(model_config: assets.ModelConfig, spec_file: Path) -> str:
         model_commit_hash=model_config.package_commit_hash,
         model_dir=model_dir,
     )
-    model_download = model_utils.download_model()
-    if model_download is False:
-        return None
 
-    update_spec_file(spec_file, os.path.abspath(model_dir))
+    validate_download = model_utils.download_model()
+
+    if validate_download is True:
+        update_spec_file(spec_file, os.path.abspath(model_dir))
+
     if model_config.type.value == "mlflow_model":
-        mlflow_dir = model_dir + "/" + model_config.name + "-mlflow"
+        model_dir = model_dir + "/" + model_config.name + "-mlflow"
         mlflow_utils = MLFlowModelUtils(
             name=model_config.name,
             task_name=model_config.task_name,
             flavor=model_config.flavor.value,
-            mlflow_model_dir=mlflow_dir,
+            mlflow_model_dir=model_dir,
         )
         mlflow_utils.covert_into_mlflow_model()
-    return model_dir
+
+    result["download_success"] = validate_download
+    result["model_dir"] = model_dir
+
+    return result
 
 
 def model_clean(model_dir: Path):
@@ -155,13 +158,9 @@ def _str2bool(v: str) -> bool:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-r", "--registry-name", required=True, type=str, help="the registry name"
-    )
+    parser.add_argument("-r", "--registry-name", required=True, type=str, help="the registry name")
     parser.add_argument("-s", "--subscription-id", type=str, help="the subscription ID")
-    parser.add_argument(
-        "-g", "--resource-group", type=str, help="the resource group name"
-    )
+    parser.add_argument("-g", "--resource-group", type=str, help="the resource group name")
     parser.add_argument("-w", "--workspace", type=str, help="the workspace name")
     parser.add_argument(
         "-a",
@@ -170,13 +169,9 @@ if __name__ == "__main__":
         type=Path,
         help="the assets directory",
     )
-    parser.add_argument(
-        "-t", "--tests-directory", type=Path, help="the tests directory"
-    )
+    parser.add_argument("-t", "--tests-directory", type=Path, help="the tests directory")
     parser.add_argument("-v", "--version-suffix", type=str, help="the version suffix")
-    parser.add_argument(
-        "-l", "--publish-list", type=Path, help="the path of the publish list file"
-    )
+    parser.add_argument("-l", "--publish-list", type=Path, help="the path of the publish list file")
     parser.add_argument(
         "-d",
         "--debug",
@@ -218,14 +213,10 @@ if __name__ == "__main__":
     for asset in util.find_assets(input_dirs=assets_dir):
         asset_names = publish_list.get(asset.type.value, [])
         if not ("*" in asset_names or asset.name in asset_names):
-            logger.print(
-                f"Skipping registering asset {asset.name} because it is not in the publish list"
-            )
+            logger.print(f"Skipping registering asset {asset.name} because it is not in the publish list")
             continue
         logger.print(f"Registering {asset}")
-        final_version = (
-            asset.version + "-" + passed_version if passed_version else asset.version
-        )
+        final_version = asset.version + "-" + passed_version if passed_version else asset.version
         logger.print(f"final version: {final_version}")
         asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
             registry_name=registry_name,
@@ -265,38 +256,39 @@ if __name__ == "__main__":
         elif asset.type == assets.AssetType.MODEL:
 
             model_config = asset.extra_config_as_object()
-            model_dir = model_prepare(model_config, asset.spec_with_path)
+            result = model_prepare(model_config, asset.spec_with_path)
             # Assemble command
-            cmd = [
-                shutil.which("az"),
-                "ml",
-                asset.type.value,
-                "create",
-                # "--subscription",
-                # subscription_id,
-                "--file",
-                str(asset.spec_with_path),
-                "--registry-name",
-                registry_name,
-                "--version",
-                final_version,
-                "--tags",
-                str(model_config.tags),
-            ]
-            if resource_group:
-                cmd.extend(["--resource-group", resource_group])
-            if workspace:
-                cmd.extend(["--workspace", workspace])
-            print(cmd)
+            if result["download_success"] is True:
+                cmd = [
+                    shutil.which("az"),
+                    "ml",
+                    asset.type.value,
+                    "create",
+                    # "--subscription",
+                    # subscription_id,
+                    "--file",
+                    str(asset.spec_with_path),
+                    "--registry-name",
+                    registry_name,
+                    "--version",
+                    final_version,
+                    "--tags",
+                    str(model_config.tags),
+                ]
+                if resource_group:
+                    cmd.extend(["--resource-group", resource_group])
+                if workspace:
+                    cmd.extend(["--workspace", workspace])
+                print(cmd)
 
-            # Run command
-            results = run_command(
-                cmd,
-                failure_list,
-                debug_mode,
-            )
-            # Delete Model Artifacts
-            model_clean(model_dir)
+                # Run command
+                results = run_command(
+                    cmd,
+                    failure_list,
+                    debug_mode,
+                )
+                # Delete Model Artifacts
+                model_clean(result["model_dir"])
 
         else:
             logger.log_warning(f"unsupported asset type: {asset.type.value}")
