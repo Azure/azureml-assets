@@ -1,18 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import logging
-from mlflow.models import ModelSignature
-from transformers import AutoTokenizer, AutoConfig
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoModelForMaskedLM,
-    AutoModelForTokenClassification,
-    AutoModelForQuestionAnswering,
-    AutoModelWithLMHead,
-)
-import azureml.evaluate.mlflow as hf_mlflow
-
 
 class MLFlowModelUtils:
     def __init__(self, name, task_name, flavor, mlflow_model_dir):
@@ -22,48 +10,8 @@ class MLFlowModelUtils:
         self.flavor = flavor
 
     def _convert_to_mlflow_hftransformers(self):
-        config = AutoConfig.from_pretrained(self.name)
-        misc_conf = {"task_type": self.task_name}
-        task_model_mapping = {
-            "multiclass": AutoModelForSequenceClassification,
-            "multilabel": AutoModelForSequenceClassification,
-            "fill-mask": AutoModelForMaskedLM,
-            "ner": AutoModelForTokenClassification,
-            "question-answering": AutoModelForQuestionAnswering,
-            "summarization": AutoModelWithLMHead,
-            "text-generation": AutoModelWithLMHead,
-            "text-classification": AutoModelForSequenceClassification,
-        }
-        if self.task_name in task_model_mapping:
-            model = task_model_mapping[self.task_name].from_pretrained(
-                self.name, config=config
-            )
-        elif "translation" in self.task_name:
-            model = AutoModelWithLMHead.from_pretrained(self.name, config=config)
-        else:
-            logging.error("Invalid Task Name")
-        tokenizer = AutoTokenizer.from_pretrained(self.name, config=config)
-        sign_dict = {
-            "inputs": '[{"name": "input_string", "type": "string"}]',
-            "outputs": '[{"type": "string"}]',
-        }
-        if self.task_name == "question-answering":
-            sign_dict[
-                "inputs"
-            ] = '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]'
-        signature = ModelSignature.from_dict(sign_dict)
-
-        try:
-            hf_mlflow.hftransformers.save_model(
-                model,
-                f"{self.mlflow_model_dir}",
-                tokenizer,
-                config,
-                misc_conf,
-                signature=signature,
-            )
-        except Exception as e:
-            logging.error("Unable to transform model as MLFlow model due to error: " + e)
+        # TODO Add MLFlow HFFlavour support once wheel files are publicly available
+        return None
 
     def _convert_to_mlflow_package(self):
         return None

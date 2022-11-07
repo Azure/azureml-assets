@@ -5,5 +5,3 @@ tqdm==4.63.0
 torch==1.12.1
 pandas
 mlflow
-https://scorestorageforgeneric.blob.core.windows.net/libs/azureml_metrics-0.1.0.72521629-py3-none-any.whl
-https://scorestorageforgeneric.blob.core.windows.net/libs/azureml_evaluate_mlflow-0.1.0.75711390-py3-none-any.whl
