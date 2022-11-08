@@ -38,8 +38,7 @@ class ModelUtils:
     def _delete_downloaded_artifacts(self) -> None:
         """Delete the downloaded artifacts in case of failure."""
         logger.print("Deleting the incomplete model artifacts")
-        delete_cmd = f"rm -rf {self.model_dir}"
-        self._run(delete_cmd)
+        self.model_dir.cleanup()
 
     def download_model(self) -> bool:
         """Download the Model."""
@@ -52,13 +51,13 @@ class ModelUtils:
         """
         lfs_cmd = "git lfs install"
         self._run(lfs_cmd)
-        clone_cmd = f"git clone {self.model_url} {self.model_dir}"
+        clone_cmd = f"git clone {self.model_url} {self.model_dir.name}"
         result = self._run(clone_cmd)
         if result != 0:
             self._delete_downloaded_artifacts()
             return False
         if self.model_commit_hash:
             cmd = f"git reset --hard {self.model_commit_hash}"
-            self._run(cmd, cwd=self.model_dir)
-        self._run("rm -rf .git", cwd=self.model_dir)
+            self._run(cmd, cwd=self.model_dir.name)
+        self._run("rm -rf .git", cwd=self.model_dir.name)
         return True

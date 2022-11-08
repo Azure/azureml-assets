@@ -9,6 +9,7 @@ import shutil
 import sys
 import os
 import yaml
+from tempfile import TemporaryDirectory
 from typing import List
 from pathlib import Path
 from string import Template
@@ -74,9 +75,9 @@ def model_prepare(model_config: assets.ModelConfig, spec_file: Path) -> object:
 
     if model_config.path_local_path:
         update_spec_file(spec_file, os.path.abspath(model_config.path_local_path))
-        return result["model_dir"]
+        return result
 
-    model_dir = "./tmp/" + model_config.name
+    model_dir = TemporaryDirectory()
 
     model_utils = ModelUtils(
         model_url=model_config.package_url,
@@ -87,15 +88,14 @@ def model_prepare(model_config: assets.ModelConfig, spec_file: Path) -> object:
     validate_download = model_utils.download_model()
 
     if validate_download is True:
-        update_spec_file(spec_file, os.path.abspath(model_dir))
+        update_spec_file(spec_file, model_dir.name)
 
     if model_config.type.value == "mlflow_model":
-        model_dir = model_dir + "/" + model_config.name + "-mlflow"
         mlflow_utils = MLFlowModelUtils(
             name=model_config.name,
             task_name=model_config.task_name,
             flavor=model_config.flavor.value,
-            mlflow_model_dir=model_dir,
+            model_dir=model_dir,
         )
         mlflow_utils.covert_into_mlflow_model()
 
@@ -105,13 +105,13 @@ def model_prepare(model_config: assets.ModelConfig, spec_file: Path) -> object:
     return result
 
 
-def model_clean(model_dir: Path):
+def model_clean(model_dir: TemporaryDirectory):
     """Delete the Model Artifact after the model has been pushed to the registry."""
     if model_dir is not None:
         print("Deleting model files from disk")
-        cmd = f"rm -rf {model_dir}"
+        
         try:
-            run(cmd, shell=True)
+            model_dir.cleanup()
         except Exception as e:
             logger.print("Failed to Delete model from disk. Encountered error: " + e)
 
@@ -159,7 +159,7 @@ def _str2bool(v: str) -> bool:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--registry-name", required=True, type=str, help="the registry name")
-    parser.add_argument("-s", "--subscription-id", required=True, type=str, help="the subscription ID")
+    parser.add_argument("-s", "--subscription-id", type=str, help="the subscription ID")
     parser.add_argument("-g", "--resource-group", type=str, help="the resource group name")
     parser.add_argument("-w", "--workspace", type=str, help="the workspace name")
     parser.add_argument(
@@ -169,7 +169,7 @@ if __name__ == "__main__":
         type=Path,
         help="the assets directory",
     )
-    parser.add_argument("-t", "--tests-directory", required=True, type=Path, help="the tests directory")
+    parser.add_argument("-t", "--tests-directory", type=Path, help="the tests directory")
     parser.add_argument("-v", "--version-suffix", type=str, help="the version suffix")
     parser.add_argument("-l", "--publish-list", type=Path, help="the path of the publish list file")
     parser.add_argument(

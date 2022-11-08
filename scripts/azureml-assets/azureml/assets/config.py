@@ -106,8 +106,6 @@ class Config:
     def _validate_enum(property_name: str, property_value: object, enum: Enum, required=False):
         """Ensure an enum value is set and is expected.
 
-        "model.flavor", self.flavor, ModelFlavor, True)
-
         Args:
             property_name (str): Property name, used only in exception message.
             property_value (object): Property value.
@@ -182,8 +180,8 @@ class Spec(Config):
         Raises:
             ValidationException: If validation failed.
         """
-        Config._validate_exists("name", self.name)
-        Config._validate_exists("version", self.version)
+        Config._validate_exists('name', self.name)
+        Config._validate_exists('version', self.version)
 
         if self.code_dir and not self.code_dir_with_path.exists():
             raise ValidationException(f"code directory {self.code_dir} not found")
