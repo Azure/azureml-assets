@@ -27,7 +27,8 @@ def test_results_analysis(config_file: Path, results_file: Path, asset_dir: Path
             assets_list = create_list[assets_type]
             if '*' in assets_list:
                 assets_set = util.find_assets(
-                    input_dirs=asset_dir / assets_type,
+                    input_dirs=asset_dir,
+                    types=[assets_type],
                     asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
                 assets_list = [asset.name for asset in assets_set]
                 logger.print(f"find all {assets_type}s: {assets_list}")

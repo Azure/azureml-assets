@@ -51,11 +51,7 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
             test_job["assets"] = covered_assets
             # save test job yaml
             with open(test_job_path, "w") as file:
-                yaml.dump(
-                    tj_yaml,
-                    file,
-                    default_flow_style=False,
-                    sort_keys=False)
+                yaml.dump(tj_yaml, file, default_flow_style=False, sort_keys=False)
             # save tests.yaml
             with open(src_yaml, "w") as file:
                 yaml.dump(data, file, default_flow_style=False, sort_keys=False)
