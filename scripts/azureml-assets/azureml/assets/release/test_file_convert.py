@@ -58,11 +58,7 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
                     sort_keys=False)
             # save tests.yaml
             with open(src_yaml, "w") as file:
-                yaml.dump(
-                    data,
-                    file,
-                    default_flow_style=False,
-                    sort_keys=False)
+                yaml.dump(data, file, default_flow_style=False, sort_keys=False)
             all_covered_assets.extend(covered_assets)
     return all_covered_assets
 

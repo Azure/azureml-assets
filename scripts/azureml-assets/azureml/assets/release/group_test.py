@@ -2,13 +2,11 @@
 # Licensed under the MIT License.
 """Python script to run group tests."""
 import argparse
-from subprocess import check_call
-from subprocess import run
+from subprocess import check_call, run
 from pathlib import Path
 import azure.ai.ml
 from azure.ai.ml import MLClient
 from azure.identity import DefaultAzureCredential
-from collections import defaultdict
 import concurrent.futures
 import yaml
 import os
@@ -20,20 +18,7 @@ TEST_YML = "tests.yml"
 def run_pytest_job(job: Path, my_env: dict):
     """Run single pytest job."""
     p = run(f"pytest -q {job}", env=my_env, shell=True)
-    return_code = p.returncode
-    return return_code
-
-
-def run_pytest_jobs_old(pytest_jobs: dict, my_env: dict):
-    """Run multiple pytest jobs concurrently."""
-    logger.print("Start running pytest jobs")
-    submitted_jobs = defaultdict(list)
-    executor = concurrent.futures.ThreadPoolExecutor()
-    for job in pytest_jobs.keys():
-        arr = [job, my_env]
-        future = executor.submit(lambda p: run_pytest_job(*p), arr)
-        submitted_jobs[future] = pytest_jobs[job]
-    return submitted_jobs
+    return p.returncode
 
 
 def run_pytest_jobs(pytest_jobs: dict, my_env: dict):
@@ -88,18 +73,18 @@ if __name__ == '__main__':
     submitted_job_list = []
     succeeded_jobs = []
     failed_jobs = []
-    test_coverage = defaultdict(list)
+    test_coverage = {}
     covered_assets = []
 
     if group_pre:
         check_call(f"python {group_pre}", env=my_env, shell=True)
 
-    pytest_jobs = defaultdict(list)  # pytest job path -> assets coverage dict
+    pytest_jobs = {}  # pytest job path -> assets coverage dict
     with open(tests_dir / TEST_YML) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
         for job, job_data in data[test_group]['jobs'].items():
             if 'pytest_job' in job_data:
-                pytest_jobs[tests_dir / job_data['pytest_job']] = job_data["assets"]
+                pytest_jobs[tests_dir / job_data['pytest_job']] = job_data['assets']
             else:
                 if 'pre' in job_data:
                     logger.print(f"Running pre script for {job}")
