@@ -109,7 +109,6 @@ def model_clean(model_dir: TemporaryDirectory):
     """Delete the Model Artifact after the model has been pushed to the registry."""
     if model_dir is not None:
         print("Deleting model files from disk")
-        
         try:
             model_dir.cleanup()
         except Exception as e:

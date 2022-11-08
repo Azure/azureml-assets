@@ -180,8 +180,8 @@ class Spec(Config):
         Raises:
             ValidationException: If validation failed.
         """
-        Config._validate_exists('name', self.name)
-        Config._validate_exists('version', self.version)
+        Config._validate_exists("name", self.name)
+        Config._validate_exists("version", self.version)
 
         if self.code_dir and not self.code_dir_with_path.exists():
             raise ValidationException(f"code directory {self.code_dir} not found")
@@ -817,7 +817,7 @@ class AssetConfig(Config):
     @property
     def _release_paths_excludes_with_path(self) -> Path:
         """Files that are required to create this asset, filtered to those that start with !."""
-        paths = [p[len(EXCLUDE_PREFIX):] for p in self._release_paths if p.startswith(EXCLUDE_PREFIX)]
+        paths = [p[len(EXCLUDE_PREFIX) :] for p in self._release_paths if p.startswith(EXCLUDE_PREFIX)]
         return [self._append_to_file_path(p) for p in paths]
 
     @property
