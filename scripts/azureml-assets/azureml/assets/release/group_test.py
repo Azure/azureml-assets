@@ -122,24 +122,13 @@ if __name__ == '__main__':
     # Run pytest jobs
     pytest_job_results = run_pytest_jobs(pytest_jobs, my_env)
 
-    # Process pytest results
-    # while submitted_pytest_jobs:
-    #    for job in submitted_pytest_jobs.copy().keys():
-    #        if job.done():
-    #            if job.result() == 0:
-    #                succeeded_jobs.append(job)
-    #                covered_assets.extend(submitted_pytest_jobs[job])
-    #            else:
-    #                failed_jobs.append(job)
-    #            del submitted_pytest_jobs[job]
-
     for job, assets in pytest_job_results.items():
         if job.result() == 0:
             succeeded_jobs.append(job)
             covered_assets.extend(assets)
         else:
             failed_jobs.append(job)
-   
+
     # TO-DO: job post and group post scripts will be run after all jobs are completed
 
     # process pipeline jobs results
