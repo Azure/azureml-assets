@@ -286,7 +286,7 @@ def get_causal_page(data):
 def get_fairlearn_page(data):
     heading = div(
         p(
-            "Understand your model’s fairness issues "
+            "Understand your model's fairness issues "
             "using group-fairness metrics across sensitive features and cohorts. "
             "Pay particular attention to the cohorts who receive worse treatments "
             "(predictions) by your model."
@@ -356,7 +356,12 @@ def get_fairlearn_page(data):
             for c in data
         ]
         x_data = [
-            100 * (get_metric("selection_rate", data[c]["y_test"], data[c]["y_pred"]))
+            100 * (get_metric(
+                "selection_rate",
+                data[c]["y_test"],
+                data[c]["y_pred"]),
+                data[c]["pos_label"]
+            )
             for c in data
         ]
         x_data = [[x, 100 - x] for x in x_data]

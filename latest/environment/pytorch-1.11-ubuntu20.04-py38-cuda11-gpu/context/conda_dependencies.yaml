@@ -21,12 +21,13 @@ dependencies:
   - numpy>=1.10,<1.22
   - ipykernel~=6.0
   - azure-core<1.23.0
-  - azureml-defaults==1.45.0
-  - azureml-mlflow==1.45.0
-  - azureml-telemetry==1.45.0
+  - azureml-defaults==1.47.0
+  - azureml-mlflow==1.47.0
+  - azureml-telemetry==1.47.0
   - tensorboard==2.6.0
   - tensorflow-gpu==2.6.0
   - onnxruntime-gpu>=1.7,<1.10
   - future==0.18.2
   - torch-tb-profiler==0.3.1
   - msrest==0.6.21
+  - debugpy~=1.6.3

@@ -189,7 +189,7 @@ def get_causal_page(data):
 def get_fairlearn_page(data):
     heading = div(
         p(
-            "Understand your model’s fairness issues "
+            "Understand your model's fairness issues "
             "using group-fairness metrics across sensitive features and cohorts. "
             "Pay particular attention to the cohorts who receive worse treatments "
             "(predictions) by your model."

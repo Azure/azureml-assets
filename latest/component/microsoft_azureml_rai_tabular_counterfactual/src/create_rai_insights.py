@@ -20,6 +20,7 @@ from rai_component_utilities import (
     get_train_dataset_id,
     get_test_dataset_id,
 )
+
 from _telemetry._loggerfactory import _LoggerFactory, track
 
 _logger = logging.getLogger(__file__)
@@ -52,9 +53,11 @@ def parse_args():
     parser.add_argument("--target_column_name", type=str, required=True)
 
     parser.add_argument("--maximum_rows_for_test_dataset", type=int, default=5000)
+
     parser.add_argument(
         "--categorical_column_names", type=str, help="Optional[List[str]]"
     )
+
     parser.add_argument("--model_info_path", type=str, help="name:version")
 
     parser.add_argument("--model_input", type=str, help="model local path on remote")
@@ -160,6 +163,7 @@ def main(args):
         DashboardInfo.RAI_INSIGHTS_CONSTRUCTOR_ARGS_KEY: constructor_args,
         DashboardInfo.RAI_INSIGHTS_TRAIN_DATASET_ID_KEY: get_train_dataset_id(my_run),
         DashboardInfo.RAI_INSIGHTS_TEST_DATASET_ID_KEY: get_test_dataset_id(my_run),
+        DashboardInfo.RAI_INSIGHTS_DASHBOARD_TITLE_KEY: args.title,
     }
     output_file = os.path.join(
         args.output_path, DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
