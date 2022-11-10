@@ -73,7 +73,7 @@ if __name__ == '__main__':
                 if version_suffix:
                     cmd.extend(["-v", version_suffix])
                 print(f"running command: {cmd}")
-                p = run(cmd, shell=True)
+                p = run(cmd) # , shell=True)
                 return_code = p.returncode
                 print(f"return code: {return_code}")
                 print(f"return output: {p.stdout}")
