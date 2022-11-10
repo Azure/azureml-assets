@@ -122,13 +122,16 @@ if __name__ == '__main__':
     # TO-DO: job post and group post scripts will be run after all jobs are completed
 
     # process pipeline jobs results
-    for job in submitted_job_list:
-        returned_job = ml_client.jobs.get(job.name)
-        if returned_job.status == "Completed":
-            succeeded_jobs.append(returned_job.display_name)
-            covered_assets.extend(test_coverage.get(job, []))
-        elif returned_job.status in ["Failed", "Cancelled"]:
-            failed_jobs.append(returned_job.display_name)
+    while submitted_job_list:
+        for job in submitted_job_list:
+            returned_job = ml_client.jobs.get(job.name)
+            if returned_job.status == "Completed":
+                succeeded_jobs.append(returned_job.display_name)
+                covered_assets.extend(test_coverage.get(job, []))
+                submitted_job_list.remove(job)
+            elif returned_job.status in ["Failed", "Cancelled"]:
+                failed_jobs.append(returned_job.display_name)
+                submitted_job_list.remove(job)
 
     print(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
 
