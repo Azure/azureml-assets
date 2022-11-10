@@ -30,7 +30,8 @@ def test_files_location(dir: Path):
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data.values():
                 for test_job in test_group['jobs'].values():
-                    test_jobs.append((test / test_job['job']).as_posix())
+                    if 'job' in test_job:
+                        test_jobs.append((test / test_job['job']).as_posix())
     return test_jobs
 
 
@@ -57,7 +58,6 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
 def _str2bool(v: str) -> bool:
     """
     Parse boolean-ish values.
-
     See https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     """
     if isinstance(v, bool):

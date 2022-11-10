@@ -34,6 +34,7 @@ def run_pytest_jobs(pytest_jobs: dict, my_env: dict):
 
 
 if __name__ == '__main__':
+    logger.print("Start running group tests")
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests folder")
     parser.add_argument("-g", "--test-group", required=True, type=str, help="test group name")
@@ -43,8 +44,6 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
     parser.add_argument("-v", "--version-suffix", required=False, type=str,
                         help="version suffix which will be used to identify the asset id in tests")
-    # parser.add_argument("-t", "--token", required=True, type=str,
-    #                    help="the Bearer token which will be used to authorize api calls in tests")
     args = parser.parse_args()
     tests_dir = args.input_dir
     test_group = args.test_group
@@ -68,7 +67,6 @@ if __name__ == '__main__':
     my_env['subscription_id'] = subscription_id
     my_env['resource_group'] = resource_group
     my_env['workspace'] = workspace
-    # my_env['token'] = args.token
     if my_env['token']:
         logger.print("token is set")
     if args.version_suffix:
@@ -121,13 +119,16 @@ if __name__ == '__main__':
     # TO-DO: job post and group post scripts will be run after all jobs are completed
 
     # process pipeline jobs results
-    for job in submitted_job_list:
-        returned_job = ml_client.jobs.get(job.name)
-        if returned_job.status == "Completed":
-            succeeded_jobs.append(returned_job.display_name)
-            covered_assets.extend(test_coverage.get(job, []))
-        elif returned_job.status in ["Failed", "Cancelled"]:
-            failed_jobs.append(returned_job.display_name)
+    while submitted_job_list:
+        for job in submitted_job_list:
+            returned_job = ml_client.jobs.get(job.name)
+            if returned_job.status == "Completed":
+                succeeded_jobs.append(returned_job.display_name)
+                covered_assets.extend(test_coverage.get(job, []))
+                submitted_job_list.remove(job)
+            elif returned_job.status in ["Failed", "Cancelled"]:
+                failed_jobs.append(returned_job.display_name)
+                submitted_job_list.remove(job)
 
     print(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
 

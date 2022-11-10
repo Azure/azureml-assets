@@ -19,7 +19,6 @@ if __name__ == '__main__':
     parser.add_argument("-w", "--workspace-name", required=True, type=str, help="Workspace name")
     parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
     parser.add_argument("-v", "--version-suffix", required=False, type=str, help="version-suffix")
-    # parser.add_argument("-t", "--token", required=True, type=str, help="the Bearer token")
     args = parser.parse_args()
     tests_dir = args.input_dir
     subscription_id = args.subscription
@@ -27,7 +26,6 @@ if __name__ == '__main__':
     workspace = args.workspace_name
     coverage_report = args.coverage_report
     version_suffix = args.version_suffix
-    # token = args.token
     final_report = {}
     ml_client = MLClient(
         DefaultAzureCredential(), subscription_id, resource_group, workspace
@@ -59,14 +57,13 @@ if __name__ == '__main__':
             for test_group in data:
                 print(f"now processing test group: {test_group}")
                 cmd = ["python3", "-u", "group_test.py", "-i", area, "-g", test_group, "-s", subscription_id,
-                       "-r", "resource_group", "-w", workspace]  # , "-t", token]
+                       "-r", resource_group, "-w", workspace]
                 if coverage_report:
                     cmd.extend(["-c", coverage_report])
                 if version_suffix:
                     cmd.extend(["-v", version_suffix])
-                p = run(cmd, shell=True)
+                p = run(cmd)
                 return_code = p.returncode
-                print(return_code)
                 final_report[area.name].append(f"test group {test_group} returned {return_code}")
                 print(f"finished processing test group: {test_group}")
             print(f"finished processing area: {area.name}")
