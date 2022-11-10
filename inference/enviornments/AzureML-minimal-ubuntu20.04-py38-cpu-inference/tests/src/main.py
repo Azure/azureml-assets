@@ -14,7 +14,7 @@ import argparse
 def main(args):
     # start the server
     server_process = start_server("/var/tmp", ["--entry_script", args.score])
-    
+
     # score a request
     req = score_with_post()
     server_process.kill()
@@ -36,11 +36,11 @@ def start_server(log_directory, args, timeout=timedelta(seconds=15)):
         time.sleep(0.25)
         req = None
         try:
-            req = requests.get(f"http://127.0.0.1:5001", timeout=10)
+            req = requests.get("http://127.0.0.1:5001", timeout=10)
         except Exception as e:
             print(e)
 
-        if req != None and req.ok:
+        if req is not None and req.ok:
             break
 
         # Ensure the server is still running
@@ -55,7 +55,7 @@ def start_server(log_directory, args, timeout=timedelta(seconds=15)):
 
 
 def score_with_post(headers=None, data=None):
-    url = f"http://127.0.0.1:5001/score"
+    url = "http://127.0.0.1:5001/score"
     return requests.post(url=url, headers=headers, data=data)
 
 
