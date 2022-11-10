@@ -40,7 +40,10 @@ def test_sklearn_1_1():
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
-        command="python main.py --score valid_score.py",
+        command="python main.py --score ${{inputs.score}}",
+        inputs=dict(
+            score="valid_score.py",
+        ),
         environment=f"{env_name}@latest",
         compute=os.environ.get("cpu_cluster"),
         display_name="minimal-cpu-inference-example",
