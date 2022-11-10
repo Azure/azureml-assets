@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+# imports
 import uuid
 import os
 from datetime import datetime
@@ -5,6 +9,7 @@ from azureml_inference_server_http.api.aml_response import AMLResponse
 from azureml_inference_server_http.api.aml_request import rawhttp
 
 
+# define functions
 def init():
     print("Initializing")
 
