@@ -4,3 +4,7 @@ general:
   jobs:
     test-pipeline: 
       job: "./general/jobs/pipeline.yml"
+    sample_pytest: 
+      pytest_job: "./general/jobs/sample_pytest.py"
+      assets:
+      - ./general/components/sample_component
