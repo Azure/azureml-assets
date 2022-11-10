@@ -58,7 +58,7 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
 def _str2bool(v: str) -> bool:
     """
     Parse boolean-ish values.
-    
+
     See https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     """
     if isinstance(v, bool):
