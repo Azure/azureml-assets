@@ -44,8 +44,6 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
     parser.add_argument("-v", "--version-suffix", required=False, type=str,
                         help="version suffix which will be used to identify the asset id in tests")
-    # parser.add_argument("-t", "--token", required=True, type=str,
-    #                    help="the Bearer token which will be used to authorize api calls in tests")
     args = parser.parse_args()
     tests_dir = args.input_dir
     test_group = args.test_group
@@ -69,7 +67,6 @@ if __name__ == '__main__':
     my_env['subscription_id'] = subscription_id
     my_env['resource_group'] = resource_group
     my_env['workspace'] = workspace
-    # my_env['token'] = args.token
     if my_env['token']:
         logger.print("token is set")
     if args.version_suffix:
