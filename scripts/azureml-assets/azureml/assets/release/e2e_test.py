@@ -68,6 +68,7 @@ if __name__ == '__main__':
                 return_code = p.returncode
                 print(f"return code: {return_code}")
                 print(f"return output: {p.stdout}")
+                print(f"return error: {p.stderr}")
                 final_report[area.name].append(f"test group {test_group} returned {return_code}")
                 print(f"finished processing test group: {test_group}")
             print(f"finished processing area: {area.name}")

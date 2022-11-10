@@ -25,12 +25,10 @@ def test_results_analysis(config_file: Path, results_file: Path, asset_dir: Path
             if assets_type not in SUPPORTED_ASSET_TYPES:
                 continue
             assets_list = create_list[assets_type]
-            print(f"assets_type: {assets_type}, assets_list: {assets_list}")
             if '*' in assets_list:
                 assets_set = util.find_assets(
                     input_dirs=asset_dir,
                     types=assets.AssetType(assets_type))
-                print(f"assets_set: {assets_set}")
                 assets_list = [asset.name for asset in assets_set]
                 logger.print(f"find all {assets_type}s: {assets_list}")
             for asset in assets_list:

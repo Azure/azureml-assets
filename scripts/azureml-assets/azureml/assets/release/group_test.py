@@ -34,6 +34,7 @@ def run_pytest_jobs(pytest_jobs: dict, my_env: dict):
 
 
 if __name__ == '__main__':
+    logger.print("Start running group tests")
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests folder")
     parser.add_argument("-g", "--test-group", required=True, type=str, help="test group name")
