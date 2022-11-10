@@ -1,6 +1,0 @@
-$schema: http://azureml/sdk-2-0/MLTable.json
-type: mltable
-paths:
-  - file: ./dbpedia_test.parquet
-transformations:
-  - read_parquet

@@ -1,9 +1,0 @@
-$schema: http://azureml/sdk-2-0/MLTable.json
-type: mltable
-paths:
- - file: ./fridge_train.jsonl
-transformations:
-  - read_json_lines:
-        encoding: utf8
-        invalid_lines: error
-        include_path_column: false
