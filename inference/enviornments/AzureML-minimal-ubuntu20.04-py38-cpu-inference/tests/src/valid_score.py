@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""A basic entry script"""
+
 # imports
 import uuid
 import os

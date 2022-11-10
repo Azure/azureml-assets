@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Validate minimal inference cpu environment by running azmlinfsrv."""
+
 # imports
 import os
 import subprocess
