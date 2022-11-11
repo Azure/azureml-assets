@@ -24,33 +24,42 @@ def copy_replace_dir(source: Path, dest: Path):
 
 def process_test_files(src_yaml: Path, assets_name_list: list):
     """Process the test files and replace the local reference to the asset with the asset name for later use."""
-    covered_assets = []
+    all_covered_assets = []
     with open(src_yaml) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
     for test_group in data.values():
         for test_job in test_group['jobs'].values():
-            test_job_path = src_yaml.parent / test_job['job']
-            with open(test_job_path) as tj:
-                tj_yaml = yaml.load(tj, Loader=yaml.FullLoader)
-                for job_name, job in tj_yaml["jobs"].items():
-                    if job["component"].split(":")[0] == 'file':
-                        # only process the local file asset
-                        original_asset = job["component"].split(":")[1]
-                        asset_folder = test_job_path.parent / Path(original_asset).parent
-                        local_assets = util.find_assets(
-                            input_dirs=asset_folder,
-                            asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
-                        if len(local_assets) > 0 and local_assets[0].name in assets_name_list:
-                            job["component"] = local_assets[0].name
-                            covered_assets.append(local_assets[0].name)
-                            logger.print(f"for job {job_name}, find Asset name: {job['component']}")
+            covered_assets = []
+            if "pytest_job" in test_job:
+                for asset_path in test_job["assets"]:
+                    asset_config = util.find_assets(input_dirs=src_yaml.parent / asset_path)[0]
+                    covered_assets.append(asset_config.name)
+            else:
+                test_job_path = src_yaml.parent / test_job['job']
+                with open(test_job_path) as tj:
+                    tj_yaml = yaml.load(tj, Loader=yaml.FullLoader)
+                    for job_name, job in tj_yaml["jobs"].items():
+                        if job["component"].split(":")[0] == 'file':
+                            # only process the local file asset
+                            original_asset = job["component"].split(":")[1]
+                            asset_folder = test_job_path.parent / Path(original_asset).parent
+                            local_assets = util.find_assets(
+                                input_dirs=asset_folder,
+                                asset_config_filename=assets.DEFAULT_ASSET_FILENAME)
+                            if len(local_assets) > 0 and local_assets[0].name in assets_name_list:
+                                job["component"] = local_assets[0].name
+                                covered_assets.append(local_assets[0].name)
+                                logger.print(f"for job {job_name}, find Asset name: {job['component']}")
+
+            test_job["assets"] = covered_assets
+            # save test job yaml
             with open(test_job_path, "w") as file:
-                yaml.dump(
-                    tj_yaml,
-                    file,
-                    default_flow_style=False,
-                    sort_keys=False)
-    return covered_assets
+                yaml.dump(tj_yaml, file, default_flow_style=False, sort_keys=False)
+            # save tests.yaml
+            with open(src_yaml, "w") as file:
+                yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+            all_covered_assets.extend(covered_assets)
+    return all_covered_assets
 
 
 def _convert_excludes(input_dirs: Union[List[Path], Path],
