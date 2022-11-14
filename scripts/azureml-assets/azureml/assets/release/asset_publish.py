@@ -286,4 +286,4 @@ if __name__ == "__main__":
         test_files_preprocess(test_jobs, asset_ids)
         logger.print("finished preprocessing test files")
     else:
-        logger.print("Test files not found")
+        logger.log_warning("Test files not found")
