@@ -44,7 +44,7 @@ class ModelUtils:
             errors="ignore",
         )
         if result.returncode != 0:
-            logger.print(f"Failed with error {result.stdout}.")
+            logger.log_error(f"Failed with error {result.stdout}.")
         else:
             logger.print(f"Successfully executed! Output: \n{result.stdout}")
         return result.returncode
