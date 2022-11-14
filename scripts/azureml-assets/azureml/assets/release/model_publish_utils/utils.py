@@ -45,21 +45,15 @@ class ModelUtils:
         Sets the HEAD to the commit hash.
         Deletes the .git folder in the downloaded artifacts.
         """
-        isValidDownload = self._download_type()
-        if (isValidDownload):
-            clone_cmd = f"git clone {self.model_url} {self.model_dir}"
-            result = self._run(clone_cmd)
-            if result != 0:
-                return False
-            if self.model_commit_hash:
-                cmd = f"git reset --hard {self.model_commit_hash}"
-                self._run(cmd, cwd=self.model_dir)
-                self._run('mkdir model_dir', cwd=self.model_dir)
-                self._run('mv $(ls -I .git -I model_dir) model_dir', cwd=self.model_dir)
-
-        else:
-            logger.print('Model Download Unsupported')
+        clone_cmd = f"git clone {self.model_url} {self.model_dir}"
+        result = self._run(clone_cmd)
+        if result != 0:
             return False
+        if self.model_commit_hash:
+            cmd = f"git reset --hard {self.model_commit_hash}"
+            self._run(cmd, cwd=self.model_dir)
+            self._run('mkdir model_dir', cwd=self.model_dir)
+            self._run('mv $(ls -I .git -I model_dir) model_dir', cwd=self.model_dir)
         return True
 
     def download_model(self) -> bool:

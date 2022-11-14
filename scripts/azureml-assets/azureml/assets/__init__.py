@@ -7,7 +7,7 @@ from .config import (
     Config,
     DEFAULT_ASSET_FILENAME,
     ModelConfig,
-    ModelDownloadMethod,
+    ModelDownloadType,
     ModelFlavor,
     ModelTaskName,
     ModelType,

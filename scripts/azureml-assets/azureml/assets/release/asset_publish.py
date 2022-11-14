@@ -12,7 +12,7 @@ from pathlib import Path
 from string import Template
 from subprocess import PIPE, STDOUT, run
 from tempfile import TemporaryDirectory
-from typing import List
+from typing import Dict, List
 
 import azureml.assets as assets
 import azureml.assets.util as util
@@ -69,7 +69,7 @@ def update_spec_file(spec_file: Path, path: Path):
 
 def model_prepare(
     model_config: assets.ModelConfig, spec_file: Path, model_dir: str
-) -> dict[str, object]:
+) -> Dict[str, Path]:
     """Prepare Model."""
     """
     Prepare the model. Download the model if required.
@@ -84,29 +84,33 @@ def model_prepare(
             model_config.path_local))
         return result
 
-    model_utils = ModelUtils(
-        model_url=model_config.remote_uri,
-        model_commit_hash=model_config.remote_commit_hash,
-        model_download_method=model_config.remote_type.value,
-        model_dir=model_dir,
-    )
+    if model_config.type == assets.ModelType.CUSTOM:
+        model_utils = ModelUtils(
+            model_url=model_config.remote_uri,
+            model_commit_hash=model_config.remote_commit_hash,
+            model_download_type=model_config.remote_type.value,
+            model_dir=model_dir,
+        )
+        validate_download = model_utils.download_model()
+        if validate_download:
+            update_spec_file(spec_file, model_dir+"/model_dir")
 
-    validate_download = model_utils.download_model()
-
-    if validate_download:
-        update_spec_file(spec_file, model_dir+"/model_dir")
-
-    if model_config.type.value == assets.ModelType.MLFLOW:
+    elif model_config.type == assets.ModelType.MLFLOW:
         mlflow_utils = MLFlowModelUtils(
             name=asset.name,
             task_name=model_config.task_name.value,
             flavor=model_config.flavor.value,
-            model_dir=model_dir,
+            mlflow_model_dir=model_dir,
         )
-        mlflow_utils.covert_into_mlflow_model()
+        validate_download = mlflow_utils.covert_into_mlflow_model()
+
+    else:
+        print(model_config.type.value, assets.ModelType.MLFLOW)
+        validate_download = False
+        logger.print('Model Support To be Added')
 
     result['download_success'] = validate_download
-    result['model_dir'] = model_dir+"model_dir"
+    result['model_dir'] = model_dir+"/model_dir"
 
     return result
 
@@ -248,14 +252,12 @@ if __name__ == "__main__":
             version=final_version,
         )
 
-        # Assemble command
-        if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT, assets.AssetType.MODEL]:
+        # Handle specific asset types
+        if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
+            # Assemble command
             cmd = assemble_command(
                 asset.type.value, str(asset.spec_with_path),
                 registry_name, final_version, resource_group, workspace, debug_mode)
-
-        # Handle specific asset types
-        if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
             # Run command
             run_command(cmd, failure_list, debug_mode)
 
@@ -268,6 +270,10 @@ if __name__ == "__main__":
                     model_config, asset.spec_with_path, tempdir)
                 # Run command
                 if result['download_success']:
+                    # Assemble Command
+                    cmd = assemble_command(
+                        asset.type.value, str(asset.spec_with_path),
+                        registry_name, final_version, resource_group, workspace, debug_mode)
                     run_command(cmd, failure_list, debug_mode)
 
         else:

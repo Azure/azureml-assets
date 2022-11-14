@@ -16,16 +16,16 @@ class MLFlowModelUtils:
     def _convert_to_mlflow_hftransformers(self):
         """Convert the model using MLFlow Huggingface Flavor."""
         # TODO Add MLFlow HFFlavour support once wheel files are publicly available
-        return None
+        return False
 
     def _convert_to_mlflow_package(self):
         """Convert the model using pyfunc flavor."""
-        return None
+        return False
 
     def covert_into_mlflow_model(self):
         """Convert the model with given flavor."""
         if self.flavor == "hftransformers":
-            self._convert_to_mlflow_hftransformers()
+            return self._convert_to_mlflow_hftransformers()
         # TODO add support for pyfunc. Pyfunc requires custom env file.
         else:
-            self._convert_to_mlflow_package()
+            return self._convert_to_mlflow_package()
