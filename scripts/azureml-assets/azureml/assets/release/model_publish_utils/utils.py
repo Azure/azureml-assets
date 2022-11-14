@@ -66,7 +66,7 @@ class ModelUtils:
             commit_exists = self._run(cmd, cwd=self.model_dir)
             if commit_exists != 0:
                 # TODO: Error handling incase of incorrect commit hash.
-                logger.print("Commit Hash doesn't exist. Downloading model from latest HEAD.")
+                logger.log_warning("Commit hash doesn't exist. Using model from latest HEAD.")
         git_path = os.path.join(self.model_dir, '.git')
         shutil.rmtree(git_path, onerror=_onerror)
         return True
