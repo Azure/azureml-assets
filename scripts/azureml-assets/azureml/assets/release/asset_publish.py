@@ -105,7 +105,7 @@ def model_prepare(
     else:
         print(model_config.type.value, assets.ModelType.MLFLOW)
         validate_download = False
-        logger.print('Model Support To be Added')
+        logger.log_error(f"Model type {model_config.type} not supported yet")
 
     return validate_download
 
