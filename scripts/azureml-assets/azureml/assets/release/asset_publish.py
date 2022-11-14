@@ -68,7 +68,7 @@ def update_spec_file(spec_file: Path, path: Path):
 
 
 def model_prepare(
-    model_config: assets.ModelConfig, spec_file: Path, model_dir: str
+    model_config: assets.ModelConfig, spec_file: Path, model_dir: Path
 ) -> Dict[str, Path]:
     """Prepare Model."""
     """
@@ -77,11 +77,11 @@ def model_prepare(
 
     Return: returns the local path to the model.
     """
-    result = {"download_success": False, "model_dir": None}
+    result = {'download_success': False, 'model_dir': None}
 
     if model_config.path_local:
         update_spec_file(spec_file, os.path.abspath(
-            model_config.path_local))
+            model_config.path_local.resolve()))
         return result
 
     if model_config.type == assets.ModelType.CUSTOM:
@@ -93,7 +93,7 @@ def model_prepare(
         )
         validate_download = model_utils.download_model()
         if validate_download:
-            update_spec_file(spec_file, model_dir+"/model_dir")
+            update_spec_file(spec_file, model_dir)
 
     elif model_config.type == assets.ModelType.MLFLOW:
         mlflow_utils = MLFlowModelUtils(
@@ -110,7 +110,7 @@ def model_prepare(
         logger.print('Model Support To be Added')
 
     result['download_success'] = validate_download
-    result['model_dir'] = model_dir+"/model_dir"
+    result['model_dir'] = model_dir
 
     return result
 
@@ -124,7 +124,7 @@ def assemble_command(
     resource_group: str,
     workspace: str,
     debug_mode: bool = None,
-):
+) -> List[str]:
     """Assemble the az cli command."""
     cmd = [
         shutil.which("az"), "ml", asset_type, "create",

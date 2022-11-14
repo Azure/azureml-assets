@@ -2,10 +2,22 @@
 # Licensed under the MIT License.
 """Model Utils Class."""
 
+import os
 from pathlib import Path
+import shutil
+import stat
 from subprocess import PIPE, run, STDOUT
 import sys
 from azureml.assets.util import logger
+
+
+def _onerror(func, path, exc_info):
+    """Error Handler for shutil rmtree."""
+    if not os.access(path, os.W_OK):
+        os.chmod(path, stat.S_IWUSR)
+        func(path)
+    else:
+        raise
 
 
 class ModelUtils:
@@ -39,8 +51,7 @@ class ModelUtils:
     def _download_git_model(self) -> bool:
         """Download the Model."""
         """
-        Initialize LFS
-        Clones the model from the URL into the Model Directory.
+        Clones the model from the git URL into the Model Directory.
         Deletes the incomplete model artifact in case of failure.
         Sets the HEAD to the commit hash.
         Deletes the .git folder in the downloaded artifacts.
@@ -52,8 +63,8 @@ class ModelUtils:
         if self.model_commit_hash:
             cmd = f"git reset --hard {self.model_commit_hash}"
             self._run(cmd, cwd=self.model_dir)
-            self._run('mkdir model_dir', cwd=self.model_dir)
-            self._run('mv $(ls -I .git -I model_dir) model_dir', cwd=self.model_dir)
+            git_path = os.path.join(self.model_dir, '.git')
+            shutil.rmtree(git_path, onerror=_onerror)
         return True
 
     def download_model(self) -> bool:

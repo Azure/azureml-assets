@@ -275,11 +275,11 @@ class ModelConfig(Config):
     Example:
 
     path: # should contain local_path or should contain package object
-        local_path: "../models/bert-base-uncased" # the local path to the model
-        package:
-            url: https://huggingface.co/bert-base-uncased
-            commit_hash: 5546055f03398095e385d7dc625e636cc8910bf2
+        local: "../models/bert-base-uncased" # the local path to the model
+        remote:
             type: git_lfs
+            uri: https://huggingface.co/bert-base-uncased
+            commit_hash: 5546055f03398095e385d7dc625e636cc8910bf2
     publish:
         type: mlflow_model # could be one of (custom_model, mlflow_model, triton_model)
         flavor: hftransformers # flavor should be specificed only for mlflow_model
@@ -306,7 +306,8 @@ class ModelConfig(Config):
     @property
     def path_local(self) -> Path:
         """Model Local Path."""
-        return self._path.get('local_path')
+        local_path = self._path.get('local_path')
+        return Path(local_path) if local_path else None
 
     @property
     def _path_remote(self) -> Dict[str, str]:
