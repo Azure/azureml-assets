@@ -232,6 +232,148 @@ class Spec(Config):
         return release_paths
 
 
+class ModelType(Enum):
+    """Enum for the Model Types accepted in ModelConfig."""
+
+    MLFLOW = 'mlflow_model'
+    CUSTOM = 'custom_model'
+    TRITON = 'triton_model'
+
+
+class ModelFlavor(Enum):
+    """Enum for the Flavors accepted in ModelConfig."""
+
+    HFTRANSFORMERS = 'hftransformers'
+    PYTORCH = 'pytorch'
+
+
+class ModelTaskName(Enum):
+    """Enum for the Task names accepted in ModelConfig."""
+
+    FILL_MASK = 'fill_mask'
+    MULTICLASS = 'multiclass'
+    MULTILABEL = 'multilabel'
+    NER = 'ner'
+    QUESTION_ANSWERING = 'question-answering'
+    SUMMARIZATION = 'summarization'
+    TEXT_GENERATION = 'text-generation'
+    TEXT_CLASSIFICATION = 'text-classification'
+
+
+class ModelDownloadType(Enum):
+    """Enum for Download Method for Remote Model."""
+
+    FTP = 'ftp'
+    GIT = 'git'
+    HTTP = 'http'
+
+
+class ModelConfig(Config):
+    """Model Config class."""
+
+    """
+    Example:
+
+    path: # should contain local_path or should contain package object
+        local: "../models/bert-base-uncased" # the local path to the model
+        remote:
+            type: git_lfs
+            uri: https://huggingface.co/bert-base-uncased
+            commit_hash: 5546055f03398095e385d7dc625e636cc8910bf2
+    publish:
+        type: mlflow_model # could be one of (custom_model, mlflow_model, triton_model)
+        flavor: hftransformers # flavor should be specificed only for mlflow_model
+        task_name: translation #optional.Needed for mlflow_model huggingface flavour
+
+    """
+
+    def __init__(self, file_name: Path):
+        """Initialize object for the Model Properties extracted from extra_config model.yaml."""
+        super().__init__(file_name)
+        self._validate()
+
+    def _validate(self):
+        """Validate the yaml file."""
+        Config._validate_exists('model.path', self._path)
+        Config._validate_exists('model.publish', self._publish)
+        Config._validate_enum('model.type', self._type, ModelType, True)
+
+    @property
+    def _path(self) -> object:
+        """Model Path."""
+        return self._yaml.get('path', {})
+
+    @property
+    def path_local(self) -> Path:
+        """Model Local Path."""
+        local_path = self._path.get('local_path')
+        return Path(local_path) if local_path else None
+
+    @property
+    def _path_remote(self) -> Dict[str, str]:
+        """Model Package."""
+        return self._path.get('remote')
+
+    @property
+    def remote_commit_hash(self) -> str:
+        """Model commit hash from remote."""
+        return self._path_remote.get('commit_hash')
+
+    @property
+    def _remote_type(self) -> str:
+        """Model Download Method."""
+        return self._path_remote.get('type')
+
+    @property
+    def remote_type(self) -> ModelDownloadType:
+        """Enum for Model Download Method."""
+        remote_type = self._remote_type
+        return ModelDownloadType(remote_type) if remote_type else None
+
+    @property
+    def remote_uri(self) -> str:
+        """Model URL from remote."""
+        return self._path_remote.get('uri')
+
+    @property
+    def _publish(self) -> Dict[str, object]:
+        """Model publish properties."""
+        return self._yaml.get('publish')
+
+    @property
+    def _type(self) -> str:
+        """Model Type."""
+        return self._publish.get('type')
+
+    @property
+    def type(self) -> ModelType:
+        """Model Type Enum."""
+        type = self._type
+        return ModelType(type) if type else None
+
+    @property
+    def _flavor(self) -> str:
+        """Model Flavor."""
+        return self._publish.get('flavor')
+
+    @property
+    def flavor(self) -> ModelFlavor:
+        """Model Flavor from Enum."""
+        flavor = self._flavor
+        return ModelFlavor(flavor) if flavor else None
+
+    @property
+    def _task_name(self) -> ModelTaskName:
+        """Model Task Name Enum."""
+        return self._publish.get('task_name')
+
+    @property
+    def task_name(self) -> str:
+        """Model task name."""
+        task_name = self._task_name
+        return ModelTaskName(task_name) if task_name else None
+
+
 DEFAULT_DOCKERFILE = "Dockerfile"
 DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
 
@@ -682,6 +824,8 @@ class AssetConfig(Config):
             if extra_config_with_path:
                 if self.type == AssetType.ENVIRONMENT:
                     self._extra_config = EnvironmentConfig(extra_config_with_path)
+                elif self.type == AssetType.MODEL:
+                    self._extra_config = ModelConfig(extra_config_with_path)
                 else:
                     raise Exception(f"extra_config loading for asset type {self.type.value} is unimplemented")
         return self._extra_config
