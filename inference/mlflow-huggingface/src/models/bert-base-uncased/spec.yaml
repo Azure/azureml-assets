@@ -1,3 +1,7 @@
 name: bert-base-uncased
-path: C:\Users\Administrator\azureml-assets\scripts\azureml-assets\tmp\bert-base-uncased
+path: ./
+tags:
+  ISV: HuggingFace
+  Owner: System
+  task: fill-mask
 version: 1

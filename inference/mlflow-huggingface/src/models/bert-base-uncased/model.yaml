@@ -1,14 +1,11 @@
-name: bert-base-uncased                                               #Required
 path:                                                                 #Required
-  # local_path: "./local-path-to-model-files"                         #Required  Either package or local_path should be passed. if both are given, local_path is given preference  
-  package:                                                            #Required. Either package or local_path should be passed. if both are given, local_path is given preference
+  # local: "./local-path-to-model-files"                              #Required  Either remote or local should be passed. if both are given, local is given preference  
+  remote:                                                             #Required. Either remote or local should be passed. if both are given, local is given preference  
+    type: git                                                         #Required. Download Type. Can be git, http or ftp
+    uri: https://huggingface.co/bert-base-uncased                     #Required. Download URI
     commit_hash: 5546055f03398095e385d7dc625e636cc8910bf2             #Optional
-    url: https://huggingface.co/bert-base-uncased                     #Required
 publish:                                                              #Required
   type: custom_model                                                  #Required
   #flavor: hftransformers                                             #Required if type==mlflow_model 
-  tags:                                                               #Optional          
-    ISV: HuggingFace
-    Owner: System
-    task: fill-mask
+  #task_name: huggingface_task_name                                   #Required if flavor==hftransformers
                           
