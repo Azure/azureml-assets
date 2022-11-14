@@ -22,7 +22,7 @@ class MLFlowModelUtils:
         """Convert the model using pyfunc flavor."""
         return False
 
-    def covert_into_mlflow_model(self):
+    def convert_into_mlflow_model(self):
         """Convert the model with given flavor."""
         if self.flavor == "hftransformers":
             return self._convert_to_mlflow_hftransformers()

@@ -12,8 +12,7 @@ from pathlib import Path
 from string import Template
 from subprocess import PIPE, STDOUT, run
 from tempfile import TemporaryDirectory
-from typing import Dict, List
-
+from typing import List
 import azureml.assets as assets
 import azureml.assets.util as util
 import yaml
@@ -69,7 +68,7 @@ def update_spec_file(spec_file: Path, path: Path):
 
 def model_prepare(
     model_config: assets.ModelConfig, spec_file: Path, model_dir: Path
-) -> Dict[str, Path]:
+) -> bool:
     """Prepare Model."""
     """
     Prepare the model. Download the model if required.
@@ -77,18 +76,17 @@ def model_prepare(
 
     Return: returns the local path to the model.
     """
-    result = {'download_success': False, 'model_dir': None}
 
     if model_config.path_local:
         update_spec_file(spec_file, os.path.abspath(
             model_config.path_local.resolve()))
-        return result
+        return True
 
     if model_config.type == assets.ModelType.CUSTOM:
         model_utils = ModelUtils(
             model_url=model_config.remote_uri,
             model_commit_hash=model_config.remote_commit_hash,
-            model_download_type=model_config.remote_type.value,
+            model_download_type=model_config.remote_type,
             model_dir=model_dir,
         )
         validate_download = model_utils.download_model()
@@ -102,17 +100,14 @@ def model_prepare(
             flavor=model_config.flavor.value,
             mlflow_model_dir=model_dir,
         )
-        validate_download = mlflow_utils.covert_into_mlflow_model()
+        validate_download = mlflow_utils.convert_into_mlflow_model()
 
     else:
         print(model_config.type.value, assets.ModelType.MLFLOW)
         validate_download = False
         logger.print('Model Support To be Added')
 
-    result['download_success'] = validate_download
-    result['model_dir'] = model_dir
-
-    return result
+    return validate_download
 
 
 def assemble_command(
@@ -269,7 +264,7 @@ if __name__ == "__main__":
                 result = model_prepare(
                     model_config, asset.spec_with_path, tempdir)
                 # Run command
-                if result['download_success']:
+                if result:
                     # Assemble Command
                     cmd = assemble_command(
                         asset.type.value, str(asset.spec_with_path),

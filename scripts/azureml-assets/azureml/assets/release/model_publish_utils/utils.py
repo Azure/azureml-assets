@@ -8,6 +8,7 @@ import shutil
 import stat
 from subprocess import PIPE, run, STDOUT
 import sys
+from azureml.assets import ModelDownloadType
 from azureml.assets.util import logger
 
 
@@ -62,14 +63,17 @@ class ModelUtils:
             return False
         if self.model_commit_hash:
             cmd = f"git reset --hard {self.model_commit_hash}"
-            self._run(cmd, cwd=self.model_dir)
-            git_path = os.path.join(self.model_dir, '.git')
-            shutil.rmtree(git_path, onerror=_onerror)
+            commit_exists = self._run(cmd, cwd=self.model_dir)
+            if commit_exists != 0:
+                # TODO: Error handling incase of incorrect commit hash.
+                logger.print("Commit Hash doesn't exist. Downloading model from latest HEAD.")
+        git_path = os.path.join(self.model_dir, '.git')
+        shutil.rmtree(git_path, onerror=_onerror)
         return True
 
     def download_model(self) -> bool:
         """Prepare the Download Environment."""
-        if self.model_download_type == 'git':
+        if self.model_download_type == ModelDownloadType.GIT:
             download_success = self._download_git_model()
             return download_success
         else:
