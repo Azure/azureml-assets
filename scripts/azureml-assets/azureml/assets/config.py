@@ -807,7 +807,7 @@ class AssetConfig(Config):
         config = self.extra_config
         return self._append_to_file_path(config) if config else None
 
-    def extra_config_as_object(self, force_reload: bool = False) -> EnvironmentConfig:
+    def extra_config_as_object(self, force_reload: bool = False):
         """Retrieve extra config file as an object.
 
         Args:
