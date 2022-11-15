@@ -16,7 +16,7 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_sklearn_1_1():
+def test_minimal_cpu_inference():
     """Tests a sample job using minimal 20.04 py38 cpu as the environment."""
     this_dir = Path(__file__).parent
 

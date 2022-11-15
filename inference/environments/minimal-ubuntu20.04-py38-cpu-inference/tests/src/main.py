@@ -12,7 +12,6 @@ import time
 import argparse
 
 
-# define functions
 def main(args):
     # start the server
     server_process = start_server("/var/tmp", ["--entry_script", args.score])

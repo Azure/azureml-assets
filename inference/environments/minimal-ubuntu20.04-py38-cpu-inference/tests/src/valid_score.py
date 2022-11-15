@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""A basic entry script"""
+"""A basic entry script."""
 
 # imports
 import uuid
@@ -11,7 +11,6 @@ from azureml_inference_server_http.api.aml_response import AMLResponse
 from azureml_inference_server_http.api.aml_request import rawhttp
 
 
-# define functions
 def init():
     print("Initializing")
 
