@@ -8,7 +8,7 @@ import shutil
 import stat
 from subprocess import PIPE, run, STDOUT
 import sys
-from azureml.assets import ModelDownloadType
+import azureml.assets as assets
 from azureml.assets.util import logger
 
 
@@ -73,7 +73,7 @@ class ModelUtils:
 
     def download_model(self) -> bool:
         """Prepare the Download Environment."""
-        if self.model_download_type == ModelDownloadType.GIT:
+        if self.model_download_type == assets.ModelDownloadType.GIT:
             download_success = self._download_git_model()
             return download_success
         else:
