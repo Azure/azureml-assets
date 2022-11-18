@@ -17,8 +17,8 @@ from typing import List
 import azureml.assets as assets
 import azureml.assets.util as util
 import yaml
-from azureml.assets.release.model_publish_utils import (MLFlowModelUtils,
-                                                        ModelUtils)
+from azureml.assets.config import PathType
+from azureml.assets.release.model_publish_utils import ModelDownloadUtils
 from azureml.assets.util import logger
 
 ASSET_ID_TEMPLATE = Template(
@@ -27,7 +27,7 @@ TEST_YML = "tests.yml"
 PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
 
 
-def test_files_location(dir: Path):
+def find_test_files(dir: Path):
     """Find test files in the directory."""
     test_jobs = []
 
@@ -42,7 +42,7 @@ def test_files_location(dir: Path):
     return test_jobs
 
 
-def test_files_preprocess(test_jobs, asset_ids: dict):
+def preprocess_test_files(test_jobs, asset_ids: dict):
     """Preprocess test files to generate asset ids."""
     for test_job in test_jobs:
         logger.print(f"processing test job: {test_job}")
@@ -60,13 +60,17 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
-def update_spec_file(spec_file: Path, path: Path):
+def update_model_spec_file(spec_file: Path, path: Path):
     """Update the yaml file after getting the model has been prepared."""
-    with open(spec_file) as f:
-        model_file = yaml.safe_load(f)
-    model_file['path'] = path
-    with open(spec_file, "w") as f:
-        yaml.dump(model_file, f)
+    try:
+        with open(spec_file) as f:
+            model_file = yaml.safe_load(f)
+        model_file['path'] = path
+        with open(spec_file, "w") as f:
+            yaml.dump(model_file, f)
+    except Exception as e:
+        logger.print("Error while updating spec")
+        raise e
 
 
 def model_prepare(
@@ -80,30 +84,21 @@ def model_prepare(
     Return: returns the local path to the model.
     """
 
-    if model_config.path_local:
-        update_spec_file(spec_file, os.path.abspath(
-            model_config.path_local.resolve()))
+    if model_config.path.type == PathType.LOCAL:
+        update_model_spec_file(spec_file, os.path.abspath(
+            Path(model_config.path.uri).resolve()))
         return True
 
     if model_config.type == assets.ModelType.CUSTOM:
-        model_utils = ModelUtils(
-            model_url=model_config.remote_uri,
-            model_commit_hash=model_config.remote_commit_hash,
-            model_download_type=model_config.remote_type,
-            model_dir=model_dir,
-        )
-        validate_download = model_utils.download_model()
+        validate_download = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
         if validate_download:
-            update_spec_file(spec_file, model_dir)
+            update_model_spec_file(spec_file, model_dir)
 
     elif model_config.type == assets.ModelType.MLFLOW:
-        mlflow_utils = MLFlowModelUtils(
-            name=asset.name,
-            task_name=model_config.task_name.value,
-            flavor=model_config.flavor.value,
-            mlflow_model_dir=model_dir,
-        )
-        validate_download = mlflow_utils.convert_into_mlflow_model()
+        # TODO: update this once we start consuming git based model
+        validate_download = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
+        if validate_download:
+            update_model_spec_file(spec_file, model_dir)
 
     else:
         print(model_config.type.value, assets.ModelType.MLFLOW)
@@ -292,10 +287,10 @@ if __name__ == "__main__":
 
     if tests_dir:
         logger.print("locating test files")
-        test_jobs = test_files_location(tests_dir)
+        test_jobs = find_test_files(tests_dir)
 
         logger.print("preprocessing test files")
-        test_files_preprocess(test_jobs, asset_ids)
+        preprocess_test_files(test_jobs, asset_ids)
         logger.print("finished preprocessing test files")
     else:
         logger.log_warning("Test files not found")
