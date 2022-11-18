@@ -23,6 +23,7 @@ from azureml.assets.util import logger
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
+PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
 
 
 def test_files_location(dir: Path):
@@ -231,49 +232,52 @@ if __name__ == "__main__":
     logger.print(f"create list: {publish_list}")
 
     failure_list = []
-    for asset in util.find_assets(input_dirs=assets_dir):
-        asset_names = publish_list.get(asset.type.value, [])
-        if not ("*" in asset_names or asset.name in asset_names):
-            logger.print(
-                f"Skipping registering asset {asset.name} because it is not in the publish list")
+    for publish_asset_type in PUBLISH_ORDER:
+        if publish_asset_type.value not in publish_list:
             continue
-        logger.print(f"Registering {asset}")
-        final_version = asset.version + "-" + \
-            passed_version if passed_version else asset.version
-        logger.print(f"final version: {final_version}")
-        asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
-            registry_name=registry_name,
-            asset_type=f"{asset.type.value}s",
-            asset_name=asset.name,
-            version=final_version,
-        )
+        for asset in util.find_assets(input_dirs=assets_dir, types=[publish_asset_type]):
+            asset_names = publish_list.get(asset.type.value, [])
+            if not ("*" in asset_names or asset.name in asset_names):
+                logger.print(
+                    f"Skipping registering asset {asset.name} because it is not in the publish list")
+                continue
+            logger.print(f"Registering {asset}")
+            final_version = asset.version + "-" + \
+                passed_version if passed_version else asset.version
+            logger.print(f"final version: {final_version}")
+            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
+                registry_name=registry_name,
+                asset_type=f"{asset.type.value}s",
+                asset_name=asset.name,
+                version=final_version,
+            )
 
-        # Handle specific asset types
-        if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
-            # Assemble command
-            cmd = assemble_command(
-                asset.type.value, str(asset.spec_with_path),
-                registry_name, final_version, resource_group, workspace, debug_mode)
-            # Run command
-            run_command(cmd, failure_list, debug_mode)
-
-        elif asset.type == assets.AssetType.MODEL:
-
-            model_config = asset.extra_config_as_object()
-
-            with TemporaryDirectory() as tempdir:
-                result = model_prepare(
-                    model_config, asset.spec_with_path, tempdir)
+            # Handle specific asset types
+            if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
+                # Assemble command
+                cmd = assemble_command(
+                    asset.type.value, str(asset.spec_with_path),
+                    registry_name, final_version, resource_group, workspace, debug_mode)
                 # Run command
-                if result:
-                    # Assemble Command
-                    cmd = assemble_command(
-                        asset.type.value, str(asset.spec_with_path),
-                        registry_name, final_version, resource_group, workspace, debug_mode)
-                    run_command(cmd, failure_list, debug_mode)
+                run_command(cmd, failure_list, debug_mode)
 
-        else:
-            logger.log_warning(f"unsupported asset type: {asset.type.value}")
+            elif asset.type == assets.AssetType.MODEL:
+
+                model_config = asset.extra_config_as_object()
+
+                with TemporaryDirectory() as tempdir:
+                    result = model_prepare(
+                        model_config, asset.spec_with_path, tempdir)
+                    # Run command
+                    if result:
+                        # Assemble Command
+                        cmd = assemble_command(
+                            asset.type.value, str(asset.spec_with_path),
+                            registry_name, final_version, resource_group, workspace, debug_mode)
+                        run_command(cmd, failure_list, debug_mode)
+
+            else:
+                logger.log_warning(f"unsupported asset type: {asset.type.value}")
 
     if len(failure_list) > 0:
         logger.log_warning(
