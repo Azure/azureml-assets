@@ -16,8 +16,7 @@ from typing import List
 import azureml.assets as assets
 import azureml.assets.util as util
 import yaml
-from azureml.assets.release.model_publish_utils import (MLFlowModelUtils,
-                                                        ModelUtils)
+from azureml.assets.release.model_publish_utils import ModelUtils
 from azureml.assets.util import logger
 
 ASSET_ID_TEMPLATE = Template(
