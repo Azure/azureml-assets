@@ -1,12 +1,12 @@
 general:
-  includes: 
-  - "./general/jobs/"
+  includes:
+  - ./general/jobs/
   jobs:
-    test-pipeline: 
-      job: "./general/jobs/pipeline.yml"
+    test-pipeline:
+      job: ./general/jobs/pipeline.yml
       assets:
       - sample_component
-    sample_pytest: 
-      pytest_job: "./general/jobs/sample_pytest.py"
+    sample_pytest:
+      pytest_job: ./general/jobs/sample_pytest.py
       assets:
       - sample_component
