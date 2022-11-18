@@ -232,11 +232,16 @@ if __name__ == "__main__":
     logger.print(f"create list: {publish_list}")
 
     failure_list = []
+    all_assets = util.find_assets(input_dirs=assets_dir)
+    assets_by_type = {}
+    for asset in all_assets:
+        assets_by_type[asset.type.value] = assets_by_type.get(asset.type.value,[]).append(asset)
+
     for publish_asset_type in PUBLISH_ORDER:
         logger.print(f"now publishing {publish_asset_type.value}s.")
         if publish_asset_type.value not in publish_list:
             continue
-        for asset in util.find_assets(input_dirs=assets_dir, types=[publish_asset_type]):
+        for asset in assets_by_type.get(publish_asset_type.value,[]):
             asset_names = publish_list.get(asset.type.value, [])
             if not ("*" in asset_names or asset.name in asset_names):
                 logger.print(
