@@ -233,6 +233,7 @@ if __name__ == "__main__":
 
     failure_list = []
     for publish_asset_type in PUBLISH_ORDER:
+        logger.print(f"now publishing {publish_asset_type.value}s.")
         if publish_asset_type.value not in publish_list:
             continue
         for asset in util.find_assets(input_dirs=assets_dir, types=[publish_asset_type]):
