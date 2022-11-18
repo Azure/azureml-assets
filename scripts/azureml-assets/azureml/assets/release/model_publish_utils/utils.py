@@ -67,12 +67,12 @@ class ModelUtils:
             if commit_exists != 0:
                 # TODO: Error handling incase of incorrect commit hash.
                 logger.log_warning("Commit hash doesn't exist. Using model from latest HEAD.")
-        git_path = os.path.join(self.model_dir, '.git')
+        git_path = os.path.join(self.model_dir, ".git")
         shutil.rmtree(git_path, onerror=_onerror)
         return True
 
     def _download_blobstore_artifacts(self) -> bool:
-        """Download model files from blobstore"""
+        """Download model files from blobstore."""
         az_copy_cmd = f"azcopy cp --recursive=true {self.model_url} {self.model_dir}"
         result = self._run(az_copy_cmd)
         # exit for non-zero error
@@ -89,5 +89,5 @@ class ModelUtils:
         if self.model_download_type == ModelDownloadType.AZURE_BLOBSTORE:
             return self._download_blobstore_artifacts()
         else:
-            logger.print('Unsupported Model Download Method.')
+            logger.print("Unsupported Model Download Method.")
         return False
