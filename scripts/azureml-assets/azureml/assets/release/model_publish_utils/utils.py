@@ -71,11 +71,23 @@ class ModelUtils:
         shutil.rmtree(git_path, onerror=_onerror)
         return True
 
+    def _download_blobstore_artifacts(self) -> bool:
+        """Download model files from blobstore"""
+        az_copy_cmd = f"azcopy cp --recursive=true {self.model_url} {self.model_dir}"
+        result = self._run(az_copy_cmd)
+        # exit for non-zero error
+        if result != 0:
+            logger.log_warning(f"Failed to download model files with URL: {self.model_url}")
+            return False
+        return True
+
     def download_model(self) -> bool:
         """Prepare the Download Environment."""
         if self.model_download_type == ModelDownloadType.GIT:
             download_success = self._download_git_model()
             return download_success
+        if self.model_download_type == ModelDownloadType.AZURE_BLOBSTORE:
+            return self._download_blobstore_artifacts()
         else:
             logger.print('Unsupported Model Download Method.')
         return False
