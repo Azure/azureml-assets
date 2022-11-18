@@ -276,8 +276,16 @@ if __name__ == "__main__":
             logger.log_warning(f"unsupported asset type: {asset.type.value}")
 
     if len(failure_list) > 0:
-        logger.log_warning(
-            f"following assets failed to publish: {failure_list}")
+        failed_assets = {}
+        for asset in failure_list:
+            failed_assets[asset.type.value] = failed_assets.get(asset.type, []).append(asset.name)
+        for asset_type, asset_names in failed_assets.items():
+            logger.log_warning(f"Failed to register {asset_type}s: {asset_names}")
+        # the following dump process will be removed when we separate the publish and test process.
+        result_path = Path().resolve() / "failed assets.yml"
+        with open(result_path, "w") as file:
+                yaml.dump(failed_assets, file, default_flow_style=False, sort_keys=False)
+
 
     if tests_dir:
         logger.print("locating test files")
