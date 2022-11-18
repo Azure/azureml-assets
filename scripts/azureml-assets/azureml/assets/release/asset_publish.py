@@ -95,13 +95,16 @@ def model_prepare(
             update_spec_file(spec_file, model_dir)
 
     elif model_config.type == assets.ModelType.MLFLOW:
-        mlflow_utils = MLFlowModelUtils(
-            name=asset.name,
-            task_name=model_config.task_name.value,
-            flavor=model_config.flavor.value,
-            mlflow_model_dir=model_dir,
+        # TODO: udpate this once we start consuming git based model
+        model_utils = ModelUtils(
+            model_url=model_config.remote_uri,
+            model_commit_hash=model_config.remote_commit_hash,
+            model_download_type=model_config.remote_type,
+            model_dir=model_dir,
         )
-        validate_download = mlflow_utils.convert_into_mlflow_model()
+        validate_download = model_utils.download_model()
+        if validate_download:
+            update_spec_file(spec_file, model_dir)
 
     else:
         print(model_config.type.value, assets.ModelType.MLFLOW)
