@@ -12,6 +12,7 @@ from pathlib import Path
 from string import Template
 from subprocess import PIPE, STDOUT, run
 from tempfile import TemporaryDirectory
+from collections import defaultdict
 from typing import List
 import azureml.assets as assets
 import azureml.assets.util as util
@@ -235,7 +236,7 @@ if __name__ == "__main__":
     all_assets = util.find_assets(input_dirs=assets_dir)
     assets_by_type = defaultdict(list)
     for asset in all_assets:
-        assets_by_type[asset.type].append(asset)
+        assets_by_type[asset.type.value].append(asset)
 
     for publish_asset_type in PUBLISH_ORDER:
         logger.print(f"now publishing {publish_asset_type.value}s.")
