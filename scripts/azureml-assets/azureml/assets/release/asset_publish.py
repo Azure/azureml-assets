@@ -12,6 +12,7 @@ from pathlib import Path
 from string import Template
 from subprocess import PIPE, STDOUT, run
 from tempfile import TemporaryDirectory
+from collections import defaultdict
 from typing import List
 import azureml.assets as assets
 import azureml.assets.util as util
@@ -75,6 +76,7 @@ def model_prepare(
     """
     Prepare the model. Download the model if required.
     Convert the models to specified publish type.
+
     Return: returns the local path to the model.
     """
 
@@ -167,6 +169,7 @@ def run_command(
 def _str2bool(v: str) -> bool:
     """
     Parse boolean-ish values.
+
     See https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     """
     if isinstance(v, bool):
@@ -230,10 +233,16 @@ if __name__ == "__main__":
     logger.print(f"create list: {publish_list}")
 
     failure_list = []
+    all_assets = util.find_assets(input_dirs=assets_dir)
+    assets_by_type = defaultdict(list)
+    for asset in all_assets:
+        assets_by_type[asset.type.value].append(asset)
+
     for publish_asset_type in PUBLISH_ORDER:
+        logger.print(f"now publishing {publish_asset_type.value}s.")
         if publish_asset_type.value not in publish_list:
             continue
-        for asset in util.find_assets(input_dirs=assets_dir, types=[publish_asset_type]):
+        for asset in assets_by_type.get(publish_asset_type.value, []):
             asset_names = publish_list.get(asset.type.value, [])
             if not ("*" in asset_names or asset.name in asset_names):
                 logger.print(
