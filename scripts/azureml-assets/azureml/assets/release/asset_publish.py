@@ -233,9 +233,9 @@ if __name__ == "__main__":
 
     failure_list = []
     all_assets = util.find_assets(input_dirs=assets_dir)
-    assets_by_type = {}
+    assets_by_type = defaultdict(list)
     for asset in all_assets:
-        assets_by_type[asset.type.value] = assets_by_type.get(asset.type.value, []).append(asset)
+        assets_by_type[asset.type].append(asset)
 
     for publish_asset_type in PUBLISH_ORDER:
         logger.print(f"now publishing {publish_asset_type.value}s.")
