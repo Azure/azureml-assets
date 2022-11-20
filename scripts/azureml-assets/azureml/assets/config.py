@@ -266,7 +266,7 @@ class ModelDownloadType(Enum):
     FTP = 'ftp'
     GIT = 'git'
     HTTP = 'http'
-    AZURE_BLOBSTORE = 'azure'
+    AZURE = 'azure'
 
 
 class ModelConfig(Config):
