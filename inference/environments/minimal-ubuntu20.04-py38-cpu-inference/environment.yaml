@@ -13,8 +13,8 @@ image:
 environment:
   metadata:
     MachineLearningFramework:
-      name: minimal
-      version: ""
+      name: minimal-cpu
+      version: "0.1"
     Purpose:
       HasTrainingSupport: false
       HasInferencingSupport: true

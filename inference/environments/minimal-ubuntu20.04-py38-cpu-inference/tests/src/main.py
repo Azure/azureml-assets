@@ -26,7 +26,6 @@ def main(args):
 
 def start_server(log_directory, args, timeout=timedelta(seconds=15)):
     """Start inference server with options."""
-
     stderr_file = open(os.path.join(log_directory, "stderr.txt"), "w")
     stdout_file = open(os.path.join(log_directory, "stdout.txt"), "w")
 
