@@ -42,7 +42,6 @@ class ModelDownloadUtils:
             logger.print(f"Successfully executed! Output: \n{result.stdout}")
         return result.returncode
 
-
     def _download_git_model(model_url, model_dir) -> bool:
         """Download the Model."""
         """
