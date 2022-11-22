@@ -13,6 +13,7 @@ import argparse
 
 
 def main(args):
+    """Start inference server and post scoring request."""
     # start the server
     server_process = start_server("/var/tmp", ["--entry_script", args.score])
 
@@ -24,6 +25,7 @@ def main(args):
 
 
 def start_server(log_directory, args, timeout=timedelta(seconds=15)):
+    """Start inference server with options."""
 
     stderr_file = open(os.path.join(log_directory, "stderr.txt"), "w")
     stdout_file = open(os.path.join(log_directory, "stdout.txt"), "w")
@@ -56,11 +58,13 @@ def start_server(log_directory, args, timeout=timedelta(seconds=15)):
 
 
 def score_with_post(headers=None, data=None):
+    """Post scoring request to the server."""
     url = "http://127.0.0.1:5001/score"
     return requests.post(url=url, headers=headers, data=data)
 
 
 def parse_args():
+    """Parse input arguments."""
     # setup arg parser
     parser = argparse.ArgumentParser()
 

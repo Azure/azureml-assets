@@ -12,11 +12,13 @@ from azureml_inference_server_http.api.aml_request import rawhttp
 
 
 def init():
+    """Sample init function."""
     print("Initializing")
 
 
 @rawhttp
 def run(input_data):
+    """Sample run function."""
     print('A new request received~~~')
     try:
         r = dict()
