@@ -12,19 +12,17 @@ from pathlib import Path
 from string import Template
 from subprocess import PIPE, STDOUT, run
 from tempfile import TemporaryDirectory
-from collections import defaultdict
 from typing import List
 import azureml.assets as assets
 import azureml.assets.util as util
 import yaml
-from azureml.assets.release.model_publish_utils import (MLFlowModelUtils,
-                                                        ModelUtils)
+from azureml.assets.config import PathType
+from azureml.assets.release.model_publish_utils import ModelDownloadUtils
 from azureml.assets.util import logger
 
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
-PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
 
 
 def test_files_location(dir: Path):
@@ -42,7 +40,7 @@ def test_files_location(dir: Path):
     return test_jobs
 
 
-def test_files_preprocess(test_jobs, asset_ids: dict):
+def preprocess_test_files(test_jobs, asset_ids: dict):
     """Preprocess test files to generate asset ids."""
     for test_job in test_jobs:
         logger.print(f"processing test job: {test_job}")
@@ -60,13 +58,17 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
-def update_spec_file(spec_file: Path, path: Path):
+def update_model_spec_file(spec_file: Path, path: Path):
     """Update the yaml file after getting the model has been prepared."""
-    with open(spec_file) as f:
-        model_file = yaml.safe_load(f)
-    model_file['path'] = path
-    with open(spec_file, "w") as f:
-        yaml.dump(model_file, f)
+    try:
+        with open(spec_file) as f:
+            model_file = yaml.safe_load(f)
+        model_file['path'] = path
+        with open(spec_file, "w") as f:
+            yaml.dump(model_file, f)
+    except Exception as e:
+        logger.print(f"Error while updating spec")
+        raise e
 
 
 def model_prepare(
@@ -76,33 +78,25 @@ def model_prepare(
     """
     Prepare the model. Download the model if required.
     Convert the models to specified publish type.
+
     Return: returns the local path to the model.
     """
 
-    if model_config.path_local:
-        update_spec_file(spec_file, os.path.abspath(
-            model_config.path_local.resolve()))
+    if model_config.path.type == PathType.LOCAL:
+        update_model_spec_file(spec_file, os.path.abspath(
+            Path(model_config.path.uri).resolve()))
         return True
 
     if model_config.type == assets.ModelType.CUSTOM:
-        model_utils = ModelUtils(
-            model_url=model_config.remote_uri,
-            model_commit_hash=model_config.remote_commit_hash,
-            model_download_type=model_config.remote_type,
-            model_dir=model_dir,
-        )
-        validate_download = model_utils.download_model()
+        validate_download = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
         if validate_download:
-            update_spec_file(spec_file, model_dir)
+            update_model_spec_file(spec_file, model_dir)
 
     elif model_config.type == assets.ModelType.MLFLOW:
-        mlflow_utils = MLFlowModelUtils(
-            name=asset.name,
-            task_name=model_config.task_name.value,
-            flavor=model_config.flavor.value,
-            mlflow_model_dir=model_dir,
-        )
-        validate_download = mlflow_utils.convert_into_mlflow_model()
+        # TODO: udpate this once we start consuming git based model
+        validate_download = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
+        if validate_download:
+            update_model_spec_file(spec_file, model_dir)
 
     else:
         print(model_config.type.value, assets.ModelType.MLFLOW)
@@ -231,58 +225,49 @@ if __name__ == "__main__":
     logger.print(f"create list: {publish_list}")
 
     failure_list = []
-    all_assets = util.find_assets(input_dirs=assets_dir)
-    assets_by_type = defaultdict(list)
-    for asset in all_assets:
-        assets_by_type[asset.type.value].append(asset)
-
-    for publish_asset_type in PUBLISH_ORDER:
-        logger.print(f"now publishing {publish_asset_type.value}s.")
-        if publish_asset_type.value not in publish_list:
+    for asset in util.find_assets(input_dirs=assets_dir):
+        asset_names = publish_list.get(asset.type.value, [])
+        if not ("*" in asset_names or asset.name in asset_names):
+            logger.print(
+                f"Skipping registering asset {asset.name} because it is not in the publish list")
             continue
-        for asset in assets_by_type.get(publish_asset_type.value, []):
-            asset_names = publish_list.get(asset.type.value, [])
-            if not ("*" in asset_names or asset.name in asset_names):
-                logger.print(
-                    f"Skipping registering asset {asset.name} because it is not in the publish list")
-                continue
-            logger.print(f"Registering {asset}")
-            final_version = asset.version + "-" + \
-                passed_version if passed_version else asset.version
-            logger.print(f"final version: {final_version}")
-            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
-                registry_name=registry_name,
-                asset_type=f"{asset.type.value}s",
-                asset_name=asset.name,
-                version=final_version,
-            )
+        logger.print(f"Registering {asset}")
+        final_version = asset.version + "-" + \
+            passed_version if passed_version else asset.version
+        logger.print(f"final version: {final_version}")
+        asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
+            registry_name=registry_name,
+            asset_type=f"{asset.type.value}s",
+            asset_name=asset.name,
+            version=final_version,
+        )
 
-            # Handle specific asset types
-            if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
-                # Assemble command
-                cmd = assemble_command(
-                    asset.type.value, str(asset.spec_with_path),
-                    registry_name, final_version, resource_group, workspace, debug_mode)
+        # Handle specific asset types
+        if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
+            # Assemble command
+            cmd = assemble_command(
+                asset.type.value, str(asset.spec_with_path),
+                registry_name, final_version, resource_group, workspace, debug_mode)
+            # Run command
+            run_command(cmd, failure_list, debug_mode)
+
+        elif asset.type == assets.AssetType.MODEL:
+
+            model_config = asset.extra_config_as_object()
+
+            with TemporaryDirectory() as tempdir:
+                result = model_prepare(
+                    model_config, asset.spec_with_path, tempdir)
                 # Run command
-                run_command(cmd, failure_list, debug_mode)
+                if result:
+                    # Assemble Command
+                    cmd = assemble_command(
+                        asset.type.value, str(asset.spec_with_path),
+                        registry_name, final_version, resource_group, workspace, debug_mode)
+                    run_command(cmd, failure_list, debug_mode)
 
-            elif asset.type == assets.AssetType.MODEL:
-
-                model_config = asset.extra_config_as_object()
-
-                with TemporaryDirectory() as tempdir:
-                    result = model_prepare(
-                        model_config, asset.spec_with_path, tempdir)
-                    # Run command
-                    if result:
-                        # Assemble Command
-                        cmd = assemble_command(
-                            asset.type.value, str(asset.spec_with_path),
-                            registry_name, final_version, resource_group, workspace, debug_mode)
-                        run_command(cmd, failure_list, debug_mode)
-
-            else:
-                logger.log_warning(f"unsupported asset type: {asset.type.value}")
+        else:
+            logger.log_warning(f"unsupported asset type: {asset.type.value}")
 
     if len(failure_list) > 0:
         logger.log_warning(
@@ -293,7 +278,7 @@ if __name__ == "__main__":
         test_jobs = test_files_location(tests_dir)
 
         logger.print("preprocessing test files")
-        test_files_preprocess(test_jobs, asset_ids)
+        preprocess_test_files(test_jobs, asset_ids)
         logger.print("finished preprocessing test files")
     else:
         logger.log_warning("Test files not found")

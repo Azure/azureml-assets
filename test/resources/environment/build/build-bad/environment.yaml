@@ -1,0 +1,6 @@
+image:
+  name: bad-build
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile

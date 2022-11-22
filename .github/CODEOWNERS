@@ -1,1 +1,5 @@
 *     @azure/aml-assets
+/benchmark/ @azure/aims
+/responsibleai/ @azure/aml-rai
+/training/ @azure/aml-training 
+/sample/ @Azure/aml-assets

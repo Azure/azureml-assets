@@ -2,4 +2,4 @@
 # Licensed under the MIT License.
 
 from .mlflow_utils import MLFlowModelUtils
-from .utils import ModelUtils
+from .utils import ModelDownloadUtils
