@@ -4,7 +4,6 @@
 """Asset config classes."""
 
 import re
-import shutil
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List
@@ -264,9 +263,9 @@ class ModelTaskName(Enum):
 class PathType(Enum):
     """Enum for path types supported for model publishing"""
     LOCAL = "local"  # Path to model files present locally.
-    GIT   = "git"    # Model hosted on a public GIT repo and can be cloned by GIT LFS.
-    FTP   = "ftp"    # <UNSUPPORTED> Model files hosted on a FTP endpoint.
-    HTTP  = "http"   # <UNSUPPORTED> Model files hosted on a HTTP endpoint.
+    GIT = "git"      # Model hosted on a public GIT repo and can be cloned by GIT LFS.
+    FTP = "ftp"      # <UNSUPPORTED> Model files hosted on a FTP endpoint.
+    HTTP = "http"    # <UNSUPPORTED> Model files hosted on a HTTP endpoint.
     AZURE = "azure"  # Model files hosted on an AZURE blobstore with public read access.
 
 
@@ -303,7 +302,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         Args:
             storage_name (str): Blob container storage name 
             container_name (str): Blob container name
-            container_path (str): Relative path of assets in blob container. Will also be used to download artifacts locally.
+            container_path (str): Relative path of assets in blob container.
         """
         self._storage_name = storage_name
         self._container_name = container_name
@@ -382,8 +381,7 @@ class ModelConfig(Config):
                 self._path = GitAssetPath(branch=path['branch'], uri=path['uri'])
             elif path_type == PathType.LOCAL:
                 self._path = LocalAssetPath(local_path=path['uri'])
-            elif path_type == PathType.HTTP or \
-                path_type == PathType.FTP:
+            elif path_type == PathType.HTTP or path_type == PathType.FTP:
                 raise NotImplementedError("Support for HTTP and FTP is being added.")
         else:
             raise Exception("path parameters are invalid")

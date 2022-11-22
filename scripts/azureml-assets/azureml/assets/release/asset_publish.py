@@ -58,13 +58,17 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
-def update_spec_file(spec_file: Path, path: Path):
+def update_model_spec_file(spec_file: Path, path: Path):
     """Update the yaml file after getting the model has been prepared."""
-    with open(spec_file) as f:
-        model_file = yaml.safe_load(f)
-    model_file['path'] = path
-    with open(spec_file, "w") as f:
-        yaml.dump(model_file, f)
+    try:
+        with open(spec_file) as f:
+            model_file = yaml.safe_load(f)
+        model_file['path'] = path
+        with open(spec_file, "w") as f:
+            yaml.dump(model_file, f)
+    except Exception as e:
+        logger.print(f"Error while updating spec")
+        raise e
 
 
 def model_prepare(
@@ -79,20 +83,20 @@ def model_prepare(
     """
 
     if model_config.path.type == PathType.LOCAL:
-        update_spec_file(spec_file, os.path.abspath(
+        update_model_spec_file(spec_file, os.path.abspath(
             Path(model_config.path.uri).resolve()))
         return True
 
     if model_config.type == assets.ModelType.CUSTOM:
         validate_download = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
         if validate_download:
-            update_spec_file(spec_file, model_dir)
+            update_model_spec_file(spec_file, model_dir)
 
     elif model_config.type == assets.ModelType.MLFLOW:
         # TODO: udpate this once we start consuming git based model
         validate_download = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
         if validate_download:
-            update_spec_file(spec_file, model_dir)
+            update_model_spec_file(spec_file, model_dir)
 
     else:
         print(model_config.type.value, assets.ModelType.MLFLOW)
