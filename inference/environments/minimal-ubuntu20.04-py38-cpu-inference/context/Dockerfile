@@ -8,13 +8,8 @@ ENV AZUREML_CONDA_ENVIRONMENT_PATH /opt/miniconda/envs/minimal
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+RUN pip install 'azureml-inference-server-http~=0.7.0'
 
-# Create conda environment
-COPY conda_dependencies.yaml .
-RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
-    rm conda_dependencies.yaml && \
-    conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
-    conda clean -a -y
+ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 
 CMD [ "runsvdir", "/var/runit" ]
