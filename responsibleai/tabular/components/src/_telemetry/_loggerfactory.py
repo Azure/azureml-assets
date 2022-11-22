@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+import sys
 import logging
 import logging.handlers
 import traceback
 import time
+import pkg_resources
 
 from contextlib import contextmanager
 from functools import wraps
@@ -14,11 +16,12 @@ from azureml.telemetry import get_telemetry_log_handler
 from azureml.telemetry.activity import (
     log_activity as _log_activity,
     ActivityType,
+    ActivityLoggerAdapter
 )
 from azureml.telemetry.logging_handler import AppInsightsLoggingHandler
 
 COMPONENT_NAME = "azureml.rai.tabular"
-instrumentation_key = "d4221f27-5e6b-4fb6-95e4-5452f0182a2c"
+instrumentation_key = "8a122f06-112a-4c18-8c2f-711c7fb5780f"
 default_custom_dimensions = {"app_name": "azureml.rai.tabular"}
 
 DEFAULT_ACTIVITY_TYPE = ActivityType.INTERNALCALL
@@ -44,7 +47,15 @@ class _LoggerFactory:
                 )
             )
 
+        _LoggerFactory.track_python_environment(logger)
+
         return logger
+
+    @staticmethod
+    def track_python_environment(logger):
+        payload = {d.project_name: d.version for d in pkg_resources.working_set}
+        activity_logger = ActivityLoggerAdapter(logger, {"python_environment": payload})
+        activity_logger.info("Logging python environment.")
 
     @staticmethod
     def track_activity(
@@ -136,9 +147,14 @@ def track(
                     try:
                         return func(*args, **kwargs)
                     except Exception as e:
+                        # local logger
+                        if type(al) == type(logger):
+                            raise
                         al.activity_info["exception_type"] = str(type(e))
                         al.activity_info["stacktrace"] = "\n".join(
-                            _extract_and_filter_stack(e, traceback.extract_stack())
+                            _extract_and_filter_stack(
+                                e, traceback.extract_tb(sys.exc_info()[2])
+                            )
                         )
                         raise
             except Exception:
@@ -161,7 +177,7 @@ def track(
 def _extract_and_filter_stack(e, traces):
     ret = [str(type(e))]
 
-    for trace in traces[:-1]:
+    for trace in traces:
         ret.append(f'File "{trace.filename}", line {trace.lineno} in {trace.name}')
         ret.append(f"  {trace.line}")
     return ret

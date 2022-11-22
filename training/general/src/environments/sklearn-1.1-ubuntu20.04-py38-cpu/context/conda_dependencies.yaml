@@ -18,3 +18,4 @@ dependencies:
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
   - scikit-learn~=1.1.0
+  - debugpy~=1.6.3
