@@ -1,9 +1,9 @@
 FROM mcr.microsoft.com/azureml/inference-base-2004:{{latest-image-tag}}
 
 RUN conda create -n minimal \
-    python=3.8.13 pip=20.2.4
+    python=3.8.13 pip=22.1.2
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/minimal
+ENV AZUREML_CONDA_ENVIRONMENT_PATH /opt/miniconda/envs/minimal
 
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
