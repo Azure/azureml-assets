@@ -1,0 +1,139 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+description: >-
+  Trains an image segmentation model using tensorflow.
+
+
+name: tensorflow_image_segmentation
+display_name: Image Segmentation (Tensorflow)
+version: 1.0.4
+
+inputs:
+  # data loading
+  train_images:
+    type: path
+    description: "Path to folder containing training images."
+  train_masks:
+    type: path
+    description: "Path to folder containing masks."
+  test_images:
+    type: path
+    description: "Path to folder containing testing images."
+  test_masks:
+    type: path
+    description: "Path to folder containing masks."
+  images_filename_pattern:
+    type: string
+  images_type:
+    type: string
+    optional: true
+    description: "jpg or png (default: png)"
+  masks_filename_pattern:
+    type: string
+
+  # data loading
+  batch_size:
+    type: integer
+    min: 1
+    optional: true
+    description: "Train/valid data loading batch size (default: 64)"
+  num_workers:
+    type: integer
+    optional: true
+    description: "Num workers for data loader (default: -1 => all cpus available)"
+  prefetch_factor:
+    type: integer
+    optional: true
+    description: "Data loader prefetch factor (default: 2)"
+  cache:
+    type: string
+    optional: true
+    description: "Use cache (disk or memory)"
+
+  # model
+  model_arch:
+    type: string
+    optional: true
+    description: "Which model architecture to use (default: unet)"
+  model_input_size:
+    type: integer
+    optional: true
+    description: "Size of input images (resized, default: 160)"
+  num_classes:
+    type: integer
+
+  # training
+  num_epochs:
+    type: integer
+    optional: true
+    description: "Number of epochs to train for (default: 1)"
+  optimizer:
+    type: string
+    optional: true
+    description: "default: rmsprop"
+  loss:
+    type: string
+    optional: true
+    description: "default: sparse_categorical_crossentropy"
+
+  num_gpus:
+    type: integer
+    optional: true
+    description: "Force down the number of gpus used for this training"
+  distributed_strategy:
+    type: string
+    optional: true
+    description: "Force strategy (default: auto)"
+  distributed_backend:
+    type: string
+    optional: true
+    description: "Which backend (ring, nccl, auto) for MultiWorkerMirroredStrategy collective communication."
+
+outputs:
+  checkpoints: 
+    type: path
+    description: "Path to export checkpoints"
+  trained_model: 
+    type: path
+    description: "Path to the final model"
+
+# code should point to parent folder containing pytorch_benchmark/ and common/
+code: ../
+
+environment: azureml:nvidia_tensorflow:22.02-tf2-py3-mod3
+
+command: >-
+  python tensorflow_benchmark/image_segmentation.py 
+  --train_images ${{inputs.train_images}}
+  --train_masks ${{inputs.train_masks}}
+  --test_images ${{inputs.test_images}}
+  --test_masks ${{inputs.test_masks}}
+  --images_filename_pattern "${{inputs.images_filename_pattern}}"
+  --masks_filename_pattern "${{inputs.masks_filename_pattern}}"
+
+  $[[--batch_size ${{inputs.batch_size}}]]
+  $[[--num_workers ${{inputs.num_workers}}]]
+  $[[--prefetch_factor ${{inputs.prefetch_factor}}]]
+  $[[--cache ${{inputs.cache}}]]
+
+  $[[--model_arch ${{inputs.model_arch}}]]
+  --num_classes ${{inputs.num_classes}}
+  $[[--model_input_size ${{inputs.model_input_size}}]]
+
+  $[[--num_epochs ${{inputs.num_epochs}}]]
+  $[[--optimizer ${{inputs.optimizer}}]]
+  $[[--loss ${{inputs.loss}}]]
+
+  $[[--num_gpus ${{inputs.num_gpus}}]]
+
+  --model_output ${{outputs.trained_model}}
+  --checkpoints ${{outputs.checkpoints}}
+
+  $[[--distributed_strategy ${{inputs.distributed_strategy}}]]
+  $[[--distributed_backend ${{inputs.distributed_backend}}]]
+
+distribution:
+  # NOTE: using type:tensorflow will use all the right env variables (ex: TF_CONFIG)
+  type: tensorflow
+  worker_count: 1

@@ -1,0 +1,6 @@
+image:
+  name: build-test-bad
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile

@@ -133,3 +133,6 @@ mlruns/
 
 # VS Code settings
 .vscode
+
+# Exclusions
+!test/resources/environment/build
