@@ -354,6 +354,7 @@ class ModelConfig(Config):
     def __init__(self, file_name: Path):
         """Initialize object for the Model Properties extracted from extra_config model.yaml."""
         super().__init__(file_name)
+        self._path = None
         self._validate()
 
     def _validate(self):
