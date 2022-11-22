@@ -358,8 +358,8 @@ class ModelConfig(Config):
 
     def _validate(self):
         """Validate the yaml file."""
-        Config._validate_exists('model.path', self._path)
-        Config._validate_enum('model.path.type', self._path.type, True)
+        Config._validate_exists('model.path', self.path)
+        Config._validate_enum('model.path.type', self.path.type, True)
         Config._validate_exists('model.publish', self._publish)
         Config._validate_enum('model.type', self._type, ModelType, True)
 
