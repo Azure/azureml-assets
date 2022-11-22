@@ -300,7 +300,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         """Create a Blobstore path.
 
         Args:
-            storage_name (str): Blob container storage name 
+            storage_name (str): Blob container storage name
             container_name (str): Blob container name
             container_path (str): Relative path of assets in blob container.
         """

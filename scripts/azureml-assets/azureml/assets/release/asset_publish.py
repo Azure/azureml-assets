@@ -67,7 +67,7 @@ def update_model_spec_file(spec_file: Path, path: Path):
         with open(spec_file, "w") as f:
             yaml.dump(model_file, f)
     except Exception as e:
-        logger.print(f"Error while updating spec")
+        logger.print("Error while updating spec")
         raise e
 
 
