@@ -285,12 +285,12 @@ class AssetPath:
 
     @property
     def uri(self) -> str:
-        """Asset URI"""
+        """Asset URI."""
         return self._uri
 
     @property
     def type(self) -> str:
-        """Asset type"""
+        """Asset type."""
         return self._type
 
 
