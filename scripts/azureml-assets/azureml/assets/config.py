@@ -270,8 +270,16 @@ class PathType(Enum):
     AZURE = "azure"  # Model files hosted on an AZURE blobstore with public read access.
 
 
-class _AssetPath:
+class AssetPath:
+    """Asset path."""
+
     def __init__(self, asset_type: str, uri: str):
+        """Initialize asset path.
+
+        Args:
+            asset_type (str): path type. Valid values are [local, git, ftp, http, azure].
+            uri (str): a valid URI to local or remote resouce.
+        """
         self._uri = uri
         self._type = asset_type
 
@@ -286,7 +294,7 @@ class _AssetPath:
         return self._type
 
 
-class LocalAssetPath(_AssetPath):
+class LocalAssetPath(AssetPath):
     """Local asset path."""
 
     def __init__(self, uri: str):
@@ -298,7 +306,7 @@ class LocalAssetPath(_AssetPath):
         super().__init__(PathType.LOCAL, uri=uri)
 
 
-class AzureBlobstoreAssetPath(_AssetPath):
+class AzureBlobstoreAssetPath(AssetPath):
     """Azure Blobstore asset path."""
 
     BLOBSTORE_URI = "https://{}.blob.core.windows.net/{}/{}"
@@ -318,7 +326,7 @@ class AzureBlobstoreAssetPath(_AssetPath):
         super().__init__(PathType.AZURE, uri)
 
 
-class GitAssetPath(_AssetPath):
+class GitAssetPath(AssetPath):
     """GIT asset path."""
 
     def __init__(self, branch: str, uri: str):
