@@ -261,7 +261,8 @@ class ModelTaskName(Enum):
 
 
 class PathType(Enum):
-    """Enum for path types supported for model publishing"""
+    """Enum for path types supported for model publishing."""
+
     LOCAL = "local"  # Path to model files present locally.
     GIT = "git"      # Model hosted on a public GIT repo and can be cloned by GIT LFS.
     FTP = "ftp"      # <UNSUPPORTED> Model files hosted on a FTP endpoint.
@@ -269,21 +270,25 @@ class PathType(Enum):
     AZURE = "azure"  # Model files hosted on an AZURE blobstore with public read access.
 
 
-class AssetPath:
+class _AssetPath:
     def __init__(self, asset_type: str, uri: str):
         self._uri = uri
         self._type = asset_type
 
     @property
     def uri(self) -> str:
+        """Asset URI"""
         return self._uri
 
     @property
     def type(self) -> str:
+        """Asset type"""
         return self._type
 
 
-class LocalAssetPath(AssetPath):
+class LocalAssetPath(_AssetPath):
+    """Local asset path."""
+
     def __init__(self, uri: str):
         """Create a Local path of asset.
 
@@ -293,7 +298,9 @@ class LocalAssetPath(AssetPath):
         super().__init__(PathType.LOCAL, uri=uri)
 
 
-class AzureBlobstoreAssetPath(AssetPath):
+class AzureBlobstoreAssetPath(_AssetPath):
+    """Azure Blobstore asset path."""
+
     BLOBSTORE_URI = "https://{}.blob.core.windows.net/{}/{}"
 
     def __init__(self, storage_name: str, container_name: str, container_path: str):
@@ -311,7 +318,9 @@ class AzureBlobstoreAssetPath(AssetPath):
         super().__init__(PathType.AZURE, uri)
 
 
-class GitAssetPath(AssetPath):
+class GitAssetPath(_AssetPath):
+    """GIT asset path."""
+
     def __init__(self, branch: str, uri: str):
         """Create a GIT repo path.
 
