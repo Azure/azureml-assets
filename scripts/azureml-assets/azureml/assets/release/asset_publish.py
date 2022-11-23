@@ -25,7 +25,7 @@ ASSET_ID_TEMPLATE = Template(
 TEST_YML = "tests.yml"
 
 
-def test_files_location(dir: Path):
+def find_test_files(dir: Path):
     """Find test files in the directory."""
     test_jobs = []
 
@@ -275,7 +275,7 @@ if __name__ == "__main__":
 
     if tests_dir:
         logger.print("locating test files")
-        test_jobs = test_files_location(tests_dir)
+        test_jobs = find_test_files(tests_dir)
 
         logger.print("preprocessing test files")
         preprocess_test_files(test_jobs, asset_ids)
