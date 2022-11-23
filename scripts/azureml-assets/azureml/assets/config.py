@@ -360,7 +360,7 @@ class ModelConfig(Config):
     def _validate(self):
         """Validate the yaml file."""
         Config._validate_exists('model.path', self.path)
-        Config._validate_enum('model.path.type', self.path.type, True)
+        Config._validate_enum('model.path.type', self.path.type.value, PathType, True)
         Config._validate_exists('model.publish', self._publish)
         Config._validate_enum('model.type', self._type, ModelType, True)
 
@@ -372,20 +372,25 @@ class ModelConfig(Config):
         path = self._yaml.get('path', {})
         if path and path.get('type'):
             path_type = path.get('type')
-            if path_type == PathType.AZURE:
+            print(f"{path_type} == {PathType.AZURE.value}")
+            print(path_type == PathType.AZURE.value)
+            if path_type == PathType.AZURE.value:
                 self._path = AzureBlobstoreAssetPath(
                     storage_name=path['storage_name'],
                     container_name=path['container_name'],
                     container_path=path['container_path'],
                 )
-            elif path_type == PathType.GIT:
+                print("Created self._path")
+                print(self._path)
+            elif path_type == PathType.GIT.value:
                 self._path = GitAssetPath(branch=path['branch'], uri=path['uri'])
-            elif path_type == PathType.LOCAL:
+            elif path_type == PathType.LOCAL.value:
                 self._path = LocalAssetPath(local_path=path['uri'])
-            elif path_type == PathType.HTTP or path_type == PathType.FTP:
+            elif path_type == PathType.HTTP.value or path_type == PathType.FTP.value:
                 raise NotImplementedError("Support for HTTP and FTP is being added.")
         else:
             raise Exception(f"path parameters are invalid \n {path}")
+        print(self._path)
         return self._path
 
     @property

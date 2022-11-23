@@ -53,15 +53,18 @@ class ModelDownloadUtils:
         result = ModelDownloadUtils._run(clone_cmd)
         if result != 0:
             return False
-        git_path = os.path.join(model_dir, ".git")
+        git_path = model_dir / ".git"
         shutil.rmtree(git_path, onerror=_onerror)
         return True
 
     def _download_azure_artifacts(model_url, model_dir) -> bool:
         """Download model files from blobstore."""
-        az_copy_cmd = f"azcopy cp --recursive=true {model_url} {model_dir}"
-        result = ModelDownloadUtils._run(az_copy_cmd)
-        # exit for non-zero error
+        commands = f"""
+        azcopy login --service-principal --application-id $SP_CLIENT_ID --tenant-id $SP_TENANT_ID
+        azcopy cp --recursive=true {model_url} {model_dir}
+        """
+        result = ModelDownloadUtils._run(commands)
+        # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
         if result != 0:
             logger.log_warning(f"Failed to download model files with URL: {model_url}")
             return False
