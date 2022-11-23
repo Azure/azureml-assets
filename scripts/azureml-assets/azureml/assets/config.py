@@ -385,7 +385,7 @@ class ModelConfig(Config):
             elif path_type == PathType.HTTP or path_type == PathType.FTP:
                 raise NotImplementedError("Support for HTTP and FTP is being added.")
         else:
-            raise Exception("path parameters are invalid")
+            raise Exception(f"path parameters are invalid \n {path}")
         return self._path
 
     @property
