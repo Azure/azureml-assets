@@ -72,7 +72,7 @@ class ModelDownloadUtils:
             login = f"azcopy login --service-principal --application-id {SP_CLIENT_ID} --tenant-id {SP_TENANT_ID}"
             result = ModelDownloadUtils._run(login)
             if result:
-                logger.log_warning(f"azcopy failed to login")
+                logger.log_warning("azcopy failed to login")
                 return False
         except Exception as e:
             logger.log_warning(e)

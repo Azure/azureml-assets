@@ -23,7 +23,6 @@ from azureml.assets.config import PathType
 from azureml.assets.release.model_publish_utils import ModelDownloadUtils
 from azureml.assets.util import logger
 from azure.ai.ml.entities._load_functions import load_model
-from azure.ai.ml.entities import Model
 
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -102,7 +101,7 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
     try:
         model = load_model(spec_file_path)
     except Exception as e:
-        logger.error(f"Error in loading model spec file at {spec_file_path}")
+        logger.error(f"Error in loading model spec file at {spec_file_path} => {str(e)}")
         return False
 
     if model_config.path.type == PathType.LOCAL:
@@ -122,7 +121,9 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
             model.path = Path(model_dir) / model.name
             if not model_config.flavors:
                 # try fetching flavors from MLModel file
-                mlmodel_file_path = model.path / MLFlowModelUtils.MLFLOW_MODEL_PATH / MLFlowModelUtils.MLMODEL_FILE_NAME
+                mlmodel_file_path = (
+                    model.path / MLFlowModelUtils.MLFLOW_MODEL_PATH / MLFlowModelUtils.MLMODEL_FILE_NAME
+                )
                 try:
                     mlmodel = load_yaml(file_path=mlmodel_file_path)
                     model.flavors = mlmodel.get("flavors")
