@@ -62,23 +62,11 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                 yaml.dump(data, file, default_flow_style=False,
                           sort_keys=False)
 
-
-def load_yaml(file_path: str) -> dict:
-    with open(file_path, "r") as f:
-        yaml_dict = yaml.safe_load(f)
-    return yaml_dict
-
-
-def dump_yaml(yaml_dict: dict, file_path: str):
-    with open(file_path, "w") as f:
-        yaml_dict = yaml.safe_dump(yaml_dict, f)
-
-
 def dump_model_spec(model, spec_file) -> bool:
     """Update the yaml file after getting the model has been prepared."""
     try:
         model_dict = json.loads(json.dumps(model._to_dict()))
-        dump_yaml(model_dict, spec_file)
+        util.dump_yaml(model_dict, spec_file)
         return True
     except Exception as e:
         logger.log_error(f"Failed to update model spec => {str(e)}")
@@ -97,7 +85,6 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
     :return: If model can be published to registry.
     :rtype: bool
     """
-
     try:
         model = load_model(spec_file_path)
     except Exception as e:
@@ -125,7 +112,7 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
                     model.path / MLFlowModelUtils.MLFLOW_MODEL_PATH / MLFlowModelUtils.MLMODEL_FILE_NAME
                 )
                 try:
-                    mlmodel = load_yaml(file_path=mlmodel_file_path)
+                    mlmodel = util.load_yaml(file_path=mlmodel_file_path)
                     model.flavors = mlmodel.get("flavors")
                 except Exception as e:
                     logger.log_error(f"Error loading flavors from MLmodel file at: {mlmodel_file_path} => {str(e)}")

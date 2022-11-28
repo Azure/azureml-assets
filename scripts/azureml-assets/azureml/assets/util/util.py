@@ -6,6 +6,7 @@ import filecmp
 import shutil
 from pathlib import Path
 from typing import List, Tuple, Union
+import yaml
 
 import azureml.assets as assets
 from azureml.assets.util import logger
@@ -333,3 +334,28 @@ def find_common_directory(paths: List[Path]) -> Tuple[Path, List[Path]]:
     relative_paths = [p.relative_to(lowest_common_dir) for p in paths_resolved]
 
     return lowest_common_dir, relative_paths
+
+
+def load_yaml(file_path: str) -> dict:
+    """Load yaml utility.
+
+    Args:
+        file_path (str): yaml file path
+
+    Returns:
+        dict: loaded yaml as dict
+    """
+    with open(file_path, "r") as f:
+        yaml_dict = yaml.safe_load(f)
+    return yaml_dict
+
+
+def dump_yaml(yaml_dict: dict, file_path: str):
+    """Dump yaml utility.
+
+    Args:
+        yaml_dict (str): dictionary object to dump into yaml.
+        file_path (str): File path to store dump result to.
+    """
+    with open(file_path, "w") as f:
+        yaml_dict = yaml.safe_dump(yaml_dict, f)
