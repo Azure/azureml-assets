@@ -1,0 +1,10 @@
+name: minimal-ubuntu20.04-py38-cuda11.6.2-gpu-inference
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+test:
+  pytest:
+    enabled: true
+    pip_requirements: tests/requirements.txt
+    tests_dir: tests
