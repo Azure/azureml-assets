@@ -1,8 +1,0 @@
-path:                                                                 #Required
-  type: git                                                           #Required
-  uri: https://huggingface.co/bert-base-uncased                       #Required
-  branch: main                                                        #Required
-publish:                                                              #Required
-  type: custom_model                                                  #Required
-  #flavor: hftransformers                                             #Required if type==mlflow_model 
-  #task_name: huggingface_task_name                                   #Required if flavor==hftransformers
