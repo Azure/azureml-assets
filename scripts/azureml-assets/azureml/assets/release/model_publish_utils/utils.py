@@ -42,14 +42,15 @@ class ModelDownloadUtils:
             logger.print(f"Successfully executed! Output: \n{result.stdout}")
         return result.returncode
 
-    def _download_git_model(model_url, model_dir) -> bool:
-        """Download the Model."""
+    def _download_git_model(model_uri: str, model_dir: Path) -> bool:
+        """Download model files from GIT repository.
+
+        :param model_url: git clonable uri of a public repo
+        :type model_url: str
+        :param model_dir: local directory to clone model to
+        :type: Path
         """
-        Clones the model from the git URL into the Model Directory.
-        Deletes the incomplete model artifact in case of failure.
-        Deletes the .git folder in the downloaded artifacts.
-        """
-        clone_cmd = f"git clone {model_url} {model_dir}"
+        clone_cmd = f"git clone {model_uri} {model_dir}"
         result = ModelDownloadUtils._run(clone_cmd)
         if result != 0:
             return False
@@ -57,25 +58,50 @@ class ModelDownloadUtils:
         shutil.rmtree(git_path, onerror=_onerror)
         return True
 
-    def _download_azure_artifacts(model_url, model_dir) -> bool:
-        """Download model files from blobstore."""
-        commands = f"""
-        azcopy login --service-principal --application-id $SP_CLIENT_ID --tenant-id $SP_TENANT_ID
-        azcopy cp --recursive=true {model_url} {model_dir}
+    def _download_azure_artifacts(model_uri, model_dir) -> bool:
+        """Download model files from blobstore.
+
+        :param model_url: Publicly readable blobstore URI of model files
+        :type model_url: str
+        :param model_dir: local directory to download model to
+        :type: Path
         """
-        result = ModelDownloadUtils._run(commands)
+        try:
+            SP_CLIENT_ID = os.environ["SP_CLIENT_ID"]
+            SP_TENANT_ID = os.environ["SP_TENANT_ID"]
+            login = f"azcopy login --service-principal --application-id {SP_CLIENT_ID} --tenant-id {SP_TENANT_ID}"
+            result = ModelDownloadUtils._run(login)
+            if result:
+                logger.log_warning(f"azcopy failed to login")
+                return False
+        except Exception as e:
+            logger.log_warning(e)
+            return False
+
+        download_cmd = f"azcopy cp --recursive=true {model_uri} {model_dir}"
+        result = ModelDownloadUtils._run(download_cmd)
+
         # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
-        if result != 0:
-            logger.log_warning(f"Failed to download model files with URL: {model_url}")
+        # https://github.com/Azure/azureml-assets/issues/283
+        if result:
+            logger.log_warning(f"Failed to download model files with URL: {model_uri}")
             return False
         return True
 
-    def download_model(model_download_type, model_url, model_dir) -> bool:
-        """Prepare the Download Environment."""
-        if model_download_type == PathType.GIT:
-            return ModelDownloadUtils._download_git_model(model_url, model_dir)
-        if model_download_type == PathType.AZURE:
-            return ModelDownloadUtils._download_azure_artifacts(model_url, model_dir)
+    def download_model(model_path_type: PathType, model_uri: str, model_dir: Path) -> bool:
+        """Prepare the Download Environment.
+
+        :param model_path_type: Model path type
+        :type model_path_type: PathType
+        :param model_uri: uri to model files
+        :type model_uri: str
+        :param model_dir: local folder to download model files too
+        :type model_dir: Path
+        """
+        if model_path_type == PathType.GIT:
+            return ModelDownloadUtils._download_git_model(model_uri, model_dir)
+        if model_path_type == PathType.AZUREBLOB:
+            return ModelDownloadUtils._download_azure_artifacts(model_uri, model_dir)
         else:
             logger.print("Unsupported Model Download Method.")
         return False

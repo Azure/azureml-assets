@@ -1,13 +1,18 @@
 #!/bin/sh -x
-pwd
+cwd="$(pwd)"
+echo "azcopy installation started ...."
 echo "Downloading azcopy to file azcopy.tar ...."
 wget https://aka.ms/downloadazcopy-v10-linux -O azcopy.tar
 tar -xvf azcopy.tar
-sudo rm /opt/azcopy
-echo "copying azcopy bin file to /opt/"
-sudo cp ./azcopy_linux_amd64_*/azcopy /opt/
+mkdir ./bin # store azcopy executable here
+echo "copying azcopy bin file to ./bin/"
+cp ./azcopy_linux_amd64_*/azcopy ./bin/
+echo "setting azcopy path"
+dir=$cwd/bin
+export PATH=$PATH:$dir
+echo "execute azcopy -h"
+azcopy -h
 echo "cleaning downloaded files"
-sudo rm azcopy.tar
-sudo rm -rf ./azcopy_linux_amd64_*
-alias azcopy=/opt/azcopy
-echo "Installed azcopy ...."
+rm azcopy.tar
+rm -rf ./azcopy_linux_amd64_*
+echo "azcopy installation completed ...."

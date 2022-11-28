@@ -267,7 +267,7 @@ class PathType(Enum):
     GIT = "git"      # Model hosted on a public GIT repo and can be cloned by GIT LFS.
     FTP = "ftp"      # <UNSUPPORTED> Model files hosted on a FTP endpoint.
     HTTP = "http"    # <UNSUPPORTED> Model files hosted on a HTTP endpoint.
-    AZURE = "azure"  # Model files hosted on an AZURE blobstore with public read access.
+    AZUREBLOB = "azureblob"  # Model files hosted on an AZUREBLOB blobstore with public read access.
 
 
 class AssetPath:
@@ -276,9 +276,10 @@ class AssetPath:
     def __init__(self, asset_type: str, uri: str):
         """Initialize asset path.
 
-        Args:
-            asset_type (str): path type. Valid values are [local, git, ftp, http, azure].
-            uri (str): a valid URI to local or remote resouce.
+        :param asset_type: path type. Valid values are [local, git, ftp, http, azure]
+        :type: str
+        :param uri: a valid URI to local or remote resource
+        :type: str
         """
         self._uri = uri
         self._type = asset_type
@@ -300,8 +301,8 @@ class LocalAssetPath(AssetPath):
     def __init__(self, uri: str):
         """Create a Local path of asset.
 
-        Args:
-            uri (str): Path to local model relative to asset.yaml.
+        :param uri: Path to local model relative to asset.yaml
+        :type uri: str
         """
         super().__init__(PathType.LOCAL, uri=uri)
 
@@ -314,16 +315,18 @@ class AzureBlobstoreAssetPath(AssetPath):
     def __init__(self, storage_name: str, container_name: str, container_path: str):
         """Create a Blobstore path.
 
-        Args:
-            storage_name (str): Blob container storage name
-            container_name (str): Blob container name
-            container_path (str): Relative path of assets in blob container.
+        :param storage_name: Blob container storage name
+        :type storage_name: str
+        :param container_name: Blob container name
+        :type container_name: str
+        :param container_path: Relative path of assets in blob container
+        :type container_path: str
         """
         self._storage_name = storage_name
         self._container_name = container_name
         self._container_path = container_path
         uri = AzureBlobstoreAssetPath.BLOBSTORE_URI.format(storage_name, container_name, container_path)
-        super().__init__(PathType.AZURE, uri)
+        super().__init__(PathType.AZUREBLOB, uri)
 
 
 class GitAssetPath(AssetPath):
@@ -332,9 +335,10 @@ class GitAssetPath(AssetPath):
     def __init__(self, branch: str, uri: str):
         """Create a GIT repo path.
 
-        Args:
-            branch (str): Git branch to checkout from.
-            uri (str): git clonable url of repo.
+        :param branch: Git branch to checkout from
+        :type branch: str
+        :param uri: git clonable url of repo
+        :type uri: str
         """
         self._branch = branch
         super().__init__(PathType.GIT, uri)
@@ -363,7 +367,7 @@ class ModelConfig(Config):
         container_path: foo/bar
     publish:
         type: mlflow_model # could be one of (custom_model, mlflow_model, triton_model)
-        flavor: hftransformers # flavor should be specificed only for mlflow_model
+        flavors: hftransformers # flavors should be specificed only for mlflow_model
         task_name: translation #optional.Needed for mlflow_model huggingface flavour
 
     """
@@ -389,7 +393,7 @@ class ModelConfig(Config):
         path = self._yaml.get('path', {})
         if path and path.get('type'):
             path_type = path.get('type')
-            if path_type == PathType.AZURE.value:
+            if path_type == PathType.AZUREBLOB.value:
                 self._path = AzureBlobstoreAssetPath(
                     storage_name=path['storage_name'],
                     container_name=path['container_name'],
@@ -422,14 +426,14 @@ class ModelConfig(Config):
         return ModelType(type) if type else None
 
     @property
-    def _flavor(self) -> str:
+    def _flavors(self) -> str:
         """Model Flavor."""
-        return self._publish.get('flavor')
+        return self._publish.get('flavors')
 
     @property
-    def flavor(self) -> ModelFlavor:
+    def flavors(self) -> ModelFlavor:
         """Model Flavor from Enum."""
-        flavor = self._flavor
+        flavor = self._flavors
         return ModelFlavor(flavor) if flavor else None
 
     @property

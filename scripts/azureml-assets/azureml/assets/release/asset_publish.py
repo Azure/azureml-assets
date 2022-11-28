@@ -4,6 +4,7 @@
 """Python script to publish assets."""
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -15,11 +16,14 @@ from tempfile import TemporaryDirectory
 from collections import defaultdict
 from typing import List
 import azureml.assets as assets
+from azureml.assets.release.model_publish_utils.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
 import yaml
 from azureml.assets.config import PathType
 from azureml.assets.release.model_publish_utils import ModelDownloadUtils
 from azureml.assets.util import logger
+from azure.ai.ml.entities._load_functions import load_model
+from azure.ai.ml.entities import Model
 
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -60,52 +64,78 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
-def update_model_spec_file(spec_file: Path, path: Path):
+def load_yaml(file_path: str) -> dict:
+    with open(file_path, "r") as f:
+        yaml_dict = yaml.safe_load(f)
+    return yaml_dict
+
+
+def dump_yaml(yaml_dict: dict, file_path: str):
+    with open(file_path, "w") as f:
+        yaml_dict = yaml.safe_dump(yaml_dict, f)
+
+
+def dump_model_spec(model, spec_file) -> bool:
     """Update the yaml file after getting the model has been prepared."""
     try:
-        with open(spec_file) as f:
-            model_file = yaml.safe_load(f)
-        model_file['path'] = path
-        with open(spec_file, "w") as f:
-            yaml.dump(model_file, f)
+        model_dict = json.loads(json.dumps(model._to_dict()))
+        dump_yaml(model_dict, spec_file)
+        return True
     except Exception as e:
-        logger.print("Error while updating spec")
-        raise e
+        logger.log_error(f"Failed to update model spec => {str(e)}")
+    return False
 
 
-def model_prepare(
-    model_config: assets.ModelConfig, spec_file: Path, model_dir: Path
-) -> bool:
-    """Prepare Model."""
+def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
+    """Prepare Model.
+
+    :param model_config: Model Config object
+    :type model_prepare: assets.ModelConfig
+    :param spec_file_path: path to model spec file
+    :type spec_file_path: Path
+    :param model_dir: path of directory where model is present locally or can be downloaded to.
+    :type model_dir: Path
+    :return: If model can be published to registry.
+    :rtype: bool
     """
-    Prepare the model. Download the model if required.
-    Convert the models to specified publish type.
 
-    Return: returns the local path to the model.
-    """
+    try:
+        model = load_model(spec_file_path)
+    except Exception as e:
+        logger.error(f"Error in loading model spec file at {spec_file_path}")
+        return False
 
     if model_config.path.type == PathType.LOCAL:
-        update_model_spec_file(spec_file, os.path.abspath(
-            Path(model_config.path.uri).resolve()))
+        model.path = os.path.abspath(Path(model_config.path.uri).resolve())
+        dump_model_spec(model, spec_file_path)
         return True
 
     if model_config.type == assets.ModelType.CUSTOM:
-        validate_download = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
-        if validate_download:
-            update_model_spec_file(spec_file, model_dir)
+        can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
+        if can_publish_model:
+            model.path = model_dir
+            can_publish_model = dump_model_spec(model, spec_file_path)
 
     elif model_config.type == assets.ModelType.MLFLOW:
-        # TODO: update this once we start consuming git based model
-        validate_download = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
-        if validate_download:
-            update_model_spec_file(spec_file, model_dir)
+        can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
+        if can_publish_model:
+            model.path = Path(model_dir) / model.name
+            if not model_config.flavors:
+                # try fetching flavors from MLModel file
+                mlmodel_file_path = model.path / MLFlowModelUtils.MLFLOW_MODEL_PATH / MLFlowModelUtils.MLMODEL_FILE_NAME
+                try:
+                    mlmodel = load_yaml(file_path=mlmodel_file_path)
+                    model.flavors = mlmodel.get("flavors")
+                except Exception as e:
+                    logger.log_error(f"Error loading flavors from MLmodel file at: {mlmodel_file_path} => {str(e)}")
+            can_publish_model = dump_model_spec(model, spec_file_path)
 
     else:
         print(model_config.type.value, assets.ModelType.MLFLOW)
-        validate_download = False
+        can_publish_model = False
         logger.log_error(f"Model type {model_config.type} not supported yet")
 
-    return validate_download
+    return can_publish_model
 
 
 def assemble_command(

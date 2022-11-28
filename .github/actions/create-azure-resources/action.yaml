@@ -27,7 +27,7 @@ runs:
     - name: Create Azure resources
       shell: bash
       run: bash ${{ inputs.scripts-setup-dir }}/create_azure_resources_daily.sh
-
+    
     - name: Create additional environment variables
       shell: bash
       run: echo "subscription_id=${{ inputs.subscription-id }}" >> $GITHUB_ENV
