@@ -286,18 +286,20 @@ if __name__ == "__main__":
 
             elif asset.type == assets.AssetType.MODEL:
 
-                model_config = asset.extra_config_as_object()
-
-                with TemporaryDirectory() as tempdir:
-                    result = model_prepare(
-                        model_config, asset.spec_with_path, tempdir)
-                    # Run command
-                    if result:
-                        # Assemble Command
-                        cmd = assemble_command(
-                            asset.type.value, str(asset.spec_with_path),
-                            registry_name, asset.version, resource_group, workspace, debug_mode)
-                        run_command(cmd, failure_list, debug_mode)
+                try:
+                    model_config = asset.extra_config_as_object()
+                    with TemporaryDirectory() as tempdir:
+                        result = model_prepare(model_config, asset.spec_with_path, tempdir)
+                        if result:
+                            # Assemble Command
+                            cmd = assemble_command(
+                                asset.type.value, str(asset.spec_with_path),
+                                registry_name, asset.version, resource_group, workspace, debug_mode)
+                            # Run command
+                            run_command(cmd, failure_list, debug_mode)
+                except Exception as e:
+                    logger.log_error(f"Exception in loading model config: {str(e)}")
+                    failure_list.append(asset)
 
             else:
                 logger.log_warning(f"unsupported asset type: {asset.type.value}")
