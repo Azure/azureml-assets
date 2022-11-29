@@ -74,19 +74,18 @@ class ModelDownloadUtils:
             if result:
                 logger.log_warning("azcopy failed to login")
                 return False
+            download_cmd = f"azcopy cp --recursive=true {model_uri} {model_dir}"
+            result = ModelDownloadUtils._run(download_cmd)
+
+            # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
+            # https://github.com/Azure/azureml-assets/issues/283
+            if result:
+                logger.log_warning(f"Failed to download model files with URL: {model_uri}")
+                return False
+            return True
         except Exception as e:
             logger.log_warning(e)
             return False
-
-        download_cmd = f"azcopy cp --recursive=true {model_uri} {model_dir}"
-        result = ModelDownloadUtils._run(download_cmd)
-
-        # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
-        # https://github.com/Azure/azureml-assets/issues/283
-        if result:
-            logger.log_warning(f"Failed to download model files with URL: {model_uri}")
-            return False
-        return True
 
     def download_model(model_path_type: PathType, model_uri: str, model_dir: Path) -> bool:
         """Prepare the Download Environment.

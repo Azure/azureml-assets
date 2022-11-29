@@ -62,6 +62,7 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                 yaml.dump(data, file, default_flow_style=False,
                           sort_keys=False)
 
+
 def dump_model_spec(model, spec_file) -> bool:
     """Update the yaml file after getting the model has been prepared."""
     try:
@@ -87,6 +88,8 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
     """
     try:
         model = load_model(spec_file_path)
+        # TODO: temp fix before restructuring what attributes are required in model config and spec.
+        model.type = model_config.type.value
     except Exception as e:
         logger.error(f"Error in loading model spec file at {spec_file_path} => {str(e)}")
         return False
