@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Script utility methods."""
+
 import difflib
 import filecmp
 import shutil
