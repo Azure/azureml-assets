@@ -296,7 +296,7 @@ if __name__ == "__main__":
                         # Assemble Command
                         cmd = assemble_command(
                             asset.type.value, str(asset.spec_with_path),
-                            registry_name, final_version, resource_group, workspace, debug_mode)
+                            registry_name, asset.version, resource_group, workspace, debug_mode)
                         run_command(cmd, failure_list, debug_mode)
 
             else:
