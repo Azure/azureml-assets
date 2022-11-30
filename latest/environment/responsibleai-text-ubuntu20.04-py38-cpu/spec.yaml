@@ -4,7 +4,7 @@ description: >-
   AzureML Responsible AI Text environment.
 
 name: "responsibleai-text-ubuntu20.04-py38-cpu"
-version: "3"
+version: "4"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
