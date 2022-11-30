@@ -4,6 +4,7 @@
 """Python script to publish assets."""
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -15,11 +16,13 @@ from tempfile import TemporaryDirectory
 from collections import defaultdict
 from typing import List
 import azureml.assets as assets
+from azureml.assets.release.model_publish_utils.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
 import yaml
-from azureml.assets.release.model_publish_utils import (MLFlowModelUtils,
-                                                        ModelUtils)
+from azureml.assets.config import PathType
+from azureml.assets.release.model_publish_utils import ModelDownloadUtils
 from azureml.assets.util import logger
+from azure.ai.ml.entities._load_functions import load_model
 
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -27,7 +30,7 @@ TEST_YML = "tests.yml"
 PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
 
 
-def test_files_location(dir: Path):
+def find_test_files(dir: Path):
     """Find test files in the directory."""
     test_jobs = []
 
@@ -42,7 +45,7 @@ def test_files_location(dir: Path):
     return test_jobs
 
 
-def test_files_preprocess(test_jobs, asset_ids: dict):
+def preprocess_test_files(test_jobs, asset_ids: dict):
     """Preprocess test files to generate asset ids."""
     for test_job in test_jobs:
         logger.print(f"processing test job: {test_job}")
@@ -60,56 +63,70 @@ def test_files_preprocess(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
-def update_spec_file(spec_file: Path, path: Path):
+def dump_model_spec(model, spec_file) -> bool:
     """Update the yaml file after getting the model has been prepared."""
-    with open(spec_file) as f:
-        model_file = yaml.safe_load(f)
-    model_file['path'] = path
-    with open(spec_file, "w") as f:
-        yaml.dump(model_file, f)
+    try:
+        model_dict = json.loads(json.dumps(model._to_dict()))
+        util.dump_yaml(model_dict, spec_file)
+        return True
+    except Exception as e:
+        logger.log_error(f"Failed to update model spec => {str(e)}")
+    return False
 
 
-def model_prepare(
-    model_config: assets.ModelConfig, spec_file: Path, model_dir: Path
-) -> bool:
-    """Prepare Model."""
+def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
+    """Prepare Model.
+
+    :param model_config: Model Config object
+    :type model_prepare: assets.ModelConfig
+    :param spec_file_path: path to model spec file
+    :type spec_file_path: Path
+    :param model_dir: path of directory where model is present locally or can be downloaded to.
+    :type model_dir: Path
+    :return: If model can be published to registry.
+    :rtype: bool
     """
-    Prepare the model. Download the model if required.
-    Convert the models to specified publish type.
-    Return: returns the local path to the model.
-    """
+    try:
+        model = load_model(spec_file_path)
+        # TODO: temp fix before restructuring what attributes are required in model config and spec.
+        model.type = model_config.type.value
+    except Exception as e:
+        logger.error(f"Error in loading model spec file at {spec_file_path} => {str(e)}")
+        return False
 
-    if model_config.path_local:
-        update_spec_file(spec_file, os.path.abspath(
-            model_config.path_local.resolve()))
+    if model_config.path.type == PathType.LOCAL:
+        model.path = os.path.abspath(Path(model_config.path.uri).resolve())
+        dump_model_spec(model, spec_file_path)
         return True
 
     if model_config.type == assets.ModelType.CUSTOM:
-        model_utils = ModelUtils(
-            model_url=model_config.remote_uri,
-            model_commit_hash=model_config.remote_commit_hash,
-            model_download_type=model_config.remote_type,
-            model_dir=model_dir,
-        )
-        validate_download = model_utils.download_model()
-        if validate_download:
-            update_spec_file(spec_file, model_dir)
+        can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
+        if can_publish_model:
+            model.path = model_dir
+            can_publish_model = dump_model_spec(model, spec_file_path)
 
     elif model_config.type == assets.ModelType.MLFLOW:
-        mlflow_utils = MLFlowModelUtils(
-            name=asset.name,
-            task_name=model_config.task_name.value,
-            flavor=model_config.flavor.value,
-            mlflow_model_dir=model_dir,
-        )
-        validate_download = mlflow_utils.convert_into_mlflow_model()
+        can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
+        if can_publish_model:
+            model.path = Path(model_dir) / model.name
+            if not model_config.flavors:
+                # try fetching flavors from MLModel file
+                mlmodel_file_path = (
+                    model.path / MLFlowModelUtils.MLFLOW_MODEL_PATH / MLFlowModelUtils.MLMODEL_FILE_NAME
+                )
+                try:
+                    mlmodel = util.load_yaml(file_path=mlmodel_file_path)
+                    model.flavors = mlmodel.get("flavors")
+                except Exception as e:
+                    logger.log_error(f"Error loading flavors from MLmodel file at: {mlmodel_file_path} => {str(e)}")
+            can_publish_model = dump_model_spec(model, spec_file_path)
 
     else:
         print(model_config.type.value, assets.ModelType.MLFLOW)
-        validate_download = False
+        can_publish_model = False
         logger.log_error(f"Model type {model_config.type} not supported yet")
 
-    return validate_download
+    return can_publish_model
 
 
 def assemble_command(
@@ -168,6 +185,7 @@ def run_command(
 def _str2bool(v: str) -> bool:
     """
     Parse boolean-ish values.
+
     See https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     """
     if isinstance(v, bool):
@@ -268,18 +286,20 @@ if __name__ == "__main__":
 
             elif asset.type == assets.AssetType.MODEL:
 
-                model_config = asset.extra_config_as_object()
-
-                with TemporaryDirectory() as tempdir:
-                    result = model_prepare(
-                        model_config, asset.spec_with_path, tempdir)
-                    # Run command
-                    if result:
-                        # Assemble Command
-                        cmd = assemble_command(
-                            asset.type.value, str(asset.spec_with_path),
-                            registry_name, final_version, resource_group, workspace, debug_mode)
-                        run_command(cmd, failure_list, debug_mode)
+                try:
+                    model_config = asset.extra_config_as_object()
+                    with TemporaryDirectory() as tempdir:
+                        result = model_prepare(model_config, asset.spec_with_path, tempdir)
+                        if result:
+                            # Assemble Command
+                            cmd = assemble_command(
+                                asset.type.value, str(asset.spec_with_path),
+                                registry_name, asset.version, resource_group, workspace, debug_mode)
+                            # Run command
+                            run_command(cmd, failure_list, debug_mode)
+                except Exception as e:
+                    logger.log_error(f"Exception in loading model config: {str(e)}")
+                    failure_list.append(asset)
 
             else:
                 logger.log_warning(f"unsupported asset type: {asset.type.value}")
@@ -290,10 +310,10 @@ if __name__ == "__main__":
 
     if tests_dir:
         logger.print("locating test files")
-        test_jobs = test_files_location(tests_dir)
+        test_jobs = find_test_files(tests_dir)
 
         logger.print("preprocessing test files")
-        test_files_preprocess(test_jobs, asset_ids)
+        preprocess_test_files(test_jobs, asset_ids)
         logger.print("finished preprocessing test files")
     else:
         logger.log_warning("Test files not found")
