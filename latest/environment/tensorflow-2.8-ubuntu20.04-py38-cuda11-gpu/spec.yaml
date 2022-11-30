@@ -4,7 +4,7 @@ description: >-
   An environment for deep learning with Tensorflow containing the Azure ML SDK and additional python packages.
 
 name: "tensorflow-2.8-ubuntu20.04-py38-cuda11-gpu"
-version: "13"
+version: "14"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
