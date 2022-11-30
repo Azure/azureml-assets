@@ -16,6 +16,7 @@ setup(
       "pyyaml>=5",
       "requests>=2.25",
       "pip>=21",
+      "azure-ai-ml",
    ],
    python_requires=">=3.6,< 4.0",
 )
