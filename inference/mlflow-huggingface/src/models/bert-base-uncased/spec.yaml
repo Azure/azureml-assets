@@ -1,7 +1,0 @@
-name: bert-base-uncased
-path: ./
-tags:
-  ISV: HuggingFace
-  Owner: System
-  task: fill-mask
-version: 1
