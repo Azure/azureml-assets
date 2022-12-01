@@ -67,13 +67,6 @@ class ModelDownloadUtils:
         :type: Path
         """
         try:
-            SP_CLIENT_ID = os.environ["SP_CLIENT_ID"]
-            SP_TENANT_ID = os.environ["SP_TENANT_ID"]
-            login = f"azcopy login --service-principal --application-id {SP_CLIENT_ID} --tenant-id {SP_TENANT_ID}"
-            result = ModelDownloadUtils._run(login)
-            if result:
-                logger.log_error("azcopy failed to login")
-                return False
             download_cmd = f"azcopy cp --recursive=true {model_uri} {model_dir}"
             result = ModelDownloadUtils._run(download_cmd)
             # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
