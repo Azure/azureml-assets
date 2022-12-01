@@ -3,12 +3,14 @@ FROM mcr.microsoft.com/azureml/inference-base-gpu-2004:{{latest-image-tag}}
 RUN conda create -n minimal \
     python=3.8.13 pip=22.1.2
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/minimal
+WORKDIR /
 
+ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/minimal
+ENV AZUREML_CONDA_DEFAULT_ENVIRONMENT=$AZUREML_CONDA_ENVIRONMENT_PATH
 # Prepend path to AzureML conda environment
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
+ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
-ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 
 # Create conda environment
 COPY conda_dependencies.yaml .
