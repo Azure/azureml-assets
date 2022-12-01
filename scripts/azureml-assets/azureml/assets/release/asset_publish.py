@@ -108,11 +108,11 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
     elif model_config.type == assets.ModelType.MLFLOW:
         can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
         if can_publish_model:
-            model.path = Path(model_dir) / model.name
+            model.path = model_dir
             if not model_config.flavors:
                 # try fetching flavors from MLModel file
                 mlmodel_file_path = (
-                    model.path / MLFlowModelUtils.MLFLOW_MODEL_PATH / MLFlowModelUtils.MLMODEL_FILE_NAME
+                    Path(model_dir) / MLFlowModelUtils.MLFLOW_MODEL_PATH / MLFlowModelUtils.MLMODEL_FILE_NAME
                 )
                 try:
                     mlmodel = util.load_yaml(file_path=mlmodel_file_path)
@@ -179,7 +179,7 @@ def run_command(
     # Check command result
     if results.returncode != 0:
         logger.log_warning(f"Error creating {asset}")
-        failure_list.append(asset)
+        failure_list.append(asset.name)
 
 
 def _str2bool(v: str) -> bool:
@@ -299,7 +299,7 @@ if __name__ == "__main__":
                             run_command(cmd, failure_list, debug_mode)
                 except Exception as e:
                     logger.log_error(f"Exception in loading model config: {str(e)}")
-                    failure_list.append(asset)
+                    failure_list.append(asset.name)
 
             else:
                 logger.log_warning(f"unsupported asset type: {asset.type.value}")
