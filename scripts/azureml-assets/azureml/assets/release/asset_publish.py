@@ -108,12 +108,10 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
     elif model_config.type == assets.ModelType.MLFLOW:
         can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
         if can_publish_model:
-            model.path = model_dir
+            model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
             if not model_config.flavors:
                 # try fetching flavors from MLModel file
-                mlmodel_file_path = (
-                    model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH / MLFlowModelUtils.MLMODEL_FILE_NAME
-                )
+                mlmodel_file_path = model.path / MLFlowModelUtils.MLMODEL_FILE_NAME
                 try:
                     mlmodel = util.load_yaml(file_path=mlmodel_file_path)
                     model.flavors = mlmodel.get("flavors")
