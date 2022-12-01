@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/AzureML-minimal-ubuntu20.04-py38-cuda11.6.2-gpu-inference
+  name: azureml/curated/minimal-ubuntu20.04-py38-cuda11.6.2-gpu-inference
   os: linux
   context:
     dir: context
@@ -12,6 +12,8 @@ image:
     visibility: public
 environment:
   metadata:
+    Cuda:
+      CudaVersion: "11.6.2"
     MachineLearningFramework:
       name: minimal-gpu
       version: "0.1"
