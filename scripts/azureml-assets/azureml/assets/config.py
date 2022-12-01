@@ -361,7 +361,7 @@ class ModelConfig(Config):
         branch: main
 
         ## Azure Blobstore example
-        type: azure
+        type: azureblob
         storage_name: my_storage
         container_name: my_container
         container_path: foo/bar
