@@ -112,7 +112,7 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
             if not model_config.flavors:
                 # try fetching flavors from MLModel file
                 mlmodel_file_path = (
-                    Path(model_dir) / MLFlowModelUtils.MLFLOW_MODEL_PATH / MLFlowModelUtils.MLMODEL_FILE_NAME
+                    model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH / MLFlowModelUtils.MLMODEL_FILE_NAME
                 )
                 try:
                     mlmodel = util.load_yaml(file_path=mlmodel_file_path)
@@ -289,7 +289,7 @@ if __name__ == "__main__":
                 try:
                     model_config = asset.extra_config_as_object()
                     with TemporaryDirectory() as tempdir:
-                        result = model_prepare(model_config, asset.spec_with_path, tempdir)
+                        result = model_prepare(model_config, asset.spec_with_path, Path(tempdir))
                         if result:
                             # Assemble Command
                             cmd = assemble_command(
