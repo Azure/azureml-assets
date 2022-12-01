@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/azureml/inference-base-gpu-2004:{{latest-image-tag}}
 
+USER root:root
+
 RUN conda create -n minimal \
     python=3.8.13 pip=22.1.2
 
