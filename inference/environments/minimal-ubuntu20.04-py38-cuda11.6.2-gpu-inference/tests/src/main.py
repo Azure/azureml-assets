@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Validate minimal inference cpu environment by running azmlinfsrv."""
+"""Validate minimal inference gpu environment by running azmlinfsrv."""
 
 # imports
 import os
@@ -38,7 +38,7 @@ def start_server(log_directory, args, timeout=timedelta(seconds=15)):
         time.sleep(0.25)
         req = None
         try:
-            req = requests.get("http://127.0.0.1:5001", timeout=10)
+            req = requests.get("http://127.0.0.1:8001", timeout=30)
         except Exception as e:
             print(e)
 
@@ -58,7 +58,7 @@ def start_server(log_directory, args, timeout=timedelta(seconds=15)):
 
 def score_with_post(headers=None, data=None):
     """Post scoring request to the server."""
-    url = "http://127.0.0.1:5001/score"
+    url = "http://127.0.0.1:8001/score"
     return requests.post(url=url, headers=headers, data=data)
 
 
