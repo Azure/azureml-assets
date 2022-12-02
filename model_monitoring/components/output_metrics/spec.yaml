@@ -1,0 +1,19 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: my_hellow_world_job
+display_name: Compute Data Drift
+description: Compute data drift given a baseline and a deployment's model data input.
+version: 0.0.1
+is_deterministic: false
+inputs:
+  baseline_input: 
+    type: uri_file
+  mdc_logs_input: 
+    type: uri_file
+code: ../src
+environment:
+  image: mcr.microsoft.com/azureml/minimal-ubuntu18.04-py37-cpu-inference:latest
+  conda_file: ./environment/conda.yml
+command: >-
+  python -m output_metrics.run
