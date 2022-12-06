@@ -13,10 +13,10 @@ dependencies:
   - psutil~=5.8.0
   - tqdm~=4.62.0
   - ipykernel~=6.0
-  - azureml-core==1.47.0
-  - azureml-defaults==1.47.0
-  - azureml-mlflow==1.47.0
-  - azureml-telemetry==1.47.0
+  - azureml-core==1.48.0
+  - azureml-defaults==1.48.0
+  - azureml-mlflow==1.48.0
+  - azureml-telemetry==1.48.0
   - tensorboard~=2.9.0
   - tensorflow-gpu~=2.9.0
   - tensorflow-datasets~=4.5.0
