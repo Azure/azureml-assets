@@ -15,7 +15,7 @@ import argparse
 def main(args):
     """Start inference server and post scoring request."""
     # start the server
-    server_process = start_server("/var/tmp", ["--entry_script", args.score])
+    server_process = start_server("/var/tmp", ["--entry_script", args.score, "--port", "5001"])
 
     # score a request
     req = score_with_post()
