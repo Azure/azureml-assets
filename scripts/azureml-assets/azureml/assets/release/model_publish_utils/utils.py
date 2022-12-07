@@ -8,7 +8,7 @@ import shutil
 import stat
 from subprocess import PIPE, run, STDOUT
 import sys
-from azureml.assets import ModelDownloadType
+from azureml.assets import PathType
 from azureml.assets.util import logger
 
 
@@ -21,17 +21,10 @@ def _onerror(func, path, exc_info):
         raise
 
 
-class ModelUtils:
+class ModelDownloadUtils:
     """Download the Model from url at a given commit into the specified model directory."""
 
-    def __init__(self, model_url: str, model_commit_hash: str, model_download_type: str, model_dir: Path):
-        """Create the base object for Model."""
-        self.model_url = model_url
-        self.model_commit_hash = model_commit_hash
-        self.model_download_type = model_download_type
-        self.model_dir = model_dir
-
-    def _run(self, cmd, cwd: Path = "./") -> int:
+    def _run(cmd, cwd: Path = "./") -> int:
         """Run the command and returns the result."""
         logger.print(cmd)
         result = run(
@@ -49,33 +42,57 @@ class ModelUtils:
             logger.print(f"Successfully executed! Output: \n{result.stdout}")
         return result.returncode
 
-    def _download_git_model(self) -> bool:
-        """Download the Model."""
+    def _download_git_model(model_uri: str, model_dir: Path) -> bool:
+        """Download model files from GIT repository.
+
+        :param model_url: git clonable uri of a public repo
+        :type model_url: str
+        :param model_dir: local directory to clone model to
+        :type: Path
         """
-        Clones the model from the git URL into the Model Directory.
-        Deletes the incomplete model artifact in case of failure.
-        Sets the HEAD to the commit hash.
-        Deletes the .git folder in the downloaded artifacts.
-        """
-        clone_cmd = f"git clone {self.model_url} {self.model_dir}"
-        result = self._run(clone_cmd)
+        clone_cmd = f"git clone {model_uri} {model_dir}"
+        result = ModelDownloadUtils._run(clone_cmd)
         if result != 0:
             return False
-        if self.model_commit_hash:
-            cmd = f"git reset --hard {self.model_commit_hash}"
-            commit_exists = self._run(cmd, cwd=self.model_dir)
-            if commit_exists != 0:
-                # TODO: Error handling incase of incorrect commit hash.
-                logger.log_warning("Commit hash doesn't exist. Using model from latest HEAD.")
-        git_path = os.path.join(self.model_dir, '.git')
+        git_path = model_dir / ".git"
         shutil.rmtree(git_path, onerror=_onerror)
         return True
 
-    def download_model(self) -> bool:
-        """Prepare the Download Environment."""
-        if self.model_download_type == ModelDownloadType.GIT:
-            download_success = self._download_git_model()
-            return download_success
+    def _download_azure_artifacts(model_uri, model_dir) -> bool:
+        """Download model files from blobstore.
+
+        :param model_url: Publicly readable blobstore URI of model files
+        :type model_url: str
+        :param model_dir: local directory to download model to
+        :type: Path
+        """
+        try:
+            download_cmd = f"azcopy cp --recursive=true {model_uri} {model_dir}"
+            result = ModelDownloadUtils._run(download_cmd)
+            # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
+            # https://github.com/Azure/azureml-assets/issues/283
+            if result:
+                logger.log_error(f"Failed to download model files with URL: {model_uri}")
+                return False
+            return True
+        except Exception as e:
+            logger.log_error(e)
+            return False
+
+    def download_model(model_path_type: PathType, model_uri: str, model_dir: Path) -> bool:
+        """Prepare the Download Environment.
+
+        :param model_path_type: Model path type
+        :type model_path_type: PathType
+        :param model_uri: uri to model files
+        :type model_uri: str
+        :param model_dir: local folder to download model files too
+        :type model_dir: Path
+        """
+        if model_path_type == PathType.GIT:
+            return ModelDownloadUtils._download_git_model(model_uri, model_dir)
+        if model_path_type == PathType.AZUREBLOB:
+            return ModelDownloadUtils._download_azure_artifacts(model_uri, model_dir)
         else:
-            logger.print('Unsupported Model Download Method.')
+            logger.print("Unsupported Model Download Method.")
         return False
