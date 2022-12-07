@@ -5,3 +5,4 @@ description: Component that executes an AutoML Text Classification task model tr
 version: 0.0.1
 type: automl
 task: text_classification
+is_deterministic: false

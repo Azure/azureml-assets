@@ -5,3 +5,4 @@ description: Component that executes an AutoML Image Classification task model t
 version: 0.0.1
 type: automl
 task: image_classification
+is_deterministic: false

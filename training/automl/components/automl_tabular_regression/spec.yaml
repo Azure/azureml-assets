@@ -5,3 +5,4 @@ description: Component that executes an AutoML Regression task model training in
 version: 0.0.1
 type: automl
 task: regression
+is_deterministic: false

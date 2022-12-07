@@ -5,3 +5,4 @@ description: Component that executes an AutoML Forecasting task model training i
 version: 0.0.1
 type: automl
 task: forecasting
+is_deterministic: false

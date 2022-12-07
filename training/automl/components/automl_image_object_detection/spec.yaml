@@ -5,3 +5,4 @@ description: Component that executes an AutoML Image Object Detection task model
 version: 0.0.1
 type: automl
 task: image_object_detection
+is_deterministic: false

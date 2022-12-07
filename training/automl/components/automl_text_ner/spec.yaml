@@ -5,3 +5,4 @@ description: Component that executes an AutoML Text NER task model training in a
 version: 0.0.1
 type: automl
 task: text_ner
+is_deterministic: false

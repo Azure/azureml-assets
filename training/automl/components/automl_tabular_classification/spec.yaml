@@ -5,3 +5,4 @@ description: Component that executes an AutoML Classification task model trainin
 version: 0.0.1
 type: automl
 task: classification
+is_deterministic: false

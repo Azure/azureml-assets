@@ -5,3 +5,4 @@ description: Component that executes an AutoML Text Classification Multilabel ta
 version: 0.0.1
 type: automl
 task: text_classification_multilabel
+is_deterministic: false
