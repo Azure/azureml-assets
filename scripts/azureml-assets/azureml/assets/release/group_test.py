@@ -69,8 +69,6 @@ if __name__ == '__main__':
     my_env['workspace'] = workspace
     if my_env['token']:
         logger.print("token is set")
-    if my_env['REGISTRY_NAME']:
-        logger.print(f"REGISTRY_NAME: {my_env['REGISTRY_NAME']}")
     if args.version_suffix:
         my_env['version_suffix'] = args.version_suffix
     ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)

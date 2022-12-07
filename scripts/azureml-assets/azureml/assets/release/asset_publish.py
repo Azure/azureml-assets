@@ -76,6 +76,7 @@ def dump_model_spec(model, spec_file) -> bool:
 
 def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
     """Prepare Model.
+
     :param model_config: Model Config object
     :type model_prepare: assets.ModelConfig
     :param spec_file_path: path to model spec file
@@ -182,6 +183,7 @@ def run_command(
 def _str2bool(v: str) -> bool:
     """
     Parse boolean-ish values.
+
     See https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     """
     if isinstance(v, bool):
@@ -301,8 +303,15 @@ if __name__ == "__main__":
                 logger.log_warning(f"unsupported asset type: {asset.type.value}")
 
     if len(failure_list) > 0:
-        logger.log_warning(
-            f"following assets failed to publish: {failure_list}")
+        failed_assets = {}
+        for asset in failure_list:
+            failed_assets[asset.type.value] = failed_assets.get(asset.type, []).append(asset.name)
+        for asset_type, asset_names in failed_assets.items():
+            logger.log_warning(f"Failed to register {asset_type}s: {asset_names}")
+        # the following dump process will generate a yaml file for the report process in the end of the publishing script
+        result_path = Path().resolve() / "failed assets.yml"
+        with open(result_path, "w") as file:
+            yaml.dump(failed_assets, file, default_flow_style=False, sort_keys=False)
 
     if tests_dir:
         logger.print("locating test files")
