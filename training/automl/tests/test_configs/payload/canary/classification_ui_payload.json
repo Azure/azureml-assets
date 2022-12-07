@@ -1,0 +1,206 @@
+{
+    "graph": {
+        "datasetNodes": [
+            {
+                "id": "test_data",
+                "amlDataStoreName": "",
+                "relativePath": "",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "assetId": "azureml://locations/eastus2euap/workspaces/a65b4ed5-7ab5-474d-a670-1067befb8e20/data/bankmarketing-test/versions/3",
+                            "path": "azureml://workspaces/a65b4ed5-7ab5-474d-a670-1067befb8e20/datastores/workspaceblobstore/paths/LocalUpload/d3f807a1e232af8800657b643d5b01fc/test-mltable-folder/",
+                            "type": "MLTable"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "training_data",
+                "amlDataStoreName": "",
+                "relativePath": "",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "assetId": "azureml://locations/eastus2euap/workspaces/a65b4ed5-7ab5-474d-a670-1067befb8e20/data/bankmarketing-train/versions/3",
+                            "path": "azureml://workspaces/a65b4ed5-7ab5-474d-a670-1067befb8e20/datastores/workspaceblobstore/paths/LocalUpload/3421f176a64fab3cb7e9e32b7e587316/training-mltable-folder/",
+                            "type": "MLTable"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "validation_data",
+                "amlDataStoreName": "",
+                "relativePath": "",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "assetId": "azureml://locations/eastus2euap/workspaces/a65b4ed5-7ab5-474d-a670-1067befb8e20/data/bankmarketing-valid/versions/3",
+                            "path": "azureml://workspaces/a65b4ed5-7ab5-474d-a670-1067befb8e20/datastores/workspaceblobstore/paths/LocalUpload/ab4439bc9830f7f9b56d14019492989c/validation-mltable-folder/",
+                            "type": "MLTable"
+                        }
+                    }
+                }
+            }
+        ],
+        "moduleNodes": [
+            {
+                "id": "automl_node",
+                "moduleId": "azureml://registries/azureml-staging/components/microsoft_azureml_automl_classification_component/versions/0.0.1-preview-azureml-staging.1669926498",
+                "moduleParameters": [],
+                "useGraphDefaultCompute": false,
+                "useGraphDefaultDatastore": true,
+                "regenerateOutput": false,
+                "comment": "",
+                "name": "automl_classification_private_preview_"
+            }
+        ],
+        "subGraphNodes": [],
+        "edges": [
+            {
+                "sourceOutputPort": {
+                    "nodeId": "test_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "test_data"
+                }
+            },
+            {
+                "sourceOutputPort": {
+                    "nodeId": "validation_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "validation_data"
+                }
+            },
+            {
+                "sourceOutputPort": {
+                    "nodeId": "training_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "training_data"
+                }
+            }
+        ],
+        "defaultCompute": {
+            "name": "cpu-cluster",
+            "mlcComputeInfo": {
+                "mlcComputeType": "AmlCompute"
+            }
+        },
+        "defaultDatastore": {
+            "dataStoreName": "workspaceblobstore"
+        }
+    },
+    "moduleNodeRunSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "azureml://registries/azureml-staging/components/microsoft_azureml_automl_classification_component/versions/0.0.1-preview-azureml-staging.1669926498",
+            "stepType": "automl",
+            "runSettings": [
+                {
+                    "name": "Target",
+                    "value": "cpu-cluster",
+                    "useGraphDefaultCompute": false,
+                    "valueType": "Literal",
+                    "mlcComputeType": "AmlCompute"
+                },
+                {
+                    "name": "PrimaryMetric",
+                    "value": "Accuracy",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "TargetColumnName",
+                    "value": "y",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "EnableDnnTraining",
+                    "value": "false",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "EnableModelExplainability",
+                    "value": "false",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "Positive class label",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "Use all supported models",
+                    "value": "False",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "AllowListModels",
+                    "value": "[\"LogisticRegression\"]",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "Timeout",
+                    "value": "1",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "ExitScore",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "MaxConcurrentTrials",
+                    "value": "2",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "ValidationType",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "TestDataSize",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "Mode",
+                    "value": "Auto",
+                    "valueType": "Literal"
+                }
+            ]
+        }
+    ],
+    "moduleNodeUIInputSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "azureml://registries/azureml-staging/components/microsoft_azureml_automl_classification_component/versions/0.0.1-preview-azureml-staging.1669926498",
+            "moduleInputSettings": [
+                {
+                    "name": "training_data",
+                    "dataDeliveryMode": "Direct"
+                },
+                {
+                    "name": "validation_data",
+                    "dataDeliveryMode": "Direct"
+                },
+                {
+                    "name": "test_data",
+                    "dataDeliveryMode": "Direct"
+                }
+            ]
+        }
+    ],
+    "experimentName": "automl_tests",
+    "continueRunOnStepFailure": true,
+    "enforceRerun": true,
+    "computeTarget": "cpu-cluster",
+    "displayName": "test_classsification",
+    "dataSetDefinitionValueAssignments": {},
+    "tags": {}
+}

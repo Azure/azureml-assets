@@ -6,3 +6,11 @@ vision:
       job: "./vision/jobs/object-detection-using-built-in-component/pipeline.yml"
       pre: "./vision/jobs/object-detection-using-built-in-component/prepare_data.py"
 
+automl_components:
+  includes:
+  - ./automl/components/
+  jobs:
+    automl_components_validation: 
+      pytest_job: ./automl/tests/test_automl_classification_component.py
+      assets:
+      - ./automl/components/automl_tabular_classification
