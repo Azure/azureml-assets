@@ -48,7 +48,7 @@ class TestAutoMLClassificationComponent:
         "spec_path, payload_path", [
             (
                 "training/automl/components/automl_tabular_classification/spec.yaml",
-                "training/automl/tests/test_configs/payload/canary/classification_ui_payload.json"
+                "training/automl/tests/test_configs/payload/classification_ui_payload.json"
             )
         ]
     )

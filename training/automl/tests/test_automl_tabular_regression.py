@@ -36,7 +36,7 @@ class TestAutoMLRegressionComponent:
         "spec_path, payload_path", [
             (
                 "training/automl/components/automl_tabular_regression/spec.yaml",
-                "training/automl/tests/test_configs/payload/canary/regression_ui_payload.json"
+                "training/automl/tests/test_configs/payload/regression_ui_payload.json"
             )
         ]
     )

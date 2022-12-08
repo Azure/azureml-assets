@@ -48,7 +48,7 @@ class TestAutoMLForecastingComponent:
         "spec_path, payload_path", [
             (
                 "training/automl/components/automl_tabular_forecasting/spec.yaml",
-                "training/automl/tests/test_configs/payload/canary/forecasting_ui_payload.json"
+                "training/automl/tests/test_configs/payload/forecasting_ui_payload.json"
             )
         ]
     )
