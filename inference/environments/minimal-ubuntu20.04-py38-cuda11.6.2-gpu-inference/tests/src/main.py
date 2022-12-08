@@ -15,7 +15,7 @@ import argparse
 def main(args):
     """Start inference server and post scoring request."""
     # start the server
-    server_process = start_server("/var/tmp", ["--entry_script", args.score])
+    server_process = start_server("/var/tmp", ["--entry_script", args.score, "--port", "8081"])
 
     # score a request
     req = score_with_post()
@@ -38,7 +38,7 @@ def start_server(log_directory, args, timeout=timedelta(seconds=15)):
         time.sleep(0.25)
         req = None
         try:
-            req = requests.get("http://127.0.0.1:8001", timeout=30)
+            req = requests.get("http://127.0.0.1:8081", timeout=10)
         except Exception as e:
             print(e)
 
@@ -58,7 +58,7 @@ def start_server(log_directory, args, timeout=timedelta(seconds=15)):
 
 def score_with_post(headers=None, data=None):
     """Post scoring request to the server."""
-    url = "http://127.0.0.1:8001/score"
+    url = "http://127.0.0.1:8081/score"
     return requests.post(url=url, headers=headers, data=data)
 
 
