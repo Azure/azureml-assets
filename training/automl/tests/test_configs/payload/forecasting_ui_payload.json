@@ -1,0 +1,314 @@
+{
+    "graph": {
+        "datasetNodes": [
+            {
+                "id": "validation_data",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "path": "azureml://workspaces/476aeaca-9950-4d94-aefd-0bff773e27af/datastores/workspaceblobstore/paths/LocalUpload/df66babeedc78dc4b6d628d1e60f2a63/validation-mltable-folder/",
+                            "type": "MLTable",
+                            "assetId": "azureml://locations/centraluseuap/workspaces/476aeaca-9950-4d94-aefd-0bff773e27af/data/forecasting-energy-demand-valid/versions/2"
+                        }
+                    }
+                },
+                "relativePath": "azureml://subscriptions/381b38e9-9840-4719-a5a0-61d9585e1e91/resourcegroups/ayush_mishra_res01/workspaces/ayushmishra_centraluseuap/datastores/workspaceblobstore/paths/LocalUpload/df66babeedc78dc4b6d628d1e60f2a63/validation-mltable-folder/"
+            },
+            {
+                "id": "training_data",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "path": "azureml://workspaces/476aeaca-9950-4d94-aefd-0bff773e27af/datastores/workspaceblobstore/paths/LocalUpload/7bcf5db6ff0a182b32b53f150ceb1ced/training-mltable-folder/",
+                            "type": "MLTable",
+                            "assetId": "azureml://locations/centraluseuap/workspaces/476aeaca-9950-4d94-aefd-0bff773e27af/data/forecasting-energy-demand-train/versions/2"
+                        }
+                    }
+                },
+                "relativePath": "azureml://subscriptions/381b38e9-9840-4719-a5a0-61d9585e1e91/resourcegroups/ayush_mishra_res01/workspaces/ayushmishra_centraluseuap/datastores/workspaceblobstore/paths/LocalUpload/7bcf5db6ff0a182b32b53f150ceb1ced/training-mltable-folder/"
+            }
+        ],
+        "moduleNodes": [
+            {
+                "runconfig": "{  \"UseAbsolutePath\": false,  \"Arguments\": [],  \"Framework\": \"Python\",  \"DataReferences\": {},  \"Data\": {},  \"OutputData\": {},  \"Datacaches\": [],  \"InstanceTypes\": [],  \"CredentialPassthrough\": false,  \"Environment\": {    \"AutoRebuild\": true,    \"Python\": {      \"UserManagedDependencies\": false    },    \"EnvironmentVariables\": {},    \"Docker\": {      \"Platform\": {        \"Os\": \"Linux\",        \"Architecture\": \"amd64\"      }    },    \"Spark\": {      \"Repositories\": [],      \"Packages\": [],      \"PrecachePackages\": true    }  },  \"History\": {    \"OutputCollection\": false,    \"DirectoriesToWatch\": null,    \"EnableMLflowTracking\": false  },  \"Spark\": {    \"Configuration\": {}  },  \"ParallelTask\": {    \"MaxRetriesPerWorker\": 0,    \"WorkerCountPerNode\": 1,    \"Configuration\": {}  },  \"BatchAi\": {    \"NodeCount\": 0  },  \"AmlCompute\": {    \"RetainCluster\": false  },  \"AISuperComputer\": {    \"InstanceType\": \"D2\",    \"ImageVersion\": \"pytorch-1.7.0\",    \"Interactive\": false,    \"EnableAzmlInt\": true,    \"Priority\": \"Medium\",    \"SLATier\": \"Standard\"  },  \"KubernetesCompute\": {},  \"Tensorflow\": {    \"WorkerCount\": 0,    \"ParameterServerCount\": 0  },  \"Mpi\": {    \"ProcessCountPerNode\": 0  },  \"PyTorch\": {},  \"Hdi\": {    \"YarnDeployMode\": \"None\"  },  \"ContainerInstance\": {    \"CpuCores\": 2.0,    \"MemoryGb\": 3.5  },  \"Docker\": {},  \"Cmk8sCompute\": {    \"Configuration\": {}  },  \"CommandReturnCodeConfig\": {    \"ReturnCode\": \"Zero\",    \"SuccessfulReturnCodes\": []  },  \"EnvironmentVariables\": {},  \"ApplicationEndpoints\": {},  \"Parameters\": []}",
+                "id": "automl_node",
+                "moduleId": "azureml://registries/azureml-dev/components/microsoft_azureml_automl_forecasting_component/versions/0.0.1-preview-azureml-dev.1669061560",
+                "comment": "",
+                "name": "automl_forecasting_private_preview_",
+                "moduleParameters": [],
+                "moduleMetadataParameters": [],
+                "moduleOutputSettings": [],
+                "moduleInputSettings": [],
+                "useGraphDefaultCompute": true,
+                "useGraphDefaultDatastore": true,
+                "regenerateOutput": false,
+                "cloudSettings": {
+                    "autoMLComponentConfig": {
+                        "autoTrainConfig": {
+                            "generalSettings": {
+                                "primaryMetric": "normalized_root_mean_squared_error",
+                                "taskType": "forecasting"
+                            },
+                            "limitSettings": {
+                                "timeout": "01:00:00",
+                                "maxConcurrentTrials": 1
+                            },
+                            "dataSettings": {
+                                "targetColumnName": "demand",
+                                "validationData": {
+                                    "nCrossValidations": {
+                                        "mode": "auto",
+                                        "value": 0
+                                    },
+                                    "validationType": "k-folder cross validation"
+                                },
+                                "testData": {}
+                            },
+                            "forecastingSettings": {
+                                "timeColumnName": "timeStamp",
+                                "targetLags": {
+                                    "mode": "auto"
+                                },
+                                "targetRollingWindowSize": {
+                                    "mode": "auto",
+                                    "value": 0
+                                },
+                                "forecastHorizon": {
+                                    "mode": "custom",
+                                    "value": 48
+                                },
+                                "frequency": "H",
+                                "seasonality": {
+                                    "mode": "auto",
+                                    "value": 0
+                                }
+                            },
+                            "trainingSettings": {
+                                "blockListModels": [
+                                    "ExtremeRandomTrees",
+                                    "AutoArima",
+                                    "Prophet"
+                                ],
+                                "enableDnnTraining": false,
+                                "stackEnsembleSettings": {},
+                                "enableModelExplainability": true
+                            },
+                            "computeConfiguration": {
+                                "isLocal": false,
+                                "isClusterless": false,
+                                "isPreemptable": false
+                            }
+                        },
+                        "autoFeaturizeConfig": {
+                            "featurizationConfig": {
+                                "mode": "Auto"
+                            }
+                        }
+                    }
+                },
+                "executionPhase": "Execution"
+            }
+        ],
+        "subGraphNodes": [],
+        "edges": [
+            {
+                "sourceOutputPort": {
+                    "nodeId": "training_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "training_data"
+                }
+            },
+            {
+                "sourceOutputPort": {
+                    "nodeId": "validation_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "validation_data"
+                }
+            }
+        ],
+        "entityInterface": {
+            "parameters": [],
+            "dataPathParameters": [],
+            "dataPathParameterList": [],
+            "ports": {
+                "inputs": [],
+                "outputs": [],
+                "controlOutputs": []
+            }
+        },
+        "defaultCompute": {
+            "name": "gpu-cluster",
+            "computeType": "BatchAi",
+            "mlcComputeInfo": {
+                "mlcComputeType": "AmlCompute"
+            }
+        },
+        "defaultDatastore": {
+            "dataStoreName": "workspaceblobstore"
+        }
+    },
+    "flattenedSubGraphs": {},
+    "pipelineRunSettings": [
+        {
+            "name": "Continue run on step failure",
+            "value": "True",
+            "valueType": "Literal"
+        }
+    ],
+    "moduleNodeRunSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "azureml://registries/azureml-dev/components/microsoft_azureml_automl_forecasting_component/versions/0.0.1-preview-azureml-dev.1669061560",
+            "stepType": "automl",
+            "runSettings": [
+                {
+                    "useGraphDefaultCompute": true,
+                    "valueType": "Literal",
+                    "name": "Target",
+                    "value": "gpu-cluster",
+                    "mlcComputeType": "AmlCompute"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Autodetect forecast horizon",
+                    "value": "False"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Autodetect time series identifier",
+                    "value": "True"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Autodetect frequency",
+                    "value": "False"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "PrimaryMetric",
+                    "value": "NormalizedRootMeanSquaredError"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "TargetColumnName",
+                    "value": "demand"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "TimeColumnName",
+                    "value": "timeStamp"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "ForecastHorizon",
+                    "value": "48"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Frequency",
+                    "value": "Hour"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "EnableDnnTraining",
+                    "value": "False"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "EnableModelExplainability",
+                    "value": "True"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Use all supported models",
+                    "value": "True"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Autodetect target lags",
+                    "value": "True"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Autodetect target rolling window size",
+                    "value": "True"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Autodetect Season and trend",
+                    "value": "False"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "CountryOrRegionForHolidays"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "BlockListModels",
+                    "value": "[\"ExtremeRandomTrees\",\"AutoArima\",\"Prophet\"]"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Timeout",
+                    "value": "1.00"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "ExitScore"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "MaxConcurrentTrials",
+                    "value": "1"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Autodetect cross validations",
+                    "value": "True"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "ValidationDataSize"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "ValidationType",
+                    "value": "k-folder cross validation"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Mode",
+                    "value": "Auto"
+                }
+            ]
+        }
+    ],
+    "moduleNodeUIInputSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "azureml://registries/azureml-dev/components/microsoft_azureml_automl_forecasting_component/versions/0.0.1-preview-azureml-dev.1669061560",
+            "moduleInputSettings": [
+                {
+                    "name": "training_data",
+                    "dataDeliveryMode": "Direct"
+                },
+                {
+                    "name": "validation_data",
+                    "dataDeliveryMode": "Direct"
+                }
+            ]
+        }
+    ],
+    "experimentName": "automl_tests",
+    "continueRunOnStepFailure": true,
+    "enforceRerun": false,
+    "computeTarget": "gpu-cluster",
+    "displayName": "test_forecasting",
+    "tags": {}
+}

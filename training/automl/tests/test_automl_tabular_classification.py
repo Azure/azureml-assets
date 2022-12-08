@@ -20,8 +20,8 @@ logger = logging.getLogger(name=__file__)
 
 @pytest.mark.unittest
 class TestAutoMLClassificationComponent:
-    def register_classification_assets(self, mlclient, version):
-        classification_data_assets = (
+    def register_assets(self, mlclient, version):
+        data_assets = (
             {
                 "name": "classification_training_data",
                 "path": "./training/automl/tests/test_configs/assets/classification_bankmarketing/training-mltable-folder",
@@ -41,10 +41,18 @@ class TestAutoMLClassificationComponent:
                 "version": version,
             },
         )
-        assets = register_data_assets(mlclient, classification_data_assets)
+        assets = register_data_assets(mlclient, data_assets)
         return assets
 
-    def test_something(
+    @pytest.mark.parametrize(
+        "spec_path, payload_path", [
+            (
+                "training/automl/components/automl_tabular_classification/spec.yaml",
+                "training/automl/tests/test_configs/payload/canary/classification_ui_payload.json"
+            )
+        ]
+    )
+    def test_classification(
         self,
         mlclient,
         registry_name,
@@ -52,16 +60,14 @@ class TestAutoMLClassificationComponent:
         ui_service_endpoint,
         workspace_id,
         workspace_location,
+        version_suffix,
+        spec_path,
+        payload_path,
     ):
-        logger.warning("test_something")
-        payload_path = "training/automl/tests/test_configs/payload/canary/classification_ui_payload.json"
-        spec_path = "training/automl/components/automl_tabular_classification/spec.yaml"
-        classification_component = load_component(spec_path)
-        version_suffix = "test01"
-        version = "1"
-        version = version + "-" + version_suffix
+        component = load_component(spec_path)
+        version = component.version + "-" + version_suffix if version_suffix else component.version
 
-        data_assets = self.register_classification_assets(mlclient, version=version)
+        data_assets = self.register_assets(mlclient, version="1")
         payload = load_json(payload_path)
         payload = update_payload_with_registered_data_assets(
             data_assets,
@@ -70,16 +76,17 @@ class TestAutoMLClassificationComponent:
             workspace_location=workspace_location,
         )
 
-        # component_asset_id = "azureml://registries/azureml-staging/components/{}/versions/{}"
-        # component_asset_id.format(registry_name, classification_component.name, version)
-        # temp change check staging registry
-        component_asset_id = "azureml://registries/azureml-staging/components/microsoft_azureml_automl_classification_component/versions/0.0.1-preview-azureml-staging.1669926498"
+        COMPONENT_ASSET_TEMPLATE = "azureml://registries/{}/components/{}/versions/{}"
+        component_asset_id = COMPONENT_ASSET_TEMPLATE.format(
+            registry_name,
+            component.name,
+            version,
+        )
+        logger.info("component_asset_id => " + component_asset_id)
         payload = update_payload_module_id(payload, "automl_node", component_asset_id)
-
         status, pipeline_run_id = make_request(
             uri=ui_service_endpoint, method="POST", headers=http_headers, data=payload
         )
         assert status == 200
-
         logger.info("pipeline_run_id : " + str(pipeline_run_id))
         validate_successful_run(mlclient, pipeline_run_id)

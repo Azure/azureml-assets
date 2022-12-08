@@ -54,9 +54,9 @@
                 "moduleParameters": [],
                 "useGraphDefaultCompute": false,
                 "useGraphDefaultDatastore": true,
-                "regenerateOutput": false,
+                "regenerateOutput": true,
                 "comment": "",
-                "name": "automl_classification_private_preview_"
+                "name": "automl_classification"
             }
         ],
         "subGraphNodes": [],

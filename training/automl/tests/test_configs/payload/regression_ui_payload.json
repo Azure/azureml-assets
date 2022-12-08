@@ -1,0 +1,258 @@
+{
+    "graph": {
+        "datasetNodes": [
+            {
+                "id": "training_data",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "path": "azureml://workspaces/476aeaca-9950-4d94-aefd-0bff773e27af/datastores/workspaceblobstore/paths/LocalUpload/b9467bf0ae6240b27bccb7f1221210b2/training-mltable-folder/",
+                            "type": "MLTable",
+                            "assetId": "azureml://locations/centraluseuap/workspaces/476aeaca-9950-4d94-aefd-0bff773e27af/data/hardware-perf-train/versions/2"
+                        }
+                    }
+                },
+                "relativePath": "azureml://subscriptions/381b38e9-9840-4719-a5a0-61d9585e1e91/resourcegroups/ayush_mishra_res01/workspaces/ayushmishra_centraluseuap/datastores/workspaceblobstore/paths/LocalUpload/b9467bf0ae6240b27bccb7f1221210b2/training-mltable-folder/"
+            }
+        ],
+        "moduleNodes": [
+            {
+                "runconfig": "{  \"UseAbsolutePath\": false,  \"Arguments\": [],  \"Framework\": \"Python\",  \"DataReferences\": {},  \"Data\": {},  \"OutputData\": {},  \"Datacaches\": [],  \"InstanceTypes\": [],  \"CredentialPassthrough\": false,  \"Environment\": {    \"AutoRebuild\": true,    \"Python\": {      \"UserManagedDependencies\": false    },    \"EnvironmentVariables\": {},    \"Docker\": {      \"Platform\": {        \"Os\": \"Linux\",        \"Architecture\": \"amd64\"      }    },    \"Spark\": {      \"Repositories\": [],      \"Packages\": [],      \"PrecachePackages\": true    }  },  \"History\": {    \"OutputCollection\": false,    \"DirectoriesToWatch\": null,    \"EnableMLflowTracking\": false  },  \"Spark\": {    \"Configuration\": {}  },  \"ParallelTask\": {    \"MaxRetriesPerWorker\": 0,    \"WorkerCountPerNode\": 1,    \"Configuration\": {}  },  \"BatchAi\": {    \"NodeCount\": 0  },  \"AmlCompute\": {    \"RetainCluster\": false  },  \"AISuperComputer\": {    \"InstanceType\": \"D2\",    \"ImageVersion\": \"pytorch-1.7.0\",    \"Interactive\": false,    \"EnableAzmlInt\": true,    \"Priority\": \"Medium\",    \"SLATier\": \"Standard\"  },  \"KubernetesCompute\": {},  \"Tensorflow\": {    \"WorkerCount\": 0,    \"ParameterServerCount\": 0  },  \"Mpi\": {    \"ProcessCountPerNode\": 0  },  \"PyTorch\": {},  \"Hdi\": {    \"YarnDeployMode\": \"None\"  },  \"ContainerInstance\": {    \"CpuCores\": 2.0,    \"MemoryGb\": 3.5  },  \"Docker\": {},  \"Cmk8sCompute\": {    \"Configuration\": {}  },  \"CommandReturnCodeConfig\": {    \"ReturnCode\": \"Zero\",    \"SuccessfulReturnCodes\": []  },  \"EnvironmentVariables\": {},  \"ApplicationEndpoints\": {},  \"Parameters\": []}",
+                "id": "automl_node",
+                "moduleId": "azureml://registries/azureml-dev/components/microsoft_azureml_automl_regression_component/versions/0.0.1-preview-azureml-dev.1669922013",
+                "comment": "",
+                "name": "automl_regression_private_preview_",
+                "moduleParameters": [],
+                "moduleMetadataParameters": [],
+                "moduleOutputSettings": [],
+                "moduleInputSettings": [
+                    {
+                        "name": "training_data",
+                        "dataStoreMode": "Direct",
+                        "options": {
+                            "IsEvalMode": "False",
+                            "ReadWrite": null,
+                            "ForceFolder": "True"
+                        }
+                    },
+                    {
+                        "name": "test_data",
+                        "dataStoreMode": "Direct"
+                    },
+                    {
+                        "name": "validation_data",
+                        "dataStoreMode": "Direct"
+                    }
+                ],
+                "useGraphDefaultCompute": false,
+                "useGraphDefaultDatastore": true,
+                "regenerateOutput": true,
+                "cloudSettings": {
+                    "autoMLComponentConfig": {
+                        "autoTrainConfig": {
+                            "generalSettings": {
+                                "primaryMetric": "r2_score",
+                                "taskType": "regression"
+                            },
+                            "limitSettings": {
+                                "timeout": "01:00:00",
+                                "maxConcurrentTrials": 2
+                            },
+                            "dataSettings": {
+                                "targetColumnName": "ERP",
+                                "validationData": {
+                                    "nCrossValidations": {
+                                        "mode": "custom",
+                                        "value": 5
+                                    },
+                                    "validationType": "k-folder cross validation"
+                                },
+                                "testData": {}
+                            },
+                            "trainingSettings": {
+                                "allowListModels": [
+                                    "LightGBM"
+                                ],
+                                "stackEnsembleSettings": {},
+                                "enableModelExplainability": false
+                            },
+                            "computeConfiguration": {
+                                "target": "cpu-cluster",
+                                "isLocal": false,
+                                "isClusterless": false,
+                                "isPreemptable": false
+                            }
+                        },
+                        "autoFeaturizeConfig": {
+                            "featurizationConfig": {
+                                "mode": "Auto"
+                            }
+                        }
+                    }
+                },
+                "executionPhase": "Execution"
+            }
+        ],
+        "subGraphNodes": [],
+        "edges": [
+            {
+                "sourceOutputPort": {
+                    "nodeId": "training_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "training_data"
+                }
+            }
+        ],
+        "entityInterface": {
+            "parameters": [],
+            "dataPathParameters": [],
+            "dataPathParameterList": [],
+            "ports": {
+                "inputs": [],
+                "outputs": [],
+                "controlOutputs": []
+            }
+        },
+        "defaultCompute": {
+            "name": "cpu-cluster",
+            "mlcComputeInfo": {
+                "mlcComputeType": "AmlCompute"
+            }
+        },
+        "defaultDatastore": {
+            "dataStoreName": "workspaceblobstore"
+        }
+    },
+    "flattenedSubGraphs": {},
+    "pipelineRunSettings": [
+        {
+            "valueType": "Literal",
+            "name": "Priority Scope"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Priority Compute cluster"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Continue run on failed optional input",
+            "value": "True"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Timeout seconds"
+        },
+        {
+            "name": "Continue run on step failure",
+            "value": "True",
+            "valueType": "Literal"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Enforce rerun"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Default compute name"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Default datastore name"
+        }
+    ],
+    "moduleNodeRunSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "azureml://registries/azureml-dev/components/microsoft_azureml_automl_regression_component/versions/0.0.1-preview-azureml-dev.1669922013",
+            "stepType": "automl",
+            "runSettings": [
+                {
+                    "useGraphDefaultCompute": false,
+                    "valueType": "Literal",
+                    "name": "Target",
+                    "value": "cpu-cluster"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "PrimaryMetric",
+                    "value": "R2Score"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "TargetColumnName",
+                    "value": "ERP"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "EnableModelExplainability",
+                    "value": "False"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Use all supported models",
+                    "value": "False"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "AllowListModels",
+                    "value": "[\"LightGBM\"]"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Timeout",
+                    "value": "1.00"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "ExitScore"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "MaxConcurrentTrials",
+                    "value": "2"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "NCrossValidations",
+                    "value": "5"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "ValidationType",
+                    "value": "k-folder cross validation"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "TestDataSize"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Mode",
+                    "value": "Auto"
+                }
+            ]
+        }
+    ],
+    "moduleNodeUIInputSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "azureml://registries/azureml-dev/components/microsoft_azureml_automl_regression_component/versions/0.0.1-preview-azureml-dev.1669922013",
+            "moduleInputSettings": [
+                {
+                    "name": "training_data",
+                    "dataDeliveryMode": "Direct"
+                }
+            ]
+        }
+    ],
+    "experimentName": "automl_tests",
+    "continueRunOnStepFailure": true,
+    "enforceRerun": true,
+    "computeTarget": "cpu-cluster",
+    "displayName": "regression_designer",
+    "dataSetDefinitionValueAssignments": {},
+    "tags": {}
+}
