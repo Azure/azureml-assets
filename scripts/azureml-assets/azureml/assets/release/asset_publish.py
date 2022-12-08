@@ -176,8 +176,8 @@ def run_command(
 
     # Check command result
     if results.returncode != 0:
-        logger.log_warning(f"Error creating {asset}")
-        failure_list.append(asset.name)
+        logger.log_warning(f"Error creating {asset.type.value} : {asset.name}")
+        failure_list.append(asset)
 
 
 def _str2bool(v: str) -> bool:
@@ -297,7 +297,7 @@ if __name__ == "__main__":
                             run_command(cmd, failure_list, debug_mode)
                 except Exception as e:
                     logger.log_error(f"Exception in loading model config: {str(e)}")
-                    failure_list.append(asset.name)
+                    failure_list.append(asset)
 
             else:
                 logger.log_warning(f"unsupported asset type: {asset.type.value}")
@@ -305,7 +305,7 @@ if __name__ == "__main__":
     if len(failure_list) > 0:
         failed_assets = {}
         for asset in failure_list:
-            failed_assets[asset.type.value] = failed_assets.get(asset.type, []).append(asset.name)
+            failed_assets[asset.type.value] = failed_assets.get(asset.type.value, []).append(asset.name)
         for asset_type, asset_names in failed_assets.items():
             logger.log_warning(f"Failed to register {asset_type}s: {asset_names}")
         # the following dump process will generate a yaml file for the report process in the end of the publishing script
