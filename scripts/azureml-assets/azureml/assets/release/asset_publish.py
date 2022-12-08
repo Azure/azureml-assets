@@ -303,7 +303,7 @@ if __name__ == "__main__":
                 logger.log_warning(f"unsupported asset type: {asset.type.value}")
 
     if len(failure_list) > 0:
-        failed_assets = {}
+        failed_assets = defaultdict(list)
         for asset in failure_list:
             failed_assets[asset.type.value] = failed_assets.get(asset.type.value, []).append(asset.name)
         for asset_type, asset_names in failed_assets.items():
