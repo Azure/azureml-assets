@@ -313,7 +313,7 @@ if __name__ == "__main__":
         for asset_type, asset_names in failed_assets.items():
             logger.log_warning(f"Failed to register {asset_type}s: {asset_names}")
         # the following dump process will generate a yaml file for the report process in the end of the publishing script
-        result_path = Path().resolve() / "failed assets.yml"
+        result_path = Path().resolve() / "failed_assets.yml"
         with open(result_path, "w") as file:
             yaml.dump(failed_assets, file, default_flow_style=False, sort_keys=False)
 
