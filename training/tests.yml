@@ -11,14 +11,8 @@ automl_components:
   - ./automl/tests/
   jobs:
     automl_classification_component_validation: 
-      pytest_job: ./automl/tests/test_automl_classification.py
+      pytest_job: ./automl/tests/test_automl_tabular_components.py
       assets:
       - ./automl/components/automl_tabular_classification
-    automl_forecasting_component_validation: 
-      pytest_job: ./automl/tests/test_automl_forecasting.py
-      assets:
       - ./automl/components/automl_tabular_forecasting
-    automl_regression_component_validation: 
-      pytest_job: ./automl/tests/test_automl_regression.py
-      assets:
       - ./automl/components/automl_tabular_regression

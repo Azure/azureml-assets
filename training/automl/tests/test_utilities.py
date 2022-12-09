@@ -50,7 +50,7 @@ def validate_successful_run(mlclient: MLClient, run_id: str):
     job = mlclient.jobs.get(run_id)
     while job.status not in RunHistoryConstants.TERMINAL_STATUSES:
         job = mlclient.jobs.get(run_id)
-        time.sleep(60)
+        time.sleep(30)
     assert job.status == JobStatus.COMPLETED
 
 
@@ -58,10 +58,10 @@ def register_data_assets(mlclient, data_assets):
     registered_assets = []
     for asset in data_assets:
         data = Data(
-            name=asset["name"],
-            version=asset["version"],
-            path=asset["path"],
-            type=asset["type"],
+            name=asset.get("name"),
+            version=asset.get("version"),
+            path=asset.get("path"),
+            type=asset.get("type"),
         )
         try:
             asset = mlclient.data.get(name=data.name, version=data.version)

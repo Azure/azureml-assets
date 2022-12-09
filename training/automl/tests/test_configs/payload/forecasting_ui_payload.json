@@ -307,7 +307,7 @@
     ],
     "experimentName": "automl_tests",
     "continueRunOnStepFailure": true,
-    "enforceRerun": false,
+    "enforceRerun": true,
     "computeTarget": "gpu-cluster",
     "displayName": "test_forecasting",
     "tags": {}
