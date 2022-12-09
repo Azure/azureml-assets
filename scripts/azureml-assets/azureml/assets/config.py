@@ -260,12 +260,88 @@ class ModelTaskName(Enum):
     TEXT_CLASSIFICATION = 'text-classification'
 
 
-class ModelDownloadType(Enum):
-    """Enum for Download Method for Remote Model."""
+class PathType(Enum):
+    """Enum for path types supported for model publishing."""
 
-    FTP = 'ftp'
-    GIT = 'git'
-    HTTP = 'http'
+    LOCAL = "local"  # Path to model files present locally.
+    GIT = "git"      # Model hosted on a public GIT repo and can be cloned by GIT LFS.
+    FTP = "ftp"      # <UNSUPPORTED> Model files hosted on a FTP endpoint.
+    HTTP = "http"    # <UNSUPPORTED> Model files hosted on a HTTP endpoint.
+    AZUREBLOB = "azureblob"  # Model files hosted on an AZUREBLOB blobstore with public read access.
+
+
+class AssetPath:
+    """Asset path."""
+
+    def __init__(self, asset_type: str, uri: str):
+        """Initialize asset path.
+
+        :param asset_type: path type. Valid values are [local, git, ftp, http, azure]
+        :type: str
+        :param uri: a valid URI to local or remote resource
+        :type: str
+        """
+        self._uri = uri
+        self._type = asset_type
+
+    @property
+    def uri(self) -> str:
+        """Asset URI."""
+        return self._uri
+
+    @property
+    def type(self) -> str:
+        """Asset type."""
+        return self._type
+
+
+class LocalAssetPath(AssetPath):
+    """Local asset path."""
+
+    def __init__(self, uri: str):
+        """Create a Local path of asset.
+
+        :param uri: Path to local model relative to asset.yaml
+        :type uri: str
+        """
+        super().__init__(PathType.LOCAL, uri=uri)
+
+
+class AzureBlobstoreAssetPath(AssetPath):
+    """Azure Blobstore asset path."""
+
+    BLOBSTORE_URI = "https://{}.blob.core.windows.net/{}/{}"
+
+    def __init__(self, storage_name: str, container_name: str, container_path: str):
+        """Create a Blobstore path.
+
+        :param storage_name: Blob container storage name
+        :type storage_name: str
+        :param container_name: Blob container name
+        :type container_name: str
+        :param container_path: Relative path of assets in blob container
+        :type container_path: str
+        """
+        self._storage_name = storage_name
+        self._container_name = container_name
+        self._container_path = container_path
+        uri = AzureBlobstoreAssetPath.BLOBSTORE_URI.format(storage_name, container_name, container_path)
+        super().__init__(PathType.AZUREBLOB, uri)
+
+
+class GitAssetPath(AssetPath):
+    """GIT asset path."""
+
+    def __init__(self, branch: str, uri: str):
+        """Create a GIT repo path.
+
+        :param branch: Git branch to checkout from
+        :type branch: str
+        :param uri: git clonable url of repo
+        :type uri: str
+        """
+        self._branch = branch
+        super().__init__(PathType.GIT, uri)
 
 
 class ModelConfig(Config):
@@ -275,14 +351,23 @@ class ModelConfig(Config):
     Example:
 
     path: # should contain local_path or should contain package object
-        local: "../models/bert-base-uncased" # the local path to the model
-        remote:
-            type: git_lfs
-            uri: https://huggingface.co/bert-base-uncased
-            commit_hash: 5546055f03398095e385d7dc625e636cc8910bf2
+        ##Local path example
+        type: local
+        uri: "../models/bert-base-uncased" # the local path to the model
+
+        ## GIT path example
+        type: git
+        uri: https://huggingface.co/bert-base-uncased
+        branch: main
+
+        ## Azure Blobstore example
+        type: azureblob
+        storage_name: my_storage
+        container_name: my_container
+        container_path: foo/bar
     publish:
         type: mlflow_model # could be one of (custom_model, mlflow_model, triton_model)
-        flavor: hftransformers # flavor should be specificed only for mlflow_model
+        flavors: hftransformers # flavors should be specificed only for mlflow_model
         task_name: translation #optional.Needed for mlflow_model huggingface flavour
 
     """
@@ -290,50 +375,39 @@ class ModelConfig(Config):
     def __init__(self, file_name: Path):
         """Initialize object for the Model Properties extracted from extra_config model.yaml."""
         super().__init__(file_name)
+        self._path = None
         self._validate()
 
     def _validate(self):
         """Validate the yaml file."""
-        Config._validate_exists('model.path', self._path)
+        Config._validate_exists('model.path', self.path)
+        Config._validate_enum('model.path.type', self.path.type.value, PathType, True)
         Config._validate_exists('model.publish', self._publish)
         Config._validate_enum('model.type', self._type, ModelType, True)
 
     @property
-    def _path(self) -> object:
+    def path(self) -> AssetPath:
         """Model Path."""
-        return self._yaml.get('path', {})
-
-    @property
-    def path_local(self) -> Path:
-        """Model Local Path."""
-        local_path = self._path.get('local_path')
-        return Path(local_path) if local_path else None
-
-    @property
-    def _path_remote(self) -> Dict[str, str]:
-        """Model Package."""
-        return self._path.get('remote')
-
-    @property
-    def remote_commit_hash(self) -> str:
-        """Model commit hash from remote."""
-        return self._path_remote.get('commit_hash')
-
-    @property
-    def _remote_type(self) -> str:
-        """Model Download Method."""
-        return self._path_remote.get('type')
-
-    @property
-    def remote_type(self) -> ModelDownloadType:
-        """Enum for Model Download Method."""
-        remote_type = self._remote_type
-        return ModelDownloadType(remote_type) if remote_type else None
-
-    @property
-    def remote_uri(self) -> str:
-        """Model URL from remote."""
-        return self._path_remote.get('uri')
+        if self._path:
+            return self._path
+        path = self._yaml.get('path', {})
+        if path and path.get('type'):
+            path_type = path.get('type')
+            if path_type == PathType.AZUREBLOB.value:
+                self._path = AzureBlobstoreAssetPath(
+                    storage_name=path['storage_name'],
+                    container_name=path['container_name'],
+                    container_path=path['container_path'],
+                )
+            elif path_type == PathType.GIT.value:
+                self._path = GitAssetPath(branch=path['branch'], uri=path['uri'])
+            elif path_type == PathType.LOCAL.value:
+                self._path = LocalAssetPath(local_path=path['uri'])
+            elif path_type == PathType.HTTP.value or path_type == PathType.FTP.value:
+                raise NotImplementedError("Support for HTTP and FTP is being added.")
+        else:
+            raise Exception("path parameters are invalid")
+        return self._path
 
     @property
     def _publish(self) -> Dict[str, object]:
@@ -352,14 +426,14 @@ class ModelConfig(Config):
         return ModelType(type) if type else None
 
     @property
-    def _flavor(self) -> str:
+    def _flavors(self) -> str:
         """Model Flavor."""
-        return self._publish.get('flavor')
+        return self._publish.get('flavors')
 
     @property
-    def flavor(self) -> ModelFlavor:
+    def flavors(self) -> ModelFlavor:
         """Model Flavor from Enum."""
-        flavor = self._flavor
+        flavor = self._flavors
         return ModelFlavor(flavor) if flavor else None
 
     @property

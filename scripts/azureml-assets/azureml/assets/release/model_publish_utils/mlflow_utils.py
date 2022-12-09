@@ -6,6 +6,9 @@
 class MLFlowModelUtils:
     """Transform Model to MLFlow Model."""
 
+    MLMODEL_FILE_NAME = "MLmodel"
+    MLFLOW_MODEL_PATH = "mlflow_model_folder"
+
     def __init__(self, name, task_name, flavor, mlflow_model_dir):
         """Initialize object for MLFlowModelUtils."""
         self.name = name

@@ -16,6 +16,7 @@ class DashboardInfo:
     RAI_INSIGHTS_TRAIN_DATASET_ID_KEY = "train_dataset_id"
     RAI_INSIGHTS_TEST_DATASET_ID_KEY = "test_dataset_id"
     RAI_INSIGHTS_DASHBOARD_TITLE_KEY = "dashboard_title"
+    RAI_INSIGHTS_INPUT_ARGS_KEY = "rai_insight_input_args"
 
 
 class PropertyKeyValues:

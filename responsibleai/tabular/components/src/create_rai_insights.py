@@ -66,6 +66,8 @@ def parse_args():
 
     parser.add_argument("--classes", type=str, help="Optional[List[str]]")
 
+    parser.add_argument("--use_model_dependency", type=bool, help="Use model dependency")
+
     parser.add_argument("--output_path", type=str, help="Path to output JSON")
 
     # parse args
@@ -139,13 +141,17 @@ def main(args):
         model_id = fetch_model_id(args.model_info_path)
         _logger.info("Loading model: {0}".format(model_id))
         model_estimator = load_mlflow_model(
-            my_run.experiment.workspace, model_id=model_id
+            workspace=my_run.experiment.workspace,
+            use_model_dependency=args.use_model_dependency,
+            model_id=model_id
         )
     elif args.model_input and args.model_info:
         model_id = args.model_info
         _logger.info("Loading model: {0}".format(model_id))
         model_estimator = load_mlflow_model(
-            my_run.experiment.workspace, model_path=args.model_input
+            workspace=my_run.experiment.workspace,
+            use_model_dependency=args.use_model_dependency,
+            model_path=args.model_input
         )
 
     constructor_args = create_constructor_arg_dict(args)
@@ -164,6 +170,7 @@ def main(args):
         DashboardInfo.RAI_INSIGHTS_TRAIN_DATASET_ID_KEY: get_train_dataset_id(my_run),
         DashboardInfo.RAI_INSIGHTS_TEST_DATASET_ID_KEY: get_test_dataset_id(my_run),
         DashboardInfo.RAI_INSIGHTS_DASHBOARD_TITLE_KEY: args.title,
+        DashboardInfo.RAI_INSIGHTS_INPUT_ARGS_KEY: vars(args)
     }
     output_file = os.path.join(
         args.output_path, DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
