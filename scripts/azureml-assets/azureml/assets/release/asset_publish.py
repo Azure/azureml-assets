@@ -307,7 +307,7 @@ if __name__ == "__main__":
         logger.print(f"failure_list: {failure_list}")
         for asset in failure_list:
             logger.print(f"processing failed asset: {asset.name}")
-            failed_assets[asset.type.value] = failed_assets.get(asset.type.value, []).append(asset.name)
+            failed_assets[asset.type.value].append(asset.name)
 
         logger.print(f"failed assets: {failed_assets}")
         for asset_type, asset_names in failed_assets.items():
