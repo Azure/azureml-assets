@@ -4,5 +4,5 @@ The deepspeed autotuner will generate an optimal configuration file (``ds_config
 ## How to Run
 1. Create a compute that can run the job. Computes with Tesla V100 GPUs provide good compute power. In the ``deepspeed-autotune-aml.yaml`` file, replace ``<name-of-your-compute-here>`` with the name of your compute.
 2. Submit the autotuning job with the following command:<br />
-```az ml job create --file deepspeed-autotune-aml.yaml```
+```bash create-job.sh```
 3. The optimal configuration file ``ds_config_optimal.json`` can be found at ``outputs/autotuning_results/exps`` under the ``outputs + logs`` tab of the completed run.
