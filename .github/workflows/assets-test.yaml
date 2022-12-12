@@ -29,6 +29,7 @@ env:
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
   scripts_setup_dir: scripts/setup
+  scripts_dir: scripts
   asset_config_filename: asset.yaml
   pytest_reports: pytest-reports
 
@@ -130,6 +131,10 @@ jobs:
     
       - name: Install dependencies
         run: pip install -e $scripts_azureml_assets_dir
+
+      - name: Setup azcopy
+        shell: bash
+        run: source $scripts_dir/install_azcopy.sh
 
       - name: Log in to Azure and create resources
         uses: ./.github/actions/create-azure-resources

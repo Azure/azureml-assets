@@ -6,7 +6,6 @@ on:
       - main
     paths-ignore:
       - .github/**
-      - scripts/**
   schedule:
     - cron: '30 6 * * *'
   workflow_dispatch:
