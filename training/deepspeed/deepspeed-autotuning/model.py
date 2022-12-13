@@ -7,6 +7,7 @@ import torch.nn.functional as F
 
 class Net(nn.Module):
     """A Neural Network Model."""
+
     def __init__(self):
         """Initialize model."""
         super(Net, self).__init__()

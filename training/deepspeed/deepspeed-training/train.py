@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-'''Train a model using deepspeed.'''
+"""Train a model using deepspeed."""
 import argparse
 import os
 import deepspeed
