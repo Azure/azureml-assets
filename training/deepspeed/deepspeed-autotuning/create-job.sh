@@ -1,6 +1,6 @@
 #!/bin/bash
 # Generate key
-ssh-keygen -t rsa -f 'generated-key'
+ssh-keygen -t rsa -f 'generated-key' -N ''
 
 # Generate yaml file with key path
 cat > deepspeed-autotune-aml.yaml << EOF
