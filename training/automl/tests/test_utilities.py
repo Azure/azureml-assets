@@ -25,9 +25,7 @@ def make_request(uri: str, method: str, headers: dict, data: dict):
         if headers.get("content-type") == "application/json":
             response_data = response_data.decode("utf-8")
     else:
-        response: HTTPResponse = http.request(
-            method=method, url=uri, headers=headers, fields=data
-        )
+        response: HTTPResponse = http.request(method=method, url=uri, headers=headers, fields=data)
         status = response.status
         response_data = response.data
     return status, response_data
@@ -39,9 +37,7 @@ def load_json(file_path: str):
             json_dict = json.load(f)
         return json_dict
     except Exception as e:
-        logger.warning(
-            f"Caught exception in loading json file at {file_path}. Exception => {e}"
-        )
+        logger.warning(f"Caught exception in loading json file at {file_path}. Exception => {e}")
         raise e
 
 
@@ -94,9 +90,7 @@ def _update_payload_with_registered_data_assets(
     return payload
 
 
-def update_payload_with_registered_data_assets(
-    assets, payload, workspace_id, workspace_location
-):
+def update_payload_with_registered_data_assets(assets, payload, workspace_id, workspace_location):
     logger.info("update payload with assets")
     for asset in assets:
         if "training_data" in asset.name:
