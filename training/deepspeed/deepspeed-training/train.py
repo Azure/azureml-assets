@@ -7,12 +7,15 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import time
+from model import Net, nn, F
 # import MLflow if available. Continue with a warning if not installed on the system.
 try:
     import mlflow
-except:
+except ImportError:
     print("MLFlow logging failed. Continuing without MLflow.")
     pass
+
+
 def add_argument():
 
     parser = argparse.ArgumentParser(description="CIFAR")
@@ -43,6 +46,7 @@ def add_argument():
     args = parser.parse_args()
 
     return args
+
 
 # Need args here to set ranks for multi-node training with download=True
 args = add_argument()
@@ -81,8 +85,6 @@ classes = (
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # Copy the neural network from the Neural Networks section before and modify it to
 # take 3-channel images (instead of 1-channel images as it was defined).
-
-from model import *
 
 net = Net()
 parameters = filter(lambda p: p.requires_grad, net.parameters())
@@ -166,7 +168,7 @@ for epoch in range(args.epochs):  # loop over the dataset multiple times
             try:
                 print("hello loss")
                 mlflow.log_metrics({"loss": loss})
-            except:
+            except NameError:
                 print("MLFlow logging failed. Continuing without MLflow.")
                 pass
         running_loss = 0.0
