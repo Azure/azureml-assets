@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+'''Train a model using deepspeed.'''
 import argparse
 import os
 import deepspeed
@@ -17,7 +18,7 @@ except ImportError:
 
 
 def add_argument():
-    """Adds arguements for deepspeed."""
+    """Add arguements for deepspeed."""
     parser = argparse.ArgumentParser(description="CIFAR")
 
     # train

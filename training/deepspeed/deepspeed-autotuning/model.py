@@ -1,14 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""Create a neural network model"""
+"""Create a neural network model."""
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class Net(nn.Module):
-    """A Neural Network Model"""
+    """A Neural Network Model."""
     def __init__(self):
-        """Initialize model"""
+        """Initialize model."""
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
         self.pool = nn.MaxPool2d(2, 2)
@@ -18,7 +18,7 @@ class Net(nn.Module):
         self.fc3 = nn.Linear(84, 10)
 
     def forward(self, x):
-        """Defines the computation performed at every call."""
+        """Define the computation performed at every call."""
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
         x = x.view(-1, 16 * 5 * 5)

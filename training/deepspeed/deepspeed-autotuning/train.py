@@ -17,7 +17,7 @@ except ImportError:
 
 
 def add_argument():
-    """Adds arguements for deepspeed."""
+    """Add arguements for deepspeed."""
     parser = argparse.ArgumentParser(description="CIFAR")
 
     # train
