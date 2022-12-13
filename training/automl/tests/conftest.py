@@ -13,10 +13,14 @@ from .test_utilities import load_json, make_request
 
 logger = logging.getLogger(__name__)
 
-PIPELINE_DRAFT_CANARY_ENDPOINT = "https://ml.azure.com/api/eastus2euap/studioservice/apiv2/subscriptions/{}/resourceGroups/{}/workspaces/{}/pipelinedrafts"
-UI_SERVICE_CANARY_ENDPOINT = "https://ml.azure.com/api/eastus2euap/studioservice/apiv2/subscriptions/{}/resourceGroups/{}/workspaces/{}/pipelinedrafts/{}/run?nodeCompositionMode=None&asyncCall=true"
-PIPELINE_DRAFT_ENDPOINT = "https://ml.azure.com/api/{}/studioservice/apiv2/subscriptions/{}/resourceGroups/{}/workspaces/{}/pipelinedrafts"
-UI_SERVICE_ENDPOINT = "https://ml.azure.com/api/{}/studioservice/apiv2/subscriptions/{}/resourceGroups/{}/workspaces/{}/pipelinedrafts/{}/run?nodeCompositionMode=None&asyncCall=true"
+PIPELINE_DRAFT_ENDPOINT = (
+    "https://ml.azure.com/api/{}/studioservice/apiv2/subscriptions/{}/resourceGroups/{}/workspaces/{}/pipelinedrafts"
+)
+
+UI_SERVICE_ENDPOINT = (
+    "https://ml.azure.com/api/{}/studioservice/apiv2/subscriptions/{}/resourceGroups/{}/workspaces/{}/pipelinedrafts/" + \
+        "{}/run?nodeCompositionMode=None&asyncCall=true"
+)
 
 
 def get_env(key: str) -> Optional[str]:
@@ -54,11 +58,18 @@ def workspace_location():
 
 
 @pytest.fixture
-def workspace_id(mlclient, workspace_name):
-    # workspace = mlclient.workspaces.get(workspace_name)
-    # tmp: this will fail test.
-    # Checking with workspace team how to fetch guid for a workspce in v2
-    return "a65b4ed5-7ab5-474d-a670-1067befb8e20"
+def workspace_id(subscription_id, resource_group, workspace_name):
+    from azure.ai.ml._restclient.v2022_10_01_preview import AzureMachineLearningWorkspaces
+
+    serviceClient = AzureMachineLearningWorkspaces(
+        credential=DefaultAzureCredential(), subscription_id=subscription_id
+    )
+    workspace = serviceClient.workspaces.get(
+        resource_group_name=resource_group,
+        workspace_name=workspace_name,
+    )
+    workspace_guid = workspace.workspace_id
+    return workspace_guid
 
 
 @pytest.fixture
@@ -77,12 +88,8 @@ def mlclient(subscription_id, resource_group, workspace_name):
 
 
 @pytest.fixture
-def pipeline_draft_endpoint(
-    subscription_id, resource_group, workspace_name, workspace_location
-):
-    return PIPELINE_DRAFT_ENDPOINT.format(
-        workspace_location, subscription_id, resource_group, workspace_name
-    )
+def pipeline_draft_endpoint(subscription_id, resource_group, workspace_name, workspace_location):
+    return PIPELINE_DRAFT_ENDPOINT.format(workspace_location, subscription_id, resource_group, workspace_name)
 
 
 @pytest.fixture
@@ -119,12 +126,8 @@ def http_headers(auth_token):
 
 @pytest.fixture
 def pipeline_draft_id(http_headers, pipeline_draft_endpoint) -> str:
-    pipeline_draft_payload = (
-        "training/automl/tests/test_configs/payload/create_pipeline_draft_payload.json"
-    )
+    pipeline_draft_payload = "training/automl/tests/test_configs/payload/create_pipeline_draft_payload.json"
     post_data = load_json(pipeline_draft_payload)
-    status, resp = make_request(
-        pipeline_draft_endpoint, "POST", http_headers, post_data
-    )
+    status, resp = make_request(pipeline_draft_endpoint, "POST", http_headers, post_data)
     assert status == 200
     return resp

@@ -101,21 +101,7 @@ class TestAutoMLClassificationComponent:
         workspace_location,
         version_suffix,
     ):
-        component = load_component(spec_path)
-        version = (
-            component.version + "-" + version_suffix
-            if version_suffix
-            else component.version
-        )
-
-        # data_assets = self.register_assets(mlclient, version="1")
-        # "requests"
-        # data_assets = register_data_assets(mlclient, request.getfixturevalue(data_assets))
-        logger.warning(data_assets)
         data_assets = register_data_assets(mlclient, data_assets)
-        logger.warning("registered data assets")
-        logger.warning(str(data_assets))
-
         payload = load_json(payload_path)
         payload = update_payload_with_registered_data_assets(
             data_assets,
@@ -125,6 +111,9 @@ class TestAutoMLClassificationComponent:
         )
 
         COMPONENT_ASSET_TEMPLATE = "azureml://registries/{}/components/{}/versions/{}"
+        component = load_component(spec_path)
+        # use latest label than a specific version
+        version = component.version + "-" + version_suffix if version_suffix else component.version
         component_asset_id = COMPONENT_ASSET_TEMPLATE.format(
             registry_name,
             component.name,
