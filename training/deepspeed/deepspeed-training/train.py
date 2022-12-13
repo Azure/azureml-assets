@@ -7,7 +7,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 import time
-from model import Net, nn, F
+from model import Net, nn
 # import MLflow if available. Continue with a warning if not installed on the system.
 try:
     import mlflow
