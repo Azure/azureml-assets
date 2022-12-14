@@ -139,7 +139,7 @@ def main(args):
         with open(output_file, "w") as of:
             json.dump(dashboard_info, of)
 
-        _logger.info("Saved dashboard to oputput")
+        _logger.info("Saved dashboard to output")
 
         rai_data = rai_i.get_data()
         rai_dict = serialize_json_safe(rai_data)
