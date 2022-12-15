@@ -11,6 +11,10 @@ ENV PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 ENV LD_LIBRARY_PATH=$AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
 
+# create non-root user and grant access
+RUN useradd --create-home dockeruser
+USER dockeruser
+
 # Create conda environment
 COPY conda_dependencies.yaml .
 RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
