@@ -176,7 +176,6 @@ def run_command(
 
     # Check command result
     if results.returncode != 0:
-        logger.log_warning(f"Error creating {asset.type.value} : {asset.name}")
         failure_list.append(asset)
 
 
@@ -214,6 +213,8 @@ if __name__ == "__main__":
                         help="the version suffix")
     parser.add_argument("-l", "--publish-list", type=Path,
                         help="the path of the publish list file")
+    parser.add_argument("-f", "--failed-list", type=Path,
+                        help="the path of the failed assets list file")
     parser.add_argument(
         "-d", "--debug", type=_str2bool, nargs="?",
         const=True, default=False, help="debug mode",
@@ -228,6 +229,7 @@ if __name__ == "__main__":
     assets_dir = args.assets_directory
     passed_version = args.version_suffix
     publish_list_file = args.publish_list
+    failed_list_file = args.failed_list
     debug_mode = args.debug
     asset_ids = {}
     logger.print("publishing assets")
@@ -311,7 +313,7 @@ if __name__ == "__main__":
             logger.log_warning(f"Failed to register {asset_type}s: {asset_names}")
         # the following dump process will generate a yaml file for the report
         # process in the end of the publishing script
-        with open("failed_assets.yml", "w") as file:
+        with open(failed_list_file, "w") as file:
             yaml.dump(failed_assets, file, default_flow_style=False, sort_keys=False)
 
     if tests_dir:
