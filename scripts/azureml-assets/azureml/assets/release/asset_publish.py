@@ -304,20 +304,15 @@ if __name__ == "__main__":
 
     if len(failure_list) > 0:
         failed_assets = defaultdict(list)
-        logger.print(f"failure_list: {failure_list}")
         for asset in failure_list:
-            logger.print(f"processing failed asset: {asset.name}")
             failed_assets[asset.type.value].append(asset.name)
 
-        logger.print(f"failed assets: {failed_assets}")
         for asset_type, asset_names in failed_assets.items():
             logger.log_warning(f"Failed to register {asset_type}s: {asset_names}")
         # the following dump process will generate a yaml file for the report
         # process in the end of the publishing script
-        result_path = Path().resolve() / "failed_assets.yml"
-        dump_data = {asset_type: asset_names for asset_type, asset_names in failed_assets.items()}
-        with open(result_path, "w") as file:
-            yaml.dump(dump_data, file, default_flow_style=False, sort_keys=False)
+        with open("failed_assets.yml", "w") as file:
+            yaml.dump(failed_assets, file, default_flow_style=False, sort_keys=False)
 
     if tests_dir:
         logger.print("locating test files")
