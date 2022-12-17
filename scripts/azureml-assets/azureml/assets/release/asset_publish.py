@@ -176,6 +176,7 @@ def run_command(
 
     # Check command result
     if results.returncode != 0:
+        logger.log_warning(f"Error creating {asset.type.value} : {asset.name}")
         failure_list.append(asset)
 
 
