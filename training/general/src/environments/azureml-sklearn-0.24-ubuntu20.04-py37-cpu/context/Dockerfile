@@ -17,10 +17,10 @@ RUN pip install 'matplotlib>=3.3,<3.4' \
                 'scipy>=1.5,<1.6' \
                 'numpy>=1.10,<1.20' \
                 'ipykernel~=6.0' \
-                '{pin-to-latest-pypi-version:"azureml-core=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-defaults=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-mlflow=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-telemetry=={}"}' \
+                'azureml-core=={{latest-pypi-version}}' \
+                'azureml-defaults=={{latest-pypi-version}}' \
+                'azureml-mlflow=={{latest-pypi-version}}' \
+                'azureml-telemetry=={{latest-pypi-version}}' \
                 'scikit-learn==0.24.1' \
                 'debugpy~=1.6.3'
 

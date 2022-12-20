@@ -1,16 +1,16 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110:biweekly.202211.2
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110:{{latest-image-tag:monthly\.\d{6}}}
 
 
 # Install pip dependencies
 RUN pip install 'ipykernel~=6.0' \
-                '{pin-to-latest-pypi-version:"azureml-core=={}"}' \
-				'{pin-to-latest-pypi-version:"azureml-dataset-runtime=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-defaults=={}"}' \
-				'{pin-to-latest-pypi-version:"azure-ml=={}"}' \
-				'{pin-to-latest-pypi-version:"azure-ml-component=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-mlflow=={}"}' \
-                '{pin-to-latest-pypi-version:"azureml-telemetry=={}"}' \
-		        '{pin-to-latest-pypi-version:"azureml-contrib-services=={}"}' \
+                'azureml-core=={{latest-pypi-version}}' \
+				'azureml-dataset-runtime=={{latest-pypi-version}}' \
+                'azureml-defaults=={{latest-pypi-version}}' \
+				'azure-ml=={{latest-pypi-version}}' \
+				'azure-ml-component=={{latest-pypi-version}}' \
+                'azureml-mlflow=={{latest-pypi-version}}' \
+                'azureml-telemetry=={{latest-pypi-version}}' \
+		        'azureml-contrib-services=={{latest-pypi-version}}' \
                 'torch-tb-profiler~=0.4.0' \
 				'py-spy==0.3.12' \
 		        'debugpy~=1.6.3'
