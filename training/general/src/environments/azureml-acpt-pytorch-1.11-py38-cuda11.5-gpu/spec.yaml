@@ -11,7 +11,7 @@ build:
   dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
-# TODO: Should this say Cuda 11.5 ?
+
 tags:
   PyTorch: "1.11"
   GPU: Cuda11
