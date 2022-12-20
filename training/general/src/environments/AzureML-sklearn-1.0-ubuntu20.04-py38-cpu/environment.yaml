@@ -1,0 +1,29 @@
+image:
+  name: azureml/curated/AzureML-sklearn-1.0-ubuntu20.04-py38-cpu
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda_dependencies.yaml
+  publish:
+    location: mcr
+    visibility: public
+environment:
+  metadata:
+    MachineLearningFramework:
+      name: Scikit-learn
+      version: "1.0"
+    Mpi:
+      name: OpenMpi
+      version: "4.1.0"
+    Purpose:
+      HasTrainingSupport: true
+      HasInferencingSupport: false
+    Runtime:
+      name: Python
+      version: "3.8"
+    Os:
+      name: Ubuntu
+      version: "20.04"
