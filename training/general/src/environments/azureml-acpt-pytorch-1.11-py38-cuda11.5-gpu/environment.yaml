@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/AzureML-ACPT-pytorch-1.11-py38-cuda11.5-gpu
+  name: azureml/curated/azureml-acpt-pytorch-1.11-py38-cuda11.5-gpu
   os: linux
   context:
     dir: context

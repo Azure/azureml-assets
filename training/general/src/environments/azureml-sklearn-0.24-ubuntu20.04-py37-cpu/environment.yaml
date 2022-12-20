@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/AzureML-sklearn-0.24-ubuntu20.04-py37-cpu
+  name: azureml/curated/azureml-sklearn-0.24-ubuntu20.04-py37-cpu
   os: linux
   context:
     dir: context
