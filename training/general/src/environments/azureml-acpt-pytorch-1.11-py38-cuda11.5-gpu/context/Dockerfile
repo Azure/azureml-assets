@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu115-py38-torch1110:biweekly.202211.2
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu115-py38-torch1110:{{latest-image-tag:monthly\.\d{6}}}
 
 # Install pip dependencies
 RUN pip install 'ipykernel~=6.0' \

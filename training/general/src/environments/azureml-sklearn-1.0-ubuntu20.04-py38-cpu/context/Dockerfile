@@ -1,4 +1,4 @@
-FROM {pin-to-latest-mcr-version-tag:"mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{}"}
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag:monthly\.\d{6}}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/sklearn-1.0
 # Create conda environment
