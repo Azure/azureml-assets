@@ -67,4 +67,3 @@ def test_pytorch_1_11():
         time.sleep(30)  # sleep 30 seconds
 
     assert current_status == "Completed"
-

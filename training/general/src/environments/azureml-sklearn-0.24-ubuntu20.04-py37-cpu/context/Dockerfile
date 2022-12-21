@@ -1,4 +1,3 @@
-# TODO: why dpes it say openmpi3.1.2 ? Shouldn't it be openmpi4.1.0 ?
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/sklearn-0.24.1

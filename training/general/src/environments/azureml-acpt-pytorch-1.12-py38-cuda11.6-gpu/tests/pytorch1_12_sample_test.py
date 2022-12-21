@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the pytorch 1.11 environment."""
+"""Tests running a sample job in the pytorch 1.12 environment."""
 import os
 import time
 from pathlib import Path
@@ -14,8 +14,8 @@ JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 
 
-def test_pytorch_1_11():
-    """Tests a sample job using pytorch 1.11 as the environment."""
+def test_pytorch_1_12():
+    """Tests a sample job using pytorch 1.12 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -26,12 +26,12 @@ def test_pytorch_1_11():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "acpt-pytorch-1_11-py38-cuda11_5"
+    env_name = "acpt-pytorch-1_12-py38-cuda11_6"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
         name=env_name,
-        description="Pytorch 1.11 with acpt environment created from a Docker context.",
+        description="Pytorch 1.12 with acpt environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
