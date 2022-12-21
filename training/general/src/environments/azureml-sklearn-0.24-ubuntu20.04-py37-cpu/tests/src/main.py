@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""Simple Sklearn Test"""
+"""Simple Sklearn Test."""
 # imports
 import mlflow
 import argparse
@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 
 # define functions
 def main(args):
-    """Main function"""
+    """The main function."""
     # enable auto logging
     mlflow.autolog()
 
@@ -37,7 +37,7 @@ def main(args):
 
 
 def process_data(df, random_state):
-    """Process data"""
+    """Process data."""
     # split dataframe into X and y
     X = df.drop(["target"], axis=1)
     y = df["target"]
@@ -52,7 +52,7 @@ def process_data(df, random_state):
 
 
 def train_model(params, X_train, X_test, y_train, y_test):
-    """Train the model"""
+    """Train the model."""
     # train model
     model = LinearRegression(**params)
     model = model.fit(X_train, y_train)
@@ -62,7 +62,7 @@ def train_model(params, X_train, X_test, y_train, y_test):
 
 
 def parse_args():
-    """Parse arguements"""
+    """Parse arguements."""
     # setup arg parser
     parser = argparse.ArgumentParser()
 

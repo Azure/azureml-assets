@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"Sample Neural Network"
+"""Sample Neural Network."""
 # imports
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,9 +8,10 @@ import torch.nn.functional as F
 
 # define network(s)
 class SimpleMLP(nn.Module):
-    """Define Network"""
+    """Define Network."""
+
     def __init__(self):
-        """Initialize model"""
+        """Initialize model."""
         super(SimpleMLP, self).__init__()
         self.l1 = nn.Linear(4, 16)
         self.l2 = nn.Linear(16, 16)
