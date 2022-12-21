@@ -26,7 +26,7 @@ RUN HOROVOD_WITH_TENSORFLOW=1 \
                 'ipykernel~=6.0' \
                 'debugpy~=1.6.3' \
                 'azureml-core=={{latest-pypi-version}}' \
-                'azureml-defaults=={{latest-pypi-version}}v' \
+                'azureml-defaults=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
                 'azureml-telemetry=={{latest-pypi-version}}'
 
