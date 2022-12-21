@@ -17,7 +17,7 @@ environment:
       version: "3.2"
     Mpi:
       name: OpenMpi
-      version: "3.1.2"
+      version: "4.1.0"
     Purpose:
       HasTrainingSupport: true
       HasInferencingSupport: false
