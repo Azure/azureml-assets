@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 
 # define functions
 def main(args):
-    """This is the main function."""
+    """Run and evaluate model."""
     # enable auto logging
     mlflow.autolog()
 
