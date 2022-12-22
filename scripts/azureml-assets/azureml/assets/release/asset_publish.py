@@ -108,12 +108,10 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
     elif model_config.type == assets.ModelType.MLFLOW:
         can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
         if can_publish_model:
-            model.path = Path(model_dir) / model.name
+            model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
             if not model_config.flavors:
                 # try fetching flavors from MLModel file
-                mlmodel_file_path = (
-                    model.path / MLFlowModelUtils.MLFLOW_MODEL_PATH / MLFlowModelUtils.MLMODEL_FILE_NAME
-                )
+                mlmodel_file_path = model.path / MLFlowModelUtils.MLMODEL_FILE_NAME
                 try:
                     mlmodel = util.load_yaml(file_path=mlmodel_file_path)
                     model.flavors = mlmodel.get("flavors")
@@ -178,7 +176,7 @@ def run_command(
 
     # Check command result
     if results.returncode != 0:
-        logger.log_warning(f"Error creating {asset}")
+        logger.log_warning(f"Error creating {asset.type.value} : {asset.name}")
         failure_list.append(asset)
 
 
@@ -216,6 +214,8 @@ if __name__ == "__main__":
                         help="the version suffix")
     parser.add_argument("-l", "--publish-list", type=Path,
                         help="the path of the publish list file")
+    parser.add_argument("-f", "--failed-list", type=Path,
+                        help="the path of the failed assets list file")
     parser.add_argument(
         "-d", "--debug", type=_str2bool, nargs="?",
         const=True, default=False, help="debug mode",
@@ -230,6 +230,7 @@ if __name__ == "__main__":
     assets_dir = args.assets_directory
     passed_version = args.version_suffix
     publish_list_file = args.publish_list
+    failed_list_file = args.failed_list
     debug_mode = args.debug
     asset_ids = {}
     logger.print("publishing assets")
@@ -289,7 +290,7 @@ if __name__ == "__main__":
                 try:
                     model_config = asset.extra_config_as_object()
                     with TemporaryDirectory() as tempdir:
-                        result = model_prepare(model_config, asset.spec_with_path, tempdir)
+                        result = model_prepare(model_config, asset.spec_with_path, Path(tempdir))
                         if result:
                             # Assemble Command
                             cmd = assemble_command(
@@ -305,8 +306,16 @@ if __name__ == "__main__":
                 logger.log_warning(f"unsupported asset type: {asset.type.value}")
 
     if len(failure_list) > 0:
-        logger.log_warning(
-            f"following assets failed to publish: {failure_list}")
+        failed_assets = defaultdict(list)
+        for asset in failure_list:
+            failed_assets[asset.type.value].append(asset.name)
+
+        for asset_type, asset_names in failed_assets.items():
+            logger.log_warning(f"Failed to register {asset_type}s: {asset_names}")
+        # the following dump process will generate a yaml file for the report
+        # process in the end of the publishing script
+        with open(failed_list_file, "w") as file:
+            yaml.dump(failed_assets, file, default_flow_style=False, sort_keys=False)
 
     if tests_dir:
         logger.print("locating test files")
