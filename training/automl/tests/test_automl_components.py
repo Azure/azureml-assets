@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test AutoML designer components."""
+
 import logging
 import pytest
 from .test_utilities import (
@@ -17,12 +19,15 @@ from azure.ai.ml.entities._load_functions import load_component
 
 logger = logging.getLogger(name=__file__)
 
+AUTOML_NODE = "automl_node"
 COMPONENT_ASSET_DEFAULT_LABEL_TEMPLATE = "azureml://registries/{}/components/{}/labels/default"
 COMPONENT_ASSET_WITH_VERSION_TEMPLATE = "azureml://registries/{}/components/{}/versions/{}"
 
 
 @pytest.mark.unittest
-class TestAutoMLTabularComponent:
+class TestAutoMLComponents:
+    """TestAutoMLComponents."""
+
     @pytest.mark.parametrize(
         "spec_path, payload_path, data_assets",
         [
@@ -157,7 +162,7 @@ class TestAutoMLTabularComponent:
             ),
         ],
     )
-    def test_automl_tabular_components(
+    def test_automl_components(
         self,
         mlclient,
         spec_path,
@@ -169,6 +174,7 @@ class TestAutoMLTabularComponent:
         workspace_id,
         workspace_location,
     ):
+        """Test AutoML designer components."""
         component = load_component(spec_path)
         component_asset_id = COMPONENT_ASSET_DEFAULT_LABEL_TEMPLATE.format(registry_name, component.name)
         logger.info("component_asset_id => " + component_asset_id)
@@ -177,7 +183,7 @@ class TestAutoMLTabularComponent:
         logger.info("registered data assets")
 
         payload = load_json(payload_path)
-        payload = update_payload_module_id(payload, "automl_node", component_asset_id)
+        payload = update_payload_module_id(payload, AUTOML_NODE, component_asset_id)
         payload = update_payload_with_registered_data_assets(
             data_assets,
             payload,

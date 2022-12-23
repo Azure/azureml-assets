@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Utility file."""
+
+from typing import Any, Dict, List, Tuple
 import json
 import logging
 import time
@@ -13,7 +16,8 @@ from azure.ai.ml.operations._run_history_constants import JobStatus, RunHistoryC
 logger = logging.getLogger(name=__file__)
 
 
-def make_request(uri: str, method: str, headers: dict, data: dict):
+def make_request(uri: str, method: str, headers: Dict, data: Dict) -> Tuple[int, Any]:
+    """Make HTTP request. Returns HTTP status code and response body."""
     http = poolmanager.PoolManager(retries=Retry(connect=3))
     if method == "POST":
         body = data
@@ -31,7 +35,8 @@ def make_request(uri: str, method: str, headers: dict, data: dict):
     return status, response_data
 
 
-def load_json(file_path: str):
+def load_json(file_path: str) -> Dict:
+    """Load JSON and returns loaded dictionary."""
     try:
         with open(file_path) as f:
             json_dict = json.load(f)
@@ -42,6 +47,7 @@ def load_json(file_path: str):
 
 
 def validate_successful_run(mlclient: MLClient, run_id: str):
+    """Asserts that job with run_id is successful."""
     run_id = run_id.strip()
     # sleep for 10s
     time.sleep(10)
@@ -52,7 +58,16 @@ def validate_successful_run(mlclient: MLClient, run_id: str):
     assert job.status == JobStatus.COMPLETED
 
 
-def register_data_assets(mlclient, data_assets):
+def register_data_assets(mlclient: MLClient, data_assets: List) -> List:
+    """Register data assets.
+
+    :param mlclient: mlclient object
+    :type mlclient: MLClient
+    :param data_assets: List of data assets to register
+    :type data_assets: List
+    :return: registered list of data assets
+    :rtype: List
+    """
     registered_assets = []
     for asset in data_assets:
         data = Data(
@@ -93,6 +108,7 @@ def _update_payload_with_registered_data_assets(
 
 
 def update_payload_with_registered_data_assets(assets, payload, workspace_id, workspace_location):
+    """Updates payload with registered data asset values."""
     logger.info("update payload with assets")
     for asset in assets:
         if "training_data" in asset.name:
@@ -123,6 +139,7 @@ def update_payload_with_registered_data_assets(assets, payload, workspace_id, wo
 
 
 def update_payload_module_id(payload, node_id, module_id):
+    """Update automl payload with module id."""
     # update in graph
     module_nodes = payload["graph"]["moduleNodes"]
     for node in module_nodes:
