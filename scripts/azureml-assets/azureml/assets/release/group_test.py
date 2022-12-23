@@ -69,12 +69,11 @@ if __name__ == '__main__':
             group_post = tests_dir / data[test_group]['post']
 
     my_env = os.environ.copy()
-    # logger.print(my_env)
     my_env['subscription_id'] = subscription_id
     my_env['resource_group'] = resource_group
     my_env['workspace'] = workspace
-    # if my_env['token']:
-    #     logger.print("token is set")
+    if my_env['token']:
+        logger.print("token is set")
     if args.version_suffix:
         my_env['version_suffix'] = args.version_suffix
     ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)

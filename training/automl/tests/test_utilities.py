@@ -47,7 +47,7 @@ def load_json(file_path: str) -> Dict:
 
 
 def validate_successful_run(mlclient: MLClient, run_id: str):
-    """Asserts that job with run_id is successful."""
+    """Assert that job with run_id is successful."""
     run_id = run_id.strip()
     # sleep for 10s
     time.sleep(10)
@@ -108,7 +108,7 @@ def _update_payload_with_registered_data_assets(
 
 
 def update_payload_with_registered_data_assets(assets, payload, workspace_id, workspace_location):
-    """Updates payload with registered data asset values."""
+    """Update payload with registered data asset values."""
     logger.info("update payload with assets")
     for asset in assets:
         if "training_data" in asset.name:

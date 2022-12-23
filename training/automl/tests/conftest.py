@@ -41,42 +41,43 @@ def _get_env(key: str) -> Optional[str]:
 
 @pytest.fixture
 def version_suffix():
+    """Return version suffix from env."""
     return _get_env("version_suffix")
 
 
 @pytest.fixture
 def subscription_id():
-    """Returns subscription id from env."""
+    """Return subscription id from env."""
     return _get_env("subscription_id")
 
 
 @pytest.fixture
 def resource_group():
-    """Returns resource group from env."""
+    """Return resource group from env."""
     return _get_env("resource_group")
 
 
 @pytest.fixture
 def workspace_name():
-    """Returns workspace name from env."""
+    """Return workspace name from env."""
     return _get_env("workspace")
 
 
 @pytest.fixture
 def resource_group_region():
-    """Returns resource group region from env."""
+    """Return resource group region from env."""
     return _get_env("RESOURCE_GROUP_REGION")
 
 
 @pytest.fixture
 def workspace_location():
-    """Returns workspace location from env."""
+    """Return workspace location from env."""
     return _get_env("WORKSPACE_REGION_TEST") or "centraluseuap"
 
 
 @pytest.fixture
 def workspace_id(subscription_id, resource_group, workspace_name):
-    """Returns workspace GUID for a workspace."""
+    """Return workspace GUID for a workspace."""
     from azure.ai.ml._restclient.v2022_10_01_preview import (
         AzureMachineLearningWorkspaces,
     )
@@ -94,13 +95,13 @@ def workspace_id(subscription_id, resource_group, workspace_name):
 
 @pytest.fixture
 def registry_name():
-    """Returns registry name from env."""
+    """Return registry name from env."""
     return _get_env("REGISTRY_NAME")
 
 
 @pytest.fixture
 def mlclient(subscription_id, resource_group, workspace_name):
-    """Returns mlclient object."""
+    """Return mlclient object."""
     return MLClient(
         credential=DefaultAzureCredential(),
         subscription_id=subscription_id,
