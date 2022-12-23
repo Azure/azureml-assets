@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/AutoMLComponent.json
 name: microsoft_azureml_automl_text_ner_component
 display_name: AutoML Text NER
 description: Component that executes an AutoML Text NER task model training in a pipeline.
-version: 0.0.1
+version: 0.0.2
 type: automl
 task: text_ner
 is_deterministic: false

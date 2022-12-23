@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/AutoMLComponent.json
 name: microsoft_azureml_automl_image_instance_segmentation_component
 display_name: AutoML Image Instance Segmentation
 description: Component that executes an AutoML Image Instance Segmentation task model training in a pipeline.
-version: 0.0.1
+version: 0.0.2
 type: automl
 task: image_instance_segmentation
 is_deterministic: false

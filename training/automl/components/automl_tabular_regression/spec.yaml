@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/AutoMLComponent.json
 name: microsoft_azureml_automl_regression_component
 display_name: AutoML Regression
 description: Component that executes an AutoML Regression task model training in a pipeline.
-version: 0.0.1
+version: 0.0.2
 type: automl
 task: regression
 is_deterministic: false

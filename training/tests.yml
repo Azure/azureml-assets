@@ -10,9 +10,12 @@ automl_components:
   includes:
   - ./automl/tests/
   jobs:
-    automl_classification_component_validation: 
-      pytest_job: ./automl/tests/test_automl_tabular_components.py
+    automl_tabular_component_validation: 
+      pytest_job: ./automl/tests/test_automl_components.py
       assets:
       - ./automl/components/automl_tabular_classification
       - ./automl/components/automl_tabular_forecasting
       - ./automl/components/automl_tabular_regression
+      - ./automl/components/automl_text_classification
+      - ./automl/components/automl_text_classification_multilable
+      - ./automl/components/automl_text_ner

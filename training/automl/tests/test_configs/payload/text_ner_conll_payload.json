@@ -1,0 +1,206 @@
+{
+    "graph": {
+        "datasetNodes": [
+            {
+                "id": "training_data",
+                "amlDataStoreName": "",
+                "relativePath": "",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "assetId": "training_data_asset_id",
+                            "path": "training_data_path",
+                            "type": "MLTable"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "validation_data",
+                "amlDataStoreName": "",
+                "relativePath": "",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "assetId": "validation_data_asset_id",
+                            "path": "validation_data_path",
+                            "type": "MLTable"
+                        }
+                    }
+                }
+            }
+        ],
+        "moduleNodes": [
+            {
+                "id": "automl_node",
+                "moduleId": " module_id",
+                "moduleParameters": [],
+                "useGraphDefaultCompute": false,
+                "useGraphDefaultDatastore": true,
+                "regenerateOutput": false,
+                "comment": "",
+                "name": "automl_text_ner"
+            }
+        ],
+        "subGraphNodes": [],
+        "edges": [
+            {
+                "sourceOutputPort": {
+                    "nodeId": "validation_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "validation_data"
+                }
+            },
+            {
+                "sourceOutputPort": {
+                    "nodeId": "training_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "training_data"
+                }
+            }
+        ],
+        "defaultCompute": {
+            "name": "cpu-cluster",
+            "mlcComputeInfo": {
+                "mlcComputeType": "AmlCompute"
+            }
+        },
+        "defaultDatastore": {
+            "dataStoreName": "workspaceblobstore"
+        }
+    },
+    "flattenedSubGraphs": {},
+    "pipelineRunSettings": [
+        {
+            "valueType": "Literal",
+            "name": "Priority Scope"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Priority Compute cluster"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Continue run on failed optional input",
+            "value": "True"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Timeout seconds"
+        },
+        {
+            "name": "Continue run on step failure",
+            "value": "True",
+            "valueType": "Literal"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Enforce rerun"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Default compute name"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Default datastore name"
+        }
+    ],
+    "moduleNodeRunSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": " module_id",
+            "stepType": "automl",
+            "runSettings": [
+                {
+                    "name": "Target",
+                    "value": "gpu-cluster",
+                    "useGraphDefaultCompute": false,
+                    "valueType": "Literal",
+                    "mlcComputeType": "AmlCompute"
+                },
+                {
+                    "name": "PrimaryMetric",
+                    "value": "Accuracy",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "DatasetLanguage",
+                    "value": "English (eng)",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "SearchSpace",
+                    "value": "[{\"learning_rate\":\"uniform(0.001,0.01)\",\"model_name\":\"bert-base-cased\"}]",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "SamplingAlgorithm",
+                    "value": "Random",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "PolicyType",
+                    "value": "Bandit",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "EvaluationInterval",
+                    "value": "2",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "DelayEvaluation",
+                    "value": "6",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "SlackFactor",
+                    "value": "0.2",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "Timeout",
+                    "value": "1",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "MaxTotalTrials",
+                    "value": "1",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "MaxConcurrentTrials",
+                    "valueType": "Literal"
+                }
+            ]
+        }
+    ],
+    "moduleNodeUIInputSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": " module_id",
+            "moduleInputSettings": [
+                {
+                    "name": "training_data",
+                    "dataDeliveryMode": "Direct"
+                },
+                {
+                    "name": "validation_data",
+                    "dataDeliveryMode": "Direct"
+                }
+            ]
+        }
+    ],
+    "experimentName": "automl_designer_validation",
+    "continueRunOnStepFailure": true,
+    "enforceRerun": false,
+    "computeTarget": "gpu-cluster",
+    "displayName": "text_ner"
+}

@@ -43,6 +43,8 @@ def load_json(file_path: str):
 
 def validate_successful_run(mlclient: MLClient, run_id: str):
     run_id = run_id.strip()
+    # sleep for 10s
+    time.sleep(10)
     job = mlclient.jobs.get(run_id)
     while job.status not in RunHistoryConstants.TERMINAL_STATUSES:
         job = mlclient.jobs.get(run_id)

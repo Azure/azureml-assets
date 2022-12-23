@@ -17,7 +17,7 @@ TEST_YML = "tests.yml"
 
 def run_pytest_job(job: Path, my_env: dict):
     """Run single pytest job."""
-    p = run(f"pytest {job} -n 3 --log-cli-level=info --show-capture=all", env=my_env, shell=True)
+    p = run(f"pytest {job} -n 3 --log-cli-level=info --show-capture=stderr", env=my_env, shell=True)
     return p.returncode
 
 
@@ -51,6 +51,11 @@ if __name__ == '__main__':
     resource_group = args.resource_group
     workspace = args.workspace_name
     coverage_report = args.coverage_report
+
+    # change current dir to test dir
+    cwd = os.getcwd()
+    os.chdir(tests_dir)
+    logger.print(f"pushd: {os.getcwd()}")
 
     # default workspace info
     group_pre = None
@@ -140,6 +145,9 @@ if __name__ == '__main__':
             cover_yaml.extend(covered_assets)
         with open(coverage_report, 'w') as yf:
             yaml.safe_dump(cover_yaml, yf)
+
+    os.chdir(cwd)
+    logger.print(f"popd: {os.getcwd()}")
 
     if failed_jobs:
         logger.log_warning(f"{len(failed_jobs)} jobs failed. {failed_jobs}.")

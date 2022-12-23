@@ -13,14 +13,24 @@ from .test_utilities import load_json, make_request
 
 logger = logging.getLogger(__name__)
 
+PIPELINE_DRAFT_ENDPOINT_MASTER = (
+    "https://master.api.azureml-test.ms/studioservice/apiv2/subscriptions/{}/resourceGroups/{}/workspaces/{}/"
+    + "pipelinedrafts"
+)
 PIPELINE_DRAFT_ENDPOINT = (
     "https://ml.azure.com/api/{}/studioservice/apiv2/subscriptions/{}/resourceGroups/{}/workspaces/{}/pipelinedrafts"
 )
 
-UI_SERVICE_ENDPOINT = (
-    "https://ml.azure.com/api/{}/studioservice/apiv2/subscriptions/{}/resourceGroups/{}/workspaces/{}/pipelinedrafts/" + \
-        "{}/run?nodeCompositionMode=None&asyncCall=true"
+UI_SERVICE_ENDPOINT_MASTER = (
+    "https://master.api.azureml-test.ms/studioservice/apiv2/subscriptions/{}/resourceGroups/{}/workspaces/{}/"
+    + "pipelinedrafts/{}/run?nodeCompositionMode=None&asyncCall=true"
 )
+UI_SERVICE_ENDPOINT = (
+    "https://ml.azure.com/api/{}/studioservice/apiv2/subscriptions/{}/resourceGroups/{}/workspaces/{}/"
+    + "pipelinedrafts/{}/run?nodeCompositionMode=None&asyncCall=true"
+)
+
+PIPELINE_DRAFT_PAYLOAD_PATH = "./automl/tests/test_configs/payload/create_pipeline_draft_payload.json"
 
 
 def get_env(key: str) -> Optional[str]:
@@ -54,12 +64,14 @@ def resource_group_region():
 
 @pytest.fixture
 def workspace_location():
-    return get_env("WORKSPACE_REGION_TEST")
+    return get_env("WORKSPACE_REGION_TEST") or "centraluseuap"
 
 
 @pytest.fixture
 def workspace_id(subscription_id, resource_group, workspace_name):
-    from azure.ai.ml._restclient.v2022_10_01_preview import AzureMachineLearningWorkspaces
+    from azure.ai.ml._restclient.v2022_10_01_preview import (
+        AzureMachineLearningWorkspaces,
+    )
 
     serviceClient = AzureMachineLearningWorkspaces(
         credential=DefaultAzureCredential(), subscription_id=subscription_id
@@ -89,6 +101,8 @@ def mlclient(subscription_id, resource_group, workspace_name):
 
 @pytest.fixture
 def pipeline_draft_endpoint(subscription_id, resource_group, workspace_name, workspace_location):
+    if workspace_location == "centraluseuap":
+        return PIPELINE_DRAFT_ENDPOINT_MASTER.format(subscription_id, resource_group, workspace_name)
     return PIPELINE_DRAFT_ENDPOINT.format(workspace_location, subscription_id, resource_group, workspace_name)
 
 
@@ -100,6 +114,8 @@ def ui_service_endpoint(
     workspace_location,
     pipeline_draft_id,
 ):
+    if workspace_location == "centraluseuap":
+        return UI_SERVICE_ENDPOINT_MASTER.format(subscription_id, resource_group, workspace_name, pipeline_draft_id)
     return UI_SERVICE_ENDPOINT.format(
         workspace_location,
         subscription_id,
@@ -120,14 +136,13 @@ def http_headers(auth_token):
         "Authorization": f"Bearer {auth_token}",
         "content-type": "application/json",
     }
-    logger.info(headers)
     return headers
 
 
 @pytest.fixture
 def pipeline_draft_id(http_headers, pipeline_draft_endpoint) -> str:
-    pipeline_draft_payload = "training/automl/tests/test_configs/payload/create_pipeline_draft_payload.json"
-    post_data = load_json(pipeline_draft_payload)
+    post_data = load_json(PIPELINE_DRAFT_PAYLOAD_PATH)
     status, resp = make_request(pipeline_draft_endpoint, "POST", http_headers, post_data)
+    logger.info("pipeline_draft_id : {resp}")
     assert status == 200
     return resp
