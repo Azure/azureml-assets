@@ -117,7 +117,7 @@ jobs:
       id-token: write
     
     env:
-      package_versions_file: scripts/test/requirements.txt
+      package_versions_file: ${{ env.scripts_test_dir }}/requirements.txt
 
     steps:
       - name: Clone branch
