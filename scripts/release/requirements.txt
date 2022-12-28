@@ -1,2 +1,2 @@
-azureml-assets
+#azureml-assets
 azure-ai-ml>=1.2.0

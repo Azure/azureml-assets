@@ -1,2 +1,2 @@
-azureml-assets
+#azureml-assets
 pytest>=7.1.1
