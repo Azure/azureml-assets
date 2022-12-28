@@ -8,8 +8,6 @@ import pytest
 import subprocess
 from pathlib import Path
 
-import azureml.assets as assets
-
 RESOURCES_DIR = Path("resources/pytest")
 SCRIPTS_DIR = Path("../scripts/test")
 TEST_ASSETS_SCRIPT = SCRIPTS_DIR / "test_assets.py"
