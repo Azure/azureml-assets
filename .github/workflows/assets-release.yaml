@@ -25,7 +25,9 @@ env:
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
   scripts_environment_dir: scripts/azureml-assets/azureml/assets/environment
+  scripts_release_dir: scripts/release
   scripts_setup_dir: scripts/setup
+  scripts_dir: scripts
   changed_assets_artifact: changed-assets
   releasable_assets_artifact: releasable-assets
   asset_config_filename: asset.yaml
@@ -214,17 +216,14 @@ jobs:
         if: steps.download-artifact.outputs.download-path
         run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
   
-      - name: Convert test files and scripts
+      - name: Copy test files and scripts
         run: |
-          python -u $main_dir/$scripts_assets_dir/release/test_file_convert.py -i "${{ env.default_test_dirs }}" -r $release_dir -w $main_dir
+          python -u $main_dir/$scripts_release_dir/test_file_convert.py -i "${{ env.default_test_dirs }}" -r $release_dir -w $main_dir
 
-      - name: Copy e2e test scripts
+      - name: Copy scripts
         run: | 
-          if [ -d $release_dir/scripts ]; then 
-            rm -Rf $release_dir/scripts 
-          fi
-          mkdir -p $release_dir/scripts
-          cp -r $main_dir/$scripts_azureml_assets_dir $release_dir/scripts
+          rm -Rf $release_dir/$scripts_dir
+          cp -r $main_dir/$scripts_dir $release_dir/$scripts_dir
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4

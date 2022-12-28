@@ -1,2 +1,0 @@
-flake8==4.0.1
-pydocstyle==6.1.1
