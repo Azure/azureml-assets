@@ -9,7 +9,6 @@ on:
   workflow_dispatch:
 
 env:
-  scripts_dir: scripts
   scripts_validation_dir: scripts/validation
 
 permissions:
@@ -46,7 +45,7 @@ jobs:
           python-version: '>=3.8'
       
       - name: Install dependencies
-        run: pip install -r $scripts_dir/script-check-requirements.txt
+        run: pip install -r $scripts_validation_dir/requirements.txt
 
       - name: Check for copyright notice
         run: python $scripts_validation_dir/copyright_validation.py -i .

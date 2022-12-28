@@ -29,6 +29,7 @@ env:
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
   scripts_setup_dir: scripts/setup
+  scripts_test_dir: scripts/test
   scripts_dir: scripts
   asset_config_filename: asset.yaml
   pytest_reports: pytest-reports
@@ -82,7 +83,7 @@ jobs:
 
       - name: Create test matrix for changed assets
         id: create-test-matrix
-        run: python -u $scripts_assets_dir/create_asset_test_matrix.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}"
+        run: python -u $scripts_test_dir/create_asset_test_matrix.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}"
 
       - name: Login to Azure and create resources
         if: steps.create-test-matrix.outputs.test_count > 0
@@ -116,7 +117,7 @@ jobs:
       id-token: write
     
     env:
-      package_versions_file: scripts/test-requirements.txt
+      package_versions_file: scripts/test/requirements.txt
 
     steps:
       - name: Clone branch

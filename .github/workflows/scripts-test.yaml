@@ -44,9 +44,9 @@ jobs:
       pull-requests: write
 
     env:
-      scripts_dir: scripts
       scripts_azureml_assets_dir: scripts/azureml-assets
       scripts_setup_dir: scripts/setup
+      scripts_test_dir: scripts/test
       test_dir: test
       resources_dir: test/resources
       pytest_reports: pytest-reports
@@ -63,7 +63,7 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -e $scripts_azureml_assets_dir -r $scripts_dir/test-requirements.txt
+        run: pip install -e $scripts_azureml_assets_dir -r $scripts_test_dir/requirements.txt
       
       - name: Log in to Azure and create resources
         uses: ./.github/actions/create-azure-resources

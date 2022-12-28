@@ -10,7 +10,7 @@ import pytest
 import azureml.assets as assets
 
 RESOURCES_DIR = Path("resources/pytest")
-TEST_REQUIREMENTS_FILE = Path("../scripts/test-requirements.txt")
+TEST_REQUIREMENTS_FILE = Path("../scripts/test/requirements.txt")
 
 
 @pytest.mark.parametrize(
