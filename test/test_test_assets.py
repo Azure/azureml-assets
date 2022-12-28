@@ -4,13 +4,16 @@
 """Test azureml.assets.test_assets() function."""
 
 import os
-from pathlib import Path
 import pytest
+import subprocess
+from pathlib import Path
 
 import azureml.assets as assets
 
 RESOURCES_DIR = Path("resources/pytest")
-TEST_REQUIREMENTS_FILE = Path("../scripts/test/requirements.txt")
+SCRIPTS_DIR = Path("../scripts/test")
+TEST_ASSETS_SCRIPT = SCRIPTS_DIR / "test_assets.py"
+TEST_REQUIREMENTS_FILE = SCRIPTS_DIR / "requirements.txt"
 
 
 @pytest.mark.parametrize(
@@ -25,12 +28,14 @@ def test_test_assets(test_subdir: str, expected: bool):
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
 
-    assert assets.test_assets(
-        this_dir / RESOURCES_DIR / test_subdir,
-        assets.DEFAULT_ASSET_FILENAME,
-        this_dir / TEST_REQUIREMENTS_FILE,
-        []) == expected
-
     assert subscription_id is not None
     assert resource_group is not None
     assert workspace_name is not None
+
+    completed_process = subprocess.run([
+        "python",
+        this_dir / TEST_ASSETS_SCRIPT,
+        "-i", this_dir / RESOURCES_DIR / test_subdir,
+        "-p", this_dir / TEST_REQUIREMENTS_FILE,
+    ])
+    assert (completed_process.returncode == 0) == expected
