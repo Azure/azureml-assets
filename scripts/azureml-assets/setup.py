@@ -16,5 +16,5 @@ setup(
       "pyyaml>=5",
       "pip>=21",
    ],
-   python_requires=">=3.6,<4.0",
+   python_requires=">=3.8,<4.0",
 )
