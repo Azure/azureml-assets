@@ -17,7 +17,6 @@ from .config import (
     PublishVisibility,
     Spec,
 )
-from .test_assets import test_assets
 from .update_assets import (
     get_release_tag_name,
     pin_env_files,

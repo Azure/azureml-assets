@@ -16,11 +16,11 @@ from tempfile import TemporaryDirectory
 from collections import defaultdict
 from typing import List
 import azureml.assets as assets
-from azureml.assets.release.model_publish_utils.mlflow_utils import MLFlowModelUtils
+from azureml.assets.model.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
 import yaml
 from azureml.assets.config import PathType
-from azureml.assets.release.model_publish_utils import ModelDownloadUtils
+from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.util import logger
 from azure.ai.ml.entities._load_functions import load_model
 
