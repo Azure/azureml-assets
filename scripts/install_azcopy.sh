@@ -2,7 +2,7 @@
 cwd="$(pwd)"
 echo "azcopy installation started ...."
 echo "Downloading azcopy to file azcopy.tar ...."
-wget https://aka.ms/downloadazcopy-v10-linux -O azcopy.tar
+wget https://aka.ms/downloadazcopy-v10-linux -O azcopy.tar --no-verbose
 tar -xvf azcopy.tar
 mkdir ./bin # store azcopy executable here
 echo "copying azcopy bin file to ./bin/"
