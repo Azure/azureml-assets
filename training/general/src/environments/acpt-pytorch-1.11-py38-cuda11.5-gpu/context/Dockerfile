@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu115-py38-torch1110:{{latest-image-tag:monthly\.\d{6}}}
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu115-py38-torch1110:{{latest-image-tag:biweekly\.\d{6}\.\d{1}}}
 
 # Install pip dependencies
 RUN pip install 'ipykernel~=6.0' \
@@ -9,15 +9,17 @@ RUN pip install 'ipykernel~=6.0' \
 		'azure-ml-component=={{latest-pypi-version}}' \
 		'azureml-mlflow=={{latest-pypi-version}}' \
 		'azureml-telemetry=={{latest-pypi-version}}' \
-                'torch-tb-profiler~=0.4.0' \
-				'py-spy==0.3.12'
+        'torch-tb-profiler~=0.4.0' \
+		'py-spy==0.3.12' \
+        'debugpy~=1.6.3'
 
 RUN pip install \
-        azure-ai-ml==0.1.0b5 \
+        azure-ai-ml==1.2.0 \
         azureml-inference-server-http~=0.7.0 \
         inference-schema~=1.4.2.1 \
-        azureml-contrib-services~=1.41.0 \
-        MarkupSafe==2.0.1
+        MarkupSafe==2.0.1 \
+        regex \
+	    pybind11
 
 # Inference requirements
 COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20220607.v1 /artifacts /var/
@@ -29,3 +31,5 @@ RUN /var/requirements/install_system_requirements.sh && \
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
+RUN apt-get update
+RUN apt-get install -y openssh-server openssh-client
