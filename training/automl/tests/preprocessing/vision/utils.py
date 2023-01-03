@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-""""""
+"""Vision preprocessing utils"""
 
 import os
 import urllib
@@ -22,6 +22,9 @@ def _download_and_register_image_data(mlclient: MLClient, download_url: str, tar
         zip.extractall(path=target_directory)
         print("done")
     # Upload data and create a data asset URI folder
+    import time
+
+    time.sleep(120)
     print("Uploading data to blob storage")
     my_data = Data(
         path=os.path.join(target_directory, asset_name),

@@ -1,5 +1,5 @@
 paths:
-  - file: ./train_data.csv
+  - file: https://automlsamplenotebookdata.blob.core.windows.net/automl-sample-nlp-data/arxiv_abstract_train.csv
 transformations:
   - read_delimited:
       delimiter: ','

@@ -66,5 +66,5 @@ def prepare_data(mlclient: MLClient):
     """
 
     with TemporaryDirectory() as tempdir:
-        local_path, uri_folder_path = _download_and_register_image_data(mlclient, _CLASSIFICATION_FRIDGE_ITEMS_URL, tempdir, "multilabelFridgeObjects")
+        local_path, uri_folder_path = _download_and_register_image_data(mlclient, _CLASSIFICATION_FRIDGE_ITEMS_URL, tempdir, "fridgeObjects")
         _create_jsonl_files(uri_folder_path, local_path)

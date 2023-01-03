@@ -53,11 +53,15 @@ if __name__ == '__main__':
     for area in tests_dir.iterdir():
         print(f"now processing area: {area.name}")
         final_report[area.name] = []
-        with open(area / "tests.yml") as fp:
+        tests_yaml_path: Path = area / "tests.yml"
+        if not tests_yaml_path.exists():
+            print(f"Could not locate tests.yaml in {area}")
+            continue
+        with open(tests_yaml_path) as fp:
             data = yaml.load(fp, Loader=yaml.FullLoader)
             for test_group in data:
                 print(f"now processing test group: {test_group}")
-                cmd = ["python3", "-u", "group_test.py", "-i", area, "-g", test_group, "-s", subscription_id,
+                cmd = ["python", "-u", "group_test.py", "-i", area, "-g", test_group, "-s", subscription_id,
                        "-r", resource_group, "-w", workspace]
                 if coverage_report:
                     cmd.extend(["-c", coverage_report])
