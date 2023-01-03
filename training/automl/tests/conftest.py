@@ -112,7 +112,7 @@ def mlclient(subscription_id, resource_group, workspace_name):
 
 @pytest.fixture
 def auth_token() -> str:
-    """Loads token from env."""
+    """Load token from env."""
     return _get_env("token")
 
 
@@ -152,7 +152,7 @@ def ui_service_endpoint(
     workspace_location,
     pipeline_draft_id,
 ):
-    """Creates and return UI service endpoint."""
+    """Create and return UI service endpoint."""
     if workspace_location == "centraluseuap":
         return UI_SERVICE_ENDPOINT_MASTER.format(subscription_id, resource_group, workspace_name, pipeline_draft_id)
     return UI_SERVICE_ENDPOINT.format(
