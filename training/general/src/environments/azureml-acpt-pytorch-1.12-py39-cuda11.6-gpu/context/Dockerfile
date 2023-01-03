@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu116-py39-torch1121:{{latest-image-tag:monthly\.\d{6}}}
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu116-py39-torch1121:{{latest-image-tag:biweekly\.\d{6}\.\d{1}}}
 
 # Install pip dependencies
 RUN pip install 'ipykernel~=6.0' \
@@ -13,7 +13,7 @@ RUN pip install 'ipykernel~=6.0' \
 				'py-spy==0.3.12' \
 		        'debugpy~=1.6.3'
 RUN pip install \
-        azure-ai-ml==0.1.0b5 \
+        azure-ai-ml==1.2.0 \
         MarkupSafe==2.1.1 \
 	    regex \
 	    pybind11
