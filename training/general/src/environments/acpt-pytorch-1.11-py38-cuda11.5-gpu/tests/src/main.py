@@ -3,7 +3,6 @@
 
 """Sample training."""
 # imports
-# flake8: noqa
 import mlflow
 import argparse
 
