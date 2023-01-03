@@ -16,11 +16,11 @@ from tempfile import TemporaryDirectory
 from collections import defaultdict
 from typing import List
 import azureml.assets as assets
-from azureml.assets.release.model_publish_utils.mlflow_utils import MLFlowModelUtils
+from azureml.assets.model.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
 import yaml
 from azureml.assets.config import PathType
-from azureml.assets.release.model_publish_utils import ModelDownloadUtils
+from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.util import logger
 from azure.ai.ml.entities._load_functions import load_model
 
@@ -176,8 +176,8 @@ def run_command(
 
     # Check command result
     if results.returncode != 0:
-        logger.log_warning(f"Error creating {asset}")
-        failure_list.append(asset.name)
+        logger.log_warning(f"Error creating {asset.type.value} : {asset.name}")
+        failure_list.append(asset)
 
 
 def _str2bool(v: str) -> bool:
@@ -214,6 +214,8 @@ if __name__ == "__main__":
                         help="the version suffix")
     parser.add_argument("-l", "--publish-list", type=Path,
                         help="the path of the publish list file")
+    parser.add_argument("-f", "--failed-list", type=Path,
+                        help="the path of the failed assets list file")
     parser.add_argument(
         "-d", "--debug", type=_str2bool, nargs="?",
         const=True, default=False, help="debug mode",
@@ -228,6 +230,7 @@ if __name__ == "__main__":
     assets_dir = args.assets_directory
     passed_version = args.version_suffix
     publish_list_file = args.publish_list
+    failed_list_file = args.failed_list
     debug_mode = args.debug
     asset_ids = {}
     logger.print("publishing assets")
@@ -297,14 +300,22 @@ if __name__ == "__main__":
                             run_command(cmd, failure_list, debug_mode)
                 except Exception as e:
                     logger.log_error(f"Exception in loading model config: {str(e)}")
-                    failure_list.append(asset.name)
+                    failure_list.append(asset)
 
             else:
                 logger.log_warning(f"unsupported asset type: {asset.type.value}")
 
     if len(failure_list) > 0:
-        logger.log_warning(
-            f"following assets failed to publish: {failure_list}")
+        failed_assets = defaultdict(list)
+        for asset in failure_list:
+            failed_assets[asset.type.value].append(asset.name)
+
+        for asset_type, asset_names in failed_assets.items():
+            logger.log_warning(f"Failed to register {asset_type}s: {asset_names}")
+        # the following dump process will generate a yaml file for the report
+        # process in the end of the publishing script
+        with open(failed_list_file, "w") as file:
+            yaml.dump(failed_assets, file, default_flow_style=False, sort_keys=False)
 
     if tests_dir:
         logger.print("locating test files")
