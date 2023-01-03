@@ -9,12 +9,12 @@ RUN pip install 'ipykernel~=6.0' \
 		'azure-ml-component=={{latest-pypi-version}}' \
 		'azureml-mlflow=={{latest-pypi-version}}' \
 		'azureml-telemetry=={{latest-pypi-version}}' \
+		azure-ai-ml=={{latest-pypi-version}}' \
         'torch-tb-profiler~=0.4.0' \
 		'py-spy==0.3.12' \
         'debugpy~=1.6.3'
 
 RUN pip install \
-        azure-ai-ml==1.2.0 \
         azureml-inference-server-http~=0.7.0 \
         inference-schema~=1.4.2.1 \
         MarkupSafe==2.0.1 \
