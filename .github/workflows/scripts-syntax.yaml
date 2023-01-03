@@ -32,7 +32,7 @@ jobs:
       
       - name: Get changed Python scripts
         id: changed-scripts
-        uses: tj-actions/changed-files@v24
+        uses: tj-actions/changed-files@v35
         with:
           files_separator: ','
           separator: ','
