@@ -167,13 +167,19 @@ class TestAutoMLComponents:
                 [
                     {
                         "name": "image_classification_training_data",
-                        "path": "./automl/tests/test_configs/assets/image-classification-fridge-items/training-mltable-folder",
+                        "path": (
+                            "./automl/tests/test_configs/assets/image-classification-fridge-items/"
+                            + "training-mltable-folder"
+                        ),
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
                     {
                         "name": "image_classification_validation_data",
-                        "path": "./automl/tests/test_configs/assets/image-classification-fridge-items/validation-mltable-folder",
+                        "path": (
+                            "./automl/tests/test_configs/assets/image-classification-fridge-items/"
+                            + "validation-mltable-folder"
+                        ),
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
@@ -186,13 +192,19 @@ class TestAutoMLComponents:
                 [
                     {
                         "name": "image_classification_multilabel_training_data",
-                        "path": "./automl/tests/test_configs/assets/image-classification-multilabel-fridge-items/training-mltable-folder",
+                        "path": (
+                            "./automl/tests/test_configs/assets/image-classification-multilabel-fridge-items"
+                            + "/training-mltable-folder"
+                        ),
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
                     {
                         "name": "image_classification_multilabel_validation_data",
-                        "path": "./automl/tests/test_configs/assets/image-classification-multilabel-fridge-items/validation-mltable-folder",
+                        "path": (
+                            "./automl/tests/test_configs/assets/image-classification-multilabel-fridge-items/"
+                            + "validation-mltable-folder"
+                        ),
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
@@ -205,13 +217,19 @@ class TestAutoMLComponents:
                 [
                     {
                         "name": "image_object_detection_training_data",
-                        "path": "./automl/tests/test_configs/assets/image-object-detection-fridge-items/training-mltable-folder",
+                        "path": (
+                            "./automl/tests/test_configs/assets/image-object-detection-fridge-items/"
+                            + "training-mltable-folder"
+                        ),
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
                     {
                         "name": "image_object_detection_validation_data",
-                        "path": "./automl/tests/test_configs/assets/image-object-detection-fridge-items/validation-mltable-folder",
+                        "path": (
+                            "./automl/tests/test_configs/assets/image-object-detection-fridge-items/"
+                            + "validation-mltable-folder"
+                        ),
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
@@ -224,13 +242,19 @@ class TestAutoMLComponents:
                 [
                     {
                         "name": "image_instance_segmentation_training_data",
-                        "path": "./automl/tests/test_configs/assets/image-instance-segmentation-fridge-items/training-mltable-folder",
+                        "path": (
+                            "./automl/tests/test_configs/assets/image-instance-segmentation-fridge-items/"
+                            + "training-mltable-folder"
+                        ),
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
                     {
                         "name": "image_instance_segmentation_validation_data",
-                        "path": "./automl/tests/test_configs/assets/image-instance-segmentation-fridge-items/validation-mltable-folder",
+                        "path": (
+                            "./automl/tests/test_configs/assets/image-instance-segmentation-fridge-items/"
+                            + "validation-mltable-folder"
+                        ),
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
@@ -253,7 +277,7 @@ class TestAutoMLComponents:
         """Test AutoML designer components."""
         component = load_component(spec_path)
         component_asset_id = COMPONENT_ASSET_DEFAULT_LABEL_TEMPLATE.format(registry_name, component.name)
-        logger.info("component_asset_id => " + component_asset_id)
+        logger.info(f"component_asset_id => {component_asset_id}")
 
         data_assets = register_data_assets(mlclient, data_assets)
         logger.info("registered data assets")
@@ -271,5 +295,5 @@ class TestAutoMLComponents:
             uri=ui_service_endpoint, method="POST", headers=http_headers, data=payload
         )
         assert status == 200
-        logger.info("pipeline_run_id : " + str(pipeline_run_id))
+        logger.info(f"pipeline_run_id : {pipeline_run_id}")
         validate_successful_run(mlclient, pipeline_run_id)

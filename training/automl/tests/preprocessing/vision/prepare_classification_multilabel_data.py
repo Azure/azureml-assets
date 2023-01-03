@@ -6,21 +6,15 @@
 
 import json
 import os
-import xml.etree.ElementTree as ET
 from azure.ai.ml import MLClient
 from tempfile import TemporaryDirectory
 from vision.utils import _download_and_register_image_data
 
 
-
-_DATA_DIR = os.path.join(os.getcwd(), "automl/tests/test_configs/assets/image-classification-multilabel-fridge-items")
-_CLASSIFICATION_MULTILABEL_FRIDGE_ITEMS_URL = "https://cvbp-secondary.z19.web.core.windows.net/datasets/image_classification/multilabelFridgeObjects.zip"
-
-
-def _create_jsonl_files(uri_folder_data_path, src_images):
+def _create_jsonl_files(data_dir, uri_folder_data_path, src_images):
     # We'll copy each JSONL file within its related MLTable folder
-    training_mltable_path = os.path.join(_DATA_DIR, "./training-mltable-folder/")
-    validation_mltable_path = os.path.join(_DATA_DIR, "./validation-mltable-folder/")
+    training_mltable_path = os.path.join(data_dir, "./training-mltable-folder/")
+    validation_mltable_path = os.path.join(data_dir, "./validation-mltable-folder/")
 
     train_validation_ratio = 5
 
@@ -70,6 +64,12 @@ def prepare_data(mlclient: MLClient):
     :type mlclient: MLClient
     """
 
+    data_dir = os.path.join(os.getcwd(), "automl/tests/test_configs/assets/image-classification-multilabel-fridge-items")
+    classification_multilabel_fridge_items_url = (
+        "https://cvbp-secondary.z19.web.core.windows.net/datasets/image_classification/multilabelFridgeObjects.zip"
+    )
+
     with TemporaryDirectory() as tempdir:
-        local_path, uri_folder_path = _download_and_register_image_data(mlclient, _CLASSIFICATION_MULTILABEL_FRIDGE_ITEMS_URL, tempdir, "multilabelFridgeObjects")
-        _create_jsonl_files(uri_folder_path, local_path)
+        local_path, uri_folder_path = _download_and_register_image_data(
+            mlclient, classification_multilabel_fridge_items_url, tempdir, "multilabelFridgeObjects")
+        _create_jsonl_files(data_dir, uri_folder_path, local_path)

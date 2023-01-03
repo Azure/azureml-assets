@@ -9,11 +9,7 @@ from tempfile import TemporaryDirectory
 from vision.utils import _download_and_register_image_data
 
 
-_DATA_DIR = os.path.join(os.getcwd(), "automl/tests/test_configs/assets/image-instance-segmentation-fridge-items")
-_INSTANCE_SEGMENTATION_FRIDGE_ITEMS_URL = "https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjectsMask.zip"
-
-
-def _create_jsonl_files(uri_folder_data_path, src_images):
+def _create_jsonl_files(data_dir, uri_folder_data_path, src_images):
     from jsonl_converter import convert_mask_in_VOC_to_jsonl
 
 
@@ -27,6 +23,12 @@ def prepare_data(mlclient: MLClient):
     :type mlclient: MLClient
     """
 
+    data_dir = os.path.join(os.getcwd(), "automl/tests/test_configs/assets/image-instance-segmentation-fridge-items")
+    instance_segmentation_fridge_items_url = (
+        "https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjectsMask.zip"
+    )
+
     with TemporaryDirectory() as tempdir:
-        local_path, uri_folder_path = _download_and_register_image_data(mlclient, _INSTANCE_SEGMENTATION_FRIDGE_ITEMS_URL, tempdir, "odFridgeObjectsMask")
-        _create_jsonl_files(uri_folder_path, local_path)
+        local_path, uri_folder_path = _download_and_register_image_data(
+            mlclient, instance_segmentation_fridge_items_url, tempdir, "odFridgeObjectsMask")
+        _create_jsonl_files(data_dir, uri_folder_path, local_path)
