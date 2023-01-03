@@ -1,0 +1,28 @@
+image:
+  name: azureml/curated/minimal-ubuntu20.04-py38-cuda11.6.2-gpu-inference
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda_dependencies.yaml
+  publish:
+    location: mcr
+    visibility: public
+environment:
+  metadata:
+    Cuda:
+      CudaVersion: "11.6.2"
+    MachineLearningFramework:
+      name: minimal-gpu
+      version: "0.1"
+    Purpose:
+      HasTrainingSupport: false
+      HasInferencingSupport: true
+    Runtime:
+      name: Python
+      version: "3.8.13"
+    Os:
+      name: Ubuntu
+      version: "20.04"
