@@ -14,6 +14,10 @@ automl_components:
       pre: ./automl/tests/preprocessing/automl_preprocessing.py
       pytest_job: ./automl/tests/test_automl_components.py
       assets:
+      - ./automl/components/automl_image_classification
+      - ./automl/components/automl_image_classification_multilabel
+      - ./automl/components/automl_image_instance_segmentation
+      - ./automl/components/automl_image_object_detection
       - ./automl/components/automl_tabular_classification
       - ./automl/components/automl_tabular_forecasting
       - ./automl/components/automl_tabular_regression
