@@ -21,7 +21,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     holidays=0.10.3 \
     setuptools-git \
     'psutil>5.0.0,<6.0.0' \
-    -c conda-forge -c pytorch -c anaconda
+    -c conda-forge -c anaconda
 
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
