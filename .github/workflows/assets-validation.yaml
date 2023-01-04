@@ -22,7 +22,7 @@ env:
   default_asset_dirs: .,!test,!scripts
   default_test_dirs: .,!test,!scripts,!.git,!.github
   scripts_azureml_assets_dir: scripts/azureml-assets
-  scripts_assets_dir: scripts/azureml-assets/azureml/assets
+  scripts_assets_dir: scripts
   asset_config_filename: asset.yaml
 
 defaults:
