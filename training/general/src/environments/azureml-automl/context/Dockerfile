@@ -8,7 +8,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     pip=20.2.4 \
     numpy~=1.21.6 \
     py-cpuinfo=5.0.0 \
-    click<8.1.0 \
+    'click<8.1.0' \
     pystan=2.19.1.1 \
     boto3=1.15.18 \
     botocore=1.18.18 \
@@ -20,7 +20,7 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     fbprophet=0.7.1 \
     holidays=0.10.3 \
     setuptools-git \
-    psutil>5.0.0,<6.0.0 \
+    'psutil>5.0.0,<6.0.0' \
     -c conda-forge -c pytorch -c anaconda
 
 # Prepend path to AzureML conda environment

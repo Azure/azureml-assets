@@ -27,7 +27,7 @@ def test_azureml_automl():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "automl-non-prod"
+    env_name = "AutoML-Non-Prod"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
@@ -55,7 +55,7 @@ def test_azureml_automl():
     classification_job.set_limits(
         timeout_minutes=60,
         trial_timeout_minutes=20,
-        max_trials=2
+        max_trials=4
     )
 
     returned_job = ml_client.create_or_update(classification_job)
