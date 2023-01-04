@@ -39,7 +39,6 @@ def run_pytest_jobs(pytest_jobs: dict, my_env: dict):
 @contextmanager
 def set_directory(path: Path):
     """Context manager to change directory to `path` and revert back to origin post performing a task."""
-
     origin = Path().absolute()
     try:
         os.chdir(path)
