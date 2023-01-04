@@ -1,3 +1,9 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""AutoML Preprocessing"""
+
+import logging
 import os
 
 from azure.ai.ml import MLClient
@@ -9,6 +15,8 @@ from vision import (
     prepare_object_detection_data,
 )
 
+
+logger = logging.Logger(__name__)
 
 if __name__ == "__main__":
     # preprocessing job list
@@ -26,7 +34,7 @@ if __name__ == "__main__":
         workspace_name=os.getenv("workspace"),
     )
 
-    print("Running automl data preprocessing ...")
+    logger.info("Running automl data preprocessing ...")
     for job in preprocessing_jobs:
         job(mlclient=mlclient)
-    print("Completed AutoML preprocessing ...")
+    logger.info("Completed AutoML preprocessing ...")

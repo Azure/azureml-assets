@@ -5,10 +5,14 @@
 """Image Classification Multilabel preprocessing."""
 
 import json
+import logging
 import os
 from azure.ai.ml import MLClient
 from tempfile import TemporaryDirectory
 from vision.utils import _download_and_register_image_data
+
+
+logger = logging.Logger(__name__)
 
 
 def _create_jsonl_files(data_dir, uri_folder_data_path, src_images):
@@ -20,9 +24,7 @@ def _create_jsonl_files(data_dir, uri_folder_data_path, src_images):
 
     # Path to the training and validation files
     train_annotations_file = os.path.join(training_mltable_path, "train_annotations.jsonl")
-    validation_annotations_file = os.path.join(
-        validation_mltable_path, "validation_annotations.jsonl"
-    )
+    validation_annotations_file = os.path.join(validation_mltable_path, "validation_annotations.jsonl")
 
     # Baseline of json line dictionary
     json_line_sample = {
@@ -43,7 +45,7 @@ def _create_jsonl_files(data_dir, uri_folder_data_path, src_images):
                         continue
                     line_split = line.strip().split(",")
                     if len(line_split) != 2:
-                        print("Skipping the invalid line: {}".format(line))
+                        logger.info("Skipping the invalid line: {}".format(line))
                         continue
                     json_line = dict(json_line_sample)
                     json_line["image_url"] += f"images/{line_split[0]}"
@@ -64,12 +66,15 @@ def prepare_data(mlclient: MLClient):
     :type mlclient: MLClient
     """
 
-    data_dir = os.path.join(os.getcwd(), "automl/tests/test_configs/assets/image-classification-multilabel-fridge-items")
+    data_dir = os.path.join(
+        os.getcwd(), "automl/tests/test_configs/assets/image-classification-multilabel-fridge-items"
+    )
     classification_multilabel_fridge_items_url = (
         "https://cvbp-secondary.z19.web.core.windows.net/datasets/image_classification/multilabelFridgeObjects.zip"
     )
 
     with TemporaryDirectory() as tempdir:
         local_path, uri_folder_path = _download_and_register_image_data(
-            mlclient, classification_multilabel_fridge_items_url, tempdir, "multilabelFridgeObjects")
+            mlclient, classification_multilabel_fridge_items_url, tempdir, "multilabelFridgeObjects"
+        )
         _create_jsonl_files(data_dir, uri_folder_path, local_path)

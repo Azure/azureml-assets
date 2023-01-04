@@ -183,7 +183,7 @@ class TestAutoMLComponents:
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
-                ]
+                ],
             ),
             # image classification multilabel
             (
@@ -208,7 +208,7 @@ class TestAutoMLComponents:
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
-                ]
+                ],
             ),
             # image object detection
             (
@@ -233,7 +233,7 @@ class TestAutoMLComponents:
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
-                ]
+                ],
             ),
             # image instance segmentation
             (
@@ -258,7 +258,7 @@ class TestAutoMLComponents:
                         "type": AssetTypes.MLTABLE,
                         "version": "1",
                     },
-                ]
+                ],
             ),
         ],
     )

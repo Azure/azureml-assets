@@ -4,11 +4,15 @@
 """Image Object Detection preprocessing."""
 
 import json
+import logging
 import os
 import xml.etree.ElementTree as ET
 from azure.ai.ml import MLClient
 from tempfile import TemporaryDirectory
 from vision.utils import _download_and_register_image_data
+
+
+logger = logging.Logger(__name__)
 
 
 def _create_jsonl_files(data_dir, uri_folder_data_path, src_images):
@@ -19,12 +23,8 @@ def _create_jsonl_files(data_dir, uri_folder_data_path, src_images):
     train_validation_ratio = 5
 
     # Path to the training and validation files
-    train_annotations_file = os.path.join(
-        training_mltable_path, "train_annotations.jsonl"
-    )
-    validation_annotations_file = os.path.join(
-        validation_mltable_path, "validation_annotations.jsonl"
-    )
+    train_annotations_file = os.path.join(training_mltable_path, "train_annotations.jsonl")
+    validation_annotations_file = os.path.join(validation_mltable_path, "validation_annotations.jsonl")
 
     # Baseline of json line dictionary
     json_line_sample = {
@@ -41,11 +41,9 @@ def _create_jsonl_files(data_dir, uri_folder_data_path, src_images):
         with open(validation_annotations_file, "w") as validation_f:
             for i, filename in enumerate(os.listdir(annotations_folder)):
                 if filename.endswith(".xml"):
-                    print("Parsing " + os.path.join(src_images, filename))
+                    logger.info("Parsing " + os.path.join(src_images, filename))
 
-                    root = ET.parse(
-                        os.path.join(annotations_folder, filename)
-                    ).getroot()
+                    root = ET.parse(os.path.join(annotations_folder, filename)).getroot()
 
                     width = int(root.find("size/width").text)
                     height = int(root.find("size/height").text)
@@ -72,9 +70,7 @@ def _create_jsonl_files(data_dir, uri_folder_data_path, src_images):
                     image_filename = root.find("filename").text
                     _, file_extension = os.path.splitext(image_filename)
                     json_line = dict(json_line_sample)
-                    json_line["image_url"] = (
-                        json_line["image_url"] + "images/" + image_filename
-                    )
+                    json_line["image_url"] = json_line["image_url"] + "images/" + image_filename
                     json_line["image_details"]["format"] = file_extension[1:]
                     json_line["image_details"]["width"] = width
                     json_line["image_details"]["height"] = height
@@ -87,8 +83,8 @@ def _create_jsonl_files(data_dir, uri_folder_data_path, src_images):
                         # train annotation
                         train_f.write(json.dumps(json_line) + "\n")
                 else:
-                    print("Skipping unknown file: {}".format(filename))
-    print("Created jsonl files")
+                    logger.info("Skipping unknown file: {}".format(filename))
+    logger.info("Created jsonl files")
 
 
 def prepare_data(mlclient: MLClient):
@@ -105,5 +101,6 @@ def prepare_data(mlclient: MLClient):
 
     with TemporaryDirectory() as tempdir:
         local_path, uri_folder_path = _download_and_register_image_data(
-            mlclient, object_detection_fridge_items_url, tempdir, "odFridgeObjects")
+            mlclient, object_detection_fridge_items_url, tempdir, "odFridgeObjects"
+        )
         _create_jsonl_files(data_dir, uri_folder_path, local_path)
