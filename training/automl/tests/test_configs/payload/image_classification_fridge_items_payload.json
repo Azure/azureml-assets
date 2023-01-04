@@ -195,7 +195,5 @@
     "enforceRerun": false,
     "experimentName": "automl_designer_validation",
     "computeTarget": "gpu-cluster",
-    "displayName": "test_image_classification",
-    "dataSetDefinitionValueAssignments": {},
-    "tags": {}
+    "displayName": "image_classification"
 }

@@ -3,14 +3,12 @@
         "datasetNodes": [
             {
                 "id": "test_data",
-                "amlDataStoreName": "",
-                "relativePath": "",
                 "dataSetDefinition": {
                     "dataTypeShortName": "MLTable",
                     "value": {
                         "assetDefinition": {
-                            "assetId": "test_data_asset_id",
-                            "path": "test_data_path",
+                            "assetId": "",
+                            "path": "",
                             "type": "MLTable"
                         }
                     }
@@ -18,14 +16,12 @@
             },
             {
                 "id": "training_data",
-                "amlDataStoreName": "",
-                "relativePath": "",
                 "dataSetDefinition": {
                     "dataTypeShortName": "MLTable",
                     "value": {
                         "assetDefinition": {
-                            "assetId": "training_data_asset_id",
-                            "path": "training_data_path",
+                            "assetId": "",
+                            "path": "",
                             "type": "MLTable"
                         }
                     }
@@ -33,14 +29,12 @@
             },
             {
                 "id": "validation_data",
-                "amlDataStoreName": "",
-                "relativePath": "",
                 "dataSetDefinition": {
                     "dataTypeShortName": "MLTable",
                     "value": {
                         "assetDefinition": {
-                            "assetId": "validation_data_asset_id",
-                            "path": "validation_data_path",
+                            "assetId": "",
+                            "path": "",
                             "type": "MLTable"
                         }
                     }
@@ -50,7 +44,7 @@
         "moduleNodes": [
             {
                 "id": "automl_node",
-                "moduleId": "module_id",
+                "moduleId": "",
                 "moduleParameters": [],
                 "useGraphDefaultCompute": false,
                 "useGraphDefaultDatastore": true,
@@ -118,7 +112,7 @@
     "moduleNodeRunSettings": [
         {
             "nodeId": "automl_node",
-            "moduleId": "module_id",
+            "moduleId": "",
             "stepType": "automl",
             "runSettings": [
                 {
@@ -200,7 +194,7 @@
     "moduleNodeUIInputSettings": [
         {
             "nodeId": "automl_node",
-            "moduleId": "module_id",
+            "moduleId": "",
             "moduleInputSettings": [
                 {
                     "name": "training_data",

@@ -2,120 +2,41 @@
     "graph": {
         "datasetNodes": [
             {
-                "id": "8035dd48",
+                "id": "training_data",
                 "dataSetDefinition": {
                     "dataTypeShortName": "MLTable",
                     "value": {
                         "assetDefinition": {
-                            "path": "azureml://workspaces/05442d3d-d9ad-42bd-929a-22260facf3ee/datastores/workspaceblobstore/paths/LocalUpload/29aba34fd2ac0142bcf273466ed3b2a1/training-mltable-folder/",
+                            "path": "",
                             "type": "MLTable",
-                            "assetId": "azureml://locations/centraluseuap/workspaces/05442d3d-d9ad-42bd-929a-22260facf3ee/data/image_classification_multilable_fridge_objects_train_data/versions/1.0.0"
+                            "assetId": ""
                         }
                     }
-                },
-                "relativePath": "azureml://subscriptions/381b38e9-9840-4719-a5a0-61d9585e1e91/resourcegroups/ayush_mishra_res01/workspaces/ayushmishra-master-ws/datastores/workspaceblobstore/paths/LocalUpload/29aba34fd2ac0142bcf273466ed3b2a1/training-mltable-folder/"
+                }
             },
             {
-                "id": "790be896",
+                "id": "validation_data",
                 "dataSetDefinition": {
                     "dataTypeShortName": "MLTable",
                     "value": {
                         "assetDefinition": {
-                            "path": "azureml://workspaces/05442d3d-d9ad-42bd-929a-22260facf3ee/datastores/workspaceblobstore/paths/LocalUpload/6aafd642d561460d70c7404c22226b55/validation-mltable-folder/",
+                            "path": "",
                             "type": "MLTable",
-                            "assetId": "azureml://locations/centraluseuap/workspaces/05442d3d-d9ad-42bd-929a-22260facf3ee/data/image_classification_multilable_fridge_objects_validation_data/versions/1.0.0"
+                            "assetId": ""
                         }
                     }
-                },
-                "relativePath": "azureml://subscriptions/381b38e9-9840-4719-a5a0-61d9585e1e91/resourcegroups/ayush_mishra_res01/workspaces/ayushmishra-master-ws/datastores/workspaceblobstore/paths/LocalUpload/6aafd642d561460d70c7404c22226b55/validation-mltable-folder/"
+                }
             }
         ],
         "moduleNodes": [
             {
-                "runconfig": "{\n  \"UseAbsolutePath\": false,\n  \"Arguments\": [],\n  \"Framework\": \"Python\",\n  \"DataReferences\": {},\n  \"Data\": {},\n  \"OutputData\": {},\n  \"Datacaches\": [],\n  \"InstanceTypes\": [],\n  \"CredentialPassthrough\": false,\n  \"Environment\": {\n    \"AutoRebuild\": true,\n    \"Python\": {\n      \"UserManagedDependencies\": false\n    },\n    \"EnvironmentVariables\": {},\n    \"Docker\": {\n      \"Platform\": {\n        \"Os\": \"Linux\",\n        \"Architecture\": \"amd64\"\n      }\n    },\n    \"Spark\": {\n      \"Repositories\": [],\n      \"Packages\": [],\n      \"PrecachePackages\": true\n    }\n  },\n  \"History\": {\n    \"OutputCollection\": false,\n    \"DirectoriesToWatch\": null,\n    \"EnableMLflowTracking\": false\n  },\n  \"Spark\": {\n    \"Configuration\": {}\n  },\n  \"ParallelTask\": {\n    \"MaxRetriesPerWorker\": 0,\n    \"WorkerCountPerNode\": 1,\n    \"Configuration\": {}\n  },\n  \"BatchAi\": {\n    \"NodeCount\": 0\n  },\n  \"AmlCompute\": {\n    \"RetainCluster\": false\n  },\n  \"AISuperComputer\": {\n    \"InstanceType\": \"D2\",\n    \"ImageVersion\": \"pytorch-1.7.0\",\n    \"Interactive\": false,\n    \"EnableAzmlInt\": true,\n    \"Priority\": \"Medium\",\n    \"SLATier\": \"Standard\"\n  },\n  \"KubernetesCompute\": {},\n  \"Tensorflow\": {\n    \"WorkerCount\": 0,\n    \"ParameterServerCount\": 0\n  },\n  \"Mpi\": {\n    \"ProcessCountPerNode\": 0\n  },\n  \"PyTorch\": {},\n  \"Hdi\": {\n    \"YarnDeployMode\": \"None\"\n  },\n  \"ContainerInstance\": {\n    \"CpuCores\": 2.0,\n    \"MemoryGb\": 3.5\n  },\n  \"Docker\": {},\n  \"Cmk8sCompute\": {\n    \"Configuration\": {}\n  },\n  \"CommandReturnCodeConfig\": {\n    \"ReturnCode\": \"Zero\",\n    \"SuccessfulReturnCodes\": []\n  },\n  \"EnvironmentVariables\": {},\n  \"ApplicationEndpoints\": {},\n  \"Parameters\": []\n}",
-                "id": "005a43c2",
-                "moduleId": "azureml://registries/azureml-dev/components/microsoft_azureml_automl_image_classification_multilabel_component/versions/0.0.1-preview-azureml-dev.1672349156",
+                "id": "automl_node",
+                "moduleId": "",
                 "comment": "",
-                "name": "automl_image_classification_multilabel_private_preview_",
-                "moduleParameters": [],
-                "moduleMetadataParameters": [
-                    {
-                        "name": "Version",
-                        "value": "1",
-                        "valueType": "Literal"
-                    }
-                ],
-                "moduleOutputSettings": [
-                    {
-                        "name": "best_model",
-                        "dataStoreName": "workspaceblobstore",
-                        "dataStoreMode": "Upload",
-                        "overwrite": true,
-                        "dataReferenceName": "best_model",
-                        "AssetOutputSettings": {
-                            "path": "azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}/",
-                            "type": "MLFlowModel",
-                            "dataStoreMode": "Upload"
-                        }
-                    }
-                ],
-                "moduleInputSettings": [
-                    {
-                        "name": "training_data",
-                        "dataStoreMode": "Direct",
-                        "options": {
-                            "IsEvalMode": "False",
-                            "ReadWrite": null,
-                            "ForceFolder": "True"
-                        }
-                    },
-                    {
-                        "name": "test_data",
-                        "dataStoreMode": "Direct"
-                    },
-                    {
-                        "name": "validation_data",
-                        "dataStoreMode": "Direct",
-                        "options": {
-                            "IsEvalMode": "False",
-                            "ReadWrite": null,
-                            "ForceFolder": "True"
-                        }
-                    }
-                ],
+                "name": "automl_image_classification_multilabel",
                 "useGraphDefaultCompute": true,
                 "useGraphDefaultDatastore": true,
                 "regenerateOutput": false,
-                "cloudSettings": {
-                    "autoMLComponentConfig": {
-                        "autoTrainConfig": {
-                            "generalSettings": {
-                                "primaryMetric": "iou",
-                                "taskType": "image_classification_multilabel"
-                            },
-                            "limitSettings": {
-                                "timeout": "01:00:00"
-                            },
-                            "dataSettings": {
-                                "targetColumnName": "label",
-                                "validationData": {},
-                                "testData": {}
-                            },
-                            "sweepSettings": {
-                                "limits": {
-                                    "maxTotalTrials": 1,
-                                    "maxConcurrentTrials": 1
-                                },
-                                "samplingAlgorithm": "grid"
-                            },
-                            "computeConfiguration": {
-                                "isLocal": false,
-                                "isClusterless": false,
-                                "isPreemptable": false
-                            }
-                        }
-                    }
-                },
                 "executionPhase": "Execution"
             }
         ],
@@ -124,56 +45,23 @@
         "edges": [
             {
                 "sourceOutputPort": {
-                    "nodeId": "8035dd48"
+                    "nodeId": "training_data"
                 },
                 "destinationInputPort": {
-                    "nodeId": "005a43c2",
+                    "nodeId": "automl_node",
                     "portName": "training_data"
                 }
             },
             {
                 "sourceOutputPort": {
-                    "nodeId": "790be896"
+                    "nodeId": "validation_data"
                 },
                 "destinationInputPort": {
-                    "nodeId": "005a43c2",
+                    "nodeId": "automl_node",
                     "portName": "validation_data"
                 }
             }
         ],
-        "graphLayout": {
-            "annotationNodes": [],
-            "nodeLayouts": {
-                "005a43c2": {
-                    "x": 228.33331,
-                    "y": 268.33334,
-                    "width": 280,
-                    "height": 76
-                },
-                "8035dd48": {
-                    "x": 51.888855,
-                    "y": 111.888916,
-                    "width": 280,
-                    "height": 76
-                },
-                "790be896": {
-                    "x": 395.88885,
-                    "y": 118.5556,
-                    "width": 280,
-                    "height": 76
-                }
-            }
-        },
-        "entityInterface": {
-            "parameters": [],
-            "dataPathParameters": [],
-            "dataPathParameterList": [],
-            "ports": {
-                "inputs": [],
-                "outputs": [],
-                "controlOutputs": []
-            }
-        },
         "defaultCompute": {
             "name": "gpu-cluster",
             "computeType": "BatchAi",
@@ -203,8 +91,8 @@
     ],
     "moduleNodeRunSettings": [
         {
-            "nodeId": "005a43c2",
-            "moduleId": "azureml://registries/azureml-dev/components/microsoft_azureml_automl_image_classification_multilabel_component/versions/0.0.1-preview-azureml-dev.1672349156",
+            "nodeId": "automl_node",
+            "moduleId": "",
             "stepType": "automl",
             "runSettings": [
                 {
@@ -278,8 +166,8 @@
     ],
     "moduleNodeUIInputSettings": [
         {
-            "nodeId": "005a43c2",
-            "moduleId": "azureml://registries/azureml-dev/components/microsoft_azureml_automl_image_classification_multilabel_component/versions/0.0.1-preview-azureml-dev.1672349156",
+            "nodeId": "automl_node",
+            "moduleId": "",
             "moduleInputSettings": [
                 {
                     "name": "training_data",
@@ -294,15 +182,9 @@
             ]
         }
     ],
-    "webServiceInputs": [],
-    "webServiceOutputs": [],
-    "experimentName": "designer_validation",
-    "description": "Pipeline created on 20230102",
+    "continueRunOnStepFailure": true,
+    "enforceRerun": false,
+    "experimentName": "automl_designer_validation",
     "computeTarget": "gpu-cluster",
-    "displayName": "image_classification_multilabel",
-    "pipelineParameters": {},
-    "dataPathAssignments": {},
-    "dataSetDefinitionValueAssignments": {},
-    "assetOutputSettingsAssignments": {},
-    "tags": {}
+    "displayName": "image_classification_multilabel"
 }

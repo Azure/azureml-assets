@@ -7,9 +7,9 @@
                     "dataTypeShortName": "MLTable",
                     "value": {
                         "assetDefinition": {
-                            "path": "validation-data-path",
+                            "path": "",
                             "type": "MLTable",
-                            "assetId": "validation-data-asset"
+                            "assetId": ""
                         }
                     }
                 }
@@ -20,9 +20,9 @@
                     "dataTypeShortName": "MLTable",
                     "value": {
                         "assetDefinition": {
-                            "path": "training-data-path",
+                            "path": "",
                             "type": "MLTable",
-                            "assetId": "training-data-asset"
+                            "assetId": ""
                         }
                     }
                 }
@@ -31,55 +31,10 @@
         "moduleNodes": [
             {
                 "id": "automl_node",
-                "moduleId": "module_id",
+                "moduleId": "",
                 "comment": "",
                 "name": "automl_image_object_detection",
                 "moduleParameters": [],
-                "moduleMetadataParameters": [
-                    {
-                        "valueType": "Literal",
-                        "name": "Version",
-                        "value": "1"
-                    }
-                ],
-                "moduleOutputSettings": [
-                    {
-                        "name": "best_model",
-                        "dataStoreName": "workspaceblobstore",
-                        "dataStoreMode": "Upload",
-                        "overwrite": true,
-                        "dataReferenceName": "best_model",
-                        "AssetOutputSettings": {
-                            "path": "azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}/",
-                            "type": "MLFlowModel",
-                            "dataStoreMode": "Upload"
-                        }
-                    }
-                ],
-                "moduleInputSettings": [
-                    {
-                        "name": "training_data",
-                        "dataStoreMode": "Direct",
-                        "options": {
-                            "IsEvalMode": "False",
-                            "ReadWrite": null,
-                            "ForceFolder": "True"
-                        }
-                    },
-                    {
-                        "name": "test_data",
-                        "dataStoreMode": "Direct"
-                    },
-                    {
-                        "name": "validation_data",
-                        "dataStoreMode": "Direct",
-                        "options": {
-                            "IsEvalMode": "False",
-                            "ReadWrite": null,
-                            "ForceFolder": "True"
-                        }
-                    }
-                ],
                 "useGraphDefaultCompute": true,
                 "useGraphDefaultDatastore": true,
                 "regenerateOutput": true
@@ -107,16 +62,6 @@
                 }
             }
         ],
-        "entityInterface": {
-            "parameters": [],
-            "dataPathParameters": [],
-            "dataPathParameterList": [],
-            "ports": {
-                "inputs": [],
-                "outputs": [],
-                "controlOutputs": []
-            }
-        },
         "defaultCompute": {
             "name": "gpu-cluster",
             "computeType": "BatchAi",
@@ -147,7 +92,7 @@
     "moduleNodeRunSettings": [
         {
             "nodeId": "automl_node",
-            "moduleId": "azureml://registries/azureml-dev/components/microsoft_azureml_automl_image_object_detection_component/versions/0.0.1-preview-azureml-dev.1672349156",
+            "moduleId": "",
             "stepType": "automl",
             "runSettings": [
                 {
@@ -222,7 +167,7 @@
     "moduleNodeUIInputSettings": [
         {
             "nodeId": "automl_node",
-            "moduleId": "azureml://registries/azureml-dev/components/microsoft_azureml_automl_image_object_detection_component/versions/0.0.1-preview-azureml-dev.1672349156",
+            "moduleId": "",
             "moduleInputSettings": [
                 {
                     "name": "training_data",

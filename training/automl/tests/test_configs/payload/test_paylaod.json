@@ -1,0 +1,290 @@
+{
+    "graph": {
+        "datasetNodes": [
+            {
+                "id": "training_data",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "path": "azureml: //subscriptions/381b38e9-9840-4719-a5a0-61d9585e1e91/resourcegroups/ayush_mishra_res01/workspaces/ayushmishra-master-ws/datastores/workspaceblobstore/paths/LocalUpload/172ddb7884678f71e05e6052f4dd1ba8/training-mltable-folder/",
+                            "type": "mltable",
+                            "assetId": "azureml://locations/centraluseuap/workspaces/05442d3d-d9ad-42bd-929a-22260facf3ee/data/image_instance_segmentation_training_data/versions/1"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "b0a9f370",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "path": "",
+                            "type": "MLTable",
+                            "assetId": ""
+                        }
+                    }
+                }
+            }
+        ],
+        "moduleNodes": [
+            {
+                "id": "automl_node",
+                "moduleId": "azureml://registries/None/components/microsoft_azureml_automl_image_instance_segmentation_component/labels/default",
+                "comment": "",
+                "name": "automl_image_instance_segmentation_private_preview_",
+                "moduleParameters": [],
+                "moduleMetadataParameters": [
+                    {
+                        "valueType": "Literal",
+                        "name": "Version",
+                        "value": "1"
+                    }
+                ],
+                "moduleOutputSettings": [
+                    {
+                        "name": "best_model",
+                        "dataStoreName": "workspaceblobstore",
+                        "dataStoreMode": "Upload",
+                        "overwrite": true,
+                        "dataReferenceName": "best_model",
+                        "AssetOutputSettings": {
+                            "path": "azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}/",
+                            "type": "MLFlowModel",
+                            "dataStoreMode": "Upload"
+                        }
+                    }
+                ],
+                "moduleInputSettings": [
+                    {
+                        "name": "training_data",
+                        "dataStoreMode": "Direct",
+                        "options": {
+                            "IsEvalMode": "False",
+                            "ReadWrite": None,
+                            "ForceFolder": "True"
+                        }
+                    },
+                    {
+                        "name": "test_data",
+                        "dataStoreMode": "Direct"
+                    },
+                    {
+                        "name": "validation_data",
+                        "dataStoreMode": "Direct",
+                        "options": {
+                            "IsEvalMode": "False",
+                            "ReadWrite": None,
+                            "ForceFolder": "true"
+                        }
+                    }
+                ],
+                "useGraphDefaultCompute": true,
+                "useGraphDefaultDatastore": true,
+                "regenerateOutput": false,
+                "cloudSettings": {
+                    "autoMLComponentConfig": {
+                        "autoTrainConfig": {
+                            "generalSettings": {
+                                "primaryMetric": "mean_average_precision",
+                                "taskType": "image_instance_segmentation"
+                            },
+                            "limitSettings": {
+                                "timeout": "01:00:00"
+                            },
+                            "dataSettings": {
+                                "targetColumnName": "label",
+                                "validationData": {},
+                                "testData": {}
+                            },
+                            "sweepSettings": {
+                                "limits": {
+                                    "maxTotalTrials": 1,
+                                    "maxConcurrentTrials": 1
+                                },
+                                "searchSpace": [
+                                    {
+                                        "learning_rate": "uniform(0.0001, 0.001)",
+                                        "optimizer": "choice(sgd, adam, adamw)",
+                                        "min_size": "choice(600, 800)",
+                                        "model_name": "maskrcnn_resnet50_fpn"
+                                    }
+                                ],
+                                "samplingAlgorithm": "random",
+                                "earlyTermination": {
+                                    "policyType": "bandit",
+                                    "evaluationInterval": 2,
+                                    "delayEvaluation": 6,
+                                    "slackFactor": 0.2
+                                }
+                            },
+                            "computeConfiguration": {
+                                "isLocal": false,
+                                "isClusterless": false,
+                                "isPreemptable": false
+                            }
+                        }
+                    }
+                },
+                "executionPhase": "Execution"
+            }
+        ],
+        "subGraphNodes": [],
+        "controlReferenceNodes": [],
+        "edges": [
+            {
+                "sourceOutputPort": {
+                    "nodeId": "training_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "training_data"
+                }
+            },
+            {
+                "sourceOutputPort": {
+                    "nodeId": "b0a9f370"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "validation_data"
+                }
+            }
+        ],
+        "entityInterface": {
+            "parameters": [],
+            "dataPathParameters": [],
+            "dataPathParameterList": [],
+            "ports": {
+                "inputs": [],
+                "outputs": [],
+                "controlOutputs": []
+            }
+        },
+        "defaultCompute": {
+            "name": "gpu-cluster",
+            "computeType": "BatchAi",
+            "mlcComputeInfo": {
+                "mlcComputeType": "AmlCompute"
+            }
+        },
+        "defaultDatastore": {
+            "dataStoreName": "workspaceblobstore"
+        }
+    },
+    "flattenedSubGraphs": {},
+    "pipelineRunSettings": [
+        {
+            "valueType": "Literal",
+            "name": "Priority Scope"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Priority Compute cluster"
+        },
+        {
+            "name": "Continue run on step failure",
+            "value": "True",
+            "valueType": "Literal"
+        }
+    ],
+    "moduleNodeRunSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "azureml://registries/None/components/microsoft_azureml_automl_image_instance_segmentation_component/labels/default",
+            "stepType": "automl",
+            "runSettings": [
+                {
+                    "useGraphDefaultCompute": true,
+                    "valueType": "Literal",
+                    "name": "Target",
+                    "value": "gpu-cluster",
+                    "mlcComputeType": "AmlCompute"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "PrimaryMetric",
+                    "value": "MeanAveragePrecision"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "TargetColumnName",
+                    "value": "label"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "SearchSpace",
+                    "value": "[{'learning_rate':'uniform(0.0001,0.001)','optimizer':'choice(sgd, adam, adamw)','min_size':'choice(600,800)','model_name':'maskrcnn_resnet50_fpn''}]"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "SamplingAlgorithm",
+                    "value": "Random"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "PolicyType",
+                    "value": "Bandit"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "EvaluationInterval",
+                    "value": "2"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "DelayEvaluation",
+                    "value": "6"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "SlackFactor",
+                    "value": "0.2"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "MaxTrials",
+                    "value": "1"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Timeout",
+                    "value": "1.00"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "MaxConcurrentTrials",
+                    "value": "1"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "ValidationType"
+                }
+            ]
+        }
+    ],
+    "moduleNodeUIInputSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "azureml://registries/None/components/microsoft_azureml_automl_image_instance_segmentation_component/labels/default",
+            "moduleInputSettings": [
+                {
+                    "name": "training_data",
+                    "dataDeliveryMode": "Direct",
+                    "isConnected": true
+                },
+                {
+                    "name": "validation_data",
+                    "dataDeliveryMode": "Direct",
+                    "isConnected": true
+                }
+            ]
+        }
+    ],
+    "experimentName": "automl_designer_validation",
+    "computeTarget": "gpu-cluster",
+    "displayName": "image_instance_segmentation",
+    "continueRunOnStepFailure": true,
+    "enforceRerun": false
+}

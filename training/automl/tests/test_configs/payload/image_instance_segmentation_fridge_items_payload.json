@@ -7,9 +7,9 @@
                     "dataTypeShortName": "MLTable",
                     "value": {
                         "assetDefinition": {
-                            "path": "training-data-path",
+                            "path": "",
                             "type": "MLTable",
-                            "assetId": "training-data-asset"
+                            "assetId": ""
                         }
                     }
                 }
@@ -20,9 +20,9 @@
                     "dataTypeShortName": "MLTable",
                     "value": {
                         "assetDefinition": {
-                            "path": "validation-data-path",
+                            "path": "",
                             "type": "MLTable",
-                            "assetId": "validation-data-asset"
+                            "assetId": ""
                         }
                     }
                 }
@@ -31,58 +31,13 @@
         "moduleNodes": [
             {
                 "id": "automl_node",
-                "moduleId": "module_id",
+                "moduleId": "",
                 "comment": "",
                 "name": "automl_image_instance_segmentation",
-                "moduleParameters": [],
-                "moduleMetadataParameters": [
-                    {
-                        "valueType": "Literal",
-                        "name": "Version",
-                        "value": "1"
-                    }
-                ],
-                "moduleOutputSettings": [
-                    {
-                        "name": "best_model",
-                        "dataStoreName": "workspaceblobstore",
-                        "dataStoreMode": "Upload",
-                        "overwrite": true,
-                        "dataReferenceName": "best_model",
-                        "AssetOutputSettings": {
-                            "path": "azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}/",
-                            "type": "MLFlowModel",
-                            "dataStoreMode": "Upload"
-                        }
-                    }
-                ],
-                "moduleInputSettings": [
-                    {
-                        "name": "training_data",
-                        "dataStoreMode": "Direct",
-                        "options": {
-                            "IsEvalMode": "False",
-                            "ReadWrite": null,
-                            "ForceFolder": "True"
-                        }
-                    },
-                    {
-                        "name": "test_data",
-                        "dataStoreMode": "Direct"
-                    },
-                    {
-                        "name": "validation_data",
-                        "dataStoreMode": "Direct",
-                        "options": {
-                            "IsEvalMode": "False",
-                            "ReadWrite": null,
-                            "ForceFolder": "True"
-                        }
-                    }
-                ],
                 "useGraphDefaultCompute": true,
                 "useGraphDefaultDatastore": true,
-                "regenerateOutput": false
+                "regenerateOutput": false,
+                "executionPhase": "Execution"
             }
         ],
         "subGraphNodes": [],
@@ -107,16 +62,6 @@
                 }
             }
         ],
-        "entityInterface": {
-            "parameters": [],
-            "dataPathParameters": [],
-            "dataPathParameterList": [],
-            "ports": {
-                "inputs": [],
-                "outputs": [],
-                "controlOutputs": []
-            }
-        },
         "defaultCompute": {
             "name": "gpu-cluster",
             "computeType": "BatchAi",
@@ -152,10 +97,10 @@
             "runSettings": [
                 {
                     "useGraphDefaultCompute": true,
-                    "mlcComputeType": "AmlCompute",
                     "valueType": "Literal",
                     "name": "Target",
-                    "value": "gpu-cluster"
+                    "value": "gpu-cluster",
+                    "mlcComputeType": "AmlCompute"
                 },
                 {
                     "valueType": "Literal",
@@ -199,13 +144,13 @@
                 },
                 {
                     "valueType": "Literal",
-                    "name": "Timeout",
-                    "value": "1.00"
+                    "name": "MaxTrials",
+                    "value": "1"
                 },
                 {
                     "valueType": "Literal",
-                    "name": "MaxTotalTrials",
-                    "value": "1"
+                    "name": "Timeout",
+                    "value": "1.00"
                 },
                 {
                     "valueType": "Literal",
@@ -222,7 +167,7 @@
     "moduleNodeUIInputSettings": [
         {
             "nodeId": "automl_node",
-            "moduleId": "module_id",
+            "moduleId": "",
             "moduleInputSettings": [
                 {
                     "name": "training_data",

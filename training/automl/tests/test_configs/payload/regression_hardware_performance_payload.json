@@ -9,8 +9,8 @@
                     "dataTypeShortName": "MLTable",
                     "value": {
                         "assetDefinition": {
-                            "assetId": "training_data_asset_id",
-                            "path": "training_data_path",
+                            "assetId": "",
+                            "path": "",
                             "type": "MLTable"
                         }
                     }
@@ -20,7 +20,7 @@
         "moduleNodes": [
             {
                 "id": "automl_node",
-                "moduleId": " module_id",
+                "moduleId": " ",
                 "moduleParameters": [],
                 "useGraphDefaultCompute": true,
                 "useGraphDefaultDatastore": true,
@@ -41,16 +41,6 @@
                 }
             }
         ],
-        "entityInterface": {
-            "parameters": [],
-            "dataPathParameters": [],
-            "dataPathParameterList": [],
-            "ports": {
-                "inputs": [],
-                "outputs": [],
-                "controlOutputs": []
-            }
-        },
         "defaultCompute": {
             "name": "cpu-cluster",
             "mlcComputeInfo": {
@@ -80,7 +70,7 @@
     "moduleNodeRunSettings": [
         {
             "nodeId": "automl_node",
-            "moduleId": "module_id",
+            "moduleId": "",
             "stepType": "automl",
             "runSettings": [
                 {
@@ -158,7 +148,7 @@
     "moduleNodeUIInputSettings": [
         {
             "nodeId": "automl_node",
-            "moduleId": " module_id",
+            "moduleId": " ",
             "moduleInputSettings": [
                 {
                     "name": "training_data",
