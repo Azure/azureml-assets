@@ -4,6 +4,7 @@
 import argparse
 import concurrent.futures
 import os
+import psutil
 import sys
 import yaml
 
@@ -20,7 +21,8 @@ TEST_YML = "tests.yml"
 
 def run_pytest_job(job: Path, my_env: dict):
     """Run single pytest job."""
-    p = run(f"pytest {job} -n auto --log-cli-level=info --show-capture=stderr", env=my_env, shell=True)
+    num_cores = psutil.cpu_count()
+    p = run(f"pytest {job} -n {num_cores} --log-cli-level=info --show-capture=stderr", env=my_env, shell=True)
     return p.returncode
 
 
