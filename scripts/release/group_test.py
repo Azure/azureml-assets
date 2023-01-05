@@ -4,7 +4,6 @@
 import argparse
 import concurrent.futures
 import os
-import psutil
 import sys
 import yaml
 
@@ -155,7 +154,6 @@ if __name__ == '__main__':
                 cover_yaml.extend(covered_assets)
             with open(coverage_report, 'w') as yf:
                 yaml.safe_dump(cover_yaml, yf)
-
 
     if failed_jobs:
         logger.log_warning(f"{len(failed_jobs)} jobs failed. {failed_jobs}.")

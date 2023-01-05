@@ -23,6 +23,7 @@ env:
   default_test_dirs: .,!test,!scripts,!.git,!.github
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
+  scripts_release_dir: scripts/release
   asset_config_filename: asset.yaml
 
 defaults:
@@ -52,6 +53,4 @@ jobs:
       - name: Check test coverage
         run: |
           mkdir -p ${{ runner.temp }}/test_coverage
-          python -u $scripts_assets_dir/release/test_file_convert.py -i "${{ env.default_test_dirs }}" -r ${{ runner.temp }}/test_coverage
-
-
+          python -u $scripts_release_dir/test_file_convert.py -i "${{ env.default_test_dirs }}" -r ${{ runner.temp }}/test_coverage

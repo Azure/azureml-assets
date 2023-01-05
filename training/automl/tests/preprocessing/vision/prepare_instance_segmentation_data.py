@@ -3,7 +3,6 @@
 
 """Image Instance Segmentation preprocessing."""
 
-
 import json
 import logging
 import numpy as np
@@ -58,8 +57,8 @@ def _convert_mask_to_polygon(
         dtype=np.uint8,
     )
     embedded_mask[
-        edge_safety_padding : image_shape[0] + edge_safety_padding,
-        edge_safety_padding : image_shape[1] + edge_safety_padding,
+        edge_safety_padding: image_shape[0] + edge_safety_padding,
+        edge_safety_padding: image_shape[1] + edge_safety_padding,
     ] = mask_array
 
     # Find Image Contours
