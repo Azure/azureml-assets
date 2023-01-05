@@ -145,16 +145,20 @@ def get_asset_release_dir(asset_config: assets.AssetConfig, release_directory_ro
     return get_asset_output_dir(asset_config, release_directory_root / RELEASE_SUBDIR)
 
 
-def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory: Path, add_subdir: bool = False):
+def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory: Path, add_subdir: bool = False,
+                             use_version_dir: bool = False):
     """Copy asset directory to output directory.
 
     Args:
         asset_config (assets.AssetConfig): Asset config to copy
         output_directory_root (Path): Output directory root
         add_subdir (bool, optional): Add asset-specific subdirectories to output_directory
+        use_version_dir (bool, optional): Store asset in version-specific directory
     """
     if add_subdir:
         output_directory = output_directory / get_asset_output_dir(asset_config, output_directory)
+    if use_version_dir:
+        output_directory = output_directory / asset_config.version
 
     common_dir, relative_release_paths = find_common_directory(asset_config.release_paths)
     copy_replace_dir(source=common_dir, dest=output_directory, paths=relative_release_paths)
