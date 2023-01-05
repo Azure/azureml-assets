@@ -137,36 +137,6 @@
                     "valueType": "Literal"
                 },
                 {
-                    "name": "SearchSpace",
-                    "value": "[{\"learning_rate\":\"uniform(0.001,0.01)\",\"model_name\":\"bert-base-cased\"}]",
-                    "valueType": "Literal"
-                },
-                {
-                    "name": "SamplingAlgorithm",
-                    "value": "Random",
-                    "valueType": "Literal"
-                },
-                {
-                    "name": "PolicyType",
-                    "value": "Bandit",
-                    "valueType": "Literal"
-                },
-                {
-                    "name": "EvaluationInterval",
-                    "value": "2",
-                    "valueType": "Literal"
-                },
-                {
-                    "name": "DelayEvaluation",
-                    "value": "6",
-                    "valueType": "Literal"
-                },
-                {
-                    "name": "SlackFactor",
-                    "value": "0.2",
-                    "valueType": "Literal"
-                },
-                {
                     "name": "Timeout",
                     "value": "1",
                     "valueType": "Literal"

@@ -9,9 +9,9 @@ vision:
 automl_components:
   includes:
   - ./automl/tests/
-  pre: ./automl/tests/preprocessing/automl_preprocessing.py
   jobs:
     automl_component_validation:
+      pre: ./automl/tests/preprocessing/automl_preprocessing.py
       pytest_job: ./automl/tests/test_automl_components.py
       assets:
       - ./automl/components/automl_image_classification
