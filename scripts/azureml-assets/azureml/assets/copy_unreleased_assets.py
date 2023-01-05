@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Copy unreleased assets from release directory to output directory."""
+
 import argparse
 from pathlib import Path
 
