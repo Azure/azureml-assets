@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110:{{latest-image-tag:biweekly\.\d{6}\.\d{1}}}
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1131:{{latest-image-tag:biweekly\.\d{6}\.\d{1}}}
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir && rm requirements.txt
