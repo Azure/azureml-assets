@@ -5,8 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for taking the time to give feedback on the environment analysis logs you used to 
-        troubleshoot your image build failure.
+        Thank you for providing feedback on the environment analysis logs you used to troubleshoot your build failure.
   - type: markdown
     attributes:
       value: |
@@ -15,14 +14,14 @@ body:
     id: helpful
     attributes:
       label: Things you liked
-      description: What was most helpful when using environment log analysis?
+      description: What was most helpful when using environment logs?
     validations:
       required: true
   - type: textarea
     id: not-helpful
     attributes:
       label: Things you didn't like
-      description: What was helpful or confusing when using environment log analysis?
+      description: What was helpful or confusing when using environment logs?
     validations:
       required: true
   - type: textarea
