@@ -5,30 +5,6 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for taking the time to fill out this bug report!
-
-        Please note that the bug reports in this repository are for bugs with our community-driven assets.
-
-        * For issues with the ML extension for Azure CLI, [please open an issue here](https://github.com/azure/azure-cli-extensions/issues/new/choose)
-        * For issues with the Azure ML Python SDK, [please open an issue here](https://github.com/azure/azure-sdk-for-python/issues/new/choose)
-  - type: markdown
-    attributes:
-      value: |
-        # Environment
-  - type: dropdown
-    id: os
-    attributes:
-      label: "Operating System"
-      multiple: false
-      options:
-        - Windows
-        - Linux
-        - MacOS
-    validations:
-      required: true
-  - type: markdown
-    attributes:
-      value: |
         # Describe the problem
   - type: textarea
     id: reproduce-steps
