@@ -1,8 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-name: sample_component
-display_name: Hello_Python_World
+name: sample-component
+display_name: Hello-Python-World
 version: 0.0.1
 
 code: ../src

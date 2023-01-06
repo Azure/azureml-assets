@@ -3,7 +3,7 @@ type: command
 
 description: Trains an image classification model. [Learn More](https://aka.ms/built-in-vision-components)
 
-name: train_image_classification_model
+name: train-image-classification-model
 display_name: Train Image Classification Model (Private Preview)
 version: 0.0.2-preview
 
