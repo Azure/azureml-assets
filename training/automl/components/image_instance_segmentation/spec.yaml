@@ -1,5 +1,5 @@
 $schema: http://azureml/sdk-2-0/AutoMLComponent.json
-name: automl-image-instance-segmentation-component
+name: automl-image-instance-segmentation
 display_name: AutoML Image Instance Segmentation (Private Preview)
 description: Component that executes an AutoML Image Instance Segmentation task model training in a pipeline.
 version: 0.0.1-preview
