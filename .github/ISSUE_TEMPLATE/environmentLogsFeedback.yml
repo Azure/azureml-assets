@@ -5,9 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thank you for taking the time to fill out this feedback report!
-
-        This form is for giving feedback on the environment analysis logs you used to 
+        Thank you for taking the time to give feedback on the environment analysis logs you used to 
         troubleshoot your image build failure.
   - type: markdown
     attributes:
