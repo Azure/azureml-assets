@@ -5,7 +5,9 @@
 
 import re
 from enum import Enum
+from functools import total_ordering
 from pathlib import Path
+from setuptools._vendor.packaging import version
 from typing import Dict, List
 from yaml import safe_load
 
@@ -721,6 +723,7 @@ DEFAULT_ASSET_FILENAME = "asset.yaml"
 VERSION_AUTO = "auto"
 
 
+@total_ordering
 class AssetConfig(Config):
     """Asset config file.
 
@@ -754,6 +757,31 @@ class AssetConfig(Config):
     def __str__(self) -> str:
         """Asset type, name, and version."""
         return f"{self.type.value} {self.name} {self.version}"
+
+    def __eq__(self, other) -> bool:
+        """Determine whether two AssetConfig objects are equal."""
+        if not isinstance(other, AssetConfig):
+            return NotImplemented
+
+        return (self.type.value, self.name, self.version) == (other.type.value, other.name, other.version)
+
+    def __lt__(self, other) -> bool:
+        """Determine whether an AssetConfig objects is less than another."""
+        if not isinstance(other, AssetConfig):
+            return NotImplemented
+
+        # Compare the easy ones first
+        if self.type.value != other.type.value:
+            return self.type.value < other.type.value
+        if self.name != other.name:
+            return self.name < other.name
+
+        # Reject auto-versioned assets
+        if self.version is None or other.version is None:
+            raise ValueError("Cannot compare auto-versioned assets")
+
+        # Compare versions using packaging's version object
+        return version.parse(self.version) < version.parse(other.version)
 
     def _validate(self):
         """Validate asset config.
