@@ -20,21 +20,21 @@ body:
     id: helpful
     attributes:
       label: Things you liked
-      description: Please describe what you found to be helpful when using the logs.
+      description: What was most helpful when using environment log analysis?
     validations:
       required: true
   - type: textarea
     id: not-helpful
     attributes:
       label: Things you didn't like
-      description: Please describe what you found to be not helpful or confusing when using the logs.
+      description: What was helpful or confusing when using environment log analysis?
     validations:
       required: true
   - type: textarea
     id: suggestions
     attributes:
       label: Suggestions
-      description: What suggestions or requests do you have to make the logs more helpful to you?
+      description: What would make the logs more helpful to you?
     validations:
       required: true
   - type: textarea
