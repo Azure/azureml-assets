@@ -34,7 +34,7 @@ body:
     id: suggestions
     attributes:
       label: Suggestions
-      description: What suggestion or request do you have for these logs so they can be more helpful to you?
+      description: What suggestions or requests do you have to make the logs more helpful to you?
     validations:
       required: true
   - type: textarea
