@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test Config classes."""
+
 from pathlib import Path
 
 import azureml.assets as assets
@@ -8,7 +10,8 @@ import azureml.assets as assets
 RESOURCES_DIR = Path("resources/config")
 
 
-def test_sort():
+def test_comparisons():
+    """Test AssetConfig comparisons."""
     this_dir = Path(__file__).parent
     resources = this_dir / RESOURCES_DIR
 
