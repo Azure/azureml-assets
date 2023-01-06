@@ -7,8 +7,8 @@ body:
       value: |
         Thank you for taking the time to fill out this feedback report!
 
-        Please note that this report is for giving feedback on the environment definition analysis and image build analysis logs you used
-        to troubleshoot an image build failure.
+        Please note that this report is for giving feedback on the environment analysis logs you used to
+        troubleshoot your image build failure.
 
         * For issues with the ML extension for Azure CLI, [please open an issue here](https://github.com/azure/azure-cli-extensions/issues/new/choose)
         * For issues with the Azure ML Python SDK, [please open an issue here](https://github.com/azure/azure-sdk-for-python/issues/new/choose)
