@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Azure Machine Learning Documentation
+    url: https://docs.microsoft.com/en-us/azure/machine-learning/
+    about: Please read through our documentation in the event it addresses your concern(s)
