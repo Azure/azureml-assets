@@ -3,7 +3,7 @@ type: command
 
 description: Trains an instance segmentation model. [Learn More](https://aka.ms/built-in-vision-components)
 
-name: train_instance_segmentation_model
+name: train-instance-segmentation-model
 display_name: Train Instance Segmentation Model (Private Preview)
 version: 0.0.2-preview
 
