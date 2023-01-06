@@ -26,21 +26,6 @@ body:
         - MacOS
     validations:
       required: true
-  - type: textarea
-    id: version
-    attributes:
-      label: Version Information
-      description: |
-        What version of our software are you running?
-
-        * If this is an issue for a CLI sample, please paste the content of `az version --output=yaml`
-        * If this is an issue for an SDK sample, please provide the following:
-          ```
-          Python Version:
-          azure-ai-ml package version: 
-          ```
-    validations:
-      required: true
   - type: markdown
     attributes:
       value: |
