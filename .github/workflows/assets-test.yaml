@@ -27,7 +27,6 @@ on:
 
 env:
   scripts_azureml_assets_dir: scripts/azureml-assets
-  scripts_assets_dir: scripts/azureml-assets/azureml/assets
   scripts_setup_dir: scripts/setup
   scripts_test_dir: scripts/test
   scripts_dir: scripts
