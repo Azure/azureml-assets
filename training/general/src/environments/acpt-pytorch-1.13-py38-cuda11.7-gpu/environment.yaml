@@ -13,12 +13,12 @@ image:
 environment:
   metadata:
     Cuda:
-      CudaVersion: "11.3"
+      CudaVersion: "11.7"
       CuDnnVersion: "8.2.0"
       NcclVersion: "2.9.9"
     MachineLearningFramework:
       name: PyTorch
-      version: "1.11"
+      version: "1.13"
     Mpi:
       name: OpenMpi
       version: "4.1.0"
