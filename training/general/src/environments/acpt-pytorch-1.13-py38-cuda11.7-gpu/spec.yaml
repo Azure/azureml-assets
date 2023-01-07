@@ -13,7 +13,7 @@ build:
 os_type: linux
 
 tags:
-  PyTorch: "1.11"
+  PyTorch: "1.13"
   GPU: Cuda11
   OS: Ubuntu20.04
   Training: ""
