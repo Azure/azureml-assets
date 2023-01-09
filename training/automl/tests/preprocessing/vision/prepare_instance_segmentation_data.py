@@ -188,12 +188,11 @@ def _create_jsonl_files(data_dir, uri_folder_data_path, src_images):
 
 
 def prepare_data(mlclient: MLClient):
-    """Prepare image OD data.
+    """Prepare Image Instance Segmentation data.
 
     :param mlclient: mlclient object to upload and register datasets
     :type mlclient: MLClient
     """
-
     data_dir = os.path.join(os.getcwd(), "automl/tests/test_configs/assets/image-instance-segmentation-fridge-items")
     instance_segmentation_fridge_items_url = (
         "https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjectsMask.zip"

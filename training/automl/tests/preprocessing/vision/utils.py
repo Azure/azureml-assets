@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Vision preprocessing utils"""
+"""Vision preprocessing utils."""
 
 import logging
 import os

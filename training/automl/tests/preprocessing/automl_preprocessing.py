@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""AutoML Preprocessing"""
+"""AutoML Preprocessing."""
 
 import logging
 import os
