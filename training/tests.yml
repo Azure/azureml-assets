@@ -15,7 +15,7 @@ automl_components:
       pytest_job: ./automl/tests/test_automl_nlp_components.py
       assets:
       - ./automl/components/automl_text_classification
-      - ./automl/components/automl_text_classification_multilable
+      - ./automl/components/automl_text_classification_multilabel
       - ./automl/components/automl_text_ner
     automl_tabular_components_validation:
       pytest_job: ./automl/tests/test_automl_tabular_components.py
