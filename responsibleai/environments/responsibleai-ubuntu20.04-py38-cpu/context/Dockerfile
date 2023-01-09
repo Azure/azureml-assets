@@ -26,5 +26,8 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
                           'webencodings==0.5.1' \
                           'domonic==0.9.10'
 
+# ADD a python file
+ADD rai_automl.py .
+
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
