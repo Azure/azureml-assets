@@ -149,7 +149,7 @@
                 },
                 {
                     "valueType": "Literal",
-                    "name": "MaxTotalTrials",
+                    "name": "MaxTrials",
                     "value": "1"
                 },
                 {
@@ -186,5 +186,5 @@
     "computeTarget": "gpu-cluster",
     "displayName": "image_object_detection",
     "continueRunOnStepFailure": true,
-    "enforceRerun": false
+    "enforceRerun": true
 }

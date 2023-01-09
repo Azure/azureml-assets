@@ -9,18 +9,24 @@ vision:
 automl_components:
   includes:
   - ./automl/tests/
+  pre: ./automl/tests/preprocessing/automl_preprocessing.py
   jobs:
-    automl_component_validation:
-      pre: ./automl/tests/preprocessing/automl_preprocessing.py
-      pytest_job: ./automl/tests/test_automl_components.py
+    automl_nlp_components_validaton:
+      pytest_job: ./automl/tests/test_automl_nlp_components.py
+      assets:
+      - ./automl/components/automl_text_classification
+      - ./automl/components/automl_text_classification_multilable
+      - ./automl/components/automl_text_ner
+    automl_tabular_components_validation:
+      pytest_job: ./automl/tests/test_automl_tabular_components.py
+      assets:
+      - ./automl/components/automl_tabular_classification
+      - ./automl/components/automl_tabular_forecasting
+      - ./automl/components/automl_tabular_regression
+    automl_vision_components_validation:
+      pytest_job: ./automl/tests/test_automl_vision_components.py
       assets:
       - ./automl/components/automl_image_classification
       - ./automl/components/automl_image_classification_multilabel
       - ./automl/components/automl_image_instance_segmentation
       - ./automl/components/automl_image_object_detection
-      - ./automl/components/automl_tabular_classification
-      - ./automl/components/automl_tabular_forecasting
-      - ./automl/components/automl_tabular_regression
-      - ./automl/components/automl_text_classification
-      - ./automl/components/automl_text_classification_multilable
-      - ./automl/components/automl_text_ner

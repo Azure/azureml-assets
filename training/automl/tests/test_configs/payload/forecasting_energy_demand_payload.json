@@ -22,7 +22,7 @@
                 "moduleParameters": [],
                 "useGraphDefaultCompute": true,
                 "useGraphDefaultDatastore": true,
-                "regenerateOutput": false,
+                "regenerateOutput": true,
                 "comment": "",
                 "name": "automl_forecasting"
             }
@@ -203,5 +203,5 @@
     "displayName": "forecasting",
     "experimentName": "automl_designer_validation",
     "continueRunOnStepFailure": true,
-    "enforceRerun": false
+    "enforceRerun": true
 }

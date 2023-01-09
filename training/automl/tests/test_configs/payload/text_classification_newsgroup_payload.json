@@ -35,7 +35,7 @@
                 "moduleParameters": [],
                 "useGraphDefaultCompute": false,
                 "useGraphDefaultDatastore": true,
-                "regenerateOutput": false,
+                "regenerateOutput": true,
                 "comment": "",
                 "name": "automl_text_classification"
             }
@@ -142,7 +142,7 @@
                     "valueType": "Literal"
                 },
                 {
-                    "name": "MaxTotalTrials",
+                    "name": "MaxTrials",
                     "value": "1",
                     "valueType": "Literal"
                 },
@@ -171,7 +171,7 @@
     ],
     "experimentName": "automl_designer_validation",
     "continueRunOnStepFailure": true,
-    "enforceRerun": false,
+    "enforceRerun": true,
     "computeTarget": "gpu-cluster",
     "displayName": "text_classification"
 }

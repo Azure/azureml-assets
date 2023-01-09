@@ -39,7 +39,7 @@
                 "moduleOutputSettings": [],
                 "useGraphDefaultCompute": false,
                 "useGraphDefaultDatastore": true,
-                "regenerateOutput": false
+                "regenerateOutput": true
             }
         ],
         "subGraphNodes": [],
@@ -160,7 +160,7 @@
                 },
                 {
                     "valueType": "Literal",
-                    "name": "MaxTotalTrials",
+                    "name": "MaxTrials",
                     "value": "1"
                 },
                 {
@@ -192,7 +192,7 @@
         }
     ],
     "continueRunOnStepFailure": true,
-    "enforceRerun": false,
+    "enforceRerun": true,
     "experimentName": "automl_designer_validation",
     "computeTarget": "gpu-cluster",
     "displayName": "image_classification"

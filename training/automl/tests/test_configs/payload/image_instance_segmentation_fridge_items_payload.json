@@ -36,7 +36,7 @@
                 "name": "automl_image_instance_segmentation",
                 "useGraphDefaultCompute": true,
                 "useGraphDefaultDatastore": true,
-                "regenerateOutput": false,
+                "regenerateOutput": true,
                 "executionPhase": "Execution"
             }
         ],
@@ -186,5 +186,5 @@
     "computeTarget": "gpu-cluster",
     "displayName": "image_instance_segmentation",
     "continueRunOnStepFailure": true,
-    "enforceRerun": false
+    "enforceRerun": true
 }

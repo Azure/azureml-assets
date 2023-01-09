@@ -35,7 +35,7 @@
                 "moduleParameters": [],
                 "useGraphDefaultCompute": true,
                 "useGraphDefaultDatastore": true,
-                "regenerateOutput": false,
+                "regenerateOutput": true,
                 "comment": "",
                 "name": "automl_text_classification_multilabel"
             }
@@ -121,7 +121,7 @@
                     "valueType": "Literal"
                 },
                 {
-                    "name": "MaxTotalTrials",
+                    "name": "MaxTrials",
                     "value": "1",
                     "valueType": "Literal"
                 },
@@ -153,7 +153,7 @@
     ],
     "experimentName": "automl_designer_validation",
     "computeTarget": "gpu-cluster",
-    "displayName": "text_classification_multilable",
+    "displayName": "text_classification_multilabel",
     "continueRunOnStepFailure": true,
-    "enforceRerun": false
+    "enforceRerun": true
 }

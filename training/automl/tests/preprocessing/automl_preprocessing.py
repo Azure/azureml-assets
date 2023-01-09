@@ -21,10 +21,10 @@ logger = logging.Logger(__name__)
 if __name__ == "__main__":
     # preprocessing job list
     preprocessing_jobs = [
-        prepare_classification_data.prepare_data,
-        prepare_classification_multilabel_data.prepare_data,
-        prepare_instance_segmentation_data.prepare_data,
-        prepare_object_detection_data.prepare_data,
+        prepare_classification_data,
+        prepare_classification_multilabel_data,
+        prepare_instance_segmentation_data,
+        prepare_object_detection_data,
     ]
 
     mlclient = MLClient(

@@ -213,7 +213,7 @@
     ],
     "experimentName": "automl_designer_validation",
     "continueRunOnStepFailure": true,
-    "enforceRerun": false,
+    "enforceRerun": true,
     "computeTarget": "cpu-cluster",
     "displayName": "classsification"
 }
