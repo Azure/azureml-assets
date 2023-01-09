@@ -15,6 +15,7 @@ logger = logging.getLogger(name=__file__)
 @pytest.mark.unittest
 class TestAutoMLVisionComponents(ValidateAutoMLComponents):
     """TestAutoMLVisionComponents."""
+
     @pytest.mark.parametrize(
         "spec_path, payload_path, data_assets",
         [
@@ -118,7 +119,7 @@ class TestAutoMLVisionComponents(ValidateAutoMLComponents):
                     },
                 ],
             ),
-        ]
+        ],
     )
     def test_automl_vision_components(
         self,

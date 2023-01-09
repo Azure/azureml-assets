@@ -13,7 +13,6 @@ from .utils import (
     update_payload_with_registered_data_assets,
     update_payload_module_id,
 )
-from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.entities._load_functions import load_component
 
 
