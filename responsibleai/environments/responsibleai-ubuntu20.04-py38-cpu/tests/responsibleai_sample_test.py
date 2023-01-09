@@ -65,3 +65,7 @@ def test_responsibleai():
         time.sleep(30)  # sleep 30 seconds
 
     assert current_status == "Completed"
+
+
+def test_rai_automl():
+    from .rai_automl import compute_and_upload_rai_insights
