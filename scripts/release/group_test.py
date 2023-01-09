@@ -21,7 +21,7 @@ TEST_YML = "tests.yml"
 def run_pytest_job(job: Path, my_env: dict):
     """Run single pytest job."""
     NUM_THREADS = 8
-    logger.print(f"Running pytest with disribution level: {NUM_THREADS}")
+    logger.print(f"Running pytest with distribution level: {NUM_THREADS}")
     p = run(f"pytest {job} -n {NUM_THREADS} --log-cli-level=info --show-capture=stderr", env=my_env, shell=True)
     return p.returncode
 
