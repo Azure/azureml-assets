@@ -68,5 +68,5 @@ def test_responsibleai():
 
 
 def test_rai_automl():
-    from rai_automl import compute_and_upload_rai_insights
+    from responsibleai_tabular_automl import compute_and_upload_rai_insights
     compute_and_upload_rai_insights()

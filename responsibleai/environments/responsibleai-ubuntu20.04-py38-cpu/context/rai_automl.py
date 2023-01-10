@@ -9,7 +9,7 @@ def compute_and_upload_rai_insights():
     print("The current run-id is: " + my_run.id)
 
     try:
-        from responsibleai import RAIInsights
+        from responsibleai import RAIInsights # noqa: F401
         print("Successfully imported from responsibleai")
     except Exception:
         print("Couldn't import from responsibleai")
