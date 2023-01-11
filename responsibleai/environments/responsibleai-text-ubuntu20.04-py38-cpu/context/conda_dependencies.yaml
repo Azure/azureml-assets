@@ -32,4 +32,4 @@ dependencies:
     - click<8.0.0
     - mltable==0.1.0b4
     - transformers>=4.17.0
-    - ml-wrappers==0.2.2
+    - ml-wrappers==0.4.2
