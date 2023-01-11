@@ -57,7 +57,7 @@ def copy_unreleased_assets(release_directory_root: Path,
         version = copy_unreleased_asset(asset_config=asset_config,
                                         release_directory_root=release_directory_root,
                                         output_directory_root=output_directory_root,
-                                        use_version_dirs=use_version_dirs)
+                                        use_version_dir=use_version_dirs)
         if version:
             logger.print(f"Copied {asset_config.type.value} {asset_config.name} version {version}")
             copied_count += 1
