@@ -20,5 +20,5 @@ dependencies:
   - azureml-dataset-runtime=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
-  - mltable==0.1.0b4
+  - mltable==1.0.0
   - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai_tabular_automl/responsibleai_tabular_automl-0.0.0-py3-none-any.whl
