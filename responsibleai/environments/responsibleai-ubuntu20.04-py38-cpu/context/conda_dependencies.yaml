@@ -6,8 +6,8 @@ dependencies:
 - python=3.8
 - pip=21.3.1
 - pip:
-  - responsibleai~=0.23.0
-  - raiwidgets~=0.23.0
+  - responsibleai~=0.24.0
+  - raiwidgets~=0.24.0
   - pyarrow
   - markupsafe<=2.0.1
   - itsdangerous==2.0.1
