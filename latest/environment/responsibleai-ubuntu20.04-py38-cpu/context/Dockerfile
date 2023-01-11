@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:ffc4b931ad29c78fd6a0aef66f35eb110b9a5add2f10f4c17be9dd50ad3524a8
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:b73474f680d34fa004febc313946764ec6547c53bcb7d7a65837fd7aad8242f9
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/responsibleai
 
@@ -15,7 +15,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
-RUN pip install --pre 'azure-ai-ml'
+RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # no-deps install for domonic due to unresolvable dependencies requirment on urllib3 and requests.
 # score card rendering is using domonic only for the html elements composer which does not involve requests or urllib3

@@ -12,7 +12,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
-RUN pip install --pre 'azure-ai-ml'
+RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # Workaround for dependency conflict around tqdm with nlp-feature-extractors
 RUN pip install 'datasets==1.18.4'
