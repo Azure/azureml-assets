@@ -30,6 +30,6 @@ dependencies:
     - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-text/responsibleai_text-0.0.7-py3-none-any.whl
     - https://publictestdatasets.blob.core.windows.net/packages/pypi/azureml-model-serializer/azureml_model_serializer-0.0.2-py3-none-any.whl
     - click<8.0.0
-    - mltable==0.1.0b4
+    - mltable==1.0.0
     - transformers>=4.17.0
     - ml-wrappers==0.2.2
