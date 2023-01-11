@@ -20,4 +20,4 @@ dependencies:
   - azureml-dataset-runtime=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
-  - mltable==0.1.0b4
+  - mltable==1.0.0
