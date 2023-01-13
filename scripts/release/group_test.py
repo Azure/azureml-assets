@@ -2,22 +2,27 @@
 # Licensed under the MIT License.
 """Python script to run group tests."""
 import argparse
-from subprocess import check_call, run
-from pathlib import Path
-import azure.ai.ml
-from azure.ai.ml import MLClient
-from azure.identity import DefaultAzureCredential
 import concurrent.futures
-import yaml
 import os
 import sys
+import yaml
+
+from contextlib import contextmanager
+from subprocess import check_call, run
+from pathlib import Path
+from azure.ai.ml import load_job, MLClient
+from azure.identity import DefaultAzureCredential
 from azureml.assets.util import logger
+
+
 TEST_YML = "tests.yml"
 
 
 def run_pytest_job(job: Path, my_env: dict):
     """Run single pytest job."""
-    p = run(f"pytest -q {job}", env=my_env, shell=True)
+    NUM_THREADS = 8
+    logger.print(f"Running pytest with distribution level: {NUM_THREADS}")
+    p = run(f"pytest {job} -n {NUM_THREADS} --log-cli-level=info --show-capture=stderr", env=my_env, shell=True)
     return p.returncode
 
 
@@ -33,7 +38,18 @@ def run_pytest_jobs(pytest_jobs: dict, my_env: dict):
     return jobs
 
 
-if __name__ == '__main__':
+@contextmanager
+def set_directory(path: Path):
+    """Context manager to change directory to `path` and revert back to origin post performing a task."""
+    origin = Path().absolute()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(origin)
+
+
+if __name__ == "__main__":
     logger.print("Start running group tests")
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests folder")
@@ -58,16 +74,16 @@ if __name__ == '__main__':
 
     with open(tests_dir / TEST_YML) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
-        if 'pre' in data[test_group]:
+        if "pre" in data[test_group]:
             group_pre = tests_dir / data[test_group]['pre']
-        if 'post' in data[test_group]:
+        if "post" in data[test_group]:
             group_post = tests_dir / data[test_group]['post']
 
     my_env = os.environ.copy()
     my_env['subscription_id'] = subscription_id
     my_env['resource_group'] = resource_group
     my_env['workspace'] = workspace
-    if my_env['token']:
+    if my_env.get('token'):
         logger.print("token is set")
     if args.version_suffix:
         my_env['version_suffix'] = args.version_suffix
@@ -78,67 +94,68 @@ if __name__ == '__main__':
     test_coverage = {}
     covered_assets = []
 
-    if group_pre:
-        check_call(f"python {group_pre}", env=my_env, shell=True)
+    with set_directory(tests_dir):
+        if group_pre:
+            check_call(f"python3 {group_pre}", env=my_env, shell=True)
 
-    pytest_jobs = {}  # pytest job path -> assets coverage dict
-    with open(tests_dir / TEST_YML) as fp:
-        data = yaml.load(fp, Loader=yaml.FullLoader)
-        for job, job_data in data[test_group]['jobs'].items():
-            if 'pytest_job' in job_data:
-                pytest_jobs[tests_dir / job_data['pytest_job']] = job_data['assets']
+        pytest_jobs = {}  # pytest job path -> assets coverage dict
+        with open(tests_dir / TEST_YML) as fp:
+            data = yaml.load(fp, Loader=yaml.FullLoader)
+            for job, job_data in data[test_group]['jobs'].items():
+                if "pytest_job" in job_data:
+                    pytest_jobs[tests_dir / job_data['pytest_job']] = job_data['assets']
+                else:
+                    if "pre" in job_data:
+                        logger.print(f"Running pre script for {job}")
+                        proc = check_call(f"python3 {tests_dir / job_data['pre']}", env=my_env, shell=True)
+                    print(f"Loading test job {job}")
+                    try:
+                        test_job = load_job(tests_dir / job_data['job'])
+                        logger.print(f"Running test job {job}")
+                        test_job = ml_client.jobs.create_or_update(test_job)
+                    except Exception as ex:
+                        logger.log_warning(
+                            f"catch error submitting {job_data['job']} with exception {ex}")
+                        failed_jobs.append(job)
+                        continue
+                    test_coverage[test_job] = job_data.get("assets", [])
+                    logger.print(f"Submitted test job {job}")
+                    logger.print(f"Job id: {test_job.id}")
+                    submitted_job_list.append(test_job)
+
+        # Run pytest jobs
+        pytest_job_results = run_pytest_jobs(pytest_jobs, my_env)
+
+        for job, assets in pytest_job_results.items():
+            if job.result() == 0:
+                succeeded_jobs.append(job)
+                covered_assets.extend(assets)
             else:
-                if 'pre' in job_data:
-                    logger.print(f"Running pre script for {job}")
-                    proc = check_call(f"python3 {tests_dir / job_data['pre']}", env=my_env, shell=True)
-                print(f'Loading test job {job}')
-                try:
-                    test_job = azure.ai.ml.load_job(tests_dir / job_data['job'])
-                    logger.print(f'Running test job {job}')
-                    test_job = ml_client.jobs.create_or_update(test_job)
-                except Exception as ex:
-                    logger.log_warning(
-                        f"catch error submitting {job_data['job']} with exception {ex}")
-                    failed_jobs.append(job)
-                    continue
-                test_coverage[test_job] = job_data.get("assets", [])
-                logger.print(f'Submitted test job {job}')
-                logger.print(f"Job id: {test_job.id}")
-                submitted_job_list.append(test_job)
+                failed_jobs.append(job)
 
-    # Run pytest jobs
-    pytest_job_results = run_pytest_jobs(pytest_jobs, my_env)
+        # TO-DO: job post and group post scripts will be run after all jobs are completed
 
-    for job, assets in pytest_job_results.items():
-        if job.result() == 0:
-            succeeded_jobs.append(job)
-            covered_assets.extend(assets)
-        else:
-            failed_jobs.append(job)
+        # process pipeline jobs results
+        while submitted_job_list:
+            for job in submitted_job_list:
+                returned_job = ml_client.jobs.get(job.name)
+                if returned_job.status == "Completed":
+                    succeeded_jobs.append(returned_job.display_name)
+                    covered_assets.extend(test_coverage.get(job, []))
+                    submitted_job_list.remove(job)
+                elif returned_job.status in ["Failed", "Cancelled"]:
+                    failed_jobs.append(returned_job.display_name)
+                    submitted_job_list.remove(job)
 
-    # TO-DO: job post and group post scripts will be run after all jobs are completed
+        print(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
 
-    # process pipeline jobs results
-    while submitted_job_list:
-        for job in submitted_job_list:
-            returned_job = ml_client.jobs.get(job.name)
-            if returned_job.status == "Completed":
-                succeeded_jobs.append(returned_job.display_name)
-                covered_assets.extend(test_coverage.get(job, []))
-                submitted_job_list.remove(job)
-            elif returned_job.status in ["Failed", "Cancelled"]:
-                failed_jobs.append(returned_job.display_name)
-                submitted_job_list.remove(job)
-
-    print(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
-
-    logger.print(f"covered_assets {covered_assets}")
-    if coverage_report:
-        with open(coverage_report, 'r') as yf:
-            cover_yaml = yaml.safe_load(yf) or []
-            cover_yaml.extend(covered_assets)
-        with open(coverage_report, 'w') as yf:
-            yaml.safe_dump(cover_yaml, yf)
+        logger.print(f"covered_assets {covered_assets}")
+        if coverage_report:
+            with open(coverage_report, "r") as yf:
+                cover_yaml = yaml.safe_load(yf) or []
+                cover_yaml.extend(covered_assets)
+            with open(coverage_report, "w") as yf:
+                yaml.safe_dump(cover_yaml, yf)
 
     if failed_jobs:
         logger.log_warning(f"{len(failed_jobs)} jobs failed. {failed_jobs}.")
