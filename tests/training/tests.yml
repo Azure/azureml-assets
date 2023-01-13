@@ -7,3 +7,27 @@ vision:
       pre: ./vision/jobs/object-detection-using-built-in-component/prepare_data.py
       assets:
       - train_object_detection_model
+automl_components:
+  includes:
+  - ./automl/tests/
+  pre: ./automl/tests/preprocessing/automl_preprocessing.py
+  jobs:
+    automl_nlp_components_validaton:
+      pytest_job: ./automl/tests/test_automl_nlp_components.py
+      assets:
+      - automl_text_classification
+      - automl_text_classification_multilabel
+      - azureml_automl_text_ner
+    automl_tabular_components_validation:
+      pytest_job: ./automl/tests/test_automl_tabular_components.py
+      assets:
+      - automl_classification
+      - automl_forecasting
+      - automl_regression
+    automl_vision_components_validation:
+      pytest_job: ./automl/tests/test_automl_vision_components.py
+      assets:
+      - automl_image_classification
+      - automl_image_classification_multilabel
+      - automl_image_instance_segmentation
+      - automl_image_object_detection
