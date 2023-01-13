@@ -21,23 +21,24 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     holidays=0.10.3 \
     setuptools-git \
     'psutil>5.0.0,<6.0.0' \
-    -c conda-forge -c anaconda
+    -c conda-forge -c pytorch -c anaconda
 
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 # Install pip dependencies
-RUN pip install 'azureml-core' \
-                'azureml-mlflow' \
-                'azureml-pipeline-core' \
-                'azureml-telemetry' \
-                'azureml-interpret' \
-                'azureml-responsibleai' \
-                'azureml-automl-core' \
-                'azureml-automl-runtime' \
-                'azureml-train-automl-client' \
-                'azureml-train-automl-runtime' \
-                'azureml-dataset-runtime' \
-                'azureml-defaults' \
+RUN pip install '{pin-to-latest-pypi-version:"azureml-core=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-mlflow=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-pipeline-core=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-telemetry=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-interpret=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-responsibleai=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-automl-core=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-automl-runtime=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-train-automl-client=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-train-automl-runtime=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-dataset-runtime=={}"}' \
+                '{pin-to-latest-pypi-version:"azureml-defaults=={}"}' \
                 'inference-schema' \
-                'mpi4py==3.1.3'
+                'mpi4py==3.1.3' \
+                '{pin-to-extra-index}'
