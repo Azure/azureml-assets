@@ -1,7 +1,0 @@
-$schema: http://azureml/sdk-2-0/AutoMLComponent.json
-name: microsoft_azureml_automl_text_classification_multilabel_component
-display_name: AutoML Text Classification Multilabel (Private Preview)
-description: Component that executes an AutoML Text Classification Multilabel task model training in a pipeline.
-version: 0.0.1-preview
-type: automl
-task: text_classification_multilabel
