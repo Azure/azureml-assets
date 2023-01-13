@@ -11,7 +11,8 @@ ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 # Install pip dependencies
 # update mldesigner to macro after its pre-release complete, currently manually update it
-RUN pip install mldesigner==0.1.0b9 \
+RUN pip install mldesigner \
+                azure-ai-ml=={{latest-pypi-version}} \
                 azureml-mlflow=={{latest-pypi-version}}
 
 # This is needed for mpi to locate libpython
