@@ -1,4 +1,4 @@
-name: component-2.0-ubuntu20.04-py38-cpu
+name: mldesigner-2.0-ubuntu20.04-py38-cpu
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml

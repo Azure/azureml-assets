@@ -1,4 +1,4 @@
-name: component-1.5-ubuntu20.04-py38-cpu
+name: componentsdk-1.5-ubuntu20.04-py38-cpu
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml
