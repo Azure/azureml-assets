@@ -69,4 +69,5 @@ def test_responsibleai_text():
             print(f"*** END {STD_LOG} ***")
         else:
             ml_client.jobs.stream(returned_job.name)
+
     assert current_status == JobStatus.COMPLETED
