@@ -54,5 +54,3 @@ jobs:
         run: |
           mkdir -p ${{ runner.temp }}/test_coverage
           python -u $scripts_release_dir/test_file_convert.py -i "${{ env.default_test_dirs }}" -r ${{ runner.temp }}/test_coverage
-
-
