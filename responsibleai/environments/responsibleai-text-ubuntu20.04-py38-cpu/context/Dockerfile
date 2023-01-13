@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/responsibleai-vision
+ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/responsibleai-text
 
 # Prepend path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
