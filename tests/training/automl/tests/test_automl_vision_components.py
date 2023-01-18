@@ -21,7 +21,7 @@ class TestAutoMLVisionComponents(ValidateAutoMLComponents):
         [
             # image classification
             (
-                "automl/components/automl_image_classification/spec.yaml",
+                "automl_image_classification",
                 "automl/tests/test_configs/payload/image_classification_fridge_items_payload.json",
                 [
                     {
@@ -46,7 +46,7 @@ class TestAutoMLVisionComponents(ValidateAutoMLComponents):
             ),
             # image classification multilabel
             (
-                "automl/components/automl_image_classification_multilabel/spec.yaml",
+                "automl_image_classification_multilabel",
                 "automl/tests/test_configs/payload/image_classification_multilabel_fridge_items_payload.json",
                 [
                     {
@@ -71,7 +71,7 @@ class TestAutoMLVisionComponents(ValidateAutoMLComponents):
             ),
             # image object detection
             (
-                "automl/components/automl_image_object_detection/spec.yaml",
+                "automl_image_object_detection",
                 "automl/tests/test_configs/payload/image_object_detection_fridge_items_payload.json",
                 [
                     {
@@ -96,7 +96,7 @@ class TestAutoMLVisionComponents(ValidateAutoMLComponents):
             ),
             # image instance segmentation
             (
-                "automl/components/automl_image_instance_segmentation/spec.yaml",
+                "automl_image_instance_segmentation",
                 "automl/tests/test_configs/payload/image_instance_segmentation_fridge_items_payload.json",
                 [
                     {

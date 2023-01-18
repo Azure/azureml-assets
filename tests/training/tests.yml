@@ -17,7 +17,7 @@ automl_components:
       assets:
       - automl_text_classification
       - automl_text_classification_multilabel
-      - azureml_automl_text_ner
+      - automl_text_ner
     automl_tabular_components_validation:
       pytest_job: ./automl/tests/test_automl_tabular_components.py
       assets:
