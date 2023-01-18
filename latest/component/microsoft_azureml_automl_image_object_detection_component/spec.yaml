@@ -1,7 +1,0 @@
-$schema: http://azureml/sdk-2-0/AutoMLComponent.json
-name: microsoft_azureml_automl_image_object_detection_component
-display_name: AutoML Image Object Detection (Private Preview)
-description: Component that executes an AutoML Image Object Detection task model training in a pipeline.
-version: 0.0.1-preview
-type: automl
-task: image_object_detection
