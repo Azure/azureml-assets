@@ -21,7 +21,7 @@ class TestAutoMLTabularComponents(ValidateAutoMLComponents):
         [
             # classification
             (
-                "automl/components/automl_tabular_classification/spec.yaml",
+                "automl_classification",
                 "automl/tests/test_configs/payload/classification_bankmarketing_payload.json",
                 [
                     {
@@ -50,7 +50,7 @@ class TestAutoMLTabularComponents(ValidateAutoMLComponents):
             ),
             # regression
             (
-                "automl/components/automl_tabular_regression/spec.yaml",
+                "automl_regression",
                 "automl/tests/test_configs/payload/regression_hardware_performance_payload.json",
                 [
                     {
@@ -66,7 +66,7 @@ class TestAutoMLTabularComponents(ValidateAutoMLComponents):
             ),
             # forecasting
             (
-                "automl/components/automl_tabular_forecasting/spec.yaml",
+                "automl_forecasting",
                 "automl/tests/test_configs/payload/forecasting_energy_demand_payload.json",
                 [
                     {
