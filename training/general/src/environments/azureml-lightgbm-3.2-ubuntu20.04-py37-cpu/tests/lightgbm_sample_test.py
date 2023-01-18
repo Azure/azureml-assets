@@ -16,7 +16,7 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 40)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_sklearn_0_24():
+def test_lightgbm_3_2():
     """Tests a sample job using lightgbm 3.2 as the environment."""
     this_dir = Path(__file__).parent
 
@@ -49,9 +49,9 @@ def test_sklearn_0_24():
         },
         environment=f"{env_name}@latest",
         compute=os.environ.get("cpu_cluster"),
-        display_name="sklearn-diabetes-example",
+        display_name="lightgbm-diabetes-example",
         description="A test run of the lightgbm 3.2 curated environment",
-        experiment_name="sklearnExperiment"
+        experiment_name="lightgbmExperiment"
     )
 
     returned_job = ml_client.create_or_update(job)
