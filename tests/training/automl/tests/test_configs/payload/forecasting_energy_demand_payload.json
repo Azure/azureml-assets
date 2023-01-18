@@ -19,7 +19,6 @@
             {
                 "id": "automl_node",
                 "moduleId": "",
-                "moduleParameters": [],
                 "useGraphDefaultCompute": true,
                 "useGraphDefaultDatastore": true,
                 "regenerateOutput": true,
@@ -143,10 +142,6 @@
                     "valueType": "Literal"
                 },
                 {
-                    "name": "UseStl",
-                    "valueType": "Literal"
-                },
-                {
                     "name": "BlockListModels",
                     "valueType": "Literal"
                 },
@@ -194,7 +189,8 @@
             "moduleInputSettings": [
                 {
                     "name": "training_data",
-                    "dataDeliveryMode": "Direct"
+                    "dataDeliveryMode": "Direct",
+                    "isConnected": true
                 }
             ]
         }
