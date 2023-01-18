@@ -30,7 +30,7 @@ class ValidateAutoMLComponents:
     def validate_automl_components(
         self,
         mlclient,
-        spec_path,
+        component_name,
         payload_path,
         data_assets,
         registry_name,
@@ -40,8 +40,7 @@ class ValidateAutoMLComponents:
         workspace_location,
     ):
         """Test AutoML designer components."""
-        component = load_component(spec_path)
-        component_asset_id = COMPONENT_ASSET_DEFAULT_LABEL_TEMPLATE.format(registry_name, component.name)
+        component_asset_id = COMPONENT_ASSET_DEFAULT_LABEL_TEMPLATE.format(registry_name, component_name)
         logger.info(f"component_asset_id => {component_asset_id}")
 
         data_assets = register_data_assets(mlclient, data_assets)

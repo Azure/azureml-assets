@@ -21,7 +21,7 @@ class TestNLPComponents(ValidateAutoMLComponents):
         [
             # nlp classification
             (
-                "automl/components/automl_text_classification/spec.yaml",
+                "automl_text_classification",
                 "automl/tests/test_configs/payload/text_classification_newsgroup_payload.json",
                 [
                     {
@@ -46,7 +46,7 @@ class TestNLPComponents(ValidateAutoMLComponents):
             ),
             # nlp classification multilabel
             (
-                "automl/components/automl_text_classification_multilabel/spec.yaml",
+                "automl_text_classification_multilabel",
                 "automl/tests/test_configs/payload/text_classification_multilabel_newsgroup_payload.json",
                 [
                     {
@@ -71,7 +71,7 @@ class TestNLPComponents(ValidateAutoMLComponents):
             ),
             # nlp ner
             (
-                "automl/components/automl_text_ner/spec.yaml",
+                "automl_text_ner",
                 "automl/tests/test_configs/payload/text_ner_conll_payload.json",
                 [
                     {
