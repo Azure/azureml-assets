@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/azureml-lightgbm-3.2-ubuntu20.04-py37-cpu
+  name: azureml/curated/acpt-pytorch-1.11-py38-cuda11.5-gpu
   os: linux
   context:
     dir: context
@@ -11,9 +11,13 @@ image:
     visibility: public
 environment:
   metadata:
+    Cuda:
+      CudaVersion: "11.5"
+      CuDnnVersion: "8.2.0"
+      NcclVersion: "2.9.9"
     MachineLearningFramework:
-      name: LightGBM
-      version: "3.2"
+      name: PyTorch
+      version: "1.11"
     Mpi:
       name: OpenMpi
       version: "4.1.0"
@@ -22,7 +26,7 @@ environment:
       HasInferencingSupport: false
     Runtime:
       name: Python
-      version: "3.7"
+      version: "3.8"
     Os:
       name: Ubuntu
       version: "20.04"

@@ -1,4 +1,4 @@
-name: azureml-sklearn-1.0-ubuntu20.04-py38-cpu
+name: acpt-pytorch-1.12-py39-cuda11.6-gpu
 version: auto
 type: environment
 spec: spec.yaml

@@ -1,4 +1,4 @@
-name: azureml-sklearn-0.24-ubuntu20.04-py37-cpu
+name: lightgbm-3.2-ubuntu20.04-py37-cpu
 version: auto
 type: environment
 spec: spec.yaml

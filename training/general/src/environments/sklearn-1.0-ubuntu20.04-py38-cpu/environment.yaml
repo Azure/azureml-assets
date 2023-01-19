@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/azureml-tensorflow-2.7-ubuntu20.04-py38-cuda11-gpu
+  name: azureml/curated/sklearn-1.0-ubuntu20.04-py38-cpu
   os: linux
   context:
     dir: context
@@ -11,13 +11,9 @@ image:
     visibility: public
 environment:
   metadata:
-    Cuda:
-      CudaVersion: "11.1.1"
-      CuDnnVersion: "8.0.5.39"
-      NcclVersion: "2.8.4"
     MachineLearningFramework:
-      name: TensorFlow
-      version: "2.6"
+      name: Scikit-learn
+      version: "1.0"
     Mpi:
       name: OpenMpi
       version: "4.1.0"

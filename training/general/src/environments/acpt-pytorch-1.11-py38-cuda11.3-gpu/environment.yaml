@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/azureml-sklearn-1.0-ubuntu20.04-py38-cpu
+  name: azureml/curated/acpt-pytorch-1.11-py38-cuda11.3-gpu
   os: linux
   context:
     dir: context
@@ -11,9 +11,13 @@ image:
     visibility: public
 environment:
   metadata:
+    Cuda:
+      CudaVersion: "11.3"
+      CuDnnVersion: "8.2.0"
+      NcclVersion: "2.9.9"
     MachineLearningFramework:
-      name: Scikit-learn
-      version: "1.0"
+      name: PyTorch
+      version: "1.11"
     Mpi:
       name: OpenMpi
       version: "4.1.0"
