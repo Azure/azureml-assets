@@ -173,7 +173,8 @@ def build_images(input_dirs: List[Path],
                  resource_group: str = None,
                  registry: str = None,
                  test_command: str = None,
-                 push: bool = False) -> bool:
+                 push: bool = False,
+                 use_version_dirs: bool = False) -> bool:
     """Build Docker images in parallel, either locally or via ACR.
 
     Args:
@@ -190,6 +191,7 @@ def build_images(input_dirs: List[Path],
         registry (str, optional): ACR name. Defaults to None.
         test_command (str, optional): Command used to test images. Defaults to None.
         push (bool, optional): Push images to ACR. Defaults to False.
+        use_version_dirs (bool, optional): Use version directories for output. Defaults to False.
 
     Returns:
         bool: True if all images were build successfully, otherwise False.
@@ -224,7 +226,7 @@ def build_images(input_dirs: List[Path],
                 # Copy file to output directory without building
                 if output_directory:
                     util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory,
-                                                  add_subdir=True)
+                                                  add_subdir=True, use_version_dir=use_version_dirs)
                 continue
 
             # Tag with version from spec
@@ -255,7 +257,7 @@ def build_images(input_dirs: List[Path],
                 counters[SUCCESS_COUNT] += 1
                 if output_directory:
                     util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory,
-                                                  add_subdir=True)
+                                                  add_subdir=True, use_version_dir=use_version_dirs)
 
     # Set variables
     for counter_name in COUNTERS:
@@ -296,6 +298,8 @@ if __name__ == '__main__':
                         help="If building on ACR, command used to test image, relative to build context root")
     parser.add_argument("-u", "--push", action="store_true",
                         help="If building on ACR, push after building and (optionally) testing")
+    parser.add_argument("-v", "--use-version-dirs", action="store_true",
+                        help="Use version directories when storing assets in output directory")
     args = parser.parse_args()
 
     # Ensure dependent args are present
@@ -305,6 +309,8 @@ if __name__ == '__main__':
         parser.error("--test-command requires both --registry and --resource-group")
     if args.push and not (args.registry and args.resource_group):
         parser.error("--push requires both --registry and --resource-group")
+    if args.use_version_dirs and not args.output_directory:
+        parser.error("--use-version-dirs requires --output-directory")
 
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
@@ -323,6 +329,7 @@ if __name__ == '__main__':
                            resource_group=args.resource_group,
                            registry=args.registry,
                            test_command=args.test_command,
-                           push=args.push)
+                           push=args.push,
+                           use_version_dirs=args.use_version_dirs)
     if not success:
         sys.exit(1)
