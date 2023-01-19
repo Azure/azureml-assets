@@ -1,19 +1,17 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
-ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/mldesigner
+WORKDIR /
 
-# Create conda environment
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
-    python=3.8.13 pip=21.3.1 -c anaconda -c conda-forge
-
-# Prepend path to AzureML conda environment
-ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
-
-# Install pip dependencies
-# update mldesigner to macro after its pre-release complete, currently manually update it
-RUN pip install mldesigner \
-                azure-ai-ml=={{latest-pypi-version}} \
-                azureml-mlflow=={{latest-pypi-version}}
+ENV CONDA_PREFIX=/azureml-envs/mldesigner
+ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
+ENV PATH=$CONDA_PREFIX/bin:$PATH
 
 # This is needed for mpi to locate libpython
-ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+
+# Create conda environment
+COPY conda_dependencies.yaml .
+RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
+    rm conda_dependencies.yaml && \
+    conda run -p $CONDA_PREFIX pip cache purge && \
+    conda clean -a -y
