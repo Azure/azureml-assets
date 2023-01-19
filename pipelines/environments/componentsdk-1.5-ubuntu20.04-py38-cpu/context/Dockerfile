@@ -10,7 +10,6 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 # Install pip dependencies
-# update mldesigner to macro after its pre-release complete, currently manually update it
 RUN pip install azure-ml-component=={{latest-pypi-version}} \
                 azureml-defaults=={{latest-pypi-version}}
 
