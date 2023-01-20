@@ -1,0 +1,32 @@
+image:
+  name: azureml/curated/pytorch-1.10-py38-cuda11-gpu
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+  publish:
+    location: mcr
+    visibility: public
+environment:
+  metadata:
+    Cuda:
+      CudaVersion: "11.1.1"
+      CuDnnVersion: "8.0.5.39"
+      NcclVersion: "2.8.4"
+    MachineLearningFramework:
+      name: PyTorch
+      version: "1.10"
+    Mpi:
+      name: OpenMpi
+      version: "4.1.0"
+    Purpose:
+      HasTrainingSupport: true
+      HasInferencingSupport: false
+    Runtime:
+      name: Python
+      version: "3.8"
+    Os:
+      name: Ubuntu
+      version: "20.04"

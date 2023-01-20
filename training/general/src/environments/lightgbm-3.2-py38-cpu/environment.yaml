@@ -1,0 +1,28 @@
+image:
+  name: azureml/curated/lightgbm-3.2-py38-cpu
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+  publish:
+    location: mcr
+    visibility: public
+environment:
+  metadata:
+    MachineLearningFramework:
+      name: LightGBM
+      version: "3.2"
+    Mpi:
+      name: OpenMpi
+      version: "4.1.0"
+    Purpose:
+      HasTrainingSupport: true
+      HasInferencingSupport: false
+    Runtime:
+      name: Python
+      version: "3.8"
+    Os:
+      name: Ubuntu
+      version: "20.04"

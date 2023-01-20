@@ -1,0 +1,10 @@
+name: lightgbm-3.2-py38-cpu
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+test:
+  pytest:
+    enabled: true 
+    pip_requirements: tests/requirements.txt
+    tests_dir: tests

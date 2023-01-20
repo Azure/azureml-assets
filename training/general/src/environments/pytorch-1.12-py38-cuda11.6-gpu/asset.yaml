@@ -1,0 +1,10 @@
+name: pytorch-1.12-py38-cuda11.6-gpu
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+test:
+  pytest:
+    enabled: true 
+    pip_requirements: tests/requirements.txt
+    tests_dir: tests
