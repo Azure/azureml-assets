@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/inference-base-gpu-2004@sha256:03a358c932f146f2fdd6af4ad92afc948aabc5310c47aea15a01cc7125fb3fc5
+FROM mcr.microsoft.com/azureml/inference-base-gpu-2004@sha256:46aa1001aa6372021091e724454e75e1c3a4734c399b69dd581e9cb5cdf4da20
 
 WORKDIR /
 
