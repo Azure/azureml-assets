@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:b73474f680d34fa004febc313946764ec6547c53bcb7d7a65837fd7aad8242f9
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:5d24ccb3c12cd77f7c9ab1f8d748500964519d984d7b22648055f331d442cbad
 
 # Install OpenCV native dependencies
 RUN apt-get update
