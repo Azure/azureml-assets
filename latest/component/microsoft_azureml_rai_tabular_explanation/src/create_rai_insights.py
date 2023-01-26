@@ -10,15 +10,18 @@ import shutil
 from azureml.core import Run
 
 from responsibleai import RAIInsights
+from responsibleai.feature_metadata import FeatureMetadata
 
 from constants import DashboardInfo
-from arg_helpers import get_from_args, json_empty_is_none_parser
+from arg_helpers import boolean_parser, get_from_args, json_empty_is_none_parser
 from rai_component_utilities import (
     load_dataset,
+    default_json_handler,
     fetch_model_id,
     load_mlflow_model,
     get_train_dataset_id,
     get_test_dataset_id,
+    UserConfigError
 )
 
 from _telemetry._loggerfactory import _LoggerFactory, track
@@ -66,7 +69,9 @@ def parse_args():
 
     parser.add_argument("--classes", type=str, help="Optional[List[str]]")
 
-    parser.add_argument("--use_model_dependency", type=bool, help="Use model dependency")
+    parser.add_argument("--feature_metadata", type=str, help="identity_feature_name:Optional[str], dropped_features:Optional[List[str]]")
+
+    parser.add_argument("--use_model_dependency", type=boolean_parser, help="Use model dependency")
 
     parser.add_argument("--output_path", type=str, help="Path to output JSON")
 
@@ -79,7 +84,6 @@ def parse_args():
 
 def create_constructor_arg_dict(args):
     """Create a kwarg dict for RAIInsights constructor
-
     Only does the 'parameters' for the component, not the
     input ports
     """
@@ -91,11 +95,20 @@ def create_constructor_arg_dict(args):
     class_names = get_from_args(
         args, "classes", custom_parser=json_empty_is_none_parser, allow_none=True
     )
+    feature_metadata_dict = get_from_args(
+        args, "feature_metadata", custom_parser=json.loads, allow_none=True
+    )
+    feature_metadata = FeatureMetadata()
+    if 'dropped_features' in feature_metadata_dict.keys():
+        feature_metadata.dropped_features = feature_metadata_dict['dropped_features']
+    if 'identity_feature_name' in feature_metadata_dict.keys():
+        feature_metadata.identity_feature_name = feature_metadata_dict['identity_feature_name']
 
     result["target_column"] = args.target_column_name
     result["task_type"] = args.task_type
     result["categorical_features"] = cat_col_names
     result["classes"] = class_names
+    result["feature_metadata"] = feature_metadata
     result["maximum_rows_for_test"] = args.maximum_rows_for_test_dataset
 
     return result
@@ -133,7 +146,7 @@ def main(args):
     if args.model_info_path is None and (
         args.model_input is None or args.model_info is None
     ):
-        raise ValueError("Either model info or model input needs to be supplied.")
+        raise UserConfigError("Either model info or model input needs to be supplied.")
 
     model_estimator = None
     model_id = None
@@ -176,7 +189,7 @@ def main(args):
         args.output_path, DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
     )
     with open(output_file, "w") as of:
-        json.dump(output_dict, of)
+        json.dump(output_dict, of, default=default_json_handler)
 
     _logger.info("Copying train data files")
     copy_input_data(
