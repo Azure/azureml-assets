@@ -321,7 +321,7 @@ def create_rai_insights_from_port_path(my_run: Run, port_path: str) -> RAIInsigh
     use_model_dependency = input_args["use_model_dependency"]
     model_id = config[DashboardInfo.RAI_INSIGHTS_MODEL_ID_KEY]
     _logger.info("Loading model: {0}".format(model_id))
-    
+
     model_estimator = load_mlflow_model(
         workspace=my_run.experiment.workspace,
         use_model_dependency=use_model_dependency,
