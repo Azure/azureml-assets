@@ -329,7 +329,7 @@ def get_dataset_name_version(run, dataset_input_name):
 
 
 def default_json_handler(data):
-    if  isinstance(data, FeatureMetadata): 
+    if isinstance(data, FeatureMetadata):
         meta_dict = data.__dict__
         type_name = type(data).__name__
         meta_dict[data_type] = type_name
