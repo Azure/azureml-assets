@@ -32,14 +32,12 @@ def get_full_html(htmlbody):
 def get_css():
     return """<style>
         * {
-          font-family: Segoe UI;
+          font-family: Ubuntu;
         }
-
         .header {
           /* border: 2px solid green; */
           /*           background-color: #ccf; */
         }
-
         .container {
           break-inside: avoid !important;
           page-break-inside: avoid !important;
@@ -47,63 +45,52 @@ def get_css():
           min-height: 80%;
           overflow: hidden;
         }
-
         .left {
           float: left;
           width: 3in;
           padding-bottom: 9999px;
           margin-bottom: -9999px;
         }
-
         .main {
           position: relative;
           margin-left: 3.05in;
           padding-bottom: 9999px;
           margin-bottom: -9999px;
         }
-
         .left_model_overview {
           float: left;
           width: 4.2in;
           padding-bottom: 9999px;
           margin-bottom: -9999px;
         }
-
         .main_model_overview {
           position: relative;
           margin-left: 4.25in;
           padding-bottom: 9999px;
           margin-bottom: -9999px;
         }
-
         #footer {
           background-color: #fcc;
         }
-
         .box {
           width: 5in;
           height: auto;
         }
-
         img {
           width: 5in;
           height: auto;
         }
-
         .left_img {
           width: 3in;
           height: auto;
         }
-
         .image_div {
           break-inside: avoid;
         }
-
         .nobreak_div {
           break-inside: avoid !important;
           page-break-inside: avoid !important;
         }
-
         .nobreak_div_padding {
           content: "";
           display: block;
@@ -112,24 +99,20 @@ def get_css():
           break-inside: avoid !important;
           page-break-inside: avoid !important;
         }
-
         .cell {
           border-collapse: collapse;
           border: 0.5px solid rgba(199, 199, 199, 1);
           padding: 5px 10px;
         }
-
         .header_cell {
           border-collapse: collapse;
           border: 0px;
           padding: 5px 10px;
         }
-
         .table {
           border-collapse: collapse;
           border-style: hidden;
         }
-
       </style>"""
 
 
@@ -791,23 +774,23 @@ def get_causal_page(data):
             )
         )
 
-        ct = p["Current treatment"]
-        et = p["Effect of treatment"]
+        def causal_policies_map_to_table(policy):
+            ct = policy["Current treatment"]
+            et = policy["Effect of treatment"]
 
-        ct = round(ct, 2) if isinstance(ct, (int, float)) else ct
-        et = round(et, 2) if isinstance(et, (int, float)) else et
+            ct = round(ct, 2) if isinstance(ct, (int, float)) else ct
+            et = round(et, 2) if isinstance(et, (int, float)) else et
+
+            return [
+                policy["index"],
+                ct,
+                policy["Treatment"],
+                et,
+            ]
 
         main_elems.append(
             get_table(
-                [
-                    [
-                        p["index"],
-                        ct,
-                        p["Treatment"],
-                        et,
-                    ]
-                    for p in data["top_local_policies"][f["feature"]]
-                ]
+                list(map(causal_policies_map_to_table, data["top_local_policies"][f["feature"]]))
             )
         )
 
