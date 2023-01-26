@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from domonic.html import div, h3, h2, p, img, table, td, th, tr, ul, li, thead, tbody
+from domonic.html import div, h3, p, img, table, td, th, tr, ul, li, thead, tbody
 from . import common_components as cc
 from ._rai_insight_data import get_metric
 
