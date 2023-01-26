@@ -21,12 +21,14 @@ from typing import Any, Dict, Optional
 from azureml.core import Model, Run, Workspace
 
 from responsibleai import RAIInsights, __version__ as responsibleai_version
+from responsibleai.feature_metadata import FeatureMetadata
 
 from constants import DashboardInfo, PropertyKeyValues, RAIToolType
 
 assetid_re = re.compile(
     r"azureml://locations/(?P<location>.*)/workspaces/(?P<workspaceid>.*)/(?P<assettype>.*)/(?P<assetname>.*)/versions/(?P<assetversion>.*)"
 )
+data_type = "data_type"
 
 _logger = logging.getLogger(__file__)
 logging.basicConfig(level=logging.INFO)
@@ -125,7 +127,7 @@ def load_dashboard_info_file(input_port_path: str) -> Dict[str, str]:
         input_port_path, DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
     )
     with open(rai_insights_dashboard_file, "r") as si:
-        dashboard_info = json.load(si)
+        dashboard_info = json.load(si, object_hook=default_object_hook)
     _logger.info("rai_insights_parent info: {0}".format(dashboard_info))
     return dashboard_info
 
@@ -324,3 +326,19 @@ def get_dataset_name_version(run, dataset_input_name):
     aid = get_run_input_assets(run)[dataset_input_name]["asset"]["assetId"]
     ainfo = get_asset_information(aid)
     return f'{ainfo["assetname"]}:{ainfo["assetversion"]}'
+
+
+def default_json_handler(data):
+    if  isinstance(data, FeatureMetadata): 
+        meta_dict = data.__dict__
+        type_name = type(data).__name__
+        meta_dict[data_type] = type_name
+        return meta_dict
+    return None
+
+
+def default_object_hook(dict):
+    if data_type in dict and dict[data_type] == FeatureMetadata.__name__:
+        del dict[data_type]
+        return FeatureMetadata(**dict)
+    return dict
