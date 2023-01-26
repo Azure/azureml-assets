@@ -100,9 +100,9 @@ def create_constructor_arg_dict(args):
     )
     feature_metadata = FeatureMetadata()
     if 'dropped_features' in feature_metadata_dict.keys():
-        feature_metadata.dropped_features=feature_metadata_dict['dropped_features']
+        feature_metadata.dropped_features = feature_metadata_dict['dropped_features']
     if 'identity_feature_name' in feature_metadata_dict.keys():
-        feature_metadata.identity_feature_name=feature_metadata_dict['identity_feature_name']
+        feature_metadata.identity_feature_name = feature_metadata_dict['identity_feature_name']
 
     result["target_column"] = args.target_column_name
     result["task_type"] = args.task_type
