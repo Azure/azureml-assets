@@ -97,7 +97,8 @@ def load_mlflow_model(
         except subprocess.CalledProcessError as e:
             _logger.error("Installing dependency using requriments.txt from mlflow model failed: {}".format(e.output))
             _classify_and_log_pip_install_error(e.output)
-            raise UserConfigError("Installing dependency using requirments.txt from mlflow model failed. "
+            raise UserConfigError(
+                "Installing dependency using requirments.txt from mlflow model failed. "
                 "This behavior can be turned off with setting use_model_dependency to False in job spec. "
                 "You may also check error log above to manually resolve package conflict error")
         _logger.info("Successfully installed model dependencies")
