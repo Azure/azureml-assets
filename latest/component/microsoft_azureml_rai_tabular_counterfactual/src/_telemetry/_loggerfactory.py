@@ -5,6 +5,7 @@ import logging
 import logging.handlers
 import traceback
 import time
+import json
 import pkg_resources
 
 from contextlib import contextmanager
@@ -54,7 +55,7 @@ class _LoggerFactory:
     @staticmethod
     def track_python_environment(logger):
         payload = {d.project_name: d.version for d in pkg_resources.working_set}
-        activity_logger = ActivityLoggerAdapter(logger, {"python_environment": payload})
+        activity_logger = ActivityLoggerAdapter(logger, {"python_environment": json.dumps(payload)})
         activity_logger.info("Logging python environment.")
 
     @staticmethod
