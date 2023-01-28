@@ -1,12 +1,11 @@
 image:
-  name: azureml/curated/tensorflow-2.9-cuda11
+  name: azureml/curated/pytorch-1.11-cuda11.3
   os: linux
   context:
     dir: context
     dockerfile: Dockerfile
     template_files:
     - Dockerfile
-    - conda_dependencies.yaml
   publish:
     location: mcr
     visibility: public
@@ -17,8 +16,8 @@ environment:
       CuDnnVersion: "8.2.0"
       NcclVersion: "2.9.9"
     MachineLearningFramework:
-      name: TensorFlow
-      version: "2.9"
+      name: PyTorch
+      version: "1.11"
     Mpi:
       name: OpenMpi
       version: "4.1.0"

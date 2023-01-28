@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/tensorflow-2.9-cuda11
+  name: azureml/curated/tensorflow-2.8-cuda11
   os: linux
   context:
     dir: context
@@ -18,7 +18,7 @@ environment:
       NcclVersion: "2.9.9"
     MachineLearningFramework:
       name: TensorFlow
-      version: "2.9"
+      version: "2.8"
     Mpi:
       name: OpenMpi
       version: "4.1.0"

@@ -1,4 +1,4 @@
-name: tensorflow-2.9-cuda11
+name: tensorflow-2.8-cuda11
 version: auto
 type: environment
 spec: spec.yaml
@@ -7,4 +7,4 @@ test:
   pytest:
     enabled: true 
     pip_requirements: tests/requirements.txt
-    tests_dir: tests
+    tests_dir: tests 
