@@ -36,7 +36,6 @@ def extract_tag_released_assets(release_directory_root: Path,
     commits_tags = defaultdict(list)
     for tag in repo.tags:
         if not pattern or re.fullmatch(pattern, tag.name):
-            print(f"Commit {tag.commit} authored at {tag.commit.authored_datetime}")
             commits_tags[tag.commit].append(tag)
             matched_count += 1
 
