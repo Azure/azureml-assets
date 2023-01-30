@@ -2,4 +2,4 @@
 azure-ai-ml==1.2.0
 scikit-image==0.19.3
 simplification==0.6.2
-pillow==9.0.0
+pillow==9.3.0
