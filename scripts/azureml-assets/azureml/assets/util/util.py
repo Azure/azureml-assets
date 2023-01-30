@@ -13,6 +13,8 @@ import yaml
 import azureml.assets as assets
 from azureml.assets.util import logger
 
+RELEASE_TAG_DELIMITER = "/"
+RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
 RELEASE_SUBDIR = "latest"
 EXCLUDE_DIR_PREFIX = "!"
 
@@ -119,17 +121,40 @@ def copy_replace_dir(source: Path, dest: Path, paths: List[Path] = None):
                 shutil.copyfile(source_path, dest_path)
 
 
-def get_asset_output_dir(asset_config: assets.AssetConfig, output_directory_root: Path) -> Path:
+def get_asset_output_dir(asset_config: assets.AssetConfig, output_directory_root: Path,
+                         use_version_dir: bool = False) -> Path:
     """Generate the output directory for a given asset.
 
     Args:
         asset_config (assets.AssetConfig): Asset config
         output_directory_root (Path): Output directory root
+        use_version_dir (bool, optional): Add version-specific directory
 
     Returns:
         Path: The output directory
     """
-    return Path(output_directory_root, asset_config.type.value, asset_config.name)
+    version = asset_config.version if use_version_dir else None
+    return get_asset_output_dir_from_parts(asset_config.type, asset_config.name, output_directory_root, version)
+
+
+def get_asset_output_dir_from_parts(type: assets.AssetType, name: str, output_directory_root: Path,
+                                    version: str = None) -> Path:
+    """Generate the output directory for a given asset.
+
+    Args:
+        type (assets.AssetConfig): Asset type
+        name (str): Asset name
+        output_directory_root (Path): Output directory root
+        version (str, optional): Asset version
+
+    Returns:
+        Path: The output directory
+    """
+    output_directory = Path(output_directory_root, type.value, name)
+    if version is not None:
+        output_directory = output_directory / version
+
+    return output_directory
 
 
 def get_asset_release_dir(asset_config: assets.AssetConfig, release_directory_root: Path) -> Path:
@@ -145,6 +170,36 @@ def get_asset_release_dir(asset_config: assets.AssetConfig, release_directory_ro
     return get_asset_output_dir(asset_config, release_directory_root / RELEASE_SUBDIR)
 
 
+def get_asset_release_dir_from_parts(type: assets.AssetType, name: str, release_directory_root: Path) -> Path:
+    """Generate the release directory for a given asset.
+
+    Args:
+        type (assets.AssetConfig): Asset type
+        name (str): Asset name
+        release_directory_root (Path): Release directory root
+
+    Returns:
+        Path: The release directory
+    """
+    return get_asset_output_dir_from_parts(type, name, release_directory_root / RELEASE_SUBDIR)
+
+
+def parse_release_tag(tag: str) -> Tuple[assets.AssetType, str, str]:
+    """Parse a release tag into its asset type, name, and version.
+
+    Args:
+        tag (str): Tag to parse
+
+    Returns:
+        Tuple[assets.AssetType, str, str]: Asset type, name, and version
+    """
+    tag_parts = tag.split(RELEASE_TAG_DELIMITER)
+    if len(tag_parts) != 3:
+        raise ValueError(f"Invalid release tag: {tag}")
+
+    return assets.AssetType(tag_parts[0]), tag_parts[1], tag_parts[2]
+
+
 def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory: Path, add_subdir: bool = False,
                              use_version_dir: bool = False):
     """Copy asset directory to output directory.
@@ -156,8 +211,8 @@ def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory:
         use_version_dir (bool, optional): Store asset in version-specific directory
     """
     if add_subdir:
-        output_directory = output_directory / get_asset_output_dir(asset_config, output_directory)
-    if use_version_dir:
+        output_directory = get_asset_output_dir(asset_config, output_directory, use_version_dir)
+    elif use_version_dir:
         output_directory = output_directory / asset_config.version
 
     common_dir, relative_release_paths = find_common_directory(asset_config.release_paths)
