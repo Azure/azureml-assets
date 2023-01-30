@@ -1,21 +1,28 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Extract selected assets from release branch into output directory."""
+
 import argparse
 import re
 from collections import defaultdict
 from git import Repo
 from pathlib import Path
 
-import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
 
-def extract_tag_released_assets(asset_config_filename: str,
-                                release_directory_root: Path,
+def extract_tag_released_assets(release_directory_root: Path,
                                 output_directory_root: Path,
                                 pattern: str = None):
+    """Extract selected assets from release branch copy into output directory.
+
+    Args:
+        release_directory_root (Path): Release directory location.
+        output_directory_root (Path): Output directory.
+        pattern (str, optional): Regex pattern for assets to extract and copy. Defaults to None.
+    """
     repo = Repo(release_directory_root)
 
     # Select tags
@@ -48,8 +55,6 @@ def extract_tag_released_assets(asset_config_filename: str,
 if __name__ == "__main__":
     # Handle command-line args
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
-                        help="Asset config file name to search for")
     parser.add_argument("-r", "--release-directory", required=True, type=Path,
                         help="Directory to which the release branch has been cloned")
     parser.add_argument("-o", "--output-directory", required=True, type=Path,
@@ -58,7 +63,6 @@ if __name__ == "__main__":
                         help="Regex pattern to select assets to extract, in the format <type>/<name>/<version>")
     args = parser.parse_args()
 
-    extract_tag_released_assets(asset_config_filename=args.asset_config_filename,
-                                release_directory_root=args.release_directory,
+    extract_tag_released_assets(release_directory_root=args.release_directory,
                                 output_directory_root=args.output_directory,
                                 pattern=args.pattern)
