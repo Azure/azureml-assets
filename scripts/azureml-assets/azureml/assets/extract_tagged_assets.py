@@ -29,10 +29,15 @@ def extract_tag_released_assets(release_directory_root: Path,
     commits_tags = defaultdict(list)
     for tag in repo.tags:
         if not pattern or re.fullmatch(pattern, tag.name):
+            print(f"Commit {tag.commit} authored at {tag.commit.authored_datetime}")
             commits_tags[tag.commit].append(tag)
 
+    # Order commits for efficient checkout
+    ordered_commits = sorted(commits_tags.keys(), key=lambda c: c.authored_datetime)
+
     # Checkout tags
-    for commit, tags in commits_tags.items():
+    for commit in ordered_commits:
+        tags = commits_tags[commit]
         logger.print(f"Checking out commit {commit} for {len(tags)} tag(s)")
         repo.git().checkout(commit)
 
