@@ -12,6 +12,9 @@ from pathlib import Path
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
+MATCHED_COUNT = "matched_count"
+EXTRACTED_COUNT = "extracted_count"
+
 
 def extract_tag_released_assets(release_directory_root: Path,
                                 output_directory_root: Path,
@@ -25,12 +28,17 @@ def extract_tag_released_assets(release_directory_root: Path,
     """
     repo = Repo(release_directory_root)
 
+    # Initialize counters
+    matched_count = 0
+    extracted_count = 0
+
     # Select tags
     commits_tags = defaultdict(list)
     for tag in repo.tags:
         if not pattern or re.fullmatch(pattern, tag.name):
             print(f"Commit {tag.commit} authored at {tag.commit.authored_datetime}")
             commits_tags[tag.commit].append(tag)
+            matched_count += 1
 
     # Order commits for efficient checkout
     ordered_commits = sorted(commits_tags.keys(), key=lambda c: c.authored_datetime)
@@ -50,11 +58,16 @@ def extract_tag_released_assets(release_directory_root: Path,
             if release_dir.exists():
                 logger.print(f"Copying {type.value} {name}:{version} to {output_directory}")
                 util.copy_replace_dir(release_dir, output_directory)
+                extracted_count += 1
             else:
                 logger.log_warning(f"{type.value.capitalize()} {name}:{version} not found in commit")
 
     # Reset to release branch
     repo.git().checkout("release")
+
+    # Set variables
+    logger.set_output(MATCHED_COUNT, matched_count)
+    logger.set_output(EXTRACTED_COUNT, extracted_count)
 
 
 if __name__ == "__main__":
