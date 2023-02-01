@@ -4,7 +4,7 @@ description: >-
   An environment for deep learning with PyTorch containing the Azure ML SDK and additional python packages.
 
 name: "pytorch-1.11-ubuntu20.04-py38-cuda11-gpu"
-version: "15"
+version: "16"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"

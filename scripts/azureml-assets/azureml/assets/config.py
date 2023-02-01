@@ -498,11 +498,6 @@ class EnvironmentConfig(Config):
           publish: # If not specified, image won't be published
             location: mcr
             visibility: public
-        environment:
-          metadata:
-            os:
-              name: Ubuntu
-              version: "20.04"
     """
 
     def __init__(self, file_name: Path):
@@ -698,16 +693,6 @@ class EnvironmentConfig(Config):
         """Image's publishing visiblity type."""
         visiblity = self._publish_visibility
         return PublishVisibility(visiblity) if visiblity else None
-
-    @property
-    def _environment(self) -> Dict[str, object]:
-        """Raw 'environment' value."""
-        return self._yaml.get('environment', {})
-
-    @property
-    def environment_metadata(self) -> Dict[str, object]:
-        """Raw 'metadata' value."""
-        return self._environment.get('metadata')
 
 
 class AssetType(Enum):
