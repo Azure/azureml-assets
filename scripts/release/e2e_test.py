@@ -10,45 +10,39 @@ from azure.ai.ml import MLClient
 from azure.ai.ml.entities import AmlCompute
 from azure.identity import DefaultAzureCredential
 
-if __name__ == '__main__':
-    # Handle command-line args
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests folder")
-    parser.add_argument("-s", "--subscription", required=True, type=str, help="Subscription ID")
-    parser.add_argument("-r", "--resource-group", required=True, type=str, help="Resource group name")
-    parser.add_argument("-w", "--workspace-name", required=True, type=str, help="Workspace name")
-    parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
-    parser.add_argument("-v", "--version-suffix", required=False, type=str,
-                        help="version suffix which will be used to identify the asset id in tests")
-    args = parser.parse_args()
-    tests_dir = args.input_dir
-    subscription_id = args.subscription
-    resource_group = args.resource_group
-    workspace = args.workspace_name
-    coverage_report = args.coverage_report
-    version_suffix = args.version_suffix
+
+def e2e_test(
+        tests_dir: Path,
+        subscription_id: str,
+        resource_group: str,
+        workspace: str,
+        coverage_report: Path = None,
+        version_suffix: str = None):
+    """Run end to end tests."""
     final_report = {}
     ml_client = MLClient(
         DefaultAzureCredential(), subscription_id, resource_group, workspace
     )
-    cpu_cluster_low_pri = AmlCompute(
+    cpu_cluster = AmlCompute(
         name="cpu-cluster",
         size="Standard_DS3_v2",
         min_instances=0,
         max_instances=2,
-        idle_time_before_scale_down=120,
-        tier="low_priority",
+        idle_time_before_scale_down=120
     )
-    ml_client.begin_create_or_update(cpu_cluster_low_pri)
-    gpu_cluster_low_pri = AmlCompute(
+    gpu_cluster = AmlCompute(
         name="gpu-cluster",
         size="Standard_NC24",
         min_instances=0,
         max_instances=2,
-        idle_time_before_scale_down=120,
-        tier="low_priority",
+        idle_time_before_scale_down=120
     )
-    ml_client.begin_create_or_update(gpu_cluster_low_pri)
+    try:
+        ml_client.begin_create_or_update(cpu_cluster)
+        ml_client.begin_create_or_update(gpu_cluster)
+    except Exception as e:
+        print(f"Failed to create cluster: {e}")
+
     print("Start executing E2E tests script")
     for area in tests_dir.iterdir():
         print(f"now processing area: {area.name}")
@@ -82,3 +76,23 @@ if __name__ == '__main__':
     if failures:
         print("One or more tests failed")
         sys.exit(1)
+
+
+if __name__ == '__main__':
+    # Handle command-line args
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--input-dir", required=True, type=Path, help="dir path of tests folder")
+    parser.add_argument("-s", "--subscription", required=True, type=str, help="Subscription ID")
+    parser.add_argument("-r", "--resource-group", required=True, type=str, help="Resource group name")
+    parser.add_argument("-w", "--workspace-name", required=True, type=str, help="Workspace name")
+    parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
+    parser.add_argument("-v", "--version-suffix", required=False, type=str,
+                        help="version suffix which will be used to identify the asset id in tests")
+    args = parser.parse_args()
+    tests_dir = args.input_dir
+    subscription_id = args.subscription
+    resource_group = args.resource_group
+    workspace = args.workspace_name
+    coverage_report = args.coverage_report
+    version_suffix = args.version_suffix
+    e2e_test(tests_dir, subscription_id, resource_group, workspace, coverage_report, version_suffix)
