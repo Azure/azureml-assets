@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 # imports
-import mlflow
 import argparse
 
 import pandas as pd
@@ -13,16 +12,13 @@ from sklearn.model_selection import train_test_split
 
 # define functions
 def main(args):
-    # enable auto logging
-    mlflow.autolog()
 
     # setup parameters
     params = {
         "fit_intercept": args.fit_intercept,
-        "normalize": args.normalize,
         "positive": args.positive,
     }
-
+    print(params)
     # read in data
     df = pd.read_csv(args.diabetes_csv)
 
@@ -66,8 +62,8 @@ def parse_args():
     parser.add_argument("--diabetes-csv", type=str)
     parser.add_argument("--random_state", type=int, default=42)
     parser.add_argument("--fit_intercept", type=bool, default=True)
-    parser.add_argument("--normalize", type=bool, default=False)
     parser.add_argument("--positive", type=bool, default=False)
+    parser.add_argument("--intel-extension", type=bool, default=False)
 
     # parse args
     args = parser.parse_args()
@@ -80,6 +76,8 @@ def parse_args():
 if __name__ == "__main__":
     # parse args
     args = parse_args()
-
+    if (args.intel_extension):
+        from sklearnex import patch_sklearn
+        patch_sklearn()
     # run main function
     main(args)
