@@ -10,20 +10,3 @@ image:
   publish:
     location: mcr
     visibility: public
-environment:
-  metadata:
-    MachineLearningFramework:
-      name: ResponsibleAI
-      version: "0.22"
-    Mpi:
-      name: OpenMpi
-      version: "4.1.0"
-    Purpose:
-      HasTrainingSupport: true
-      HasInferencingSupport: false
-    Runtime:
-      name: Python
-      version: "3.8"
-    Os:
-      name: Ubuntu
-      version: "20.04"
