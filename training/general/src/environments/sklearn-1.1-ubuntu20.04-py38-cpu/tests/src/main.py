@@ -18,7 +18,6 @@ def main(args):
         "fit_intercept": args.fit_intercept,
         "positive": args.positive,
     }
-    print(params)
     # read in data
     df = pd.read_csv(args.diabetes_csv)
 
@@ -27,9 +26,6 @@ def main(args):
 
     # train model
     model = train_model(params, X_train, X_test, y_train, y_test)
-
-    print(model)
-
 
 def process_data(df, random_state):
     # split dataframe into X and y
