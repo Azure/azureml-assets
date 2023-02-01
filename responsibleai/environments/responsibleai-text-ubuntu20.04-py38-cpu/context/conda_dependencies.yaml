@@ -7,6 +7,7 @@ channels:
   - pytorch
 dependencies:
   - python=3.8
+  - pip
   - pytorch
   - torchvision
   - cpuonly
@@ -26,8 +27,9 @@ dependencies:
     - azureml-dataset-runtime
     - azureml-core
     - --extra-index-url https://azuremlsdktestpypi.azureedge.net/sdk-cli-v2
-    - nlp-feature-extractors==0.0.3
-    - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-text/responsibleai_text-0.0.7-py3-none-any.whl
+    - nlp-feature-extractors==0.1.0
+    - datasets>=2.9.0
+    - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-text/responsibleai_text-0.0.13-py3-none-any.whl
     - https://publictestdatasets.blob.core.windows.net/packages/pypi/azureml-model-serializer/azureml_model_serializer-0.0.2-py3-none-any.whl
     - click<8.0.0
     - mltable==1.0.0
