@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/lightgbm-3.2-py38-cpu
+  name: azureml/curated/pytorch-1.13-cuda11.7
   os: linux
   context:
     dir: context
@@ -11,9 +11,19 @@ image:
     visibility: public
 environment:
   metadata:
+    Cuda:
+      CudaVersion: "11.7"
+      CuDnnVersion: "8.0.5.39"
+      MScclVersion: "2.9.6"
     MachineLearningFramework:
-      name: LightGBM
-      version: "3.2"
+      name: PyTorch
+      version: "1.13.0"
+    DeepSpeed:
+      name: deepspeed
+      version: "0.7.3"
+    Onnx Runtime:
+      name: onnxruntime_training
+      version: "1.13.1"
     Mpi:
       name: OpenMpi
       version: "4.1.0"

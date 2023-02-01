@@ -1,23 +1,23 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the sklearn 0.24 environment."""
+"""Tests running a sample job in the tensorflow 2.9 environment."""
 import os
 import time
 from pathlib import Path
-from azure.ai.ml import command, Input, MLClient
+from azure.ai.ml import command, MLClient
 from azure.ai.ml._restclient.models import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
-TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 40)
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_sklearn_0_24():
-    """Tests a sample job using sklearn 0.24 as the environment."""
+def test_tensorflow_2_9():
+    """Tests a sample job using Tensorflow 2.9 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -28,30 +28,24 @@ def test_sklearn_0_24():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "sklearn0_24"
+    env_name = "tensorflow-2_9-cuda11"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
-        name="sklearn0_24",
-        description="Sklearn 0.24.1 environment created from a Docker context.",
+        name=env_name,
+        description="Tensorflow 2.9 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
-        command="python main.py --diabetes-csv ${{inputs.diabetes}}",
-        inputs={
-            "diabetes": Input(
-                type="uri_file",
-                path="https://azuremlexamples.blob.core.windows.net/datasets/diabetes.csv",
-            )
-        },
+        command="python main.py",
         environment=f"{env_name}@latest",
-        compute=os.environ.get("cpu_cluster"),
-        display_name="sklearn-diabetes-example",
-        description="A test run of the sklearn 0_24 curated environment",
-        experiment_name="sklearnExperiment"
+        compute=os.environ.get("gpu_cluster"),
+        display_name="tensorflow-mnist-example",
+        description="A test run of the tensorflow 2_9 curated environment",
+        experiment_name="tensorflow29Experiment"
     )
 
     returned_job = ml_client.create_or_update(job)

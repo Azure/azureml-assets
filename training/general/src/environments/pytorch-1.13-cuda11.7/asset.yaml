@@ -1,4 +1,4 @@
-name: sklearn-0.24-py38-cpu
+name: pytorch-1.13-cuda11.7
 version: auto
 type: environment
 spec: spec.yaml

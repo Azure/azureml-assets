@@ -32,7 +32,7 @@ def test_sklearn_1_1():
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
-        name="sklearn1_1",
+        name="sklearn-1_1",
         description="Sklearn 1.1 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)

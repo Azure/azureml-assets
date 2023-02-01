@@ -14,13 +14,16 @@ environment:
     Cuda:
       CudaVersion: "11.5"
       CuDnnVersion: "8.2.0"
-      NcclVersion: "2.9.9"
+      MScclVersion: "2.9.6"
     MachineLearningFramework:
       name: PyTorch
       version: "1.11"
-    Mpi:
-      name: OpenMpi
-      version: "4.1.0"
+    DeepSpeed:
+      name: deepspeed
+      version: "0.7.3"
+    Onnx Runtime:
+      name: onnxruntime_training
+      version: "1.11.1"
     Purpose:
       HasTrainingSupport: true
       HasInferencingSupport: false

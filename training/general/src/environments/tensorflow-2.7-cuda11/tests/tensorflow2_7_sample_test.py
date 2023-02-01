@@ -28,7 +28,7 @@ def test_tensorflow_2_7():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "tensorflow2_7"
+    env_name = "tensorflow-2_7-cuda11"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
