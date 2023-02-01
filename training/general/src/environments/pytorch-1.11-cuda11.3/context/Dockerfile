@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110:{{lat
 
 
 # Install pip dependencies
-RUN pip install 'ipykernel~=6.0' \
+RUN pip install 'ipykernel~=6.20.2' \
                 'azureml-core=={{latest-pypi-version}}' \
 				'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-defaults=={{latest-pypi-version}}' \

@@ -15,7 +15,7 @@ RUN HOROVOD_WITH_TENSORFLOW=1 pip install 'matplotlib~=3.5.0' \
                                           'pandas~=1.3.0' \
                                           'scipy~=1.7.0' \
                                           'numpy~=1.21.0' \
-                                          'ipykernel~=6.0' \
+                                          'ipykernel~=6.20.2' \
                                           'azureml-core=={{latest-pypi-version}}' \
                                           'azureml-defaults=={{latest-pypi-version}}' \
                                           'azureml-mlflow=={{latest-pypi-version}}' \

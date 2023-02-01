@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu116-py39-torch1121:{{latest-image-tag:biweekly\.\d{6}\.\d{1}}}
 
 # Install pip dependencies
-RUN pip install 'ipykernel~=6.0' \
+RUN pip install 'ipykernel~=6.20.2' \
                 'azureml-core=={{latest-pypi-version}}' \
 				'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-defaults=={{latest-pypi-version}}' \
