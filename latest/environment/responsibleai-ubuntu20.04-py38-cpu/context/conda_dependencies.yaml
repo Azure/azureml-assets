@@ -5,6 +5,7 @@ channels:
   - anaconda
 dependencies:
   - python=3.8
+  - pip
   - pip:
     - responsibleai~=0.24.1
     - raiwidgets~=0.24.1
