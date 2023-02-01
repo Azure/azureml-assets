@@ -15,7 +15,9 @@ from typing import List
 
 from azureml.assets.util import logger
 
-LATEST_PYPI_VERSION = re.compile(r"([^\"'\s]+)([=~]=)\{\{latest-pypi-version\}\}")
+# Handles {{latest-pypi-version}} and {{latest-pypi-version:flags}}
+LATEST_PYPI_VERSION = re.compile(r"([^\"'\s]+)([=~]=)\{\{latest-pypi-version(?::(.+))?\}\}")
+LATEST_PYPY_VERSION_FLAGS_PRE = "pre"
 PYPI_URL = "https://pypi.org/simple"
 
 
@@ -99,8 +101,11 @@ def pin_packages(contents: str) -> str:
             break
         package = match.group(1)
         selector = match.group(2)
+        flags = match.group(3)
+        include_pre = True if flags is not None and LATEST_PYPY_VERSION_FLAGS_PRE in flags else False
+
         logger.log_debug(f"Looking up latest version of {package}")
-        version = get_latest_package_version(package, package_finder)
+        version = get_latest_package_version(package, package_finder, include_pre)
         logger.log_debug(f"Latest version of {package} is {version}")
         contents = contents[:match.start()] + f"{package}{selector}{version}" + contents[match.end():]
 
