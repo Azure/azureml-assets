@@ -10,24 +10,3 @@ image:
   publish:
     location: mcr
     visibility: public
-environment:
-  metadata:
-    Cuda:
-      CudaVersion: "11.3"
-      CuDnnVersion: "8.2.0"
-      NcclVersion: "2.9.9"
-    MachineLearningFramework:
-      name: PyTorch
-      version: "1.11"
-    Mpi:
-      name: OpenMpi
-      version: "4.1.0"
-    Purpose:
-      HasTrainingSupport: true
-      HasInferencingSupport: false
-    Runtime:
-      name: Python
-      version: "3.8"
-    Os:
-      name: Ubuntu
-      version: "20.04"
