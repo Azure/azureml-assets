@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the pytorch 1.12 environment."""
+"""Tests running a sample job in the pytorch 1.13 environment."""
 import os
 import time
 from pathlib import Path
@@ -14,8 +14,8 @@ JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 40)
 
 
-def test_pytorch_1_12():
-    """Tests a sample job using pytorch 1.12 as the environment."""
+def test_pytorch_1_13():
+    """Tests a sample job using pytorch 1.13 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
