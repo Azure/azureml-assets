@@ -707,7 +707,7 @@ class AssetType(Enum):
 DEFAULT_ASSET_FILENAME = "asset.yaml"
 VERSION_AUTO = "auto"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
-FULL_NAME_DELIMITER = "/"
+FULL_ASSET_NAME_DELIMITER = "/"
 
 
 @total_ordering
@@ -845,7 +845,7 @@ class AssetConfig(Config):
         Returns:
             Tuple[assets.AssetType, str, str]: Asset type, name, and version
         """
-        tag_parts = full_name.split(FULL_NAME_DELIMITER)
+        tag_parts = full_name.split(FULL_ASSET_NAME_DELIMITER)
         if len(tag_parts) != 3:
             raise ValueError(f"Invalid full name: {full_name}")
 
