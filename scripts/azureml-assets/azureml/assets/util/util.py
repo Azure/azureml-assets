@@ -5,6 +5,7 @@
 
 import difflib
 import filecmp
+import re
 import shutil
 from pathlib import Path
 from typing import List, Tuple, Union
@@ -13,8 +14,6 @@ import yaml
 import azureml.assets as assets
 from azureml.assets.util import logger
 
-RELEASE_TAG_DELIMITER = "/"
-RELEASE_TAG_VERSION_TEMPLATE = "{type}/{name}/{version}"
 RELEASE_SUBDIR = "latest"
 EXCLUDE_DIR_PREFIX = "!"
 
@@ -184,22 +183,6 @@ def get_asset_release_dir_from_parts(type: assets.AssetType, name: str, release_
     return get_asset_output_dir_from_parts(type, name, release_directory_root / RELEASE_SUBDIR)
 
 
-def parse_release_tag(tag: str) -> Tuple[assets.AssetType, str, str]:
-    """Parse a release tag into its asset type, name, and version.
-
-    Args:
-        tag (str): Tag to parse
-
-    Returns:
-        Tuple[assets.AssetType, str, str]: Asset type, name, and version
-    """
-    tag_parts = tag.split(RELEASE_TAG_DELIMITER)
-    if len(tag_parts) != 3:
-        raise ValueError(f"Invalid release tag: {tag}")
-
-    return assets.AssetType(tag_parts[0]), tag_parts[1], tag_parts[2]
-
-
 def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory: Path, add_subdir: bool = False,
                              use_version_dir: bool = False):
     """Copy asset directory to output directory.
@@ -295,7 +278,8 @@ def find_assets(input_dirs: Union[List[Path], Path],
                 asset_config_filename: str = assets.DEFAULT_ASSET_FILENAME,
                 types: Union[List[assets.AssetType], assets.AssetType] = None,
                 changed_files: List[Path] = None,
-                exclude_dirs: List[Path] = None) -> List[assets.AssetConfig]:
+                exclude_dirs: List[Path] = None,
+                pattern: re.Pattern = None) -> List[assets.AssetConfig]:
     """Search directories for assets.
 
     Args:
@@ -304,6 +288,7 @@ def find_assets(input_dirs: Union[List[Path], Path],
         types (Union[List[assets.AssetType], assets.AssetType], optional): AssetTypes to search for.
         changed_files (List[Path], optional): Changed files, used to filter assets in input_dirs.
         exclude_dirs (Union[List[Path], Path], optional): Directories that should be excluded from the search.
+        pattern (re.Pattern, optional): Regex pattern used to filter assets. Defaults to None.
 
     Returns:
         List[assets.AssetConfig]: Assets found.
@@ -318,6 +303,10 @@ def find_assets(input_dirs: Union[List[Path], Path],
 
         # If specified, skip types not included in filter
         if types and asset_config.type not in types:
+            continue
+
+        # If specified, skip assets that don't match the pattern
+        if pattern is not None and not pattern.fullmatch(asset_config.full_name):
             continue
 
         found_assets.append(asset_config)
