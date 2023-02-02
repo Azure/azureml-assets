@@ -57,20 +57,18 @@ def group_test(
         coverage_report: Path = None,
         version_suffix: str = None):
     """Run group tests."""
-    # default workspace info
-    group_pre = None
-    group_post = None
 
     with open(tests_dir / TEST_YML) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
+        group_pre = None
         if "pre" in data[test_group]:
             group_pre = tests_dir / data[test_group]['pre']
         """
         TO-D0: Run post job
+        group_post = None
         if "post" in data[test_group]:
         group_post = tests_dir / data[test_group]['post']
         """
-
 
     my_env = os.environ.copy()
     my_env['subscription_id'] = subscription_id
