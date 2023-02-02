@@ -4,6 +4,7 @@
 """Copy unreleased assets from release directory to output directory."""
 
 import argparse
+import re
 from pathlib import Path
 
 import azureml.assets as assets
@@ -38,7 +39,8 @@ def copy_unreleased_asset(asset_config: assets.AssetConfig,
 def copy_unreleased_assets(release_directory_root: Path,
                            output_directory_root: Path,
                            asset_config_filename: str,
-                           use_version_dirs: bool = False):
+                           use_version_dirs: bool = False,
+                           pattern: re.Pattern = None):
     """Copy unreleased assets from release directory to output directory.
 
     Args:
@@ -46,11 +48,12 @@ def copy_unreleased_assets(release_directory_root: Path,
         output_directory_root (Path, optional): Output directory
         asset_config_filename (str): Asset config filename to search for.
         use_version_dirs (bool, optional): Use version directories for output. Defaults to False.
+        pattern (re.Pattern, optional): Regex pattern for assets to copy. Defaults to None.
     """
     # Find assets under release dir
     asset_count = 0
     copied_count = 0
-    for asset_config in util.find_assets(release_directory_root, asset_config_filename):
+    for asset_config in util.find_assets(release_directory_root, asset_config_filename, pattern=pattern):
         asset_count += 1
 
         # Copy asset if tag doesn't exist
@@ -78,10 +81,13 @@ if __name__ == '__main__':
                         help="Asset config file name to search for")
     parser.add_argument("-v", "--use-version-dirs", action="store_true",
                         help="Use version directories when storing assets in output directory")
+    parser.add_argument("-t", "--pattern", type=re.compile,
+                        help="Regex pattern to select assets to copy, in the format <type>/<name>/<version>")
     args = parser.parse_args()
 
     # Release assets
     copy_unreleased_assets(release_directory_root=args.release_directory,
                            output_directory_root=args.output_directory,
                            asset_config_filename=args.asset_config_filename,
-                           use_version_dirs=args.use_version_dirs)
+                           use_version_dirs=args.use_version_dirs,
+                           pattern=args.pattern)

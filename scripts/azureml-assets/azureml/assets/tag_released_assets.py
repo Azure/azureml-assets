@@ -26,7 +26,7 @@ def tag_released_assets(input_directory: Path,
     # Create tags locally
     tag_refs = []
     for asset_config in util.find_assets(input_directory, asset_config_filename):
-        tag = assets.get_release_tag_name(asset_config)
+        tag = asset_config.full_name
         message = f"Release {asset_config}"
 
         logger.print(f"Creating tag {tag}")

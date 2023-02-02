@@ -8,7 +8,7 @@ from enum import Enum
 from functools import total_ordering
 from pathlib import Path
 from setuptools._vendor.packaging import version
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from yaml import safe_load
 
 
@@ -706,6 +706,8 @@ class AssetType(Enum):
 
 DEFAULT_ASSET_FILENAME = "asset.yaml"
 VERSION_AUTO = "auto"
+FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
+FULL_NAME_DELIMITER = "/"
 
 
 @total_ordering
@@ -827,6 +829,27 @@ class AssetConfig(Config):
                 raise ValidationException(f"Tried to read asset name from spec, "
                                           f"but it includes a template tag: {name}")
         return name
+
+    @property
+    def full_name(self) -> str:
+        """Full asset name, including type and version."""
+        return FULL_ASSET_NAME_TEMPLATE.format(type=self.type.value, name=self.name, version=self.version)
+
+    @staticmethod
+    def parse_full_name(full_name: str) -> Tuple[AssetType, str, str]:
+        """Parse a full name into its asset type, name, and version.
+
+        Args:
+            full_name (str): Full name to parse
+
+        Returns:
+            Tuple[assets.AssetType, str, str]: Asset type, name, and version
+        """
+        tag_parts = full_name.split(FULL_NAME_DELIMITER)
+        if len(tag_parts) != 3:
+            raise ValueError(f"Invalid full name: {full_name}")
+
+        return AssetType(tag_parts[0]), tag_parts[1], tag_parts[2]
 
     @property
     def _version(self) -> str:
