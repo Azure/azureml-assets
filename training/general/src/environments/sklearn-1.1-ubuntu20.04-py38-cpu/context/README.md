@@ -1,7 +1,7 @@
 # SKLearn Docker Environment 
 
 ## Overview
-This document provides details on how to create a containerized SKLearn Environment using stock version of SKLearn as well as Intel Extension for SKLearn on Azure ML instances. 
+This document provides details on how to create and run a sample workload in a containerized SKLearn Environment using stock version of SKLearn as well as Intel Extension for SKLearn on Azure ML instances.
 
 ## How it works
 To create a stock SKLearn docker container use the `Dockerfile` and `conda_dependencies.yaml`. Follow the instructions below
