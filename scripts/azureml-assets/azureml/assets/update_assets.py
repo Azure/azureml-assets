@@ -48,20 +48,6 @@ def pin_env_files(env_config: assets.EnvironmentConfig):
             logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
 
-def get_release_tag_name(asset_config: assets.AssetConfig) -> str:
-    """Generate the Git release tag for an asset.
-
-    Args:
-        asset_config (assets.AssetConfig): Asset config
-
-    Returns:
-        str: Release tag
-    """
-    version = asset_config.spec_as_object().version
-    return util.RELEASE_TAG_VERSION_TEMPLATE.format(type=asset_config.type.value, name=asset_config.name,
-                                                    version=version)
-
-
 def release_tag_exists(asset_config: assets.AssetConfig, release_directory_root: Path) -> bool:
     """Check repo for an asset's release tag.
 
@@ -74,8 +60,7 @@ def release_tag_exists(asset_config: assets.AssetConfig, release_directory_root:
     """
     # Check git repo for version-specific tag
     repo = Repo(release_directory_root)
-    tag = get_release_tag_name(asset_config)
-    return tag in repo.tags
+    return asset_config.full_name in repo.tags
 
 
 def update_asset(asset_config: assets.AssetConfig,

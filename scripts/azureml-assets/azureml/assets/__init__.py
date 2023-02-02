@@ -18,7 +18,6 @@ from .config import (
     Spec,
 )
 from .update_assets import (
-    get_release_tag_name,
     pin_env_files,
     release_tag_exists,
     update_asset,
