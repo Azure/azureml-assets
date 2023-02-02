@@ -9,6 +9,7 @@ from collections import defaultdict
 from git import Repo
 from pathlib import Path
 
+import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
@@ -18,13 +19,13 @@ EXTRACTED_COUNT = "extracted_count"
 
 def extract_tag_released_assets(release_directory_root: Path,
                                 output_directory_root: Path,
-                                pattern: str = None):
+                                pattern: re.Pattern = None):
     """Extract selected assets from release branch copy into output directory.
 
     Args:
         release_directory_root (Path): Release directory location.
         output_directory_root (Path): Output directory.
-        pattern (str, optional): Regex pattern for assets to extract and copy. Defaults to None.
+        pattern (re.Pattern, optional): Regex pattern for assets to extract and copy. Defaults to None.
     """
     repo = Repo(release_directory_root)
 
@@ -35,7 +36,7 @@ def extract_tag_released_assets(release_directory_root: Path,
     # Select tags
     commits_tags = defaultdict(list)
     for tag in repo.tags:
-        if not pattern or re.fullmatch(pattern, tag.name):
+        if not pattern or pattern.fullmatch(tag.name):
             commits_tags[tag.commit].append(tag)
             matched_count += 1
 
@@ -51,7 +52,7 @@ def extract_tag_released_assets(release_directory_root: Path,
         # Iterate over tags
         for tag in tags:
             # Copy asset to output directory
-            type, name, version = util.parse_release_tag(tag.name)
+            type, name, version = assets.AssetConfig.parse_full_name(tag.name)
             release_dir = util.get_asset_release_dir_from_parts(type, name, release_directory_root)
             output_directory = util.get_asset_output_dir_from_parts(type, name, output_directory_root, version)
             if release_dir.exists():
@@ -76,7 +77,7 @@ if __name__ == "__main__":
                         help="Directory to which the release branch has been cloned")
     parser.add_argument("-o", "--output-directory", required=True, type=Path,
                         help="Directory to which unreleased assets will be written")
-    parser.add_argument("-t", "--pattern",
+    parser.add_argument("-t", "--pattern", type=re.compile,
                         help="Regex pattern to select assets to extract, in the format <type>/<name>/<version>")
     args = parser.parse_args()
 
