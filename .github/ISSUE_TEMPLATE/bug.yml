@@ -1,0 +1,38 @@
+name: Bug Report
+description: File a bug report for an asset
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Describe the problem
+  - type: textarea
+    id: reproduce-steps
+    attributes:
+      label: Steps to reproduce
+      description: Please provide minimal required steps to reproduce the bug.
+      placeholder: |
+          1. Step one.
+          2. Step two.
+          3. Step three.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: What was the expected behavior?
+    validations:
+      required: true
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: What was the actual behavior?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Addition information
+      description: If there is any additional information relevant to this issue, please include below.

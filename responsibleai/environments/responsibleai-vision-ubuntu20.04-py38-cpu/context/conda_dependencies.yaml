@@ -1,11 +1,12 @@
 name: responsibleai-vision
 channels:
   - conda-forge
+  - defaults
   - anaconda
   - pytorch
 dependencies:
   - python=3.8
-  - pip=22.1.2
+  - pip
   - pytorch
   - torchvision
   - cpuonly
@@ -16,8 +17,8 @@ dependencies:
     - scikit-learn
     - azure-core==1.25.1
     - mlflow
-    - responsibleai~=0.23.0
-    - raiwidgets~=0.23.0
+    - responsibleai~=0.24.1
+    - raiwidgets~=0.24.1
     # Limit markupsafe version is a workaround to resolve the issue from markupsafe's breaking change: https://github.com/aws/aws-sam-cli/issues/3661
     - markupsafe<2.1.0
     # Workaround to fix import failure related to itsdangerous's latest release: https://stackoverflow.com/questions/71189819/python-docker-importerror-cannot-import-name-json-from-itsdangerous
@@ -28,7 +29,7 @@ dependencies:
     - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-vision/responsibleai_vision-0.0.8-py3-none-any.whl
     - https://publictestdatasets.blob.core.windows.net/packages/pypi/azureml-model-serializer/azureml_model_serializer-0.0.2-py3-none-any.whl
     - click<8.0.0
-    - mltable==0.1.0b4
-    - ml-wrappers==0.2.2
+    - mltable==1.0.0
+    - ml-wrappers==0.4.2
     - fastai
     - opencv-python

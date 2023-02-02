@@ -15,7 +15,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
-RUN pip install --pre 'azure-ai-ml'
+RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # no-deps install for domonic due to unresolvable dependencies requirment on urllib3 and requests.
 # score card rendering is using domonic only for the html elements composer which does not involve requests or urllib3
@@ -25,6 +25,8 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
                           'html5lib==1.1' \
                           'webencodings==0.5.1' \
                           'domonic==0.9.10'
+
+RUN pip freeze
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

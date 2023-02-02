@@ -8,7 +8,7 @@ import sklearn.metrics as skm
 import numpy as np
 
 from collections import OrderedDict
-from erroranalysis._internal.metrics import metric_to_func
+from erroranalysis._internal.metrics import metric_to_func, metric_to_task
 from erroranalysis._internal.cohort_filter import filter_from_cohort
 from fairlearn.metrics import selection_rate, MetricFrame
 from responsibleai import RAIInsights
@@ -54,11 +54,19 @@ def fairness_metric_wrapper(y_test, y_pred, **kwargs):
 
 
 metric_func_map = metric_to_func
+metric_task_map = metric_to_task
 metric_func_map["error_rate"] = skm.zero_one_loss
+metric_task_map["error_rate"] = "classification"
 metric_func_map["selection_rate"] = selection_rate
+metric_task_map["selection_rate"] = "classification"
 metric_func_map["confusion_matrix"] = skm.confusion_matrix
+metric_task_map["confusion_matrix"] = "classification"
 metric_func_map["false_positive"] = false_positive
+metric_task_map["false_positive"] = "classification"
 metric_func_map["false_negative"] = false_negative
+metric_task_map["false_negative"] = "classification"
+
+metric_task_map["accuracy_score"] = "classification"
 
 
 class ExplainerFiles:
@@ -81,9 +89,12 @@ class RaiInsightData:
         self._set_component_paths_prefix()
         self._set_json_paths()
 
-        self.y_pred = self.raiinsight.model.predict(
-            self.raiinsight.test.drop(columns=self.raiinsight.target_column)
-        )
+        test_data = self.raiinsight.test.drop(columns=self.raiinsight.target_column)
+        if self.raiinsight._feature_metadata is not None\
+                and self.raiinsight._feature_metadata.dropped_features is not None:
+            test_data = test_data.drop(
+                self.raiinsight._feature_metadata.dropped_features, axis=1)
+        self.y_pred = self.raiinsight.model.predict(test_data)
 
     def _set_component_paths_prefix(self):
         for c in self.components:
@@ -274,6 +285,8 @@ class PdfDataGen:
         self.pos_label = None
         self.other_class = "other"
 
+        self.validate_valid_metric_for_task_type()
+
         if self.tasktype == "classification":
             self.is_multiclass = len(np.unique(self.data.get_y_test())) > 2
             self.classes = self.data.get_raiinsight()._classes
@@ -282,6 +295,11 @@ class PdfDataGen:
         if self.is_multiclass:
             self.pos_label = str(self.data._classes[0])
             self.classes = [self.other_class, self.pos_label]
+
+    def validate_valid_metric_for_task_type(self):
+        for m in self.metrics:
+            if m in metric_task_map and metric_task_map[m].lower() != self.tasktype:
+                raise ValueError(f"Metric {m} is not compatible with specified task type {self.tasktype}")
 
     def get_metric_kwargs(self):
         return {"pos_label": self.pos_label, "labels": self.classes}

@@ -20,6 +20,7 @@ from rai_component_utilities import (
     create_rai_tool_directories,
     create_rai_insights_from_port_path,
     copy_insight_to_raiinsights,
+    default_json_handler,
     load_dashboard_info_file,
     add_properties_to_gather_run,
     print_dir_tree,
@@ -137,7 +138,7 @@ def main(args):
             args.dashboard, DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
         )
         with open(output_file, "w") as of:
-            json.dump(dashboard_info, of)
+            json.dump(dashboard_info, of, default=default_json_handler)
 
         _logger.info("Saved dashboard to output")
 
