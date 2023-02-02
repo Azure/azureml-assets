@@ -4,7 +4,6 @@
 from .logger import logger
 from .template import render
 from .util import (
-    RELEASE_TAG_VERSION_TEMPLATE,
     apply_tag_template,
     apply_version_template,
     are_dir_trees_equal,
@@ -18,6 +17,5 @@ from .util import (
     get_asset_output_dir_from_parts,
     get_asset_release_dir,
     get_asset_release_dir_from_parts,
-    parse_release_tag,
     load_yaml,
 )
