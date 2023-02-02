@@ -57,7 +57,6 @@ def group_test(
         coverage_report: Path = None,
         version_suffix: str = None):
     """Run group tests."""
-
     with open(tests_dir / TEST_YML) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
         group_pre = None
