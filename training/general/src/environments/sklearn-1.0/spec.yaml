@@ -17,3 +17,5 @@ tags:
   OS: Ubuntu20.04
   Training: ""
   Preview: ""
+  OpenMpi: "4.1.0"
+  Python: "3.8"
