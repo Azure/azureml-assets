@@ -148,12 +148,5 @@ if __name__ == '__main__':
     parser.add_argument("-v", "--version-suffix", required=False, type=str,
                         help="version suffix which will be used to identify the asset id in tests")
     args = parser.parse_args()
-    tests_dir = args.input_dir
-    test_group = args.test_group
-    subscription_id = args.subscription
-    resource_group = args.resource_group
-    workspace = args.workspace_name
-    coverage_report = args.coverage_report
-    version_suffix = args.version_suffix
-
-    group_test(tests_dir, test_group, subscription_id, resource_group, workspace, coverage_report, version_suffix)
+    group_test(args.input_dir, args.test_group, args.subscription, args.resource_group, args.workspace_name,
+               args.coverage_report, args.version_suffix)
