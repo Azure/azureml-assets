@@ -28,7 +28,7 @@ def test_sklearn_1_0():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "sklearn1_0"
+    env_name = "sklearn-1_0"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
