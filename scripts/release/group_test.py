@@ -65,8 +65,12 @@ def group_test(
         data = yaml.load(fp, Loader=yaml.FullLoader)
         if "pre" in data[test_group]:
             group_pre = tests_dir / data[test_group]['pre']
+        """
+        TO-D0: Run post job
         if "post" in data[test_group]:
-            group_post = tests_dir / data[test_group]['post']
+        group_post = tests_dir / data[test_group]['post']
+        """
+
 
     my_env = os.environ.copy()
     my_env['subscription_id'] = subscription_id
@@ -96,7 +100,7 @@ def group_test(
                 else:
                     if "pre" in job_data:
                         logger.info(f"Running pre script for {job}")
-                        proc = check_call(f"python3 {tests_dir / job_data['pre']}", env=my_env, shell=True)
+                        check_call(f"python3 {tests_dir / job_data['pre']}", env=my_env, shell=True)
                     logger.info(f"Loading test job {job}")
                     try:
                         test_job = load_job(tests_dir / job_data['job'])
@@ -136,7 +140,8 @@ def group_test(
                     failed_jobs.append(returned_job.display_name)
                     submitted_job_list.remove(job)
 
-        logger.info(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run. {len(succeeded_jobs)} jobs succeeded.")
+        logger.info(f"{len(succeeded_jobs) + len(failed_jobs)} jobs have been run.")
+        logger.info(f"{len(succeeded_jobs)} jobs succeeded.")
 
         logger.info(f"covered_assets {covered_assets}")
         if coverage_report:
