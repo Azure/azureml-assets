@@ -1,4 +1,4 @@
-name: mldesigner-2.0-ubuntu20.04-py38-cpu
+name: mldesigner
 version: auto
 type: environment
 spec: spec.yaml
