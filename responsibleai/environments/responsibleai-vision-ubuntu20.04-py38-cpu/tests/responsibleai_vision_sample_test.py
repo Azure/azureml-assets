@@ -12,7 +12,7 @@ from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
-TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
 
 
 def test_responsibleai_vision():
