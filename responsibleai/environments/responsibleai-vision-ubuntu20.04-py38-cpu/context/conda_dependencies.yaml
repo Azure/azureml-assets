@@ -9,27 +9,18 @@ dependencies:
   - pip
   - pytorch
   - torchvision
+  - captum
   - cpuonly
   - pip:
-    - numpy
-    - pandas
-    - pyarrow
-    - scikit-learn
-    - azure-core==1.25.1
-    - mlflow
+    - numpy==1.21.6
     - responsibleai~=0.24.1
     - raiwidgets~=0.24.1
-    # Limit markupsafe version is a workaround to resolve the issue from markupsafe's breaking change: https://github.com/aws/aws-sam-cli/issues/3661
+    - pyarrow
+    - mlflow
     - markupsafe<2.1.0
-    # Workaround to fix import failure related to itsdangerous's latest release: https://stackoverflow.com/questions/71189819/python-docker-importerror-cannot-import-name-json-from-itsdangerous
     - itsdangerous==2.0.1
-    - azureml-dataset-runtime
-    - azureml-core
-    - azureml-mlflow
-    - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-vision/responsibleai_vision-0.0.8-py3-none-any.whl
-    - https://publictestdatasets.blob.core.windows.net/packages/pypi/azureml-model-serializer/azureml_model_serializer-0.0.2-py3-none-any.whl
+    - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-vision/responsibleai_vision-0.0.15-py3-none-any.whl
+    - opencv-python==4.3.0.36
     - click<8.0.0
     - mltable==1.0.0
-    - ml-wrappers==0.4.2
     - fastai
-    - opencv-python

@@ -1,5 +1,6 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
 
 import argparse
 import logging
@@ -26,6 +27,8 @@ from responsibleai_text import (
 from raiutils.data_processing import serialize_json_safe
 
 from azureml_model_serializer import ModelSerializer
+# Local
+from constants import TaskType
 
 print(download("en_core_web_sm"))
 
@@ -105,7 +108,9 @@ def parse_args():
 
     # add arguments
     parser.add_argument(
-        "--task_type", type=str, required=True, choices=["text_classification"]
+        "--task_type", type=str, required=True,
+        choices=[TaskType.TEXT_CLASSIFICATION,
+                 TaskType.MULTILABEL_TEXT_CLASSIFICATION]
     )
 
     parser.add_argument(
@@ -135,6 +140,9 @@ def parse_args():
 
     # Error analysis
     parser.add_argument("--enable_error_analysis", type=boolean_parser)
+
+    parser.add_argument("--use_model_dependency", type=boolean_parser,
+                        help="Use model dependency")
 
     # Outputs
     parser.add_argument("--dashboard", type=str, required=True)
@@ -255,15 +263,27 @@ def main(args):
     _logger.info("Loading model: {0}".format(model_id))
     my_run = Run.get_context()
     workspace = my_run.experiment.workspace
-    model_serializer = ModelSerializer(model_id, workspace=workspace)
+    model_serializer = ModelSerializer(
+        model_id, workspace=workspace,
+        use_model_dependency=args.use_model_dependency)
     text_model = model_serializer.load("Ignored path")
+
+    if args.task_type == TaskType.MULTILABEL_TEXT_CLASSIFICATION:
+        target_column = get_from_args(
+            args=args,
+            arg_name="target_column_name",
+            custom_parser=json_empty_is_none_parser,
+            allow_none=True
+        )
+    else:
+        target_column = args.target_column_name
 
     _logger.info("Creating RAI Text Insights")
     rai_ti = RAITextInsights(
         model=text_model,
         train=train_df,
         test=test_df,
-        target_column=args.target_column_name,
+        target_column=target_column,
         task_type=args.task_type,
         classes=get_from_args(
             args, "classes", custom_parser=json_empty_is_none_parser,
