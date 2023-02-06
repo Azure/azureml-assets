@@ -20,4 +20,4 @@ tags:
   Preview: ""
   Python: "3.8"
   DeepSpeed: "0.7.3"
-  Onnx Runtime: "1.13.1"
+  ONNXRuntime: "1.13.1"
