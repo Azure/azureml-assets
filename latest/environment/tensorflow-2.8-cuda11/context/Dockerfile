@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.3-cudnn8-ubuntu20.04@sha256:b
 
 WORKDIR /
 
-ENV CONDA_PREFIX=/azureml-envs/pytorch-1.11
+ENV CONDA_PREFIX=/azureml-envs/tensorflow-2.8
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 

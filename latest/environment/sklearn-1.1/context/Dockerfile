@@ -1,8 +1,8 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.3-cudnn8-ubuntu20.04@sha256:bd3e72a631156251727d9e21cbf05b19f81a017b51765ad3344e0e491ecd3487
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:a5c475b3479315cf35295d5de1c162bfed48fee879443a5cb5e26270791c40f1
 
 WORKDIR /
 
-ENV CONDA_PREFIX=/azureml-envs/pytorch-1.11
+ENV CONDA_PREFIX=/azureml-envs/sklearn-1.1
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
