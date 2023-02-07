@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the pytorch 1.11 environment."""
+"""Tests running a sample job in the sklearn 1.1 environment."""
 import os
 import time
 from pathlib import Path
@@ -16,8 +16,8 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 45)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_pytorch_1_11():
-    """Tests a sample job using pytorch 1.11 as the environment."""
+def test_sklearn_1_1():
+    """Tests a sample job using sklearn 1.1 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -28,33 +28,30 @@ def test_pytorch_1_11():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "pytorch1_11"
+    env_name = "sklearn-1_1"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
-        name=env_name,
-        description="Pytorch 1.11 environment created from a Docker context.",
+        name="sklearn-1_1",
+        description="Sklearn 1.1 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
-        command="pip install -r requirements.txt && python main.py --iris-csv ${{inputs.iris_csv}} "
-                "--epochs ${{inputs.epochs}} --lr ${{inputs.lr}}",
+        command="python main.py --diabetes-csv ${{inputs.diabetes}}",
         inputs={
-            "iris_csv": Input(
+            "diabetes": Input(
                 type="uri_file",
-                path="https://azuremlexamples.blob.core.windows.net/datasets/iris.csv",
-            ),
-            "epochs": 10,
-            "lr": 0.1,
+                path="https://azuremlexamples.blob.core.windows.net/datasets/diabetes.csv",
+            )
         },
         environment=f"{env_name}@latest",
-        compute=os.environ.get("gpu_cluster"),
-        display_name="pytorch-iris-example",
-        description="Train a neural network with PyTorch on the Iris dataset.",
-        experiment_name="pytorch111Experiment"
+        compute=os.environ.get("cpu_cluster"),
+        display_name="sklearn-diabetes-example",
+        description="A test run of the sklearn 1_1 curated environment",
+        experiment_name="sklearnExperiment"
     )
 
     returned_job = ml_client.create_or_update(job)
