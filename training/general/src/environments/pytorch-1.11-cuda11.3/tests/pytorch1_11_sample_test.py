@@ -6,14 +6,12 @@ import os
 import time
 from pathlib import Path
 from azure.ai.ml import command, Input, MLClient
-from azure.ai.ml._restclient.models import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
-TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 45)
-STD_LOG = Path("artifacts/user_logs/std_log.txt")
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 40)
 
 
 def test_pytorch_1_11():
@@ -28,7 +26,7 @@ def test_pytorch_1_11():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "pytorch1_11"
+    env_name = "pytorch-1_11-cuda11_3"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
@@ -54,7 +52,7 @@ def test_pytorch_1_11():
         compute=os.environ.get("gpu_cluster"),
         display_name="pytorch-iris-example",
         description="Train a neural network with PyTorch on the Iris dataset.",
-        experiment_name="pytorch111Experiment"
+        experiment_name="pytorch111_Cuda113_Experiment"
     )
 
     returned_job = ml_client.create_or_update(job)
@@ -63,25 +61,9 @@ def test_pytorch_1_11():
     # Poll until final status is reached or timed out
     timeout = time.time() + (TIMEOUT_MINUTES * 60)
     while time.time() <= timeout:
-        job = ml_client.jobs.get(returned_job.name)
-        status = job.status
-        if status in [JobStatus.COMPLETED, JobStatus.FAILED]:
+        current_status = ml_client.jobs.get(returned_job.name).status
+        if current_status in ["Completed", "Failed"]:
             break
         time.sleep(30)  # sleep 30 seconds
-    else:
-        # Timeout
-        ml_client.jobs.cancel(returned_job.name)
-        raise Exception(f"Test aborted because the job took longer than {TIMEOUT_MINUTES} minutes. "
-                        f"Last status was {status}.")
 
-    if status == JobStatus.FAILED:
-        ml_client.jobs.download(returned_job.name)
-        if STD_LOG.exists():
-            print(f"*** BEGIN {STD_LOG} ***")
-            with open(STD_LOG, "r") as f:
-                print(f.read(), end="")
-            print(f"*** END {STD_LOG} ***")
-        else:
-            ml_client.jobs.stream(returned_job.name)
-
-    assert status == JobStatus.COMPLETED
+    assert current_status == "Completed"

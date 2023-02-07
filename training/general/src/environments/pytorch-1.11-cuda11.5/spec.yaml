@@ -1,0 +1,24 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  Recommended environment in public preview for Deep Learning with PyTorch on Azure containing the Azure ML SDK with the latest compatible versions of Ubuntu, Python, PyTorch, CUDA\RocM, combined with optimizers like ORT Training,+DeepSpeed+MSCCL+ORT MoE and more.
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+build:
+  path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
+
+os_type: linux
+
+tags:
+  PyTorch: "1.11"
+  GPU: Cuda11
+  OS: Ubuntu20.04
+  Training: ""
+  Preview: ""
+  Python: "3.8"
+  DeepSpeed: "0.7.3"
+  ONNXRuntime: "1.11.1"
+
