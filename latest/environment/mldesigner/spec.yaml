@@ -1,0 +1,17 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+
+description: >-
+  CPU based environment for pipelines (ML Designer).
+
+name: "mldesigner"
+version: "1"
+
+build:
+  path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
+  dockerfile_path: "Dockerfile"
+
+os_type: linux
+
+tags:
+  OS: Ubuntu20.04
+  Python: 3.8
