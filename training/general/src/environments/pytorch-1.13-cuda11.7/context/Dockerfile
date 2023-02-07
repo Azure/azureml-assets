@@ -1,4 +1,5 @@
 FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1130:{{latest-image-tag:biweekly\.\d{6}\.\d{1}}}
+
 # Install pip dependencies
 COPY requirements.txt .
 RUN pip install -r requirements.txt
@@ -13,6 +14,7 @@ RUN /var/requirements/install_system_requirements.sh && \
 ENV SVDIR=/var/runit
 ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
+
 # support Deepspeed launcher requirement of passwordless ssh login
 RUN apt-get update
 RUN apt-get install -y openssh-server openssh-client
