@@ -3,7 +3,7 @@ azureml-core==1.48.0
 azureml-dataset-runtime==1.48.0
 azureml-defaults==1.48.0
 azure-ml==0.0.1
-azure-ml-component==0.9.16.post2
+azure-ml-component==0.9.17
 azureml-mlflow==1.48.0
 azureml-telemetry==1.48.0
 azureml-contrib-services==1.48.0
