@@ -23,4 +23,4 @@ dependencies:
     - azureml-telemetry=={{latest-pypi-version}}
     - mltable==1.0.0
     - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai_tabular_automl/responsibleai_tabular_automl-0.0.0-py3-none-any.whl
-    - https://publictestdatasets.blob.core.windows.net/packages/pypi/raiwidgets_big_data/raiwidgets_big_data-0.0.1-py3-none-any.whl
+    - https://publictestdatasets.blob.core.windows.net/packages/pypi/raiwidgets_big_data/raiwidgets_big_data-0.1.0-py3-none-any.whl
