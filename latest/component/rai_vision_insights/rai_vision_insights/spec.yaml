@@ -6,7 +6,7 @@ type: command
 inputs:
   task_type:
     type: string
-    enum: ['image_classification']
+    enum: ['image_classification', 'multilabel_image_classification']
   model_input: # mlflow model name:version
     type: mlflow_model
     optional: false
@@ -28,16 +28,45 @@ inputs:
   precompute_explanation:
     type: boolean
     default: True
+  use_model_dependency:
+    type: boolean
+    default: False
   model_type:
     type: string
     enum: ['pyfunc', 'fastai']
+  # guided_gradcam doesn't work with transformer vision models
+  # and shap isn't supported for automl images models
+  # for more details on XAI parameters, refer to following link
+  # https://learn.microsoft.com/en-us/azure/machine-learning/how-to-auto-train-image-models?tabs=cli#generate-explanations-for-predictions
+  xai_algorithm:
+    type: string
+    enum: ['guided_backprop', 'guided_gradcam', 'integrated_gradients', 'xrai', 'shap']
+    default: 'guided_gradcam'
+    optional: true
+  n_steps:
+    type: integer
+    optional: true
+  xrai_fast:
+    type: boolean
+    optional: true
+  approximation_method:
+    type: string
+    enum: ['gausslegendre', 'riemann_middle']
+    optional: true
+  confidence_score_threshold_multilabel:
+    type: number
+    optional: true
+  dataset_type:
+    type: string
+    default: public
+    enum: ['private', 'public']
 outputs:
   dashboard:
     type: path
   ux_json:
     type: path
 code: ../src
-environment: azureml://registries/azureml/environments/responsibleai-vision-ubuntu20.04-py38-cpu/versions/1
+environment: azureml://registries/azureml/environments/responsibleai-vision-ubuntu20.04-py38-cpu/versions/10
 command: >-
   python ./rai_vision_insights.py
   --task_type ${{inputs.task_type}}
@@ -45,10 +74,17 @@ command: >-
   --model_info '${{inputs.model_info}}'
   --train_dataset ${{inputs.train_dataset}}
   --test_dataset ${{inputs.test_dataset}}
-  --target_column_name ${{inputs.target_column_name}}
+  --dataset_type ${{inputs.dataset_type}}
+  --target_column_name '${{inputs.target_column_name}}'
   --maximum_rows_for_test_dataset ${{inputs.maximum_rows_for_test_dataset}}
-  --classes ${{inputs.classes}}
+  --classes '${{inputs.classes}}'
   --precompute_explanation ${{inputs.precompute_explanation}}
+  --use_model_dependency ${{inputs.use_model_dependency}}
   --model_type ${{inputs.model_type}}
+  $[[--xai_algorithm ${{inputs.xai_algorithm}}]]
+  $[[--n_steps ${{inputs.n_steps}}]]
+  $[[--xrai_fast ${{inputs.xrai_fast}}]]
+  $[[--approximation_method ${{inputs.approximation_method}}]]
+  $[[--confidence_score_threshold_multilabel ${{inputs.confidence_score_threshold_multilabel}}]]
   --dashboard ${{outputs.dashboard}}
   --ux_json ${{outputs.ux_json}}
