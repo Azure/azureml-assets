@@ -5,7 +5,7 @@ description: Trains an image classification model. [Learn More](https://aka.ms/b
 
 name: train_image_classification_model
 display_name: Train Image Classification Model (Private Preview)
-version: 0.0.2-preview
+version: 0.0.1
 
 inputs:
   training_data:
@@ -15,62 +15,159 @@ inputs:
     type: mltable
     optional: true
     description: Validation data
-  model_name:
+  multilabel:
+    description: Whether a single image can have multiple labels.
+    type: boolean
+    default: false
+  ams_gradient:
+    description: Enable ams_gradient when optimizer is adam or adamw.
+    type: boolean
+    optional: true
+  beta1:
+    description: Value of beta1 when optimizer is adam or adamw. Must be a float in the range [0, 1].
+    type: number
+    optional: true
+    min: 0
+    max: 1
+  beta2:
+    description: Value of beta2 when optimizer is adam or adamw. Must be a float in the range [0, 1].
+    type: number
+    optional: true
+    min: 0
+    max: 1
+  checkpoint_frequency:
+    description: Frequency to store model checkpoints. Must be a positive integer.
+    type: integer
+    optional: true
+    min: 0
+  checkpoint_run_id:
+    description: The run ID of the experiment that has a pretrained checkpoint for incremental training.
     type: string
-    description: Model name
-    default: vitb16r224
-    enum: ['mobilenetv2', 'resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'resnest50', 'resnest101', 'seresnext', 'vits16r224', 'vitb16r224', 'vitl16r224']
+    optional: true
+  early_stopping:
+    description: Enable early stopping logic during training.
+    type: boolean
+    optional: true
+  early_stopping_patience:
+    description: Minimum number of epochs or validation evaluations with no primary metric improvement before the run is stopped. Must be a positive integer.
+    type: integer
+    optional: true
+    min: 1
+  early_stopping_delay:
+    description: Minimum number of epochs or validation evaluations to wait before primary metric improvement is tracked for early stopping. Must be a positive integer.
+    type: integer
+    optional: true
+    min: 1
+  evaluation_frequency:
+    description: Frequency to evaluate validation dataset to get metric scores. Must be a positive integer.
+    type: integer
+    optional: true
+    min: 1
+  gradient_accumulation_step:
+    description: Gradient accumulation means running a configured number of gradient_accumulation_step without updating the model weights while accumulating the gradients of those steps, and then using the accumulated gradients to compute the weight updates. Must be a positive integer.
+    type: integer
+    optional: true
+    min: 1
+  layers_to_freeze:
+    description: How many layers to freeze for your model. For instance, passing 2 as value for seresnext means freezing layer0 and layer1 referring to the below supported model layer info. Must be a positive integer.
+    type: integer
+    optional: true
+    min: 1
   learning_rate:
     description: Initial learning rate
     type: number
     optional: true
     min: 0
     max: 1
+  learning_rate_scheduler:
+    description: Type of learning rate scheduler. Must be warmup_cosine or step.
+    type: string
+    optional: true
+    default: warmup_cosine
+    enum: ['warmup_cosine', 'step']
+  model_name:
+    type: string
+    description: Model name
+    default: vitb16r224
+  momentum:
+    description: Value of momentum when optimizer is sgd. Must be a float in the range [0, 1].
+    type: number
+    optional: true
+    min: 0
+    max: 1
+  nesterov:
+    description: Enable nesterov when optimizer is sgd.
+    type: boolean
+    optional: true
   number_of_epochs:
     description: Number of training epochs
     type: integer
-    default: 15
+    optional: true
     min: 1
   optimizer:
     description: Type of optimizer
     type: string
+    optional: true
     default: sgd
     enum: ['sgd', 'adam', 'adamw']
+  step_lr_gamma:
+    description: Value of gamma when learning rate scheduler is step. Must be a float in the range [0, 1].
+    type: number
+    optional: true
+    min: 0
+    max: 1
+  step_lr_step_size:
+    description: Value of step size when learning rate scheduler is step. Must be a positive integer.
+    type: integer
+    optional: true
+    min: 0
   training_batch_size:
     description: Training batch size
     type: integer
     optional: true
     min: 1
+  training_crop_size:
+    type: integer
+    optional: true
+    description: Image crop size that's input to your neural network for training dataset. Note - seresnext doesn't take an arbitrary size. ViT-variants should have the same validation_crop_size and training_crop_size.
+    min: 1
   validation_batch_size:
     description: Validation batch size
+    optional: true
     type: integer
     optional: true
     min: 1
+  validation_crop_size:
+    type: integer
+    optional: true
+    description: Image crop size that's input to your neural network for validation dataset. Note - seresnext doesn't take an arbitrary size. ViT-variants should have the same validation_crop_size and training_crop_size.
+    min: 1
+  validation_resize_size:
+    type: integer
+    optional: true
+    description: Image size to which to resize before cropping for validation dataset. Note - seresnext doesn't take an arbitrary size.
+    min: 1
+  warmup_cosine_lr_cycles:
+    description: Value of cosine cycle when learning rate scheduler is warmup_cosine. Must be a float in the range [0, 1].
+    type: number
+    optional: true
+    min: 0
+    max: 1
+  warmup_cosine_lr_warmup_epochs:
+    description: Value of warmup epochs when learning rate scheduler is warmup_cosine. Must be a positive integer.
+    type: integer
+    optional: true
+    min: 0
   weight_decay:
     description: Value of weight decay used by the optimizer.
     type: number
-    default: 0.0001
+    optional: true
     min: 0
     max: 1
-  train_crop_size:
+  weighted_loss: 
+    description: 0 for no weighted loss, 1 for weighted loss with sqrt (class_weights), 2 for weighted loss with class_weights.
     type: integer
-    default: 224
-    description: "Image crop size that's input to your neural network for training dataset. Notes: seresnext doesn't take an arbitrary size. ViT-variants should have the same valid_crop_size and train_crop_size. Training run may get into CUDA OOM if the size is too big."
-    min: 1
-  valid_crop_size:
-    type: integer
-    default: 224
-    description: "Image crop size that's input to your neural network for validation dataset. Note: seresnext doesn't take an arbitrary size. ViT-variants should have the same valid_crop_size and train_crop_size. Training run may get into CUDA OOM if the size is too big."
-    min: 1
-  valid_resize_size:
-    type: integer
-    default: 256
-    description: "Image size to which to resize before cropping for validation dataset. Note: seresnext doesn't take an arbitrary size. Training run may get into CUDA OOM if the size is too big."
-    min: 1
-  multilabel:
-    type: boolean
-    default: false
-    description: Whether a single image can have multiple labels.
+    optional: true
 
 outputs:
   model:
@@ -79,23 +176,40 @@ outputs:
 
 code: ../src
 
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:98
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:107
 
 command: >-
   python -m image_classification.run
   --training_data ${{inputs.training_data}}
-  [--validation_data ${{inputs.validation_data}}]
-  --model_name  ${{inputs.model_name}}
-  [--learning_rate  ${{inputs.learning_rate}}]
-  --number_of_epochs ${{inputs.number_of_epochs}}
-  --optimizer ${{inputs.optimizer}}
-  [--training_batch_size ${{inputs.training_batch_size}}]
-  [--validation_batch_size ${{inputs.validation_batch_size}}]
-  --weight_decay ${{inputs.weight_decay}}
-  --train_crop_size ${{inputs.train_crop_size}}
-  --valid_crop_size ${{inputs.valid_crop_size}}
-  --valid_resize_size ${{inputs.valid_resize_size}}
+  $[[--validation_data ${{inputs.validation_data}}]]
   --multilabel ${{inputs.multilabel}}
+  $[[--amsgrad  ${{inputs.ams_gradient}}]]
+  $[[--beta1  ${{inputs.beta1}}]]
+  $[[--beta2  ${{inputs.beta2}}]]
+  $[[--checkpoint_frequency  ${{inputs.checkpoint_frequency}}]]
+  $[[--checkpoint_run_id  ${{inputs.checkpoint_run_id}}]]
+  $[[--early_stopping  ${{inputs.early_stopping}}]]
+  $[[--early_stopping_patience  ${{inputs.early_stopping_patience}}]]
+  $[[--early_stopping_delay  ${{inputs.early_stopping_delay}}]]
+  $[[--evaluation_frequency  ${{inputs.evaluation_frequency}}]]
+  $[[--grad_accumulation_step  ${{inputs.gradient_accumulation_step}}]]
+  $[[--layers_to_freeze  ${{inputs.layers_to_freeze}}]]
+  $[[--learning_rate  ${{inputs.learning_rate}}]]
+  $[[--lr_scheduler  ${{inputs.learning_rate_scheduler}}]]
+  --model_name  ${{inputs.model_name}}
+  $[[--momentum  ${{inputs.momentum}}]]
+  $[[--nesterov  ${{inputs.nesterov}}]]
+  $[[--number_of_epochs ${{inputs.number_of_epochs}}]]
+  $[[--optimizer ${{inputs.optimizer}}]]
+  $[[--step_lr_gamma  ${{inputs.step_lr_gamma}}]]
+  $[[--step_lr_step_size  ${{inputs.step_lr_step_size}}]]
+  $[[--training_batch_size ${{inputs.training_batch_size}}]]
+  $[[--train_crop_size ${{inputs.training_crop_size}}]]
+  $[[--validation_batch_size ${{inputs.validation_batch_size}}]]
+  $[[--valid_crop_size ${{inputs.validation_crop_size}}]]
+  $[[--valid_resize_size ${{inputs.validation_resize_size}}]]
+  $[[--weight_decay ${{inputs.weight_decay}}]]
+  $[[--weighted_loss ${{inputs.weighted_loss}}]]
   --model_output ${{outputs.model}}
 
 distribution:
