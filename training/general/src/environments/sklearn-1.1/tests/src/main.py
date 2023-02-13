@@ -1,8 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""Simple Sklearn Test."""
+
 # imports
-import mlflow
 import argparse
 
 import pandas as pd
@@ -13,17 +12,12 @@ from sklearn.model_selection import train_test_split
 
 # define functions
 def main(args):
-    """Run and evaluate model."""
-    # enable auto logging
-    mlflow.autolog()
 
     # setup parameters
     params = {
         "fit_intercept": args.fit_intercept,
-        "normalize": args.normalize,
         "positive": args.positive,
     }
-
     # read in data
     df = pd.read_csv(args.diabetes_csv)
 
@@ -33,11 +27,7 @@ def main(args):
     # train model
     model = train_model(params, X_train, X_test, y_train, y_test)
 
-    print(model)
-
-
 def process_data(df, random_state):
-    """Process data."""
     # split dataframe into X and y
     X = df.drop(["target"], axis=1)
     y = df["target"]
@@ -52,7 +42,6 @@ def process_data(df, random_state):
 
 
 def train_model(params, X_train, X_test, y_train, y_test):
-    """Train the model."""
     # train model
     model = LinearRegression(**params)
     model = model.fit(X_train, y_train)
@@ -62,7 +51,6 @@ def train_model(params, X_train, X_test, y_train, y_test):
 
 
 def parse_args():
-    """Parse arguements."""
     # setup arg parser
     parser = argparse.ArgumentParser()
 
@@ -70,8 +58,8 @@ def parse_args():
     parser.add_argument("--diabetes-csv", type=str)
     parser.add_argument("--random_state", type=int, default=42)
     parser.add_argument("--fit_intercept", type=bool, default=True)
-    parser.add_argument("--normalize", type=bool, default=False)
     parser.add_argument("--positive", type=bool, default=False)
+    parser.add_argument("--intel-extension", type=bool, default=False)
 
     # parse args
     args = parser.parse_args()
@@ -84,6 +72,8 @@ def parse_args():
 if __name__ == "__main__":
     # parse args
     args = parse_args()
-
+    if (args.intel_extension):
+        from sklearnex import patch_sklearn
+        patch_sklearn()
     # run main function
     main(args)
