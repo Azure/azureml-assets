@@ -312,7 +312,6 @@ if __name__ == "__main__":
                     logger.print(f"Component update failed for asset spec path: {asset.spec_with_path}")
                     failure_list.append(asset)
                     continue
-
             elif asset.type == assets.AssetType.MODEL:
                 try:
                     model_config = asset.extra_config_as_object()
@@ -322,6 +321,7 @@ if __name__ == "__main__":
                 except Exception as e:
                     logger.log_error(f"Model prepare exception. Error => {str(e)}")
                     failure_list.append(asset)
+                    continue
             else:
                 logger.log_warning(f"unsupported asset type: {asset.type.value}")
                 continue
