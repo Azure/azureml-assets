@@ -14,7 +14,7 @@ from string import Template
 from subprocess import PIPE, STDOUT, run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
-from typing import List
+from typing import Any, List
 import azureml.assets as assets
 from azureml.assets.model.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
@@ -65,7 +65,7 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
-def update_spec(asset, spec_file) -> bool:
+def update_spec(asset: Any, spec_file: Path) -> bool:
     """Update the yaml spec file with updated properties."""
     try:
         asset_dict = json.loads(json.dumps(asset._to_dict()))
@@ -76,11 +76,11 @@ def update_spec(asset, spec_file) -> bool:
     return False
 
 
-def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
+def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
     """Prepare Model.
 
     :param model_config: Model Config object
-    :type model_prepare: assets.ModelConfig
+    :type model_config: assets.ModelConfig
     :param spec_file_path: path to model spec file
     :type spec_file_path: Path
     :param model_dir: path of directory where model is present locally or can be downloaded to.
@@ -98,8 +98,7 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
 
     if model_config.path.type == PathType.LOCAL:
         model.path = os.path.abspath(Path(model_config.path.uri).resolve())
-        update_spec(model, spec_file_path)
-        return True
+        return update_spec(model, spec_file_path)
 
     if model_config.type == assets.ModelType.CUSTOM:
         can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
@@ -286,11 +285,14 @@ if __name__ == "__main__":
                 env = component.environment
                 ws_env_pattern = re.compile("^(.+):(.+)$")
                 registry_env_pattern = re.compile("^azureml://registries/.+/environments/(.+)/versions/(.+)")
-                match = ws_env_pattern.search(env)
+                match = registry_env_pattern.search(env)
                 if not match:
-                    match = registry_env_pattern.search(env)
+                    match = ws_env_pattern.search(env)
                     if not match:
-                        logger.print(f"Env name doesnot match with expected workspace or registry pattern in {asset.spec_with_path}")
+                        logger.print(
+                            "Env ID doesnot match with expected workspace or registry pattern"
+                            + f" in {asset.spec_with_path}"
+                        )
                         failure_list.append(asset)
                         continue
 
@@ -300,7 +302,11 @@ if __name__ == "__main__":
                 logger.print(f"Env name:version => {env_name}:{env_version}")
                 logger.print(f"Using final_version {final_version} to check if env registered")
                 try:
-                    mlclient = MLClient(DefaultAzureCredential(), subscription_id=subscription_id, registry_name=registry_name) 
+                    mlclient = MLClient(
+                        DefaultAzureCredential(),
+                        subscription_id=subscription_id,
+                        registry_name=registry_name,
+                    )
                     env = mlclient.environments.get(name=env_name, version=final_version)
                 except Exception as e:
                     logger.print(f"Fetching component env from registry failed => str{e}")
@@ -316,7 +322,7 @@ if __name__ == "__main__":
                 try:
                     model_config = asset.extra_config_as_object()
                     with TemporaryDirectory() as tempdir:
-                        if not model_prepare(model_config, asset.spec_with_path, Path(tempdir)):
+                        if not prepare_model(model_config, asset.spec_with_path, Path(tempdir)):
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")
                 except Exception as e:
                     logger.log_error(f"Model prepare exception. Error => {str(e)}")
@@ -332,7 +338,6 @@ if __name__ == "__main__":
                 registry_name, final_version, resource_group, workspace, debug_mode)
             # Run command
             run_command(cmd, failure_list, debug_mode)
-
 
     if len(failure_list) > 0:
         failed_assets = defaultdict(list)
