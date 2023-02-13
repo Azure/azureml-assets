@@ -22,7 +22,10 @@ import yaml
 from azureml.assets.config import PathType
 from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.util import logger
-from azure.ai.ml.entities._load_functions import load_model
+from azure.ai.ml import MLClient
+from azure.identity import DefaultAzureCredential
+from azure.ai.ml.entities._load_functions import load_component, load_model
+
 
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -63,14 +66,14 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
-def dump_model_spec(model, spec_file) -> bool:
-    """Update the yaml file after getting the model has been prepared."""
+def update_spec(asset, spec_file) -> bool:
+    """Update the yaml spec file with updated properties."""
     try:
-        model_dict = json.loads(json.dumps(model._to_dict()))
-        util.dump_yaml(model_dict, spec_file)
+        asset_dict = json.loads(json.dumps(asset._to_dict()))
+        util.dump_yaml(asset_dict, spec_file)
         return True
     except Exception as e:
-        logger.log_error(f"Failed to update model spec => {str(e)}")
+        logger.log_error(f"Failed to update spec => {str(e)}")
     return False
 
 
@@ -96,14 +99,14 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
 
     if model_config.path.type == PathType.LOCAL:
         model.path = os.path.abspath(Path(model_config.path.uri).resolve())
-        dump_model_spec(model, spec_file_path)
+        update_spec(model, spec_file_path)
         return True
 
     if model_config.type == assets.ModelType.CUSTOM:
         can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
         if can_publish_model:
             model.path = model_dir
-            can_publish_model = dump_model_spec(model, spec_file_path)
+            can_publish_model = update_spec(model, spec_file_path)
 
     elif model_config.type == assets.ModelType.MLFLOW:
         can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
@@ -117,7 +120,7 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
                     model.flavors = mlmodel.get("flavors")
                 except Exception as e:
                     logger.log_error(f"Error loading flavors from MLmodel file at: {mlmodel_file_path} => {str(e)}")
-            can_publish_model = dump_model_spec(model, spec_file_path)
+            can_publish_model = update_spec(model, spec_file_path)
 
     else:
         print(model_config.type.value, assets.ModelType.MLFLOW)
@@ -276,34 +279,62 @@ if __name__ == "__main__":
                 version=final_version,
             )
 
+            if asset.type not in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT, assets.AssetType.MODEL]:
+                logger.log_warning(f"unsupported asset type: {asset.type.value}")
+                continue
+
             # Handle specific asset types
-            if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
-                # Assemble command
-                cmd = assemble_command(
-                    asset.type.value, str(asset.spec_with_path),
-                    registry_name, final_version, resource_group, workspace, debug_mode)
-                # Run command
-                run_command(cmd, failure_list, debug_mode)
+            if asset.type == assets.AssetType.COMPONENT:
+                # load component and check if environment exists
+                print(f"spec's path: {asset.spec_with_path}")
+                component = load_component(asset.spec_with_path)
+                env = component.environment
+                ws_env_pattern = re.compile("^(.+):(.+)$")
+                registry_env_pattern = re.compile("^azureml://registries/.+/environments/(.+)/versions/(.+)")
+                match = ws_env_pattern.search(env)
+                if not match:
+                    match = registry_env_pattern.search(env)
+                    if not match:
+                        print(f"Env name doesnot match with expected workspace or registry pattern in {asset.spec_with_path}")
+                        failure_list.append(asset)
+                        continue
 
+                # both ws and registry env follows the same grouping
+                env_name = match.group(1)
+                env_version = match.group(2)
+                print(f"Env name:version {env_name}:{env_version}")
+                print(f"Using final_version {final_version} to check if env registered")
+                try:
+                    mlclient = MLClient(DefaultAzureCredential(), subscription_id=subscription_id, registry_name=registry_name) 
+                    env = mlclient.environments.get(name=env_name, version=final_version)
+                except Exception as e:
+                    print(f"Fetching component env from registry failed => str{e}")
+                    failure_list.append(asset)
+                    continue
+
+                component.environment = env.id
+                if not update_spec(component, asset.spec_with_path):
+                    print(f"Component update failed for asset spec path: {asset.spec_with_path}")
+                    failure_list.append(asset)
+                    continue
             elif asset.type == assets.AssetType.MODEL:
-
                 try:
                     model_config = asset.extra_config_as_object()
                     with TemporaryDirectory() as tempdir:
                         result = model_prepare(model_config, asset.spec_with_path, Path(tempdir))
-                        if result:
-                            # Assemble Command
-                            cmd = assemble_command(
-                                asset.type.value, str(asset.spec_with_path),
-                                registry_name, asset.version, resource_group, workspace, debug_mode)
-                            # Run command
-                            run_command(cmd, failure_list, debug_mode)
+                        if not result:
+                            raise Exception(f"Error in preparing model {asset.spec_with_path}")
                 except Exception as e:
-                    logger.log_error(f"Exception in loading model config: {str(e)}")
+                    logger.log_error(f"Exception in model prepare: {str(e)}")
                     failure_list.append(asset)
 
-            else:
-                logger.log_warning(f"unsupported asset type: {asset.type.value}")
+            # Assemble command
+            cmd = assemble_command(
+                asset.type.value, str(asset.spec_with_path),
+                registry_name, final_version, resource_group, workspace, debug_mode)
+            # Run command
+            run_command(cmd, failure_list, debug_mode)
+
 
     if len(failure_list) > 0:
         failed_assets = defaultdict(list)
