@@ -66,7 +66,15 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
 
 
 def update_spec(asset: Any, spec_file: Path) -> bool:
-    """Update the yaml spec file with updated properties."""
+    """Update the yaml spec file with updated properties in asset.
+
+    :param asset: Asset loaded using load_*(component, environemnt, model) method.
+    :type asset: Any
+    :param spec_file: path to model spec file
+    :type spec_file: Path
+    :return: True if spec was successfully updated
+    :rtype: bool
+    """
     try:
         asset_dict = json.loads(json.dumps(asset._to_dict()))
         util.dump_yaml(asset_dict, spec_file)
