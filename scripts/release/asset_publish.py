@@ -31,6 +31,8 @@ ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
+WORKSPACE_ENV_PATTERN = re.compile("^(.+):(.+)$")
+REGISTRY_ENV_PATTERN = re.compile("^azureml://registries/.+/environments/(.+)/versions/(.+)")
 
 
 def find_test_files(dir: Path):
@@ -292,11 +294,10 @@ if __name__ == "__main__":
                 logger.print(f"spec's path: {asset.spec_with_path}")
                 component = load_component(asset.spec_with_path)
                 env = component.environment
-                ws_env_pattern = re.compile("^(.+):(.+)$")
-                registry_env_pattern = re.compile("^azureml://registries/.+/environments/(.+)/versions/(.+)")
-                match = registry_env_pattern.match(env)
+
+                match = REGISTRY_ENV_PATTERN.match(env)
                 if not match:
-                    match = ws_env_pattern.match(env)
+                    match = WORKSPACE_ENV_PATTERN.match(env)
                     if not match:
                         logger.print(
                             "Env ID doesn't match workspace or registry pattern"
