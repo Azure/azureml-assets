@@ -14,7 +14,7 @@ from string import Template
 from subprocess import PIPE, STDOUT, run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
-from typing import Any, List
+from typing import List, Union
 import azureml.assets as assets
 from azureml.assets.model.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
@@ -23,6 +23,7 @@ from azureml.assets.config import PathType
 from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.util import logger
 from azure.ai.ml import MLClient, load_component, load_model
+from azure.ai.ml.entities import Component, Environment, Model
 from azure.identity import DefaultAzureCredential
 
 
@@ -65,11 +66,11 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
-def update_spec(asset: Any, spec_file: Path) -> bool:
+def update_spec(asset: Union[Component, Environment, Model], spec_file: Path) -> bool:
     """Update the yaml spec file with updated properties in asset.
 
     :param asset: Asset loaded using load_*(component, environemnt, model) method.
-    :type asset: Any
+    :type asset: Union[Component, Environment, Model]
     :param spec_file: path to model spec file
     :type spec_file: Path
     :return: True if spec was successfully updated
@@ -80,7 +81,7 @@ def update_spec(asset: Any, spec_file: Path) -> bool:
         util.dump_yaml(asset_dict, spec_file)
         return True
     except Exception as e:
-        logger.log_error(f"Failed to update spec => {str(e)}")
+        logger.log_error(f"Failed to update spec => {e}")
     return False
 
 
@@ -101,7 +102,7 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
         # TODO: temp fix before restructuring what attributes are required in model config and spec.
         model.type = model_config.type.value
     except Exception as e:
-        logger.error(f"Error in loading model spec file at {spec_file_path} => {str(e)}")
+        logger.error(f"Error in loading model spec file at {spec_file_path} => {e}")
         return False
 
     if model_config.path.type == PathType.LOCAL:
@@ -125,7 +126,7 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
                     mlmodel = util.load_yaml(file_path=mlmodel_file_path)
                     model.flavors = mlmodel.get("flavors")
                 except Exception as e:
-                    logger.log_error(f"Error loading flavors from MLmodel file at: {mlmodel_file_path} => {str(e)}")
+                    logger.log_error(f"Error loading flavors from MLmodel file at: {mlmodel_file_path} => {e}")
             can_publish_model = update_spec(model, spec_file_path)
 
     else:
@@ -293,12 +294,12 @@ if __name__ == "__main__":
                 env = component.environment
                 ws_env_pattern = re.compile("^(.+):(.+)$")
                 registry_env_pattern = re.compile("^azureml://registries/.+/environments/(.+)/versions/(.+)")
-                match = registry_env_pattern.search(env)
+                match = registry_env_pattern.match(env)
                 if not match:
-                    match = ws_env_pattern.search(env)
+                    match = ws_env_pattern.match(env)
                     if not match:
                         logger.print(
-                            "Env ID doesnot match with expected workspace or registry pattern"
+                            "Env ID doesn't match workspace or registry pattern"
                             + f" in {asset.spec_with_path}"
                         )
                         failure_list.append(asset)
@@ -317,7 +318,7 @@ if __name__ == "__main__":
                     )
                     env = mlclient.environments.get(name=env_name, version=final_version)
                 except Exception as e:
-                    logger.print(f"Fetching component env from registry failed => str{e}")
+                    logger.print(f"Fetching component env from registry failed: {e}")
                     failure_list.append(asset)
                     continue
 
@@ -333,7 +334,7 @@ if __name__ == "__main__":
                         if not prepare_model(model_config, asset.spec_with_path, Path(tempdir)):
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")
                 except Exception as e:
-                    logger.log_error(f"Model prepare exception. Error => {str(e)}")
+                    logger.log_error(f"Model prepare exception. Error => {e}")
                     failure_list.append(asset)
                     continue
             else:
