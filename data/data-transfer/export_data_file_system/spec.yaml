@@ -1,13 +1,13 @@
 $schema: http://azureml/sdk-2-0/DataTransferComponent.json
 name: export_data_file_system
 display_name: export data from uri_folder data asset to external file system
-
+version: 0.0.1
 type: data_transfer
 task: export_data
 
 inputs:
-  source: 
+  source:
     type: uri_folder
 
-sink: 
+sink:
   type: file_system
