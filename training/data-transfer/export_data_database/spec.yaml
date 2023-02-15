@@ -1,0 +1,13 @@
+$schema: http://azureml/sdk-2-0/DataTransferComponent.json
+name: export_data_database
+display_name: export data from uri_file data asset to database
+
+type: data_transfer
+task: export_data
+
+inputs:
+  source: 
+    type: uri_file
+
+sink: 
+  type: database
