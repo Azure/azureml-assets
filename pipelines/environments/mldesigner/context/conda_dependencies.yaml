@@ -1,6 +1,5 @@
 name: mldesigner
 channels:
-- anaconda
 - conda-forge
 dependencies:
 - python=3.8.13
@@ -9,4 +8,3 @@ dependencies:
   - azure-ai-ml=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - mldesigner=={{latest-pypi-version:pre}}
-  - wheel==0.38.1
