@@ -7,3 +7,4 @@ dependencies:
 - pip=21.3.1
 - pip:
   - mldesigner=={{latest-pypi-version:pre}}
+  - wheel==0.38.1
