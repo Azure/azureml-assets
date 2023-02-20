@@ -1,0 +1,11 @@
+image:
+  name: azureml/curated/acft-ubuntu20.04-py38-pytorch1.13.1-cuda11.7-gpu
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+  publish:
+    location: mcr
+    visibility: public

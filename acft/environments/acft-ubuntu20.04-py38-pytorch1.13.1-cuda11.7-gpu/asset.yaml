@@ -1,0 +1,10 @@
+name: acft-ubuntu20.04-py38-pytorch1.13.1-cuda11.7-gpu
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+test:
+  pytest:
+    enabled: true
+    pip_requirements: tests/requirements.txt
+    tests_dir: tests
