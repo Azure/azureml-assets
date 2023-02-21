@@ -2,8 +2,6 @@
 # Licensed under the MIT License.
 
 import argparse
-from distutils.util import strtobool
-
 from azureml.automl.core.shared.constants import Tasks
 from azureml.automl.dnn.vision.common import utils
 
