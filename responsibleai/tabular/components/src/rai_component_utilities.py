@@ -157,7 +157,7 @@ def load_parquet(parquet_path: str) -> pd.DataFrame:
     try:
         df = pd.read_parquet(parquet_path)
     except Exception as e:
-        _logger.info(f"Failed to load {mltable_path} as MLTable. ")
+        _logger.info(f"Failed to load {mltable_path} as MLTable. ")  # noqa: F821
         raise e
     return df
 
