@@ -9,10 +9,10 @@ version: 0.0.1
 
 inputs:
   training_data:
-    description: Training data
+    description: Path to MLTable for training data.
     type: mltable
   validation_data:
-    description: Validation data
+    description: Path to MLTable for validation data.
     type: mltable
     optional: true
   ams_gradient:
@@ -71,7 +71,7 @@ inputs:
     optional: true
     min: 1
   gradient_accumulation_step:
-    description: Gradient accumulation means running a configured number of gradient_accumulation_step without updating the model weights while accumulating the gradients of those steps, and then using the accumulated gradients to compute the weight updates. Must be a positive integer.
+    description: Number of forward passes without updating the model weights while accumulating the gradients of those steps, and then using the accumulated gradients to compute the weight updates. Must be a positive integer.
     type: integer
     optional: true
     min: 1
@@ -155,7 +155,7 @@ inputs:
     optional: true
     min: 0
   tile_grid_size:
-    description: The grid size to use for tiling each image. Should be passed as a string in '3x2' format. Example --tile_grid_size '3x2'
+    description: The grid size to use for tiling each image. Should be passed as a string in '3x2' format. Example --tile_grid_size '3x2'. For more information please visit https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-automl-small-object-detect?tabs=CLI-v2.
     type: string
     optional: true
   tile_overlap_ratio:
@@ -190,6 +190,7 @@ inputs:
     description: Metric computation method to use for validation metrics. Must be none, coco, voc, or coco_voc.
     type: string
     optional: true
+    default: 'voc'
     enum: ['none', 'coco', 'voc', 'coco_voc']
   warmup_cosine_lr_cycles:
     description: Value of cosine cycle when learning rate scheduler is warmup_cosine. Must be a float in the range [0, 1].
@@ -215,7 +216,7 @@ outputs:
 
 code: ../src
 
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:107
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU@latest
 
 command: >-
   python -m object_detection.run

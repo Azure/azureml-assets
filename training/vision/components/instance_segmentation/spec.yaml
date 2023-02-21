@@ -9,10 +9,10 @@ version: 0.0.1
 
 inputs:
   training_data:
-    description: Training data
+    description: Path to MLTable for training data.
     type: mltable
   validation_data:
-    description: Validation data
+    description: Path to MLTable for validation data.
     type: mltable
     optional: true
   ams_gradient:
@@ -71,7 +71,7 @@ inputs:
     optional: true
     min: 1
   gradient_accumulation_step:
-    description: Gradient accumulation means running a configured number of gradient_accumulation_step without updating the model weights while accumulating the gradients of those steps, and then using the accumulated gradients to compute the weight updates. Must be a positive integer.
+    description: Number of forward passes without updating the model weights while accumulating the gradients of those steps, and then using the accumulated gradients to compute the weight updates. Must be a positive integer.
     type: integer
     optional: true
     min: 1
@@ -87,7 +87,7 @@ inputs:
     min: 0
     max: 1
   learning_rate_scheduler:
-    description: Type of learning rate scheduler. Must be warmup_cosine or step.
+    description: Type of learning rate scheduler. Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters more information.
     type: string
     optional: true
     default: warmup_cosine
@@ -132,15 +132,15 @@ inputs:
     type: string
     optional: true
     default: sgd
-    enum: ['sgd', 'adam', 'adamw']  
+    enum: ['sgd', 'adam', 'adamw']
   step_lr_gamma:
-    description: Value of gamma when learning rate scheduler is step. Must be a float in the range [0, 1].
+    description: Value of gamma when learning rate scheduler is step. Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters more information.
     type: number
     optional: true
     min: 0
     max: 1
   step_lr_step_size:
-    description: Value of step size when learning rate scheduler is step. Must be a positive integer.
+    description: Value of step size when learning rate scheduler is step. Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters more information.
     type: integer
     optional: true
     min: 0
@@ -180,15 +180,16 @@ inputs:
     description: Metric computation method to use for validation metrics. Must be none, coco, voc, or coco_voc.
     type: string
     optional: true
+    default: 'voc'
     enum: ['none', 'coco', 'voc', 'coco_voc']
   warmup_cosine_lr_cycles:
-    description: Value of cosine cycle when learning rate scheduler is warmup_cosine. Must be a float in the range [0, 1].
+    description: Value of cosine cycle when learning rate scheduler is warmup_cosine. Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters more information.
     type: number
     optional: true
     min: 0
     max: 1
   warmup_cosine_lr_warmup_epochs:
-    description: Value of warmup epochs when learning rate scheduler is warmup_cosine. Must be a positive integer.
+    description: Value of warmup epochs when learning rate scheduler is warmup_cosine. Please check for https://learn.microsoft.com/azure/machine-learning/reference-automl-images-hyperparameters more information.
     type: integer
     optional: true
     min: 0
@@ -206,7 +207,7 @@ outputs:
 
 code: ../src
  
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:107
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU@latest
 
 command: >-
   python -m instance_segmentation.run
