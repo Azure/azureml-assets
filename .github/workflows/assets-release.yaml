@@ -33,8 +33,8 @@ env:
   asset_config_filename: asset.yaml
 
 permissions:
-  # Required to clone repo and push
-  contents: write
+  # Required to clone repo
+  contents: read
   # Required for OIDC login to Azure
   id-token: write
 
@@ -198,6 +198,7 @@ jobs:
         with:
           ref: release
           fetch-depth: 0
+          token: ${{ secrets.AZUREML_BOT_PAT }}
           path: ${{ env.release_dir }}
 
       # TODO: Not needed unless calling update_assets.py
