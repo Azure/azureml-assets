@@ -27,7 +27,7 @@ def test_acft():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "acft-ubuntu20.04-py38-pytorch1.13.1-cuda11.7-gpu"
+    env_name = "acft-ubuntu2004-py38-pytorch1131-cuda117-gpu"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
