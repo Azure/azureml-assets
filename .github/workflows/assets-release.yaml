@@ -37,8 +37,6 @@ permissions:
   contents: write
   # Required for OIDC login to Azure
   id-token: write
-  # Required to create/update pull requests
-  pull-requests: write
 
 defaults:
   run:
@@ -225,12 +223,18 @@ jobs:
           rm -Rf $release_dir/$scripts_dir
           cp -r $main_dir/$scripts_dir $release_dir/$scripts_dir
 
-      - name: Create pull request
-        uses: peter-evans/create-pull-request@v4
-        with:
-          path: ${{ env.release_dir }}
-          commit-message: Update release branch
-          branch: release-update
-          delete-branch: true
-          title: Update release branch
-          body: Automated updates made by [${{ github.workflow }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+      - name: Create commit and push
+        env:
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: GitHub
+          GIT_COMMITTER_EMAIL: noreply@github.com
+        run: |
+          if [[ -z $(git status -s) ]]; then
+            echo "No updates to the release branch"
+            exit 0
+          fi
+          git add -A .
+          git commit -m "Update release branch" -m "Automated updates made by [$GITHUB_WORKFLOW]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+          git push
+        working-directory: ${{ env.release_dir }}
