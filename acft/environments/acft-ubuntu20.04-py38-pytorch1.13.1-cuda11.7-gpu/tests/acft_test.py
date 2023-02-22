@@ -6,13 +6,14 @@
 import os
 import time
 from pathlib import Path
-from azure.ai.ml import command, Input, MLClient
+from azure.ai.ml import command, MLClient
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 90)
+
 
 def test_acft():
     """Tests a sample job usingACFT as the environment."""
@@ -58,3 +59,4 @@ def test_acft():
         time.sleep(30)  # sleep 30 seconds
 
     assert current_status == "Completed"
+
