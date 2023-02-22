@@ -59,4 +59,3 @@ def test_acft():
         time.sleep(30)  # sleep 30 seconds
 
     assert current_status == "Completed"
-
