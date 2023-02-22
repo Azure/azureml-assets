@@ -107,7 +107,7 @@ def main(args):
     properties = model_info.get("properties", {})
 
     # validations
-    if not model_type in SUPPORTED_MODEL_ASSET_TYPES:
+    if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
         raise Exception(f"Unsupported model type {model_type}")
 
     if not model_name:
@@ -126,7 +126,7 @@ def main(args):
     try:
         models_list = ml_client.models.list(name=model_name)
         if models_list:
-            max_version = (max(models_list, key=lambda x:x.version)).version
+            max_version = (max(models_list, key=lambda x: x.version)).version
             model_version = str(int(max_version) + 1)
     except Exception:
         print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
@@ -142,7 +142,7 @@ def main(args):
 
     # register the model in workspace or registry
     registered_model = ml_client.models.create_or_update(model)
-    
+
     print(f"model => {registered_model}")
     # write registered model id which will be fetched by deployment component
     (Path(registration_details)).write_text(registered_model.id)

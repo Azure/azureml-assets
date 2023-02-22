@@ -21,7 +21,10 @@ def _get_parser():
         "--model-type",
         default="custom_model",
         required=False,
-        help="Model type supported by AzureML viz. custom/mlflow/triton. **custom** will be assumed as default, if unspecified.",
+        help=(
+            "Model type supported by AzureML viz. custom/mlflow/triton."
+            + " **custom** will be used as default, if unspecified."
+        ),
     )
     parser.add_argument("--model-info", required=True, help="Model source info file path")
     parser.add_argument("--model-output-dir", required=True, help="Model download directory")
