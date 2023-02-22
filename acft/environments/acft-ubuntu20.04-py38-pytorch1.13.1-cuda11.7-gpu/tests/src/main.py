@@ -122,10 +122,7 @@ def main(args):
 
 
 def single_label_metrics_func(eval_pred: EvalPrediction) -> Dict[str, Any]:
-    """
-    compute and return metrics for sequence classification
-    """
-
+    """Compute and return metrics for sequence classification."""
     predictions, labels = eval_pred
     pred_flat = np.argmax(predictions, axis=1).flatten()
     labels_flat = labels.flatten()
