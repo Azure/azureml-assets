@@ -1,5 +1,5 @@
 image:
-  name: model-management
+  name: azureml/curated/model-management
   os: linux
   context:
     dir: context
@@ -7,3 +7,6 @@ image:
     template_files:
     - Dockerfile
     - requirements.txt
+  publish:
+    location: mcr
+    visibility: public

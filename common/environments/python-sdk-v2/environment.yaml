@@ -1,5 +1,5 @@
 image:
-  name: python-sdk-v2
+  name: azureml/curated/python-sdk-v2
   os: linux
   context:
     dir: context
@@ -7,3 +7,6 @@ image:
     template_files:
     - Dockerfile
     - conda_dependencies.yaml
+  publish:
+    location: mcr
+    visibility: public
