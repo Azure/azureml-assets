@@ -2,8 +2,7 @@
 # Licensed under the MIT License.
 
 import argparse
-from distutils.util import strtobool
-
+from azureml.automl.core.shared.constants import Tasks
 from azureml.automl.dnn.vision.common import utils
 
 
@@ -28,9 +27,11 @@ class CommonSettings:
 
 class ClassificationSettings(CommonSettings):
 
-    def __init__(self, training_data: str, validation_data: str, model_output: str, multilabel: bool) -> None:
+    def __init__(self, training_data: str, validation_data: str, model_output: str, task_type: str) -> None:
         super().__init__(training_data, validation_data, model_output)
-        self.multilabel = multilabel
+        self.multilabel = False
+        if task_type == Tasks.IMAGE_CLASSIFICATION_MULTILABEL:
+            self.multilabel = True
 
     @classmethod
     def create_from_parsing_current_cmd_line_args(cls) -> "ClassificationSettings":
@@ -39,11 +40,11 @@ class ClassificationSettings(CommonSettings):
 
         # Create classification settings
         parser = argparse.ArgumentParser()
-        parser.add_argument('--multilabel', type=lambda x: bool(strtobool(str(x))))
+        parser.add_argument('--task_type', type=str)
         args, _ = parser.parse_known_args()
         return ClassificationSettings(
             common_settings.training_data, common_settings.validation_data, common_settings.model_output,
-            args.multilabel)
+            args.task_type)
 
 
 class ObjectDetectionSettings(CommonSettings):

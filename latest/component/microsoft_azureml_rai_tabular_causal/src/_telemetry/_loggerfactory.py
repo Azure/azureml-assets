@@ -17,7 +17,7 @@ from azureml.telemetry import get_telemetry_log_handler
 from azureml.telemetry.activity import (
     log_activity as _log_activity,
     ActivityType,
-    ActivityLoggerAdapter
+    ActivityLoggerAdapter,
 )
 from azureml.telemetry.logging_handler import AppInsightsLoggingHandler
 
@@ -55,7 +55,9 @@ class _LoggerFactory:
     @staticmethod
     def track_python_environment(logger):
         payload = {d.project_name: d.version for d in pkg_resources.working_set}
-        activity_logger = ActivityLoggerAdapter(logger, {"python_environment": json.dumps(payload)})
+        activity_logger = ActivityLoggerAdapter(
+            logger, {"python_environment": json.dumps(payload)}
+        )
         activity_logger.info("Logging python environment.")
 
     @staticmethod

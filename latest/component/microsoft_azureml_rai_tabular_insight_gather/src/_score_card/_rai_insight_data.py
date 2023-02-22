@@ -90,10 +90,13 @@ class RaiInsightData:
         self._set_json_paths()
 
         test_data = self.raiinsight.test.drop(columns=self.raiinsight.target_column)
-        if self.raiinsight._feature_metadata is not None\
-                and self.raiinsight._feature_metadata.dropped_features is not None:
+        if (
+            self.raiinsight._feature_metadata is not None
+            and self.raiinsight._feature_metadata.dropped_features is not None
+        ):
             test_data = test_data.drop(
-                self.raiinsight._feature_metadata.dropped_features, axis=1)
+                self.raiinsight._feature_metadata.dropped_features, axis=1
+            )
         self.y_pred = self.raiinsight.model.predict(test_data)
 
     def _set_component_paths_prefix(self):
@@ -299,7 +302,9 @@ class PdfDataGen:
     def validate_valid_metric_for_task_type(self):
         for m in self.metrics:
             if m in metric_task_map and metric_task_map[m].lower() != self.tasktype:
-                raise ValueError(f"Metric {m} is not compatible with specified task type {self.tasktype}")
+                raise ValueError(
+                    f"Metric {m} is not compatible with specified task type {self.tasktype}"
+                )
 
     def get_metric_kwargs(self):
         return {"pos_label": self.pos_label, "labels": self.classes}
@@ -419,7 +424,7 @@ class PdfDataGen:
                         primary_metric,
                         y_predict[index_filter],
                         y_test[index_filter],
-                        **self.get_metric_kwargs()
+                        **self.get_metric_kwargs(),
                     )
 
                 data["data"].append(f_data)
@@ -587,7 +592,7 @@ class PdfDataGen:
                                 m,
                                 filtered_dataset["y_test"],
                                 filtered_dataset["y_pred"],
-                                **self.get_metric_kwargs()
+                                **self.get_metric_kwargs(),
                             ),
                             "population": len(filtered_dataset["y_pred"])
                             / len(self.data.get_y_test()),

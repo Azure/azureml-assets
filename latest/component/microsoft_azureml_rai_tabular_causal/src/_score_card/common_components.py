@@ -790,7 +790,12 @@ def get_causal_page(data):
 
         main_elems.append(
             get_table(
-                list(map(causal_policies_map_to_table, data["top_local_policies"][f["feature"]]))
+                list(
+                    map(
+                        causal_policies_map_to_table,
+                        data["top_local_policies"][f["feature"]],
+                    )
+                )
             )
         )
 

@@ -21,7 +21,7 @@ from rai_component_utilities import (
     load_mlflow_model,
     get_train_dataset_id,
     get_test_dataset_id,
-    UserConfigError
+    UserConfigError,
 )
 
 from _telemetry._loggerfactory import _LoggerFactory, track
@@ -69,9 +69,15 @@ def parse_args():
 
     parser.add_argument("--classes", type=str, help="Optional[List[str]]")
 
-    parser.add_argument("--feature_metadata", type=str, help="identity_feature_name:Optional[str], dropped_features:Optional[List[str]]")
+    parser.add_argument(
+        "--feature_metadata",
+        type=str,
+        help="identity_feature_name:Optional[str], dropped_features:Optional[List[str]]",
+    )
 
-    parser.add_argument("--use_model_dependency", type=boolean_parser, help="Use model dependency")
+    parser.add_argument(
+        "--use_model_dependency", type=boolean_parser, help="Use model dependency"
+    )
 
     parser.add_argument("--output_path", type=str, help="Path to output JSON")
 
@@ -99,10 +105,12 @@ def create_constructor_arg_dict(args):
         args, "feature_metadata", custom_parser=json.loads, allow_none=True
     )
     feature_metadata = FeatureMetadata()
-    if 'dropped_features' in feature_metadata_dict.keys():
-        feature_metadata.dropped_features = feature_metadata_dict['dropped_features']
-    if 'identity_feature_name' in feature_metadata_dict.keys():
-        feature_metadata.identity_feature_name = feature_metadata_dict['identity_feature_name']
+    if "dropped_features" in feature_metadata_dict.keys():
+        feature_metadata.dropped_features = feature_metadata_dict["dropped_features"]
+    if "identity_feature_name" in feature_metadata_dict.keys():
+        feature_metadata.identity_feature_name = feature_metadata_dict[
+            "identity_feature_name"
+        ]
 
     result["target_column"] = args.target_column_name
     result["task_type"] = args.task_type
@@ -156,7 +164,7 @@ def main(args):
         model_estimator = load_mlflow_model(
             workspace=my_run.experiment.workspace,
             use_model_dependency=args.use_model_dependency,
-            model_id=model_id
+            model_id=model_id,
         )
     elif args.model_input and args.model_info:
         model_id = args.model_info
@@ -164,7 +172,7 @@ def main(args):
         model_estimator = load_mlflow_model(
             workspace=my_run.experiment.workspace,
             use_model_dependency=args.use_model_dependency,
-            model_path=args.model_input
+            model_path=args.model_input,
         )
 
     constructor_args = create_constructor_arg_dict(args)
@@ -183,7 +191,7 @@ def main(args):
         DashboardInfo.RAI_INSIGHTS_TRAIN_DATASET_ID_KEY: get_train_dataset_id(my_run),
         DashboardInfo.RAI_INSIGHTS_TEST_DATASET_ID_KEY: get_test_dataset_id(my_run),
         DashboardInfo.RAI_INSIGHTS_DASHBOARD_TITLE_KEY: args.title,
-        DashboardInfo.RAI_INSIGHTS_INPUT_ARGS_KEY: vars(args)
+        DashboardInfo.RAI_INSIGHTS_INPUT_ARGS_KEY: vars(args),
     }
     output_file = os.path.join(
         args.output_path, DashboardInfo.RAI_INSIGHTS_PARENT_FILENAME
