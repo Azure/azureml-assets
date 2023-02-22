@@ -1,0 +1,53 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: download_model
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Download model
+description: Downloads a model from a public storage container
+
+environment: azureml:model-management:0.0.1
+
+code: ../../src/
+command: >
+  python run_model_download.py
+  --model-uri-type ${{inputs.model_uri_type}}
+  --model-uri ${{inputs.model_uri}}
+  --model-type ${{inputs.model_type}}
+  --model-info ${{outputs.model_info}}
+  --model-output-dir ${{outputs.model_output}}
+
+inputs:
+  model_uri_type:
+    type: string
+    optional: false
+    enum:
+      - git
+      - azureblob
+    description: Model's storage container
+
+  model_uri:
+    type: string
+    optional: false
+    description: A public URI referencing the model. model_uri must be a valid http/https URI
+
+  model_type:
+    type: string
+    enum:
+      - custom_model
+      - mlflow_model
+    optional: false
+    description: Model type
+
+outputs:
+  model_info:
+    type: uri_file
+    description: File name to which model download details will be written
+
+  model_output:
+    type: uri_folder
+    description: Path to the dowloaded model
+    mode: rw_mount

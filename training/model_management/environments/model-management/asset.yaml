@@ -1,0 +1,5 @@
+name: model-management
+version: 0.0.1
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml

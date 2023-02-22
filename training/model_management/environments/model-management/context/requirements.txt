@@ -1,0 +1,3 @@
+azure-core=={{latest-pypi-version}}
+azure-ai-ml=={{latest-pypi-version}}
+azure-identity=={{latest-pypi-version}}
