@@ -1,0 +1,15 @@
+$schema: http://azureml/sdk-2-0/DataTransferComponent.json
+name: import_data_file_system
+display_name: import_data_file_system (Preview)
+version: 0.0.1
+description:
+  Component that import data from external file_system as uri_folder data asset within an Azure Machine Learning pipeline.
+  For more details, you can look at the component documentation [here](https://aka.ms/ai-components) (Preview).
+type: data_transfer
+task: import_data
+
+source:
+  type: file_system
+outputs:
+  sink:
+    type: uri_folder

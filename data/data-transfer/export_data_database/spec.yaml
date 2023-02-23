@@ -1,0 +1,16 @@
+$schema: http://azureml/sdk-2-0/DataTransferComponent.json
+name: export_data_database
+display_name: export_data_database (Preview)
+version: 0.0.1
+type: data_transfer
+description:
+  Component that export data from uri_file data asset to database within an Azure Machine Learning pipeline.
+  For more details, you can look at the component documentation [here](https://aka.ms/ai-components) (Preview).
+task: export_data
+
+inputs:
+  source:
+    type: uri_file
+
+sink:
+  type: database
