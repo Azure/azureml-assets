@@ -34,6 +34,9 @@ RUN pip install 'ml-wrappers~=0.4.2' \
                 'dask>=2021.10.0' \
                 'distributed>=2021.10.0' \
                 'onnx>=1.13.0' \
+                'torch>=1.13.1' \
+                'cryptography>=38.0.3' \
+                'protobuf==3.20.2' \
                 'setuptools>=65.5.1' \
                 'joblib>=1.2.0'
 
