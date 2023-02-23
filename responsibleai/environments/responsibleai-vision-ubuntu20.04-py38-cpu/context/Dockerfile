@@ -30,7 +30,12 @@ RUN pip install 'azureml-dataset-runtime==1.48.0' \
 RUN pip install 'ml-wrappers~=0.4.2' \
                 'shap==0.40.0' \
                 'interpret-community==0.28.0' \
-                'Pillow>=9.1.0'
+                'Pillow>=9.1.0' \
+                'dask>=2021.10.0' \
+                'distributed>=2021.10.0' \
+                'onnx>=1.13.0' \
+                'setuptools>=65.5.1' \
+                'joblib>=1.2.0'
 
 RUN pip freeze
 
