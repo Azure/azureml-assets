@@ -8,7 +8,7 @@ dependencies:
 - pandas~=1.3.0
 - scipy~=1.7.0
 - numpy~=1.21.0
-- scikit-learn-intelex~={{latest-sklearnex-version}}
+- scikit-learn-intelex~={{latest-pypi-version}}
 - pip:
   - matplotlib~=3.5.0
   - psutil~=5.8.0

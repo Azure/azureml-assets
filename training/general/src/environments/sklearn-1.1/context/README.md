@@ -4,17 +4,9 @@
 This document provides details on how to create and run a sample workload in a containerized SKLearn Environment using stock version of SKLearn as well as Intel Extension for SKLearn on Azure ML instances.
 
 ## How it works
-To create a stock SKLearn docker container use the `Dockerfile` and `conda_dependencies.yaml`. Follow the instructions below
-```
-sed -i 's#{{latest-image-tag}}#20230120.v1#g' Dockerfile 
-docker build -f Dockerfile -t azure-ml:stock-sklearn .
-```
-
-To create SKLearn docker container using Intel Extensions,use `Dockerfile` and `conda_dependencies.yaml` inside `intel-extension` folder. Follow the instructions below
-```
-sed -i 's#{{latest-image-tag}}#20230120.v1#g' Dockerfile 
-docker build -f Dockerfile -t azure-ml:intel-ex-sklearn .
-```
+To create a stock SKLearn docker container use the `Dockerfile` and `conda_dependencies.yaml`.
+To create SKLearn docker container using Intel Extensions,use `Dockerfile` and `conda_dependencies.yaml` inside `intel-extension` folder. 
+To build the dockerfile use the link [here](https://github.com/Azure/azureml-assets/wiki/Environments#testing-environment-image-builds) to parse the macros.
 
 ## Run a Linear Regression workload inside the container
 The code by default has Intel Extension Optimizations disabled.
