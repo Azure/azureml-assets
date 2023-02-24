@@ -17,9 +17,9 @@ dependencies:
     - pdfkit==1.0.0
     - plotly==5.6.0
     - kaleido==0.2.1
-    - azureml-core=={{latest-pypi-version}}
-    - azureml-dataset-runtime=={{latest-pypi-version}}
-    - azureml-mlflow=={{latest-pypi-version}}
-    - azureml-telemetry=={{latest-pypi-version}}
+    - azureml-core==1.48.0
+    - azureml-dataset-runtime==1.48.0
+    - azureml-mlflow==1.48.0
+    - azureml-telemetry==1.48.0
     - mltable==1.0.0
     - https://publictestdatasets.blob.core.windows.net/packages/pypi/raiwidgets_big_data/raiwidgets_big_data-0.1.0-py3-none-any.whl
