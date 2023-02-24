@@ -17,6 +17,9 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
+# Install azureml packages
+RUN pip install 'https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai_tabular_automl/responsibleai_tabular_automl-0.1.0-py3-none-any.whl'
+
 # no-deps install for domonic due to unresolvable dependencies requirment on urllib3 and requests.
 # score card rendering is using domonic only for the html elements composer which does not involve requests or urllib3
 RUN pip install --no-deps 'charset-normalizer==2.0.12' \
