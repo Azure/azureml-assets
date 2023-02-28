@@ -30,7 +30,7 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-core=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
-                'azureml-automl-dnn-vision=={{latest-pypi-version}}' \
+                'azureml-telemetry=={{latest-pypi-version}}' \
 
 RUN pip freeze
 
