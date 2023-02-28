@@ -141,11 +141,12 @@ def main(args):
     )
 
     # register the model in workspace or registry
+    print("Registering model ....")
     registered_model = ml_client.models.create_or_update(model)
+    print(f"Model registered. AssetID : {registered_model.id}")
 
-    print(f"model => {registered_model}")
-    # write registered model id which will be fetched by deployment component
     (Path(registration_details)).write_text(registered_model.id)
+    print("Saved model registration details in output text file.")
 
 
 # run script

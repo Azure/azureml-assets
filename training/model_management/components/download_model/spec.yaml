@@ -14,33 +14,23 @@ environment: azureml:model-management:0.0.1
 code: ../../src/
 command: >
   python run_model_download.py
-  --model-uri-type ${{inputs.model_uri_type}}
-  --model-uri ${{inputs.model_uri}}
-  --model-type ${{inputs.model_type}}
+  --model-source ${{inputs.model_source}}
+  --model-id ${{inputs.model_id}}
   --model-info ${{outputs.model_info}}
   --model-output-dir ${{outputs.model_output}}
 
 inputs:
-  model_uri_type:
+  model_source:
     type: string
-    optional: false
+    description: Supported model containers
     enum:
-      - git
-      - azureblob
-    description: Model's storage container
+      - Huggingface
+      - Git
+      - AzureBlob
 
-  model_uri:
+  model_id:
     type: string
-    optional: false
-    description: A public URI referencing the model. model_uri must be a valid http/https URI
-
-  model_type:
-    type: string
-    enum:
-      - custom_model
-      - mlflow_model
-    optional: false
-    description: Model type
+    description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **Git** or **AzureBlob** is selected in `model_source`
 
 outputs:
   model_info:

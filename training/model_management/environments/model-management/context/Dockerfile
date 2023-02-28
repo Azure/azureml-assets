@@ -19,3 +19,6 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 # List installed packages
 RUN pip list
+
+## Delete
+RUN rm requirements.txt
