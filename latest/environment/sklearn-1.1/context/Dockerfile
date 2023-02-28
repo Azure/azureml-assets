@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:a5c475b3479315cf35295d5de1c162bfed48fee879443a5cb5e26270791c40f1
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:8da14f0707b4c199a7a2518935fda0ae0459c627a3664e0bbe46bd1f5abd61ef
 
 WORKDIR /
 
