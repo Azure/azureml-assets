@@ -26,6 +26,12 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
                           'webencodings==0.5.1' \
                           'domonic==0.9.10'
 
+# Install azureml packages
+RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
+                'azureml-core=={{latest-pypi-version}}' \
+                'azureml-mlflow=={{latest-pypi-version}}' \
+                'azureml-automl-dnn-vision=={{latest-pypi-version}}' \
+
 RUN pip freeze
 
 # This is needed for mpi to locate libpython
