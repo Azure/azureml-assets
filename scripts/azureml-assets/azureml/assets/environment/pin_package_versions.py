@@ -36,6 +36,7 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
         )
     selection_prefs = SelectionPreferences(
         allow_yanked=True,
+        ignore_requires_python=True,
     )
     try:
         return PackageFinder.create(
