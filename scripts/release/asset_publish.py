@@ -119,6 +119,7 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
                     logger.log_error(f"Error loading flavors from MLmodel file at: {mlmodel_file_path} => {str(e)}")
             can_publish_model = dump_model_spec(model, spec_file_path)
 
+
     else:
         print(model_config.type.value, assets.ModelType.MLFLOW)
         can_publish_model = False
@@ -277,7 +278,7 @@ if __name__ == "__main__":
             )
 
             # Handle specific asset types
-            if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
+            if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT, assets.AssetType.DATA]:
                 # Assemble command
                 cmd = assemble_command(
                     asset.type.value, str(asset.spec_with_path),
@@ -302,6 +303,15 @@ if __name__ == "__main__":
                     logger.log_error(f"Exception in loading model config: {str(e)}")
                     failure_list.append(asset)
 
+            elif asset.type == assets.AssetType.DATA:
+                try:
+                    pass
+                except Exception as e:
+                    logger.log_error(f"Exception in publishing data asset: {str(e)}")
+                    failure_list.append(asset)
+
+            else:
+                logger.log_warning(f"unsupported asset type: {asset.type.value}")
             else:
                 logger.log_warning(f"unsupported asset type: {asset.type.value}")
 

@@ -702,6 +702,7 @@ class AssetType(Enum):
     COMPONENT = 'component'
     ENVIRONMENT = 'environment'
     MODEL = 'model'
+    DATA = 'data'
 
 
 DEFAULT_ASSET_FILENAME = "asset.yaml"
