@@ -32,14 +32,16 @@ class ModelSource(_CustomEnum):
     HUGGING_FACE = "Huggingface"   # Model files hosted on Huggingface
 
     @classmethod
-    def get_base_url(cls, key):
+    def get_base_url(cls, key) -> str:
+        """Return base url of the model container."""
         global MODEL_CONTAINER_DICT
         if isinstance(key, str):
             return MODEL_CONTAINER_DICT.get(key).get("base_uri")
         return MODEL_CONTAINER_DICT.get(key.value).get("base_uri")
 
     @classmethod
-    def get_path_type(cls, key):
+    def get_path_type(cls, key) -> PathType:
+        """Return path type of the model container."""
         global MODEL_CONTAINER_DICT
         if isinstance(key, str):
             return MODEL_CONTAINER_DICT.get(key).get("path_type")
