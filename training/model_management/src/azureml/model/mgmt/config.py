@@ -26,7 +26,6 @@ class PathType(_CustomEnum):
     GIT = "GIT"              # Model hosted on a public GIT repo that can be cloned by GIT LFS.
 
 
-
 class ModelSource(_CustomEnum):
     """Enum for supported model container sources."""
 
