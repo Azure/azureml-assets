@@ -43,7 +43,6 @@ def _onerror(func, path, exc_info):
         raise
 
 
-@log_execution_time
 def _download_git_model(model_uri: str, model_dir: Path) -> None:
     """Download model files from GIT repository.
 
@@ -73,7 +72,6 @@ def _download_git_model(model_uri: str, model_dir: Path) -> None:
     return download_details
 
 
-@log_execution_time
 def _download_azure_artifacts(model_uri, model_dir):
     """Download model files from blobstore.
 
@@ -97,6 +95,7 @@ def _download_azure_artifacts(model_uri, model_dir):
         raise e
 
 
+@log_execution_time
 def download_model(model_path_type: PathType, model_uri: str, model_dir: Path) -> None:
     """Prepare the Download Environment.
 
@@ -107,9 +106,9 @@ def download_model(model_path_type: PathType, model_uri: str, model_dir: Path) -
     :param model_dir: local folder to download model files too
     :type model_dir: Path
     """
-    if model_path_type == PathType.GIT.value:
+    if model_path_type == PathType.GIT.value or model_path_type == PathType.GIT:
         return _download_git_model(model_uri, model_dir)
-    elif model_path_type == PathType.AZUREBLOB.value:
+    elif model_path_type == PathType.AZUREBLOB.value or model_path_type == PathType.AZUREBLOB:
         return _download_azure_artifacts(model_uri, model_dir)
     else:
         raise Exception("Unsupported Model Download Method.")

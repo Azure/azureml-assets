@@ -17,18 +17,39 @@ class ModelType(_CustomEnum):
 
     MLFLOW = 'mlflow_model'
     CUSTOM = 'custom_model'
-    TRITON = 'triton_model'
-
-
-class ModelFlavor(_CustomEnum):
-    """Enum for the Flavors accepted in ModelConfig."""
-
-    HFTRANSFORMERS = 'hftransformers'
-    PYTORCH = 'pytorch'
 
 
 class PathType(_CustomEnum):
-    """Enum for path types supported for model publishing."""
+    """Enum for path types supported for model download."""
 
-    AZUREBLOB = "azureblob"  # Model files hosted on an AZUREBLOB blobstore with public read access.
-    GIT = "git"      # Model hosted on a public GIT repo and can be cloned by GIT LFS.
+    AZUREBLOB = "AzureBlob"  # Model files hosted on an AZUREBLOB blobstore with public read access.
+    GIT = "GIT"              # Model hosted on a public GIT repo that can be cloned by GIT LFS.
+
+
+
+class ModelSource(_CustomEnum):
+    """Enum for supported model container sources."""
+
+    HUGGING_FACE = "Huggingface"   # Model files hosted on Huggingface
+
+    @classmethod
+    def get_base_url(cls, key):
+        global MODEL_CONTAINER_DICT
+        if isinstance(key, str):
+            return MODEL_CONTAINER_DICT.get(key).get("base_uri")
+        return MODEL_CONTAINER_DICT.get(key.value).get("base_uri")
+
+    @classmethod
+    def get_path_type(cls, key):
+        global MODEL_CONTAINER_DICT
+        if isinstance(key, str):
+            return MODEL_CONTAINER_DICT.get(key).get("path_type")
+        return MODEL_CONTAINER_DICT.get(key.value).get("path_type")
+
+
+MODEL_CONTAINER_DICT = {
+    ModelSource.HUGGING_FACE.value: {
+        "base_uri": "https://huggingface.co/{}",
+        "path_type":  PathType.GIT
+    }
+}

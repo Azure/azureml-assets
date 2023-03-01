@@ -9,7 +9,7 @@ is_deterministic: True
 display_name: Download model
 description: Downloads a model from a public storage container
 
-environment: azureml:model-management:0.0.1
+environment: azureml:model-management:1
 
 code: ../../src/
 command: >
@@ -24,13 +24,13 @@ inputs:
     type: string
     description: Supported model containers
     enum:
-      - Huggingface
-      - Git
       - AzureBlob
+      - GIT
+      - Huggingface
 
   model_id:
     type: string
-    description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **Git** or **AzureBlob** is selected in `model_source`
+    description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
 
 outputs:
   model_info:
