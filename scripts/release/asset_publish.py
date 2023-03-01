@@ -311,17 +311,29 @@ if __name__ == "__main__":
                 env_version = match.group(2)
                 logger.print(f"Env name:version => {env_name}:{env_version}")
                 logger.print(f"Using final_version {final_version} to check if env registered")
+
+                mlclient = MLClient(
+                    DefaultAzureCredential(),
+                    subscription_id=subscription_id,
+                    registry_name=registry_name,
+                )
+
                 try:
-                    mlclient = MLClient(
-                        DefaultAzureCredential(),
-                        subscription_id=subscription_id,
-                        registry_name=registry_name,
-                    )
-                    env = mlclient.environments.get(name=env_name, version=final_version)
+                    env = mlclient.environments.get(name=env_name, version=env_version)
                 except Exception as e:
-                    logger.print(f"Fetching component env from registry failed: {e}")
-                    failure_list.append(asset)
-                    continue
+                    logger.print(
+                        f"Fetching component env {env_name}:{env_version} from registry failed. Error:\n\n{e}"
+                    )
+
+                if not env:
+                    try:
+                        env = mlclient.environments.get(name=env_name, version=final_version)
+                    except Exception as e:
+                        logger.print(
+                            f"Fetching component env {env_name}:{final_version} from registry failed. Error\n\n{e}"
+                        )
+                        failure_list.append(asset)
+                        continue
 
                 component.environment = env.id
                 if not update_spec(component, asset.spec_with_path):
