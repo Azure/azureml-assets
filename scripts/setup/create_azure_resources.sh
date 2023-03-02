@@ -4,7 +4,6 @@ location="eastus"
 resource_group="azureml-assets-static"
 managed_identity="azureml-assets-uai"
 federated_identity="azureml-assets"
-credential_params_file="credential_params.json"
 
 echo "Retrieving subscription information..."
 subscription_name=$(az account show --query name -o tsv | tr -d '\n\r')
