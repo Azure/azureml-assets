@@ -30,9 +30,9 @@ from azure.identity import DefaultAzureCredential
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
-WORKSPACE_ENV_PATTERN = re.compile("^([\w_-]+)(?:\:([0-9.]+)|\@([a-z]+))$")
+WORKSPACE_ENV_PATTERN = re.compile(r"^([\w_-]+)(?:\:([0-9.]+)|\@([a-z]+))$")
 REGISTRY_ENV_PATTERN = re.compile(
-    "^azureml://registries/[\w_-]+/environments/([\w_-]+)/(?:versions/([0-9.]+)|labels/([a-z]+))"
+    r"^azureml://registries/[\w_-]+/environments/([\w_-]+)/(?:versions/([0-9.]+)|labels/([a-z]+))"
 )
 
 
