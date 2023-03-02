@@ -27,12 +27,13 @@ from azure.ai.ml.entities import Component, Environment, Model
 from azure.identity import DefaultAzureCredential
 
 
-ASSET_ID_TEMPLATE = Template(
-    "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
+ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
-WORKSPACE_ENV_PATTERN = re.compile("^(.+):(.+)$")
-REGISTRY_ENV_PATTERN = re.compile("^azureml://registries/.+/environments/(.+)/versions/(.+)")
+WORKSPACE_ENV_PATTERN = re.compile("^([\w_-]+)(?:\:([0-9.]+)|\@([a-z]+))$")
+REGISTRY_ENV_PATTERN = re.compile(
+    "^azureml://registries/[\w_-]+/environments/([\w_-]+)/(?:versions/([0-9.]+)|labels/([a-z]+))"
+)
 
 
 def find_test_files(dir: Path):
@@ -73,7 +74,7 @@ def update_spec(asset: Union[Component, Environment, Model], spec_file: Path) ->
 
     :param asset: Asset loaded using load_*(component, environemnt, model) method.
     :type asset: Union[Component, Environment, Model]
-    :param spec_file: path to model spec file
+    :param spec_file: path to asset spec file
     :type spec_file: Path
     :return: True if spec was successfully updated
     :rtype: bool
@@ -298,26 +299,34 @@ if __name__ == "__main__":
                 component = load_component(asset.spec_with_path)
                 env = component.environment
 
-                match = REGISTRY_ENV_PATTERN.match(env)
+                for pattern in [REGISTRY_ENV_PATTERN, WORKSPACE_ENV_PATTERN]:
+                    if match := pattern.match(env):
+                        break
+
                 if not match:
-                    match = WORKSPACE_ENV_PATTERN.match(env)
-                    if not match:
-                        logger.print(
-                            "Env ID doesn't match workspace or registry pattern"
-                            + f" in {asset.spec_with_path}"
-                        )
-                        failure_list.append(asset)
-                        continue
+                    logger.print(f"Env ID doesn't match workspace or registry pattern in {asset.spec_with_path}")
+                    failure_list.append(asset)
+                    continue
 
                 # both ws and registry env follows the same grouping
                 env_name = match.group(1)
                 env_version = match.group(2)
-                logger.print(f"Env name:version => {env_name}:{env_version}")
-                logger.print(f"Using final_version {final_version} to check if env registered")
+                env_label = match.group(3)
+                logger.print(f"Env name: {env_name}, version: {env_version}, label: {env_label}")
 
-                for version in [env_version, final_version]:
+                if env_label:
+                    # TODO: Add fetching env from label
+                    # https://github.com/Azure/azureml-assets/issues/415
+                    print("Unexpected !!! Registering a component with env label is still to be supported.")
+                    failure_list.append(asset)
+                    continue
+
+                env = None
+                for version in set(env_version, final_version):
                     try:
-                        env = mlclient.environments.get(name=env_name, version=version)
+                        # Check if component's env is registered
+                        if env := mlclient.environments.get(name=env_name, version=version):
+                            break
                     except Exception as e:
                         logger.print(
                             f"Fetching component env {env_name}:{version} from registry failed. Error:\n\n{e}"
