@@ -267,6 +267,9 @@ if __name__ == "__main__":
     for asset in all_assets:
         assets_by_type[asset.type.value].append(asset)
 
+    # mlclient for the registry
+    mlclient = MLClient(DefaultAzureCredential(), subscription_id=subscription_id, registry_name=registry_name)
+
     for publish_asset_type in PUBLISH_ORDER:
         logger.print(f"now publishing {publish_asset_type.value}s.")
         if publish_asset_type.value not in publish_list:
@@ -312,28 +315,18 @@ if __name__ == "__main__":
                 logger.print(f"Env name:version => {env_name}:{env_version}")
                 logger.print(f"Using final_version {final_version} to check if env registered")
 
-                mlclient = MLClient(
-                    DefaultAzureCredential(),
-                    subscription_id=subscription_id,
-                    registry_name=registry_name,
-                )
-
-                try:
-                    env = mlclient.environments.get(name=env_name, version=env_version)
-                except Exception as e:
-                    logger.print(
-                        f"Fetching component env {env_name}:{env_version} from registry failed. Error:\n\n{e}"
-                    )
-
-                if not env:
+                for version in [env_version, final_version]:
                     try:
-                        env = mlclient.environments.get(name=env_name, version=final_version)
+                        env = mlclient.environments.get(name=env_name, version=version)
                     except Exception as e:
                         logger.print(
-                            f"Fetching component env {env_name}:{final_version} from registry failed. Error\n\n{e}"
+                            f"Fetching component env {env_name}:{version} from registry failed. Error:\n\n{e}"
                         )
-                        failure_list.append(asset)
-                        continue
+
+                if not env:
+                    logger.print(f"Could not find a registered env for {component.name}. Please retry again!!!")
+                    failure_list.append(asset)
+                    continue
 
                 component.environment = env.id
                 if not update_spec(component, asset.spec_with_path):
