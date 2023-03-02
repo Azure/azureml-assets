@@ -161,7 +161,7 @@ def data_prepare(data_config: assets.DataConfig, spec_file_path: Path, data_dir:
     if data_config.path.type == PathType.LOCAL:
         data.path = os.path.abspath(Path(data_config.path.uri).resolve())
     else:
-        can_publish_data = DataDownloadUtils.download_model(data_config.path.type, data_config.path.uri, data_dir)
+        can_publish_data = DataDownloadUtils.download_data(data_config.path.type, data_config.path.uri, data_dir)
         if can_publish_data:
             data.path = data_dir
 
