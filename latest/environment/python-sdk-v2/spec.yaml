@@ -1,0 +1,11 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+description: Environment containing Azure SDK for Python v2.
+
+name: "python-sdk-v2"
+version: "1"
+
+build:
+  path: "context"
+  dockerfile_path: "Dockerfile"
+
+os_type: linux
