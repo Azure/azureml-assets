@@ -271,6 +271,12 @@ class PathType(Enum):
     HTTP = "http"    # <UNSUPPORTED> Model files hosted on a HTTP endpoint.
     AZUREBLOB = "azureblob"  # Model files hosted on an AZUREBLOB blobstore with public read access.
 
+class DataType(Enum):
+    """Enum for data types supported for data publishing."""
+
+    URI_FILE = "uri_file"  
+    URI_FOLDER = "uri_folder"      
+    MLTABLE = "mltable"
 
 class AssetPath:
     """Asset path."""
@@ -345,7 +351,73 @@ class GitAssetPath(AssetPath):
         self._branch = branch
         super().__init__(PathType.GIT, uri)
 
+class DataConfig(Config):
+    """Data Config class."""
 
+    """
+    Example:
+
+    path: #Could be azure storage, git , hugging face
+
+        ## Azure Blobstore example
+        type: azureblob
+        storage_name: my_storage
+        container_name: my_container
+        container_path: foo/bar
+    """
+    def __init__(self, file_name: Path):
+        """Initialize object for the Data Properties extracted from extra_config data.yaml."""
+        super().__init__(file_name)
+        self._path = None
+        self._validate()
+
+    def _validate(self):
+        """Validate the yaml file."""
+        Config._validate_exists('data.path', self.path)
+        Config._validate_enum('data.path.type', self.path.type.value, PathType, True)
+        Config._validate_enum('data.type', self._type, DataType, True)
+
+    @property
+    def path(self) -> AssetPath:
+        """Data Path."""
+        if self._path:
+            return self._path
+        path = self._yaml.get('path', {})
+        if path and path.get('type'):
+            path_type = path.get('type')
+            if path_type == PathType.AZUREBLOB.value:
+                self._path = AzureBlobstoreAssetPath(
+                    storage_name=path['storage_name'],
+                    container_name=path['container_name'],
+                    container_path=path['container_path'],
+                )
+            elif path_type == PathType.GIT.value:
+                self._path = GitAssetPath(branch=path['branch'], uri=path['uri'])
+            elif path_type == PathType.LOCAL.value:
+                self._path = LocalAssetPath(local_path=path['uri'])
+            elif path_type == PathType.HTTP.value or path_type == PathType.FTP.value:
+                raise NotImplementedError("Support for HTTP and FTP is being added.")
+        else:
+            raise Exception("path parameters are invalid")
+        return self._path
+
+    @property
+    def _publish(self) -> Dict[str, object]:
+        """Data publish properties."""
+        return self._yaml.get('publish')
+
+    @property
+    def _type(self) -> str:
+        """Data Type."""
+        return self._publish.get('type')
+
+    @property
+    def type(self) -> DataType:
+        """Data Type Enum."""
+        type = self._type
+        return DataType(type) if type else None
+
+   
 class ModelConfig(Config):
     """Model Config class."""
 
@@ -937,6 +1009,8 @@ class AssetConfig(Config):
                     self._extra_config = EnvironmentConfig(extra_config_with_path)
                 elif self.type == AssetType.MODEL:
                     self._extra_config = ModelConfig(extra_config_with_path)
+                elif self.type == AssetType.DATA:
+                    self._extra_config = DataConfig(extra_config_with_path)
                 else:
                     raise Exception(f"extra_config loading for asset type {self.type.value} is unimplemented")
         return self._extra_config

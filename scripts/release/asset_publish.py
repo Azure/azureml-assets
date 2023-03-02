@@ -21,13 +21,14 @@ import azureml.assets.util as util
 import yaml
 from azureml.assets.config import PathType
 from azureml.assets.model import ModelDownloadUtils
+from azureml.assets.data import DataDownloadUtils
 from azureml.assets.util import logger
-from azure.ai.ml.entities._load_functions import load_model
+from azure.ai.ml.entities._load_functions import load_model,load_data
 
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
-PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
+PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.DATA, assets.AssetType.MODEL]
 
 
 def find_test_files(dir: Path):
@@ -127,6 +128,45 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
 
     return can_publish_model
 
+def dump_data_spec(data, spec_file) -> bool:
+    """Update the yaml file after getting the data has been prepared."""
+    try:
+        data_dict = json.loads(json.dumps(data._to_dict()))
+        util.dump_yaml(data_dict, spec_file)
+        return True
+    except Exception as e:
+        logger.log_error(f"Failed to update data spec => {str(e)}")
+    return False
+
+def data_prepare(data_config: assets.DataConfig, spec_file_path: Path, data_dir: Path) -> bool:
+    """Prepare Data.
+
+    :param data_config: Data Config object
+    :type data_config: assets.DataConfig
+    :param spec_file_path: path to data spec file
+    :type spec_file_path: Path
+    :param data_dir: path of directory where data is present locally or can be downloaded to.
+    :type data_dir: Path
+    :return: If data can be published to registry.
+    :rtype: bool
+    """
+    try:
+        data = load_data(spec_file_path)
+        # TODO: temp fix before restructuring what attributes are required in model config and spec.
+        data.type = data_config.type.value
+    except Exception as e:
+        logger.error(f"Error in loading data spec file at {spec_file_path} => {str(e)}")
+        return False
+
+    if data_config.path.type == PathType.LOCAL:
+        data.path = os.path.abspath(Path(data_config.path.uri).resolve())
+    else:
+        can_publish_data = DataDownloadUtils.download_model(data_config.path.type, data_config.path.uri, data_dir)
+        if can_publish_data:
+            data.path = data_dir
+
+    can_publish_data = dump_data_spec(data, spec_file_path)
+    return can_publish_data
 
 def assemble_command(
     asset_type: str,
@@ -278,7 +318,7 @@ if __name__ == "__main__":
             )
 
             # Handle specific asset types
-            if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT, assets.AssetType.DATA]:
+            if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
                 # Assemble command
                 cmd = assemble_command(
                     asset.type.value, str(asset.spec_with_path),
@@ -287,7 +327,6 @@ if __name__ == "__main__":
                 run_command(cmd, failure_list, debug_mode)
 
             elif asset.type == assets.AssetType.MODEL:
-
                 try:
                     model_config = asset.extra_config_as_object()
                     with TemporaryDirectory() as tempdir:
@@ -302,18 +341,24 @@ if __name__ == "__main__":
                 except Exception as e:
                     logger.log_error(f"Exception in loading model config: {str(e)}")
                     failure_list.append(asset)
-
             elif asset.type == assets.AssetType.DATA:
                 try:
-                    pass
+                    data_config = asset.extra_config_as_object()
+                    with TemporaryDirectory() as tempdir:
+                        result = data_prepare(data_config, asset.spec_with_path, Path(tempdir))
+                        if result:
+                            # Assemble Command
+                            cmd = assemble_command(
+                                asset.type.value, str(asset.spec_with_path),
+                                registry_name, asset.version, resource_group, workspace, debug_mode)
+                            # Run command
+                            run_command(cmd, failure_list, debug_mode)
                 except Exception as e:
                     logger.log_error(f"Exception in publishing data asset: {str(e)}")
                     failure_list.append(asset)
-
             else:
                 logger.log_warning(f"unsupported asset type: {asset.type.value}")
-            else:
-                logger.log_warning(f"unsupported asset type: {asset.type.value}")
+                
 
     if len(failure_list) > 0:
         failed_assets = defaultdict(list)
