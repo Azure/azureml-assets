@@ -1,0 +1,11 @@
+name: python-sdk-v2
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8
+  - pip=21.2.4
+  - pip:
+    - azure-core=={{latest-pypi-version}}
+    - azure-ai-ml=={{latest-pypi-version}}
+    - azure-identity=={{latest-pypi-version}}
+    - azureml-core=={{latest-pypi-version}}
