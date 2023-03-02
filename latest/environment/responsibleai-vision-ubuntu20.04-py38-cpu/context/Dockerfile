@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:ffc4b931ad29c78fd6a0aef66f35eb110b9a5add2f10f4c17be9dd50ad3524a8
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:8da14f0707b4c199a7a2518935fda0ae0459c627a3664e0bbe46bd1f5abd61ef
 
 # Install OpenCV native dependencies
 RUN apt-get update
@@ -17,7 +17,22 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
-RUN pip install --pre 'azure-ai-ml'
+RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
+
+# Install azureml packages
+RUN pip install 'azureml-dataset-runtime==1.49.0' \
+                'azureml-core==1.49.0' \
+                'azureml-mlflow==1.49.0' \
+                'azureml-automl-dnn-vision==1.49.0' \
+                'https://publictestdatasets.blob.core.windows.net/packages/pypi/azureml-model-serializer/azureml_model_serializer-0.0.16-py3-none-any.whl'
+
+# Work around to resolve error: The user requested ml-wrappers~=0.4.2; interpret-community 0.27.0 depends on ml-wrappers==0.2.2
+RUN pip install 'ml-wrappers~=0.4.2' \
+                'shap==0.40.0' \
+                'interpret-community==0.28.0' \
+                'Pillow>=9.1.0'
+
+RUN pip freeze
 
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH

@@ -2,7 +2,7 @@ $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: microsoft_azureml_rai_tabular_insight_constructor
 display_name: RAI Insights Dashboard Constructor
 description: RAI Insights Dashboard Constructor [Learn More](https://aka.ms/RAIComponents)
-version: 0.4.0
+version: 0.6.0
 type: command
 inputs:
   title:
@@ -34,6 +34,9 @@ inputs:
   classes:
     type: string # Optional[List[str]]
     default: '[]'
+  feature_metadata:
+    type: string # Optional[Dict[str, Union[str | List[str]]]]
+    default: '{}'
   use_model_dependency:
     type: boolean
     default: False
@@ -41,7 +44,7 @@ outputs:
   rai_insights_dashboard:
     type: path
 code: ../src/
-environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/2
+environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/10
 command: >-
   python create_rai_insights.py
   --title '${{inputs.title}}'
@@ -55,5 +58,6 @@ command: >-
   --maximum_rows_for_test_dataset ${{inputs.maximum_rows_for_test_dataset}}
   --categorical_column_names '${{inputs.categorical_column_names}}'
   --classes '${{inputs.classes}}'
+  --feature_metadata '${{inputs.feature_metadata}}'
   --use_model_dependency ${{inputs.use_model_dependency}}
   --output_path ${{outputs.rai_insights_dashboard}}

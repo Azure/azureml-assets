@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Create tags for released assets."""
+
 import argparse
 from git import Repo
 from pathlib import Path
@@ -15,6 +17,15 @@ def tag_released_assets(input_directory: Path,
                         release_directory_root: Path,
                         git_username: str = None,
                         git_email: str = None):
+    """Create tags for released assets.
+
+    Args:
+        input_directory (Path): Directory containing released assets.
+        asset_config_filename (str): Asset config filename to search for.
+        release_directory_root (Path): Release directory location.
+        git_username (str, optional): User name to use for tag creation. Defaults to None.
+        git_email (str, optional): Email address to use for tag creation. Defaults to None.
+    """
     repo = Repo(release_directory_root)
 
     # Set username and email
@@ -26,7 +37,7 @@ def tag_released_assets(input_directory: Path,
     # Create tags locally
     tag_refs = []
     for asset_config in util.find_assets(input_directory, asset_config_filename):
-        tag = assets.get_release_tag_name(asset_config)
+        tag = asset_config.full_name
         message = f"Release {asset_config}"
 
         logger.print(f"Creating tag {tag}")

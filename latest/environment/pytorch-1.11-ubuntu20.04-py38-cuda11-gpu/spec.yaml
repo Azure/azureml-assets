@@ -1,10 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
-  An environment for deep learning with PyTorch containing the Azure ML SDK and additional python packages.
+  DEPRECATED: Please use pytorch-1.11-cuda11.5 instead.
 
 name: "pytorch-1.11-ubuntu20.04-py38-cuda11-gpu"
-version: "13"
+version: "17"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
@@ -18,3 +18,5 @@ tags:
   OS: Ubuntu20.04
   Training: ""
   Preview: ""
+  Deprecated: ""
+  DeleteOn: "2023-03-20"

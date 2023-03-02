@@ -48,7 +48,6 @@ def parse_args():
 
 @track(_get_logger)
 def main(args):
-
     my_run = Run.get_context()
 
     # Create the RAI Insights object

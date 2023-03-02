@@ -1,0 +1,13 @@
+image:
+  name: azureml/curated/pytorch-1.12-py39-cuda11.6
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - requirements.txt
+  publish:
+    location: mcr
+    visibility: public
+
