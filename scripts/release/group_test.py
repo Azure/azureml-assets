@@ -12,6 +12,7 @@ from subprocess import check_call, run
 from pathlib import Path
 from azure.ai.ml import load_job, MLClient
 from azure.identity import DefaultAzureCredential
+from azureml.core.workspace import Workspace
 
 logger = logging.getLogger(__name__)
 TEST_YML = "tests.yml"
@@ -55,7 +56,8 @@ def group_test(
         resource_group: str,
         workspace: str,
         coverage_report: Path = None,
-        version_suffix: str = None):
+        version_suffix: str = None,
+        runner_workspace: Workspace = None):
     """Run group tests."""
     with open(tests_dir / TEST_YML) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
@@ -77,7 +79,11 @@ def group_test(
         logger.info("token is set")
     if version_suffix:
         my_env['version_suffix'] = version_suffix
-    ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)
+    if runner_workspace:
+        credential = runner_workspace._auth_object
+    else:
+        credential = DefaultAzureCredential()
+    ml_client = MLClient(credential, subscription_id, resource_group, workspace)
     submitted_job_list = []
     succeeded_jobs = []
     failed_jobs = []
@@ -164,6 +170,8 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
     parser.add_argument("-v", "--version-suffix", required=False, type=str,
                         help="version suffix which will be used to identify the asset id in tests")
+    parser.add_argument("--runner-workspace", required=False, type=Workspace,
+                        help="pass shared_workspace to use shared workspace for test runner")
     args = parser.parse_args()
     group_test(args.input_dir, args.test_group, args.subscription, args.resource_group, args.workspace_name,
-               args.coverage_report, args.version_suffix)
+               args.coverage_report, args.version_suffix, args.runner_workspace)
