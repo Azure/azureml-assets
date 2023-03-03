@@ -300,7 +300,7 @@ if __name__ == "__main__":
                 env = component.environment
 
                 for pattern in [REGISTRY_ENV_PATTERN, WORKSPACE_ENV_PATTERN]:
-                    if match := pattern.match(env):
+                    if (match := pattern.match(env)) is not None:
                         break
 
                 if not match:
@@ -317,15 +317,15 @@ if __name__ == "__main__":
                 if env_label:
                     # TODO: Add fetching env from label
                     # https://github.com/Azure/azureml-assets/issues/415
-                    print("Unexpected !!! Registering a component with env label is still to be supported.")
+                    logger.print("Unexpected !!! Registering a component with env label is not yet supported.")
                     failure_list.append(asset)
                     continue
 
                 env = None
-                for version in set(env_version, final_version):
+                for version in set((env_version, final_version)):
                     try:
                         # Check if component's env is registered
-                        if env := mlclient.environments.get(name=env_name, version=version):
+                        if (env := mlclient.environments.get(name=env_name, version=version)) is not None:
                             break
                     except Exception as e:
                         logger.print(
