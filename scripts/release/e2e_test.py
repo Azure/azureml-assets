@@ -10,6 +10,7 @@ from azure.ai.ml import MLClient
 from azure.ai.ml.entities import AmlCompute
 from azure.identity import DefaultAzureCredential
 from azureml.core.workspace import Workspace
+from group_test import group_test
 
 
 def e2e_test(

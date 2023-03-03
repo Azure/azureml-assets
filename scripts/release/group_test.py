@@ -13,9 +13,22 @@ from pathlib import Path
 from azure.ai.ml import load_job, MLClient
 from azure.identity import DefaultAzureCredential
 from azureml.core.workspace import Workspace
+from azure.core.credentials import AccessToken, TokenCredential
+from datetime import datetime, timedelta
+
 
 logger = logging.getLogger(__name__)
 TEST_YML = "tests.yml"
+
+
+class CustomTokenCredential(TokenCredential):
+    def __init__(self, token):
+        self.token = token
+
+    def get_token(self, *scopes):
+        two_hours_from_now = datetime.now() + timedelta(hours=2)
+        utc_timestamp = int(two_hours_from_now.timestamp())
+        return AccessToken(self.token, utc_timestamp)
 
 
 def run_pytest_job(job: Path, my_env: dict):
@@ -79,10 +92,15 @@ def group_test(
         logger.info("token is set")
     if version_suffix:
         my_env['version_suffix'] = version_suffix
+    
+    credential = CustomTokenCredential(my_env['token'])
+    """
     if runner_workspace:
         credential = runner_workspace._auth_object
     else:
         credential = DefaultAzureCredential()
+    """
+    
     ml_client = MLClient(credential, subscription_id, resource_group, workspace)
     submitted_job_list = []
     succeeded_jobs = []
