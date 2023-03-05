@@ -30,10 +30,8 @@ from azure.identity import DefaultAzureCredential
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
-WORKSPACE_ENV_PATTERN = re.compile(r"^([\w_-]+)(?:\:([0-9.]+)|\@([a-z]+))$")
-REGISTRY_ENV_PATTERN = re.compile(
-    r"^azureml://registries/[\w_-]+/environments/([\w_-]+)/(?:versions/([0-9.]+)|labels/([a-z]+))"
-)
+WORKSPACE_ENV_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
+REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/.+/environments/(.+)/(?:versions/(.+)|labels/(.+))")
 
 
 def find_test_files(dir: Path):
@@ -322,7 +320,7 @@ if __name__ == "__main__":
                     continue
 
                 env = None
-                for version in set((env_version, final_version)):
+                for version in [env_version, final_version]:
                     try:
                         # Check if component's env is registered
                         if (env := mlclient.environments.get(name=env_name, version=version)) is not None:
