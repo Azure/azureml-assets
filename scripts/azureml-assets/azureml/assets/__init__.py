@@ -16,6 +16,7 @@ from .config import (
     PublishLocation,
     PublishVisibility,
     Spec,
+    DataConfig,
 )
 from .update_assets import (
     pin_env_files,
