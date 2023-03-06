@@ -271,13 +271,6 @@ class PathType(Enum):
     HTTP = "http"    # <UNSUPPORTED> Model files hosted on a HTTP endpoint.
     AZUREBLOB = "azureblob"  # Model files hosted on an AZUREBLOB blobstore with public read access.
 
-class DataType(Enum):
-    """Enum for data types supported for data publishing."""
-
-    URI_FILE = "uri_file"  
-    URI_FOLDER = "uri_folder"      
-    MLTABLE = "mltable"
-
 class AssetPath:
     """Asset path."""
 
@@ -350,6 +343,13 @@ class GitAssetPath(AssetPath):
         """
         self._branch = branch
         super().__init__(PathType.GIT, uri)
+
+class DataType(Enum):
+    """Enum for data types supported for data publishing."""
+
+    URI_FILE = "uri_file"  
+    URI_FOLDER = "uri_folder"      
+    MLTABLE = "mltable"
 
 class DataConfig(Config):
     """Data Config class."""

@@ -24,6 +24,7 @@ from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.data import DataDownloadUtils
 from azureml.assets.util import logger
 from azure.ai.ml.entities._load_functions import load_model,load_data
+from azure.ai.ml.entities._assets._artifacts.data import Data
 
 ASSET_ID_TEMPLATE = Template(
     "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -119,8 +120,6 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
                 except Exception as e:
                     logger.log_error(f"Error loading flavors from MLmodel file at: {mlmodel_file_path} => {str(e)}")
             can_publish_model = dump_model_spec(model, spec_file_path)
-
-
     else:
         print(model_config.type.value, assets.ModelType.MLFLOW)
         can_publish_model = False
@@ -128,14 +127,14 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
 
     return can_publish_model
 
-def dump_data_spec(data, spec_file) -> bool:
+def dump_data_spec(data: Data, spec_file: Path) -> bool:
     """Update the yaml file after getting the data has been prepared."""
     try:
         data_dict = json.loads(json.dumps(data._to_dict()))
         util.dump_yaml(data_dict, spec_file)
         return True
     except Exception as e:
-        logger.log_error(f"Failed to update data spec => {str(e)}")
+        logger.log_error(f"Failed to update data spec => {e}")
     return False
 
 def data_prepare(data_config: assets.DataConfig, spec_file_path: Path, data_dir: Path) -> bool:
@@ -155,7 +154,7 @@ def data_prepare(data_config: assets.DataConfig, spec_file_path: Path, data_dir:
         # TODO: temp fix before restructuring what attributes are required in model config and spec.
         data.type = data_config.type.value
     except Exception as e:
-        logger.error(f"Error in loading data spec file at {spec_file_path} => {str(e)}")
+        logger.error(f"Error in loading data spec file at {spec_file_path} => {e}")
         return False
 
     if data_config.path.type == PathType.LOCAL:
@@ -354,11 +353,10 @@ if __name__ == "__main__":
                             # Run command
                             run_command(cmd, failure_list, debug_mode)
                 except Exception as e:
-                    logger.log_error(f"Exception in publishing data asset: {str(e)}")
+                    logger.log_error(f"Exception in publishing data asset: {e}")
                     failure_list.append(asset)
             else:
-                logger.log_warning(f"unsupported asset type: {asset.type.value}")
-                
+                logger.log_warning(f"unsupported asset type: {asset.type.value}")               
 
     if len(failure_list) > 0:
         failed_assets = defaultdict(list)

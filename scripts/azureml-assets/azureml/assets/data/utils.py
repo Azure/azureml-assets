@@ -8,7 +8,8 @@ from subprocess import PIPE, run, STDOUT
 import sys
 
 class DataDownloadUtils:
-    def _run(cmd, cwd: Path = "./") -> int:
+    """Downloads the data to system disk."""
+    def _run(cmd: str, cwd: Path = "./") -> int:
         """Run the command and returns the result."""
         logger.print(cmd)
         result = run(
@@ -26,8 +27,8 @@ class DataDownloadUtils:
             logger.print(f"Successfully executed! Output: \n{result.stdout}")
         return result.returncode
     
-    def _download_azure_artifacts(data_uri, data_dir) -> bool:
-        """Download data files from blobstore.
+    def _download_azure_storage_data(data_uri: str, data_dir: Path) -> bool:
+        """Downloads the data from azure storage account.
 
         :param data_url: Publicly readable blobstore URI of data files
         :type data_url: str
@@ -46,6 +47,11 @@ class DataDownloadUtils:
         except Exception as e:
             logger.log_error(e)
             return False
+        
+    def _download_open_source_data():
+        """Downloads the open source data."""
+        pass
+    
 
     def download_data(data_path_type: PathType, data_uri: str, data_dir: Path) -> bool:
         """Prepare the Download Environment.
