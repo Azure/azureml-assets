@@ -24,7 +24,7 @@ from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.util import logger
 from azure.ai.ml import MLClient, load_component, load_model
 from azure.ai.ml.entities import Component, Environment, Model
-from azure.identity import AzureCliCredential, DefaultAzureCredential
+from azure.identity import AzureCliCredential
 
 
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -67,19 +67,19 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
-def update_spec(asset: Union[Component, Environment, Model], spec_file: Path) -> bool:
+def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) -> bool:
     """Update the yaml spec file with updated properties in asset.
 
     :param asset: Asset loaded using load_*(component, environemnt, model) method.
     :type asset: Union[Component, Environment, Model]
-    :param spec_file: path to asset spec file
-    :type spec_file: Path
+    :param spec_path: path to asset spec file
+    :type spec_path: Path
     :return: True if spec was successfully updated
     :rtype: bool
     """
     try:
         asset_dict = json.loads(json.dumps(asset._to_dict()))
-        util.dump_yaml(asset_dict, spec_file)
+        util.dump_yaml(asset_dict, spec_path)
         return True
     except Exception as e:
         logger.log_error(f"Failed to update spec => {e}")
@@ -136,6 +136,59 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
         logger.log_error(f"Model type {model_config.type} not supported yet")
 
     return can_publish_model
+
+
+def validate_update_command_component(mlclient: MLClient, component: Component, spec_path: Path, final_version: str) -> bool:
+    """Validate and update command component spec.
+
+    :param mlclient: MLClient object
+    :type mlclient: MLClient
+    :param component: A command component
+    :type component: Component
+    :param spec_path: Path of loaded component
+    :type spec_path: Path
+    :param final_version: Final version string used to register component
+    :type final_version: str
+    :return: True for successful validation and update
+    :rtype: bool
+    """
+    env = component.environment
+    match = None
+    for pattern in [REGISTRY_ENV_PATTERN, WORKSPACE_ENV_PATTERN]:
+        if (match := pattern.match(env)) is not None:
+            break
+
+    if not match:
+        logger.print(f"Env ID doesn't match workspace or registry pattern in {asset.spec_with_path}")
+        return False
+
+    # both ws and registry env follows the same grouping
+    env_name, env_version, env_label = match.group(1), match.group(2), match.group(3)
+    logger.print(f"Env name: {env_name}, version: {env_version}, label: {env_label}")
+
+    if env_label:
+        # TODO: Add fetching env from label
+        # https://github.com/Azure/azureml-assets/issues/415
+        logger.print("Unexpected !!! Registering a component with env label is not yet supported.")
+        return False
+
+    env = None
+    # Check if component's env is registered
+    for version in [env_version, final_version]:
+        try:
+            if (env := mlclient.environments.get(name=env_name, version=version)) is not None:
+                break
+        except Exception as e:
+            logger.print(f"Fetching component env {env_name}:{version} from registry failed. Error: {e}")
+
+    if not env:
+        logger.print(f"Could not find a registered env for {component.name}. Please retry again!!!")
+        return False
+
+    component.environment = env.id
+    if not update_spec(component, spec_path):
+        logger.print(f"Component update failed for asset spec path: {asset.spec_path}")
+        return False
 
 
 def assemble_command(
@@ -267,8 +320,8 @@ if __name__ == "__main__":
         assets_by_type[asset.type.value].append(asset)
 
     # mlclient for the registry
-    credential = DefaultAzureCredential()
-    mlclient = MLClient(credential=credential, registry_name=registry_name)
+    credential = AzureCliCredential()
+    mlclient = MLClient(credential=credential, registry_name=registry_name, show_progress=False)
 
     for publish_asset_type in PUBLISH_ORDER:
         logger.print(f"now publishing {publish_asset_type.value}s.")
@@ -296,51 +349,10 @@ if __name__ == "__main__":
                 # load component and check if environment exists
                 logger.print(f"spec's path: {asset.spec_with_path}")
                 component = load_component(asset.spec_with_path)
-                env = component.environment
-
-                for pattern in [REGISTRY_ENV_PATTERN, WORKSPACE_ENV_PATTERN]:
-                    if (match := pattern.match(env)) is not None:
-                        break
-
-                if not match:
-                    logger.print(f"Env ID doesn't match workspace or registry pattern in {asset.spec_with_path}")
-                    failure_list.append(asset)
-                    continue
-
-                # both ws and registry env follows the same grouping
-                env_name = match.group(1)
-                env_version = match.group(2)
-                env_label = match.group(3)
-                logger.print(f"Env name: {env_name}, version: {env_version}, label: {env_label}")
-
-                if env_label:
-                    # TODO: Add fetching env from label
-                    # https://github.com/Azure/azureml-assets/issues/415
-                    logger.print("Unexpected !!! Registering a component with env label is not yet supported.")
-                    failure_list.append(asset)
-                    continue
-
-                env = None
-                for version in [env_version, final_version]:
-                    try:
-                        # Check if component's env is registered
-                        if (env := mlclient.environments.get(name=env_name, version=version)) is not None:
-                            break
-                    except Exception as e:
-                        logger.print(
-                            f"Fetching component env {env_name}:{version} from registry failed. Error:\n\n{e}"
-                        )
-
-                if not env:
-                    logger.print(f"Could not find a registered env for {component.name}. Please retry again!!!")
-                    failure_list.append(asset)
-                    continue
-
-                component.environment = env.id
-                if not update_spec(component, asset.spec_with_path):
-                    logger.print(f"Component update failed for asset spec path: {asset.spec_with_path}")
-                    failure_list.append(asset)
-                    continue
+                if component.type == "command":
+                    if not validate_update_command_component(mlclient, component, asset.spec_with_path, final_version):
+                        failure_list.append(asset)
+                        continue
             elif asset.type == assets.AssetType.MODEL:
                 try:
                     model_config = asset.extra_config_as_object()
