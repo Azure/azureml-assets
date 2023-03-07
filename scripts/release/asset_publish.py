@@ -267,7 +267,9 @@ if __name__ == "__main__":
         assets_by_type[asset.type.value].append(asset)
 
     # mlclient for the registry
-    mlclient = MLClient(DefaultAzureCredential(), subscription_id=subscription_id, registry_name=registry_name)
+    credential = DefaultAzureCredential()
+    logger.print(f"check token => {credential.get_token('https://management.azure.com/.default')}")
+    mlclient = MLClient(credential=credential, registry_name=registry_name)
 
     for publish_asset_type in PUBLISH_ORDER:
         logger.print(f"now publishing {publish_asset_type.value}s.")
