@@ -24,7 +24,7 @@ from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.util import logger
 from azure.ai.ml import MLClient, load_component, load_model
 from azure.ai.ml.entities import Component, Environment, Model
-from azure.identity import DefaultAzureCredential
+from azure.identity import AzureCliCredential
 
 
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -138,9 +138,11 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
     return can_publish_model
 
 
-def validate_command_component(component: Component, spec_path: Path, final_version: str) -> bool:
+def validate_update_command_component(mlclient: MLClient, component: Component, spec_path: Path, final_version: str) -> bool:
     """Validate and update command component spec.
 
+    :param mlclient: MLClient object
+    :type mlclient: MLClient
     :param component: A command component
     :type component: Component
     :param spec_path: Path of loaded component
@@ -318,7 +320,7 @@ if __name__ == "__main__":
         assets_by_type[asset.type.value].append(asset)
 
     # mlclient for the registry
-    credential = DefaultAzureCredential()
+    credential = AzureCliCredential()
     mlclient = MLClient(credential=credential, registry_name=registry_name, show_progress=False)
 
     for publish_asset_type in PUBLISH_ORDER:
@@ -348,7 +350,7 @@ if __name__ == "__main__":
                 logger.print(f"spec's path: {asset.spec_with_path}")
                 component = load_component(asset.spec_with_path)
                 if component.type == "command":
-                    if not validate_command_component(component, asset.spec_with_path, final_version):
+                    if not validate_update_command_component(mlclient, component, asset.spec_with_path, final_version):
                         failure_list.append(asset)
                         continue
             elif asset.type == assets.AssetType.MODEL:
