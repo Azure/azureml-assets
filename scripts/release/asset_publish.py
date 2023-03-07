@@ -24,7 +24,7 @@ from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.util import logger
 from azure.ai.ml import MLClient, load_component, load_model
 from azure.ai.ml.entities import Component, Environment, Model
-from azure.identity import DefaultAzureCredential
+from azure.identity import AzureCliCredential
 
 
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -267,8 +267,7 @@ if __name__ == "__main__":
         assets_by_type[asset.type.value].append(asset)
 
     # mlclient for the registry
-    credential = DefaultAzureCredential()
-    logger.print(f"check token => {credential.get_token('https://management.azure.com/.default')}")
+    credential = AzureCliCredential()
     mlclient = MLClient(credential=credential, registry_name=registry_name)
 
     for publish_asset_type in PUBLISH_ORDER:
