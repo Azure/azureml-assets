@@ -150,7 +150,6 @@ def validate_command_component(component: Component, spec_path: Path, final_vers
     :return: True for successful validation and update
     :rtype: bool
     """
-
     env = component.environment
     match = None
     for pattern in [REGISTRY_ENV_PATTERN, WORKSPACE_ENV_PATTERN]:
