@@ -267,7 +267,8 @@ if __name__ == "__main__":
         assets_by_type[asset.type.value].append(asset)
 
     # mlclient for the registry
-    mlclient = MLClient(DefaultAzureCredential(), subscription_id=subscription_id, registry_name=registry_name)
+    credential = DefaultAzureCredential()
+    mlclient = MLClient(credential=credential, registry_name=registry_name, show_progress=False)
 
     for publish_asset_type in PUBLISH_ORDER:
         logger.print(f"now publishing {publish_asset_type.value}s.")
@@ -350,9 +351,6 @@ if __name__ == "__main__":
                     logger.log_error(f"Model prepare exception. Error => {e}")
                     failure_list.append(asset)
                     continue
-            else:
-                logger.log_warning(f"unsupported asset type: {asset.type.value}")
-                continue
 
             # Assemble command
             cmd = assemble_command(
