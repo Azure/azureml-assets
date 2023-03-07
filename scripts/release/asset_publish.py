@@ -67,19 +67,19 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
-def update_spec(asset: Union[Component, Environment, Model], spec_file: Path) -> bool:
+def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) -> bool:
     """Update the yaml spec file with updated properties in asset.
 
     :param asset: Asset loaded using load_*(component, environemnt, model) method.
     :type asset: Union[Component, Environment, Model]
-    :param spec_file: path to asset spec file
-    :type spec_file: Path
+    :param spec_path: path to asset spec file
+    :type spec_path: Path
     :return: True if spec was successfully updated
     :rtype: bool
     """
     try:
         asset_dict = json.loads(json.dumps(asset._to_dict()))
-        util.dump_yaml(asset_dict, spec_file)
+        util.dump_yaml(asset_dict, spec_path)
         return True
     except Exception as e:
         logger.log_error(f"Failed to update spec => {e}")
@@ -138,11 +138,13 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
     return can_publish_model
 
 
-def validate_command_component(component: Component, final_version: str) -> bool:
+def validate_command_component(component: Component, spec_path: Path, final_version: str) -> bool:
     """Validate and update command component spec.
 
     :param component: A command component
     :type component: Component
+    :param spec_path: Path of loaded component
+    :type spec_path: Path
     :param final_version: Final version string used to register component
     :type final_version: str
     :return: True for successful validation and update
@@ -183,8 +185,8 @@ def validate_command_component(component: Component, final_version: str) -> bool
         return False
 
     component.environment = env.id
-    if not update_spec(component, asset.spec_with_path):
-        logger.print(f"Component update failed for asset spec path: {asset.spec_with_path}")
+    if not update_spec(component, spec_path):
+        logger.print(f"Component update failed for asset spec path: {asset.spec_path}")
         return False
 
 
@@ -347,7 +349,7 @@ if __name__ == "__main__":
                 logger.print(f"spec's path: {asset.spec_with_path}")
                 component = load_component(asset.spec_with_path)
                 if component.type == "command":
-                    if not validate_command_component(component, final_version):
+                    if not validate_command_component(component, asset.spec_with_path, final_version):
                         failure_list.append(asset)
                         continue
             elif asset.type == assets.AssetType.MODEL:
