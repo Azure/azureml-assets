@@ -351,9 +351,6 @@ if __name__ == "__main__":
                     logger.log_error(f"Model prepare exception. Error => {e}")
                     failure_list.append(asset)
                     continue
-            else:
-                logger.log_warning(f"unsupported asset type: {asset.type.value}")
-                continue
 
             # Assemble command
             cmd = assemble_command(
