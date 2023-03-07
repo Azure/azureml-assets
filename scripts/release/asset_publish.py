@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
     # mlclient for the registry
     credential = AzureCliCredential()
-    mlclient = MLClient(credential=credential, registry_name=registry_name)
+    mlclient = MLClient(credential=credential, registry_name=registry_name, show_progress=False)
 
     for publish_asset_type in PUBLISH_ORDER:
         logger.print(f"now publishing {publish_asset_type.value}s.")
