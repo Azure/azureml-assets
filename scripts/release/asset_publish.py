@@ -138,7 +138,12 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
     return can_publish_model
 
 
-def validate_update_command_component(mlclient: MLClient, component: Component, spec_path: Path, final_version: str) -> bool:
+def validate_update_command_component(
+    mlclient: MLClient,
+    component: Component,
+    spec_path: Path,
+    final_version: str
+) -> bool:
     """Validate and update command component spec.
 
     :param mlclient: MLClient object
