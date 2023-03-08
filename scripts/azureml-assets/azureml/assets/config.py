@@ -7,9 +7,12 @@ import re
 from enum import Enum
 from functools import total_ordering
 from pathlib import Path
-from setuptools._vendor.packaging import version
 from typing import Dict, List, Tuple
 from yaml import safe_load
+
+print("Importing packaging.version")
+from setuptools._vendor.packaging import version
+print("Done importing packaging.version")
 
 
 class ValidationException(Exception):
