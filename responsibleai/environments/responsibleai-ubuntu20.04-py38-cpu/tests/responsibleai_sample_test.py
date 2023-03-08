@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """Tests running a sample job in the responsibleai 0.22 environment."""
+import mlflow
 import os
 import time
 from pathlib import Path
@@ -18,6 +19,38 @@ JOB_SOURCE_CODE = "src"
 DATA_SOURCE = "data/training-mltable-folder"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
+
+
+def verify_automl_rai_run(ml_client, automl_job):
+
+    # Obtain the tracking URL from MLClient
+    MLFLOW_TRACKING_URI = ml_client.workspaces.get(
+        name=ml_client.workspace_name
+    ).mlflow_tracking_uri
+
+    print(MLFLOW_TRACKING_URI)
+
+    # Set the MLFLOW TRACKING URI
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+
+    print("\nCurrent tracking uri: {}".format(mlflow.get_tracking_uri()))
+
+    from mlflow.tracking.client import MlflowClient
+
+    # Initialize MLFlow client
+    mlflow_client = MlflowClient()
+
+    mlflow_automl_rai_run = mlflow_client.get_run(automl_job.name + "_RAI")
+    # Poll until final status is reached, or timed out
+    timeout = time.time() + (TIMEOUT_MINUTES * 60)
+    while time.time() <= timeout:
+        # assert mlflow_automl_rai_run.info.status == 'FINISHED'
+        if mlflow_automl_rai_run.info.status in [
+                'FINISHED', 'FAILED', 'KILLED']:
+            break
+        time.sleep(30)  # sleep 30 seconds
+
+    assert mlflow_automl_rai_run.info.status == 'FINISHED'
 
 
 def test_responsibleai():
@@ -82,7 +115,7 @@ def test_responsibleai():
     assert current_status == "Completed"
 
 
-def test_responsibleai_automl():
+def test_responsibleai_automl_regression():
     """Tests a sample automl job using responsibleai image as the environment."""
     this_dir = Path(__file__).parent
     subscription_id = os.environ.get("subscription_id")
@@ -150,3 +183,4 @@ def test_responsibleai_automl():
             ml_client.jobs.stream(returned_job.name)
 
     assert current_status == "Completed"
+    verify_automl_rai_run(ml_client, returned_job)
