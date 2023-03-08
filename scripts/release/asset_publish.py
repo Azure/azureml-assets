@@ -133,7 +133,7 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
     else:
         logger.print(model_config.type.value, assets.ModelType.MLFLOW)
         can_publish_model = False
-        logger.log_error(f"Model type {model_config.type} not supported yet")
+        logger.log_error(f"Model type {model_config.type} not supported")
 
     return can_publish_model
 
@@ -174,7 +174,7 @@ def validate_update_command_component(
     if env_label:
         # TODO: Add fetching env from label
         # https://github.com/Azure/azureml-assets/issues/415
-        logger.print("Unexpected !!! Registering a component with env label is not yet supported.")
+        logger.print("Unexpected !!! Registering a component with env label is not supported.")
         return False
 
     env = None
