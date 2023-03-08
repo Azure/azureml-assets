@@ -4,6 +4,7 @@
 """Asset config classes."""
 
 import re
+import warnings
 from enum import Enum
 from functools import total_ordering
 from pathlib import Path
@@ -11,7 +12,9 @@ from typing import Dict, List, Tuple
 from yaml import safe_load
 
 print("Importing packaging.version")
-from setuptools._vendor.packaging import version
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from setuptools._vendor.packaging import version
 print("Done importing packaging.version")
 
 
