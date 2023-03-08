@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - release
-      - elesel/improve-validation
   pull_request:
     branches:
       - main
