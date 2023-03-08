@@ -94,42 +94,42 @@ def validate_environment_name(asset_config: assets.AssetConfig) -> int:
     # Check for invalid strings
     for invalid_string in INVALID_ENVIRONMENT_STRINGS:
         if invalid_string in asset_name:
-            _log_error(asset_config, f"Name contains invalid string {invalid_string}")
+            _log_error(asset_config, f"Name '{asset_name}' contains invalid string '{invalid_string}'")
             error_count += 1
 
     # Check for missing frameworks and version
     frameworks_found = [f for f in FRAMEWORKS if f in asset_name]
     if len(frameworks_found) == 0:
-        _log_warning(asset_config, "Name is missing framework")
+        _log_warning(asset_config, f"Name '{asset_name}' is missing framework")
     else:
         # Check framework version
         if not FRAMEWORK_VERSION_PATTERN.search(asset_name):
-            _log_error(asset_config, "Name is missing framework version")
+            _log_error(asset_config, f"Name '{asset_name}' is missing framework version")
             error_count += 1
 
     # Check operating system and version
     if (OPERATING_SYSTEM_PATTERN.search(asset_name) and
             not OPERATING_SYSTEM_VERSION_PATTERN.search(asset_name)):
-        _log_error(asset_config, "Name is missing operating system version")
+        _log_error(asset_config, f"Name '{asset_name}' is missing operating system version")
         error_count += 1
 
     # Check python version
     if PYTHON_VERSION_PATTERN.search(asset_name):
-        _log_warning(asset_config, "Name should only contain Python version if absolutely necessary")
+        _log_warning(asset_config, f"Name '{asset_name}' should only contain Python version if absolutely necessary")
 
     # Check GPU driver and version
     gpu_drivers_found = [f for f in GPU_DRIVERS if f in asset_name]
     if gpu_drivers_found:
         if not GPU_DRIVER_VERSION_PATTERN.search(asset_name):
-            _log_error(asset_config, "Name is missing GPU driver version")
+            _log_error(asset_config, f"Name '{asset_name}' is missing GPU driver version")
             error_count += 1
         if "gpu" in asset_name:
-            _log_error(asset_config, "Name should not contain both GPU driver and 'gpu'")
+            _log_error(asset_config, f"Name '{asset_name}' should not contain both GPU driver and 'gpu'")
             error_count += 1
 
     # Check for ordering
     if frameworks_found and not ENVIRONMENT_NAME_FULL_PATTERN.search(asset_name):
-        _log_error(asset_config, "Name elements are out of order")
+        _log_error(asset_config, f"Name '{asset_name}' elements are out of order")
         error_count += 1
 
     return error_count
@@ -149,7 +149,7 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
 
     # Check against generic naming pattern
     if not COMMON_NAME_PATTERN.match(asset_name):
-        _log_error(asset_config, "Name contains invalid characters")
+        _log_error(asset_config, f"Name '{asset_name}' contains invalid characters")
         error_count += 1
 
     # Check for invalid strings
@@ -160,7 +160,7 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
         for invalid_string in string_group_list:
             if invalid_string in asset_name:
                 # Complain only about the first matching string
-                _log_error(asset_config, f"Name contains invalid string {invalid_string}")
+                _log_error(asset_config, f"Name '{asset_name}' contains invalid string '{invalid_string}'")
                 error_count += 1
                 break
 
