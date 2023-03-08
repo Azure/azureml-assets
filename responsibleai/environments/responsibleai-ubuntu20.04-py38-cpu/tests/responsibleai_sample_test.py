@@ -93,16 +93,17 @@ def test_responsibleai_automl():
     # general job parameters
     max_trials = 5
     exp_name = "dpv2-regression-experiment"
+    # Training MLTable defined locally, with local data to be uploaded
     my_training_data_input = Input(
-        type="uri_file",
-        path="https://azuremlexamples.blob.core.windows.net/datasets/diabetes.csv")
+        type=AssetTypes.MLTABLE, path="./data/training-mltable-folder"
+    )
 
     # Create the AutoML regression job with the related factory-function.
     regression_job = automl.regression(
         compute=os.environ.get("cpu_cluster"),
         experiment_name=exp_name,
         training_data=my_training_data_input,
-        target_column_name="target",
+        target_column_name="ERP",
         primary_metric="R2Score",
         n_cross_validations=5,
         enable_model_explainability=True,
