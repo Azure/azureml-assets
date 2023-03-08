@@ -64,7 +64,7 @@ jobs:
           path: ${{ env.release_dir }}
       
       - name: Use Python 3.8 or newer
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: '>=3.8'
     
@@ -120,7 +120,7 @@ jobs:
           fetch-depth: 1
       
       - name: Use Python 3.8 or newer
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: '>=3.8'
     
@@ -204,7 +204,7 @@ jobs:
 
       # TODO: Not needed unless calling update_assets.py
       - name: Use Python 3.8 or newer
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: '>=3.8'
     
