@@ -15,6 +15,7 @@ from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
+DATA_SOURCE = "data/training-mltable-folder"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
@@ -83,6 +84,7 @@ def test_responsibleai():
 
 def test_responsibleai_automl():
     """Tests a sample automl job using responsibleai image as the environment."""
+    this_dir = Path(__file__).parent
     subscription_id = os.environ.get("subscription_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
@@ -95,7 +97,7 @@ def test_responsibleai_automl():
     exp_name = "dpv2-regression-experiment"
     # Training MLTable defined locally, with local data to be uploaded
     my_training_data_input = Input(
-        type=AssetTypes.MLTABLE, path="./data/training-mltable-folder"
+        type=AssetTypes.MLTABLE, path=(this_dir / DATA_SOURCE)
     )
 
     # Create the AutoML regression job with the related factory-function.
