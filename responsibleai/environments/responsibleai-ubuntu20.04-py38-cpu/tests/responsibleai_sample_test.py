@@ -95,14 +95,14 @@ def test_responsibleai_automl():
     exp_name = "dpv2-regression-experiment"
     my_training_data_input = Input(
         type="uri_file",
-        path="azureml://datastores/workspaceblobstore/paths/my-regression-mltable")
+        path="https://azuremlexamples.blob.core.windows.net/datasets/diabetes.csv")
 
     # Create the AutoML regression job with the related factory-function.
     regression_job = automl.regression(
         compute=os.environ.get("cpu_cluster"),
         experiment_name=exp_name,
         training_data=my_training_data_input,
-        target_column_name="ERP",
+        target_column_name="target",
         primary_metric="R2Score",
         n_cross_validations=5,
         enable_model_explainability=True,
