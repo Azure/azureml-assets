@@ -18,7 +18,7 @@ PROJECT_DIR=<path/to/sklearn-1.1>
 IMAGE_NAME=<name of built image>
 docker run -it -w $WORKDIR -v ${PROJECT_DIR}:${WORKDIR} $IMAGE_NAME /bin/bash 
 ```
-Use the code available in `/workspace/tests/sklearn_sample_test.py` on an Azure ML instance. This code uses the `main.py` python script located in `/workspace/tests/src`. 
+Use the code available in `/workspace/tests/sklearn_sample_test.py` on an Azure ML instance inside the container. This code uses the `main.py` python script located in `/workspace/tests/src`. 
 
 To enable Intel Extension for SKLearn, pass `command="python main.py --diabetes-csv ${{inputs.diabetes}} --intel-extension True"` to line 43 of `/workspace/tests/sklearn_sample_test.py`.
 
