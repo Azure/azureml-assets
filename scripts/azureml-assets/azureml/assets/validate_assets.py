@@ -151,14 +151,14 @@ def validate_image_publishing(asset_config: assets.AssetConfig,
     """
     error_count = 0
     asset_name = asset_config.name
-    environment_config = environment_config or asset_config.extra_config_as_object() 
+    environment_config = environment_config or asset_config.extra_config_as_object()
 
     # Check image name
     if (match := IMAGE_NAME_PATTERN.match(environment_config.image_name)) is not None:
         # Ensure image name matches environment name
         if match.group(1) != asset_name:
             _log_error(asset_config,
-                   f"Image name '{environment_config.image_name}' should be 'azureml/curated/{asset_name}'")
+                       f"Image name '{environment_config.image_name}' should be 'azureml/curated/{asset_name}'")
             error_count += 1
     else:
         _log_error(asset_config,
@@ -227,7 +227,7 @@ def validate_assets(input_dirs: List[Path],
 
     Args:
         input_dirs (List[Path]): Directories containing assets.
-        asset_config_filename (str): Asset config filename to search for.        
+        asset_config_filename (str): Asset config filename to search for.     
         changed_files (List[Path], optional): List of changed files, used to filter assets. Defaults to None.
         check_images (bool, optional): Whether to check image names. Defaults to False.
 
@@ -287,7 +287,7 @@ def validate_assets(input_dirs: List[Path],
                 raise ValidationException(f"Asset and spec version mismatch: {asset_config.version} != {spec.version}")
         except Exception as e:
             logger.log_error(f"Validation of {asset_config.spec_with_path} failed: {e}")
-            error_count += 1        
+            error_count += 1   
 
     # Ensure unique assets
     for type_and_name, dirs in asset_dirs.items():
