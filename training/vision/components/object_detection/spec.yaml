@@ -137,12 +137,20 @@ inputs:
     type: integer
     optional: true
     min: 1
+  number_of_workers:
+    description: Number of subprocesses to use for data loading (PyTorch only). 0 means that the data will be loaded in the main process.
+    type: integer
+    optional: true
   optimizer:
     description: Type of optimizer
     type: string
     optional: true
     default: sgd
     enum: ['sgd', 'adam', 'adamw']
+  random_seed:
+    description: Random seed that will be set at the beginning of training.
+    type: integer
+    optional: true
   step_lr_gamma:
     description: Value of gamma when learning rate scheduler is step. Must be a float in the range [0, 1].
     type: number
@@ -246,7 +254,9 @@ command: >-
   $[[--nesterov  ${{inputs.nesterov}}]]
   $[[--nms_iou_thresh  ${{inputs.nms_iou_threshold}}]]
   $[[--number_of_epochs ${{inputs.number_of_epochs}}]]
+  $[[--number_of_workers ${{inputs.number_of_workers}}]]
   $[[--optimizer ${{inputs.optimizer}}]]
+  $[[--random_seed ${{inputs.random_seed}}]]
   $[[--step_lr_gamma  ${{inputs.step_lr_gamma}}]]
   $[[--step_lr_step_size  ${{inputs.step_lr_step_size}}]]
   $[[--tile_grid_size  ${{inputs.tile_grid_size}}]]
