@@ -10,23 +10,26 @@ RESOURCES_DIR = Path("resources/validate")
 
 
 @pytest.mark.parametrize(
-    "test_subdir,expected",
+    "test_subdir,check_images,expected",
     [
-        ("name-mismatch", False),
-        ("version-mismatch", False),
-        ("invalid-strings", False),
-        ("env-with-underscores", False),
-        ("framework-ver-missing", False),
-        ("ubuntu-in-name", False),
-        ("extra-gpu", False),
-        ("incorrect-order", False),
-        ("good-validation", True),
-        ("correct-order", True),
+        ("name-mismatch", False, False),
+        ("version-mismatch", False, False),
+        ("invalid-strings", False, False),
+        ("env-with-underscores", False, False),
+        ("framework-ver-missing", False, False),
+        ("ubuntu-in-name", False, False),
+        ("extra-gpu", False, False),
+        ("incorrect-order", False, False),
+        ("image-name-mismatch", True, False),
+        ("publishing-disabled", True, False),
+        ("good-validation", True, True),
+        ("correct-order", True, True),
     ]
 )
-def test_validate_assets(test_subdir: str, expected: bool):
+def test_validate_assets(test_subdir: str, check_images: bool, expected: bool):
     this_dir = Path(__file__).parent
 
     assert assets.validate_assets(
-        this_dir / RESOURCES_DIR / test_subdir,
-        assets.DEFAULT_ASSET_FILENAME) == expected
+        input_dirs=this_dir / RESOURCES_DIR / test_subdir,
+        asset_config_filename=assets.DEFAULT_ASSET_FILENAME,
+        check_images=check_images) == expected

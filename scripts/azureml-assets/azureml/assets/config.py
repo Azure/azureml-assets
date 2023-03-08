@@ -671,6 +671,11 @@ class EnvironmentConfig(Config):
         return self._image.get('publish', {})
 
     @property
+    def publish_enabled(self) -> bool:
+        """Whether image should be published."""
+        return bool(self._publish)
+
+    @property
     def _publish_location(self) -> str:
         """Raw 'image.location' value."""
         return self._publish.get('location')
