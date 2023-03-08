@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Test validate_assets script."""
+
 from pathlib import Path
 import pytest
 
@@ -27,6 +29,13 @@ RESOURCES_DIR = Path("resources/validate")
     ]
 )
 def test_validate_assets(test_subdir: str, check_images: bool, expected: bool):
+    """Test validate_assets function.
+
+    Args:
+        test_subdir (str): Test subdirectory
+        check_images (bool): Check image build/publish info
+        expected (bool): Success expected
+    """
     this_dir = Path(__file__).parent
 
     assert assets.validate_assets(
