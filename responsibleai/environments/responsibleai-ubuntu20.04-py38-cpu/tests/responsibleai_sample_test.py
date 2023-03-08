@@ -94,7 +94,7 @@ def test_responsibleai_automl():
     max_trials = 5
     exp_name = "dpv2-regression-experiment"
     my_training_data_input = Input(
-        type=AssetTypes.MLTABLE,
+        type="uri_file",
         path="azureml://datastores/workspaceblobstore/paths/my-regression-mltable")
 
     # Create the AutoML regression job with the related factory-function.
