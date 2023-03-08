@@ -1,0 +1,5 @@
+name: pytorch-no-version
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - release
+      - elesel/improve-validation
   pull_request:
     branches:
       - main
@@ -39,6 +40,13 @@ jobs:
       - name: Clone branch
         uses: actions/checkout@v3
       
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+        with:
+          files_separator: ','
+          separator: ','
+      
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v3
         with:
@@ -48,7 +56,7 @@ jobs:
         run: pip install -e $scripts_azureml_assets_dir
       
       - name: Validate assets
-        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename
+        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}"
 
       - name: Check test coverage
         run: |

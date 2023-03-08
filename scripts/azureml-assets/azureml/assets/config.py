@@ -698,8 +698,8 @@ class EnvironmentConfig(Config):
 class AssetType(Enum):
     """Asset type."""
 
-    CODE = 'code'
     COMPONENT = 'component'
+    DATA = 'data'
     ENVIRONMENT = 'environment'
     MODEL = 'model'
 
