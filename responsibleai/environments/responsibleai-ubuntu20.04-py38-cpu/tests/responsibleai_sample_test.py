@@ -10,7 +10,7 @@ from azure.ai.ml import command, Input
 from azure.ai.ml._restclient.models import JobStatus
 from azure.ai.ml.entities import Environment, BuildContext
 from azure.ai.ml import automl
-from azure.ai.ml import Input
+from azure.ai.ml.constants import AssetTypes
 from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
@@ -81,10 +81,8 @@ def test_responsibleai():
     assert current_status == "Completed"
 
 
- def test_responsibleai_automl():
+def test_responsibleai_automl():
     """Tests a sample automl job using responsibleai image as the environment."""
-    this_dir = Path(__file__).parent
-
     subscription_id = os.environ.get("subscription_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
@@ -95,13 +93,13 @@ def test_responsibleai():
     # general job parameters
     max_trials = 5
     exp_name = "dpv2-regression-experiment"
-    my_training_data_input  = Input(
+    my_training_data_input = Input(
         type=AssetTypes.MLTABLE,
         path="azureml://datastores/workspaceblobstore/paths/my-regression-mltable")
-    
+
     # Create the AutoML regression job with the related factory-function.
     regression_job = automl.regression(
-        compute=os.environ.get("cpu_cluster"),,
+        compute=os.environ.get("cpu_cluster"),
         experiment_name=exp_name,
         training_data=my_training_data_input,
         target_column_name="ERP",
@@ -121,7 +119,7 @@ def test_responsibleai():
         # max_cores_per_trial: -1,
         enable_early_termination=True,
     )
-    
+
     # Submit the AutoML job
     returned_job = ml_client.jobs.create_or_update(
         regression_job
