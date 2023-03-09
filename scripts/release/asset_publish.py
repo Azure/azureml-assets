@@ -11,10 +11,10 @@ import shutil
 import sys
 from pathlib import Path
 from string import Template
-from subprocess import PIPE, STDOUT, run
+from subprocess import PIPE, run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
-from typing import List, Union
+from typing import Dict, List, Union
 import azureml.assets as assets
 from azureml.assets.model.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
@@ -22,15 +22,14 @@ import yaml
 from azureml.assets.config import PathType
 from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.util import logger
-from azure.ai.ml import MLClient, load_component, load_model
+from azure.ai.ml import load_component, load_model
 from azure.ai.ml.entities import Component, Environment, Model
-from azure.identity import AzureCliCredential
 
 
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
-WORKSPACE_ENV_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
+WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/.+/environments/(.+)/(?:versions/(.+)|labels/(.+))")
 
 
@@ -139,27 +138,27 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
 
 
 def validate_update_command_component(
-    mlclient: MLClient,
     component: Component,
     spec_path: Path,
-    final_version: str
+    final_version: str,
+    registry_name: str,
 ) -> bool:
     """Validate and update command component spec.
 
-    :param mlclient: MLClient object
-    :type mlclient: MLClient
     :param component: A command component
     :type component: Component
     :param spec_path: Path of loaded component
     :type spec_path: Path
     :param final_version: Final version string used to register component
     :type final_version: str
+    :param registry_name: name of the registry to publish component to
+    :type registry_name: str
     :return: True for successful validation and update
     :rtype: bool
     """
     env = component.environment
     match = None
-    for pattern in [REGISTRY_ENV_PATTERN, WORKSPACE_ENV_PATTERN]:
+    for pattern in [REGISTRY_ENV_PATTERN, WORKSPACE_ASSET_PATTERN]:
         if (match := pattern.match(env)) is not None:
             break
 
@@ -179,26 +178,42 @@ def validate_update_command_component(
 
     env = None
     # Check if component's env is registered
-    for version in [env_version, final_version]:
-        try:
-            if (env := mlclient.environments.get(name=env_name, version=version)) is not None:
-                break
-        except Exception as e:
-            logger.print(f"Fetching component env {env_name}:{version} from registry failed. Error: {e}")
+    registered_envs = get_registered_asset_versions(assets.AssetType.ENVIRONMENT, env_name, registry_name)
+    env = next((x for x in registered_envs if x['version'] in [env_version, final_version]), None)
 
     if not env:
         logger.print(f"Could not find a registered env for {component.name}. Please retry again!!!")
         return False
 
-    component.environment = env.id
+    component.environment = env["id"]
     if not update_spec(component, spec_path):
         logger.print(f"Component update failed for asset spec path: {asset.spec_path}")
         return False
 
 
-def assemble_command(
+def run_command(cmd: List[str]):
+    """Run the command for and return result."""
+    result = run(cmd, stdout=PIPE, stderr=PIPE, encoding=sys.stdout.encoding, errors="ignore")
+    return result
+
+
+def asset_list_command(
     asset_type: str,
-    # subscription_id: str,
+    asset_name: str,
+    registry_name: str,
+) -> List[str]:
+    """Command to list of registered asset versions."""
+    cmd = [
+        "az", "ml", asset_type, "list",
+        "--name", asset_name,
+        "--registry-name", registry_name,
+    ]
+    print(cmd)
+    return cmd
+
+
+def asset_publish_command(
+    asset_type: str,
     asset_path: str,
     registry_name: str,
     version: str,
@@ -209,7 +224,6 @@ def assemble_command(
     """Assemble the az cli command."""
     cmd = [
         shutil.which("az"), "ml", asset_type, "create",
-        # "--subscription", subscription_id,
         "--file", asset_path,
         "--registry-name", registry_name,
         "--version", version,
@@ -221,32 +235,60 @@ def assemble_command(
     if debug_mode:
         cmd.append("--debug")
     print(cmd)
-
     return cmd
 
 
-def run_command(
-    cmd, failure_list: List, debug_mode: bool = None
+def publish_asset(
+    asset,
+    registry_name,
+    resource_group,
+    workspace_name,
+    version,
+    failure_list,
+    debug_mode: bool = None
 ):
-    """Run the az cli command for pushing the model to registry."""
+    """Publish asset to registry."""
+    registered_assets = get_registered_asset_versions(asset.type.value, asset.name, registry_name, return_dict=True)
+    if version in registered_assets:
+        print(f"Version already registered. Skipping publish for asset: {asset.name}")
+        return
+
+    cmd = asset_publish_command(
+        asset.type.value, str(asset.spec_with_path),
+        registry_name, version, resource_group, workspace_name, debug_mode
+    )
+
+    # Run command
+    result = run_command(cmd, failure_list, debug_mode)
     if debug_mode:
         # Capture and redact output
-        results = run(
-            cmd,
-            stdout=PIPE,
-            stderr=STDOUT,
-            encoding=sys.stdout.encoding,
-            errors="ignore",
-        )
-        redacted_output = re.sub(r"Bearer.*", "", results.stdout)
-        logger.print(redacted_output)
-    else:
-        results = run(cmd)
+        redacted_output = re.sub(r"Bearer.*", "", result.stdout)
+        print(redacted_output)
 
-    # Check command result
-    if results.returncode != 0:
-        logger.log_warning(f"Error creating {asset.type.value} : {asset.name}")
+    if result.returncode != 0:
+        print(f"Error creating {asset.type.value} : {asset.name}")
         failure_list.append(asset)
+
+
+def get_registered_asset_versions(
+    asset_type: str,
+    asset_name: str,
+    registry_name: str,
+    return_dict=False
+) -> Union[Dict, List]:
+    """Return list/dict of registered asset versions."""
+    result = run_command(asset_list_command(
+        asset_type=asset_type,
+        asset_name=asset_name,
+        registry_name=registry_name,
+    ))
+    if result.returncode != 0:
+        print(f"Error in listing asset version. stdout:\n{result.stdout}")
+        result = "[]"
+    registered_assets = json.loads(result.stdout)
+    if return_dict:
+        return {x['version']: x for x in registered_assets}
+    return registered_assets
 
 
 def _str2bool(v: str) -> bool:
@@ -324,10 +366,6 @@ if __name__ == "__main__":
     for asset in all_assets:
         assets_by_type[asset.type.value].append(asset)
 
-    # mlclient for the registry
-    credential = AzureCliCredential()
-    mlclient = MLClient(credential=credential, registry_name=registry_name, show_progress=False)
-
     for publish_asset_type in PUBLISH_ORDER:
         logger.print(f"now publishing {publish_asset_type.value}s.")
         if publish_asset_type.value not in publish_list:
@@ -355,7 +393,9 @@ if __name__ == "__main__":
                 logger.print(f"spec's path: {asset.spec_with_path}")
                 component = load_component(asset.spec_with_path)
                 if component.type == "command":
-                    if not validate_update_command_component(mlclient, component, asset.spec_with_path, final_version):
+                    if not validate_update_command_component(
+                        component, asset.spec_with_path, final_version, registry_name
+                    ):
                         failure_list.append(asset)
                         continue
             elif asset.type == assets.AssetType.MODEL:
@@ -369,12 +409,16 @@ if __name__ == "__main__":
                     failure_list.append(asset)
                     continue
 
-            # Assemble command
-            cmd = assemble_command(
-                asset.type.value, str(asset.spec_with_path),
-                registry_name, final_version, resource_group, workspace, debug_mode)
-            # Run command
-            run_command(cmd, failure_list, debug_mode)
+            # publish asset
+            publish_asset(
+                asset=asset,
+                version=final_version,
+                registry_name=registry_name,
+                resource_group=resource_group,
+                workspace_name=workspace,
+                failure_list=failure_list,
+                debug_mode=debug_mode
+            )
 
     if len(failure_list) > 0:
         failed_assets = defaultdict(list)
