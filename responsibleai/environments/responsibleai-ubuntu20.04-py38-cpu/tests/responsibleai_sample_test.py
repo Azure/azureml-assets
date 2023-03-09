@@ -3,6 +3,7 @@
 
 """Tests running a sample job in the responsibleai 0.22 environment."""
 import mlflow
+from mlflow.tracking.client import MlflowClient
 import os
 import time
 from pathlib import Path
@@ -14,6 +15,7 @@ from azure.ai.ml import automl
 from azure.ai.ml.constants import AssetTypes
 from azure.identity import AzureCliCredential
 
+
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 DATA_SOURCE = "data/training-mltable-folder"
@@ -21,36 +23,35 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def verify_automl_rai_run(ml_client, automl_job):
+# def verify_automl_rai_run(ml_client, automl_job):
 
-    # Obtain the tracking URL from MLClient
-    MLFLOW_TRACKING_URI = ml_client.workspaces.get(
-        name=ml_client.workspace_name
-    ).mlflow_tracking_uri
+#     # Obtain the tracking URL from MLClient
+#     MLFLOW_TRACKING_URI = ml_client.workspaces.get(
+#         name=ml_client.workspace_name
+#     ).mlflow_tracking_uri
 
-    print(MLFLOW_TRACKING_URI)
+#     print(MLFLOW_TRACKING_URI)
 
-    # Set the MLFLOW TRACKING URI
-    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+#     # Set the MLFLOW TRACKING URI
+#     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
-    print("\nCurrent tracking uri: {}".format(mlflow.get_tracking_uri()))
+#     print("\nCurrent tracking uri: {}".format(mlflow.get_tracking_uri()))
 
-    from mlflow.tracking.client import MlflowClient
+#     # Initialize MLFlow client
+#     mlflow_client = MlflowClient()
 
-    # Initialize MLFlow client
-    mlflow_client = MlflowClient()
+#     mlflow_automl_rai_run = mlflow_client.get_run(automl_job.name + "_RAI")
+#     assert mlflow_automl_rai_run is not None
 
-    mlflow_automl_rai_run = mlflow_client.get_run(automl_job.name + "_RAI")
     # Poll until final status is reached, or timed out
-    timeout = time.time() + (TIMEOUT_MINUTES * 60)
-    while time.time() <= timeout:
-        # assert mlflow_automl_rai_run.info.status == 'FINISHED'
-        if mlflow_automl_rai_run.info.status in [
-                'FINISHED', 'FAILED', 'KILLED']:
-            break
-        time.sleep(30)  # sleep 30 seconds
+    # timeout = time.time() + (TIMEOUT_MINUTES * 60)
+    # while time.time() <= timeout:
+    #     if mlflow_automl_rai_run.info.status in [
+    #             'FINISHED', 'FAILED', 'KILLED']:
+    #         break
+    #     time.sleep(30)  # sleep 30 seconds
 
-    assert mlflow_automl_rai_run.info.status == 'FINISHED'
+    # assert mlflow_automl_rai_run.info.status == 'FINISHED'
 
 
 def test_responsibleai():
@@ -181,4 +182,55 @@ def test_responsibleai_automl_regression():
             ml_client.jobs.stream(returned_job.name)
 
     assert current_status == "Completed"
-    verify_automl_rai_run(ml_client, returned_job)
+    # verify_automl_rai_run(ml_client, returned_job)
+
+    # Submit an execution for AutoML child run
+    env_name = "responsibleai"
+
+    env_docker_context = Environment(
+        build=BuildContext(path=this_dir / BUILD_CONTEXT),
+        name=env_name,
+        description="ResponsibleAI environment created from a Docker context.",
+    )
+    ml_client.environments.create_or_update(env_docker_context)
+
+    # create the command
+    job = command(
+        code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
+        command="python automl_submit_rai_run.py --automl_parent_run_id {0} --automl_child_run_id {1}".format(
+            returned_job.name, returned_job.name + "_0"),
+        inputs={
+            "diabetes": Input(
+                type="uri_file",
+                path="https://azuremlexamples.blob.core.windows.net/datasets/diabetes.csv",
+            )
+        },
+        environment=f"{env_name}@latest",
+        compute=os.environ.get("cpu_cluster"),
+        display_name="responsibleai-diabetes-example",
+        description="A test run of the responsibleai curated environment",
+        experiment_name="responsibleaiExperiment"
+    )
+
+    returned_job = ml_client.create_or_update(job)
+    assert returned_job is not None
+
+    # Poll until final status is reached, or timed out
+    timeout = time.time() + (TIMEOUT_MINUTES * 60)
+    while time.time() <= timeout:
+        current_status = ml_client.jobs.get(returned_job.name).status
+        if current_status in [JobStatus.COMPLETED, JobStatus.FAILED]:
+            break
+        time.sleep(30)  # sleep 30 seconds
+
+    if current_status == JobStatus.FAILED:
+        ml_client.jobs.download(returned_job.name)
+        if STD_LOG.exists():
+            print(f"*** BEGIN {STD_LOG} ***")
+            with open(STD_LOG, "r") as f:
+                print(f.read(), end="")
+            print(f"*** END {STD_LOG} ***")
+        else:
+            ml_client.jobs.stream(returned_job.name)
+
+    assert current_status == "Completed"
