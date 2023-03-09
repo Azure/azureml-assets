@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/test-asset-1
+  name: env
   os: linux
   context:
     dir: context

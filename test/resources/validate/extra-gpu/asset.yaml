@@ -1,0 +1,5 @@
+name: env-cuda11.1-gpu
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
