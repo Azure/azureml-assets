@@ -185,7 +185,8 @@ def validate_update_command_component(
         logger.print(f"Could not find a registered env for {component.name}. Please retry again!!!")
         return False
 
-    component.environment = env["id"]
+    # TODO: Bug in env list, which does not give complete detail
+    component.environment = f"azureml://registries/{registry_name}/environments/{env['name']}/versions/{env['version']}"
     if not update_spec(component, spec_path):
         logger.print(f"Component update failed for asset spec path: {asset.spec_path}")
         return False
