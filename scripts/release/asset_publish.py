@@ -187,7 +187,8 @@ def validate_update_command_component(
 
     # TODO: Bug in env list, which does not give complete detail
     # https://github.com/Azure/azure-sdk-for-python/issues/29248
-    component.environment = f"azureml://registries/{registry_name}/environments/{env['name']}/versions/{env['version']}"
+    env_id = f"azureml://registries/{registry_name}/environments/{env['name']}/versions/{env['version']}"
+    component.environment = env_id
     if not update_spec(component, spec_path):
         logger.print(f"Component update failed for asset spec path: {asset.spec_path}")
         return False
