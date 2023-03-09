@@ -222,6 +222,7 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
 def validate_assets(input_dirs: List[Path],
                     asset_config_filename: str,
                     changed_files: List[Path] = None,
+                    check_names: bool = False,
                     check_images: bool = False) -> bool:
     """Validate assets.
 
@@ -229,6 +230,7 @@ def validate_assets(input_dirs: List[Path],
         input_dirs (List[Path]): Directories containing assets.
         asset_config_filename (str): Asset config filename to search for.
         changed_files (List[Path], optional): List of changed files, used to filter assets. Defaults to None.
+        check_names (bool, optional): Whether to check asset names. Defaults to False.
         check_images (bool, optional): Whether to check image names. Defaults to False.
 
     Raises:
@@ -255,8 +257,8 @@ def validate_assets(input_dirs: List[Path],
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
         # Validate name
-        logger.print(f"Asset naming convention: {NAMING_CONVENTION_URL}")
-        error_count += validate_name(asset_config)
+        if check_names:
+            error_count += validate_name(asset_config)
 
         # Validate specific asset types
         if asset_config.type == assets.AssetType.ENVIRONMENT:
@@ -314,6 +316,8 @@ if __name__ == '__main__':
                         help="Asset config file name to search for")
     parser.add_argument("-c", "--changed-files",
                         help="Comma-separated list of changed files, used to filter assets")
+    parser.add_argument("-n", "--check-names", action="store_true",
+                        help="Check asset names")
     parser.add_argument("-I", "--check-images", action="store_true",
                         help="Check environment images")
     args = parser.parse_args()
@@ -322,10 +326,15 @@ if __name__ == '__main__':
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
     changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
 
+    # Share asset naming convention URL
+    if args.check_names:
+        logger.print(f"Asset naming convention: {NAMING_CONVENTION_URL}")
+
     # Validate assets
     success = validate_assets(input_dirs=input_dirs,
                               asset_config_filename=args.asset_config_filename,
                               changed_files=changed_files,
+                              check_names=args.check_names,
                               check_images=args.check_images)
     if not success:
         sys.exit(1)
