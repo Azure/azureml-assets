@@ -4,12 +4,16 @@
 """Asset config classes."""
 
 import re
+import warnings
 from enum import Enum
 from functools import total_ordering
 from pathlib import Path
 from setuptools._vendor.packaging import version
 from typing import Dict, List, Tuple
 from yaml import safe_load
+
+# Ignore setuptools warning about replacing distutils
+warnings.filterwarnings("ignore", message="Setuptools is replacing distutils.", category=UserWarning)
 
 
 class ValidationException(Exception):
@@ -667,6 +671,11 @@ class EnvironmentConfig(Config):
         return self._image.get('publish', {})
 
     @property
+    def publish_enabled(self) -> bool:
+        """Whether image should be published."""
+        return bool(self._publish)
+
+    @property
     def _publish_location(self) -> str:
         """Raw 'image.location' value."""
         return self._publish.get('location')
@@ -698,8 +707,8 @@ class EnvironmentConfig(Config):
 class AssetType(Enum):
     """Asset type."""
 
-    CODE = 'code'
     COMPONENT = 'component'
+    DATA = 'data'
     ENVIRONMENT = 'environment'
     MODEL = 'model'
 
