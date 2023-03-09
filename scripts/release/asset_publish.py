@@ -186,7 +186,9 @@ def validate_update_command_component(
         return False
 
     # TODO: Bug in env list, which does not give complete detail
-    component.environment = f"azureml://registries/{registry_name}/environments/{env['name']}/versions/{env['version']}"
+    # https://github.com/Azure/azure-sdk-for-python/issues/29248
+    env_id = f"azureml://registries/{registry_name}/environments/{env['name']}/versions/{env['version']}"
+    component.environment = env_id
     if not update_spec(component, spec_path):
         logger.print(f"Component update failed for asset spec path: {asset.spec_path}")
         return False
@@ -256,13 +258,15 @@ def publish_asset(
 
     # Run command
     result = run_command(cmd)
+    debug_mode = True
     if debug_mode:
         # Capture and redact output
         redacted_output = re.sub(r"Bearer.*", "", result.stdout)
-        print(redacted_output)
+        print(f"Output: {redacted_output}")
 
     if result.returncode != 0:
         print(f"Error creating {asset.type.value} : {asset.name}")
+        print(f"Error: {result.stderr}")
         failure_list.append(asset)
 
 
