@@ -402,6 +402,7 @@ if __name__ == "__main__":
             elif asset.type == assets.AssetType.MODEL:
                 try:
                     model_config = asset.extra_config_as_object()
+                    final_version = 2
                     with TemporaryDirectory() as tempdir:
                         if not prepare_model(model_config, asset.spec_with_path, Path(tempdir)):
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")
