@@ -68,7 +68,7 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
 def dump_model_spec(model, spec_file) -> bool:
     """Update the yaml file after getting the model has been prepared."""
     try:
-        model_dict = json.loads(json.dumps(model._to_dict()))
+        model_dict = model._to_dict()
         util.dump_yaml(model_dict, spec_file)
         return True
     except Exception as e:
@@ -130,7 +130,7 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
 def dump_data_spec(data: Data, spec_file: Path) -> bool:
     """Update the yaml file after getting the data has been prepared."""
     try:
-        data_dict = json.loads(json.dumps(data._to_dict()))
+        data_dict = data._to_dict()
         util.dump_yaml(data_dict, spec_file)
         return True
     except Exception as e:

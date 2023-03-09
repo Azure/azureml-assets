@@ -344,6 +344,26 @@ class GitAssetPath(AssetPath):
         self._branch = branch
         super().__init__(PathType.GIT, uri)
 
+class PathFactory():
+    """Factory method to create asset path."""
+    def __init__(self):
+        self.asset_path = None
+
+    def getPath(self, path, path_type)-> AssetPath:
+        if path_type == PathType.AZUREBLOB.value:
+            self.asset_path = AzureBlobstoreAssetPath(
+                storage_name=path['storage_name'],
+                container_name=path['container_name'],
+                container_path=path['container_path'],
+            )
+        elif path_type == PathType.GIT.value:
+            self.asset_path = GitAssetPath(branch=path['branch'], uri=path['uri'])
+        elif path_type == PathType.LOCAL.value:
+            self.asset_path= LocalAssetPath(local_path=path['uri'])
+        elif path_type == PathType.HTTP.value or path_type == PathType.FTP.value:
+            raise NotImplementedError("Support for HTTP and FTP is being added.")
+        return self.asset_path    
+          
 class DataType(Enum):
     """Enum for data types supported for data publishing."""
 
@@ -356,51 +376,45 @@ class DataConfig(Config):
 
     """
     Example:
-
-    path: #Could be azure storage, git , hugging face
-
-        ## Azure Blobstore example
+    ## Azure Blobstore example
+    path:
         type: azureblob
         storage_name: my_storage
         container_name: my_container
         container_path: foo/bar
+    publish:
+        type: uri_folder
     """
     def __init__(self, file_name: Path):
         """Initialize object for the Data Properties extracted from extra_config data.yaml."""
         super().__init__(file_name)
-        self._path = None
+        self.asset_path = None
         self._validate()
 
     def _validate(self):
         """Validate the yaml file."""
-        Config._validate_exists('data.path', self.path)
-        Config._validate_enum('data.path.type', self.path.type.value, PathType, True)
+        Config._validate_exists('data.path', self._path)
+        Config._validate_enum('data.path.type', self._path_type, PathType, True)
         Config._validate_enum('data.type', self._type, DataType, True)
 
     @property
+    def _path(self):
+        return self._yaml.get('path')
+
+    @property
+    def _path_type(self):
+        return self._path.get('type')
+    
+    @property
     def path(self) -> AssetPath:
         """Data Path."""
-        if self._path:
-            return self._path
-        path = self._yaml.get('path', {})
-        if path and path.get('type'):
-            path_type = path.get('type')
-            if path_type == PathType.AZUREBLOB.value:
-                self._path = AzureBlobstoreAssetPath(
-                    storage_name=path['storage_name'],
-                    container_name=path['container_name'],
-                    container_path=path['container_path'],
-                )
-            elif path_type == PathType.GIT.value:
-                self._path = GitAssetPath(branch=path['branch'], uri=path['uri'])
-            elif path_type == PathType.LOCAL.value:
-                self._path = LocalAssetPath(local_path=path['uri'])
-            elif path_type == PathType.HTTP.value or path_type == PathType.FTP.value:
-                raise NotImplementedError("Support for HTTP and FTP is being added.")
-        else:
-            raise Exception("path parameters are invalid")
-        return self._path
+        if not self.asset_path:
+            path = self._path
+            path_type = self._path_type
+            self.asset_path = PathFactory().getPath(path, path_type)
 
+        return self.asset_path
+    
     @property
     def _publish(self) -> Dict[str, object]:
         """Data publish properties."""
@@ -464,23 +478,11 @@ class ModelConfig(Config):
         """Model Path."""
         if self._path:
             return self._path
-        path = self._yaml.get('path', {})
-        if path and path.get('type'):
-            path_type = path.get('type')
-            if path_type == PathType.AZUREBLOB.value:
-                self._path = AzureBlobstoreAssetPath(
-                    storage_name=path['storage_name'],
-                    container_name=path['container_name'],
-                    container_path=path['container_path'],
-                )
-            elif path_type == PathType.GIT.value:
-                self._path = GitAssetPath(branch=path['branch'], uri=path['uri'])
-            elif path_type == PathType.LOCAL.value:
-                self._path = LocalAssetPath(local_path=path['uri'])
-            elif path_type == PathType.HTTP.value or path_type == PathType.FTP.value:
-                raise NotImplementedError("Support for HTTP and FTP is being added.")
         else:
-            raise Exception("path parameters are invalid")
+            path = self._yaml.get('path', {})
+            path_type = path.get('type')
+
+            self._path = PathFactory().getPath(path, path_type)
         return self._path
 
     @property
