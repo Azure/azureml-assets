@@ -28,7 +28,7 @@ from azure.ai.ml.entities import Component, Environment, Model
 
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
-PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
+PUBLISH_ORDER = [assets.AssetType.MODEL, assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/.+/environments/(.+)/(?:versions/(.+)|labels/(.+))")
 
@@ -178,7 +178,7 @@ def validate_update_command_component(
 
     env = None
     # Check if component's env is registered
-    registered_envs = get_registered_asset_versions(assets.AssetType.ENVIRONMENT, env_name, registry_name)
+    registered_envs = get_registered_asset_versions(assets.AssetType.ENVIRONMENT.value, env_name, registry_name)
     env = next((x for x in registered_envs if x['version'] in [env_version, final_version]), None)
 
     if not env:
