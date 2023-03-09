@@ -21,7 +21,6 @@ WARNING_TEMPLATE = "Warning during validation of {asset}: {warning}"
 # Common naming convention
 NAMING_CONVENTION_URL = "https://github.com/Azure/azureml-assets/wiki/Asset-naming-convention"
 INVALID_STRINGS = ["microsoft", ["azureml", "azure"], "aml"]
-INVALID_STRINGS.extend([t.value for t in assets.AssetType])
 COMMON_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
 
 # Environment naming convention
@@ -201,7 +200,8 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
         error_count += 1
 
     # Check for invalid strings
-    for string_group in INVALID_STRINGS:
+    invalid_strings = INVALID_STRINGS + [asset_config.type.value]
+    for string_group in invalid_strings:
         # Coerce into a list
         string_group_list = string_group if isinstance(string_group, list) else [string_group]
 
