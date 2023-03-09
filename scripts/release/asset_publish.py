@@ -11,7 +11,7 @@ import shutil
 import sys
 from pathlib import Path
 from string import Template
-from subprocess import PIPE, STDOUT, run
+from subprocess import PIPE, run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
 from typing import Dict, List, Union
@@ -22,7 +22,7 @@ import yaml
 from azureml.assets.config import PathType
 from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.util import logger
-from azure.ai.ml import MLClient, load_component, load_model
+from azure.ai.ml import load_component, load_model
 from azure.ai.ml.entities import Component, Environment, Model
 
 
@@ -178,8 +178,8 @@ def validate_update_command_component(
 
     env = None
     # Check if component's env is registered
-    registered_envs = get_registered_asset_versions(assets.AssetType.ENVIRONMENT, env_name, registry_name)    
-    env = next((x for x in registered_envs if x['version'] in [env_version, final_version] ), None)
+    registered_envs = get_registered_asset_versions(assets.AssetType.ENVIRONMENT, env_name, registry_name)
+    env = next((x for x in registered_envs if x['version'] in [env_version, final_version]), None)
 
     if not env:
         logger.print(f"Could not find a registered env for {component.name}. Please retry again!!!")
@@ -270,7 +270,12 @@ def publish_asset(
         failure_list.append(asset)
 
 
-def get_registered_asset_versions(asset_type: str, asset_name: str, registry_name: str, return_dict=False) -> Union[Dict, List]:
+def get_registered_asset_versions(
+    asset_type: str,
+    asset_name: str,
+    registry_name: str,
+    return_dict=False
+) -> Union[Dict, List]:
     """Return list/dict of registered asset versions."""
     result = run_command(asset_list_command(
         asset_type=asset_type,
@@ -282,7 +287,7 @@ def get_registered_asset_versions(asset_type: str, asset_name: str, registry_nam
         result = "[]"
     registered_assets = json.loads(result.stdout)
     if return_dict:
-        return {x['version']:x for x in registered_assets}
+        return {x['version']: x for x in registered_assets}
     return registered_assets
 
 
