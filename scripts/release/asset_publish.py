@@ -249,11 +249,6 @@ def publish_asset(
     debug_mode: bool = None
 ):
     """Publish asset to registry."""
-    registered_assets = get_registered_asset_versions(asset.type.value, asset.name, registry_name, return_dict=True)
-    if version in registered_assets:
-        print(f"Version already registered. Skipping publish for asset: {asset.name}")
-        return
-
     cmd = asset_publish_command(
         asset.type.value, str(asset.spec_with_path),
         registry_name, version, resource_group, workspace_name, debug_mode
@@ -400,9 +395,15 @@ if __name__ == "__main__":
                         failure_list.append(asset)
                         continue
             elif asset.type == assets.AssetType.MODEL:
+                final_version = asset.version
+                registered_assets = get_registered_asset_versions(
+                    asset.type.value, asset.name, registry_name, return_dict=True)
+                if final_version in registered_assets:
+                    print(f"Version already registered. Skipping publish for asset: {asset.name}")
+                    continue
+
                 try:
                     model_config = asset.extra_config_as_object()
-                    final_version = '2'
                     with TemporaryDirectory() as tempdir:
                         if not prepare_model(model_config, asset.spec_with_path, Path(tempdir)):
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")
