@@ -126,7 +126,7 @@ def test_responsibleai_automl_regression():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
     # general job parameters
-    max_trials = 5
+    max_trials = 1
     exp_name = "dpv2-regression-experiment"
     # Training MLTable defined locally, with local data to be uploaded
     my_training_data_input = Input(
@@ -148,11 +148,9 @@ def test_responsibleai_automl_regression():
 
     # Limits are all optional
     regression_job.set_limits(
-        timeout_minutes=600,
+        timeout_minutes=60,
         trial_timeout_minutes=20,
         max_trials=max_trials,
-        # max_concurrent_trials = 4,
-        # max_cores_per_trial: -1,
         enable_early_termination=True,
     )
 
