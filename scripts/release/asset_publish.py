@@ -247,7 +247,7 @@ def publish_asset(
     failure_list,
     debug_mode: bool = None
 ):
-    """ Publish asset to registry."""
+    """Publish asset to registry."""
     registered_assets = get_registered_asset_versions(asset.type.value, asset.name, registry_name, return_dict=True)
     if version in registered_assets:
         print(f"Version already registered. Skipping publish for asset: {asset.name}")
