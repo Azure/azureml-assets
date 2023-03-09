@@ -126,7 +126,7 @@ def test_responsibleai_automl_regression():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
     # general job parameters
-    max_trials = 1
+    max_trials = 5
     exp_name = "dpv2-regression-experiment"
     # Training MLTable defined locally, with local data to be uploaded
     my_training_data_input = Input(
