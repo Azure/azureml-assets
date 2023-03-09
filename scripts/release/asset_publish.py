@@ -178,14 +178,16 @@ def validate_update_command_component(
 
     env = None
     # Check if component's env is registered
-    registered_envs = get_registered_asset_versions(assets.AssetType.ENVIRONMENT, env_name, registry_name)
+    registered_envs = get_registered_asset_versions(assets.AssetType.ENVIRONMENT.value, env_name, registry_name)
     env = next((x for x in registered_envs if x['version'] in [env_version, final_version]), None)
 
     if not env:
         logger.print(f"Could not find a registered env for {component.name}. Please retry again!!!")
         return False
 
-    component.environment = env["id"]
+    # TODO: Bug in env list, which does not give complete detail
+    # https://github.com/Azure/azure-sdk-for-python/issues/29248
+    component.environment = f"azureml://registries/{registry_name}/environments/{env['name']}/versions/{env['version']}"
     if not update_spec(component, spec_path):
         logger.print(f"Component update failed for asset spec path: {asset.spec_path}")
         return False
@@ -248,18 +250,13 @@ def publish_asset(
     debug_mode: bool = None
 ):
     """Publish asset to registry."""
-    registered_assets = get_registered_asset_versions(asset.type.value, asset.name, registry_name, return_dict=True)
-    if version in registered_assets:
-        print(f"Version already registered. Skipping publish for asset: {asset.name}")
-        return
-
     cmd = asset_publish_command(
         asset.type.value, str(asset.spec_with_path),
         registry_name, version, resource_group, workspace_name, debug_mode
     )
 
     # Run command
-    result = run_command(cmd, failure_list, debug_mode)
+    result = run_command(cmd)
     if debug_mode:
         # Capture and redact output
         redacted_output = re.sub(r"Bearer.*", "", result.stdout)
@@ -399,6 +396,13 @@ if __name__ == "__main__":
                         failure_list.append(asset)
                         continue
             elif asset.type == assets.AssetType.MODEL:
+                final_version = asset.version
+                registered_assets = get_registered_asset_versions(
+                    asset.type.value, asset.name, registry_name, return_dict=True)
+                if final_version in registered_assets:
+                    print(f"Version already registered. Skipping publish for asset: {asset.name}")
+                    continue
+
                 try:
                     model_config = asset.extra_config_as_object()
                     with TemporaryDirectory() as tempdir:
