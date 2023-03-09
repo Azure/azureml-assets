@@ -259,7 +259,7 @@ def publish_asset(
     )
 
     # Run command
-    result = run_command(cmd, debug_mode)
+    result = run_command(cmd)
     if debug_mode:
         # Capture and redact output
         redacted_output = re.sub(r"Bearer.*", "", result.stdout)
