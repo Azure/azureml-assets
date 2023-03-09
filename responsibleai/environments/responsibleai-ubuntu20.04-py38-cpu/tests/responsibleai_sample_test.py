@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 """Tests running a sample job in the responsibleai 0.22 environment."""
-import mlflow
-from mlflow.tracking.client import MlflowClient
+# import mlflow
+# from mlflow.tracking.client import MlflowClient
 import os
 import time
 from pathlib import Path
@@ -43,15 +43,15 @@ STD_LOG = Path("artifacts/user_logs/std_log.txt")
 #     mlflow_automl_rai_run = mlflow_client.get_run(automl_job.name + "_RAI")
 #     assert mlflow_automl_rai_run is not None
 
-    # Poll until final status is reached, or timed out
-    # timeout = time.time() + (TIMEOUT_MINUTES * 60)
-    # while time.time() <= timeout:
-    #     if mlflow_automl_rai_run.info.status in [
-    #             'FINISHED', 'FAILED', 'KILLED']:
-    #         break
-    #     time.sleep(30)  # sleep 30 seconds
+#     # Poll until final status is reached, or timed out
+#     timeout = time.time() + (TIMEOUT_MINUTES * 60)
+#     while time.time() <= timeout:
+#         if mlflow_automl_rai_run.info.status in [
+#                 'FINISHED', 'FAILED', 'KILLED']:
+#             break
+#         time.sleep(30)  # sleep 30 seconds
 
-    # assert mlflow_automl_rai_run.info.status == 'FINISHED'
+#     assert mlflow_automl_rai_run.info.status == 'FINISHED'
 
 
 def test_responsibleai():
