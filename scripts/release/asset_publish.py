@@ -11,7 +11,7 @@ import shutil
 import sys
 from pathlib import Path
 from string import Template
-from subprocess import PIPE, run
+from subprocess import run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
 from typing import Dict, List, Union
@@ -31,6 +31,7 @@ TEST_YML = "tests.yml"
 PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/.+/environments/(.+)/(?:versions/(.+)|labels/(.+))")
+BEARER = r"Bearer.*"
 
 
 def find_test_files(dir: Path):
@@ -198,23 +199,8 @@ def validate_update_command_component(
 
 def run_command(cmd: List[str]):
     """Run the command for and return result."""
-    result = run(cmd, stdout=PIPE, stderr=PIPE, encoding=sys.stdout.encoding, errors="ignore")
+    result = run(cmd, capture_output=True, encoding=sys.stdout.encoding, errors="ignore")
     return result
-
-
-def asset_list_command(
-    asset_type: str,
-    asset_name: str,
-    registry_name: str,
-) -> List[str]:
-    """Command to list of registered asset versions."""
-    cmd = [
-        "az", "ml", asset_type, "list",
-        "--name", asset_name,
-        "--registry-name", registry_name,
-    ]
-    print(cmd)
-    return cmd
 
 
 def asset_publish_command(
@@ -239,8 +225,14 @@ def asset_publish_command(
         cmd.extend(["--workspace", workspace])
     if debug_mode:
         cmd.append("--debug")
-    print(cmd)
     return cmd
+
+
+def sanitize_output(out: str):
+    """Sanitize output."""
+    # Remove sensitive token    
+    sanitized_output = re.sub(BEARER, "", out)
+    return sanitized_output
 
 
 def publish_asset(
@@ -262,13 +254,16 @@ def publish_asset(
     result = run_command(cmd)
     if debug_mode:
         # Capture and redact output
-        redacted_output = re.sub(r"Bearer.*", "", result.stdout)
-        redacted_err = re.sub(r"Bearer.*", "", result.stderr)
-        print(f"stdout: {redacted_output}")
-        print(f"stderr: {redacted_err}")
+        logger.print(f"Executed: {cmd}")
+        redacted_output = sanitize_output(result.stdout)
+        redacted_err = sanitize_output(result.stderr)
+        if redacted_output:
+            logger.print(f"stdout:\n{redacted_output}")
+        if redacted_err:
+            logger.print(f"stderr:\n{redacted_err}")
 
     if result.returncode != 0:
-        print(f"Error creating {asset.type.value} : {asset.name}")
+        logger.log_warning(f"Error creating {asset.type.value} : {asset.name}. Error {redacted_err}")
         failure_list.append(asset)
 
 
@@ -279,14 +274,16 @@ def get_registered_asset_versions(
     return_dict=False
 ) -> Union[Dict, List]:
     """Return list/dict of registered asset versions."""
-    result = run_command(asset_list_command(
-        asset_type=asset_type,
-        asset_name=asset_name,
-        registry_name=registry_name,
-    ))
+    cmd = [
+        "az", "ml", asset_type, "list",
+        "--name", asset_name,
+        "--registry-name", registry_name,
+    ]
+    result = run_command(cmd)
     if result.returncode != 0:
-        print(f"Error in listing asset version. stdout:\n{result.stdout}")
-        result = "[]"
+        msg = f"Error in listing asset version. stdout:\n{result.stderr}"
+        logger.log_warning(msg)
+        raise Exception(msg)
     registered_assets = json.loads(result.stdout)
     if return_dict:
         return {x['version']: x for x in registered_assets}
@@ -407,7 +404,7 @@ if __name__ == "__main__":
                     registered_assets = get_registered_asset_versions(
                         asset.type.value, asset.name, registry_name, return_dict=True)
                     if final_version in registered_assets:
-                        print(f"Version already registered. Skipping publish for asset: {asset.name}")
+                        logger.print(f"Version already registered. Skipping publish for asset: {asset.name}")
                         continue
 
                     try:
