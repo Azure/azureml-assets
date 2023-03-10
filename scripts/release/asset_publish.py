@@ -262,11 +262,12 @@ def publish_asset(
     if debug_mode:
         # Capture and redact output
         redacted_output = re.sub(r"Bearer.*", "", result.stdout)
-        print(f"Output: {redacted_output}")
+        redacted_err = re.sub(r"Bearer.*", "", result.stderr)
+        print(f"stdout: {redacted_output}")
+        print(f"stderr: {redacted_err}")
 
     if result.returncode != 0:
         print(f"Error creating {asset.type.value} : {asset.name}")
-        print(f"Error: {result.stderr}")
         failure_list.append(asset)
 
 
@@ -371,61 +372,62 @@ if __name__ == "__main__":
         if publish_asset_type.value not in publish_list:
             continue
         for asset in assets_by_type.get(publish_asset_type.value, []):
-            asset_names = publish_list.get(asset.type.value, [])
-            if not ("*" in asset_names or asset.name in asset_names):
-                logger.print(
-                    f"Skipping registering asset {asset.name} because it is not in the publish list")
-                continue
-            logger.print(f"Registering {asset}")
-            final_version = asset.version + "-" + \
-                passed_version if passed_version else asset.version
-            logger.print(f"final version: {final_version}")
-            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
-                registry_name=registry_name,
-                asset_type=f"{asset.type.value}s",
-                asset_name=asset.name,
-                version=final_version,
-            )
+            with TemporaryDirectory() as work_dir:
+                asset_names = publish_list.get(asset.type.value, [])
+                if not ("*" in asset_names or asset.name in asset_names):
+                    logger.print(
+                        f"Skipping registering asset {asset.name} because it is not in the publish list")
+                    continue
+                logger.print(f"Registering {asset}")
+                final_version = asset.version + "-" + \
+                    passed_version if passed_version else asset.version
+                logger.print(f"final version: {final_version}")
+                asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
+                    registry_name=registry_name,
+                    asset_type=f"{asset.type.value}s",
+                    asset_name=asset.name,
+                    version=final_version,
+                )
 
-            # Handle specific asset types
-            if asset.type == assets.AssetType.COMPONENT:
-                # load component and check if environment exists
-                logger.print(f"spec's path: {asset.spec_with_path}")
-                component = load_component(asset.spec_with_path)
-                if component.type == "command":
-                    if not validate_update_command_component(
-                        component, asset.spec_with_path, final_version, registry_name
-                    ):
+                # Handle specific asset types
+                if asset.type == assets.AssetType.COMPONENT:
+                    # load component and check if environment exists
+                    logger.print(f"spec's path: {asset.spec_with_path}")
+                    component = load_component(asset.spec_with_path)
+                    if component.type == "command":
+                        if not validate_update_command_component(
+                            component, asset.spec_with_path, final_version, registry_name
+                        ):
+                            failure_list.append(asset)
+                            continue
+                elif asset.type == assets.AssetType.MODEL:
+                    # check if model is already registered
+                    final_version = asset.version
+                    registered_assets = get_registered_asset_versions(
+                        asset.type.value, asset.name, registry_name, return_dict=True)
+                    if final_version in registered_assets:
+                        print(f"Version already registered. Skipping publish for asset: {asset.name}")
+                        continue
+
+                    try:
+                        model_config = asset.extra_config_as_object()
+                        if not prepare_model(model_config, asset.spec_with_path, Path(work_dir)):
+                            raise Exception(f"Could not prepare model at {asset.spec_with_path}")
+                    except Exception as e:
+                        logger.log_error(f"Model prepare exception. Error => {e}")
                         failure_list.append(asset)
                         continue
-            elif asset.type == assets.AssetType.MODEL:
-                final_version = asset.version
-                registered_assets = get_registered_asset_versions(
-                    asset.type.value, asset.name, registry_name, return_dict=True)
-                if final_version in registered_assets:
-                    print(f"Version already registered. Skipping publish for asset: {asset.name}")
-                    continue
 
-                try:
-                    model_config = asset.extra_config_as_object()
-                    with TemporaryDirectory() as tempdir:
-                        if not prepare_model(model_config, asset.spec_with_path, Path(tempdir)):
-                            raise Exception(f"Could not prepare model at {asset.spec_with_path}")
-                except Exception as e:
-                    logger.log_error(f"Model prepare exception. Error => {e}")
-                    failure_list.append(asset)
-                    continue
-
-            # publish asset
-            publish_asset(
-                asset=asset,
-                version=final_version,
-                registry_name=registry_name,
-                resource_group=resource_group,
-                workspace_name=workspace,
-                failure_list=failure_list,
-                debug_mode=debug_mode
-            )
+                # publish asset
+                publish_asset(
+                    asset=asset,
+                    version=final_version,
+                    registry_name=registry_name,
+                    resource_group=resource_group,
+                    workspace_name=workspace,
+                    failure_list=failure_list,
+                    debug_mode=debug_mode
+                )
 
     if len(failure_list) > 0:
         failed_assets = defaultdict(list)
