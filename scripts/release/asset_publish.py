@@ -28,7 +28,7 @@ from azure.ai.ml.entities import Component, Environment, Model
 
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
-PUBLISH_ORDER = [assets.AssetType.MODEL, assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT]
+PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/.+/environments/(.+)/(?:versions/(.+)|labels/(.+))")
 
@@ -188,10 +188,12 @@ def validate_update_command_component(
     # TODO: Bug in env list, which does not give complete detail
     # https://github.com/Azure/azure-sdk-for-python/issues/29248
     env_id = f"azureml://registries/{registry_name}/environments/{env['name']}/versions/{env['version']}"
+    logger.print(f"Updating component env to {env_id}")
     component.environment = env_id
     if not update_spec(component, spec_path):
         logger.print(f"Component update failed for asset spec path: {asset.spec_path}")
         return False
+    return True
 
 
 def run_command(cmd: List[str]):
@@ -258,7 +260,6 @@ def publish_asset(
 
     # Run command
     result = run_command(cmd)
-    debug_mode = True
     if debug_mode:
         # Capture and redact output
         redacted_output = re.sub(r"Bearer.*", "", result.stdout)
