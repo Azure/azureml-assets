@@ -1,4 +1,4 @@
-FROM stable-ubuntu2004-cu117-py38-torch200:{{latest-image-tag:test_torch2_v1/}}
+FROM stable-ubuntu2004-cu117-py38-torch200:{{latest-image-tag}}
 
 # Install pip dependencies
 COPY requirements.txt .
