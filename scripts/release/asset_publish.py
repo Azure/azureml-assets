@@ -271,9 +271,8 @@ def get_registered_asset_versions(
     asset_type: str,
     asset_name: str,
     registry_name: str,
-    return_dict=False
-) -> Union[Dict, List]:
-    """Return list/dict of registered asset versions."""
+) -> List:
+    """Return list of registered asset versions."""
     cmd = [
         "az", "ml", asset_type, "list",
         "--name", asset_name,
@@ -285,8 +284,6 @@ def get_registered_asset_versions(
         logger.log_warning(msg)
         raise Exception(msg)
     registered_assets = json.loads(result.stdout)
-    if return_dict:
-        return {x['version']: x for x in registered_assets}
     return registered_assets
 
 
@@ -402,8 +399,8 @@ if __name__ == "__main__":
                     # check if model is already registered
                     final_version = asset.version
                     registered_assets = get_registered_asset_versions(
-                        asset.type.value, asset.name, registry_name, return_dict=True)
-                    if final_version in registered_assets:
+                        asset.type.value, asset.name, registry_name)
+                    if final_version in [x['version'] for x in registered_assets]:
                         logger.print(f"Version already registered. Skipping publish for asset: {asset.name}")
                         continue
 
