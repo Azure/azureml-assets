@@ -14,7 +14,7 @@ from string import Template
 from subprocess import run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
-from typing import List, Union
+from typing import Dict, List, Union
 import azureml.assets as assets
 from azureml.assets.model.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
@@ -28,9 +28,10 @@ from azure.ai.ml.entities import Component, Environment, Model
 
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
+PROD_SYSTEM_REGISTRY = "azureml"
 PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
-REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/.+/environments/(.+)/(?:versions/(.+)|labels/(.+))")
+REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)/(?:versions/(.+)|labels/(.+))")
 BEARER = r"Bearer.*"
 
 
@@ -166,17 +167,28 @@ def validate_update_command_component(
     """
     env = component.environment
     match = None
-    for pattern in [REGISTRY_ENV_PATTERN, WORKSPACE_ASSET_PATTERN]:
-        if (match := pattern.match(env)) is not None:
-            break
+    if (match := REGISTRY_ENV_PATTERN.match(env)) is not None:
+        env_registry_name, env_name, env_version, env_label = (
+            match.group(1), match.group(2), match.group(3), match.group(4))
+    elif (match := WORKSPACE_ASSET_PATTERN.match(env)) is not None:
+        env_name, env_version, env_label = match.group(1), match.group(2), match.group(3)
 
     if not match:
         logger.print(f"Env ID doesn't match workspace or registry pattern in {asset.spec_with_path}")
         return False
 
-    # both ws and registry env follows the same grouping
-    env_name, env_version, env_label = match.group(1), match.group(2), match.group(3)
-    logger.print(f"Env name: {env_name}, version: {env_version}, label: {env_label}")
+    logger.print(
+        f"Env name: {env_name}, version: {env_version}, label: {env_label}, env_registry_name: {env_registry_name}"
+    )
+
+    if env_registry_name and env_registry_name != PROD_SYSTEM_REGISTRY and env_registry_name != registry_name:
+        logger.log_warning(
+            "Unexpected !!! Registry name for component's env URI must be either "
+            + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{env_registry_name}'"
+        )
+        return False
+
+    registry_name = registry_name if not env_registry_name else env_registry_name
 
     if env_label:
         # TODO: Add fetching env from label
@@ -186,16 +198,15 @@ def validate_update_command_component(
 
     env = None
     # Check if component's env is registered
-    registered_envs = get_registered_asset_versions(assets.AssetType.ENVIRONMENT.value, env_name, registry_name)
-    env = next((x for x in registered_envs if x['version'] in [env_version, final_version]), None)
+    for version in [env_version, final_version]:
+        env = get_registered_asset_details(assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name)
+        if env: break
 
     if not env:
         logger.print(f"Could not find a registered env for {component.name}. Please retry again!!!")
         return False
 
-    # TODO: Bug in env list, which does not give complete detail
-    # https://github.com/Azure/azure-sdk-for-python/issues/29248
-    env_id = f"azureml://registries/{registry_name}/environments/{env['name']}/versions/{env['version']}"
+    env_id = env["id"]
     logger.print(f"Updating component env to {env_id}")
     component.environment = env_id
     if not update_spec(component, spec_path):
@@ -267,24 +278,24 @@ def publish_asset(
         failure_list.append(asset)
 
 
-def get_registered_asset_versions(
+def get_registered_asset_details(
     asset_type: str,
     asset_name: str,
+    asset_version: str,
     registry_name: str,
-) -> List:
-    """Return list of registered asset versions."""
+) -> Dict:
+    """Return registered asset details."""
     cmd = [
-        "az", "ml", asset_type, "list",
+        "az", "ml", asset_type, "show",
         "--name", asset_name,
+        "--version", asset_version,
         "--registry-name", registry_name,
     ]
     result = run_command(cmd)
     if result.returncode != 0:
-        msg = f"Error in listing asset version. stdout:\n{result.stderr}"
-        logger.log_warning(msg)
-        raise Exception(msg)
-    registered_assets = json.loads(result.stdout)
-    return registered_assets
+        logger.log_warning(f"Error in fetching asset details. Error:\n{result.stderr}")
+        return None
+    return json.loads(result.stdout)
 
 
 def _str2bool(v: str) -> bool:
@@ -398,9 +409,7 @@ if __name__ == "__main__":
                 elif asset.type == assets.AssetType.MODEL:
                     # check if model is already registered
                     final_version = asset.version
-                    registered_assets = get_registered_asset_versions(
-                        asset.type.value, asset.name, registry_name)
-                    if final_version in [x['version'] for x in registered_assets]:
+                    if get_registered_asset_details(asset.type.value, asset.name, final_version, registry_name):
                         logger.print(f"Version already registered. Skipping publish for asset: {asset.name}")
                         continue
 
