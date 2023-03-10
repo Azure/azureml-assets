@@ -1,4 +1,4 @@
-FROM stable-ubuntu2004-cu117-py38-torch200:{{latest-image-tag}}
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch200:test_torch2_v1
 
 # Install pip dependencies
 COPY requirements.txt .
