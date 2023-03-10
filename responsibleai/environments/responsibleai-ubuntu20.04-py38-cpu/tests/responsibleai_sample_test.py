@@ -54,6 +54,29 @@ STD_LOG = Path("artifacts/user_logs/std_log.txt")
 #     assert mlflow_automl_rai_run.info.status == 'FINISHED'
 
 
+def verify_if_command_job_completed(ml_client, command_job):
+    """Verify if the command_job successfully completed."""
+    # Poll until final status is reached, or timed out
+    timeout = time.time() + (TIMEOUT_MINUTES * 60)
+    while time.time() <= timeout:
+        current_status = ml_client.jobs.get(command_job.name).status
+        if current_status in [JobStatus.COMPLETED, JobStatus.FAILED]:
+            break
+        time.sleep(30)  # sleep 30 seconds
+
+    if current_status == JobStatus.FAILED:
+        ml_client.jobs.download(command_job.name)
+        if STD_LOG.exists():
+            print(f"*** BEGIN {STD_LOG} ***")
+            with open(STD_LOG, "r") as f:
+                print(f.read(), end="")
+            print(f"*** END {STD_LOG} ***")
+        else:
+            ml_client.jobs.stream(command_job.name)
+
+    assert current_status == JobStatus.COMPLETED
+
+
 def test_responsibleai():
     """Tests a sample job using responsibleai image as the environment."""
     this_dir = Path(__file__).parent
@@ -94,26 +117,7 @@ def test_responsibleai():
 
     returned_job = ml_client.create_or_update(job)
     assert returned_job is not None
-
-    # Poll until final status is reached, or timed out
-    timeout = time.time() + (TIMEOUT_MINUTES * 60)
-    while time.time() <= timeout:
-        current_status = ml_client.jobs.get(returned_job.name).status
-        if current_status in [JobStatus.COMPLETED, JobStatus.FAILED]:
-            break
-        time.sleep(30)  # sleep 30 seconds
-
-    if current_status == JobStatus.FAILED:
-        ml_client.jobs.download(returned_job.name)
-        if STD_LOG.exists():
-            print(f"*** BEGIN {STD_LOG} ***")
-            with open(STD_LOG, "r") as f:
-                print(f.read(), end="")
-            print(f"*** END {STD_LOG} ***")
-        else:
-            ml_client.jobs.stream(returned_job.name)
-
-    assert current_status == "Completed"
+    verify_if_command_job_completed(ml_client, returned_job)
 
 
 def test_responsibleai_automl_regression():
@@ -162,27 +166,7 @@ def test_responsibleai_automl_regression():
 
     print(f"Created job: {returned_job}")
     assert returned_job is not None
-
-    # Poll until final status is reached, or timed out
-    timeout = time.time() + (TIMEOUT_MINUTES * 60)
-    while time.time() <= timeout:
-        current_status = ml_client.jobs.get(returned_job.name).status
-        if current_status in [JobStatus.COMPLETED, JobStatus.FAILED]:
-            break
-        time.sleep(30)  # sleep 30 seconds
-
-    if current_status == JobStatus.FAILED:
-        ml_client.jobs.download(returned_job.name)
-        if STD_LOG.exists():
-            print(f"*** BEGIN {STD_LOG} ***")
-            with open(STD_LOG, "r") as f:
-                print(f.read(), end="")
-            print(f"*** END {STD_LOG} ***")
-        else:
-            ml_client.jobs.stream(returned_job.name)
-
-    assert current_status == "Completed"
-    # verify_automl_rai_run(ml_client, returned_job)
+    verify_if_command_job_completed(ml_client, returned_job)
 
     # Submit an execution for AutoML child run
     env_name = "responsibleai"
@@ -214,23 +198,4 @@ def test_responsibleai_automl_regression():
 
     returned_job = ml_client.create_or_update(job)
     assert returned_job is not None
-
-    # Poll until final status is reached, or timed out
-    timeout = time.time() + (2* TIMEOUT_MINUTES * 60)
-    while time.time() <= timeout:
-        current_status = ml_client.jobs.get(returned_job.name).status
-        if current_status in [JobStatus.COMPLETED, JobStatus.FAILED]:
-            break
-        time.sleep(30)  # sleep 30 seconds
-
-    if current_status == JobStatus.FAILED:
-        ml_client.jobs.download(returned_job.name)
-        if STD_LOG.exists():
-            print(f"*** BEGIN {STD_LOG} ***")
-            with open(STD_LOG, "r") as f:
-                print(f.read(), end="")
-            print(f"*** END {STD_LOG} ***")
-        else:
-            ml_client.jobs.stream(returned_job.name)
-
-    assert current_status == "Completed"
+    verify_if_command_job_completed(ml_client, returned_job)
