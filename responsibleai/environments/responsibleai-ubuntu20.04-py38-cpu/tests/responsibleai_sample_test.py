@@ -2,8 +2,6 @@
 # Licensed under the MIT License.
 
 """Tests running a sample job in the responsibleai 0.22 environment."""
-# import mlflow
-# from mlflow.tracking.client import MlflowClient
 import os
 import time
 from pathlib import Path
