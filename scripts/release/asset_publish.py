@@ -199,8 +199,10 @@ def validate_update_command_component(
     env = None
     # Check if component's env is registered
     for version in [env_version, final_version]:
-        env = get_registered_asset_details(assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name)
-        if env: break
+        if (env := get_registered_asset_details(
+            assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name
+        )) is not None:
+            break
 
     if not env:
         logger.print(f"Could not find a registered env for {component.name}. Please retry again!!!")
