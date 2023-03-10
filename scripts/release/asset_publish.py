@@ -14,7 +14,7 @@ from string import Template
 from subprocess import run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
-from typing import Dict, List, Union
+from typing import List, Union
 import azureml.assets as assets
 from azureml.assets.model.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
