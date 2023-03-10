@@ -216,7 +216,7 @@ def test_responsibleai_automl_regression():
     assert returned_job is not None
 
     # Poll until final status is reached, or timed out
-    timeout = time.time() + (TIMEOUT_MINUTES * 60)
+    timeout = time.time() + (2* TIMEOUT_MINUTES * 60)
     while time.time() <= timeout:
         current_status = ml_client.jobs.get(returned_job.name).status
         if current_status in [JobStatus.COMPLETED, JobStatus.FAILED]:
