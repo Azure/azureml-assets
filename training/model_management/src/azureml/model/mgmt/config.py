@@ -51,6 +51,6 @@ class ModelSource(_CustomEnum):
 MODEL_CONTAINER_DICT = {
     ModelSource.HUGGING_FACE.value: {
         "base_uri": "https://huggingface.co/{}",
-        "path_type":  PathType.GIT
+        "path_type":  PathType.GIT.value
     }
 }
