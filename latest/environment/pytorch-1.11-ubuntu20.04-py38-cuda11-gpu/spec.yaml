@@ -4,7 +4,7 @@ description: >-
   DEPRECATED: Please use pytorch-1.11-cuda11.5 instead.
 
 name: "pytorch-1.11-ubuntu20.04-py38-cuda11-gpu"
-version: "17"
+version: "18"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
