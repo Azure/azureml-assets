@@ -167,6 +167,7 @@ def validate_update_command_component(
     """
     env = component.environment
     match = None
+    env_registry_name = None
     if (match := REGISTRY_ENV_PATTERN.match(env)) is not None:
         env_registry_name, env_name, env_version, env_label = (
             match.group(1), match.group(2), match.group(3), match.group(4))
