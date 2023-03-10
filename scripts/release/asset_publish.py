@@ -67,6 +67,13 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
+def sanitize_output(input: str) -> str:
+    """Return sanitized string."""
+    # Remove sensitive token
+    sanitized_output = re.sub(BEARER, "", input)
+    return sanitized_output
+
+
 def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) -> bool:
     """Update the yaml spec file with updated properties in asset.
 
@@ -226,13 +233,6 @@ def asset_publish_command(
     if debug_mode:
         cmd.append("--debug")
     return cmd
-
-
-def sanitize_output(out: str):
-    """Sanitize output."""
-    # Remove sensitive token    
-    sanitized_output = re.sub(BEARER, "", out)
-    return sanitized_output
 
 
 def publish_asset(
