@@ -182,7 +182,7 @@ def validate_update_command_component(
         f"Env name: {env_name}, version: {env_version}, label: {env_label}, env_registry_name: {env_registry_name}"
     )
 
-    if env_registry_name and env_registry_name != PROD_SYSTEM_REGISTRY and env_registry_name != registry_name:
+    if env_registry_name and env_registry_name not in [PROD_SYSTEM_REGISTRY, registry_name]:
         logger.log_warning(
             "Unexpected !!! Registry name for component's env URI must be either "
             + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{env_registry_name}'"
