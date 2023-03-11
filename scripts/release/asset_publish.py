@@ -189,7 +189,7 @@ def validate_update_command_component(
         )
         return False
 
-    registry_name = registry_name if not env_registry_name else env_registry_name
+    registry_name = env_registry_name or registry_name
 
     if env_label:
         # TODO: Add fetching env from label
