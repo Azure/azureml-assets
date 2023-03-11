@@ -173,8 +173,7 @@ def validate_update_command_component(
             match.group(1), match.group(2), match.group(3), match.group(4))
     elif (match := WORKSPACE_ASSET_PATTERN.match(env)) is not None:
         env_name, env_version, env_label = match.group(1), match.group(2), match.group(3)
-
-    if not match:
+    else:
         logger.print(f"Env ID doesn't match workspace or registry pattern in {asset.spec_with_path}")
         return False
 
