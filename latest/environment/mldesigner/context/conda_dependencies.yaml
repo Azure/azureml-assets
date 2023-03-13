@@ -8,3 +8,4 @@ dependencies:
   - azure-ai-ml==1.4.0
   - azureml-mlflow==1.49.0
   - mldesigner==0.1.0b11
+  - cryptography==39.0.1
