@@ -5,7 +5,7 @@ description: Trains an instance segmentation model. [Learn More](https://aka.ms/
 
 name: train_instance_segmentation_model
 display_name: Train Instance Segmentation Model (Private Preview)
-version: 0.0.1
+version: 0.0.2
 
 inputs:
   training_data:
