@@ -15,6 +15,7 @@ from azure.ai.ml.entities import (
 from azure.identity import ManagedIdentityCredential
 from azureml.core import Run
 
+
 def parse_args():
     """Return arguments."""
     parser = argparse.ArgumentParser()
@@ -84,11 +85,13 @@ def parse_args():
         parser.error("Arg max_queue_wait_ms cannot be less than 1")
     return args
 
+
 def get_endpoint(args):
     """Return online or batch endpoint."""
     endpoint = ManagedOnlineEndpoint(name=args.endpoint_name, auth_mode="key")
     print("Endpoint created with name ", endpoint.name)
     return endpoint
+
 
 def get_ml_client():
     """Return ML client."""
@@ -105,6 +108,7 @@ def get_ml_client():
         workspace_name=ws._workspace_name,
     )
     return ml_client
+
 
 def main(args):
     """Run main function."""
@@ -147,6 +151,7 @@ def main(args):
     json_object = json.dumps(deployment_details, indent=4)
     with open(args.model_deployment_details, "w") as outfile:
         outfile.write(json_object)
+
 
 # run script
 if __name__ == "__main__":
