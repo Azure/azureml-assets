@@ -1,0 +1,9 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/openai-whisper-large/240e349/mlflow_model_folder
+publish:
+  task_name: automatic-speech-recognition
+  type: mlflow_model
+  

@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+description: View model card at [HuggingFace](https://huggingface.co/openai/whisper-large)
+name: openai-whisper-large
+path: ./
+properties:
+  commit_hash: 240e3491a13ae8df4bd1c09cde455adae26c1ad5
+  language: English, Chinese, German, Spanish, Russian, Sanskrit and 93 more
+  license: apache-2.0
+  finetuning-tasks: automatic-speech-recognition
+tags:
+  hub: HuggingFace
+  task: automatic-speech-recognition
+version: 1
