@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/distilbert-base-uncased/1c4513b/mlflow_model_folder
+publish:
+  type: mlflow_model
+  task_name: fill-mask

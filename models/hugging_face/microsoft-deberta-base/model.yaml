@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/microsoft-deberta-base/0d1b43c/mlflow_model_folder
+publish:
+  task_name: fill-mask
+  type: mlflow_model

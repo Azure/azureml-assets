@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/finiteautomata-bertweet-base-sentiment-analysis/cf6b0f6/mlflow_model_folder
+publish:
+  task_name: text-classification
+  type: mlflow_model

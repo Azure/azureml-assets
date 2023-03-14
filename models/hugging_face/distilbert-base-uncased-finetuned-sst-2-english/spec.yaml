@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+description: View model card at [HuggingFace](https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english)
+name: distilbert-base-uncased-finetuned-sst-2-english
+path: ./
+properties:
+  commit_hash: da4550f
+  language: English
+  license: apache-2.0
+  finetuning-tasks: text-classification, token-classification, question-answering
+tags:
+  hub: HuggingFace
+  task: text-classification
+version: 3

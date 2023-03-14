@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/gpt2-large/e5ab12c/mlflow_model_folder
+publish:
+  task_name: text-generation
+  type: mlflow_model

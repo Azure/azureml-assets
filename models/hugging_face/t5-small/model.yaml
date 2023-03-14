@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/t5-small/d78aea1/mlflow_model_folder
+publish:
+  task_name: translation
+  type: mlflow_model

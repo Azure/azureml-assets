@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+description: View model card at [HuggingFace](https://huggingface.co/t5-base)
+name: t5-base
+path: ./
+properties:
+  commit_hash: 23aa4f4
+  language: English, French, German, Romanian
+  license: apache-2.0
+  finetuning-tasks: summarization, translation
+tags:
+  hub: HuggingFace
+  task: translation
+version: 4

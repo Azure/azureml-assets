@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/distilbert-base-uncased-finetuned-sst-2-english/da4550f/mlflow_model_folder
+publish:
+  task_name: text-classification
+  type: mlflow_model

@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+description: View model card at [HuggingFace](https://huggingface.co/roberta-large-mnli)
+name: roberta-large-mnli
+path: ./
+properties:
+  commit_hash: 0dcbcf2
+  language: English
+  license: mit
+  finetuning-tasks: text-classification, token-classification, question-answering
+tags:
+  hub: HuggingFace
+  task: text-classification
+version: 3

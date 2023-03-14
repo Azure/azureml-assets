@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/Jean-Baptiste-camembert-ner/9f8b220/mlflow_model_folder
+publish:
+  task_name: token-classification
+  type: mlflow_model

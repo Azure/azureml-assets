@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/facebook-bart-large-cnn/45b6053/mlflow_model_folder
+publish:
+  task_name: summarization
+  type: mlflow_model

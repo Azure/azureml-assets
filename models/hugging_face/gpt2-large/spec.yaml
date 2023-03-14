@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+description: View model card at [HuggingFace](https://huggingface.co/gpt2-large)
+name: gpt2-large
+path: ./
+properties:
+  commit_hash: e5ab12c
+  language: English
+  license: mit
+  finetuning-tasks: text-classification, token-classification
+tags:
+  hub: HuggingFace
+  task: text-generation
+version: 3

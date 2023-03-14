@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/camembert-base/3f452b6/mlflow_model_folder
+publish:
+  task_name: fill-mask
+  type: mlflow_model

@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+description: View model card at [HuggingFace](https://huggingface.co/facebook/bart-large-cnn)
+name: facebook-bart-large-cnn
+path: ./
+properties:
+  commit_hash: 45b6053
+  language: English
+  license: mit
+  finetuning-tasks: summarization
+tags:
+  hub: HuggingFace
+  task: summarization
+version: 3

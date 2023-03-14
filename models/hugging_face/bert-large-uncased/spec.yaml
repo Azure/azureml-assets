@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+description: View model card at [HuggingFace](https://huggingface.co/bert-large-uncased)
+name: bert-large-uncased
+path: ./
+properties:
+  commit_hash: 80792f8
+  language: English
+  license: apache-2.0
+  finetuning-tasks: text-classification, token-classification, question-answering
+tags:
+  hub: HuggingFace
+  task: fill-mask
+version: 3

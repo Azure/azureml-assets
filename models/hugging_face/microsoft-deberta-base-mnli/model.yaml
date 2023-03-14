@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/microsoft-deberta-base-mnli/a80a6eb/mlflow_model_folder
+publish:
+  task_name: text-classification
+  type: mlflow_model

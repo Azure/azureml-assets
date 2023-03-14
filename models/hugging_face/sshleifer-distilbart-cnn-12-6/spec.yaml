@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+description: View model card at [HuggingFace](https://huggingface.co/sshleifer/distilbart-cnn-12-6)
+name: sshleifer-distilbart-cnn-12-6
+path: ./
+properties:
+  commit_hash: a4f8f3e
+  language: English
+  license: apache-2.0
+  finetuning-tasks: summarization
+tags:
+  hub: HuggingFace
+  task: summarization
+version: 3

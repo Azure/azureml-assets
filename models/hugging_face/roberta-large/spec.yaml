@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+description: View model card at [HuggingFace](https://huggingface.co/roberta-large)
+name: roberta-large
+path: ./
+properties:
+  commit_hash: 5069d8a
+  language: English
+  license: mit
+  finetuning-tasks: text-classification, token-classification, question-answering
+tags:
+  hub: HuggingFace
+  task: fill-mask
+version: 3

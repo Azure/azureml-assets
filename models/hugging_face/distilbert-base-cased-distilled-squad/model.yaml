@@ -1,0 +1,8 @@
+path:
+  type: azureblob
+  storage_name: automlcesdkdataresources
+  container_name: models
+  container_path: HuggingFace/distilbert-base-cased-distilled-squad/ab869c3/mlflow_model_folder
+publish:
+  task_name: question-answering
+  type: mlflow_model

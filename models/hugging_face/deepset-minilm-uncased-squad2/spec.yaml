@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+
+description: View model card at [HuggingFace](https://huggingface.co/deepset/minilm-uncased-squad2)
+name: deepset-minilm-uncased-squad2
+path: ./
+properties:
+  commit_hash: b836be0
+  language: English
+  license: cc-by-4.0
+  finetuning-tasks: text-classification, token-classification, question-answering
+tags:
+  hub: HuggingFace
+  task: question-answering
+version: 3
