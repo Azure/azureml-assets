@@ -484,7 +484,6 @@ class PdfDataGen:
         fairness_config = self.config["Fairness"]
         fm = {}
         dataset = self.data.get_test()
-        dataset_len = len(dataset)
 
         for sensitive_feature in fairness_config["sensitive_features"]:
             fm[sensitive_feature] = {}
@@ -539,7 +538,7 @@ class PdfDataGen:
 
             si_index = 0
             for k, v in feature_statistics.items():
-                filtermap = self.data.get_test()[f] == k
+                filtermap = self.data.get_test()[sensitive_feature] == k
                 cohort_data = self.data.get_cohort_data(filtermap)
                 cohort_data["short_label"] = short_labels[si_index]
                 cohort_data["pos_label"] = self.pos_label
