@@ -11,4 +11,4 @@ properties:
 tags:
   hub: HuggingFace
   task: fill-mask
-version: 3
+version: 1

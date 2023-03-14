@@ -11,4 +11,4 @@ properties:
 tags:
   hub: HuggingFace
   task: text-classification
-version: 3
+version: 1

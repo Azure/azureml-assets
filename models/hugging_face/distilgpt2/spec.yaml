@@ -11,4 +11,4 @@ properties:
 tags:
   hub: HuggingFace
   task: text-generation
-version: 3
+version: 1

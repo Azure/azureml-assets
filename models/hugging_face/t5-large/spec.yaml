@@ -11,4 +11,4 @@ properties:
 tags:
   hub: HuggingFace
   task: translation
-version: 4
+version: 1

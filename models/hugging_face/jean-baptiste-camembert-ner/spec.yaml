@@ -11,4 +11,4 @@ properties:
 tags:
   hub: HuggingFace
   task: token-classification
-version: 3
+version: 1
