@@ -1,0 +1,77 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: deploy_model
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Deploy model
+description:
+  Deploy a model to a workspace. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
+
+environment: azureml:python-sdk-v2:1
+
+code: ../../src/model_deployment
+command: >-
+  python deploy.py
+  --registration_details ${{inputs.registration_details}}
+  --endpoint_name ${{inputs.endpoint_name}}
+  --deployment_name ${{inputs.deployment_name}}
+  --instance_type ${{inputs.instance_type}}
+  --instance_count ${{inputs.instance_count}}
+  $[[--max_concurrent_requests_per_instance ${{inputs.max_concurrent_requests_per_instance}}]] 
+  $[[--request_timeout_ms ${{inputs.request_timeout_ms}}]]
+  $[[--max_queue_wait_ms ${{inputs.max_queue_wait_ms}}]]
+  --model_deployment_details ${{outputs.model_deployment_details}}
+
+inputs:
+  # Output of registering component
+  registration_details:
+    type: uri_file
+    optional: false
+    description: Text file that contains the ID of registered model to be deployed
+
+  endpoint_name:
+    type: string
+    optional: false
+    description: Name of the endpoint
+
+  deployment_name:
+    type: string
+    optional: false
+    description: Name of the deployment
+  
+  instance_type:
+    type: string
+    optional: true
+    default: Standard_F8s_v2
+    description: Compute instance type to deploy model
+
+  instance_count:
+    type: integer
+    optional: true
+    default: 1
+    description: Number of instances you want to use for deployment
+
+  max_concurrent_requests_per_instance:
+    type: integer
+    default: 1
+    optional: true
+    description: Maximum concurrent requests to be handled per instance
+
+  request_timeout_ms:
+    type: integer
+    default: 5000
+    optional: true
+    description: Request timeout in ms. Max limit is 90000.
+
+  max_queue_wait_ms:
+    type: integer
+    default: 500
+    optional: true
+    description: Maximum queue wait time of a request in ms
+
+outputs:
+  model_deployment_details:
+    type: uri_file
+    description: Json file to which deployment details will be written
