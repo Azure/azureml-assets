@@ -7,7 +7,6 @@ import pandas as pd
 import logging
 
 from responsibleai import RAIInsights
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import ndcg_score
 from ml_wrappers.model.predictions_wrapper import (
     PredictionsModelWrapperClassification,
@@ -45,12 +44,12 @@ def create_lightgbm_model(X, y, task_type):
     Returns:
        An appropriate model.
     """
-    if(task_type == "classification"): 
-         lgbm = LGBMClassifier(boosting_type='gbdt', learning_rate=0.1,
-                          max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
+    if (task_type == "classification"): 
+        lgbm = LGBMClassifier(boosting_type='gbdt', learning_rate=0.1,
+                              max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
     else: 
         lgbm = LGBMRegressor(boosting_type='gbdt', learning_rate=0.1,
-                         max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
+                            max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
     model = lgbm.fit(X, y)
     
     _logger.info("Created lightgbm model")
@@ -59,7 +58,7 @@ def create_lightgbm_model(X, y, task_type):
 
 def get_model_wrapper(task_type, target_column, baseline_df, production_df):
     """Create model wrapper using ml-wrappers on which to calculate feature importances
-    
+
     Args:
       task_type: str, The task type (regression or classification) of the resulting model
       target_column: str, the column to predict
@@ -86,7 +85,7 @@ def get_model_wrapper(task_type, target_column, baseline_df, production_df):
         all_data = pd.concat([x_test, x_train])
         model_predict = model.predict(all_data)
         model_wrapper = PredictionsModelWrapperRegression(all_data, model_predict)
-    
+
     _logger.info("Created ml wrapper")
     return model_wrapper
 
@@ -141,7 +140,7 @@ def calculate_attribution_drift(baseline_explanations, production_explanations):
     Args:
       baseline_explanations: list of explanations calculated using the baseline dataframe
       production_explanations: list of explanations calculated using the production dataframe
-      
+ 
     Returns:
       float: the ndcg metric between the baseline and production data
     """
@@ -161,7 +160,7 @@ def compute_attribution_drift(task_type, target_column, baseline_df, production_
       target_column: str, the column to predict
       baseline_df: The baseline dataframe
       production_df: The production dataframe
-      
+
     Returns:
       float: the ndcg metric between the baseline and production data
     """

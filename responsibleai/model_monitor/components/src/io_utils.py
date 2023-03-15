@@ -6,6 +6,7 @@
 import mltable
 import pandas as pd
 
+
 def load_mltable_to_df(mltable_path: str) -> pd.DataFrame:
     """Load MLTable into a DataFrame.
 
