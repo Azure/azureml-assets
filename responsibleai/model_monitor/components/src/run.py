@@ -4,13 +4,11 @@
 """Entry script for Data Drift Compute Histogram Component."""
 
 import argparse
-import os
-import uuid
 import logging
 from calculate_attribution import compute_attribution_drift
 from io_utils import load_mltable_to_df
 
-from tabular.components.src._telemetry._loggerfactory import _LoggerFactory, track
+from tabular.components.src._telemetry._loggerfactory import _LoggerFactory
 
 _logger = logging.getLogger(__file__)
 _ai_logger = None
@@ -22,7 +20,9 @@ def _get_logger():
         _ai_logger = _LoggerFactory.get_logger(__file__)
     return _ai_logger
 
+
 _get_logger()
+
 
 def parse_args():
     # Parse arguments

@@ -3,11 +3,10 @@
 
 """This file contains the core logic for feature attribution drift component."""
 import numpy as np
-import mltable
 import pandas as pd
+import logging
 
 from responsibleai import RAIInsights
-from sklearn.datasets import  load_diabetes
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import ndcg_score
 from ml_wrappers.model.predictions_wrapper import (
@@ -19,7 +18,7 @@ try:
 except ImportError:
     pass
 
-from tabular.components.src._telemetry._loggerfactory import _LoggerFactory, track
+from tabular.components.src._telemetry._loggerfactory import _LoggerFactory
 
 _logger = logging.getLogger(__file__)
 _ai_logger = None
@@ -30,6 +29,7 @@ def _get_logger():
     if _ai_logger is None:
         _ai_logger = _LoggerFactory.get_logger(__file__)
     return _ai_logger
+
 
 _get_logger()
 
@@ -75,20 +75,21 @@ def get_model_wrapper(task_type, target_column, baseline_df, production_df):
     model = create_lightgbm_model(x_train, y_train, task_type)
 
     if task_type == 'classification':
-      all_data = pd.concat([x_test, x_train])
-      model_predict = model.predict(all_data)
-      model_predict_proba = model.predict_proba(all_data)
-      model_wrapper = PredictionsModelWrapperClassification(
+        all_data = pd.concat([x_test, x_train])
+        model_predict = model.predict(all_data)
+        model_predict_proba = model.predict_proba(all_data)
+        model_wrapper = PredictionsModelWrapperClassification(
             all_data,
             model_predict,
             model_predict_proba)
     else:
-      all_data = pd.concat([x_test, x_train])
-      model_predict = model.predict(all_data)
-      model_wrapper = PredictionsModelWrapperRegression(all_data, model_predict)
+        all_data = pd.concat([x_test, x_train])
+        model_predict = model.predict(all_data)
+        model_wrapper = PredictionsModelWrapperRegression(all_data, model_predict)
     
     _logger.info("Created ml wrapper")
     return model_wrapper
+
 
 def compute_categorical_features(baseline_df, target_column):
     """Compute which features are categorical based on data type of the columns.
@@ -107,6 +108,7 @@ def compute_categorical_features(baseline_df, target_column):
             categorical_features.append(baseline_column.name)
     _logger.info("Successfully categorized columns")
     return categorical_features
+
 
 def compute_explanations(model_wrapper, df, categorical_features, target_column, task_type):
     """Compute explanations (feature importances) for a given dataset
