@@ -157,7 +157,7 @@ class Config:
 
 
 class ComponentType(Enum):
-    """Enum for path types supported for model publishing."""
+    """Enum for component types."""
 
     PIPELINE = "component"  # A pipeline component which allows multi-stage jobs.
     PARALLEL = "parallel" # A parallel component, aka PRSv2.
