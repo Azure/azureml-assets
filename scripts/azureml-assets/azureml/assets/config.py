@@ -156,6 +156,13 @@ class Config:
         return [path]
 
 
+class ComponentType(Enum):
+    """Enum for path types supported for model publishing."""
+
+    PIPELINE = "component"  # A pipeline component which allows multi-stage jobs.
+    PARALLEL = "parallel" # A parallel component, aka PRSv2.
+    COMMAND = "command" # A command component.
+
 class Spec(Config):
     """Load and access spec file properties.
 
@@ -220,6 +227,9 @@ class Spec(Config):
     @property
     def code_dir(self) -> str:
         """Component code directory."""
+        if(self._yaml.get('type') == ComponentType.PARALLEL):
+            task = self._yaml.get('task')
+            return None if task is None else task.get('code')
         return self._yaml.get('code')
 
     @property
