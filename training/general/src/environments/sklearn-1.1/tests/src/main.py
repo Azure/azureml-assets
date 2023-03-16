@@ -12,7 +12,7 @@ from sklearn.model_selection import train_test_split
 
 # define functions
 def main(args):
-    """Run and evaluate model"""
+    """Run and evaluate model."""
     # enable auto logging
     mlflow.autolog()
     # setup parameters
@@ -30,6 +30,7 @@ def main(args):
     model = train_model(params, X_train, X_test, y_train, y_test)
 
     print(model)
+
 
 def process_data(df, random_state):
     """Process data."""
