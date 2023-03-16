@@ -228,7 +228,8 @@ class Spec(Config):
     @property
     def code_dir(self) -> str:
         """Component code directory."""
-        if(self._yaml.get('type') == ComponentType.PARALLEL):
+        if(self._yaml.get('type') == ComponentType.PARALLEL.value):
+
             task = self._yaml.get('task')
             return None if task is None else task.get('code')
         return self._yaml.get('code')
