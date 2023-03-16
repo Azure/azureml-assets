@@ -37,8 +37,8 @@ def create_lightgbm_model(X, y, task_type):
     """Create model on which to calculate feature importances
 
     Args:
-      X: list of x values (data excluding target columns)
-      y: list y values (target column data)
+      X: pandas dataframe of x values (data excluding target columns)
+      y: nparray of y values (target column data)
       task_type: str, the task type (regression or classification) of the resulting model
 
     Returns:
@@ -52,69 +52,70 @@ def create_lightgbm_model(X, y, task_type):
                             max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
     model = lgbm.fit(X, y)
     
-    _logger.info("Created lightgbm model")
+    _logger.info("Created lightgbm model using task_type: {0}".format(task_type))
     return model
 
 
-def get_model_wrapper(task_type, target_column, baseline_df, production_df):
+def get_model_wrapper(task_type, target_column, baseline_dataframe, production_dataframe):
     """Create model wrapper using ml-wrappers on which to calculate feature importances
 
     Args:
       task_type: str, The task type (regression or classification) of the resulting model
       target_column: str, the column to predict
-      baseline_df: The baseline dataframe
-      production_df: The production dataframe
+      baseline_dataframe: The baseline dataframe meaning the dataframe used to create the
+      model monitor
+      production_dataframe: The production dataframe meaning the most recent set of data
+      sent to the model monitor, the current set of data
 
     Returns:
        An appropriate model wrapper
     """
-    y_train = baseline_df[target_column]
-    x_train = baseline_df.drop([target_column], axis=1)
-    x_test = production_df.drop([target_column], axis=1)
+    y_train = baseline_dataframe[target_column]
+    x_train = baseline_dataframe.drop([target_column], axis=1)
+    x_test = production_dataframe.drop([target_column], axis=1)
     model = create_lightgbm_model(x_train, y_train, task_type)
+    all_data = pd.concat([x_test, x_train])
+    model_predict = model.predict(all_data)
 
     if task_type == 'classification':
-        all_data = pd.concat([x_test, x_train])
-        model_predict = model.predict(all_data)
         model_predict_proba = model.predict_proba(all_data)
         model_wrapper = PredictionsModelWrapperClassification(
             all_data,
             model_predict,
             model_predict_proba)
     else:
-        all_data = pd.concat([x_test, x_train])
-        model_predict = model.predict(all_data)
         model_wrapper = PredictionsModelWrapperRegression(all_data, model_predict)
 
     _logger.info("Created ml wrapper")
     return model_wrapper
 
 
-def compute_categorical_features(baseline_df, target_column):
+def compute_categorical_features(baseline_dataframe, target_column):
     """Compute which features are categorical based on data type of the columns.
 
     Args:
-      baseline_df: The baseline dataframe
+      baseline_dataframe: The baseline dataframe meaning the dataframe used to create the
+      model monitor
       target_column: str, the column to predict
 
     Returns:
       list: A list of categorical features.
     """
     categorical_features = []
-    for column in baseline_df.columns:
-        baseline_column = pd.Series(baseline_df[column])
+    for column in baseline_dataframe.columns:
+        baseline_column = pd.Series(baseline_dataframe[column])
         if baseline_column.dtype.name == 'object' and baseline_column.name != target_column:
             categorical_features.append(baseline_column.name)
     _logger.info("Successfully categorized columns")
     return categorical_features
 
 
-def compute_explanations(model_wrapper, df, categorical_features, target_column, task_type):
+def compute_explanations(model_wrapper, dataframe, categorical_features, target_column, task_type):
     """Compute explanations (feature importances) for a given dataset
 
     Args:
       model_wrapper: wrapper around a model that can be used to calculate explanations
-      df: The dataframe
+      dataframe: The dataframe
       categorical_features: list of categorical features not including the target column
       target_column: str, the column to predict
       task_type: str, the task type (regression or classification) of the resulting model
@@ -122,9 +123,9 @@ def compute_explanations(model_wrapper, df, categorical_features, target_column,
     Returns:
       list: A list of explanations.
     """
-    # Create the RAI Insights object, use either baseline as train and test data
+    # Create the RAI Insights object, use baseline as train and test data
     rai_i: RAIInsights = RAIInsights(
-        model_wrapper, df, df, target_column, task_type, categorical_features=categorical_features
+        model_wrapper, dataframe, dataframe, target_column, task_type, categorical_features=categorical_features
     )
 
     # Add the explanation and compute
@@ -151,27 +152,31 @@ def calculate_attribution_drift(baseline_explanations, production_explanations):
     return feature_attribution_drift
 
 
-def compute_attribution_drift(task_type, target_column, baseline_df, production_df):
+def compute_attribution_drift(task_type, target_column, baseline_dataframe, production_dataframe):
     """Compute feature attribution drift by calculating feature importances on each 
     dataframe input and using these to calculate the ndcg metric
 
     Args:
       task_type: str, the task type (regression or classification) of the resulting model
       target_column: str, the column to predict
-      baseline_df: The baseline dataframe
-      production_df: The production dataframe
+      baseline_dataframe: The baseline dataframe meaning the dataframe used to create the
+      model monitor
+      production_dataframe: The production dataframe meaning the most recent set of data
+      sent to the model monitor, the current set of data
 
     Returns:
       float: the ndcg metric between the baseline and production data
     """
-    model_wrapper = get_model_wrapper(task_type, target_column, baseline_df, production_df)
+    if(baseline_dataframe)
 
-    categorical_features = compute_categorical_features(baseline_df, target_column)
+    model_wrapper = get_model_wrapper(task_type, target_column, baseline_dataframe, production_dataframe)
 
-    baseline_explanations = compute_explanations(model_wrapper, baseline_df, categorical_features, target_column, task_type)
+    categorical_features = compute_categorical_features(baseline_dataframe, target_column)
+
+    baseline_explanations = compute_explanations(model_wrapper, baseline_dataframe, categorical_features, target_column, task_type)
     _logger.info("Successfully computed explanations for baseline dataset")
 
-    production_explanations = compute_explanations(model_wrapper, production_df, categorical_features, target_column, task_type)
-    _logger.info("Successfully computed explanations for productiond dataset")
+    production_explanations = compute_explanations(model_wrapper, production_dataframe, categorical_features, target_column, task_type)
+    _logger.info("Successfully computed explanations for production dataset")
 
     return calculate_attribution_drift(baseline_explanations, production_explanations)

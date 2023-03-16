@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""This file contains utilities to read write data."""
+"""This file contains utilities to read data."""
 
 import mltable
 import pandas as pd

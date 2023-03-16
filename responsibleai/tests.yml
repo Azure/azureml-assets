@@ -1,3 +1,10 @@
+model_monitor_rai:
+  includes:
+    - "./model_monitoring/jobs/"
+  jobs:
+    raivisioninsight_pipeline:
+      pre: "./model_monitoring/jobs/prepare.py"
+      job: ./model_monitoring/jobs/pipeline_iris_analyze.yml"
 tabular_rai_insight:
   includes:
     - "./tabular/jobs/"
