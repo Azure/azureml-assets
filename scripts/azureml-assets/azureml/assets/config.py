@@ -159,7 +159,7 @@ class Config:
 class ComponentType(Enum):
     """Enum for component types."""
 
-    PIPELINE = "component"  # A pipeline component which allows multi-stage jobs.
+    PIPELINE = "pipeline"  # A pipeline component which allows multi-stage jobs.
     PARALLEL = "parallel" # A parallel component, aka PRSv2.
     COMMAND = "command" # A command component.
 
