@@ -163,6 +163,7 @@ class ComponentType(Enum):
     PARALLEL = "parallel" # A parallel component, aka PRSv2.
     COMMAND = "command" # A command component.
 
+
 class Spec(Config):
     """Load and access spec file properties.
 
