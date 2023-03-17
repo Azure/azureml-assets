@@ -22,4 +22,5 @@ tags:
   Python: "3.8"
   DeepSpeed: "0.7.3"
   ONNXRuntime: "1.11.1"
+  Checkpointing:Nebula: "0.15.9 (Preview)"
 
