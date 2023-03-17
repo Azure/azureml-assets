@@ -6,10 +6,10 @@ import os
 import pandas as pd
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
-import mltable
 
 
 data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'resources')
+
 
 def fetch_and_write_iris_dataset():
     baseline_path = os.path.join(data_dir, "iris_baseline")
@@ -19,7 +19,7 @@ def fetch_and_write_iris_dataset():
     target_feature = "target"
     data_df = pd.DataFrame(data.data, columns=data.feature_names)
 
-    # use train_test_split to split dataset into baseline and production 
+    # use train_test_split to split dataset into baseline and production
     X_baseline, X_production, y_baseline, y_production = train_test_split(
         data_df, data.target, test_size=0.5, random_state=7
     )
@@ -34,5 +34,6 @@ def fetch_and_write_iris_dataset():
     production_data.to_parquet(os.path.join(production_data, "iris_production.parquet"), index=False)
 
     return baseline_path, production_path
+
 
 fetch_and_write_iris_dataset()

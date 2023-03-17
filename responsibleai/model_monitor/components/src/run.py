@@ -23,6 +23,7 @@ def _get_logger():
 
 _get_logger()
 
+
 def parse_args():
     # Parse arguments
     parser = argparse.ArgumentParser()

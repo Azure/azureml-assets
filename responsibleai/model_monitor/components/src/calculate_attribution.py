@@ -45,14 +45,14 @@ def create_lightgbm_model(X, y, task_type):
     Returns:
        An appropriate model.
     """
-    if (task_type == "classification"): 
+    if (task_type == "classification"):
         lgbm = LGBMClassifier(boosting_type='gbdt', learning_rate=0.1,
                               max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
-    else: 
+    else:
         lgbm = LGBMRegressor(boosting_type='gbdt', learning_rate=0.1,
-                            max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
+                             max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
     model = lgbm.fit(X, y)
-    
+
     _logger.info("Created lightgbm model using task_type: {0}".format(task_type))
     return model
 
@@ -142,7 +142,7 @@ def calculate_attribution_drift(baseline_explanations, production_explanations):
     Args:
       baseline_explanations: list of explanations calculated using the baseline dataframe
       production_explanations: list of explanations calculated using the production dataframe
- 
+
     Returns:
       float: the ndcg metric between the baseline and production data
     """
@@ -153,7 +153,7 @@ def calculate_attribution_drift(baseline_explanations, production_explanations):
 
 
 def compute_attribution_drift(task_type, target_column, baseline_dataframe, production_dataframe):
-    """Compute feature attribution drift by calculating feature importances on each 
+    """Compute feature attribution drift by calculating feature importances on each
     dataframe input and using these to calculate the ndcg metric
 
     Args:
@@ -167,9 +167,9 @@ def compute_attribution_drift(task_type, target_column, baseline_dataframe, prod
     Returns:
       float: the ndcg metric between the baseline and production data
     """
-    
+
     if len(baseline_dataframe.columns.difference(production_dataframe.columns)) > 0:
-      raise UserErrorException("Dataset columns differ in baseline and production datasets")
+        raise UserErrorException("Dataset columns differ in baseline and production datasets")
 
     model_wrapper = get_model_wrapper(task_type, target_column, baseline_dataframe, production_dataframe)
 
