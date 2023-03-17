@@ -11,8 +11,8 @@ inputs:
   production_data:
     type: mltable
 outputs:
-  explanation_data_path:
-    type: uri_folder
+  normalized_discounted_cumulative_gain:
+    type: mltable
 code: ./
 environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/10
 resources:
@@ -20,4 +20,3 @@ resources:
 command: python run.py
   --baseline_data ${{inputs.baseline_data}}
   --production_data ${{inputs.production_data}}
-  --output_data_path ${{outputs.output_data_path}}

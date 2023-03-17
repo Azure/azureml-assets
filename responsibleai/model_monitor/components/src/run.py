@@ -23,15 +23,11 @@ def _get_logger():
 
 _get_logger()
 
-
 def parse_args():
     # Parse arguments
     parser = argparse.ArgumentParser()
-    # parser.add_argument("--class_names", type=str)
-    # parser.add_argument("--task_type", type=str)
     parser.add_argument("--baseline_data", type=str)
     parser.add_argument("--production_data", type=str)
-    parser.add_argument('--output_data_path', type=str)
 
     args = parser.parse_args()
 

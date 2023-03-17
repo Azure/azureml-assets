@@ -11,6 +11,7 @@ from sklearn.metrics import ndcg_score
 from ml_wrappers.model.predictions_wrapper import (
     PredictionsModelWrapperClassification,
     PredictionsModelWrapperRegression)
+from azureml.exceptions import UserErrorException
 
 try:
     from lightgbm import LGBMClassifier, LGBMRegressor
@@ -121,18 +122,18 @@ def compute_explanations(model_wrapper, dataframe, categorical_features, target_
       task_type: str, the task type (regression or classification) of the resulting model
 
     Returns:
-      list: A list of explanations.
+      list: A list of explanation scores
     """
     # Create the RAI Insights object, use baseline as train and test data
     rai_i: RAIInsights = RAIInsights(
         model_wrapper, dataframe, dataframe, target_column, task_type, categorical_features=categorical_features
     )
 
-    # Add the explanation and compute
+    # Add the global explanations using batching to allow for larger input data sizes
     rai_i.explainer.add()
-    rai_i.compute()
-
-    return rai_i.explainer._explanation.global_importance_values
+    evaluation_data = dataframe.drop([target_column], axis=1)
+    explanationData = rai_i.explainer.request_explanations(local=False, data=evaluation_data)
+    return explanationData.precomputedExplanations.globalFeatureImportance['scores']
 
 
 def calculate_attribution_drift(baseline_explanations, production_explanations):
@@ -148,7 +149,6 @@ def calculate_attribution_drift(baseline_explanations, production_explanations):
     true_relevance = np.asarray([baseline_explanations])
     relevance_score = np.asarray([production_explanations])
     feature_attribution_drift = ndcg_score(true_relevance, relevance_score)
-    print(feature_attribution_drift)
     return feature_attribution_drift
 
 
@@ -167,7 +167,9 @@ def compute_attribution_drift(task_type, target_column, baseline_dataframe, prod
     Returns:
       float: the ndcg metric between the baseline and production data
     """
-    if(baseline_dataframe)
+    
+    if len(baseline_dataframe.columns.difference(production_dataframe.columns)) > 0:
+      raise UserErrorException("Dataset columns differ in baseline and production datasets")
 
     model_wrapper = get_model_wrapper(task_type, target_column, baseline_dataframe, production_dataframe)
 
