@@ -3,14 +3,16 @@
 
 import json
 import os
-
+import shutil
 import torch
+
 from azureml.automl.core.shared import log_server, logging_utilities
 from azureml.automl.core.shared.constants import MLTableDataLabel, MLTableLiterals
 from azureml.automl.dnn.vision.common import utils
 from azureml.automl.dnn.vision.common.exceptions import AutoMLVisionValidationException
 from azureml.automl.dnn.vision.common.logging_utils import get_logger
 from azureml.automl.dnn.vision.common.constants import SettingsLiterals
+from azureml.core import Run
 
 from common.settings import CommonSettings
 
@@ -70,3 +72,25 @@ def validate_running_on_gpu_compute() -> None:
     if not torch.cuda.is_available() or torch.cuda.device_count() == 0:
         raise AutoMLVisionValidationException(
             "This component requires compute that contains one or more GPU.")
+
+
+def download_models(run: Run, mlflow_output: str, pytorch_output: str):
+    TMP_OUTPUT = '/tmp/outputs'
+    TMP_MLFLOW = TMP_OUTPUT + '/mlflow-model'
+
+    run.download_files(
+        prefix='outputs', output_directory=TMP_OUTPUT, append_prefix=False)
+    
+    # Copy the mlflow model
+    try:
+        shutil.copytree(TMP_MLFLOW, mlflow_output, dirs_exist_ok=True)
+    except Exception as e:
+        logger.error('Error in uploading mlflow model: {}'.format(e))
+
+    shutil.rmtree(TMP_MLFLOW, ignore_errors=True)
+
+    # Copy the pytorch model
+    try:
+        shutil.copytree(TMP_OUTPUT, pytorch_output, dirs_exist_ok=True)
+    except Exception as e:
+        logger.error('Error in uploading pytorch model: {}'.format(e))
