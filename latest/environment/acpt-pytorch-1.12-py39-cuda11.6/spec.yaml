@@ -4,7 +4,7 @@ description: >-
   Recommended environment in public preview for Deep Learning with PyTorch on Azure containing the Azure ML SDK with the latest compatible versions of Ubuntu, Python, PyTorch, CUDA\RocM, combined with optimizers like ORT Training,+DeepSpeed+MSCCL+ORT MoE and more.
 
 name: "acpt-pytorch-1.12-py39-cuda11.6"
-version: "1"
+version: "2"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
