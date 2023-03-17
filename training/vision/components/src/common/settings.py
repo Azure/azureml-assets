@@ -8,7 +8,8 @@ from azureml.automl.dnn.vision.common import utils
 
 class CommonSettings:
 
-    def __init__(self, training_data: str, validation_data: str, mlflow_model_output: str, pytorch_model_output: str) -> None:
+    def __init__(self, training_data: str, validation_data: str, mlflow_model_output: str,
+                 pytorch_model_output: str) -> None:
         self.training_data = training_data
         self.validation_data = validation_data
         self.mlflow_model_output = mlflow_model_output
@@ -29,7 +30,8 @@ class CommonSettings:
 
 class ClassificationSettings(CommonSettings):
 
-    def __init__(self, training_data: str, validation_data: str, mlflow_model_output: str, pytorch_model_output: str, task_type: str) -> None:
+    def __init__(self, training_data: str, validation_data: str, mlflow_model_output: str,
+                 pytorch_model_output: str, task_type: str) -> None:
         super().__init__(training_data, validation_data, mlflow_model_output, pytorch_model_output)
         self.multilabel = False
         if task_type == Tasks.IMAGE_CLASSIFICATION_MULTILABEL:

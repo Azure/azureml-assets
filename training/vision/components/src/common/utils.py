@@ -80,7 +80,7 @@ def download_models(run: Run, mlflow_output: str, pytorch_output: str):
 
     run.download_files(
         prefix='outputs', output_directory=TMP_OUTPUT, append_prefix=False)
-    
+
     # Copy the mlflow model
     try:
         shutil.copytree(TMP_MLFLOW, mlflow_output, dirs_exist_ok=True)
