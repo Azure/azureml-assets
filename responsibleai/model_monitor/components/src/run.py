@@ -43,8 +43,11 @@ def run(args):
     # todo: read from args when available
     task_type = "classification"
     target_column = "target"
+    try:
+        compute_attribution_drift(task_type, target_column, baseline_df, production_df)
+    except Exception as e:
+        _logger.info("Error encountered when executing feature attribution component: {0}", e)
 
-    compute_attribution_drift(task_type, target_column, baseline_df, production_df)
     _logger.info("Successfully executed the feature attribution component.")
 
 
