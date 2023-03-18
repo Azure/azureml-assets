@@ -1,0 +1,16 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+name: hello_pipeline_component
+version: 0.0.1
+display_name: Hello Pipeline Component
+is_deterministic: false
+inputs:
+  message:
+    type: string
+    default: "Hello, Pipeline Component!"
+jobs:
+  hello_world:
+    type: command
+    component: azureml://registries/azureml/components/hello_command_component/versions/0.0.1
+    inputs:
+      message: ${{parent.inputs.message}}

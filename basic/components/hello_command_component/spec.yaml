@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: command
+name: hello_command_component
+version: 0.0.1
+display_name: Hello Command Component
+is_deterministic: false
+inputs:
+  message:
+    type: string
+    default: "Hello, Command Component!"
+code: ../src
+environment: azureml://registries/azureml/environments/sklearn-1.1-ubuntu20.04-py38-cpu/versions/6
+command: >-
+    python hello.py --message "${{inputs.message}}"
