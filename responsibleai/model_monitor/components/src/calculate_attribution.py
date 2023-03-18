@@ -144,15 +144,17 @@ def calculate_attribution_drift(baseline_explanations, production_explanations):
     """Compute feature attribution drift given two sets of explanations
 
       :param baseline_explanations list of explanations calculated using the baseline dataframe
-      :type baseline_explanations
+      :type baseline_explanations list[float]
       :param production_explanations list of explanations calculated using the production dataframe
-      :type production_explanations
+      :type production_explanations list[float]
       :return the ndcg metric between the baseline and production data
       :rtype float
     """
     true_relevance = np.asarray([baseline_explanations])
     relevance_score = np.asarray([production_explanations])
     feature_attribution_drift = ndcg_score(true_relevance, relevance_score)
+    # just log for now, eventually we will have to write the output
+    _logger.info("feature attribution drift calculated: {0}", feature_attribution_drift)
     return feature_attribution_drift
 
 

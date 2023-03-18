@@ -7,13 +7,13 @@ import mltable
 import pandas as pd
 
 
-def load_mltable_to_df(mltable_path: str) -> pd.DataFrame:
+def load_mltable_to_df(mltable_path) -> pd.DataFrame:
     """Load MLTable into a DataFrame.
 
-    Args:
-        mltable_path: Path to MLtable
+        :param mltable_path: Path to MLtable
+        :type mltable_path string
+        :return datafrom loaded from mltable
+        :rtype pandas.Dataframe
 
-    Returns:
-        pd.DataFrame: DataFrame loaded from MLtable
     """
     return mltable.load(mltable_path).to_pandas_dataframe()
