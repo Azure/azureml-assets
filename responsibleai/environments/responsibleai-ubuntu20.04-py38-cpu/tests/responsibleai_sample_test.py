@@ -151,12 +151,6 @@ def test_responsibleai_automl_regression():
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
         command="python automl_submit_rai_run.py --automl_parent_run_id {0} --automl_child_run_id {1}".format(
             returned_job.name, returned_job.name + "_0"),
-        # inputs={
-        #     "diabetes": Input(
-        #         type="uri_file",
-        #         path="https://azuremlexamples.blob.core.windows.net/datasets/diabetes.csv",
-        #     )
-        # },
         environment=f"{env_name}@latest",
         compute=os.environ.get("cpu_cluster"),
         display_name="responsibleai-diabetes-example",
@@ -193,7 +187,7 @@ def test_responsibleai_automl_classification():
         experiment_name=exp_name,
         training_data=my_training_data_input,
         target_column_name="iris",
-        primary_metric="R2Score",
+        primary_metric="accuracy",
         n_cross_validations=5,
         enable_model_explainability=True,
         tags={"my_custom_tag": "My custom value"},
@@ -232,12 +226,6 @@ def test_responsibleai_automl_classification():
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
         command="python automl_submit_rai_run.py --automl_parent_run_id {0} --automl_child_run_id {1}".format(
             returned_job.name, returned_job.name + "_0"),
-        # inputs={
-        #     "diabetes": Input(
-        #         type="uri_file",
-        #         path="https://azuremlexamples.blob.core.windows.net/datasets/diabetes.csv",
-        #     )
-        # },
         environment=f"{env_name}@latest",
         compute=os.environ.get("cpu_cluster"),
         display_name="responsibleai-iris-example",
