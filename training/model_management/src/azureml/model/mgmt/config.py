@@ -19,6 +19,12 @@ class ModelType(_CustomEnum):
     CUSTOM = 'custom_model'
 
 
+class ModelFlavor(_CustomEnum):
+    """Enum for the Flavors accepted in ModelConfig."""
+
+    HFTRANSFORMERS = 'hftransformers'
+
+
 class PathType(_CustomEnum):
     """Enum for path types supported for model download."""
 

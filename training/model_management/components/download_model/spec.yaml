@@ -6,7 +6,7 @@ type: command
 
 is_deterministic: True
 
-display_name: Download model
+display_name: Download model (Public Preview)
 description: Downloads a model from a public storage container
 
 environment: azureml:model-management:1

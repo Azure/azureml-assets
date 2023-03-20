@@ -1,0 +1,70 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: mlflow_converter
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: MLFlow converter (Public Preview)
+description: Component converts the input model to MLFlow format
+
+environment: azureml:model-management:1
+
+code: ../../src/
+command: >
+  python run_model_preprocess.py
+  $[[--model-id ${{inputs.model_id}}]]
+  $[[--task-type ${{inputs.task_type}}]]
+  $[[--model-info ${{inputs.model_info}}]]
+  --mlflow-flavor ${{inputs.mlflow_flavor}}
+  --model-path ${{inputs.model_path}}
+  --mlflow-model-output-dir ${{outputs.mlflow_model_output}}
+
+inputs:
+  mlflow_flavor:
+    type: string
+    description: MLFlow flavor to translate model to. Flavor information is used to determine model loader module
+    enum:
+      # TODO: add support for other flavors such as pytorch, tensorflow etc
+      - hftransformers
+
+  model_id:
+    type: string
+    description: 
+    optional: True
+
+  task_type:
+    type: string
+    enum:
+      - multiclass
+      - multilabel
+      - fill-mask
+      - token-classification
+      - question-answering
+      - summarization
+      - text-generation
+      - text-classification
+      - translation
+      - image-classification
+      - image-classification-multilabel
+      - text-to-image
+    description: Choose task supported by respective Huggingface model. A required parameter for hftransformers mlflow flavor
+    optional: True
+
+  model_info:
+    type: uri_file
+    description: JSON file containing model download details
+    optional: True
+
+  model_path:
+    type: uri_folder
+    description: Path to the Hugging Face model
+    mode: ro_mount
+    optional: false
+
+outputs:
+  mlflow_model_output:
+    type: mlflow_model
+    description: Output path for the converted MLFlow model
+    mode: rw_mount
