@@ -120,7 +120,7 @@ inputs:
   
   failure_threshold_readiness_probe:
     type: integer
-    default: 30
+    default: 10
     optional: true 
     description: No of times system will try after failing the readiness probe
 
@@ -132,7 +132,7 @@ inputs:
   
   timeout_readiness_probe:
     type: integer
-    default: 2
+    default: 10
     optional: true
     description: The number of seconds after which the readiness probe times out
 
@@ -156,7 +156,7 @@ inputs:
   
   timeout_liveness_probe:
     type: integer
-    default: 2
+    default: 10
     optional: true
     description: The number of seconds after which the liveness probe times out
 

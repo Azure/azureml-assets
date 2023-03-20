@@ -69,56 +69,65 @@ def parse_args():
     parser.add_argument(
         "--failure_threshold_readiness_probe",
         type=int,
-        default=30,
+        default=10,
         help="No of times system will try after failing the readiness probe",
+        choices = range(1,50)
     )
     parser.add_argument(
         "--success_threshold_readiness_probe",
         type=int,
         default=1,
         help="The minimum consecutive successes for the readiness probe to be considered successful after having failed",
+        choices = range(1,50)
     )
     parser.add_argument(
         "--timeout_readiness_probe",
         type=int,
-        default=2,
+        default=10,
         help="The number of seconds after which the readiness probe times out",
+        choices = range(1,500)
     )
     parser.add_argument(
         "--period_readiness_probe",
         type=int,
         default=10,
         help="How often (in seconds) to perform the readiness probe",
+        choices = range(1,500)
     )
     parser.add_argument(
         "--initial_delay_readiness_probe",
         type=int,
         default=10,
         help="The number of seconds after the container has started before the readiness probe is initiated",
+        choices = range(1,500)
     )
     parser.add_argument(
         "--failure_threshold_liveness_probe",
         type=int,
         default=30,
         help="No of times system will try after failing the liveness probe",
+        choices = range(1,50)
     )
     parser.add_argument(
         "--timeout_liveness_probe",
         type=int,
-        default=2,
+        default=10,
         help="The number of seconds after which the liveness probe times out",
+        choices = range(1,500)
     )
     parser.add_argument(
         "--period_liveness_probe",
         type=int,
         default=10,
         help="How often (in seconds) to perform the liveness probe",
+        choices = range(1,500)
     )
     parser.add_argument(
         "--initial_delay_liveness_probe",
         type=int,
         default=10,
         help="The number of seconds after the container has started before the liveness probe is initiated",
+        choices = range(1,500)
     )
     parser.add_argument(
         "--egress_public_network_access",
@@ -143,7 +152,6 @@ def parse_args():
         parser.error("Arg request_timeout_ms should lie between 1 and 90000")
     if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > 500:
         parser.error("Arg max_queue_wait_ms should lie between 1 and 500")
-    return args
 
 
 def get_endpoint(args):
