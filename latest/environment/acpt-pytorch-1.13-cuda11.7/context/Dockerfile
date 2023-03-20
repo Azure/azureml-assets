@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1130:biweekly.202303.1.v1
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1130:biweekly.202303.2
 
 # Install pip dependencies
 COPY requirements.txt .
