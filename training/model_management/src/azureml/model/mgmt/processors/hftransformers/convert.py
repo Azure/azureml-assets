@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
 """HFTransformers convert model."""
 
@@ -77,8 +76,8 @@ def _get_image_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = 
     hf_conf["hf_tokenizer_class"] = AutoImageProcessor.__name__
     hf_conf["train_label_list"] = sorted(list(config.label2id.keys()))
 
-    predict_script = os.path.join(os.path.dirname(__file__), "image_export_assets", "hf_test_predict.py")
-    requirements_file = os.path.join(os.path.dirname(__file__), "image_export_assets", "requirements.txt")
+    predict_script = os.path.join(os.path.dirname(__file__), "vision", "predict.py")
+    requirements_file = os.path.join(os.path.dirname(__file__), "vision", "requirements.txt")
 
     return {
         "hf_model": str(model_dir),
