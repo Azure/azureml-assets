@@ -11,6 +11,7 @@ from azure.ai.ml.entities import (
     ManagedOnlineEndpoint,
     ManagedOnlineDeployment,
     OnlineRequestSettings,
+    ProbeSettings,
 )
 from azure.identity import ManagedIdentityCredential
 from azureml.core import Run
@@ -122,7 +123,7 @@ def parse_args():
     parser.add_argument(
         "--egress_public_network_access",
         type=int,
-        default=500,
+        default="enabled",
         help="Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources used by it",
     )
     parser.add_argument(
@@ -189,6 +190,20 @@ def main(args):
             request_timeout_ms=args.request_timeout_ms,
             max_queue_wait_ms=args.max_queue_wait_ms,
         ),
+        liveness_probe=ProbeSettings(
+            failure_threshold=args.failure_threshold_liveness_probe,
+            timeout=args.timeout_liveness_probe,
+            period=args.period_liveness_probe,
+            initial_delay=args.initial_delay_liveness_probe,
+        ),
+        readiness_probe=ProbeSettings(
+            failure_threshold=args.failure_threshold_readiness_probe,
+            success_threshold=args.success_threshold_readiness_probe,
+            timeout=args.timeout_readiness_probe,
+            period=args.period_readiness_probe,
+            initial_delay=args.initial_delay_readiness_probe,
+        ),
+        egress_public_network_access = args.egress_public_network_access,
     )
     ml_client.online_deployments.begin_create_or_update(deployment).wait()
 
