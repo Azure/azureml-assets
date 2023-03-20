@@ -79,10 +79,10 @@ def parse_args():
     # Validating passed input values
     if args.max_concurrent_requests_per_instance < 1:
         parser.error("Arg max_concurrent_requests_per_instance cannot be less than 1")
-    if args.request_timeout_ms < 1:
-        parser.error("Arg request_timeout_ms cannot be less than 1")
-    if args.max_queue_wait_ms < 1:
-        parser.error("Arg max_queue_wait_ms cannot be less than 1")
+    if args.request_timeout_ms < 1 or args.request_timeout_ms > 90000:
+        parser.error("Arg request_timeout_ms should lie between 1 and 90000")
+    if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > 500:
+        parser.error("Arg max_queue_wait_ms should lie between 1 and 500")
     return args
 
 
