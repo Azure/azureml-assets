@@ -21,6 +21,7 @@ def _get_parser():
     parser.add_argument("--mlflow-model-output-dir", type=Path, required=True, help="Output MLFlow model")
     return parser
 
+
 def _validate_hf_transformers_args(args):
     if "model_id" not in args:
         raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")

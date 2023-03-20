@@ -70,11 +70,11 @@ class SupportedTasks(_CustomEnum):
     TEXT_CLASSIFICATION = "text-classification"
     TRANSLATION = "translation"
 
-    ## Vision tasks
+    # Vision tasks
     IMAGE_CLASSIFICATION = "image-classification"
     IMAGE_CLASSIFICATION_MULTI_LABEL = "image-classification-multilabel"
 
-    ## Text to Image
+    # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
 
 

@@ -22,7 +22,8 @@ class DiffusionPyFunc:
         """Init."""
         if torch.cuda.is_available():  # correct?
             device = "cuda"
-            pipe = StableDiffusionPipeline.from_pretrained(model_path, local_files_only=True, torch_dtype=torch.float16)
+            pipe = StableDiffusionPipeline.from_pretrained(
+                model_path, local_files_only=True, torch_dtype=torch.float16)
             pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
             self._model = pipe.to(device)
         else:

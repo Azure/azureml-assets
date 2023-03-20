@@ -10,9 +10,9 @@ import yaml
 from .config import MODEL_FILE_PATTERN
 from azureml.evaluate import mlflow as hf_mlflow
 from azureml.model.mgmt.processors.hftransformers.config import (
-    SupportedTasks, 
+    SupportedTasks,
     SupportedTextToImageVariants,
-    SupportedNLPTasks, 
+    SupportedNLPTasks,
     SupportedVisionTasks,
     TaskToClassMapping,
 )
@@ -101,9 +101,9 @@ def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_co
             pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
             model = pipe.to(device)
     except Exception as e:
-        print("Error in loading stable diffusion model")
+        print(f"Error in loading stable diffusion model:\n{e}")
 
-    if not model:    
+    if not model:
         model = StableDiffusionPipeline.from_pretrained(input_dir, local_files_only=True, torch_dtype=torch.float16)
 
     predict = os.path.join(os.path.dirname(__file__), "diffusion", "predict.py")
