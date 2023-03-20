@@ -18,32 +18,20 @@ try:
 except ImportError:
     pass
 
-from tabular.components.src._telemetry._loggerfactory import _LoggerFactory
-
 _logger = logging.getLogger(__file__)
-_ai_logger = None
-
-
-def _get_logger():
-    global _ai_logger
-    if _ai_logger is None:
-        _ai_logger = _LoggerFactory.get_logger(__file__)
-    return _ai_logger
-
-
-_get_logger()
+logging.basicConfig(level=logging.INFO)
 
 
 def create_lightgbm_model(X, y, task_type):
     """Create model on which to calculate feature importances
 
-      :param X x values (data excluding target columns)
-      :type X pandas.Dataframe
-      :param y nparray of y values (target column data)
-      :type y nparray
-      :param task_type the task type (regression or classification) of the resulting model
-      :type task_type string
-      :return an appropriate model wrapper
+      :param X: x values (data excluding target columns)
+      :type X: pandas.Dataframe
+      :param y: nparray of y values (target column data)
+      :type y: nparray
+      :param task_type: the task type (regression or classification) of the resulting model
+      :type task_type: string
+      :return: an appropriate model wrapper
       :rtype: LightGBMClassifier or LightGBMRegressor
     """
     if (task_type == "classification"):
@@ -61,17 +49,17 @@ def create_lightgbm_model(X, y, task_type):
 def get_model_wrapper(task_type, target_column, baseline_dataframe, production_dataframe):
     """Create model wrapper using ml-wrappers on which to calculate feature importances
 
-      :param task_type The task type (regression or classification) of the resulting model
-      :type task_type string
-      :param target_column the column to predict
-      :type target_column string
-      :param baseline_dataframe The baseline data meaning the data used to create the
+      :param task_type: The task type (regression or classification) of the resulting model
+      :type task_type: string
+      :param target_column: the column to predict
+      :type target_column: string
+      :param baseline_dataframe: The baseline data meaning the data used to create the
       model monitor
-      :type baseline_dataframe pandas.DataFrame
+      :type baseline_dataframe: pandas.DataFrame
       :param production_dataframe: The production data meaning the most recent set of data
       sent to the model monitor, the current set of data
-      :type production_dataframe pandas.DataFrame
-      :return an appropriate model wrapper
+      :type production_dataframe: pandas.DataFrame
+      :return: an appropriate model wrapper
       :rtype: PredictionsModelWrapperRegression or PredictionsModelWrapperClassification
     """
     y_train = baseline_dataframe[target_column]
@@ -97,13 +85,13 @@ def get_model_wrapper(task_type, target_column, baseline_dataframe, production_d
 def compute_categorical_features(baseline_dataframe, target_column):
     """Compute which features are categorical based on data type of the columns.
 
-      :param baseline_dataframe The baseline data meaning the data used to create the
+      :param baseline_dataframe: The baseline data meaning the data used to create the
       model monitor
-      :type baseline_dataframe pandas.DataFrame
-      :param target_column the column to predict
-      :type target_column string
-      :return categorical features
-      :rtype list[string]
+      :type baseline_dataframe: pandas.DataFrame
+      :param target_column: the column to predict
+      :type target_column: string
+      :return: categorical features
+      :rtype: list[string]
     """
     categorical_features = []
     for column in baseline_dataframe.columns:
@@ -117,16 +105,17 @@ def compute_categorical_features(baseline_dataframe, target_column):
 def compute_explanations(model_wrapper, dataframe, categorical_features, target_column, task_type):
     """Compute explanations (feature importances) for a given dataset
 
-      :param model_wrapper wrapper around a model that can be used to calculate explanations
+      :param model_wrapper wrapper: around a model that can be used to calculate explanations
       :param  dataframe: The data used to calculate the explanations
-      :type dataframe pandas.DataFrame
-      :param categorical_features: list of categorical features not including the target column
-      :param target_column the column to predict
-      :type target_column string
-      :param task_type the task type (regression or classification) of the resulting model
-      :type task_type string
-      :return explanation scores for the input data
-      :rtype list[float]
+      :type dataframe: pandas.DataFrame
+      :param categorical_features: categorical features not including the target column
+      :type categorical_features: list[str]
+      :param target_column: the column to predict
+      :type target_column: string
+      :param task_type: the task type (regression or classification) of the resulting model
+      :type task_type: string
+      :return: explanation scores for the input data
+      :rtype: list[float]
     """
     # Create the RAI Insights object, use baseline as train and test data
     rai_i: RAIInsights = RAIInsights(
@@ -143,12 +132,12 @@ def compute_explanations(model_wrapper, dataframe, categorical_features, target_
 def calculate_attribution_drift(baseline_explanations, production_explanations):
     """Compute feature attribution drift given two sets of explanations
 
-      :param baseline_explanations list of explanations calculated using the baseline dataframe
-      :type baseline_explanations list[float]
-      :param production_explanations list of explanations calculated using the production dataframe
-      :type production_explanations list[float]
-      :return the ndcg metric between the baseline and production data
-      :rtype float
+      :param baseline_explanations: list of explanations calculated using the baseline dataframe
+      :type baseline_explanations: list[float]
+      :param production_explanations: list of explanations calculated using the production dataframe
+      :type production_explanations: list[float]
+      :return: the ndcg metric between the baseline and production data
+      :rtype: float
     """
     true_relevance = np.asarray([baseline_explanations])
     relevance_score = np.asarray([production_explanations])
@@ -162,18 +151,18 @@ def compute_attribution_drift(task_type, target_column, baseline_dataframe, prod
     """Compute feature attribution drift by calculating feature importances on each
     dataframe input and using these to calculate the ndcg metric
 
-      :param task_type The task type (regression or classification) of the resulting model
-      :type task_type string
-      :param target_column the column to predict
-      :type target_column string
-      :param baseline_dataframe The baseline data meaning the data used to create the
+      :param task_type: The task type (regression or classification) of the resulting model
+      :type task_type: string
+      :param target_column: the column to predict
+      :type target_column: string
+      :param baseline_dataframe: The baseline data meaning the data used to create the
       model monitor
-      :type baseline_dataframe pandas.DataFrame
+      :type baseline_dataframe: pandas.DataFrame
       :param production_dataframe: The production data meaning the most recent set of data
       sent to the model monitor, the current set of data
-      :type production_dataframe pandas.DataFrame
-      :return the ndcg metric between the baseline and production data
-      :rtype float
+      :type production_dataframe: pandas.DataFrame
+      :return: the ndcg metric between the baseline and production data
+      :rtype: float
     """
 
     if len(baseline_dataframe.columns.difference(production_dataframe.columns)) > 0:

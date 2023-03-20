@@ -8,7 +8,7 @@ import logging
 from calculate_attribution import compute_attribution_drift
 from io_utils import load_mltable_to_df
 
-from tabular.components.src._telemetry._loggerfactory import _LoggerFactory
+from tabular.components.src._telemetry._loggerfactory import _LoggerFactory, track
 
 _logger = logging.getLogger(__file__)
 _ai_logger = None
@@ -35,6 +35,7 @@ def parse_args():
     return args
 
 
+@track(_get_logger)
 def run(args):
 
     baseline_df = load_mltable_to_df(args.baseline_data)
@@ -45,10 +46,9 @@ def run(args):
     target_column = "target"
     try:
         compute_attribution_drift(task_type, target_column, baseline_df, production_df)
+        _logger.info("Successfully executed the feature attribution component.")
     except Exception as e:
         _logger.info("Error encountered when executing feature attribution component: {0}", e)
-
-    _logger.info("Successfully executed the feature attribution component.")
 
 
 if __name__ == "__main__":
