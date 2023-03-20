@@ -4,7 +4,7 @@ model_monitor_rai:
   jobs:
     raimodelmonitor_pipeline:
       pre: "./model_monitor/jobs/prepare.py"
-      job: ./model_monitor/jobs/pipeline_iris_analyze.yml"
+      job: "./model_monitor/jobs/pipeline_iris_analyze.yml"
 tabular_rai_insight:
   includes:
     - "./tabular/jobs/"
