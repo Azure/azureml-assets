@@ -17,11 +17,21 @@ command: >-
   --registration_details ${{inputs.registration_details}}
   --endpoint_name ${{inputs.endpoint_name}}
   --deployment_name ${{inputs.deployment_name}}
-  --instance_type ${{inputs.instance_type}}
-  --instance_count ${{inputs.instance_count}}
+  $[[--instance_type ${{inputs.instance_type}}]]
+  $[[--instance_count ${{inputs.instance_count}}]]
   $[[--max_concurrent_requests_per_instance ${{inputs.max_concurrent_requests_per_instance}}]] 
   $[[--request_timeout_ms ${{inputs.request_timeout_ms}}]]
   $[[--max_queue_wait_ms ${{inputs.max_queue_wait_ms}}]]
+  $[[--failure_threshold_readiness_probe ${{inputs.failure_threshold_readiness_probe}}]]
+  $[[--success_threshold_readiness_probe ${{inputs.success_threshold_readiness_probe}}]]
+  $[[--timeout_readiness_probe ${{inputs.timeout_readiness_probe}}]]
+  $[[--period_readiness_probe ${{inputs.period_readiness_probe}}]]
+  $[[--initial_delay_readiness_probe ${{inputs.initial_delay_readiness_probe}}]]
+  $[[--failure_threshold_liveness_probe ${{inputs.failure_threshold_liveness_probe}}]]
+  $[[--timeout_liveness_probe ${{inputs.timeout_liveness_probe}}]]
+  $[[--period_liveness_probe ${{inputs.period_liveness_probe}}]]
+  $[[--initial_delay_liveness_probe ${{inputs.initial_delay_liveness_probe}}]]
+  $[[--egress_public_network_access ${{inputs.egress_public_network_access}}]]
   --model_deployment_details ${{outputs.model_deployment_details}}
 
 inputs:
@@ -107,6 +117,69 @@ inputs:
     default: 500
     optional: true
     description: Maximum queue wait time of a request in ms
+  
+  failure_threshold_readiness_probe:
+    type: integer
+    default: 30
+    optional: true 
+    description: No of times system will try after failing the readiness probe
+
+  success_threshold_readiness_probe:
+    type: integer
+    default: 1
+    optional: true 
+    description: The minimum consecutive successes for the readiness probe to be considered successful after having failed
+  
+  timeout_readiness_probe:
+    type: integer
+    default: 2
+    optional: true
+    description: The number of seconds after which the readiness probe times out
+
+  period_readiness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: How often (in seconds) to perform the readiness probe
+
+  initial_delay_readiness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: The number of seconds after the container has started before the readiness probe is initiated
+
+  failure_threshold_liveness_probe:
+    type: integer
+    default: 30
+    optional: true 
+    description: No of times system will try after failing the liveness probe
+  
+  timeout_liveness_probe:
+    type: integer
+    default: 2
+    optional: true
+    description: The number of seconds after which the liveness probe times out
+
+  period_liveness_probe:
+    type: integer
+    default: 10
+    optional: true 
+    description:  How often (in seconds) to perform the liveness probe
+
+  initial_delay_liveness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: The number of seconds after the container has started before the liveness probe is initiated
+  
+  egress_public_network_access:
+    type: string
+    default: enabled
+    optional: true 
+    enum:
+      - enabled
+      - disabled
+    description: Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources used by it
 
 outputs:
   model_deployment_details:

@@ -48,11 +48,6 @@ def parse_args():
         choices=range(1, 20),
     )
     parser.add_argument(
-        "--model_deployment_details",
-        type=str,
-        help="Json file to which deployment details will be written",
-    )
-    parser.add_argument(
         "--max_concurrent_requests_per_instance",
         type=int,
         default=1,
@@ -70,7 +65,71 @@ def parse_args():
         default=500,
         help="Maximum queue wait time of a request in ms",
     )
-
+    parser.add_argument(
+        "--failure_threshold_readiness_probe",
+        type=int,
+        default=30,
+        help="No of times system will try after failing the readiness probe",
+    )
+    parser.add_argument(
+        "--success_threshold_readiness_probe",
+        type=int,
+        default=1,
+        help="The minimum consecutive successes for the readiness probe to be considered successful after having failed",
+    )
+    parser.add_argument(
+        "--timeout_readiness_probe",
+        type=int,
+        default=2,
+        help="The number of seconds after which the readiness probe times out",
+    )
+    parser.add_argument(
+        "--period_readiness_probe",
+        type=int,
+        default=10,
+        help="How often (in seconds) to perform the readiness probe",
+    )
+    parser.add_argument(
+        "--initial_delay_readiness_probe",
+        type=int,
+        default=10,
+        help="The number of seconds after the container has started before the readiness probe is initiated",
+    )
+    parser.add_argument(
+        "--failure_threshold_liveness_probe",
+        type=int,
+        default=30,
+        help="No of times system will try after failing the liveness probe",
+    )
+    parser.add_argument(
+        "--timeout_liveness_probe",
+        type=int,
+        default=2,
+        help="The number of seconds after which the liveness probe times out",
+    )
+    parser.add_argument(
+        "--period_liveness_probe",
+        type=int,
+        default=10,
+        help="How often (in seconds) to perform the liveness probe",
+    )
+    parser.add_argument(
+        "--initial_delay_liveness_probe",
+        type=int,
+        default=10,
+        help="The number of seconds after the container has started before the liveness probe is initiated",
+    )
+    parser.add_argument(
+        "--egress_public_network_access",
+        type=int,
+        default=500,
+        help="Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources used by it",
+    )
+    parser.add_argument(
+        "--model_deployment_details",
+        type=str,
+        help="Json file to which deployment details will be written",
+    )
     # parse args
     args = parser.parse_args()
     print("args received ", args)
