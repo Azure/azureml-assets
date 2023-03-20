@@ -33,12 +33,14 @@ class _CustomEnum(Enum):
 
 class SupportedVisionTasks(_CustomEnum):
     """Supported Vision Hugging face tasks."""
+
     IMAGE_CLASSIFICATION = "image-classification"
     IMAGE_CLASSIFICATION_MULTI_LABEL = "image-classification-multilabel"
 
 
 class SupportedNLPTasks(_CustomEnum):
     """Supported NLP Hugging face tasks."""
+
     MULTICLASS = "multiclass"
     MULTILABEL = "multilabel"
     FILL_MASK = "fill-mask"
@@ -53,6 +55,7 @@ class SupportedNLPTasks(_CustomEnum):
 
 class SupportedTextToImageVariants(_CustomEnum):
     """Supported text to image variants."""
+
     STABLE_DIFFUSION = "stable-diffusion"
 
 
