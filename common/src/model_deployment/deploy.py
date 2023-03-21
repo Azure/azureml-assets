@@ -15,6 +15,7 @@ from azure.ai.ml.entities import (
 )
 from azure.identity import ManagedIdentityCredential
 from azureml.core import Run
+import logging
 
 
 def parse_args():
@@ -131,7 +132,7 @@ def parse_args():
     )
     parser.add_argument(
         "--egress_public_network_access",
-        type=int,
+        type=str,
         default="enabled",
         help="Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources used by it",
     )
@@ -184,7 +185,12 @@ def main(args):
     model_id = (Path(args.registration_details)).read_text()
     endpoint = get_endpoint(args)
 
-    ml_client.begin_create_or_update(endpoint).wait()
+    try:
+        ml_client.begin_create_or_update(endpoint).wait()
+    except Exception as e:
+        error_msg = f'Error occured while creating endpoint - {e}'
+        logging.error(error_msg)
+        raise Exception(error_msg)
 
     # deployment
     deployment = ManagedOnlineDeployment(
@@ -213,13 +219,23 @@ def main(args):
         ),
         egress_public_network_access = args.egress_public_network_access,
     )
-    ml_client.online_deployments.begin_create_or_update(deployment).wait()
+    try:
+        ml_client.online_deployments.begin_create_or_update(deployment).wait()
+    except Exception as e:
+        error_msg = f'Error occured while creating deployment - {e}'
+        logging.error(error_msg)
+        raise Exception(error_msg)
 
     print("Deployment done with name ", deployment.name)
 
     # deployment to take 100% traffic
     endpoint.traffic = {deployment.name: 100}
-    ml_client.begin_create_or_update(endpoint).wait()
+    try:
+        ml_client.begin_create_or_update(endpoint).wait()
+    except Exception as e:
+        error_msg = f'Error occured while updating endpoint traffic - {e}'
+        logging.error(error_msg)
+        raise Exception(error_msg)
 
     # write deployment details to file
     endpoint_type = "aml_online_inference"
@@ -229,6 +245,9 @@ def main(args):
         "deployment_name": deployment.name,
         "endpoint_uri": endpoint_response.__dict__["_scoring_uri"],
         "endpoint_type": endpoint_type,
+        "instance_type" : args.instance_type,
+        "instance_count" : args.instance_count,
+        "max_concurrent_requests_per_instance" : args.max_concurrent_requests_per_instance
     }
     json_object = json.dumps(deployment_details, indent=4)
     with open(args.model_deployment_details, "w") as outfile:
