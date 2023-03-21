@@ -92,13 +92,13 @@ inputs:
       - Standard_ND96asr_v4
       - Standard_ND96amsr_A100_v4
     default: Standard_F8s_v2
-    description: Compute instance type to deploy model
+    description: Compute instance type to deploy model. Make sure that instance type is available and have enough quota available.
 
   instance_count:
     type: integer
     optional: true
     default: 1
-    description: Number of instances you want to use for deployment
+    description: Number of instances you want to use for deployment. Make sure instance type have enough quota available.
 
   max_concurrent_requests_per_instance:
     type: integer
