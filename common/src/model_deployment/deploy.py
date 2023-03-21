@@ -4,7 +4,6 @@
 """Run Model deployment module."""
 import os
 import argparse
-from pathlib import Path
 import json
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import (
@@ -134,7 +133,7 @@ def parse_args():
         "--egress_public_network_access",
         type=str,
         default="enabled",
-        help="Secures the deployment by restricting communication between the deployment and the Azure resources used by it",
+        help="Secures the deployment by restricting interaction between deployment and Azure resources used by it",
     )
     parser.add_argument(
         "--model_deployment_details",
