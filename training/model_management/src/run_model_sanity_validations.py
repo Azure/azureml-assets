@@ -112,7 +112,7 @@ if __name__ == "__main__":
     exit_code, stdout = run_command(pip_install_cmd)
     if exit_code != 0:
         raise Exception(f"Failure in installing requirements:\n{stdout}\n")
-    logger.info(f"Installed pip requirements")
+    logger.info("Installed pip requirements")
 
     data = _load_data(test_data_path=test_data_path)
     _validate_data(data, mlmodel_dict)
