@@ -18,8 +18,7 @@ def run(task, component_settings):
             {SettingsLiterals.TASK_TYPE: task},
             mltable_data_json=mltable_data_json, multilabel=component_settings.multilabel)
         run = Run.get_context()
-        run.download_files(
-            prefix='outputs/mlflow-model', output_directory=component_settings.model_output, append_prefix=False)
+        utils.download_models(run, component_settings.mlflow_model_output, component_settings.pytorch_model_output)
 
     run_component(task)
 

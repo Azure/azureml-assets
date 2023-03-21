@@ -18,8 +18,7 @@ def run():
         {SettingsLiterals.TASK_TYPE: Tasks.IMAGE_INSTANCE_SEGMENTATION},
         mltable_data_json=mltable_data_json)
     run = Run.get_context()
-    run.download_files(
-        prefix='outputs/mlflow-model', output_directory=component_settings.model_output, append_prefix=False)
+    utils.download_models(run, component_settings.mlflow_model_output, component_settings.pytorch_model_output)
 
 
 if __name__ == "__main__":
