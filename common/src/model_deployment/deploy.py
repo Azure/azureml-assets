@@ -78,7 +78,7 @@ def parse_args():
         "--success_threshold_readiness_probe",
         type=int,
         default=1,
-        help="The minimum consecutive successes for the readiness probe to be considered successful after having failed",
+        help="The minimum consecutive successes for the readiness probe to be considered successful, after fail",
         choices=range(1, 50),
     )
     parser.add_argument(
@@ -134,7 +134,7 @@ def parse_args():
         "--egress_public_network_access",
         type=str,
         default="enabled",
-        help="Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources used by it",
+        help="Secures the deployment by restricting communication between the deployment and the Azure resources used by it",
     )
     parser.add_argument(
         "--model_deployment_details",
