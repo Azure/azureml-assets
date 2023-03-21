@@ -2,16 +2,13 @@
 # Licensed under the MIT License.
 
 """This file contains the core logic for feature attribution drift component."""
-import numpy as np
 import pandas as pd
 import logging
 
 from responsibleai import RAIInsights
-from sklearn.metrics import ndcg_score
 from ml_wrappers.model.predictions_wrapper import (
     PredictionsModelWrapperClassification,
     PredictionsModelWrapperRegression)
-from azureml.exceptions import UserErrorException
 
 try:
     from lightgbm import LGBMClassifier, LGBMRegressor
@@ -129,53 +126,4 @@ def compute_explanations(model_wrapper, dataframe, categorical_features, target_
     return explanationData.precomputedExplanations.globalFeatureImportance['scores']
 
 
-def calculate_attribution_drift(baseline_explanations, production_explanations):
-    """Compute feature attribution drift given two sets of explanations
 
-      :param baseline_explanations: list of explanations calculated using the baseline dataframe
-      :type baseline_explanations: list[float]
-      :param production_explanations: list of explanations calculated using the production dataframe
-      :type production_explanations: list[float]
-      :return: the ndcg metric between the baseline and production data
-      :rtype: float
-    """
-    true_relevance = np.asarray([baseline_explanations])
-    relevance_score = np.asarray([production_explanations])
-    feature_attribution_drift = ndcg_score(true_relevance, relevance_score)
-    # just log for now, eventually we will have to write the output
-    _logger.info("feature attribution drift calculated: {0}", feature_attribution_drift)
-    return feature_attribution_drift
-
-
-def compute_attribution_drift(task_type, target_column, baseline_dataframe, production_dataframe):
-    """Compute feature attribution drift by calculating feature importances on each
-    dataframe input and using these to calculate the ndcg metric
-
-      :param task_type: The task type (regression or classification) of the resulting model
-      :type task_type: string
-      :param target_column: the column to predict
-      :type target_column: string
-      :param baseline_dataframe: The baseline data meaning the data used to create the
-      model monitor
-      :type baseline_dataframe: pandas.DataFrame
-      :param production_dataframe: The production data meaning the most recent set of data
-      sent to the model monitor, the current set of data
-      :type production_dataframe: pandas.DataFrame
-      :return: the ndcg metric between the baseline and production data
-      :rtype: float
-    """
-
-    if len(baseline_dataframe.columns.difference(production_dataframe.columns)) > 0:
-        raise UserErrorException("Dataset columns differ in baseline and production datasets")
-
-    model_wrapper = get_model_wrapper(task_type, target_column, baseline_dataframe, production_dataframe)
-
-    categorical_features = compute_categorical_features(baseline_dataframe, target_column)
-
-    baseline_explanations = compute_explanations(model_wrapper, baseline_dataframe, categorical_features, target_column, task_type)
-    _logger.info("Successfully computed explanations for baseline dataset")
-
-    production_explanations = compute_explanations(model_wrapper, production_dataframe, categorical_features, target_column, task_type)
-    _logger.info("Successfully computed explanations for production dataset")
-
-    return calculate_attribution_drift(baseline_explanations, production_explanations)
