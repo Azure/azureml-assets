@@ -1,0 +1,27 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: mlflow_model_local_validator
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: MLFlow model local validator (Public Preview)
+description: Validates if a MLFLow model is locally loadable and inferencable
+
+environment: azureml:model-management:1
+
+code: ../../src/
+command: >
+  python run_model_sanity_validations.py
+  --model-path ${{inputs.input_model}}
+  --test-data-path ${{inputs.test_data_path}}
+
+inputs:
+  model_path:
+    type: mlflow_model
+    description: Input mlflow model for sanity validations
+
+  test_data_path:
+    type: uri_file
+    description: Test dataset for model inference validation
