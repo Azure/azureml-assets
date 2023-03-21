@@ -105,5 +105,5 @@ class TaskToClassMapping:
 
     def get_loader_class_name(task_type) -> str:
         """Return loader class name for a supported Hugging face task."""
-        cls = TaskToClassMapping.get_automodel_class(task_type)
+        cls = TaskToClassMapping.get_loader_class(task_type)
         return cls.__name__ if cls else None
