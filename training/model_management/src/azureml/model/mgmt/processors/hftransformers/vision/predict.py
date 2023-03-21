@@ -1,14 +1,20 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
 
-"""HF image model prediction function and utilities."""
+"""Huggingface classification predict file for mlflow."""
 
 import base64
+import io
 import logging
+
+import numpy as np
 import pandas as pd
 import tempfile
+
+import re
+import requests
 import torch
-import io
 
 from datasets import load_dataset
 from PIL import Image
@@ -18,23 +24,22 @@ from transformers import (
     TrainingArguments,
     Trainer
 )
-from typing import List, Dict, Any
-
+from typing import List, Dict, Any, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
 
 class HFTaskLiterals:
     """HF task name constants."""
-
     MULTI_CLASS_IMAGE_CLASSIFICATION = "image-classification"
     MULTI_LABEL_CLASSIFICATION = "image-classification-multilabel"
 
 
-class HFMiscellaneousLiterals:
+class HFMiscellaneousConstants:
     """HF miscellaneous constants."""
 
     DEFAULT_IMAGE_KEY = "image"
+    DEFAULT_THRESHOLD = 0.5
 
 
 class MLFlowSchemaLiterals:
@@ -53,6 +58,7 @@ class MLFlowLiterals:
 
     BATCH_SIZE_KEY = "batch_size"
     TRAIN_LABEL_LIST = "train_label_list"
+    THRESHOLD = "threshold"
 
 
 def create_temp_file(request_body: bytes, parent_dir: str) -> str:
@@ -72,17 +78,51 @@ def create_temp_file(request_body: bytes, parent_dir: str) -> str:
         return img_path
 
 
-def _decode_base64_img(img: pd.Series) -> pd.Series:
-    """Decode input data from base64 string format.
-
+def _process_image(img: pd.Series) -> pd.Series:
+    """If input image is in base64 string format, decode it to bytes. If input image is in url format, 
+    download it and return bytes.
     https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
 
-    :param img: pandas series with image in base64 string format.
+    :param img: pandas series with image in base64 string format or url.
     :type img: pd.Series
     :return: decoded image in pandas series format.
     :rtype: Pandas Series
     """
-    return pd.Series(base64.b64decode(img[0]))
+    image = img[0]
+    if _is_valid_url(image):
+        image = requests.get(image).content
+        return pd.Series(image)
+    else:
+        return pd.Series(base64.b64decode(img[0]))
+
+
+def _is_valid_url(text: str) -> bool:
+    """check if text is url or base64 string
+    :param text: text to validate
+    :type text: str
+    :return: True if url else false
+    :rtype: bool
+    """
+    regex = (
+        "((http|https)://)(www.)?"
+        + "[a-zA-Z0-9@:%._\\+~#?&//=]"
+        + "{2,256}\\.[a-z]"
+        + "{2,6}\\b([-a-zA-Z0-9@:%"
+        + "._\\+~#?&//=]*)"
+    )
+    p = re.compile(regex)
+
+    # If the string is empty
+    # return false
+    if str is None:
+        return False
+
+    # Return if the string
+    # matched the ReGex
+    if re.search(p, text):
+        return True
+    else:
+        return False
 
 
 def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.DataFrame:
@@ -104,7 +144,7 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
     # Decode the base64 image column
     decoded_images = input_data.loc[
         :, [MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE]
-    ].apply(axis=1, func=_decode_base64_img)
+    ].apply(axis=1, func=_process_image)
 
     # arguments for Trainer
     test_args = TrainingArguments(
@@ -124,12 +164,13 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
             .map(lambda row: create_temp_file(row, tmp_output_dir))
             .tolist()
         )
-        conf_scores = run_inference_batch(
+        predicted_indexes, conf_scores = run_inference_batch(
             test_args,
             image_processor=tokenizer,
             model=model,
             image_path_list=image_path_list,
-            task_type=task
+            task_type=task,
+            threshold=kwargs.get(MLFlowLiterals.THRESHOLD, None)
         )
 
     df_result = pd.DataFrame(
@@ -139,14 +180,20 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
         ]
     )
 
-    # TODO We are returning the prediction confidence scores and list of labels which can unnecessarily increase
-    # the payload size. We can either return the predicted class label/s or don't return labels. In later case,
-    # returned json from predict function have "label" key and value "null".
-
     labels = kwargs.get(MLFlowLiterals.TRAIN_LABEL_LIST)
-    number_of_predictions = len(conf_scores)
-    df_result[MLFlowLiterals.PROBS], df_result[MLFlowLiterals.LABELS] = (conf_scores.tolist(),
-                                                                         [labels] * number_of_predictions)
+
+    if task == HFTaskLiterals.MULTI_CLASS_IMAGE_CLASSIFICATION:
+        predicted_labels = [labels[index] for index in predicted_indexes]
+    else:
+        predicted_labels = []
+        for predicted_index in predicted_indexes:
+            image_labels = []
+            for index, pred in enumerate(predicted_index):
+                if pred == 1:
+                    image_labels.append(labels[index])
+            predicted_labels.append(image_labels)
+
+    df_result[MLFlowLiterals.PROBS], df_result[MLFlowLiterals.LABELS] = (conf_scores.tolist(), predicted_labels)
     return df_result
 
 
@@ -156,7 +203,8 @@ def run_inference_batch(
     model: AutoModelForImageClassification,
     image_path_list: List,
     task_type: HFTaskLiterals,
-) -> torch.tensor:
+    threshold: Optional[float] = None
+) -> Tuple[torch.tensor, torch.tensor]:
     """Perform inference on batch of input images.
 
     :param test_args: Training arguments path.
@@ -169,8 +217,10 @@ def run_inference_batch(
     :type image_path_list: List
     :param task_type: Task type of the model.
     :type task_type: HFTaskLiterals
-    :return: Predicted probabilities
-    :rtype: torch.tensor
+    :param threshold: threshold for multi_label_classification
+    :type threshold: optional, float
+    :return: Predicted labels index, Predicted probabilities, 
+    :rtype: Tuple of torch.tensor, torch.tensor
     """
 
     def collate_fn(examples: List[Dict[str, Any]]) -> Dict[str, torch.tensor]:
@@ -181,7 +231,7 @@ def run_inference_batch(
         :return: Dictionary of pixel values in torch tensor format.
         :rtype: Dict
         """
-        images = [data[HFMiscellaneousLiterals.DEFAULT_IMAGE_KEY] for data in examples]
+        images = [data[HFMiscellaneousConstants.DEFAULT_IMAGE_KEY] for data in examples]
         return image_processor(images, return_tensors="pt")
 
     inference_dataset = load_dataset(
@@ -199,9 +249,15 @@ def run_inference_batch(
     )
     results = trainer.predict(inference_dataset)
     if task_type == HFTaskLiterals.MULTI_CLASS_IMAGE_CLASSIFICATION:
-        probs = torch.nn.functional.softmax(torch.from_numpy(results.predictions), dim=1)
+        probs = torch.nn.functional.softmax(torch.from_numpy(results.predictions), dim=1).numpy()
+        y_pred = np.argmax(probs, axis=1)
     elif task_type == HFTaskLiterals.MULTI_LABEL_CLASSIFICATION:
         sigmoid = torch.nn.Sigmoid()
-        probs = sigmoid(torch.from_numpy(results.predictions))
+        threshold = threshold or HFMiscellaneousConstants.DEFAULT_THRESHOLD
 
-    return probs
+        probs = sigmoid(torch.from_numpy(results.predictions)).numpy()
+        y_pred = np.zeros(probs.shape)
+        # next, use threshold to turn them into integer predictions
+        y_pred[np.where(probs >= threshold)] = 1
+
+    return y_pred, probs
