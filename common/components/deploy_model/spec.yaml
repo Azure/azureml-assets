@@ -39,7 +39,7 @@ inputs:
   registration_details:
     type: uri_file
     optional: false
-    description: Text file that contains the ID of registered model to be deployed
+    description: Json file that contains the ID of registered model to be deployed
 
   endpoint_name:
     type: string

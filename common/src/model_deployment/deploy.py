@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument(
         "--registration_details",
         type=str,
-        help="Text file that contains the ID of registered model to be deployed",
+        help="Json file that contains the ID of registered model to be deployed",
     )
     parser.add_argument(
         "--endpoint_name",
@@ -184,7 +184,12 @@ def get_ml_client():
 def main(args):
     """Run main function."""
     ml_client = get_ml_client()
-    model_id = (Path(args.registration_details)).read_text()
+    # get registered model id
+    model_info = {}
+    with open(args.registration_details) as f:
+        model_info = json.load(f)
+    model_id = model_info["registered_model_id"]
+
     endpoint = get_endpoint(args)
 
     try:

@@ -139,14 +139,20 @@ def main(args):
         tags=tags,
         properties=properties,
     )
-
+    if model_description is not None:
+        model.description = model_description
     # register the model in workspace or registry
     print("Registering model ....")
     registered_model = ml_client.models.create_or_update(model)
     print(f"Model registered. AssetID : {registered_model.id}")
 
-    (Path(registration_details)).write_text(registered_model.id)
-    print("Saved model registration details in output text file.")
+    # Updating model_information with registered model id
+    model_info["registered_model_id"] = registered_model.id
+    json_object = json.dumps(model_info, indent=4)
+
+    with open(registration_details, "w") as outfile:
+        outfile.write(json_object)
+    print("Saved model registration details in output json file.")
 
 
 # run script
