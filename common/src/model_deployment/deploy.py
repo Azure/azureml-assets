@@ -154,6 +154,8 @@ def parse_args():
     if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > 500:
         parser.error("Arg max_queue_wait_ms should lie between 1 and 500")
 
+    return args
+
 
 def get_endpoint(args):
     """Return online or batch endpoint."""
