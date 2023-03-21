@@ -72,63 +72,63 @@ def parse_args():
         type=int,
         default=10,
         help="No of times system will try after failing the readiness probe",
-        choices = range(1,50)
+        choices=range(1, 50),
     )
     parser.add_argument(
         "--success_threshold_readiness_probe",
         type=int,
         default=1,
         help="The minimum consecutive successes for the readiness probe to be considered successful after having failed",
-        choices = range(1,50)
+        choices=range(1, 50),
     )
     parser.add_argument(
         "--timeout_readiness_probe",
         type=int,
         default=10,
         help="The number of seconds after which the readiness probe times out",
-        choices = range(1,500)
+        choices=range(1, 500),
     )
     parser.add_argument(
         "--period_readiness_probe",
         type=int,
         default=10,
         help="How often (in seconds) to perform the readiness probe",
-        choices = range(1,500)
+        choices=range(1, 500),
     )
     parser.add_argument(
         "--initial_delay_readiness_probe",
         type=int,
         default=10,
         help="The number of seconds after the container has started before the readiness probe is initiated",
-        choices = range(1,500)
+        choices=range(1, 500),
     )
     parser.add_argument(
         "--failure_threshold_liveness_probe",
         type=int,
         default=30,
         help="No of times system will try after failing the liveness probe",
-        choices = range(1,50)
+        choices=range(1, 50),
     )
     parser.add_argument(
         "--timeout_liveness_probe",
         type=int,
         default=10,
         help="The number of seconds after which the liveness probe times out",
-        choices = range(1,500)
+        choices=range(1, 500),
     )
     parser.add_argument(
         "--period_liveness_probe",
         type=int,
         default=10,
         help="How often (in seconds) to perform the liveness probe",
-        choices = range(1,500)
+        choices=range(1, 500),
     )
     parser.add_argument(
         "--initial_delay_liveness_probe",
         type=int,
         default=10,
         help="The number of seconds after the container has started before the liveness probe is initiated",
-        choices = range(1,500)
+        choices=range(1, 500),
     )
     parser.add_argument(
         "--egress_public_network_access",
@@ -188,7 +188,7 @@ def main(args):
     try:
         ml_client.begin_create_or_update(endpoint).wait()
     except Exception as e:
-        error_msg = f'Error occured while creating endpoint - {e}'
+        error_msg = f"Error occured while creating endpoint - {e}"
         logging.error(error_msg)
         raise Exception(error_msg)
 
@@ -217,12 +217,12 @@ def main(args):
             period=args.period_readiness_probe,
             initial_delay=args.initial_delay_readiness_probe,
         ),
-        egress_public_network_access = args.egress_public_network_access,
+        egress_public_network_access=args.egress_public_network_access,
     )
     try:
         ml_client.online_deployments.begin_create_or_update(deployment).wait()
     except Exception as e:
-        error_msg = f'Error occured while creating deployment - {e}'
+        error_msg = f"Error occured while creating deployment - {e}"
         logging.error(error_msg)
         raise Exception(error_msg)
 
@@ -233,7 +233,7 @@ def main(args):
     try:
         ml_client.begin_create_or_update(endpoint).wait()
     except Exception as e:
-        error_msg = f'Error occured while updating endpoint traffic - {e}'
+        error_msg = f"Error occured while updating endpoint traffic - {e}"
         logging.error(error_msg)
         raise Exception(error_msg)
 
@@ -245,9 +245,9 @@ def main(args):
         "deployment_name": deployment.name,
         "endpoint_uri": endpoint_response.__dict__["_scoring_uri"],
         "endpoint_type": endpoint_type,
-        "instance_type" : args.instance_type,
-        "instance_count" : args.instance_count,
-        "max_concurrent_requests_per_instance" : args.max_concurrent_requests_per_instance
+        "instance_type": args.instance_type,
+        "instance_count": args.instance_count,
+        "max_concurrent_requests_per_instance": args.max_concurrent_requests_per_instance,
     }
     json_object = json.dumps(deployment_details, indent=4)
     with open(args.model_deployment_details, "w") as outfile:
