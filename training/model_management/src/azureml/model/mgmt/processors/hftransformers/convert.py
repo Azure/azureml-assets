@@ -145,7 +145,7 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     task_type = translate_params['task_type']
 
     task_category = task_type if "stable-diffusion" not in model_id else "stable-diffusion"
-    hf_pretrained_class = TaskToClassMapping.get_automodel_class_name(task_category)
+    hf_pretrained_class = TaskToClassMapping.get_loader_class_name(task_category)
 
     hf_conf = {
         'task_type': task_type,
@@ -155,7 +155,7 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
 
     if SupportedTextToImageVariants.has_value(task_category):
         model_configs = _get_stable_difussion_model_to_save(input_dir, output_dir, hf_conf)
-    elif SupportedVisionTasks.has_value(task_category):
+    elif SupportedNLPTasks.has_value(task_category):
         model_configs = _get_nlp_model_to_save(input_dir, output_dir, hf_conf)
     elif SupportedVisionTasks.has_value(task_category):
         model_configs = _get_image_model_to_save(input_dir, output_dir, hf_conf)
