@@ -1,7 +1,7 @@
-# -------------------------------------------------------------------------
-# Portions Copyright (c) Microsoft Corporation.  All rights reserved.
+# Portions of this code are:
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
-# --------------------------------------------------------------------------
 # Copyright 2020 The HuggingFace Datasets Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
