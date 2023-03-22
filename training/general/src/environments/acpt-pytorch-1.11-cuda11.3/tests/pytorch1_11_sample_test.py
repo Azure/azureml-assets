@@ -21,7 +21,8 @@ def test_pytorch_1_11():
     subscription_id = os.environ.get("subscription_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
-
+    print("hello!")
+    print(workspace_name)
     ml_client = MLClient(
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
@@ -47,7 +48,7 @@ def test_pytorch_1_11():
             )
         },
         environment=f"{env_name}@latest",
-        compute=os.environ.get("gpu_cluster"),
+        compute=os.environ.get("gpu_v100_cluster"),
         display_name="bert-pretrain-GLUE",
         description="Pretrain the BERT model on the GLUE dataset.",
         experiment_name="pytorch111_Cuda113_Experiment",
@@ -57,6 +58,7 @@ def test_pytorch_1_11():
 
     returned_job = ml_client.create_or_update(job)
     assert returned_job is not None
+    print(returned_job.log_files)
 
     # Poll until final status is reached or timed out
     timeout = time.time() + (TIMEOUT_MINUTES * 60)
