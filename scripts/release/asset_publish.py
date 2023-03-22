@@ -188,19 +188,10 @@ def validate_update_command_component(
     registry_name = env_registry_name or registry_name
 
     if env_label:
-        if env_label == LATEST_LABEL:
-            versions = get_asset_versions(assets.AssetType.ENVIRONMENT.value, env_name, registry_name)
-            if versions:
-                # List is returned with the latest version at the beginning
-                env_version = versions[0]
-            else:
-                logger.log_error(f"Unable to retrieve versions for env {env_name}")
-                return False
-        else:
-            # TODO: Add fetching env from other labels
-            # https://github.com/Azure/azureml-assets/issues/415
-            logger.log_error(f"Creating a component with env label {env_label} is not supported")
-            return False
+        # TODO: Add fetching env from label
+        # https://github.com/Azure/azureml-assets/issues/415
+        logger.log_error(f"Creating a component with env label is not supported")
+        return False
 
     env = None
     # Check if component's env exists
@@ -284,24 +275,6 @@ def create_asset(
     if result.returncode != 0:
         logger.log_error(f"Error creating {asset.type.value} {asset.name}: {redacted_err}")
         failure_list.append(asset)
-
-
-def get_asset_versions(
-    asset_type: str,
-    asset_name: str,
-    registry_name: str,
-) -> List[str]:
-    """Get asset versions from registry."""
-    cmd = [
-        "az", "ml", asset_type, "list",
-        "--name", asset_name,
-        "--registry-name", registry_name,
-    ]
-    result = run_command(cmd)
-    if result.returncode != 0:
-        logger.log_error(f"Failed to list assets: {result.stderr}")
-        return []
-    return [a['version'] for a in json.loads(result.stdout)]
 
 
 def get_asset_details(
