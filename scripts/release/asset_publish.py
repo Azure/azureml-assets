@@ -189,7 +189,7 @@ def validate_update_command_component(
     if env_label:
         # TODO: Add fetching env from label
         # https://github.com/Azure/azureml-assets/issues/415
-        logger.log_error(f"Creating a component with env label is not supported")
+        logger.log_error("Creating a component with env label is not supported")
         return False
 
     env = None
