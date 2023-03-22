@@ -6,7 +6,7 @@ import os
 import time
 from pathlib import Path
 from azure.ai.ml import command, Output, MLClient, PyTorchDistribution
-from azure.ai.ml.entities import Environment, BuildContext, ResourceConfiguration
+from azure.ai.ml.entities import Environment, BuildContext, JobResourceConfiguration
 from azure.identity import AzureCliCredential
 
 BUILD_CONTEXT = Path("../context")
@@ -52,7 +52,7 @@ def test_pytorch_1_11():
         description="Pretrain the BERT model on the GLUE dataset.",
         experiment_name="pytorch111_Cuda113_Experiment",
         distribution=PyTorchDistribution(process_count_per_instance=8),
-        resources=ResourceConfiguration(instance_count=2),
+        resources=JobResourceConfiguration(instance_count=2),
     )
 
     returned_job = ml_client.create_or_update(job)
