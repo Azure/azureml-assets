@@ -42,8 +42,14 @@ def main(args):
     task_type = ModelTask.REGRESSION
     rai_insights = RAIInsights(model, X_train, X_test, LABELS, task_type=task_type)
     rai_insights.error_analysis.add()
+    rai_insights.counterfactual.add(total_CFs=20, desired_range=[50, 120])
+    rai_insights.causal.add(treatment_features=['bmi', 'bp', 's2'])
+    rai_insights.explainer.add()
     rai_insights.compute()
     print(rai_insights.error_analysis.get())
+    print(rai_insights.counterfactual.get())
+    print(rai_insights.causal.get())
+    print(rai_insights.explainer.get())
 
 
 def process_data(df, random_state):

@@ -1,0 +1,11 @@
+name: mldesigner
+channels:
+- conda-forge
+dependencies:
+- python=3.8.13
+- pip=21.3.1
+- pip:
+  - azure-ai-ml=={{latest-pypi-version}}
+  - azureml-mlflow=={{latest-pypi-version}}
+  - mldesigner=={{latest-pypi-version:pre}}
+  - cryptography==39.0.1

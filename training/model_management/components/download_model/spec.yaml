@@ -1,0 +1,43 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: download_model
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Download model
+description: Downloads a model from a public storage container
+
+environment: azureml:model-management:1
+
+code: ../../src/
+command: >
+  python run_model_download.py
+  --model-source ${{inputs.model_source}}
+  --model-id ${{inputs.model_id}}
+  --model-info ${{outputs.model_info}}
+  --model-output-dir ${{outputs.model_output}}
+
+inputs:
+  model_source:
+    type: string
+    description: Supported model containers
+    enum:
+      - AzureBlob
+      - GIT
+      - Huggingface
+
+  model_id:
+    type: string
+    description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
+
+outputs:
+  model_info:
+    type: uri_file
+    description: File name to which model download details will be written
+
+  model_output:
+    type: uri_folder
+    description: Path to the dowloaded model
+    mode: rw_mount

@@ -11,10 +11,10 @@ import shutil
 import sys
 from pathlib import Path
 from string import Template
-from subprocess import PIPE, STDOUT, run
+from subprocess import run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
-from typing import List
+from typing import Dict, List, Union
 import azureml.assets as assets
 from azureml.assets.model.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
@@ -22,12 +22,17 @@ import yaml
 from azureml.assets.config import PathType
 from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.util import logger
-from azure.ai.ml.entities._load_functions import load_model
+from azure.ai.ml import load_component, load_model
+from azure.ai.ml.entities import Component, Environment, Model
 
-ASSET_ID_TEMPLATE = Template(
-    "azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
+
+ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
+PROD_SYSTEM_REGISTRY = "azureml"
 PUBLISH_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
+WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
+REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)/(?:versions/(.+)|labels/(.+))")
+BEARER = r"Bearer.*"
 
 
 def find_test_files(dir: Path):
@@ -63,22 +68,37 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                           sort_keys=False)
 
 
-def dump_model_spec(model, spec_file) -> bool:
-    """Update the yaml file after getting the model has been prepared."""
+def sanitize_output(input: str) -> str:
+    """Return sanitized string."""
+    # Remove sensitive token
+    sanitized_output = re.sub(BEARER, "", input)
+    return sanitized_output
+
+
+def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) -> bool:
+    """Update the yaml spec file with updated properties in asset.
+
+    :param asset: Asset loaded using load_*(component, environemnt, model) method.
+    :type asset: Union[Component, Environment, Model]
+    :param spec_path: path to asset spec file
+    :type spec_path: Path
+    :return: True if spec was successfully updated
+    :rtype: bool
+    """
     try:
-        model_dict = json.loads(json.dumps(model._to_dict()))
-        util.dump_yaml(model_dict, spec_file)
+        asset_dict = json.loads(json.dumps(asset._to_dict()))
+        util.dump_yaml(asset_dict, spec_path)
         return True
     except Exception as e:
-        logger.log_error(f"Failed to update model spec => {str(e)}")
+        logger.log_error(f"Failed to update spec => {e}")
     return False
 
 
-def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
+def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
     """Prepare Model.
 
     :param model_config: Model Config object
-    :type model_prepare: assets.ModelConfig
+    :type model_config: assets.ModelConfig
     :param spec_file_path: path to model spec file
     :type spec_file_path: Path
     :param model_dir: path of directory where model is present locally or can be downloaded to.
@@ -91,19 +111,18 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
         # TODO: temp fix before restructuring what attributes are required in model config and spec.
         model.type = model_config.type.value
     except Exception as e:
-        logger.error(f"Error in loading model spec file at {spec_file_path} => {str(e)}")
+        logger.error(f"Error in loading model spec file at {spec_file_path} => {e}")
         return False
 
     if model_config.path.type == PathType.LOCAL:
         model.path = os.path.abspath(Path(model_config.path.uri).resolve())
-        dump_model_spec(model, spec_file_path)
-        return True
+        return update_spec(model, spec_file_path)
 
     if model_config.type == assets.ModelType.CUSTOM:
         can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
         if can_publish_model:
             model.path = model_dir
-            can_publish_model = dump_model_spec(model, spec_file_path)
+            can_publish_model = update_spec(model, spec_file_path)
 
     elif model_config.type == assets.ModelType.MLFLOW:
         can_publish_model = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
@@ -116,20 +135,96 @@ def model_prepare(model_config: assets.ModelConfig, spec_file_path: Path, model_
                     mlmodel = util.load_yaml(file_path=mlmodel_file_path)
                     model.flavors = mlmodel.get("flavors")
                 except Exception as e:
-                    logger.log_error(f"Error loading flavors from MLmodel file at: {mlmodel_file_path} => {str(e)}")
-            can_publish_model = dump_model_spec(model, spec_file_path)
+                    logger.log_error(f"Error loading flavors from MLmodel file at: {mlmodel_file_path} => {e}")
+            can_publish_model = update_spec(model, spec_file_path)
 
     else:
-        print(model_config.type.value, assets.ModelType.MLFLOW)
+        logger.print(model_config.type.value, assets.ModelType.MLFLOW)
         can_publish_model = False
-        logger.log_error(f"Model type {model_config.type} not supported yet")
+        logger.log_error(f"Model type {model_config.type} not supported")
 
     return can_publish_model
 
 
-def assemble_command(
+def validate_update_command_component(
+    component: Component,
+    spec_path: Path,
+    final_version: str,
+    registry_name: str,
+) -> bool:
+    """Validate and update command component spec.
+
+    :param component: A command component
+    :type component: Component
+    :param spec_path: Path of loaded component
+    :type spec_path: Path
+    :param final_version: Final version string used to register component
+    :type final_version: str
+    :param registry_name: name of the registry to publish component to
+    :type registry_name: str
+    :return: True for successful validation and update
+    :rtype: bool
+    """
+    env = component.environment
+    match = None
+    env_registry_name = None
+    if (match := REGISTRY_ENV_PATTERN.match(env)) is not None:
+        env_registry_name, env_name, env_version, env_label = (
+            match.group(1), match.group(2), match.group(3), match.group(4))
+    elif (match := WORKSPACE_ASSET_PATTERN.match(env)) is not None:
+        env_name, env_version, env_label = match.group(1), match.group(2), match.group(3)
+    else:
+        logger.print(f"Env ID doesn't match workspace or registry pattern in {asset.spec_with_path}")
+        return False
+
+    logger.print(
+        f"Env name: {env_name}, version: {env_version}, label: {env_label}, env_registry_name: {env_registry_name}"
+    )
+
+    if env_registry_name and env_registry_name not in [PROD_SYSTEM_REGISTRY, registry_name]:
+        logger.log_warning(
+            "Unexpected !!! Registry name for component's env URI must be either "
+            + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{env_registry_name}'"
+        )
+        return False
+
+    registry_name = env_registry_name or registry_name
+
+    if env_label:
+        # TODO: Add fetching env from label
+        # https://github.com/Azure/azureml-assets/issues/415
+        logger.print("Unexpected !!! Registering a component with env label is not supported.")
+        return False
+
+    env = None
+    # Check if component's env is registered
+    for version in [env_version, final_version]:
+        if (env := get_registered_asset_details(
+            assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name
+        )) is not None:
+            break
+
+    if not env:
+        logger.print(f"Could not find a registered env for {component.name}. Please retry again!!!")
+        return False
+
+    env_id = env["id"]
+    logger.print(f"Updating component env to {env_id}")
+    component.environment = env_id
+    if not update_spec(component, spec_path):
+        logger.print(f"Component update failed for asset spec path: {asset.spec_path}")
+        return False
+    return True
+
+
+def run_command(cmd: List[str]):
+    """Run the command for and return result."""
+    result = run(cmd, capture_output=True, encoding=sys.stdout.encoding, errors="ignore")
+    return result
+
+
+def asset_publish_command(
     asset_type: str,
-    # subscription_id: str,
     asset_path: str,
     registry_name: str,
     version: str,
@@ -140,7 +235,6 @@ def assemble_command(
     """Assemble the az cli command."""
     cmd = [
         shutil.which("az"), "ml", asset_type, "create",
-        # "--subscription", subscription_id,
         "--file", asset_path,
         "--registry-name", registry_name,
         "--version", version,
@@ -151,33 +245,59 @@ def assemble_command(
         cmd.extend(["--workspace", workspace])
     if debug_mode:
         cmd.append("--debug")
-    print(cmd)
-
     return cmd
 
 
-def run_command(
-    cmd, failure_list: List, debug_mode: bool = None
+def publish_asset(
+    asset,
+    registry_name,
+    resource_group,
+    workspace_name,
+    version,
+    failure_list,
+    debug_mode: bool = None
 ):
-    """Run the az cli command for pushing the model to registry."""
+    """Publish asset to registry."""
+    cmd = asset_publish_command(
+        asset.type.value, str(asset.spec_with_path),
+        registry_name, version, resource_group, workspace_name, debug_mode
+    )
+
+    # Run command
+    result = run_command(cmd)
     if debug_mode:
         # Capture and redact output
-        results = run(
-            cmd,
-            stdout=PIPE,
-            stderr=STDOUT,
-            encoding=sys.stdout.encoding,
-            errors="ignore",
-        )
-        redacted_output = re.sub(r"Bearer.*", "", results.stdout)
-        logger.print(redacted_output)
-    else:
-        results = run(cmd)
+        logger.print(f"Executed: {cmd}")
+        redacted_output = sanitize_output(result.stdout)
+        redacted_err = sanitize_output(result.stderr)
+        if redacted_output:
+            logger.print(f"stdout:\n{redacted_output}")
+        if redacted_err:
+            logger.print(f"stderr:\n{redacted_err}")
 
-    # Check command result
-    if results.returncode != 0:
-        logger.log_warning(f"Error creating {asset.type.value} : {asset.name}")
+    if result.returncode != 0:
+        logger.log_warning(f"Error creating {asset.type.value} : {asset.name}. Error {redacted_err}")
         failure_list.append(asset)
+
+
+def get_registered_asset_details(
+    asset_type: str,
+    asset_name: str,
+    asset_version: str,
+    registry_name: str,
+) -> Dict:
+    """Return registered asset details."""
+    cmd = [
+        "az", "ml", asset_type, "show",
+        "--name", asset_name,
+        "--version", asset_version,
+        "--registry-name", registry_name,
+    ]
+    result = run_command(cmd)
+    if result.returncode != 0:
+        logger.log_warning(f"Error in fetching asset details. Error:\n{result.stderr}")
+        return None
+    return json.loads(result.stdout)
 
 
 def _str2bool(v: str) -> bool:
@@ -260,50 +380,60 @@ if __name__ == "__main__":
         if publish_asset_type.value not in publish_list:
             continue
         for asset in assets_by_type.get(publish_asset_type.value, []):
-            asset_names = publish_list.get(asset.type.value, [])
-            if not ("*" in asset_names or asset.name in asset_names):
-                logger.print(
-                    f"Skipping registering asset {asset.name} because it is not in the publish list")
-                continue
-            logger.print(f"Registering {asset}")
-            final_version = asset.version + "-" + \
-                passed_version if passed_version else asset.version
-            logger.print(f"final version: {final_version}")
-            asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
-                registry_name=registry_name,
-                asset_type=f"{asset.type.value}s",
-                asset_name=asset.name,
-                version=final_version,
-            )
+            with TemporaryDirectory() as work_dir:
+                asset_names = publish_list.get(asset.type.value, [])
+                if not ("*" in asset_names or asset.name in asset_names):
+                    logger.print(
+                        f"Skipping registering asset {asset.name} because it is not in the publish list")
+                    continue
+                logger.print(f"Registering {asset}")
+                final_version = asset.version + "-" + \
+                    passed_version if passed_version else asset.version
+                logger.print(f"final version: {final_version}")
+                asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
+                    registry_name=registry_name,
+                    asset_type=f"{asset.type.value}s",
+                    asset_name=asset.name,
+                    version=final_version,
+                )
 
-            # Handle specific asset types
-            if asset.type in [assets.AssetType.COMPONENT, assets.AssetType.ENVIRONMENT]:
-                # Assemble command
-                cmd = assemble_command(
-                    asset.type.value, str(asset.spec_with_path),
-                    registry_name, final_version, resource_group, workspace, debug_mode)
-                # Run command
-                run_command(cmd, failure_list, debug_mode)
+                # Handle specific asset types
+                if asset.type == assets.AssetType.COMPONENT:
+                    # load component and check if environment exists
+                    logger.print(f"spec's path: {asset.spec_with_path}")
+                    component = load_component(asset.spec_with_path)
+                    if component.type == "command":
+                        if not validate_update_command_component(
+                            component, asset.spec_with_path, final_version, registry_name
+                        ):
+                            failure_list.append(asset)
+                            continue
+                elif asset.type == assets.AssetType.MODEL:
+                    # check if model is already registered
+                    final_version = asset.version
+                    if get_registered_asset_details(asset.type.value, asset.name, final_version, registry_name):
+                        logger.print(f"Version already registered. Skipping publish for asset: {asset.name}")
+                        continue
 
-            elif asset.type == assets.AssetType.MODEL:
+                    try:
+                        model_config = asset.extra_config_as_object()
+                        if not prepare_model(model_config, asset.spec_with_path, Path(work_dir)):
+                            raise Exception(f"Could not prepare model at {asset.spec_with_path}")
+                    except Exception as e:
+                        logger.log_error(f"Model prepare exception. Error => {e}")
+                        failure_list.append(asset)
+                        continue
 
-                try:
-                    model_config = asset.extra_config_as_object()
-                    with TemporaryDirectory() as tempdir:
-                        result = model_prepare(model_config, asset.spec_with_path, Path(tempdir))
-                        if result:
-                            # Assemble Command
-                            cmd = assemble_command(
-                                asset.type.value, str(asset.spec_with_path),
-                                registry_name, asset.version, resource_group, workspace, debug_mode)
-                            # Run command
-                            run_command(cmd, failure_list, debug_mode)
-                except Exception as e:
-                    logger.log_error(f"Exception in loading model config: {str(e)}")
-                    failure_list.append(asset)
-
-            else:
-                logger.log_warning(f"unsupported asset type: {asset.type.value}")
+                # publish asset
+                publish_asset(
+                    asset=asset,
+                    version=final_version,
+                    registry_name=registry_name,
+                    resource_group=resource_group,
+                    workspace_name=workspace,
+                    failure_list=failure_list,
+                    debug_mode=debug_mode
+                )
 
     if len(failure_list) > 0:
         failed_assets = defaultdict(list)

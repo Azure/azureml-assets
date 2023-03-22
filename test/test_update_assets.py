@@ -62,7 +62,7 @@ def test_update_assets(test_subdir: str, skip_unreleased: bool, create_tag: bool
         # Create tag
         if create_tag:
             asset_config = util.find_assets(input_dirs=temp_release_path)[0]
-            repo.create_tag(assets.get_release_tag_name(asset_config))
+            repo.create_tag(asset_config.full_name)
 
         # Create updatable expected dir
         if expected_dir.exists():

@@ -1,7 +1,9 @@
 # Use of | tr -d '\n\r' is to handle newline mismatches on Windows systems
 
-app_name="azureml-assets"
-credential_params_file="credential_params.json"
+location="eastus"
+resource_group="azureml-assets-static"
+managed_identity="azureml-assets-uai"
+federated_identity="azureml-assets"
 
 echo "Retrieving subscription information..."
 subscription_name=$(az account show --query name -o tsv | tr -d '\n\r')
@@ -20,14 +22,15 @@ END
 [[ "$(read -e -p 'Continue? [y/N] '; echo $REPLY)" == [Yy]* ]] || exit
 echo
 
-echo "Creating ${app_name} application and service principal..."
-az ad app create --display-name $app_name
-app_id=$(az ad app list --display-name "${app_name}" --query "[0].appId" -o tsv | tr -d '\n\r')
-az ad sp show --id $app_id || az ad sp create --id $app_id
+echo "Creating ${resource_group} resource group..."
+az group show --name $resource_group || az group create --location $location --name $resource_group --tags "SkipAutoDeleteTill=2099-12-31"
 
-echo "Adding federated credential to ${app_name} application..."
-az ad app federated-credential create --id $app_id --parameters $credential_params_file
-exit
+echo "Creating ${managed_identity} user-assigned managed identity..."
+az identity create --name $managed_identity --resource-group $resource_group --location $location --subscription $subscription_id  
+managed_identity_id=$(az identity show --name $managed_identity --resource-group $resource_group --query principalId -o tsv | tr -d '\n\r')
 
-echo "Granting ${app_name} access to subscription..."
-az role assignment create --role Contributor --assignee $app_id
+echo "Creating ${federated_identity} federated identity credential..."
+az identity federated-credential create --name $federated_identity --identity-name $managed_identity --resource-group $resource_group --issuer 'https://token.actions.githubusercontent.com' --subject 'repo:Azure/azureml-assets:environment:Testing' --audiences 'api://AzureADTokenExchange'
+
+echo "Granting ${managed_identity} access to subscription..."
+az role assignment create --role Contributor --assignee $managed_identity_id --scope /subscriptions/$subscription_id

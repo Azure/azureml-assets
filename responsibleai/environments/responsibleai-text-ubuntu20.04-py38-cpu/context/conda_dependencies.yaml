@@ -1,35 +1,34 @@
 name: responsibleai-text
 channels:
   - conda-forge
+  - defaults
   - huggingface
   - anaconda
   - pytorch
 dependencies:
   - python=3.8
-  - pip=22.1.2
+  - pip
   - pytorch
   - torchvision
+  - captum
   - cpuonly
   - pip:
-    - numpy
-    - pandas
+    - numpy==1.21.6
+    - responsibleai~=0.24.1
+    - raiwidgets~=0.24.1
     - pyarrow
-    - scikit-learn
+    - azure-core==1.25.1
     - mlflow
-    - azureml-mlflow
-    - responsibleai~=0.23.0
-    - raiwidgets~=0.23.0
-    # Limit markupsafe version is a workaround to resolve the issue from markupsafe's breaking change: https://github.com/aws/aws-sam-cli/issues/3661
     - markupsafe<2.1.0
-    # Workaround to fix import failure related to itsdangerous's latest release: https://stackoverflow.com/questions/71189819/python-docker-importerror-cannot-import-name-json-from-itsdangerous
     - itsdangerous==2.0.1
     - azureml-dataset-runtime
     - azureml-core
-    - --extra-index-url https://azuremlsdktestpypi.azureedge.net/sdk-cli-v2
-    - nlp-feature-extractors==0.0.3
-    - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-text/responsibleai_text-0.0.7-py3-none-any.whl
-    - https://publictestdatasets.blob.core.windows.net/packages/pypi/azureml-model-serializer/azureml_model_serializer-0.0.2-py3-none-any.whl
+    - azureml-mlflow
+    - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-text/responsibleai_text-0.0.13-py3-none-any.whl
+    - https://publictestdatasets.blob.core.windows.net/packages/pypi/azureml-model-serializer/azureml_model_serializer-0.0.16-py3-none-any.whl
     - click<8.0.0
-    - mltable==0.1.0b4
+    - mltable==1.0.0
     - transformers>=4.17.0
-    - ml-wrappers==0.2.2
+    - ml-wrappers~=0.4.2
+    - nlp-feature-extractors==0.1.0
+    - datasets

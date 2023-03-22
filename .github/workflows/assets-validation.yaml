@@ -23,6 +23,7 @@ env:
   default_test_dirs: .,!test,!scripts,!.git,!.github
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
+  scripts_release_dir: scripts/release
   asset_config_filename: asset.yaml
 
 defaults:
@@ -38,8 +39,15 @@ jobs:
       - name: Clone branch
         uses: actions/checkout@v3
       
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+        with:
+          files_separator: ','
+          separator: ','
+      
       - name: Use Python 3.8 or newer
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: '>=3.8'
     
@@ -47,11 +55,9 @@ jobs:
         run: pip install -e $scripts_azureml_assets_dir
       
       - name: Validate assets
-        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename
+        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}" -I
 
       - name: Check test coverage
         run: |
           mkdir -p ${{ runner.temp }}/test_coverage
-          python -u $scripts_assets_dir/release/test_file_convert.py -i "${{ env.default_test_dirs }}" -r ${{ runner.temp }}/test_coverage
-
-
+          python -u $scripts_release_dir/test_file_convert.py -i "${{ env.default_test_dirs }}" -r ${{ runner.temp }}/test_coverage

@@ -1,0 +1,16 @@
+# data science
+numpy
+scipy
+pandas>=1.2.0
+adlfs>=2021.8.1
+scikit-learn
+torch
+torchvision
+
+# tracking
+mlflow
+azureml-mlflow
+
+# compatibility
+azure-core>=1.23.0
+typing-extensions>=4.0.1

@@ -1,0 +1,38 @@
+name: Environments Log Analysis Feedback
+description: File a feedback report detailing what was and wasn't helpful to you, and suggestions for improvement
+labels: ["environmentLogs"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for providing feedback on the environment analysis logs you used to troubleshoot your build failure.
+  - type: markdown
+    attributes:
+      value: |
+        # Describe your experience
+  - type: textarea
+    id: helpful
+    attributes:
+      label: Things you liked
+      description: What was most helpful when using environment logs?
+    validations:
+      required: true
+  - type: textarea
+    id: not-helpful
+    attributes:
+      label: Things you didn't like
+      description: What was helpful or confusing when using environment logs?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestions
+    attributes:
+      label: Suggestions
+      description: What would make the logs more helpful to you?
+    validations:
+      required: true
+  - type: textarea
+    id: more-info
+    attributes:
+      label: Addition information
+      description: If there is any additional information you'd like to share, please include it below.
