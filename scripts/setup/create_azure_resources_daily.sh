@@ -5,6 +5,7 @@ container_registry="azuremlassetscr${datestamp}"
 workspace="azureml-assets-ws-${datestamp}"
 cpu_cluster="cpu-cluster"
 gpu_cluster="gpu-cluster"
+gpu_v100_cluster="gpu-v100-cluster"
 
 echo "Installing Azure CLI extension for Azure Machine Learning"
 az extension add -n ml -y
@@ -13,7 +14,7 @@ echo "Configuring Azure CLI defaults"
 az configure --defaults group=$resource_group workspace=$workspace location=$location
 
 # See if the last resource to be created already exists, and if so bail early
-if az ml compute show --name $gpu_cluster >/dev/null 2>&1; then
+if az ml compute show --name $gpu_v100_cluster >/dev/null 2>&1; then
     echo "Azure resources already exist"
 else
     resource_name="resource group ${resource_group}"
@@ -51,6 +52,13 @@ else
         echo "Creating ${resource_name}"
         az ml compute create --name $gpu_cluster --size Standard_NC6 --min-instances 0 --max-instances 10 --type AmlCompute
     fi
+
+    resource_name="compute cluster ${gpu_v100_cluster}"
+    echo "Checking ${resource_name}"
+    if ! az ml compute show --name $gpu_v100_cluster --output none >/dev/null 2>&1; then
+        echo "Creating ${resource_name}"
+        az ml compute create --name $gpu_v100_cluster --size Standard_ND40rs_v2 --min-instances 0 --max-instances 2 --type AmlCompute
+    fi
 fi
 
 # Create environment variables
@@ -60,4 +68,5 @@ container_registry=${container_registry}
 workspace=${workspace}
 cpu_cluster=${cpu_cluster}
 gpu_cluster=${gpu_cluster}
+gpu_v100_cluster=${gpu_v100_cluster}
 EOF
