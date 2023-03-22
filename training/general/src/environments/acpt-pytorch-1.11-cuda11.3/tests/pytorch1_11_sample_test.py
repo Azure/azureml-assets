@@ -68,4 +68,6 @@ def test_pytorch_1_11():
             break
         time.sleep(30)  # sleep 30 seconds
 
+    with open('/home/runner/work/azureml-assets/azureml-assets/pytest-reports/environment/acpt-pytorch-1.11-cuda11.3.xml', 'r') as f:
+        print(f.read())
     assert current_status == "Completed"
