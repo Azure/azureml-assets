@@ -68,6 +68,12 @@ def test_pytorch_1_11():
             break
         time.sleep(30)  # sleep 30 seconds
 
+    bashCommand = "ls"
+    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+    output, error = process.communicate()
+    print(output)
+    print(error)
+
     if current_status=="Failed":
         ml_client.jobs.download(returned_job.name)
         if STD_LOG.exists():
@@ -78,9 +84,4 @@ def test_pytorch_1_11():
         else:
             ml_client.jobs.stream(returned_job.name)
 
-    bashCommand = "ls"
-    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    print(output)
-    print(error)
     assert current_status == "Completed"
