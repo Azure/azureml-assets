@@ -73,7 +73,7 @@ def _get_image_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = 
     image_processor = AutoImageProcessor.from_pretrained(input_dir, config=config, local_files_only=True)
 
     hf_conf["hf_predict_module"] = "predict"
-    hf_conf["train_label_list"] = sorted(list(config.label2id.keys()))
+    hf_conf["train_label_list"] = sorted(list(config.id2label.values()))
 
     predict_script = os.path.join(os.path.dirname(__file__), "vision", "predict.py")
     requirements_file = os.path.join(os.path.dirname(__file__), "vision", "requirements.txt")
