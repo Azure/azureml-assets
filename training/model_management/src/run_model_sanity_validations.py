@@ -1,15 +1,18 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Run Model Sanity Validations module."""
+"""Run MLflow Model local validations."""
 
 import argparse
+import json
 import logging
-import sys
+import mlflow
 import shutil
+import sys
 import yaml
-from azureml.model.mgmt.utils.common_utils import run_command
+import pandas as pd
 from pathlib import Path
+from typing import Dict
 
 
 MLFLOW_MODEL_SCORING_SCRIPT = "validations/mlflow_model_scoring_script.py"
@@ -25,6 +28,55 @@ logging.basicConfig(
     handlers=handlers
 )
 logger = logging.getLogger(__name__)
+
+
+def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: Dict):
+    ext = test_data_path.suffix
+    logger.info(f"file type: {ext}")
+    if ext == ".jsonl":
+        data = pd.read_json(test_data_path, lines=True, dtype=False)
+    elif ext == ".csv":
+        data = pd.read_csv(test_data_path)
+    else:
+        raise Exception("Unsupported file type")
+
+    # translations
+    if col_rename_map:
+        data.rename(columns=col_rename_map, inplace=True)
+
+    # Validations
+    logger.info(f"data cols => {data.columns}")
+    # validate model input signature matches with data provided
+    if mlmodel.get("signature", None):
+        input_signatures_str = mlmodel['signature'].get("inputs", None)
+    else:
+        logger.warning("signature is missing from MLModel file.")
+
+    if input_signatures_str:
+        input_signatures = json.loads(input_signatures_str)
+        logger.info(f"input_signatures: {input_signatures}")
+        for item in input_signatures:
+            if item.get("name") not in data.columns:
+                logger.warning(f"Missing {item.get('name')} in test data.")
+    else:
+        logger.warning("Input signature missing in MLmodel. Prediction might fail.")
+    return data
+
+
+def _load_and_infer_model(model_dir, data):
+    try:
+        model = mlflow.pyfunc.load_model(model_dir)
+    except Exception as e:
+        logger.error(f"Error in loading mlflow model: {e}")
+        raise Exception(f"Error in loading mlflow model: {e}")
+
+    try:
+        logger.info("Predicting model with test data!!!")
+        pred_results = model.predict(data)
+        logger.info(f"prediction results\n{pred_results}")
+    except Exception as e:
+        logger.error(f"Failed to infer model with provided dataset: {e}")
+        raise Exception(f"Failed to infer model with provided dataset: {e}")
 
 
 def _get_parser():
@@ -61,28 +113,24 @@ if __name__ == "__main__":
         conda_dict = yaml.safe_load(f)
         logger.info(f"conda :\n{conda_dict}\n")
 
-    cp_conda_yaml = f"cp {conda_env_file_path} ./"
-    conda_create_env_command = f"conda env create -p {CONDA_ENV_PREFIX} -f {CONDA_YAML_FILE_NAME} -q"
+    col_rename_map = {}
+    if col_rename_map_str:
+        mapping_list = col_rename_map_str.split(";")
+        print(mapping_list)
+        for item in mapping_list:
+            split = [] if not item else item.split(":")
+            if split:
+                col_rename_map[split[0]] = split[1]
+        logger.info(f"col_rename_map => {col_rename_map}")
 
-    logger.info("Creating conda env using MLFlow model conda file.")
-    cmd = cp_conda_yaml + " && " + conda_create_env_command
-    exit_code, stdout = run_command(cmd)
-    if exit_code != 0:
-        raise Exception(f"Error in creating conda env. Error {stdout}")
-    logger.info(f"conda env successfully created at {CONDA_ENV_PREFIX}")
-
-    run_model_inferencing_script = (
-        f"conda run -p  {CONDA_ENV_PREFIX} python {MLFLOW_MODEL_SCORING_SCRIPT}" +
-        f" --model-path {model_dir}" +
-        f" --test-data-path {test_data_path}" +
-        f" --column-rename-map {col_rename_map_str}"
+    _load_and_infer_model(
+        model_dir=model_dir,
+        data=_load_and_prepare_data(
+            test_data_path=test_data_path,
+            mlmodel=mlmodel_dict,
+            col_rename_map=col_rename_map,
+        )
     )
-
-    logger.info("Loading model and testing inference")
-    exit_code, stdout = run_command(run_model_inferencing_script)
-    if exit_code != 0:
-        raise Exception(f"Error in local validation for model. Error {stdout}")
-    logger.info(f"Local validation completed:\n{stdout}")
 
     # copy the model to output dir
     shutil.copytree(src=input_model_path, dst=output_model_path, dirs_exist_ok=True)
