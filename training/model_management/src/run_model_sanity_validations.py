@@ -43,7 +43,7 @@ if __name__ == "__main__":
     input_model_path: Path = args.model_path
     test_data_path: Path = args.test_data_path
     col_rename_map_str: str = args.column_rename_map
-    output_model_path: Path = args.output_model_path    
+    output_model_path: Path = args.output_model_path
 
     logger.info("##### logger.info args #####")
     for arg, value in args.__dict__.items():
@@ -60,7 +60,6 @@ if __name__ == "__main__":
     with open(conda_env_file_path) as f:
         conda_dict = yaml.safe_load(f)
         logger.info(f"conda :\n{conda_dict}\n")
-
 
     cp_conda_yaml = f"cp {conda_env_file_path} ./"
     conda_create_env_command = f"conda env create -p {CONDA_ENV_PREFIX} -f {CONDA_YAML_FILE_NAME} -q"
