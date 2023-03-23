@@ -43,8 +43,6 @@ def run_command(cmd: str, cwd: Path = "./") -> Tuple[int, str]:
     )
     if result.returncode != 0:
         print(f"Failed with error {result.stdout}.")
-    else:
-        print(f"Successfully executed! Output: \n{result.stdout}")
     return result.returncode, result.stdout
 
 

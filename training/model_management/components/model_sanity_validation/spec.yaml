@@ -14,14 +14,30 @@ environment: azureml:model-management:1
 code: ../../src/
 command: >
   python run_model_sanity_validations.py
-  --model-path ${{inputs.input_model}}
+  --model-path ${{inputs.model_path}}
   --test-data-path ${{inputs.test_data_path}}
+  $[[--column-rename-map "${{inputs.column_rename_map}}"]]
+  --output-model-path ${{outputs.mlflow_output_path}}
 
 inputs:
   model_path:
     type: mlflow_model
+    mode: ro_mount
     description: Input mlflow model for sanity validations
 
   test_data_path:
     type: uri_file
     description: Test dataset for model inference validation
+
+  column_rename_map:
+    type: string
+    optional: true
+    description: |
+      Provide mapping of dataset column names that should be renamed before inferencing.
+      eg: col1:ren1; col2:ren2; col3:ren3 
+
+outputs:
+  mlflow_output_path:
+    type: uri_folder
+    mode: rw_mount
+    description: Validated input model. Here input model is used to block further steps in pipeline job if local validation fails
