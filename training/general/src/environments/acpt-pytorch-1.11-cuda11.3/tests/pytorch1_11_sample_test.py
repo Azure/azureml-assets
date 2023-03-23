@@ -8,6 +8,7 @@ from pathlib import Path
 from azure.ai.ml import command, Output, MLClient, PyTorchDistribution
 from azure.ai.ml.entities import Environment, BuildContext, JobResourceConfiguration
 from azure.identity import AzureCliCredential
+import subprocess
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
@@ -77,4 +78,9 @@ def test_pytorch_1_11():
         else:
             ml_client.jobs.stream(returned_job.name)
 
+    bashCommand = "ls"
+    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+    output, error = process.communicate()
+    print(output)
+    print(error)
     assert current_status == "Completed"
