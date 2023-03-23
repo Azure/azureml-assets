@@ -3,7 +3,7 @@ type: pipeline
 name: hello_pipeline
 version: 0.0.1
 display_name: Hello World from Pipeline
-is_deterministic: false
+is_deterministic: true
 inputs:
   message:
     type: string

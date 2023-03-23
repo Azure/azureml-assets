@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+"""Hello World script."""
 from argparse import ArgumentParser
 
 

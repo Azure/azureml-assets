@@ -3,7 +3,7 @@ type: command
 name: hello_command
 version: 0.0.1
 display_name: Hello World from Command
-is_deterministic: false
+is_deterministic: true
 inputs:
   message:
     type: string
