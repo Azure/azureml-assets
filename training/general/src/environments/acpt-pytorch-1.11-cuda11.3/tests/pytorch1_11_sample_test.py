@@ -12,7 +12,7 @@ from azure.identity import AzureCliCredential
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 40)
-
+STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 def test_pytorch_1_11():
     """Tests a sample job using pytorch 1.11 as the environment."""
@@ -21,8 +21,7 @@ def test_pytorch_1_11():
     subscription_id = os.environ.get("subscription_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
-    print("hello!")
-    print(workspace_name)
+
     ml_client = MLClient(
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
@@ -58,7 +57,7 @@ def test_pytorch_1_11():
 
     returned_job = ml_client.create_or_update(job)
     assert returned_job is not None
-    print(returned_job.log_files)
+
 
     # Poll until final status is reached or timed out
     timeout = time.time() + (TIMEOUT_MINUTES * 60)
@@ -69,3 +68,12 @@ def test_pytorch_1_11():
         time.sleep(30)  # sleep 30 seconds
 
     assert current_status == "Completed"
+    if current_status=="Failed":
+        ml_client.jobs.download(returned_job.name)
+        if STD_LOG.exists():
+            print(f"*** BEGIN {STD_LOG} ***")
+            with open(STD_LOG, "r") as f:
+                print(f.read(), end="")
+            print(f"*** END {STD_LOG} ***")
+        else:
+            ml_client.jobs.stream(returned_job.name)
