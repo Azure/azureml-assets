@@ -67,7 +67,6 @@ def test_pytorch_1_11():
             break
         time.sleep(30)  # sleep 30 seconds
 
-    assert current_status == "Completed"
     if current_status=="Failed":
         ml_client.jobs.download(returned_job.name)
         if STD_LOG.exists():
@@ -77,3 +76,5 @@ def test_pytorch_1_11():
             print(f"*** END {STD_LOG} ***")
         else:
             ml_client.jobs.stream(returned_job.name)
+
+    assert current_status == "Completed"
