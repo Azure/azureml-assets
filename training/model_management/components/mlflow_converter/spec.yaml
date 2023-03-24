@@ -1,13 +1,13 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
-name: mlflow_converter
+name: convert_model_to_mlflow
 version: 0.0.1
 type: command
 
 is_deterministic: True
 
-display_name: MLFlow converter (Public Preview)
-description: Component converts the input model to MLFlow format
+display_name: Convert model to MLFlow
+description: Component converts the input model to MLFlow packaging format
 
 environment: azureml:model-management:1
 
@@ -16,23 +16,16 @@ command: >
   python run_model_preprocess.py
   $[[--model-id ${{inputs.model_id}}]]
   $[[--task-type ${{inputs.task_type}}]]
-  --mlflow-flavor ${{inputs.mlflow_flavor}}
+  --mlflow-flavor hftransformers
   --model-path ${{inputs.model_path}}
-  --model-info ${{inputs.model_info}}
-  --mlflow-model-output-dir ${{outputs.mlflow_model_output}}
+  --model-download-details ${{inputs.model_download_details}}
+  --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
 
 inputs:
-  mlflow_flavor:
-    type: string
-    description: MLFlow flavor to translate model to. Flavor information is used to determine model loader module
-    enum:
-      # TODO: add support for other flavors such as pytorch, tensorflow etc
-      - hftransformers
-
   model_id:
     type: string
     description: Huggingface model id (https://huggingface.co/<model_id>). A required parameter for hftransformers flavor. Can be provided as input here or in model_info JSON file.
-    optional: True
+    optional: true
 
   task_type:
     type: string
@@ -50,20 +43,24 @@ inputs:
       - image-classification-multilabel
       - text-to-image
     description: A Hugging face task on which model was trained on. A required parameter for hftransformers mlflow flavor. Can be provided as input here or in model_info JSON file.
-    optional: True
+    optional: true
 
-  model_info:
+  model_download_details:
     type: uri_file
-    description: JSON file containing model download details
+    optional: true
+    description: JSON file containing model download details.
 
   model_path:
     type: uri_folder
-    description: Path to the Hugging Face model
+    description: Path to the model.
     mode: ro_mount
     optional: false
 
 outputs:
-  mlflow_model_output:
+  mlflow_model_folder:
     type: mlflow_model
-    description: Output path for the converted MLFlow model
+    description: Output path for the converted MLFlow model.
     mode: rw_mount
+
+tags:
+    Preview: ""

@@ -16,7 +16,7 @@ def _get_parser():
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
     parser.add_argument("--task-type", type=str, required=False, help="Hugging Face task type")
     parser.add_argument("--mlflow-flavor", type=str, default=ModelFlavor.HFTRANSFORMERS.value, help="Model flavor")
-    parser.add_argument("--model-info", type=Path, required=False, help="Model info path")
+    parser.add_argument("--model-download-details", type=Path, required=False, help="Model download details")
     parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
     parser.add_argument("--mlflow-model-output-dir", type=Path, required=True, help="Output MLFlow model")
     return parser
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     model_id = args.model_id
     task_type = args.task_type
     mlflow_flavor = args.mlflow_flavor
-    model_info_path = args.model_info
+    model_download_details_path = args.model_download_details
     model_path = args.model_path
     mlflow_model_output_dir = args.mlflow_model_output_dir
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
         'task_type': task_type,
     }
 
-    with open(str(model_info_path)) as f:
+    with open(model_download_details_path) as f:
         preprocess_args.update(json.load(f))
 
     if mlflow_flavor == ModelFlavor.HFTRANSFORMERS.value:
