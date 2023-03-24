@@ -187,7 +187,7 @@ def main(args):
     model_info = {}
     with open(args.registration_details) as f:
         model_info = json.load(f)
-    model_id = model_info["registered_model_id"]
+    model_id = model_info["id"]
 
     endpoint = get_endpoint(args)
 
