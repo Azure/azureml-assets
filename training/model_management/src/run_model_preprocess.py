@@ -9,7 +9,9 @@ import json
 from azureml.model.mgmt.config import ModelFlavor
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from pathlib import Path
+import shutil
 
+LICENSE_FILE = 'LICENSE'
 
 def _get_parser():
     parser = argparse.ArgumentParser()
@@ -59,5 +61,12 @@ if __name__ == "__main__":
         _validate_hf_transformers_args(preprocess_args)
 
     run_preprocess(mlflow_flavor, model_path, mlflow_model_output_dir, **preprocess_args)
+
+    ## Adding support for license file if exist in model path
+    if os.path.exists(Path(model_path,LICENSE_FILE)):
+        shutil.copy(Path(model_path,LICENSE_FILE), mlflow_model_output_dir)
+    else:
+        print(f"License file does not exist for :{args.modell-id}")
+
     print(f"\nListing mlflow model directory: {mlflow_model_output_dir}:")
     print(os.listdir(mlflow_model_output_dir))
