@@ -18,9 +18,9 @@ command: >-
   $[[--model_type ${{inputs.model_type}}]]
   $[[--model_name ${{inputs.model_name}}]]
   $[[--registry_name ${{inputs.registry_name}}]]
-  $[[--model_info_path ${{inputs.model_info_path}}]]
+  $[[--download_details ${{inputs.download_details}}]]
   $[[--model_description "${{inputs.model_description}}"]]
-  $[[--model_metadata_path ${{inputs.model_metadata_path}}]]
+  $[[--model_metadata ${{inputs.model_metadata}}]]
   --registration_details ${{outputs.registration_details}}
 
 inputs:
@@ -53,17 +53,17 @@ inputs:
     optional: false
     description: Path to the model directory
 
-  model_info_path:
+  download_details:
     type: uri_file
     optional: true
-    description: A JSON file to provide model registration specific settings (name, type, description, tags, properties).
+    description: A JSON file which contains information related to model download.
 
-  model_metadata_path:
+  model_metadata:
     type: uri_file
     optional: true
-    description: Yaml file that contains tags, properties and description
+    description: YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
 
 outputs:
   registration_details:
     type: uri_file
-    description: Json File into which model registration details will be written
+    description: JSON file into which model registration details will be written

@@ -53,18 +53,18 @@ def parse_args():
     parser.add_argument(
         "--registration_details",
         type=str,
-        help="Json File into which model registration details will be written",
+        help="JSON file into which model registration details will be written",
     )
     parser.add_argument(
-        "--model_info_path",
+        "--download_details",
         type=str,
         help="Json file containing metadata related to the downloaded model",
         default=None,
     )
     parser.add_argument(
-        "--model_metadata_path",
+        "--model_metadata",
         type=str,
-        help="Yaml file that contains tags,properties and description",
+        help="YAML file that contains model metadata confirming to Model V2",
         default=None,
     )
     args = parser.parse_args()
@@ -95,15 +95,14 @@ def main(args):
     model_description = args.model_description
     registry_name = args.registry_name
     model_path = args.model_path
-    model_info_path = args.model_info_path
     registration_details = args.registration_details
     tags, properties = {}, {}
 
     ml_client = get_ml_client(registry_name)
 
     model_info = {}
-    if model_info_path:
-        with open(model_info_path) as f:
+    if args.download_details:
+        with open(args.download_details) as f:
             model_info = json.load(f)
 
     model_name = model_name or model_info.get("model_name").replace("/", "-")
@@ -137,12 +136,12 @@ def main(args):
         )
 
     # Updating tags and properties with value provided in metadata file
-    if args.model_metadata_path:
-        with open(args.model_metadata_path, "r") as stream:
+    if args.model_metadata:
+        with open(args.model_metadata, "r") as stream:
             metadata = yaml.safe_load(stream)
-            tags = metadata["tags"]
-            properties = metadata["properties"]
-            model_description = metadata["description"] or model_description
+            tags = metadata.get("tags", tags)
+            properties = metadata.get("properties", properties)
+            model_description = metadata.get("description", model_description)
 
     # Updating properties from model_info file
     for key in PROPERTIES:
