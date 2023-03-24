@@ -13,12 +13,10 @@ from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.entities import Model
 from azureml.core import Run
 from azure.identity import ManagedIdentityCredential
-from pathlib import Path
 import yaml
-import markdown
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
-PROPERTIES = ["commit_hash","model_size"]
+PROPERTIES = ["commit_hash", "model_size"]
 
 
 def parse_args():
@@ -99,7 +97,7 @@ def main(args):
     model_path = args.model_path
     model_info_path = args.model_info_path
     registration_details = args.registration_details
-    tags,properties = {},{}
+    tags, properties = {}, {}
 
     ml_client = get_ml_client(registry_name)
 
@@ -107,8 +105,8 @@ def main(args):
     if model_info_path:
         with open(model_info_path) as f:
             model_info = json.load(f)
-            
-    model_name = model_name or model_info.get("model_name").replace('/','-')
+
+    model_name = model_name or model_info.get("model_name").replace("/", "-")
     model_type = model_type or model_info.get("type")
 
     # validations
@@ -134,15 +132,17 @@ def main(args):
             max_version = (max(models_list, key=lambda x: x.version)).version
             model_version = str(int(max_version) + 1)
     except Exception:
-        print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
-    
+        print(
+            f"Error in listing versions for model {model_name}. Trying to register model with version '1'."
+        )
+
     # Updating tags and properties with value provided in metadata file
     if args.model_metadata_path:
-        with open(args.model_metadata_path, 'r') as stream:
+        with open(args.model_metadata_path, "r") as stream:
             metadata = yaml.safe_load(stream)
-            tags = metadata['tags']
-            properties = metadata['properties']
-            model_description = metadata['description'] or model_description
+            tags = metadata["tags"]
+            properties = metadata["properties"]
+            model_description = metadata["description"] or model_description
 
     # Updating properties from model_info file
     for key in PROPERTIES:
@@ -154,9 +154,9 @@ def main(args):
         type=model_type,
         path=model_path,
         tags=tags,
-        properties=properties
+        properties=properties,
     )
-    
+
     # register the model in workspace or registry
     print("Registering model ....")
     registered_model = ml_client.models.create_or_update(model)
@@ -164,22 +164,21 @@ def main(args):
 
     # Updating the description after registring (*Bugs need to be fixed)
     if model_description:
-        registered_model = ml_client.models.get(name = model_name, version = model_version)
+        registered_model = ml_client.models.get(name=model_name, version=model_version)
         registered_model.description = model_description
-
         registered_model = ml_client.models.create_or_update(model)
-    
+
     # Registered model information
     model_info = {
         "id": registered_model.id,
         "name": registered_model.name,
         "version": registered_model.version,
-        "path" : registered_model.path,
+        "path": registered_model.path,
         "flavors": registered_model.flavors,
         "type": registered_model.type,
         "properties": registered_model.properties,
         "tags": registered_model.tags,
-        "description": registered_model.description
+        "description": registered_model.description,
     }
     json_object = json.dumps(model_info, indent=4)
 
