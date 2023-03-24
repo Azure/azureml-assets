@@ -66,7 +66,7 @@ if __name__ == "__main__":
     if os.path.exists(Path(model_path,LICENSE_FILE)):
         shutil.copy(Path(model_path,LICENSE_FILE), mlflow_model_output_dir)
     else:
-        print(f"License file does not exist for :{args.modell-id}")
+        print(f"License file does not exist for :{args.model_id}")
 
     print(f"\nListing mlflow model directory: {mlflow_model_output_dir}:")
     print(os.listdir(mlflow_model_output_dir))
