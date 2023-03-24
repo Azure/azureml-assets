@@ -23,9 +23,9 @@ def _get_parser():
 
 
 def _validate_hf_transformers_args(args):
-    if "model_id" not in args:
+    if not args.get("model_id"):
         raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
-    if "task_type" not in args:
+    if not args.get("task_type"):
         raise Exception("task_type is a required parameter for hftransformers mlflow flavor.")
 
 
