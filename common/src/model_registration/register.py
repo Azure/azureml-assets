@@ -166,7 +166,7 @@ def main(args):
     if model_description:
         registered_model = ml_client.models.get(name=model_name, version=model_version)
         registered_model.description = model_description
-        registered_model = ml_client.models.create_or_update(model)
+        registered_model = ml_client.models.create_or_update(registered_model)
 
     # Registered model information
     model_info = {
