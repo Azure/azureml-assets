@@ -44,3 +44,6 @@ outputs:
     type: uri_folder
     mode: rw_mount
     description: Validated input model. Here input model is used to block further steps in pipeline job if local validation fails
+
+tags:
+  Preview: ""

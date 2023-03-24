@@ -92,7 +92,7 @@ if __name__ == "__main__":
     parser = _get_parser()
     args, _ = parser.parse_known_args()
 
-    input_model_path: Path = args.model_path
+    model_dir: Path = args.model_path
     test_data_path: Path = args.test_data_path
     col_rename_map_str: str = args.column_rename_map
     output_model_path: Path = args.output_model_path
@@ -101,7 +101,6 @@ if __name__ == "__main__":
     for arg, value in args.__dict__.items():
         logger.info(f"{arg} => {value}")
 
-    model_dir = f"{input_model_path}"
     mlmodel_file_path = f"{model_dir}/{MLMODEL_FILE_NAME}"
     conda_env_file_path = f"{model_dir}/{CONDA_YAML_FILE_NAME}"
 
@@ -133,4 +132,4 @@ if __name__ == "__main__":
     )
 
     # copy the model to output dir
-    shutil.copytree(src=input_model_path, dst=output_model_path, dirs_exist_ok=True)
+    shutil.copytree(src=model_dir, dst=output_model_path, dirs_exist_ok=True)
