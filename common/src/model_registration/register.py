@@ -145,7 +145,8 @@ def main(args):
 
     # Updating properties from model_info file
     for key in PROPERTIES:
-        properties[key] = model_info["metadata"]["download_details"][key]
+        if key in model_info["metadata"]["download_details"]:
+            properties[key] = model_info["metadata"]["download_details"][key]
 
     model = Model(
         name=model_name,
