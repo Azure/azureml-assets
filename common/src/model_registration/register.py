@@ -18,6 +18,7 @@ import yaml
 import markdown
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
+PROPERTIES = ["commit_hash","model_size"]
 
 
 def parse_args():
@@ -57,20 +58,15 @@ def parse_args():
         help="Json File into which model registration details will be written",
     )
     parser.add_argument(
-        "--model_description_file_path",
-        type=str,
-        help="Mardown file that contains the description of model",
-    )
-    parser.add_argument(
         "--model_info_path",
         type=str,
-        help="Json file containing metadata related to the model",
+        help="Json file containing metadata related to the downloaded model",
         default=None,
     )
     parser.add_argument(
-        "--model_metadata_file_path",
+        "--model_metadata_path",
         type=str,
-        help="Yaml file that contains tags and properties",
+        help="Yaml file that contains tags,properties and description",
         default=None,
     )
     args = parser.parse_args()
@@ -103,6 +99,7 @@ def main(args):
     model_path = args.model_path
     model_info_path = args.model_info_path
     registration_details = args.registration_details
+    tags,properties = {},{}
 
     ml_client = get_ml_client(registry_name)
 
@@ -113,9 +110,6 @@ def main(args):
             
     model_name = model_name or model_info.get("model_name").replace('/','-')
     model_type = model_type or model_info.get("type")
-    model_description = model_description or model_info.get("description")
-    tags = model_info.get("tags", {})
-    properties = model_info.get("properties", {})
 
     # validations
     if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
@@ -143,16 +137,16 @@ def main(args):
         print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
     
     # Updating tags and properties with value provided in metadata file
-    if args.model_metadata_file_path:
-        with open(args.model_metadata_file_path, 'r') as stream:
+    if args.model_metadata_path:
+        with open(args.model_metadata_path, 'r') as stream:
             metadata = yaml.safe_load(stream)
-            tags = metadata['tags'] or tags
-            properties = metadata['properties'] or properties
+            tags = metadata['tags']
+            properties = metadata['properties']
+            model_description = metadata['description'] or model_description
 
-    # Updating description with value provided in description file
-    if args.model_description_file_path:
-        with open(args.model_description_file_path, 'r') as f:
-            model_description = f.read() or model_description
+    # Updating properties from model_info file
+    for key in PROPERTIES:
+        properties[key] = model_info["metadata"]["download_details"][key]
 
     model = Model(
         name=model_name,
@@ -160,8 +154,7 @@ def main(args):
         type=model_type,
         path=model_path,
         tags=tags,
-        properties=properties,
-        description=model_description
+        properties=properties
     )
     
     # register the model in workspace or registry
@@ -169,15 +162,24 @@ def main(args):
     registered_model = ml_client.models.create_or_update(model)
     print(f"Model registered. AssetID : {registered_model.id}")
 
+    # Updating the description after registring (*Bugs need to be fixed)
+    if model_description:
+        registered_model = ml_client.models.get(name = model_name, version = model_version)
+        registered_model.description = model_description
+
+        registered_model = ml_client.models.create_or_update(model)
+    
     # Registered model information
     model_info = {
-        "registered_model_id": registered_model.id,
+        "id": registered_model.id,
         "name": registered_model.name,
-        "base_path" : registered_model.base_path,
         "version": registered_model.version,
         "path" : registered_model.path,
         "flavors": registered_model.flavors,
-        "type": registered_model.type
+        "type": registered_model.type,
+        "properties": registered_model.properties,
+        "tags": registered_model.tags,
+        "description": registered_model.description
     }
     json_object = json.dumps(model_info, indent=4)
 
