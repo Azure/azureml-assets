@@ -14,7 +14,8 @@ from azure.ai.ml.entities import Model
 from azureml.core import Run
 from azure.identity import ManagedIdentityCredential
 from pathlib import Path
-
+import yaml
+import markdown
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
 
@@ -53,7 +54,12 @@ def parse_args():
     parser.add_argument(
         "--registration_details",
         type=str,
-        help="Text File into which model registration details will be written",
+        help="Json File into which model registration details will be written",
+    )
+    parser.add_argument(
+        "--model_description_file_path",
+        type=str,
+        help="Mardown file that contains the description of model",
     )
     parser.add_argument(
         "--model_info_path",
@@ -61,7 +67,12 @@ def parse_args():
         help="Json file containing metadata related to the model",
         default=None,
     )
-
+    parser.add_argument(
+        "--model_metadata_file_path",
+        type=str,
+        help="Yaml file that contains tags and properties",
+        default=None,
+    )
     args = parser.parse_args()
     print("args received ", args)
     return args
@@ -99,10 +110,10 @@ def main(args):
     if model_info_path:
         with open(model_info_path) as f:
             model_info = json.load(f)
-
-    model_name = model_info.get("name", model_name)
-    model_type = model_info.get("type", model_type)
-    model_description = model_info.get("description", model_description)
+            
+    model_name = model_name or model_info.get("model_name").replace('/','-')
+    model_type = model_type or model_info.get("type")
+    model_description = model_description or model_info.get("description")
     tags = model_info.get("tags", {})
     properties = model_info.get("properties", {})
 
@@ -130,6 +141,18 @@ def main(args):
             model_version = str(int(max_version) + 1)
     except Exception:
         print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
+    
+    # Updating tags and properties with value provided in metadata file
+    if args.model_metadata_file_path:
+        with open(args.model_metadata_file_path, 'r') as stream:
+            metadata = yaml.safe_load(stream)
+            tags = metadata['tags'] or tags
+            properties = metadata['properties'] or properties
+
+    # Updating description with value provided in description file
+    if args.model_description_file_path:
+        with open(args.model_description_file_path, 'r') as f:
+            model_description = f.read() or model_description
 
     model = Model(
         name=model_name,
@@ -138,15 +161,29 @@ def main(args):
         path=model_path,
         tags=tags,
         properties=properties,
+        description=model_description
     )
-
+    
     # register the model in workspace or registry
     print("Registering model ....")
     registered_model = ml_client.models.create_or_update(model)
     print(f"Model registered. AssetID : {registered_model.id}")
 
-    (Path(registration_details)).write_text(registered_model.id)
-    print("Saved model registration details in output text file.")
+    # Registered model information
+    model_info = {
+        "registered_model_id": registered_model.id,
+        "name": registered_model.name,
+        "base_path" : registered_model.base_path,
+        "version": registered_model.version,
+        "path" : registered_model.path,
+        "flavors": registered_model.flavors,
+        "type": registered_model.type
+    }
+    json_object = json.dumps(model_info, indent=4)
+
+    with open(registration_details, "w") as outfile:
+        outfile.write(json_object)
+    print("Saved model registration details in output json file.")
 
 
 # run script

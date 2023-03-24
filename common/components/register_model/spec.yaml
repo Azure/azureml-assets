@@ -20,6 +20,8 @@ command: >-
   $[[--registry_name ${{inputs.registry_name}}]]
   $[[--model_info_path ${{inputs.model_info_path}}]]
   $[[--model_description "${{inputs.model_description}}"]]
+  $[[--model_description_file_path ${{inputs.model_description_file_path}}]]
+  $[[--model_metadata_file_path ${{inputs.model_metadata_file_path}}]]
   --registration_details ${{outputs.registration_details}}
 
 inputs:
@@ -57,7 +59,17 @@ inputs:
     optional: true
     description: A JSON file to provide model registration specific settings (name, type, description, tags, properties). This will take priority over values provided through component inputs
 
+  model_description_file_path:
+    type: uri_file
+    optional: true
+    description: Mardown file that contains the description of model
+
+  model_metadata_file_path:
+    type: uri_file
+    optional: true
+    description: Yaml file that contains tags and properties
+
 outputs:
   registration_details:
     type: uri_file
-    description: Text File into which model registration details will be written
+    description: Json File into which model registration details will be written
