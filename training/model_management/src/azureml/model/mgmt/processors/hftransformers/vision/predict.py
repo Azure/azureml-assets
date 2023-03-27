@@ -92,8 +92,24 @@ def _process_image(img: pd.Series) -> pd.Series:
     if _is_valid_url(image):
         image = requests.get(image).content
         return pd.Series(image)
+    elif _is_valid_base64_format(image):
+        return pd.Series(base64.b64decode(image))
     else:
-        return pd.Series(base64.b64decode(img[0]))
+        raise ValueError("Invalid image format")
+
+
+def _is_valid_base64_format(text: str) -> bool:
+    """check if text is base64 string
+    :param text: text to validate
+    :type text: str
+    :return: True if base64 else false
+    :rtype: bool
+    """
+    try:
+        base64.b64decode(text)
+        return True
+    except Exception:
+        return False
 
 
 def _is_valid_url(text: str) -> bool:
