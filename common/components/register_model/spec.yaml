@@ -21,7 +21,7 @@ command: >-
   $[[--model_info_path ${{inputs.model_info_path}}]]
   $[[--model_description "${{inputs.model_description}}"]]
   --registration_details ${{outputs.registration_details}}
-
+  
 inputs:
   model_name:
     type: string
