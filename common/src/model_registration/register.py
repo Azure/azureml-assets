@@ -100,7 +100,10 @@ def is_model_available(ml_client, model_name, model_version):
     try:
         ml_client.models.get(name=model_name, version=model_version)
     except Exception as e:
-        print(f"Model with name - {model_name} and version - {model_version} is not available.", e)
+        print(
+            f"Model with name - {model_name} and version - {model_version} is not available.",
+            e,
+        )
         is_available = False
     return is_available
 
@@ -133,7 +136,7 @@ def main(args):
 
     if not model_name:
         raise Exception(
-            "Model name is a required parameter. Provide model_name in the component input or in the model_download_metadata JSON"
+            "Missing Model Name. Provide model_name as input or in the model_download_metadata JSON"
         )
 
     if model_type == "mlflow_model":
