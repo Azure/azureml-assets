@@ -60,3 +60,4 @@ outputs:
   registration_details:
     type: uri_file
     description: Text File into which model registration details will be written
+    
