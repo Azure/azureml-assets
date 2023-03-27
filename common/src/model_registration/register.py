@@ -70,7 +70,7 @@ def parse_args():
     parser.add_argument(
         "--model_version",
         type=str,
-        help="Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented",
+        help="Model version in workspace/registry. If model with same version exists,version will be auto incremented",
         default=None,
     )
     args = parser.parse_args()
@@ -98,8 +98,9 @@ def is_model_available(ml_client, model_name, model_version):
     """Returns true if model is available else false."""
     is_available = True
     try:
-        model = ml_client.models.get(name=model_name, version=model_version)
-    except:
+        ml_client.models.get(name=model_name, version=model_version)
+    except Exception as e:
+        print(f"Model with name - {model_name} and version - {model_version} is not available.")
         is_available = False
     return is_available
 
