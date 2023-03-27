@@ -12,7 +12,8 @@ from pathlib import Path
 from typing import List
 
 
-PROPERTIES = ["model_id", "size", "commit_hash", "SHA", "license", "dataset", "languages", "finetuning_tasks", "last_modified"]
+PROPERTIES = [
+    "model_id", "size", "commit_hash", "SHA", "license", "dataset", "languages", "finetuning_tasks", "last_modified"]
 TAGS = ["task_name"]
 
 
