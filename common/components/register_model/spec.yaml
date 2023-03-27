@@ -19,7 +19,7 @@ command: >-
   $[[--model_name ${{inputs.model_name}}]]
   $[[--model_version ${{inputs.model_version}}]]
   $[[--registry_name ${{inputs.registry_name}}]]
-  $[[--download_details ${{inputs.download_details}}]]
+  $[[--model_download_metadata ${{inputs.model_download_metadata}}]]
   $[[--model_description "${{inputs.model_description}}"]]
   $[[--model_metadata ${{inputs.model_metadata}}]]
   --registration_details ${{outputs.registration_details}}
@@ -59,7 +59,7 @@ inputs:
     optional: false
     description: Path to the model directory
 
-  download_details:
+  model_download_metadata:
     type: uri_file
     optional: true
     description: A JSON file which contains information related to model download.

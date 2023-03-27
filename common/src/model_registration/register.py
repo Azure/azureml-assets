@@ -56,7 +56,7 @@ def parse_args():
         help="JSON file into which model registration details will be written",
     )
     parser.add_argument(
-        "--download_details",
+        "--model_download_metadata",
         type=str,
         help="Json file containing metadata related to the downloaded model",
         default=None,
@@ -118,13 +118,14 @@ def main(args):
 
     ml_client = get_ml_client(registry_name)
 
-    model_info = {}
-    if args.download_details:
-        with open(args.download_details) as f:
-            model_info = json.load(f)
+    model_download_metadata = {}
+    if args.model_download_metadata:
+        with open(args.model_download_metadata) as f:
+            model_download_metadata = json.load(f)
 
-    model_name = model_name or model_info.get("model_name", "").replace("/", "-")
-    model_type = model_type or model_info.get("type")
+    model_name = model_name or model_download_metadata.get("name", "").replace("/", "-")
+    tags = model_download_metadata.get("tags", tags)
+    properties = model_download_metadata.get("properties", properties)
 
     # validations
     if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
@@ -132,7 +133,7 @@ def main(args):
 
     if not model_name:
         raise Exception(
-            "Model name is a required parameter. Provide model_name in the component input or in the model_info JSON"
+            "Model name is a required parameter. Provide model_name in the component input or in the model_download_metadata JSON"
         )
 
     if model_type == "mlflow_model":
@@ -161,11 +162,7 @@ def main(args):
             tags = metadata.get("tags", tags)
             properties = metadata.get("properties", properties)
             model_description = metadata.get("description", model_description)
-
-    # Updating properties from model_info file
-    for key in PROPERTIES:
-        if key in model_info["metadata"]["download_details"]:
-            properties[key] = model_info["metadata"]["download_details"][key]
+            model_type = metadata.get("type", model_type)
 
     # Adding Preview tag in model
     tags["Preview"] = ""
