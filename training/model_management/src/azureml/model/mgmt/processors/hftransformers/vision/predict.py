@@ -1,8 +1,7 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
-"""Huggingface classification predict file for mlflow."""
+"""Huggingface predict file for Image classification mlflow model."""
 
 import base64
 import io

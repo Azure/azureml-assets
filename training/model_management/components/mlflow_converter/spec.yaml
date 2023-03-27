@@ -15,10 +15,10 @@ code: ../../src/
 command: >
   python run_model_preprocess.py
   $[[--model-id ${{inputs.model_id}}]]
-  $[[--task-type ${{inputs.task_type}}]]
+  $[[--task-name ${{inputs.task_name}}]]
   --mlflow-flavor hftransformers
   --model-path ${{inputs.model_path}}
-  --model-download-details ${{inputs.model_download_details}}
+  --model-download-metadata ${{inputs.model_download_metadata}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
 
 inputs:
@@ -27,7 +27,7 @@ inputs:
     description: Huggingface model id (https://huggingface.co/<model_id>). A required parameter for hftransformers flavor. Can be provided as input here or in model_info JSON file.
     optional: true
 
-  task_type:
+  task_name:
     type: string
     enum:
       - multiclass
@@ -45,7 +45,7 @@ inputs:
     description: A Hugging face task on which model was trained on. A required parameter for hftransformers mlflow flavor. Can be provided as input here or in model_info JSON file.
     optional: true
 
-  model_download_details:
+  model_download_metadata:
     type: uri_file
     optional: true
     description: JSON file containing model download details.

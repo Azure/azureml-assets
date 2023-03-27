@@ -23,20 +23,20 @@ from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from typing import Dict
 
 
-def _get_default_task_signatures(task_type) -> Dict:
+def _get_default_task_signatures(task_name) -> Dict:
     """Return mlflow i/p and o/p signature for a hftransformers supported task."""
-    if task_type == SupportedTasks.TEXT_TO_IMAGE.value:
+    if task_name == SupportedTasks.TEXT_TO_IMAGE.value:
         return {
             "inputs": '[{"name": "input_string", "type": "string"}]',
             "outputs": '[{"name": "image", "type": "string"}]'
         }
-    elif SupportedVisionTasks.has_value(task_type):
+    elif SupportedVisionTasks.has_value(task_name):
         return {
             "inputs": '[{"name": "image", "type": "string"}]',
             "outputs": '[{"name": "probs", "type": "string"}, {"name": "labels", "type": "string"}]'
         }
-    elif SupportedNLPTasks.has_value(task_type):
-        if task_type == SupportedTasks.QUESTION_ANSWERING.value:
+    elif SupportedNLPTasks.has_value(task_name):
+        if task_name == SupportedTasks.QUESTION_ANSWERING.value:
             return {
                 "inputs": '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]',
                 "outputs": '[{"type": "string"}]'
@@ -139,13 +139,13 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     """Convert Hugging face pytorch model to Mlflow."""
     signatures = translate_params.get('signature')
     model_id = translate_params['model_id']
-    task_type = translate_params['task_type']
+    task_name = translate_params['task_name']
 
-    task_category = task_type if "stable-diffusion" not in model_id else "stable-diffusion"
+    task_category = task_name if "stable-diffusion" not in model_id else "stable-diffusion"
     hf_pretrained_class = TaskToClassMapping.get_loader_class_name(task_category)
 
     hf_conf = {
-        'task_type': task_type,
+        'task_name': task_name,
         'hf_pretrained_class': hf_pretrained_class,
         'huggingface_id': model_id,
     }
@@ -164,6 +164,6 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     hf_mlflow.hftransformers.save_model(**model_configs)
 
     # add signatures
-    signatures = signatures if signatures else _get_default_task_signatures(task_type)
+    signatures = signatures if signatures else _get_default_task_signatures(task_name)
     _add_mlflow_signature(output_dir, signatures)
     print("Model saved!!!")
