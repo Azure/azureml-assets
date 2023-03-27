@@ -72,12 +72,10 @@ def _get_image_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = 
     config = AutoConfig.from_pretrained(input_dir, local_files_only=True)
     image_processor = AutoImageProcessor.from_pretrained(input_dir, config=config, local_files_only=True)
 
-    hf_conf["hf_predict_module"] = "hf_test_predict"
-    hf_conf["hf_tokenizer_class"] = AutoImageProcessor.__name__
-    hf_conf["train_label_list"] = sorted(list(config.label2id.keys()))
+    hf_conf["hf_predict_module"] = "predict"
+    hf_conf["train_label_list"] = list(config.id2label.values())
 
     predict_script = os.path.join(os.path.dirname(__file__), "vision", "predict.py")
-    requirements_file = os.path.join(os.path.dirname(__file__), "vision", "requirements.txt")
 
     return {
         "hf_model": str(model_dir),
@@ -85,8 +83,7 @@ def _get_image_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = 
         "tokenizer": image_processor,
         "config": config,
         "hf_conf": hf_conf,
-        "code_paths": [predict_script],
-        "pip_requirements": requirements_file
+        "code_paths": [predict_script]
     }
 
 
