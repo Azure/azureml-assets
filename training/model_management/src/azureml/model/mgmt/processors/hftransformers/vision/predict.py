@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 class HFTaskLiterals:
     """HF task name constants."""
+
     MULTI_CLASS_IMAGE_CLASSIFICATION = "image-classification"
     MULTI_LABEL_CLASSIFICATION = "image-classification-multilabel"
 
@@ -78,8 +79,10 @@ def create_temp_file(request_body: bytes, parent_dir: str) -> str:
 
 
 def _process_image(img: pd.Series) -> pd.Series:
-    """If input image is in base64 string format, decode it to bytes. If input image is in url format,
-    download it and return bytes.
+    """Process input image.
+
+    If input image is in base64 string format, decode it to bytes.
+    If input image is in url format, download it and return bytes.
     https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
 
     :param img: pandas series with image in base64 string format or url.
@@ -98,7 +101,8 @@ def _process_image(img: pd.Series) -> pd.Series:
 
 
 def _is_valid_url(text: str) -> bool:
-    """check if text is url or base64 string
+    """Check if text is url or base64 string.
+
     :param text: text to validate
     :type text: str
     :return: True if url else false
