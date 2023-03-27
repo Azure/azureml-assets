@@ -16,7 +16,7 @@ command: >
   python run_model_download.py
   --model-source ${{inputs.model_source}}
   --model-id ${{inputs.model_id}}
-  --model-info ${{outputs.model_info}}
+  --model-download-metadata ${{outputs.model_download_metadata}}
   --model-output-dir ${{outputs.model_output}}
 
 inputs:
@@ -33,7 +33,7 @@ inputs:
     description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
 
 outputs:
-  model_info:
+  model_download_metadata:
     type: uri_file
     description: File name to which model download details will be written
 
