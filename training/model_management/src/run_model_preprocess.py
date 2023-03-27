@@ -14,9 +14,9 @@ from pathlib import Path
 def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
-    parser.add_argument("--task-type", type=str, required=False, help="Hugging Face task type")
+    parser.add_argument("--task-name", type=str, required=False, help="Hugging Face task type")
     parser.add_argument("--mlflow-flavor", type=str, default=ModelFlavor.HFTRANSFORMERS.value, help="Model flavor")
-    parser.add_argument("--model-download-details", type=Path, required=False, help="Model download details")
+    parser.add_argument("--model-download-metadata", type=Path, required=False, help="Model download details")
     parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
     parser.add_argument("--mlflow-model-output-dir", type=Path, required=True, help="Output MLFlow model")
     return parser
@@ -25,8 +25,8 @@ def _get_parser():
 def _validate_hf_transformers_args(args):
     if not args.get("model_id"):
         raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
-    if not args.get("task_type"):
-        raise Exception("task_type is a required parameter for hftransformers mlflow flavor.")
+    if not args.get("task_name"):
+        raise Exception("task_name is a required parameter for hftransformers mlflow flavor.")
 
 
 if __name__ == "__main__":
@@ -34,9 +34,9 @@ if __name__ == "__main__":
     args, _ = parser.parse_known_args()
 
     model_id = args.model_id
-    task_type = args.task_type
+    task_name = args.task_name
     mlflow_flavor = args.mlflow_flavor
-    model_download_details_path = args.model_download_details
+    model_download_metadata_path = args.model_download_metadata
     model_path = args.model_path
     mlflow_model_output_dir = args.mlflow_model_output_dir
 
@@ -49,11 +49,13 @@ if __name__ == "__main__":
 
     preprocess_args = {
         'model_id': model_id,
-        'task_type': task_type,
+        'task_name': task_name,
     }
 
-    with open(model_download_details_path) as f:
-        preprocess_args.update(json.load(f))
+    with open(model_download_metadata_path) as f:
+        download_details = json.load(f)
+        preprocess_args.update(download_details.get("tags", {}))
+        preprocess_args.update(download_details.get("properties", {}))
 
     if mlflow_flavor == ModelFlavor.HFTRANSFORMERS.value:
         _validate_hf_transformers_args(preprocess_args)

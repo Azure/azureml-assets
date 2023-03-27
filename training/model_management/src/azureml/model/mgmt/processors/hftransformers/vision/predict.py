@@ -78,7 +78,7 @@ def create_temp_file(request_body: bytes, parent_dir: str) -> str:
 
 
 def _process_image(img: pd.Series) -> pd.Series:
-    """If input image is in base64 string format, decode it to bytes. If input image is in url format, 
+    """If input image is in base64 string format, decode it to bytes. If input image is in url format,
     download it and return bytes.
     https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
 
@@ -220,7 +220,7 @@ def run_inference_batch(
     :type task_type: HFTaskLiterals
     :param threshold: threshold for multi_label_classification
     :type threshold: optional, float
-    :return: Predicted labels index, Predicted probabilities, 
+    :return: Predicted labels index, Predicted probabilities
     :rtype: Tuple of torch.tensor, torch.tensor
     """
 
