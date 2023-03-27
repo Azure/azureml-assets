@@ -23,7 +23,7 @@ class HuggingfaceDownloader():
     URI_TYPE = PathType.GIT.value
 
     def __init__(self, model_id: str):
-        """HuggingfaceDownloader init.
+        """Huggingface downloader init.
 
         param model_id: https://huggingface.co/<model_id>
         type model_id: str
@@ -85,7 +85,7 @@ class GITDownloader:
     URI_TYPE = PathType.GIT.value
 
     def __init__(self, model_uri):
-        """GITDownloader init.
+        """GIT downloader init.
 
         param model_uri: GIT repository URL for the model.
             eg: https://github.com/some_model
@@ -111,7 +111,7 @@ class AzureBlobstoreDownloader:
     URI_TYPE = PathType.AZUREBLOB.value
 
     def __init__(self, model_uri: str):
-        """AzureBlobstoreDownloader init.
+        """Azure blobstore downloader init.
 
         param model_uri: blobstore path to the model.
             eg: https://blobstorageaccount.blob.core.windows.net/models/model_folder
