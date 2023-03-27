@@ -76,7 +76,6 @@ def _get_image_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = 
     hf_conf["train_label_list"] = list(config.id2label.values())
 
     predict_script = os.path.join(os.path.dirname(__file__), "vision", "predict.py")
-    requirements_file = os.path.join(os.path.dirname(__file__), "vision", "requirements.txt")
 
     return {
         "hf_model": str(model_dir),
@@ -84,8 +83,7 @@ def _get_image_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = 
         "tokenizer": image_processor,
         "config": config,
         "hf_conf": hf_conf,
-        "code_paths": [predict_script],
-        "pip_requirements": requirements_file
+        "code_paths": [predict_script]
     }
 
 
