@@ -67,6 +67,12 @@ def parse_args():
         help="YAML file that contains model metadata confirming to Model V2",
         default=None,
     )
+    parser.add_argument(
+        "--model_version",
+        type=str,
+        help="Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented",
+        default=None,
+    )
     args = parser.parse_args()
     print("args received ", args)
     return args
@@ -88,6 +94,16 @@ def get_ml_client(registry_name):
     return MLClient(credential=credential, registry_name=registry_name)
 
 
+def is_model_available(ml_client, model_name, model_version):
+    """Returns true if model is available else false."""
+    is_available = True
+    try:
+        model = ml_client.models.get(name=model_name, version=model_version)
+    except:
+        is_available = False
+    return is_available
+
+
 def main(args):
     """Run main function."""
     model_name = args.model_name
@@ -96,6 +112,7 @@ def main(args):
     registry_name = args.registry_name
     model_path = args.model_path
     registration_details = args.registration_details
+    model_version = args.model_version
     tags, properties = {}, {}
 
     ml_client = get_ml_client(registry_name)
@@ -105,7 +122,7 @@ def main(args):
         with open(args.download_details) as f:
             model_info = json.load(f)
 
-    model_name = model_name or model_info.get("model_name").replace("/", "-")
+    model_name = model_name or model_info.get("model_name", "").replace("/", "-")
     model_type = model_type or model_info.get("type")
 
     # validations
@@ -122,18 +139,19 @@ def main(args):
         shutil.copytree(model_path, "mlflow_model_folder", dirs_exist_ok=True)
         model_path = "mlflow_model_folder"
 
-    # hack to get current model versions in registry
-    model_version = "1"
-    models_list = []
-    try:
-        models_list = ml_client.models.list(name=model_name)
-        if models_list:
-            max_version = (max(models_list, key=lambda x: x.version)).version
-            model_version = str(int(max_version) + 1)
-    except Exception:
-        print(
-            f"Error in listing versions for model {model_name}. Trying to register model with version '1'."
-        )
+    if not model_version or is_model_available(ml_client, model_name, model_version):
+        # hack to get current model versions in registry
+        model_version = "1"
+        models_list = []
+        try:
+            models_list = ml_client.models.list(name=model_name)
+            if models_list:
+                max_version = (max(models_list, key=lambda x: x.version)).version
+                model_version = str(int(max_version) + 1)
+        except Exception:
+            print(
+                f"Error in listing versions for model {model_name}. Trying to register model with version '1'."
+            )
 
     # Updating tags and properties with value provided in metadata file
     if args.model_metadata:
@@ -147,6 +165,9 @@ def main(args):
     for key in PROPERTIES:
         if key in model_info["metadata"]["download_details"]:
             properties[key] = model_info["metadata"]["download_details"][key]
+
+    # Adding Preview tag in model
+    tags["Preview"] = ""
 
     model = Model(
         name=model_name,

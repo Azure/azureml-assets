@@ -17,6 +17,7 @@ command: >-
   --model_path ${{inputs.model_path}}
   $[[--model_type ${{inputs.model_type}}]]
   $[[--model_name ${{inputs.model_name}}]]
+  $[[--model_version ${{inputs.model_version}}]]
   $[[--registry_name ${{inputs.registry_name}}]]
   $[[--download_details ${{inputs.download_details}}]]
   $[[--model_description "${{inputs.model_description}}"]]
@@ -28,6 +29,11 @@ inputs:
     type: string
     optional: true
     description: Model name to use in the registration. If name already exists, the version will be auto incremented
+
+  model_version:
+    type: string
+    optional: true 
+    description: Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented
 
   model_type:
     type: string
