@@ -117,9 +117,9 @@ if __name__ == "__main__":
         mapping_list = col_rename_map_str.split(";")
         print(mapping_list)
         for item in mapping_list:
-            split = [] if not item else item.split(":")
-            if split:
-                col_rename_map[split[0]] = split[1]
+            split = item.split(":")
+            if len(split) == 2:
+                col_rename_map[split[0].strip()] = split[1].strip()
         logger.info(f"col_rename_map => {col_rename_map}")
 
     _load_and_infer_model(
