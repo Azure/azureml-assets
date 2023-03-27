@@ -95,7 +95,7 @@ def get_ml_client(registry_name):
 
 
 def is_model_available(ml_client, model_name, model_version):
-    """Returns true if model is available else false."""
+    """Return true if model is available else false."""
     is_available = True
     try:
         ml_client.models.get(name=model_name, version=model_version)
