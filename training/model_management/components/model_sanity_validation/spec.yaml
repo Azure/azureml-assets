@@ -26,7 +26,7 @@ inputs:
   model_path:
     type: mlflow_model
     mode: ro_mount
-    description: Input mlflow model for sanity validations
+    description: MLFlow model to be validated
 
   test_data_path:
     type: uri_file
