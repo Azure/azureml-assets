@@ -19,8 +19,8 @@ TAGS = ["task_name"]
 class HuggingfaceDownloader():
     """Huggingface model downloader class."""
 
-    HF_ENDPOINT = "https://huggingface.co" 
-    URI_TYPE =  PathType.GIT.value
+    HF_ENDPOINT = "https://huggingface.co"
+    URI_TYPE = PathType.GIT.value
 
     def __init__(self, model_id: str):
         """HuggingfaceDownloader init.
@@ -70,8 +70,8 @@ class HuggingfaceDownloader():
         download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
         model_props = self._get_model_properties()
         model_props.update(download_details)
-        tags = {k:model_props[k] for k in TAGS if k in model_props}
-        props = {k:model_props[k] for k in PROPERTIES if k in model_props}
+        tags = {k: model_props[k] for k in TAGS if k in model_props}
+        props = {k: model_props[k] for k in PROPERTIES if k in model_props}
         return {
             "name": "-".join(self._model_id.split("/")),
             "tags": tags,
@@ -82,7 +82,7 @@ class HuggingfaceDownloader():
 class GITDownloader:
     """Downloader class for model hosted on public git repositories."""
 
-    URI_TYPE =  PathType.GIT.value
+    URI_TYPE = PathType.GIT.value
 
     def __init__(self, model_uri):
         """GITDownloader init.
@@ -96,8 +96,8 @@ class GITDownloader:
     def download_model(self, download_dir):
         """Download a publicly hosted GIT model and return details."""
         download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
-        tags = {k:download_details[k] for k in TAGS if k in download_details}
-        props = {k:download_details[k] for k in PROPERTIES if k in download_details}
+        tags = {k: download_details[k] for k in TAGS if k in download_details}
+        props = {k: download_details[k] for k in PROPERTIES if k in download_details}
         return {
             "name": self._model_uri.split("/")[-1],
             "tags": tags,
@@ -108,7 +108,7 @@ class GITDownloader:
 class AzureBlobstoreDownloader:
     """Downloader class for model hosted on a public azure blobstorage."""
 
-    URI_TYPE =  PathType.AZUREBLOB.value
+    URI_TYPE = PathType.AZUREBLOB.value
 
     def __init__(self, model_uri: str):
         """AzureBlobstoreDownloader init.
@@ -122,8 +122,8 @@ class AzureBlobstoreDownloader:
     def download_model(self, download_dir):
         """Download a model from a publicly accessible azure blobstorage and return details."""
         download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
-        tags = {k:download_details[k] for k in TAGS if k in download_details}
-        props = {k:download_details[k] for k in PROPERTIES if k in download_details}
+        tags = {k: download_details[k] for k in TAGS if k in download_details}
+        props = {k: download_details[k] for k in PROPERTIES if k in download_details}
         return {
             "name": self._model_uri.split("/")[-1],
             "tags": tags,
