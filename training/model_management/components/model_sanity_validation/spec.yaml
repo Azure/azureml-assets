@@ -30,7 +30,7 @@ inputs:
 
   test_data_path:
     type: uri_file
-    description: Test dataset for model inference validation
+    description: Test dataset
 
   column_rename_map:
     type: string
