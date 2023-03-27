@@ -57,7 +57,7 @@ if __name__ == "__main__":
         preprocess_args.update(download_details.get("tags", {}))
         preprocess_args.update(download_details.get("properties", {}))
 
-    if mlflow_flavor == ModelFlavor.HFTRANSFORMERS.value:
+    if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
         _validate_transformers_args(preprocess_args)
 
     run_preprocess(mlflow_flavor, model_path, mlflow_model_output_dir, **preprocess_args)

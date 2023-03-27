@@ -24,7 +24,7 @@ command: >
 inputs:
   model_id:
     type: string
-    description: Huggingface model id (https://huggingface.co/<model_id>). A required parameter for hftransformers flavor. Can be provided as input here or in model_info JSON file.
+    description: Huggingface model id (https://huggingface.co/<model_id>). A required parameter for transformers flavor. Can be provided as input here or in model_info JSON file.
     optional: true
 
   task_name:
@@ -42,7 +42,7 @@ inputs:
       - image-classification
       - image-classification-multilabel
       - text-to-image
-    description: A Hugging face task on which model was trained on. A required parameter for hftransformers mlflow flavor. Can be provided as input here or in model_info JSON file.
+    description: A Hugging face task on which model was trained on. A required parameter for transformers mlflow flavor. Can be provided as input here or in model_info JSON file.
     optional: true
 
   model_download_metadata:

@@ -9,7 +9,7 @@ import yaml
 
 from .config import MODEL_FILE_PATTERN
 from azureml.evaluate import mlflow as hf_mlflow
-from azureml.model.mgmt.processors.hftransformers.config import (
+from azureml.model.mgmt.processors.transformers.config import (
     SupportedTasks,
     SupportedTextToImageVariants,
     SupportedNLPTasks,
