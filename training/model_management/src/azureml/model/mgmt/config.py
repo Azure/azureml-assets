@@ -15,14 +15,14 @@ class _CustomEnum(Enum):
 class ModelType(_CustomEnum):
     """Enum for the Model Types accepted in ModelConfig."""
 
-    MLFLOW = 'mlflow_model'
-    CUSTOM = 'custom_model'
+    MLFLOW = "mlflow_model"
+    CUSTOM = "custom_model"
 
 
 class ModelFlavor(_CustomEnum):
     """Enum for the Flavors accepted in ModelConfig."""
 
-    HFTRANSFORMERS = 'hftransformers'
+    TRANSFORMERS = "transformers"
 
 
 class PathType(_CustomEnum):

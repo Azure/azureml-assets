@@ -15,14 +15,14 @@ def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
     parser.add_argument("--task-name", type=str, required=False, help="Hugging Face task type")
-    parser.add_argument("--mlflow-flavor", type=str, default=ModelFlavor.HFTRANSFORMERS.value, help="Model flavor")
+    parser.add_argument("--mlflow-flavor", type=str, default=ModelFlavor.TRANSFORMERS.value, help="Model flavor")
     parser.add_argument("--model-download-metadata", type=Path, required=False, help="Model download details")
     parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
     parser.add_argument("--mlflow-model-output-dir", type=Path, required=True, help="Output MLFlow model")
     return parser
 
 
-def _validate_hf_transformers_args(args):
+def _validate_transformers_args(args):
     if not args.get("model_id"):
         raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
     if not args.get("task_name"):
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         preprocess_args.update(download_details.get("properties", {}))
 
     if mlflow_flavor == ModelFlavor.HFTRANSFORMERS.value:
-        _validate_hf_transformers_args(preprocess_args)
+        _validate_transformers_args(preprocess_args)
 
     run_preprocess(mlflow_flavor, model_path, mlflow_model_output_dir, **preprocess_args)
     print(f"\nListing mlflow model directory: {mlflow_model_output_dir}:")

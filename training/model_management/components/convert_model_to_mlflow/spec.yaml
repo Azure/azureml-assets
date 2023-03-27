@@ -16,7 +16,7 @@ command: >
   python run_model_preprocess.py
   $[[--model-id ${{inputs.model_id}}]]
   $[[--task-name ${{inputs.task_name}}]]
-  --mlflow-flavor hftransformers
+  --mlflow-flavor transformers
   --model-path ${{inputs.model_path}}
   --model-download-metadata ${{inputs.model_download_metadata}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
