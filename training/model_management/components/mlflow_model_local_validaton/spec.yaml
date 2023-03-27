@@ -1,13 +1,13 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
-name: mlflow_model_local_validator
+name: mlflow_model_local_validaton
 version: 0.0.1
 type: command
 
 is_deterministic: True
 
-display_name: MLFlow model local validator
-description: Validates if a MLFLow model is locally loadable and inferencable
+display_name: MLFlow model local validaton
+description: Validates if a MLFLow model can be loaded on a compute and is usable for inferencing.
 
 environment: azureml:model-management:1
 
