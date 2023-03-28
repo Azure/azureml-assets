@@ -13,11 +13,10 @@ from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.entities import Model
 from azureml.core import Run
 from azure.identity import ManagedIdentityCredential
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 import yaml
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
-PROPERTIES = ["commit_hash", "model_size"]
-
 
 def parse_args():
     """Return arguments."""
@@ -80,8 +79,15 @@ def parse_args():
 
 def get_ml_client(registry_name):
     """Return ML Client."""
-    msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-    credential = ManagedIdentityCredential(client_id=msi_client_id)
+    credential = AzureMLOnBehalfOfCredential()
+    try:
+        # Check if given credential can get token successfully.
+        credential.get_token("https://management.azure.com/.default")
+    except Exception as ex:
+        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential not work
+        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+        credential = ManagedIdentityCredential(client_id=msi_client_id)
+
     if registry_name is None:
         run = Run.get_context(allow_offline=False)
         ws = run.experiment.workspace
