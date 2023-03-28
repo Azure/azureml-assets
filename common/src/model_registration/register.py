@@ -197,7 +197,7 @@ def main(args):
     registered_model = ml_client.models.create_or_update(model)
     print(f"Model registered. AssetID : {registered_model.id}")
 
-    # Updating the description after registring (*Bugs need to be fixed)
+    # Updating the description after model registration (*Bugs need to be fixed)
     if model_description:
         registered_model = ml_client.models.get(name=model_name, version=model_version)
         registered_model.description = model_description
