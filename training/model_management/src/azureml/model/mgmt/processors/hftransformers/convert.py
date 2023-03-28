@@ -7,6 +7,7 @@ import os
 import torch
 import yaml
 import shutil
+import re
 
 from .config import MODEL_FILE_PATTERN
 from azureml.evaluate import mlflow as hf_mlflow
@@ -23,7 +24,6 @@ from transformers import AutoConfig, AutoTokenizer, AutoImageProcessor
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from typing import Dict
 
-LICENSE_FILE = 'LICENSE'
 
 def _get_default_task_signatures(task_type) -> Dict:
     """Return mlflow i/p and o/p signature for a hftransformers supported task."""
@@ -178,7 +178,7 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
 
 def _add_license_file(input_dir: Path, output_dir: Path):
     """Copy license file from input_dir to output_dir, if exists."""
-    if os.path.exists(Path(input_dir,LICENSE_FILE)):
-        shutil.copy(Path(input_dir,LICENSE_FILE), output_dir)
-    else:
-        print("License file does not exist.")
+    regex = re.compile('(?i)^LICENSE')
+    for file in os.listdir(input_dir):
+        if regex.match(file):
+            shutil.copy(Path(input_dir,file), output_dir)
