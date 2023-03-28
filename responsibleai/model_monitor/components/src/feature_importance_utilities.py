@@ -43,7 +43,7 @@ def create_lightgbm_model(X, y, task_type):
     return model
 
 
-def get_model_wrapper(task_type, target_column, baseline_dataframe, production_dataframe):
+def get_model_wrapper(task_type, target_column, baseline_dataframe, production_dataframe=None):
     """Create model wrapper using ml-wrappers on which to calculate feature importances
 
       :param task_type: The task type (regression or classification) of the resulting model
@@ -61,9 +61,12 @@ def get_model_wrapper(task_type, target_column, baseline_dataframe, production_d
     """
     y_train = baseline_dataframe[target_column]
     x_train = baseline_dataframe.drop([target_column], axis=1)
-    x_test = production_dataframe.drop([target_column], axis=1)
     model = create_lightgbm_model(x_train, y_train, task_type)
-    all_data = pd.concat([x_test, x_train])
+    if production_dataframe is not None:
+        x_test = production_dataframe.drop([target_column], axis=1)
+        all_data = pd.concat([x_test, x_train])
+    else:
+        all_data = x_train
     model_predict = model.predict(all_data)
 
     if task_type == 'classification':

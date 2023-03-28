@@ -50,7 +50,7 @@ def compute_feature_importance(task_type, target_column, baseline_dataframe):
       :rtype: list[float]
     """
 
-    model_wrapper = get_model_wrapper(task_type, target_column, baseline_dataframe)
+    model_wrapper = get_model_wrapper(task_type, target_column, baseline_dataframe, baseline_dataframe)
 
     categorical_features = compute_categorical_features(baseline_dataframe, target_column)
 
@@ -71,7 +71,7 @@ def write_to_mltable(explanations, dataset, file_path):
     """
     metrics_dataframe = pd.DataFrame(columns=['feature', 'metric_value', 'metric_name'])
     for index in range(len(explanations)):
-        new_row = {"feature": dataset.columns, "metic_value": explanations[index], "metric_name": "feature_importance"}
+        new_row = {"feature": dataset.columns[index], "metic_value": explanations[index], "metric_name": "feature_importance"}
         metrics_dataframe = metrics_dataframe.append(new_row, ignore_index=True)
     save_df_as_mltable(metrics_dataframe, file_path)
 
