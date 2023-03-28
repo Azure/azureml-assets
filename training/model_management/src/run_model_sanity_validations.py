@@ -34,7 +34,7 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
     if not test_data_path:
         logger.info("Test data not shared for inferencing")
         return
- 
+
     ext = test_data_path.suffix
     logger.info(f"file type: {ext}")
     if ext == ".jsonl":
