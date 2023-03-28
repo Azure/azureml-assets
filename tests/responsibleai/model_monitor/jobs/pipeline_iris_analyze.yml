@@ -14,7 +14,7 @@ inputs:
 jobs:
   analyse_model:
     type: command
-    component: feature_attribution_drift
+    component: feature_attribution_drift_compute_metrics
     limits:
       timeout: 120
     inputs:
