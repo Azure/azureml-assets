@@ -35,14 +35,11 @@ class SupportedVisionTasks(_CustomEnum):
     """Supported Vision Hugging face tasks."""
 
     IMAGE_CLASSIFICATION = "image-classification"
-    IMAGE_CLASSIFICATION_MULTI_LABEL = "image-classification-multilabel"
 
 
 class SupportedNLPTasks(_CustomEnum):
     """Supported NLP Hugging face tasks."""
 
-    MULTICLASS = "multiclass"
-    MULTILABEL = "multilabel"
     FILL_MASK = "fill-mask"
     TOKEN_CLASSIFICATION = "token-classification"
     QUESTION_ANSWERING = "question-answering"
@@ -50,7 +47,6 @@ class SupportedNLPTasks(_CustomEnum):
     TEXT_GENERATION = "text-generation"
     TEXT_CLASSIFICATION = "text-classification"
     TRANSLATION = "translation"
-    TEXT_2_IMAGE = "text-to-image"
 
 
 class SupportedTextToImageVariants(_CustomEnum):
@@ -75,7 +71,6 @@ class SupportedTasks(_CustomEnum):
 
     # Vision tasks
     IMAGE_CLASSIFICATION = "image-classification"
-    IMAGE_CLASSIFICATION_MULTI_LABEL = "image-classification-multilabel"
 
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
@@ -86,8 +81,6 @@ class TaskToClassMapping:
 
     _task_loader_mapping = {
         "fill-mask": AutoModelForMaskedLM,
-        "multiclass": AutoModelForSequenceClassification,
-        "multilabel": AutoModelForSequenceClassification,
         "text-classification": AutoModelForSequenceClassification,
         "token-classification": AutoModelForTokenClassification,
         "question-answering": AutoModelForQuestionAnswering,
@@ -95,7 +88,6 @@ class TaskToClassMapping:
         "text-generation": AutoModelWithLMHead,
         "translation": AutoModelForSeq2SeqLM,
         "image-classification": AutoModelForImageClassification,
-        "image-classification-multilabel": AutoModelForImageClassification,
         "stable-diffusion": StableDiffusionPipeline,
     }
 
