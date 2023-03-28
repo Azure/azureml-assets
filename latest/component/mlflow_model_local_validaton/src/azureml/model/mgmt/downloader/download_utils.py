@@ -68,7 +68,7 @@ def _download_git_model(model_uri: str, model_dir: Path) -> None:
         download_details["commit_hash"] = stdout
     git_path = os.path.join(model_dir, ".git")
     shutil.rmtree(git_path, onerror=_onerror)
-    download_details["model_size"] = _round_size(_get_size(model_dir))
+    download_details["size"] = _round_size(_get_size(model_dir))
     return download_details
 
 
@@ -89,15 +89,15 @@ def _download_azure_artifacts(model_uri, model_dir):
             raise Exception(f"Failed to download model files with URL: {model_uri}. Error => {stdout}")
         download_details = {}
         download_details["download_time_utc"] = _get_system_time_utc()
-        download_details["model_size"] = _round_size(_get_size(model_dir))
+        download_details["size"] = _round_size(_get_size(model_dir))
         return download_details
     except Exception as e:
         raise e
 
 
 @log_execution_time
-def download_model(model_path_type: PathType, model_uri: str, model_dir: Path) -> None:
-    """Prepare the Download Environment.
+def download_model_for_path_type(model_path_type: PathType, model_uri: str, model_dir: Path) -> None:
+    """Download model based on path type.
 
     :param model_path_type: Model path type
     :type model_path_type: PathType
