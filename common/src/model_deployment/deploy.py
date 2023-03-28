@@ -13,6 +13,7 @@ from azure.ai.ml.entities import (
     ProbeSettings,
 )
 from azure.identity import ManagedIdentityCredential
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.core import Run
 import logging
 
@@ -165,8 +166,14 @@ def get_endpoint(args):
 
 def get_ml_client():
     """Return ML client."""
-    msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-    credential = ManagedIdentityCredential(client_id=msi_client_id)
+    credential = AzureMLOnBehalfOfCredential()
+    try:
+        # Check if given credential can get token successfully.
+        credential.get_token("https://management.azure.com/.default")
+    except Exception as ex:
+        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential not work
+        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+        credential = ManagedIdentityCredential(client_id=msi_client_id)
 
     run = Run.get_context(allow_offline=False)
     ws = run.experiment.workspace
