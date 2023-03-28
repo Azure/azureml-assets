@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: feature_importance
 version: 0.0.1
-display_name: feature_importance
+display_name: Feature importance
 is_deterministic: False
 type: command
 description: Feature importance using model monitoring.
@@ -9,7 +9,7 @@ inputs:
   baseline_data:
     type: mltable
 outputs:
-  feature_importance:
+  feature_importance_data:
     type: mltable
 code: ./
 environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/10
@@ -17,3 +17,4 @@ resources:
   instance_count: 1
 command: python compute_feature_importance.py
   --baseline_data ${{inputs.baseline_data}}
+  --feature_importance_data ${{outputs.feature_importance_data}}

@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
-name: feature_attribution_drift
+name: feature_attribution_drift_compute_metrics
 version: 0.0.1
-display_name: feature_attribution_drift
+display_name: Feature Attribution Drift - Compute Metrics
 is_deterministic: False
 type: command
 description: Feature attribution drift using model monitoring.
@@ -11,7 +11,7 @@ inputs:
   production_data:
     type: mltable
 outputs:
-  normalized_discounted_cumulative_gain:
+  feature_attribution_data:
     type: mltable
 code: ./
 environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/10
@@ -20,3 +20,4 @@ resources:
 command: python compute_attribution_drift.py
   --baseline_data ${{inputs.baseline_data}}
   --production_data ${{inputs.production_data}}
+  --feature_attribution_data ${{outputs.feature_attribution_data}}

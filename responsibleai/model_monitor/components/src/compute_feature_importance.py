@@ -5,9 +5,10 @@
 
 import argparse
 import logging
+import pandas as pd
 
-from responsibleai.model_monitor.components.src.feature_importance_utilities import get_model_wrapper, compute_explanations,  compute_categorical_features
-from io_utils import load_mltable_to_df
+from feature_importance_utilities import get_model_wrapper, compute_explanations,  compute_categorical_features
+from io_utils import load_mltable_to_df, save_df_as_mltable
 
 from tabular.components.src._telemetry._loggerfactory import _LoggerFactory, track
 
@@ -29,10 +30,12 @@ def parse_args():
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline_data", type=str)
+    parser.add_argument("--feature_importance_data", type=str)
 
     args = parser.parse_args()
 
     return args
+
 
 def compute_feature_importance(task_type, target_column, baseline_dataframe):
     """Compute feature importance of baseline dataframe
@@ -52,9 +55,26 @@ def compute_feature_importance(task_type, target_column, baseline_dataframe):
     categorical_features = compute_categorical_features(baseline_dataframe, target_column)
 
     baseline_explanations = compute_explanations(model_wrapper, baseline_dataframe, categorical_features, target_column, task_type)
-    _logger.info("Successfully computed explanations for baseline dataset")
+    _logger.info("Successfully computed explanations for dataset")
 
     return baseline_explanations
+
+
+def write_to_mltable(explanations, dataset, file_path):
+    """write feature importance values to mltable
+      :param explanations: list of feature importances in the order of the baseline columns
+      :type explanations: list[float]
+      :param dataset: dataset to derive feature names
+      :type dataset: pandas.Dataframe
+      :param file_path: path to folder to save mltable
+      :type file_path: string
+    """
+    
+    metrics_dataframe = pd.DataFrame(columns=['feature', 'metric_value', 'metric_name'])
+    for index in range(len(explanations)):
+        new_row = {"feature": dataset.columns, "metic_value": explanations[index], "metric_name": "feature_importance"}
+        metrics_dataframe = metrics_dataframe.append(new_row, ignore_index=True)
+    save_df_as_mltable(metrics_dataframe, file_path)
 
 
 @track(_get_logger)
@@ -66,8 +86,9 @@ def run(args):
     task_type = "classification"
     target_column = "target"
     try:
-        compute_feature_importance(task_type, target_column, baseline_df)
+        feature_importances = compute_feature_importance(task_type, target_column, baseline_df)
         _logger.info("Successfully executed the feature importance component.")
+        write_to_mltable(feature_importances, baseline_df, args.feature_importance_data)
     except Exception as e:
         _logger.info("Error encountered when executing feature importance component: {0}", e)
 
