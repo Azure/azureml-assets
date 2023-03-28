@@ -69,7 +69,6 @@ def write_to_mltable(explanations, dataset, file_path):
       :param file_path: path to folder to save mltable
       :type file_path: string
     """
-    
     metrics_dataframe = pd.DataFrame(columns=['feature', 'metric_value', 'metric_name'])
     for index in range(len(explanations)):
         new_row = {"feature": dataset.columns, "metic_value": explanations[index], "metric_name": "feature_importance"}

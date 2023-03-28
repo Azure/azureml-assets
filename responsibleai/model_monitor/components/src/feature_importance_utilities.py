@@ -124,6 +124,3 @@ def compute_explanations(model_wrapper, dataframe, categorical_features, target_
     evaluation_data = dataframe.drop([target_column], axis=1)
     explanationData = rai_i.explainer.request_explanations(local=False, data=evaluation_data)
     return explanationData.precomputedExplanations.globalFeatureImportance['scores']
-
-
-
