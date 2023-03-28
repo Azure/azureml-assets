@@ -7,7 +7,7 @@ type: command
 is_deterministic: True
 
 display_name: Download model
-description: Downloads a model from a public storage container
+description: Downloads a publicly available model
 
 environment: azureml:model-management:1
 
@@ -22,7 +22,8 @@ command: >
 inputs:
   model_source:
     type: string
-    description: Supported model containers
+    description: Storage containers from where model will be sourced from.
+    default: Huggingface
     enum:
       - AzureBlob
       - GIT
@@ -35,9 +36,12 @@ inputs:
 outputs:
   model_download_metadata:
     type: uri_file
-    description: File name to which model download details will be written
+    description: File name to which model download details will be written. File would contain details that could be useful for model registration in forms of model tags and properties
 
   model_output:
     type: uri_folder
     description: Path to the dowloaded model
     mode: rw_mount
+
+tags:
+    "Preview": ""
