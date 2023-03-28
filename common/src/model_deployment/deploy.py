@@ -172,13 +172,13 @@ def get_ml_client():
         credential.get_token("https://management.azure.com/.default")
     except Exception as ex:
         # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential not work
+        print(f"Failed to get obo credentials - {ex}")
         msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
         credential = ManagedIdentityCredential(client_id=msi_client_id)
-        
     try:
         credential.get_token("https://management.azure.com/.default")
     except Exception as ex:
-        raise(f"Failed to get credentials : {ex}")
+        raise (f"Failed to get credentials : {ex}")
     run = Run.get_context(allow_offline=False)
     ws = run.experiment.workspace
 
