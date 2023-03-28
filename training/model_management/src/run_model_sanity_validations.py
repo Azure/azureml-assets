@@ -31,6 +31,10 @@ logger = logging.getLogger(__name__)
 
 
 def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: Dict):
+    if not test_data_path:
+        logger.warning("Test data not available for inferencing")
+        return None
+ 
     ext = test_data_path.suffix
     logger.info(f"file type: {ext}")
     if ext == ".jsonl":
@@ -69,8 +73,12 @@ def _load_and_infer_model(model_dir, data):
     except Exception as e:
         logger.error(f"Error in loading mlflow model: {e}")
         raise Exception(f"Error in loading mlflow model: {e}")
-
     try:
+        if not data:
+            logger.info(
+                "Data not shared. Would not be able to inference the loaded model."
+                + " Returning with model load validation.")
+            return
         logger.info("Predicting model with test data!!!")
         pred_results = model.predict(data)
         logger.info(f"prediction results\n{pred_results}")
@@ -82,7 +90,7 @@ def _load_and_infer_model(model_dir, data):
 def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
-    parser.add_argument("--test-data-path", type=Path, required=True, help="Test dataset path")
+    parser.add_argument("--test-data-path", type=Path, required=False, help="Test dataset path")
     parser.add_argument("--column-rename-map", type=str, required=False, help="")
     parser.add_argument("--output-model-path", type=Path, required=True, help="Output model path")
     return parser

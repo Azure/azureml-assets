@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
-name: mlflow_model_local_validaton
+name: mlflow_model_local_validation
 version: 0.0.1
 type: command
 
 is_deterministic: True
 
-display_name: MLFlow model local validaton
+display_name: MLFlow model local validation
 description: Validates if a MLFLow model can be loaded on a compute and is usable for inferencing.
 
 environment: azureml:model-management:1
@@ -20,7 +20,7 @@ command: |
   cp ${{inputs.model_path}}/conda.yaml ./
   conda env create -p $ENV_PREFIX -f conda.yaml -q
   echo "conda env successfully created at $ENV_PREFIX"
-  conda run -p $ENV_PREFIX python run_model_sanity_validations.py --model-path ${{inputs.model_path}} --test-data-path ${{inputs.test_data_path}} $[[--column-rename-map "${{inputs.column_rename_map}}"]] --output-model-path ${{outputs.mlflow_output_path}}
+  conda run -p $ENV_PREFIX python run_model_sanity_validations.py --model-path ${{inputs.model_path}} $[[--test-data-path ${{inputs.test_data_path}}]] $[[--column-rename-map "${{inputs.column_rename_map}}"]] --output-model-path ${{outputs.mlflow_model_folder}}
 
 inputs:
   model_path:
@@ -30,11 +30,12 @@ inputs:
 
   test_data_path:
     type: uri_file
-    description: Test dataset
+    optional: True
+    description: Test dataset for model inferencing
 
   column_rename_map:
     type: string
-    optional: true
+    optional: True
     description: |
       Provide mapping of dataset column names that should be renamed before inferencing.
       eg: col1:ren1; col2:ren2; col3:ren3 
