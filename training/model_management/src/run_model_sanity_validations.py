@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 
 def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: Dict):
     if not test_data_path:
-        logger.warning("Test data not available for inferencing")
-        return None
+        logger.info("Test data not shared for inferencing")
+        return
  
     ext = test_data_path.suffix
     logger.info(f"file type: {ext}")
@@ -75,9 +75,7 @@ def _load_and_infer_model(model_dir, data):
         raise Exception(f"Error in loading mlflow model: {e}")
     try:
         if not data:
-            logger.info(
-                "Data not shared. Would not be able to inference the loaded model."
-                + " Returning with model load validation.")
+            logger.info("Data not shared. Could not infer the loaded model")
             return
         logger.info("Predicting model with test data!!!")
         pred_results = model.predict(data)

@@ -30,12 +30,12 @@ inputs:
 
   test_data_path:
     type: uri_file
-    optional: True
+    optional: true
     description: Test dataset for model inferencing
 
   column_rename_map:
     type: string
-    optional: True
+    optional: true
     description: |
       Provide mapping of dataset column names that should be renamed before inferencing.
       eg: col1:ren1; col2:ren2; col3:ren3 
