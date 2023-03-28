@@ -145,7 +145,7 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     hf_pretrained_class = TaskToClassMapping.get_loader_class_name(task_category)
 
     hf_conf = {
-        'task_name': task_name,
+        'task_type': task_name,
         'hf_pretrained_class': hf_pretrained_class,
         'huggingface_id': model_id,
     }
