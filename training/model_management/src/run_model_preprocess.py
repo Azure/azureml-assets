@@ -26,32 +26,6 @@ def _get_parser():
     return parser
 
 
-def get_ml_client():
-    """Return ML client."""
-    credential = AzureMLOnBehalfOfCredential()
-    try:
-        # Check if given credential can get token successfully.
-        credential.get_token("https://management.azure.com/.default")
-    except Exception as ex:
-        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential not work
-        print(f"Failed to get obo credentials - {ex}")
-        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-        credential = ManagedIdentityCredential(client_id=msi_client_id)
-    try:
-        credential.get_token("https://management.azure.com/.default")
-    except Exception as ex:
-        raise (f"Failed to get credentials : {ex}")
-    run = Run.get_context(allow_offline=False)
-    ws = run.experiment.workspace
-
-    ml_client = MLClient(
-        credential=credential,
-        subscription_id=ws._subscription_id,
-        resource_group_name=ws._resource_group,
-        workspace_name=ws._workspace_name,
-    )
-    return ml_client
-
 def _validate_transformers_args(args):
     if not args.get("model_id"):
         raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
@@ -95,11 +69,10 @@ if __name__ == "__main__":
     print(f"\nListing mlflow model directory: {mlflow_model_output_dir}:")
     print(os.listdir(mlflow_model_output_dir))
 
-    ml_client = get_ml_client()
 
     # Add job path
-    this_job = ml_client.jobs.get(os.environ["MLFLOW_RUN_ID"])
-    path = f"azureml://jobs/{this_job.name}/outputs/mlflow_model_folder"
+    this_job = os.environ["MLFLOW_RUN_ID"]
+    path = f"azureml://jobs/{this_job}/outputs/mlflow_model_folder"
     model_path_dict = {"path":path}
     json_object = json.dumps(model_path_dict, indent=4)
     with open(model_job_path, "w") as outfile:
