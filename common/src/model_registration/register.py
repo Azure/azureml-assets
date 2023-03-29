@@ -73,6 +73,12 @@ def parse_args():
         help="Model version in workspace/registry. If model with same version exists,version will be auto incremented",
         default=None,
     )
+    parser.add_argument(
+        "--model_job_path",
+        type=str,
+        help="JSON file that contains the job path of model to have lineage.",
+        default=None,
+    )
     args = parser.parse_args()
     print("args received ", args)
     return args
@@ -182,6 +188,12 @@ def main(args):
 
     # Adding Preview tag in model
     tags["Preview"] = ""
+
+    # check if we can have lineage and update the model path
+    if args.model_job_path:
+        with open(args.model_job_path) as f:
+            model_job_path = json.load(f)
+        model_path = model_job_path.get("path", model_path)
 
     model = Model(
         name=model_name,

@@ -22,6 +22,7 @@ command: >-
   $[[--model_download_metadata ${{inputs.model_download_metadata}}]]
   $[[--model_description "${{inputs.model_description}}"]]
   $[[--model_metadata ${{inputs.model_metadata}}]]
+  $[[--model_job_path ${{inputs.model_job_path}}]]
   --registration_details ${{outputs.registration_details}}
 
 inputs:
@@ -68,6 +69,11 @@ inputs:
     type: uri_file
     optional: true
     description: YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
+  
+  model_job_path:
+    type: uri_file
+    optional: true 
+    description: JSON file that contains the job path of model to have lineage.
 
 outputs:
   registration_details:
