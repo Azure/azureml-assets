@@ -83,6 +83,10 @@ def parse_args():
     print("args received ", args)
     return args
 
+def append_dictionary(old_dict,new_dict):
+    for key in new_dict:
+        old_dict[key] = new_dict[key]
+    return old_dict
 
 def get_ml_client(registry_name):
     """Return ML Client."""
@@ -185,8 +189,8 @@ def main(args):
     if args.model_metadata:
         with open(args.model_metadata, "r") as stream:
             metadata = yaml.safe_load(stream)
-            tags = metadata.get("tags", tags)
-            properties = metadata.get("properties", properties)
+            tags = append_dictionary(tags, metadata.get("tags",{}))
+            properties = append_dictionary(properties, metadata.get("properties", {}))
             model_description = metadata.get("description", model_description)
             model_type = metadata.get("type", model_type)
             flavors = metadata.get("flavors", flavors)
