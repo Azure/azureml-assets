@@ -6,6 +6,8 @@
 import os
 import torch
 import yaml
+import re
+import shutil
 
 from .config import MODEL_FILE_PATTERN
 from azureml.evaluate import mlflow as hf_mlflow
@@ -167,3 +169,13 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     signatures = signatures if signatures else _get_default_task_signatures(task_name)
     _add_mlflow_signature(output_dir, signatures)
     print("Model saved!!!")
+
+    # add license file
+    _add_license_file(input_dir, output_dir)
+
+def _add_license_file(input_dir: Path, output_dir: Path):
+    """Copy license file from input_dir to output_dir, if exists."""
+    regex = re.compile('(?i)^LICENSE')
+    for file in os.listdir(input_dir):
+        if regex.match(file):
+            shutil.copy(Path(input_dir,file), output_dir)

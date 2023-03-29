@@ -20,6 +20,7 @@ command: >
   --mlflow-flavor transformers
   --model-path ${{inputs.model_path}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
+  --model-job-path ${{outputs.model_job_path}}
 
 inputs:
   model_id:
@@ -59,6 +60,9 @@ outputs:
     type: mlflow_model
     description: Output path for the converted MLFlow model.
     mode: rw_mount
-
+    
+  model_job_path:
+    type: uri_file
+    description: JSON file containing model job path for model lineage
 tags:
     Preview: ""
