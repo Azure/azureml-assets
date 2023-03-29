@@ -136,7 +136,7 @@ def main(args):
     model_path = args.model_path
     registration_details = args.registration_details
     model_version = args.model_version
-    tags, properties = {}, {}
+    tags, properties, flavors = {}, {}, {}
 
     ml_client = get_ml_client(registry_name)
 
@@ -162,6 +162,10 @@ def main(args):
         # Make sure parent directory is mlflow_model_folder for mlflow model
         shutil.copytree(model_path, "mlflow_model_folder", dirs_exist_ok=True)
         model_path = "mlflow_model_folder"
+        mlmodel_path = os.path.join(model_path, "MLmodel")
+        with open(mlmodel_path, "r") as stream:
+            metadata = yaml.safe_load(stream)
+            flavors = metadata.get('flavors', flavors)
 
     if not model_version or is_model_available(ml_client, model_name, model_version):
         # hack to get current model versions in registry
@@ -185,9 +189,7 @@ def main(args):
             properties = metadata.get("properties", properties)
             model_description = metadata.get("description", model_description)
             model_type = metadata.get("type", model_type)
-
-    # Adding Preview tag in model
-    tags["Preview"] = ""
+            flavors = metadata.get("flavors", flavors)
 
     # check if we can have lineage and update the model path
     if args.model_job_path:
@@ -202,6 +204,7 @@ def main(args):
         path=model_path,
         tags=tags,
         properties=properties,
+        flavors=flavors,
     )
 
     # register the model in workspace or registry
