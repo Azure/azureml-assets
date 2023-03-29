@@ -7,14 +7,15 @@ import argparse
 import json
 import os
 import shutil
+import yaml
 
 from azure.ai.ml import MLClient
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.entities import Model
-from azureml.core import Run
 from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-import yaml
+from azureml.core import Run
+
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
 
@@ -90,20 +91,23 @@ def append_dictionary(old_dict,new_dict):
 
 def get_ml_client(registry_name):
     """Return ML Client."""
-    credential = AzureMLOnBehalfOfCredential()
+    obo = False
     try:
+        credential = AzureMLOnBehalfOfCredential()
         # Check if given credential can get token successfully.
         credential.get_token("https://management.azure.com/.default")
+        obo = True
     except Exception as ex:
         # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential not work
         print(f"Failed to get OBO credentials - {ex}")
-        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-        credential = ManagedIdentityCredential(client_id=msi_client_id)
 
-    try:
-        credential.get_token("https://management.azure.com/.default")
-    except Exception as ex:
-        raise (f"Failed to get credentials : {ex}")
+    if not obo:
+        try:
+            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+            credential = ManagedIdentityCredential(client_id=msi_client_id)
+            credential.get_token("https://management.azure.com/.default")
+        except Exception as ex:
+            raise (f"Failed to get MSI credentials : {ex}")
 
     if registry_name is None:
         run = Run.get_context(allow_offline=False)
@@ -123,10 +127,7 @@ def is_model_available(ml_client, model_name, model_version):
     try:
         ml_client.models.get(name=model_name, version=model_version)
     except Exception as e:
-        print(
-            f"Model with name - {model_name} and version - {model_version} is not available.",
-            e,
-        )
+        print(f"Model with name - {model_name} and version - {model_version} is not available. Error: {e}")
         is_available = False
     return is_available
 
@@ -148,19 +149,26 @@ def main(args):
     if args.model_download_metadata:
         with open(args.model_download_metadata) as f:
             model_download_metadata = json.load(f)
+            model_name = model_name or model_download_metadata.get("name", "").replace("/", "-")
+            tags = model_download_metadata.get("tags", tags)
+            properties = model_download_metadata.get("properties", properties)
 
-    model_name = model_name or model_download_metadata.get("name", "").replace("/", "-")
-    tags = model_download_metadata.get("tags", tags)
-    properties = model_download_metadata.get("properties", properties)
+    # Updating tags and properties with value provided in metadata file
+    if args.model_metadata:
+        with open(args.model_metadata, "r") as stream:
+            metadata = json.load(stream)
+            tags = append_dictionary(tags, metadata.get("tags",{}))
+            properties = append_dictionary(properties, metadata.get("properties", {}))
+            model_description = metadata.get("description", model_description)
+            model_type = metadata.get("type", model_type)
+            flavors = metadata.get("flavors", flavors)
 
     # validations
     if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
         raise Exception(f"Unsupported model type {model_type}")
 
     if not model_name:
-        raise Exception(
-            "Missing Model Name. Provide model_name as input or in the model_download_metadata JSON"
-        )
+        raise Exception("Missing Model Name. Provide model_name as input or in the model_download_metadata JSON")
 
     if model_type == "mlflow_model":
         # Make sure parent directory is mlflow_model_folder for mlflow model
@@ -181,22 +189,10 @@ def main(args):
                 max_version = (max(models_list, key=lambda x: x.version)).version
                 model_version = str(int(max_version) + 1)
         except Exception:
-            print(
-                f"Error in listing versions for model {model_name}. Trying to register model with version '1'."
-            )
+            print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
 
-    # Updating tags and properties with value provided in metadata file
-    if args.model_metadata:
-        with open(args.model_metadata, "r") as stream:
-            metadata = yaml.safe_load(stream)
-            tags = append_dictionary(tags, metadata.get("tags",{}))
-            properties = append_dictionary(properties, metadata.get("properties", {}))
-            model_description = metadata.get("description", model_description)
-            model_type = metadata.get("type", model_type)
-            flavors = metadata.get("flavors", flavors)
-
-    # check if we can have lineage and update the model path
-    if args.model_job_path:
+    # check if we can have lineage and update the model path for ws import
+    if not registry_name and args.model_job_path:
         with open(args.model_job_path) as f:
             model_job_path = json.load(f)
         model_path = model_job_path.get("path", model_path)
@@ -209,18 +205,13 @@ def main(args):
         tags=tags,
         properties=properties,
         flavors=flavors,
+        description=model_description,
     )
 
     # register the model in workspace or registry
     print("Registering model ....")
     registered_model = ml_client.models.create_or_update(model)
     print(f"Model registered. AssetID : {registered_model.id}")
-
-    # Updating the description after model registration (*Bugs need to be fixed)
-    if model_description:
-        registered_model = ml_client.models.get(name=model_name, version=model_version)
-        registered_model.description = model_description
-        registered_model = ml_client.models.create_or_update(registered_model)
 
     # Registered model information
     model_info = {
