@@ -12,9 +12,8 @@ from pathlib import Path
 from typing import List
 
 
-PROPERTIES = [
-    "model_id", "size", "commit_hash", "SHA", "license", "dataset", "languages", "finetuning_tasks", "last_modified"]
-TAGS = ["task_name"]
+PROPERTIES = ["commit_hash", "SHA", "last_modified"]
+TAGS = ["task", "model_id", "size", "license", "datasets", "languages", "finetuning_tasks"]
 
 
 class HuggingfaceDownloader():
@@ -62,8 +61,8 @@ class HuggingfaceDownloader():
                 datasets.append(tag.split(":")[1])
             elif tag.startswith("license:"):
                 props["license"] = tag.split(":")[1]
-        props["dataset"] = ", ".join(datasets)
-        props["language"] = ", ".join(supported_langs)
+        props["datasets"] = ", ".join(datasets)
+        props["languages"] = ", ".join(supported_langs)
         return props
 
     def download_model(self, download_dir):
