@@ -4,7 +4,7 @@ description: >-
   An environment for deep learning with Tensorflow containing the Azure ML SDK and additional python packages.
 
 name: "tensorflow-2.9-cuda11"
-version: "3"
+version: "4"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
