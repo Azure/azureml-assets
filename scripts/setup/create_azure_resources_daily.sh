@@ -13,8 +13,9 @@ az extension add -n ml -y
 echo "Configuring Azure CLI defaults"
 az configure --defaults group=$resource_group workspace=$workspace location=$location
 
+az ml compute delete --name $gpu_v100_cluster --yes
 # See if the last resource to be created already exists, and if so bail early
-if az ml compute show --name $gpu_v100_cluster >/dev/null 2>&1; then
+if az ml compute show --name $gpu_cluster >/dev/null 2>&1; then
     echo "Azure resources already exist"
 else
     resource_name="resource group ${resource_group}"
@@ -55,7 +56,6 @@ else
 
     resource_name="compute cluster ${gpu_v100_cluster}"
     echo "Checking ${resource_name}"
-    az ml compute delete --name $gpu_v100_cluster --yes
     if ! az ml compute show --name $gpu_v100_cluster --output none >/dev/null 2>&1; then
         echo "Creating ${resource_name}"
         az ml compute create --name $gpu_v100_cluster --size Standard_NC12s_v3 --min-instances 0 --max-instances 2 --type AmlCompute
