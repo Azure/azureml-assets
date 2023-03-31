@@ -171,7 +171,7 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     print("Model saved!!!")
 
     # add license file
-    _add_license_file(input_dir, output_dir)
+    # _add_license_file(input_dir, output_dir)
 
 def _add_license_file(input_dir: Path, output_dir: Path):
     """Copy license file from input_dir to output_dir, if exists."""

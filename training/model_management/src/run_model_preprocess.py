@@ -68,15 +68,14 @@ if __name__ == "__main__":
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
         _validate_transformers_args(preprocess_args)
 
-    #Copy license file in input model_path
-    if license_folder:
-        for file in os.listdir(license_folder):
-            shutil.copy(Path(license_folder,file), model_path)
-            
     run_preprocess(mlflow_flavor, model_path, mlflow_model_output_dir, **preprocess_args)
     print(f"\nListing mlflow model directory: {mlflow_model_output_dir}:")
     print(os.listdir(mlflow_model_output_dir))
 
+    #Copy license file in input model_path
+    if license_folder:
+        for file in os.listdir(license_folder):
+            shutil.copy(Path(license_folder,file), mlflow_model_output_dir)
 
     # Add job path
     this_job = os.environ["MLFLOW_RUN_ID"]
