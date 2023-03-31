@@ -1,0 +1,25 @@
+DeBERTa is a model that improves on the BERT and RoBERTa models by using disentangled attention and an enhanced mask decoder. It performance better on several NLU tasks than RoBERTa with 80GB training data. The DeBERTa XLarge model has 48 layers and a hidden size of 1024 with 750 million parameters. It demonstrates good results when fine-tuned on several NLU tasks like SQuAD and GLUE benchmark. If you use DeBERTa in your work, the authors request that you cite their papers.
+
+> The above summary was generated using ChatGPT. Review the [original model card](https://huggingface.co/microsoft/deberta-xlarge) to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
+### Inference samples
+
+Inference type|Python sample (Notebook)|CLI with YAML
+|--|--|--|
+Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/azureml-sdk-fill-mask-online-endpoint)|[fill-mask-online-endpoint.sh](https://aka.ms/azureml-cli-fill-mask-online-endpoint)
+Batch | todo
+
+
+### Finetuning samples
+
+Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
+|---|--|--|--|--|
+Text Classification|Emotion Detection|[Emotion](https://huggingface.co/datasets/dair-ai/emotion)|[emotion-detection.ipynb](https://aka.ms/azureml-ft-sdk-emotion-detection)|[emotion-detection.sh](https://aka.ms/azureml-ft-cli-emotion-detection)
+Token Classification|Token Classification|[Conll2003](https://huggingface.co/datasets/conll2003)|[token-classification.ipynb](https://github.com/Azure/azureml-examples/tree/sitaram/finetunenotebooks/sdk/python/foundation-models/system/finetune/token-classification/token-classification.ipynb)|[token-classification.sh](https://github.com/Azure/azureml-examples/blob/sitaram/finetunenotebooks/cli/foundation-models/system/finetune/token-classification/token-classification.sh)
+Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/datasets/squad)|[extractive-qa.ipynb](https://aka.ms/azureml-ft-sdk-extractive-qa)|[extractive-qa.sh](https://github.com/Azure/azureml-examples/blob/sitaram/finetunenotebooks/cli/foundation-models/system/finetune/question-answering/extractive-qa.sh)
+
+
+
+
+
+
