@@ -31,5 +31,3 @@ dependencies:
   - tokenizers
   - datasets
   - mltable
-  - azureml-evaluate-mlflow=={{latest-pypi-version}}
-  - azureml-metrics=={{latest-pypi-version}}
