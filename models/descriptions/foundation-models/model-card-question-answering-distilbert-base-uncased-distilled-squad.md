@@ -1,5 +1,8 @@
 The DistilBERT model is a distilled version of the BERT language model with 40% fewer parameters, 60% faster run time, but with 95% of BERT's performance. It is trained for question answering and has a F1 score of 87.1 on SQuAD V1.1. The model is licensed under the Apache 2.0 license and is developed by Hugging Face. The model is based on the Transformer architecture and trained in English. However, it's output should not be used to create hostile or alienating environments or produce false/biased content. Training the model requires 8 16GB V100 GPUs and 90 hours. The model card authors are from the Hugging Face team.
 
+
+> The above summary was generated using ChatGPT. Review the [original model card](https://huggingface.co/distilbert-base-uncased-distilled-squad) to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
 ### Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML

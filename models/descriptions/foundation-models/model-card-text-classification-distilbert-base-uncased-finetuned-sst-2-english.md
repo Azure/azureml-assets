@@ -1,6 +1,9 @@
 This is a fine-tuned version of DistilBERT-base-uncased, trained on SST-2, which reached 91.3 % accuracy on the dev set. Developed by Hugging Face, it's mainly intended to be used for topic classification and can be fine-tuned on downstream tasks, but it's important to keep in mind that it has certain biases, such as biased predictions for certain underrepresented populations and that it should not be used to create hostile or alienating environments for people. Additionally, the authors used the Stanford Sentiment Treebank(sst2) corpora for training the model. 
 It's recommended to evaluate the risks of this model by thoroughly probing the bias evaluation datasets like WinoBias, WinoGender, Stereoset
 
+
+> The above summary was generated using ChatGPT. Review the [original model card](https://huggingface.co/distilbert-base-uncased-finetuned-sst-2-english) to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
 ### Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML

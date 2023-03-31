@@ -1,5 +1,8 @@
 GPT-2 is a transformer-based language model intended for AI researchers and practitioners. It was trained on unfiltered content from Reddit and may have biases. It is best used for text generation, but the training data has not been publicly released. It has several limitations and should be used with caution in situations that require truth and in systems that interact with humans. There are different versions of the model, including GPT-Large, GPT-Medium, and GPT-Xl, available for different use cases. The information provided by the OpenAI team is to complete and give specific examples of bias in their model.
 
+
+> The above summary was generated using ChatGPT. Review the [original model card](https://huggingface.co/gpt2) to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
 ### Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML

@@ -1,5 +1,7 @@
 DeBERTa is a version of the BERT model that has been improved through the use of disentangled attention and enhanced mask decoders. Compared to BERT and RoBERTa, it outperforms them on a majority of NLU tasks using 80GB of training data. It has been fine-tuned for NLU tasks and has achieved dev results on SQuAD 1.1/2.0 and MNLI tasks. If you find the model useful please cite the paper.
 
+> The above summary was generated using ChatGPT. Review the [original model card](https://huggingface.co/microsoft/deberta-base-mnli) to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+
 ### Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
