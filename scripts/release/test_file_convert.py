@@ -31,6 +31,7 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
         for test_job in test_group['jobs'].values():
             covered_assets = []
             if "pytest_job" in test_job:
+                test_job_path = None
                 for asset_path in test_job["assets"]:
                     asset_config = util.find_assets(input_dirs=src_yaml.parent / asset_path)[0]
                     covered_assets.append(asset_config.name)
@@ -53,8 +54,9 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
 
             test_job["assets"] = covered_assets
             # save test job yaml
-            with open(test_job_path, "w") as file:
-                yaml.dump(tj_yaml, file, default_flow_style=False, sort_keys=False)
+            if test_job_path:
+                with open(test_job_path, "w") as file:
+                    yaml.dump(tj_yaml, file, default_flow_style=False, sort_keys=False)
             # save tests.yaml
             with open(src_yaml, "w") as file:
                 yaml.dump(data, file, default_flow_style=False, sort_keys=False)
