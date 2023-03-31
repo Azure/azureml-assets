@@ -1,0 +1,9 @@
+image:
+  name: model-evaluation
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda.yaml
