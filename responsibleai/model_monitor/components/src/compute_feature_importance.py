@@ -76,7 +76,7 @@ def run(args):
         _logger.info("Successfully executed the feature importance component.")
         write_to_mltable(feature_importances, baseline_df, args.feature_importance_data)
     except Exception as e:
-        _logger.info("Error encountered when executing feature importance component: {0}", e)
+        _logger.info(f"Error encountered when executing feature importance component: {e}")
 
 
 if __name__ == "__main__":

@@ -44,7 +44,7 @@ def calculate_attribution_drift(baseline_explanations, production_explanations):
     relevance_score = np.asarray([production_explanations])
     feature_attribution_drift = ndcg_score(true_relevance, relevance_score)
     # just log for now, eventually we will have to write the output
-    _logger.info("feature attribution drift calculated: {0}", feature_attribution_drift)
+    _logger.info(f"feature attribution drift calculated: {feature_attribution_drift}")
     return feature_attribution_drift
 
 
@@ -109,7 +109,7 @@ def run(args):
         compute_attribution_drift(task_type, target_column, baseline_df, production_df, args.feature_attribution_data)
         _logger.info("Successfully executed the feature attribution component.")
     except Exception as e:
-        _logger.info("Error encountered when executing feature attribution component: {0}", e)
+        _logger.info(f"Error encountered when executing feature attribution component: {e}")
 
 
 if __name__ == "__main__":

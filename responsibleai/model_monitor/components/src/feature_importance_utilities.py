@@ -39,7 +39,7 @@ def create_lightgbm_model(X, y, task_type):
                              max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
     model = lgbm.fit(X, y)
 
-    _logger.info("Created lightgbm model using task_type: {0}".format(task_type))
+    _logger.info(f"Created lightgbm model using task_type: {task_type}")
     return model
 
 
