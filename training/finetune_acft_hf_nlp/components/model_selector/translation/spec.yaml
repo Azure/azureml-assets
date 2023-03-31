@@ -1,0 +1,40 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: translation_model_import
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Translation Model Import
+description: Import PyTorch / MLFlow model
+
+environment: azureml:acft-hf-nlp-gpu:0.0.1
+
+code: ../../../src/model_selector
+
+inputs:
+  # Model and task name
+  huggingface_id:
+    type: string
+    description: Input HuggingFace model id. Incase of continual finetuning provide proper id. Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms.
+    optional: true
+
+  # Continual-Finetuning model path
+  pytorch_model_path:
+    type: custom_model
+    optional: true
+    description: Input folder path containing pytorch model for further finetuning. Proper model/huggingface id must be passed.
+
+  mlflow_model_path:
+    type:  mlflow_model
+    optional: true
+    description: Input folder path containing mlflow model for further finetuning. Proper model/huggingface id must be passed.
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: folder to store model metadata
+
+command: >-
+  python model_selector.py --task_name Translation $[[--huggingface_id ${{inputs.huggingface_id}}]] $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']] $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']] --output_dir ${{outputs.output_dir}}
+
