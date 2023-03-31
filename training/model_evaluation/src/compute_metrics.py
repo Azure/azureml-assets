@@ -118,16 +118,9 @@ class ModelEvaluationRunner:
             if os.path.isdir(self.predictions_probabilities) and not self.is_predictions_probabilities_mltable:
                 predictions_probabilities = self.read_multiple_files(path=self.predictions_probabilities)
             else:
-                predictions_probabilities = read_data(self.predictions_probabilities, is_mltable=self.is_predictions_probabilities_mltable)
+                predictions_probabilities = read_data(self.predictions_probabilities,
+                                                      is_mltable=self.is_predictions_probabilities_mltable)
             predictions_probabilities = list(predictions_probabilities)[0]
-        # if self.task == constants.TASK.QnA:
-        #     if type(ground_truth[ground_truth.columns[0]][0]) != str and len(ground_truth[ground_truth.columns[0]][0].keys()) > 1:
-        #         print("dance dance dance", type(ground_truth[ground_truth.columns[0]][0]))
-        #         ground_truth[ground_truth.columns[0]] = ground_truth[ground_truth.columns[0]].apply(lambda x: x[self.label_column_name][0])
-        #         logger.warning("Multiple answers in ground truth not supported. Keeping the first answer.")
-
-        # No batching support for compute metrics component. Length is always 1.
-
         return ground_truth, predictions, predictions_probabilities
 
     def fetch_mode_runner(self):
@@ -140,8 +133,10 @@ class ModelEvaluationRunner:
 
     def compute_metrics(self):
         """Compute Metrics Mode."""
-        with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME, custom_dimensions=self.custom_dimensions):
-            result = evaluate_predictions(self.ground_truth, self.predictions, self.predictions_probabilities, self.task, self.metrics_config)
+        with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME,
+                          custom_dimensions=self.custom_dimensions):
+            result = evaluate_predictions(self.ground_truth, self.predictions, self.predictions_probabilities, 
+                                          self.task, self.metrics_config)
             if result:
                 scalar_metrics = result.metrics
                 logger.info("Computed metrics:")
@@ -157,7 +152,8 @@ class ModelEvaluationRunner:
         Raises:
             DataLoaderException: _description_
         """
-        with log_activity(logger, activity_name=constants.TelemetryConstants.DATA_LOADING, custom_dimensions=self.custom_dimensions):
+        with log_activity(logger, activity_name=constants.TelemetryConstants.DATA_LOADING,
+                          custom_dimensions=self.custom_dimensions):
             try:
                 print("Loading data ", self.predictions_probabilities, type(self.predictions_probabilities))
                 self.ground_truth, self.predictions, self.predictions_probabilities = self.load_data()
@@ -184,9 +180,12 @@ def filter_ground_truths(data, task_type, column_name=None):
         if type(data[data.columns[0]][0]) == dict and len(data[data.columns[0]][0].keys()) > 1:
             try:
                 if isinstance(data, pd.DataFrame):
-                    logger.warning("Multiple ground truths are not supported for the Question and Answering currently.\
-                                Considering only the first ground truth in case of multiple values.")
-                    data[data.columns[0]] = data[data.columns[0]].apply(lambda x: x[column_name][0] if len(x[column_name]) > 0 else "")
+                    logger.warning("Multiple ground truths are not supported for the \
+                                   Question and Answering currently.\
+                                   Considering only the first ground truth in case of multiple values.")
+                    data[data.columns[0]] = data[data.columns[0]].apply(
+                        lambda x: x[column_name][0] if len(x[column_name]) > 0 else ""
+                    )
             except Exception as e:
                 message = "Invalid ground truths column name"
                 log_traceback(e, logger, message, True)
@@ -208,28 +207,38 @@ def test_component():
     parser.add_argument("--task", type=str, dest="task", choices=constants.ALL_TASKS)
     parser.add_argument("--ground_truths", type=str, dest="ground_truths", required=False, default="")
     parser.add_argument("--predictions", type=str, dest="predictions", required=False, default="")
-    parser.add_argument("--prediction_probabilities", type=str, dest="prediction_probabilities", required=False, default="")
+    parser.add_argument("--prediction_probabilities", type=str, dest="prediction_probabilities",
+                        required=False, default="")
     parser.add_argument("--output", type=str, dest="output")
     parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default="")
-    parser.add_argument("--ground_truths_mltable", type=str, dest="ground_truths_mltable", required=False, default="")
+    parser.add_argument("--ground_truths_mltable", type=str, dest="ground_truths_mltable",
+                        required=False, default="")
     parser.add_argument("--predictions_mltable", type=str, dest="predictions_mltable", required=False, default="")
-    parser.add_argument("--prediction_probabilities_mltable", type=str, dest="prediction_probabilities_mltable", required=False, default="")
-    parser.add_argument("--ground_truths_column_name", type=str, dest="ground_truths_column_name", required=False, default=None)
-    parser.add_argument("--predictions_column_name", type=str, dest="predictions_column_name", required=False, default=None)
+    parser.add_argument("--prediction_probabilities_mltable", type=str, dest="prediction_probabilities_mltable",
+                        required=False, default="")
+    parser.add_argument("--ground_truths_column_name", type=str, dest="ground_truths_column_name",
+                        required=False, default=None)
+    parser.add_argument("--predictions_column_name", type=str, dest="predictions_column_name", 
+                        required=False, default=None)
     args = parser.parse_args()
     print(args)
 
     custom_dimensions.app_name = constants.TelemetryConstants.COMPUTE_METRICS_NAME
     custom_dims_dict = vars(custom_dimensions)
-    with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME, custom_dimensions=custom_dims_dict):
+    with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME,
+                      custom_dimensions=custom_dims_dict):
         logger.info("Validating arguments")
-        with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME, custom_dimensions=custom_dims_dict):
+        with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME,
+                          custom_dimensions=custom_dims_dict):
             validate_compute_metrics_args(args)
 
-        is_ground_truths_mltable, ground_truths = check_and_return_if_mltable(args.ground_truths, args.ground_truths_mltable)
-        is_predictions_mltable, predictions = check_and_return_if_mltable(args.predictions, args.predictions_mltable)
+        is_ground_truths_mltable, ground_truths = check_and_return_if_mltable(args.ground_truths,
+                                                                              args.ground_truths_mltable)
+        is_predictions_mltable, predictions = check_and_return_if_mltable(args.predictions,
+                                                                          args.predictions_mltable)
         is_prediction_probabilities_mltable, prediction_probabilities = check_and_return_if_mltable(
-            args.prediction_probabilities, args.prediction_probabilities_mltable)
+            args.prediction_probabilities, args.prediction_probabilities_mltable
+        )
 
         runner = ModelEvaluationRunner(
             task=args.task,

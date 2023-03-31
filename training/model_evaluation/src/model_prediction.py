@@ -51,12 +51,14 @@ class Inferencer:
         """
         self.model_uri = model_uri
         self.task = task
-        self.multilabel = task == constants.TASK.CLASSIFICATION_MULTILABEL or task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL
+        self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL
+                               or task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL)
         self.custom_dimensions = custom_dimensions
         self.device = torch.cuda.current_device() if device == "gpu" else -1
         self.batch_size = batch_size
         # self._setup_custom_environment()
-        with log_activity(logger, constants.TelemetryConstants.LOAD_MODEL, custom_dimensions=self.custom_dimensions):
+        with log_activity(logger, constants.TelemetryConstants.LOAD_MODEL,
+                          custom_dimensions=self.custom_dimensions):
             logger.info("Loading model")
             try:
                 self.model = aml_mlflow.aml.load_model(self.model_uri, constants.MLFLOW_MODEL_TYPE_MAP[self.task])
@@ -73,7 +75,8 @@ class Inferencer:
             ModelEvaluationException: _description_
             ModelEvaluationException: _description_
         """
-        with log_activity(logger, constants.TelemetryConstants.ENVIRONMENT_SETUP, custom_dimensions=self.custom_dimensions):
+        with log_activity(logger, constants.TelemetryConstants.ENVIRONMENT_SETUP,
+                          custom_dimensions=self.custom_dimensions):
             logger.info("Setting up model dependencies")
             try:
                 logger.info("Fetching requirements")
@@ -123,7 +126,8 @@ class Inferencer:
         """
         predictions, pred_probas, y_test = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
-        with log_activity(logger, constants.TelemetryConstants.DATA_LOADING, custom_dimensions=self.custom_dimensions):
+        with log_activity(logger, constants.TelemetryConstants.DATA_LOADING,
+                          custom_dimensions=self.custom_dimensions):
             data = self.load_data(test_data, label_column_name, input_column_names, is_mltable=is_mltable)
 
         for idx, (X_test, y_test_chunk) in enumerate(data):
@@ -133,9 +137,11 @@ class Inferencer:
             predictor = predictor_cls(self.model)
             device = self.device  # torch.cuda.current_device() if torch.cuda.is_available() else "cpu"
             pred_probas_chunk = None
-            predictions_chunk = predictor.predict(X_test, device=device, y_transformer=y_transformer, multilabel=self.multilabel)
+            predictions_chunk = predictor.predict(X_test, device=device,
+                                                  y_transformer=y_transformer, multilabel=self.multilabel)
             if self.task in constants.CLASSIFICATION_SET:
-                pred_probas_chunk = predictor.predict_proba(X_test, device=device, y_transformer=y_transformer, multilabel=self.multilabel)
+                pred_probas_chunk = predictor.predict_proba(X_test, device=device,
+                                                            y_transformer=y_transformer, multilabel=self.multilabel)
             if not isinstance(predictions_chunk, pd.DataFrame):
                 predictions_df = pd.DataFrame()
                 predictions_df["predictions"] = predictions_chunk
@@ -144,8 +150,11 @@ class Inferencer:
                 pred_probas_chunk = pd.DataFrame(pred_probas_chunk)
             if y_test_chunk is not None:
                 y_test_chunk = pd.DataFrame(y_test_chunk, index=X_test.index, columns=[label_column_name])
-                if isinstance(y_test_chunk[label_column_name].iloc[0], str) and self.task in constants.MULTIPLE_OUTPUTS_SET:
-                    y_test_chunk[label_column_name] = y_test_chunk[label_column_name].apply(lambda x: ast.literal_eval(x))
+                if isinstance(y_test_chunk[label_column_name].iloc[0], str) \
+                    and self.task in constants.MULTIPLE_OUTPUTS_SET:
+                    y_test_chunk[label_column_name] = y_test_chunk[label_column_name].apply(
+                        lambda x: ast.literal_eval(x)
+                    )
             else:
                 y_test_chunk = pd.DataFrame({})
             predictions_chunk.index = X_test.index
@@ -172,13 +181,17 @@ def test_model():
     parser.add_argument("--label-column-name", type=str, dest="label_column_name", required=False, default=None)
     parser.add_argument("--predictions", type=str, dest="predictions")
     parser.add_argument("--predictions-mltable", type=str, dest="predictions_mltable")
-    parser.add_argument("--prediction-probabilities", type=str, required=False, default=None, dest="prediction_probabilities")
-    parser.add_argument("--prediction-probabilities-mltable", type=str, required=False, default=None, dest="prediction_probabilities_mltable")
+    parser.add_argument("--prediction-probabilities", type=str, required=False,
+                        default=None, dest="prediction_probabilities")
+    parser.add_argument("--prediction-probabilities-mltable", type=str, required=False,
+                        default=None, dest="prediction_probabilities_mltable")
     parser.add_argument("--ground-truth", type=str, required=False, default=None, dest="ground_truth")
     parser.add_argument("--ground-truth-mltable", type=str, required=False, default=None, dest="ground_truth_mltable")
     parser.add_argument("--device", type=str, required=False, default="cpu", dest="device")
     parser.add_argument("--batch-size", type=int, required=False, default=None, dest="batch_size")
-    parser.add_argument("--input-column-names", type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()], dest="input_column_names", required=False, default=None)
+    parser.add_argument("--input-column-names",
+                        type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()],
+                        dest="input_column_names", required=False, default=None)
 
     args = parser.parse_args()
     print(args)

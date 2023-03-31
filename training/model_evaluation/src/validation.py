@@ -64,42 +64,6 @@ def _validate_model(args):
     )
 
 
-'''def _validate_data(args):
-    """Validate Test Data.
-
-    Args:
-        args (_type_): _description_
-    """
-    print(os.listdir(args.data))
-    assert_and_raise(
-        condition=os.path.exists(os.path.join(args.data, MLTABLE_FILE_NAME)),
-        exception_cls=DataValidationException,
-        message="Invalid test data file name. Either file is missing or mispelled."
-    )
-
-    if args.config_file_name:
-        assert_and_raise(
-            condition=os.path.exists(args.config_file_name),
-            exception_cls=DataValidationException,
-            message="Invalid config file name. Either file is missing or mispelled."
-        )
-        filepath = args.config_file_name
-        label_column_name, prediction_column_name, metrics_config = read_config(filepath, args.task)
-        if args.mode != "predict" and args.task != TASK.NER:
-            assert_and_raise(
-                condition=label_column_name is not None,
-                exception_cls=DataValidationException,
-                message=f"Label Column Name is required for mode {args.mode}. See documentation on how to create a config file."
-            )
-
-        if args.mode == "compute_metrics":
-            assert_and_raise(
-                condition=prediction_column_name is not None,
-                exception_cls=DataValidationException,
-                message=f"Prediction Column Name required for mode {args.mode}. See documentation on how to create a config file."
-            )'''
-
-
 def _validate_task(args):
     """Validate Task selected.
 

@@ -10,7 +10,14 @@ from constants import ExceptionLiterals
 class ModelEvaluationException(AzureMLException):
     """Base Model Evaluation Exception."""
 
-    def __init__(self, exception_message, inner_exception=None, target=None, details=None, message_format=None, message_parameters=None, reference_code=None, **kwargs):
+    def __init__(self,
+                 exception_message,
+                 inner_exception=None,
+                 target=None, details=None,
+                 message_format=None,
+                 message_parameters=None,
+                 reference_code=None,
+                 **kwargs):
         """__init__.
 
         Args:
@@ -24,8 +31,14 @@ class ModelEvaluationException(AzureMLException):
         """
         if not target:
             target = ExceptionLiterals.MODEL_EVALUATION_TARGET
-        super().__init__(exception_message, inner_exception=inner_exception, target=target, details=details, message_format=message_format,
-                         message_parameters=message_parameters, reference_code=reference_code, **kwargs)
+        super().__init__(exception_message,
+                         inner_exception=inner_exception,
+                         target=target,
+                         details=details,
+                         message_format=message_format,
+                         message_parameters=message_parameters,
+                         reference_code=reference_code,
+                         **kwargs)
 
 
 class ArgumentValidationException(ModelEvaluationException):
@@ -35,7 +48,14 @@ class ArgumentValidationException(ModelEvaluationException):
         ModelEvaluationException (_type_): _description_
     """
 
-    def __init__(self, exception_message, inner_exception=None, details=None, message_format=None, message_parameters=None, reference_code=None, **kwargs):
+    def __init__(self,
+                 exception_message,
+                 inner_exception=None,
+                 details=None,
+                 message_format=None,
+                 message_parameters=None,
+                 reference_code=None,
+                 **kwargs):
         """__init__.
 
         Args:
@@ -47,8 +67,14 @@ class ArgumentValidationException(ModelEvaluationException):
             reference_code (_type_, optional): _description_. Defaults to None.
         """
         target = ExceptionLiterals.ARGS_TARGET
-        super().__init__(exception_message, inner_exception=inner_exception, target=target, details=details, message_format=message_format,
-                         message_parameters=message_parameters, reference_code=reference_code, **kwargs)
+        super().__init__(exception_message,
+                         inner_exception=inner_exception,
+                         target=target,
+                         details=details,
+                         message_format=message_format,
+                         message_parameters=message_parameters,
+                         reference_code=reference_code,
+                         **kwargs)
 
 
 class DataValidationException(ModelEvaluationException):
@@ -58,7 +84,14 @@ class DataValidationException(ModelEvaluationException):
         ModelEvaluationException (_type_): _description_
     """
 
-    def __init__(self, exception_message, inner_exception=None, details=None, message_format=None, message_parameters=None, reference_code=None, **kwargs):
+    def __init__(self,
+                 exception_message,
+                 inner_exception=None,
+                 details=None,
+                 message_format=None,
+                 message_parameters=None,
+                 reference_code=None,
+                 **kwargs):
         """__init__.
 
         Args:
@@ -70,8 +103,14 @@ class DataValidationException(ModelEvaluationException):
             reference_code (_type_, optional): _description_. Defaults to None.
         """
         target = ExceptionLiterals.DATA_TARGET
-        super().__init__(exception_message, inner_exception=inner_exception, target=target, details=details, message_format=message_format,
-                         message_parameters=message_parameters, reference_code=reference_code, **kwargs)
+        super().__init__(exception_message,
+                         inner_exception=inner_exception,
+                         target=target,
+                         details=details,
+                         message_format=message_format,
+                         message_parameters=message_parameters,
+                         reference_code=reference_code,
+                         **kwargs)
 
 
 class DataLoaderException(ModelEvaluationException):
@@ -81,7 +120,14 @@ class DataLoaderException(ModelEvaluationException):
         ModelEvaluationException (_type_): _description_
     """
 
-    def __init__(self, exception_message, inner_exception=None, details=None, message_format=None, message_parameters=None, reference_code=None, **kwargs):
+    def __init__(self,
+                 exception_message,
+                 inner_exception=None,
+                 details=None,
+                 message_format=None,
+                 message_parameters=None,
+                 reference_code=None,
+                 **kwargs):
         """__init__.
 
         Args:
@@ -93,8 +139,14 @@ class DataLoaderException(ModelEvaluationException):
             reference_code (_type_, optional): _description_. Defaults to None.
         """
         target = ExceptionLiterals.DATA_LOADING_TARGET
-        super().__init__(exception_message, inner_exception=inner_exception, target=target, details=details, message_format=message_format,
-                         message_parameters=message_parameters, reference_code=reference_code, **kwargs)
+        super().__init__(exception_message,
+                         inner_exception=inner_exception,
+                         target=target,
+                         details=details,
+                         message_format=message_format,
+                         message_parameters=message_parameters,
+                         reference_code=reference_code,
+                         **kwargs)
 
 
 class ModelValidationException(ModelEvaluationException):
@@ -104,7 +156,14 @@ class ModelValidationException(ModelEvaluationException):
         ModelEvaluationException (_type_): _description_
     """
 
-    def __init__(self, exception_message, inner_exception=None, details=None, message_format=None, message_parameters=None, reference_code=None, **kwargs):
+    def __init__(self,
+                exception_message,
+                inner_exception=None,
+                details=None,
+                message_format=None,
+                message_parameters=None,
+                reference_code=None,
+                **kwargs):
         """__init__.
 
         Args:
@@ -116,8 +175,14 @@ class ModelValidationException(ModelEvaluationException):
             reference_code (_type_, optional): _description_. Defaults to None.
         """
         target = ExceptionLiterals.MODEL_LOADER_TARGET
-        super().__init__(exception_message, inner_exception=inner_exception, target=target, details=details, message_format=message_format,
-                         message_parameters=message_parameters, reference_code=reference_code, **kwargs)
+        super().__init__(exception_message,
+                         inner_exception=inner_exception,
+                         target=target,
+                         details=details,
+                         message_format=message_format,
+                         message_parameters=message_parameters,
+                         reference_code=reference_code,
+                         **kwargs)
 
 
 class ScoringException(ModelEvaluationException):
@@ -127,7 +192,14 @@ class ScoringException(ModelEvaluationException):
         ModelEvaluationException (_type_): _description_
     """
 
-    def __init__(self, exception_message, inner_exception=None, details=None, message_format=None, message_parameters=None, reference_code=None, **kwargs):
+    def __init__(self,
+                 exception_message,
+                 inner_exception=None,
+                 details=None,
+                 message_format=None,
+                 message_parameters=None,
+                 reference_code=None,
+                 **kwargs):
         """__init__.
 
         Args:
@@ -139,8 +211,14 @@ class ScoringException(ModelEvaluationException):
             reference_code (_type_, optional): _description_. Defaults to None.
         """
         target = ExceptionLiterals.MODEL_EVALUATION_TARGET
-        super().__init__(exception_message, inner_exception=inner_exception, target=target, details=details, message_format=message_format,
-                         message_parameters=message_parameters, reference_code=reference_code, **kwargs)
+        super().__init__(exception_message,
+                         inner_exception=inner_exception,
+                         target=target,
+                         details=details,
+                         message_format=message_format,
+                         message_parameters=message_parameters,
+                         reference_code=reference_code,
+                         **kwargs)
 
 
 class PredictException(ModelEvaluationException):
@@ -150,7 +228,14 @@ class PredictException(ModelEvaluationException):
         ModelEvaluationException (_type_): _description_
     """
 
-    def __init__(self, exception_message, inner_exception=None, details=None, message_format=None, message_parameters=None, reference_code=None, **kwargs):
+    def __init__(self,
+                 exception_message,
+                 inner_exception=None,
+                 details=None,
+                 message_format=None,
+                 message_parameters=None,
+                 reference_code=None,
+                 **kwargs):
         """__init__.
 
         Args:
@@ -162,8 +247,14 @@ class PredictException(ModelEvaluationException):
             reference_code (_type_, optional): _description_. Defaults to None.
         """
         target = ExceptionLiterals.MODEL_EVALUATION_TARGET
-        super().__init__(exception_message, inner_exception=inner_exception, target=target, details=details, message_format=message_format,
-                         message_parameters=message_parameters, reference_code=reference_code, **kwargs)
+        super().__init__(exception_message,
+                         inner_exception=inner_exception,
+                         target=target,
+                         details=details,
+                         message_format=message_format,
+                         message_parameters=message_parameters,
+                         reference_code=reference_code,
+                         **kwargs)
 
 
 class ComputeMetricsException(ModelEvaluationException):
@@ -173,7 +264,14 @@ class ComputeMetricsException(ModelEvaluationException):
         ModelEvaluationException (_type_): _description_
     """
 
-    def __init__(self, exception_message, inner_exception=None, details=None, message_format=None, message_parameters=None, reference_code=None, **kwargs):
+    def __init__(self,
+                 exception_message,
+                 inner_exception=None,
+                 details=None,
+                 message_format=None,
+                 message_parameters=None,
+                 reference_code=None,
+                 **kwargs):
         """__init__.
 
         Args:
@@ -185,5 +283,11 @@ class ComputeMetricsException(ModelEvaluationException):
             reference_code (_type_, optional): _description_. Defaults to None.
         """
         target = ExceptionLiterals.MODEL_EVALUATION_TARGET
-        super().__init__(exception_message, inner_exception=inner_exception, target=target, details=details, message_format=message_format,
-                         message_parameters=message_parameters, reference_code=reference_code, **kwargs)
+        super().__init__(exception_message,
+                         inner_exception=inner_exception,
+                         target=target,
+                         details=details,
+                         message_format=message_format,
+                         message_parameters=message_parameters,
+                         reference_code=reference_code,
+                         **kwargs)

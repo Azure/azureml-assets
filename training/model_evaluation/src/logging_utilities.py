@@ -155,7 +155,9 @@ class ModelEvaluationHandler(logging.StreamHandler):
         stream.write(msg)
 
 
-def get_logger(logging_level: str = 'DEBUG', custom_dimensions: dict = vars(custom_dimensions), name: str = constants.TelemetryConstants.LOGGER_NAME):
+def get_logger(logging_level: str = 'DEBUG',
+               custom_dimensions: dict = vars(custom_dimensions),
+               name: str = constants.TelemetryConstants.LOGGER_NAME):
     """Get logger.
 
     Args:
@@ -183,7 +185,8 @@ def get_logger(logging_level: str = 'DEBUG', custom_dimensions: dict = vars(cust
 
     if (constants.TelemetryConstants.MODEL_EVALUATION_HANDLER_NAME not in handler_names):
         formatter = logging.Formatter(
-            '%(asctime)s [{}] [{}] [%(module)s] %(funcName)s +%(lineno)s: %(levelname)-8s [%(process)d] %(message)s \n'.format(app_name, run_id)
+            '%(asctime)s [{}] [{}] [%(module)s] %(funcName)s +%(lineno)s: %(levelname)-8s \
+            [%(process)d] %(message)s \n'.format(app_name, run_id)
         )
         stream_handler = ModelEvaluationHandler()
         stream_handler.setFormatter(formatter)
@@ -196,8 +199,14 @@ def get_logger(logging_level: str = 'DEBUG', custom_dimensions: dict = vars(cust
         current_logger = logging.getLogger("azureml.telemetry").getChild(child_namespace)
         current_logger.propagate = False
         current_logger.setLevel(logging.CRITICAL)
-        appinsights_handler = get_appinsights_log_handler(instrumentation_key=constants.TelemetryConstants.INSTRUMENTATION_KEY, logger=current_logger, properties=custom_dimensions)
-        formatter = AppInsightsPIIStrippingFormatter(fmt='%(asctime)s [{}] [{}] [%(module)s] %(funcName)s +%(lineno)s: %(levelname)-8s [%(process)d] %(message)s \n'.format(app_name, run_id))
+        appinsights_handler = get_appinsights_log_handler(
+            instrumentation_key=constants.TelemetryConstants.INSTRUMENTATION_KEY,
+            logger=current_logger, properties=custom_dimensions
+        )
+        formatter = AppInsightsPIIStrippingFormatter(
+            fmt='%(asctime)s [{}] [{}] [%(module)s] %(funcName)s +%(lineno)s: %(levelname)-8s \
+                [%(process)d] %(message)s \n'.format(app_name, run_id)
+        )
         appinsights_handler.setFormatter(formatter)
         appinsights_handler.setLevel(numeric_log_level)
         appinsights_handler.set_name(constants.TelemetryConstants.APP_INSIGHT_HANDLER_NAME)

@@ -450,7 +450,9 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
 
     if task == constants.TASK.NER:
         if len(X_test.columns) > 1 and "tokens" not in X_test.columns:
-            raise DataLoaderException("Too many feature columns in dataset. Only 1 feature column should be passed for NER.")
+            raise DataLoaderException(
+                "Too many feature columns in dataset. Only 1 feature column should be passed for NER."
+            )
         if len(X_test.columns) > 1:
             X_test = X_test["tokens"]
         if len(X_test.columns) == 1:
@@ -474,7 +476,10 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
         elif isinstance(y_test.iloc[0], list) or isinstance(y_test.iloc[0], np.ndarray):
             y_test = y_test.apply(lambda x: x[0])
         if not isinstance(y_test.iloc[0], str):
-            raise DataLoaderException(exception_message="Ground Truths for Question-answering should be a string or an array found "+type(y_test.iloc[0]))
+            raise DataLoaderException(
+                exception_message="Ground Truths for Question-answering should be a string or \
+                    an array found "+type(y_test.iloc[0])
+            )
     if y_test is not None:
         y_test = y_test.values
     return X_test, y_test
@@ -629,7 +634,10 @@ def read_conll(stream_info, labels=None):
         data = str(f.read())
         f.close()
     else:
-        raise DataLoaderException("Invalid MLTABLE File for ConLL formatted data. See Sample Here : https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-standalone-jobs/cli-automl-text-ner-conll/validation-mltable-folder/MLTable")
+        info_link = "https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-\
+            standalone-jobs/cli-automl-text-ner-conll/validation-mltable-folder/MLTable"
+        raise DataLoaderException("Invalid MLTABLE File for ConLL formatted data. \
+                                  See Sample Here : "+info_link)
     data = data.replace("-DOCSTART- O\n\n", "")
     data = data.split("\n\n")
 
