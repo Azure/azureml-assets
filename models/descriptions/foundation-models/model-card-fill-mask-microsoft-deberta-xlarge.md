@@ -19,6 +19,12 @@ Token Classification|Token Classification|[Conll2003](https://huggingface.co/dat
 Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/datasets/squad)|[extractive-qa.ipynb](https://aka.ms/azureml-ft-sdk-extractive-qa)|[extractive-qa.sh](https://github.com/Azure/azureml-examples/blob/sitaram/finetunenotebooks/cli/foundation-models/system/finetune/question-answering/extractive-qa.sh)
 
 
+### Model Evaluation
+
+|Task|Use case|Dataset|Python sample (Notebook)|
+|---|--|--|--|
+|Fill Mask||[imdb](https://huggingface.co/datasets/imdb)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|
+
 
 
 
