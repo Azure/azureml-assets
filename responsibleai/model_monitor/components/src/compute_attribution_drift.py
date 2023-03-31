@@ -13,20 +13,9 @@ from azureml.exceptions import UserErrorException
 from feature_importance_utilities import get_model_wrapper, compute_explanations,  compute_categorical_features
 from io_utils import load_mltable_to_df, save_df_as_mltable
 
-from tabular.components.src._telemetry._loggerfactory import _LoggerFactory, track
 
 _logger = logging.getLogger(__file__)
-_ai_logger = None
-
-
-def _get_logger():
-    global _ai_logger
-    if _ai_logger is None:
-        _ai_logger = _LoggerFactory.get_logger(__file__)
-    return _ai_logger
-
-
-_get_logger()
+logging.basicConfig(level=logging.INFO)
 
 
 def parse_args():
@@ -55,7 +44,7 @@ def calculate_attribution_drift(baseline_explanations, production_explanations):
     relevance_score = np.asarray([production_explanations])
     feature_attribution_drift = ndcg_score(true_relevance, relevance_score)
     # just log for now, eventually we will have to write the output
-    _logger.info("feature attribution drift calculated: {0}", feature_attribution_drift)
+    _logger.info(f"feature attribution drift calculated: {feature_attribution_drift}")
     return feature_attribution_drift
 
 
@@ -108,7 +97,6 @@ def write_to_mltable(baseline_explanations, production_explanations, feature_att
     save_df_as_mltable(metrics_dataframe, feature_attribution_data)
 
 
-@track(_get_logger)
 def run(args):
 
     baseline_df = load_mltable_to_df(args.baseline_data)
@@ -121,7 +109,7 @@ def run(args):
         compute_attribution_drift(task_type, target_column, baseline_df, production_df, args.feature_attribution_data)
         _logger.info("Successfully executed the feature attribution component.")
     except Exception as e:
-        _logger.info("Error encountered when executing feature attribution component: {0}", e)
+        _logger.info(f"Error encountered when executing feature attribution component: {e}")
 
 
 if __name__ == "__main__":
