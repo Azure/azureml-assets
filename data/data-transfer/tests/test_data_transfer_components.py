@@ -14,7 +14,10 @@ logger = logging.getLogger(name=__file__)
 
 @pytest.mark.unittest
 class TestDataTransferComponents:
-    def test_pipeline_job_load_with_data_transfer_components(self):
-        pipeline = load_job(source="./data-transfer/tests/test_data_transfer_components.yaml")
+    """TestDataTransferComponents."""
 
+    def test_pipeline_job_load_with_data_transfer_components(self):
+        """Test DataTransfer components."""
+        logger.info("Running DataTransfer Component Validations ...")
+        pipeline = load_job(source="./data-transfer/tests/test_data_transfer_components.yaml")
         assert isinstance(pipeline, PipelineJob)
