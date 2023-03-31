@@ -1,6 +1,6 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: feature_importance
-version: 0.0.1
+version: 0.0.2
 display_name: Feature importance
 is_deterministic: False
 type: command
@@ -11,7 +11,7 @@ inputs:
 outputs:
   feature_importance_data:
     type: mltable
-code: ./
+code: ../src/
 environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/10
 resources:
   instance_count: 1
