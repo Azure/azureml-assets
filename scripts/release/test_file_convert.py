@@ -31,6 +31,7 @@ def process_test_files(src_yaml: Path, assets_name_list: list):
         for test_job in test_group['jobs'].values():
             covered_assets = []
             if "pytest_job" in test_job:
+                test_job_path = None
                 for asset_path in test_job["assets"]:
                     asset_config = util.find_assets(input_dirs=src_yaml.parent / asset_path)[0]
                     covered_assets.append(asset_config.name)
