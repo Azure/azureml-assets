@@ -3,7 +3,7 @@ name: evaluate_model
 display_name: Evaluate Model
 description: Evaluate MLFlow models for supported task types.
 
-version: 0.0.1.preview
+version: 0.0.1
 
 tags:
   type: evaluation
@@ -69,7 +69,7 @@ outputs:
     type: uri_folder
 
 code: ../../src
-environment: azureml:model-evaluation:0.0.1-preview
+environment: azureml:model-evaluation:1
 command: >-
   python download_dependencies.py
   $[[--mlflow-model '${{inputs.mlflow_model}}']]
