@@ -107,11 +107,19 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
     """
     try:
         model = load_model(spec_file_path)
-        # TODO: temp fix before restructuring what attributes are required in model config and spec.
         model.type = model_config.type.value
     except Exception as e:
         logger.error(f"Error in loading model spec file at {spec_file_path}: {e}")
         return False
+
+    model_description_file_path = Path(spec_file_path).parent / model_config.description
+    logger.print(f"model_description_file_path {model_description_file_path}")
+    if os.path.exists(model_description_file_path):
+        with open(model_description_file_path) as f:
+            model_description = f.read()
+            model.description = model_description
+    else:
+        logger.print("description file does not exist")
 
     if model_config.path.type == PathType.LOCAL:
         model.path = os.path.abspath(Path(model_config.path.uri).resolve())
@@ -126,7 +134,7 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
         success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
         if success:
             model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
-            if not model_config.flavors:
+            if not model.flavors:
                 # try fetching flavors from MLModel file
                 mlmodel_file_path = model.path / MLFlowModelUtils.MLMODEL_FILE_NAME
                 try:
