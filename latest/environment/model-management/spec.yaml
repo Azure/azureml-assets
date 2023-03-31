@@ -9,3 +9,6 @@ build:
   dockerfile_path: "Dockerfile"
 
 os_type: linux
+
+tags:
+    Preview: ""
