@@ -173,9 +173,10 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     # add license file
     # _add_license_file(input_dir, output_dir)
 
+
 def _add_license_file(input_dir: Path, output_dir: Path):
     """Copy license file from input_dir to output_dir, if exists."""
     regex = re.compile('(?i)^LICENSE')
     for file in os.listdir(input_dir):
         if regex.match(file):
-            shutil.copy(Path(input_dir,file), output_dir)
+            shutil.copy(Path(input_dir, file), output_dir)
