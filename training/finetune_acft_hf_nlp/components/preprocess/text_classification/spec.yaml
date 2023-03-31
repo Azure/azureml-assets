@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Text Classification DataPreProcess
 description: Component to preprocess data for single label classification task
 
-environment: azureml:acft-hf-nlp-gpu:0.0.1
+environment: azureml:acft-hf-nlp-gpu:1
 
 code: ../../../src/preprocess
 
