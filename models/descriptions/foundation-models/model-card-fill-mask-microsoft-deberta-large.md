@@ -1,4 +1,4 @@
-The summary of DeBERTa: Decoding-enhanced BERT with Disentangled Attention is that it is an improvement of the BERT and RoBERTa models using disentangled attention and enhanced mask decoder. With 80GB training data, it outperforms the BERT and RoBERTa models in many Natural Language Understanding (NLU) tasks. Key results can be found on the SQuAD 1.1/2.0 and GLUE benchmark tasks when fine-tuned with the MNLI task. The details are available in the official repository and a related paper. If it's useful, cite the paper as described in the citation.
+Decoding-enhanced BERT with Disentangled Attention is that it is an improvement of the BERT and RoBERTa models using disentangled attention and enhanced mask decoder. With 80GB training data, it outperforms the BERT and RoBERTa models in many Natural Language Understanding (NLU) tasks. Key results can be found on the SQuAD 1.1/2.0 and GLUE benchmark tasks when fine-tuned with the MNLI task. The details are available in the official repository and a related paper. If it's useful, cite the paper as described in the citation.
 
 > The above summary was generated using ChatGPT. Review the [original model card](https://huggingface.co/microsoft/deberta-large) to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
@@ -24,8 +24,3 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Fill Mask||[imdb](https://huggingface.co/datasets/imdb)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|
-
-
-
-
-
