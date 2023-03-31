@@ -6,7 +6,7 @@ The RoBERTa Large model is a pretrained language model developed by the Hugging 
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[translation-online-endpoint.ipynb](https://aka.ms/azureml-sdk-fill-mask-online-endpoint)|[translation-online-endpoint.sh](https://aka.ms/azureml-cli-fill-mask-online-endpoint)
+Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
 Batch | todo
 
 
