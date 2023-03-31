@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Base Predictor."""
 
 from abc import abstractmethod, ABC

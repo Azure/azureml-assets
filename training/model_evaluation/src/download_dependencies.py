@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Script for downloading and installing mlflow model dependencies."""
 
 from mlflow.pyfunc import _get_model_dependencies

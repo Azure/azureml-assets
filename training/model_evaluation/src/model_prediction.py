@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Entry script for Model Evaluation Component."""
 
 import argparse

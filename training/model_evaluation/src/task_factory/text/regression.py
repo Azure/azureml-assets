@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Text Regression."""
 
 from task_factory.tabular.regression import TabularRegressor

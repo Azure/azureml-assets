@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Text Summarization."""
 
 from task_factory.base import PredictWrapper

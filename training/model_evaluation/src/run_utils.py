@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """AzureML Core Run utilities."""
 from azureml.core import Run
 from azureml.core.run import _OfflineRun

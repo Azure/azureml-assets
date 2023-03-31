@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """File to create AzureML Based Exceptions for Model Evaluation."""
 
 from azureml.exceptions import AzureMLException

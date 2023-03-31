@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Text Classifier."""
 
 from task_factory.tabular.classification import TabularClassifier

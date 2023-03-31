@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Forecast Predictor."""
 
 # TODO: Add Forecast predictor

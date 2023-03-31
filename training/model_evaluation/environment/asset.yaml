@@ -1,4 +1,4 @@
-name: model-evaluation
+name: azureml/curated/model-evaluation
 version: 0.0.1-preview
 type: environment
 spec: spec.yaml

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """File containing constants for model evaluation script."""
 
 MLFLOW_MODEL_TYPE_MAP = {

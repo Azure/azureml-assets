@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """Text Translation."""
 
 from task_factory.base import PredictWrapper
