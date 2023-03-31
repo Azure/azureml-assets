@@ -45,7 +45,7 @@ if __name__ == "__main__":
     model_download_metadata_path = args.model_download_metadata
     model_path = args.model_path
     mlflow_model_output_dir = args.mlflow_model_output_dir
-    model_job_path = args.model_job_path
+    model_import_job_path = args.model_import_job_path
     license_folder = args.license_folder
 
     print("##### Print args #####")
@@ -82,5 +82,5 @@ if __name__ == "__main__":
     path = f"azureml://jobs/{this_job}/outputs/mlflow_model_folder"
     model_path_dict = {"path":path}
     json_object = json.dumps(model_path_dict, indent=4)
-    with open(model_job_path, "w") as outfile:
+    with open(model_import_job_path, "w") as outfile:
         outfile.write(json_object)
