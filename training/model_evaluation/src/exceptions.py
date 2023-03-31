@@ -157,13 +157,13 @@ class ModelValidationException(ModelEvaluationException):
     """
 
     def __init__(self,
-                exception_message,
-                inner_exception=None,
-                details=None,
-                message_format=None,
-                message_parameters=None,
-                reference_code=None,
-                **kwargs):
+                 exception_message,
+                 inner_exception=None,
+                 details=None,
+                 message_format=None,
+                 message_parameters=None,
+                 reference_code=None,
+                 **kwargs):
         """__init__.
 
         Args:

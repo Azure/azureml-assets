@@ -135,7 +135,7 @@ class ModelEvaluationRunner:
         """Compute Metrics Mode."""
         with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME,
                           custom_dimensions=self.custom_dimensions):
-            result = evaluate_predictions(self.ground_truth, self.predictions, self.predictions_probabilities, 
+            result = evaluate_predictions(self.ground_truth, self.predictions, self.predictions_probabilities,
                                           self.task, self.metrics_config)
             if result:
                 scalar_metrics = result.metrics
@@ -218,7 +218,7 @@ def test_component():
                         required=False, default="")
     parser.add_argument("--ground_truths_column_name", type=str, dest="ground_truths_column_name",
                         required=False, default=None)
-    parser.add_argument("--predictions_column_name", type=str, dest="predictions_column_name", 
+    parser.add_argument("--predictions_column_name", type=str, dest="predictions_column_name",
                         required=False, default=None)
     args = parser.parse_args()
     print(args)

@@ -202,7 +202,7 @@ def test_model():
     parser.add_argument("--batch-size", type=int, required=False, default=None, dest="batch_size")
     parser.add_argument("--label-column-name", type=str, dest="label_column_name", required=True)
     parser.add_argument("--input-column-names",
-                        type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()], 
+                        type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()],
                         dest="input_column_names", required=False, default=None)
 
     args = parser.parse_args()

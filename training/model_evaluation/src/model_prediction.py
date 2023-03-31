@@ -151,7 +151,7 @@ class Inferencer:
             if y_test_chunk is not None:
                 y_test_chunk = pd.DataFrame(y_test_chunk, index=X_test.index, columns=[label_column_name])
                 if isinstance(y_test_chunk[label_column_name].iloc[0], str) \
-                    and self.task in constants.MULTIPLE_OUTPUTS_SET:
+                        and self.task in constants.MULTIPLE_OUTPUTS_SET:
                     y_test_chunk[label_column_name] = y_test_chunk[label_column_name].apply(
                         lambda x: ast.literal_eval(x)
                     )
