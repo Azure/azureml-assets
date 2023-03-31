@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Huggingface predict file for whisper mlflow model."""
+
 import os
 import re
 import wget
@@ -112,8 +117,8 @@ supported_languages = [
 ]
 
 
-def isValidURL(str):
-
+def is_valid_url(str):
+    """Return if URL is a valid string."""
     regex = (
         "((http|https)://)(www.)?"
         + "[a-zA-Z0-9@:%._\\+~#?&//=]"
@@ -122,12 +127,10 @@ def isValidURL(str):
         + "._\\+~#?&//=]*)"
     )
     p = re.compile(regex)
-
     # If the string is empty
     # return false
     if str is None:
         return False
-
     # Return if the string
     # matched the ReGex
     if re.search(p, str):
@@ -136,9 +139,8 @@ def isValidURL(str):
         return False
 
 
-# Function to convert base64encoded audio string to np array
 def audio_input_to_nparray(audio_file_path: Path, sampling_rate: int = 16000) -> np.array:
-
+    """Function to convert base64encoded audio string to np array."""
     try:
         out, _ = (
             ffmpeg.input(audio_file_path, threads=0)
@@ -151,12 +153,12 @@ def audio_input_to_nparray(audio_file_path: Path, sampling_rate: int = 16000) ->
     return np.frombuffer(out, np.int16).flatten().astype(np.float32) / 32768.0
 
 
-# Function to change base64 encoded string to nparray.
 def audio_processor(audio_input: str, sampling_rate: int = 16000):
+    """Function to change base64 encoded string to nparray."""
     with TemporaryDirectory() as temp_dir:
         audio_file_path = os.path.join(temp_dir, "audio_file.m4a")
 
-        if isValidURL(audio_input):
+        if is_valid_url(audio_input):
             audio_file = wget.download(audio_input, out=audio_file_path)
             print(audio_file)
         else:
@@ -168,33 +170,26 @@ def audio_processor(audio_input: str, sampling_rate: int = 16000):
 
 
 def predict(model_input: pd.DataFrame, task, model, tokenizer, **kwargs):
-
+    """Pedict model with the inputs provided."""
     if not task == "automatic-speech-recognition":
         return AMLResponse(f"Invalid task name {task}", 400)
-
     result = []
     for row in model_input.itertuples():
         # Parse inputs.
-
         audio = row.audio
         language = row.language or None
-
         if not isinstance(audio, str):
             return AMLResponse(f"Invalid input format {type(audio)}, input should be base64 encoded string", 400)
         if not isinstance(language, str):
             return AMLResponse(f"Invalid language format {type(language)}, should be type string", 400)
         if language not in supported_languages:
             return AMLResponse(f"Language not supported {type(language)}, should be type string", 400)
-
         forced_decoder_ids = (
             tokenizer.get_decoder_prompt_ids(language=language, task="transcribe") if language else None
         )
-
         audio_array = audio_processor(audio)
         input_features = tokenizer(audio_array, sampling_rate=16000, return_tensors="pt").input_features
         predicted_ids = model.generate(input_features, forced_decoder_ids=forced_decoder_ids)
         transcription = tokenizer.batch_decode(predicted_ids, skip_special_tokens=True)[0]
-
         result.append({"text": transcription})
-
     return result

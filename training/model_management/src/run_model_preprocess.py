@@ -62,6 +62,7 @@ if __name__ == "__main__":
         download_details = json.load(f)
         preprocess_args.update(download_details.get("tags", {}))
         preprocess_args.update(download_details.get("properties", {}))
+
     print(preprocess_args)
 
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
