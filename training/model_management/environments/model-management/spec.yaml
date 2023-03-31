@@ -9,3 +9,7 @@ build:
   dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
+
+
+tags:
+    Preview: ""
