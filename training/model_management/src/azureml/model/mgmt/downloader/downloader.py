@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import List
 
 
-PROPERTIES = ["commit_hash", "SHA", "last_modified"]
-TAGS = ["task", "model_id", "size", "license", "datasets", "languages", "finetuning_tasks"]
+PROPERTIES = ["commit_hash", "SHA", "last_modified", "model_id", "size", "datasets", "languages", "finetuning_tasks"]
+TAGS = ["task", "license"]
 
 
 class HuggingfaceDownloader():
@@ -47,7 +47,7 @@ class HuggingfaceDownloader():
     def _get_model_properties(self):
         props = {
             "model_id": self.model_info.modelId,
-            "task_name": self.model_info.pipeline_tag,
+            "task": self.model_info.pipeline_tag,
             "SHA": self.model_info.sha,
             "last_modified": self.model_info.lastModified
         }
