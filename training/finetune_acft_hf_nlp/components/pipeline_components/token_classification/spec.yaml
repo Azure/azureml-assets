@@ -6,26 +6,21 @@ display_name: Token Classification Pipeline
 description: Pipeline component for named entity recognition
 inputs:
   # Compute parameters
-  instance_type_model_selector:
+  compute_model_import:
     type: string
-    default: Standard_ds12_v2
     optional: false
-    description: SKU used for model_selector
-  instance_type_preprocess:
+    description: compute to be used for model_import eg. provide 'FT-Cluster' if
+      your compute is named 'FT-Cluster'
+  compute_preprocess:
     type: string
-    default: Standard_ds12_v2
     optional: false
-    description: SKU used for preprocess
-  instance_type_finetune:
+    description: compute to be used for preprocess eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'
+  compute_finetune:
     type: string
-    default: Standard_nd40rs_v2
     optional: false
-    description: SKU used for finetune
-  instance_type_model_evaluation:
-    type: string
-    default: Standard_nd40rs_v2
-    optional: false
-    description: SKU used for model_evaluation
+    description: compute to be used for finetune eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'
   num_nodes_finetune:
     type: integer
     default: 1
@@ -33,7 +28,7 @@ inputs:
     description: number of nodes to be used for finetuning (used for distributed training)
   number_of_gpu_to_use_finetuning:
     type: integer
-    default: 8
+    default: 1
     optional: true
     description: number of gpus to be used per node for finetuning, should be equal
       to number of gpu per node in the compute SKU used for finetune
@@ -427,15 +422,11 @@ outputs:
     type: uri_folder
     description: Test Data Evaluation Results
 
-settings:
-  default_compute: azureml:serverless
-
 jobs:
   token_classification_model_import:
     type: command
     component: azureml://registries/azureml/components/token_classification_model_import/versions/0.0.1
-    resources:
-      instance_type: ${{parent.inputs.instance_type_model_selector}}
+    compute: ${{parent.inputs.compute_model_import}}
     inputs:
       huggingface_id: ${{parent.inputs.huggingface_id}}
       pytorch_model_path: ${{parent.inputs.pytorch_model_path}}
@@ -443,8 +434,7 @@ jobs:
   token_classification_datapreprocess:
     type: command
     component: azureml://registries/azureml/components/token_classification_datapreprocess/versions/0.0.1
-    resources:
-      instance_type: ${{parent.inputs.instance_type_preprocess}}
+    compute: ${{parent.inputs.compute_preprocess}}
     inputs:
       token_key: ${{parent.inputs.token_key}}
       tag_key: ${{parent.inputs.tag_key}}
@@ -459,11 +449,11 @@ jobs:
   token_classification_finetune:
     type: command
     component: azureml://registries/azureml/components/token_classification_finetune/versions/0.0.1
+    compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
       process_count_per_instance: ${{parent.inputs.number_of_gpu_to_use_finetuning}}
     resources:
-      instance_type: ${{parent.inputs.instance_type_finetune}}
       instance_count: ${{parent.inputs.num_nodes_finetune}}
     inputs:
       apply_lora: ${{parent.inputs.apply_lora}}

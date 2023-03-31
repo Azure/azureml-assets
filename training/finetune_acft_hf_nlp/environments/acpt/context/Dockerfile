@@ -9,6 +9,7 @@ RUN apt-get -y update
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
+RUN pip install azureml-evaluate-mlflow==0.0.1
 RUN python -m nltk.downloader punkt
 
 # Check versions
