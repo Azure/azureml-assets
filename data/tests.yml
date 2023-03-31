@@ -1,7 +1,10 @@
 data_transfer_components:
+  includes:
+  - ./data-transfer/tests/
   jobs:
     data_transfer_components_validaton:
       assets:
-      - ./export_data_database
-      - ./import_data_database
-      - ./import_data_file_system
+      - ./data-transfer/export_data_database
+      - ./data-transfer/import_data_database
+      - ./data-transfer/import_data_file_system
+      pytest_job: ./data-transfer/tests/test_data_transfer_components.py
