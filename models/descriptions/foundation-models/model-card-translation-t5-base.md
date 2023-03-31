@@ -6,7 +6,7 @@ T5 Base is a text-to-text transformer model that can be used for a variety of NL
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[translation-online-endpoint.ipynb](https://github.com/Azure/azureml-examples/blob/susridhar/inference-examples/sdk/python/foundation-models/system/inference/translation/translation-online-endpoint.ipynb)|[translation-online-endpoint.sh](https://github.com/Azure/azureml-examples/blob/susridhar/inference-examples/cli/foundation-models/system/inference/translation/translation-online-endpoint.sh)
+Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
 Batch | todo
 
 
