@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/acft-hf-nlp-gpu
+  name: mcr.microsoft.com/azureml/curated/acft-hf-nlp-gpu
   os: linux
   context:
     dir: context
