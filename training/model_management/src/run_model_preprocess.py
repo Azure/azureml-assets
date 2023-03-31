@@ -9,7 +9,11 @@ import json
 from azureml.model.mgmt.config import ModelFlavor
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from pathlib import Path
-
+from azure.identity import ManagedIdentityCredential
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+from azure.ai.ml import MLClient
+from azureml.core import Run
+import shutil
 
 def _get_parser():
     parser = argparse.ArgumentParser()
@@ -19,6 +23,8 @@ def _get_parser():
     parser.add_argument("--model-download-metadata", type=Path, required=False, help="Model download details")
     parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
     parser.add_argument("--mlflow-model-output-dir", type=Path, required=True, help="Output MLFlow model")
+    parser.add_argument("--model-job-path", type=Path, required=True, help="JSON file containing model job path for model lineage")
+    parser.add_argument("--license-folder", type=Path, required=True, help="Folder containing the license file")   
     return parser
 
 
@@ -39,6 +45,8 @@ if __name__ == "__main__":
     model_download_metadata_path = args.model_download_metadata
     model_path = args.model_path
     mlflow_model_output_dir = args.mlflow_model_output_dir
+    model_job_path = args.model_job_path
+    license_folder = args.license_folder
 
     print("##### Print args #####")
     for arg, value in args.__dict__.items():
@@ -63,3 +71,16 @@ if __name__ == "__main__":
     run_preprocess(mlflow_flavor, model_path, mlflow_model_output_dir, **preprocess_args)
     print(f"\nListing mlflow model directory: {mlflow_model_output_dir}:")
     print(os.listdir(mlflow_model_output_dir))
+
+    #Copy license file in input model_path
+    if license_folder:
+        for file in os.listdir(license_folder):
+            shutil.copy(Path(license_folder,file), mlflow_model_output_dir)
+
+    # Add job path
+    this_job = os.environ["MLFLOW_RUN_ID"]
+    path = f"azureml://jobs/{this_job}/outputs/mlflow_model_folder"
+    model_path_dict = {"path":path}
+    json_object = json.dumps(model_path_dict, indent=4)
+    with open(model_job_path, "w") as outfile:
+        outfile.write(json_object)
