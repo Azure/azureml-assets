@@ -1,5 +1,5 @@
 image:
-  name: model-evaluation
+  name: azureml/curated/model-evaluation
   os: linux
   context:
     dir: context
@@ -7,3 +7,6 @@ image:
     template_files:
     - Dockerfile
     - conda.yaml
+  publish:
+    location: mcr
+    visibility: unlisted
