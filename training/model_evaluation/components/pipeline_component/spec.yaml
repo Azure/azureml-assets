@@ -9,6 +9,7 @@ description: Pipeline component for model evaluation for supported tasks. \
 tags:
   type: evaluation
   sub_type: subgraph
+  Preview: ""
 
 inputs:
 # model prediction
