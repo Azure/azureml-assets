@@ -84,24 +84,20 @@ def parse_args():
     print("args received ", args)
     return args
 
-def append_dictionary(old_dict,new_dict):
-    for key in new_dict:
-        old_dict[key] = new_dict[key]
-    return old_dict
 
 def get_ml_client(registry_name):
     """Return ML Client."""
-    obo = False
+    has_obo_succeeded = False
     try:
         credential = AzureMLOnBehalfOfCredential()
         # Check if given credential can get token successfully.
         credential.get_token("https://management.azure.com/.default")
-        obo = True
+        has_obo_succeeded = True
     except Exception as ex:
-        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential not work
+        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
         print(f"Failed to get OBO credentials - {ex}")
 
-    if not obo:
+    if not has_obo_succeeded:
         try:
             msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
             credential = ManagedIdentityCredential(client_id=msi_client_id)
@@ -157,8 +153,8 @@ def main(args):
     if args.model_metadata:
         with open(args.model_metadata, "r") as stream:
             metadata = json.load(stream)
-            tags = append_dictionary(tags, metadata.get("tags",{}))
-            properties = append_dictionary(properties, metadata.get("properties", {}))
+            tags.update(metadata.get("tags", {}))
+            properties.update(metadata.get("properties", {}))
             model_description = metadata.get("description", model_description)
             model_type = metadata.get("type", model_type)
             flavors = metadata.get("flavors", flavors)
