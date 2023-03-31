@@ -20,7 +20,8 @@ def _get_parser():
     parser.add_argument("--model-download-metadata", type=Path, required=False, help="Model download details")
     parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
     parser.add_argument("--mlflow-model-output-dir", type=Path, required=True, help="Output MLFlow model")
-    parser.add_argument("--model-job-path", type=Path, required=True, help="JSON file containing model job path for model lineage")
+    parser.add_argument("--model-job-path", type=Path, required=True,
+                        help="JSON file containing model job path for model lineage")
     parser.add_argument("--license-folder", type=Path, required=True, help="Folder containing the license file")
     return parser
 
