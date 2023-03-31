@@ -6,4 +6,4 @@ sentencepiece==0.1.97
 accelerate==0.17.1
 datasets==2.3.2
 diffusers==0.14.0
-azureml-evaluate-mlflow==0.0.1
+azureml-evaluate-mlflow=={{latest-pypi-version}}
