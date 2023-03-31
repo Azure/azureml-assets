@@ -14,31 +14,37 @@ from azureml.evaluate import mlflow as hf_mlflow
 from azureml.model.mgmt.processors.transformers.config import (
     SupportedTasks,
     SupportedTextToImageVariants,
+    SupportedASRVariants,
     SupportedNLPTasks,
     SupportedVisionTasks,
     TaskToClassMapping,
 )
 from azureml.model.mgmt.utils.common_utils import copy_file_paths_to_destination, log_execution_time
 from pathlib import Path
-from transformers import AutoConfig, AutoTokenizer, AutoImageProcessor
+from transformers import AutoConfig, AutoTokenizer, AutoImageProcessor, WhisperConfig, WhisperProcessor
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from typing import Dict
 
 
-def _get_default_task_signatures(task_name) -> Dict:
+def _get_default_task_signatures(task) -> Dict:
     """Return mlflow i/p and o/p signature for a hftransformers supported task."""
-    if task_name == SupportedTasks.TEXT_TO_IMAGE.value:
+    if task == SupportedTasks.TEXT_TO_IMAGE.value:
         return {
             "inputs": '[{"name": "input_string", "type": "string"}]',
             "outputs": '[{"name": "image", "type": "string"}]'
         }
-    elif SupportedVisionTasks.has_value(task_name):
+    elif task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
+        return {
+            "inputs": '[{"name": "audio", "type": "string"}, {"name": "language", "type": "string"}]',
+            "outputs": '[{"type": "string"}]'
+        }
+    elif SupportedVisionTasks.has_value(task):
         return {
             "inputs": '[{"name": "image", "type": "string"}]',
             "outputs": '[{"name": "probs", "type": "string"}, {"name": "labels", "type": "string"}]'
         }
-    elif SupportedNLPTasks.has_value(task_name):
-        if task_name == SupportedTasks.QUESTION_ANSWERING.value:
+    elif SupportedNLPTasks.has_value(task):
+        if task == SupportedTasks.QUESTION_ANSWERING.value:
             return {
                 "inputs": '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]',
                 "outputs": '[{"type": "string"}]'
@@ -106,13 +112,37 @@ def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_co
         model = StableDiffusionPipeline.from_pretrained(input_dir, local_files_only=True, torch_dtype=torch.float16)
 
     predict = os.path.join(os.path.dirname(__file__), "diffusion", "predict.py")
+    hf_conf["hf_predict_module"] = "predict"
     hf_conf['custom_config_module'] = "diffusers"
     hf_conf['custom_tokenizer_module'] = "diffusers"
     hf_conf['custom_model_module'] = "diffusers"
+    hf_conf['force_load_tokenizer'] = False
+    hf_conf['force_load_config'] = False
     return {
         "hf_model": model,
         "hf_conf": hf_conf,
         "path": output_dir,
+        "code_paths": [predict]
+    }
+
+
+def _get_whisper_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = {}) -> Dict:
+    """Save whisper group of models to mlflow and return hftransformers accepted parameters."""
+    temp_output_dir = Path(output_dir).parent.absolute() / "tmp"
+    model_dir = temp_output_dir / "model"
+    copy_file_paths_to_destination(input_dir, model_dir, MODEL_FILE_PATTERN)
+
+    config = WhisperConfig.from_pretrained(input_dir, local_files_only=True)
+    processor = WhisperProcessor.from_pretrained(input_dir, padding=True, truncation=True, local_files_only=True)
+
+    predict = os.path.join(os.path.dirname(__file__), "whisper", "predict.py")
+    hf_conf["hf_predict_module"] = "predict"
+    return {
+        "hf_model": str(model_dir),
+        "tokenizer": processor,
+        "config": config,
+        "path": output_dir,
+        "hf_conf": hf_conf,
         "code_paths": [predict]
     }
 
@@ -141,13 +171,16 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     """Convert Hugging face pytorch model to Mlflow."""
     signatures = translate_params.get('signature')
     model_id = translate_params['model_id']
-    task_name = translate_params['task_name']
+    task = translate_params['task']
+    task_category = task
+    if "stable-diffusion" in model_id:
+        task_category = SupportedTextToImageVariants.STABLE_DIFFUSION.value
+    elif "whisper" in model_id:
+        task_category = SupportedASRVariants.WHISPER_ASR.value
 
-    task_category = task_name if "stable-diffusion" not in model_id else "stable-diffusion"
     hf_pretrained_class = TaskToClassMapping.get_loader_class_name(task_category)
-
     hf_conf = {
-        'task_type': task_name,
+        'task_type': task,
         'hf_pretrained_class': hf_pretrained_class,
         'huggingface_id': model_id,
     }
@@ -158,6 +191,8 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
         model_configs = _get_nlp_model_to_save(input_dir, output_dir, hf_conf)
     elif SupportedVisionTasks.has_value(task_category):
         model_configs = _get_image_model_to_save(input_dir, output_dir, hf_conf)
+    elif SupportedASRVariants.has_value(task_category):
+        model_configs = _get_whisper_model_to_save(input_dir, output_dir, hf_conf)
     else:
         raise Exception("Unsupported model or task type")
 
@@ -166,17 +201,6 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     hf_mlflow.hftransformers.save_model(**model_configs)
 
     # add signatures
-    signatures = signatures if signatures else _get_default_task_signatures(task_name)
+    signatures = signatures if signatures else _get_default_task_signatures(task)
     _add_mlflow_signature(output_dir, signatures)
     print("Model saved!!!")
-
-    # add license file
-    # _add_license_file(input_dir, output_dir)
-
-
-def _add_license_file(input_dir: Path, output_dir: Path):
-    """Copy license file from input_dir to output_dir, if exists."""
-    regex = re.compile('(?i)^LICENSE')
-    for file in os.listdir(input_dir):
-        if regex.match(file):
-            shutil.copy(Path(input_dir, file), output_dir)
