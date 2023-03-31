@@ -6,4 +6,4 @@ sentencepiece==0.1.97
 accelerate==0.17.1
 datasets==2.3.2
 diffusers==0.14.0
-https://automlcesdkdataresources.blob.core.windows.net/finetuning-models/eval_metrics_whls/17_03_latest_eval_wheel/azureml_evaluate_mlflow-0.1.0.86769376-py3-none-any.whl
+azureml-evaluate-mlflow==0.0.1
