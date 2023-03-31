@@ -10,20 +10,8 @@ import pandas as pd
 from feature_importance_utilities import get_model_wrapper, compute_explanations,  compute_categorical_features
 from io_utils import load_mltable_to_df, save_df_as_mltable
 
-from tabular.components.src._telemetry._loggerfactory import _LoggerFactory, track
-
 _logger = logging.getLogger(__file__)
-_ai_logger = None
-
-
-def _get_logger():
-    global _ai_logger
-    if _ai_logger is None:
-        _ai_logger = _LoggerFactory.get_logger(__file__)
-    return _ai_logger
-
-
-_get_logger()
+logging.basicConfig(level=logging.INFO)
 
 
 def parse_args():
@@ -76,7 +64,6 @@ def write_to_mltable(explanations, dataset, file_path):
     save_df_as_mltable(metrics_dataframe, file_path)
 
 
-@track(_get_logger)
 def run(args):
 
     baseline_df = load_mltable_to_df(args.baseline_data)
