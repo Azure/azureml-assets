@@ -12,7 +12,7 @@ from typing import List
 
 import azureml.assets as assets
 import azureml.assets.util as util
-from azureml.assets import PublishLocation, PublishVisibility
+from azureml.assets import PublishLocation
 from azureml.assets.config import ValidationException
 from azureml.assets.util import logger
 
