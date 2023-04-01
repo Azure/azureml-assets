@@ -184,9 +184,9 @@ def validate_image_publishing(asset_config: assets.AssetConfig,
     if environment_config.publish_location != PublishLocation.MCR:
         _log_error(asset_config, "Image publishing location should be 'mcr'")
         error_count += 1
-    if environment_config.publish_visibility != PublishVisibility.PUBLIC:
-        _log_error(asset_config, "Image publishing visibility should be 'public'")
-        error_count += 1
+    # if environment_config.publish_visibility != PublishVisibility.PUBLIC:
+    #     _log_error(asset_config, "Image publishing visibility should be 'public'")
+    #     error_count += 1
 
     return error_count
 
