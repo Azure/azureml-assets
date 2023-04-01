@@ -140,7 +140,7 @@ def is_valid_url(str):
 
 
 def audio_input_to_nparray(audio_file_path: Path, sampling_rate: int = 16000) -> np.array:
-    """Function to convert base64encoded audio string to np array."""
+    """Convert base64encoded audio string to np array."""
     try:
         out, _ = (
             ffmpeg.input(audio_file_path, threads=0)
@@ -154,7 +154,7 @@ def audio_input_to_nparray(audio_file_path: Path, sampling_rate: int = 16000) ->
 
 
 def audio_processor(audio_input: str, sampling_rate: int = 16000):
-    """Function to change base64 encoded string to nparray."""
+    """Change base64 encoded string to nparray."""
     with TemporaryDirectory() as temp_dir:
         audio_file_path = os.path.join(temp_dir, "audio_file.m4a")
 
