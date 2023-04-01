@@ -4,22 +4,36 @@
 """Stable Diffusion prediction function."""
 
 import torch
-import io
 import base64
+import io
+import pandas as pd
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
+from pathlib import Path
 from typing import List
 
 
-def _load_pyfunc(path):
-    """Load pyfunc flavour."""
-    return DiffusionPyFunc(path)
+def _load_pyfunc(path: Path):
+    """Load stable diffusion mlflow flavour model.
+
+    :param path: path to the mlflow stable diffusion model.
+    :type path: Path
+    """
+    return StableDiffusionInference(path)
 
 
-class DiffusionPyFunc:
-    """StableDiffusion pipeline."""
+class StableDiffusionInference:
+    """Stable diffusion inference class.
 
-    def __init__(self, model_path):
-        """Init."""
+    :param model_path: Path to mlflow stable diffusion model 
+    :type model_path: Path
+    """
+
+    def __init__(self, model_path: Path):
+        """Init.
+
+        :param model_path: Path to mlflow stable diffusion model 
+        :type model_path: Path
+        """
         if torch.cuda.is_available():  # correct?
             device = "cuda"
             pipe = StableDiffusionPipeline.from_pretrained(
@@ -29,8 +43,14 @@ class DiffusionPyFunc:
         else:
             self._model = StableDiffusionPipeline.from_pretrained(model_path)
 
-    def predict(self, model_input) -> List[str]:
-        """Predict."""
+    def predict(self, model_input: pd.DataFrame) -> List[str]:
+        """Return a stable diffusion image for the given model input.
+
+        :param model_input: Model input in panda dataframes
+        :type model_input: pd.DataFrame
+        :return: Image encoded as base64 encoded string
+        :rtype: List[str]
+        """
         results = []
         for row in model_input.itertuples():
             task = row.task
