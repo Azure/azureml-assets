@@ -24,14 +24,14 @@ def _load_pyfunc(path: Path):
 class StableDiffusionInference:
     """Stable diffusion inference class.
 
-    :param model_path: Path to mlflow stable diffusion model 
+    :param model_path: Path to mlflow stable diffusion model
     :type model_path: Path
     """
 
     def __init__(self, model_path: Path):
         """Init.
 
-        :param model_path: Path to mlflow stable diffusion model 
+        :param model_path: Path to mlflow stable diffusion model
         :type model_path: Path
         """
         if torch.cuda.is_available():  # correct?

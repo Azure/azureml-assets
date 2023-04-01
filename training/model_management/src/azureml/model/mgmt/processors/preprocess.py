@@ -18,7 +18,7 @@ def run_preprocess(mlflow_flavor: str, model_path: Path, output_dir: Path, **pre
     :type model_path: Path
     :param output_dir: directory where converted mlflow model would be saved to
     :type output_dir: Path
-    :param preprocess_args: additional preprocess args required by mlflow flavor 
+    :param preprocess_args: additional preprocess args required by mlflow flavor
     :type preprocess_args: Dict
     """
     print(f"Run preprocess for model with flavor: {mlflow_flavor} at path: {model_path}")
