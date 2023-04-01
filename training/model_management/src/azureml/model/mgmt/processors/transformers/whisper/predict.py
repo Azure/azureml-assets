@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from azureml.contrib.services.aml_response import AMLResponse
+
 
 SUPPORTED_LANGUAGES = [
     "en",
@@ -148,7 +148,7 @@ def audio_input_to_nparray(audio_file_path: Path, sampling_rate: int = 16000) ->
             .run(cmd=["ffmpeg", "-nostdin"], capture_stdout=True, capture_stderr=True)
         )
     except ffmpeg.Error as e:
-        return AMLResponse(f"Failed to load audio: {e.stderr.decode()}", 400)
+        return f"Failed to load audio: {e.stderr.decode()}"
 
     return np.frombuffer(out, np.int16).flatten().astype(np.float32) / 32768.0
 
@@ -172,18 +172,20 @@ def audio_processor(audio_input: str, sampling_rate: int = 16000):
 def predict(model_input: pd.DataFrame, task, model, tokenizer, **kwargs):
     """Pedict model with the inputs provided."""
     if not task == "automatic-speech-recognition":
-        return AMLResponse(f"Invalid task name {task}", 400)
+        return f"Invalid task name {task}"
+
     result = []
     for row in model_input.itertuples():
         # Parse inputs.
         audio = row.audio
         language = row.language or None
         if not isinstance(audio, str):
-            return AMLResponse(f"Invalid input format {type(audio)}, input should be base64 encoded string", 400)
+            return f"Invalid input format {type(audio)}, input should be base64 encoded string"
         if not isinstance(language, str):
-            return AMLResponse(f"Invalid language format {type(language)}, should be type string", 400)
+            return f"Invalid language format {type(language)}, should be type string"
         if language not in SUPPORTED_LANGUAGES:
-            return AMLResponse(f"Language not supported {type(language)}, should be type string", 400)
+            return f"Language not supported {type(language)}, should be type string"
+
         forced_decoder_ids = (
             tokenizer.get_decoder_prompt_ids(language=language, task="transcribe") if language else None
         )

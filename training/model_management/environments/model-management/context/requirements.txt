@@ -1,7 +1,6 @@
 azure-core=={{latest-pypi-version}}
 azure-ai-ml=={{latest-pypi-version}}
 azure-identity=={{latest-pypi-version}}
-azureml-contrib-services=={{latest-pypi-version}}
 azureml-evaluate-mlflow=={{latest-pypi-version}}
 ffmpeg=={{latest-pypi-version}}
 langcodes=={{latest-pypi-version}}
