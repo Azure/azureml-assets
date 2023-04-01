@@ -186,7 +186,6 @@ def validate_image_publishing(asset_config: assets.AssetConfig,
         error_count += 1
     if environment_config.publish_visibility != PublishVisibility.PUBLIC:
         _log_warning(asset_config, "Image publishing visibility should be 'public'")
-        error_count += 1
 
     return error_count
 
