@@ -156,6 +156,14 @@ class Config:
         return [path]
 
 
+class ComponentType(Enum):
+    """Enum for component types."""
+
+    PIPELINE = "pipeline"  # A pipeline component which allows multi-stage jobs.
+    PARALLEL = "parallel"  # A parallel component, aka PRSv2.
+    COMMAND = "command"  # A command component.
+
+
 class Spec(Config):
     """Load and access spec file properties.
 
@@ -220,6 +228,9 @@ class Spec(Config):
     @property
     def code_dir(self) -> str:
         """Component code directory."""
+        if self._yaml.get('type') == ComponentType.PARALLEL.value:
+            task = self._yaml.get('task')
+            return None if task is None else task.get('code')
         return self._yaml.get('code')
 
     @property
@@ -372,10 +383,8 @@ class ModelConfig(Config):
         container_name: my_container
         container_path: foo/bar
     publish:
-        type: mlflow_model # could be one of (custom_model, mlflow_model, triton_model)
-        flavors: hftransformers # flavors should be specificed only for mlflow_model
-        task_name: translation #optional.Needed for mlflow_model huggingface flavour
-
+        description: model_card.md
+        type: mlflow_model
     """
 
     def __init__(self, file_name: Path):
@@ -389,6 +398,7 @@ class ModelConfig(Config):
         Config._validate_exists('model.path', self.path)
         Config._validate_enum('model.path.type', self.path.type.value, PathType, True)
         Config._validate_exists('model.publish', self._publish)
+        Config._validate_exists('model.description', self.description)
         Config._validate_enum('model.type', self._type, ModelType, True)
 
     @property
@@ -421,6 +431,11 @@ class ModelConfig(Config):
         return self._yaml.get('publish')
 
     @property
+    def description(self) -> Dict[str, object]:
+        """Model description."""
+        return self._publish.get('description')
+
+    @property
     def _type(self) -> str:
         """Model Type."""
         return self._publish.get('type')
@@ -430,28 +445,6 @@ class ModelConfig(Config):
         """Model Type Enum."""
         type = self._type
         return ModelType(type) if type else None
-
-    @property
-    def _flavors(self) -> str:
-        """Model Flavor."""
-        return self._publish.get('flavors')
-
-    @property
-    def flavors(self) -> ModelFlavor:
-        """Model Flavor from Enum."""
-        flavor = self._flavors
-        return ModelFlavor(flavor) if flavor else None
-
-    @property
-    def _task_name(self) -> ModelTaskName:
-        """Model Task Name Enum."""
-        return self._publish.get('task_name')
-
-    @property
-    def task_name(self) -> str:
-        """Model task name."""
-        task_name = self._task_name
-        return ModelTaskName(task_name) if task_name else None
 
 
 DEFAULT_DOCKERFILE = "Dockerfile"

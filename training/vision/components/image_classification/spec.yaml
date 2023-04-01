@@ -5,7 +5,7 @@ description: Trains an image classification model. [Learn More](https://aka.ms/b
 
 name: train_image_classification_model
 display_name: Train Image Classification Model (Private Preview)
-version: 0.0.1
+version: 0.0.3
 
 inputs:
   training_data:
@@ -88,7 +88,7 @@ inputs:
   model_name:
     type: string
     description: Model name
-    default: vitb16r224
+    optional: true
   momentum:
     description: Value of momentum when optimizer is sgd. Must be a float in the range [0, 1].
     type: number
@@ -177,9 +177,12 @@ inputs:
     optional: true
 
 outputs:
-  model:
-    description: Trained model.
+  mlflow_model:
+    description: Trained MLFlow model.
     type: mlflow_model
+  pytorch_model:
+    description: Trained Pytorch model.
+    type: custom_model
 
 code: ../src
 
@@ -190,28 +193,28 @@ command: >-
   --training_data ${{inputs.training_data}}
   $[[--validation_data ${{inputs.validation_data}}]]
   --task_type ${{inputs.task_type}}
-  $[[--amsgrad  ${{inputs.ams_gradient}}]]
-  $[[--beta1  ${{inputs.beta1}}]]
-  $[[--beta2  ${{inputs.beta2}}]]
-  $[[--checkpoint_frequency  ${{inputs.checkpoint_frequency}}]]
-  $[[--checkpoint_run_id  ${{inputs.checkpoint_run_id}}]]
-  $[[--early_stopping  ${{inputs.early_stopping}}]]
+  $[[--amsgrad ${{inputs.ams_gradient}}]]
+  $[[--beta1 ${{inputs.beta1}}]]
+  $[[--beta2 ${{inputs.beta2}}]]
+  $[[--checkpoint_frequency ${{inputs.checkpoint_frequency}}]]
+  $[[--checkpoint_run_id ${{inputs.checkpoint_run_id}}]]
+  $[[--early_stopping ${{inputs.early_stopping}}]]
   $[[--early_stopping_patience  ${{inputs.early_stopping_patience}}]]
-  $[[--early_stopping_delay  ${{inputs.early_stopping_delay}}]]
-  $[[--evaluation_frequency  ${{inputs.evaluation_frequency}}]]
-  $[[--grad_accumulation_step  ${{inputs.gradient_accumulation_step}}]]
-  $[[--layers_to_freeze  ${{inputs.layers_to_freeze}}]]
-  $[[--learning_rate  ${{inputs.learning_rate}}]]
-  $[[--lr_scheduler  ${{inputs.learning_rate_scheduler}}]]
-  --model_name  ${{inputs.model_name}}
-  $[[--momentum  ${{inputs.momentum}}]]
-  $[[--nesterov  ${{inputs.nesterov}}]]
+  $[[--early_stopping_delay ${{inputs.early_stopping_delay}}]]
+  $[[--evaluation_frequency ${{inputs.evaluation_frequency}}]]
+  $[[--grad_accumulation_step ${{inputs.gradient_accumulation_step}}]]
+  $[[--layers_to_freeze ${{inputs.layers_to_freeze}}]]
+  $[[--learning_rate ${{inputs.learning_rate}}]]
+  $[[--lr_scheduler ${{inputs.learning_rate_scheduler}}]]
+  $[[--model_name ${{inputs.model_name}}]]
+  $[[--momentum ${{inputs.momentum}}]]
+  $[[--nesterov ${{inputs.nesterov}}]]
   $[[--number_of_epochs ${{inputs.number_of_epochs}}]]
   $[[--number_of_workers ${{inputs.number_of_workers}}]]
   $[[--optimizer ${{inputs.optimizer}}]]
   $[[--random_seed ${{inputs.random_seed}}]]
-  $[[--step_lr_gamma  ${{inputs.step_lr_gamma}}]]
-  $[[--step_lr_step_size  ${{inputs.step_lr_step_size}}]]
+  $[[--step_lr_gamma ${{inputs.step_lr_gamma}}]]
+  $[[--step_lr_step_size ${{inputs.step_lr_step_size}}]]
   $[[--training_batch_size ${{inputs.training_batch_size}}]]
   $[[--train_crop_size ${{inputs.training_crop_size}}]]
   $[[--validation_batch_size ${{inputs.validation_batch_size}}]]
@@ -219,7 +222,8 @@ command: >-
   $[[--valid_resize_size ${{inputs.validation_resize_size}}]]
   $[[--weight_decay ${{inputs.weight_decay}}]]
   $[[--weighted_loss ${{inputs.weighted_loss}}]]
-  --model_output ${{outputs.model}}
+  --mlflow_model_output ${{outputs.mlflow_model}}
+  --pytorch_model_output ${{outputs.pytorch_model}}
 
 distribution:
   type: pytorch

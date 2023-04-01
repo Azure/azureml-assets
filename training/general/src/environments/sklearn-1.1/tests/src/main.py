@@ -4,7 +4,6 @@
 # imports
 import mlflow
 import argparse
-
 import pandas as pd
 
 from sklearn.linear_model import LinearRegression
@@ -16,14 +15,11 @@ def main(args):
     """Run and evaluate model."""
     # enable auto logging
     mlflow.autolog()
-
     # setup parameters
     params = {
         "fit_intercept": args.fit_intercept,
-        "normalize": args.normalize,
         "positive": args.positive,
     }
-
     # read in data
     df = pd.read_csv(args.diabetes_csv)
 
@@ -62,7 +58,7 @@ def train_model(params, X_train, X_test, y_train, y_test):
 
 
 def parse_args():
-    """Parse arguements."""
+    """Parse arguments."""
     # setup arg parser
     parser = argparse.ArgumentParser()
 
@@ -70,8 +66,8 @@ def parse_args():
     parser.add_argument("--diabetes-csv", type=str)
     parser.add_argument("--random_state", type=int, default=42)
     parser.add_argument("--fit_intercept", type=bool, default=True)
-    parser.add_argument("--normalize", type=bool, default=False)
     parser.add_argument("--positive", type=bool, default=False)
+    parser.add_argument("--intel-extension", type=bool, default=False)
 
     # parse args
     args = parser.parse_args()
@@ -84,6 +80,8 @@ def parse_args():
 if __name__ == "__main__":
     # parse args
     args = parse_args()
-
+    if (args.intel_extension):
+        from sklearnex import patch_sklearn
+        patch_sklearn()
     # run main function
     main(args)

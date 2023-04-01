@@ -5,7 +5,7 @@ description: Trains an object detection model. [Learn More](https://aka.ms/built
 
 name: train_object_detection_model
 display_name: Train Object Detection Model (Private Preview)
-version: 0.0.1
+version: 0.0.3
 
 inputs:
   training_data:
@@ -105,7 +105,7 @@ inputs:
   model_name:
     description: Model name
     type: string
-    default: yolov5
+    optional: true
   momentum:
     description: Value of momentum when optimizer is sgd. Must be a float in the range [0, 1].
     type: number
@@ -217,10 +217,14 @@ inputs:
     optional: true
     min: 0
     max: 1
+
 outputs:
-  model:
-    description: Trained model.
+  mlflow_model:
+    description: Trained MLFlow model.
     type: mlflow_model
+  pytorch_model:
+    description: Trained Pytorch model.
+    type: custom_model
 
 code: ../src
 
@@ -230,46 +234,47 @@ command: >-
   python -m object_detection.run
   --training_data ${{inputs.training_data}}
   $[[--validation_data ${{inputs.validation_data}}]]
-  $[[--amsgrad  ${{inputs.ams_gradient}}]]
-  $[[--beta1  ${{inputs.beta1}}]]
-  $[[--beta2  ${{inputs.beta2}}]]
-  $[[--box_detections_per_img  ${{inputs.box_detections_per_image}}]]
-  $[[--box_score_thresh  ${{inputs.box_score_threshold}}]]
-  $[[--checkpoint_frequency  ${{inputs.checkpoint_frequency}}]]
-  $[[--checkpoint_run_id  ${{inputs.checkpoint_run_id}}]]
-  $[[--early_stopping  ${{inputs.early_stopping}}]]
-  $[[--early_stopping_patience  ${{inputs.early_stopping_patience}}]]
-  $[[--early_stopping_delay  ${{inputs.early_stopping_delay}}]]
-  $[[--evaluation_frequency  ${{inputs.evaluation_frequency}}]]
-  $[[--grad_accumulation_step  ${{inputs.gradient_accumulation_step}}]]
-  $[[--layers_to_freeze  ${{inputs.layers_to_freeze}}]]
-  $[[--learning_rate  ${{inputs.learning_rate}}]]
-  $[[--lr_scheduler  ${{inputs.learning_rate_scheduler}}]]
+  $[[--amsgrad ${{inputs.ams_gradient}}]]
+  $[[--beta1 ${{inputs.beta1}}]]
+  $[[--beta2 ${{inputs.beta2}}]]
+  $[[--box_detections_per_img ${{inputs.box_detections_per_image}}]]
+  $[[--box_score_thresh ${{inputs.box_score_threshold}}]]
+  $[[--checkpoint_frequency ${{inputs.checkpoint_frequency}}]]
+  $[[--checkpoint_run_id ${{inputs.checkpoint_run_id}}]]
+  $[[--early_stopping ${{inputs.early_stopping}}]]
+  $[[--early_stopping_patience ${{inputs.early_stopping_patience}}]]
+  $[[--early_stopping_delay ${{inputs.early_stopping_delay}}]]
+  $[[--evaluation_frequency ${{inputs.evaluation_frequency}}]]
+  $[[--grad_accumulation_step ${{inputs.gradient_accumulation_step}}]]
+  $[[--layers_to_freeze ${{inputs.layers_to_freeze}}]]
+  $[[--learning_rate ${{inputs.learning_rate}}]]
+  $[[--lr_scheduler ${{inputs.learning_rate_scheduler}}]]
   $[[--max_size ${{inputs.max_size}}]]
   $[[--min_size ${{inputs.min_size}}]]
-  --model_name  ${{inputs.model_name}}
+  $[[--model_name  ${{inputs.model_name}}]]
   $[[--model_size ${{inputs.model_size}}]]
-  $[[--momentum  ${{inputs.momentum}}]]
-  $[[--multi_scale  ${{inputs.multi_scale}}]]
-  $[[--nesterov  ${{inputs.nesterov}}]]
-  $[[--nms_iou_thresh  ${{inputs.nms_iou_threshold}}]]
+  $[[--momentum ${{inputs.momentum}}]]
+  $[[--multi_scale ${{inputs.multi_scale}}]]
+  $[[--nesterov ${{inputs.nesterov}}]]
+  $[[--nms_iou_thresh ${{inputs.nms_iou_threshold}}]]
   $[[--number_of_epochs ${{inputs.number_of_epochs}}]]
   $[[--number_of_workers ${{inputs.number_of_workers}}]]
   $[[--optimizer ${{inputs.optimizer}}]]
   $[[--random_seed ${{inputs.random_seed}}]]
-  $[[--step_lr_gamma  ${{inputs.step_lr_gamma}}]]
-  $[[--step_lr_step_size  ${{inputs.step_lr_step_size}}]]
-  $[[--tile_grid_size  ${{inputs.tile_grid_size}}]]
-  $[[--tile_overlap_ratio  ${{inputs.tile_overlap_ratio}}]]
-  $[[--tile_predictions_nms_thresh  ${{inputs.tile_predictions_nms_threshold}}]]
+  $[[--step_lr_gamma ${{inputs.step_lr_gamma}}]]
+  $[[--step_lr_step_size ${{inputs.step_lr_step_size}}]]
+  $[[--tile_grid_size ${{inputs.tile_grid_size}}]]
+  $[[--tile_overlap_ratio ${{inputs.tile_overlap_ratio}}]]
+  $[[--tile_predictions_nms_thresh ${{inputs.tile_predictions_nms_threshold}}]]
   $[[--training_batch_size ${{inputs.training_batch_size}}]]
   $[[--validation_batch_size ${{inputs.validation_batch_size}}]]
-  $[[--validation_iou_threshold  ${{inputs.validation_iou_threshold}}]]
-  $[[--validation_metric_type  ${{inputs.validation_metric_type}}]]
-  $[[--warmup_cosine_lr_cycles  ${{inputs.warmup_cosine_lr_cycles}}]]
-  $[[--warmup_cosine_lr_warmup_epochs  ${{inputs.warmup_cosine_lr_warmup_epochs}}]]
+  $[[--validation_iou_threshold ${{inputs.validation_iou_threshold}}]]
+  $[[--validation_metric_type ${{inputs.validation_metric_type}}]]
+  $[[--warmup_cosine_lr_cycles ${{inputs.warmup_cosine_lr_cycles}}]]
+  $[[--warmup_cosine_lr_warmup_epochs ${{inputs.warmup_cosine_lr_warmup_epochs}}]]
   $[[--weight_decay ${{inputs.weight_decay}}]]
-  --model_output ${{outputs.model}}
+  --mlflow_model_output ${{outputs.mlflow_model}}
+  --pytorch_model_output ${{outputs.pytorch_model}}
 
 distribution:
   type: pytorch
