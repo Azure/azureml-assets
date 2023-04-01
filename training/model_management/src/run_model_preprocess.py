@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     run_preprocess(mlflow_flavor, model_path, mlflow_model_output_dir, **preprocess_args)
 
-    #Copy license file in input model_path
+    # Copy license file in input model_path
     if license_file_path:
         shutil.copy(license_file_path, mlflow_model_output_dir)
 

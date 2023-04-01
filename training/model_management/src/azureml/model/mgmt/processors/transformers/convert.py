@@ -6,8 +6,6 @@
 import os
 import torch
 import yaml
-import re
-import shutil
 
 from .config import MODEL_FILE_PATTERN
 from azureml.evaluate import mlflow as hf_mlflow

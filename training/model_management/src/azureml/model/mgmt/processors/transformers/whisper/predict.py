@@ -14,7 +14,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from azureml.contrib.services.aml_response import AMLResponse
 
-supported_languages = [
+SUPPORTED_LANGUAGES = [
     "en",
     "zh",
     "de",
@@ -182,7 +182,7 @@ def predict(model_input: pd.DataFrame, task, model, tokenizer, **kwargs):
             return AMLResponse(f"Invalid input format {type(audio)}, input should be base64 encoded string", 400)
         if not isinstance(language, str):
             return AMLResponse(f"Invalid language format {type(language)}, should be type string", 400)
-        if language not in supported_languages:
+        if language not in SUPPORTED_LANGUAGES:
             return AMLResponse(f"Language not supported {type(language)}, should be type string", 400)
         forced_decoder_ids = (
             tokenizer.get_decoder_prompt_ids(language=language, task="transcribe") if language else None
