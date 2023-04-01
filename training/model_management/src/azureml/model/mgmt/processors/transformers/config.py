@@ -11,7 +11,8 @@ from transformers import (
     AutoModelForSeq2SeqLM,
     AutoModelWithLMHead,
     AutoModelForMaskedLM,
-    AutoModelForImageClassification
+    AutoModelForImageClassification,
+    WhisperForConditionalGeneration,
 )
 from diffusers import StableDiffusionPipeline
 from typing import Any
@@ -55,6 +56,12 @@ class SupportedTextToImageVariants(_CustomEnum):
     STABLE_DIFFUSION = "stable-diffusion"
 
 
+class SupportedASRVariants(_CustomEnum):
+    """Supported text to image variants."""
+
+    WHISPER_ASR = "whisper-asr"
+
+
 class SupportedTasks(_CustomEnum):
     """Supported Hugging face tasks for conversion to mlflow."""
 
@@ -68,12 +75,12 @@ class SupportedTasks(_CustomEnum):
     TEXT_GENERATION = "text-generation"
     TEXT_CLASSIFICATION = "text-classification"
     TRANSLATION = "translation"
-
     # Vision tasks
     IMAGE_CLASSIFICATION = "image-classification"
-
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
+    # ASR
+    AUTOMATIC_SPEECH_RECOGNITION = "automatic-speech-recognition"
 
 
 class TaskToClassMapping:
@@ -89,6 +96,7 @@ class TaskToClassMapping:
         "translation": AutoModelForSeq2SeqLM,
         "image-classification": AutoModelForImageClassification,
         "stable-diffusion": StableDiffusionPipeline,
+        "whisper-asr": WhisperForConditionalGeneration,
     }
 
     def get_loader_class(task_type) -> Any:
