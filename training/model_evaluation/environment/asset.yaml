@@ -1,5 +1,5 @@
 name: model-evaluation
-version: auto
+version: 1
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml
