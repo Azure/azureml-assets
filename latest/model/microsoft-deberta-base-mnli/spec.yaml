@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: microsoft-deberta-base-mnli
+path: ./
+properties:
+  SHA: a80a6eb013898011540b19bf1f64e21eb61e53d6
+  datasets: ''
+  finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
+tags:
+  Preview: ''
+  license: mit
+  min_inference_sku: Standard_DS2_v2
+  task: text-classification
+version: 1

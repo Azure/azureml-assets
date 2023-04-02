@@ -3,7 +3,7 @@ description: >-
   Environment for evaluating mlflow models. 
 
 name: "model-evaluation"
-version: "0.0.1-preview"
+version: "1"
 
 build:
   path: context/
