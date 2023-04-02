@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: distilbert-base-uncased-finetuned-sst-2-english
+path: ./
+properties:
+  SHA: 3d65bad49c7ba6f71920504507a8927f4b9db6c0
+  datasets: sst2, glue
+  finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
+tags:
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS2_v2
+  task: text-classification
+version: 1
