@@ -1,8 +1,8 @@
 path:
-  type: azureblob
-  storage_name: automlcesdkdataresources
   container_name: models
-  container_path: HuggingFace/deepset-minilm-uncased-squad2/b836be0/mlflow_model_folder
+  container_path: huggingface/deepset-minilm-uncased-squad2/96785db/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
 publish:
-  task_name: question-answering
+  description: description.md
   type: mlflow_model

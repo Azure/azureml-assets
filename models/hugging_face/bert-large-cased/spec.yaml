@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/bert-large-cased)
 name: bert-large-cased
 path: ./
 properties:
-  commit_hash: d923823
-  language: English
-  license: apache-2.0
+  SHA: d9238236d8326ce4bc117132bb3b7e62e95f3a9a
+  datasets: bookcorpus, wikipedia
   finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
 tags:
-  hub: HuggingFace
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS3_v2
   task: fill-mask
 version: 1

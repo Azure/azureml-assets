@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/roberta-large-openai-detector)
 name: roberta-large-openai-detector
 path: ./
 properties:
-  commit_hash: 5002d69
-  language: English
-  license: mit
+  SHA: 5002d695ecf610d8bbfb1fa0d14f1575185b4915
+  datasets: bookcorpus, wikipedia
   finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
 tags:
-  hub: HuggingFace
+  Preview: ''
+  license: mit
+  min_inference_sku: Standard_DS2_v2
   task: text-classification
 version: 1

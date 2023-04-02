@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/distilroberta-base)
 name: distilroberta-base
 path: ./
 properties:
-  commit_hash: d5411c3
-  language: English
-  license: apache-2.0
+  SHA: d5411c3ee9e1793fd9ef58390b40a80a4c10df32
+  datasets: openwebtext
   finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
 tags:
-  hub: HuggingFace
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS2_v2
   task: fill-mask
 version: 1

@@ -1,14 +1,15 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/distilgpt2)
 name: distilgpt2
 path: ./
 properties:
-  commit_hash: ee0b29d
-  language: English
-  license: apache-2.0
+  SHA: f241065e938b44ac52db2c5de82c8bd2fafc76d0
+  datasets: openwebtext
   finetuning-tasks: text-classification, token-classification
+  languages: en
 tags:
-  hub: HuggingFace
+  Featured: ''
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS2_v2
   task: text-generation
 version: 1

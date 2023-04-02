@@ -1,14 +1,13 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/finiteautomata/bertweet-base-sentiment-analysis)
 name: finiteautomata-bertweet-base-sentiment-analysis
 path: ./
 properties:
-  commit_hash: cf6b0f6
-  language: English
-  license: opensource
+  SHA: 924fc4c80bccb8003d21fe84dd92c7887717f245
+  datasets: ''
   finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
 tags:
-  hub: HuggingFace
+  Preview: ''
+  min_inference_sku: Standard_DS2_v2
   task: text-classification
 version: 1

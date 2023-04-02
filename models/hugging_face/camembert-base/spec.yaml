@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/camembert-base)
 name: camembert-base
 path: ./
 properties:
-  commit_hash: 3f452b6
-  language: French
-  license: mit
+  SHA: 3f452b6e5a89b0e6c828c9bba2642bc577086eae
+  datasets: oscar
   finetuning-tasks: text-classification, token-classification, question-answering
+  languages: fr
 tags:
-  hub: HuggingFace
+  Preview: ''
+  license: mit
+  min_inference_sku: Standard_DS2_v2
   task: fill-mask
 version: 1

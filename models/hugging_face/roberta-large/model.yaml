@@ -1,8 +1,8 @@
 path:
-  type: azureblob
-  storage_name: automlcesdkdataresources
   container_name: models
-  container_path: HuggingFace/roberta-large/5069d8a/mlflow_model_folder
+  container_path: huggingface/roberta-large/716877d/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
 publish:
-  task_name: fill-mask
+  description: description.md
   type: mlflow_model

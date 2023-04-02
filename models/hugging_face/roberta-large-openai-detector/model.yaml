@@ -1,8 +1,8 @@
 path:
-  type: azureblob
-  storage_name: automlcesdkdataresources
   container_name: models
-  container_path: HuggingFace/roberta-large-openai-detector/5002d69/mlflow_model_folder
+  container_path: huggingface/roberta-large-openai-detector/5002d69/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
 publish:
-  task_name: text-classification
+  description: description.md
   type: mlflow_model

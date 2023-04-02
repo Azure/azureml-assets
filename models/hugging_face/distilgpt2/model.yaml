@@ -1,8 +1,8 @@
 path:
-  type: azureblob
-  storage_name: automlcesdkdataresources
   container_name: models
-  container_path: HuggingFace/distilgpt2/ee0b29d/mlflow_model_folder
+  container_path: huggingface/distilgpt2/f241065/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
 publish:
-  task_name: text-generation
+  description: description.md
   type: mlflow_model

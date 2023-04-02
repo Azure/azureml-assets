@@ -1,14 +1,15 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/facebook/bart-large-cnn)
 name: facebook-bart-large-cnn
 path: ./
 properties:
-  commit_hash: 45b6053
-  language: English
-  license: mit
+  SHA: 3d224934c6541b2b9147e023c2f6f6fe49bd27e1
+  datasets: cnn_dailymail
   finetuning-tasks: summarization
+  languages: en
 tags:
-  hub: HuggingFace
+  Preview: ''
+  finetuning-tasks: summarization
+  license: mit
+  min_inference_sku: Standard_DS4_v2
   task: summarization
 version: 1

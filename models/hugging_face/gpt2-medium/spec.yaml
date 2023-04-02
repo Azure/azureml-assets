@@ -1,14 +1,15 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/gpt2-medium)
 name: gpt2-medium
 path: ./
 properties:
-  commit_hash: e852c90
-  language: English
-  license: mit
+  SHA: 425b0cc90498ac177aa51ba07be26fc2fea6af9d
+  datasets: ''
   finetuning-tasks: text-classification, token-classification
+  languages: en
 tags:
-  hub: HuggingFace
+  Featured: ''
+  Preview: ''
+  license: mit
+  min_inference_sku: Standard_DS3_v2
   task: text-generation
 version: 1

@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/t5-large)
 name: t5-large
 path: ./
 properties:
-  commit_hash: cb7a967
-  language: English, French, German, Romanian
-  license: apache-2.0
+  SHA: 6ed159b7a9408621a1ed0b9ca39aacc42c694d73
+  datasets: c4
   finetuning-tasks: summarization, translation
+  languages: en, fr, ro, de
 tags:
-  hub: HuggingFace
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS4_v2
   task: translation
 version: 1

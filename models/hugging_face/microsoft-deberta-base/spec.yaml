@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/microsoft/deberta-base)
 name: microsoft-deberta-base
 path: ./
 properties:
-  commit_hash: 0d1b43c
-  language: English
-  license: mit
+  SHA: 0d1b43ccf21b5acd9f4e5f7b077fa698f05cf195
+  datasets: ''
   finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
 tags:
-  hub: HuggingFace
+  Preview: ''
+  license: mit
+  min_inference_sku: Standard_DS3_v2
   task: fill-mask
 version: 1

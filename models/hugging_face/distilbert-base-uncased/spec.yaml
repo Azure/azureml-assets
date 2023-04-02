@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/distilbert-base-uncased)
 name: distilbert-base-uncased
 path: ./
 properties:
-  commit_hash: 1c4513b
-  language: English
-  license: apache-2.0
+  SHA: 1c4513b2eedbda136f57676a34eea67aba266e5c
+  datasets: bookcorpus, wikipedia
   finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
 tags:
-  hub: HuggingFace
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS2_v2
   task: fill-mask
 version: 1

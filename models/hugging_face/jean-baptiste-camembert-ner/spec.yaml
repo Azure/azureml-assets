@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/Jean-Baptiste/camembert-ner)
-name: jean-baptiste-camembert-ner
+name: Jean-Baptiste-camembert-ner
 path: ./
 properties:
-  commit_hash: 9f8b220
-  language: French
-  license: mit
+  SHA: cc63721791a6e1d60f4764997bbb311667ec75d8
+  datasets: Jean-Baptiste/wikiner_fr
   finetuning-tasks: text-classification, token-classification, question-answering
+  languages: fr
 tags:
-  hub: HuggingFace
+  Preview: ''
+  license: mit
+  min_inference_sku: Standard_DS2_v2
   task: token-classification
 version: 1

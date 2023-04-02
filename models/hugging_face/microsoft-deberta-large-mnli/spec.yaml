@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/microsoft/deberta-large-mnli)
 name: microsoft-deberta-large-mnli
 path: ./
 properties:
-  commit_hash: 7296194
-  language: English
-  license: mit
+  SHA: 7296194b9009373def4f7c5dad292651e4b5cf4e
+  datasets: ''
   finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
 tags:
-  hub: HuggingFace
+  Preview: ''
+  license: mit
+  min_inference_sku: Standard_DS2_v2
   task: text-classification
 version: 1

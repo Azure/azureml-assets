@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-
-description: View model card at [HuggingFace](https://huggingface.co/bert-base-uncased)
 name: bert-base-uncased
 path: ./
 properties:
-  commit_hash: 0a6aa91
-  language: English
-  license: apache-2.0
+  SHA: 0a6aa9128b6194f4f3c4db429b6cb4891cdb421b
+  datasets: bookcorpus, wikipedia
   finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
 tags:
-  hub: HuggingFace
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS2_v2
   task: fill-mask
 version: 1
