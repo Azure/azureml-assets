@@ -15,6 +15,8 @@ from typing import List
 PROPERTIES = ["commit_hash", "SHA", "last_modified", "model_id", "size", "datasets", "languages", "finetuning_tasks"]
 TAGS = ["task", "license"]
 
+LANGUAGE_CODE_EXCEPTIONS = ["jax"]
+
 
 class HuggingfaceDownloader():
     """Huggingface model downloader class."""
@@ -49,20 +51,21 @@ class HuggingfaceDownloader():
             "model_id": self.model_info.modelId,
             "task": self.model_info.pipeline_tag,
             "SHA": self.model_info.sha,
-            "last_modified": self.model_info.lastModified
         }
         all_tags = self.model_info.tags
-        supported_langs = []
+        languages = []
         datasets = []
         for tag in all_tags:
-            if langcodes.tag_is_valid(tag):
-                supported_langs.append(tag)
+            if langcodes.tag_is_valid(tag) and not in LANGUAGE_CODE_EXCEPTIONS:
+                languages.append(tag)
             elif tag.startswith("dataset:"):
                 datasets.append(tag.split(":")[1])
             elif tag.startswith("license:"):
                 props["license"] = tag.split(":")[1]
-        props["datasets"] = ", ".join(datasets)
-        props["languages"] = ", ".join(supported_langs)
+        if datasets:
+            props["datasets"] = ", ".join(datasets)
+        if languages:
+            props["languages"] = ", ".join(languages)
         return props
 
     def download_model(self, download_dir):

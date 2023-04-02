@@ -57,19 +57,12 @@ def _download_git_model(model_uri: str, model_dir: Path) -> None:
     if exit_code != 0:
         raise Exception(f"Could not clone repo {model_uri}. Error => {stdout}")
 
-    download_details = {}
-    download_details["download_time_utc"] = _get_system_time_utc()
-    # fetch commit details
-    with switch_dir(model_dir):
-        cmd = "git log --oneline -n 1 --pretty=tformat:'%H'"
-        exit_code, stdout = run_command(cmd)
-        if exit_code != 0:
-            raise Exception(f"Could not capture commit HEAD. Error => {stdout}")
-        download_details["commit_hash"] = stdout
     git_path = os.path.join(model_dir, ".git")
     shutil.rmtree(git_path, onerror=_onerror)
-    download_details["size"] = _round_size(_get_size(model_dir))
-    return download_details
+    return {
+        "download_time_utc": _get_system_time_utc(),
+        "size": _round_size(_get_size(model_dir)),
+    }
 
 
 def _download_azure_artifacts(model_uri, model_dir):
@@ -87,10 +80,10 @@ def _download_azure_artifacts(model_uri, model_dir):
         exit_code, stdout = run_command(download_cmd)
         if exit_code != 0:
             raise Exception(f"Failed to download model files with URL: {model_uri}. Error => {stdout}")
-        download_details = {}
-        download_details["download_time_utc"] = _get_system_time_utc()
-        download_details["size"] = _round_size(_get_size(model_dir))
-        return download_details
+        return {
+            "download_time_utc": _get_system_time_utc(),
+            "size": _round_size(_get_size(model_dir)),
+        }
     except Exception as e:
         raise e
 
