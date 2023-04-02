@@ -5,9 +5,9 @@
 
 import os
 import re
-import wget
-import ffmpeg
 import base64
+import ffmpeg
+import requests
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -155,20 +155,23 @@ def audio_input_to_nparray(audio_file_path: Path, sampling_rate: int = 16000) ->
     return np.frombuffer(out, np.int16).flatten().astype(np.float32) / 32768.0
 
 
-def audio_processor(audio_input: str, sampling_rate: int = 16000):
-    """Change base64 encoded string to nparray."""
+def audio_processor(audio_input: str, sampling_rate: int = 16000) -> np.array:
+    """Process input audio and convert it to np array."""
     with TemporaryDirectory() as temp_dir:
         audio_file_path = os.path.join(temp_dir, "audio_file.m4a")
 
+        # check if input string is a URI to an audio file
         if is_valid_url(audio_input):
-            audio_file = wget.download(audio_input, out=audio_file_path)
-            print(audio_file)
-        else:
+            with open(audio_file_path, "wb") as f:
+                f.write(requests.get(audio_input).content)
+            return audio_input_to_nparray(audio_file_path, sampling_rate)
+
+        try:
             with open(audio_file_path, "wb") as audio:
                 audio.write(base64.b64decode(audio_input))
-
-        audio_nparray = audio_input_to_nparray(audio_file_path, sampling_rate)
-    return audio_nparray
+        except Exception:
+            raise ValueError("Invalid audio format")
+        return audio_input_to_nparray(audio_file_path, sampling_rate)
 
 
 def predict(
@@ -182,13 +185,13 @@ def predict(
 
     :param model_input: base64 encoded audio input
     :type model_input: pd.DataFrame
-    :param model: whishper model 
+    :param model: whishper model
     :type model: WhisperForConditionalGeneration
-    :param tokenizer: Processor for whisper model  
+    :param tokenizer: whisper model processor
     :type tokenizer: WhisperProcessor
-    :param kwargs:
-    :type kwargs:
-    :return:
+    :param kwargs: any other args
+    :type kwargs: Dict
+    :return: whisper predicted text
     :rtype: str
     """
     if not task == "automatic-speech-recognition":
