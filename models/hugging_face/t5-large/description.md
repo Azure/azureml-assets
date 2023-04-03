@@ -6,7 +6,7 @@ The T5-Large is a text-to-text transfer transformer (T5) model with 770 million 
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[translation-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-translation)|[translation-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-translation)
 Batch | todo
 
 
