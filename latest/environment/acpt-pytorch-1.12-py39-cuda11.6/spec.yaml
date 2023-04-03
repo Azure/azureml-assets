@@ -5,7 +5,7 @@ description: >-
   Azure Container Registry:mcr.microsoft.com/azureml/curated/acpt-pytorch-1.12-py39-cuda11.6
 
 name: "acpt-pytorch-1.12-py39-cuda11.6"
-version: "3"
+version: "4"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
