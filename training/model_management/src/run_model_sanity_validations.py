@@ -30,7 +30,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: Dict):
+def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: Dict) -> pd.DataFrame:
     if not test_data_path:
         logger.info("Test data not shared for inferencing")
         return
@@ -67,9 +67,9 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
     return data
 
 
-def _load_and_infer_model(model_dir, data):
+def _load_and_infer_model(model_dir: Path, data: pd.DataFrame):
     try:
-        model = mlflow.pyfunc.load_model(model_dir)
+        model = mlflow.pyfunc.load_model(str(model_dir))
     except Exception as e:
         logger.error(f"Error in loading mlflow model: {e}")
         raise Exception(f"Error in loading mlflow model: {e}")
