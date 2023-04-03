@@ -177,10 +177,10 @@ inputs:
     optional: true
 
 outputs:
-  mlflow_model:
+  mlflow_model_folder:
     description: Trained MLFlow model.
     type: mlflow_model
-  pytorch_model:
+  pytorch_model_folder:
     description: Trained Pytorch model.
     type: custom_model
 
@@ -222,8 +222,8 @@ command: >-
   $[[--valid_resize_size ${{inputs.validation_resize_size}}]]
   $[[--weight_decay ${{inputs.weight_decay}}]]
   $[[--weighted_loss ${{inputs.weighted_loss}}]]
-  --mlflow_model_output ${{outputs.mlflow_model}}
-  --pytorch_model_output ${{outputs.pytorch_model}}
+  --mlflow_model_output ${{outputs.mlflow_model_folder}}
+  --pytorch_model_output ${{outputs.pytorch_model_folder}}
 
 distribution:
   type: pytorch
