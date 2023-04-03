@@ -432,7 +432,7 @@ if __name__ == "__main__":
                     final_version = asset.version
                     if "auto" == asset.version.strip():
                         model_versions = get_asset_versions(asset.type.value, asset.name, registry_name)
-                        final_version = str(int(max(model_versions, key=lambda x: x)) + 1) 
+                        final_version = str(int(max(model_versions, key=lambda x: x)) + 1)
                     elif get_asset_details(asset.type.value, asset.name, final_version, registry_name):
                         logger.print(f"{asset.name} {final_version} already exists, skipping")
                         continue
