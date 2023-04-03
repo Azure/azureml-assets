@@ -8,7 +8,7 @@ It's recommended to evaluate the risks of this model by thoroughly probing the b
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[entailment-contradiction-online.ipynb](https://aka.ms/azureml-infer-online-sdk-text-classification)|[text-classification-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-text-classification)
 Batch | todo
 
 
