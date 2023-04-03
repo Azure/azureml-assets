@@ -304,6 +304,24 @@ def get_asset_details(
     return json.loads(result.stdout)
 
 
+def get_asset_versions(
+    asset_type: str,
+    asset_name: str,
+    registry_name: str,
+) -> List[str]:
+    """Get asset versions from registry."""
+    cmd = [
+        "az", "ml", asset_type, "list",
+        "--name", asset_name,
+        "--registry-name", registry_name,
+    ]
+    result = run_command(cmd)
+    if result.returncode != 0:
+        logger.log_error(f"Failed to list assets: {result.stderr}")
+        return []
+    return [a['version'] for a in json.loads(result.stdout)]
+
+
 def _str2bool(v: str) -> bool:
     """
     Parse boolean-ish values.
@@ -412,7 +430,10 @@ if __name__ == "__main__":
                 elif asset.type == assets.AssetType.MODEL:
                     # Check if model already exists
                     final_version = asset.version
-                    if get_asset_details(asset.type.value, asset.name, final_version, registry_name):
+                    if "auto" == asset.version.strip():
+                        model_versions = get_asset_versions(asset.type.value, asset.name, registry_name)
+                        final_version = str(int(max(model_versions, key=lambda x: x)) + 1) 
+                    elif get_asset_details(asset.type.value, asset.name, final_version, registry_name):
                         logger.print(f"{asset.name} {final_version} already exists, skipping")
                         continue
                     try:
