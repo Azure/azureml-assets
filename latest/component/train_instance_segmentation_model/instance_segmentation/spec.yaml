@@ -209,10 +209,10 @@ inputs:
     max: 1
 
 outputs:
-  mlflow_model:
+  mlflow_model_folder:
     description: Trained MLFlow model.
     type: mlflow_model
-  pytorch_model:
+  pytorch_model_folder:
     description: Trained Pytorch model.
     type: custom_model
 
@@ -261,8 +261,8 @@ command: >-
   $[[--warmup_cosine_lr_cycles ${{inputs.warmup_cosine_lr_cycles}}]]
   $[[--warmup_cosine_lr_warmup_epochs ${{inputs.warmup_cosine_lr_warmup_epochs}}]]  
   $[[--weight_decay ${{inputs.weight_decay}}]]
-  --mlflow_model_output ${{outputs.mlflow_model}}
-  --pytorch_model_output ${{outputs.pytorch_model}}
+  --mlflow_model_output ${{outputs.mlflow_model_folder}}
+  --pytorch_model_output ${{outputs.pytorch_model_folder}}
 
 distribution:
   type: pytorch
