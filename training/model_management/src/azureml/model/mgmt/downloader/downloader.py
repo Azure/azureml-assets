@@ -15,6 +15,9 @@ from typing import List
 PROPERTIES = ["commit_hash", "SHA", "last_modified", "model_id", "size", "datasets", "languages", "finetuning_tasks"]
 TAGS = ["task", "license"]
 
+# Valid language codes which conflicts with other namings.
+# jax for example is a Numpy framework and is present in tags for most HF models.
+# jax is also a language code used to represent the language spoken by the Jaintia people.
 LANGUAGE_CODE_EXCEPTIONS = ["jax"]
 
 
@@ -56,7 +59,7 @@ class HuggingfaceDownloader():
         languages = []
         datasets = []
         for tag in all_tags:
-            if langcodes.tag_is_valid(tag) and not in LANGUAGE_CODE_EXCEPTIONS:
+            if langcodes.tag_is_valid(tag) and tag not in LANGUAGE_CODE_EXCEPTIONS:
                 languages.append(tag)
             elif tag.startswith("dataset:"):
                 datasets.append(tag.split(":")[1])

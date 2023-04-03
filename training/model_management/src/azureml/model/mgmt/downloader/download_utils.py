@@ -9,7 +9,7 @@ import stat
 from datetime import datetime
 from pathlib import Path
 from azureml.model.mgmt.config import PathType
-from azureml.model.mgmt.utils.common_utils import run_command, log_execution_time, switch_dir
+from azureml.model.mgmt.utils.common_utils import run_command, log_execution_time
 
 
 def _get_system_time_utc():
