@@ -81,7 +81,26 @@ def get_model_wrapper(task_type, target_column, baseline_dataframe, production_d
     _logger.info("Created ml wrapper")
     return model_wrapper
 
-
+def drop_metadata_columns(baseline_dataframe, production_dataframe):
+    """Drop any columns from production dataframe that are not in the baseline
+       dataframe; necessary because the production dataframe could contain extra
+       metadata columns which should be removed.
+       :param baseline_dataframe: The baseline data meaning the data used to create the
+      model monitor
+      :type baseline_dataframe: pandas.DataFrame
+      :param production_dataframe: The production data meaning the most recent set of data
+      sent to the model monitor, the current set of data
+      :type production_dataframe: pandas.DataFrame
+      :return: production dataframe with removed columns
+      :rtype: pandas.DataFrame
+    """
+    for column in production_dataframe.columns:
+        if column not in baseline_dataframe.columns:
+            production_dataframe = production_dataframe.drop([column], axis=1)
+            _logger.info(f"Dropped {column} column in production dataset")
+    return production_dataframe
+        
+        
 def compute_categorical_features(baseline_dataframe, target_column):
     """Compute which features are categorical based on data type of the columns.
 
