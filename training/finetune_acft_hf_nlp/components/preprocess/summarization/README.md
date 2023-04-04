@@ -29,7 +29,7 @@ The goal of data preprocessing component is to validate and tokenize the user da
 
 7. _model_selector_output_ (URI_FOLDER, required)
 
-    Output of [ModelSelector](../../model_selector/summarization/README.md) component
+    Output of [ModelSelector](../../model_import/summarization/README.md) component
 
 > Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. Also, the validation and test paths are optional, an automatic split of train data happens if they are not passed.
 

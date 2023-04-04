@@ -13,7 +13,7 @@ The components can be seen here ![as shown in the figure](https://aka.ms/azureml
 
 3. _model_selector_output_ (URI_FOLDER, required)
 
-    Path to the output directory of [model import component](../../model_selector/question_answering/model_selector_component.md/#2-outputs)
+    Path to the output directory of [model import component](../../model_import/question_answering/README.md/#2-outputs)
 
 
 # 2. Outputs
