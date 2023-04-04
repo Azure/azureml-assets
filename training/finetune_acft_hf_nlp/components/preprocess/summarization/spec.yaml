@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Summarization DataPreProcess
 description: Component to preprocess data for summarization task
 
-environment: azureml:acft-hf-nlp-gpu:1
+environment: azureml:acft-hf-nlp-gpu:2
 
 code: ../../../src/preprocess
 

@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Translation Finetune
 description: Component to finetune model for Translation task
 
-environment: azureml:acft-hf-nlp-gpu:1
+environment: azureml:acft-hf-nlp-gpu:2
 
 code: ../../../src/finetune
 

@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Summarization Finetune
 description: Component to finetune model for summarization task
 
-environment: azureml:acft-hf-nlp-gpu:1
+environment: azureml:acft-hf-nlp-gpu:2
 
 code: ../../../src/finetune
 
