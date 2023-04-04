@@ -1,8 +1,8 @@
 name: model-evaluation
 channels:
+- conda-forge
 - anaconda
 - pytorch
-- conda-forge
 - nvidia
 dependencies:
 - python=3.8
