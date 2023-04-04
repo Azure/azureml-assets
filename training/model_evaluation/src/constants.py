@@ -3,19 +3,6 @@
 
 """File containing constants for model evaluation script."""
 
-MLFLOW_MODEL_TYPE_MAP = {
-    "tabular-classification": "classifier",
-    "text-classification": "text-classifier",
-    "tabular-classification-multilabel": "classifier-multilabel",
-    "text-classification-multilabel": "classifier-multilabel",
-    "tabular-regression": "regressor",
-    "text-named-entity-recognition": "text-ner",
-    "forecasting": "forecasting",
-    "text-translation": "translation",
-    "question-answering": "question-answering",
-    "text-summarization": "summarization"
-}
-
 PREDICTIONS_COLUMN_NAME = "predictions"
 TRANSFORMER_KEY = "y_transformer"
 EVALUATION_RESULTS_PATH = "evaluationResult"
@@ -38,14 +25,16 @@ class TASK:
 
     CLASSIFICATION = "tabular-classification"
     CLASSIFICATION_MULTILABEL = "tabular-classification-multilabel"
+    REGRESSION = "tabular-regression"
     TEXT_CLASSIFICATION = "text-classification"
     TEXT_CLASSIFICATION_MULTILABEL = "text-classification-multilabel"
-    REGRESSION = "tabular-regression"
     NER = "text-named-entity-recognition"
     FORECASTING = "forecasting"
     SUMMARIZATION = "text-summarization"
     QnA = "question-answering"
     TRANSLATION = "text-translation"
+    TEXT_GENERATION = "text-generation"
+    FILL_MASK = "fill-mask"
 
 
 ALL_TASKS = [
@@ -57,12 +46,29 @@ ALL_TASKS = [
     TASK.NER,
     TASK.FORECASTING,
     TASK.SUMMARIZATION,
+    TASK.QnA,
     TASK.TRANSLATION,
-    TASK.QnA]
+    TASK.FILL_MASK,
+    TASK.TEXT_GENERATION
+]
 
-CLASSIFICATION_SET = [TASK.CLASSIFICATION, TASK.CLASSIFICATION_MULTILABEL,
-                      TASK.TEXT_CLASSIFICATION, TASK.TEXT_CLASSIFICATION_MULTILABEL]
+CLASSIFICATION_SET = [TASK.CLASSIFICATION, TASK.CLASSIFICATION_MULTILABEL, TASK.TEXT_CLASSIFICATION, TASK.TEXT_CLASSIFICATION_MULTILABEL]
 MULTIPLE_OUTPUTS_SET = [TASK.CLASSIFICATION_MULTILABEL, TASK.NER, TASK.TEXT_CLASSIFICATION_MULTILABEL]
+
+MLFLOW_MODEL_TYPE_MAP = {
+    TASK.CLASSIFICATION: "classifier",
+    TASK.CLASSIFICATION_MULTILABEL: "classifier-multilabel",
+    TASK.REGRESSION: "regressor",
+    TASK.TEXT_CLASSIFICATION: "text-classifier",
+    TASK.TEXT_CLASSIFICATION_MULTILABEL: "classifier-multilabel",
+    TASK.NER: "text-ner",
+    TASK.FORECASTING: "forecasting",
+    TASK.TRANSLATION: "translation",
+    TASK.QnA: "question-answering",
+    TASK.SUMMARIZATION: "summarization",
+    TASK.TEXT_GENERATION: "text-generation",
+    TASK.FILL_MASK: "fill-mask",
+}
 
 
 class TelemetryConstants:

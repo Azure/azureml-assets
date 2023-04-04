@@ -5,9 +5,9 @@
 import os
 import traceback
 from exceptions import ModelValidationException, DataValidationException, ArgumentValidationException
-from constants import ALL_TASKS
+from constants import ALL_TASKS, TASK
 from logging_utilities import get_logger, log_traceback
-from utils import assert_and_raise
+from utils import assert_and_raise, check_and_return_if_mltable
 from typing import Union
 
 
@@ -91,6 +91,30 @@ def _validate_mode(args):
         message="Invalid mode type. It should be either predict, compute_metrics or score"
     )
 
+def _validate_test_data(args):
+    _, _data = check_and_return_if_mltable(args.data, args.data_mltable)
+    assert_and_raise(
+        condition=(_data is not None and _data != ""),
+        exception_cls=DataValidationException,
+        message="Either test_data or test_data_mltable should be passed."
+    )
+
+
+def _validate_compute_metrics_data(args):
+    _, predictions = check_and_return_if_mltable(args.predictions, args.predictions_mltable)
+    assert_and_raise(
+        condition=(predictions is not None and predictions != ""),
+        exception_cls=DataValidationException,
+        message="Either predictions or predictions_mltable should be passed."
+    )
+    if args.task != TASK.FILL_MASK:
+        _, ground_truths = check_and_return_if_mltable(args.ground_truths, args.ground_truths_mltable)
+        assert_and_raise(
+            condition=(ground_truths is not None and ground_truths != ""),
+            exception_cls=DataValidationException,
+            message="Either ground_truths or ground_truths_mltable should be passed."
+        )
+
 
 def validate_args(args):
     """Validate All args.
@@ -100,6 +124,7 @@ def validate_args(args):
     """
     _validate_model(args)
     _validate_task(args)
+    _validate_test_data(args)
 
 
 def validate_compute_metrics_args(args):
@@ -109,6 +134,7 @@ def validate_compute_metrics_args(args):
         args (_type_): _description_
     """
     _validate_task(args)
+    _validate_compute_metrics_data(args)
 
 
 def _validate_Xy(X_test, y_test, y_pred, mode):

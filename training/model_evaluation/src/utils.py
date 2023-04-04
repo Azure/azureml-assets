@@ -20,6 +20,8 @@ from task_factory.text.ner import TextNerPredictor
 from task_factory.text.qna import QnAPredictor
 from task_factory.text.summarization import Summarizer
 from task_factory.text.translation import Translator
+from task_factory.text.text_generation import TextGenerator
+from task_factory.text.fill_mask import FillMask
 from evaluators.evaluators import EvaluatorFactory
 from run_utils import TestRun
 from azureml.metrics import _scoring_utilities, constants as metrics_constants
@@ -100,18 +102,25 @@ def _log_metrics(metrics, artifacts):
 
     Raises:
         ModelEvaluationException: _description_
-        ModelEvaluationException: _description_
-        ModelEvaluationException: _description_
     """
     table_scores = {}
     nonscalar_scores = {}
+    list_metrics = [metrics_constants.Metric.FMPerplexity]
     run = TestRun().run
+    list_scores = {}
 
     for name, score in artifacts.items():
         if score is None:
             continue
         elif _scoring_utilities.is_table_metric(name):
             table_scores[name] = score
+        elif name in list_metrics:
+            try:
+                list_scores[name] = list(score)
+                if name == metrics_constants.Metric.FMPerplexity:
+                    metrics["mean_"+name] = np.mean(score)
+            except TypeError:
+                logger.warning(f"{name} is not of type list.")
         elif name in metrics_constants.Metric.NONSCALAR_FULL_SET:
             nonscalar_scores[name] = score
         elif name in metrics_constants.TrainingResultsType.ALL_TIME:
@@ -132,6 +141,14 @@ def _log_metrics(metrics, artifacts):
             run.log_table(name, score)
         except Exception:
             raise ModelEvaluationException(f"Failed to log table metric {name} with value {score}")
+
+    for name, score in list_scores.items():
+        try:
+            #TODO: Add checks for logging longer lists
+            pass
+            #run.log_list(name, score)
+        except Exception:
+            raise ModelEvaluationException(f"Failed to log list metric {name} with value {score}")
 
     # Log the non-scalar metrics. (Currently, these are all artifact-based.)
     for name, score in nonscalar_scores.items():
@@ -199,7 +216,9 @@ def get_predictor(task):
         TASK.NER: TextNerPredictor,
         TASK.QnA: QnAPredictor,
         TASK.SUMMARIZATION: Summarizer,
-        TASK.TRANSLATION: Translator
+        TASK.TRANSLATION: Translator,
+        TASK.TEXT_GENERATION: TextGenerator,
+        TASK.FILL_MASK: FillMask,
     }
     return predictor_map.get(task)
 
@@ -258,6 +277,10 @@ class ArgumentsSet:
             self.args_set = self.text_translation
         if task_type == TASK.QnA:
             self.args_set = self.qna
+        if task_type == TASK.TEXT_GENERATION:
+            self.args_set = self.text_generation
+        if task_type == TASK.FILL_MASK:
+            self.args_set = self.fill_mask
 
     @property
     def classification(self):
@@ -320,7 +343,9 @@ class ArgumentsSet:
             _type_: _description_
         """
         args_map = {
-            "metrics": "list(val)"
+            "metrics": "list(val)",
+            "aggregator": "bool(val)",
+            "stemmer": "bool(val)"
         }
         return args_map
 
@@ -332,7 +357,23 @@ class ArgumentsSet:
             _type_: _description_
         """
         args_map = {
-            "metrics": "list(val)"
+            "metrics": "list(val)",
+            "smoothing": "bool(val)"
+        }
+        return args_map
+
+    @property
+    def text_generation(self):
+        """Text Generation arguments.
+
+        Return:
+            _type_: _description_
+        """
+        args_map = {
+            "metrics": "list(val)",
+            "smoothing": "bool(val)",
+            "aggregator": "bool(val)",
+            "stemmer": "bool(val)"
         }
         return args_map
 
@@ -345,7 +386,25 @@ class ArgumentsSet:
         """
         args_map = {
             "metrics": "list(val)",
-            "label_column_name": "list(val)"
+            "regexes_to_ignore": "list(val)",
+            "ignore_case": "bool(val)",
+            "ignore_punctuation": "bool(val)",
+            "ignore_numbers": "bool(val)"
+        }
+        return args_map
+
+    @property
+    def fill_mask(self):
+        """Fill Masking arguments
+
+        Returns:
+            _type_: _description_
+        """
+        args_map = {
+            "metrics": "list(val)",
+            "model_id": "str(val)",
+            "batch_size": "int(val)",
+            "add_start_token": "bool(val)"
         }
         return args_map
 
@@ -462,12 +521,12 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
                 X_test[X_test.columns[0]] = X_test[X_test.columns[0]].apply(lambda x: " ".join(x.tolist()))
         if isinstance(X_test, pd.Series):
             X_test = X_test.to_frame()
-    if _has_multiple_output and not isinstance(y_test.iloc[0], str):
+    if _has_multiple_output and y_test is not None and not isinstance(y_test.iloc[0], str):
         if isinstance(y_test.iloc[0], np.ndarray):
             y_test = y_test.apply(lambda x: x.tolist())
         y_test = y_test.astype(str)
 
-    if task == constants.TASK.QnA:
+    if task == constants.TASK.QnA and y_test is not None:
         if isinstance(y_test.iloc[0], dict):
             # Extracting only the first one for now
             # TODO: Fix this post PrP
@@ -476,10 +535,15 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
         elif isinstance(y_test.iloc[0], list) or isinstance(y_test.iloc[0], np.ndarray):
             y_test = y_test.apply(lambda x: x[0])
         if not isinstance(y_test.iloc[0], str):
-            raise DataLoaderException(
-                exception_message="Ground Truths for Question-answering should be a string or \
-                    an array found "+type(y_test.iloc[0])
-            )
+            message = "Ground Truths for Question-answering should be a string \
+                       or an array found " + type(y_test.iloc[0])
+            raise DataLoaderException(exception_message=message)
+    if task == constants.TASK.FILL_MASK and y_test is not None:
+        if isinstance(y_test.iloc[0], np.ndarray) or isinstance(y_test.iloc[0], list):
+            y_test = y_test.apply(lambda x: tuple(x))
+        if not isinstance(y_test.iloc[0], str) and not isinstance(y_test.iloc[0], tuple):
+            message = "Ground Truths for Fill-Mask should be a string or an array found "+type(y_test.iloc[0])
+            raise DataLoaderException(exception_message=message)
     if y_test is not None:
         y_test = y_test.values
     return X_test, y_test
@@ -509,12 +573,18 @@ def read_config(conf_folder, task_type):
 
     metrics_args = ArgumentsSet(task_type=task_type)
     metrics_config = {}
+    # logger.info(metrics_args)
     for arg, func in metrics_args.args_set.items():
         val = data.get(arg, None)
         if val is not None:
             # if arg == "y_transformer":
             #    val = os.path.join(conf_folder, val)
-            metrics_config[arg] = eval(func)
+            try:
+                metrics_config[arg] = eval(func)
+            except TypeError:
+                message = "Invalid dtype passed for config param '"+arg+"'."
+                logger.error(message)
+                raise DataValidationException(message)
 
     return metrics_config
 
@@ -578,11 +648,17 @@ def read_compute_metrics_config(conf_folder, task_type):
 
     metrics_args = ArgumentsSet(task_type=task_type)
     metrics_config = {}
-    print(metrics_args)
+    # logger.info(metrics_args)
     for arg, func in metrics_args.args_set.items():
         val = data.get(arg, None)
         if val is not None:
-            metrics_config[arg] = eval(func)
+            try:
+                metrics_config[arg] = eval(func)
+            except TypeError:
+                message = "Invalid dtype passed for config param '"+arg+"'."
+                logger.error(message)
+                raise DataValidationException(message)
+
 
     return metrics_config
 

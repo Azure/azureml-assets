@@ -131,7 +131,7 @@ class Inferencer:
             data = self.load_data(test_data, label_column_name, input_column_names, is_mltable=is_mltable)
 
         for idx, (X_test, y_test_chunk) in enumerate(data):
-            print("batch: ", idx)
+            logger.info("batch: "+str(idx))
             y_transformer = None
             predictor_cls = get_predictor(self.task)
             predictor = predictor_cls(self.model)

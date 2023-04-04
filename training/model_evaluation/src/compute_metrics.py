@@ -7,9 +7,11 @@ import argparse
 import azureml.evaluate.mlflow as aml_mlflow
 import os
 import glob
+import json
 import pandas as pd
 import numpy as np
 from azureml.telemetry.activity import log_activity
+from azureml.metrics.constants import Metric
 
 import constants
 from exceptions import DataLoaderException
@@ -40,6 +42,7 @@ class ModelEvaluationRunner:
                  output: str,
                  custom_dimensions: dict,
                  config_file: str = None,
+                 metrics_config: dict = None,
                  is_ground_truth_mltable: str = None,
                  is_predictions_mltable: str = None,
                  is_prediction_probabilities_mltable: str = None,
@@ -66,6 +69,8 @@ class ModelEvaluationRunner:
         self.label_column_name, self.prediction_column_name, self.metrics_config = None, None, {}
         if config_file:
             self.metrics_config = read_compute_metrics_config(config_file, self.task)
+        elif metrics_config:
+            self.metrics_config = metrics_config
         self._is_multilabel = self.metrics_config.get("multilabel", False)
         self.custom_dimensions = custom_dimensions
         self._has_multiple_output = self._is_multilabel or self.task == constants.TASK.NER
@@ -214,32 +219,44 @@ def test_component():
     parser.add_argument("--ground_truths_mltable", type=str, dest="ground_truths_mltable",
                         required=False, default="")
     parser.add_argument("--predictions_mltable", type=str, dest="predictions_mltable", required=False, default="")
-    parser.add_argument("--prediction_probabilities_mltable", type=str, dest="prediction_probabilities_mltable",
-                        required=False, default="")
-    parser.add_argument("--ground_truths_column_name", type=str, dest="ground_truths_column_name",
-                        required=False, default=None)
-    parser.add_argument("--predictions_column_name", type=str, dest="predictions_column_name",
-                        required=False, default=None)
+    parser.add_argument("--prediction_probabilities_mltable", type=str, 
+                        dest="prediction_probabilities_mltable", required=False, default="")
+    parser.add_argument("--ground_truths_column_name", type=str, 
+                        dest="ground_truths_column_name", required=False, default=None)
+    parser.add_argument("--predictions_column_name", type=str, 
+                        dest="predictions_column_name", required=False, default=None)
+    parser.add_argument("--config_str", type=str, dest="config_str", required=False, default=None)
     args = parser.parse_args()
-    print(args)
 
     custom_dimensions.app_name = constants.TelemetryConstants.COMPUTE_METRICS_NAME
     custom_dims_dict = vars(custom_dimensions)
-    with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME,
+    with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME, 
                       custom_dimensions=custom_dims_dict):
         logger.info("Validating arguments")
-        with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME,
+        with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME, 
                           custom_dimensions=custom_dims_dict):
             validate_compute_metrics_args(args)
 
-        is_ground_truths_mltable, ground_truths = check_and_return_if_mltable(args.ground_truths,
+        is_ground_truths_mltable, ground_truths = check_and_return_if_mltable(args.ground_truths, 
                                                                               args.ground_truths_mltable)
-        is_predictions_mltable, predictions = check_and_return_if_mltable(args.predictions,
+        is_predictions_mltable, predictions = check_and_return_if_mltable(args.predictions, 
                                                                           args.predictions_mltable)
         is_prediction_probabilities_mltable, prediction_probabilities = check_and_return_if_mltable(
             args.prediction_probabilities, args.prediction_probabilities_mltable
         )
 
+        met_config = None
+        if args.config_str:
+            if args.config_file_name:
+                logger.warning("Both evaluation_config and evaluation_config_params are passed. \
+                               Using evaluation_config as additional params.")
+            else:
+                try:
+                    met_config = json.loads(args.config_str)
+                except Exception as e:
+                    message = "Unable to load evaluation_config_params. String is not JSON serielized."
+                    raise DataLoaderException(message,
+                                              inner_exception=e)
         runner = ModelEvaluationRunner(
             task=args.task,
             ground_truth=ground_truths,
@@ -248,6 +265,7 @@ def test_component():
             output=args.output,
             custom_dimensions=custom_dims_dict,
             config_file=args.config_file_name,
+            metrics_config=met_config,
             is_ground_truth_mltable=is_ground_truths_mltable,
             is_predictions_mltable=is_predictions_mltable,
             is_prediction_probabilities_mltable=is_prediction_probabilities_mltable,

@@ -7,6 +7,7 @@ import argparse
 
 import azureml.evaluate.mlflow as aml_mlflow
 import os
+import json
 import constants
 import torch
 from itertools import repeat
@@ -42,7 +43,8 @@ class EvaluateModel:
                  output: str,
                  custom_dimensions: dict,
                  device: str = "cpu",
-                 config_file: str = None) -> None:
+                 config_file: str = None,
+                 metrics_config: dict = None) -> None:
         """
         Evaluate Model Object.
 
@@ -58,10 +60,12 @@ class EvaluateModel:
         self.model_uri = model_uri
         self.output = output
         self.metrics_config = {}
-        if config_file is not None:
+        if config_file:
             self.metrics_config = read_config(config_file, task)
-        self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL
-                               or task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL)
+        elif metrics_config:
+            self.metrics_config = metrics_config
+        self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL or 
+                               task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL)
         self._has_multiple_output = task in constants.MULTIPLE_OUTPUTS_SET
         self.custom_dimensions = custom_dimensions
         self.device = torch.cuda.current_device() if device == "gpu" else -1
@@ -137,13 +141,6 @@ class EvaluateModel:
 
         validate_Xy(X_test, y_test)
 
-        # if self.multilabel:
-        #     class_labels = self.metrics_config("class_labels", None)
-        # if class_labels is not None:
-        #     from sklearn.preprocessing import MultiLabelBinarizer
-        #     y_transformer = MultiLabelBinarizer(sparse_output=True)
-        #     y_transformer.fit(class_labels)
-        # self.metrics_config.update({"y_transformer": y_transformer})
         with log_activity(logger, constants.TelemetryConstants.MLFLOW_NAME, custom_dimensions=self.custom_dimensions):
             feature_names = X_test.columns
 
@@ -201,16 +198,16 @@ def test_model():
     parser.add_argument("--device", type=str, required=False, default="cpu", dest="device")
     parser.add_argument("--batch-size", type=int, required=False, default=None, dest="batch_size")
     parser.add_argument("--label-column-name", type=str, dest="label_column_name", required=True)
-    parser.add_argument("--input-column-names",
-                        type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()],
+    parser.add_argument("--input-column-names", 
+                        type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()], 
                         dest="input_column_names", required=False, default=None)
-
+    parser.add_argument("--config_str", type=str, dest="config_str", required=False, default=None)
     args = parser.parse_args()
-    print(args)
+    # logger.info(args)
 
     custom_dimensions.app_name = constants.TelemetryConstants.EVALUATE_MODEL_NAME
     custom_dims_dict = vars(custom_dimensions)
-    print(args.config_file_name)
+    # logger.info("Evaluation Config file name:"+args.config_file_name)
     with log_activity(logger, constants.TelemetryConstants.EVALUATE_MODEL_NAME, custom_dimensions=custom_dims_dict):
         logger.info("Validating arguments")
         with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME, custom_dimensions=custom_dims_dict):
@@ -221,10 +218,18 @@ def test_model():
         if mlflow_model:
             model_uri = mlflow_model
 
-        # if args.task is None:
-        #     args.task = get_task_from_model(model_uri)
-        #     _validate_task(args)
-
+        met_config = None
+        if args.config_str:
+            if args.config_file_name:
+                logger.warning("Both evaluation_config and evaluation_config_params are passed. \
+                               Using evaluation_config as additional params.")
+            else:
+                try:
+                    met_config = json.loads(args.config_str)
+                except Exception as e:
+                    message = "Unable to load evaluation_config_params. String is not JSON serielized."
+                    raise DataLoaderException(message,
+                                              inner_exception=e)
         is_mltable, data = check_and_return_if_mltable(args.data, args.data_mltable)
 
         runner = EvaluateModel(
@@ -233,6 +238,7 @@ def test_model():
             custom_dimensions=custom_dims_dict,
             model_uri=model_uri,
             config_file=args.config_file_name,
+            metrics_config=met_config,
             device=args.device
         )
         runner.score(test_data=data, label_column_name=args.label_column_name,

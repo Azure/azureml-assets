@@ -28,11 +28,13 @@ class EvaluatorFactory:
             TASK.REGRESSION: RegressorEvaluator,
             TASK.NER: NerEvaluator,
             "text-ner": NerEvaluator,
-            TASK.TEXT_CLASSIFICATION: ClassifierEvaluator,
+            TASK.TEXT_CLASSIFICATION: TextClassifierEvaluator,
             TASK.TEXT_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
             TASK.TRANSLATION: TranslationEvaluator,
             TASK.SUMMARIZATION: SummarizationEvaluator,
-            TASK.QnA: QnAEvaluator
+            TASK.QnA: QnAEvaluator,
+            TASK.FILL_MASK: FillMaskEvaluator,
+            TASK.TEXT_GENERATION: TextGenerationEvaluator,
         }
 
     def get_evaluator(self, task_type, metrics_config=None):
@@ -107,6 +109,8 @@ class ClassifierEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+    def __init__(self, task_type, metrics_config):
+        super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, y_pred_proba=None):
         """Evaluate classification.
@@ -126,6 +130,32 @@ class ClassifierEvaluator(Evaluator):
                                   y_pred_proba=y_pred_proba, **self.metrics_config)
         return metrics
 
+class TextClassifierEvaluator(Evaluator):
+    """Text Classifier Evaluator.
+
+    Args:
+        Evaluator (_type_): _description_
+    """
+    def __init__(self, task_type, metrics_config):
+        super().__init__(task_type, metrics_config)
+
+    def evaluate(self, y_test, y_pred, y_pred_proba=None):
+        """Evaluate classification.
+
+        Args:
+            y_test (_type_): _description_
+            y_pred (_type_): _description_
+            y_pred_proba (_type_, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
+        y_pred = self._convert_predictions(y_pred)
+        y_pred_proba = self._convert_predictions(y_pred_proba)
+        y_test = self._convert_predictions(y_test)
+        metrics = compute_metrics(task_type=constants.Tasks.TEXT_CLASSIFICATION, y_test=y_test, y_pred=y_pred,
+                                  y_pred_proba=y_pred_proba, **self.metrics_config)
+        return metrics
 
 class RegressorEvaluator(Evaluator):
     """Regressor Evaluator.
@@ -133,6 +163,8 @@ class RegressorEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+    def __init__(self, task_type, metrics_config):
+        super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, **kwargs):
         """Evaluate regression.
@@ -157,6 +189,8 @@ class ClassifierMultilabelEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+    def __init__(self, task_type, metrics_config):
+        super().__init__(task_type, metrics_config)
 
     def _convert_predictions(self, preds):
         """Convert predictions to np array.
@@ -197,6 +231,8 @@ class NerEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+    def __init__(self, task_type, metrics_config):
+        super().__init__(task_type, metrics_config)
 
     def _convert_predictions(self, preds):
         """Convert predictions.
@@ -235,6 +271,8 @@ class SummarizationEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+    def __init__(self, task_type, metrics_config):
+        super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, **kwargs):
         """Evaluate summarizer.
@@ -261,6 +299,8 @@ class QnAEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+    def __init__(self, task_type, metrics_config):
+        super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, **kwargs):
         """Evaluate QnA.
@@ -295,6 +335,8 @@ class TranslationEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+    def __init__(self, task_type, metrics_config):
+        super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, **kwargs):
         """Evaluate Translation.
@@ -311,5 +353,59 @@ class TranslationEvaluator(Evaluator):
         if y_test.ndim == 1:
             y_test = np.reshape(y_test, (-1, 1))
         metrics = compute_metrics(task_type=constants.Tasks.TRANSLATION, y_test=y_test.tolist(),
+                                  y_pred=y_pred.tolist(), **self.metrics_config)
+        return metrics
+
+
+class FillMaskEvaluator(Evaluator):
+    """Fill Mask Evaluator.
+
+    Args:
+        Evaluator (_type_): _description_
+    """
+    def __init__(self, task_type, metrics_config):
+        super().__init__(task_type, metrics_config)
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """Evaluate Fill Mask.
+
+        Args:
+            y_test (_type_): _description_
+            y_pred (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        y_pred = self._convert_predictions(y_pred).tolist()
+        y_test = self._convert_predictions(y_test).tolist()
+        metrics = compute_metrics(task_type=constants.Tasks.FILL_MASK, y_test=y_test,
+                                  y_pred=y_pred, **self.metrics_config)
+        return metrics
+
+
+class TextGenerationEvaluator(Evaluator):
+    """Text Generation Evaluator.
+
+    Args:
+        Evaluator (_type_): _description_
+    """
+    def __init__(self, task_type, metrics_config):
+        super().__init__(task_type, metrics_config)
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """Evaluate TextGeneration.
+
+        Args:
+            y_test (_type_): _description_
+            y_pred (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        y_pred = self._convert_predictions(y_pred)
+        y_test = self._convert_predictions(y_test)
+        if y_test.ndim == 1:
+            y_test = np.reshape(y_test, (-1, 1))
+        metrics = compute_metrics(task_type=constants.Tasks.TEXT_GENERATION, y_test=y_test.tolist(),
                                   y_pred=y_pred.tolist(), **self.metrics_config)
         return metrics
