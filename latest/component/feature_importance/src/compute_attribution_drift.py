@@ -9,8 +9,7 @@ import numpy as np
 import pandas as pd
 
 from sklearn.metrics import ndcg_score
-from azureml.exceptions import UserErrorException
-from feature_importance_utilities import get_model_wrapper, compute_explanations,  compute_categorical_features
+from feature_importance_utilities import get_model_wrapper, compute_explanations,  compute_categorical_features, drop_metadata_columns
 from io_utils import load_mltable_to_df, save_df_as_mltable
 
 
@@ -43,7 +42,6 @@ def calculate_attribution_drift(baseline_explanations, production_explanations):
     true_relevance = np.asarray([baseline_explanations])
     relevance_score = np.asarray([production_explanations])
     feature_attribution_drift = ndcg_score(true_relevance, relevance_score)
-    # just log for now, eventually we will have to write the output
     _logger.info(f"feature attribution drift calculated: {feature_attribution_drift}")
     return feature_attribution_drift
 
@@ -65,8 +63,7 @@ def compute_attribution_drift(task_type, target_column, baseline_dataframe, prod
       :return: the ndcg metric between the baseline and production data
       :rtype: float
     """
-    if len(baseline_dataframe.columns.difference(production_dataframe.columns)) > 0:
-        raise UserErrorException("Dataset columns differ in baseline and production datasets")
+    production_dataframe = drop_metadata_columns(baseline_dataframe, production_dataframe)
 
     model_wrapper = get_model_wrapper(task_type, target_column, baseline_dataframe, production_dataframe)
 
@@ -78,10 +75,10 @@ def compute_attribution_drift(task_type, target_column, baseline_dataframe, prod
     production_explanations = compute_explanations(model_wrapper, production_dataframe, categorical_features, target_column, task_type)
     _logger.info("Successfully computed explanations for production dataset")
 
-    write_to_mltable(baseline_explanations, production_explanations, feature_attribution_data)
+    compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations, feature_attribution_data)
 
 
-def write_to_mltable(baseline_explanations, production_explanations, feature_attribution_data):
+def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations, feature_attribution_data):
     """write feature importance values to mltable
       :param explanations: list of feature importances in the order of the baseline columns
       :type explanations: list[float]
