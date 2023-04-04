@@ -23,11 +23,13 @@ dependencies:
   - azureml-telemetry=={{latest-pypi-version}}
   - azureml-automl-core=={{latest-pypi-version}}
   - azureml-automl-runtime=={{latest-pypi-version}}
+  - azureml-evaluate-mlflow=={{latest-pypi-version}}
+  - azureml-metrics=={{latest-pypi-version}}
   - xgboost==1.6.1
   - statsmodels==0.11.0
   - lightgbm==3.2.1
   - msrest==0.6.21
-  - transformers==4.16.0 # >=4.21.0
+  - transformers
   - tokenizers
   - datasets
   - mltable
