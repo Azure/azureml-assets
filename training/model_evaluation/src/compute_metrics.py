@@ -11,7 +11,6 @@ import json
 import pandas as pd
 import numpy as np
 from azureml.telemetry.activity import log_activity
-from azureml.metrics.constants import Metric
 
 import constants
 from exceptions import DataLoaderException
