@@ -1,5 +1,5 @@
 #azureml-assets
-azure-ai-ml==1.2.0
+azure-ai-ml==1.5.0
 scikit-image==0.19.3
 simplification==0.6.2
 pillow==9.3.0
