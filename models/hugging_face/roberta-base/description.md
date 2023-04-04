@@ -15,7 +15,7 @@ Batch | todo
 
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
-|Fill Mask||[imdb](https://huggingface.co/datasets/imdb)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|
+|Fill Mask|Fill Mask|[imdb](https://huggingface.co/datasets/imdb)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|
 
 
 ### Finetuning samples

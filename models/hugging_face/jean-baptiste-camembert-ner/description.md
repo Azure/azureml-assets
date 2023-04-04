@@ -24,4 +24,4 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
-|Token Classification||[CoNLL 2003](https://huggingface.co/datasets/conll2003)|[evaluate-model-token-classification.ipynb](https://aka.ms/azureml-eval-sdk-token-classification)|
+|Token Classification|Token Classification|[CoNLL 2003](https://huggingface.co/datasets/conll2003)|[evaluate-model-token-classification.ipynb](https://aka.ms/azureml-eval-sdk-token-classification)|

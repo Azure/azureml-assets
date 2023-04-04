@@ -23,4 +23,4 @@ Token Classification|Token Classification|[Conll2003](https://huggingface.co/dat
 
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
-|Text generation||todo|[evaluate-model-text-generation.ipynb](https://aka.ms/azureml-eval-sdk-text-generation/)|
+|Text generation|Text generation|todo|[evaluate-model-text-generation.ipynb](https://aka.ms/azureml-eval-sdk-text-generation/)|
