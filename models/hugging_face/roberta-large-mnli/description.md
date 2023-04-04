@@ -16,7 +16,7 @@ Batch | todo
 
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
-|Text Classification||[GoEmotions](https://huggingface.co/datasets/go_emotions)|[evaluate-model-text-classification.ipynb](https://aka.ms/azureml-eval-sdk-text-classification)|
+|Text Classification|Emotion Detection|[GoEmotions](https://huggingface.co/datasets/go_emotions)|[evaluate-model-text-classification.ipynb](https://aka.ms/azureml-eval-sdk-text-classification)|
 
 
 ### Finetuning samples
