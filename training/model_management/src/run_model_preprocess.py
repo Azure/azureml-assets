@@ -8,6 +8,7 @@ import os
 import json
 from azureml.model.mgmt.config import ModelFlavor
 from azureml.model.mgmt.processors.preprocess import run_preprocess
+from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from pathlib import Path
 import shutil
 
@@ -31,6 +32,9 @@ def _validate_transformers_args(args):
         raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
     if not args.get("task"):
         raise Exception("task is a required parameter for hftransformers mlflow flavor.")
+    task = args["task"]
+    if not SupportedTasks.has_value(task):
+        raise Exception(f"Unsupported task {task}")
 
 
 if __name__ == "__main__":
