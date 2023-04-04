@@ -1,0 +1,67 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+
+name: feature_attribution_model_monitor
+display_name: Feature attribution - Model Monitor
+description: Computes the feature attribution between a baseline and production data assets.
+version: 0.0.1
+is_deterministic: false
+
+inputs:
+  monitor_current_time:
+    type: string
+  window_size_in_days:
+    type: number
+  production_data:
+    type: uri_folder
+  baseline_data:
+    type: mltable
+  numerical_threshold:
+    type: number
+    default: 0.5
+  categorical_threshold:
+    type: number
+    default: 0.5
+jobs:
+  data_window:
+    type: command
+    component: azureml:data_window:0.0.6
+    inputs:
+      monitor_current_time: ${{parent.inputs.monitor_current_time}}
+      window_size_in_days: ${{parent.inputs.window_size_in_days}}
+      production_data:
+        type: uri_folder
+        path: ${{parent.inputs.production_data}}
+    outputs:
+      window_data:
+        type: mltable
+  model_data_collector_flatten_logs:
+    type: command
+    component: azureml://registries/azureml-dev/components/model_data_collector_flatten_logs/versions/0.1.0-azureml-dev.1676397046
+    inputs:
+      input_data: ${{parent.jobs.data_window.outputs.window_data}}
+    outputs:
+      output_data:
+        type: mltable
+  compute_measures_tests:
+    type: command
+    component: azureml://registries/azureml-dev/components/feature_attribution_drift_compute_metrics/versions/0.0.3-azureml-dev.1680631831
+    inputs:
+      production_data:
+        type: mltable
+        path: ${{parent.jobs.model_data_collector_flatten_logs.outputs.output_data}}
+      baseline_data:
+        type: mltable
+        path: ${{parent.inputs.baseline_data}}
+    outputs:
+      feature_attribution_data:
+        type: mltable
+  evaluate_metric_thresholds:
+    type: command
+    component: azureml://registries/azureml-preview/components/data_drift_evaluate_metrics_threshold/versions/0.2.0
+    inputs:
+      metrics_to_evaluate:
+        type: mltable
+        path: ${{parent.jobs.compute_measures_tests.outputs.feature_attribution_data}}
+      numerical_threshold: ${{parent.inputs.numerical_threshold}}
+      categorical_threshold: ${{parent.inputs.categorical_threshold}}
