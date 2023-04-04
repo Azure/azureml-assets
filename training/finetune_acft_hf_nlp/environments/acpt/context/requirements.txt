@@ -1,5 +1,5 @@
-azureml-acft-accelerator==0.0.3
-azureml-acft-contrib-hf-nlp==0.0.3
+azureml-acft-accelerator==0.0.4
+azureml-acft-contrib-hf-nlp==0.0.4
 azureml-evaluate-mlflow==0.0.4
 mltable==1.1.0
 datasets==2.3.2
