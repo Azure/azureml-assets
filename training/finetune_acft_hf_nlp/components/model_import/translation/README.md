@@ -22,8 +22,6 @@ The component copies the input model folder to the component output directory wh
     - All the tokenizer files should be kept in _data/tokenizer_
     - **`MLmodel`** is a yaml file and this should contain _model_name_or_path_ information. See the sample MLmodel file [here](https://aka.ms/azureml-ft-docs-sample-mlmodel-file)
 
-    > List of base mlflow models that are available in [azureml-preview](https://ml.azure.com/registries/azureml-preview/models?tid=72f988bf-86f1-41af-91ab-2d7cd011db47) registry can be used directly for finetuning.
-
     > Currently _resume_from_checkpoint_ is **NOT** fully enabled with _mlflow_model_path_. Only the saved model weights can be reloaded but not the optimizer, scheduler and random states
 
 **NOTE** The _pytorch_model_path_ take priority over _mlflow_model_path_, in case both inputs are passed
