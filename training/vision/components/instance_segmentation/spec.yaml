@@ -7,6 +7,8 @@ name: train_instance_segmentation_model
 display_name: Train Instance Segmentation Model (Private Preview)
 version: 0.0.3
 
+is_deterministic: false
+
 inputs:
   training_data:
     description: Path to MLTable for training data.
