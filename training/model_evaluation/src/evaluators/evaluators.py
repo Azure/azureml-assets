@@ -111,6 +111,12 @@ class ClassifierEvaluator(Evaluator):
     """
 
     def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
         super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, y_pred_proba=None):
