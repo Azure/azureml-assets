@@ -22,7 +22,7 @@ command: >-
   $[[--model_download_metadata ${{inputs.model_download_metadata}}]]
   $[[--model_description "${{inputs.model_description}}"]]
   $[[--model_metadata ${{inputs.model_metadata}}]]
-  $[[--model_job_path ${{inputs.model_job_path}}]]
+  $[[--model_import_job_path  ${{inputs.model_import_job_path }}]]
   --registration_details ${{outputs.registration_details}}
 
 inputs:
