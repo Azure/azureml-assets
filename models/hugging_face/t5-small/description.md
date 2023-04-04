@@ -22,4 +22,4 @@ Translation|Translation|[WMT16](https://huggingface.co/datasets/cnn_dailymail)|[
 
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
-|Translation||[wmt19/cs-en](https://huggingface.co/datasets/wmt19/viewer/cs-en/)|[evaluate-model-translation.ipynb](https://aka.ms/azureml-eval-sdk-translation)|
+|Translation|Translation|[wmt19/cs-en](https://huggingface.co/datasets/wmt19/viewer/cs-en/)|[evaluate-model-translation.ipynb](https://aka.ms/azureml-eval-sdk-translation)|
