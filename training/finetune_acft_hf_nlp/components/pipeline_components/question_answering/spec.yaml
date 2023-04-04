@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: question_answering_pipeline
-version: 0.0.1
+version: 0.0.5
 type: pipeline
 display_name: Question Answering Pipeline
 description: Pipeline component for question answering
