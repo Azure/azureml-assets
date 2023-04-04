@@ -24,3 +24,34 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Question Answering||[Squad v2](https://huggingface.co/datasets/squad_v2)|[evaluate-model-question-answering.ipynb](https://aka.ms/azureml-eval-sdk-question-answering)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "question": ["What is my name?", "Where do I live?"],
+        "context": ["My name is John and I live in Seattle.", "My name is Ravi and I live in Hyderabad."]
+    }
+}
+```
+
+#### Sample output
+```
+[
+    {
+        "score": 0.9982209801673889,
+        "start": 11,
+        "end": 15,
+        "answer": "John"
+    },
+    {
+        "score": 0.9689329266548157,
+        "start": 30,
+        "end": 39,
+        "answer": "Hyderabad"
+    }
+]
+```

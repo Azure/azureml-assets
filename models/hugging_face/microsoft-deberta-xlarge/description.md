@@ -24,3 +24,52 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Fill Mask||[imdb](https://huggingface.co/datasets/imdb)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["Paris is the [MASK] of France.", "Today is a [MASK] day!"]
+    },
+    "parameters": {
+        "top_k": 2
+    }
+}
+```
+
+#### Sample output
+```
+[
+    [
+        {
+            "score": 0.00045154482359066606,
+            "token": 22569,
+            "token_str": " Tig",
+            "sequence": "Paris is the Tig of France."
+        },
+        {
+            "score": 0.00027906251489184797,
+            "token": 23408,
+            "token_str": " promoter",
+            "sequence": "Paris is the promoter of France."
+        }
+    ],
+    [
+        {
+            "score": 0.0003339046670589596,
+            "token": 13093,
+            "token_str": "edd",
+            "sequence": "Today is aedd day!"
+        },
+        {
+            "score": 0.0003173339064233005,
+            "token": 42781,
+            "token_str": " hallucinations",
+            "sequence": "Today is a hallucinations day!"
+        }
+    ]
+]
+```

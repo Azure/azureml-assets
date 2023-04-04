@@ -24,3 +24,42 @@ Token Classification|Token Classification|[Conll2003](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Text generation||todo|[evaluate-model-text-generation.ipynb](https://aka.ms/azureml-eval-sdk-text-generation/)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["My name is John and I am", "Once upon a time,"]
+    },
+    "parameters": {
+        "min_length": 20,
+        "max_length": 30,
+        "num_return_sequences": 2
+    }
+}
+```
+
+#### Sample output
+```
+[
+    [
+        {
+            "generated_text": "My name is John and I am a student at UC Berkeley. It is my main interest to do research in the humanities. I am going to share"
+        },
+        {
+            "generated_text": "My name is John and I am from West London. But the 31-year-old was left stunned after his video appeared on Reddit last"
+        }
+    ],
+    [
+        {
+            "generated_text": "Once upon a time, they were just another small family, only three. She says one day that her father was getting a new license"
+        },
+        {
+            "generated_text": "Once upon a time, my character had the power to grant a certain amount of protection and to change the form of the power to that of the caster"
+        }
+    ]
+]
+```
