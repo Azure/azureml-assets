@@ -186,7 +186,7 @@ def main(args):
                 model_version = str(int(max_version) + 1)
         except Exception:
             print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
-            
+
     # check if we can have lineage and update the model path for ws import
     if not registry_name and args.model_job_path:
         with open(args.model_job_path) as f:
