@@ -395,7 +395,7 @@ class ArgumentsSet:
 
     @property
     def fill_mask(self):
-        """Fill Masking arguments
+        """Fill Masking arguments.
 
         Returns:
             _type_: _description_

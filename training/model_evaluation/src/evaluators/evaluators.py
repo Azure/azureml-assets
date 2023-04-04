@@ -109,6 +109,7 @@ class ClassifierEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+
     def __init__(self, task_type, metrics_config):
         super().__init__(task_type, metrics_config)
 
@@ -137,7 +138,14 @@ class TextClassifierEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+
     def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
         super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, y_pred_proba=None):
@@ -165,7 +173,14 @@ class RegressorEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+
     def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
         super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, **kwargs):
@@ -191,7 +206,14 @@ class ClassifierMultilabelEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+
     def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
         super().__init__(task_type, metrics_config)
 
     def _convert_predictions(self, preds):
@@ -233,7 +255,14 @@ class NerEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+
     def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
         super().__init__(task_type, metrics_config)
 
     def _convert_predictions(self, preds):
@@ -273,7 +302,14 @@ class SummarizationEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+
     def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
         super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, **kwargs):
@@ -301,7 +337,14 @@ class QnAEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+
     def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
         super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, **kwargs):
@@ -337,7 +380,14 @@ class TranslationEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+
     def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
         super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, **kwargs):
@@ -365,7 +415,14 @@ class FillMaskEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+
     def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
         super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, **kwargs):
@@ -391,7 +448,14 @@ class TextGenerationEvaluator(Evaluator):
     Args:
         Evaluator (_type_): _description_
     """
+
     def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
         super().__init__(task_type, metrics_config)
 
     def evaluate(self, y_test, y_pred, **kwargs):
