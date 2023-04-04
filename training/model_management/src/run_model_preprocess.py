@@ -53,15 +53,13 @@ if __name__ == "__main__":
     if not ModelFlavor.has_value(mlflow_flavor):
         raise Exception("Unsupported model flavor")
 
-    preprocess_args = {
-        'model_id': model_id,
-        'task': task_name,
-    }
-
+    preprocess_args = {}
     with open(model_download_metadata_path) as f:
         download_details = json.load(f)
         preprocess_args.update(download_details.get("tags", {}))
         preprocess_args.update(download_details.get("properties", {}))
+    preprocess_args["task"] = task_name if task_name else preprocess_args.get("task")
+    preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
 
     print(preprocess_args)
 

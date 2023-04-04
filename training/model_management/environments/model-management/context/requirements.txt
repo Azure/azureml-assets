@@ -7,5 +7,3 @@ langcodes=={{latest-pypi-version}}
 protobuf==3.20.0
 sentencepiece==0.1.97
 accelerate==0.17.1
-datasets==2.3.2
-diffusers==0.14.0
