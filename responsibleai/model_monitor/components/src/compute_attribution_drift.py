@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 
 from sklearn.metrics import ndcg_score
-from azureml.exceptions import UserErrorException
 from feature_importance_utilities import get_model_wrapper, compute_explanations,  compute_categorical_features, drop_metadata_columns
 from io_utils import load_mltable_to_df, save_df_as_mltable
 
