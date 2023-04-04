@@ -4,6 +4,3 @@ azure-identity=={{latest-pypi-version}}
 azureml-evaluate-mlflow=={{latest-pypi-version}}
 ffmpeg-python=={{latest-pypi-version}}
 langcodes=={{latest-pypi-version}}
-protobuf==3.20.0
-sentencepiece==0.1.97
-accelerate==0.17.1
