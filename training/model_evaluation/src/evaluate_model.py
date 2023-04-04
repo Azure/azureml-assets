@@ -64,7 +64,7 @@ class EvaluateModel:
             self.metrics_config = read_config(config_file, task)
         elif metrics_config:
             self.metrics_config = metrics_config
-        self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL or 
+        self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL or
                                task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL)
         self._has_multiple_output = task in constants.MULTIPLE_OUTPUTS_SET
         self.custom_dimensions = custom_dimensions
@@ -198,8 +198,8 @@ def test_model():
     parser.add_argument("--device", type=str, required=False, default="cpu", dest="device")
     parser.add_argument("--batch-size", type=int, required=False, default=None, dest="batch_size")
     parser.add_argument("--label-column-name", type=str, dest="label_column_name", required=True)
-    parser.add_argument("--input-column-names", 
-                        type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()], 
+    parser.add_argument("--input-column-names",
+                        type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()],
                         dest="input_column_names", required=False, default=None)
     parser.add_argument("--config_str", type=str, dest="config_str", required=False, default=None)
     args = parser.parse_args()

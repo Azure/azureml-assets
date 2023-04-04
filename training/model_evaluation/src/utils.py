@@ -144,9 +144,9 @@ def _log_metrics(metrics, artifacts):
 
     for name, score in list_scores.items():
         try:
-            #TODO: Add checks for logging longer lists
+            # TODO: Add checks for logging longer lists
             pass
-            #run.log_list(name, score)
+            # run.log_list(name, score)
         except Exception:
             raise ModelEvaluationException(f"Failed to log list metric {name} with value {score}")
 
@@ -589,41 +589,6 @@ def read_config(conf_folder, task_type):
     return metrics_config
 
 
-'''def read_config(conf_folder, task_type):
-    """Util function for reading config.
-
-    Args:
-        conf_folder (_type_): _description_
-        task_type (_type_): _description_
-
-    Raises:
-        DataValidationException: _description_
-
-    Returns:
-        _type_: _description_
-    """
-    try:
-        json_file = load(conf_folder)
-        data = json_file.to_pandas_dataframe().to_dict(orient="records")[0]
-    except Exception as e:
-        error_message = f"Failed to load config file with error {repr(e)}"
-        log_traceback(e, logger, error_message, is_critical=True)
-        raise DataValidationException(error_message)
-    label_column_name = data.get("label_column_name", None)
-    prediction_column_name = data.get("prediction_column_name", None)
-
-    metrics_args = ArgumentsSet(task_type=task_type)
-    metrics_config = {}
-    for arg, func in metrics_args.args_set.items():
-        val = data.get(arg, None)
-        if val is not None:
-            if arg == "y_transformer":
-                val = os.path.join(conf_folder, val)
-            metrics_config[arg] = eval(func)
-
-    return label_column_name, prediction_column_name, metrics_config'''
-
-
 def read_compute_metrics_config(conf_folder, task_type):
     """Util function for reading config.
 
@@ -658,7 +623,6 @@ def read_compute_metrics_config(conf_folder, task_type):
                 message = "Invalid dtype passed for config param '"+arg+"'."
                 logger.error(message)
                 raise DataValidationException(message)
-
 
     return metrics_config
 

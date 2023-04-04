@@ -130,6 +130,7 @@ class ClassifierEvaluator(Evaluator):
                                   y_pred_proba=y_pred_proba, **self.metrics_config)
         return metrics
 
+
 class TextClassifierEvaluator(Evaluator):
     """Text Classifier Evaluator.
 
@@ -156,6 +157,7 @@ class TextClassifierEvaluator(Evaluator):
         metrics = compute_metrics(task_type=constants.Tasks.TEXT_CLASSIFICATION, y_test=y_test, y_pred=y_pred,
                                   y_pred_proba=y_pred_proba, **self.metrics_config)
         return metrics
+
 
 class RegressorEvaluator(Evaluator):
     """Regressor Evaluator.

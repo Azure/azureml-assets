@@ -91,6 +91,7 @@ def _validate_mode(args):
         message="Invalid mode type. It should be either predict, compute_metrics or score"
     )
 
+
 def _validate_test_data(args):
     _, _data = check_and_return_if_mltable(args.data, args.data_mltable)
     assert_and_raise(

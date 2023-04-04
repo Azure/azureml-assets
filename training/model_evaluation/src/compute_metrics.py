@@ -219,27 +219,27 @@ def test_component():
     parser.add_argument("--ground_truths_mltable", type=str, dest="ground_truths_mltable",
                         required=False, default="")
     parser.add_argument("--predictions_mltable", type=str, dest="predictions_mltable", required=False, default="")
-    parser.add_argument("--prediction_probabilities_mltable", type=str, 
+    parser.add_argument("--prediction_probabilities_mltable", type=str,
                         dest="prediction_probabilities_mltable", required=False, default="")
-    parser.add_argument("--ground_truths_column_name", type=str, 
+    parser.add_argument("--ground_truths_column_name", type=str,
                         dest="ground_truths_column_name", required=False, default=None)
-    parser.add_argument("--predictions_column_name", type=str, 
+    parser.add_argument("--predictions_column_name", type=str,
                         dest="predictions_column_name", required=False, default=None)
     parser.add_argument("--config_str", type=str, dest="config_str", required=False, default=None)
     args = parser.parse_args()
 
     custom_dimensions.app_name = constants.TelemetryConstants.COMPUTE_METRICS_NAME
     custom_dims_dict = vars(custom_dimensions)
-    with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME, 
+    with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME,
                       custom_dimensions=custom_dims_dict):
         logger.info("Validating arguments")
-        with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME, 
+        with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME,
                           custom_dimensions=custom_dims_dict):
             validate_compute_metrics_args(args)
 
-        is_ground_truths_mltable, ground_truths = check_and_return_if_mltable(args.ground_truths, 
+        is_ground_truths_mltable, ground_truths = check_and_return_if_mltable(args.ground_truths,
                                                                               args.ground_truths_mltable)
-        is_predictions_mltable, predictions = check_and_return_if_mltable(args.predictions, 
+        is_predictions_mltable, predictions = check_and_return_if_mltable(args.predictions,
                                                                           args.predictions_mltable)
         is_prediction_probabilities_mltable, prediction_probabilities = check_and_return_if_mltable(
             args.prediction_probabilities, args.prediction_probabilities_mltable
