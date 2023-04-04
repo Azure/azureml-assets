@@ -9,7 +9,6 @@ dependencies:
 - pip=21.2.4
 - pytorch=1.13.1
 - pytorch-cuda=11.7
-- scikit-learn=0.24.1
 - pip:
   - matplotlib>=3.3,<3.4
   - protobuf<4.0.0
@@ -29,7 +28,4 @@ dependencies:
   - statsmodels==0.11.0
   - lightgbm==3.2.1
   - msrest==0.6.21
-  - transformers
-  - tokenizers
-  - datasets
   - mltable
