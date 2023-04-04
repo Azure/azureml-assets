@@ -70,7 +70,7 @@ inputs:
     optional: true
     description: YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
   
-  model_job_path:
+  model_import_job_path :
     type: uri_file
     optional: true 
     description: JSON file that contains the job path of model to have lineage.

@@ -75,7 +75,7 @@ def parse_args():
         default=None,
     )
     parser.add_argument(
-        "--model_job_path",
+        "--model_import_job_path",
         type=str,
         help="JSON file that contains the job path of model to have lineage.",
         default=None,
@@ -188,10 +188,10 @@ def main(args):
             print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
 
     # check if we can have lineage and update the model path for ws import
-    if not registry_name and args.model_job_path:
-        with open(args.model_job_path) as f:
-            model_job_path = json.load(f)
-        model_path = model_job_path.get("path", model_path)
+    if not registry_name and args.model_import_job_path:
+        with open(args.model_import_job_path) as f:
+            model_import_job_path = json.load(f)
+        model_path = model_import_job_path.get("path", model_path)
 
     model = Model(
         name=model_name,
