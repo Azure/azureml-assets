@@ -5,7 +5,7 @@ The components can be seen here ![as shown in the figure](https://aka.ms/azureml
 # 1. Inputs
 1. _deepspeed_ (URI_FILE, optional)
 
-    Input path to the deepspeed config file. This is a JSON file that can be used to configure optimizer, scheduler, batch size and other training related parameters. This is the [default deepspeed config]() used when [apply_deepspeed](#33-deepspeed-and-ort-parameters) is set to `true`. Alternatively, you can pass your custom deepspeed config. Please follow the [deepspeed docs](https://www.deepspeed.ai/docs/config-json/) to create the custom config.
+    Input path to the deepspeed config file. This is a JSON file that can be used to configure optimizer, scheduler, batch size and other training related parameters. This is the [default deepspeed config](https://aka.ms/azureml-ft-docs-sample-deepspeed-config) used when [apply_deepspeed](#33-deepspeed-and-ort-parameters) is set to `true`. Alternatively, you can pass your custom deepspeed config. Please follow the [deepspeed docs](https://www.deepspeed.ai/docs/config-json/) to create the custom config.
 
 2. _preprocess_output_ (URI_FOLDER, required)
 
