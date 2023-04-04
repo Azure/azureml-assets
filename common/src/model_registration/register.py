@@ -182,11 +182,11 @@ def main(args):
         try:
             models_list = ml_client.models.list(name=model_name)
             if models_list:
-                max_version = (max(models_list, key=lambda x: x.version)).version
+                max_version = (max(models_list, key=lambda x: int(x.version))).version
                 model_version = str(int(max_version) + 1)
         except Exception:
             print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
-
+            
     # check if we can have lineage and update the model path for ws import
     if not registry_name and args.model_job_path:
         with open(args.model_job_path) as f:
