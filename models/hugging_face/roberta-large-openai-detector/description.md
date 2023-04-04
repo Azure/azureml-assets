@@ -27,3 +27,29 @@ Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 Text Classification|Emotion Detection|[Emotion](https://huggingface.co/datasets/dair-ai/emotion)|[emotion-detection.ipynb](https://aka.ms/azureml-ft-sdk-emotion-detection)|[emotion-detection.sh](https://aka.ms/azureml-ft-cli-emotion-detection)
 Token Classification|Token Classification|[Conll2003](https://huggingface.co/datasets/conll2003)|[token-classification.ipynb](https://aka.ms/azureml-ft-sdk-token-classification)|[token-classification.sh](https://aka.ms/azureml-ft-cli-token-classification)
 Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/datasets/squad)|[extractive-qa.ipynb](https://aka.ms/azureml-ft-sdk-extractive-qa)|[extractive-qa.sh](https://aka.ms/azureml-ft-cli-extractive-qa)
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
+    }
+}
+```
+
+#### Sample output
+```
+[
+    {
+        "label": "LABEL_0",
+        "score": 0.5973310470581055
+    },
+    {
+        "label": "LABEL_0",
+        "score": 0.5915216207504272
+    }
+]
+```

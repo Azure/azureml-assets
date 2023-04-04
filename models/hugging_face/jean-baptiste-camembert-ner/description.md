@@ -25,3 +25,53 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Token Classification|Token Classification|[CoNLL 2003](https://huggingface.co/datasets/conll2003)|[evaluate-model-token-classification.ipynb](https://aka.ms/azureml-eval-sdk-token-classification)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["Je m'appelle jean-baptiste et je vis à montréal", "george washington est allé à washington"]
+    }
+}
+```
+
+#### Sample output
+```
+[
+    [
+        {
+            "entity_group": "PER",
+            "score": 0.99309397,
+            "word": "jean-baptiste",
+            "start": 12,
+            "end": 26
+        },
+        {
+            "entity_group": "LOC",
+            "score": 0.99793863,
+            "word": "montréal",
+            "start": 38,
+            "end": 47
+        }
+    ],
+    [
+        {
+            "entity_group": "PER",
+            "score": 0.9873353,
+            "word": "george washington",
+            "start": 0,
+            "end": 17
+        },
+        {
+            "entity_group": "LOC",
+            "score": 0.9930083,
+            "word": "washington",
+            "start": 28,
+            "end": 39
+        }
+    ]
+]
+```

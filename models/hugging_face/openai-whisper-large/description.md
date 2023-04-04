@@ -6,5 +6,30 @@ Whisper is an OpenAI pre-trained speech recognition model with potential applica
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[asr-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-asr)|[asr-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-asr)
 Batch | todo
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "audio": ["https://audiovisionfiles.blob.core.windows.net/audio/audio.m4a", "https://audiovisionfiles.blob.core.windows.net/audio/audio.m4a"],
+        "language": ["en", "fr"]
+    }
+}
+```
+
+#### Sample output
+```
+[
+    {
+        "text": "This is a bright day."
+    },
+    {
+        "text": "This is a bright day."
+    }
+]
+```

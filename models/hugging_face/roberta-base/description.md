@@ -25,3 +25,52 @@ Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 Text Classification|Emotion Detection|[Emotion](https://huggingface.co/datasets/dair-ai/emotion)|[emotion-detection.ipynb](https://aka.ms/azureml-ft-sdk-emotion-detection)|[emotion-detection.sh](https://aka.ms/azureml-ft-cli-emotion-detection)
 Token Classification|Token Classification|[Conll2003](https://huggingface.co/datasets/conll2003)|[token-classification.ipynb](https://aka.ms/azureml-ft-sdk-token-classification)|[token-classification.sh](https://aka.ms/azureml-ft-cli-token-classification)
 Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/datasets/squad)|[extractive-qa.ipynb](https://aka.ms/azureml-ft-sdk-extractive-qa)|[extractive-qa.sh](https://aka.ms/azureml-ft-cli-extractive-qa)
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["Paris is the <mask> of France.", "Today is a <mask> day!"]
+    },
+    "parameters": {
+        "top_k": 2
+    }
+}
+```
+
+#### Sample output
+```
+[
+    [
+        {
+            "score": 0.8638194799423218,
+            "token": 812,
+            "token_str": " capital",
+            "sequence": "Paris is the capital of France."
+        },
+        {
+            "score": 0.055570174008607864,
+            "token": 1144,
+            "token_str": " heart",
+            "sequence": "Paris is the heart of France."
+        }
+    ],
+    [
+        {
+            "score": 0.20306870341300964,
+            "token": 372,
+            "token_str": " great",
+            "sequence": "Today is a great day!"
+        },
+        {
+            "score": 0.11999315023422241,
+            "token": 205,
+            "token_str": " good",
+            "sequence": "Today is a good day!"
+        }
+    ]
+]
+```

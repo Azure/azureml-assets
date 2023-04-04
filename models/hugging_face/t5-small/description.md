@@ -23,3 +23,27 @@ Translation|Translation|[WMT16](https://huggingface.co/datasets/cnn_dailymail)|[
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Translation|Translation|[wmt19/cs-en](https://huggingface.co/datasets/wmt19/viewer/cs-en/)|[evaluate-model-translation.ipynb](https://aka.ms/azureml-eval-sdk-translation)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["My name is John and I live in Seattle", "Berlin is the capital of Germany."]
+    }
+}
+```
+
+#### Sample output
+```
+[
+    {
+        "translation_text": "Mein Name ist John und ich lebe in Seattle."
+    },
+    {
+        "translation_text": "Berlin ist die Hauptstadt Deutschlands."
+    }
+]
+```

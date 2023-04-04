@@ -24,3 +24,42 @@ Token Classification|Token Classification|[Conll2003](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Text generation|Text generation|todo|[evaluate-model-text-generation.ipynb](https://aka.ms/azureml-eval-sdk-text-generation/)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["My name is John and I am", "Once upon a time,"]
+    },
+    "parameters": {
+        "min_length": 20,
+        "max_length": 30,
+        "num_return_sequences": 2
+    }
+}
+```
+
+#### Sample output
+```
+[
+    [
+        {
+            "generated_text": "My name is John and I am a very good cook. My specialty is lasagna. I am not your typical lasagna producer. My wife and"
+        },
+        {
+            "generated_text": "My name is John and I am the President of the San Francisco 49ers. Here are the highlights of my first season as a 49er with my"
+        }
+    ],
+    [
+        {
+            "generated_text": "Once upon a time, everyone believed that you had to be a member of the priesthood to be worthy of the blessings of salvation in the next life."
+        },
+        {
+            "generated_text": "Once upon a time, one of the most beautiful rivers was the Rio Grande. The river was long enough for a large army to easily push to the"
+        }
+    ]
+]
+```
