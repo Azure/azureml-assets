@@ -14,8 +14,5 @@ RUN conda env create -p $CONDA_PREFIX -f conda.yaml -q && \
 # Prepend path to AzureML conda environment
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
-RUN pip install "azureml-evaluate-mlflow=={{latest-pypi-version}}" --upgrade
-RUN pip install "azureml-metrics=={{latest-pypi-version}}" --upgrade
-
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
