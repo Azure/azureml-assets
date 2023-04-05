@@ -129,11 +129,12 @@ def load_mlflow_model(
 
 
 def _classify_and_log_pip_install_error(elog):
-    if "Could not find a version that satisfies the requirement" in elog:
-        _logger.warn("Detected unsatisfiable version requirment.")
+    if elog is not None:
+        if "Could not find a version that satisfies the requirement" in elog:
+            _logger.warn("Detected unsatisfiable version requirment.")
 
-    if "package versions have conflicting dependencies" in elog:
-        _logger.warn("Detected dependency conflict error.")
+        if "package versions have conflicting dependencies" in elog:
+            _logger.warn("Detected dependency conflict error.")
 
 
 def load_mltable(mltable_path: str) -> pd.DataFrame:
