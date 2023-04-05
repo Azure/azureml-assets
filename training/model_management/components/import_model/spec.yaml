@@ -36,19 +36,6 @@ inputs:
     description: Path to the license file
     optional: true
 
-  ## Inputs for model local validation
-  test_data_path:
-    type: uri_file
-    optional: true
-    description: Test dataset for model inferencing
-
-  test_data_column_rename_map:
-    type: string
-    optional: true
-    description: |
-      Provide mapping of dataset column names that should be renamed before inferencing.
-      eg: col1:ren1; col2:ren2; col3:ren3
-
   ## Inputs for Model registration
   custom_model_name:
     type: string
@@ -110,17 +97,6 @@ jobs:
       model_import_job_path:
         type: uri_file
 
-  mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.1
-    compute: ${{parent.inputs.compute}}
-    inputs:
-      model_path: ${{parent.jobs.mlflow_convert_model.outputs.mlflow_model_folder}}
-      test_data_path: ${{parent.inputs.test_data_path}}
-      column_rename_map: ${{parent.inputs.test_data_column_rename_map}}
-    outputs:
-      mlflow_model_folder:
-        type: mlflow_model
-
   register_model:
     component: azureml:register_model:0.0.1
     compute: ${{parent.inputs.compute}}
@@ -132,7 +108,7 @@ jobs:
       model_metadata: ${{parent.inputs.model_metadata}}
       model_type: mlflow_model
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
-      model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
+      model_path: ${{parent.jobs.convert_model_to_mlflow.outputs.mlflow_model_folder}}
       model_import_job_path: ${{parent.jobs.mlflow_convert_model.outputs.model_import_job_path}}
     outputs:
       registration_details: ${{parent.outputs.model_registration_details}}
