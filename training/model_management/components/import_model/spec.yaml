@@ -6,6 +6,9 @@ display_name: Import model
 description: Import a model into a workspace or a registry
 version: 0.0.1
 
+identity:
+  type: user_identity
+
 # Pipeline inputs
 inputs:
   # pipeline specific compute
