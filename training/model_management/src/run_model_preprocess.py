@@ -17,13 +17,32 @@ def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
     parser.add_argument("--task-name", type=str, required=False, help="Hugging Face task type")
-    parser.add_argument("--mlflow-flavor", type=str, default=ModelFlavor.TRANSFORMERS.value, help="Model flavor")
-    parser.add_argument("--model-download-metadata", type=Path, required=False, help="Model download details")
+    parser.add_argument(
+        "--mlflow-flavor",
+        type=str,
+        default=ModelFlavor.TRANSFORMERS.value,
+        help="Model flavor",
+    )
+    parser.add_argument(
+        "--model-download-metadata",
+        type=Path,
+        required=False,
+        help="Model download details",
+    )
     parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
     parser.add_argument("--license-file-path", type=Path, required=False, help="License file path")
-    parser.add_argument("--mlflow-model-output-dir", type=Path, required=True, help="Output MLFlow model")
-    parser.add_argument("--model-import-job-path", type=Path, required=True,
-                        help="JSON file containing model job path for model lineage")
+    parser.add_argument(
+        "--mlflow-model-output-dir",
+        type=Path,
+        required=True,
+        help="Output MLFlow model",
+    )
+    parser.add_argument(
+        "--model-import-job-path",
+        type=Path,
+        required=True,
+        help="JSON file containing model job path for model lineage",
+    )
     return parser
 
 

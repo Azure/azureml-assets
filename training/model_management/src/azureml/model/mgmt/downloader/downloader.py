@@ -12,7 +12,16 @@ from pathlib import Path
 from typing import List
 
 
-PROPERTIES = ["commit_hash", "SHA", "last_modified", "model_id", "size", "datasets", "languages", "finetuning_tasks"]
+PROPERTIES = [
+    "commit_hash",
+    "SHA",
+    "last_modified",
+    "model_id",
+    "size",
+    "datasets",
+    "languages",
+    "finetuning_tasks",
+]
 TAGS = ["task", "license"]
 
 # Valid language codes which conflicts with other namings.
@@ -21,7 +30,7 @@ TAGS = ["task", "license"]
 LANGUAGE_CODE_EXCEPTIONS = ["jax"]
 
 
-class HuggingfaceDownloader():
+class HuggingfaceDownloader:
     """Huggingface model downloader class."""
 
     HF_ENDPOINT = "https://huggingface.co"
@@ -50,14 +59,15 @@ class HuggingfaceDownloader():
         return self._model_info
 
     def _get_model_properties(self):
+        languages = []
+        datasets = []
+        all_tags = self.model_info.tags
         props = {
             "model_id": self.model_info.modelId,
             "task": self.model_info.pipeline_tag,
             "SHA": self.model_info.sha,
         }
-        all_tags = self.model_info.tags
-        languages = []
-        datasets = []
+
         for tag in all_tags:
             if langcodes.tag_is_valid(tag) and tag not in LANGUAGE_CODE_EXCEPTIONS:
                 languages.append(tag)
@@ -65,10 +75,12 @@ class HuggingfaceDownloader():
                 datasets.append(tag.split(":")[1])
             elif tag.startswith("license:"):
                 props["license"] = tag.split(":")[1]
+
         if datasets:
             props["datasets"] = ", ".join(datasets)
         if languages:
             props["languages"] = ", ".join(languages)
+
         return props
 
     def download_model(self, download_dir):
@@ -81,7 +93,7 @@ class HuggingfaceDownloader():
         return {
             "name": "-".join(self._model_id.split("/")),
             "tags": tags,
-            "properties": props
+            "properties": props,
         }
 
 
@@ -107,7 +119,7 @@ class GITDownloader:
         return {
             "name": self._model_uri.split("/")[-1],
             "tags": tags,
-            "properties": props
+            "properties": props,
         }
 
 
@@ -133,7 +145,7 @@ class AzureBlobstoreDownloader:
         return {
             "name": self._model_uri.split("/")[-1],
             "tags": tags,
-            "properties": props
+            "properties": props,
         }
 
 

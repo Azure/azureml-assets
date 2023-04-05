@@ -24,8 +24,8 @@ stdout_handler = logging.StreamHandler(stream=sys.stdout)
 handlers = [stdout_handler]
 logging.basicConfig(
     level=logging.DEBUG,
-    format='[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s',
-    handlers=handlers
+    format="[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s",
+    handlers=handlers,
 )
 logger = logging.getLogger(__name__)
 
@@ -134,7 +134,7 @@ if __name__ == "__main__":
             test_data_path=test_data_path,
             mlmodel=mlmodel_dict,
             col_rename_map=col_rename_map,
-        )
+        ),
     )
 
     # copy the model to output dir
