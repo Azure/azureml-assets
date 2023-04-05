@@ -173,7 +173,7 @@ def validate_and_prepare_pipeline_component(
             return False
 
         logger.print(
-            f"component details:\n"
+            "component details:\n"
             + f"name: {name}\n"
             + f"version: {version}\n"
             + f"label: {label}\n"
@@ -210,7 +210,7 @@ def validate_and_prepare_pipeline_component(
 
     try:
         util.dump_yaml(pipeline_dict, spec_path)
-    except Exception as e:
+    except Exception:
         logger.log_error(f"Component update failed for asset spec path: {asset.spec_path}")
         return False
     return True
@@ -467,7 +467,8 @@ if __name__ == "__main__":
             continue
 
         assets_to_publish = assets_by_type.get(create_asset_type.value, [])
-        if create_asset_type == assets.AssetType.COMPONENT.value:
+        if create_asset_type == assets.AssetType.COMPONENT:
+            logger.print("updating components publishing order")
             # sort component list to keep pipline components at the end in publushing list
             # this is a temporary solution as a pipeline component can have another pipeline component as dependency
             def compare(spec_path):
@@ -476,7 +477,7 @@ if __name__ == "__main__":
                     return True
                 return False
 
-            assets_to_publish.sort(key=lambda x:compare(x.spec_with_path))
+            assets_to_publish.sort(key=lambda x: compare(x.spec_with_path))
 
         for asset in assets_to_publish:
             with TemporaryDirectory() as work_dir:
