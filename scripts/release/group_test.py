@@ -21,10 +21,13 @@ TEST_YML = "tests.yml"
 
 
 class CustomTokenCredential(TokenCredential):
+    """Custom token credential class for runner."""
     def __init__(self, token):
+        """Initialize custom token credential class."""
         self.token = token
 
     def get_token(self, *scopes):
+        """Get token."""
         two_hours_from_now = datetime.now() + timedelta(hours=2)
         utc_timestamp = int(two_hours_from_now.timestamp())
         return AccessToken(self.token, utc_timestamp)
