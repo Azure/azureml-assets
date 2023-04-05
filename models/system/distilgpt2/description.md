@@ -29,7 +29,7 @@ Token Classification|Token Classification|[Conll2003](https://huggingface.co/dat
 ### Sample inputs and outputs (for real-time inference)
 
 #### Sample input
-```
+```json
 {
     "inputs": {
         "input_string": ["My name is John and I am", "Once upon a time,"]
@@ -43,7 +43,7 @@ Token Classification|Token Classification|[Conll2003](https://huggingface.co/dat
 ```
 
 #### Sample output
-```
+```json
 [
     [
         {

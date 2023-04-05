@@ -28,7 +28,7 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 
 
 #### Sample input
-```
+```json
 {
     "inputs": {
         "question": ["What is my name?", "Where do I live?"],
@@ -38,7 +38,7 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 ```
 
 #### Sample output
-```
+```json
 [
     {
         "score": 0.9956907033920288,

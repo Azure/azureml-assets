@@ -29,7 +29,7 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 ### Sample inputs and outputs (for real-time inference)
 
 #### Sample input
-```
+```json
 {
     "inputs": {
         "input_string": ["Paris is the <mask> of France.", "Today is a <mask> day!"]
@@ -41,7 +41,7 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 ```
 
 #### Sample output
-```
+```json
 [
     [
         {

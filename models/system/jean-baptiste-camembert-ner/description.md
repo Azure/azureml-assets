@@ -30,7 +30,7 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 ### Sample inputs and outputs (for real-time inference)
 
 #### Sample input
-```
+```json
 {
     "inputs": {
         "input_string": ["Je m'appelle jean-baptiste et je vis à montréal", "george washington est allé à washington"]
@@ -39,7 +39,7 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 ```
 
 #### Sample output
-```
+```json
 [
     [
         {
