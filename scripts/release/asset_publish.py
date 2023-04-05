@@ -469,7 +469,7 @@ if __name__ == "__main__":
         assets_to_publish = assets_by_type.get(create_asset_type.value, [])
         if create_asset_type == assets.AssetType.COMPONENT:
 
-            def compare(spec_path):
+            def _compare(spec_path):
                 comp = load_component(source=spec_path)
                 if comp.type == "pipeline":
                     return True
@@ -478,7 +478,7 @@ if __name__ == "__main__":
             # sort component list to keep pipline components at the end in publushing list
             # this is a temporary solution as a pipeline component can have another pipeline component as dependency
             logger.print("updating components publishing order")
-            assets_to_publish.sort(key=lambda x: compare(x.spec_with_path))
+            assets_to_publish.sort(key=lambda x: _compare(x.spec_with_path))
 
         for asset in assets_to_publish:
             with TemporaryDirectory() as work_dir:
