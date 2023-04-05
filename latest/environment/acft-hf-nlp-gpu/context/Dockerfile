@@ -8,7 +8,9 @@ USER root
 RUN apt-get -y update
 
 COPY requirements.txt .
-RUN pip install --upgrade "azureml-evaluate-mlflow==0.0.4"
+RUN pip install "azureml-acft-accelerator==0.0.4"
+RUN pip install "azureml-acft-contrib-hf-nlp==0.0.4"
+RUN pip install "azureml-evaluate-mlflow==0.0.4"
 RUN pip install -r requirements.txt --no-cache-dir
 RUN python -m nltk.downloader punkt
 
