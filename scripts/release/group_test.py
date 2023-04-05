@@ -12,9 +12,22 @@ from subprocess import check_call, run
 from pathlib import Path
 from azure.ai.ml import load_job, MLClient
 from azure.identity import DefaultAzureCredential
+from azure.core.credentials import AccessToken, TokenCredential
+from datetime import datetime, timedelta
+
 
 logger = logging.getLogger(__name__)
 TEST_YML = "tests.yml"
+
+
+class CustomTokenCredential(TokenCredential):
+    def __init__(self, token):
+        self.token = token
+
+    def get_token(self, *scopes):
+        two_hours_from_now = datetime.now() + timedelta(hours=2)
+        utc_timestamp = int(two_hours_from_now.timestamp())
+        return AccessToken(self.token, utc_timestamp)
 
 
 def run_pytest_job(job: Path, my_env: dict):
@@ -55,7 +68,8 @@ def group_test(
         resource_group: str,
         workspace: str,
         coverage_report: Path = None,
-        version_suffix: str = None):
+        version_suffix: str = None,
+        runner: bool = False):
     """Run group tests."""
     with open(tests_dir / TEST_YML) as fp:
         data = yaml.load(fp, Loader=yaml.FullLoader)
@@ -77,7 +91,13 @@ def group_test(
         logger.info("token is set")
     if version_suffix:
         my_env['version_suffix'] = version_suffix
-    ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)
+    
+    if runner:
+        credential = CustomTokenCredential(my_env['token'])
+    else:
+        credential = DefaultAzureCredential()
+    
+    ml_client = MLClient(credential, subscription_id, resource_group, workspace)
     submitted_job_list = []
     succeeded_jobs = []
     failed_jobs = []
@@ -164,6 +184,8 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
     parser.add_argument("-v", "--version-suffix", required=False, type=str,
                         help="version suffix which will be used to identify the asset id in tests")
+    parser.add_argument("--runner", required=False, type=bool, default=False,
+                        help="if the runner is running the tests")
     args = parser.parse_args()
     group_test(args.input_dir, args.test_group, args.subscription, args.resource_group, args.workspace_name,
-               args.coverage_report, args.version_suffix)
+               args.coverage_report, args.version_suffix, args.runner)
