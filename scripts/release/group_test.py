@@ -91,12 +91,10 @@ def group_test(
         logger.info("token is set")
     if version_suffix:
         my_env['version_suffix'] = version_suffix
-    
     if runner:
         credential = CustomTokenCredential(my_env['token'])
     else:
         credential = DefaultAzureCredential()
-    
     ml_client = MLClient(credential, subscription_id, resource_group, workspace)
     submitted_job_list = []
     succeeded_jobs = []
