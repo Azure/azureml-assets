@@ -6,7 +6,7 @@ DistilRoBERTa base is a distilled version of the RoBERTa-base model, with 6 laye
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-fill-mask)|[fill-mask-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-fill-mask)
 Batch | todo
 
 
@@ -24,3 +24,52 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Fill Mask|Fill Mask|[imdb](https://huggingface.co/datasets/imdb)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["Paris is the <mask> of France.", "Today is a <mask> day!"]
+    },
+    "parameters": {
+        "top_k": 2
+    }
+}
+```
+
+#### Sample output
+```
+[
+    [
+        {
+            "score": 0.6790168285369873,
+            "token": 812,
+            "token_str": " capital",
+            "sequence": "Paris is the capital of France."
+        },
+        {
+            "score": 0.051780153065919876,
+            "token": 32357,
+            "token_str": " birthplace",
+            "sequence": "Paris is the birthplace of France."
+        }
+    ],
+    [
+        {
+            "score": 0.20368757843971252,
+            "token": 3610,
+            "token_str": " busy",
+            "sequence": "Today is a busy day!"
+        },
+        {
+            "score": 0.09197165817022324,
+            "token": 2721,
+            "token_str": " beautiful",
+            "sequence": "Today is a beautiful day!"
+        }
+    ]
+]
+```

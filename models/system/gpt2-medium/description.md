@@ -6,7 +6,7 @@ The GPT-2 Transformer-based language model is designed primarily for use by AI r
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[text-generation-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-text-generation)|[text-generation-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-text-generation)
 Batch | todo
 
 
@@ -23,3 +23,42 @@ Token Classification|Token Classification|[Conll2003](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Text generation|Text generation|todo|[evaluate-model-text-generation.ipynb](https://aka.ms/azureml-eval-sdk-text-generation/)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["My name is John and I am", "Once upon a time,"]
+    },
+    "parameters": {
+        "min_length": 20,
+        "max_length": 30,
+        "num_return_sequences": 2
+    }
+}
+```
+
+#### Sample output
+```
+[
+    [
+        {
+            "generated_text": "My name is John and I am part of the world's largest open computer lab, one of the largest academic computer labs in the world, with over"
+        },
+        {
+            "generated_text": "My name is John and I am a member of the Canadian Bitcoin Association (CBA) and the British Bitcoin Association (BA), but I'm happy"
+        }
+    ],
+    [
+        {
+            "generated_text": "Once upon a time, when I was twenty myself, I read John Milton's Paradise Lost in a small magazine. I was struck by a passage:"
+        },
+        {
+            "generated_text": "Once upon a time, there was an elf queen in the valley of the mountains called Seren-Sylvia, and there lived a man-"
+        }
+    ]
+]
+```

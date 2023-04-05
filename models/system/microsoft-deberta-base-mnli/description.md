@@ -6,7 +6,7 @@ DeBERTa is a version of the BERT model that has been improved through the use of
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[entailment-contradiction-online.ipynb](https://aka.ms/azureml-infer-online-sdk-text-classification)|[text-classification-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-text-classification)
 Batch | todo
 
 
@@ -24,3 +24,29 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Text Classification|Emotion Detection|[GoEmotions](https://huggingface.co/datasets/go_emotions)|[evaluate-model-text-classification.ipynb](https://aka.ms/azureml-eval-sdk-text-classification)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
+    }
+}
+```
+
+#### Sample output
+```
+[
+    {
+        "label": "NEUTRAL",
+        "score": 0.9817705750465393
+    },
+    {
+        "label": "NEUTRAL",
+        "score": 0.9873807430267334
+    }
+]
+```
