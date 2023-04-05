@@ -44,7 +44,7 @@ inputs:
     optional: true
     description: |
       Provide mapping of dataset column names that should be renamed before inferencing.
-      eg: col1:ren1; col2:ren2; col3:ren3 
+      eg: col1:ren1; col2:ren2; col3:ren3
 
   ## Inputs for Model registration
   custom_model_name:
@@ -54,12 +54,12 @@ inputs:
 
   model_version:
     type: string
-    optional: true 
+    optional: true
     description: Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented
 
   model_description:
     type: string
-    optional: true 
+    optional: true
     description: Description of the model that will be shown in AzureML registry or workspace
 
   registry_name:
