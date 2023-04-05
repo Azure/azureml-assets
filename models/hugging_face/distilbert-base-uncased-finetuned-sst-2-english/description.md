@@ -8,7 +8,7 @@ It's recommended to evaluate the risks of this model by thoroughly probing the b
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[entailment-contradiction-online.ipynb](https://aka.ms/azureml-infer-online-sdk-text-classification)|[text-classification-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-text-classification)
 Batch | todo
 
 
@@ -26,3 +26,29 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Text Classification|Emotion Detection|[GoEmotions](https://huggingface.co/datasets/go_emotions)|[evaluate-model-text-classification.ipynb](https://aka.ms/azureml-eval-sdk-text-classification)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
+    }
+}
+```
+
+#### Sample output
+```
+[
+    {
+        "label": "POSITIVE",
+        "score": 0.9998794794082642
+    },
+    {
+        "label": "NEGATIVE",
+        "score": 0.9995174407958984
+    }
+]
+```

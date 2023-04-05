@@ -7,7 +7,7 @@ The DistilBERT model requires significant computational power to train, as it wa
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[question-answering-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-question-answering)|[question-answering-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-question-answering)
 Batch | todo
 
 
@@ -25,3 +25,32 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Question Answering|Extractive Q&A|[Squad v2](https://huggingface.co/datasets/squad_v2)|[evaluate-model-question-answering.ipynb](https://aka.ms/azureml-eval-sdk-question-answering)|**
+
+
+#### Sample input
+```
+{
+    "inputs": {
+        "question": ["What is my name?", "Where do I live?"],
+        "context": ["My name is John and I live in Seattle.", "My name is Ravi and I live in Hyderabad."]
+    }
+}
+```
+
+#### Sample output
+```
+[
+    {
+        "score": 0.9956907033920288,
+        "start": 11,
+        "end": 15,
+        "answer": "John"
+    },
+    {
+        "score": 0.9792415499687195,
+        "start": 30,
+        "end": 39,
+        "answer": "Hyderabad"
+    }
+]
+```

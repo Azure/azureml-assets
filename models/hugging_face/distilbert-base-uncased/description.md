@@ -6,7 +6,7 @@ The DistilBERT base model (uncased) is a distilled version of the BERT base mode
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-fill-mask)|[fill-mask-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-fill-mask)
 Batch | todo
 
 
@@ -24,3 +24,52 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Fill Mask|Fill Mask|[imdb](https://huggingface.co/datasets/imdb)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["Paris is the [MASK] of France.", "Today is a [MASK] day!"]
+    },
+    "parameters": {
+        "top_k": 2
+    }
+}
+```
+
+#### Sample output
+```
+[
+    [
+        {
+            "score": 0.9815465807914734,
+            "token": 3007,
+            "token_str": "capital",
+            "sequence": "paris is the capital of france."
+        },
+        {
+            "score": 0.0033424433786422014,
+            "token": 14508,
+            "token_str": "birthplace",
+            "sequence": "paris is the birthplace of france."
+        }
+    ],
+    [
+        {
+            "score": 0.17984138429164886,
+            "token": 14013,
+            "token_str": "glorious",
+            "sequence": "today is a glorious day!"
+        },
+        {
+            "score": 0.07140577584505081,
+            "token": 3376,
+            "token_str": "beautiful",
+            "sequence": "today is a beautiful day!"
+        }
+    ]
+]
+```

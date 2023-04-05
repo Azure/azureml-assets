@@ -7,7 +7,7 @@ DistilGPT2 is a distilled version of GPT-2, which is a transformer-based languag
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[text-generation-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-text-generation)|[text-generation-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-text-generation)
 Batch | todo
 
 
@@ -24,3 +24,42 @@ Token Classification|Token Classification|[Conll2003](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Text generation|Text generation|todo|[evaluate-model-text-generation.ipynb](https://aka.ms/azureml-eval-sdk-text-generation/)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```
+{
+    "inputs": {
+        "input_string": ["My name is John and I am", "Once upon a time,"]
+    },
+    "parameters": {
+        "min_length": 20,
+        "max_length": 30,
+        "num_return_sequences": 2
+    }
+}
+```
+
+#### Sample output
+```
+[
+    [
+        {
+            "generated_text": "My name is John and I am the first person to ever make the same kind of a film. I've always been obsessed with the film, and"
+        },
+        {
+            "generated_text": "My name is John and I am a lawyer in Washington. We want to speak for many. But we are not saying that all of us are in"
+        }
+    ],
+    [
+        {
+            "generated_text": "Once upon a time, though, we were always a different people than any other society. Many of us now live in one-of-kind communities"
+        },
+        {
+            "generated_text": "Once upon a time, I started to wonder about why I used such a system in my daily lives; why I couldn't be so lucky that a"
+        }
+    ]
+]
+```
