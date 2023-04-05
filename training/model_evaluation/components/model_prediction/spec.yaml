@@ -3,7 +3,7 @@ name: model_prediction
 display_name: Model Prediction
 description: Generate predictions on a given mlflow model for supported tasks.
 
-version: 0.0.1
+version: 0.0.2
 tags:
   type: evaluation
   sub_type: inference
@@ -79,7 +79,7 @@ outputs:
     type: mltable
 
 code: ../../src
-environment: azureml:model-evaluation:2
+environment: azureml:model-evaluation:3
 
 command: >-
   python download_dependencies.py
