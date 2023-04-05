@@ -28,7 +28,7 @@ Translation|Translation|[WMT16](https://huggingface.co/datasets/cnn_dailymail)|[
 ### Sample inputs and outputs (for real-time inference)
 
 #### Sample input
-```
+```json
 {
     "inputs": {
         "input_string": ["My name is John and I live in Seattle", "Berlin is the capital of Germany."]
@@ -37,7 +37,7 @@ Translation|Translation|[WMT16](https://huggingface.co/datasets/cnn_dailymail)|[
 ```
 
 #### Sample output
-```
+```json
 [
     {
         "translation_text": "Mein Name ist John und ich lebe in Seattle."

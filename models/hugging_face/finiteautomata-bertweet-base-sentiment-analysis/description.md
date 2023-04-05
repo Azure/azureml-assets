@@ -29,7 +29,7 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 ### Sample inputs and outputs (for real-time inference)
 
 #### Sample input
-```
+```json
 {
     "inputs": {
         "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
@@ -38,7 +38,7 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 ```
 
 #### Sample output
-```
+```json
 [
     {
         "label": "POS",

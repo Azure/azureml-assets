@@ -13,7 +13,7 @@ Batch | todo
 ### Sample inputs and outputs (for real-time inference)
 
 #### Sample input
-```
+```json
 {
     "inputs": {
         "audio": ["https://audiovisionfiles.blob.core.windows.net/audio/audio.m4a", "https://audiovisionfiles.blob.core.windows.net/audio/audio.m4a"],
@@ -23,7 +23,7 @@ Batch | todo
 ```
 
 #### Sample output
-```
+```json
 [
     {
         "text": "This is a bright day."
