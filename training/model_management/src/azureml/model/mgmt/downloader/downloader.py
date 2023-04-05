@@ -24,17 +24,17 @@ PROPERTIES = [
 ]
 TAGS = ["task", "license"]
 
-# Valid language codes which conflicts with other namings.
-# jax for example is a Numpy framework and is present in tags for most HF models.
-# jax is also a language code used to represent the language spoken by the Jaintia people.
-LANGUAGE_CODE_EXCEPTIONS = ["jax"]
-
 
 class HuggingfaceDownloader:
     """Huggingface model downloader class."""
 
     HF_ENDPOINT = "https://huggingface.co"
     URI_TYPE = PathType.GIT.value
+
+    # Valid language codes which conflicts with other model tags.
+    # jax for example is a NumPy framework and is present in tags for most HF models.
+    # jax is also a language code used to represent the language spoken by the Jaintia people.
+    LANGUAGE_CODE_EXCEPTIONS = ["jax", "vit"]
 
     def __init__(self, model_id: str):
         """Huggingface downloader init.
@@ -69,7 +69,7 @@ class HuggingfaceDownloader:
         }
 
         for tag in all_tags:
-            if langcodes.tag_is_valid(tag) and tag not in LANGUAGE_CODE_EXCEPTIONS:
+            if langcodes.tag_is_valid(tag) and tag not in HuggingfaceDownloader.LANGUAGE_CODE_EXCEPTIONS:
                 languages.append(tag)
             elif tag.startswith("dataset:"):
                 datasets.append(tag.split(":")[1])
