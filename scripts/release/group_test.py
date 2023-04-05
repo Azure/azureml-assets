@@ -22,6 +22,7 @@ TEST_YML = "tests.yml"
 
 class CustomTokenCredential(TokenCredential):
     """Custom token credential class for runner."""
+
     def __init__(self, token):
         """Initialize custom token credential class."""
         self.token = token
