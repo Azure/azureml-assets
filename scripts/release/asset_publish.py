@@ -167,7 +167,6 @@ def validate_and_prepare_pipeline_component(
     :return: True for successful validation and update
     :rtype: bool
     """
-
     with open(spec_path) as f:
         pipeline_dict = yaml.safe_load(f)
 
