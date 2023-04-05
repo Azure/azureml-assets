@@ -156,6 +156,18 @@ def validate_and_prepare_pipeline_component(
     final_version: str,
     registry_name: str,
 ) -> bool:
+    """Validate and update pipeline component spec.
+
+    :param spec_path: Path of loaded component
+    :type spec_path: Path
+    :param final_version: Final version string used to create component
+    :type final_version: str
+    :param registry_name: name of the registry to create component in
+    :type registry_name: str
+    :return: True for successful validation and update
+    :rtype: bool
+    """
+
     with open(spec_path) as f:
         pipeline_dict = yaml.safe_load(f)
 
@@ -503,7 +515,7 @@ if __name__ == "__main__":
                     component = load_component(asset.spec_with_path)
                     if component.type == "pipeline":
                         if not validate_and_prepare_pipeline_component(
-                            component, asset.spec_with_path, final_version, registry_name
+                            asset.spec_with_path, final_version, registry_name
                         ):
                             failure_list.append(asset)
                             continue
