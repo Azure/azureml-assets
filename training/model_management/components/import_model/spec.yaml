@@ -6,9 +6,6 @@ display_name: Import model
 description: Import a model into a workspace or a registry
 version: 0.0.1
 
-identity:
-  type: user_identity
-
 # Pipeline inputs
 inputs:
   # pipeline specific compute
@@ -112,6 +109,8 @@ jobs:
       model_import_job_path: ${{parent.jobs.mlflow_convert_model.outputs.model_import_job_path}}
     outputs:
       registration_details: ${{parent.outputs.model_registration_details}}
+    identity:
+      type: user_identity
 
 tags:
     Preview: ""
