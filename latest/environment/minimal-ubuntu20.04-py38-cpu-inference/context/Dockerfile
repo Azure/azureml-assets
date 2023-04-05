@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/inference-base-2004@sha256:21a3ab08c02f18542fcbca316cb13e956c448d3b0436716a44b597f7ccc0e7f2
+FROM mcr.microsoft.com/azureml/inference-base-2004@sha256:15aaaff97dc34f7902e6c38fd5c957b202b5ad9ade2aa2c62467d42c759d251d
 
 WORKDIR /
 ENV AZUREML_CONDA_ENVIRONMENT_PATH=/azureml-envs/minimal
