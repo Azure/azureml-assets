@@ -74,6 +74,10 @@ inputs:
 
 # Pipeline outputs
 outputs:
+  mlflow_model_folder:
+    description: Output path for the converted MLFlow model.
+    type: mlflow_model
+
   model_registration_details:
     description: Output file which captures transformations applied above and registration details in JSON file.
     type: uri_file
@@ -99,8 +103,7 @@ jobs:
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.download_model.outputs.model_output}}
     outputs:
-      mlflow_model_folder:
-        type: mlflow_model
+      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
       model_import_job_path:
         type: uri_file
 
@@ -126,7 +129,7 @@ jobs:
       model_metadata: ${{parent.inputs.model_metadata}}
       model_type: mlflow_model
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
-      model_path: ${{parent.jobs.mlflow_local_validation.outputs.mlflow_model_folder}}
+      model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
       model_import_job_path: ${{parent.jobs.mlflow_convert_model.outputs.model_import_job_path}}
     outputs:
       registration_details: ${{parent.outputs.model_registration_details}}
