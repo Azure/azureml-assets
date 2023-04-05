@@ -32,6 +32,7 @@ PROD_SYSTEM_REGISTRY = "azureml"
 CREATE_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)/(?:versions/(.+)|labels/(.+))")
+REGISTRY_ASSET_STR = "^azureml://registries/(.+)/{}s/(.+)/(?:versions/(.+)|labels/(.+))"
 BEARER = r"Bearer.*"
 
 
@@ -374,8 +375,7 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
         `label` and `registry_name` will be None for workspace URI.
     :rtype: Tuple
     """
-    WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
-    REGISTRY_ASSET_PATTERN = re.compile(rf"^azureml://registries/(.+)/{asset_type}s/(.+)/(?:versions/(.+)|labels/(.+))")
+    REGISTRY_ASSET_PATTERN = re.compile(rf"{REGISTRY_ASSET_STR.format(asset_type)}")
     asset_registry_name = None
     if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
         asset_registry_name, asset_name, asset_version, asset_label = (
@@ -468,7 +468,7 @@ if __name__ == "__main__":
 
         assets_to_publish = assets_by_type.get(create_asset_type.value, [])
         if create_asset_type == assets.AssetType.COMPONENT.value:
-            # sort component list
+            # sort component list to keep pipline components at the end in publushing list
             # this is a temporary solution as a pipeline component can have another pipeline component as dependency
             def compare(spec_path):
                 comp = load_component(source=spec_path)
