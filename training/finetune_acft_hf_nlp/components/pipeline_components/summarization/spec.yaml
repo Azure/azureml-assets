@@ -21,6 +21,11 @@ inputs:
     optional: false
     description: compute to be used for finetune eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'
+  compute_model_evaluation:
+    type: string
+    optional: false
+    description: compute to be used for finetune eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'
   num_nodes_finetune:
     type: integer
     default: 1
@@ -415,6 +420,11 @@ inputs:
     optional: true
     description: Additional parameters for Computing Metrics
 
+  evaluation_config_params:
+    type: string
+    optional: true
+    description: Additional parameters as JSON serielized string
+
 outputs:
   pytorch_model_folder:
     type: uri_folder
@@ -431,7 +441,7 @@ outputs:
 jobs:
   summarization_model_import:
     type: command
-    component: azureml://registries/azureml/components/summarization_model_import/versions/0.0.5
+    component: azureml://registries/azureml-preview/components/summarization_model_import/versions/0.0.5
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       huggingface_id: ${{parent.inputs.huggingface_id}}
@@ -439,7 +449,7 @@ jobs:
       mlflow_model_path: ${{parent.inputs.mlflow_model_path}}
   summarization_datapreprocess:
     type: command
-    component: azureml://registries/azureml/components/summarization_datapreprocess/versions/0.0.5
+    component: azureml://registries/azureml-preview/components/summarization_datapreprocess/versions/0.0.5
     compute: ${{parent.inputs.compute_preprocess}}
     inputs:
       document_key: ${{parent.inputs.document_key}}
@@ -455,7 +465,7 @@ jobs:
       model_selector_output: ${{parent.jobs.summarization_model_import.outputs.output_dir}}
   summarization_finetune:
     type: command
-    component: azureml://registries/azureml/components/summarization_finetune/versions/0.0.5
+    component: azureml://registries/azureml-preview/components/summarization_finetune/versions/0.0.5
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -508,3 +518,31 @@ jobs:
     outputs:
       pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
+  model_prediction:
+    type: command
+    component: azureml://registries/azureml-preview/components/model_prediction/versions/0.0.9.preview
+    compute: ${{parent.inputs.compute_model_evaluation}}
+    inputs:
+      task: text-summarization
+      test_data: ${{parent.jobs.summarization_datapreprocess.outputs.output_dir}}
+      test_data_mltable: ${{parent.inputs.test_mltable_path}}
+      label_column_name: ${{parent.inputs.summary_key}}
+      input_column_names: ${{parent.inputs.document_key}}
+      batch_size: ${{parent.inputs.batch_size}}
+      device: gpu
+      mlflow_model: ${{parent.jobs.summarization_finetune.outputs.mlflow_model_folder}}
+  compute_metrics:
+    type: command
+    component: azureml://registries/azureml-preview/components/compute_metrics/versions/0.0.9.preview
+    compute: ${{parent.inputs.compute_model_evaluation}}
+    inputs:
+      task: text-summarization
+      ground_truth: ${{parent.jobs.model_prediction.outputs.ground_truth}}
+      ground_truth_column_name: ${{parent.inputs.summary_key}}
+      prediction: ${{parent.jobs.model_prediction.outputs.predictions}}
+      prediction_column_name: predictions
+      prediction_probabilities: ${{parent.jobs.model_prediction.outputs.prediction_probabilities}}
+      evaluation_config: ${{parent.inputs.evaluation_config}}
+      evaluation_config_params: ${{parent.inputs.evaluation_config_params}}
+    outputs:
+      evaluation_result: ${{parent.outputs.evaluation_result}}
