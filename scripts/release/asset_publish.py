@@ -29,11 +29,10 @@ from azure.ai.ml.entities import Component, Environment, Model
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PROD_SYSTEM_REGISTRY = "azureml"
-ASSET_TYPE = "ASSET_TYPE"
 CREATE_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)/(?:versions/(.+)|labels/(.+))")
-REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/${ASSET_TYPE}s/(.+)/(?:versions/(.+)|labels/(.+))")
+REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/${asset_type}s/(.+)/(?:versions/(.+)|labels/(.+))")
 BEARER = r"Bearer.*"
 
 
@@ -387,7 +386,7 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
         `label` and `registry_name` will be None for workspace URI.
     :rtype: Tuple
     """
-    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute({ASSET_TYPE: asset_type}))
+    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(asset_type=asset_type))
     asset_registry_name = None
     if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
         asset_registry_name, asset_name, asset_version, asset_label = match.groups()

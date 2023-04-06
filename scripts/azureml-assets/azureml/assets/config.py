@@ -159,10 +159,10 @@ class Config:
 class ComponentType(Enum):
     """Enum for component types."""
 
-    PIPELINE = "pipeline"  # A pipeline component which allows multi-stage jobs.
-    PARALLEL = "parallel"  # A parallel component, aka PRSv2.
-    COMMAND = "command"  # A command component.
-    AUTOML = 'automl'  # Am Automl component.
+    PIPELINE = 'pipeline'  # A pipeline component which allows multi-stage jobs.
+    PARALLEL = 'parallel'  # A parallel component, aka PRSv2.
+    COMMAND = 'command'  # A command component.
+    AUTOML = 'automl'  # An AutoML component.
     SWEEP = 'sweep'  # A sweep component.
 
 
@@ -235,7 +235,7 @@ class Spec(Config):
             `custom_model` or `mlflow_model` for a model asset.
             `command`, `pipeline` etc. for a component asset.
         """
-        return self._yaml.get("type", "command")
+        return self._yaml.get('type')
 
     @property
     def code_dir(self) -> str:
