@@ -16,7 +16,7 @@ inputs:
   ## Inputs for download model
   model_source:
     type: string
-    description: Storage containers from where model will be sourced from.
+    description: Storage containers from where model will be sourced from
     default: Huggingface
     enum:
       - AzureBlob
@@ -32,6 +32,22 @@ inputs:
     type: uri_file
     description: Path to the license file
     optional: true
+
+  task_name:
+    description: A Hugging face task on which model was trained on
+    enum:
+    - text-classification
+    - fill-mask
+    - token-classification
+    - question-answering
+    - summarization
+    - text-generation
+    - text-classification
+    - translation
+    - image-classification
+    - text-to-image
+    optional: true
+    type: string
 
   ## Inputs for Model registration
   custom_model_name:
@@ -62,16 +78,16 @@ inputs:
 # Pipeline outputs
 outputs:
   mlflow_model_folder:
-    description: Output path for the converted MLFlow model.
+    description: Output path for the converted MLFlow model
     type: mlflow_model
 
   model_registration_details:
-    description: Output file which captures transformations applied above and registration details in JSON file.
+    description: Output file which captures transformations applied above and registration details in JSON file
     type: uri_file
 
 jobs:
   download_model:
-    component: azureml:download_model:0.0.1
+    component: azureml://registries/azureml-preview/components/download_model/versions/0.0.2
     compute: ${{parent.inputs.compute}}
     inputs:
       model_source: ${{parent.inputs.model_source}}
@@ -83,9 +99,10 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.1
+    component: azureml://registries/azureml-preview/components/convert_model_to_mlflow/versions/0.0.2
     compute: ${{parent.inputs.compute}}
     inputs:
+      task_name: ${{parent.inputs.task_name}}
       license_file_path: ${{parent.inputs.license_file_path}}
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.download_model.outputs.model_output}}
@@ -95,7 +112,7 @@ jobs:
         type: uri_file
 
   register_model:
-    component: azureml:register_model:0.0.1
+    component: azureml://registries/azureml-preview/components/register_model/versions/0.1.0
     compute: ${{parent.inputs.compute}}
     inputs:
       model_name: ${{parent.inputs.custom_model_name}}
@@ -106,7 +123,7 @@ jobs:
       model_type: mlflow_model
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.convert_model_to_mlflow.outputs.mlflow_model_folder}}
-      model_import_job_path: ${{parent.jobs.mlflow_convert_model.outputs.model_import_job_path}}
+      model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
     outputs:
       registration_details: ${{parent.outputs.model_registration_details}}
     identity:
