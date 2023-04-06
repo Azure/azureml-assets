@@ -9,7 +9,7 @@ is_deterministic: True
 display_name: MLFlow model local validation
 description: Validates if a MLFLow model can be loaded on a compute and is usable for inferencing.
 
-environment: azureml://registries/azureml/environments/model-management/versions/3
+environment: azureml://registries/azureml/environments/model-management/versions/4
 
 code: ../../src/
 command: |
