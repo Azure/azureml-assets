@@ -11,4 +11,4 @@ tags:
   license: cc-by-4.0
   min_inference_sku: Standard_DS2_v2
   task: question-answering
-version: 1
+version: 4
