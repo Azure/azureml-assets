@@ -29,4 +29,4 @@ class PathType(_CustomEnum):
     """Enum for path types supported for model download."""
 
     AZUREBLOB = "AzureBlob"  # Model files hosted on an AZUREBLOB blobstore with public read access.
-    GIT = "GIT"              # Model hosted on a public GIT repo that can be cloned by GIT LFS.
+    GIT = "GIT"  # Model hosted on a public GIT repo that can be cloned by GIT LFS.

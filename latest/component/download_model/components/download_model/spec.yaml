@@ -44,4 +44,4 @@ outputs:
     mode: rw_mount
 
 tags:
-    "Preview": ""
+    Preview: ""

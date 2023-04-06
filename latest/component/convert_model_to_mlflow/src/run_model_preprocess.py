@@ -8,6 +8,7 @@ import os
 import json
 from azureml.model.mgmt.config import ModelFlavor
 from azureml.model.mgmt.processors.preprocess import run_preprocess
+from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from pathlib import Path
 import shutil
 
@@ -16,13 +17,32 @@ def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
     parser.add_argument("--task-name", type=str, required=False, help="Hugging Face task type")
-    parser.add_argument("--mlflow-flavor", type=str, default=ModelFlavor.TRANSFORMERS.value, help="Model flavor")
-    parser.add_argument("--model-download-metadata", type=Path, required=False, help="Model download details")
+    parser.add_argument(
+        "--mlflow-flavor",
+        type=str,
+        default=ModelFlavor.TRANSFORMERS.value,
+        help="Model flavor",
+    )
+    parser.add_argument(
+        "--model-download-metadata",
+        type=Path,
+        required=False,
+        help="Model download details",
+    )
     parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
     parser.add_argument("--license-file-path", type=Path, required=False, help="License file path")
-    parser.add_argument("--mlflow-model-output-dir", type=Path, required=True, help="Output MLFlow model")
-    parser.add_argument("--model-import-job-path", type=Path, required=True,
-                        help="JSON file containing model job path for model lineage")
+    parser.add_argument(
+        "--mlflow-model-output-dir",
+        type=Path,
+        required=True,
+        help="Output MLFlow model",
+    )
+    parser.add_argument(
+        "--model-import-job-path",
+        type=Path,
+        required=True,
+        help="JSON file containing model job path for model lineage",
+    )
     return parser
 
 
@@ -31,6 +51,9 @@ def _validate_transformers_args(args):
         raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
     if not args.get("task"):
         raise Exception("task is a required parameter for hftransformers mlflow flavor.")
+    task = args["task"]
+    if not SupportedTasks.has_value(task):
+        raise Exception(f"Unsupported task {task}")
 
 
 if __name__ == "__main__":
@@ -53,15 +76,13 @@ if __name__ == "__main__":
     if not ModelFlavor.has_value(mlflow_flavor):
         raise Exception("Unsupported model flavor")
 
-    preprocess_args = {
-        'model_id': model_id,
-        'task': task_name,
-    }
-
+    preprocess_args = {}
     with open(model_download_metadata_path) as f:
         download_details = json.load(f)
         preprocess_args.update(download_details.get("tags", {}))
         preprocess_args.update(download_details.get("properties", {}))
+    preprocess_args["task"] = task_name if task_name else preprocess_args.get("task")
+    preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
 
     print(preprocess_args)
 

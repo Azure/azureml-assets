@@ -24,16 +24,15 @@ stdout_handler = logging.StreamHandler(stream=sys.stdout)
 handlers = [stdout_handler]
 logging.basicConfig(
     level=logging.DEBUG,
-    format='[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s',
-    handlers=handlers
+    format="[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s",
+    handlers=handlers,
 )
 logger = logging.getLogger(__name__)
 
 
-def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: Dict):
+def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: Dict) -> pd.DataFrame:
     if not test_data_path:
-        logger.info("Test data not shared for inferencing")
-        return
+        return None
 
     ext = test_data_path.suffix
     logger.info(f"file type: {ext}")
@@ -68,15 +67,17 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
 
 
 def _load_and_infer_model(model_dir, data):
+    if not data:
+        logger.warning("Data not shared. Could not infer the loaded model")
+        return
+
     try:
-        model = mlflow.pyfunc.load_model(model_dir)
+        model = mlflow.pyfunc.load_model(str(model_dir))
     except Exception as e:
         logger.error(f"Error in loading mlflow model: {e}")
         raise Exception(f"Error in loading mlflow model: {e}")
+
     try:
-        if not data:
-            logger.info("Data not shared. Could not infer the loaded model")
-            return
         logger.info("Predicting model with test data!!!")
         pred_results = model.predict(data)
         logger.info(f"prediction results\n{pred_results}")
@@ -134,7 +135,7 @@ if __name__ == "__main__":
             test_data_path=test_data_path,
             mlmodel=mlmodel_dict,
             col_rename_map=col_rename_map,
-        )
+        ),
     )
 
     # copy the model to output dir

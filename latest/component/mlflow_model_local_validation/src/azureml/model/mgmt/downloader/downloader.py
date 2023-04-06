@@ -13,15 +13,28 @@ from typing import List
 
 
 PROPERTIES = [
-    "model_id", "size", "commit_hash", "SHA", "license", "dataset", "languages", "finetuning_tasks", "last_modified"]
-TAGS = ["task_name"]
+    "commit_hash",
+    "SHA",
+    "last_modified",
+    "model_id",
+    "size",
+    "datasets",
+    "languages",
+    "finetuning_tasks",
+]
+TAGS = ["task", "license"]
 
 
-class HuggingfaceDownloader():
+class HuggingfaceDownloader:
     """Huggingface model downloader class."""
 
     HF_ENDPOINT = "https://huggingface.co"
     URI_TYPE = PathType.GIT.value
+
+    # Valid language codes which conflicts with other model tags.
+    # jax for example is a NumPy framework and is present in tags for most HF models.
+    # jax is also a language code used to represent the language spoken by the Jaintia people.
+    LANGUAGE_CODE_EXCEPTIONS = ["jax", "vit"]
 
     def __init__(self, model_id: str):
         """Huggingface downloader init.
@@ -46,24 +59,28 @@ class HuggingfaceDownloader():
         return self._model_info
 
     def _get_model_properties(self):
+        languages = []
+        datasets = []
+        all_tags = self.model_info.tags
         props = {
             "model_id": self.model_info.modelId,
-            "task_name": self.model_info.pipeline_tag,
+            "task": self.model_info.pipeline_tag,
             "SHA": self.model_info.sha,
-            "last_modified": self.model_info.lastModified
         }
-        all_tags = self.model_info.tags
-        supported_langs = []
-        datasets = []
+
         for tag in all_tags:
-            if langcodes.tag_is_valid(tag):
-                supported_langs.append(tag)
+            if langcodes.tag_is_valid(tag) and tag not in HuggingfaceDownloader.LANGUAGE_CODE_EXCEPTIONS:
+                languages.append(tag)
             elif tag.startswith("dataset:"):
                 datasets.append(tag.split(":")[1])
             elif tag.startswith("license:"):
                 props["license"] = tag.split(":")[1]
-        props["dataset"] = ", ".join(datasets)
-        props["language"] = ", ".join(supported_langs)
+
+        if datasets:
+            props["datasets"] = ", ".join(datasets)
+        if languages:
+            props["languages"] = ", ".join(languages)
+
         return props
 
     def download_model(self, download_dir):
@@ -76,7 +93,7 @@ class HuggingfaceDownloader():
         return {
             "name": "-".join(self._model_id.split("/")),
             "tags": tags,
-            "properties": props
+            "properties": props,
         }
 
 
@@ -102,7 +119,7 @@ class GITDownloader:
         return {
             "name": self._model_uri.split("/")[-1],
             "tags": tags,
-            "properties": props
+            "properties": props,
         }
 
 
@@ -128,7 +145,7 @@ class AzureBlobstoreDownloader:
         return {
             "name": self._model_uri.split("/")[-1],
             "tags": tags,
-            "properties": props
+            "properties": props,
         }
 
 

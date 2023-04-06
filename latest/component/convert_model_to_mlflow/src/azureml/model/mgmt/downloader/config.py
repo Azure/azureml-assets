@@ -15,6 +15,6 @@ class _CustomEnum(Enum):
 class ModelSource(_CustomEnum):
     """Enum for supported model container sources."""
 
-    HUGGING_FACE = "Huggingface"   # Model files hosted on Huggingface
-    AZUREBLOB = "AzureBlob"        # Model files hosted on an AZUREBLOB blobstore with public read access.
-    GIT = "GIT"                    # Model hosted on a public GIT repo that can be cloned by GIT LFS.
+    HUGGING_FACE = "Huggingface"  # Model files hosted on Huggingface
+    AZUREBLOB = "AzureBlob"  # Model files hosted on an AZUREBLOB blobstore with public read access.
+    GIT = "GIT"  # Model hosted on a public GIT repo that can be cloned by GIT LFS.

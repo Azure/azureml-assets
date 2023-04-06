@@ -37,7 +37,8 @@ class StableDiffusionInference:
         if torch.cuda.is_available():  # correct?
             device = "cuda"
             pipe = StableDiffusionPipeline.from_pretrained(
-                model_path, local_files_only=True, torch_dtype=torch.float16)
+                model_path, local_files_only=True, torch_dtype=torch.float16
+            )
             pipe.scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
             self._model = pipe.to(device)
         else:
@@ -57,9 +58,7 @@ class StableDiffusionInference:
             result = self._model(task)
             img = result.images[0]
             buf = io.BytesIO()
-            img.save(buf, format='JPEG')
-            img_base64 = base64.encodebytes(buf.getbuffer().tobytes()).decode('utf-8')
-            results.append({
-                'image': img_base64
-            })
+            img.save(buf, format="JPEG")
+            img_base64 = base64.encodebytes(buf.getbuffer().tobytes()).decode("utf-8")
+            results.append({"image": img_base64})
         return results

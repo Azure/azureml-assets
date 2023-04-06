@@ -35,7 +35,8 @@ if __name__ == "__main__":
 
     print("Downloading model ...")
     model_download_details = download_model(
-        model_source=model_source, model_id=model_id, download_dir=model_output_dir)
+        model_source=model_source, model_id=model_id, download_dir=model_output_dir
+    )
     print(f"Model files downloaded at: {model_output_dir} !!!")
 
     with open(model_download_metadata_path, "w") as f:
