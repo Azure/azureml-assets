@@ -29,10 +29,11 @@ from azure.ai.ml.entities import Component, Environment, Model
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PROD_SYSTEM_REGISTRY = "azureml"
+ASSET_TYPE = "ASSET_TYPE"
 CREATE_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)/(?:versions/(.+)|labels/(.+))")
-REGISTRY_ASSET_STR = "^azureml://registries/(.+)/{}s/(.+)/(?:versions/(.+)|labels/(.+))"
+REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/${ASSET_TYPE}s/(.+)/(?:versions/(.+)|labels/(.+))")
 BEARER = r"Bearer.*"
 
 
@@ -386,13 +387,12 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
         `label` and `registry_name` will be None for workspace URI.
     :rtype: Tuple
     """
-    REGISTRY_ASSET_PATTERN = re.compile(rf"{REGISTRY_ASSET_STR.format(asset_type)}")
+    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute({ASSET_TYPE: asset_type}))
     asset_registry_name = None
     if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
-        asset_registry_name, asset_name, asset_version, asset_label = (
-            match.group(1), match.group(2), match.group(3), match.group(4))
+        asset_registry_name, asset_name, asset_version, asset_label = match.groups()
     elif (match := WORKSPACE_ASSET_PATTERN.match(asset_uri)) is not None:
-        asset_name, asset_version, asset_label = match.group(1), match.group(2), match.group(3)
+        asset_name, asset_version, asset_label = match.groups()
     else:
         raise Exception(f"{asset_uri} doesn't match workspace or registry pattern.")
     return asset_name, asset_version, asset_label, asset_registry_name
@@ -479,17 +479,10 @@ if __name__ == "__main__":
 
         assets_to_publish = assets_by_type.get(create_asset_type.value, [])
         if create_asset_type == assets.AssetType.COMPONENT:
-
-            def _compare(spec_path):
-                comp = load_component(source=spec_path)
-                if comp.type == "pipeline":
-                    return True
-                return False
-
-            # sort component list to keep pipline components at the end in publushing list
+            # sort component list to keep pipline components at the end in publishing list
             # this is a temporary solution as a pipeline component can have another pipeline component as dependency
             logger.print("updating components publishing order")
-            assets_to_publish.sort(key=lambda x: _compare(x.spec_with_path))
+            assets_to_publish.sort(key=lambda x: x.spec_as_object().type == assets.ComponentType.PIPELINE.value)
 
         for asset in assets_to_publish:
             with TemporaryDirectory() as work_dir:
@@ -512,13 +505,13 @@ if __name__ == "__main__":
                 if asset.type == assets.AssetType.COMPONENT:
                     # load component and check if environment exists
                     component = load_component(asset.spec_with_path)
-                    if component.type == "pipeline":
+                    if component.type == assets.ComponentType.PIPELINE.value:
                         if not validate_and_prepare_pipeline_component(
                             asset.spec_with_path, final_version, registry_name
                         ):
                             failure_list.append(asset)
                             continue
-                    elif component.type == "command":
+                    elif component.type == assets.ComponentType.COMMAND.value:
                         if not validate_update_command_component(
                             component, asset.spec_with_path, final_version, registry_name
                         ):
