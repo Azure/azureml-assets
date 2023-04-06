@@ -510,7 +510,7 @@ if __name__ == "__main__":
                         ):
                             failure_list.append(asset)
                             continue
-                    elif component.type == assets.ComponentType.COMMAND.value:
+                    elif component.type is None or component.type == assets.ComponentType.COMMAND.value:
                         if not validate_update_command_component(
                             component, asset.spec_with_path, final_version, registry_name
                         ):
