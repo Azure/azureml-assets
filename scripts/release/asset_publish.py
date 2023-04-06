@@ -189,6 +189,8 @@ def validate_update_command_component(
 
     if env_label:
         if env_label == LATEST_LABEL:
+            # TODO: Use a more direct approach like this, when supported by Azure CLI:
+            # az ml environment show --name sklearn-1.1-ubuntu20.04-py38-cpu --registry-name azureml --label latest
             versions = get_asset_versions(assets.AssetType.ENVIRONMENT.value, env_name, registry_name)
             if versions:
                 # List is returned with the latest version at the beginning
