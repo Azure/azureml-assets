@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Text Classification Model Import
 description: Import PyTorch / MLFlow model
 
-environment: azureml:acft-hf-nlp-gpu:2
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/3
 
 code: ../../../src/model_selector
 

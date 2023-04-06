@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Token Classification Finetune
 description: Component to finetune model for named entity recognition task
 
-environment: azureml:acft-hf-nlp-gpu:2
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/3
 
 code: ../../../src/finetune
 
