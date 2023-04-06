@@ -159,10 +159,10 @@ class Config:
 class ComponentType(Enum):
     """Enum for component types."""
 
-    PIPELINE = "pipeline"  # A pipeline component which allows multi-stage jobs.
-    PARALLEL = "parallel"  # A parallel component, aka PRSv2.
-    COMMAND = "command"  # A command component.
-    AUTOML = 'automl'  # Am Automl component.
+    PIPELINE = 'pipeline'  # A pipeline component which allows multi-stage jobs.
+    PARALLEL = 'parallel'  # A parallel component, aka PRSv2.
+    COMMAND = 'command'  # A command component.
+    AUTOML = 'automl'  # An AutoML component.
     SWEEP = 'sweep'  # A sweep component.
 
 
