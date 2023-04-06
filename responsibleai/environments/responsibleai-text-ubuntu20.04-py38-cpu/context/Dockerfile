@@ -14,6 +14,12 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
+# Install azureml packages
+RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
+                'azureml-core=={{latest-pypi-version}}' \
+                'azureml-mlflow=={{latest-pypi-version}}' \
+                'https://publictestdatasets.blob.core.windows.net/packages/pypi/azureml-model-serializer/azureml_model_serializer-0.0.16-py3-none-any.whl'
+
 RUN pip freeze
 
 # This is needed for mpi to locate libpython
