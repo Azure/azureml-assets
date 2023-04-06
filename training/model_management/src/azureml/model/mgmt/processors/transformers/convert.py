@@ -17,9 +17,18 @@ from azureml.model.mgmt.processors.transformers.config import (
     SupportedVisionTasks,
     TaskToClassMapping,
 )
-from azureml.model.mgmt.utils.common_utils import copy_file_paths_to_destination, log_execution_time
+from azureml.model.mgmt.utils.common_utils import (
+    copy_file_paths_to_destination,
+    log_execution_time,
+)
 from pathlib import Path
-from transformers import AutoConfig, AutoTokenizer, AutoImageProcessor, WhisperConfig, WhisperProcessor
+from transformers import (
+    AutoConfig,
+    AutoTokenizer,
+    AutoImageProcessor,
+    WhisperConfig,
+    WhisperProcessor,
+)
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from typing import Dict
 
@@ -29,28 +38,28 @@ def _get_default_task_signatures(task) -> Dict:
     if task == SupportedTasks.TEXT_TO_IMAGE.value:
         return {
             "inputs": '[{"name": "input_string", "type": "string"}]',
-            "outputs": '[{"name": "image", "type": "string"}]'
+            "outputs": '[{"name": "image", "type": "string"}]',
         }
     elif task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
         return {
             "inputs": '[{"name": "audio", "type": "string"}, {"name": "language", "type": "string"}]',
-            "outputs": '[{"type": "string"}]'
+            "outputs": '[{"type": "string"}]',
         }
     elif SupportedVisionTasks.has_value(task):
         return {
             "inputs": '[{"name": "image", "type": "string"}]',
-            "outputs": '[{"name": "probs", "type": "string"}, {"name": "labels", "type": "string"}]'
+            "outputs": '[{"name": "probs", "type": "string"}, {"name": "labels", "type": "string"}]',
         }
     elif SupportedNLPTasks.has_value(task):
         if task == SupportedTasks.QUESTION_ANSWERING.value:
             return {
                 "inputs": '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]',
-                "outputs": '[{"type": "string"}]'
+                "outputs": '[{"type": "string"}]',
             }
         # For all the supported tasks
         return {
             "inputs": '[{"name": "input_string", "type": "string"}]',
-            "outputs": '[{"type": "string"}]'
+            "outputs": '[{"type": "string"}]',
         }
     return {}
 
@@ -89,7 +98,7 @@ def _get_image_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = 
         "tokenizer": image_processor,
         "config": config,
         "hf_conf": hf_conf,
-        "code_paths": [predict_script]
+        "code_paths": [predict_script],
     }
 
 
@@ -120,7 +129,7 @@ def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_co
         "hf_model": model,
         "hf_conf": hf_conf,
         "path": output_dir,
-        "code_paths": [predict]
+        "code_paths": [predict],
     }
 
 
@@ -141,7 +150,7 @@ def _get_whisper_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict 
         "config": config,
         "path": output_dir,
         "hf_conf": hf_conf,
-        "code_paths": [predict]
+        "code_paths": [predict],
     }
 
 
