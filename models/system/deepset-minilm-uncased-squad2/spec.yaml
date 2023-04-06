@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: deepset-minilm-uncased-squad2
+path: ./
+properties:
+  SHA: 96785dbd59c4f67f564824ef7a1a165cec3414af
+  datasets: squad_v2
+  finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
+tags:
+  Preview: ''
+  license: cc-by-4.0
+  min_inference_sku: Standard_DS2_v2
+  task: question-answering
+version: 4

@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: distilbert-base-uncased-distilled-squad
+path: ./
+properties:
+  SHA: b82e3a1aaea09a786682861c68609122d8fe5d64
+  datasets: squad
+  finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
+tags:
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS2_v2
+  task: question-answering
+version: 4

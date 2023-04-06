@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: t5-small
+path: ./
+properties:
+  SHA: 3479082dc36f8a4730936ef1c9b88cd8b0835c53
+  datasets: c4
+  finetuning-tasks: summarization, translation
+  languages: en, fr, ro, de
+tags:
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS2_v2
+  task: translation
+version: 5

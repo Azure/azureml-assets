@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: roberta-large
+path: ./
+properties:
+  SHA: 716877d372b884cad6d419d828bac6c85b3b18d9
+  datasets: bookcorpus, wikipedia
+  finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
+tags:
+  Preview: ''
+  license: mit
+  min_inference_sku: Standard_DS3_v2
+  task: fill-mask
+version: 4
