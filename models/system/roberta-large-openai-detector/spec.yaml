@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: roberta-large-openai-detector
+path: ./
+properties:
+  SHA: 5002d695ecf610d8bbfb1fa0d14f1575185b4915
+  datasets: bookcorpus, wikipedia
+  finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
+tags:
+  Preview: ''
+  license: mit
+  min_inference_sku: Standard_DS2_v2
+  task: text-classification
+version: 4

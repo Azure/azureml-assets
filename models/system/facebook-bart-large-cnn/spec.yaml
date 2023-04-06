@@ -1,0 +1,15 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: facebook-bart-large-cnn
+path: ./
+properties:
+  SHA: 3d224934c6541b2b9147e023c2f6f6fe49bd27e1
+  datasets: cnn_dailymail
+  finetuning-tasks: summarization
+  languages: en
+tags:
+  Preview: ''
+  finetuning-tasks: summarization
+  license: mit
+  min_inference_sku: Standard_DS4_v2
+  task: summarization
+version: 4
