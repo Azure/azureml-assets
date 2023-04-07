@@ -4,6 +4,7 @@
 from .config import (
     AssetConfig,
     AssetType,
+    ComponentType,
     Config,
     DEFAULT_ASSET_FILENAME,
     ModelConfig,

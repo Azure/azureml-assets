@@ -14,7 +14,7 @@ from string import Template
 from subprocess import run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 import azureml.assets as assets
 from azureml.assets.model.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
@@ -32,6 +32,7 @@ PROD_SYSTEM_REGISTRY = "azureml"
 CREATE_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)/(?:versions/(.+)|labels/(.+))")
+REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/${asset_type}s/(.+)/(?:versions/(.+)|labels/(.+))")
 BEARER = r"Bearer.*"
 LATEST_LABEL = "latest"
 
@@ -151,6 +152,82 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
     return success
 
 
+def validate_and_prepare_pipeline_component(
+    spec_path: Path,
+    final_version: str,
+    registry_name: str,
+) -> bool:
+    """Validate and update pipeline component spec.
+
+    :param spec_path: Path of loaded component
+    :type spec_path: Path
+    :param final_version: Final version string used to create component
+    :type final_version: str
+    :param registry_name: name of the registry to create component in
+    :type registry_name: str
+    :return: True for successful validation and update
+    :rtype: bool
+    """
+    with open(spec_path) as f:
+        pipeline_dict = yaml.safe_load(f)
+
+    jobs = pipeline_dict['jobs']
+    logger.print(f"Preparing pipeline component {pipeline_dict['name']}")
+    updated_jobs = {}
+
+    for job_name, job_details in jobs.items():
+        logger.print(f"job {job_name}")
+        try:
+            name, version, label, registry = get_parsed_details_from_asset_uri(
+                assets.AssetType.COMPONENT.value, job_details['component'])
+        except Exception as e:
+            logger.log_error(e)
+            return False
+
+        logger.print(
+            "component details:\n"
+            + f"name: {name}\n"
+            + f"version: {version}\n"
+            + f"label: {label}\n"
+            + f"registry: {registry}"
+        )
+
+        if registry and registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
+            logger.log_error(
+                "Registry name for component's URI must be either "
+                + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{registry}'"
+            )
+            return False
+
+        # Check if component's env exists
+        registry_name = registry or registry_name
+        asset_details = None
+        for ver in [version, final_version]:
+            if (asset_details := get_asset_details(
+                assets.AssetType.COMPONENT.value, name, ver, registry_name
+            )) is not None:
+                break
+
+        if not asset_details:
+            logger.log_warning(
+                f"dependent component {name} with version {version} not found in registry {registry}"
+            )
+            return False
+
+        # logger.print(asset_details)
+        updated_jobs[job_name] = job_details
+        updated_jobs[job_name]['component'] = asset_details["id"]
+
+    pipeline_dict['jobs'] = updated_jobs
+
+    try:
+        util.dump_yaml(pipeline_dict, spec_path)
+    except Exception:
+        logger.log_error(f"Component update failed for asset spec path: {asset.spec_path}")
+        return False
+    return True
+
+
 def validate_update_command_component(
     component: Component,
     spec_path: Path,
@@ -170,16 +247,11 @@ def validate_update_command_component(
     :return: True for successful validation and update
     :rtype: bool
     """
-    env = component.environment
-    match = None
-    env_registry_name = None
-    if (match := REGISTRY_ENV_PATTERN.match(env)) is not None:
-        env_registry_name, env_name, env_version, env_label = (
-            match.group(1), match.group(2), match.group(3), match.group(4))
-    elif (match := WORKSPACE_ASSET_PATTERN.match(env)) is not None:
-        env_name, env_version, env_label = match.group(1), match.group(2), match.group(3)
-    else:
-        logger.log_error(f"Env ID doesn't match workspace or registry pattern in {asset.spec_with_path}")
+    try:
+        env_name, env_version, env_label, env_registry_name = get_parsed_details_from_asset_uri(
+            assets.AssetType.ENVIRONMENT.value, component.environment)
+    except Exception as e:
+        logger.log_error(e)
         return False
 
     logger.print(
@@ -285,13 +357,11 @@ def create_asset(
         # Capture and redact output
         logger.print(f"Executed: {cmd}")
         redacted_output = sanitize_output(result.stdout)
-        redacted_err = sanitize_output(result.stderr)
         if redacted_output:
             logger.print(f"STDOUT: {redacted_output}")
-        if redacted_err:
-            logger.print(f"STDERR: {redacted_err}")
 
     if result.returncode != 0:
+        redacted_err = sanitize_output(result.stderr)
         logger.log_error(f"Error creating {asset.type.value} {asset.name}: {redacted_err}")
         failure_list.append(asset)
 
@@ -332,6 +402,29 @@ def get_asset_details(
         logger.log_error(f"Failed to get asset details: {result.stderr}")
         return None
     return json.loads(result.stdout)
+
+
+def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[str, str, str, str]:
+    """Validate asset URI and return parsed details. Exception is raised for an invalid URI.
+
+    :param asset_type: Valid values are component, environment and model
+    :type asset_type: str
+    :param asset_uri: A workspace or registry asset URI to parse
+    :type asset_uri: str
+    :return:
+        A tuple with asset `name`, `version`, `label`, and `registry_name` in order.
+        `label` and `registry_name` will be None for workspace URI.
+    :rtype: Tuple
+    """
+    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(asset_type=asset_type))
+    asset_registry_name = None
+    if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
+        asset_registry_name, asset_name, asset_version, asset_label = match.groups()
+    elif (match := WORKSPACE_ASSET_PATTERN.match(asset_uri)) is not None:
+        asset_name, asset_version, asset_label = match.groups()
+    else:
+        raise Exception(f"{asset_uri} doesn't match workspace or registry pattern.")
+    return asset_name, asset_version, asset_label, asset_registry_name
 
 
 def _str2bool(v: str) -> bool:
@@ -412,7 +505,15 @@ if __name__ == "__main__":
         logger.print(f"Creating {create_asset_type.value}s.")
         if create_asset_type.value not in create_list:
             continue
-        for asset in assets_by_type.get(create_asset_type.value, []):
+
+        assets_to_publish = assets_by_type.get(create_asset_type.value, [])
+        if create_asset_type == assets.AssetType.COMPONENT:
+            # sort component list to keep pipline components at the end in publishing list
+            # this is a temporary solution as a pipeline component can have another pipeline component as dependency
+            logger.print("updating components publishing order")
+            assets_to_publish.sort(key=lambda x: x.spec_as_object().type == assets.ComponentType.PIPELINE.value)
+
+        for asset in assets_to_publish:
             with TemporaryDirectory() as work_dir:
                 asset_names = create_list.get(asset.type.value, [])
                 if not ("*" in asset_names or asset.name in asset_names):
@@ -433,7 +534,13 @@ if __name__ == "__main__":
                 if asset.type == assets.AssetType.COMPONENT:
                     # load component and check if environment exists
                     component = load_component(asset.spec_with_path)
-                    if component.type == "command":
+                    if component.type == assets.ComponentType.PIPELINE.value:
+                        if not validate_and_prepare_pipeline_component(
+                            asset.spec_with_path, final_version, registry_name
+                        ):
+                            failure_list.append(asset)
+                            continue
+                    elif component.type is None or component.type == assets.ComponentType.COMMAND.value:
                         if not validate_update_command_component(
                             component, asset.spec_with_path, final_version, registry_name
                         ):
