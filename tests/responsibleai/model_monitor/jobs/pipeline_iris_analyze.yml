@@ -3,7 +3,9 @@ type: pipeline
 display_name: iris_analyze
 experiment_name: iris_analyze
 description: analyze iris feature attribution drift
+
 compute: azureml:cpu-cluster
+
 inputs:
   production_data:
     type: mltable
@@ -11,6 +13,7 @@ inputs:
   baseline_data:
     type: mltable
     path: ./resources/baseline/
+
 jobs:
   analyse_model:
     type: command

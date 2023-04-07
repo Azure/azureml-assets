@@ -39,7 +39,7 @@ inputs:
     default: '{}'
   use_model_dependency:
     type: boolean
-    default: False
+    default: false
 outputs:
   rai_insights_dashboard:
     type: path

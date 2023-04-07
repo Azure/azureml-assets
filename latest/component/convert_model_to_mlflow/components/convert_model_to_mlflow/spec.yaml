@@ -4,7 +4,7 @@ name: convert_model_to_mlflow
 version: 0.0.1
 type: command
 
-is_deterministic: True
+is_deterministic: true
 
 display_name: Convert model to MLFlow
 description: Component converts the input model to MLFlow packaging format
@@ -26,23 +26,27 @@ command: >
 inputs:
   model_id:
     type: string
-    description: Huggingface model id (https://huggingface.co/<model_id>). A required parameter for transformers flavor. Can be provided as input here or in model_download_metadata JSON file.
+    description: Huggingface model id (https://huggingface.co/<model_id>). A required
+      parameter for transformers flavor. Can be provided as input here or in model_download_metadata
+      JSON file.
     optional: true
 
   task_name:
     type: string
     enum:
-      - text-classification
-      - fill-mask
-      - token-classification
-      - question-answering
-      - summarization
-      - text-generation
-      - text-classification
-      - translation
-      - image-classification
-      - text-to-image
-    description: A Hugging face task on which model was trained on. A required parameter for transformers mlflow flavor. Can be provided as input here or in model_download_metadata JSON file.
+    - text-classification
+    - fill-mask
+    - token-classification
+    - question-answering
+    - summarization
+    - text-generation
+    - text-classification
+    - translation
+    - image-classification
+    - text-to-image
+    description: A Hugging face task on which model was trained on. A required parameter
+      for transformers mlflow flavor. Can be provided as input here or in model_download_metadata
+      JSON file.
     optional: true
 
   model_download_metadata:
@@ -66,10 +70,10 @@ outputs:
     type: mlflow_model
     description: Output path for the converted MLFlow model.
     mode: rw_mount
-    
+
   model_import_job_path:
     type: uri_file
     description: JSON file containing model job path for model lineage
 
 tags:
-    Preview: ""
+  Preview: ""

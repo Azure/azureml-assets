@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 experiment_name: fridge_analyze
 type: pipeline
+
 inputs:
   fridge_model_info: fridge_model_1:1
   my_training_data:
@@ -10,7 +11,9 @@ inputs:
     type: mltable
     path: ./resources/fridge_test
   target_column_name: label
+
 compute: azureml:cpu-cluster
+
 jobs:
   analyse_model:
     type: command

@@ -27,10 +27,10 @@ inputs:
     default: '[]'
   precompute_explanation:
     type: boolean
-    default: True
+    default: true
   use_model_dependency:
     type: boolean
-    default: False
+    default: false
   model_type:
     type: string
     enum: ['pyfunc', 'fastai']

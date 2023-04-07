@@ -3,7 +3,7 @@ name: question_answering_datapreprocess
 version: 0.0.5
 type: command
 
-is_deterministic: True
+is_deterministic: true
 
 display_name: Question Answering DataPreProcess
 description: Component to preprocess data for question answering task
@@ -17,7 +17,8 @@ inputs:
   question_key:
     type: string
     optional: false
-    description: The question whose answer needs to be extracted from the provided context 
+    description: The question whose answer needs to be extracted from the provided
+      context
 
   context_key:
     type: string
@@ -27,23 +28,27 @@ inputs:
   answers_key:
     type: string
     optional: false
-    description: "The value of this field is text in JSON format with two nested keys: answer_start_key and answer_text_key with their corresponding values"
+    description: "The value of this field is text in JSON format with two nested keys:\
+      \ answer_start_key and answer_text_key with their corresponding values"
 
   answer_start_key:
     type: string
     optional: false
-    description: Refers to the position where the answer beings in context. Needs a value that maps to a nested key in the values of the answers_key parameter
+    description: Refers to the position where the answer beings in context. Needs
+      a value that maps to a nested key in the values of the answers_key parameter
 
   answer_text_key:
     type: string
     optional: false
-    description: Contains the answer to the question. Needs a value that maps to a nested key in the values of the answers_key parameter
+    description: Contains the answer to the question. Needs a value that maps to a
+      nested key in the values of the answers_key parameter
 
   doc_stride:
     type: integer
     default: 128
     optional: true
-    description: Number of ovelapping context tokens to use while splitting the examples into multiple splits based on the model sequence length
+    description: Number of ovelapping context tokens to use while splitting the examples
+      into multiple splits based on the model sequence length
 
   n_best_size:
     type: integer
@@ -98,7 +103,8 @@ inputs:
   model_selector_output:
     type: uri_folder
     optional: false
-    description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
+    description: output folder of model selector containing model metadata like config,
+      checkpoints, tokenizer config
 
 outputs:
   output_dir:
@@ -106,5 +112,14 @@ outputs:
     description: folder to store preprocessed outputs of input data
 
 command: >-
-  python preprocess.py --task_name QuestionAnswering --question_key ${{inputs.question_key}} --context_key ${{inputs.context_key}} --answers_key ${{inputs.answers_key}} --answer_start_key ${{inputs.answer_start_key}} --answer_text_key ${{inputs.answer_text_key}} $[[--doc_stride ${{inputs.doc_stride}}]] $[[--n_best_size ${{inputs.n_best_size}}]] $[[--max_answer_length_in_tokens ${{inputs.max_answer_length_in_tokens}}]] $[[--batch_size ${{inputs.batch_size}}]] $[[--train_file_path '${{inputs.train_file_path}}']] $[[--validation_file_path '${{inputs.validation_file_path}}']] $[[--test_file_path '${{inputs.test_file_path}}']] $[[--train_mltable_path '${{inputs.train_mltable_path}}']] $[[--validation_mltable_path '${{inputs.validation_mltable_path}}']] $[[--test_mltable_path '${{inputs.test_mltable_path}}']] --model_selector_output ${{inputs.model_selector_output}} --output_dir ${{outputs.output_dir}}
+  python preprocess.py --task_name QuestionAnswering --question_key ${{inputs.question_key}}
+  --context_key ${{inputs.context_key}} --answers_key ${{inputs.answers_key}} --answer_start_key
+  ${{inputs.answer_start_key}} --answer_text_key ${{inputs.answer_text_key}} $[[--doc_stride
+  ${{inputs.doc_stride}}]] $[[--n_best_size ${{inputs.n_best_size}}]] $[[--max_answer_length_in_tokens
+  ${{inputs.max_answer_length_in_tokens}}]] $[[--batch_size ${{inputs.batch_size}}]]
+  $[[--train_file_path '${{inputs.train_file_path}}']] $[[--validation_file_path '${{inputs.validation_file_path}}']]
+  $[[--test_file_path '${{inputs.test_file_path}}']] $[[--train_mltable_path '${{inputs.train_mltable_path}}']]
+  $[[--validation_mltable_path '${{inputs.validation_mltable_path}}']] $[[--test_mltable_path
+  '${{inputs.test_mltable_path}}']] --model_selector_output ${{inputs.model_selector_output}}
+  --output_dir ${{outputs.output_dir}}
 

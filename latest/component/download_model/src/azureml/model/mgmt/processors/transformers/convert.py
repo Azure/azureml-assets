@@ -5,7 +5,7 @@
 
 import os
 import torch
-import yaml
+from ruamel.yaml import YAML
 
 from .config import MODEL_FILE_PATTERN
 from azureml.evaluate import mlflow as hf_mlflow
@@ -69,8 +69,10 @@ def _add_mlflow_signature(mlflow_model_path: Path, signature):
     mlmodel_path = mlflow_model_path / "MLmodel"
     updated_yaml_dict = {}
     # read YAML file
+    yaml = YAML()
+    yaml.preserve_quotes = True
     with open(mlmodel_path, "r") as f:
-        yaml_dict = yaml.safe_load(f)
+        yaml_dict = yaml.load(f)
         updated_yaml_dict.update(yaml_dict)
         updated_yaml_dict["signature"] = signature
     # save updated values to MLModel file

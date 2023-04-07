@@ -19,13 +19,15 @@ inputs:
     description: Storage containers from where model will be sourced from
     default: Huggingface
     enum:
-      - AzureBlob
-      - GIT
-      - Huggingface
+    - AzureBlob
+    - GIT
+    - Huggingface
 
   model_id:
     type: string
-    description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
+    description: A valid model id for the model source selected. For example you can
+      specify `bert-base-uncased` for importing HuggingFace bert base uncased model.
+      Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
 
   ## Inputs for the MlFLow conversion
   license_file_path:
@@ -53,27 +55,32 @@ inputs:
   custom_model_name:
     type: string
     optional: true
-    description: Model name to use in the registration. If name already exists, the version will be auto incremented
+    description: Model name to use in the registration. If name already exists, the
+      version will be auto incremented
 
   model_version:
     type: string
     optional: true
-    description: Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented
+    description: Model version in workspace/registry. If the same model name and version
+      exists, the version will be auto incremented
 
   model_description:
     type: string
     optional: true
-    description: Description of the model that will be shown in AzureML registry or workspace
+    description: Description of the model that will be shown in AzureML registry or
+      workspace
 
   registry_name:
     type: string
     optional: true
-    description: Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
+    description: Name of the AzureML asset registry where the model will be registered.
+      Model will be registered in a workspace if this is unspecified
 
   model_metadata:
     type: uri_file
     optional: true
-    description: A JSON or a YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
+    description: A JSON or a YAML file that contains model metadata confirming to
+      Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
 
 # Pipeline outputs
 outputs:
@@ -82,7 +89,8 @@ outputs:
     type: mlflow_model
 
   model_registration_details:
-    description: Output file which captures transformations applied above and registration details in JSON file
+    description: Output file which captures transformations applied above and registration
+      details in JSON file
     type: uri_file
 
 jobs:
@@ -130,4 +138,4 @@ jobs:
       type: user_identity
 
 tags:
-    Preview: ""
+  Preview: ""

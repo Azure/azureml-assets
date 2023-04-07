@@ -11,4 +11,4 @@ inputs:
 code: ../src
 environment: azureml://registries/azureml/environments/sklearn-1.1-ubuntu20.04-py38-cpu/versions/6
 command: >-
-    python hello.py --message "${{inputs.message}}"
+  python hello.py --message "${{inputs.message}}"

@@ -38,7 +38,7 @@ inputs:
     default: 2
   skip_cat_limit_checks:
     type: boolean
-    default: False
+    default: false
   categories:
     type: string
     default: auto
@@ -62,7 +62,7 @@ environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04
 
 # For debugging
 environment_variables:
-   AZUREML_COMPUTE_USE_COMMON_RUNTIME: true
+  AZUREML_COMPUTE_USE_COMMON_RUNTIME: true
 
 command: >-
   python create_causal.py

@@ -9,8 +9,8 @@ inputs:
   compute_model_import:
     type: string
     optional: false
-    description: compute to be used for model_import eg. provide 'FT-Cluster' if
-      your compute is named 'FT-Cluster'
+    description: compute to be used for model_import eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'
   compute_preprocess:
     type: string
     optional: false
@@ -41,7 +41,10 @@ inputs:
   # ModelSelector parameters
   huggingface_id:
     type: string
-    description: Input HuggingFace model id. Incase of continual finetuning provide proper id. Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms.
+    description: Input HuggingFace model id. Incase of continual finetuning provide
+      proper id. Models from Hugging Face are subject to third party license terms
+      available on the Hugging Face model details page. It is your responsibility
+      to comply with the model's license terms.
     optional: true
 
   # Continual-Finetuning model path
@@ -110,8 +113,8 @@ inputs:
   apply_lora:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: lora enabled
@@ -119,11 +122,12 @@ inputs:
   merge_lora_weights:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "true"
     optional: true
-    description: if set to true, the lora trained weights will be merged to base model before saving
+    description: if set to true, the lora trained weights will be merged to base model
+      before saving
 
   lora_alpha:
     type: integer
@@ -154,7 +158,9 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: If set to a positive number, the total number of training steps to perform. Overrides 'epochs'. In case of using a finite iterable dataset the training may stop before reaching the set number of steps when all data is exhausted.
+    description: If set to a positive number, the total number of training steps to
+      perform. Overrides 'epochs'. In case of using a finite iterable dataset the
+      training may stop before reaching the set number of steps when all data is exhausted.
 
   per_device_train_batch_size:
     type: integer
@@ -171,21 +177,24 @@ inputs:
   auto_find_batch_size:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
-    description: Flag to enable auto finding of batch size. If the provided 'per_device_train_batch_size' goes into Out Of Memory (OOM) enabling auto_find_batch_size will find the correct batch size by iteratively reducing 'per_device_train_batch_size' by a factor of 2 till the OOM is fixed
+    description: Flag to enable auto finding of batch size. If the provided 'per_device_train_batch_size'
+      goes into Out Of Memory (OOM) enabling auto_find_batch_size will find the correct
+      batch size by iteratively reducing 'per_device_train_batch_size' by a factor
+      of 2 till the OOM is fixed
 
   optim:
     type: string
     default: adamw_hf
     optional: true
     enum:
-      - adamw_hf
-      - adamw_torch
+    - adamw_hf
+    - adamw_torch
       # - adamw_apex_fused
-      - adafactor
+    - adafactor
     description: Optimizer to be used while training
 
   learning_rate:
@@ -204,7 +213,8 @@ inputs:
     type: number
     default: 0.0
     optional: true
-    description: The weight decay to apply (if not zero) to all layers except all bias and LayerNorm weights in AdamW optimizer
+    description: The weight decay to apply (if not zero) to all layers except all
+      bias and LayerNorm weights in AdamW optimizer
 
   adam_beta1:
     type: number
@@ -228,29 +238,31 @@ inputs:
     type: integer
     default: 1
     optional: true
-    description: Number of updates steps to accumulate the gradients for, before performing a backward/update pass
+    description: Number of updates steps to accumulate the gradients for, before performing
+      a backward/update pass
 
   lr_scheduler_type:
     type: string
     default: linear
     optional: true
     enum:
-      - linear
-      - cosine
-      - cosine_with_restarts
-      - polynomial
-      - constant
-      - constant_with_warmup
+    - linear
+    - cosine
+    - cosine_with_restarts
+    - polynomial
+    - constant
+    - constant_with_warmup
     description: The scheduler type to use
 
   precision:
     type: string
     enum:
-      - "32"
-      - "16"
+    - "32"
+    - "16"
     default: "32"
     optional: true
-    description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
+    description: Apply mixed precision training. This can reduce memory footprint
+      by performing operations in half-precision.
 
   seed:
     type: integer
@@ -261,8 +273,8 @@ inputs:
   enable_full_determinism:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: Ensure reproducible behavior during distributed training
@@ -271,16 +283,18 @@ inputs:
     type: integer
     default: 0
     optional: true
-    description: Number of subprocesses to use for data loading. 0 means that the data will be loaded in the main process.
+    description: Number of subprocesses to use for data loading. 0 means that the
+      data will be loaded in the main process.
 
   ignore_mismatched_sizes:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "true"
     optional: true
-    description: Whether or not to raise an error if some of the weights from the checkpoint do not have the same size as the weights of the model
+    description: Whether or not to raise an error if some of the weights from the
+      checkpoint do not have the same size as the weights of the model
 
   max_grad_norm:
     type: number
@@ -293,15 +307,16 @@ inputs:
     default: epoch
     optional: true
     enum:
-      - epoch
-      - steps
+    - epoch
+    - steps
     description: The evaluation strategy to adopt during training
 
   evaluation_steps_interval:
     type: number
     default: 0.0
     optional: true
-    description: The evaluation steps in fraction of an epoch steps to adopt during training. Overwrites evaluation_steps if not 0.
+    description: The evaluation steps in fraction of an epoch steps to adopt during
+      training. Overwrites evaluation_steps if not 0.
 
   eval_steps:
     type: integer
@@ -314,8 +329,8 @@ inputs:
     default: epoch
     optional: true
     enum:
-      - epoch
-      - steps
+    - epoch
+    - steps
     description: The logging strategy to adopt during training.
 
   logging_steps:
@@ -329,8 +344,8 @@ inputs:
     default: loss
     optional: true
     enum:
-      - loss
-      - bleu
+    - loss
+    - bleu
     description: Specify the metric to use to compare two different models
 
   resume_from_checkpoint:
@@ -338,15 +353,16 @@ inputs:
     default: "false"
     optional: true
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     description: Loads Optimizer, Scheduler and Trainer state for finetuning if true
 
   save_total_limit:
     type: integer
     default: -1
     optional: true
-    description: If a value is passed, will limit the total amount of checkpoints. Deletes the older checkpoints in output_dir. If the value is -1 saves all checkpoints"
+    description: If a value is passed, will limit the total amount of checkpoints.
+      Deletes the older checkpoints in output_dir. If the value is -1 saves all checkpoints"
 
   # Early Stopping Parameters
   apply_early_stopping:
@@ -354,28 +370,30 @@ inputs:
     default: "false"
     optional: true
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     description: Enable early stopping
 
   early_stopping_patience:
     type: integer
     default: 1
     optional: true
-    description: Stop training when the specified metric worsens for early_stopping_patience evaluation calls
+    description: Stop training when the specified metric worsens for early_stopping_patience
+      evaluation calls
 
   early_stopping_threshold:
     type: number
     default: 0.0
     optional: true
-    description: Denotes how much the specified metric must improve to satisfy early stopping conditions
+    description: Denotes how much the specified metric must improve to satisfy early
+      stopping conditions
 
   # Deepspeed Parameters
   apply_deepspeed:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to true, will enable deepspeed for training
@@ -389,8 +407,8 @@ inputs:
   apply_ort:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "false"
     optional: true
     description: If set to true, will use the ONNXRunTime training
@@ -399,8 +417,8 @@ inputs:
   save_as_mlflow_model:
     type: string
     enum:
-      - "true"
-      - "false"
+    - "true"
+    - "false"
     default: "true"
     optional: true
     description: If set to true, will save as mlflow model with pyfunc as flavour
