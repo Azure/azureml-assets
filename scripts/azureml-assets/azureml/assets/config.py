@@ -8,9 +8,9 @@ import warnings
 from enum import Enum
 from functools import total_ordering
 from pathlib import Path
+from ruamel.yaml import YAML
 from setuptools._vendor.packaging import version
 from typing import Dict, List, Tuple
-from yaml import safe_load
 
 # Ignore setuptools warning about replacing distutils
 warnings.filterwarnings("ignore", message="Setuptools is replacing distutils.", category=UserWarning)
@@ -34,7 +34,7 @@ class Config:
             file_name (Path): Location of config file.
         """
         with open(file_name) as f:
-            self._yaml = safe_load(f)
+            self._yaml = YAML().load(f)
         self._file_name_with_path = file_name
         self._file_name = file_name.name
         self._file_path = file_name.parent
@@ -722,6 +722,7 @@ DEFAULT_ASSET_FILENAME = "asset.yaml"
 VERSION_AUTO = "auto"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
 FULL_ASSET_NAME_DELIMITER = "/"
+DEFAULT_DESCRIPTION_FILE = "description.md"
 
 
 @total_ordering
@@ -733,6 +734,7 @@ class AssetConfig(Config):
         version: 1 # Can also be set to auto to auto-increment version
         type: environment
         spec: spec.yaml
+        description_file: description.md # Path to optional description file
         extra_config: environment.yaml
         release_paths: # Additional dirs/files to include in release
         - ../src
@@ -800,6 +802,9 @@ class AssetConfig(Config):
 
         if not self.spec_with_path.exists():
             raise ValidationException(f"spec file {self.spec} not found")
+
+        if self.description_file and not self.description_file_with_path.exists():
+            raise ValidationException(f"description_file {self.description_file} not found")
 
         if self.extra_config and not self.extra_config_with_path.exists():
             raise ValidationException(f"extra_config file {self.extra_config} not found")
@@ -921,6 +926,25 @@ class AssetConfig(Config):
         return self._spec
 
     @property
+    def description_file(self) -> str:
+        """Raw 'description_file' value."""
+        return self._yaml.get('description_file')
+
+    @property
+    def description_file_with_path(self) -> Path:
+        """Asset's description file."""
+        description_file = self.description_file
+        if description_file is None:
+            # Check for default file
+            description_file_path = self._append_to_file_path(DEFAULT_DESCRIPTION_FILE)
+            if not description_file_path.exists():
+                description_file_path = None
+        else:
+            # Use specified file
+            description_file_path = self._append_to_file_path(description_file)
+        return description_file_path
+
+    @property
     def extra_config(self) -> str:
         """Raw 'extra_config' value."""
         return self._yaml.get('extra_config')
@@ -977,6 +1001,11 @@ class AssetConfig(Config):
 
         # Collect files from spec
         release_paths.extend(self.spec_as_object().release_paths)
+
+        # Collect description file if set or found
+        description_file = self.description_file_with_path
+        if description_file is not None:
+            release_paths.append(description_file)
 
         # Collect files from extra_config if set
         extra_config = self.extra_config_as_object()
