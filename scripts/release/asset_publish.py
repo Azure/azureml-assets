@@ -171,7 +171,7 @@ def validate_and_prepare_pipeline_component(
     with open(spec_path) as f:
         try:
             pipeline_dict = yaml.safe_load(f)
-        except Exception as e:
+        except Exception:
             logger.log_error(f"Error in loading component spec at {spec_path}")
             return False
 
@@ -250,7 +250,7 @@ def validate_update_command_component(
     with open(spec_path) as f:
         try:
             component_dict = yaml.safe_load(f)
-        except Exception as e:
+        except Exception:
             logger.log_error(f"Error in loading component spec at {spec_path}")
             return False
 
@@ -555,7 +555,7 @@ if __name__ == "__main__":
                             continue
                     elif component_type is None or component_type == assets.ComponentType.COMMAND.value:
                         if not validate_update_command_component(
-                            component, asset.spec_with_path, final_version, registry_name
+                            asset.spec_with_path, final_version, registry_name
                         ):
                             failure_list.append(asset)
                             continue
