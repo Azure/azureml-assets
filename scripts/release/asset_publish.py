@@ -116,15 +116,6 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
         logger.error(f"Error in loading model spec file at {spec_file_path}: {e}")
         return False
 
-    model_description_file_path = Path(spec_file_path).parent / model_config.description
-    logger.print(f"model_description_file_path {model_description_file_path}")
-    if os.path.exists(model_description_file_path):
-        with open(model_description_file_path) as f:
-            model_description = f.read()
-            model.description = model_description
-    else:
-        logger.print("description file does not exist")
-
     if model_config.path.type == PathType.LOCAL:
         model.path = os.path.abspath(Path(model_config.path.uri).resolve())
         return update_spec(model, spec_file_path)
