@@ -68,7 +68,11 @@ class EvaluateModel:
                                task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL)
         self._has_multiple_output = task in constants.MULTIPLE_OUTPUTS_SET
         self.custom_dimensions = custom_dimensions
-        self.device = torch.cuda.current_device() if device == "gpu" else -1
+        try:
+            self.device = torch.cuda.current_device() if device == "gpu" else -1
+        except Exception:
+            logger.warning("No GPU found. Using CPU instead")
+            self.device = -1
         # self._setup_custom_environment()
 
     def _setup_custom_environment(self):
