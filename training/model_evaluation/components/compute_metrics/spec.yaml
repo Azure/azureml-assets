@@ -3,7 +3,7 @@ name: compute_metrics
 display_name: Compute Metrics
 description: Calculate model performance metics, given ground truth and prediction data.
 
-version: 0.0.9.preview
+version: 0.0.10.preview
 type: command
 
 tags:
@@ -75,7 +75,7 @@ outputs:
     type: uri_folder
 
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/3
+environment: azureml://registries/azureml/environments/model-evaluation/versions/4
 command: >-
   python compute_metrics.py
   --task ${{inputs.task}}
