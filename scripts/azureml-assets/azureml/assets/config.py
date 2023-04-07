@@ -159,9 +159,11 @@ class Config:
 class ComponentType(Enum):
     """Enum for component types."""
 
-    PIPELINE = "pipeline"  # A pipeline component which allows multi-stage jobs.
-    PARALLEL = "parallel"  # A parallel component, aka PRSv2.
-    COMMAND = "command"  # A command component.
+    PIPELINE = 'pipeline'  # A pipeline component which allows multi-stage jobs.
+    PARALLEL = 'parallel'  # A parallel component, aka PRSv2.
+    COMMAND = 'command'  # A command component.
+    AUTOML = 'automl'  # An AutoML component.
+    SWEEP = 'sweep'  # A sweep component.
 
 
 class Spec(Config):
@@ -226,9 +228,19 @@ class Spec(Config):
         return self._yaml.get('image')
 
     @property
+    def type(self) -> str:
+        """Type of a particular asset.
+
+        For eg:
+            `custom_model` or `mlflow_model` for a model asset.
+            `command`, `pipeline` etc. for a component asset.
+        """
+        return self._yaml.get('type')
+
+    @property
     def code_dir(self) -> str:
         """Component code directory."""
-        if self._yaml.get('type') == ComponentType.PARALLEL.value:
+        if self.type == ComponentType.PARALLEL.value:
             task = self._yaml.get('task')
             return None if task is None else task.get('code')
         return self._yaml.get('code')

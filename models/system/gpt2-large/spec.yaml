@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: gpt2-large
+path: ./
+properties:
+  SHA: 212095d5832abbf9926672e1c1e8d14312a3be20
+  datasets: ''
+  finetuning-tasks: text-classification, token-classification
+  languages: en
+tags:
+  Preview: ''
+  license: mit
+  min_inference_sku: Standard_DS4_v2
+  task: text-generation
+version: 4

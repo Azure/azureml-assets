@@ -7,13 +7,14 @@ import argparse
 import json
 import os
 import shutil
+import yaml
 
 from azure.ai.ml import MLClient
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.entities import Model
-from azureml.core import Run
 from azure.identity import ManagedIdentityCredential
-from pathlib import Path
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+from azureml.core import Run
 
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
@@ -53,15 +54,32 @@ def parse_args():
     parser.add_argument(
         "--registration_details",
         type=str,
-        help="Text File into which model registration details will be written",
+        help="JSON file into which model registration details will be written",
     )
     parser.add_argument(
-        "--model_info_path",
+        "--model_download_metadata",
         type=str,
-        help="Json file containing metadata related to the model",
+        help="Json file containing metadata related to the downloaded model",
         default=None,
     )
-
+    parser.add_argument(
+        "--model_metadata",
+        type=str,
+        help="YAML file that contains model metadata confirming to Model V2",
+        default=None,
+    )
+    parser.add_argument(
+        "--model_version",
+        type=str,
+        help="Model version in workspace/registry. If model with same version exists,version will be auto incremented",
+        default=None,
+    )
+    parser.add_argument(
+        "--model_import_job_path",
+        type=str,
+        help="JSON file that contains the job path of model to have lineage.",
+        default=None,
+    )
     args = parser.parse_args()
     print("args received ", args)
     return args
@@ -69,8 +87,24 @@ def parse_args():
 
 def get_ml_client(registry_name):
     """Return ML Client."""
-    msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-    credential = ManagedIdentityCredential(client_id=msi_client_id)
+    has_obo_succeeded = False
+    try:
+        credential = AzureMLOnBehalfOfCredential()
+        # Check if given credential can get token successfully.
+        credential.get_token("https://management.azure.com/.default")
+        has_obo_succeeded = True
+    except Exception as ex:
+        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
+        print(f"Failed to get OBO credentials - {ex}")
+
+    if not has_obo_succeeded:
+        try:
+            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+            credential = ManagedIdentityCredential(client_id=msi_client_id)
+            credential.get_token("https://management.azure.com/.default")
+        except Exception as ex:
+            raise (f"Failed to get MSI credentials : {ex}")
+
     if registry_name is None:
         run = Run.get_context(allow_offline=False)
         ws = run.experiment.workspace
@@ -83,6 +117,17 @@ def get_ml_client(registry_name):
     return MLClient(credential=credential, registry_name=registry_name)
 
 
+def is_model_available(ml_client, model_name, model_version):
+    """Return true if model is available else false."""
+    is_available = True
+    try:
+        ml_client.models.get(name=model_name, version=model_version)
+    except Exception as e:
+        print(f"Model with name - {model_name} and version - {model_version} is not available. Error: {e}")
+        is_available = False
+    return is_available
+
+
 def main(args):
     """Run main function."""
     model_name = args.model_name
@@ -90,46 +135,63 @@ def main(args):
     model_description = args.model_description
     registry_name = args.registry_name
     model_path = args.model_path
-    model_info_path = args.model_info_path
     registration_details = args.registration_details
+    model_version = args.model_version
+    tags, properties, flavors = {}, {}, {}
 
     ml_client = get_ml_client(registry_name)
 
-    model_info = {}
-    if model_info_path:
-        with open(model_info_path) as f:
-            model_info = json.load(f)
+    model_download_metadata = {}
+    if args.model_download_metadata:
+        with open(args.model_download_metadata) as f:
+            model_download_metadata = json.load(f)
+            model_name = model_name or model_download_metadata.get("name", "").replace("/", "-")
+            tags = model_download_metadata.get("tags", tags)
+            properties = model_download_metadata.get("properties", properties)
 
-    model_name = model_info.get("name", model_name)
-    model_type = model_info.get("type", model_type)
-    model_description = model_info.get("description", model_description)
-    tags = model_info.get("tags", {})
-    properties = model_info.get("properties", {})
+    # Updating tags and properties with value provided in metadata file
+    if args.model_metadata:
+        with open(args.model_metadata, "r") as stream:
+            metadata = json.load(stream)
+            tags.update(metadata.get("tags", {}))
+            properties.update(metadata.get("properties", {}))
+            model_description = metadata.get("description", model_description)
+            model_type = metadata.get("type", model_type)
+            flavors = metadata.get("flavors", flavors)
 
     # validations
     if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
         raise Exception(f"Unsupported model type {model_type}")
 
     if not model_name:
-        raise Exception(
-            "Model name is a required parameter. Provide model_name in the component input or in the model_info JSON"
-        )
+        raise Exception("Missing Model Name. Provide model_name as input or in the model_download_metadata JSON")
 
     if model_type == "mlflow_model":
         # Make sure parent directory is mlflow_model_folder for mlflow model
         shutil.copytree(model_path, "mlflow_model_folder", dirs_exist_ok=True)
         model_path = "mlflow_model_folder"
+        mlmodel_path = os.path.join(model_path, "MLmodel")
+        with open(mlmodel_path, "r") as stream:
+            metadata = yaml.safe_load(stream)
+            flavors = metadata.get('flavors', flavors)
 
-    # hack to get current model versions in registry
-    model_version = "1"
-    models_list = []
-    try:
-        models_list = ml_client.models.list(name=model_name)
-        if models_list:
-            max_version = (max(models_list, key=lambda x: x.version)).version
-            model_version = str(int(max_version) + 1)
-    except Exception:
-        print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
+    if not model_version or is_model_available(ml_client, model_name, model_version):
+        # hack to get current model versions in registry
+        model_version = "1"
+        models_list = []
+        try:
+            models_list = ml_client.models.list(name=model_name)
+            if models_list:
+                max_version = (max(models_list, key=lambda x: int(x.version))).version
+                model_version = str(int(max_version) + 1)
+        except Exception:
+            print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
+
+    # check if we can have lineage and update the model path for ws import
+    if not registry_name and args.model_import_job_path:
+        with open(args.model_import_job_path) as f:
+            model_import_job_path = json.load(f)
+        model_path = model_import_job_path.get("path", model_path)
 
     model = Model(
         name=model_name,
@@ -138,6 +200,8 @@ def main(args):
         path=model_path,
         tags=tags,
         properties=properties,
+        flavors=flavors,
+        description=model_description,
     )
 
     # register the model in workspace or registry
@@ -145,8 +209,23 @@ def main(args):
     registered_model = ml_client.models.create_or_update(model)
     print(f"Model registered. AssetID : {registered_model.id}")
 
-    (Path(registration_details)).write_text(registered_model.id)
-    print("Saved model registration details in output text file.")
+    # Registered model information
+    model_info = {
+        "id": registered_model.id,
+        "name": registered_model.name,
+        "version": registered_model.version,
+        "path": registered_model.path,
+        "flavors": registered_model.flavors,
+        "type": registered_model.type,
+        "properties": registered_model.properties,
+        "tags": registered_model.tags,
+        "description": registered_model.description,
+    }
+    json_object = json.dumps(model_info, indent=4)
+
+    with open(registration_details, "w") as outfile:
+        outfile.write(json_object)
+    print("Saved model registration details in output json file.")
 
 
 # run script
