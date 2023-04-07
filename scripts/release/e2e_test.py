@@ -4,11 +4,11 @@
 import argparse
 from pathlib import Path
 import sys
-import yaml
 from subprocess import run
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import AmlCompute
 from azure.identity import DefaultAzureCredential
+from ruamel.yaml import YAML
 
 
 def e2e_test(
@@ -52,7 +52,7 @@ def e2e_test(
             print(f"Could not locate tests.yaml in {area}")
             continue
         with open(tests_yaml_file) as fp:
-            data = yaml.load(fp, Loader=yaml.FullLoader)
+            data = YAML().load(fp)
             for test_group in data:
                 print(f"now processing test group: {test_group}")
                 cmd = ["python3", "-u", "group_test.py", "-i", area, "-g", test_group, "-s", subscription_id,
