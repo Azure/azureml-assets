@@ -183,7 +183,7 @@ def validate_and_prepare_pipeline_component(
         logger.print(f"job {job_name}")
         if not job_details.get('component'):
             # if-else or inline component
-            logger.println(f"component not defined for job {job_name}")
+            logger.print(f"component not defined for job {job_name}")
             updated_jobs[job_name] = job_details
             continue
 
