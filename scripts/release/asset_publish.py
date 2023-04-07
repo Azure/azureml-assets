@@ -181,6 +181,12 @@ def validate_and_prepare_pipeline_component(
 
     for job_name, job_details in jobs.items():
         logger.print(f"job {job_name}")
+        if not job_details.get('component'):
+            # if-else or inline component
+            logger.println(f"component not defined for job {job_name}")
+            updated_jobs[job_name] = job_details
+            continue
+
         try:
             name, version, label, registry = get_parsed_details_from_asset_uri(
                 assets.AssetType.COMPONENT.value, job_details['component'])
