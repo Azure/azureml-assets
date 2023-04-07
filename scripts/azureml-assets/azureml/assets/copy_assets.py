@@ -34,7 +34,7 @@ def copy_asset(asset_config: assets.AssetConfig,
     # Copy asset to output directory
     util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory_root, add_subdir=True,
                                   use_version_dir=use_version_dir)
-    return asset_config.spec_as_object().version
+    return asset_config.version
 
 
 def copy_assets(input_dirs: List[Path],
