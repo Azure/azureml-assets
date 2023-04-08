@@ -11,4 +11,4 @@ tags:
   license: mit
   min_inference_sku: Standard_DS4_v2
   task: text-generation
-version: 4
+version: 5

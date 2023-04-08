@@ -11,4 +11,4 @@ tags:
   license: apache-2.0
   min_inference_sku: Standard_DS3_v2
   task: fill-mask
-version: 4
+version: 5
