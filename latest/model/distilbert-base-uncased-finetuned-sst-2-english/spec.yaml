@@ -11,7 +11,7 @@ tags:
   license: apache-2.0
   min_inference_sku: Standard_DS2_v2
   task: text-classification
-version: 4
+version: 5
 description: |
   This is a fine-tuned version of DistilBERT-base-uncased, trained on SST-2, which reached 91.3 % accuracy on the dev set. Developed by Hugging Face, it's mainly intended to be used for topic classification and can be fine-tuned on downstream tasks, but it's important to keep in mind that it has certain biases, such as biased predictions for certain underrepresented populations and that it should not be used to create hostile or alienating environments for people. Additionally, the authors used the Stanford Sentiment Treebank(sst2) corpora for training the model. 
   It's recommended to evaluate the risks of this model by thoroughly probing the bias evaluation datasets like WinoBias, WinoGender, Stereoset
