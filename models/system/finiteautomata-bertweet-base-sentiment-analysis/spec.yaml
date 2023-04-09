@@ -10,4 +10,4 @@ tags:
   Preview: ''
   min_inference_sku: Standard_DS2_v2
   task: text-classification
-version: 4
+version: 5
