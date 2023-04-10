@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: bert-large-cased
+path: ./
+properties:
+  SHA: d9238236d8326ce4bc117132bb3b7e62e95f3a9a
+  datasets: bookcorpus, wikipedia
+  finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
+tags:
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS3_v2
+  task: fill-mask
+version: 5

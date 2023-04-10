@@ -87,7 +87,7 @@ outputs:
 
 jobs:
   download_model:
-    component: azureml://registries/azureml-preview/components/download_model/versions/0.0.2
+    component: azureml:download_model:0.0.1
     compute: ${{parent.inputs.compute}}
     inputs:
       model_source: ${{parent.inputs.model_source}}
@@ -99,7 +99,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml://registries/azureml-preview/components/convert_model_to_mlflow/versions/0.0.2
+    component: azureml:convert_model_to_mlflow:0.0.1
     compute: ${{parent.inputs.compute}}
     inputs:
       task_name: ${{parent.inputs.task_name}}
@@ -112,7 +112,7 @@ jobs:
         type: uri_file
 
   register_model:
-    component: azureml://registries/azureml-preview/components/register_model/versions/0.1.0
+    component: azureml:register_model:0.0.1
     compute: ${{parent.inputs.compute}}
     inputs:
       model_name: ${{parent.inputs.custom_model_name}}

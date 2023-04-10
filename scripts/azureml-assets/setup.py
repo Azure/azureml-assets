@@ -13,7 +13,7 @@ setup(
    packages=find_packages(),
    install_requires=[
       "GitPython>=3.1",
-      "pyyaml>=5",
+      "ruamel.yaml==0.17.21",
       "pip>=21",
    ],
    python_requires=">=3.8,<4.0",

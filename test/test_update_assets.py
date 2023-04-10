@@ -23,6 +23,7 @@ RESOURCES_DIR = Path("resources/update")
         ("manual-version", False, True),
         ("manual-version-unreleased", False, False),
         ("manual-version-unreleased-skip", True, False),
+        ("with-description", False, True),
     ]
 )
 def test_update_assets(test_subdir: str, skip_unreleased: bool, create_tag: bool):
