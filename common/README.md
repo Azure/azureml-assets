@@ -6,8 +6,8 @@ This directory contains the general purpose assets that includes [components](ht
 
 | Directory         | Description                                                                          |
 |:------------------|:-------------------------------------------------------------------------------------|
-| `components/deploy_model` | Definition for the component deploy_model.                                                      |
-| `components/register_model`       | Definition for the component register_model.                                   |
+| `components/deploy_model` | Definition of the component for the [model deployment](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-deploy-online-endpoints?view=azureml-api-2&tabs=azure-cli).                                                      |
+| `components/register_model`       | Definition for the component [model registration](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-models?view=azureml-api-2&tabs=cli%2Cuse-local).                                   |
 | `src/deploy_model`  | Python code for deploy model component. |
 | `src/register_model`          | Python code for register model component.                                                       |
 | `environments`  | Definition for the environment python-sdk-v2  |
