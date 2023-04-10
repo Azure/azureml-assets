@@ -4,7 +4,7 @@ path: ./
 properties:
   SHA: 0dcbcf20673c006ac2d1e324954491b96f0c0015
   datasets: multi_nli, wikipedia, bookcorpus
-  finetuning-tasks: text-classification, token-classification, question-answering
+  finetuning-tasks: text-classification, token-classification
   languages: en
 tags:
   Preview: ''

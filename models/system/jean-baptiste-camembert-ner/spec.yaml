@@ -4,7 +4,7 @@ path: ./
 properties:
   SHA: cc63721791a6e1d60f4764997bbb311667ec75d8
   datasets: Jean-Baptiste/wikiner_fr
-  finetuning-tasks: text-classification, token-classification, question-answering
+  finetuning-tasks: text-classification, token-classification
   languages: fr
 tags:
   Preview: ''
