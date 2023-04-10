@@ -15,6 +15,11 @@ dependencies:
     - numpy==1.21.6
     - responsibleai~=0.26.0
     - raiwidgets~=0.26.0
+    # Required since azureml-automl-dnn-vision uses a fig.save_fig method with
+    # some parameters such as quality=100, optimizer=True, progressive=True which are only
+    # supported until matplotlib 3.5.3. There is a fix in dnn-vision which will be rolled out soon
+    # post which this pin can be removed.
+    - matplotlib<=3.5.3
     - pyarrow
     - mlflow
     - markupsafe<2.1.0
