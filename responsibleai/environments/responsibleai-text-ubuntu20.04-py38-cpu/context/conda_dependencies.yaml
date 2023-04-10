@@ -21,7 +21,7 @@ dependencies:
     - mlflow
     - markupsafe<2.1.0
     - itsdangerous==2.0.1
-    - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-text/responsibleai_text-0.0.13-py3-none-any.whl
+    - responsibleai-text==0.0.1
     - click<8.0.0
     - mltable==1.0.0
     - transformers>=4.17.0
