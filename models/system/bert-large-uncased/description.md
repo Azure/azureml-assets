@@ -6,8 +6,9 @@ BERT is a pre-trained language model created by the Hugging Face team that uses 
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-fill-mask)|[fill-mask-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-fill-mask)
 Batch | todo
+
 
 ### Finetuning samples
 
@@ -23,3 +24,52 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Fill Mask|Fill Mask|[imdb](https://huggingface.co/datasets/imdb)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```json
+{
+    "inputs": {
+        "input_string": ["Paris is the [MASK] of France.", "Today is a [MASK] day!"]
+    },
+    "parameters": {
+        "top_k": 2
+    }
+}
+```
+
+#### Sample output
+```json
+[
+    [
+        {
+            "score": 0.9984765648841858,
+            "token": 3007,
+            "token_str": "capital",
+            "sequence": "paris is the capital of france."
+        },
+        {
+            "score": 0.0005300433840602636,
+            "token": 2415,
+            "token_str": "center",
+            "sequence": "paris is the center of france."
+        }
+    ],
+    [
+        {
+            "score": 0.4392628073692322,
+            "token": 2204,
+            "token_str": "good",
+            "sequence": "today is a good day!"
+        },
+        {
+            "score": 0.09155428409576416,
+            "token": 3376,
+            "token_str": "beautiful",
+            "sequence": "today is a beautiful day!"
+        }
+    ]
+]
+```

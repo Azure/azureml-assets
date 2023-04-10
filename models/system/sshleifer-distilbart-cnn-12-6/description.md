@@ -7,7 +7,7 @@ The RoBERTa Large model is a large transformer-based language model that was dev
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[summarization-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-summarization)|[summarization-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-summarization)
 Batch | todo
 
 
@@ -26,3 +26,31 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Summarization|Summarization|[cnn_dailymail](https://huggingface.co/datasets/cnn_dailymail)|[evaluate-model-summarization.ipynb](https://aka.ms/azureml-eval-sdk-summarization)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```json
+{
+    "inputs": {
+        "input_string": ["The tower is 324 metres (1,063 ft) tall, about the same height as an 81-storey building, and the tallest structure in Paris. Its base is square, measuring 125 metres (410 ft) on each side. During its construction, the Eiffel Tower surpassed the Washington Monument to become the tallest man-made structure in the world, a title it held for 41 years until the Chrysler Building in New York City was finished in 1930. It was the first structure to reach a height of 300 metres. Due to the addition of a broadcasting aerial at the top of the tower in 1957, it is now taller than the Chrysler Building by 5.2 metres (17 ft). Excluding transmitters, the Eiffel Tower is the second tallest free-standing structure in France after the Millau Viaduct.", "Paris is the capital and most populous city of France, with an estimated population of 2,175,601 residents as of 2018, in an area of more than 105 square kilometres (41 square miles). The City of Paris is the centre and seat of government of the region and province of Île-de-France, or Paris Region, which has an estimated population of 12,174,880, or about 18 percent of the population of France as of 2017."]
+    },
+    "parameters": {
+        "min_length": 20,
+        "max_length": 70
+    }
+}
+```
+
+#### Sample output
+```json
+[
+    {
+        "summary_text": " The tower is 324 metres (1,063 ft) tall, about the same height as an 81-storey building . It was the first structure to reach a height of 300 metres . Excluding transmitters, the Eiffel Tower is the second tallest free-standing structure in France after the Millau Viaduct ."
+    },
+    {
+        "summary_text": " Paris is the capital and most populous city of France, with an estimated population of 2,175,601 residents as of 2018 . City of Paris is centre and seat of government of the region and province of Île-de-France, or Paris Region, which has an estimated 12,174,880, or about 18 percent"
+    }
+]
+```

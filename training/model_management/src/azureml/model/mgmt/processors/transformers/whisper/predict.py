@@ -179,7 +179,7 @@ def predict(
     task: str,
     model: WhisperForConditionalGeneration,
     tokenizer: WhisperProcessor,
-    **kwargs: Dict
+    **kwargs: Dict,
 ) -> str:
     """Return a whisper predicted text from an audio input.
 

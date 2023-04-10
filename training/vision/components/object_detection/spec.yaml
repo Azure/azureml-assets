@@ -7,6 +7,8 @@ name: train_object_detection_model
 display_name: Train Object Detection Model (Private Preview)
 version: 0.0.3
 
+is_deterministic: false
+
 inputs:
   training_data:
     description: Path to MLTable for training data.

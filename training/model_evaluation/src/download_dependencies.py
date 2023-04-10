@@ -32,6 +32,10 @@ def main():
         for line in f.readlines():
             if line.strip() == "mlflow":
                 continue
+            if "azureml_evaluate_mlflow" in line.strip() or "azureml-evaluate-mlflow" in line.strip():
+                continue
+            if "azureml_metrics" in line.strip() or "azureml-metrics" in line.strip():
+                continue
             try:
                 pipmain(["install", line.strip()])
             except Exception:

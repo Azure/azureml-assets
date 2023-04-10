@@ -9,7 +9,7 @@ is_deterministic: True
 display_name: Convert model to MLFlow
 description: Component converts the input model to MLFlow packaging format
 
-environment: azureml:model-management:1
+environment: azureml://registries/azureml/environments/model-management/versions/4
 
 code: ../../src/
 command: >

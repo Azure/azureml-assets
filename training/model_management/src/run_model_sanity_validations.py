@@ -9,10 +9,10 @@ import logging
 import mlflow
 import shutil
 import sys
-import yaml
 import pandas as pd
 from pathlib import Path
 from typing import Dict
+from ruamel.yaml import YAML
 
 
 MLFLOW_MODEL_SCORING_SCRIPT = "validations/mlflow_model_scoring_script.py"
@@ -24,16 +24,15 @@ stdout_handler = logging.StreamHandler(stream=sys.stdout)
 handlers = [stdout_handler]
 logging.basicConfig(
     level=logging.DEBUG,
-    format='[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s',
-    handlers=handlers
+    format="[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s",
+    handlers=handlers,
 )
 logger = logging.getLogger(__name__)
 
 
-def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: Dict):
+def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: Dict) -> pd.DataFrame:
     if not test_data_path:
-        logger.info("Test data not shared for inferencing")
-        return
+        return None
 
     ext = test_data_path.suffix
     logger.info(f"file type: {ext}")
@@ -68,15 +67,17 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
 
 
 def _load_and_infer_model(model_dir, data):
+    if not data:
+        logger.warning("Data not shared. Could not infer the loaded model")
+        return
+
     try:
-        model = mlflow.pyfunc.load_model(model_dir)
+        model = mlflow.pyfunc.load_model(str(model_dir))
     except Exception as e:
         logger.error(f"Error in loading mlflow model: {e}")
         raise Exception(f"Error in loading mlflow model: {e}")
+
     try:
-        if not data:
-            logger.info("Data not shared. Could not infer the loaded model")
-            return
         logger.info("Predicting model with test data!!!")
         pred_results = model.predict(data)
         logger.info(f"prediction results\n{pred_results}")
@@ -110,12 +111,14 @@ if __name__ == "__main__":
     mlmodel_file_path = model_dir / MLMODEL_FILE_NAME
     conda_env_file_path = model_dir / CONDA_YAML_FILE_NAME
 
+    yaml = YAML()
+
     with open(mlmodel_file_path) as f:
-        mlmodel_dict = yaml.safe_load(f)
+        mlmodel_dict = yaml.load(f)
         logger.info(f"mlmodel :\n{mlmodel_dict}\n")
 
     with open(conda_env_file_path) as f:
-        conda_dict = yaml.safe_load(f)
+        conda_dict = yaml.load(f)
         logger.info(f"conda :\n{conda_dict}\n")
 
     col_rename_map = {}
@@ -134,7 +137,7 @@ if __name__ == "__main__":
             test_data_path=test_data_path,
             mlmodel=mlmodel_dict,
             col_rename_map=col_rename_map,
-        )
+        ),
     )
 
     # copy the model to output dir

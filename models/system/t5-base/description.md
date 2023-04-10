@@ -6,7 +6,7 @@ T5 Base is a text-to-text transformer model that can be used for a variety of NL
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[translation-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-translation)|[translation-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-translation)
 Batch | todo
 
 
@@ -23,3 +23,27 @@ Translation|Translation|[WMT16](https://huggingface.co/datasets/cnn_dailymail)|[
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Translation|Translation|[wmt19/cs-en](https://huggingface.co/datasets/wmt19/viewer/cs-en/)|[evaluate-model-translation.ipynb](https://aka.ms/azureml-eval-sdk-translation)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```json
+{
+    "inputs": {
+        "input_string": ["My name is John and I live in Seattle", "Berlin is the capital of Germany."]
+    }
+}
+```
+
+#### Sample output
+```json
+[
+    {
+        "translation_text": "Mein Name ist John und ich lebe in Seattle"
+    },
+    {
+        "translation_text": "Berlin ist die Hauptstadt Deutschlands."
+    }
+]
+```

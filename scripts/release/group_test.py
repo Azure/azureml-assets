@@ -6,7 +6,6 @@ import concurrent.futures
 import os
 import sys
 import logging
-import yaml
 from contextlib import contextmanager
 from subprocess import check_call, run
 from pathlib import Path
@@ -14,7 +13,7 @@ from azure.ai.ml import load_job, MLClient
 from azure.identity import DefaultAzureCredential
 from azure.core.credentials import AccessToken, TokenCredential
 from datetime import datetime, timedelta
-
+from ruamel.yaml import YAML
 
 logger = logging.getLogger(__name__)
 TEST_YML = "tests.yml"
@@ -76,7 +75,7 @@ def group_test(
         runner: bool = False):
     """Run group tests."""
     with open(tests_dir / TEST_YML) as fp:
-        data = yaml.load(fp, Loader=yaml.FullLoader)
+        data = YAML().load(fp)
         group_pre = None
         if "pre" in data[test_group]:
             group_pre = tests_dir / data[test_group]['pre']
@@ -112,7 +111,7 @@ def group_test(
 
         pytest_jobs = {}  # pytest job path -> assets coverage dict
         with open(tests_dir / TEST_YML) as fp:
-            data = yaml.load(fp, Loader=yaml.FullLoader)
+            data = YAML().load(fp)
             for job, job_data in data[test_group]['jobs'].items():
                 if "pytest_job" in job_data:
                     pytest_jobs[tests_dir / job_data['pytest_job']] = job_data['assets']
@@ -164,11 +163,13 @@ def group_test(
 
         logger.info(f"covered_assets {covered_assets}")
         if coverage_report:
+            yaml = YAML()
+            yaml.preserve_quotes = True
             with open(coverage_report, "r") as yf:
-                cover_yaml = yaml.safe_load(yf) or []
+                cover_yaml = yaml.load(yf) or []
                 cover_yaml.extend(covered_assets)
             with open(coverage_report, "w") as yf:
-                yaml.safe_dump(cover_yaml, yf)
+                yaml.dump(cover_yaml, yf)
 
     if failed_jobs:
         logger.warning(f"{len(failed_jobs)} jobs failed. {failed_jobs}.")

@@ -9,7 +9,7 @@ is_deterministic: True
 display_name: Download model
 description: Downloads a publicly available model
 
-environment: azureml:model-management:1
+environment: azureml://registries/azureml/environments/model-management/versions/4
 
 code: ../../src/
 command: >
@@ -44,4 +44,4 @@ outputs:
     mode: rw_mount
 
 tags:
-    "Preview": ""
+    Preview: ""

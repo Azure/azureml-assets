@@ -6,7 +6,7 @@ The RoBERTa Large model is a pretrained language model developed by the Hugging 
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[sdk-example.ipynb](https://aka.ms/azureml-infer-sdk)|[cli-example.sh](https://aka.ms/azureml-infer-cli)
+Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-fill-mask)|[fill-mask-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-fill-mask)
 Batch | todo
 
 
@@ -24,3 +24,52 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
 |Fill Mask|Fill Mask|[imdb](https://huggingface.co/datasets/imdb)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|
+
+
+### Sample inputs and outputs (for real-time inference)
+
+#### Sample input
+```json
+{
+    "inputs": {
+        "input_string": ["Paris is the <mask> of France.", "Today is a <mask> day!"]
+    },
+    "parameters": {
+        "top_k": 2
+    }
+}
+```
+
+#### Sample output
+```json
+[
+    [
+        {
+            "score": 0.9945607781410217,
+            "token": 812,
+            "token_str": " capital",
+            "sequence": "Paris is the capital of France."
+        },
+        {
+            "score": 0.0038944401312619448,
+            "token": 1867,
+            "token_str": " Capital",
+            "sequence": "Paris is the Capital of France."
+        }
+    ],
+    [
+        {
+            "score": 0.231650248169899,
+            "token": 372,
+            "token_str": " great",
+            "sequence": "Today is a great day!"
+        },
+        {
+            "score": 0.15877646207809448,
+            "token": 2721,
+            "token_str": " beautiful",
+            "sequence": "Today is a beautiful day!"
+        }
+    ]
+]
+```

@@ -54,7 +54,11 @@ class Inferencer:
         self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL
                                or task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL)
         self.custom_dimensions = custom_dimensions
-        self.device = torch.cuda.current_device() if device == "gpu" else -1
+        try:
+            self.device = torch.cuda.current_device() if device == "gpu" else -1
+        except Exception:
+            logger.warning("No GPU found. Using CPU instead")
+            self.device = -1
         self.batch_size = batch_size
         # self._setup_custom_environment()
         with log_activity(logger, constants.TelemetryConstants.LOAD_MODEL,

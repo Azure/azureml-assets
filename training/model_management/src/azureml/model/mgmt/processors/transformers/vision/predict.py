@@ -21,7 +21,7 @@ from transformers import (
     AutoImageProcessor,
     AutoModelForImageClassification,
     TrainingArguments,
-    Trainer
+    Trainer,
 )
 from typing import List, Dict, Any, Optional, Tuple
 
@@ -147,9 +147,7 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
     ['filename', 'boxes'] for object detection, instance segmentation
     """
     # Decode the base64 image column
-    decoded_images = input_data.loc[
-        :, [MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE]
-    ].apply(axis=1, func=_process_image)
+    decoded_images = input_data.loc[:, [MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(axis=1, func=_process_image)
 
     # arguments for Trainer
     test_args = TrainingArguments(
@@ -164,18 +162,14 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
     # To Do: change image height and width based on kwargs.
 
     with tempfile.TemporaryDirectory() as tmp_output_dir:
-        image_path_list = (
-            decoded_images.iloc[:, 0]
-            .map(lambda row: create_temp_file(row, tmp_output_dir))
-            .tolist()
-        )
+        image_path_list = decoded_images.iloc[:, 0].map(lambda row: create_temp_file(row, tmp_output_dir)).tolist()
         predicted_indexes, conf_scores = run_inference_batch(
             test_args,
             image_processor=tokenizer,
             model=model,
             image_path_list=image_path_list,
             task_type=task,
-            threshold=kwargs.get(MLFlowLiterals.THRESHOLD, None)
+            threshold=kwargs.get(MLFlowLiterals.THRESHOLD, None),
         )
 
     df_result = pd.DataFrame(
@@ -198,7 +192,10 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
                     image_labels.append(labels[index])
             predicted_labels.append(image_labels)
 
-    df_result[MLFlowLiterals.PROBS], df_result[MLFlowLiterals.LABELS] = (conf_scores.tolist(), predicted_labels)
+    df_result[MLFlowLiterals.PROBS], df_result[MLFlowLiterals.LABELS] = (
+        conf_scores.tolist(),
+        predicted_labels,
+    )
     return df_result
 
 
@@ -208,7 +205,7 @@ def run_inference_batch(
     model: AutoModelForImageClassification,
     image_path_list: List,
     task_type: HFTaskLiterals,
-    threshold: Optional[float] = None
+    threshold: Optional[float] = None,
 ) -> Tuple[torch.tensor, torch.tensor]:
     """Perform inference on batch of input images.
 
@@ -239,10 +236,7 @@ def run_inference_batch(
         images = [data[HFMiscellaneousConstants.DEFAULT_IMAGE_KEY] for data in examples]
         return image_processor(images, return_tensors="pt")
 
-    inference_dataset = load_dataset(
-        "imagefolder",
-        data_files={"val": image_path_list}
-    )
+    inference_dataset = load_dataset("imagefolder", data_files={"val": image_path_list})
     inference_dataset = inference_dataset["val"]
 
     # Initialize the trainer
