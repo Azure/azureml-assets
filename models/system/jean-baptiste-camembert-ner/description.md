@@ -8,7 +8,7 @@ Summary: camembert-ner is a NER model fine-tuned from camemBERT on the Wikiner-f
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|[token-classification-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-token-classification)|[token-classification-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-token-classification)
-Batch | todo
+Batch | coming soon
 
 
 ### Finetuning samples

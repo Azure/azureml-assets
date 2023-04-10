@@ -8,7 +8,7 @@ The BART model is a transformer encoder-encoder model trained on English languag
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|[summarization-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-summarization)|[summarization-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-summarization)
-Batch | todo
+Batch | coming soon
 
 
 ### Finetuning samples
