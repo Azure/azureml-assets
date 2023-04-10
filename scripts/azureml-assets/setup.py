@@ -13,8 +13,7 @@ setup(
    packages=find_packages(),
    install_requires=[
       "GitPython>=3.1",
-      "pyyaml>=5",  # Remove after ruamel.yaml migration is complete
-      "ruamel.yaml>=0.17.21",
+      "ruamel.yaml==0.17.21",
       "pip>=21",
    ],
    python_requires=">=3.8,<4.0",
