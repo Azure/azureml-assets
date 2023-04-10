@@ -1,0 +1,10 @@
+paths:
+- file: ../predictions/predictions
+transformations:
+- read_json_lines:
+    encoding: utf8
+    include_path_column: false
+    invalid_lines: error
+    partition_size: 20971520
+    path_column: Path
+type: mltable

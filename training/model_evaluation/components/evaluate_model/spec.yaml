@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: evaluate_model
 display_name: Evaluate Model
-description: Evaluate MLFlow models for supported task types.
+description: Evaluate MLFlow models for supported task types. See [docs](aka.ms/azureml/components/evaluate_model) to learn more.
 
 version: 0.0.10.preview
 

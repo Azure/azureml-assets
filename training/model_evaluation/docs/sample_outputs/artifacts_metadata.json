@@ -1,0 +1,7 @@
+{
+    "confusion_matrix": 
+    {
+        "uri": "azureml://experiments/Compute_Metrics_Components_Testing/runs/787529be-80e7-4f19-9f5a-80825ced80b4/artifacts/confusion_matrix", 
+        "class_name": "mlflow.models.evaluation.artifacts.JsonEvaluationArtifact"
+    }
+}

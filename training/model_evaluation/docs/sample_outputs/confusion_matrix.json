@@ -1,0 +1,8 @@
+{
+    "schema_type": "confusion_matrix", 
+    "schema_version": "1.0.0", 
+    "data": {
+        "class_labels": ["0", "1"], 
+        "matrix": [[3, 0], [0, 6]]
+    }
+}

@@ -1,0 +1,4 @@
+{
+  "label_list":["B-PER","I-PER", "O", "B-LOC", "I-LOC", "B-MISC", "I-MISC"],
+  "metrics": ["accuracy", "f1_score_macro", "f1_score_micro"]
+}

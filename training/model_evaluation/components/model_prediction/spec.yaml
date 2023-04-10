@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: model_prediction
 display_name: Model Prediction
-description: Generate predictions on a given mlflow model for supported tasks.
+description: Generate predictions on a given mlflow model for supported tasks. See [docs](aka.ms/azureml/components/model_prediction) to learn more.
 
 version: 0.0.10.preview
 tags:

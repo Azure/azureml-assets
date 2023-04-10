@@ -4,7 +4,8 @@ version: 0.0.5.preview
 type: pipeline
 display_name: Model Evaluation Pipeline
 description: Pipeline component for model evaluation for supported tasks. \
-    Generates predictions on a given model, followed by computing model performance metrics to score the model quality for supported tasks.
+    Generates predictions on a given model, followed by computing model performance metrics to score the model quality for supported tasks. \
+    See [docs](aka.ms/azureml/components/model_evaluation_pipeline) to learn more.
 
 tags:
   type: evaluation

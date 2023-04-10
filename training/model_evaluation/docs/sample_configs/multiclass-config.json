@@ -1,0 +1,11 @@
+{
+  "metrics": ["accuracy", "f1_score_micro", "average_precision_score_macro"],
+  "class_labels": [0, 1],
+  "train_labels": [0, 1],
+  "multilabel": false,
+  "enable_metric_confidence": true,
+  "confidence_metrics": ["accuracy", "f1_score_micro"],
+  "use_binary": false,
+  "positive_label": 0,
+  "sample_weight": [1, 10]
+}

@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: compute_metrics
 display_name: Compute Metrics
-description: Calculate model performance metics, given ground truth and prediction data.
+description: Calculate model performance metrics, given ground truth and prediction data. See [docs](aka.ms/azureml/components/compute_metrics) to learn more.
 
 version: 0.0.10.preview
 type: command
