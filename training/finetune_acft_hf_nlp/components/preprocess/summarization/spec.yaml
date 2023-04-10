@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: summarization_datapreprocess
-version: 0.0.5
+version: 0.0.6
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Summarization DataPreProcess
 description: Component to preprocess data for summarization task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/3
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/4
 
 code: ../../../src/preprocess
 
