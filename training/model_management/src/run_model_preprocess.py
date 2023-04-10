@@ -95,6 +95,18 @@ if __name__ == "__main__":
     if license_file_path:
         shutil.copy(license_file_path, mlflow_model_output_dir)
 
+    # Validation to check if license file exist or not
+    files = os.listdir(mlflow_model_output_dir)
+    is_license = False
+    # Loop through each file and check if it matches the filename "license" (case insensitive)
+    for file in files:
+        name, ext = os.path.splitext(file)
+        if name.lower() == "license":
+            is_license = True
+
+    if not is_license:
+        raise Exception(f"License file doesn't exist for the model : {preprocess_args['model_id']}")
+    
     print(f"\nListing mlflow model directory: {mlflow_model_output_dir}:")
     print(os.listdir(mlflow_model_output_dir))
 
