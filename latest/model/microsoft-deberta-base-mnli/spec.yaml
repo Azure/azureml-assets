@@ -11,7 +11,7 @@ tags:
   license: mit
   min_inference_sku: Standard_DS2_v2
   task: text-classification
-version: 5
+version: 1
 description: |
   DeBERTa is a version of the BERT model that has been improved through the use of disentangled attention and enhanced mask decoders. Compared to BERT and RoBERTa, it outperforms them on a majority of NLU tasks using 80GB of training data. It has been fine-tuned for NLU tasks and has achieved dev results on SQuAD 1.1/2.0 and MNLI tasks. If you find the model useful please cite the paper.
 

@@ -11,7 +11,7 @@ tags:
   license: apache-2.0
   min_inference_sku: Standard_DS3_v2
   task: translation
-version: 6
+version: 1
 description: |
   T5 Base is a text-to-text transformer model that can be used for a variety of NLP tasks, such as machine translation, document summarization, question answering and classification tasks, such as sentiment analysis. It was developed by a team at Google and is pre-trained on the Colossal Clean Crawled Corpus. It is licensed under Apache 2.0 and you can start using the model by installing the T5 tokenizer and model and following the examples provided in the Colab Notebook created by its developers. Be mindful of bias, risks and limitations that may arise while using this model.
 
