@@ -9,3 +9,4 @@
 /common/components/deploy_model/ @azure/aml-training
 /common/src/model_deployment/ @azure/aml-training
 /common/src/model_registration/ @azure/aml-training
+
