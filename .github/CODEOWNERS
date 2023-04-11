@@ -5,3 +5,4 @@
 /sample/ @Azure/aml-assets
 /data/ @Azure/azureml-data
 /models/ @azure/aml-training
+/common/ @azure/aml-training
