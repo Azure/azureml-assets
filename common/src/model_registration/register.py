@@ -149,14 +149,13 @@ def main(args):
 
     # Updating tags and properties with value provided in metadata file
     if args.model_metadata:
-        metadata = {}
         with open(args.model_metadata, "r") as stream:
             metadata = yaml.safe_load(stream)
-        tags.update(metadata.get("tags", {}))
-        properties.update(metadata.get("properties", {}))
-        model_description = metadata.get("description", model_description)
-        model_type = metadata.get("type", model_type)
-        flavors = metadata.get("flavors", flavors)
+            tags.update(metadata.get("tags", {}))
+            properties.update(metadata.get("properties", {}))
+            model_description = metadata.get("description", model_description)
+            model_type = metadata.get("type", model_type)
+            flavors = metadata.get("flavors", flavors)
 
     # validations
     if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
