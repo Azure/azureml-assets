@@ -4,7 +4,7 @@ path: ./
 properties:
   SHA: a4f8f3ea906ed274767e9906dbaede7531d660ff
   datasets: cnn_dailymail, xsum
-  finetuning-tasks: summarization
+  finetuning-tasks: summarization, translation
   languages: en
 tags:
   Preview: ''

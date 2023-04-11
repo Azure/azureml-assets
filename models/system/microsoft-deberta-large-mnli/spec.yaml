@@ -4,7 +4,7 @@ path: ./
 properties:
   SHA: 7296194b9009373def4f7c5dad292651e4b5cf4e
   datasets: ''
-  finetuning-tasks: text-classification, token-classification, question-answering
+  finetuning-tasks: text-classification, token-classification
   languages: en
 tags:
   Preview: ''
