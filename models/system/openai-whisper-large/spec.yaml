@@ -17,4 +17,4 @@ tags:
   license: apache-2.0
   min_inference_sku: Standard_DS4_v2
   task: automatic-speech-recognition
-version: 3
+version: 1
