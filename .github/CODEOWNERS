@@ -5,4 +5,7 @@
 /sample/ @Azure/aml-assets
 /data/ @Azure/azureml-data
 /models/ @azure/aml-training
-/common/ @azure/aml-training
+/common/components/register_model/ @azure/aml-training
+/common/components/deploy_model/ @azure/aml-training
+/common/src/model_deployment/ @azure/aml-training
+/common/src/model_registration/ @azure/aml-training
