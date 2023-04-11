@@ -7,7 +7,7 @@ The pysentimiento library is an open-source tool for non-commercial use and scie
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|[entailment-contradiction-online.ipynb](https://aka.ms/azureml-infer-online-sdk-text-classification)|[text-classification-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-text-classification)
-Batch | todo
+Batch | coming soon
 
 
 ### Finetuning samples

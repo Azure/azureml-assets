@@ -7,7 +7,7 @@ The GPT-2 Transformer-based language model is designed primarily for use by AI r
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|[text-generation-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-text-generation)|[text-generation-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-text-generation)
-Batch | todo
+Batch | coming soon
 
 
 ### Finetuning samples
@@ -22,7 +22,7 @@ Token Classification|Token Classification|[Conll2003](https://huggingface.co/dat
 
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
-|Text generation|Text generation|todo|[evaluate-model-text-generation.ipynb](https://aka.ms/azureml-eval-sdk-text-generation/)|
+|Text generation|Text generation|coming soon|[evaluate-model-text-generation.ipynb](https://aka.ms/azureml-eval-sdk-text-generation/)|
 
 
 ### Sample inputs and outputs (for real-time inference)

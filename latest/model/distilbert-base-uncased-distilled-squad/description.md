@@ -7,7 +7,7 @@ The DistilBERT model is a distilled version of the BERT language model with 40% 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|[question-answering-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-question-answering)|[question-answering-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-question-answering)
-Batch | todo
+Batch | coming soon
 
 
 ### Finetuning samples
