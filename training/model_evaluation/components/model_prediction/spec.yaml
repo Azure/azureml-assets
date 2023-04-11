@@ -78,7 +78,7 @@ outputs:
     type: mltable
 
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/3
+environment: azureml://registries/azureml/environments/model-evaluation/versions/4
 
 command: >-
   python download_dependencies.py
