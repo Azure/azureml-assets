@@ -63,7 +63,7 @@ def parse_args():
     parser.add_argument(
         "--model_metadata",
         type=str,
-        help="JSON file that contains model metadata confirming to Model V2",
+        help="JSON/YAML file that contains model metadata confirming to Model V2",
         default=None,
     )
     parser.add_argument(
