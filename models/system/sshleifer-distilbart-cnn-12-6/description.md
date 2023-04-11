@@ -8,7 +8,7 @@ The RoBERTa Large model is a large transformer-based language model that was dev
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|[summarization-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-summarization)|[summarization-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-summarization)
-Batch | todo
+Batch | coming soon
 
 
 ### Finetuning samples

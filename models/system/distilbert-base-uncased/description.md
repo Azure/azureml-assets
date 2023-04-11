@@ -7,7 +7,7 @@ The DistilBERT base model (uncased) is a distilled version of the BERT base mode
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|[fill-mask-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-fill-mask)|[fill-mask-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-fill-mask)
-Batch | todo
+Batch | coming soon
 
 
 ### Finetuning samples

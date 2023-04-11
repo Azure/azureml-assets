@@ -7,7 +7,7 @@ T5 Small is a text-to-text transformer model with 60 million parameters. It is d
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|[translation-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-translation)|[translation-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-translation)
-Batch | todo
+Batch | coming soon
 
 
 ### Finetuning samples

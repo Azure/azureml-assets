@@ -7,7 +7,7 @@ T5 Base is a text-to-text transformer model that can be used for a variety of NL
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|[translation-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-translation)|[translation-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-translation)
-Batch | todo
+Batch | coming soon
 
 
 ### Finetuning samples

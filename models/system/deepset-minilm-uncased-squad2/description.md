@@ -7,7 +7,7 @@ The MiniLM-L12-H384-uncased model is a microsoft language model for extractive q
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|[question-answering-online-endpoint.ipynb](https://aka.ms/azureml-infer-online-sdk-question-answering)|[question-answering-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-question-answering)
-Batch | todo
+Batch | coming soon
 
 
 ### Finetuning samples
