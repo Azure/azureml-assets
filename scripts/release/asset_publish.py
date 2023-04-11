@@ -605,7 +605,7 @@ if __name__ == "__main__":
         # the following dump process will generate a yaml file for the report
         # process in the end of the publishing script
         with open(failed_list_file, "w") as file:
-            yaml.dump(failed_assets, file)
+            yaml.dump(json.loads(json.dumps(failed_assets)), file)
 
     if tests_dir:
         logger.print("Locating test files")
