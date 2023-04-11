@@ -174,7 +174,7 @@ def main(args):
         mlmodel_path = os.path.join(model_path, "MLmodel")
         with open(mlmodel_path, "r") as stream:
             metadata = yaml.safe_load(stream)
-            flavors = metadata.get("flavors", flavors)
+            flavors = metadata.get('flavors', flavors)
 
     if not model_version or is_model_available(ml_client, model_name, model_version):
         # hack to get current model versions in registry
