@@ -150,13 +150,8 @@ def main(args):
     # Updating tags and properties with value provided in metadata file
     if args.model_metadata:
         metadata = {}
-        try:
-            with open(args.model_metadata, "r") as stream:
-                metadata = json.load(stream)
-        except Exception as e:
-            print(f"Failed to read metadata from json file: {e}")
-            with open(args.model_metadata, "r") as stream:
-                metadata = yaml.safe_load(stream)
+        with open(args.model_metadata, "r") as stream:
+            metadata = yaml.safe_load(stream)
         tags.update(metadata.get("tags", {}))
         properties.update(metadata.get("properties", {}))
         model_description = metadata.get("description", model_description)
