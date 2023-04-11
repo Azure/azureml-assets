@@ -25,9 +25,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     # add arguments
-    parser.add_argument(
-        "--model_path", type=str, help="Directory containing model files"
-    )
+    parser.add_argument("--model_path", type=str, help="Directory containing model files")
     parser.add_argument(
         "--model_type",
         type=str,
@@ -59,7 +57,7 @@ def parse_args():
     parser.add_argument(
         "--model_download_metadata",
         type=str,
-        help="Json file containing metadata related to the downloaded model",
+        help="JSON file containing metadata related to the downloaded model",
         default=None,
     )
     parser.add_argument(
@@ -173,7 +171,7 @@ def main(args):
         mlmodel_path = os.path.join(model_path, "MLmodel")
         with open(mlmodel_path, "r") as stream:
             metadata = yaml.safe_load(stream)
-            flavors = metadata.get('flavors', flavors)
+            flavors = metadata.get("flavors", flavors)
 
     if not model_version or is_model_available(ml_client, model_name, model_version):
         # hack to get current model versions in registry
