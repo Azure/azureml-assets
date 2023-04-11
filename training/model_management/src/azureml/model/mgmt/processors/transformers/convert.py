@@ -120,7 +120,7 @@ def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_co
 
     predict = os.path.join(os.path.dirname(__file__), "diffusion", "predict.py")
     hf_conf['hf_predict_module'] = "predict"
-    hf_conf['yamlcustom_config_module'] = "diffusers"
+    hf_conf['custom_config_module'] = "diffusers"
     hf_conf['custom_tokenizer_module'] = "diffusers"
     hf_conf['custom_model_module'] = "diffusers"
     hf_conf['force_load_tokenizer'] = False
