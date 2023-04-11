@@ -30,7 +30,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: Dict) -> pd.DataFrame:
+def _load_and_prepare_data(
+    test_data_path: Path, mlmodel: Dict, col_rename_map: Dict
+) -> pd.DataFrame:
     if not test_data_path:
         return None
 
@@ -51,7 +53,7 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
     logger.info(f"data cols => {data.columns}")
     # validate model input signature matches with data provided
     if mlmodel.get("signature", None):
-        input_signatures_str = mlmodel['signature'].get("inputs", None)
+        input_signatures_str = mlmodel["signature"].get("inputs", None)
     else:
         logger.warning("signature is missing from MLModel file.")
 
@@ -88,10 +90,16 @@ def _load_and_infer_model(model_dir, data):
 
 def _get_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
-    parser.add_argument("--test-data-path", type=Path, required=False, help="Test dataset path")
+    parser.add_argument(
+        "--model-path", type=Path, required=True, help="Model input path"
+    )
+    parser.add_argument(
+        "--test-data-path", type=Path, required=False, help="Test dataset path"
+    )
     parser.add_argument("--column-rename-map", type=str, required=False, help="")
-    parser.add_argument("--output-model-path", type=Path, required=True, help="Output model path")
+    parser.add_argument(
+        "--output-model-path", type=Path, required=True, help="Output model path"
+    )
     return parser
 
 
@@ -110,7 +118,6 @@ if __name__ == "__main__":
 
     mlmodel_file_path = model_dir / MLMODEL_FILE_NAME
     conda_env_file_path = model_dir / CONDA_YAML_FILE_NAME
-
 
     with open(mlmodel_file_path) as f:
         mlmodel_dict = yaml.safe_load(f)
