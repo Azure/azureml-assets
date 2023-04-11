@@ -7,7 +7,7 @@ import argparse
 import json
 import os
 import shutil
-from ruamel.yaml import YAML
+import yaml
 
 from azure.ai.ml import MLClient
 from azure.ai.ml.constants import AssetTypes
@@ -65,7 +65,7 @@ def parse_args():
     parser.add_argument(
         "--model_metadata",
         type=str,
-        help="YAML file that contains model metadata confirming to Model V2",
+        help="Json file that contains model metadata confirming to Model V2",
         default=None,
     )
     parser.add_argument(
@@ -172,7 +172,7 @@ def main(args):
         model_path = "mlflow_model_folder"
         mlmodel_path = os.path.join(model_path, "MLmodel")
         with open(mlmodel_path, "r") as stream:
-            metadata = YAML().load(stream)
+            metadata = yaml.safe_load(stream)
             flavors = metadata.get('flavors', flavors)
 
     if not model_version or is_model_available(ml_client, model_name, model_version):
