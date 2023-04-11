@@ -119,12 +119,12 @@ def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_co
         model = StableDiffusionPipeline.from_pretrained(input_dir, local_files_only=True, torch_dtype=torch.float16)
 
     predict = os.path.join(os.path.dirname(__file__), "diffusion", "predict.py")
-    hf_conf["hf_predict_module"] = "predict"
-    hf_conf["custom_config_module"] = "diffusers"
-    hf_conf["custom_tokenizer_module"] = "diffusers"
-    hf_conf["custom_model_module"] = "diffusers"
-    hf_conf["force_load_tokenizer"] = False
-    hf_conf["force_load_config"] = False
+    hf_conf['hf_predict_module'] = "predict"
+    hf_conf['yamlcustom_config_module'] = "diffusers"
+    hf_conf['custom_tokenizer_module'] = "diffusers"
+    hf_conf['custom_model_module'] = "diffusers"
+    hf_conf['force_load_tokenizer'] = False
+    hf_conf['force_load_config'] = False
     return {
         "hf_model": model,
         "hf_conf": hf_conf,
@@ -176,9 +176,9 @@ def _get_nlp_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = {}
 @log_execution_time
 def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     """Convert Hugging face pytorch model to Mlflow."""
-    signatures = translate_params.get("signature")
-    model_id = translate_params["model_id"]
-    task = translate_params["task"]
+    signatures = translate_params.get('signature')
+    model_id = translate_params['model_id']
+    task = translate_params['task']
     task_category = task
     if "stable-diffusion" in model_id:
         task_category = SupportedTextToImageVariants.STABLE_DIFFUSION.value
@@ -187,9 +187,9 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
 
     hf_pretrained_class = TaskToClassMapping.get_loader_class_name(task_category)
     hf_conf = {
-        "task_type": task,
-        "hf_pretrained_class": hf_pretrained_class,
-        "huggingface_id": model_id,
+        'task_type': task,
+        'hf_pretrained_class': hf_pretrained_class,
+        'huggingface_id': model_id,
     }
 
     if SupportedTextToImageVariants.has_value(task_category):

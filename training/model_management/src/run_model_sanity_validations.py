@@ -51,7 +51,7 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
     logger.info(f"data cols => {data.columns}")
     # validate model input signature matches with data provided
     if mlmodel.get("signature", None):
-        input_signatures_str = mlmodel["signature"].get("inputs", None)
+        input_signatures_str = mlmodel['signature'].get("inputs", None)
     else:
         logger.warning("signature is missing from MLModel file.")
 
