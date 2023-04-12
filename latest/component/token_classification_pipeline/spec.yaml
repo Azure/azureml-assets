@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: token_classification_pipeline
-version: 0.0.5
+version: 0.0.1
 type: pipeline
 display_name: Token Classification Pipeline
 description: Pipeline component for named entity recognition
@@ -453,7 +453,7 @@ outputs:
 jobs:
   token_classification_model_import:
     type: command
-    component: azureml://registries/azureml-preview/components/token_classification_model_import/versions/0.0.5
+    component: azureml://registries/azureml-preview/components/token_classification_model_import/versions/0.0.1
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       huggingface_id: ${{parent.inputs.huggingface_id}}
@@ -461,7 +461,7 @@ jobs:
       mlflow_model_path: ${{parent.inputs.mlflow_model_path}}
   token_classification_datapreprocess:
     type: command
-    component: azureml://registries/azureml-preview/components/token_classification_datapreprocess/versions/0.0.5
+    component: azureml://registries/azureml-preview/components/token_classification_datapreprocess/versions/0.0.1
     compute: ${{parent.inputs.compute_preprocess}}
     inputs:
       token_key: ${{parent.inputs.token_key}}
@@ -476,7 +476,7 @@ jobs:
       model_selector_output: ${{parent.jobs.token_classification_model_import.outputs.output_dir}}
   token_classification_finetune:
     type: command
-    component: azureml://registries/azureml-preview/components/token_classification_finetune/versions/0.0.5
+    component: azureml://registries/azureml-preview/components/token_classification_finetune/versions/0.0.1
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
