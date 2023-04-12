@@ -21,9 +21,9 @@ Translation|Translation|[WMT16](https://huggingface.co/datasets/cnn_dailymail)|[
 
 ### Model Evaluation
 
-|Task|Use case|Dataset|Python sample (Notebook)|
-|---|--|--|--|
-|Summarization|Summarization|[cnn_dailymail](https://huggingface.co/datasets/cnn_dailymail)|[evaluate-model-summarization.ipynb](https://aka.ms/azureml-eval-sdk-summarization)|
+| Task          | Use case      | Dataset                                                        | Python sample (Notebook)                                                            | CLI with YAML                                                                     |
+|---------------|---------------|----------------------------------------------------------------|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| Summarization | Summarization | [cnn_dailymail](https://huggingface.co/datasets/cnn_dailymail) | [evaluate-model-summarization.ipynb](https://aka.ms/azureml-eval-sdk-summarization) | [evaluate-model-summarization.yml](https://aka.ms/azureml-eval-cli-summarization) |
 
 
 ### Sample inputs and outputs (for real-time inference)

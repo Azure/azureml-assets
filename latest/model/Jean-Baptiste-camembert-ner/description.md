@@ -21,9 +21,9 @@ Token Classification|Token Classification|[Conll2003](https://huggingface.co/dat
 
 ### Model Evaluation
 
-|Task|Use case|Dataset|Python sample (Notebook)|
-|---|--|--|--|
-|Token Classification|Token Classification|[CoNLL 2003](https://huggingface.co/datasets/conll2003)|[evaluate-model-token-classification.ipynb](https://aka.ms/azureml-eval-sdk-token-classification)|
+| Task                 | Use case             | Dataset                                                 | Python sample (Notebook)                                                                          | CLI with YAML                                                                                   |
+|----------------------|----------------------|---------------------------------------------------------|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+| Token Classification | Token Classification | [CoNLL 2003](https://huggingface.co/datasets/conll2003) | [evaluate-model-token-classification.ipynb](https://aka.ms/azureml-eval-sdk-token-classification) | [evaluate-model-token-classification.yml](https://aka.ms/azureml-eval-cli-token-classification) |
 
 
 ### Sample inputs and outputs (for real-time inference)

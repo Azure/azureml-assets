@@ -37,9 +37,9 @@ description: |
 
   ### Model Evaluation
 
-  |Task|Use case|Dataset|Python sample (Notebook)|
-  |---|--|--|--|
-  |Text generation|Text generation|coming soon|[evaluate-model-text-generation.ipynb](https://aka.ms/azureml-eval-sdk-text-generation/)|
+  | Task            | Use case        | Dataset     | Python sample (Notebook)                                                                 | CLI with YAML                                                                          |
+  |-----------------|-----------------|-------------|------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+  | Text generation | Text generation | coming soon | [evaluate-model-text-generation.ipynb](https://aka.ms/azureml-eval-sdk-text-generation/) | [evaluate-model-text-generation.yml](https://aka.ms/azureml-eval-cli-text-generation/) |
 
 
   ### Sample inputs and outputs (for real-time inference)
