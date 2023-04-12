@@ -14,9 +14,9 @@ Batch | coming soon
 
 ### Model Evaluation
 
-|Task|Use case|Dataset|Python sample (Notebook)|
-|---|--|--|--|
-|Text Classification|Emotion Detection|[GoEmotions](https://huggingface.co/datasets/go_emotions)|[evaluate-model-text-classification.ipynb](https://aka.ms/azureml-eval-sdk-text-classification)|
+| Task                | Use case          | Dataset                                                   | Python sample (Notebook)                                                                        | CLI with YAML                                                                                 |
+|---------------------|-------------------|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| Text Classification | Emotion Detection | [GoEmotions](https://huggingface.co/datasets/go_emotions) | [evaluate-model-text-classification.ipynb](https://aka.ms/azureml-eval-sdk-text-classification) | [evaluate-model-text-classification.yml](https://aka.ms/azureml-eval-cli-text-classification) |
 
 
 ### Finetuning samples

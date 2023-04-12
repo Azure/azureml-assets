@@ -21,9 +21,9 @@ Question Answering|Extractive Q&A|[SQUAD (Wikipedia)](https://huggingface.co/dat
 
 ### Model Evaluation
 
-|Task|Use case|Dataset|Python sample (Notebook)|
-|---|--|--|--|
-|Question Answering|Extractive Q&A|[Squad v2](https://huggingface.co/datasets/squad_v2)|[evaluate-model-question-answering.ipynb](https://aka.ms/azureml-eval-sdk-question-answering)|
+| Task               | Use case       | Dataset                                              | Python sample (Notebook)                                                                      | CLI with YAML                                                                               |
+|--------------------|----------------|------------------------------------------------------|-----------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| Question Answering | Extractive Q&A | [Squad v2](https://huggingface.co/datasets/squad_v2) | [evaluate-model-question-answering.ipynb](https://aka.ms/azureml-eval-sdk-question-answering) | [evaluate-model-question-answering.yml](https://aka.ms/azureml-eval-cli-question-answering) |
 
 
 ### Sample inputs and outputs (for real-time inference)

@@ -20,9 +20,9 @@ Translation|Translation|[WMT16](https://huggingface.co/datasets/cnn_dailymail)|[
 
 ### Model Evaluation
 
-|Task|Use case|Dataset|Python sample (Notebook)|
-|---|--|--|--|
-|Translation|Translation|[wmt19/cs-en](https://huggingface.co/datasets/wmt19/viewer/cs-en/)|[evaluate-model-translation.ipynb](https://aka.ms/azureml-eval-sdk-translation)|
+| Task        | Use case    | Dataset                                                            | Python sample (Notebook)                                                        | CLI with YAML                                                                   |
+|-------------|-------------|--------------------------------------------------------------------|---------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| Translation | Translation | [wmt19/cs-en](https://huggingface.co/datasets/wmt19/viewer/cs-en/) | [evaluate-model-translation.ipynb](https://aka.ms/azureml-eval-sdk-translation) | [evaluate-model-translation.ipynb](https://aka.ms/azureml-eval-sdk-translation) |[evaluate-model-translation.yml](https://aka.ms/azureml-eval-cli-translation)|
 
 
 ### Sample inputs and outputs (for real-time inference)
