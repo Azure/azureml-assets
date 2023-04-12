@@ -8,8 +8,9 @@ dependencies:
 - pandas~=1.3.0
 - scipy~=1.7.0
 - scikit-learn-intelex=={{latest-pypi-version}}
-- numpy~=1.21.0
+- numpy~=1.22.0
 - pip:
+  - wheel~=0.38.1
   - matplotlib~=3.5.0
   - psutil~=5.8.0
   - tqdm~=4.62.0
@@ -19,4 +20,5 @@ dependencies:
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
   - scikit-learn~=1.1.0
+  - joblib~=1.2.0
   - debugpy~=1.6.3
