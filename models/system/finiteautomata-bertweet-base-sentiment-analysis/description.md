@@ -1,12 +1,12 @@
 The pysentimiento library is an open-source tool for non-commercial use and scientific research purposes, used for Sentiment Analysis and Social NLP tasks. It was trained on about 40k tweets from the SemEval 2017 corpus, using the BERTweet - a RoBERTa model trained on English tweets and processes POS, NEG, and NEU labels. The Github repository link is https://github.com/finiteautomata/pysentimiento/  While using this model, it is important to keep in mind that they are trained with third-party datasets and are subject to their respective licenses.Additionally Publication details are also mentioned.
 
-> The above summary was generated using ChatGPT. Review the [original model card](https://huggingface.co/finiteautomata/bertweet-base-sentiment-analysis) to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/finiteautomata/bertweet-base-sentiment-analysis" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|[entailment-contradiction-online.ipynb](https://aka.ms/azureml-infer-online-sdk-text-classification)|[text-classification-online-endpoint.sh](https://aka.ms/azureml-infer-online-cli-text-classification)
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">entailment-contradiction-online.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
 Batch | coming soon
 
 
@@ -14,14 +14,14 @@ Batch | coming soon
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|--|
-Text Classification|Emotion Detection|[Emotion](https://huggingface.co/datasets/dair-ai/emotion)|[emotion-detection.ipynb](https://aka.ms/azureml-ft-sdk-emotion-detection)|[emotion-detection.sh](https://aka.ms/azureml-ft-cli-emotion-detection)
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
 
 
 ### Model Evaluation
 
 |Task|Use case|Dataset|Python sample (Notebook)|
 |---|--|--|--|
-|Text Classification|Emotion Detection|[GoEmotions](https://huggingface.co/datasets/go_emotions)|[evaluate-model-text-classification.ipynb](https://aka.ms/azureml-eval-sdk-text-classification)|
+|Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/go_emotions" target="_blank">GoEmotions</a>|<a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a>|
 
 
 ### Sample inputs and outputs (for real-time inference)
