@@ -19,7 +19,7 @@ dependencies:
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
   - tensorboard~=2.9.0
-  - tensorflow-gpu~=2.9.3
+  - tensorflow-gpu~=2.9.0
   - tensorflow-datasets~=4.5.0
   - onnxruntime-gpu~=1.9.0
   - protobuf~=3.20
