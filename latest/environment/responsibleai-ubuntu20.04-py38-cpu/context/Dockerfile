@@ -27,10 +27,10 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
                           'domonic==0.9.10'
 
 # Install azureml packages
-RUN pip install 'azureml-dataset-runtime==1.49.0' \
-                'azureml-core==1.49.0' \
-                'azureml-mlflow==1.49.0' \
-                'azureml-telemetry==1.49.0'
+RUN pip install 'azureml-dataset-runtime==1.50.0' \
+                'azureml-core==1.50.0' \
+                'azureml-mlflow==1.50.0' \
+                'azureml-telemetry==1.50.0'
 
 RUN pip freeze
 

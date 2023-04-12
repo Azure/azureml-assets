@@ -20,10 +20,10 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # Install azureml packages
-RUN pip install 'azureml-dataset-runtime==1.49.0' \
-                'azureml-core==1.49.0' \
-                'azureml-mlflow==1.49.0' \
-                'azureml-automl-dnn-vision==1.49.1' \
+RUN pip install 'azureml-dataset-runtime==1.50.0' \
+                'azureml-core==1.50.0' \
+                'azureml-mlflow==1.50.0' \
+                'azureml-automl-dnn-vision==1.50.0' \
                 'azureml-rai-utils==0.0.2' \
                 'https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-vision/responsibleai_vision-0.0.25-py3-none-any.whl'
 # Todo: Need to install rai-vision-utils from wheels and update the raivisioninsights package wheel 
