@@ -8,6 +8,7 @@ version: 0.0.1
 tags:
   type: evaluation
   sub_type: evaluate_model
+  Preview: ""
 
 inputs:
   task:
