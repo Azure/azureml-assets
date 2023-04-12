@@ -185,3 +185,6 @@ outputs:
   model_deployment_details:
     type: uri_file
     description: Json file to which deployment details will be written
+
+tags:
+    Preview: ""
