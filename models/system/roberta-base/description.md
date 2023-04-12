@@ -13,9 +13,9 @@ Batch | coming soon
 
 ### Model Evaluation
 
-|Task|Use case|Dataset|Python sample (Notebook)|
-|---|--|--|--|
-|Fill Mask|Fill Mask|[imdb](https://huggingface.co/datasets/imdb)|[evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/)|
+| Task      | Use case  | Dataset                                      | Python sample (Notebook)                                                     | CLI with YAML                                                              |
+|-----------|-----------|----------------------------------------------|------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| Fill Mask | Fill Mask | [imdb](https://huggingface.co/datasets/imdb) | [evaluate-model-fill-mask.ipynb](https://aka.ms/azureml-eval-sdk-fill-mask/) | [evaluate-model-fill-mask.yml](https://aka.ms/azureml-eval-cli-fill-mask/) |
 
 
 ### Finetuning samples
