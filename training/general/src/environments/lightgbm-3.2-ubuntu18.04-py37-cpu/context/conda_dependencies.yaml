@@ -7,7 +7,7 @@ dependencies:
 - pip=21.3.1
 - pandas>=1.1,<1.2
 - scipy~=1.5.0
-- numpy~=1.21.0
+- numpy~=1.22.0
 - pip:
   - matplotlib>=3.3,<3.4
   - psutil>=5.8,<5.9
@@ -20,6 +20,6 @@ dependencies:
   - scikit-learn~=0.24.1
   - debugpy~=1.6.3
   - xgboost~=1.4.0
-  - lightgbm~=3.2.0
+  - lightgbm~=3.3.5
   - distributed~=2021.10.0
   - adlfs~=0.7.0
