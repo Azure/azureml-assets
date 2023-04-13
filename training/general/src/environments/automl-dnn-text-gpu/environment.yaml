@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/azureml-automl
+  name: azureml/curated/automl-dnn-text-gpu
   os: linux
   context:
     dir: context
