@@ -11,6 +11,7 @@ import torch
 import ast
 import traceback
 import mltable
+import os
 from itertools import repeat
 
 from exceptions import (ModelEvaluationException,
@@ -228,15 +229,27 @@ def test_model():
                                                           input_column_names=args.input_column_names,
                                                           is_mltable=is_mltable)
         preds.to_json(args.predictions, orient="records", lines=True)
-        preds_mltable = mltable.from_json_lines_files(paths=[{'file': args.predictions}])
+
+        preds_file_name = args.predictions.split(os.sep)[-1]
+        preds_mltable_file_path = args.predictions_mltable + os.sep + preds_file_name
+        preds.to_json(preds_mltable_file_path, orient="records", lines=True)
+        preds_mltable = mltable.from_json_lines_files(paths=[{'file': preds_mltable_file_path}])
         preds_mltable.save(args.predictions_mltable)
         if pred_probas is not None:
             pred_probas.to_json(args.prediction_probabilities, orient="records", lines=True)
-            pred_probas_mltable = mltable.from_json_lines_files(paths=[{'file': args.prediction_probabilities}])
+
+            pred_probas_file_name = args.prediction_probabilities.split(os.sep)[-1]
+            pred_probas_mltable_file_path = args.prediction_probabilities_mltable + os.sep + pred_probas_file_name
+            pred_probas.to_json(pred_probas_mltable_file_path, orient="records", lines=True)
+            pred_probas_mltable = mltable.from_json_lines_files(paths=[{'file': pred_probas_mltable_file_path}])
             pred_probas_mltable.save(args.prediction_probabilities_mltable)
         if ground_truth is not None:
             ground_truth.to_json(args.ground_truth, orient="records", lines=True)
-            ground_truth_mltable = mltable.from_json_lines_files(paths=[{'file': args.ground_truth}])
+
+            ground_truth_file_name = args.ground_truth.split(os.sep)[-1]
+            ground_truth_mltable_file_path = args.ground_truth_mltable + os.sep + ground_truth_file_name
+            ground_truth.to_json(ground_truth_mltable_file_path, orient="records", lines=True)
+            ground_truth_mltable = mltable.from_json_lines_files(paths=[{'file': ground_truth_mltable_file_path}])
             ground_truth_mltable.save(args.ground_truth_mltable)
     try:
         root_run.add_properties(properties=constants.ROOT_RUN_PROPERTIES)

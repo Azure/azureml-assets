@@ -4,7 +4,7 @@ display_name: Compute Metrics
 description: Calculate model performance metics, given ground truth and prediction
   data.
 
-version: 0.0.1
+version: 0.0.2
 type: command
 
 tags:
