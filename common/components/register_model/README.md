@@ -1,7 +1,7 @@
 # Model Registration Component
 This component can be used in [azure machine learning pipelines](https://learn.microsoft.com/en-us/azure/machine-learning/concept-ml-pipelines?view=azureml-api-2) to [register](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-models?view=azureml-api-2&tabs=cli%2Cuse-local) the model in [workspace](https://learn.microsoft.com/en-us/azure/machine-learning/concept-workspace?view=azureml-api-2) or [registry](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-registries?view=azureml-api-2&tabs=cli).
 Model registration allows you to store and version your models in the Azure cloud, in your workspace. It helps you organize and keep track of your trained models.
-The components can be seen here ![as shown in the figure](https://aka.ms/azureml-ft-docs-finetune-component-images)
+The components can be seen here ![as shown in the figure]
 
 # 1. Inputs
 
@@ -33,11 +33,11 @@ The components can be seen here ![as shown in the figure](https://aka.ms/azureml
 
 1. _model_name_ (string, optional)
 
-    Model name to use in the registration. If name already exists, the version will be auto incremented
+    Model name to use in the registration. If name already exists, the version will be auto incremented.If this parameter will not be passed, script will try to get model_name from _model_download_metadata_ file
 
 2. _model_version_ (string, optional)
 
-    Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented
+    Model version in workspace/registry. If the same model name and version exists or if this parameter is will not be passed, the version will be auto incremented.
 
 3. _model_type_ (string, optional)
 
