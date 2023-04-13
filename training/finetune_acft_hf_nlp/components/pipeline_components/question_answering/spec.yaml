@@ -466,7 +466,7 @@ outputs:
 jobs:
   question_answering_model_import:
     type: command
-    component: azureml://registries/azureml-preview/components/question_answering_model_import/versions/0.0.1
+    component: azureml://registries/azureml/components/question_answering_model_import/versions/0.0.1
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       huggingface_id: ${{parent.inputs.huggingface_id}}
@@ -474,7 +474,7 @@ jobs:
       mlflow_model_path: ${{parent.inputs.mlflow_model_path}}
   question_answering_datapreprocess:
     type: command
-    component: azureml://registries/azureml-preview/components/question_answering_datapreprocess/versions/0.0.1
+    component: azureml://registries/azureml/components/question_answering_datapreprocess/versions/0.0.1
     compute: ${{parent.inputs.compute_preprocess}}
     inputs:
       question_key: ${{parent.inputs.question_key}}
@@ -495,7 +495,7 @@ jobs:
       model_selector_output: ${{parent.jobs.question_answering_model_import.outputs.output_dir}}
   question_answering_finetune:
     type: command
-    component: azureml://registries/azureml-preview/components/question_answering_finetune/versions/0.0.1
+    component: azureml://registries/azureml/components/question_answering_finetune/versions/0.0.1
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -550,7 +550,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
   model_prediction:
     type: command
-    component: azureml://registries/azureml-preview/components/model_prediction/versions/0.0.9.preview
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.1
     compute: ${{parent.inputs.compute_model_evaluation}}
     inputs:
       task: question-answering
@@ -563,7 +563,7 @@ jobs:
       mlflow_model: ${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}
   compute_metrics:
     type: command
-    component: azureml://registries/azureml-preview/components/compute_metrics/versions/0.0.9.preview
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.1
     compute: ${{parent.inputs.compute_model_evaluation}}
     inputs:
       task: question-answering
