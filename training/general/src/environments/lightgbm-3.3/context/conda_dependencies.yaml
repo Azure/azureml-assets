@@ -1,4 +1,4 @@
-name: lightgbm-3.2-ubuntu18.04-py37-cpu
+name: lightgbm-3.3
 channels:
 - anaconda
 - conda-forge

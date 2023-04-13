@@ -13,7 +13,7 @@ build:
 os_type: linux
 
 tags:
-  LightGBM: "3.2"
+  LightGBM: "3.3"
   OS: Ubuntu20.04
   Training: ""
   Preview: ""

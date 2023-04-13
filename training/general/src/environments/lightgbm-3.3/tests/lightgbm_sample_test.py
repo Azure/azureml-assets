@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the lightgbm 3.2 environment."""
+"""Tests running a sample job in the lightgbm 3.3 environment."""
 import os
 import time
 from pathlib import Path
@@ -16,8 +16,8 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 40)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_lightgbm_3_2():
-    """Tests a sample job using lightgbm 3.2 as the environment."""
+def test_lightgbm_3_3():
+    """Tests a sample job using lightgbm 3.3 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -28,12 +28,12 @@ def test_lightgbm_3_2():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "lightgbm-3_2-ubuntu18_04-py37-cpu"
+    env_name = "lightgbm-3_3"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
-        name="lightgbm-3_2-ubuntu18_04-py37-cpu",
-        description="lightgbm 3.2 environment created from a Docker context.",
+        name="lightgbm-3_3",
+        description="lightgbm 3.3 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
@@ -50,7 +50,7 @@ def test_lightgbm_3_2():
         environment=f"{env_name}@latest",
         compute=os.environ.get("cpu_cluster"),
         display_name="lightgbm-iris-example",
-        description="A test run of the lightgbm 3_2 curated environment",
+        description="A test run of the lightgbm 3_3 curated environment",
         experiment_name="lightgbmExperiment"
     )
 

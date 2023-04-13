@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/lightgbm-3.2-ubuntu18.04-py37-cpu
+  name: azureml/curated/lightgbm-3.3
   os: linux
   context:
     dir: context

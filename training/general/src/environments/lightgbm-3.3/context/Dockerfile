@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
 WORKDIR /
 
-ENV CONDA_PREFIX=/azureml-envs/lightgbm-3.2-ubuntu18.04-py37-cpu
+ENV CONDA_PREFIX=/azureml-envs/lightgbm-3.3
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
