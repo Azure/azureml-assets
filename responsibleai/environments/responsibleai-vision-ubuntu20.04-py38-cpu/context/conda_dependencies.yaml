@@ -29,3 +29,4 @@ dependencies:
     - click<8.0.0
     - mltable==1.0.0
     - fastai
+    - Werkzeug==2.2.3

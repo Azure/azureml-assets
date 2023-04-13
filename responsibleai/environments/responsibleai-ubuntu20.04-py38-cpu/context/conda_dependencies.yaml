@@ -20,3 +20,4 @@ dependencies:
     - mltable==1.0.0
     - responsibleai-tabular-automl==0.2.3
     - https://publictestdatasets.blob.core.windows.net/packages/pypi/raiwidgets_big_data/raiwidgets_big_data-0.2.0-py3-none-any.whl
+    - Werkzeug==2.2.3
