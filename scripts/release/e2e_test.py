@@ -4,11 +4,11 @@
 import argparse
 from pathlib import Path
 import sys
-import yaml
 from subprocess import run
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import AmlCompute
 from azure.identity import DefaultAzureCredential
+from ruamel.yaml import YAML
 
 
 def e2e_test(
@@ -17,12 +17,10 @@ def e2e_test(
         resource_group: str,
         workspace: str,
         coverage_report: Path = None,
-        version_suffix: str = None):
+        version_suffix: str = None,
+        runner: bool = False):
     """Run end to end tests."""
     final_report = {}
-    ml_client = MLClient(
-        DefaultAzureCredential(), subscription_id, resource_group, workspace
-    )
     cpu_cluster = AmlCompute(
         name="cpu-cluster",
         size="Standard_DS3_v2",
@@ -38,6 +36,9 @@ def e2e_test(
         idle_time_before_scale_down=120
     )
     try:
+        ml_client = MLClient(
+            DefaultAzureCredential(), subscription_id, resource_group, workspace
+        )
         ml_client.begin_create_or_update(cpu_cluster)
         ml_client.begin_create_or_update(gpu_cluster)
     except Exception as e:
@@ -52,7 +53,7 @@ def e2e_test(
             print(f"Could not locate tests.yaml in {area}")
             continue
         with open(tests_yaml_file) as fp:
-            data = yaml.load(fp, Loader=yaml.FullLoader)
+            data = YAML().load(fp)
             for test_group in data:
                 print(f"now processing test group: {test_group}")
                 cmd = ["python3", "-u", "group_test.py", "-i", area, "-g", test_group, "-s", subscription_id,
@@ -61,6 +62,8 @@ def e2e_test(
                     cmd.extend(["-c", coverage_report])
                 if version_suffix:
                     cmd.extend(["-v", version_suffix])
+                if runner:
+                    cmd.extend(["--runner", runner])
                 p = run(cmd)
                 return_code = p.returncode
                 final_report[area.name].append(f"test group {test_group} returned {return_code}")
@@ -92,6 +95,8 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
     parser.add_argument("-v", "--version-suffix", required=False, type=str,
                         help="version suffix which will be used to identify the asset id in tests")
+    parser.add_argument("--runner", required=False, type=bool, default=False,
+                        help="if the runner is running the tests")
     args = parser.parse_args()
     e2e_test(args.input_dir, args.subscription, args.resource_group, args.workspace_name,
-             args.coverage_report, args.version_suffix)
+             args.coverage_report, args.version_suffix, args.runner)

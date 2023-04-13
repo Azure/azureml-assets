@@ -7,6 +7,8 @@ name: train_image_classification_model
 display_name: Train Image Classification Model (Private Preview)
 version: 0.0.3
 
+is_deterministic: false
+
 inputs:
   training_data:
     type: mltable
@@ -177,16 +179,16 @@ inputs:
     optional: true
 
 outputs:
-  mlflow_model:
+  mlflow_model_folder:
     description: Trained MLFlow model.
     type: mlflow_model
-  pytorch_model:
+  pytorch_model_folder:
     description: Trained Pytorch model.
     type: custom_model
 
 code: ../src
 
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU@latest
+environment: azureml://registries/azureml/environments/AzureML-AutoML-DNN-Vision-GPU/versions/110
 
 command: >-
   python -m image_classification.run
@@ -222,8 +224,8 @@ command: >-
   $[[--valid_resize_size ${{inputs.validation_resize_size}}]]
   $[[--weight_decay ${{inputs.weight_decay}}]]
   $[[--weighted_loss ${{inputs.weighted_loss}}]]
-  --mlflow_model_output ${{outputs.mlflow_model}}
-  --pytorch_model_output ${{outputs.pytorch_model}}
+  --mlflow_model_output ${{outputs.mlflow_model_folder}}
+  --pytorch_model_output ${{outputs.pytorch_model_folder}}
 
 distribution:
   type: pytorch

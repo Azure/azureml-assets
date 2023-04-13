@@ -12,6 +12,7 @@ from typing import List
 
 import azureml.assets as assets
 import azureml.assets.util as util
+from azureml.assets import PublishLocation, PublishVisibility
 from azureml.assets.config import ValidationException
 from azureml.assets.util import logger
 
@@ -178,6 +179,13 @@ def validate_image_publishing(asset_config: assets.AssetConfig,
     if not environment_config.publish_enabled:
         _log_error(asset_config, "Image publishing information is not specified")
         error_count += 1
+
+    # Check publishing details
+    if environment_config.publish_location != PublishLocation.MCR:
+        _log_error(asset_config, "Image publishing location should be 'mcr'")
+        error_count += 1
+    if environment_config.publish_visibility != PublishVisibility.PUBLIC:
+        _log_warning(asset_config, "Image publishing visibility should be 'public'")
 
     return error_count
 

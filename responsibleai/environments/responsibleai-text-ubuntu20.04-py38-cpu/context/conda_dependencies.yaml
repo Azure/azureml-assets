@@ -14,18 +14,14 @@ dependencies:
   - cpuonly
   - pip:
     - numpy==1.21.6
-    - responsibleai~=0.24.1
-    - raiwidgets~=0.24.1
+    - responsibleai~=0.26.0
+    - raiwidgets~=0.26.0
     - pyarrow
     - azure-core==1.25.1
     - mlflow
     - markupsafe<2.1.0
     - itsdangerous==2.0.1
-    - azureml-dataset-runtime
-    - azureml-core
-    - azureml-mlflow
-    - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-text/responsibleai_text-0.0.13-py3-none-any.whl
-    - https://publictestdatasets.blob.core.windows.net/packages/pypi/azureml-model-serializer/azureml_model_serializer-0.0.16-py3-none-any.whl
+    - responsibleai-text==0.0.1
     - click<8.0.0
     - mltable==1.0.0
     - transformers>=4.17.0

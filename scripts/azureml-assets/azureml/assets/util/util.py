@@ -8,8 +8,8 @@ import filecmp
 import re
 import shutil
 from pathlib import Path
+from ruamel.yaml import YAML
 from typing import List, Tuple, Union
-import yaml
 
 import azureml.assets as assets
 from azureml.assets.util import logger
@@ -396,7 +396,7 @@ def load_yaml(file_path: str) -> dict:
         dict: loaded yaml as dict
     """
     with open(file_path, "r") as f:
-        yaml_dict = yaml.safe_load(f)
+        yaml_dict = YAML().load(f)
     return yaml_dict
 
 
@@ -408,4 +408,4 @@ def dump_yaml(yaml_dict: dict, file_path: str):
         file_path (str): File path to store dump result to.
     """
     with open(file_path, "w") as f:
-        yaml_dict = yaml.safe_dump(yaml_dict, f)
+        yaml_dict = YAML().dump(yaml_dict, f)

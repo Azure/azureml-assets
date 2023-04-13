@@ -7,6 +7,8 @@ name: train_instance_segmentation_model
 display_name: Train Instance Segmentation Model (Private Preview)
 version: 0.0.3
 
+is_deterministic: false
+
 inputs:
   training_data:
     description: Path to MLTable for training data.
@@ -209,16 +211,16 @@ inputs:
     max: 1
 
 outputs:
-  mlflow_model:
+  mlflow_model_folder:
     description: Trained MLFlow model.
     type: mlflow_model
-  pytorch_model:
+  pytorch_model_folder:
     description: Trained Pytorch model.
     type: custom_model
 
 code: ../src
  
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU@latest
+environment: azureml://registries/azureml/environments/AzureML-AutoML-DNN-Vision-GPU/versions/110
 
 command: >-
   python -m instance_segmentation.run
@@ -261,8 +263,8 @@ command: >-
   $[[--warmup_cosine_lr_cycles ${{inputs.warmup_cosine_lr_cycles}}]]
   $[[--warmup_cosine_lr_warmup_epochs ${{inputs.warmup_cosine_lr_warmup_epochs}}]]  
   $[[--weight_decay ${{inputs.weight_decay}}]]
-  --mlflow_model_output ${{outputs.mlflow_model}}
-  --pytorch_model_output ${{outputs.pytorch_model}}
+  --mlflow_model_output ${{outputs.mlflow_model_folder}}
+  --pytorch_model_output ${{outputs.pytorch_model_folder}}
 
 distribution:
   type: pytorch
