@@ -28,4 +28,3 @@ dependencies:
     - ml-wrappers~=0.4.2
     - nlp-feature-extractors==0.1.0
     - datasets
-    - Werkzeug==2.2.3
