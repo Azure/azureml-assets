@@ -35,6 +35,7 @@ class TASK:
     TRANSLATION = "text-translation"
     TEXT_GENERATION = "text-generation"
     FILL_MASK = "fill-mask"
+    FORECASTING = "forecasting"
 
 
 ALL_TASKS = [
@@ -121,3 +122,10 @@ class ExceptionTypes:
     Service = "Service"
     Unclassified = "Unclassified"
     All = {User, System, Service, Unclassified}
+
+
+class ForecastingConfigContract:
+    """Forecasting data contract on forecasting metrics config."""
+
+    TIME_COLUMN_NAME = 'time_column_name'
+    TIME_SERIES_ID_COLUMN_NAMES = 'time_series_id_column_names'

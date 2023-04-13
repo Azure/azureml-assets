@@ -13,7 +13,7 @@ import numpy as np
 from azureml.telemetry.activity import log_activity
 
 import constants
-from exceptions import DataLoaderException
+from exceptions import DataLoaderException, DataValidationException
 from logging_utilities import custom_dimensions, get_logger, log_traceback
 from utils import (read_compute_metrics_config,
                    check_and_return_if_mltable,
@@ -139,8 +139,13 @@ class ModelEvaluationRunner:
         """Compute Metrics Mode."""
         with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME,
                           custom_dimensions=self.custom_dimensions):
+            ground_true_regressors = None
+            if self.task == constants.TASK.FORECASTING:
+                ground_truth = self.ground_truth.pop(self.ground_truths_column_name).values
+                ground_true_regressors = self.ground_truth
+                self.ground_truth = ground_truth
             result = evaluate_predictions(self.ground_truth, self.predictions, self.predictions_probabilities,
-                                          self.task, self.metrics_config)
+                                          self.task, self.metrics_config, ground_true_regressors)
             if result:
                 scalar_metrics = result.metrics
                 logger.info("Computed metrics:")
@@ -181,7 +186,7 @@ def filter_ground_truths(data, task_type, column_name=None):
     """
     #  for Question-Answering checking for multiple columns in ground truth
     if task_type == constants.TASK.QnA and column_name:
-        if type(data[data.columns[0]][0]) == dict and len(data[data.columns[0]][0].keys()) > 1:
+        if isinstance(data[data.columns[0]][0], dict) and len(data[data.columns[0]][0].keys()) > 1:
             try:
                 if isinstance(data, pd.DataFrame):
                     logger.warning("Multiple ground truths are not supported for the \
@@ -256,6 +261,12 @@ def test_component():
                     message = "Unable to load evaluation_config_params. String is not JSON serielized."
                     raise DataLoaderException(message,
                                               inner_exception=e)
+        if args.task == constants.TASK.FORECASTING:
+            if not is_ground_truths_mltable or not args.ground_truths_column_name:
+                message = ("For forecasting tasks, the ground_truths parameter must be empty, "
+                           "ground_truths_mltable must contain a tale with time, target and time series IDs "
+                           "if any.")
+                raise DataValidationException(message)
         runner = ModelEvaluationRunner(
             task=args.task,
             ground_truth=ground_truths,
