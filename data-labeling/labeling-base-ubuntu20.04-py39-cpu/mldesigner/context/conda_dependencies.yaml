@@ -1,0 +1,17 @@
+name: labeling-base-ubuntu20.04-py39-cpu
+channels:
+- conda-forge
+- pytorch
+dependencies:
+- python=3.9
+- pip=21.3.1
+- pip:
+  - azureml-core=={{latest-pypi-version}}
+  - azureml-contrib-dataset=={{latest-pypi-version}}
+  - azureml-dataset-runtime[fuse,pandas]=={{latest-pypi-version}}
+  - azureml-defaults=={{latest-pypi-version}}
+  - azure-storage-blob==12.14.1=={{latest-pypi-version}}
+  - Pillow=={{latest-pypi-version}}
+  - pycairo==1.20.1=={{latest-pypi-version}}
+  - pydicom=={{latest-pypi-version}}
+  - python-rle==0.0.3=={{latest-pypi-version}}
