@@ -35,7 +35,7 @@ class TASK:
     TRANSLATION = "text-translation"
     TEXT_GENERATION = "text-generation"
     FILL_MASK = "fill-mask"
-    FORECASTING = "forecasting"
+    FORECASTING = "tabular-forecasting"
 
 
 ALL_TASKS = [
@@ -129,3 +129,11 @@ class ForecastingConfigContract:
 
     TIME_COLUMN_NAME = 'time_column_name'
     TIME_SERIES_ID_COLUMN_NAMES = 'time_series_id_column_names'
+
+
+class ForecastColumns:
+    """The columns, returned in the forecast data frame."""
+
+    _ACTUAL_COLUMN_NAME = '_automl_actual'
+    _FORECAST_COLUMN_NAME = '_automl_forecast'
+

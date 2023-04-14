@@ -6,12 +6,13 @@
 import ast
 from abc import abstractmethod
 
-from constants import TASK, ForecastingConfigContract
+# TODO: Import ForecastColumnsfrom azureml.evaluate.mlflow, when it will be
+# available.
+from constants import TASK, ForecastingConfigContract, ForecastColumns
 import pandas as pd
 import numpy as np
 from azureml.metrics import compute_metrics, constants
 from logging_utilities import get_logger
-from azureml.evaluate.mlflow.constants import ForecastColumns
 
 logger = get_logger(name=__name__)
 
