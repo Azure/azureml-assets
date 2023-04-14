@@ -14,7 +14,6 @@ os_type: linux
 
 tags:
   Deprecated: ""
-  DeleteOn: "2023-04-14"
   PyTorch: "1.11"
   GPU: Cuda11
   OS: Ubuntu20.04
