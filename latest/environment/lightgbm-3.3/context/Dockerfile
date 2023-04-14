@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:b2ac743eb4bbd5e21
 
 WORKDIR /
 
-ENV CONDA_PREFIX=/azureml-envs/sklearn-1.1
+ENV CONDA_PREFIX=/azureml-envs/lightgbm-3.3
 ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
 ENV PATH=$CONDA_PREFIX/bin:$PATH
 
