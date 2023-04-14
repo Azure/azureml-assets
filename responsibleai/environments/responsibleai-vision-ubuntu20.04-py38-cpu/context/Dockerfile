@@ -17,7 +17,7 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
     conda clean -a -y
 
-RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0' 'setuptools>=65.5.1'
+RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
 # Install azureml packages
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
@@ -33,7 +33,8 @@ RUN pip install 'ml-wrappers~=0.4.2' \
                 'shap==0.40.0' \
                 'interpret-community==0.28.0' \
                 'Pillow>=9.1.0' \
-                'Werkzeug==2.2.3'
+                'Werkzeug==2.2.3' \
+                'setuptools>=65.5.1'
 
 RUN pip freeze
 
