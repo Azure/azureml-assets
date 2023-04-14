@@ -32,7 +32,8 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
 RUN pip install 'ml-wrappers~=0.4.2' \
                 'shap==0.40.0' \
                 'interpret-community==0.28.0' \
-                'Pillow>=9.1.0'
+                'Pillow>=9.1.0' \
+                'Werkzeug==2.2.3'
 
 RUN pip freeze
 
