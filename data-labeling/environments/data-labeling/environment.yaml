@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/labeling-base-ubuntu20.04-py39-cpu
+  name: azureml/curated/data-labeling
   os: linux
   context:
     dir: context

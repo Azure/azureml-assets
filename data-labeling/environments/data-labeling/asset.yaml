@@ -1,4 +1,4 @@
-name: labeling-base-ubuntu20.04-py39-cpu
+name: data-labeling
 version: auto
 type: environment
 spec: spec.yaml
