@@ -20,6 +20,9 @@ RUN pip install 'azureml-dataset-runtime==1.50.0' \
                 'azureml-mlflow==1.50.0' \
                 'azureml-rai-utils==0.0.2'
 
+# To resolve vulnerability issue
+RUN pip install 'Werkzeug==2.2.3'                
+
 RUN pip freeze
 
 # This is needed for mpi to locate libpython
