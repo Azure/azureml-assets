@@ -34,7 +34,8 @@ RUN pip install 'ml-wrappers~=0.4.2' \
                 'interpret-community==0.28.0' \
                 'Pillow>=9.1.0' \
                 'Werkzeug==2.2.3' \
-                'setuptools>=65.5.1'
+                'setuptools>=65.5.1' \
+                'numpy==1.22.0'
 
 RUN pip freeze
 
