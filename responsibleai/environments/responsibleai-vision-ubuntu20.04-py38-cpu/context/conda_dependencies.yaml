@@ -12,7 +12,6 @@ dependencies:
   - captum
   - cpuonly
   - pip:
-    - numpy==1.22.0
     - responsibleai~=0.26.0
     - raiwidgets~=0.26.0
     # Required since azureml-automl-dnn-vision uses a fig.save_fig method with
