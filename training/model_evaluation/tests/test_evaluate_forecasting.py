@@ -103,7 +103,7 @@ class TestEvaluateForecast(unittest.TestCase):
         ml_table = mltable.from_parquet_files(parquet_paths)
         ml_table.save(mltable_dir)
 
-    def test_compute_component_e2e(self):
+    def _do_test_compute_component_e2e(self, config_as_string):
         """Test component end to end."""
         exec_path = compute_metrics.__file__
         _, X_test, y_pred = self._make_forecasting(grains=2)
@@ -118,23 +118,42 @@ class TestEvaluateForecast(unittest.TestCase):
             input_test = os.path.join(d, 'x_test')
             self._save_mltable(Y_pred_table, d, 'y_pred')
             input_pred = os.path.join(d, 'y_pred')
-            metrics_config = json.dumps({
+            metrics_config_dt = {
                 ForecastingConfigContract.TIME_COLUMN_NAME: TestEvaluateForecast.DATE,
                 ForecastingConfigContract.TIME_SERIES_ID_COLUMN_NAMES: TestEvaluateForecast.GRAIN
-            })
+            }
             outputs = os.path.join(d, 'outputs')
             os.makedirs(outputs, exist_ok=True)
-            subprocess.run([sys.executable, exec_path,
-                            "--task", TASK.FORECASTING,
-                            "--ground_truths_mltable", input_test,
-                            "--ground_truths_column_name", TestEvaluateForecast.TGT,
-                            "--predictions_mltable", input_pred,
-                            "--output", outputs,
-                            "--config_str", metrics_config])
+            param_list = [
+                sys.executable, exec_path,
+                "--task", TASK.FORECASTING,
+                "--ground_truths_mltable", input_test,
+                "--ground_truths_column_name", TestEvaluateForecast.TGT,
+                "--predictions_mltable", input_pred,
+                "--output", outputs
+                ]
+            if config_as_string:
+                param_list.append("--config_str")
+                metrics_config = json.dumps(metrics_config_dt)
+            else:
+                param_list.append("--config-file-name")
+                metrics_config = os.path.join(d, 'config.json')
+                with open(metrics_config, 'w') as cn:
+                    json.dump(metrics_config_dt, cn)
+            param_list.append(metrics_config)
+            subprocess.run(param_list)
             with open(os.path.join(outputs, 'evaluationResult', 'metrics.json'), 'r') as f:
                 eval_results = json.load(f)
             self.assertIn("normalized_root_mean_squared_error", eval_results)
             self.assertAlmostEqual(eval_results["normalized_root_mean_squared_error"], expected_nrmse)
+
+    def test_compute_component_e2e_config_as_str(self):
+        """Test evaluation if config is a string."""
+        self._do_test_compute_component_e2e(True)
+
+    def test_compute_component_e2e_config_as_file(self):
+        """Test evaluation if config is a string."""
+        self._do_test_compute_component_e2e(False)
 
     def test_compute_component_e2e_errors(self):
         """Test component end to end."""

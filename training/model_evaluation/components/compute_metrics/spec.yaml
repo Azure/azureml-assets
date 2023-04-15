@@ -3,7 +3,7 @@ name: compute_metrics
 display_name: Compute Metrics
 description: Calculate model performance metics, given ground truth and prediction data.
 
-version: 0.0.10.preview
+version: 0.0.12.nirovins
 type: command
 
 tags:
@@ -19,6 +19,7 @@ inputs:
       tabular-classification,
       tabular-classification-multilabel,
       tabular-regression,
+      tabular-forecasting,
       text-classification,
       text-classification-multilabel,
       text-named-entity-recognition,
@@ -26,7 +27,7 @@ inputs:
       question-answering,
       text-translation,
       text-generation,
-      fill-mask
+      fill-mask,
     ]
     description: "Task type"
   ground_truth:

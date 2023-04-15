@@ -9,7 +9,7 @@ import pandas as pd
 import pickle
 import os
 
-from constants import TASK
+from constants import TASK, ForecastingConfigContract
 from logging_utilities import get_logger, log_traceback
 from mltable import load
 from task_factory.tabular.classification import TabularClassifier
@@ -282,6 +282,8 @@ class ArgumentsSet:
             self.args_set = self.text_generation
         if task_type == TASK.FILL_MASK:
             self.args_set = self.fill_mask
+        if task_type == TASK.FORECASTING:
+            self.args_set = self.forecasting
 
     @property
     def classification(self):
@@ -406,6 +408,19 @@ class ArgumentsSet:
             "model_id": "str(val)",
             "batch_size": "int(val)",
             "add_start_token": "bool(val)"
+        }
+        return args_map
+
+    @property
+    def forecasting(self):
+        """Forecasting arguments
+
+        Returns:
+            _type_: _description_
+        """
+        args_map = {
+            ForecastingConfigContract.TIME_COLUMN_NAME: "str(val)",
+            ForecastingConfigContract.TIME_SERIES_ID_COLUMN_NAMES: "val"
         }
         return args_map
 

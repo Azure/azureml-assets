@@ -29,7 +29,6 @@ class TASK:
     TEXT_CLASSIFICATION = "text-classification"
     TEXT_CLASSIFICATION_MULTILABEL = "text-classification-multilabel"
     NER = "text-named-entity-recognition"
-    FORECASTING = "forecasting"
     SUMMARIZATION = "text-summarization"
     QnA = "question-answering"
     TRANSLATION = "text-translation"
@@ -136,4 +135,3 @@ class ForecastColumns:
 
     _ACTUAL_COLUMN_NAME = '_automl_actual'
     _FORECAST_COLUMN_NAME = '_automl_forecast'
-
