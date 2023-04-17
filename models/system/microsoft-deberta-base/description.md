@@ -34,9 +34,6 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 {
     "inputs": {
         "input_string": ["Paris is the [MASK] of France.", "Today is a [MASK] day!"]
-    },
-    "parameters": {
-        "top_k": 2
     }
 }
 ```
@@ -44,33 +41,11 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 #### Sample output
 ```json
 [
-    [
-        {
-            "score": 0.0014589033089578152,
-            "token": 36858,
-            "token_str": " Hamb",
-            "sequence": "Paris is the Hamb of France."
-        },
-        {
-            "score": 0.0012754832860082388,
-            "token": 46353,
-            "token_str": "…", 
-            "sequence": "Paris is the … of France."
-        }
-    ],
-    [
-        {
-            "score": 0.0020057905931025743,
-            "token": 47818,
-            "token_str": "gently",
-            "sequence": "Today is agently day!"
-        },
-        {
-            "score": 0.0012056897394359112,
-            "token": 32503,
-            "token_str": "cand",
-            "sequence": "Today is acand day!"
-        }
-    ]
+    {
+        0: "capital"
+    },
+    {
+        0: "beautiful"
+    }
 ]
 ```

@@ -40,16 +40,10 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 ```json
 [
     {
-        "score": 0.7660106420516968,
-        "start": 11,
-        "end": 15,
-        "answer": "John"
+        0: "John"
     },
     {
-        "score": 0.9268450736999512,
-        "start": 30,
-        "end": 39,
-        "answer": "Hyderabad"
+        0: "Hyderabad"
     }
 ]
 ```

@@ -41,12 +41,10 @@ Token Classification|Token Classification|<a href="https://huggingface.co/datase
 ```json
 [
     {
-        "label": "NEUTRAL",
-        "score": 0.9605958461761475
+        0: "NEUTRAL"
     },
     {
-        "label": "NEUTRAL",
-        "score": 0.98270583152771
+        0: "NEUTRAL"
     }
 ]
 ```

@@ -33,9 +33,6 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 {
     "inputs": {
         "input_string": ["Paris is the <mask> of France.", "Today is a <mask> day!"]
-    },
-    "parameters": {
-        "top_k": 2
     }
 }
 ```

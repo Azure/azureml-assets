@@ -39,12 +39,10 @@ Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/d
 ```json
 [
     {
-        "label": "POS",
-        "score": 0.9921929240226746
+        0: "POS"
     },
     {
-        "label": "NEG",
-        "score": 0.9493512511253357
+        0: "NEG"
     }
 ]
 ```
