@@ -18,11 +18,13 @@ The components can be seen here ![as shown in the figure]
 # 3. Parameters
     
 ## 3.1 Endpoint parameters
+
 1. _endpoint_name_ (string, required)
 
     Name of the (endpoint)[https://learn.microsoft.com/en-us/azure/machine-learning/concept-endpoints?view=azureml-api-2#managed-online-endpoints-vs-kubernetes-online-endpoints].Endpoint is an HTTPS path that provides an interface for clients to send requests (input data) and receive the inferencing (scoring) output of a trained model.
 
 ## 3.2 Deployment parameters
+
 1. _deployment_name_ (string, required)
 
     Name of the deployment.User can deploy multiple models at same endpoint with different names and distrbute incoming traffic amongst them.
@@ -82,6 +84,7 @@ The components can be seen here ![as shown in the figure]
     2. disabled
 
 ## 3.3 Request Settings Parameters
+
 1. _max_concurrent_requests_per_instance_ (integer, optional)
 
     Maximum concurrent requests to be handled per instance. Default value is "1".
@@ -95,6 +98,7 @@ The components can be seen here ![as shown in the figure]
     The maximum amount of time in milliseconds a request will stay in the queue. Default value is "500".
 
 ## 3.4 Readiness Probe Parameters
+
 1. _failure_threshold_readiness_probe_ (integer, optional)
 
     Number of times system will try after failing the readiness probe.Defaut value is "10".
@@ -117,6 +121,7 @@ The components can be seen here ![as shown in the figure]
     The number of seconds after the container has started before the readiness probe is initiated. Default value is "10".
 
 ## 3.5 Liveness probe parameters
+
 1. _failure_threshold_liveness_probe_ (integer, optional)
 
     No of times system will try after failing the liveness probe.Default value is "30"

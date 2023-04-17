@@ -1,6 +1,7 @@
 # Model Registration Component
 This component can be used in [azure machine learning pipelines](https://learn.microsoft.com/en-us/azure/machine-learning/concept-ml-pipelines?view=azureml-api-2) to [register](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-models?view=azureml-api-2&tabs=cli%2Cuse-local) the model in [workspace](https://learn.microsoft.com/en-us/azure/machine-learning/concept-workspace?view=azureml-api-2) or [registry](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-manage-registries?view=azureml-api-2&tabs=cli).
 Model registration allows you to store and version your models in the Azure cloud, in your workspace. It helps you organize and keep track of your trained models.
+
 The components can be seen here ![as shown in the figure]
 
 # 1. Inputs
@@ -41,7 +42,7 @@ The components can be seen here ![as shown in the figure]
 
 3. _model_type_ (string, optional)
 
-    Type of model that you want to register in workspace. By default it is mlflow_model.
+    Type of model that you want to register in workspace. Default value is "mlflow_model".
     Currently we support following model types
 
     1. mlflow_model

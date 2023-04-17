@@ -50,7 +50,7 @@ The components can be seen here ![as shown in the figure]
     JSON file containing model job path for model lineage. This will help user to track the job (while seeing registered model in workspace) that converts the model's type to mlflow.
 
 
-# 3. Run Settings
+# 4. Run Settings
 
 This setting helps to choose the compute for running the component code.
 
