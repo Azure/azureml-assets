@@ -13,7 +13,7 @@ dependencies:
   - captum
   - cpuonly
   - pip:
-    - numpy==1.21.6
+    - numpy==1.22.0
     - responsibleai~=0.26.0
     - raiwidgets~=0.26.0
     - pyarrow

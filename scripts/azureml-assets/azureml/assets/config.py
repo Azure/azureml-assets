@@ -704,9 +704,9 @@ class EnvironmentConfig(Config):
 
     @property
     def publish_visibility(self) -> PublishVisibility:
-        """Image's publishing visiblity type."""
-        visiblity = self._publish_visibility
-        return PublishVisibility(visiblity) if visiblity else None
+        """Image's publishing visibility type."""
+        visibility = self._publish_visibility
+        return PublishVisibility(visibility) if visibility else None
 
 
 class AssetType(Enum):

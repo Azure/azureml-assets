@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
-  DEPRECATED: Please use acpt-pytorch-1.11-cuda11.3 instead.
+  An environment for tasks such as regression, clustering, and classification with LightGBM. Contains the Azure ML SDK and additional python packages.
 
 name: "{{asset.name}}"
 version: "{{asset.version}}"
@@ -13,14 +13,9 @@ build:
 os_type: linux
 
 tags:
-  Deprecated: ""
-  PyTorch: "1.11"
-  GPU: Cuda11
+  LightGBM: "3.3"
   OS: Ubuntu20.04
   Training: ""
   Preview: ""
+  OpenMpi: "4.1.0"
   Python: "3.8"
-  DeepSpeed: "0.7.3"
-  ONNXRuntime: "1.11.1"
-  Checkpointing:Nebula: "0.15.9 (Preview)"
-
