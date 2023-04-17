@@ -81,7 +81,7 @@ The components can be seen here ![as shown in the figure]
     1. enabled
     2. disabled
 
-## 3.3 RequestSettings Parameters
+## 3.3 Request Settings Parameters
 1. _max_concurrent_requests_per_instance_ (integer, optional)
 
     Maximum concurrent requests to be handled per instance. Default value is "1".
