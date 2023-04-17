@@ -9,7 +9,6 @@ The components can be seen here ![as shown in the figure]
 
     Json file that contains all the details of registered model that needs to be deployed.
 
-
 # 2. Outputs
 
 1. _model_deployment_details_ (URI_FILE)
@@ -19,18 +18,19 @@ The components can be seen here ![as shown in the figure]
 # 3. Parameters
     
 ## 3.1 Endpoint parameters
-1. _endpoint_name_ (string, optional)
+1. _endpoint_name_ (string, required)
 
     Name of the (endpoint)[https://learn.microsoft.com/en-us/azure/machine-learning/concept-endpoints?view=azureml-api-2#managed-online-endpoints-vs-kubernetes-online-endpoints].Endpoint is an HTTPS path that provides an interface for clients to send requests (input data) and receive the inferencing (scoring) output of a trained model.
 
 ## 3.2 Deployment parameters
-1. _deployment_name_ (string, optional)
+1. _deployment_name_ (string, required)
 
     Name of the deployment.User can deploy multiple models at same endpoint with different names and distrbute incoming traffic amongst them.
 
 2. _instance_type_ (string, optional)
 
-    Compute instance type to deploy model. Make sure that instance type is available and have enough quota available.Currently we support following compute types
+    Compute instance type to deploy model. Make sure that instance type is available and have enough quota available.Default value is "Standard_F8s_v2".
+    Currently we support following compute types
 
     1. Standard_DS1_v2
     2. Standard_DS2_v2
@@ -69,64 +69,70 @@ The components can be seen here ![as shown in the figure]
     35. Standard_ND96asr_v4
     36. Standard_ND96amsr_A100_v4
 
-3. _instance_count_ (string, optional)
+3. _instance_count_ (integer, optional)
 
-    Description of the model that will be shown in model card of registered model in AzureML registry or workspace
+    Number of instances you want to use for deployment. Make sure instance type have enough quota available.
+    Default value is "1".
 
-4. _max_concurrent_requests_per_instance_ (string, optional)
+4. _egress_public_network_access_ (string, optional)
 
-    Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
+    This flag secures the deployment by restricting communication between the deployment and the Azure resources used by it. Set to disabled to ensure that the download of the model, code, and images needed by your deployment are secured with a private endpoint. This flag is applicable only for managed online endpoints. Default value is "enabled"
+    Possible values
+    1. enabled
+    2. disabled
 
-5. _request_timeout_ms_ (string, optional)
+## 3.3 RequestSettings Parameters
+1. _max_concurrent_requests_per_instance_ (integer, optional)
 
-    Description of the model that will be shown in model card of registered model in AzureML registry or workspace
+    Maximum concurrent requests to be handled per instance. Default value is "1".
 
-6. _max_queue_wait_ms_ (string, optional)
+2. _request_timeout_ms_ (integer, optional)
 
-    Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
+    Request timeout in milliseconds. Max limit is "90000". Default value is "5000".
 
-## 3.3 Readiness Probe Parameters
-1. _failure_threshold_readiness_probe_ (string, optional)
+3. _max_queue_wait_ms_ (integer, optional)
 
-    Description of the model that will be shown in model card of registered model in AzureML registry or workspace
+    The maximum amount of time in milliseconds a request will stay in the queue. Default value is "500".
 
-2. _success_threshold_readiness_probe_ (string, optional)
+## 3.4 Readiness Probe Parameters
+1. _failure_threshold_readiness_probe_ (integer, optional)
 
-    Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
+    Number of times system will try after failing the readiness probe.Defaut value is "10".
 
-3. _timeout_readiness_probe_ (string, optional)
+2. _success_threshold_readiness_probe_ (integer, optional)
 
-    Description of the model that will be shown in model card of registered model in AzureML registry or workspace
+    The minimum consecutive successes for the readiness probe to be considered successful after failing.Default value is "1".
+ 
 
-4. _period_readiness_probe_ (string, optional)
+3. _timeout_readiness_probe_ (integer, optional)
 
-    Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
+    The number of seconds after which the readiness probe times out.Default value is "10".
 
-5. _initial_delay_readiness_probe_ (string, optional)
+4. _period_readiness_probe_ (integer, optional)
 
-    Description of the model that will be shown in model card of registered model in AzureML registry or workspace
+    How often (in seconds) to perform the readiness probe. Default value is "10".
 
-## 3.4 Liveness probe parameters
-1. _failure_threshold_liveness_probe_ (string, optional)
+5. _initial_delay_readiness_probe_ (integer, optional)
 
-    Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
+    The number of seconds after the container has started before the readiness probe is initiated. Default value is "10".
 
-2. _timeout_liveness_probe_ (string, optional)
+## 3.5 Liveness probe parameters
+1. _failure_threshold_liveness_probe_ (integer, optional)
 
-    Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
+    No of times system will try after failing the liveness probe.Default value is "30"
 
-3. _period_liveness_probe_ (string, optional)
+2. _timeout_liveness_probe_ (integer, optional)
 
-    Description of the model that will be shown in model card of registered model in AzureML registry or workspace
+    The number of seconds after which the liveness probe times out.Default value is "10".
+
+3. _period_liveness_probe_ (integer, optional)
+
+    How often (in seconds) to perform the liveness probe.Default value is "10".
 
 4. _initial_delay_liveness_probe_ (string, optional)
 
-    Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
+    The number of seconds after the container has started before the liveness probe is initiated.Default value is "10".
 
-## 3.5 parameters
-1. _egress_public_network_access_ (string, optional)
-
-    Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
 
 # 4. Run Settings
 
