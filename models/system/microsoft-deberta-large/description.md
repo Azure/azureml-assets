@@ -41,10 +41,10 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 ```json
 [
     {
-        0: "capital"
+        "0": "capital"
     },
     {
-        0: "beautiful"
+        "0": "beautiful"
     }
 ]
 ```

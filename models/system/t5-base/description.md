@@ -40,10 +40,10 @@ Translation|Translation|<a href="https://huggingface.co/datasets/cnn_dailymail" 
 ```json
 [
     {
-        0: "Mein Name ist John und ich lebe in Seattle"
+        "0": "Mein Name ist John und ich lebe in Seattle"
     },
     {
-        0: "Berlin ist die Hauptstadt Deutschlands."
+        "0": "Berlin ist die Hauptstadt Deutschlands."
     }
 ]
 ```

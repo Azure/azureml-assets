@@ -43,10 +43,10 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 ```json
 [
     {
-        0: "POSITIVE"
+        "0": "POSITIVE"
     },
     {
-        0: "NEGATIVE"
+        "0": "NEGATIVE"
     }
 ]
 ```

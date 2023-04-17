@@ -40,10 +40,10 @@ Token Classification|Token Classification|<a href="https://huggingface.co/datase
 ```json
 [
     {
-        0: "NEUTRAL"
+        "0": "NEUTRAL"
     },
     {
-        0: "NEUTRAL"
+        "0": "NEUTRAL"
     }
 ]
 ```

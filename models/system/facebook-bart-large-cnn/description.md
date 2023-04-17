@@ -41,10 +41,10 @@ Translation|Translation|<a href="https://huggingface.co/datasets/cnn_dailymail" 
 ```json
 [
     {
-        0: "The tower is 324 metres (1,063 ft) tall, about the same height as an 81-storey building. Its base is square, measuring 125 metres (410 ft) on each side. It is the second tallest free-standing structure in France after the Millau Viaduct."
+        "0": "The tower is 324 metres (1,063 ft) tall, about the same height as an 81-storey building. Its base is square, measuring 125 metres (410 ft) on each side. It is the second tallest free-standing structure in France after the Millau Viaduct."
     },
     {
-        0: "Paris is the capital and most populous city of France, with an estimated population of 2,175,601 residents as of 2018. The City of Paris is the centre and seat of government of the region and province of Île-de-France, or Paris Region."
+        "0": "Paris is the capital and most populous city of France, with an estimated population of 2,175,601 residents as of 2018. The City of Paris is the centre and seat of government of the region and province of Île-de-France, or Paris Region."
     }
 ]
 ```

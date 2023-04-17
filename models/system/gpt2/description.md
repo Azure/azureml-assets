@@ -41,10 +41,10 @@ Token Classification|Token Classification|<a href="https://huggingface.co/datase
 ```json
 [
     {
-        0: "My name is John and I am a student at UC Berkeley. It is my main interest to do research in the humanities. I am going to share"
+        "0": "My name is John and I am a student at UC Berkeley. It is my main interest to do research in the humanities. I am going to share"
     },
     {
-        0: "Once upon a time, they were just another small family, only three. She says one day that her father was getting a new license"
+        "0": "Once upon a time, they were just another small family, only three. She says one day that her father was getting a new license"
     }
 ]
 ```

@@ -41,10 +41,10 @@ Token Classification|Token Classification|<a href="https://huggingface.co/datase
 ```json
 [
     {
-        0: "My name is John and I am a very good cook. My specialty is lasagna. I am not your typical lasagna producer. My wife and"
+        "0": "My name is John and I am a very good cook. My specialty is lasagna. I am not your typical lasagna producer. My wife and"
     },
     {
-        0: "Once upon a time, everyone believed that you had to be a member of the priesthood to be worthy of the blessings of salvation in the next life."
+        "0": "Once upon a time, everyone believed that you had to be a member of the priesthood to be worthy of the blessings of salvation in the next life."
     }
 ]
 ```

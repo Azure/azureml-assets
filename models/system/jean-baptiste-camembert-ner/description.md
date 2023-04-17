@@ -41,10 +41,10 @@ Token Classification|Token Classification|<a href="https://huggingface.co/datase
 ```json
 [
     {
-        0: "['O', 'O', 'I-PER', 'O', 'O', 'O', 'O', 'I-LOC']"
+        "0": "['O', 'O', 'I-PER', 'O', 'O', 'O', 'O', 'I-LOC']"
     },
     {
-        0: "['I-PER', 'I-PER', 'O', 'O', 'O', 'I-LOC']"
+        "0": "['I-PER', 'I-PER', 'O', 'O', 'O', 'I-LOC']"
     }
 ]
 ```

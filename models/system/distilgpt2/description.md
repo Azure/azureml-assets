@@ -41,10 +41,10 @@ Token Classification|Token Classification|<a href="https://huggingface.co/datase
 ```json
 [
     {
-        0: "My name is John and I am the first person to ever make the same kind of a film. I've always been obsessed with the film, and"
+        "0": "My name is John and I am the first person to ever make the same kind of a film. I've always been obsessed with the film, and"
     },
     {
-        0: "Once upon a time, though, we were always a different people than any other society. Many of us now live in one-of-kind communities"
+        "0": "Once upon a time, though, we were always a different people than any other society. Many of us now live in one-of-kind communities"
     }
 ]
 ```

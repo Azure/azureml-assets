@@ -40,10 +40,10 @@ Token Classification|Token Classification|<a href="https://huggingface.co/datase
 ```json
 [
     {
-        0: "My name is John and I am part of the world's largest open computer lab, one of the largest academic computer labs in the world, with over"
+        "0": "My name is John and I am part of the world's largest open computer lab, one of the largest academic computer labs in the world, with over"
     },
     {
-        0: "Once upon a time, when I was twenty myself, I read John Milton's Paradise Lost in a small magazine. I was struck by a passage:"
+        "0": "Once upon a time, when I was twenty myself, I read John Milton's Paradise Lost in a small magazine. I was struck by a passage:"
     }
 ]
 ```
