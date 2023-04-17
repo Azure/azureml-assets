@@ -17,7 +17,17 @@ The components can be seen here ![as shown in the figure]
 
     Path to the license file of the model. 
 
-# 2. Parameters
+# 2. Outputs
+
+1. _mlflow_model_folder_ (URI_FOLDER)
+
+    Output path for the converted MLFlow model.
+    
+2. _model_import_job_path_ (URI_FILE)
+
+    JSON file containing model job path for model lineage. This will help user to track the job (while seeing registered model in workspace) that converts the model's type to mlflow.
+
+# 3. Parameters
 
 1. _model_id_ (string, optional)
 
@@ -26,7 +36,7 @@ The components can be seen here ![as shown in the figure]
 
 2. _task_name_ (string, optional)
 
-    A Hugging face task on which model was trained on. A required parameter for transformers mlflow flavor. Can be provided as input here or in model_download_metadata JSON file. Tasks that we currently supports are listed below
+    A Hugging face task on which model was trained on. A required parameter for transformers mlflow flavor. Can be provided as input here or it will consume from model_download_metadata JSON file. Tasks that we currently supports are listed below
 
     1. text-classification
     2. fill-mask
@@ -38,17 +48,6 @@ The components can be seen here ![as shown in the figure]
     8. translation
     9. image-classification
     10. text-to-image    
-
-# 3. Outputs
-
-1. _mlflow_model_folder_ (URI_FOLDER)
-
-    Output path for the converted MLFlow model.
-    
-2. _model_import_job_path_ (URI_FILE)
-
-    JSON file containing model job path for model lineage. This will help user to track the job (while seeing registered model in workspace) that converts the model's type to mlflow.
-
 
 # 4. Run Settings
 

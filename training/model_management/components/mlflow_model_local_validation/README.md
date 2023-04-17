@@ -12,20 +12,19 @@ The components can be seen here ![as shown in the figure]
 2. _test_data_path_ (URI_FILE, optional)
 
     Test dataset for model inferencing.
+
+# 2. Outputs
+
+1. _mlflow_model_folder_ (URI_FOLDER)
+
+    Validated input model. Here input model is used to block further steps in pipeline job if local validation fails.
  
-# 2. Parameters
+# 3. Parameters
 
 1. _column_rename_map_ (string, optional)
 
     Provide mapping of dataset column names that should be renamed before inferencing.
     eg: _col1:ren1; col2:ren2; col3:ren3_.
-
-# 3. Outputs
-
-1. _mlflow_model_folder_ (URI_FOLDER)
-
-    Validated input model. Here input model is used to block further steps in pipeline job if local validation fails.
-
 
 # 4. Run Settings
 
