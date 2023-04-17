@@ -15,7 +15,7 @@ Batch | coming soon
 
 Task | Use case | Dataset Python sample (Notebook) |CLI with YAML
 |--|--|--|--|
-| Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/imdb" target="_blank">imdb</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a> |
+Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/imdb" target="_blank">imdb</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
 
 
 ### Finetuning samples
