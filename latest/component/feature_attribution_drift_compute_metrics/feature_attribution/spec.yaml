@@ -14,7 +14,7 @@ outputs:
   feature_attribution_data:
     type: mltable
 code: ../src/
-environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/10
+environment: azureml://registries/azureml/environments/responsibleai-ubuntu20.04-py38-cpu/versions/16
 resources:
   instance_count: 1
 command: python compute_attribution_drift.py --baseline_data ${{inputs.baseline_data}}

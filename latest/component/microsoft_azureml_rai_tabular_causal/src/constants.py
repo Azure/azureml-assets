@@ -65,6 +65,9 @@ class PropertyKeyValues:
         "_azureml.responsibleai.rai_insights.test_dataset_id"
     )
 
+    RAI_INSIGHTS_DROPPED_FEATURE_KEY = "dropped_features"
+    RAI_INSIGHTS_IDENTITY_FEATURE_KEY = "identity_feature_name"
+
 
 class RAIToolType:
     CAUSAL = "causal"

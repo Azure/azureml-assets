@@ -3,7 +3,6 @@
 
 import json
 import logging
-
 from typing import Any, Dict, List, Union
 
 _logger = logging.getLogger(__file__)
