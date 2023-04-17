@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from domonic.html import div, h3, p, img, table, td, th, tr, ul, li, thead, tbody
+from domonic.html import (div, h3, img, li, p, table, tbody, td, th, thead, tr,
+                          ul)
+
 from . import common_components as cc
 from ._rai_insight_data import get_metric
 
@@ -326,8 +328,7 @@ def get_fairlearn_page(data):
                         "Maximum difference in {} is {}".format(
                             metric_key,
                             round(
-                                metric_details["group_max"][1]
-                                - metric_details["group_min"][1],
+                                metric_details["group_max"][1] - metric_details["group_min"][1],
                                 2,
                             ),
                         )
@@ -339,8 +340,7 @@ def get_fairlearn_page(data):
                         "Minimum ratio of {} is {}".format(
                             metric_key,
                             round(
-                                metric_details["group_min"][1]
-                                / metric_details["group_max"][1],
+                                metric_details["group_min"][1] / metric_details["group_max"][1],
                                 2,
                             ),
                         )
@@ -356,8 +356,7 @@ def get_fairlearn_page(data):
             for c in data
         ]
         x_data = [
-            100
-            * (
+            100 * (
                 get_metric("selection_rate", data[c]["y_test"], data[c]["y_pred"]),
                 data[c]["pos_label"],
             )
