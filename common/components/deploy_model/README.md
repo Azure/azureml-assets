@@ -1,5 +1,5 @@
 # Model Deployment Component
-This component can be used in azure machine learning pipelines to deploy the model in workspace.
+This component can be used in Azure Machine Learning pipelines to deploy the model in workspace.
 
 # 1. Inputs
 

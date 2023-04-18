@@ -1,5 +1,5 @@
 # MLFlow Converter Component
-This component can be used in azure machine learning pipelines to convert the model type to mlflow.
+This component can be used in Azure Machine Learning pipelines to convert the model type to mlflow.
 
 # 1. Inputs
 

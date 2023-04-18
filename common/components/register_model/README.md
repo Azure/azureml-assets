@@ -1,5 +1,5 @@
 # Model Registration Component
-This component can be used in azure machine learning pipelines to register the model in workspace or registry.
+This component can be used in Azure Machine Learning pipelines to register the model in workspace or registry.
 Model registration allows you to store and version your models in the Azure cloud, in your workspace. It helps you organize and keep track of your trained models.
 
 # 1. Inputs

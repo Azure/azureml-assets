@@ -1,5 +1,5 @@
 # MLFlow Model Local Validation Component
-This component can be used in azure machine learning pipelines to valdate if a MLFLow model can be loaded on a compute and is usable for inferencing
+This component can be used in Azure Machine Learning pipelines to valdate if a MLFLow model can be loaded on a compute and is usable for inferencing
 
 # 1. Inputs
 

@@ -1,5 +1,5 @@
 # Model Import Pipeline Component
-This is pipeline component, which can be used to create an azure machine learning pipelines to import a publicly available model from sources like HuggingFace,Github to user's workspace or registry.
+This is pipeline component, which can be used to create an Azure Machine Learning pipelines to import a publicly available model from sources like HuggingFace,Github to user's workspace or registry.
 
 # 1. Inputs
 

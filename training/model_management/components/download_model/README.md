@@ -1,5 +1,5 @@
 # Model Download Component
-This component can be used in azure machine learning pipelines to download the publicy available model.
+This component can be used in Azure Machine Learning pipelines to download the publicy available model.
 
 # 1. Parameters
 
