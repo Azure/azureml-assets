@@ -33,9 +33,6 @@ Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/imdb" target="_blan
 {
     "inputs": {
         "input_string": ["Paris is the [MASK] of France.", "Today is a [MASK] day!"]
-    },
-    "parameters": {
-        "top_k": 2
     }
 }
 ```
@@ -43,33 +40,11 @@ Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/imdb" target="_blan
 #### Sample output
 ```json
 [
-    [
-        {
-            "score": 0.9576897025108337,
-            "token": 2364,
-            "token_str": "capital",
-            "sequence": "Paris is the capital of France."
-        },
-        {
-            "score": 0.025112619623541832,
-            "token": 6299,
-            "token_str": "Capital",
-            "sequence": "Paris is the Capital of France."
-        }
-    ],
-    [
-        {
-            "score": 0.21417436003684998,
-            "token": 1957,
-            "token_str": "special",
-            "sequence": "Today is a special day!"
-        },
-        {
-            "score": 0.1488540917634964,
-            "token": 1632,
-            "token_str": "great",
-            "sequence": "Today is a great day!"
-        }
-    ]
+    {
+        "0": "capital"
+    },
+    {
+        "0": "beautiful"
+    }
 ]
 ```

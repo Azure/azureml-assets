@@ -32,11 +32,6 @@ Text generation | Text generation | coming soon | <a href="https://aka.ms/azurem
 {
     "inputs": {
         "input_string": ["My name is John and I am", "Once upon a time,"]
-    },
-    "parameters": {
-        "min_length": 20,
-        "max_length": 30,
-        "num_return_sequences": 2
     }
 }
 ```
@@ -44,21 +39,11 @@ Text generation | Text generation | coming soon | <a href="https://aka.ms/azurem
 #### Sample output
 ```json
 [
-    [
-        {
-            "generated_text": "My name is John and I am the first person to ever make the same kind of a film. I've always been obsessed with the film, and"
-        },
-        {
-            "generated_text": "My name is John and I am a lawyer in Washington. We want to speak for many. But we are not saying that all of us are in"
-        }
-    ],
-    [
-        {
-            "generated_text": "Once upon a time, though, we were always a different people than any other society. Many of us now live in one-of-kind communities"
-        },
-        {
-            "generated_text": "Once upon a time, I started to wonder about why I used such a system in my daily lives; why I couldn't be so lucky that a"
-        }
-    ]
+    {
+        "0": "My name is John and I am the first person to ever make the same kind of a film. I've always been obsessed with the film, and"
+    },
+    {
+        "0": "Once upon a time, though, we were always a different people than any other society. Many of us now live in one-of-kind communities"
+    }
 ]
 ```
