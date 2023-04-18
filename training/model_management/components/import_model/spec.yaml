@@ -3,8 +3,8 @@ type: pipeline
 
 name: import_model
 display_name: Import model
-description: Import a model into a workspace or a registry
-version: 0.0.2
+description: Import a model into a workspace or a registry. See [docs](https://aka.ms/azureml/components/import_model) to learn more.
+version: 0.0.3
 
 # Pipeline inputs
 inputs:

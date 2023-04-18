@@ -1,13 +1,13 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: download_model
-version: 0.0.2
+version: 0.0.3
 type: command
 
 is_deterministic: True
 
 display_name: Download model
-description: Downloads a publicly available model
+description: Downloads a publicly available model. See [docs](https://aka.ms/azureml/components/download_model) to learn more.
 
 environment: azureml://registries/azureml/environments/model-management/versions/4
 

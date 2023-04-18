@@ -1,13 +1,13 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: deploy_model
-version: 0.0.1
+version: 0.0.2
 type: command
 
 is_deterministic: True
 
 display_name: Deploy model
 description:
-  Deploy a model to a workspace. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
+  Deploy a model to a workspace. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached. See [docs](https://aka.ms/azureml/components/deploy_model) to learn more.
 
 environment: azureml://registries/azureml/environments/python-sdk-v2/versions/2
 
