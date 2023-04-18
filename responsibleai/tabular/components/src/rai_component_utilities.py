@@ -1,32 +1,31 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import sys
 import json
 import logging
 import os
 import pathlib
+import re
 import shutil
+import subprocess
+import sys
 import tempfile
 import uuid
-import re
-import subprocess
+from typing import Any, Dict, Optional
 
 import mlflow
 import mltable
 import pandas as pd
-
-from typing import Any, Dict, Optional
-
 from azureml.core import Model, Run, Workspace
-
-from responsibleai import RAIInsights, __version__ as responsibleai_version
+from constants import DashboardInfo, PropertyKeyValues, RAIToolType
+from raiutils.exceptions import UserConfigValidationException
 from responsibleai.feature_metadata import FeatureMetadata
 
-from constants import DashboardInfo, PropertyKeyValues, RAIToolType
+from responsibleai import RAIInsights
+from responsibleai import __version__ as responsibleai_version
 
 assetid_re = re.compile(
-    r"azureml://locations/(?P<location>.*)/workspaces/(?P<workspaceid>.*)/(?P<assettype>.*)/(?P<assetname>.*)/versions/(?P<assetversion>.*)"
+    r"azureml://locations/(?P<location>.*)/workspaces/(?P<workspaceid>.*)/(?P<assettype>.*)/(?P<assetname>.*)/versions/(?P<assetversion>.*)"  # noqa: E501
 )
 data_type = "data_type"
 
@@ -83,7 +82,7 @@ def load_mlflow_model(
         try:
             model = Model._get(workspace, id=model_id)
         except Exception as e:
-            raise UserConfigError(
+            raise UserConfigValidationException(
                 "Unable to retrieve model by model id {} in workspace {}, error:\n{}".format(
                     model_id, workspace.name, e
                 )
@@ -110,7 +109,7 @@ def load_mlflow_model(
                 )
             )
             _classify_and_log_pip_install_error(e.output)
-            raise UserConfigError(
+            raise UserConfigValidationException(
                 "Installing dependency using requirments.txt from mlflow model failed. "
                 "This behavior can be turned off with setting use_model_dependency to False in job spec. "
                 "You may also check error log above to manually resolve package conflict error"
@@ -131,10 +130,10 @@ def load_mlflow_model(
 def _classify_and_log_pip_install_error(elog):
     if elog is not None:
         if "Could not find a version that satisfies the requirement" in elog:
-            _logger.warn("Detected unsatisfiable version requirment.")
+            _logger.warning("Detected unsatisfiable version requirment.")
 
         if "package versions have conflicting dependencies" in elog:
-            _logger.warn("Detected dependency conflict error.")
+            _logger.warning("Detected dependency conflict error.")
 
 
 def load_mltable(mltable_path: str) -> pd.DataFrame:
@@ -172,7 +171,7 @@ def load_dataset(dataset_path: str) -> pd.DataFrame:
         df = load_mltable(dataset_path)
         isLoadSuccessful = True
     except Exception as e:
-        new_e = UserConfigError(
+        new_e = UserConfigValidationException(
             f"Input dataset {dataset_path} cannot be read as mltable."
             f"You may disregard this error if dataset input is intended to be parquet dataset. Exception: {e}"
         )
@@ -183,14 +182,14 @@ def load_dataset(dataset_path: str) -> pd.DataFrame:
             df = load_parquet(dataset_path)
             isLoadSuccessful = True
         except Exception as e:
-            new_e = UserConfigError(
+            new_e = UserConfigValidationException(
                 f"Input dataset {dataset_path} cannot be read as parquet."
                 f"You may disregard this error if dataset input is intended to be mltable. Exception: {e}"
             )
             exceptions.append(new_e)
 
     if not isLoadSuccessful:
-        raise UserConfigError(
+        raise UserConfigValidationException(
             f"Input dataset {dataset_path} cannot be read as MLTable or Parquet dataset."
             f"Please check that input dataset is valid. Exceptions encountered during reading: {exceptions}"
         )
