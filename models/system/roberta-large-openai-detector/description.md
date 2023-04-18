@@ -43,12 +43,10 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 ```json
 [
     {
-        "label": "LABEL_0",
-        "score": 0.5973310470581055
+        "0": "LABEL_0"
     },
     {
-        "label": "LABEL_0",
-        "score": 0.5915216207504272
+        "0": "LABEL_0"
     }
 ]
 ```

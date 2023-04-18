@@ -34,9 +34,6 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 {
     "inputs": {
         "input_string": ["Paris is the <mask> of France.", "Today is a <mask> day!"]
-    },
-    "parameters": {
-        "top_k": 2
     }
 }
 ```
@@ -44,33 +41,11 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 #### Sample output
 ```json
 [
-    [
-        {
-            "score": 0.8638194799423218,
-            "token": 812,
-            "token_str": " capital",
-            "sequence": "Paris is the capital of France."
-        },
-        {
-            "score": 0.055570174008607864,
-            "token": 1144,
-            "token_str": " heart",
-            "sequence": "Paris is the heart of France."
-        }
-    ],
-    [
-        {
-            "score": 0.20306870341300964,
-            "token": 372,
-            "token_str": " great",
-            "sequence": "Today is a great day!"
-        },
-        {
-            "score": 0.11999315023422241,
-            "token": 205,
-            "token_str": " good",
-            "sequence": "Today is a good day!"
-        }
-    ]
+    {
+        "0": "capital"
+    },
+    {
+        "0": "beautiful"
+    }
 ]
 ```

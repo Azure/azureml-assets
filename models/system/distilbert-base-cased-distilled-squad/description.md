@@ -41,16 +41,10 @@ Question Answering | Extractive Q&A | <a href="https://huggingface.co/datasets/s
 ```json
 [
     {
-        "score": 0.9956907033920288,
-        "start": 11,
-        "end": 15,
-        "answer": "John"
+        "0": "John"
     },
     {
-        "score": 0.9792415499687195,
-        "start": 30,
-        "end": 39,
-        "answer": "Hyderabad"
+        "0": "Hyderabad"
     }
 ]
 ```

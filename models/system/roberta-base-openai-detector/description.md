@@ -43,12 +43,10 @@ Text Classification|Detecting GPT2 Output|<a href="https://huggingface.co/datase
 ```json
 [
     {
-        "label": "Fake",
-        "score": 0.9851952195167542
+        "0": "Fake"
     },
     {
-        "label": "Fake",
-        "score": 0.6486035585403442
+        "0": "Fake"
     }
 ]
 ```

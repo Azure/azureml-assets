@@ -41,12 +41,10 @@ Text Classification|Textual Entailment|<a href="https://huggingface.co/datasets/
 ```json
 [
     {
-        "label": "NEUTRAL",
-        "score": 0.9605958461761475
+        "0": "NEUTRAL"
     },
     {
-        "label": "NEUTRAL",
-        "score": 0.98270583152771
+        "0": "NEUTRAL"
     }
 ]
 ```
