@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: question_answering_finetune
-version: 0.0.1
+version: 0.0.2
 type: command
 
 is_deterministic: True
 
 display_name: Question Answering Finetune
-description: Component to finetune model for question answering task
+description: Component to finetune model for question answering task. See [docs](https://aka.ms/azureml/components/question_answering_finetune) to learn more.
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/4
 

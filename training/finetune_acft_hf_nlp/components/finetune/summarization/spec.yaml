@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: summarization_finetune
-version: 0.0.1
+version: 0.0.2
 type: command
 
 is_deterministic: True
 
 display_name: Summarization Finetune
-description: Component to finetune model for summarization task
+description: Component to finetune model for summarization task. See [docs](https://aka.ms/azureml/components/summarization_finetune) to learn more.
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/4
 
