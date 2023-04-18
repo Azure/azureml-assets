@@ -32,6 +32,9 @@ Translation|Translation|<a href="https://huggingface.co/datasets/cnn_dailymail" 
 {
     "inputs": {
         "input_string": ["My name is John and I live in Seattle", "Berlin is the capital of Germany."]
+    },
+    "parameters": {
+        "task_type": "translation_en_to_fr"
     }
 }
 ```
@@ -40,10 +43,10 @@ Translation|Translation|<a href="https://huggingface.co/datasets/cnn_dailymail" 
 ```json
 [
     {
-        "0": "Mein Name ist John und ich lebe in Seattle"
+        "0": "Mon nom est John et je vivais à Seattle."
     },
     {
-        "0": "Berlin ist die Hauptstadt Deutschlands."
+        "0": "Berlin est la capitale de l'Allemagne."
     }
 ]
 ```
