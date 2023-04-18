@@ -14,16 +14,16 @@ Batch | coming soon
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|---|--|--|--|--|
+|--|--|--|--|--|
 Summarization|Summarization|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">CNN DailyMail</a>|<a href="https://aka.ms/azureml-ft-sdk-news-summary" target="_blank">news-summary.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-news-summary" target="_blank">news-summary.sh</a>
 Translation|Translation|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">WMT16</a>|<a href="https://aka.ms/azureml-ft-sdk-translation" target="_blank">translation.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-translation" target="_blank">translation.sh</a>
 
 
 ### Model Evaluation
 
-| Task          | Use case      | Dataset                                                        | Python sample (Notebook)                                                            | CLI with YAML                                                                     |
-|---------------|---------------|----------------------------------------------------------------|-------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
-| Summarization | Summarization | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">cnn_dailymail</a> | <a href="https://aka.ms/azureml-eval-sdk-summarization" target="_blank">evaluate-model-summarization.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-summarization" target="_blank">evaluate-model-summarization.yml</a> |
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Summarization | Summarization | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">cnn_dailymail</a> | <a href="https://aka.ms/azureml-eval-sdk-summarization" target="_blank">evaluate-model-summarization.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-summarization" target="_blank">evaluate-model-summarization.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)
