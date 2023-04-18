@@ -111,7 +111,6 @@ if __name__ == "__main__":
     mlmodel_file_path = model_dir / MLMODEL_FILE_NAME
     conda_env_file_path = model_dir / CONDA_YAML_FILE_NAME
 
-
     with open(mlmodel_file_path) as f:
         mlmodel_dict = yaml.safe_load(f)
         logger.info(f"mlmodel :\n{mlmodel_dict}\n")

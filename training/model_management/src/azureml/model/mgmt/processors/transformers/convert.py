@@ -119,7 +119,7 @@ def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_co
         model = StableDiffusionPipeline.from_pretrained(input_dir, local_files_only=True, torch_dtype=torch.float16)
 
     predict = os.path.join(os.path.dirname(__file__), "diffusion", "predict.py")
-    hf_conf["hf_predict_module"] = "predict"
+    hf_conf['hf_predict_module'] = "predict"
     hf_conf['custom_config_module'] = "diffusers"
     hf_conf['custom_tokenizer_module'] = "diffusers"
     hf_conf['custom_model_module'] = "diffusers"
