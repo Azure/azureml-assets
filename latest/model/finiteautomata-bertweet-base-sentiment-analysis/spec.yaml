@@ -35,7 +35,7 @@ description: |
 
   Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
   |--|--|--|--|--|
-  Text Classification | Emotion Detection | <a href="https://huggingface.co/datasets/go_emotions" target="_blank">GoEmotions</a> | <a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a>
+  Text Classification|Sentiment Classification|<a href="https://huggingface.co/datasets/glue/viewer/sst2/validation" target="_blank">SST2</a>|<a href="https://aka.ms/evaluate-model-sentiment-analysis" target="_blank">evaluate-model-sentiment-analysis.ipynb</a>|<a href="https://aka.ms/evaluate-model-sentiment-analysis-cli" target="_blank">evaluate-model-sentiment-analysis.yml</a>
 
 
   ### Sample inputs and outputs (for real-time inference)
