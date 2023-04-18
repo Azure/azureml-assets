@@ -1,8 +1,5 @@
 # Model Import Pipeline Component
-This is pipeline component, which can be used to create an [azure machine learning pipelines](https://learn.microsoft.com/en-us/azure/machine-learning/concept-ml-pipelines?view=azureml-api-2) to import a publicly available model from sources like HuggingFace,Github to user's workspace or registry.
-Click [here](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-use-pipeline-component?view=azureml-api-2) to know more about pipeline component.
-
-The components can be seen here ![as shown in the figure]
+This is pipeline component, which can be used to create an azure machine learning pipelines to import a publicly available model from sources like HuggingFace,Github to user's workspace or registry.
 
 # 1. Inputs
 
@@ -10,13 +7,13 @@ The components can be seen here ![as shown in the figure]
 
 1. _license_file_path_ (URI_FILE, optional)
 
-    Path to the license file of the model(which user want to import)
+    Path to the license file of the model(which user want to import).
 
 ## 1.2 Inputs for Model Registration Component
 
 1. _model_metadata_ (URI_FILE, optional)
 
-    A JSON or a YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json).
+    A JSON or a YAML file that contains model metadata confirming to Model V2 contract.
 
 # 2. Outputs
 
@@ -35,13 +32,13 @@ The components can be seen here ![as shown in the figure]
 
 1. _compute_ (STRING, required)
 
-    Compute to run pipeline job
+    Compute to run pipeline job.
 
 ## 3.2 Parameters for Model Download Component
 
 1. _model_source_ (STRING, optional)
 
-    Source from which model can be downloaded.Currently users can download model from the sources given below. Default value is "Huggingface".
+    Source from which model can be downloaded. Currently users can download model from the sources given below. Default value is "Huggingface".
 
     1. AzureBlob
     2. GIT
@@ -81,7 +78,7 @@ The components can be seen here ![as shown in the figure]
 
 3. _model_description_ (STRING, optional)
 
-    Description of the model that will be shown in model card of registered model in AzureML registry or workspace.Can be provided as input here or it will consume from model_metadata file.
+    Description of the model that will be shown in model card of registered model in AzureML registry or workspace. Can be provided as input here or it will consume from model_metadata file.
     
 4. _registry_name_ (STRING, optional)
 
@@ -95,7 +92,6 @@ This setting helps to choose the compute for running the component code.
 > Select *Use other compute target*
 
 - Under this option, you can select either `compute_cluster` or `compute_instance` as the compute type and the corresponding instance / cluster created in your workspace.
-- If you have not created the compute, you can create the compute by clicking the `Create Azure ML compute cluster` link that's available while selecting the compute. See the figure below
-![other compute target](https://aka.ms/azureml-ft-docs-create-compute-target)
+- If you have not created the compute, you can create the compute by clicking the `Create Azure ML compute cluster` link that's available while selecting the compute.
 - We generally recommend to use Standard_DS3_v2 compute for this node.
 

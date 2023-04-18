@@ -1,7 +1,5 @@
-# Ml-flow Converter Component
-This component can be used in [azure machine learning pipelines](https://learn.microsoft.com/en-us/azure/machine-learning/concept-ml-pipelines?view=azureml-api-2) to convert the model type to [mlflow](https://www.mlflow.org/docs/latest/models.html).
-
-The components can be seen here ![as shown in the figure]
+# MLFlow Converter Component
+This component can be used in azure machine learning pipelines to convert the model type to mlflow.
 
 # 1. Inputs
 
@@ -29,12 +27,12 @@ The components can be seen here ![as shown in the figure]
 
 # 3. Parameters
 
-1. _model_id_ (string, optional)
+1. _model_id_ (STRING, optional)
 
     A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`. Can be provided as input here or in model_download_metadata JSON file.
 
 
-2. _task_name_ (string, optional)
+2. _task_name_ (STRING, optional)
 
     A Hugging face task on which model was trained on. A required parameter for transformers mlflow flavor. Can be provided as input here or it will consume from model_download_metadata JSON file. Tasks that we currently supports are listed below
 
@@ -56,7 +54,6 @@ This setting helps to choose the compute for running the component code.
 > Select *Use other compute target*
 
 - Under this option, you can select either `compute_cluster` or `compute_instance` as the compute type and the corresponding instance / cluster created in your workspace.
-- If you have not created the compute, you can create the compute by clicking the `Create Azure ML compute cluster` link that's available while selecting the compute. See the figure below
-![other compute target](https://aka.ms/azureml-ft-docs-create-compute-target)
+- If you have not created the compute, you can create the compute by clicking the `Create Azure ML compute cluster` link that's available while selecting the compute.
 - We generally recommend to use Standard_DS3_v2 compute for this node.
 

@@ -1,7 +1,5 @@
-# Mlflow Model Local Validation Component
-This component can be used in [azure machine learning pipelines](https://learn.microsoft.com/en-us/azure/machine-learning/concept-ml-pipelines?view=azureml-api-2) to valdate if a MLFLow model can be loaded on a compute and is usable for inferencing
-
-The components can be seen here ![as shown in the figure]
+# MLFlow Model Local Validation Component
+This component can be used in azure machine learning pipelines to valdate if a MLFLow model can be loaded on a compute and is usable for inferencing
 
 # 1. Inputs
 
@@ -21,7 +19,7 @@ The components can be seen here ![as shown in the figure]
  
 # 3. Parameters
 
-1. _column_rename_map_ (string, optional)
+1. _column_rename_map_ (STRING, optional)
 
     Provide mapping of dataset column names that should be renamed before inferencing.
     eg: _col1:ren1; col2:ren2; col3:ren3_.
@@ -33,7 +31,6 @@ This setting helps to choose the compute for running the component code.
 > Select *Use other compute target*
 
 - Under this option, you can select either `compute_cluster` or `compute_instance` as the compute type and the corresponding instance / cluster created in your workspace.
-- If you have not created the compute, you can create the compute by clicking the `Create Azure ML compute cluster` link that's available while selecting the compute. See the figure below
-![other compute target](https://aka.ms/azureml-ft-docs-create-compute-target)
+- If you have not created the compute, you can create the compute by clicking the `Create Azure ML compute cluster` link that's available while selecting the compute.
 - We generally recommend to use Standard_DS3_v2 compute for this node.
 
