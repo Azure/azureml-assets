@@ -14,7 +14,7 @@ command
 
 ### Description 
 
-Downloads a publicly available model. See [docs](https://aka.ms/azureml/components/download_model) to learn more.
+Downloads a publicly available model.
 
 ## Inputs 
 

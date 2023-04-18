@@ -14,7 +14,7 @@ command
 
 ### Description 
 
-Validates if a MLFLow model can be loaded on a compute and is usable for inferencing. See [docs](https://aka.ms/azureml/components/mlflow_model_local_validation) to learn more.
+Validates if a MLFLow model can be loaded on a compute and is usable for inferencing.
 
 ## Inputs 
 

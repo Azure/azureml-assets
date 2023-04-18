@@ -14,8 +14,7 @@ pipeline
 
 ### Description 
 
-Import a model into a workspace or a registry. See [docs](https://aka.ms/azureml/components/import_model) to learn more.
-
+Import a model into a workspace or a registry.
 ## Inputs 
 
 pipeline specific compute

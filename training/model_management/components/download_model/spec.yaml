@@ -7,7 +7,7 @@ type: command
 is_deterministic: True
 
 display_name: Download model
-description: Downloads a publicly available model
+description: Downloads a publicly available model. See [docs](https://aka.ms/azureml/components/download_model) to learn more.
 
 environment: azureml://registries/azureml/environments/model-management/versions/4
 

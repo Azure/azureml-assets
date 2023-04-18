@@ -14,7 +14,7 @@ command
 
 ### Description 
 
-Component converts the input model to MLFlow packaging format. See [docs](https://aka.ms/azureml/components/convert_model_to_mlflow) to learn more.
+Component converts the input model to MLFlow packaging format.
 
 ## Inputs 
 

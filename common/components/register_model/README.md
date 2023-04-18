@@ -14,7 +14,7 @@ command
 
 ### Description 
 
-Register a model to a workspace or a registry. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached. See [docs](https://aka.ms/azureml/components/register_model) to learn more.
+Register a model to a workspace or a registry. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
 
 ## Inputs 
 
