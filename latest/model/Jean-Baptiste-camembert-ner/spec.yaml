@@ -55,37 +55,11 @@ description: |
   #### Sample output
   ```json
   [
-      [
-          {
-              "entity_group": "PER",
-              "score": 0.99309397,
-              "word": "jean-baptiste",
-              "start": 12,
-              "end": 26
-          },
-          {
-              "entity_group": "LOC",
-              "score": 0.99793863,
-              "word": "montréal",
-              "start": 38,
-              "end": 47
-          }
-      ],
-      [
-          {
-              "entity_group": "PER",
-              "score": 0.9873353,
-              "word": "george washington",
-              "start": 0,
-              "end": 17
-          },
-          {
-              "entity_group": "LOC",
-              "score": 0.9930083,
-              "word": "washington",
-              "start": 28,
-              "end": 39
-          }
-      ]
+      {
+          "0": "['O', 'O', 'I-PER', 'O', 'O', 'O', 'O', 'I-LOC']"
+      },
+      {
+          "0": "['I-PER', 'I-PER', 'O', 'O', 'O', 'I-LOC']"
+      }
   ]
   ```

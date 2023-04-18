@@ -32,11 +32,6 @@ Text generation | Text generation | coming soon | <a href="https://aka.ms/azurem
 {
     "inputs": {
         "input_string": ["My name is John and I am", "Once upon a time,"]
-    },
-    "parameters": {
-        "min_length": 20,
-        "max_length": 30,
-        "num_return_sequences": 2
     }
 }
 ```
@@ -44,21 +39,11 @@ Text generation | Text generation | coming soon | <a href="https://aka.ms/azurem
 #### Sample output
 ```json
 [
-    [
-        {
-            "generated_text": "My name is John and I am part of the world's largest open computer lab, one of the largest academic computer labs in the world, with over"
-        },
-        {
-            "generated_text": "My name is John and I am a member of the Canadian Bitcoin Association (CBA) and the British Bitcoin Association (BA), but I'm happy"
-        }
-    ],
-    [
-        {
-            "generated_text": "Once upon a time, when I was twenty myself, I read John Milton's Paradise Lost in a small magazine. I was struck by a passage:"
-        },
-        {
-            "generated_text": "Once upon a time, there was an elf queen in the valley of the mountains called Seren-Sylvia, and there lived a man-"
-        }
-    ]
+    {
+        "0": "My name is John and I am part of the world's largest open computer lab, one of the largest academic computer labs in the world, with over"
+    },
+    {
+        "0": "Once upon a time, when I was twenty myself, I read John Milton's Paradise Lost in a small magazine. I was struck by a passage:"
+    }
 ]
 ```
