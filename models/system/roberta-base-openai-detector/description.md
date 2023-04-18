@@ -25,7 +25,7 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
-Text Classification | Emotion Detection | <a href="https://huggingface.co/datasets/go_emotions" target="_blank">GoEmotions</a> | <a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a>
+Text Classification|Detecting GPT2 Output|<a href="https://huggingface.co/datasets/spacerini/gpt2-outputs" target="_blank">GPT2-Outputs</a> |<a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)
