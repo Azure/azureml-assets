@@ -201,9 +201,6 @@ This component enables finetuning of Hugging Face pretrained models on custom or
 
     Metric to be used to compare two different models. The possible metrics are loss, f1, accuracy, recall and precision. The default metric used is loss
 
-16. _save_as_mlflow_model_ (string, optional)
-
-    If set to true, mlflow model will be saved along with the pytorch_model
 
 ## 3.6. Continual Finetuning
 
