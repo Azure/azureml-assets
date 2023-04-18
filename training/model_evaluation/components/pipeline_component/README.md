@@ -1,4 +1,4 @@
-## Evaluate Model Component
+## Model Evaluation Pipeline Component
 
 ### Name 
 
