@@ -16,7 +16,7 @@ Batch | coming soon
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
-Text Classification | Emotion Detection | <a href="https://huggingface.co/datasets/glue/viewer/mnli/validation_matched" target="_blank">MNLIs</a> | <a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a>
+Text Classification | Emotion Detection | <a href="https://huggingface.co/datasets/glue/viewer/mnli/validation_matched" target="_blank">MNLI</a> | <a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a>
 
 
 ### Finetuning samples
