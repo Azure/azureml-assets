@@ -6,34 +6,42 @@ type: command
 is_deterministic: True
 
 display_name: Translation Model Import
-description: Import PyTorch / MLFlow model. See [docs](https://aka.ms/azureml/components/translation_model_import) to learn more.
+description: Component to import PyTorch / MLFlow model. See [docs](https://aka.ms/azureml/components/translation_model_import) to learn more.
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/4
 
 code: ../../../src/model_selector
 
 inputs:
-  # Model and task name
+  # custom model id
   huggingface_id:
     type: string
-    description: Input HuggingFace model id. Incase of continual finetuning provide proper id. Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms.
+    description: The string can be any Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=translation&sort=downloads). Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms.
     optional: true
 
-  # Continual-Finetuning model path
+  # PyTorch model as input
+  # Folder structure for Pytorch model asset: The model folder is expected to contain model, config and tokenizer files and optionally optimizer, scheduler and the random states. The files are expected to be in the [Hugging Face format](https://huggingface.co/bert-base-uncased/tree/main). Additionally, the input folder **MUST** contain the file `finetune_args.json` with *model_name_or_path* as one of the keys of the dictionary. This file is already created if you are using an already finetuned model from Azureml
   pytorch_model_path:
     type: custom_model
     optional: true
-    description: Input folder path containing pytorch model for further finetuning. Proper model/huggingface id must be passed.
+    description: Pytorch model asset path
 
+  # MLflow model as an input
+  # Folder structure for MLflow model asset:The model folder is expected to contain model, config and tokenizer files in a specific format as explained below -
+  # - All the configuration files should be stored in _data/config_ folder
+  # - All the model files should be stored in _data/model_ folder
+  # - All the tokenizer files should be kept in _data/tokenizer_ folder
+  # - **`MLmodel`** is a yaml file and this should contain _model_name_or_path_ information.
+  # You could use the Model import pipeline to create a model of your own or refer to any of models in the Model Catalogue page if you want to manually create one. The MLflow output of a finetune model will be in correct format and no modification is needed.
   mlflow_model_path:
     type:  mlflow_model
     optional: true
-    description: Input folder path containing mlflow model for further finetuning. Proper model/huggingface id must be passed.
+    description: MLflow model asset path
 
 outputs:
   output_dir:
     type: uri_folder
-    description: folder to store model metadata
+    description: Path to output directory which contains the component metadata and the model artifacts folder
 
 command: >-
   python model_selector.py --task_name Translation $[[--huggingface_id ${{inputs.huggingface_id}}]] $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']] $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']] --output_dir ${{outputs.output_dir}}
