@@ -29,7 +29,7 @@ inputs:
 
   # sample input2
   # {"sentence1":"Amrozi accused his brother , whom he called \" the witness \" , of deliberately distorting his evidence .","sentence2":"Referring to him as only \" the witness \" , Amrozi accused his brother of deliberately distorting his evidence .","label":1,"idx":0}
-  # If your dataset follows above pattern, `sentence1_key` should be set as sentence1 and `sentece2_key` as sentence2 `label_key` as label.
+  # If your dataset follows above pattern, `sentence1_key` should be set as sentence1 and `sentence2_key` as sentence2 `label_key` as label.
 
   sentence1_key:
     type: string
