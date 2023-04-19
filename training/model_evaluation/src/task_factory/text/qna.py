@@ -22,6 +22,7 @@ class QnAPredictor(PredictWrapper):
         Returns:
             _type_: _description_
         """
+        self._ensure_base_model_input_schema(X_test)
         try:
             y_pred = self.model.predict(X_test, **kwargs)
         except TypeError:
