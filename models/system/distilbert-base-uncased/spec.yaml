@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: distilbert-base-uncased
+path: ./
+properties:
+  SHA: 1c4513b2eedbda136f57676a34eea67aba266e5c
+  datasets: bookcorpus, wikipedia
+  finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
+tags:
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS2_v2
+  task: fill-mask
+version: 2

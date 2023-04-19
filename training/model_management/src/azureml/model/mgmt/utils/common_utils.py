@@ -20,12 +20,14 @@ from typing import Any, Dict, Tuple
 
 def log_execution_time(func, logger=None):
     """Decorate method to log execution time."""
+
     def wrap_func(*args, **kwargs):
         t1 = time.time()
         result = func(*args, **kwargs)
         t2 = time.time()
         print(f"{func.__name__!r} executed in {(t2-t1):.4f}s")
         return result
+
     return wrap_func
 
 
@@ -43,8 +45,6 @@ def run_command(cmd: str, cwd: Path = "./") -> Tuple[int, str]:
     )
     if result.returncode != 0:
         print(f"Failed with error {result.stdout}.")
-    else:
-        print(f"Successfully executed! Output: \n{result.stdout}")
     return result.returncode, result.stdout
 
 

@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: bert-base-uncased
+path: ./
+properties:
+  SHA: 0a6aa9128b6194f4f3c4db429b6cb4891cdb421b
+  datasets: bookcorpus, wikipedia
+  finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
+tags:
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS2_v2
+  task: fill-mask
+version: 2

@@ -1,0 +1,50 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: mlflow_model_local_validation
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: MLFlow model local validation
+description: Validates if a MLFLow model can be loaded on a compute and is usable for inferencing.
+
+environment: azureml://registries/azureml/environments/model-management/versions/4
+
+code: ../../src/
+command: |
+  set -ex
+  export ENV_PREFIX="/opt/conda/envs/inferencing"
+  echo $ENV_PREFIX
+  ls -ltr ${{inputs.model_path}}
+  cp ${{inputs.model_path}}/conda.yaml ./
+  conda env create -p $ENV_PREFIX -f conda.yaml -q
+  echo "conda env successfully created at $ENV_PREFIX"
+  conda run -p $ENV_PREFIX python run_model_sanity_validations.py --model-path ${{inputs.model_path}} $[[--test-data-path ${{inputs.test_data_path}}]] $[[--column-rename-map "${{inputs.column_rename_map}}"]] --output-model-path ${{outputs.mlflow_model_folder}}
+
+inputs:
+  model_path:
+    type: mlflow_model
+    mode: ro_mount
+    description: MLFlow model to be validated
+
+  test_data_path:
+    type: uri_file
+    optional: true
+    description: Test dataset for model inferencing
+
+  column_rename_map:
+    type: string
+    optional: true
+    description: |
+      Provide mapping of dataset column names that should be renamed before inferencing.
+      eg: col1:ren1; col2:ren2; col3:ren3 
+
+outputs:
+  mlflow_model_folder:
+    type: uri_folder
+    mode: rw_mount
+    description: Validated input model. Here input model is used to block further steps in pipeline job if local validation fails
+
+tags:
+  Preview: ""

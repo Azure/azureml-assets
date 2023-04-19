@@ -1,0 +1,133 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+
+name: import_model
+display_name: Import model
+description: Import a model into a workspace or a registry
+version: 0.0.2
+
+# Pipeline inputs
+inputs:
+  # pipeline specific compute
+  compute:
+    type: string
+    description: Compute to run pipeline job
+
+  ## Inputs for download model
+  model_source:
+    type: string
+    description: Storage containers from where model will be sourced from
+    default: Huggingface
+    enum:
+      - AzureBlob
+      - GIT
+      - Huggingface
+
+  model_id:
+    type: string
+    description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
+
+  ## Inputs for the MlFLow conversion
+  license_file_path:
+    type: uri_file
+    description: Path to the license file
+    optional: true
+
+  task_name:
+    description: A Hugging face task on which model was trained on
+    enum:
+    - text-classification
+    - fill-mask
+    - token-classification
+    - question-answering
+    - summarization
+    - text-generation
+    - text-classification
+    - translation
+    - image-classification
+    - text-to-image
+    optional: true
+    type: string
+
+  ## Inputs for Model registration
+  custom_model_name:
+    type: string
+    optional: true
+    description: Model name to use in the registration. If name already exists, the version will be auto incremented
+
+  model_version:
+    type: string
+    optional: true
+    description: Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented
+
+  model_description:
+    type: string
+    optional: true
+    description: Description of the model that will be shown in AzureML registry or workspace
+
+  registry_name:
+    type: string
+    optional: true
+    description: Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
+
+  model_metadata:
+    type: uri_file
+    optional: true
+    description: A JSON or a YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
+
+# Pipeline outputs
+outputs:
+  mlflow_model_folder:
+    description: Output path for the converted MLFlow model
+    type: mlflow_model
+
+  model_registration_details:
+    description: Output file which captures transformations applied above and registration details in JSON file
+    type: uri_file
+
+jobs:
+  download_model:
+    component: azureml:download_model:0.0.2
+    compute: ${{parent.inputs.compute}}
+    inputs:
+      model_source: ${{parent.inputs.model_source}}
+      model_id: ${{parent.inputs.model_id}}
+    outputs:
+      model_download_metadata:
+        type: uri_file
+      model_output:
+        type: uri_folder
+
+  convert_model_to_mlflow:
+    component: azureml:convert_model_to_mlflow:0.0.2
+    compute: ${{parent.inputs.compute}}
+    inputs:
+      task_name: ${{parent.inputs.task_name}}
+      license_file_path: ${{parent.inputs.license_file_path}}
+      model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
+      model_path: ${{parent.jobs.download_model.outputs.model_output}}
+    outputs:
+      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
+      model_import_job_path:
+        type: uri_file
+
+  register_model:
+    component: azureml:register_model:0.0.2
+    compute: ${{parent.inputs.compute}}
+    inputs:
+      model_name: ${{parent.inputs.custom_model_name}}
+      model_version: ${{parent.inputs.model_version}}
+      model_description: ${{parent.inputs.model_description}}
+      registry_name: ${{parent.inputs.registry_name}}
+      model_metadata: ${{parent.inputs.model_metadata}}
+      model_type: mlflow_model
+      model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
+      model_path: ${{parent.jobs.convert_model_to_mlflow.outputs.mlflow_model_folder}}
+      model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
+    outputs:
+      registration_details: ${{parent.outputs.model_registration_details}}
+    identity:
+      type: user_identity
+
+tags:
+    Preview: ""

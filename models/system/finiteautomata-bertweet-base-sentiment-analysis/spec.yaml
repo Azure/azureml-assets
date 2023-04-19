@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: finiteautomata-bertweet-base-sentiment-analysis
+path: ./
+properties:
+  SHA: 924fc4c80bccb8003d21fe84dd92c7887717f245
+  datasets: ''
+  finetuning-tasks: text-classification
+  languages: en
+tags:
+  Preview: ''
+  min_inference_sku: Standard_DS2_v2
+  task: text-classification
+version: 2
