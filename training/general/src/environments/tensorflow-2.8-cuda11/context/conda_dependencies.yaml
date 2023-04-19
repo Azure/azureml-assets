@@ -25,4 +25,3 @@ dependencies:
   - protobuf~=3.19.0
   - horovod[tensorflow-gpu]
   - debugpy~=1.6.3
-  
