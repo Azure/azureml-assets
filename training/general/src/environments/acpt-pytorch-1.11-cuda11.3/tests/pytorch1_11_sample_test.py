@@ -52,7 +52,7 @@ def test_pytorch_1_11():
         display_name="bert-pretrain-GLUE",
         description="Pretrain the BERT model on the GLUE dataset.",
         experiment_name="pytorch111_Cuda113_Experiment",
-        distribution=PyTorchDistribution(process_count_per_instance=8),
+        distribution=PyTorchDistribution(process_count_per_instance=2),
         resources=JobResourceConfiguration(instance_count=1),
     )
 
