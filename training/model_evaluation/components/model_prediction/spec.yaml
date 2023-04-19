@@ -3,7 +3,7 @@ name: model_prediction
 display_name: Model Prediction
 description: Generate predictions on a given mlflow model for supported tasks.
 
-version: 0.0.2
+version: 0.0.3
 tags:
   type: evaluation
   sub_type: inference
@@ -47,6 +47,14 @@ inputs:
     type: string
     optional: true
     description: "Input column names in provided test dataset (Ex : column1). Add comma delimited values in case of multiple input columns (Ex : column1,column2)"
+  evaluation_config:
+    type: uri_file 
+    optional: true
+    description: "Additional parameters required for evaluation."
+  evaluation_config_params:
+    type: string
+    optional: true
+    description: "JSON Serielized string of evaluation_config"
   #ADDED TO ACCOMMODATE CURRENT DESIGNER
   model_uri:
     type: string
@@ -79,7 +87,7 @@ outputs:
     type: mltable
 
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/4
+environment: azureml://registries/azureml/environments/model-evaluation/versions/5
 
 command: >-
   python download_dependencies.py
@@ -99,6 +107,8 @@ command: >-
   $[[--mlflow-model '${{inputs.mlflow_model}}']]
   $[[--model-uri ${{inputs.model_uri}}]]
   $[[--label-column-name ${{inputs.label_column_name}}]]
+  $[[--config-file-name '${{inputs.evaluation_config}}']]
   $[[--device ${{inputs.device}}]]
   $[[--batch-size ${{inputs.batch_size}}]]
+  $[[--config_str '${{inputs.evaluation_config_params}}']]
   
