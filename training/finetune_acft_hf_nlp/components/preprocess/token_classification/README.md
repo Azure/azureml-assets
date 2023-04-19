@@ -1,67 +1,66 @@
-# Token Classification DataPreProcess Component
-The goal of the component is to validate the user data and encode it. The encoded data along with relevant metadata is saved in the component output folder to be consumed by downstream components.
+## Token Classification DataPreProcess
 
-# 1. Inputs
-1. _train_file_path_ (URI_FILE, optional)
+### Name 
 
-    Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+token_classification_datapreprocess
 
-2. _validation_file_path_ (URI_FILE, optional)
+### Version 
 
-    Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+0.0.2
 
-3. _test_file_path_ (URI_FILE, optional)
+### Type 
 
-    Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+command
 
-4. _train_mltable_path_ (MLTABLE, optional)
+### Description 
 
-    Path to the registered training data asset in `mltable` format.
+Component to preprocess data for token classification task. See [docs](https://aka.ms/azureml/components/token_classification_datapreprocess) to learn more.
 
-5. _validation_mltable_path_ (MLTABLE, optional)
+## Inputs 
 
-    Path to the registered validation data asset in `mltable` format.
+task arguments
 
-6. _test_mltable_path_ (MLTABLE, optional)
-
-    Registered test data asset in `mltable` format
-
-7. _model_selector_output_ (URI_FOLDER, required)
-
-    Output of Token Classification Model Import component
-
-> Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split of train data happens if they are not passed. Below table shows the split details -
-
-| __Validation file__ (could be mltable file or URI file) | __Test file__ (could be mltable file or URI file) | __Train Data Split__ (train-validation-test)|
-| --- | --- | --- |
-|missing|missing|80-10-10|
-|missing|exists|80-0-20|
-|exists|missing|80-20-0|
-
-You can explore more about MLTable at [Working with tables in Azure Machine Learning](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-mltable?tabs=cli%2Cpandas%2Cadls) and about its schema at [CLI (v2) mltable YAML schema](https://learn.microsoft.com/en-us/azure/machine-learning/reference-yaml-mltable).
-
-
-# 2. Outputs
-1. _output_dir_ (URI_FOLDER, required)
-
-    The folder contains the tokenized output of the train, validation and test data along with the tokenizer files used to tokenize the data
-
-# 3. Parameters
-
-1. _token_key_ (string, required)
-
-    Key for input text in each example line
-
-2. _tag_key_ (string, required)
-
-    Key for tokens in each example line
-
-3. _batch_size_ (int, optional)
-
-    Number of examples to batch before calling the tokenization function. The default value is 1000.
-
-Example1: Below is an example from conll2003 dataset
+sample input
 
 {`tokens_column`: [ "EU", "rejects", "German", "call", "to", "boycott", "British", "lamb", "." ], `ner_tags_column`: '["B-ORG", "O", "B-MISC", "O", "O", "O", "B-MISC", "O", "O"]'}
 
 For the above dataset pattern, `token_key` should be set as tokens_column and `tag_key` as ner_tags_column
+
+| Name       | Description                                                          | Type    | Default | Optional | Enum |
+| ---------- | -------------------------------------------------------------------- | ------- | ------- | -------- | ---- |
+| token_key  | Key for tokens in each example line                                  | string  | -       | False    | NA   |
+| tag_key    | Key for tags in each example line                                    | string  | -       | False    | NA   |
+| batch_size | Number of examples to batch before calling the tokenization function | integer | 1000    | True     | NA   |
+
+
+
+Data inputs
+
+Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split from train data happens if they are not passed.
+
+If both validation and test files are missing, 10% of train data will be assigned to each of them and the remaining 80% will be used for training
+
+If anyone of the file is missing, 20% of the train data will be assigned to it and the remaining 80% will be used for training
+
+| Name                    | Description                                                                                                               | Type     | Default | Optional | Enum |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- | ------- | -------- | ---- |
+| train_file_path         | Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`    | uri_file | -       | True     | NA   |
+| validation_file_path    | Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. | uri_file | -       | True     | NA   |
+| test_file_path          | Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.       | uri_file | -       | True     | NA   |
+| train_mltable_path      | Path to the registered training data asset in `mltable` format.                                                           | mltable  | -       | True     | NA   |
+| validation_mltable_path | Path to the registered validation data asset in `mltable` format.                                                         | mltable  | -       | True     | NA   |
+| test_mltable_path       | Path to the registered test data asset in `mltable` format.                                                               | mltable  | -       | True     | NA   |
+
+
+
+Dataset parameters
+
+| Name                  | Description                                                                                          | Type       | Default | Optional | Enum |
+| --------------------- | ---------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- | ---- |
+| model_selector_output | output folder of model selector containing model metadata like config, checkpoints, tokenizer config | uri_folder | -       | False    | NA   |
+
+## Outputs 
+
+| Name       | Description                                                                                                                              | Type       |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| output_dir | The folder contains the tokenized output of the train, validation and test data along with the tokenizer files used to tokenize the data | uri_folder |

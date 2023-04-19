@@ -1,77 +1,81 @@
-# Text Classification DataPreProcess Component
-The goal of the component is to validate the user data and encode it. The encoded data along with relevant metadata is saved in the component output folder to be consumed by downstream components.
+## Text Classification DataPreProcess
 
-# 1. Inputs
-1. _train_file_path_ (URI_FILE, optional)
+### Name 
 
-    Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+text_classification_datapreprocess
 
-2. _validation_file_path_ (URI_FILE, optional)
+### Version 
 
-    Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+0.0.2
 
-3. _test_file_path_ (URI_FILE, optional)
+### Type 
 
-    Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+command
 
-4. _train_mltable_path_ (MLTABLE, optional)
+### Description 
 
-    Path to the registered training data asset in `mltable` format.
+Component to preprocess data for single label classification task. See [docs](https://aka.ms/azureml/components/text_classification_datapreprocess) to learn more.
 
-5. _validation_mltable_path_ (MLTABLE, optional)
+## Inputs 
 
-    Path to the registered validation data asset in `mltable` format.
+Text Claasification task type
 
-6. _test_mltable_path_ (MLTABLE, optional)
-
-    Registered test data asset in `mltable` format
-
-7. _model_selector_output_ (URI_FOLDER, required)
-
-    Output of Text Classification Model Import component
-
-> Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split of train data happens if they are not passed. Below table shows the split details -
-
-| __Validation file__ (could be mltable file or URI file) | __Test file__ (could be mltable file or URI file) | __Train Data Split__ (train-validation-test)|
-| --- | --- | --- |
-|missing|missing|80-10-10|
-|missing|exists|80-0-20|
-|exists|missing|80-20-0|
-
-You can explore more about MLTable at [Working with tables in Azure Machine Learning](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-mltable?tabs=cli%2Cpandas%2Cadls) and about its schema at [CLI (v2) mltable YAML schema](https://learn.microsoft.com/en-us/azure/machine-learning/reference-yaml-mltable).
+| Name      | Description                   | Type   | Default                   | Optional | Enum                          |
+| --------- | ----------------------------- | ------ | ------------------------- | -------- | ----------------------------- |
+| task_name | Text Classification task type | string | SingleLabelClassification | False    | ['SingleLabelClassification'] |
 
 
-# 2. Outputs
-1. _output_dir_ (URI_FOLDER, required)
 
-    The folder contains the tokenized output of the train, validation and test data along with the tokenizer files used to tokenize the data
+task arguments
 
-# 3. Parameters
-
-1. _sentence1_key_ (string, required)
-
-    Key for `sentence1_key` in each example line
-
-2. _sentence2_key_ (string, optional)
-
-    Key for `sentence2_key` in each example line
-
-3. _label_key_ (string, required)
-
-    label key in each example line
-
-4. _batch_size_ (int, optional)
-
-    Number of examples to batch before calling the tokenization function. The default value is 1000.
-
-Example1: Below is an example from CoLA train dataset
+sample input1
 
 {"sentence":"Our friends won't buy this analysis, let alone the next one we propose.","label":true,"idx":0}
 
 For this setting, `sentence1_key` is sentence, and `label_key` is label. The optional parameter `sentence2_key` can be ignored
 
-Example2: Below is an example from MRPC train dataset
+sample input2
 
 {"sentence1":"Amrozi accused his brother , whom he called \" the witness \" , of deliberately distorting his evidence .","sentence2":"Referring to him as only \" the witness \" , Amrozi accused his brother of deliberately distorting his evidence .","label":1,"idx":0}
 
 If your dataset follows above pattern, `sentence1_key` should be set as sentence1 and `sentece2_key` as sentence2 `label_key` as label.
+
+| Name          | Description                                                          | Type    | Default | Optional | Enum |
+| ------------- | -------------------------------------------------------------------- | ------- | ------- | -------- | ---- |
+| sentence1_key | Key for `sentence1_key` in each example line                         | string  | -       | False    | NA   |
+| sentence2_key | Key for `sentence2_key` in each example line                         | string  | -       | True     | NA   |
+| label_key     | label key in each example line                                       | string  | -       | False    | NA   |
+| batch_size    | Number of examples to batch before calling the tokenization function | integer | 1000    | True     | NA   |
+
+
+
+Data inputs
+
+Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split from train data happens if they are not passed.
+
+If both validation and test files are missing, 10% of train data will be assigned to each of them and the remaining 80% will be used for training
+
+If anyone of the file is missing, 20% of the train data will be assigned to it and the remaining 80% will be used for training
+
+| Name                    | Description                                                                                                               | Type     | Default | Optional | Enum |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- | ------- | -------- | ---- |
+| train_file_path         | Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.   | uri_file | -       | True     | NA   |
+| validation_file_path    | Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. | uri_file | -       | True     | NA   |
+| test_file_path          | Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.       | uri_file | -       | True     | NA   |
+| train_mltable_path      | Path to the registered training data asset in `mltable` format.                                                           | mltable  | -       | True     | NA   |
+| validation_mltable_path | Path to the registered validation data asset in `mltable` format.                                                         | mltable  | -       | True     | NA   |
+| test_mltable_path       | Path to the registered test data asset in `mltable` format.                                                               | mltable  | -       | True     | NA   |
+
+
+
+Dataset parameters
+
+| Name                  | Description                                                                                          | Type       | Default | Optional | Enum |
+| --------------------- | ---------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- | ---- |
+| model_selector_output | output folder of model selector containing model metadata like config, checkpoints, tokenizer config | uri_folder | -       | False    | NA   |
+
+## Outputs 
+
+| Name       | Description                                                                                                                              | Type       |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| output_dir | The folder contains the tokenized output of the train, validation and test data along with the tokenizer files used to tokenize the data | uri_folder |
