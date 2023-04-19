@@ -54,6 +54,8 @@ class BasePredictor(ABC):
                             key = [i for i in X_test.keys() if i != "parameters"][0]
                             X_test[input_names[0]] = X_test[key]
                             X_test.pop(key)
+                            X_test.pop("parameters")
+
 
 class PredictWrapper(BasePredictor):
     """Abstract class for predict based models."""
