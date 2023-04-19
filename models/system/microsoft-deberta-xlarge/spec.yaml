@@ -6,8 +6,11 @@ properties:
   datasets: ''
   finetuning-tasks: text-classification, token-classification, question-answering
   languages: en
+  recommended-sku: Standard_ND40RS_v2
+  minimum-sku: Standard_NC6
+  finetune-min-sku-spec: 6|1|56|380
 tags:
-  Preview: ''
+  preview: ''
   license: mit
   min_inference_sku: Standard_DS4_v2
   task: fill-mask
