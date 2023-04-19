@@ -216,7 +216,6 @@ def test_model():
     parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default=None)
 
     args = parser.parse_args()
-    print(args)
     custom_dimensions.app_name = constants.TelemetryConstants.MODEL_PREDICTION_NAME
     custom_dims_dict = vars(custom_dimensions)
     with log_activity(logger, constants.TelemetryConstants.MODEL_PREDICTION_NAME, custom_dimensions=custom_dims_dict):
