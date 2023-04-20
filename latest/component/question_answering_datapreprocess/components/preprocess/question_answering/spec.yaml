@@ -1,19 +1,24 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: question_answering_datapreprocess
-version: 0.0.1
+version: 0.0.2
 type: command
 
 is_deterministic: true
 
 display_name: Question Answering DataPreProcess
-description: Component to preprocess data for question answering task
+description: Component to preprocess data for question answering task. See [docs](https://aka.ms/azureml/components/question_answering_datapreprocess)
+  to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/4
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/5
 
 code: ../../../src/preprocess
 
 inputs:
   # Task arguments
+  # Sample example
+  # {`question_column`: "In what year did Paul VI formally appoint Mary as mother of the Catholic church?", `context_column`: "Paul VI opened the third period on 14 September 1964, telling the Council Fathers that he viewed the text about the Church as the most important document to come out from the Council. As the Council discussed the role of bishops in the papacy, Paul VI issued an explanatory note confirming the primacy of the papacy, a step which was viewed by some as meddling in the affairs of the Council American bishops pushed for a speedy resolution on religious freedom, but Paul VI insisted this to be approved together with related texts such as ecumenism. The Pope concluded the session on 21 November 1964, with the formal pronouncement of Mary as Mother of the Church.", `answers_column`: {`answer_start_column`: [595], `text_column`: ['1964']}}
+# If the dataset follows above pattern, `question_key`: "question_column"; `context_key`: "context_column"; `answers_key`: answers_column; `answer_start_key`: answer_start_column; `answer_text_key`: text_column
+
   question_key:
     type: string
     optional: false
@@ -47,20 +52,23 @@ inputs:
     type: integer
     default: 128
     optional: true
-    description: Number of ovelapping context tokens to use while splitting the examples
-      into multiple splits based on the model sequence length
+    description: The amount of context overlap to keep in case the number of tokens
+      per example exceed __max_seq_length__
 
   n_best_size:
     type: integer
     default: 20
     optional: true
-    description: Topk results to use for the predicted start and end token positions
+    description: The `top_n` max probable start tokens and end tokens to be consider
+      while generating possible answers.
 
   max_answer_length_in_tokens:
     type: integer
     default: 30
     optional: true
-    description: Maximum answer length to consider
+    description: The maximum allowed answer length specified in token length. The
+      default value for this parameter is 30. All the answers with above 30 tokens
+      will not be considered as a possible answer.
 
   batch_size:
     type: integer
@@ -68,38 +76,44 @@ inputs:
     default: 1000
     description: Number of examples to batch before calling the tokenization function
 
-  # Inputs
+  # Data inputs
+  # Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split from train data happens if they are not passed.
+  # If both validation and test files are missing, 10% of train data will be assigned to each of them and the remaining 80% will be used for training
+  # If anyone of the file is missing, 20% of the train data will be assigned to it and the remaining 80% will be used for training
   train_file_path:
     type: uri_file
     optional: true
-    description: Enter the train file path
+    description: Path to the registered training data asset. The supported data formats
+      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Enter the validation file path
+    description: Path to the registered validation data asset. The supported data
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
 
   test_file_path:
     type: uri_file
     optional: true
-    description: Enter the test file path
+    description: Path to the registered test data asset. The supported data formats
+      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
 
   train_mltable_path:
     type: mltable
     optional: true
-    description: Enter the train mltable path
+    description: Path to the registered training data asset in `mltable` format.
 
   validation_mltable_path:
     type: mltable
     optional: true
-    description: Enter the validation mltable path
+    description: Path to the registered validation data asset in `mltable` format.
 
   test_mltable_path:
     type: mltable
     optional: true
-    description: Enter the test mltable path
+    description: Path to the registered test data asset in `mltable` format.
 
-  # Dataset parameters
+  # Model input
   model_selector_output:
     type: uri_folder
     optional: false
@@ -109,7 +123,8 @@ inputs:
 outputs:
   output_dir:
     type: uri_folder
-    description: folder to store preprocessed outputs of input data
+    description: The folder contains the tokenized output of the train, validation
+      and test data along with the tokenizer files used to tokenize the data
 
 command: >-
   python preprocess.py --task_name QuestionAnswering --question_key ${{inputs.question_key}}
@@ -122,4 +137,3 @@ command: >-
   $[[--validation_mltable_path '${{inputs.validation_mltable_path}}']] $[[--test_mltable_path
   '${{inputs.test_mltable_path}}']] --model_selector_output ${{inputs.model_selector_output}}
   --output_dir ${{outputs.output_dir}}
-
