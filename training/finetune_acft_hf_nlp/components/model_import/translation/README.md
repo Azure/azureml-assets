@@ -40,7 +40,7 @@ This is nothing but huggingface model folder. Here's the link to the example mod
 
 MLflow model as an input
 
-This is also a huggingface model folder expect that the folder structure is slightly different. You could invoke a model import pipeline to convert the standard huggingface model into MLflow format. Please refer to this [notebook](https://github.com/Azure/azureml-examples/blob/main/sdk/python/foundation-models/system/import/import_model_into_registry.ipynb) for steps to do the same
+This is also a huggingface model folder expect that the folder structure is slightly different. You could invoke a model import pipeline to convert the standard huggingface model into MLflow format. Please refer to this [notebook](https://aka.ms/azureml-import-model) for steps to do the same
 
 NOTE The pytorch_model_path take priority over mlflow_model_path, in case both inputs are passed
 
