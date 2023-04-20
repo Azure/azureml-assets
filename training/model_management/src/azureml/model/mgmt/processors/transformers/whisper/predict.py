@@ -9,6 +9,7 @@ import base64
 import ffmpeg
 import logging
 import requests
+import torch
 import numpy as np
 import pandas as pd
 from pathlib import Path
