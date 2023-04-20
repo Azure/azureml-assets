@@ -5,18 +5,14 @@ import argparse
 import json
 import logging
 
-from responsibleai import RAIInsights
-
-from azureml.core import Run
-
-from constants import RAIToolType
-from rai_component_utilities import (
-    create_rai_insights_from_port_path,
-    save_to_output_port,
-    copy_dashboard_info_file,
-)
-
 from _telemetry._loggerfactory import _LoggerFactory, track
+from azureml.core import Run
+from constants import RAIToolType
+from rai_component_utilities import (copy_dashboard_info_file,
+                                     create_rai_insights_from_port_path,
+                                     save_to_output_port)
+
+from responsibleai import RAIInsights
 
 _logger = logging.getLogger(__file__)
 _ai_logger = None

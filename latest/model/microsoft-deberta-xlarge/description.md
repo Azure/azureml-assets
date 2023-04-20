@@ -13,17 +13,17 @@ Batch | coming soon
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|---|--|--|--|--|
+|--|--|--|--|--|
 Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Token Classification|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">token-classification.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">token-classification.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
 Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
 
 
 ### Model Evaluation
 
-| Task      | Use case  | Dataset                                      | Python sample (Notebook)                                                     | CLI with YAML                                                              |
-|-----------|-----------|----------------------------------------------|------------------------------------------------------------------------------|----------------------------------------------------------------------------|
-| Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/imdb" target="_blank">imdb</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a> |
+Task| Use case| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|
+Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/imdb" target="_blank">imdb</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)
@@ -33,9 +33,6 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 {
     "inputs": {
         "input_string": ["Paris is the [MASK] of France.", "Today is a [MASK] day!"]
-    },
-    "parameters": {
-        "top_k": 2
     }
 }
 ```
@@ -43,33 +40,11 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 #### Sample output
 ```json
 [
-    [
-        {
-            "score": 0.00045154482359066606,
-            "token": 22569,
-            "token_str": " Tig",
-            "sequence": "Paris is the Tig of France."
-        },
-        {
-            "score": 0.00027906251489184797,
-            "token": 23408,
-            "token_str": " promoter",
-            "sequence": "Paris is the promoter of France."
-        }
-    ],
-    [
-        {
-            "score": 0.0003339046670589596,
-            "token": 13093,
-            "token_str": "edd",
-            "sequence": "Today is aedd day!"
-        },
-        {
-            "score": 0.0003173339064233005,
-            "token": 42781,
-            "token_str": " hallucinations",
-            "sequence": "Today is a hallucinations day!"
-        }
-    ]
+    {
+        "0": "capital"
+    },
+    {
+        "0": "beautiful"
+    }
 ]
 ```

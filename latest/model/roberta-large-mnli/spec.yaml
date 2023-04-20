@@ -29,17 +29,17 @@ description: |
 
   ### Model Evaluation
 
-  | Task                | Use case          | Dataset                                                   | Python sample (Notebook)                                                                        | CLI with YAML                                                                                 |
-  |---------------------|-------------------|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
-  | Text Classification | Emotion Detection | <a href="https://huggingface.co/datasets/go_emotions" target="_blank">GoEmotions</a> | <a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a> |
+  Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+  |--|--|--|--|--|
+  Text Classification|Textual Entailment|<a href="https://huggingface.co/datasets/glue/viewer/mnli/validation_matched" target="_blank">MNLI</a>|<a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a>
 
 
   ### Finetuning samples
 
   Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-  |---|--|--|--|--|
+  |--|--|--|--|--|
   Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-  Token Classification|Token Classification|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">token-classification.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">token-classification.sh</a>
+  Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
 
 
   ### Sample inputs and outputs (for real-time inference)
@@ -57,12 +57,10 @@ description: |
   ```json
   [
       {
-          "label": "NEUTRAL",
-          "score": 0.655748724937439
+          "0": "NEUTRAL"
       },
       {
-          "label": "NEUTRAL",
-          "score": 0.7130465507507324
+          "0": "NEUTRAL"
       }
   ]
   ```

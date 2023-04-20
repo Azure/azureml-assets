@@ -29,16 +29,16 @@ description: |
   ### Finetuning samples
 
   Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-  |---|--|--|--|--|
+  |--|--|--|--|--|
   Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-  Token Classification|Token Classification|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">token-classification.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">token-classification.sh</a>
+  Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
 
 
   ### Model Evaluation
 
-  | Task                 | Use case             | Dataset                                                 | Python sample (Notebook)                                                                          | CLI with YAML                                                                                   |
-  |----------------------|----------------------|---------------------------------------------------------|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
-  | Token Classification | Token Classification | <a href="https://huggingface.co/datasets/conll2003" target="_blank">CoNLL 2003</a> | <a href="https://aka.ms/azureml-eval-sdk-token-classification" target="_blank">evaluate-model-token-classification.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-token-classification" target="_blank">evaluate-model-token-classification.yml</a> |
+  Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+  |--|--|--|--|--|
+  Token Classification | Token Classification | <a href="https://huggingface.co/datasets/conll2003" target="_blank">CoNLL 2003</a> | <a href="https://aka.ms/azureml-eval-sdk-token-classification" target="_blank">evaluate-model-token-classification.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-token-classification" target="_blank">evaluate-model-token-classification.yml</a>
 
 
   ### Sample inputs and outputs (for real-time inference)
@@ -55,37 +55,11 @@ description: |
   #### Sample output
   ```json
   [
-      [
-          {
-              "entity_group": "PER",
-              "score": 0.99309397,
-              "word": "jean-baptiste",
-              "start": 12,
-              "end": 26
-          },
-          {
-              "entity_group": "LOC",
-              "score": 0.99793863,
-              "word": "montréal",
-              "start": 38,
-              "end": 47
-          }
-      ],
-      [
-          {
-              "entity_group": "PER",
-              "score": 0.9873353,
-              "word": "george washington",
-              "start": 0,
-              "end": 17
-          },
-          {
-              "entity_group": "LOC",
-              "score": 0.9930083,
-              "word": "washington",
-              "start": 28,
-              "end": 39
-          }
-      ]
+      {
+          "0": "['O', 'O', 'I-PER', 'O', 'O', 'O', 'O', 'I-LOC']"
+      },
+      {
+          "0": "['I-PER', 'I-PER', 'O', 'O', 'O', 'I-LOC']"
+      }
   ]
   ```

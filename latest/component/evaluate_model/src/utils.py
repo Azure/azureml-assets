@@ -358,7 +358,9 @@ class ArgumentsSet:
         """
         args_map = {
             "metrics": "list(val)",
-            "smoothing": "bool(val)"
+            "smoothing": "bool(val)",
+            "source_lang": "str(val)",
+            "target_lang": "str(val)"
         }
         return args_map
 

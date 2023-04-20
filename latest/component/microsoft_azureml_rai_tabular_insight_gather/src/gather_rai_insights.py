@@ -1,32 +1,26 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import os
 import argparse
 import json
 import logging
-from pathlib import Path
+import os
 import tempfile
-
+from pathlib import Path
 from typing import Dict
 
+from _telemetry._loggerfactory import _LoggerFactory, track
 from azureml.core import Run
-
-from responsibleai import RAIInsights
+from constants import DashboardInfo, RAIToolType
+from rai_component_utilities import (add_properties_to_gather_run,
+                                     copy_insight_to_raiinsights,
+                                     create_rai_insights_from_port_path,
+                                     create_rai_tool_directories,
+                                     default_json_handler,
+                                     load_dashboard_info_file, print_dir_tree)
 from responsibleai.serialization_utilities import serialize_json_safe
 
-from constants import DashboardInfo, RAIToolType
-from rai_component_utilities import (
-    create_rai_tool_directories,
-    create_rai_insights_from_port_path,
-    copy_insight_to_raiinsights,
-    default_json_handler,
-    load_dashboard_info_file,
-    add_properties_to_gather_run,
-    print_dir_tree,
-)
-
-from _telemetry._loggerfactory import _LoggerFactory, track
+from responsibleai import RAIInsights
 
 _DASHBOARD_CONSTRUCTOR_MISMATCH = (
     "Insight {0} was not " "computed from the constructor specified"

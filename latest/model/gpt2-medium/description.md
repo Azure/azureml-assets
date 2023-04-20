@@ -13,16 +13,16 @@ Batch | coming soon
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
-|---|--|--|--|--|
+|--|--|--|--|--|
 Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Token Classification|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">token-classification.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">token-classification.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
 
 
 ### Model Evaluation
 
-| Task            | Use case        | Dataset     | Python sample (Notebook)                                                                 | CLI with YAML                                                                          |
-|-----------------|-----------------|-------------|------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
-| Text generation | Text generation | coming soon | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a> |
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Text generation | Text generation | coming soon | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)
@@ -32,11 +32,6 @@ Token Classification|Token Classification|<a href="https://huggingface.co/datase
 {
     "inputs": {
         "input_string": ["My name is John and I am", "Once upon a time,"]
-    },
-    "parameters": {
-        "min_length": 20,
-        "max_length": 30,
-        "num_return_sequences": 2
     }
 }
 ```
@@ -44,21 +39,11 @@ Token Classification|Token Classification|<a href="https://huggingface.co/datase
 #### Sample output
 ```json
 [
-    [
-        {
-            "generated_text": "My name is John and I am part of the world's largest open computer lab, one of the largest academic computer labs in the world, with over"
-        },
-        {
-            "generated_text": "My name is John and I am a member of the Canadian Bitcoin Association (CBA) and the British Bitcoin Association (BA), but I'm happy"
-        }
-    ],
-    [
-        {
-            "generated_text": "Once upon a time, when I was twenty myself, I read John Milton's Paradise Lost in a small magazine. I was struck by a passage:"
-        },
-        {
-            "generated_text": "Once upon a time, there was an elf queen in the valley of the mountains called Seren-Sylvia, and there lived a man-"
-        }
-    ]
+    {
+        "0": "My name is John and I am part of the world's largest open computer lab, one of the largest academic computer labs in the world, with over"
+    },
+    {
+        "0": "Once upon a time, when I was twenty myself, I read John Milton's Paradise Lost in a small magazine. I was struck by a passage:"
+    }
 ]
 ```

@@ -6,18 +6,18 @@ import json
 import logging
 import os
 import re
+from datetime import datetime
 
-from azureml.core import Run
-from responsibleai import __version__ as responsibleai_version
-
-from _score_card._rai_insight_data import RaiInsightData, PdfDataGen
-from _score_card.common_components import to_pdf, get_full_html
-import _score_card.regression_components as RegressionComponents
 import _score_card.classification_components as ClassificationComponents
-
+import _score_card.regression_components as RegressionComponents
+from _score_card._rai_insight_data import PdfDataGen, RaiInsightData
+from _score_card.common_components import get_full_html, to_pdf
+from _telemetry._loggerfactory import _LoggerFactory, track
+from azureml.core import Run
 from constants import DashboardInfo, PropertyKeyValues, RAIToolType
 from rai_component_utilities import load_dashboard_info_file
-from _telemetry._loggerfactory import _LoggerFactory, track
+
+from responsibleai import __version__ as responsibleai_version
 
 threshold_reg = re.compile(r"([<>=]{1,2})([0-9.]+)")
 
@@ -171,16 +171,23 @@ def main(args):
         run = Run.get_context()
         run_details = run.get_details()
         ws = run.experiment.workspace
-        wsid = f"/subscriptions/{ws.subscription_id}/resourceGroups/{ws.resource_group}/providers/Microsoft.MachineLearningServices/workspaces/{ws.name}"
+        wsid = f"/subscriptions/{ws.subscription_id}/resourceGroups/{ws.resource_group}/\
+        providers/Microsoft.MachineLearningServices/workspaces/{ws.name}"
         dashboard_link = "https://ml.azure.com/model/analysis/{}/{}/?wsid={}".format(
             dashboard_info[DashboardInfo.RAI_INSIGHTS_MODEL_ID_KEY],
             dashboard_info[DashboardInfo.RAI_INSIGHTS_GATHER_RUN_ID_KEY],
             wsid,
         )
 
+        if "startTimeUtc" not in run_details:
+            # Get UTC from python datetime module if this is not available from run details
+            startTimeUtc = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        else:
+            startTimeUtc = run_details["startTimeUtc"]
+
         config["runinfo"] = {
             "submittedBy": run_details["submittedBy"],
-            "startTimeUtc": run_details["startTimeUtc"],
+            "startTimeUtc": startTimeUtc,
             "dashboard_link": dashboard_link,
             "model_id": dashboard_info[DashboardInfo.RAI_INSIGHTS_MODEL_ID_KEY],
             "dashboard_title": dashboard_info[
@@ -225,14 +232,11 @@ class Workflow:
             "model_overview": True,
             "model_performance": True,
             "data_explorer": "DataExplorer" in self.config,
-            "cohorts": "Cohorts" in self.config
-            or len(self.raiinsight.list()["error_analysis"]["reports"]) > 0,
-            "feature_importance": "FeatureImportance" in self.config
-            and self.raiinsight.list()["explainer"]["is_computed"],
-            "fairness": "Fairness" in self.config
-            and len(self.config["Fairness"]["sensitive_features"]) > 0,
-            "causal": "Causal" in self.config
-            and len(self.raiinsight.list()["causal"]["causal_effects"]) > 0,
+            "cohorts": "Cohorts" in self.config or len(self.raiinsight.list()["error_analysis"]["reports"]) > 0,
+            "feature_importance": "FeatureImportance" in self.config and
+                                  self.raiinsight.list()["explainer"]["is_computed"],
+            "fairness": "Fairness" in self.config and len(self.config["Fairness"]["sensitive_features"]) > 0,
+            "causal": "Causal" in self.config and len(self.raiinsight.list()["causal"]["causal_effects"]) > 0,
         }
 
     def generate_pdf(self):

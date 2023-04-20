@@ -9,7 +9,7 @@ description: >-
   Registry:mcr.microsoft.com/azureml/curated/acpt-pytorch-2.0-cuda11.7
 
 name: "acpt-pytorch-2.0-cuda11.7"
-version: "4"
+version: "6"
 
 build:
   path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
