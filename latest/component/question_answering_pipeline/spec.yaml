@@ -582,7 +582,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
   model_prediction:
     type: command
-    component: azureml://registries/azureml/components/model_prediction/versions/0.0.2
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.3
     compute: ${{parent.inputs.compute_model_evaluation}}
     inputs:
       task: question-answering
@@ -595,7 +595,7 @@ jobs:
       mlflow_model: ${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}
   compute_metrics:
     type: command
-    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.2
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.3
     compute: ${{parent.inputs.compute_model_evaluation}}
     inputs:
       task: question-answering
