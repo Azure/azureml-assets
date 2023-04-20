@@ -196,6 +196,14 @@ def predict(
     """
     if not task == "automatic-speech-recognition":
         return f"Invalid task name {task}"
+    
+    device = kwargs.get("device", -1)
+
+    if device == 0 and not torch.cuda.is_available():
+        device = -1
+        logging.warning("CUDA unavailable. Defaulting to CPU device.")
+
+    device = "cuda" if device == 0 else "cpu"
 
     result = []
     for row in model_input.itertuples():
@@ -212,9 +220,11 @@ def predict(
         forced_decoder_ids = (
             tokenizer.get_decoder_prompt_ids(language=language, task="transcribe") if language else None
         )
+
+        model = model.to(device)
         audio_array = audio_processor(audio)
-        input_features = tokenizer(audio_array, sampling_rate=16000, return_tensors="pt").input_features
-        predicted_ids = model.generate(input_features, forced_decoder_ids=forced_decoder_ids)
+        input_features = tokenizer(audio_array, sampling_rate=16000, return_tensors="pt").input_features.to(device)
+        predicted_ids = model.generate(input_features, forced_decoder_ids=forced_decoder_ids, max_new_tokens=1024)
         transcription = tokenizer.batch_decode(predicted_ids, skip_special_tokens=True)[0]
         result.append({"text": transcription})
     return result
