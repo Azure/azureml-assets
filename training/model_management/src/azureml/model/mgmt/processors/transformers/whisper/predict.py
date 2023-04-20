@@ -201,7 +201,10 @@ def predict(
         return f"Invalid task name {task}"
 
     device = kwargs.get("device", -1)
+    max_new_tokens = kwargs.get("max_new_tokens", 448)
 
+    if device == -1 and torch.cuda.is_available():
+        logging.warning('CUDA available. To switch to GPU device pass `"parameters": {"device" : 0}` in the input.')
     if device == 0 and not torch.cuda.is_available():
         device = -1
         logging.warning("CUDA unavailable. Defaulting to CPU device.")
@@ -227,7 +230,7 @@ def predict(
         model = model.to(device)
         audio_array = audio_processor(audio)
         input_features = tokenizer(audio_array, sampling_rate=16000, return_tensors="pt").input_features.to(device)
-        predicted_ids = model.generate(input_features, forced_decoder_ids=forced_decoder_ids, max_new_tokens=1024)
+        predicted_ids = model.generate(input_features, forced_decoder_ids=forced_decoder_ids, max_new_tokens=max_new_tokens)
         transcription = tokenizer.batch_decode(predicted_ids, skip_special_tokens=True)[0]
         result.append({"text": transcription})
     return result
