@@ -7,6 +7,7 @@ import os
 import re
 import base64
 import ffmpeg
+import logging
 import requests
 import numpy as np
 import pandas as pd
@@ -15,6 +16,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.WARNING)
 
 SUPPORTED_LANGUAGES = [
     "en",
