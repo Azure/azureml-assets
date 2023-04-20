@@ -9,6 +9,7 @@ import json
 from azureml.model.mgmt.config import ModelFlavor
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
+from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
 from pathlib import Path
 import shutil
 
@@ -53,7 +54,15 @@ def _validate_transformers_args(args):
         raise Exception("task is a required parameter for hftransformers mlflow flavor.")
     task = args["task"]
     if not SupportedTasks.has_value(task):
-        raise Exception(f"Unsupported task {task}")
+        raise Exception(f"Unsupported task {task} for hftransformers mlflow flavor.")
+
+
+def _validate_pyfunc_args(pyfunc_args):
+    if not pyfunc_args.get("task"):
+        raise Exception("task is a required parameter for pyfunc flavor.")
+    task = pyfunc_args["task"]
+    if not Tasks.has_value(task):
+        raise Exception(f"Unsupported task {task} for pyfunc flavor.")
 
 
 if __name__ == "__main__":
@@ -77,10 +86,11 @@ if __name__ == "__main__":
         raise Exception("Unsupported model flavor")
 
     preprocess_args = {}
-    with open(model_download_metadata_path) as f:
-        download_details = json.load(f)
-        preprocess_args.update(download_details.get("tags", {}))
-        preprocess_args.update(download_details.get("properties", {}))
+    if model_download_metadata_path:
+        with open(model_download_metadata_path) as f:
+            download_details = json.load(f)
+            preprocess_args.update(download_details.get("tags", {}))
+            preprocess_args.update(download_details.get("properties", {}))
     preprocess_args["task"] = task_name if task_name else preprocess_args.get("task")
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
 
@@ -88,6 +98,8 @@ if __name__ == "__main__":
 
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
         _validate_transformers_args(preprocess_args)
+    elif mlflow_flavor == ModelFlavor.PYFUNC.value:
+        _validate_pyfunc_args(preprocess_args)
 
     run_preprocess(mlflow_flavor, model_path, mlflow_model_output_dir, **preprocess_args)
 
