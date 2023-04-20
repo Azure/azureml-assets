@@ -10,7 +10,7 @@ properties:
   minimum-sku: Standard_NC6
   finetune-min-sku-spec: 6|1|56|380
 tags:
-  preview: ''
+  Preview: ''
   license: mit
   min_inference_sku: Standard_DS3_v2
   task: fill-mask
