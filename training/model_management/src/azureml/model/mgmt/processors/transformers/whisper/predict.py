@@ -199,7 +199,7 @@ def predict(
     """
     if not task == "automatic-speech-recognition":
         return f"Invalid task name {task}"
-    
+
     device = kwargs.get("device", -1)
 
     if device == 0 and not torch.cuda.is_available():
