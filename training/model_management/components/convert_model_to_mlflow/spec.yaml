@@ -1,13 +1,13 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: convert_model_to_mlflow
-version: 0.0.2
+version: 0.0.3
 type: command
 
 is_deterministic: True
 
-display_name: Convert model to MLFlow
-description: Component converts the input model to MLFlow packaging format
+display_name: Convert Hugging face models to MLFlow
+description: Component converts Huggingface models to MLFlow model packaging format
 
 environment: azureml://registries/azureml/environments/model-management/versions/4
 
