@@ -7,7 +7,7 @@ is_deterministic: True
 
 display_name: Register model
 description:
-  Register a model to a workspace or a registry. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
+  Register a model to a workspace or a registry. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached. See [docs](https://aka.ms/azureml/components/register_model) to learn more.
 
 environment: azureml://registries/azureml/environments/python-sdk-v2/versions/2
 
