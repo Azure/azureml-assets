@@ -32,16 +32,7 @@ def _prepare_artifacts_dict(input_dir: Path) -> Dict:
         MMDetLiterals.CONFIG_PATH: os.path.join(input_dir, metadata.get("pytorch_model_path")),
         MMDetLiterals.WEIGHTS_PATH: os.path.join(input_dir, metadata.get("model_weights_path_or_url")),
     }
-
-    config_dir = os.path.join(input_dir, "model")
-    if not os.path.exists(config_dir):
-        return artifacts_dict
-
-    extra_config_files = {
-        file: os.path.join(config_dir, file) for file in os.listdir(config_dir) if file.endswith(".py")
-    }
-    extra_config_files.update(artifacts_dict)
-    return extra_config_files
+    return artifacts_dict
 
 
 def _get_mlflow_signature(task_type: str) -> ModelSignature:
