@@ -21,12 +21,12 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     conda clean -a -y
 
 # Install pip dependencies
-RUN pip install azureml-core=={{latest-image-tag}} \
-                azureml-mlflow=={{latest-image-tag}} \
-                azureml-automl-core=={{latest-image-tag}} \
-                azureml-automl-dnn-nlp=={{latest-image-tag}} \
-                azureml-automl-runtime=={{latest-image-tag}} \
-                azureml-train-automl-client=={{latest-image-tag}} \
-                azureml-train-automl-runtime=={{latest-image-tag}} \
-                azureml-defaults=={{latest-image-tag}} \
+RUN pip install azureml-core=={{latest-pypi-version}} \
+                azureml-mlflow=={{latest-pypi-version}} \
+                azureml-automl-core=={{latest-pypi-version}} \
+                azureml-automl-dnn-nlp=={{latest-pypi-version}} \
+                azureml-automl-runtime=={{latest-pypi-version}} \
+                azureml-train-automl-client=={{latest-pypi-version}} \
+                azureml-train-automl-runtime=={{latest-pypi-version}} \
+                azureml-defaults=={{latest-pypi-version}} \
                 'horovod==0.21.3'

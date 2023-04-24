@@ -23,18 +23,18 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 RUN pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 --extra-index-url https://download.pytorch.org/whl/cu113
 
 # Install pip dependencies
-RUN pip install azureml-core=={{latest-image-tag}} \
-                azureml-mlflow=={{latest-image-tag}} \
-                azureml-dataset-runtime=={{latest-image-tag}} \
-                azureml-telemetry=={{latest-image-tag}} \
-                azureml-responsibleai=={{latest-image-tag}} \
-                azureml-automl-core=={{latest-image-tag}} \
-                azureml-automl-runtime=={{latest-image-tag}} \
-                azureml-train-automl-client=={{latest-image-tag}} \
-                azureml-defaults=={{latest-image-tag}} \
-                azureml-interpret=={{latest-image-tag}} \
-                azureml-train-automl-runtime=={{latest-image-tag}} \
-                azureml-automl-dnn-vision=={{latest-image-tag}} \
+RUN pip install azureml-core=={{latest-pypi-version}} \
+                azureml-mlflow=={{latest-pypi-version}} \
+                azureml-dataset-runtime=={{latest-pypi-version}} \
+                azureml-telemetry=={{latest-pypi-version}} \
+                azureml-responsibleai=={{latest-pypi-version}} \
+                azureml-automl-core=={{latest-pypi-version}} \
+                azureml-automl-runtime=={{latest-pypi-version}} \
+                azureml-train-automl-client=={{latest-pypi-version}} \
+                azureml-defaults=={{latest-pypi-version}} \
+                azureml-interpret=={{latest-pypi-version}} \
+                azureml-train-automl-runtime=={{latest-pypi-version}} \
+                azureml-automl-dnn-vision=={{latest-pypi-version}} \
                 'azureml-dataprep>=2.24.4'
 
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
