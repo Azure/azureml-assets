@@ -11,16 +11,19 @@ import torch
 import ast
 import traceback
 import mltable
+import json
 from itertools import repeat
 
 from exceptions import (ModelEvaluationException,
-                        ModelValidationException)
+                        ModelValidationException,
+                        DataLoaderException)
 from logging_utilities import custom_dimensions, get_logger, log_traceback
 from azureml.telemetry.activity import log_activity
 from utils import (setup_model_dependencies,
                    check_and_return_if_mltable,
                    get_predictor,
                    read_data,
+                   read_config,
                    prepare_data)
 from run_utils import TestRun
 from validation import _validate, validate_args
@@ -37,7 +40,8 @@ aml_mlflow.set_tracking_uri(ws.get_mlflow_tracking_uri())
 class Inferencer:
     """Main Class for Inferencing all tasks modes."""
 
-    def __init__(self, model_uri, task, custom_dimensions, device, batch_size):
+    def __init__(self, model_uri, task, custom_dimensions, device,
+                 batch_size, config_file=None, metrics_config=None):
         """__init__.
 
         Args:
@@ -51,6 +55,11 @@ class Inferencer:
         """
         self.model_uri = model_uri
         self.task = task
+        self.metrics_config = {}
+        if config_file:
+            self.metrics_config = read_config(config_file, task)
+        elif metrics_config:
+            self.metrics_config = metrics_config
         self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL
                                or task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL)
         self.custom_dimensions = custom_dimensions
@@ -141,8 +150,15 @@ class Inferencer:
             predictor = predictor_cls(self.model)
             device = self.device  # torch.cuda.current_device() if torch.cuda.is_available() else "cpu"
             pred_probas_chunk = None
-            predictions_chunk = predictor.predict(X_test, device=device,
-                                                  y_transformer=y_transformer, multilabel=self.multilabel)
+            if self.task == constants.TASK.TRANSLATION:
+                source_lang = self.metrics_config.get("source_lang", None)
+                target_lang = self.metrics_config.get("target_lang", None)
+                predictions_chunk = predictor.predict(X_test, device=device,
+                                                      y_transformer=y_transformer, multilabel=self.multilabel,
+                                                      source_lang=source_lang, target_lang=target_lang)
+            else:
+                predictions_chunk = predictor.predict(X_test, device=device,
+                                                      y_transformer=y_transformer, multilabel=self.multilabel)
             if self.task in constants.CLASSIFICATION_SET:
                 pred_probas_chunk = predictor.predict_proba(X_test, device=device,
                                                             y_transformer=y_transformer, multilabel=self.multilabel)
@@ -196,9 +212,10 @@ def test_model():
     parser.add_argument("--input-column-names",
                         type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()],
                         dest="input_column_names", required=False, default=None)
+    parser.add_argument("--config_str", type=str, dest="config_str", required=False, default=None)
+    parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default=None)
 
     args = parser.parse_args()
-    print(args)
     custom_dimensions.app_name = constants.TelemetryConstants.MODEL_PREDICTION_NAME
     custom_dims_dict = vars(custom_dimensions)
     with log_activity(logger, constants.TelemetryConstants.MODEL_PREDICTION_NAME, custom_dimensions=custom_dims_dict):
@@ -211,9 +228,18 @@ def test_model():
         if mlflow_model:
             model_uri = mlflow_model
 
-        # if args.task is None:
-        #     args.task = get_task_from_model(model_uri)
-        #     _validate_task(args)
+        met_config = None
+        if args.config_str:
+            if args.config_file_name:
+                logger.warning("Both evaluation_config and evaluation_config_params are passed. \
+                               Using evaluation_config as additional params.")
+            else:
+                try:
+                    met_config = json.loads(args.config_str)
+                except Exception as e:
+                    message = "Unable to load evaluation_config_params. String is not JSON serielized."
+                    raise DataLoaderException(message,
+                                              inner_exception=e)
 
         is_mltable, data = check_and_return_if_mltable(args.data, args.data_mltable)
 
@@ -222,7 +248,9 @@ def test_model():
             custom_dimensions=custom_dims_dict,
             model_uri=model_uri,
             device=args.device,
-            batch_size=args.batch_size
+            batch_size=args.batch_size,
+            config_file=args.config_file_name,
+            metrics_config=met_config
         )
         preds, pred_probas, ground_truth = runner.predict(data, label_column_name=args.label_column_name,
                                                           input_column_names=args.input_column_names,

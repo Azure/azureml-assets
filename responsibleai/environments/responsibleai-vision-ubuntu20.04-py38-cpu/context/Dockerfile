@@ -24,13 +24,18 @@ RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-core=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
                 'azureml-automl-dnn-vision=={{latest-pypi-version}}' \
-                'https://publictestdatasets.blob.core.windows.net/packages/pypi/azureml-model-serializer/azureml_model_serializer-0.0.16-py3-none-any.whl'
+                'azureml-rai-utils==0.0.2' \
+                'https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-vision/responsibleai_vision-0.0.25-py3-none-any.whl'
+# Todo: Need to install rai-vision-utils from wheels and update the raivisioninsights package wheel 
 
 # Work around to resolve error: The user requested ml-wrappers~=0.4.2; interpret-community 0.27.0 depends on ml-wrappers==0.2.2
 RUN pip install 'ml-wrappers~=0.4.2' \
                 'shap==0.40.0' \
                 'interpret-community==0.28.0' \
-                'Pillow>=9.1.0'
+                'Pillow>=9.1.0' \
+                'Werkzeug==2.2.3' \
+                'setuptools>=65.5.1' \
+                'numpy==1.22.0'
 
 RUN pip freeze
 

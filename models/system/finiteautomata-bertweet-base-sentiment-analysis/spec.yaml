@@ -4,10 +4,10 @@ path: ./
 properties:
   SHA: 924fc4c80bccb8003d21fe84dd92c7887717f245
   datasets: ''
-  finetuning-tasks: text-classification, token-classification, question-answering
+  finetuning-tasks: text-classification
   languages: en
 tags:
   Preview: ''
   min_inference_sku: Standard_DS2_v2
   task: text-classification
-version: 4
+version: 2

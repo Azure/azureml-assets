@@ -14,6 +14,15 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
+# Install azureml packages
+RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
+                'azureml-core=={{latest-pypi-version}}' \
+                'azureml-mlflow=={{latest-pypi-version}}' \
+                'azureml-rai-utils==0.0.2'
+
+# To resolve vulnerability issue
+RUN pip install 'Werkzeug==2.2.3'                
+
 RUN pip freeze
 
 # This is needed for mpi to locate libpython

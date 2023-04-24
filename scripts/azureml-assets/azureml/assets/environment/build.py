@@ -8,11 +8,11 @@ import os
 import shutil
 import sys
 import tempfile
-import yaml
 from collections import Counter
 from concurrent.futures import as_completed, ThreadPoolExecutor
 from datetime import timedelta
 from pathlib import Path
+from ruamel.yaml import YAML
 from subprocess import run, PIPE, STDOUT
 from timeit import default_timer as timer
 from typing import List, Tuple
@@ -73,7 +73,9 @@ def create_acr_task(image_name: str,
     # Write YAML file to disk
     task_file = build_context_dir / task_filename
     with open(task_file, "w") as f:
-        yaml.dump(task, f, default_flow_style=False, sort_keys=False)
+        yaml = YAML()
+        yaml.default_flow_style = False
+        YAML().dump(task, f)
 
     return task_file
 

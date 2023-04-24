@@ -9,10 +9,10 @@ import logging
 import mlflow
 import shutil
 import sys
-import yaml
 import pandas as pd
 from pathlib import Path
 from typing import Dict
+import yaml
 
 
 MLFLOW_MODEL_SCORING_SCRIPT = "validations/mlflow_model_scoring_script.py"

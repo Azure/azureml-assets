@@ -22,4 +22,5 @@ class TextRegressor(TabularRegressor):
         Returns:
             _type_: _description_
         """
+        self._ensure_base_model_input_schema(X_test)
         return super().predict(X_test, **kwargs)

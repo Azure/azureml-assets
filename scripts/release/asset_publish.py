@@ -18,12 +18,12 @@ from typing import Dict, List, Tuple, Union
 import azureml.assets as assets
 from azureml.assets.model.mlflow_utils import MLFlowModelUtils
 import azureml.assets.util as util
-import yaml
 from azureml.assets.config import AssetConfig, PathType
 from azureml.assets.model import ModelDownloadUtils
 from azureml.assets.util import logger
 from azure.ai.ml import load_model
 from azure.ai.ml.entities import Component, Environment, Model
+from ruamel.yaml import YAML
 
 
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -44,7 +44,7 @@ def find_test_files(dir: Path):
     for test in dir.iterdir():
         logger.print(f"Processing test folder {test.name}")
         with open(test / TEST_YML) as fp:
-            data = yaml.load(fp, Loader=yaml.FullLoader)
+            data = YAML().load(fp)
             for test_group in data.values():
                 for test_job in test_group['jobs'].values():
                     if 'job' in test_job:
@@ -57,7 +57,10 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
     for test_job in test_jobs:
         logger.print(f"Processing test job {test_job}")
         with open(test_job) as fp:
-            data = yaml.load(fp, Loader=yaml.FullLoader)
+            yaml = YAML()
+            yaml.preserve_quotes = True
+            yaml.default_flow_style = False
+            data = yaml.load(fp)
             for job_name, job in data['jobs'].items():
                 asset_name = job['component']
                 logger.print(f"Processing asset {asset_name}")
@@ -65,8 +68,7 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                     job['component'] = asset_ids.get(asset_name)
                     logger.print(f"For job {job_name}, the new asset id is {job['component']}")
             with open(test_job, "w") as file:
-                yaml.dump(data, file, default_flow_style=False,
-                          sort_keys=False)
+                yaml.dump(data, file)
 
 
 def sanitize_output(input: str) -> str:
@@ -140,7 +142,7 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
                 # try fetching flavors from MLModel file
                 mlmodel_file_path = model.path / MLFlowModelUtils.MLMODEL_FILE_NAME
                 try:
-                    mlmodel = util.load_yaml(file_path=mlmodel_file_path)
+                    mlmodel = util.load_yaml(mlmodel_file_path)
                     model.flavors = mlmodel.get("flavors")
                 except Exception as e:
                     logger.log_error(f"Error loading flavors from MLmodel file at {mlmodel_file_path}: {e}")
@@ -170,7 +172,7 @@ def validate_and_prepare_pipeline_component(
     """
     with open(spec_path) as f:
         try:
-            pipeline_dict = yaml.safe_load(f)
+            pipeline_dict = YAML().load(f)
         except Exception:
             logger.log_error(f"Error in loading component spec at {spec_path}")
             return False
@@ -255,7 +257,7 @@ def validate_update_command_component(
     """
     with open(spec_path) as f:
         try:
-            component_dict = yaml.safe_load(f)
+            component_dict = YAML().load(f)
         except Exception:
             logger.log_error(f"Error in loading component spec at {spec_path}")
             return False
@@ -503,7 +505,7 @@ if __name__ == "__main__":
     # Load publishing list from deploy config
     if publish_list_file:
         with open(publish_list_file) as fp:
-            config = yaml.load(fp, Loader=yaml.FullLoader)
+            config = YAML().load(fp)
             create_list = config.get('create', {})
     else:
         create_list = {}
@@ -596,12 +598,14 @@ if __name__ == "__main__":
         for asset in failure_list:
             failed_assets[asset.type.value].append(asset.name)
 
+        yaml = YAML()
+        yaml.default_flow_style = False
         for asset_type, asset_names in failed_assets.items():
             logger.log_warning(f"Failed to create {asset_type}s: {asset_names}")
         # the following dump process will generate a yaml file for the report
         # process in the end of the publishing script
         with open(failed_list_file, "w") as file:
-            yaml.dump(failed_assets, file, default_flow_style=False, sort_keys=False)
+            yaml.dump(dict(failed_assets), file)
 
     if tests_dir:
         logger.print("Locating test files")

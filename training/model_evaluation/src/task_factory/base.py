@@ -5,6 +5,8 @@
 
 from abc import abstractmethod, ABC
 import azureml.evaluate.mlflow as aml_mlflow
+import numpy as np
+import pandas as pd
 
 
 class BasePredictor(ABC):
@@ -29,6 +31,30 @@ class BasePredictor(ABC):
         self.is_torch = is_torch
         self.is_hf = is_hf
         super().__init__()
+
+    def _ensure_base_model_input_schema(self, X_test):
+        input_schema = self.model.metadata.get_input_schema()
+        if self.is_hf and input_schema is not None:
+            if input_schema.has_input_names():
+                # make sure there are no missing columns
+                input_names = input_schema.input_names()
+                expected_cols = set(input_names)
+                # Hard coding logic for converting data to input string for base models
+                if len(expected_cols) == 1 and input_names[0] == "input_string":
+                    if isinstance(X_test, np.ndarray):
+                        X_test = {input_names[0]: X_test}
+                    elif isinstance(X_test, pd.DataFrame) and len(X_test.columns) == 1:
+                        X_test.columns = input_names
+                    elif isinstance(X_test, dict):
+                        if len(X_test.keys()) == 1:
+                            key = X_test.keys()[0]
+                            X_test[input_names[0]] = X_test[key]
+                            X_test.pop(key)
+                        elif len(X_test.keys()) == 2 and "parameters" in X_test.keys():
+                            key = [i for i in X_test.keys() if i != "parameters"][0]
+                            X_test[input_names[0]] = X_test[key]
+                            X_test.pop(key)
+                            X_test.pop("parameters")
 
 
 class PredictWrapper(BasePredictor):
