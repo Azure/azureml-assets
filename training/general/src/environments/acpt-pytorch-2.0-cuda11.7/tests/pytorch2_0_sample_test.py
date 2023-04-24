@@ -73,8 +73,9 @@ def test_pytorch_2_0():
     output, error = process.communicate()
     print(output)
     print(error)
-
-    if current_status=="Failed":
+    print("hello")
+    print(current_status)
+    if current_status=="Failed" or current_status=="Cancelled":
         ml_client.jobs.download(returned_job.name)
         if STD_LOG.exists():
             print(f"*** BEGIN {STD_LOG} ***")
