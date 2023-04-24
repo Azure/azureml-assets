@@ -115,7 +115,7 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             # Install mmcv and mmdet using mim, with pip installation is not working
             subprocess.check_call([sys.executable, "-m", "mim", "install", "mmcv-full==1.7.1"])
             subprocess.check_call([sys.executable, "-m", "mim", "install", "mmdet==2.28.2"])
-            subprocess.check_call([sys.executable, "-m", "pip", "install", 
+            subprocess.check_call([sys.executable, "-m", "pip", "install",
                                    "opencv-python-headless==4.7.0.72", "--force-reinstall"])
 
             # importing mmdet/mmcv afte installing using mim
