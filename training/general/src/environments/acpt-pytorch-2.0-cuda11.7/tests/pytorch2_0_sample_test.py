@@ -55,7 +55,7 @@ def test_pytorch_2_0():
         distribution=PyTorchDistribution(process_count_per_instance=2),
         resources=JobResourceConfiguration(instance_count=1),
     )
-
+    print("job created!")
     returned_job = ml_client.create_or_update(job)
     assert returned_job is not None
 
