@@ -44,18 +44,18 @@ RUN conda install -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     -c conda-forge -c anaconda
 
 # Install pip dependencies
-RUN pip install azureml-core=={{latest-image-tag}}
-                azureml-pipeline-core=={{latest-image-tag}}
-                azureml-telemetry=={{latest-image-tag}}
-                azureml-defaults=={{latest-image-tag}}
-                azureml-interpret=={{latest-image-tag}}
-                azureml-responsibleai=={{latest-image-tag}}
-                azureml-automl-core=={{latest-image-tag}}
-                azureml-automl-runtime=={{latest-image-tag}}
-                azureml-train-automl-client=={{latest-image-tag}}
-                azureml-train-automl-runtime=={{latest-image-tag}}
-                azureml-dataset-runtime=={{latest-image-tag}}
-                azureml-mlflow=={{latest-image-tag}}
+RUN pip install azureml-core=={{latest-image-tag}} \
+                azureml-pipeline-core=={{latest-image-tag}} \
+                azureml-telemetry=={{latest-image-tag}} \
+                azureml-defaults=={{latest-image-tag}} \
+                azureml-interpret=={{latest-image-tag}} \
+                azureml-responsibleai=={{latest-image-tag}} \
+                azureml-automl-core=={{latest-image-tag}} \
+                azureml-automl-runtime=={{latest-image-tag}} \
+                azureml-train-automl-client=={{latest-image-tag}} \
+                azureml-train-automl-runtime=={{latest-image-tag}} \
+                azureml-dataset-runtime=={{latest-image-tag}} \
+                azureml-mlflow=={{latest-image-tag}} \
                 'azureml-model-management-sdk==1.0.1b6.post1' \
                 'inference-schema' \
                 'horovod==0.21.3' \

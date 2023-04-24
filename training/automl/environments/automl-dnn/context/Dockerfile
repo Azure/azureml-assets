@@ -30,18 +30,18 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
     conda clean -a -y
 
 # Install pip dependencies
-RUN pip install azureml-core=={{latest-pypi-version}}
-                azureml-mlflow=={{latest-pypi-version}}
-                azureml-pipeline-core=={{latest-pypi-version}}
-                azureml-telemetry=={{latest-pypi-version}}
-                azureml-interpret=={{latest-pypi-version}}
-                azureml-responsibleai=={{latest-pypi-version}}
-                azureml-automl-core=={{latest-pypi-version}}
-                azureml-automl-runtime=={{latest-pypi-version}}
-                azureml-train-automl-client=={{latest-pypi-version}}
-                azureml-train-automl-runtime=={{latest-pypi-version}}
-                azureml-dataset-runtime=={{latest-pypi-version}}
-                azureml-defaults=={{latest-pypi-version}}
+RUN pip install azureml-core=={{latest-pypi-version}} \
+                azureml-mlflow=={{latest-pypi-version}} \
+                azureml-pipeline-core=={{latest-pypi-version}} \
+                azureml-telemetry=={{latest-pypi-version}} \
+                azureml-interpret=={{latest-pypi-version}} \
+                azureml-responsibleai=={{latest-pypi-version}} \
+                azureml-automl-core=={{latest-pypi-version}} \
+                azureml-automl-runtime=={{latest-pypi-version}} \
+                azureml-train-automl-client=={{latest-pypi-version}} \
+                azureml-train-automl-runtime=={{latest-pypi-version}} \
+                azureml-dataset-runtime=={{latest-pypi-version}} \
+                azureml-defaults=={{latest-pypi-version}} \
                 'inference-schema' \
                 'fbprophet==0.7.1' \
                 'pystan==2.19.1.1' \

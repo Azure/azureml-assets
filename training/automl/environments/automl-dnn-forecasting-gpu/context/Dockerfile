@@ -29,20 +29,20 @@ RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH \
 # Install pip dependencies
 RUN pip install 'inference-schema' \
                 'horovod==0.22.1' \
-                azureml-core=={{latest-pypi-version}}
-                azureml-mlflow=={{latest-pypi-version}}
-                azureml-defaults=={{latest-pypi-version}}
-                azureml-telemetry=={{latest-pypi-version}}
-                azureml-interpret=={{latest-pypi-version}}
-                azureml-responsibleai=={{latest-pypi-version}}
-                azureml-automl-core=={{latest-pypi-version}}
-                azureml-automl-runtime=={{latest-pypi-version}}
-                azureml-train-automl-client=={{latest-pypi-version}}
-                azureml-train-automl-runtime=={{latest-pypi-version}}
-                azureml-dataset-runtime=={{latest-pypi-version}}
-                azureml-contrib-dataset=={{latest-pypi-version}}
-                azureml-train-automl=={{latest-pypi-version}}
-                azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}}
+                azureml-core=={{latest-pypi-version}} \
+                azureml-mlflow=={{latest-pypi-version}} \
+                azureml-defaults=={{latest-pypi-version}} \
+                azureml-telemetry=={{latest-pypi-version}} \
+                azureml-interpret=={{latest-pypi-version}} \
+                azureml-responsibleai=={{latest-pypi-version}} \
+                azureml-automl-core=={{latest-pypi-version}} \
+                azureml-automl-runtime=={{latest-pypi-version}} \
+                azureml-train-automl-client=={{latest-pypi-version}} \
+                azureml-train-automl-runtime=={{latest-pypi-version}} \
+                azureml-dataset-runtime=={{latest-pypi-version}} \
+                azureml-contrib-dataset=={{latest-pypi-version}} \
+                azureml-train-automl=={{latest-pypi-version}} \
+                azureml-contrib-automl-dnn-forecasting=={{latest-pypi-version}} \
                 'spacy==2.1.8' \
                 'https://aka.ms/automl-resources/packages/en_core_web_sm-2.1.0.tar.gz' \
                 'py-cpuinfo==5.0.0'
