@@ -39,10 +39,8 @@ def _create_temp_file(request_body: bytes, parent_dir: str) -> str:
 
 
 def _process_image(img: pd.Series) -> pd.Series:
-    """If input image is in base64 string format, decode it to bytes. If input image is in url format,
-    download it and return bytes.
+    """Process the image input (image url or base64 string) and return bytes.
 
-    https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
     :param img: pandas series with image in base64 string format or url
     :type img: pd.Series
     :return: decoded image in pandas series format.
@@ -59,7 +57,7 @@ def _process_image(img: pd.Series) -> pd.Series:
 
 
 def _is_valid_url(text: str) -> bool:
-    """check if text is url or base64 string.
+    """Check if text is url or base64 string.
 
     :param text: text to validate
     :type text: str
@@ -95,7 +93,7 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         self,
         task_type: str,
     ) -> None:
-        """MLFlow model wrapper for AutoML for Images models.
+        """Mlflow model wrapper for AutoML for Images models.
 
         :param task_type: Task type used in training.
         :type task_type: str
@@ -117,12 +115,14 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             # Install mmcv and mmdet using mim, with pip installation is not working
             subprocess.check_call([sys.executable, "-m", "mim", "install", "mmcv-full==1.7.1"])
             subprocess.check_call([sys.executable, "-m", "mim", "install", "mmdet==2.28.2"])
-            subprocess.check_call([sys.executable, "-m", "pip", "install",
-                                   "opencv-python-headless==4.7.0.72", "--force-reinstall"])
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", "opencv-python-headless==4.7.0.72", "--force-reinstall"]
+            )
 
             # importing mmdet/mmcv afte installing using mim
             from mmdet.apis import inference_detector, init_detector
             from mmcv import Config
+
             self._inference_detector = inference_detector
             try:
                 model_config_path = context.artifacts[MMDetLiterals.CONFIG_PATH]
@@ -140,7 +140,7 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             raise ValueError(f"invalid task type {self._task_type}")
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
-        """Performs inference on the input data.
+        """Perform inference on the input data.
 
         :param context: Mlflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
