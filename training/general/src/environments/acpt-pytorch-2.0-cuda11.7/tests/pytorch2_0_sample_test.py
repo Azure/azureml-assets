@@ -55,7 +55,7 @@ def test_pytorch_2_0():
         distribution=PyTorchDistribution(process_count_per_instance=2),
         resources=JobResourceConfiguration(instance_count=1),
     )
-    print("job created!")
+
     returned_job = ml_client.create_or_update(job)
     assert returned_job is not None
 
@@ -63,9 +63,8 @@ def test_pytorch_2_0():
     # Poll until final status is reached or timed out
     timeout = time.time() + (TIMEOUT_MINUTES * 60)
     while time.time() <= timeout:
-        ml_client.jobs.cancel(returned_job.name)
         current_status = ml_client.jobs.get(returned_job.name).status
-        if current_status in ["Completed", "Failed", "Cancelled"]:
+        if current_status in ["Completed", "Failed"]:
             break
         time.sleep(30)  # sleep 30 seconds
 
@@ -74,8 +73,7 @@ def test_pytorch_2_0():
     output, error = process.communicate()
     print(output)
     print(error)
-    print("hello")
-    print(current_status)
+
     if current_status=="Failed" or current_status=="Cancelled":
         ml_client.jobs.download(returned_job.name)
         if STD_LOG.exists():
