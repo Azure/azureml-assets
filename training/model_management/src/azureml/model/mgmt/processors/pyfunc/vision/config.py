@@ -16,14 +16,14 @@ class _CustomEnum(Enum):
 
 
 class Tasks(_CustomEnum):
-    """Tasks supported for All Frameworks"""
+    """Tasks supported for All Frameworks."""
 
     MM_OBJECT_DETECTION = "image-object-detection"
     MM_INSTANCE_SEGMENTATION = "image-instance-segmentation"
 
 
 class MMDetLiterals:
-    """MMDetection constants"""
+    """MMDetection constants."""
 
     CONFIG_PATH = "config_path"
     WEIGHTS_PATH = "weights_path"
@@ -31,7 +31,7 @@ class MMDetLiterals:
 
 
 class MLFlowSchemaLiterals:
-    """MLFlow model signature related schema"""
+    """MLFlow model signature related schema."""
 
     INPUT_IMAGE_KEY = "image_base64"
     INPUT_COLUMN_IMAGE_DATA_TYPE = "string"
@@ -49,7 +49,7 @@ class MLFlowSchemaLiterals:
 
 
 class ODLiterals:
-    """OD constants"""
+    """OD constants."""
 
     LABEL = "label"
     BOXES = "boxes"

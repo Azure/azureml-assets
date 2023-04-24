@@ -18,7 +18,8 @@ from .vision.config import MLFlowSchemaLiterals, MMDetLiterals, Tasks
 
 
 def _prepare_artifacts_dict(input_dir: Path) -> Dict:
-    """Prepare artifacts dict for mlflow model
+    """Prepare artifacts dict for mlflow model.
+
     :param input_dir: input directory
     :type input_dir: Path
     :return: artifacts dict
@@ -36,7 +37,8 @@ def _prepare_artifacts_dict(input_dir: Path) -> Dict:
 
 
 def _get_mlflow_signature(task_type: str) -> ModelSignature:
-    """Return mlflow model signature with input and output schema given the input task type
+    """Return mlflow model signature with input and output schema given the input task type.
+
     :param task_type: Task type used in training
     :type task_type: str
     :return: mlflow model signature.
@@ -58,6 +60,7 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
 @log_execution_time
 def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None:
     """Convert Hugging face pytorch model to Mlflow.
+
     :param input_dir: model input directory
     :type input_dir: Path
     :param output_dir: output directory

@@ -41,6 +41,7 @@ def _create_temp_file(request_body: bytes, parent_dir: str) -> str:
 def _process_image(img: pd.Series) -> pd.Series:
     """If input image is in base64 string format, decode it to bytes. If input image is in url format,
     download it and return bytes.
+
     https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
     :param img: pandas series with image in base64 string format or url
     :type img: pd.Series
@@ -58,7 +59,8 @@ def _process_image(img: pd.Series) -> pd.Series:
 
 
 def _is_valid_url(text: str) -> bool:
-    """check if text is url or base64 string
+    """check if text is url or base64 string.
+
     :param text: text to validate
     :type text: str
     :return: True if url else false
@@ -93,7 +95,7 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         self,
         task_type: str,
     ) -> None:
-        """This method is called when the python model wrapper is initialized.
+        """MLFlow model wrapper for AutoML for Images models.
 
         :param task_type: Task type used in training.
         :type task_type: str
@@ -104,7 +106,7 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         self._task_type = task_type
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
-        """This method is called when loading a Mlflow model with pyfunc.load_model().
+        """Load a Mlflow model with pyfunc.load_model().
 
         :param context: Mlflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
@@ -138,7 +140,7 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             raise ValueError(f"invalid task type {self._task_type}")
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
-        """This method performs inference on the input data.
+        """Performs inference on the input data.
 
         :param context: Mlflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
@@ -148,7 +150,6 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns ["boxes"] for object detection
         """
-
         # process the images in image column
         processed_images = input_data.loc[:, [MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
             axis=1, func=_process_image
