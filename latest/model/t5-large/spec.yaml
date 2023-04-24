@@ -37,7 +37,7 @@ description: |
 
   Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
   |--|--|--|--|--|
-  Translation | Translation | <a href="https://huggingface.co/datasets/wmt19/viewer/cs-en/" target="_blank">wmt19/cs-en</a> | <a href="https://aka.ms/azureml-eval-sdk-translation" target="_blank">evaluate-model-translation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-translation" target="_blank">evaluate-model-translation.yml</a>
+  Translation | Translation | <a href="https://huggingface.co/datasets/wmt16/viewer/ro-en/train" target="_blank">wmt16/ro-en</a> | <a href="https://aka.ms/azureml-eval-sdk-translation" target="_blank">evaluate-model-translation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-translation" target="_blank">evaluate-model-translation.yml</a>
 
 
   ### Sample inputs and outputs (for real-time inference)
