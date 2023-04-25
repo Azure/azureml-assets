@@ -1,5 +1,5 @@
 DeBERTa is a model that improves on the BERT and RoBERTa models by using disentangled attention and an enhanced mask decoder. It performance better on several NLU tasks than RoBERTa with 80GB training data. The DeBERTa XLarge model has 48 layers and a hidden size of 1024 with 750 million parameters. It demonstrates good results when fine-tuned on several NLU tasks like SQuAD and GLUE benchmark. If you use DeBERTa in your work, the authors request that you cite their papers.
-
+<br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/microsoft/deberta-xlarge" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
