@@ -1,12 +1,3 @@
-model_monitor_rai:
-  includes:
-  - "./model_monitor/jobs/"
-  jobs:
-    raimodelmonitor_pipeline:
-      pre: "./model_monitor/jobs/prepare.py"
-      job: "./model_monitor/jobs/pipeline_iris_analyze.yml"
-      assets:
-      - feature_attribution_drift_compute_metrics
 tabular_rai_insight:
   includes:
   - "./tabular/jobs/"
