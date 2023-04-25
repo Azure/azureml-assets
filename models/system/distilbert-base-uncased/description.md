@@ -1,5 +1,5 @@
 The DistilBERT base model (uncased) is a distilled version of the BERT base model that is smaller and faster than BERT. It was introduced in a specific paper and the code for creating the model can be found on a specific webpage. The model is uncased so it doesn't differentiate between lower and upper case letters in the English language. DistilBERT is considered a transformers model that was pretrained on the same corpus in a self-supervised fashion using the BERT base model as a teacher. The model was pretrained using the distillation loss, masked language modeling, and cosine embedding loss objectives. The intended use of the model is to be fine-tuned on downstream tasks like sequence classification, token classification, and question answering, but not text generation.
-
+<br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/distilbert-base-uncased" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
