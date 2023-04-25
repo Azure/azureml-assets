@@ -1,0 +1,114 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+name: microsoft_com_azureml_oaie_finetune_pipeline_v2
+version: 0.0.1
+type: pipeline
+display_name: PipelineComponent for OpenAI Finetuning workflow
+description: Pipeline component for OpenAI finetuning workflow
+
+inputs:
+  model:
+    type: string
+    optional: False
+    default: Ada
+    description: GPT-3 model engine
+    enum:
+      - Ada
+      - Babbage
+      - Curie
+      - DaVinci
+      - Text-Ada-001
+      - Text-Babbage-001
+      - Text-Curie-001
+      - Text-DaVinci-001
+      - Text-DaVinci-002-onebox-inference-only
+      - Text-DaVinci-fine-tune-002
+      - Text-DaVinci-003-onebox-inference-only
+      - Text-Chat-DaVinci-002-onebox-inference-only
+      - ChatGPT-202301-onebox-inference-only
+      - ChatGPT-202301-2-8k-onebox-inference-only
+      - Code-Cushman-001
+      - Code-Cushman-fine-tune-002
+      - Codex-Cushman-fim-2021-11-10
+      - Code-DaVinci-002-onebox-inference-only
+      - Code-DaVinci-fine-tune-002
+      - Text-Similarity-Ada-001-onebox-inference-only
+      - Text-Similarity-Babbage-001-onebox-inference-only
+      - Text-Similarity-Curie-001-onebox-inference-only
+      - Text-Similarity-DaVinci-001-onebox-inference-only
+      - Code-Search-Ada-Code-001-onebox-inference-only
+      - Code-Search-Ada-Text-001-onebox-inference-only
+      - Code-Search-Babbage-Code-001-onebox-inference-only
+      - Code-Search-Babbage-Text-001-onebox-inference-only
+      - Text-Search-Ada-Doc-001-onebox-inference-only
+      - Text-Search-Ada-Query-001-onebox-inference-only
+      - Text-Search-Babbage-Doc-001-onebox-inference-only
+      - Text-Search-Babbage-Query-001-onebox-inference-only
+      - Text-Search-Curie-Doc-001-onebox-inference-only
+      - Text-Search-Curie-Query-001-onebox-inference-only
+      - Text-Search-DaVinci-Doc-001-onebox-inference-only
+      - Text-Search-DaVinci-Query-001-onebox-inference-only
+      - Text-Embedding-Ada-002-onebox-inference-only
+      - Text-Embedding-Ada-002-test-stage-onebox-inference-only
+      - Code-Ada-002-test-stage
+  train_dataset:
+    type: uri_folder
+    optional: False
+    description: Input dataset (file or folder). If a folder dataset is passed, includes all nested files.
+  registered_model_name:
+    type: string
+    optional: False
+    description: User-defined registered model name
+  singularity_cpu_instance_type:
+    type: string
+    optional: False
+    default: Singularity.D16_v3
+    description: Singularity CPU instance type
+  singularity_gpu_instance_type:
+    type: string
+    optional: False
+    default: Singularity.ND96amrs_A100_v4
+    description: Singularity GPU instance type
+  singularity_subscription:
+    type: string
+    optional: False
+    default: /subscriptions/ed2cab61-14cc-4fb3-ac23-d72609214cfd/resourceGroups/singularity_vc/providers/Microsoft.MachineLearningServices/virtualClusters/corpftgpt35cicdvc2
+    description: Singularity subscription
+
+outputs:
+  output_model:
+    type: uri_folder
+    description: Dataset for the output model
+
+jobs:
+  model_selector:
+    type: command
+    component: azureml://registries/openai-dev-euap/components/microsoft_com_azureml_oai_modelselector/versions/0.1.7
+    inputs:
+      model: ${{parent.inputs.model}}
+    compute: ${{parent.inputs.singularity_subscription}}
+    resources:
+      instance_type: ${{parent.inputs.singularity_cpu_instance_type}}
+      properties:
+        singularity:
+          imageVersion: ''
+          slaTier: Standard
+          priority: Medium
+
+  fine_tune:
+    type: command
+    component: azureml://registries/openai-dev-euap/components/microsoft_com_azureml_oai_finetune/versions/0.1.8
+    inputs:
+      model: ${{parent.inputs.model}}
+      train_dataset: ${{parent.inputs.train_dataset}}
+      base_model: ${{parent.jobs.model_selector.outputs.output_model}}
+      registered_model_name: ${{parent.inputs.registered_model_name}}
+    outputs:
+      output_model: ${{parent.outputs.output_model}}
+    compute: ${{parent.inputs.singularity_subscription}}
+    resources:
+      instance_type: ${{parent.inputs.singularity_gpu_instance_type}}
+      properties:
+        singularity:
+          imageVersion: ''
+          slaTier: Premium
+          priority: Medium
