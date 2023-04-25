@@ -16,7 +16,7 @@ BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
 
-def test_azureml_automl():
+def test_azureml_automl_dnn():
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -40,35 +40,34 @@ def test_azureml_automl():
         type=AssetTypes.MLTABLE, path=f"{this_dir}/training-mltable-folder"
     )
 
-    forecasting_job = automl.text_classification(
+    my_validation_data_input = Input(
+        type=AssetTypes.MLTABLE, path=f"{this_dir}/validation-mltable-folder"
+    )
+
+    classification_job = automl.classification(
         compute=os.environ.get("cpu_cluster"),
         experiment_name="AutoMLDNNCPUExperiment",
         training_data=my_training_data_input,
-        target_column_name="count",
+        target_column_name="y",
         primary_metric="accuracy",
-        n_cross_validations=10,
+        validation_data=my_validation_data_input,
         properties={'_automl_internal_scenario': 'non-prod', 'enable_code_generation': True},
     )
 
     # Limits are all optional
-    forecasting_job.set_limits(
+    classification_job.set_limits(
         timeout_minutes=60,
         trial_timeout_minutes=30,
         max_trials=4,
         max_concurrent_trials=4,
     )
 
-    # Specialized properties for Time Series Forecasting training
-    forecasting_job.set_forecast_settings(
-        time_column_name="date", forecast_horizon=14, frequency="D"
+    # Enable Dnn training 
+    classification_job.set_training(
+        enable_dnn_training=True
     )
 
-    # Enable Dnn training and allow only TCNForecaster model
-    forecasting_job.set_training(
-        allowed_training_algorithms=["TCNForecaster"], enable_dnn_training=True
-    )
-
-    returned_job = ml_client.create_or_update(forecasting_job)
+    returned_job = ml_client.create_or_update(classification_job)
     assert returned_job is not None
 
     # Poll until final status is reached, or timed out

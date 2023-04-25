@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the azureml-automl environment."""
+"""Tests running a sample job in the automl-dnn environment."""
 import os
 import time
 from pathlib import Path
@@ -16,7 +16,7 @@ BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
 
-def test_azureml_automl():
+def test_azureml_automl_text_gpu():
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -27,7 +27,7 @@ def test_azureml_automl():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "AutoML-Non-Prod"
+    env_name = "AutoML-Non-Prod-DNN"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
@@ -40,25 +40,31 @@ def test_azureml_automl():
         type=AssetTypes.MLTABLE, path=f"{this_dir}/training-mltable-folder"
     )
 
-    classification_job = automl.classification(
-        compute=os.environ.get("cpu_cluster"),
-        experiment_name="AutoMLCPUExperiment",
+    my_validation_data_input = Input(
+        type=AssetTypes.MLTABLE, path=f"{this_dir}/validation-mltable-folder"
+    )
+
+    text_classification_job = automl.text_classification(
+        compute=os.environ.get("gpu_cluster"),
+        experiment_name="AutoMLDNNCPUExperiment",
         training_data=my_training_data_input,
         target_column_name="y",
         primary_metric="accuracy",
-        n_cross_validations=5,
-        enable_model_explainability=True,
-        properties={'_automl_internal_scenario': 'non-prod', 'enable_code_generation': True}
+        validation_data=my_validation_data_input,
+        properties={'_automl_internal_scenario': 'non-prod', 'enable_code_generation': True},
     )
 
     # Limits are all optional
-    classification_job.set_limits(
+    text_classification_job.set_limits(
         timeout_minutes=60,
-        trial_timeout_minutes=20,
-        max_trials=4
+        trial_timeout_minutes=30,
+        max_trials=4,
+        max_concurrent_trials=4,
     )
 
-    returned_job = ml_client.create_or_update(classification_job)
+    text_classification_job.set_featurization(dataset_language="eng")
+
+    returned_job = ml_client.create_or_update(text_classification_job)
     assert returned_job is not None
 
     # Poll until final status is reached, or timed out
