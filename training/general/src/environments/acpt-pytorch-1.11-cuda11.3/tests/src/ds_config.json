@@ -1,5 +1,5 @@
 {
-    "train_micro_batch_size_per_gpu": 32,
+    "train_micro_batch_size_per_gpu": 10,
     "fp16": {
         "enabled": true
     },
