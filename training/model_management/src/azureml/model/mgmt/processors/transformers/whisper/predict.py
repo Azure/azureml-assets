@@ -4,7 +4,6 @@
 """Huggingface predict file for whisper mlflow model."""
 
 import os
-import re
 import base64
 import ffmpeg
 import requests
@@ -14,6 +13,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Dict
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
+from urllib.parse import urlparse
 
 
 SUPPORTED_LANGUAGES = [
@@ -121,24 +121,8 @@ SUPPORTED_LANGUAGES = [
 
 def is_valid_url(str):
     """Return if URL is a valid string."""
-    regex = (
-        "((http|https)://)(www.)?"
-        + "[a-zA-Z0-9@:%._\\+~#?&//=]"
-        + "{2,256}\\.[a-z]"
-        + "{2,6}\\b([-a-zA-Z0-9@:%"
-        + "._\\+~#?&//=]*)"
-    )
-    p = re.compile(regex)
-    # If the string is empty
-    # return false
-    if str is None:
-        return False
-    # Return if the string
-    # matched the ReGex
-    if re.search(p, str):
-        return True
-    else:
-        return False
+    result = urlparse(str)
+    return all([result.scheme, result.netloc])
 
 
 def audio_input_to_nparray(audio_file_path: Path, sampling_rate: int = 16000) -> np.array:
@@ -162,8 +146,11 @@ def audio_processor(audio_input: str, sampling_rate: int = 16000) -> np.array:
 
         # check if input string is a URI to an audio file
         if is_valid_url(audio_input):
-            with open(audio_file_path, "wb") as f:
-                f.write(requests.get(audio_input).content)
+            try:
+                with open(audio_file_path, "wb") as f:
+                    f.write(requests.get(audio_input).content)
+            except Exception:
+                raise ValueError("Invalid URL")
             return audio_input_to_nparray(audio_file_path, sampling_rate)
 
         try:
