@@ -11,6 +11,6 @@ inputs:
 jobs:
   hello_world:
     type: command
-    component: azureml://registries/azureml/components/hello_command_component/versions/0.0.1
+    component: azureml://registries/azureml/components/hello_command/versions/0.0.1
     inputs:
       message: ${{parent.inputs.message}}
