@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 name: hello_pipeline
-version: 0.0.1
+version: 0.0.2
 display_name: Hello World from Pipeline
 is_deterministic: true
 inputs:
