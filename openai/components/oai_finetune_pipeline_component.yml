@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
-name: microsoft_com_azureml_oaie_finetune_pipeline_v2
+name: microsoft_com_azureml_oai_finetune_pipeline_v2
 version: 0.0.1
 type: pipeline
 display_name: PipelineComponent for OpenAI Finetuning workflow
