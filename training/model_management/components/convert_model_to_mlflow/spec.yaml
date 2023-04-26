@@ -9,7 +9,7 @@ is_deterministic: True
 display_name: Convert Hugging face models to MLFlow
 description: Component converts Huggingface models to MLFlow model packaging format
 
-environment: azureml://registries/azureml/environments/model-management/versions/4
+environment: azureml://registries/azureml/environments/model-management/versions/5
 
 code: ../../src/
 command: >
