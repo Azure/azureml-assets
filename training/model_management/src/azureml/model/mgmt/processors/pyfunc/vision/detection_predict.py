@@ -31,7 +31,6 @@ def _create_temp_file(request_body: bytes, parent_dir: str) -> str:
     :rtype: str
     """
     with tempfile.NamedTemporaryFile(dir=parent_dir, mode="wb", delete=False) as image_file_fp:
-        # image_file_fp.write(request_body)
         img_path = image_file_fp.name + ".png"
         img = Image.open(io.BytesIO(request_body))
         img.save(img_path)
@@ -115,6 +114,8 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             # Install mmcv and mmdet using mim, with pip installation is not working
             subprocess.check_call([sys.executable, "-m", "mim", "install", "mmcv-full==1.7.1"])
             subprocess.check_call([sys.executable, "-m", "mim", "install", "mmdet==2.28.2"])
+            # mmdet installs opencv-python but it results in error while importing libGL.so.1. So, we
+            # need to re-install headless version of opencv-python.
             subprocess.check_call(
                 [sys.executable, "-m", "pip", "install", "opencv-python-headless==4.7.0.72", "--force-reinstall"]
             )

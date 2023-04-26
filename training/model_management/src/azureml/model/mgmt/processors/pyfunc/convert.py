@@ -54,6 +54,8 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
                 ColSpec(MLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, MLFlowSchemaLiterals.OUTPUT_COLUMN_BOXES),
             ]
         )
+    else:
+        raise NotImplementedError(f"Task type: {task_type} is not supported yet.")
     return ModelSignature(inputs=input_schema, outputs=output_schema)
 
 
