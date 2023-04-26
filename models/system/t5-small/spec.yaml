@@ -6,8 +6,7 @@ properties:
   datasets: c4
   finetuning-tasks: summarization, translation
   languages: en, fr, ro, de
-  recommended-sku: Standard_ND40RS_v2
-  minimum-sku: Standard_NC6
+  finetune-recommended-sku: Standard_ND40RS_v2
   finetune-min-sku-spec: 6|1|56|380
 tags:
   Preview: ''
