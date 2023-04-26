@@ -11,6 +11,8 @@ properties:
     bs, kk, sq, sw, gl, mr, pa, si, km, sn, yo, so, af, oc, ka, be, tg, sd, gu, am,
     yi, lo, uz, fo, ht, ps, tk, nn, mt, sa, lb, my, bo, tl, mg, as, tt, haw, ln, ha,
     ba, jw, su
+  inference-recommended-sku: Standard_DS4_v2
+  inference-min-sku-spec: 8|0|28|56
 tags:
   Featured: ''
   Preview: ''

@@ -6,6 +6,8 @@ properties:
   datasets: bookcorpus, wikipedia
   finetuning-tasks: text-classification, token-classification, question-answering
   languages: en
+  inference-recommended-sku: Standard_DS2_v2
+  inference-min-sku-spec: 2|0|7|14
   finetune-recommended-sku: Standard_ND40RS_v2
   finetune-min-sku-spec: 4|1|28|176
 tags:
