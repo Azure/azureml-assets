@@ -4,22 +4,22 @@
 """Huggingface predict file for whisper mlflow model."""
 
 import os
-import re
-import base64
+import wget
 import ffmpeg
+import base64
 import logging
-import requests
 import torch
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Dict
+from tempfile import TemporaryDirectory
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
+from urllib.parse import urlparse
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.WARNING)
 
-SUPPORTED_LANGUAGES = [
+supported_languages = [
     "en",
     "zh",
     "de",
@@ -124,24 +124,8 @@ SUPPORTED_LANGUAGES = [
 
 def is_valid_url(str):
     """Return if URL is a valid string."""
-    regex = (
-        "((http|https)://)(www.)?"
-        + "[a-zA-Z0-9@:%._\\+~#?&//=]"
-        + "{2,256}\\.[a-z]"
-        + "{2,6}\\b([-a-zA-Z0-9@:%"
-        + "._\\+~#?&//=]*)"
-    )
-    p = re.compile(regex)
-    # If the string is empty
-    # return false
-    if str is None:
-        return False
-    # Return if the string
-    # matched the ReGex
-    if re.search(p, str):
-        return True
-    else:
-        return False
+    result = urlparse(str)
+    return all([result.scheme, result.netloc])
 
 
 def audio_input_to_nparray(audio_file_path: Path, sampling_rate: int = 16000) -> np.array:
@@ -163,18 +147,23 @@ def audio_processor(audio_input: str, sampling_rate: int = 16000) -> np.array:
     with TemporaryDirectory() as temp_dir:
         audio_file_path = os.path.join(temp_dir, "audio_file.m4a")
 
-        # check if input string is a URI to an audio file
         if is_valid_url(audio_input):
-            with open(audio_file_path, "wb") as f:
-                f.write(requests.get(audio_input).content)
-            return audio_input_to_nparray(audio_file_path, sampling_rate)
+            logging.info("Recieved Remote Audio URL as input.")
+            try:
+                audio_file = wget.download(audio_input, out=audio_file_path)
+                print(audio_file)
+            except Exception:
+                raise ValueError("Invalid URL")
+        else:
+            logging.info("Recieved base64encoded string as input.")
+            try:
+                with open(audio_file_path, "wb") as audio:
+                    audio.write(base64.b64decode(audio_input))
+            except Exception:
+                raise ValueError("Invalid base64encoded string")
 
-        try:
-            with open(audio_file_path, "wb") as audio:
-                audio.write(base64.b64decode(audio_input))
-        except Exception:
-            raise ValueError("Invalid audio format")
-        return audio_input_to_nparray(audio_file_path, sampling_rate)
+        audio_nparray = audio_input_to_nparray(audio_file_path, sampling_rate)
+    return audio_nparray
 
 
 def predict(
@@ -197,6 +186,7 @@ def predict(
     :return: whisper predicted text
     :rtype: str
     """
+
     if not task == "automatic-speech-recognition":
         return f"Invalid task name {task}"
 
@@ -211,17 +201,21 @@ def predict(
 
     device = "cuda" if device == 0 else "cpu"
 
+    logging.info(f"Using device: {device} for the inference")
+
     result = []
     for row in model_input.itertuples():
         # Parse inputs.
+
         audio = row.audio
         language = row.language or None
+
         if not isinstance(audio, str):
             return f"Invalid input format {type(audio)}, input should be base64 encoded string"
         if not isinstance(language, str):
             return f"Invalid language format {type(language)}, should be type string"
-        if language not in SUPPORTED_LANGUAGES:
-            return f"Language not supported {type(language)}, should be type string"
+        if language not in supported_languages:
+            return f"Language not supported. Language should be in list {supported_languages}"
 
         forced_decoder_ids = (
             tokenizer.get_decoder_prompt_ids(language=language, task="transcribe") if language else None
@@ -233,5 +227,7 @@ def predict(
         predicted_ids = model.generate(input_features, forced_decoder_ids=forced_decoder_ids,
                                        max_new_tokens=max_new_tokens)
         transcription = tokenizer.batch_decode(predicted_ids, skip_special_tokens=True)[0]
+
         result.append({"text": transcription})
-    return result
+
+    return pd.DataFrame(result)
