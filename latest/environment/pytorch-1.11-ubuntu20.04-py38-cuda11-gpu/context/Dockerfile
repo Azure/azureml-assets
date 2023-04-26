@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.3-cudnn8-ubuntu20.04@sha256:4171bb8e6f265f5e33f234f8b636ec9992e17270a9e2028adf04dfc5bc93d3b8
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.3-cudnn8-ubuntu20.04@sha256:84eb72cc798b4ae61726f645c1b8a6ebab8d21f9ee46a14076b8aaf7b2136da0
 
 WORKDIR /
 
