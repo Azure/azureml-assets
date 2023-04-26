@@ -186,7 +186,6 @@ def predict(
     :return: whisper predicted text
     :rtype: str
     """
-
     if not task == "automatic-speech-recognition":
         return f"Invalid task name {task}"
 
