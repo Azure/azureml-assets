@@ -102,7 +102,7 @@ def _get_image_model_to_save(input_dir: Path, output_dir: Path, temp_working_dir
     }
 
 
-def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, temp_working_dir: Path, hf_conf: Dict = {}) -> Dict:
+def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = {}) -> Dict:
     """Save Huggingface stable diffusion model to mlflow and return hftransformers accepted parameters."""
     model = None
     try:
@@ -196,13 +196,13 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     temp_working_dir = Path(output_dir) / "tmp"
 
     if SupportedTextToImageVariants.has_value(task_category):
-        model_configs = _get_stable_difussion_model_to_save(input_dir, output_dir, hf_conf, temp_working_dir)
+        model_configs = _get_stable_difussion_model_to_save(input_dir, output_dir, hf_conf)
     elif SupportedNLPTasks.has_value(task_category):
-        model_configs = _get_nlp_model_to_save(input_dir, output_dir, hf_conf, temp_working_dir)
+        model_configs = _get_nlp_model_to_save(input_dir, output_dir, temp_working_dir, hf_conf)
     elif SupportedVisionTasks.has_value(task_category):
-        model_configs = _get_image_model_to_save(input_dir, output_dir, hf_conf, temp_working_dir)
+        model_configs = _get_image_model_to_save(input_dir, output_dir, temp_working_dir, hf_conf)
     elif SupportedASRVariants.has_value(task_category):
-        model_configs = _get_whisper_model_to_save(input_dir, output_dir, hf_conf, temp_working_dir)
+        model_configs = _get_whisper_model_to_save(input_dir, output_dir, temp_working_dir, hf_conf)
     else:
         raise Exception("Unsupported model or task type")
 
