@@ -4,15 +4,3 @@ accelerate
 scikit-learn
 apache_beam
 evaluate
-optimum
-coloredlogs 
-absl-py 
-rouge_score
-seqeval
-scipy
-sacrebleu
-nltk
-parameterized
-sentencepiece
-fairscale
-mpi4py

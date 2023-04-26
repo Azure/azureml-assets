@@ -131,7 +131,7 @@ if __name__ == "__main__":
         # data_collator=data_collator,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
-        callbacks=[ProfilerCallback]
+        # callbacks=[ProfilerCallback]
     )
 
     trainer.pop_callback(MLflowCallback)
