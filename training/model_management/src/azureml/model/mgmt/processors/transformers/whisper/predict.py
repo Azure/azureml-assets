@@ -4,9 +4,9 @@
 """Huggingface predict file for whisper mlflow model."""
 
 import os
+import base64
 import wget
 import ffmpeg
-import base64
 import logging
 import torch
 import numpy as np
@@ -150,8 +150,7 @@ def audio_processor(audio_input: str, sampling_rate: int = 16000) -> np.array:
         if is_valid_url(audio_input):
             logging.info("Recieved Remote Audio URL as input.")
             try:
-                audio_file = wget.download(audio_input, out=audio_file_path)
-                print(audio_file)
+                wget.download(audio_input, out=audio_file_path)
             except Exception:
                 raise ValueError("Invalid URL")
         else:
@@ -172,7 +171,7 @@ def predict(
     model: WhisperForConditionalGeneration,
     tokenizer: WhisperProcessor,
     **kwargs: Dict,
-) -> str:
+) -> pd.DataFrame:
     """Return a whisper predicted text from an audio input.
 
     :param model_input: base64 encoded audio input
@@ -184,7 +183,7 @@ def predict(
     :param kwargs: any other args
     :type kwargs: Dict
     :return: whisper predicted text
-    :rtype: str
+    :rtype: pd.DataFrame
     """
     if not task == "automatic-speech-recognition":
         return f"Invalid task name {task}"
