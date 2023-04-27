@@ -19,5 +19,12 @@
         "output_path": "outputs/runs/",
         "job_name": "train_bert"
     },
+    "nebula": {
+        "enabled": true,
+        "persistent_storage_path": "/outputs/nebula_checkpoint/",
+        "persistent_time_interval": 10,
+        "num_of_version_in_retention": 2,
+        "enable_nebula_load": true
+    },
     "gradient_accumulation_steps": 1
 }
