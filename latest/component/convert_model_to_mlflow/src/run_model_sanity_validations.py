@@ -67,7 +67,7 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
 
 
 def _load_and_infer_model(model_dir, data):
-    if not data:
+    if data is None:
         logger.warning("Data not shared. Could not infer the loaded model")
         return
 
