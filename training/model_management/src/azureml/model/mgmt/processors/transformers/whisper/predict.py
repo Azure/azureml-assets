@@ -152,14 +152,14 @@ def audio_processor(audio_input: str, sampling_rate: int = 16000) -> np.array:
             try:
                 wget.download(audio_input, out=audio_file_path)
             except Exception:
-                raise ValueError("Invalid URL")
+                raise ValueError(f"File {audio_input} download failed.")
         else:
             logging.info("Recieved base64encoded string as input.")
             try:
                 with open(audio_file_path, "wb") as audio:
                     audio.write(base64.b64decode(audio_input))
             except Exception:
-                raise ValueError("Invalid base64encoded string")
+                raise ValueError("Invalid audio content in base64encoded string")
 
         audio_nparray = audio_input_to_nparray(audio_file_path, sampling_rate)
     return audio_nparray
