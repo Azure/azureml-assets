@@ -25,7 +25,7 @@ def test_test_assets(test_subdir: str, expected: bool):
     subscription_id = os.environ.get("subscription_id")
     resource_group = os.environ.get("resource_group")
     workspace_name = os.environ.get("workspace")
-
+    print("assert ws config")
     assert subscription_id is not None
     assert resource_group is not None
     assert workspace_name is not None
