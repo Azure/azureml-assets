@@ -5,3 +5,4 @@ azureml-evaluate-mlflow=={{latest-pypi-version}}
 ffmpeg-python=={{latest-pypi-version}}
 langcodes=={{latest-pypi-version}}
 sentencepiece==0.1.97
+wget==3.2
