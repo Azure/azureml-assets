@@ -1,8 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
-name: openai_completions_pipeline
+
+name: openai_completions_finetune_pipeline
 version: 0.0.1
 type: pipeline
-display_name: OpenAI Completions Pipeline
+display_name: OpenAI Completions Finetune Pipeline
 description: Pipeline component for OpenAI finetuning workflow
 
 settings:
@@ -35,7 +36,7 @@ inputs:
 outputs:
   output_model:
     type: uri_folder
-    description: Dataset for the output model
+    description: output model path
 
 jobs:
   model_selector:
