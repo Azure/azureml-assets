@@ -9,7 +9,7 @@ properties:
   inference-recommended-sku: Standard_DS2_v2
   inference-min-sku-spec: 2|0|7|14
   finetune-recommended-sku: Standard_ND40RS_v2
-  finetune-min-sku-spec: 4|1|28|176
+  finetune-min-sku-spec: 4|1|28|176     # num_cpu_cores|num_gpu|ram_gb|memory_gb (this min sku spec is used to filter the computes shown to the user submitting a job from Model Catalog page)
 tags:
   Preview: ''
   min_inference_sku: Standard_DS2_v2
