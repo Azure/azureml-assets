@@ -53,7 +53,7 @@ def test_pytorch_2_0():
         description="Pretrain the BERT model on the GLUE dataset.",
         experiment_name="pytorch20_Cuda117_Experiment",
         distribution=PyTorchDistribution(process_count_per_instance=2),
-        resources=JobResourceConfiguration(instance_count=1),
+        resources=JobResourceConfiguration(instance_count=1, shm_size='3100m'),
     )
 
     returned_job = ml_client.create_or_update(job)
