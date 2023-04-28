@@ -35,6 +35,7 @@ env:
   scripts_setup_dir: scripts/setup
   scripts_dir: scripts
   scripts_docs: scripts/docs
+  docs_dir: docs
   changed_assets_artifact: changed-assets
   releasable_assets_artifact: releasable-assets
   asset_config_filename: asset.yaml
@@ -87,7 +88,13 @@ jobs:
       - name: Clean up wiki
         run: |
           ls -l
+          rm -rf $docs_dir
+          mkdir $docs_dir
         working-directory: ${{ env.wiki_dir }}
+
+      - name: Generate asset documentation
+        run: python $GITHUB_WORKSPACE/$main_dir/$scripts_docs/parse_assets.py -i $GITHUB_WORKSPACE/$release_dir/latest
+        working-directory: ${{ env.wiki_dir }}/${{ env.docs_dir }}
       
       # TODO: This may be overkill, consider copying directories without involving this script
       # - name: Update release branch
