@@ -21,15 +21,11 @@ def create_asset_doc(spec_file_name, asset_type):
     doc = add_outputs(doc, component)
     doc = add_additional_details(doc, component)
 
-    # check if ReferenceDocumentation folder exists, create one if not
-    if not os.path.exists("ReferenceDocumentation/"):
-        os.mkdir("ReferenceDocumentation/")
+    # check if asset folder exists, create one if not
+    if not os.path.exists(asset_type + "s/"):
+        os.mkdir(asset_type + "s")
 
-    # check if asset folder exists in ReferenceDocumentation, create one if not
-    if not os.path.exists("ReferenceDocumentation/" + asset_type + "s/"):
-        os.mkdir("ReferenceDocumentation/" + asset_type + "s")
-
-    with open("ReferenceDocumentation/" + asset_type + "s/" + asset_type + "-" + component["name"] + ".md", 'w') as f:
+    with open(asset_type + "s/" + asset_type + "-" + component["name"] + ".md", 'w') as f:
         f.write(str(doc))
 
     # return md file name

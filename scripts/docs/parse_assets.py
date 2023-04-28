@@ -79,7 +79,7 @@ def parse_assets(input_dirs: List[Path],
         doc.add_unordered_list(asset_links_list)
 
 
-        with open("ReferenceDocumentation/" + asset_type + "s/" + asset_type + "s.md", 'w') as f:
+        with open(asset_type + "s/" + asset_type + "s.md", 'w') as f:
             f.write(str(doc))
 
 
