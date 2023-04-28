@@ -15,6 +15,5 @@ properties:
 tags:
   Preview: ''
   license: apache-2.0
-  min_inference_sku: Standard_DS2_v2
   task: text-classification
 version: 2

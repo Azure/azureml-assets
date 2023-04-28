@@ -16,6 +16,5 @@ tags:
   Featured: ''
   Preview: ''
   license: mit
-  min_inference_sku: Standard_DS3_v2
   task: text-generation
 version: 2

@@ -15,6 +15,5 @@ properties:
 tags:
   Preview: ''
   license: mit
-  min_inference_sku: Standard_DS4_v2
   task: summarization
 version: 2
