@@ -87,29 +87,16 @@ jobs:
 
       - name: Clean up wiki
         run: |
-          ls -l
           rm -rf $docs_dir
           mkdir $docs_dir
         working-directory: ${{ env.wiki_dir }}
 
       - name: Generate asset documentation
-        run: python $GITHUB_WORKSPACE/$main_dir/$scripts_docs/parse_assets.py -i $GITHUB_WORKSPACE/$release_dir/latest
+        run: |
+          python $GITHUB_WORKSPACE/$main_dir/$scripts_docs/parse_assets.py -i $GITHUB_WORKSPACE/$release_dir/latest
+          find .
         working-directory: ${{ env.wiki_dir }}/${{ env.docs_dir }}
       
-      # TODO: This may be overkill, consider copying directories without involving this script
-      # - name: Update release branch
-      #   if: steps.download-artifact.outputs.download-path
-      #   run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
-  
-      # - name: Copy test files and scripts
-      #   run: |
-      #     python -u $main_dir/$scripts_release_dir/test_file_convert.py -i "${{ env.default_test_dirs }}" -r $release_dir -w $main_dir
-
-      # - name: Copy scripts
-      #   run: | 
-      #     rm -Rf $release_dir/$scripts_dir
-      #     cp -r $main_dir/$scripts_dir $release_dir/$scripts_dir
-
       # - name: Create commit and push
       #   env:
       #     GIT_AUTHOR_NAME: github-actions[bot]
@@ -124,4 +111,4 @@ jobs:
       #     git add -A .
       #     git commit -m "Update release branch" -m "Automated updates made by [$GITHUB_WORKFLOW]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
       #     git push
-      #   working-directory: ${{ env.release_dir }}
+      #   working-directory: ${{ env.wiki_dir }}
