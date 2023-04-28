@@ -1,0 +1,114 @@
+name: assets-docs
+
+on:
+  push:
+    branches:
+      - generate-docs
+    paths-ignore:
+      - .github/**
+  # push:
+  #   branches:
+  #     - release
+  #   paths-ignore:
+  #     - .github/**
+  # schedule:
+  #   - cron: '30 6 * * *'
+  workflow_dispatch:
+    inputs:
+      asset_dirs:
+        description: Asset directories
+        default: .,!test,!scripts
+        required: true
+
+concurrency: ${{ github.workflow }}
+
+env:
+  default_asset_dirs: .,!test,!scripts
+  default_test_dirs: .,!test,!scripts,!.git,!.github
+  main_dir: main
+  release_dir: release
+  wiki_dir: wiki
+  scripts_azureml_assets_dir: scripts/azureml-assets
+  scripts_assets_dir: scripts/azureml-assets/azureml/assets
+  scripts_environment_dir: scripts/azureml-assets/azureml/assets/environment
+  scripts_release_dir: scripts/release
+  scripts_setup_dir: scripts/setup
+  scripts_dir: scripts
+  changed_assets_artifact: changed-assets
+  releasable_assets_artifact: releasable-assets
+  asset_config_filename: asset.yaml
+
+permissions:
+  # Required to clone repo
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  release-assets:
+    name: Release assets
+    # if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Clone branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          path: ${{ env.main_dir }}
+
+      - name: Clone release branch
+        uses: actions/checkout@v3
+        with:
+          ref: release
+          fetch-depth: 1
+          path: ${{ env.release_dir }}
+
+      - name: Clone wiki
+        uses: actions/checkout@v3
+        with:
+          repository: Azure/azureml-assets.wiki
+          fetch-depth: 0
+          token: ${{ secrets.AZUREML_BOT_PAT }}
+          path: ${{ env.wiki_dir }}
+
+      # TODO: Not needed unless calling update_assets.py
+      - name: Use Python 3.8 or newer
+        uses: actions/setup-python@v4
+        with:
+          python-version: '>=3.8'
+    
+      - name: Install dependencies
+        run: pip install -e $main_dir/$scripts_azureml_assets_dir
+      
+      # TODO: This may be overkill, consider copying directories without involving this script
+      # - name: Update release branch
+      #   if: steps.download-artifact.outputs.download-path
+      #   run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
+  
+      # - name: Copy test files and scripts
+      #   run: |
+      #     python -u $main_dir/$scripts_release_dir/test_file_convert.py -i "${{ env.default_test_dirs }}" -r $release_dir -w $main_dir
+
+      # - name: Copy scripts
+      #   run: | 
+      #     rm -Rf $release_dir/$scripts_dir
+      #     cp -r $main_dir/$scripts_dir $release_dir/$scripts_dir
+
+      # - name: Create commit and push
+      #   env:
+      #     GIT_AUTHOR_NAME: github-actions[bot]
+      #     GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+      #     GIT_COMMITTER_NAME: GitHub
+      #     GIT_COMMITTER_EMAIL: noreply@github.com
+      #   run: |
+      #     if [[ -z $(git status -s) ]]; then
+      #       echo "No updates to the release branch"
+      #       exit 0
+      #     fi
+      #     git add -A .
+      #     git commit -m "Update release branch" -m "Automated updates made by [$GITHUB_WORKFLOW]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+      #     git push
+      #   working-directory: ${{ env.release_dir }}
