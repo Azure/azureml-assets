@@ -6,9 +6,14 @@ properties:
   datasets: ''
   finetuning-tasks: text-classification, token-classification, question-answering
   languages: en
+  inference-recommended-sku: Standard_DS3_v2
+  inference-min-sku-spec: 4|0|14|28
+  evaluation-recommended-sku: Standard_DS3_v2
+  evaluation-min-sku-spec: 4|0|14|28
+  finetune-recommended-sku: Standard_ND40RS_v2
+  finetune-min-sku-spec: 4|1|28|176     # num_cpu_cores|num_gpu|ram_gb|memory_gb (this min sku spec is used to filter the computes shown to the user submitting a job from Model Catalog page)
 tags:
   Preview: ''
   license: mit
-  min_inference_sku: Standard_DS3_v2
   task: fill-mask
 version: 2
