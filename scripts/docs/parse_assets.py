@@ -50,7 +50,6 @@ def parse_assets(input_dirs: List[Path],
 
     for asset_type in references:
 
-
         print(asset_type)
         # create new md file (folder_name + ".md")
 
@@ -58,13 +57,6 @@ def parse_assets(input_dirs: List[Path],
         doc.add_heading(asset_type.capitalize() + "s", level=1)
 
         doc.add_heading("Glossary", level=2)
-
-        # [componentA]: https://github.com/vizhur/vizhur/wiki/componentA
-        # [componentB]: https://github.com/vizhur/vizhur/wiki/componentB
-        # [componentC]: https://github.com/vizhur/vizhur/wiki/componentC
-
-        # ***
-        # * [ComponentA][componentA]
 
         for asset_file_name in references[asset_type]:
             doc.add_paragraph("[" + asset_file_name + "]: https://github.com/vizhur/vizhur/wiki/" + asset_type + "-" + asset_file_name)
@@ -78,8 +70,7 @@ def parse_assets(input_dirs: List[Path],
 
         doc.add_unordered_list(asset_links_list)
 
-
-        with open(asset_type + "s/" + asset_type + "s.md", 'w') as f:
+        with open(asset_type + "s/" + asset_type + "s-documentation.md", 'w') as f:
             f.write(str(doc))
 
 
