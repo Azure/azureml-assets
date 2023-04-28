@@ -34,6 +34,7 @@ env:
   scripts_release_dir: scripts/release
   scripts_setup_dir: scripts/setup
   scripts_dir: scripts
+  scripts_docs: scripts/docs
   changed_assets_artifact: changed-assets
   releasable_assets_artifact: releasable-assets
   asset_config_filename: asset.yaml
@@ -81,7 +82,7 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -e $main_dir/$scripts_azureml_assets_dir
+        run: pip install -e $main_dir/$scripts_azureml_assets_dir -r $main_dir/$scripts_docs/requirements.txt
       
       # TODO: This may be overkill, consider copying directories without involving this script
       # - name: Update release branch
