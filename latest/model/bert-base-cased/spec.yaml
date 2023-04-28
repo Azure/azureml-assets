@@ -16,7 +16,7 @@ tags:
   Preview: ''
   license: apache-2.0
   task: fill-mask
-version: 2
+version: 3
 description: |
   The BERT model is a pre-trained model that has been trained on a large corpus of English language data. The model was trained using a masked language modeling (MLM) objective, meaning that the model is able to predict words that were randomly masked in an input sentence. The BERT model can also predict if two sentences were originally consecutive in a text or not. This model is intended to be used as a tool for fine-tuning in various downstream tasks such as sequence classification and question answering, but is not recommended for tasks such as text generation. To use this model, you can utilize a pipeline specifically designed for masked language modeling.
   <br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 
