@@ -1,5 +1,5 @@
 #PTCA image
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1131@sha256:2d1a82c6c2721ac0c51adb1862b3a36d041bdd38b568b4a78cbfc60950a5cb5b
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1131@sha256:96b372ff350da529969a28c50616d7a8dedced1393d0dbeb838e34c47724197a
 
 # ls root dir
 RUN ls -lh
