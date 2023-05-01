@@ -46,12 +46,14 @@ task_columns = {
     "wnli": ("sentence1", "sentence2"),
 }
 
+
 # mnli-mm is a special name used by huggingface
 def actual_task(task):
     if task == "mnli-mm":
         return "mnli"
     else:
         return task
+
 
 def num_labels_from_task(task: str) -> int:
     """Return the number of labels for the GLUE task."""

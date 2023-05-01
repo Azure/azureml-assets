@@ -46,8 +46,13 @@ task_columns = {
     "wnli": ("sentence1", "sentence2"),
 }
 
+
 # mnli-mm is a special name used by huggingface
-actual_task = lambda task: "mnli" if task == "mnli-mm" else task
+def actual_task(task):
+    if task == "mnli-mm":
+        return "mnli"
+    else:
+        return task
 
 
 def num_labels_from_task(task: str) -> int:

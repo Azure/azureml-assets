@@ -46,6 +46,7 @@ task_columns = {
     "wnli": ("sentence1", "sentence2"),
 }
 
+
 # mnli-mm is a special name used by huggingface
 def actual_task(task):
     if task == "mnli-mm":
