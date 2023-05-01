@@ -49,7 +49,7 @@ jobs:
         run: pip install -r $scripts_validation_dir/requirements.txt
 
       - name: Check for copyright notice
-        run: python $scripts_validation_dir/copyright_validation.py -i . -e $test_resources_dir
+        run: python $scripts_validation_dir/copyright_validation.py -i . -e $test_resources_dir/validate-copyright/missing-copyright/tests
       
       - name: Check code health
         run: python $scripts_validation_dir/code_health.py -i .
