@@ -10,6 +10,7 @@ on:
 
 env:
   scripts_validation_dir: scripts/validation
+  test_dir: test
 
 permissions:
   # Required to clone repo
@@ -48,7 +49,7 @@ jobs:
         run: pip install -r $scripts_validation_dir/requirements.txt
 
       - name: Check for copyright notice
-        run: python $scripts_validation_dir/copyright_validation.py -i .
+        run: python $scripts_validation_dir/copyright_validation.py -i . -e $test_dir
       
       - name: Check code health
         run: python $scripts_validation_dir/code_health.py -i .
