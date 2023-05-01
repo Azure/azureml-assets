@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Union
 
+import mlflow
 import mltable
 
 from azureml.core import Run
@@ -25,7 +26,8 @@ from responsibleai_text import (
 )
 from raiutils.data_processing import serialize_json_safe
 
-from azureml_model_serializer import ModelSerializer
+from azureml.rai.utils import ModelSerializer
+
 # Local
 from constants import TaskType
 
@@ -121,7 +123,6 @@ def parse_args():
         "--model_info", type=str, help="name:version", required=True
     )
 
-    parser.add_argument("--train_dataset", type=str, required=True)
     parser.add_argument("--test_dataset", type=str, required=True)
 
     parser.add_argument("--target_column_name", type=str, required=True)
@@ -142,6 +143,8 @@ def parse_args():
 
     parser.add_argument("--use_model_dependency", type=boolean_parser,
                         help="Use model dependency")
+    parser.add_argument("--use_conda", type=boolean_parser,
+                        help="Use conda instead of pip")
 
     # Outputs
     parser.add_argument("--dashboard", type=str, required=True)
@@ -248,10 +251,7 @@ def add_properties_to_gather_run(
 
 
 def main(args):
-    _logger.info("Dealing with initialization dataset")
-    train_df = load_dataset(args.train_dataset)
-
-    _logger.info("Dealing with evaluation dataset")
+    _logger.info("Loading evaluation dataset")
     test_df = load_dataset(args.test_dataset)
 
     if args.model_input is None or args.model_info is None:
@@ -260,11 +260,13 @@ def main(args):
 
     model_id = args.model_info
     _logger.info("Loading model: {0}".format(model_id))
-    my_run = Run.get_context()
-    workspace = my_run.experiment.workspace
+
+    tracking_uri = mlflow.get_tracking_uri()
     model_serializer = ModelSerializer(
-        model_id, workspace=workspace,
-        use_model_dependency=args.use_model_dependency)
+        model_id,
+        use_model_dependency=args.use_model_dependency,
+        use_conda=args.use_conda,
+        tracking_uri=tracking_uri)
     text_model = model_serializer.load("Ignored path")
 
     if args.task_type == TaskType.MULTILABEL_TEXT_CLASSIFICATION:
@@ -280,7 +282,6 @@ def main(args):
     _logger.info("Creating RAI Text Insights")
     rai_ti = RAITextInsights(
         model=text_model,
-        train=train_df,
         test=test_df,
         target_column=target_column,
         task_type=args.task_type,

@@ -88,11 +88,10 @@ def main():
     data = load_fridge_dataset()
     model = retrieve_fridge_model()
 
-    train_data = data
     test_data = data
     class_names = data[ImageColumns.LABEL.value].unique()
 
-    rai_insights = RAIVisionInsights(model, train_data, test_data,
+    rai_insights = RAIVisionInsights(model, test_data,
                                      "label",
                                      task_type=ModelTask.IMAGE_CLASSIFICATION,
                                      classes=class_names)

@@ -62,10 +62,8 @@ def main():
 
     print(download("en_core_web_sm"))
 
-    pd_data = load_dataset("train")
     pd_valid_data = load_dataset("test")
 
-    train_data = pd_data[NUM_TEST_SAMPLES:]
     test_data = pd_valid_data[:NUM_TEST_SAMPLES]
 
     model = retrieve_dbpedia_model()
@@ -90,7 +88,7 @@ def main():
                        'SportsSeason', 'TopicalConcept', 'UnitOfWork',
                        'Work']
 
-    rai_insights = RAITextInsights(pred, train_data, test_data,
+    rai_insights = RAITextInsights(pred, test_data,
                                    "label",
                                    classes=encoded_classes,
                                    task_type=ModelTask.TEXT_CLASSIFICATION)
