@@ -9,6 +9,7 @@ dependencies:
 - scipy~=1.5.0
 - numpy~=1.22.0
 - pip:
+  - wheel~=0.38.1
   - matplotlib>=3.3,<3.4
   - psutil>=5.8,<5.9
   - tqdm>=4.59,<4.60
