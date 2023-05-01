@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
         def on_train_end(self, args, state, control, model=None, **kwargs):
             self.prof.stop()
-        
+
         def on_step_begin(self, args, state, control, model=None, **kwargs):
             self.prof.step()
 
