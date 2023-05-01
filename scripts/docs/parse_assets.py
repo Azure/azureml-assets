@@ -53,13 +53,13 @@ def parse_assets(input_dirs: List[Path],
         doc.add_heading("Glossary", level=2)
 
         for asset_name, asset_file_name in references[asset_type]:
-            doc.add_paragraph("[" + asset_name + "]: https://github.com/Azure/azureml-assets/wiki/" + asset_file_name)
+            doc.add_paragraph("[" + asset_file_name + "]: https://github.com/Azure/azureml-assets/wiki/" + asset_file_name)
             
         doc.add_horizontal_rule()
 
         asset_links_list = []
         for asset_name, asset_file_name in references[asset_type]:
-            asset_links_list.append(snakemd.Paragraph(asset_name).insert_link(asset_name, asset_name))
+            asset_links_list.append(snakemd.Paragraph(asset_name).insert_link(asset_name, asset_file_name))
 
         doc.add_unordered_list(asset_links_list)
 
