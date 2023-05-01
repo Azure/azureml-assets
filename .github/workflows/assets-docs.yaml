@@ -29,16 +29,9 @@ env:
   release_dir: release
   wiki_dir: wiki
   scripts_azureml_assets_dir: scripts/azureml-assets
-  scripts_assets_dir: scripts/azureml-assets/azureml/assets
   scripts_environment_dir: scripts/azureml-assets/azureml/assets/environment
-  scripts_release_dir: scripts/release
-  scripts_setup_dir: scripts/setup
-  scripts_dir: scripts
-  scripts_docs: scripts/docs
+  scripts_docs_dir: scripts/docs
   docs_dir: docs
-  changed_assets_artifact: changed-assets
-  releasable_assets_artifact: releasable-assets
-  asset_config_filename: asset.yaml
 
 permissions:
   # Required to clone repo
@@ -51,7 +44,7 @@ defaults:
 jobs:
   release-assets:
     name: Release assets
-    # if: always() && github.ref == 'refs/heads/main'
+    # if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     
     steps:
@@ -83,7 +76,7 @@ jobs:
           python-version: '>=3.8'
     
       - name: Install dependencies
-        run: pip install -e $main_dir/$scripts_azureml_assets_dir -r $main_dir/$scripts_docs/requirements.txt
+        run: pip install -e $main_dir/$scripts_azureml_assets_dir -r $main_dir/$scripts_docs_dir/requirements.txt
 
       - name: Clean up wiki
         run: |
@@ -93,7 +86,7 @@ jobs:
 
       - name: Generate asset documentation
         run: |
-          python $GITHUB_WORKSPACE/$main_dir/$scripts_docs/parse_assets.py -i $GITHUB_WORKSPACE/$release_dir/latest
+          python $GITHUB_WORKSPACE/$main_dir/$scripts_docs_dir/parse_assets.py -i $GITHUB_WORKSPACE/$release_dir/latest
           find .
         working-directory: ${{ env.wiki_dir }}/${{ env.docs_dir }}
       
@@ -105,7 +98,7 @@ jobs:
           GIT_COMMITTER_EMAIL: noreply@github.com
         run: |
           if [[ -z $(git status -s) ]]; then
-            echo "No updates to the release branch"
+            echo "No updates to the wiki"
             exit 0
           fi
           git add -A .
