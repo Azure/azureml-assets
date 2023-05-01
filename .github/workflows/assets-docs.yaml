@@ -43,7 +43,7 @@ defaults:
 
 jobs:
   release-assets:
-    name: Release assets
+    name: Update documentation
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     
