@@ -25,7 +25,6 @@ the data, which is then written to provided output directory.
 """
 import argparse
 import os
-import logging
 from typing import Any, Union, Dict, Callable
 from datasets import load_dataset, load_metric
 from datasets import DatasetDict, Dataset, Metric  # used for typing
