@@ -87,7 +87,6 @@ jobs:
       - name: Generate asset documentation
         run: |
           python $GITHUB_WORKSPACE/$main_dir/$scripts_docs_dir/parse_assets.py -i $GITHUB_WORKSPACE/$release_dir/latest
-          find .
         working-directory: ${{ env.wiki_dir }}/${{ env.docs_dir }}
       
       - name: Create commit and push
