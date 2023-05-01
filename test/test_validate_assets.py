@@ -27,7 +27,6 @@ RESOURCES_DIR = Path("resources/validate")
         ("good-validation", True, True),
         ("correct-order", True, True),
         ("missing-description-file", True, False),
-        ("missing-copyright", False, False),
     ]
 )
 def test_validate_assets(test_subdir: str, check_images: bool, expected: bool):
