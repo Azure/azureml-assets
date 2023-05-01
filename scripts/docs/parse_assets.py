@@ -40,31 +40,25 @@ def parse_assets(input_dirs: List[Path],
         asset_type, asset_name, asset_file_name = generate_asset_documentation.create_asset_doc(asset_config.spec_with_path, asset_config.type)
         references[asset_type].append((asset_name, asset_file_name))
 
-    logger.print(f"{asset_count} asset(s) copied")
+    logger.print(f"{asset_count} asset(s) parsed")
 
     for asset_type in references:
-
-        print(asset_type)
-        
         # Create a new markdown file for each asset type
         doc = snakemd.new_doc()
         doc.add_heading(asset_type.capitalize() + "s", level=1)
 
         # Create glossary that links to each asset of the asset type
         doc.add_heading("Glossary", level=2)
-
-        for asset_name, asset_file_name in references[asset_type]:
-            doc.add_paragraph("[" + asset_file_name + "]: https://github.com/Azure/azureml-assets/wiki/" + asset_file_name)
             
         doc.add_horizontal_rule()
 
         asset_links_list = []
         for asset_name, asset_file_name in references[asset_type]:
-            asset_links_list.append("[" + asset_name + "][" + asset_file_name + "]")
+            asset_links_list.append(snakemd.Paragraph(asset_name).insert_link(asset_name, asset_file_name))
 
         doc.add_unordered_list(asset_links_list)
 
-        with open(asset_type + "s/" + asset_type + "s-documentation.md", 'w') as f:
+        with open(f"{asset_type}s/{asset_type}s-documentation.md", 'w') as f:
             f.write(str(doc))
 
 

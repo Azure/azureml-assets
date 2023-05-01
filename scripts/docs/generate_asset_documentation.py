@@ -25,12 +25,13 @@ def create_asset_doc(spec_file_name, asset_type):
     doc = add_additional_details(doc, asset)
 
     # check if asset folder exists, create one if not
-    if not os.path.exists(asset_type + "s/"):
+    if not os.path.exists(f"{asset_type}s/"):
         os.mkdir(asset_type + "s")
-    asset_file_name = asset_type + "-" + asset["name"]
-    
+
+    asset_file_name = f"{asset_type}-{asset['name']}"
+
     # write the file into the asset folder
-    with open(asset_type + "s/" + asset_file_name + ".md", 'w') as f:
+    with open(f"{asset_type}s/{asset_file_name}.md", 'w') as f:
         f.write(str(doc))
 
     return asset_type, asset["name"], asset_file_name
