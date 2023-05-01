@@ -3,16 +3,11 @@ name: assets-docs
 on:
   push:
     branches:
-      - generate-docs
-    # paths-ignore:
-    #   - .github/**
-  # push:
-  #   branches:
-  #     - release
-  #   paths-ignore:
-  #     - .github/**
-  # schedule:
-  #   - cron: '30 6 * * *'
+      - release
+    paths-ignore:
+      - .github/**
+  schedule:
+    - cron: '30 8 * * *'
   workflow_dispatch:
     inputs:
       asset_dirs:
@@ -23,13 +18,10 @@ on:
 concurrency: ${{ github.workflow }}
 
 env:
-  default_asset_dirs: .,!test,!scripts
-  default_test_dirs: .,!test,!scripts,!.git,!.github
   main_dir: main
   release_dir: release
   wiki_dir: wiki
   scripts_azureml_assets_dir: scripts/azureml-assets
-  scripts_environment_dir: scripts/azureml-assets/azureml/assets/environment
   scripts_docs_dir: scripts/docs
   docs_dir: docs
 
