@@ -28,7 +28,7 @@ def parse_assets(input_dirs: List[Path],
     Args:
         input_dirs (List[Path]): List of directories to search for assets.
         asset_config_filename (str): Asset config filename to search for.
-        pattern (re.Pattern, optional): Regex pattern for assets to copy. Defaults to None.
+        pattern (re.Pattern, optional): Regex pattern for assets to parse. Defaults to None.
     """
     asset_count = 0
 
@@ -45,11 +45,12 @@ def parse_assets(input_dirs: List[Path],
     for asset_type in references:
 
         print(asset_type)
-        # create new md file (folder_name + ".md")
-
+        
+        # Create a new markdown file for each asset type
         doc = snakemd.new_doc()
         doc.add_heading(asset_type.capitalize() + "s", level=1)
 
+        # Create glossary that links to each asset of the asset type
         doc.add_heading("Glossary", level=2)
 
         for asset_name, asset_file_name in references[asset_type]:
@@ -59,7 +60,7 @@ def parse_assets(input_dirs: List[Path],
 
         asset_links_list = []
         for asset_name, asset_file_name in references[asset_type]:
-            asset_links_list.append(snakemd.Paragraph(asset_name).insert_link(asset_name, asset_file_name))
+            asset_links_list.append("[" + asset_name + "][" + asset_file_name + "]")
 
         doc.add_unordered_list(asset_links_list)
 
