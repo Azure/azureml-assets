@@ -19,10 +19,9 @@ from collections import defaultdict
 PARSED_COUNT = "parsed_count"
 
 
-
 def parse_assets(input_dirs: List[Path],
-                asset_config_filename: str,
-                pattern: re.Pattern = None):
+                    asset_config_filename: str,
+                    pattern: re.Pattern = None):
     """Parse all assets from input directory and generate documentation for each.
 
     Args:
@@ -37,7 +36,9 @@ def parse_assets(input_dirs: List[Path],
     for asset_config in util.find_assets(input_dirs, asset_config_filename, pattern=pattern):
         asset_count += 1
 
-        asset_type, asset_name, asset_file_name = generate_asset_documentation.create_asset_doc(asset_config.spec_with_path, asset_config.type)
+        asset_type, asset_name, asset_file_name = \
+            generate_asset_documentation.create_asset_doc(asset_config.spec_with_path, asset_config.type)
+
         references[asset_type].append((asset_name, asset_file_name))
 
     logger.print(f"{asset_count} asset(s) parsed")
@@ -49,7 +50,7 @@ def parse_assets(input_dirs: List[Path],
 
         # Create glossary that links to each asset of the asset type
         doc.add_heading("Glossary", level=2)
-            
+
         doc.add_horizontal_rule()
 
         asset_links_list = []
@@ -60,8 +61,6 @@ def parse_assets(input_dirs: List[Path],
 
         with open(f"{asset_type}s/{asset_type}s-documentation.md", 'w') as f:
             f.write(str(doc))
-
-
 
 
 if __name__ == '__main__':
@@ -80,5 +79,5 @@ if __name__ == '__main__':
 
     # Parse assets
     parse_assets(input_dirs=input_dirs,
-                asset_config_filename=args.asset_config_filename,
-                pattern=args.pattern)
+                    asset_config_filename=args.asset_config_filename,
+                    pattern=args.pattern)

@@ -4,7 +4,6 @@
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 import snakemd
-import argparse
 import re
 import os
 
@@ -61,27 +60,32 @@ def add_intro(doc, asset):
 
     if "properties" in asset:
         doc.add_heading("Properties", level=4)
-        doc.add_paragraph("**SHA**: " + asset["properties"]["SHA"] if "SHA" in asset["properties"] else "")
-        doc.add_paragraph("**Datasets**: " + asset["properties"]["datasets"] if "datasets" in asset["properties"] else "")
-        doc.add_paragraph("**Finetuning Tasks**: " + asset["properties"]["finetuning-tasks"] if "finetuning-tasks" in asset["properties"] else "")
-        doc.add_paragraph("**Languages**: " + asset["properties"]["languages"] if "languages" in asset["properties"] else "")
+        if "SHA" in asset["properties"]:
+            doc.add_paragraph("**SHA**: " + asset["properties"]["SHA"])
+        if "datasets" in asset["properties"]:
+            doc.add_paragraph("**Datasets**: " + asset["properties"]["datasets"])
+        if "finetuning-tasks" in asset["properties"]:
+            doc.add_paragraph("**Finetuning Tasks**: " + asset["properties"]["finetuning-tasks"])
+        if "languages" in asset["properties"]:
+            doc.add_paragraph("**Languages**: " + asset["properties"]["languages"])
 
     return doc
 
 
 def add_additional_details(doc, asset):
-
     doc.add_heading("Parameters ", level=3)
-    
+
     doc.add_heading("Code", level=3)
     if "type" in asset and asset["type"] == "command" and "code" in asset:
         doc.add_paragraph(asset['code'])
 
     doc.add_heading("Environment ", level=3)
     doc.add_paragraph(asset['environment'] if "environment" in asset else "")
-        
+
     doc.add_heading("Compute Specifications ", level=3)
-    doc.add_paragraph(asset['tags']['min_inference_sku'] if "tags" in asset and "min_inference_sku" in asset["tags"] else "")
+
+    if "tags" in asset and "min_inference_sku":
+        doc.add_paragraph(asset['tags']['min_inference_sku'] in asset["tags"])
 
     return doc
 
@@ -101,6 +105,7 @@ def get_comments_map(self, key):
             coms.append(token)
     return coms
 
+
 def get_comments_seq(self, idx):
     coms = []
     comments = self.ca.items.get(idx)
@@ -119,10 +124,11 @@ def get_comments_seq(self, idx):
 setattr(CommentedMap, 'get_comments', get_comments_map)
 setattr(CommentedSeq, 'get_comments', get_comments_seq)
 
+
 def check_comments(data):
     if isinstance(data, CommentedMap):
         for k, v in data.items():
-           comments = data.get_comments(k)
+            comments = data.get_comments(k)
     elif isinstance(data, CommentedSeq):
         for idx, item in enumerate(data):
             comments = data.get_comments(k)
@@ -130,22 +136,24 @@ def check_comments(data):
         text = comment.value
         text = re.sub(r"[\n\t\s]*", "", text)
         if text:
-            return True 
+            return True
     return False
-        
+
+
 def insert_comments_between_inputs(doc, data):
     if isinstance(data, CommentedMap):
         for k, v in data.items():
-           comments = data.get_comments(k)
+            comments = data.get_comments(k)
     elif isinstance(data, CommentedSeq):
         for idx, item in enumerate(data):
             comments = data.get_comments(k)
     for comment in comments:
-        text=comment.value
+        text = comment.value
         text = re.sub(r"#", "", text)
         doc.add_paragraph(text)
 
     return doc
+
 
 def insert_comments_under_input(doc, data):
     for comments in data:
@@ -153,6 +161,7 @@ def insert_comments_under_input(doc, data):
             for comment in comments:
                 doc.add_paragraph(comment.value.strip('#'))
     return doc
+
 
 def add_inputs(doc, asset):
     doc.add_heading("Inputs ", level=2)
@@ -170,13 +179,13 @@ def add_inputs(doc, asset):
             row.append(v['type'])
             row.append(v['default'] if 'default' in v else ' ')
             row.append(v['optional'] if 'optional' in v else ' ')
-            row.append(v['enum'] if 'enum' in v else ' ') 
-            
+            row.append(v['enum'] if 'enum' in v else ' ')
+
             if check_comments(v):
                 rows.append(row)
                 doc.add_table(headers, rows)
                 doc = insert_comments_between_inputs(doc, v)
-                rows = []  
+                rows = []
             else:
                 rows.append(row)
 
@@ -199,16 +208,15 @@ def add_outputs(doc, asset):
             row.append(k)
             row.append(v['description'] if 'description' in v else ' ')
             row.append(v['type'])
-            
+
             if check_comments(v):
                 rows.append(row)
                 doc.add_table(headers, rows)
                 doc = insert_comments_between_inputs(doc, v)
-                rows = []      
+                rows = []
             else:
                 rows.append(row)
 
         doc.add_table(headers, rows)
 
     return doc
-
