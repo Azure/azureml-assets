@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Generate markdown documentation for an asset"""
+"""Generate markdown documentation for an asset."""
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 import snakemd
@@ -10,7 +10,7 @@ import os
 
 
 def create_asset_doc(spec_file_name, asset_type):
-    """Generate asset markdown document with information based on its asset yaml file"""
+    """Generate asset markdown document with information based on its asset yaml file."""
     # read the asset yaml file and parse it
     yaml = YAML()
     with open(spec_file_name, 'r') as f:
@@ -39,7 +39,7 @@ def create_asset_doc(spec_file_name, asset_type):
 
 
 def add_intro(doc, asset):
-    """Add information like asset name and description to asset doc"""
+    """Add information like asset name and description to asset doc."""
     doc.add_heading(asset['display_name'] if "display_name" in asset else asset["name"], level=2)
 
     doc.add_heading("README file ", level=3)
@@ -75,7 +75,7 @@ def add_intro(doc, asset):
 
 
 def add_additional_details(doc, asset):
-    """Add information like parameters and compute specifications to asset doc"""
+    """Add information like parameters and compute specifications to asset doc."""
     doc.add_heading("Parameters ", level=3)
 
     doc.add_heading("Code", level=3)
@@ -95,7 +95,7 @@ def add_additional_details(doc, asset):
 
 # set attributes
 def get_comments_map(self, key):
-    """Get comments based on key"""
+    """Get comments based on key."""
     coms = []
     comments = self.ca.items.get(key)
     if comments is None:
@@ -111,7 +111,7 @@ def get_comments_map(self, key):
 
 
 def get_comments_seq(self, idx):
-    """Get comments based on id"""
+    """Get comments based on id."""
     coms = []
     comments = self.ca.items.get(idx)
     if comments is None:
@@ -131,7 +131,7 @@ setattr(CommentedSeq, 'get_comments', get_comments_seq)
 
 
 def check_comments(data):
-    """Check for comments in asset input"""
+    """Check for comments in asset input."""
     if isinstance(data, CommentedMap):
         for k, v in data.items():
             comments = data.get_comments(k)
@@ -147,7 +147,7 @@ def check_comments(data):
 
 
 def insert_comments_between_inputs(doc, data):
-    """Insert comments between inputs"""
+    """Insert comments between inputs."""
     if isinstance(data, CommentedMap):
         for k, v in data.items():
             comments = data.get_comments(k)
@@ -163,7 +163,7 @@ def insert_comments_between_inputs(doc, data):
 
 
 def insert_comments_under_input(doc, data):
-    """Insert comments under inputs"""
+    """Insert comments under inputs."""
     for comments in data:
         if comments:
             for comment in comments:
@@ -172,7 +172,7 @@ def insert_comments_under_input(doc, data):
 
 
 def add_inputs(doc, asset):
-    """Generate inputs table for the asset doc"""
+    """Generate inputs table for the asset doc."""
     doc.add_heading("Inputs ", level=2)
 
     if "inputs" in asset:
@@ -204,7 +204,7 @@ def add_inputs(doc, asset):
 
 
 def add_outputs(doc, asset):
-    """Generate an outputs table for the asset doc"""
+    """Generate an outputs table for the asset doc."""
     doc.add_heading("Outputs ", level=2)
 
     if "outputs" in asset:
