@@ -21,9 +21,8 @@ def _test(testpaths: List[Path], excludes: List[Path] = []) -> bool:
     for testpath in testpaths:
         for file in testpath.rglob("*.py"):
             # Skip ignored files
-            for parent in file.parents:
-                if parent in excludes:
-                    continue
+            if any([p in excludes for p in file.parents]):
+                continue
 
             # Ignore zero-length files
             if file.stat().st_size == 0:
