@@ -25,9 +25,10 @@ the data, which is then written to provided output directory.
 """
 import argparse
 import os
+import logging as logger
 from typing import Any, Union, Dict, Callable
 from datasets import load_dataset, load_metric
-from datasets import DatasetDict, Dataset, Metric  # used for typing
+from datasets import DatasetDict, Metric  # used for typing
 from torch.utils.data.dataset import Dataset
 from transformers import PreTrainedTokenizerBase, AutoTokenizer
 

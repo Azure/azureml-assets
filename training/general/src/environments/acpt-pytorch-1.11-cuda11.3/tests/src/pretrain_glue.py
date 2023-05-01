@@ -19,7 +19,6 @@ import numpy as np
 import mlflow
 import time
 from typing import Dict, Callable
-import json
 import os
 
 # from dataclasses import dataclass, field
@@ -37,9 +36,8 @@ from glue_datasets import (
     num_labels_from_task,
     load_metric_from_task,
 )
-#pretraining
+# pretraining
 from transformers import AutoConfig
-from transformers import DataCollatorForLanguageModeling
 # Azure ML imports - could replace this with e.g. wandb or mlflow
 from transformers.integrations import MLflowCallback
 # Pytorch Profiler
@@ -101,7 +99,7 @@ if __name__ == "__main__":
     compute_metrics = construct_compute_metrics_function(args.task)
 
     # Create path for logging to tensorboard
-    my_logs=os.environ['PWD']+args.tensorboard_log_dir
+    my_logs = os.environ['PWD']+args.tensorboard_log_dir
 
     # Custom HuggingFace trainer callback used for starting/stopping the pytorch profiler
     class ProfilerCallback(TrainerCallback):
