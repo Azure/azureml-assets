@@ -53,7 +53,7 @@ def parse_assets(input_dirs: List[Path],
         doc.add_heading("Glossary", level=2)
 
         for asset_name, asset_file_name in references[asset_type]:
-            doc.add_paragraph("[" + asset_name + "]: https://github.com/vizhur/vizhur/wiki/" + asset_type + "-" + asset_file_name)
+            doc.add_paragraph("[" + asset_name + "]: https://github.com/Azure/azureml-assets/wiki/" + asset_file_name)
             
         doc.add_horizontal_rule()
 
