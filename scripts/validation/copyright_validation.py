@@ -12,9 +12,7 @@ COPYRIGHT = [
     "# Copyright (c) Microsoft Corporation.",
     "# Licensed under the MIT License."
 ]
-IGNORE_LINES = [
-    "# Portions of this code are:"
-]
+
 
 def _test(testpaths: List[Path], excludes: List[Path] = []) -> bool:
     badfiles = []
@@ -31,10 +29,7 @@ def _test(testpaths: List[Path], excludes: List[Path] = []) -> bool:
             # Read copyright
             with open(file, encoding="utf8") as f:
                 for i in range(0, len(COPYRIGHT)):
-                    line = f.readline().rstrip()
-                    while line in IGNORE_LINES:
-                        line = f.readline().rstrip()
-                    if line != COPYRIGHT[i]:
+                    if f.readline().rstrip() != COPYRIGHT[i]:
                         badfiles.append(file)
                         break
 
