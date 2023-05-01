@@ -15,7 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""A collection of utility methods for working with the GLUE dataset
+"""A collection of utility methods for working with the GLUE dataset.
+
 Primarily includes methods to:
     - Download raw GLUE data
     - Process GLUE data with a given tokenizer
@@ -49,6 +50,7 @@ task_columns = {
 
 # mnli-mm is a special name used by huggingface
 def actual_task(task):
+    """The task mnli-mm is a special name used by huggingface and needs to be converted."""
     if task == "mnli-mm":
         return "mnli"
     else:
@@ -74,6 +76,7 @@ def load_metric_from_task(task: str) -> Metric:
 
 def get_metric_name_from_task(task: str) -> str:
     """Get the name of the metric for the corresponding GLUE task.
+
     If using `load_best_model_at_end=True` in TrainingArguments then you need
     `metric_for_best_model=metric_name`. Use this method to get the metric_name
     for the corresponding GLUE task.
@@ -90,6 +93,7 @@ def construct_tokenizer_function(
     tokenizer: PreTrainedTokenizerBase, task: str
 ) -> Callable[[Union[Dict, Any]], Union[Dict, Any]]:
     """Construct function used to tokenize GLUE data.
+
     Some GLUE tasks (CoLA and SST2) have single sentence input, while the rest
     have sentence pairs. This method returns a method that applies the appropriate
     tokenizer to an example input based on that tasks sentence_keys.
@@ -101,7 +105,6 @@ def construct_tokenizer_function(
         A function that applies our tokenizer to example sentence(s) from the
         associated GLUE task.
     """
-
     sentence_keys = task_columns.get(task)
 
     if len(sentence_keys) == 1:
@@ -124,6 +127,7 @@ def construct_tokenizer_function(
 
 
 def load_raw_glue_dataset(task: str) -> Union[DatasetDict, Dataset]:
+    """Load the raw GLUE dataset."""
     dataset = load_dataset("glue", actual_task(task))
     return dataset
 

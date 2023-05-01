@@ -15,6 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""The main file for starting BERT pretraining."""
 import numpy as np
 import mlflow
 import time
@@ -46,6 +47,7 @@ from transformers import TrainerCallback
 
 
 def construct_compute_metrics_function(task: str) -> Callable[[EvalPrediction], Dict]:
+    """Construct the function for computing training metrics."""
     metric = load_metric_from_task(task)
 
     if task != "stsb":
@@ -103,7 +105,9 @@ if __name__ == "__main__":
 
     # Custom HuggingFace trainer callback used for starting/stopping the pytorch profiler
     class ProfilerCallback(TrainerCallback):
+        """A class for Pytorch Profiling of the training."""
         def on_train_begin(self, args, state, control, model=None, **kwargs):
+            """A function executed the training starts."""
             self.prof = profiler.profile(
                 schedule=profiler.schedule(wait=2, warmup=1, active=3, repeat=2),
                 activities=[profiler.ProfilerActivity.CPU, profiler.ProfilerActivity.CUDA],
@@ -115,9 +119,11 @@ if __name__ == "__main__":
             self.prof.start()
 
         def on_train_end(self, args, state, control, model=None, **kwargs):
+            """A function executed the training ends."""
             self.prof.stop()
 
         def on_step_begin(self, args, state, control, model=None, **kwargs):
+            """A function executed when a training step starts."""
             self.prof.step()
 
     # Initialize huggingface trainer. This trainer will internally execute the training loop
@@ -129,7 +135,7 @@ if __name__ == "__main__":
         # data_collator=data_collator,
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
-        callbacks=[ProfilerCallback]
+        # callbacks=[ProfilerCallback]
     )
 
     trainer.pop_callback(MLflowCallback)
