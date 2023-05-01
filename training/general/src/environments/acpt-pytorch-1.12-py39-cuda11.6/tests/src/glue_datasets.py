@@ -50,7 +50,7 @@ task_columns = {
 
 # mnli-mm is a special name used by huggingface
 def actual_task(task):
-    """The task mnli-mm is a special name used by huggingface and needs to be converted."""
+    """Convert the mnli-mm task to mnli."""
     if task == "mnli-mm":
         return "mnli"
     else:
