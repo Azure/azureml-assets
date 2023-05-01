@@ -10,78 +10,77 @@ import os
 
 
 def create_asset_doc(spec_file_name, asset_type):
-    # read the component yaml file and parse it
+    # read the asset yaml file and parse it
     yaml = YAML()
     with open(spec_file_name, 'r') as f:
-        component = yaml.load(f)
+        asset = yaml.load(f)
 
     asset_type = str(asset_type).replace("AssetType.", "").lower()
 
-    # create component document and add info
+    # create asset document and add info
     doc = snakemd.new_doc()
-    doc = add_intro(doc, component)
-    doc = add_inputs(doc, component)
-    doc = add_outputs(doc, component)
-    doc = add_additional_details(doc, component)
+    doc = add_intro(doc, asset)
+    doc = add_inputs(doc, asset)
+    doc = add_outputs(doc, asset)
+    doc = add_additional_details(doc, asset)
 
     # check if asset folder exists, create one if not
     if not os.path.exists(asset_type + "s/"):
         os.mkdir(asset_type + "s")
-
+    asset_file_name = asset_type + "-" + asset["name"]
+    
     # write the file into the asset folder
-    with open(asset_type + "s/" + asset_type + "-" + component["name"] + ".md", 'w') as f:
+    with open(asset_type + "s/" + asset_file_name + ".md", 'w') as f:
         f.write(str(doc))
 
-    # return md file name
-    return asset_type, asset_type + "-" + component["name"]
+    return asset_type, asset["name"], asset_file_name
 
 
+def add_intro(doc, asset):
 
-def add_intro(doc, component):
-
-    doc.add_heading(component['display_name'] if "display_name" in component else component["name"], level=2)
+    doc.add_heading(asset['display_name'] if "display_name" in asset else asset["name"], level=2)
 
     doc.add_heading("README file ", level=3)
 
-    doc.add_heading("Component Overview ", level=3)
-    
-    if "description" in component:
-        doc.add_paragraph("**Description**: " + str(component['description']))
-    if "version" in component:
-        doc.add_paragraph("**Version**: " + str(component['version']))
-    if "type" in component:
-        doc.add_paragraph("**Type**: " + component['type'])
-    if "tags" in component and "license" in component["tags"]:
-        doc.add_paragraph("**License**: " + component["tags"]["license"])
+    doc.add_heading("Overview ", level=3)
+
+    if "description" in asset:
+        doc.add_paragraph("**Description**: " + str(asset['description']))
+    if "version" in asset:
+        doc.add_paragraph("**Version**: " + str(asset['version']))
+    if "type" in asset:
+        doc.add_paragraph("**Type**: " + asset['type'])
+    if "tags" in asset and "license" in asset["tags"]:
+        doc.add_paragraph("**License**: " + asset["tags"]["license"])
 
     doc.add_heading("YAML Syntax ", level=3)
 
-    if "type" in component and component["type"] == "automl":
-        doc.add_paragraph("**Task**: " + component["task"] if "task" in component else "")
+    if "type" in asset and asset["type"] == "automl":
+        doc.add_paragraph("**Task**: " + asset["task"] if "task" in asset else "")
 
-    if "properties" in component:
+    if "properties" in asset:
         doc.add_heading("Properties", level=4)
-        doc.add_paragraph("**SHA**: " + component["properties"]["SHA"] if "SHA" in component["properties"] else "")
-        doc.add_paragraph("**Datasets**: " + component["properties"]["datasets"] if "datasets" in component["properties"] else "")
-        doc.add_paragraph("**Finetuning Tasks**: " + component["properties"]["finetuning-tasks"] if "finetuning-tasks" in component["properties"] else "")
-        doc.add_paragraph("**Languages**: " + component["properties"]["languages"] if "languages" in component["properties"] else "")
+        doc.add_paragraph("**SHA**: " + asset["properties"]["SHA"] if "SHA" in asset["properties"] else "")
+        doc.add_paragraph("**Datasets**: " + asset["properties"]["datasets"] if "datasets" in asset["properties"] else "")
+        doc.add_paragraph("**Finetuning Tasks**: " + asset["properties"]["finetuning-tasks"] if "finetuning-tasks" in asset["properties"] else "")
+        doc.add_paragraph("**Languages**: " + asset["properties"]["languages"] if "languages" in asset["properties"] else "")
 
     return doc
 
 
-def add_additional_details(doc, component):
+def add_additional_details(doc, asset):
 
     doc.add_heading("Parameters ", level=3)
     
     doc.add_heading("Code", level=3)
-    if "type" in component and component["type"] == "command" and "code" in component:
-        doc.add_paragraph(component['code'])
+    if "type" in asset and asset["type"] == "command" and "code" in asset:
+        doc.add_paragraph(asset['code'])
 
     doc.add_heading("Environment ", level=3)
-    doc.add_paragraph(component['environment'] if "environment" in component else "")
+    doc.add_paragraph(asset['environment'] if "environment" in asset else "")
         
     doc.add_heading("Compute Specifications ", level=3)
-    doc.add_paragraph(component['tags']['min_inference_sku'] if "tags" in component and "min_inference_sku" in component["tags"] else "")
+    doc.add_paragraph(asset['tags']['min_inference_sku'] if "tags" in asset and "min_inference_sku" in asset["tags"] else "")
 
     return doc
 
@@ -154,16 +153,16 @@ def insert_comments_under_input(doc, data):
                 doc.add_paragraph(comment.value.strip('#'))
     return doc
 
-def add_inputs(doc, component):
+def add_inputs(doc, asset):
     doc.add_heading("Inputs ", level=2)
 
-    if "inputs" in component:
+    if "inputs" in asset:
         headers = ['Name', 'Description', 'Type', 'Default', 'Optional', 'Enum']
         rows = []
-        if component.ca.items.get('inputs') is not None:
-            doc = insert_comments_under_input(doc, component.ca.items.get('inputs'))
+        if asset.ca.items.get('inputs') is not None:
+            doc = insert_comments_under_input(doc, asset.ca.items.get('inputs'))
 
-        for k, v in component['inputs'].items():
+        for k, v in asset['inputs'].items():
             row = []
             row.append(k)
             row.append(v['description'] if 'description' in v else ' ')
@@ -185,16 +184,16 @@ def add_inputs(doc, component):
     return doc
 
 
-def add_outputs(doc, component):
+def add_outputs(doc, asset):
     doc.add_heading("Outputs ", level=2)
 
-    if "outputs" in component:
+    if "outputs" in asset:
         headers = ['Name', 'Description', 'Type']
         rows = []
-        if component.ca.items.get('outputs') is not None:
-            doc = insert_comments_under_input(doc, component.ca.items.get('outputs'))
+        if asset.ca.items.get('outputs') is not None:
+            doc = insert_comments_under_input(doc, asset.ca.items.get('outputs'))
 
-        for k, v in component['outputs'].items():
+        for k, v in asset['outputs'].items():
             row = []
             row.append(k)
             row.append(v['description'] if 'description' in v else ' ')

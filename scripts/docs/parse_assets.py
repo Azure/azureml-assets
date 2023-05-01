@@ -37,11 +37,10 @@ def parse_assets(input_dirs: List[Path],
     for asset_config in util.find_assets(input_dirs, asset_config_filename, pattern=pattern):
         asset_count += 1
 
-        asset_type, asset_file_name = generate_asset_documentation.create_asset_doc(asset_config.spec_with_path, asset_config.type)
-        references[asset_type].append(asset_file_name)
+        asset_type, asset_name, asset_file_name = generate_asset_documentation.create_asset_doc(asset_config.spec_with_path, asset_config.type)
+        references[asset_type].append((asset_name, asset_file_name))
 
     logger.print(f"{asset_count} asset(s) copied")
-
 
     for asset_type in references:
 
@@ -53,15 +52,14 @@ def parse_assets(input_dirs: List[Path],
 
         doc.add_heading("Glossary", level=2)
 
-        for asset_file_name in references[asset_type]:
-            doc.add_paragraph("[" + asset_file_name + "]: https://github.com/vizhur/vizhur/wiki/" + asset_type + "-" + asset_file_name)
+        for asset_name, asset_file_name in references[asset_type]:
+            doc.add_paragraph("[" + asset_name + "]: https://github.com/vizhur/vizhur/wiki/" + asset_type + "-" + asset_file_name)
             
         doc.add_horizontal_rule()
 
         asset_links_list = []
-        for asset_file_name in references[asset_type]:
-            asset_links_list.append(snakemd.Paragraph(asset_file_name).insert_link(asset_file_name, asset_file_name))
-            # add xref link to Glossary!
+        for asset_name, asset_file_name in references[asset_type]:
+            asset_links_list.append(snakemd.Paragraph(asset_name).insert_link(asset_name, asset_name))
 
         doc.add_unordered_list(asset_links_list)
 
