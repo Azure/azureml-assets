@@ -22,19 +22,14 @@ PARSED_COUNT = "parsed_count"
 
 def parse_assets(input_dirs: List[Path],
                 asset_config_filename: str,
-                release_directory_root: Path = None,
-                use_version_dirs: bool = False,
                 pattern: re.Pattern = None):
     """Parse all assets from input directory and generate documentation for each.
 
     Args:
         input_dirs (List[Path]): List of directories to search for assets.
         asset_config_filename (str): Asset config filename to search for.
-        release_directory_root (Path, optional): Release directory location. Defaults to None.
-        use_version_dirs (bool, optional): Use version directories for output. Defaults to False.
         pattern (re.Pattern, optional): Regex pattern for assets to copy. Defaults to None.
     """
-    # Find assets under release dir
     asset_count = 0
 
     references = defaultdict(list)
@@ -61,7 +56,7 @@ def parse_assets(input_dirs: List[Path],
         for asset_file_name in references[asset_type]:
             doc.add_paragraph("[" + asset_file_name + "]: https://github.com/vizhur/vizhur/wiki/" + asset_type + "-" + asset_file_name)
             
-        doc.add_horizontal_rule()  # aka ***
+        doc.add_horizontal_rule()
 
         asset_links_list = []
         for asset_file_name in references[asset_type]:
@@ -83,11 +78,6 @@ if __name__ == '__main__':
                         help="Comma-separated list of directories containing assets")
     parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
                         help="Asset config file name to search for")
-    parser.add_argument("-r", "--release-directory", type=Path,
-                        help="Directory to which the release branch has been cloned. "
-                        "If provided, only asset versions without a release tag will be copied.")
-    parser.add_argument("-v", "--use-version-dirs", action="store_true",
-                        help="Use version directories when storing assets in output directory")
     parser.add_argument("-t", "--pattern", type=re.compile,
                         help="Regex pattern to select assets to copy, in the format <type>/<name>/<version>")
     args = parser.parse_args()
@@ -95,9 +85,7 @@ if __name__ == '__main__':
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
 
-    # Copy assets
+    # Parse assets
     parse_assets(input_dirs=input_dirs,
                 asset_config_filename=args.asset_config_filename,
-                release_directory_root=args.release_directory,
-                use_version_dirs=args.use_version_dirs,
                 pattern=args.pattern)

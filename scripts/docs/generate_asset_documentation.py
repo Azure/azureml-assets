@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 import snakemd
@@ -25,6 +28,7 @@ def create_asset_doc(spec_file_name, asset_type):
     if not os.path.exists(asset_type + "s/"):
         os.mkdir(asset_type + "s")
 
+    # write the file into the asset folder
     with open(asset_type + "s/" + asset_type + "-" + component["name"] + ".md", 'w') as f:
         f.write(str(doc))
 
@@ -40,6 +44,7 @@ def add_intro(doc, component):
     doc.add_heading("README file ", level=3)
 
     doc.add_heading("Component Overview ", level=3)
+    
     if "description" in component:
         doc.add_paragraph("**Description**: " + str(component['description']))
     if "version" in component:
