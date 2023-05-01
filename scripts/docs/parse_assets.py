@@ -20,8 +20,8 @@ PARSED_COUNT = "parsed_count"
 
 
 def parse_assets(input_dirs: List[Path],
-                    asset_config_filename: str,
-                    pattern: re.Pattern = None):
+                  asset_config_filename: str,
+                  pattern: re.Pattern = None):
     """Parse all assets from input directory and generate documentation for each.
 
     Args:
@@ -79,5 +79,5 @@ if __name__ == '__main__':
 
     # Parse assets
     parse_assets(input_dirs=input_dirs,
-                    asset_config_filename=args.asset_config_filename,
-                    pattern=args.pattern)
+                  asset_config_filename=args.asset_config_filename,
+                  pattern=args.pattern)
