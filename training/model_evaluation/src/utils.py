@@ -71,6 +71,19 @@ def get_task_from_model(model_uri):
     return task_type
 
 
+def filter_pipeline_params(evaluation_config):
+    """Filter Pipeline params in evaluation_config.
+
+    Args:
+        evaluation_config (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    filtered_params = {i: j for i, j in evaluation_config.items() if i in constants.ALLOWED_PIPELINE_PARAMS}
+    return filtered_params
+
+
 def load_transformer(filename):
     """Load y transformer.
 

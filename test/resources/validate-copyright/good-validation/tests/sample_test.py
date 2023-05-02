@@ -1,7 +1,8 @@
+# Here's the copyright, but not at the very top of the file:
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the pytorch 1.12 environment."""
+"""Tests running a sample job in the pytorch 1.11 environment."""
 import os
 import time
 from pathlib import Path
@@ -14,8 +15,8 @@ JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 40)
 
 
-def test_pytorch_1_12():
-    """Tests a sample job using pytorch 1.12 as the environment."""
+def test_pytorch_1_11():
+    """Tests a sample job using pytorch 1.11 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -26,12 +27,12 @@ def test_pytorch_1_12():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "acpt-pytorch-1_12-cuda11_6"
+    env_name = "acpt-pytorch-1_11-cuda11_3"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
         name=env_name,
-        description="Pytorch 1.12 environment created from a Docker context.",
+        description="Pytorch 1.11 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
@@ -52,7 +53,7 @@ def test_pytorch_1_12():
         compute=os.environ.get("gpu_cluster"),
         display_name="pytorch-iris-example",
         description="Train a neural network with PyTorch on the Iris dataset.",
-        experiment_name="pytorch112_Cuda116_Experiment"
+        experiment_name="pytorch111_Cuda113_Experiment"
     )
 
     returned_job = ml_client.create_or_update(job)
