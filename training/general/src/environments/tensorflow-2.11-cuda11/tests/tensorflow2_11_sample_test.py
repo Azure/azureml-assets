@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the tensorflow 2.8 environment."""
+"""Tests running a sample job in the tensorflow 2.11 environment."""
 import os
 import time
 from pathlib import Path
@@ -16,8 +16,8 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_tensorflow_2_8():
-    """Tests a sample job using tensorflow 2.8 as the environment."""
+def test_tensorflow_2_11():
+    """Tests a sample job using tensorflow 2.11 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -28,12 +28,12 @@ def test_tensorflow_2_8():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "tensorflow-2_8-cuda11"
+    env_name = "tensorflow-2_11-cuda11"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
         name=env_name,
-        description="Tensorflow 2.8 environment created from a Docker context.",
+        description="Tensorflow 2.11 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
@@ -44,8 +44,8 @@ def test_tensorflow_2_8():
         environment=f"{env_name}@latest",
         compute=os.environ.get("gpu_cluster"),
         display_name="tensorflow-mnist-example",
-        description="A test run of the tensorflow 2_8 curated environment",
-        experiment_name="tensorflow28Experiment"
+        description="A test run of the tensorflow 2_11 curated environment",
+        experiment_name="tensorflow211Experiment"
     )
 
     returned_job = ml_client.create_or_update(job)

@@ -13,7 +13,7 @@ build:
 os_type: linux
 
 tags:
-  Tensorflow: "2.8"
+  Tensorflow: "2.11"
   GPU: Cuda11
   OS: Ubuntu20.04
   Training: ""

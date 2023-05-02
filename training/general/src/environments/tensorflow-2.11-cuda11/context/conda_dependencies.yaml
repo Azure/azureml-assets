@@ -1,4 +1,4 @@
-name: tensorflow-2.8
+name: tensorflow-2.11-cuda11
 channels:
 - anaconda
 - conda-forge
@@ -18,8 +18,8 @@ dependencies:
   - azureml-defaults=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-telemetry=={{latest-pypi-version}}
-  - tensorboard~=2.8.0
-  - tensorflow-gpu~=2.8.0
+  - tensorboard~=2.11.0
+  - tensorflow-gpu~=2.11.0
   - tensorflow-datasets~=4.5.0
   - onnxruntime-gpu~=1.9.0
   - protobuf~=3.19.0

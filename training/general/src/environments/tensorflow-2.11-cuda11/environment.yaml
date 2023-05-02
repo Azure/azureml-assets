@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/tensorflow-2.8-cuda11
+  name: azureml/curated/tensorflow-2.11-cuda11
   os: linux
   context:
     dir: context
