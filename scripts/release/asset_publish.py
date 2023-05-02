@@ -306,7 +306,7 @@ def validate_update_command_component(
 
     env = None
     # Check if component's env exists
-    final_version = version + "-" + version_suffix if version_suffix else version
+    final_version = env_version + "-" + version_suffix if version_suffix else env_version
     for version in [env_version, final_version]:
         if (env := get_asset_details(
             assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name
