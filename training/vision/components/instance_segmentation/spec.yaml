@@ -4,8 +4,8 @@ type: command
 description: Trains an instance segmentation model. [Learn More](https://aka.ms/built-in-vision-components)
 
 name: train_instance_segmentation_model
-display_name: Train Instance Segmentation Model (Private Preview)
-version: 0.0.3
+display_name: Image Instance Segmentation AutoML
+version: 0.0.4
 
 is_deterministic: false
 
@@ -220,7 +220,7 @@ outputs:
 
 code: ../src
  
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:110
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:115
 
 command: >-
   python -m instance_segmentation.run
