@@ -5,7 +5,7 @@
 
 import os
 import torch
-from ruamel.yaml import YAML
+import yaml
 
 from .config import MODEL_FILE_PATTERN
 from azureml.evaluate import mlflow as hf_mlflow
@@ -69,10 +69,8 @@ def _add_mlflow_signature(mlflow_model_path: Path, signature):
     mlmodel_path = mlflow_model_path / "MLmodel"
     updated_yaml_dict = {}
     # read YAML file
-    yaml = YAML()
-    yaml.preserve_quotes = True
     with open(mlmodel_path, "r") as f:
-        yaml_dict = yaml.load(f)
+        yaml_dict = yaml.safe_load(f)
         updated_yaml_dict.update(yaml_dict)
         updated_yaml_dict["signature"] = signature
     # save updated values to MLModel file
@@ -120,18 +118,16 @@ def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_co
     if not model:
         model = StableDiffusionPipeline.from_pretrained(input_dir, local_files_only=True, torch_dtype=torch.float16)
 
-    predict = os.path.join(os.path.dirname(__file__), "diffusion", "predict.py")
-    hf_conf["hf_predict_module"] = "predict"
     hf_conf['custom_config_module'] = "diffusers"
     hf_conf['custom_tokenizer_module'] = "diffusers"
     hf_conf['custom_model_module'] = "diffusers"
     hf_conf['force_load_tokenizer'] = False
     hf_conf['force_load_config'] = False
+
     return {
         "hf_model": model,
         "hf_conf": hf_conf,
         "path": output_dir,
-        "code_paths": [predict],
     }
 
 
@@ -183,6 +179,7 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     task = translate_params['task']
     task_category = task
     if "stable-diffusion" in model_id:
+        # TODO: check using tags for SD models
         task_category = SupportedTextToImageVariants.STABLE_DIFFUSION.value
     elif "whisper" in model_id:
         task_category = SupportedASRVariants.WHISPER_ASR.value

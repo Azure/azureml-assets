@@ -12,9 +12,8 @@ dependencies:
   - captum
   - cpuonly
   - pip:
-    - numpy==1.21.6
-    - responsibleai~=0.26.0
-    - raiwidgets~=0.26.0
+    - responsibleai~=0.27.0
+    - raiwidgets~=0.27.0
     # Required since azureml-automl-dnn-vision uses a fig.save_fig method with
     # some parameters such as quality=100, optimizer=True, progressive=True which are only
     # supported until matplotlib 3.5.3. There is a fix in dnn-vision which will be rolled out soon
@@ -24,7 +23,9 @@ dependencies:
     - mlflow
     - markupsafe<2.1.0
     - itsdangerous==2.0.1
-    - https://publictestdatasets.blob.core.windows.net/packages/pypi/responsibleai-vision/responsibleai_vision-0.0.25-py3-none-any.whl
+    - vision_explanation_methods
+    - ml_wrappers
+    - responsibleai-vision==0.1.0
     - opencv-python==4.3.0.36
     - click<8.0.0
     - mltable==1.0.0

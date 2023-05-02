@@ -13,15 +13,15 @@ dependencies:
   - captum
   - cpuonly
   - pip:
-    - numpy==1.21.6
-    - responsibleai~=0.26.0
-    - raiwidgets~=0.26.0
+    - numpy==1.22.0
+    - responsibleai~=0.27.0
+    - raiwidgets~=0.27.0
     - pyarrow
     - azure-core==1.25.1
     - mlflow
     - markupsafe<2.1.0
     - itsdangerous==2.0.1
-    - responsibleai-text==0.0.1
+    - responsibleai-text==0.1.1
     - click<8.0.0
     - mltable==1.0.0
     - transformers>=4.17.0

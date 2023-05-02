@@ -7,7 +7,7 @@ import argparse
 import json
 import os
 import shutil
-from ruamel.yaml import YAML
+import yaml
 
 from azure.ai.ml import MLClient
 from azure.ai.ml.constants import AssetTypes
@@ -25,9 +25,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     # add arguments
-    parser.add_argument(
-        "--model_path", type=str, help="Directory containing model files"
-    )
+    parser.add_argument("--model_path", type=str, help="Directory containing model files")
     parser.add_argument(
         "--model_type",
         type=str,
@@ -59,13 +57,13 @@ def parse_args():
     parser.add_argument(
         "--model_download_metadata",
         type=str,
-        help="Json file containing metadata related to the downloaded model",
+        help="JSON file containing metadata related to the downloaded model",
         default=None,
     )
     parser.add_argument(
         "--model_metadata",
         type=str,
-        help="YAML file that contains model metadata confirming to Model V2",
+        help="JSON/YAML file that contains model metadata confirming to Model V2",
         default=None,
     )
     parser.add_argument(
@@ -152,7 +150,7 @@ def main(args):
     # Updating tags and properties with value provided in metadata file
     if args.model_metadata:
         with open(args.model_metadata, "r") as stream:
-            metadata = json.load(stream)
+            metadata = yaml.safe_load(stream)
             tags.update(metadata.get("tags", {}))
             properties.update(metadata.get("properties", {}))
             model_description = metadata.get("description", model_description)
@@ -172,7 +170,7 @@ def main(args):
         model_path = "mlflow_model_folder"
         mlmodel_path = os.path.join(model_path, "MLmodel")
         with open(mlmodel_path, "r") as stream:
-            metadata = YAML().load(stream)
+            metadata = yaml.safe_load(stream)
             flavors = metadata.get('flavors', flavors)
 
     if not model_version or is_model_available(ml_client, model_name, model_version):

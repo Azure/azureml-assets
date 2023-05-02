@@ -33,9 +33,7 @@ def parse_args():
         type=str,
         help="Name of the endpoint",
     )
-    parser.add_argument(
-        "--deployment_name", type=str, help="Name of the the deployment"
-    )
+    parser.add_argument("--deployment_name", type=str, help="Name of the the deployment")
     parser.add_argument(
         "--instance_type",
         type=str,

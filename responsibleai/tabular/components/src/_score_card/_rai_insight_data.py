@@ -1,19 +1,20 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import os
-import pandas as pd
 import json
-import sklearn.metrics as skm
-import numpy as np
-
+import os
 from collections import OrderedDict
-from erroranalysis._internal.metrics import metric_to_func, metric_to_task
-from erroranalysis._internal.cohort_filter import filter_from_cohort
-from fairlearn.metrics import selection_rate, MetricFrame
-from responsibleai import RAIInsights
 from datetime import datetime
+
+import numpy as np
+import pandas as pd
+import sklearn.metrics as skm
+from erroranalysis._internal.cohort_filter import filter_from_cohort
+from erroranalysis._internal.metrics import metric_to_func, metric_to_task
+from fairlearn.metrics import MetricFrame, selection_rate
 from raiutils.exceptions import UserConfigValidationException
+
+from responsibleai import RAIInsights
 
 
 def false_positive(y_test, y_pred, labels):
@@ -91,10 +92,8 @@ class RaiInsightData:
         self._set_json_paths()
 
         test_data = self.raiinsight.test.drop(columns=self.raiinsight.target_column)
-        if (
-            self.raiinsight._feature_metadata is not None
-            and self.raiinsight._feature_metadata.dropped_features is not None
-        ):
+        if self.raiinsight._feature_metadata is not None and \
+                self.raiinsight._feature_metadata.dropped_features is not None:
             test_data = test_data.drop(
                 self.raiinsight._feature_metadata.dropped_features, axis=1
             )
@@ -315,7 +314,7 @@ class PdfDataGen:
     def validate_valid_metric_for_task_type(self):
         for metric in self.metrics:
             if metric in metric_task_map and metric_task_map[metric].lower() != self.tasktype:
-                raise ValueError(
+                raise UserConfigValidationException(
                     f"Metric {metric} is not compatible with specified task type {self.tasktype}"
                 )
 
@@ -537,7 +536,7 @@ class PdfDataGen:
             ]
 
             si_index = 0
-            for k, v in feature_statistics.items():
+            for k, _ in feature_statistics.items():
                 filtermap = self.data.get_test()[sensitive_feature] == k
                 cohort_data = self.data.get_cohort_data(filtermap)
                 cohort_data["short_label"] = short_labels[si_index]
@@ -581,9 +580,9 @@ class PdfDataGen:
                 "false_positive",
             ]
 
-            for m in report_metrics:
-                return_data["metrics"][m] = get_metric(
-                    m, y_test, y_pred, **self.get_metric_kwargs()
+            for metric in report_metrics:
+                return_data["metrics"][metric] = get_metric(
+                    metric, y_test, y_pred, **self.get_metric_kwargs()
                 )
 
         return_data["user_requested_metrics"] = self.config["Metrics"]
@@ -612,8 +611,7 @@ class PdfDataGen:
                                 filtered_dataset["y_pred"],
                                 **self.get_metric_kwargs(),
                             ),
-                            "population": len(filtered_dataset["y_pred"])
-                            / len(self.data.get_y_test()),
+                            "population": len(filtered_dataset["y_pred"]) / len(self.data.get_y_test()),
                         }
                         if "threshold" in self.config["Metrics"][metric]:
                             cd["threshold"] = self.config["Metrics"][metric]["threshold"][1]
@@ -640,8 +638,7 @@ class PdfDataGen:
                                 else "All Data",
                                 "short_label": short_labels[index],
                                 metric: treemap[node["id"]]["metricValue"],
-                                "population": treemap[node["id"]]["size"]
-                                / len(self.data.get_y_test()),
+                                "population": treemap[node["id"]]["size"] / len(self.data.get_y_test()),
                             }
                             if "threshold" in self.config["Metrics"][metric]:
                                 cd["threshold"] = self.config["Metrics"][metric][

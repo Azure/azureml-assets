@@ -18,7 +18,8 @@ RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-core=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
-                'azureml-rai-utils==0.0.2'
+                'azureml-rai-utils==0.0.2' \
+                'Werkzeug==2.2.3'
 
 RUN pip freeze
 

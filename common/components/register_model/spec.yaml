@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: register_model
-version: 0.0.1
+version: 0.0.2
 type: command
 
 is_deterministic: True
@@ -68,7 +68,7 @@ inputs:
   model_metadata:
     type: uri_file
     optional: true
-    description: YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
+    description: JSON/YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
   
   model_import_job_path :
     type: uri_file
@@ -79,3 +79,6 @@ outputs:
   registration_details:
     type: uri_file
     description: JSON file into which model registration details will be written
+
+tags:
+    Preview: ""
