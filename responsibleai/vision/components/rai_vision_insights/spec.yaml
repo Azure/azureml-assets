@@ -1,20 +1,21 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
-name: rai_vision_insights
+name: microsoft_azureml_rai_vision_insights
 display_name: RAI Vision Insights
-version: 0.0.2.preview
+version: 0.0.3.preview
 type: command
 inputs:
   task_type:
     type: string
-    enum: ['image_classification', 'multilabel_image_classification']
+    enum: ['image_classification', 'multilabel_image_classification', 'object_detection']
+  data_folder:
+    type: string 
+    optional: true
   model_input: # mlflow model name:version
     type: mlflow_model
     optional: false
   model_info:
     type: string # model name:version
     optional: false
-  train_dataset:
-    type: mltable
   test_dataset:
     type: mltable
   target_column_name:
@@ -28,12 +29,18 @@ inputs:
   precompute_explanation:
     type: boolean
     default: True
+  enable_error_analysis:
+    type: boolean
+    default: True
   use_model_dependency:
+    type: boolean
+    default: False
+  use_conda:
     type: boolean
     default: False
   model_type:
     type: string
-    enum: ['pyfunc', 'fastai']
+    enum: ['pyfunc', 'fastai', 'pytorch']
   # guided_gradcam doesn't work with transformer vision models
   # and shap isn't supported for automl images models
   # for more details on XAI parameters, refer to following link
@@ -41,7 +48,7 @@ inputs:
   xai_algorithm:
     type: string
     enum: ['guided_backprop', 'guided_gradcam', 'integrated_gradients', 'xrai', 'shap']
-    default: 'guided_gradcam'
+    default: 'guided_backprop'
     optional: true
   n_steps:
     type: integer
@@ -66,20 +73,22 @@ outputs:
   ux_json:
     type: path
 code: ../src
-environment: azureml://registries/azureml/environments/responsibleai-vision-ubuntu20.04-py38-cpu/versions/10
+environment: azureml://registries/azureml/environments/responsibleai-vision-ubuntu20.04-py38-cpu/versions/16
 command: >-
   python ./rai_vision_insights.py
   --task_type ${{inputs.task_type}}
+  $[[--data_folder ${{inputs.data_folder}}]]
   --model_input '${{inputs.model_input}}'
   --model_info '${{inputs.model_info}}'
-  --train_dataset ${{inputs.train_dataset}}
   --test_dataset ${{inputs.test_dataset}}
   --dataset_type ${{inputs.dataset_type}}
   --target_column_name '${{inputs.target_column_name}}'
   --maximum_rows_for_test_dataset ${{inputs.maximum_rows_for_test_dataset}}
   --classes '${{inputs.classes}}'
   --precompute_explanation ${{inputs.precompute_explanation}}
+  --enable_error_analysis ${{inputs.enable_error_analysis}}
   --use_model_dependency ${{inputs.use_model_dependency}}
+  --use_conda ${{inputs.use_conda}}
   --model_type ${{inputs.model_type}}
   $[[--xai_algorithm ${{inputs.xai_algorithm}}]]
   $[[--n_steps ${{inputs.n_steps}}]]
