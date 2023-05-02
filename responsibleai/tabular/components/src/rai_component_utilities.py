@@ -129,10 +129,10 @@ def load_mlflow_model(
 
 def _classify_and_log_pip_install_error(elog):
     if elog is not None:
-        if "Could not find a version that satisfies the requirement" in elog:
+        if b"Could not find a version that satisfies the requirement" in elog:
             _logger.warning("Detected unsatisfiable version requirment.")
 
-        if "package versions have conflicting dependencies" in elog:
+        if b"package versions have conflicting dependencies" in elog:
             _logger.warning("Detected dependency conflict error.")
 
 
