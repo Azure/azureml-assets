@@ -95,7 +95,7 @@ outputs:
 
 jobs:
   download_model:
-    component: azureml:download_model:0.0.2
+    component: azureml:download_model:0.0.3
     compute: ${{parent.inputs.compute}}
     inputs:
       model_source: ${{parent.inputs.model_source}}
@@ -107,7 +107,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.2
+    component: azureml:convert_model_to_mlflow:0.0.3
     compute: ${{parent.inputs.compute}}
     inputs:
       task_name: ${{parent.inputs.task_name}}
