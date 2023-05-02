@@ -121,3 +121,9 @@ class ExceptionTypes:
     Service = "Service"
     Unclassified = "Unclassified"
     All = {User, System, Service, Unclassified}
+
+
+ALLOWED_PIPELINE_PARAMS = set([
+    "tokenizer_config",
+    "model_kwargs"
+])

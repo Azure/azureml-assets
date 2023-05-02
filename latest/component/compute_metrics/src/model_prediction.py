@@ -16,7 +16,8 @@ from itertools import repeat
 
 from exceptions import (ModelEvaluationException,
                         ModelValidationException,
-                        DataLoaderException)
+                        DataLoaderException,
+                        PredictException)
 from logging_utilities import custom_dimensions, get_logger, log_traceback
 from azureml.telemetry.activity import log_activity
 from utils import (setup_model_dependencies,
@@ -24,7 +25,8 @@ from utils import (setup_model_dependencies,
                    get_predictor,
                    read_data,
                    read_config,
-                   prepare_data)
+                   prepare_data,
+                   filter_pipeline_params)
 from run_utils import TestRun
 from validation import _validate, validate_args
 
@@ -150,18 +152,38 @@ class Inferencer:
             predictor = predictor_cls(self.model)
             device = self.device  # torch.cuda.current_device() if torch.cuda.is_available() else "cpu"
             pred_probas_chunk = None
-            if self.task == constants.TASK.TRANSLATION:
-                source_lang = self.metrics_config.get("source_lang", None)
-                target_lang = self.metrics_config.get("target_lang", None)
-                predictions_chunk = predictor.predict(X_test, device=device,
-                                                      y_transformer=y_transformer, multilabel=self.multilabel,
-                                                      source_lang=source_lang, target_lang=target_lang)
-            else:
-                predictions_chunk = predictor.predict(X_test, device=device,
-                                                      y_transformer=y_transformer, multilabel=self.multilabel)
-            if self.task in constants.CLASSIFICATION_SET:
-                pred_probas_chunk = predictor.predict_proba(X_test, device=device,
-                                                            y_transformer=y_transformer, multilabel=self.multilabel)
+            pipeline_params = filter_pipeline_params(self.metrics_config)
+            torch_error_message = "Model prediction Failed.\nPossible Reason:\n"\
+                                  "1. Your input text exceeds max length of model.\n"\
+                                  "\t\tYou can either keep truncation=True in tokenizer while logging model.\n"\
+                                  "\t\tOr you can pass tokenizer_config in evaluation_config.\n"\
+                                  "2. Your tokenizer's vocab size doesn't match with model's vocab size.\n"\
+                                  "\t\tTo fix this check your model/tokenizer config.\n"\
+                                  "3. If it is Cuda Assertion Error, check your test data."\
+                                  "Whether that input can be passed directly to model or not."
+            try:
+                if self.task == constants.TASK.TRANSLATION:
+                    source_lang = self.metrics_config.get("source_lang", None)
+                    target_lang = self.metrics_config.get("target_lang", None)
+                    predictions_chunk = predictor.predict(X_test, device=device,
+                                                          y_transformer=y_transformer, multilabel=self.multilabel,
+                                                          source_lang=source_lang, target_lang=target_lang)
+                else:
+                    predictions_chunk = predictor.predict(X_test, device=device,
+                                                          y_transformer=y_transformer,
+                                                          multilabel=self.multilabel,
+                                                          **pipeline_params)
+                if self.task in constants.CLASSIFICATION_SET:
+                    pred_probas_chunk = predictor.predict_proba(X_test, device=device,
+                                                                y_transformer=y_transformer,
+                                                                multilabel=self.multilabel,
+                                                                **pipeline_params)
+            except IndexError as e:
+                raise PredictException(exception_message=torch_error_message,
+                                       inner_exception=e)
+            except RuntimeError as e:
+                raise PredictException(exception_message=torch_error_message,
+                                       inner_exception=e)
             if not isinstance(predictions_chunk, pd.DataFrame):
                 predictions_df = pd.DataFrame()
                 predictions_df["predictions"] = predictions_chunk
@@ -216,6 +238,7 @@ def test_model():
     parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default=None)
 
     args = parser.parse_args()
+    # print(args)
     custom_dimensions.app_name = constants.TelemetryConstants.MODEL_PREDICTION_NAME
     custom_dims_dict = vars(custom_dimensions)
     with log_activity(logger, constants.TelemetryConstants.MODEL_PREDICTION_NAME, custom_dimensions=custom_dims_dict):
