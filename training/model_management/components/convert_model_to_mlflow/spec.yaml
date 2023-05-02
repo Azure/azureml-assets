@@ -36,7 +36,7 @@ inputs:
       - mmlab_pyfunc
     default: transformers
     optional: false
-    description: Mlflow flavor to convert model into.
+    description: Mlflow flavor to convert model into. Please note that, mmlab_pyfunc flavor is only supported for image object detection models.
 
   task_name:
     type: string
