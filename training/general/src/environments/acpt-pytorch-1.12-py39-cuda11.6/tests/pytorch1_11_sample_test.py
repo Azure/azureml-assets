@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests running a sample job in the pytorch 1.11 environment."""
+"""Tests running a sample job in the pytorch 1.12 environment."""
 import os
 import time
 from pathlib import Path
@@ -16,8 +16,8 @@ TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
-def test_pytorch_1_11():
-    """Tests a sample job using pytorch 1.11 as the environment."""
+def test_pytorch_1_12():
+    """Tests a sample job using pytorch 1.12 as the environment."""
     this_dir = Path(__file__).parent
 
     subscription_id = os.environ.get("subscription_id")
@@ -28,12 +28,12 @@ def test_pytorch_1_11():
         AzureCliCredential(), subscription_id, resource_group, workspace_name
     )
 
-    env_name = "acpt-pytorch-1_11-cuda11_3"
+    env_name = "acpt-pytorch-1_12-py39-cuda11_6"
 
     env_docker_context = Environment(
         build=BuildContext(path=this_dir / BUILD_CONTEXT),
         name=env_name,
-        description="Pytorch 1.11 environment created from a Docker context.",
+        description="Pytorch 1.12 environment created from a Docker context.",
     )
     ml_client.environments.create_or_update(env_docker_context)
 
@@ -59,7 +59,7 @@ def test_pytorch_1_11():
         compute=os.environ.get("gpu_v100_cluster"),
         display_name="bert-pretrain-GLUE",
         description="Pretrain the BERT model on the GLUE dataset.",
-        experiment_name="pytorch111_Cuda113_Experiment",
+        experiment_name="pytorch112_py39_Cuda116_Experiment",
         distribution=PyTorchDistribution(process_count_per_instance=1),
         resources=JobResourceConfiguration(instance_count=2, shm_size='3100m'),
     )
