@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
         _validate_transformers_args(preprocess_args)
-    elif mlflow_flavor == ModelFlavor.PYFUNC.value:
+    elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         _validate_pyfunc_args(preprocess_args)
 
     run_preprocess(mlflow_flavor, model_path, mlflow_model_output_dir, **preprocess_args)

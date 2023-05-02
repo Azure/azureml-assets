@@ -33,7 +33,7 @@ inputs:
     type: string
     enum:
       - transformers
-      - pyfunc
+      - mmlab_pyfunc
     default: transformers
     optional: false
     description: Mlflow flavor to convert model into.

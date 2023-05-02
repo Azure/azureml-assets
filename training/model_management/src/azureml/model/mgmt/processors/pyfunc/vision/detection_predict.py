@@ -173,13 +173,13 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
                     cur_image_preds[ODLiterals.BOXES].append(
                         {
                             ODLiterals.BOX: {
-                                ODLiterals.TOP_X: str(bbox[0]),
-                                ODLiterals.TOP_Y: str(bbox[1]),
-                                ODLiterals.BOTTOM_X: str(bbox[2]),
-                                ODLiterals.BOTTOM_Y: str(bbox[3]),
+                                ODLiterals.TOP_X: float(bbox[0]),
+                                ODLiterals.TOP_Y: float(bbox[1]),
+                                ODLiterals.BOTTOM_X: float(bbox[2]),
+                                ODLiterals.BOTTOM_Y: float(bbox[3]),
                             },
                             ODLiterals.LABEL: self._model.CLASSES[label],
-                            ODLiterals.SCORE: str(bbox[4]),
+                            ODLiterals.SCORE: float(bbox[4]),
                         }
                     )
                 predictions.append(cur_image_preds)
