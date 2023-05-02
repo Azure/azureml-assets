@@ -105,10 +105,10 @@ if __name__ == "__main__":
 
     # Custom HuggingFace trainer callback used for starting/stopping the pytorch profiler
     class ProfilerCallback(TrainerCallback):
-        """A class for Pytorch Profiling of the training."""
+        """Profile training performance."""
 
         def on_train_begin(self, args, state, control, model=None, **kwargs):
-            """Executes the training starts."""
+            """Execute when the training starts."""
             self.prof = profiler.profile(
                 schedule=profiler.schedule(wait=2, warmup=1, active=3, repeat=2),
                 activities=[profiler.ProfilerActivity.CPU, profiler.ProfilerActivity.CUDA],
@@ -120,11 +120,11 @@ if __name__ == "__main__":
             self.prof.start()
 
         def on_train_end(self, args, state, control, model=None, **kwargs):
-            """Executes the training ends."""
+            """Execute when the training ends."""
             self.prof.stop()
 
         def on_step_begin(self, args, state, control, model=None, **kwargs):
-            """Executes when a training step starts."""
+            """Execute when a training step starts."""
             self.prof.step()
 
     # Initialize huggingface trainer. This trainer will internally execute the training loop
