@@ -3,11 +3,11 @@ name: assets-docs
 on:
   push:
     branches:
-      - release
-    paths-ignore:
-      - .github/**
-  schedule:
-    - cron: '30 8 * * *'
+      - generate-docs
+  #   paths-ignore:
+  #     - .github/**
+  # schedule:
+  #   - cron: '30 6 * * *'
   workflow_dispatch:
 
 concurrency: ${{ github.workflow }}
@@ -31,7 +31,7 @@ defaults:
 jobs:
   release-assets:
     name: Update documentation
-    if: github.ref == 'refs/heads/main'
+    # if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     
     steps:
