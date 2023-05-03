@@ -54,7 +54,7 @@ def parse_assets(input_dirs: List[Path],
         doc.add_horizontal_rule()
 
         # alphabetize references
-        references[asset_type].sort()
+        references[asset_type].sort(key=lambda x: x[0].lower())
 
         asset_links_list = []
         for asset_name, asset_file_name in references[asset_type]:
