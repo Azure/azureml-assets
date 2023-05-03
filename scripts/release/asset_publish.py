@@ -554,7 +554,7 @@ if __name__ == "__main__":
                 )
 
                 if get_asset_details(asset.type.value, asset.name, asset.version, registry_name):
-                    logger.print(f"{asset.name} {final_version} already exists, skipping")
+                    logger.print(f"{asset.name} {asset.version} already exists, skipping")
                     continue
 
                 # Handle specific asset types
