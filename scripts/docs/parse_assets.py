@@ -53,6 +53,9 @@ def parse_assets(input_dirs: List[Path],
 
         doc.add_horizontal_rule()
 
+        # alphabetize references
+        references[asset_type].sort()
+
         asset_links_list = []
         for asset_name, asset_file_name in references[asset_type]:
             asset_links_list.append(snakemd.Paragraph(asset_name).insert_link(asset_name, asset_file_name))

@@ -43,52 +43,57 @@ def add_intro(doc, asset):
     """Add information like asset name and description to asset doc."""
     doc.add_heading(asset['display_name'] if "display_name" in asset else asset["name"], level=2)
 
-    doc.add_heading("README file ", level=3)
+    doc.add_heading("Name", level=3)
+    doc.add_paragraph(asset["name"])
 
-    doc.add_heading("Overview ", level=3)
+    if "version" in asset:
+        doc.add_heading("Version", level=3)
+        doc.add_paragraph(str(asset['version']))
+
+    if "type" in asset:
+        doc.add_heading("Type", level=3)
+        doc.add_paragraph(asset['type'])
 
     if "description" in asset:
-        doc.add_paragraph("**Description**: " + str(asset['description']))
-    if "version" in asset:
-        doc.add_paragraph("**Version**: " + str(asset['version']))
-    if "type" in asset:
-        doc.add_paragraph("**Type**: " + asset['type'])
+        doc.add_heading("Description ", level=3)
+        doc.add_paragraph(str(asset['description']))
+
+    if "environment" in asset:
+        doc.add_heading("Environment ", level=3)
+        doc.add_paragraph(asset['environment'])
+
     if "tags" in asset and "license" in asset["tags"]:
         doc.add_paragraph("**License**: " + asset["tags"]["license"])
 
-    doc.add_heading("YAML Syntax ", level=3)
+    # doc.add_heading("YAML Syntax ", level=3)
 
-    if "type" in asset and asset["type"] == "automl":
-        doc.add_paragraph("**Task**: " + asset["task"] if "task" in asset else "")
+    # if "type" in asset and asset["type"] == "automl":
+    #     doc.add_paragraph("**Task**: " + asset["task"] if "task" in asset else "")
 
-    if "properties" in asset:
-        doc.add_heading("Properties", level=4)
-        if "SHA" in asset["properties"]:
-            doc.add_paragraph("**SHA**: " + asset["properties"]["SHA"])
-        if "datasets" in asset["properties"]:
-            doc.add_paragraph("**Datasets**: " + asset["properties"]["datasets"])
-        if "finetuning-tasks" in asset["properties"]:
-            doc.add_paragraph("**Finetuning Tasks**: " + asset["properties"]["finetuning-tasks"])
-        if "languages" in asset["properties"]:
-            doc.add_paragraph("**Languages**: " + asset["properties"]["languages"])
+    # if "properties" in asset:
+    #     doc.add_heading("Properties", level=4)
+    #     if "SHA" in asset["properties"]:
+    #         doc.add_paragraph("**SHA**: " + asset["properties"]["SHA"])
+    #     if "datasets" in asset["properties"]:
+    #         doc.add_paragraph("**Datasets**: " + asset["properties"]["datasets"])
+    #     if "finetuning-tasks" in asset["properties"]:
+    #         doc.add_paragraph("**Finetuning Tasks**: " + asset["properties"]["finetuning-tasks"])
+    #     if "languages" in asset["properties"]:
+    #         doc.add_paragraph("**Languages**: " + asset["properties"]["languages"])
 
     return doc
 
 
 def add_additional_details(doc, asset):
     """Add information like parameters and compute specifications to asset doc."""
-    doc.add_heading("Parameters ", level=3)
-
-    doc.add_heading("Code", level=3)
+    # doc.add_heading("Parameters ", level=3)
+    
     if "type" in asset and asset["type"] == "command" and "code" in asset:
+        doc.add_heading("Code", level=3)
         doc.add_paragraph(asset['code'])
 
-    doc.add_heading("Environment ", level=3)
-    doc.add_paragraph(asset['environment'] if "environment" in asset else "")
-
-    doc.add_heading("Compute Specifications ", level=3)
-
     if "tags" in asset and "min_inference_sku" in asset["tags"]:
+        doc.add_heading("Compute Specifications ", level=3)
         doc.add_paragraph(asset['tags']['min_inference_sku'])
 
     return doc
@@ -174,9 +179,10 @@ def insert_comments_under_input(doc, data):
 
 def add_inputs(doc, asset):
     """Generate inputs table for the asset doc."""
-    doc.add_heading("Inputs ", level=2)
 
     if "inputs" in asset:
+        doc.add_heading("Inputs ", level=2)
+
         headers = ['Name', 'Description', 'Type', 'Default', 'Optional', 'Enum']
         rows = []
         if asset.ca.items.get('inputs') is not None:
@@ -206,9 +212,10 @@ def add_inputs(doc, asset):
 
 def add_outputs(doc, asset):
     """Generate an outputs table for the asset doc."""
-    doc.add_heading("Outputs ", level=2)
 
     if "outputs" in asset:
+        doc.add_heading("Outputs ", level=2)
+        
         headers = ['Name', 'Description', 'Type']
         rows = []
         if asset.ca.items.get('outputs') is not None:
