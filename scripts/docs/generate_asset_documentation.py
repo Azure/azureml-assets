@@ -6,7 +6,6 @@ from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 import snakemd
 import re
-import os
 from pathlib import Path
 
 
