@@ -1,5 +1,5 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
-name: microsoft_azureml_rai_vision_insights
+name: rai_vision_insights
 display_name: RAI Vision Insights
 version: 0.0.3.preview
 type: command
@@ -73,7 +73,7 @@ outputs:
   ux_json:
     type: path
 code: ../src
-environment: azureml://registries/azureml/environments/responsibleai-vision-ubuntu20.04-py38-cpu/versions/16
+environment: azureml://registries/azureml/environments/responsibleai-vision-ubuntu20.04-py38-cpu/versions/17
 command: >-
   python ./rai_vision_insights.py
   --task_type ${{inputs.task_type}}
