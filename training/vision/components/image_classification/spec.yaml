@@ -1,10 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-description: Trains an image classification model. [Learn More](https://aka.ms/built-in-vision-components)
+description: Component to finetune AutoML legacy models for image classification.
 
 name: train_image_classification_model
-display_name: Image Classification AutoML
+display_name: Image Classification AutoML Legacy Model Finetune
 version: 0.0.4
 
 is_deterministic: false

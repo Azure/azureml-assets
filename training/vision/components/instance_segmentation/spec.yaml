@@ -1,10 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-description: Trains an instance segmentation model. [Learn More](https://aka.ms/built-in-vision-components)
+description: Component to finetune AutoML legacy models for instance segmentation.
 
 name: train_instance_segmentation_model
-display_name: Image Instance Segmentation AutoML
+display_name: Image Instance Segmentation AutoML Legacy Model Finetune
 version: 0.0.4
 
 is_deterministic: false
