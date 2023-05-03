@@ -7,6 +7,7 @@ from ruamel.yaml.comments import CommentedMap, CommentedSeq
 import snakemd
 import re
 import os
+from pathlib import Path
 
 
 def create_asset_doc(spec_file_name, asset_type):
