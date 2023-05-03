@@ -9,11 +9,6 @@ on:
   schedule:
     - cron: '30 8 * * *'
   workflow_dispatch:
-    inputs:
-      asset_dirs:
-        description: Asset directories
-        default: .,!test,!scripts
-        required: true
 
 concurrency: ${{ github.workflow }}
 
