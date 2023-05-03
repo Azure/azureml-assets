@@ -16,7 +16,7 @@ def create_asset_doc(spec_file_name, asset_type):
     with open(spec_file_name, 'r') as f:
         asset = yaml.load(f)
 
-    asset_type = str(asset_type).replace("AssetType.", "").lower()
+    asset_type = asset_type.value
 
     # create asset document and add info
     doc = snakemd.new_doc()
