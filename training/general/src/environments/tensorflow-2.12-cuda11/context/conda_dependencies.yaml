@@ -1,7 +1,7 @@
 name: tensorflow-2.12-cuda11
 channels:
-- anaconda
 - conda-forge
+- anaconda
 dependencies:
 - python=3.8
 - pip=21.1

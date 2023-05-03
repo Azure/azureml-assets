@@ -1,7 +1,7 @@
 name: tensorflow-2.11-cuda11
 channels:
-- anaconda
 - conda-forge
+- anaconda
 dependencies:
 - python=3.8
 - pip=21.1
@@ -22,6 +22,6 @@ dependencies:
   - tensorflow-gpu~=2.11.0
   - tensorflow-datasets~=4.5.0
   - onnxruntime-gpu~=1.9.0
-  - protobuf~=4.22.0
+  - protobuf~=3.19.0
   - horovod[tensorflow-gpu]
   - debugpy~=1.6.3
