@@ -31,7 +31,7 @@ def create_asset_doc(spec_file_name, asset_type):
     asset_type_dir.mkdir(exist_ok=True)
 
     asset_file_name = f"{asset_type}-{asset['name']}"
-    full_asset_file_name = asset_type_dir / "{asset_file_name}.md"
+    full_asset_file_name = f"{asset_type_dir}/{asset_file_name}.md"
 
     # write the file into the asset folder
     with open(full_asset_file_name, 'w') as f:
