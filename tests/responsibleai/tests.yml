@@ -21,7 +21,7 @@ text_rai_insight:
       pre: "./text/jobs/prepare.py"
       job: "./text/jobs/pipeline_dbpedia_analyze.yml"
       assets:
-      - microsoft_azureml_rai_text_insights
+      - rai_text_insights
 vision_rai_insight:
   includes:
   - "./vision/jobs/"
@@ -30,4 +30,4 @@ vision_rai_insight:
       pre: "./vision/jobs/prepare.py"
       job: "./vision/jobs/pipeline_fridge_analyze.yml"
       assets:
-      - microsoft_azureml_rai_vision_insights
+      - rai_vision_insights

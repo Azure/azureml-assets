@@ -17,7 +17,7 @@ compute: azureml:cpu-cluster
 jobs:
   analyse_model:
     type: command
-    component: microsoft_azureml_rai_vision_insights
+    component: rai_vision_insights
     limits:
       timeout: 120
     inputs:
