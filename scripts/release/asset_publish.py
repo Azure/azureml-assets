@@ -553,6 +553,10 @@ if __name__ == "__main__":
                     version=final_version,
                 )
 
+                if get_asset_details(asset.type.value, asset.name, asset.version, registry_name):
+                    logger.print(f"{asset.name} {final_version} already exists, skipping")
+                    continue
+
                 # Handle specific asset types
                 if asset.type == assets.AssetType.COMPONENT:
                     # load component and check if environment exists
@@ -570,11 +574,6 @@ if __name__ == "__main__":
                             failure_list.append(asset)
                             continue
                 elif asset.type == assets.AssetType.MODEL:
-                    # Check if model already exists
-                    final_version = asset.version
-                    if get_asset_details(asset.type.value, asset.name, final_version, registry_name):
-                        logger.print(f"{asset.name} {final_version} already exists, skipping")
-                        continue
                     try:
                         model_config = asset.extra_config_as_object()
                         if not prepare_model(model_config, asset.spec_with_path, Path(work_dir)):
