@@ -141,6 +141,8 @@ def _get_whisper_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict 
     processor = WhisperProcessor.from_pretrained(input_dir, padding=True, truncation=True, local_files_only=True)
 
     predict = os.path.join(os.path.dirname(__file__), "whisper", "predict.py")
+    conda_file_path = os.path.join(os.path.dirname(__file__), "whisper", "conda.yaml")
+    conda_env = yaml.safe_load(conda_file_path)
     hf_conf["hf_predict_module"] = "predict"
     return {
         "hf_model": str(model_dir),
@@ -149,6 +151,7 @@ def _get_whisper_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict 
         "path": output_dir,
         "hf_conf": hf_conf,
         "code_paths": [predict],
+        "conda_env": conda_env,
     }
 
 
