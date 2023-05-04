@@ -35,6 +35,8 @@ class EvaluatorFactory:
             TASK.QnA: QnAEvaluator,
             TASK.FILL_MASK: FillMaskEvaluator,
             TASK.TEXT_GENERATION: TextGenerationEvaluator,
+            TASK.IMAGE_CLASSIFICATION: ClassifierEvaluator,
+            TASK.IMAGE_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
         }
 
     def get_evaluator(self, task_type, metrics_config=None):

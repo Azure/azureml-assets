@@ -35,6 +35,8 @@ class TASK:
     TRANSLATION = "text-translation"
     TEXT_GENERATION = "text-generation"
     FILL_MASK = "fill-mask"
+    IMAGE_CLASSIFICATION = "image-classification"
+    IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
 
 
 ALL_TASKS = [
@@ -49,7 +51,9 @@ ALL_TASKS = [
     TASK.QnA,
     TASK.TRANSLATION,
     TASK.FILL_MASK,
-    TASK.TEXT_GENERATION
+    TASK.TEXT_GENERATION,
+    TASK.IMAGE_CLASSIFICATION,
+    TASK.IMAGE_CLASSIFICATION_MULTILABEL
 ]
 
 CLASSIFICATION_SET = [
