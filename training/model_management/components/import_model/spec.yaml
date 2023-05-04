@@ -99,7 +99,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.3
+    component: azureml:convert_model_to_mlflow:0.0.4
     compute: ${{parent.inputs.compute}}
     inputs:
       task_name: ${{parent.inputs.task_name}}
