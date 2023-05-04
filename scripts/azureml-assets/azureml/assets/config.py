@@ -744,6 +744,7 @@ class AssetConfig(Config):
             enabled: true
             pip_requirements: tests/requirements.txt
             tests_dir: tests
+        categories: ["PyTorch", "Python 3.9"] # List of categories
     """
 
     def __init__(self, file_name: Path):
