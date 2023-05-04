@@ -46,7 +46,7 @@ class BasePredictor(ABC):
                     elif isinstance(X_test, pd.DataFrame) and len(X_test.columns) == 1:
                         X_test.columns = input_names
                     elif isinstance(X_test, dict) and len(X_test.keys()) == 1:
-                        key = X_test.keys()[0]
+                        key = list(X_test.keys())[0]
                         X_test[input_names[0]] = X_test[key]
                         X_test.pop(key)
 
