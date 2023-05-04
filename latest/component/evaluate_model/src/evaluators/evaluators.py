@@ -119,7 +119,7 @@ class ClassifierEvaluator(Evaluator):
         """
         super().__init__(task_type, metrics_config)
 
-    def evaluate(self, y_test, y_pred, y_pred_proba=None):
+    def evaluate(self, y_test, y_pred, y_pred_proba=None, **kwargs):
         """Evaluate classification.
 
         Args:
@@ -154,7 +154,7 @@ class TextClassifierEvaluator(Evaluator):
         """
         super().__init__(task_type, metrics_config)
 
-    def evaluate(self, y_test, y_pred, y_pred_proba=None):
+    def evaluate(self, y_test, y_pred, y_pred_proba=None, **kwargs):
         """Evaluate classification.
 
         Args:
@@ -236,7 +236,7 @@ class ClassifierMultilabelEvaluator(Evaluator):
             preds = np.array(list(map(lambda x: ast.literal_eval(x), preds)))
         return preds
 
-    def evaluate(self, y_test, y_pred, y_pred_proba=None):
+    def evaluate(self, y_test, y_pred, y_pred_proba=None, **kwargs):
         """Evaluate multilabel.
 
         Args:

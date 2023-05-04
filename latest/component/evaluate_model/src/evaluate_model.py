@@ -21,7 +21,8 @@ from utils import (read_config,
                    check_and_return_if_mltable,
                    read_data,
                    prepare_data,
-                   setup_model_dependencies)
+                   setup_model_dependencies,
+                   get_predictor)
 
 from run_utils import TestRun
 from validation import _validate, validate_args, validate_Xy
@@ -100,6 +101,12 @@ class EvaluateModel:
                 log_traceback(e, logger, message=message)
                 raise ModelEvaluationException(message, inner_exception=e)
 
+    def _validate_schema(self, X_test):
+        model = aml_mlflow.aml.load_model(self.model_uri, constants.MLFLOW_MODEL_TYPE_MAP[self.task])
+        predictor_cls = get_predictor(self.task)
+        predictor = predictor_cls(model)
+        predictor._ensure_base_model_input_schema(X_test=X_test)
+
     def load_data(self, test_data, label_column_name, input_column_names=None, is_mltable=True):
         """
         Load data in required format.
@@ -144,6 +151,7 @@ class EvaluateModel:
         X_test, y_test = list(data)[0]
 
         validate_Xy(X_test, y_test)
+        self._validate_schema(X_test)
 
         with log_activity(logger, constants.TelemetryConstants.MLFLOW_NAME, custom_dimensions=self.custom_dimensions):
             feature_names = X_test.columns
