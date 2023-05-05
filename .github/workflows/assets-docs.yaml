@@ -3,11 +3,11 @@ name: assets-docs
 on:
   push:
     branches:
-      - generate-docs
-  #   paths-ignore:
-  #     - .github/**
-  # schedule:
-  #   - cron: '30 8 * * *'
+      - release
+    paths-ignore:
+      - .github/**
+  schedule:
+    - cron: '30 8 * * *'
   workflow_dispatch:
 
 concurrency: ${{ github.workflow }}
