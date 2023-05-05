@@ -1,11 +1,7 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: rai_vision_insights
 display_name: RAI Vision Insights
-<<<<<<< HEAD
-version: 0.0.2.preview
-=======
 version: 0.0.4.preview
->>>>>>> dd72eed5437b545560c6458999e9e9ba590778de
 type: command
 inputs:
   task_type:
@@ -70,11 +66,7 @@ outputs:
   ux_json:
     type: path
 code: ../src
-<<<<<<< HEAD
-environment: azureml://registries/azureml/environments/responsibleai-vision-ubuntu20.04-py38-cpu/versions/10
-=======
 environment: azureml://registries/azureml/environments/responsibleai-vision-ubuntu20.04-py38-cpu/versions/18
->>>>>>> dd72eed5437b545560c6458999e9e9ba590778de
 command: >-
   python ./rai_vision_insights.py
   --task_type ${{inputs.task_type}}

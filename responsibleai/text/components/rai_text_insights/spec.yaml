@@ -1,11 +1,7 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: rai_text_insights
 display_name: RAI Text Insights
-<<<<<<< HEAD
-version: 0.0.2.preview
-=======
 version: 0.0.4.preview
->>>>>>> dd72eed5437b545560c6458999e9e9ba590778de
 type: command
 inputs:
   task_type:
@@ -44,11 +40,7 @@ outputs:
   ux_json:
     type: path
 code: ../src
-<<<<<<< HEAD
-environment: azureml://registries/azureml/environments/responsibleai-text-ubuntu20.04-py38-cpu/versions/10
-=======
 environment: azureml://registries/azureml/environments/responsibleai-text-ubuntu20.04-py38-cpu/versions/17
->>>>>>> dd72eed5437b545560c6458999e9e9ba590778de
 command: >-
   python ./rai_text_insights.py
   --task_type ${{inputs.task_type}}
