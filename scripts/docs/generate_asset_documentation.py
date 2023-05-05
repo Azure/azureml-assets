@@ -74,6 +74,7 @@ def create_component_doc(asset, asset_config):
     categories = None
     return doc, description, name, categories
 
+
 def create_model_doc(asset, asset_config):
     """Generate model document content."""
     doc = snakemd.new_doc()
@@ -92,7 +93,8 @@ def create_model_doc(asset, asset_config):
 
 def add_mcr_image(doc, asset, asset_config):
     """Add MCR Image."""
-    doc.add_paragraph("**Docker image**: " + str(asset_config.extra_config_as_object().get_full_image_name()) + ":" + asset["version"])
+    doc.add_paragraph("**Docker image**: " +
+        str(asset_config.extra_config_as_object().get_full_image_name()) + ":" + asset["version"])
     return doc
 
 
@@ -102,7 +104,7 @@ def add_docker_context(doc, asset, asset_config):
     context = {}
     dockerfile = ""
     for context_file in search(str(asset_config.extra_config_as_object().context_dir_with_path) + "/*"):
-        content=""
+        content = ""
         with open(context_file, "r") as f:
             # do not expect nested structure for now
             content = f.read()
@@ -111,7 +113,7 @@ def add_docker_context(doc, asset, asset_config):
             dockerfile = content
         else:
             context[filename] = content
-        
+
     doc.add_heading("Dockerfile", level=3)
     doc.add_code(dockerfile, lang="dockerfile")
 
