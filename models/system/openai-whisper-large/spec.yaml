@@ -2,9 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: openai-whisper-large
 path: ./
 properties:
-  SHA: 6fdb54a299484b6593da58397ea40defd2006d1c
-  datasets: ''
-  finetuning-tasks: automatic-speech-recognition
+  SHA: 27b5bb3f092ae34d8079fdc073b8195e6815dec7
   languages: en, zh, de, es, ru, ko, fr, ja, pt, tr, pl, ca, nl, ar, sv, it,
     id, hi, fi, vi, he, uk, el, ms, cs, ro, da, hu, ta, no, th, ur, hr, bg, lt, la,
     mi, ml, cy, sk, te, fa, lv, bn, sr, az, sl, kn, et, mk, br, eu, is, hy, ne, mn,
@@ -16,6 +14,6 @@ properties:
 tags:
   Featured: ''
   Preview: ''
-  license: apache-2.0
+  license: mit
   task: automatic-speech-recognition
 version: 2
