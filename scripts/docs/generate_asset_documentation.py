@@ -300,7 +300,6 @@ def add_inputs(doc, asset):
 
 def add_outputs(doc, asset):
     """Generate an outputs table for the asset doc."""
-
     if "outputs" in asset:
         doc.add_heading("Outputs ", level=2)
 
