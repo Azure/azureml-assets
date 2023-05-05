@@ -21,7 +21,7 @@ dependencies:
     - mlflow
     - markupsafe<2.1.0
     - itsdangerous==2.0.1
-    - responsibleai-text==0.1.1
+    - responsibleai-text==0.1.2
     - click<8.0.0
     - mltable==1.0.0
     - transformers>=4.17.0

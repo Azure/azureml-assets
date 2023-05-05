@@ -25,8 +25,9 @@ dependencies:
     - itsdangerous==2.0.1
     - vision_explanation_methods
     - ml_wrappers
-    - responsibleai-vision==0.1.0
+    - responsibleai-vision==0.2.0
     - opencv-python==4.3.0.36
     - click<8.0.0
     - mltable==1.0.0
     - fastai
+    - ipython<8.13
