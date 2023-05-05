@@ -94,7 +94,7 @@ def create_model_doc(asset, asset_config):
 def add_mcr_image(doc, asset, asset_config):
     """Add MCR Image."""
     img = ":".join([str(asset_config.extra_config_as_object().get_full_image_name()), asset["version"]])
-    doc.add_paragraph("**Docker image**: " + img
+    doc.add_paragraph("**Docker image**: " + img)
     return doc
 
 
