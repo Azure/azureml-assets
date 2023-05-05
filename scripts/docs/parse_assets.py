@@ -51,7 +51,6 @@ def parse_assets(input_dirs: List[Path],
 
         references[asset_type]["All"].append((asset_name, asset_file_name, asset_description))
 
-
     logger.print(f"{asset_count} asset(s) parsed")
 
     for asset_type in references:
@@ -66,7 +65,8 @@ def parse_assets(input_dirs: List[Path],
             capitalized_category = category[0].upper() + category[1:]
 
             # Add to unordered list of categories
-            category_docs_links_list.append(snakemd.Paragraph(capitalized_category).insert_link(capitalized_category, category_doc_file_name))
+            category_docs_links_list.append(
+                snakemd.Paragraph(capitalized_category).insert_link(capitalized_category, category_doc_file_name))
 
             # Create a new markdown file for each category
             category_doc = snakemd.new_doc()
@@ -76,13 +76,14 @@ def parse_assets(input_dirs: List[Path],
             category_asset_links_list = []
 
             for asset_name, asset_file_name, asset_description in references[asset_type][category]:
-                category_asset_links_list.append(snakemd.Paragraph(asset_name).insert_link(asset_name, category_doc_file_name))
+                category_asset_links_list.append(
+                    snakemd.Paragraph(asset_name).insert_link(asset_name, category_doc_file_name))
 
             category_doc.add_unordered_list(category_asset_links_list)
 
             # Write to category doc
             with open(f"{asset_type}s/{category_doc_file_name}.md", 'w') as f:
-               f.write(str(category_doc))
+                f.write(str(category_doc))
 
         # Create a new markdown file for each asset type
         doc = snakemd.new_doc()
@@ -100,7 +101,6 @@ def parse_assets(input_dirs: List[Path],
 
         doc.add_horizontal_rule()
 
-
         asset_links_list = []
         for asset_name, asset_file_name, asset_description in references[asset_type]["All"]:
             doc.add_unordered_list([snakemd.Paragraph(asset_name).insert_link(asset_name, asset_file_name)])
@@ -109,7 +109,7 @@ def parse_assets(input_dirs: List[Path],
             doc.add_raw("\n  > " + description)
 
         doc.add_unordered_list(asset_links_list)
-    
+
         with open(f"{asset_type}s/{asset_type}s-documentation.md", 'w') as f:
             f.write(str(doc))
 
