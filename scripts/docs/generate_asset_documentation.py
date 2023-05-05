@@ -163,7 +163,7 @@ def add_intro(doc, asset, asset_type=None):
         tags = []
         for tag, value in asset["tags"].items():
             tags.append("`{}` ".format(tag if len(str(value)) == 0 else (tag + " : " + str(value))))
-        tags.sort()
+        tags.sort(key=lambda x: x[0].lower())
         doc.add_raw(" ".join(tags))
 
     return doc
