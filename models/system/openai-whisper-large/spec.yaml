@@ -12,7 +12,7 @@ properties:
 tags:
   Featured: ''
   Preview: ''
-  license: apache-2.0
+  license: mit
   min_inference_sku: Standard_DS4_v2
   task: automatic-speech-recognition
 version: 2
