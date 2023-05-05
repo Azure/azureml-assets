@@ -172,7 +172,7 @@ def add_intro(doc, asset, asset_type=None):
 def add_additional_details(doc, asset):
     """Add information like parameters and compute specifications to asset doc."""
     # doc.add_heading("Parameters ", level=3)
-    
+
     if "type" in asset and asset["type"] == "command" and "code" in asset:
         doc.add_heading("Code", level=3)
         doc.add_paragraph(asset['code'])
@@ -303,7 +303,7 @@ def add_outputs(doc, asset):
 
     if "outputs" in asset:
         doc.add_heading("Outputs ", level=2)
-        
+
         headers = ['Name', 'Description', 'Type']
         rows = []
         if asset.ca.items.get('outputs') is not None:
