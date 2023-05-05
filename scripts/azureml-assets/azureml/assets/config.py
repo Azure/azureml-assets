@@ -927,6 +927,11 @@ class AssetConfig(Config):
         return self._spec
 
     @property
+    def categories(self) -> List[str]:
+        """List of categories."""
+        return self._yaml.get('categories', [])
+
+    @property
     def description_file(self) -> str:
         """Raw 'description_file' value."""
         return self._yaml.get('description_file')

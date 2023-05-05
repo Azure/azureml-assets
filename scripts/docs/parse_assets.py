@@ -31,7 +31,7 @@ def parse_assets(input_dirs: List[Path],
     """
     asset_count = 0
 
-    references = defaultdict(list)
+    references = {}
 
     for asset_config in util.find_assets(input_dirs, asset_config_filename, pattern=pattern):
         asset_count += 1
@@ -39,25 +39,57 @@ def parse_assets(input_dirs: List[Path],
         asset_type, asset_name, asset_file_name = \
             generate_asset_documentation.create_asset_doc(asset_config.spec_with_path, asset_config.type)
 
-        references[asset_type].append((asset_name, asset_file_name))
+        if asset_type not in references:
+            references[asset_type] = defaultdict(list)
+
+        for category in asset_config.categories:
+            references[asset_type][category].append((asset_name, asset_file_name))
+
+        # If no categories are found, put the asset under "Uncategorized"
+        if len(asset_config.categories) == 0:
+            references[asset_type]["Uncategorized"].append((asset_name, asset_file_name))
+
+        references[asset_type]["All"].append((asset_name, asset_file_name))
+
 
     logger.print(f"{asset_count} asset(s) parsed")
 
     for asset_type in references:
+        for category in references[asset_type]:
+            if category == "All":
+                continue
+
+            # Create a new markdown file for each category
+            category_doc = snakemd.new_doc()
+            category_doc.add_heading(f"{category.capitalize()} {asset_type}s", level=1)
+            category_asset_links_list = []
+
+            for asset_name, asset_file_name in references[asset_type][category]:
+                category_asset_links_list.append(snakemd.Paragraph(asset_name).insert_link(asset_name, asset_file_name))
+
+            category_doc.add_unordered_list(category_asset_links_list)
+
+            # write to category doc
+            with open(f"{asset_type}s/{asset_type}s-{category}-documentation.md", 'w') as f:
+               f.write(str(category_doc))
+
         # Create a new markdown file for each asset type
         doc = snakemd.new_doc()
-        doc.add_heading(asset_type.capitalize() + "s", level=1)
+        doc.add_heading(f"{asset_type.capitalize()}s", level=1)
+
+        doc.add_heading("Components by categories", level=2)
+
+        # alphabetize references with case-insensitivity
+        references[asset_type]["All"].sort(key=lambda x: x[0].lower())
 
         # Create glossary that links to each asset of the asset type
         doc.add_heading("Glossary", level=2)
 
         doc.add_horizontal_rule()
 
-        # alphabetize references
-        references[asset_type].sort(key=lambda x: x[0].lower())
 
         asset_links_list = []
-        for asset_name, asset_file_name in references[asset_type]:
+        for asset_name, asset_file_name in references[asset_type]["All"]:
             asset_links_list.append(snakemd.Paragraph(asset_name).insert_link(asset_name, asset_file_name))
 
         doc.add_unordered_list(asset_links_list)
