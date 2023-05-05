@@ -6,11 +6,23 @@ on:
       - main
     paths-ignore:
       - .github/**
+      - scripts/docs/**
+      - scripts/release/**
+      - scripts/setup/**
+      - scripts/test/**
+      - scripts/validation/**
+      - test/**
   pull_request_target:
     branches:
       - main
     paths-ignore:
       - .github/**
+      - scripts/docs/**
+      - scripts/release/**
+      - scripts/setup/**
+      - scripts/test/**
+      - scripts/validation/**
+      - test/**
     types:
       - opened
       - labeled
