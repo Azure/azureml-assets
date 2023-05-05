@@ -103,7 +103,7 @@ def add_docker_context(doc, asset, asset_config):
     doc.add_heading("Docker build context", level=2)
     context = {}
     dockerfile = ""
-    for context_file in search(str(asset_config.extra_config_as_object().context_dir_with_path) + "/*"):
+    for context_file in asset_config.extra_config_as_object().context_dir_with_path.glob("**"):
         content = ""
         with open(context_file, "r") as f:
             # do not expect nested structure for now
