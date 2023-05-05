@@ -18,7 +18,7 @@ command: >
   $[[--task-name ${{inputs.task_name}}]]
   $[[--model-download-metadata ${{inputs.model_download_metadata}}]]
   $[[--license-file-path ${{inputs.license_file_path}}]]
-  --mlflow-flavor transformers
+  --mlflow-flavor ${{inputs.mlflow_flavor}}
   --model-path ${{inputs.model_path}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
   --model-import-job-path ${{outputs.model_import_job_path}}
@@ -30,6 +30,16 @@ inputs:
       parameter for transformers flavor. Can be provided as input here or in model_download_metadata
       JSON file.
     optional: true
+
+  mlflow_flavor:
+    type: string
+    enum:
+    - transformers
+    - mmlab_pyfunc
+    default: transformers
+    optional: false
+    description: Mlflow flavor to convert model into. Please note that, mmlab_pyfunc
+      flavor is only supported for image object detection models.
 
   task_name:
     type: string
@@ -43,6 +53,7 @@ inputs:
     - text-classification
     - translation
     - image-classification
+    - image-object-detection
     - text-to-image
     description: A Hugging face task on which model was trained on. A required parameter
       for transformers mlflow flavor. Can be provided as input here or in model_download_metadata
