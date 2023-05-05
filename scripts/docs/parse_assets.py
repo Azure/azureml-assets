@@ -55,13 +55,21 @@ def parse_assets(input_dirs: List[Path],
     logger.print(f"{asset_count} asset(s) parsed")
 
     for asset_type in references:
+
+        category_docs_links_list = []
+
         for category in references[asset_type]:
             if category == "All":
                 continue
 
+            # Add to unordered list of categories
+            category_docs_links_list.append(snakemd.Paragraph(category.capitalize()).insert_link(category.capitalize(), asset_file_name))
+
             # Create a new markdown file for each category
             category_doc = snakemd.new_doc()
             category_doc.add_heading(f"{category.capitalize()} {asset_type}s", level=1)
+
+            # Create list of assets under the category
             category_asset_links_list = []
 
             for asset_name, asset_file_name in references[asset_type][category]:
@@ -69,7 +77,7 @@ def parse_assets(input_dirs: List[Path],
 
             category_doc.add_unordered_list(category_asset_links_list)
 
-            # write to category doc
+            # Write to category doc
             with open(f"{asset_type}s/{asset_type}s-{category}-documentation.md", 'w') as f:
                f.write(str(category_doc))
 
@@ -77,7 +85,9 @@ def parse_assets(input_dirs: List[Path],
         doc = snakemd.new_doc()
         doc.add_heading(f"{asset_type.capitalize()}s", level=1)
 
+        # Add list of asset categories
         doc.add_heading("Components by categories", level=2)
+        doc.add_unordered_list(category_docs_links_list)
 
         # alphabetize references with case-insensitivity
         references[asset_type]["All"].sort(key=lambda x: x[0].lower())
