@@ -56,8 +56,8 @@ def parse_assets(input_dirs: List[Path],
         for asset_name, asset_file_name, asset_description in references[asset_type]:
             doc.add_unordered_list([snakemd.Paragraph(asset_name).insert_link(asset_name, asset_file_name)])
             # limit description to 300 chars
-            asset_description = asset_description if len(asset_description) < 300 else (asset_description[:297] + "...")
-            doc.add_raw("\n  > " + asset_description)
+            description = asset_description if len(asset_description) < 300 else (asset_description[:297] + "...")
+            doc.add_raw("\n  > " + description)
 
         with open(f"{asset_type}s/{asset_type}s-documentation.md", 'w') as f:
             f.write(str(doc))
