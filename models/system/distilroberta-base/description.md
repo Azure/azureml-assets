@@ -1,5 +1,5 @@
 DistilRoBERTa base is a distilled version of the RoBERTa-base model, with 6 layers, 768 dimension, and 12 heads, and 82M parameters, it is faster than RoBERTa-base. The model is primarily intended for fine-tuning on whole sentence-based tasks such as sequence classification, token classification, and question answering but should not be used to generate harmful or alienating content. There is a risk of bias in the generated predictions as it may include harmful stereotypes. It is developed by Victor Sanh, Lysandre Debut, Julien Chaumond and Thomas Wolf of Hugging Face and is licensed under Apache 2.0. Users are encouraged to check out the RoBERTa-base model card for more information. When getting started with the model, it is recommended to use fine-tuned versions on the task that interests you.
-
+<br>Please Note: This model accepts masks in `<mask>` format. See Sample input for reference. 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/distilroberta-base" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
@@ -22,7 +22,7 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 ### Model Evaluation
 
 Task| Use case| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|--|
+|--|--|--|--|
 Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/imdb" target="_blank">imdb</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
 
 

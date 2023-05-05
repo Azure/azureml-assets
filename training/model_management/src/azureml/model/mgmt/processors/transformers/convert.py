@@ -118,18 +118,16 @@ def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_co
     if not model:
         model = StableDiffusionPipeline.from_pretrained(input_dir, local_files_only=True, torch_dtype=torch.float16)
 
-    predict = os.path.join(os.path.dirname(__file__), "diffusion", "predict.py")
-    hf_conf['hf_predict_module'] = "predict"
     hf_conf['custom_config_module'] = "diffusers"
     hf_conf['custom_tokenizer_module'] = "diffusers"
     hf_conf['custom_model_module'] = "diffusers"
     hf_conf['force_load_tokenizer'] = False
     hf_conf['force_load_config'] = False
+
     return {
         "hf_model": model,
         "hf_conf": hf_conf,
         "path": output_dir,
-        "code_paths": [predict],
     }
 
 
@@ -143,6 +141,8 @@ def _get_whisper_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict 
     processor = WhisperProcessor.from_pretrained(input_dir, padding=True, truncation=True, local_files_only=True)
 
     predict = os.path.join(os.path.dirname(__file__), "whisper", "predict.py")
+    conda_file_path = os.path.join(os.path.dirname(__file__), "whisper", "conda.yaml")
+    conda_env = yaml.safe_load(conda_file_path)
     hf_conf["hf_predict_module"] = "predict"
     return {
         "hf_model": str(model_dir),
@@ -151,6 +151,7 @@ def _get_whisper_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict 
         "path": output_dir,
         "hf_conf": hf_conf,
         "code_paths": [predict],
+        "conda_env": conda_env,
     }
 
 
@@ -181,6 +182,7 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     task = translate_params['task']
     task_category = task
     if "stable-diffusion" in model_id:
+        # TODO: check using tags for SD models
         task_category = SupportedTextToImageVariants.STABLE_DIFFUSION.value
     elif "whisper" in model_id:
         task_category = SupportedASRVariants.WHISPER_ASR.value

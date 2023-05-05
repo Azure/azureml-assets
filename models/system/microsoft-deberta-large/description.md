@@ -1,5 +1,5 @@
 Decoding-enhanced BERT with Disentangled Attention is that it is an improvement of the BERT and RoBERTa models using disentangled attention and enhanced mask decoder. With 80GB training data, it outperforms the BERT and RoBERTa models in many Natural Language Understanding (NLU) tasks. Key results can be found on the SQuAD 1.1/2.0 and GLUE benchmark tasks when fine-tuned with the MNLI task. The details are available in the official repository and a related paper. If it's useful, cite the paper as described in the citation.
-
+<br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/microsoft/deberta-large" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
