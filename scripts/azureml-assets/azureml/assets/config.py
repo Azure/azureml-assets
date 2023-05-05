@@ -744,6 +744,7 @@ class AssetConfig(Config):
             enabled: true
             pip_requirements: tests/requirements.txt
             tests_dir: tests
+        categories: ["PyTorch", "Python 3.9"] # List of categories
     """
 
     def __init__(self, file_name: Path):
@@ -924,6 +925,11 @@ class AssetConfig(Config):
         if force_reload or self._spec is None:
             self._spec = Spec(self.spec_with_path)
         return self._spec
+
+    @property
+    def categories(self) -> List[str]:
+        """List of categories."""
+        return self._yaml.get('categories', [])
 
     @property
     def description_file(self) -> str:
