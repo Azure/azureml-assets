@@ -16,6 +16,7 @@ default_category = "Uncategorized"
 
 class AssetInfo:
     """Base class for Assets documentation."""
+
     _asset_config = None
     _asset = None
     _doc = None
@@ -82,7 +83,7 @@ class AssetInfo:
 
     @staticmethod
     def create_asset_info(asset_config):
-        """Factory method to instantiate an asset info class."""
+        """Instantiate an asset info class."""
         # TODO: Use AssetType.COMPONENT
         if asset_config.type.value == "environment":
             return EnvironmentInfo(asset_config)
@@ -282,6 +283,7 @@ class EnvironmentInfo(AssetInfo):
 
 class ComponentInfo(AssetInfo):
     """Component asset class."""
+
     def __init__(self, asset_config):
         """Instantiate Component asset class."""
         super().__init__(asset_config)
@@ -308,6 +310,7 @@ class ComponentInfo(AssetInfo):
 
 class ModelInfo(AssetInfo):
     """Model asset class."""
+
     def __init__(self, asset_config):
         """Instantiate Model asset class."""
         super().__init__(asset_config)
