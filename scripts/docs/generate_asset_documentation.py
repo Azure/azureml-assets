@@ -15,11 +15,13 @@ default_category = "Uncategorized"
 
 
 class AssetInfo:
+    """Base class for Assets documentation."""
     _asset_config = None
     _asset = None
     _doc = None
 
     def __init__(self, asset_config):
+        """Initialize content."""
         self._asset_config = asset_config
         yaml = YAML()
         with open(self._asset_config.spec_with_path, 'r') as f:
@@ -28,48 +30,59 @@ class AssetInfo:
 
     @property
     def type(self):
+        """Return asset type."""
         return self._asset_config.type.value
 
     @property
     def name(self):
+        """Return asset name."""
         return self._asset["name"]
 
     @property
     def version(self):
+        """Return asset version."""
         return str(self._asset["version"])
 
     @property
     def description(self):
+        """Return asset description."""
         return str(self._asset.get("description", ""))
 
     @property
     def categories(self):
+        """Return asset categories."""
         return [default_category]
 
     @property
     def filename(self):
+        """Return asset filename."""
         return f"{self.type}-{self.name}"
 
     @property
     def directory(self):
+        """Return asset directory."""
         return Path(f"{self.type}s")
 
     @property
     def fullpath(self):
+        """Return asset document full path."""
         return f"{self.directory}/{self.filename}.md"
 
     @property
     def doc(self):
+        """Generate markdown document."""
         _doc = snakemd.new_doc()
         return _doc
 
     def save(self):
+        """Save markdown document."""
         self.directory.mkdir(exist_ok=True)
         with open(self.fullpath, 'w') as f:
             f.write(str(self.doc))
 
     @staticmethod
     def create_asset_info(asset_config):
+        """Factory method to instantiate an asset info class."""
         # TODO: Use AssetType.COMPONENT
         if asset_config.type.value == "environment":
             return EnvironmentInfo(asset_config)
@@ -240,12 +253,15 @@ class AssetInfo:
 
 
 class EnvironmentInfo(AssetInfo):
+    """Environment asset class."""
 
     def __init__(self, asset_config):
+        """Instantiate Environment asset class."""
         super().__init__(asset_config)
 
     @AssetInfo.doc.getter
     def doc(self):
+        """Generate environment markdown document."""
         _doc = snakemd.new_doc()
 
         self._add_doc_name(_doc)
@@ -265,12 +281,14 @@ class EnvironmentInfo(AssetInfo):
 
 
 class ComponentInfo(AssetInfo):
-
+    """Component asset class."""
     def __init__(self, asset_config):
+        """Instantiate Component asset class."""
         super().__init__(asset_config)
 
     @AssetInfo.doc.getter
     def doc(self):
+        """Generate component markdown document."""
         _doc = snakemd.new_doc()
 
         self._add_doc_name(_doc)
@@ -289,12 +307,14 @@ class ComponentInfo(AssetInfo):
 
 
 class ModelInfo(AssetInfo):
-
+    """Model asset class."""
     def __init__(self, asset_config):
+        """Instantiate Model asset class."""
         super().__init__(asset_config)
 
     @AssetInfo.doc.getter
     def doc(self):
+        """Generate model markdown document."""
         _doc = snakemd.new_doc()
         self._add_doc_name(_doc)
         self._add_doc_overview(_doc)
