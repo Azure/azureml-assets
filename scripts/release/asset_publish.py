@@ -523,7 +523,13 @@ if __name__ == "__main__":
     validate_assets = args.validate_assets
     asset_ids = {}
 
-    logger.print(f"validate_assets? {validate_assets}")
+    logger.print(
+        f"validate_assets is set to {validate_assets}. When this is False, asset spec is published as it is."
+    )
+
+    if not validate_assets and registry_name in [PROD_SYSTEM_REGISTRY]:
+        logger.error(f"Unexpected!!! validate_assets must be enabled for {registry_name}")
+        exit(1)
 
     # Load publishing list from deploy config
     if publish_list_file:
