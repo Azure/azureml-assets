@@ -10,8 +10,9 @@ import os
 from pathlib import Path
 from glob import glob as search
 
-supported_asset_types=["environment", "component", "model"]
+supported_asset_types = ["environment", "component", "model"]
 default_category = "Uncategorized"
+
 
 class AssetInfo:
     _asset_config = None
@@ -28,7 +29,7 @@ class AssetInfo:
     @property
     def type(self):
         return self._asset_config.type.value
-    
+
     @property
     def name(self):
         return self._asset["name"]
@@ -36,11 +37,11 @@ class AssetInfo:
     @property
     def version(self):
         return str(self._asset["version"])
-    
+
     @property
     def description(self):
         return str(self._asset.get("description", ""))
-    
+
     @property
     def categories(self):
         return [default_category]
@@ -52,7 +53,7 @@ class AssetInfo:
     @property
     def directory(self):
         return Path(f"{self.type}s")
-    
+
     @property
     def fullpath(self):
         return f"{self.directory}/{self.filename}.md"
@@ -79,7 +80,7 @@ class AssetInfo:
 
         raise Exception(f"Not supported asset type {asset_config.type}. Use {supported_asset_types}")
 
-#region Doc Formatting
+# region Doc Formatting
     def _add_doc_name(self, doc):
         if "display_name" in self._asset:
             doc.add_heading(self._asset['display_name'])
@@ -87,17 +88,17 @@ class AssetInfo:
 
     def _add_doc_overview(self, doc):
         doc.add_heading("Overview ", level=2)
-    
+
     def _add_doc_description(self, doc):
         doc.add_paragraph("**Description**: " + self.description)
-    
+
     def _add_doc_asset_version(self, doc):
         doc.add_paragraph("**Version**: " + self.version)
 
     def _add_doc_license_from_tags(self, doc):
         if "tags" in self._asset and "license" in self._asset["tags"]:
             doc.add_paragraph("**License**: " + self._asse["tags"]["license"])
-  
+
     def _add_doc_properties(self, doc):
         if "properties" in self._asset:
             doc.add_heading("Properties", level=4)
@@ -118,7 +119,6 @@ class AssetInfo:
         """Add MCR Image."""
         img = ":".join([self._asset_config.extra_config_as_object().get_full_image_name(), self.version])
         doc.add_paragraph("**Docker image**: " + img)
-
 
     def _add_doc_docker_context(self, doc):
         """Add docker context content."""
@@ -148,9 +148,9 @@ class AssetInfo:
         # TODO: have a code reference on GH
         # doc.add_heading("Code", level=3)
         # doc.add_paragraph(self._asset['code'])
-        pass        
+        pass
 
-    def _add_doc_environment_dependency(self, doc):    
+    def _add_doc_environment_dependency(self, doc):
         if "environment" in self._asset:
             doc.add_heading("Environment", level=3)
             doc.add_paragraph(self._asset['environment'])
@@ -211,7 +211,6 @@ class AssetInfo:
 
             doc.add_table(headers, rows)
 
-
     def _add_doc_asset_outputs(self, doc):
         """Generate an outputs table for the asset doc."""
         if "outputs" in self._asset:
@@ -237,9 +236,8 @@ class AssetInfo:
                     rows.append(row)
 
             doc.add_table(headers, rows)
+# endregion
 
-
-#endregion
 
 class EnvironmentInfo(AssetInfo):
 
@@ -249,13 +247,12 @@ class EnvironmentInfo(AssetInfo):
     @AssetInfo.doc.getter
     def doc(self):
         _doc = snakemd.new_doc()
-        
+
         self._add_doc_name(_doc)
         self._add_doc_overview(_doc)
         self._add_doc_description(_doc)
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
-
 
         link = "https://ml.azure.com/registries/azureml/environments/{}/version/{}".format(self.name, self.version)
         _doc.add_paragraph("**View in Studio**:  [{}]({})".format(link, link))
@@ -265,6 +262,7 @@ class EnvironmentInfo(AssetInfo):
         self._add_doc_docker_context(_doc)
 
         return _doc
+
 
 class ComponentInfo(AssetInfo):
 
@@ -303,14 +301,14 @@ class ModelInfo(AssetInfo):
         self._add_doc_description(_doc)
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
-
+        self._add_doc_license_from_tags(_doc)
         self._add_doc_properties(_doc)
         self._add_doc_compute_sku(_doc)
 
         return _doc
 
-#region attibutes
 
+# region attibutes
 # set attributes
 def get_comments_map(self, key):
     """Get comments based on key."""
@@ -363,4 +361,4 @@ def check_comments(data):
             return True
     return False
 
-#endregion
+# endregion
