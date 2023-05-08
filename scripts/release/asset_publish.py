@@ -490,10 +490,6 @@ if __name__ == "__main__":
         "-d", "--debug", type=_str2bool, nargs="?",
         const=True, default=False, help="debug mode",
     )
-    parser.add_argument(
-        "-u", "--skip-update-spec", type=_str2bool, nargs="?",
-        const=True, default=False, help="Skip asset's spec update",
-    )
     args = parser.parse_args()
 
     registry_name = args.registry_name
@@ -506,15 +502,7 @@ if __name__ == "__main__":
     publish_list_file = args.publish_list
     failed_list_file = args.failed_list
     debug_mode = args.debug
-    skip_update_spec = args.skip_update_spec
     asset_ids = {}
-
-    logger.print(
-        f"skip_update_spec is set to {skip_update_spec}. When this is True, asset spec is published as it is."
-    )
-
-    if skip_update_spec and registry_name in [PROD_SYSTEM_REGISTRY]:
-        raise Exception(f"Unexpected!!! skip_update_spec must be disabled for {registry_name}")
 
     # Load publishing list from deploy config
     if publish_list_file:
@@ -571,18 +559,18 @@ if __name__ == "__main__":
 
                 # Handle specific asset types
                 if asset.type == assets.AssetType.COMPONENT:
-                    if not skip_update_spec:
-                        component_type = asset.spec_as_object().type
-                        got_updated = False
-                        if component_type == assets.ComponentType.PIPELINE.value:
-                            got_updated = validate_and_prepare_pipeline_component(
-                                asset.spec_with_path, passed_version, registry_name
-                            )
-                        elif component_type is None or component_type == assets.ComponentType.COMMAND.value:
-                            got_updated = validate_update_command_component(
-                                asset.spec_with_path, passed_version, registry_name
-                            )
-                        if not got_updated:
+                    # load component and check if environment exists
+                    component_type = asset.spec_as_object().type
+                    if component_type == assets.ComponentType.PIPELINE.value:
+                        if not validate_and_prepare_pipeline_component(
+                            asset.spec_with_path, passed_version, registry_name
+                        ):
+                            failure_list.append(asset)
+                            continue
+                    elif component_type is None or component_type == assets.ComponentType.COMMAND.value:
+                        if not validate_update_command_component(
+                            asset.spec_with_path, passed_version, registry_name
+                        ):
                             failure_list.append(asset)
                             continue
                 elif asset.type == assets.AssetType.MODEL:
