@@ -158,7 +158,6 @@ def validate_and_prepare_pipeline_component(
     spec_path: Path,
     version_suffix: str,
     registry_name: str,
-    skip_update_spec: bool,
 ) -> bool:
     """Validate and update pipeline component spec.
 
@@ -168,15 +167,9 @@ def validate_and_prepare_pipeline_component(
     :type version_suffix: str
     :param registry_name: name of the registry to create component in
     :type registry_name: str
-    :param skip_update_spec: flag to check if asset's spec should be updated
-    :type skip_update_spec: bool
     :return: True for successful validation and update
     :rtype: bool
     """
-    # Use spec file as it is if skip_update_spec is True
-    if skip_update_spec:
-        return True
-
     with open(spec_path) as f:
         try:
             pipeline_dict = YAML().load(f)
@@ -251,7 +244,6 @@ def validate_update_command_component(
     spec_path: Path,
     version_suffix: str,
     registry_name: str,
-    skip_update_spec: bool,
 ) -> bool:
     """Validate and update command component spec.
 
@@ -261,15 +253,9 @@ def validate_update_command_component(
     :type version_suffix: str
     :param registry_name: name of the registry to create component in
     :type registry_name: str
-    :param skip_update_spec: flag to check if asset's spec should be updated
-    :type skip_update_spec: bool
     :return: True for successful validation and update
     :rtype: bool
     """
-    # Use spec file as it is if skip_update_spec is True
-    if skip_update_spec:
-        return True
-
     with open(spec_path) as f:
         try:
             component_dict = YAML().load(f)
@@ -585,18 +571,18 @@ if __name__ == "__main__":
 
                 # Handle specific asset types
                 if asset.type == assets.AssetType.COMPONENT:
-                    # load component and check if environment exists
-                    component_type = asset.spec_as_object().type
-                    if component_type == assets.ComponentType.PIPELINE.value:
-                        if not validate_and_prepare_pipeline_component(
-                            asset.spec_with_path, passed_version, registry_name, skip_update_spec
-                        ):
-                            failure_list.append(asset)
-                            continue
-                    elif component_type is None or component_type == assets.ComponentType.COMMAND.value:
-                        if not validate_update_command_component(
-                            asset.spec_with_path, passed_version, registry_name, skip_update_spec
-                        ):
+                    if not skip_update_spec:
+                        component_type = asset.spec_as_object().type
+                        got_updated = False
+                        if component_type == assets.ComponentType.PIPELINE.value:
+                            got_updated = validate_and_prepare_pipeline_component(
+                                asset.spec_with_path, passed_version, registry_name
+                            )
+                        elif component_type is None or component_type == assets.ComponentType.COMMAND.value:
+                            got_updated = validate_update_command_component(
+                                asset.spec_with_path, passed_version, registry_name
+                            )
+                        if not got_updated:
                             failure_list.append(asset)
                             continue
                 elif asset.type == assets.AssetType.MODEL:
