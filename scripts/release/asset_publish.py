@@ -528,8 +528,7 @@ if __name__ == "__main__":
     )
 
     if skip_update_spec and registry_name in [PROD_SYSTEM_REGISTRY]:
-        logger.error(f"Unexpected!!! skip_update_spec must be disabled for {registry_name}")
-        exit(1)
+        raise Exception(f"Unexpected!!! skip_update_spec must be disabled for {registry_name}")
 
     # Load publishing list from deploy config
     if publish_list_file:
