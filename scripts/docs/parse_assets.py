@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """Parse assets from directory and generate markdown files."""
-import generate_asset_documentation
 
 import argparse
 import re
