@@ -75,8 +75,7 @@ class AssetInfo:
     @property
     def doc(self) -> snakemd.document.Document:
         """Generate markdown document."""
-        _doc = snakemd.new_doc()
-        return _doc
+        raise Exception("Not implemented")
 
     def save(self):
         """Save markdown document."""
