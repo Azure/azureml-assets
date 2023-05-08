@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """Parse assets from directory and generate markdown files."""
-import generate_asset_documentation
 
 import argparse
 import re
@@ -15,6 +14,8 @@ from azureml.assets.util import logger
 
 import snakemd
 from collections import defaultdict
+
+from generate_asset_documentation import AssetInfo
 
 PARSED_COUNT = "parsed_count"
 
@@ -36,10 +37,11 @@ def parse_assets(input_dirs: List[Path],
     for asset_config in util.find_assets(input_dirs, asset_config_filename, pattern=pattern):
         asset_count += 1
 
-        asset_type, asset_name, asset_file_name, asset_description = \
-            generate_asset_documentation.create_asset_doc(asset_config, asset_config.type)
+        asset_info = AssetInfo.create_asset_info(asset_config)
+        # Save asset info. Revisit to save all docs after
+        asset_info.save()
 
-        references[asset_type].append((asset_name, asset_file_name, asset_description))
+        references[asset_info.type].append((asset_info.name, asset_info.filename, asset_info.description))
 
     logger.print(f"{asset_count} asset(s) parsed")
 
