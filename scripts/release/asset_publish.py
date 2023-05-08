@@ -492,7 +492,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-sk", "--skip-update-spec", type=_str2bool, nargs="?",
-        const=False, default=True, help="Skip asset's spec update",
+        const=True, default=False, help="Skip asset's spec update",
     )
     args = parser.parse_args()
 
