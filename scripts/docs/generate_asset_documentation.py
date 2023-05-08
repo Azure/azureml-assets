@@ -2,16 +2,18 @@
 # Licensed under the MIT License.
 
 """Generate markdown documentation for an asset."""
+from typing import List
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 import snakemd
 import re
 import os
 from pathlib import Path
+from azureml.assets.config import AssetConfig, AssetType
 from glob import glob as search
 
-supported_asset_types = ["environment", "component", "model"]
-default_category = "Uncategorized"
+SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL]
+DEFAULT_CATEGORY = "Uncategorized"
 
 
 class AssetInfo:
@@ -19,58 +21,60 @@ class AssetInfo:
 
     _asset_config = None
     _asset = None
+    _extra_config_object = None
     _doc = None
 
-    def __init__(self, asset_config):
+    def __init__(self, asset_config: AssetConfig):
         """Initialize content."""
         self._asset_config = asset_config
         yaml = YAML()
         with open(self._asset_config.spec_with_path, 'r') as f:
             self._asset = yaml.load(f)
-        self._doc = snakemd.new_doc()
+        self._extra_config_object = self._asset_config.extra_config_as_object()
+        
 
     @property
-    def type(self):
+    def type(self) -> str:
         """Return asset type."""
         return self._asset_config.type.value
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return asset name."""
         return self._asset["name"]
 
     @property
-    def version(self):
+    def version(self) -> str:
         """Return asset version."""
         return str(self._asset["version"])
 
     @property
-    def description(self):
+    def description(self) -> str:
         """Return asset description."""
         return str(self._asset.get("description", ""))
 
     @property
-    def categories(self):
+    def categories(self) -> List[str]:
         """Return asset categories."""
-        return [default_category]
+        return [DEFAULT_CATEGORY]
 
     @property
-    def filename(self):
+    def filename(self) -> str:
         """Return asset filename."""
         return f"{self.type}-{self.name}"
 
     @property
-    def directory(self):
+    def directory(self) -> Path:
         """Return asset directory."""
         return Path(f"{self.type}s")
 
     @property
-    def fullpath(self):
+    def fullpath(self) -> str:
         """Return asset document full path."""
         return f"{self.directory}/{self.filename}.md"
 
     @property
-    def doc(self):
+    def doc(self) -> snakemd.document.Document:
         """Generate markdown document."""
         _doc = snakemd.new_doc()
         return _doc
@@ -85,14 +89,14 @@ class AssetInfo:
     def create_asset_info(asset_config):
         """Instantiate an asset info class."""
         # TODO: Use AssetType.COMPONENT
-        if asset_config.type.value == "environment":
+        if asset_config.type == AssetType.ENVIRONMENT:
             return EnvironmentInfo(asset_config)
-        if asset_config.type.value == "component":
+        if asset_config.type == AssetType.COMPONENT:
             return ComponentInfo(asset_config)
-        if asset_config.type.value == "model":
+        if asset_config.type == AssetType.MODEL:
             return ModelInfo(asset_config)
 
-        raise Exception(f"Not supported asset type {asset_config.type}. Use {supported_asset_types}")
+        raise Exception(f"Not supported asset type {asset_config.type}. Use {SUPPORTED_ASSET_TYPES}")
 
 # region Doc Formatting
     def _add_doc_name(self, doc):
@@ -111,7 +115,7 @@ class AssetInfo:
 
     def _add_doc_license_from_tags(self, doc):
         if "tags" in self._asset and "license" in self._asset["tags"]:
-            doc.add_paragraph("**License**: " + self._asse["tags"]["license"])
+            doc.add_paragraph("**License**: " + self._asset["tags"]["license"])
 
     def _add_doc_properties(self, doc):
         if "properties" in self._asset:
@@ -131,7 +135,7 @@ class AssetInfo:
 
     def _add_doc_mcr_image(self, doc):
         """Add MCR Image."""
-        img = ":".join([self._asset_config.extra_config_as_object().get_full_image_name(), self.version])
+        img = ":".join([self._extra_config_object.get_full_image_name(), self.version])
         doc.add_paragraph("**Docker image**: " + img)
 
     def _add_doc_docker_context(self, doc):
@@ -139,7 +143,7 @@ class AssetInfo:
         doc.add_heading("Docker build context", level=2)
         context = {}
         dockerfile = ""
-        for context_file in search(str(self._asset_config.extra_config_as_object().context_dir_with_path) + "/*"):
+        for context_file in search(str(self._extra_config_object.context_dir_with_path) + "/*"):
             content = ""
             with open(context_file, "r") as f:
                 # do not expect nested structure for now
@@ -256,12 +260,12 @@ class AssetInfo:
 class EnvironmentInfo(AssetInfo):
     """Environment asset class."""
 
-    def __init__(self, asset_config):
+    def __init__(self, asset_config: AssetConfig):
         """Instantiate Environment asset class."""
         super().__init__(asset_config)
 
     @AssetInfo.doc.getter
-    def doc(self):
+    def doc(self) -> snakemd.document.Document:
         """Generate environment markdown document."""
         _doc = snakemd.new_doc()
 
@@ -284,12 +288,12 @@ class EnvironmentInfo(AssetInfo):
 class ComponentInfo(AssetInfo):
     """Component asset class."""
 
-    def __init__(self, asset_config):
+    def __init__(self, asset_config:AssetConfig):
         """Instantiate Component asset class."""
         super().__init__(asset_config)
 
     @AssetInfo.doc.getter
-    def doc(self):
+    def doc(self) -> snakemd.document.Document:
         """Generate component markdown document."""
         _doc = snakemd.new_doc()
 
@@ -311,12 +315,12 @@ class ComponentInfo(AssetInfo):
 class ModelInfo(AssetInfo):
     """Model asset class."""
 
-    def __init__(self, asset_config):
+    def __init__(self, asset_config: AssetConfig):
         """Instantiate Model asset class."""
         super().__init__(asset_config)
 
     @AssetInfo.doc.getter
-    def doc(self):
+    def doc(self) -> snakemd.document.Document:
         """Generate model markdown document."""
         _doc = snakemd.new_doc()
         self._add_doc_name(_doc)
