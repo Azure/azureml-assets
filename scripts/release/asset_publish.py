@@ -181,56 +181,57 @@ def validate_and_prepare_pipeline_component(
     logger.print(f"Preparing pipeline component {pipeline_dict['name']}")
     updated_jobs = {}
 
-    for job_name, job_details in jobs.items():
-        logger.print(f"job {job_name}")
-        if not job_details.get('component'):
-            # if-else or inline component
-            logger.print(f"component not defined for job {job_name}")
-            updated_jobs[job_name] = job_details
-            continue
+    # TODO: allow bypass
+    # for job_name, job_details in jobs.items():
+    #     logger.print(f"job {job_name}")
+    #     if not job_details.get('component'):
+    #         # if-else or inline component
+    #         logger.print(f"component not defined for job {job_name}")
+    #         updated_jobs[job_name] = job_details
+    #         continue
 
-        try:
-            name, version, label, registry = get_parsed_details_from_asset_uri(
-                assets.AssetType.COMPONENT.value, job_details['component'])
-        except Exception as e:
-            logger.log_error(e)
-            return False
+    #     try:
+    #         name, version, label, registry = get_parsed_details_from_asset_uri(
+    #             assets.AssetType.COMPONENT.value, job_details['component'])
+    #     except Exception as e:
+    #         logger.log_error(e)
+    #         return False
 
-        logger.print(
-            "component details:\n"
-            + f"name: {name}\n"
-            + f"version: {version}\n"
-            + f"label: {label}\n"
-            + f"registry: {registry}"
-        )
+    #     logger.print(
+    #         "component details:\n"
+    #         + f"name: {name}\n"
+    #         + f"version: {version}\n"
+    #         + f"label: {label}\n"
+    #         + f"registry: {registry}"
+    #     )
 
-        if registry and registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
-            logger.log_error(
-                "Registry name for component's URI must be either "
-                + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{registry}'"
-            )
-            return False
+    #     if registry and registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
+    #         logger.log_error(
+    #             "Registry name for component's URI must be either "
+    #             + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{registry}'"
+    #         )
+    #         return False
 
-        # Check if component's env exists
-        final_version = version + "-" + version_suffix if version_suffix else version
-        registry_name = registry or registry_name
-        asset_details = None
-        for ver in [version, final_version]:
-            if (asset_details := get_asset_details(
-                assets.AssetType.COMPONENT.value, name, ver, registry_name
-            )) is not None:
-                break
+    #     # Check if component's env exists
+    #     final_version = version + "-" + version_suffix if version_suffix else version
+    #     registry_name = registry or registry_name
+    #     asset_details = None
+    #     for ver in [version, final_version]:
+    #         if (asset_details := get_asset_details(
+    #             assets.AssetType.COMPONENT.value, name, ver, registry_name
+    #         )) is not None:
+    #             break
 
-        if not asset_details:
-            logger.log_warning(
-                f"dependent component {name} with version {version} not found in registry {registry}"
-            )
-            return False
+    #     if not asset_details:
+    #         logger.log_warning(
+    #             f"dependent component {name} with version {version} not found in registry {registry}"
+    #         )
+    #         return False
 
-        updated_jobs[job_name] = job_details
-        updated_jobs[job_name]['component'] = asset_details["id"]
+    #     updated_jobs[job_name] = job_details
+    #     updated_jobs[job_name]['component'] = asset_details["id"]
 
-    pipeline_dict['jobs'] = updated_jobs
+    # pipeline_dict['jobs'] = updated_jobs
 
     try:
         util.dump_yaml(pipeline_dict, spec_path)
@@ -263,62 +264,63 @@ def validate_update_command_component(
             logger.log_error(f"Error in loading component spec at {spec_path}")
             return False
 
-    component_name = component_dict['name']
-    component_env = component_dict['environment']
-    logger.print(f"Preparing command component {component_name}")
+    # TODO: allow bypass
+    # component_name = component_dict['name']
+    # component_env = component_dict['environment']
+    # logger.print(f"Preparing command component {component_name}")
 
-    try:
-        env_name, env_version, env_label, env_registry_name = get_parsed_details_from_asset_uri(
-            assets.AssetType.ENVIRONMENT.value, component_env)
-    except Exception as e:
-        logger.log_error(e)
-        return False
+    # try:
+    #     env_name, env_version, env_label, env_registry_name = get_parsed_details_from_asset_uri(
+    #         assets.AssetType.ENVIRONMENT.value, component_env)
+    # except Exception as e:
+    #     logger.log_error(e)
+    #     return False
 
-    logger.print(
-        f"Env name: {env_name}, version: {env_version}, label: {env_label}, env_registry_name: {env_registry_name}"
-    )
+    # logger.print(
+    #     f"Env name: {env_name}, version: {env_version}, label: {env_label}, env_registry_name: {env_registry_name}"
+    # )
 
-    if env_registry_name and env_registry_name not in [PROD_SYSTEM_REGISTRY, registry_name]:
-        logger.log_error(
-            "Registry name for component's env URI must be either "
-            + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{env_registry_name}'"
-        )
-        return False
+    # if env_registry_name and env_registry_name not in [PROD_SYSTEM_REGISTRY, registry_name]:
+    #     logger.log_error(
+    #         "Registry name for component's env URI must be either "
+    #         + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{env_registry_name}'"
+    #     )
+    #     return False
 
-    registry_name = env_registry_name or registry_name
+    # registry_name = env_registry_name or registry_name
 
-    if env_label:
-        if env_label == LATEST_LABEL:
-            # TODO: Use a more direct approach like this, when supported by Azure CLI:
-            # az ml environment show --name sklearn-1.1-ubuntu20.04-py38-cpu --registry-name azureml --label latest
-            versions = get_asset_versions(assets.AssetType.ENVIRONMENT.value, env_name, registry_name)
-            if versions:
-                # List is returned with the latest version at the beginning
-                env_version = versions[0]
-            else:
-                logger.log_error(f"Unable to retrieve versions for env {env_name}")
-                return False
-        else:
-            # TODO: Add fetching env from other labels
-            # https://github.com/Azure/azureml-assets/issues/415
-            logger.log_error(f"Creating a component with env label {env_label} is not supported")
-            return False
+    # if env_label:
+    #     if env_label == LATEST_LABEL:
+    #         # TODO: Use a more direct approach like this, when supported by Azure CLI:
+    #         # az ml environment show --name sklearn-1.1-ubuntu20.04-py38-cpu --registry-name azureml --label latest
+    #         versions = get_asset_versions(assets.AssetType.ENVIRONMENT.value, env_name, registry_name)
+    #         if versions:
+    #             # List is returned with the latest version at the beginning
+    #             env_version = versions[0]
+    #         else:
+    #             logger.log_error(f"Unable to retrieve versions for env {env_name}")
+    #             return False
+    #     else:
+    #         # TODO: Add fetching env from other labels
+    #         # https://github.com/Azure/azureml-assets/issues/415
+    #         logger.log_error(f"Creating a component with env label {env_label} is not supported")
+    #         return False
 
-    env = None
-    # Check if component's env exists
-    final_version = env_version + "-" + version_suffix if version_suffix else env_version
-    for version in [env_version, final_version]:
-        if (env := get_asset_details(
-            assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name
-        )) is not None:
-            break
+    # env = None
+    # # Check if component's env exists
+    # final_version = env_version + "-" + version_suffix if version_suffix else env_version
+    # for version in [env_version, final_version]:
+    #     if (env := get_asset_details(
+    #         assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name
+    #     )) is not None:
+    #         break
 
-    if not env:
-        logger.log_error(f"Could not find the env for {component_name}")
-        return False
+    # if not env:
+    #     logger.log_error(f"Could not find the env for {component_name}")
+    #     return False
 
-    logger.print(f"Updating component env to {env['id']}")
-    component_dict['environment'] = env['id']
+    # logger.print(f"Updating component env to {env['id']}")
+    # component_dict['environment'] = env['id']
 
     try:
         util.dump_yaml(component_dict, spec_path)
