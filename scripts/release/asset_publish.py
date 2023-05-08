@@ -158,7 +158,7 @@ def validate_and_prepare_pipeline_component(
     spec_path: Path,
     version_suffix: str,
     registry_name: str,
-    validate_assets: bool,
+    skip_update_spec: bool,
 ) -> bool:
     """Validate and update pipeline component spec.
 
@@ -168,13 +168,13 @@ def validate_and_prepare_pipeline_component(
     :type version_suffix: str
     :param registry_name: name of the registry to create component in
     :type registry_name: str
-    :param validate_assets: flag to check if asset should be validated before publish
-    :type validate_assets: bool
+    :param skip_update_spec: flag to check if asset's spec should be updated
+    :type skip_update_spec: bool
     :return: True for successful validation and update
     :rtype: bool
     """
-    # Use spec file as it is if validate_assets is False
-    if validate_assets is False:
+    # Use spec file as it is if skip_update_spec is True
+    if skip_update_spec:
         return True
 
     with open(spec_path) as f:
@@ -251,7 +251,7 @@ def validate_update_command_component(
     spec_path: Path,
     version_suffix: str,
     registry_name: str,
-    validate_assets: bool,
+    skip_update_spec: bool,
 ) -> bool:
     """Validate and update command component spec.
 
@@ -261,13 +261,13 @@ def validate_update_command_component(
     :type version_suffix: str
     :param registry_name: name of the registry to create component in
     :type registry_name: str
-    :param validate_assets: flag to check if asset should be validated before publish
-    :type validate_assets: bool
+    :param skip_update_spec: flag to check if asset's spec should be updated
+    :type skip_update_spec: bool
     :return: True for successful validation and update
     :rtype: bool
     """
-    # Use spec file as it is if validate_assets is False
-    if not validate_assets:
+    # Use spec file as it is if skip_update_spec is True
+    if skip_update_spec:
         return True
 
     with open(spec_path) as f:
@@ -505,8 +505,8 @@ if __name__ == "__main__":
         const=True, default=False, help="debug mode",
     )
     parser.add_argument(
-        "-va", "--validate-assets", type=_str2bool, nargs="?",
-        const=True, default=True, help="Validate assets before publishing",
+        "-sk", "--skip-update-spec", type=_str2bool, nargs="?",
+        const=False, default=True, help="Skip asset's spec update",
     )
     args = parser.parse_args()
 
@@ -520,15 +520,15 @@ if __name__ == "__main__":
     publish_list_file = args.publish_list
     failed_list_file = args.failed_list
     debug_mode = args.debug
-    validate_assets = args.validate_assets
+    skip_update_spec = args.skip_update_spec
     asset_ids = {}
 
     logger.print(
-        f"validate_assets is set to {validate_assets}. When this is False, asset spec is published as it is."
+        f"skip_update_spec is set to {skip_update_spec}. When this is True, asset spec is published as it is."
     )
 
-    if not validate_assets and registry_name in [PROD_SYSTEM_REGISTRY]:
-        logger.error(f"Unexpected!!! validate_assets must be enabled for {registry_name}")
+    if skip_update_spec and registry_name in [PROD_SYSTEM_REGISTRY]:
+        logger.error(f"Unexpected!!! skip_update_spec must be disabled for {registry_name}")
         exit(1)
 
     # Load publishing list from deploy config
@@ -590,13 +590,13 @@ if __name__ == "__main__":
                     component_type = asset.spec_as_object().type
                     if component_type == assets.ComponentType.PIPELINE.value:
                         if not validate_and_prepare_pipeline_component(
-                            asset.spec_with_path, passed_version, registry_name, validate_assets
+                            asset.spec_with_path, passed_version, registry_name, skip_update_spec
                         ):
                             failure_list.append(asset)
                             continue
                     elif component_type is None or component_type == assets.ComponentType.COMMAND.value:
                         if not validate_update_command_component(
-                            asset.spec_with_path, passed_version, registry_name, validate_assets
+                            asset.spec_with_path, passed_version, registry_name, skip_update_spec
                         ):
                             failure_list.append(asset)
                             continue
