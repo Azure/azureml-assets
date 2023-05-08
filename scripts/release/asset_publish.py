@@ -158,6 +158,7 @@ def validate_and_prepare_pipeline_component(
     spec_path: Path,
     version_suffix: str,
     registry_name: str,
+    validate_assets: bool,
 ) -> bool:
     """Validate and update pipeline component spec.
 
@@ -167,9 +168,15 @@ def validate_and_prepare_pipeline_component(
     :type version_suffix: str
     :param registry_name: name of the registry to create component in
     :type registry_name: str
+    :param validate_assets: flag to check if asset should be validated before publish
+    :type validate_assets: bool
     :return: True for successful validation and update
     :rtype: bool
     """
+    # Use spec file as it is if validate_assets is False
+    if validate_assets is False:
+        return True
+
     with open(spec_path) as f:
         try:
             pipeline_dict = YAML().load(f)
@@ -244,6 +251,7 @@ def validate_update_command_component(
     spec_path: Path,
     version_suffix: str,
     registry_name: str,
+    validate_assets: bool,
 ) -> bool:
     """Validate and update command component spec.
 
@@ -253,9 +261,15 @@ def validate_update_command_component(
     :type version_suffix: str
     :param registry_name: name of the registry to create component in
     :type registry_name: str
+    :param validate_assets: flag to check if asset should be validated before publish
+    :type validate_assets: bool
     :return: True for successful validation and update
     :rtype: bool
     """
+    # Use spec file as it is if validate_assets is False
+    if not validate_assets:
+        return True
+
     with open(spec_path) as f:
         try:
             component_dict = YAML().load(f)
@@ -490,6 +504,10 @@ if __name__ == "__main__":
         "-d", "--debug", type=_str2bool, nargs="?",
         const=True, default=False, help="debug mode",
     )
+    parser.add_argument(
+        "-va", "--validate-assets", type=_str2bool, nargs="?",
+        const=True, default=True, help="Validate assets before publishing",
+    )
     args = parser.parse_args()
 
     registry_name = args.registry_name
@@ -502,7 +520,10 @@ if __name__ == "__main__":
     publish_list_file = args.publish_list
     failed_list_file = args.failed_list
     debug_mode = args.debug
+    validate_assets = args.validate_assets
     asset_ids = {}
+
+    logger.print(f"validate_assets? {validate_assets}")
 
     # Load publishing list from deploy config
     if publish_list_file:
@@ -563,13 +584,13 @@ if __name__ == "__main__":
                     component_type = asset.spec_as_object().type
                     if component_type == assets.ComponentType.PIPELINE.value:
                         if not validate_and_prepare_pipeline_component(
-                            asset.spec_with_path, passed_version, registry_name
+                            asset.spec_with_path, passed_version, registry_name, validate_assets
                         ):
                             failure_list.append(asset)
                             continue
                     elif component_type is None or component_type == assets.ComponentType.COMMAND.value:
                         if not validate_update_command_component(
-                            asset.spec_with_path, passed_version, registry_name
+                            asset.spec_with_path, passed_version, registry_name, validate_assets
                         ):
                             failure_list.append(asset)
                             continue
