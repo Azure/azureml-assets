@@ -31,7 +31,6 @@ class AssetInfo:
         with open(self._asset_config.spec_with_path, 'r') as f:
             self._asset = yaml.load(f)
         self._extra_config_object = self._asset_config.extra_config_as_object()
-        
 
     @property
     def type(self) -> str:
@@ -288,7 +287,7 @@ class EnvironmentInfo(AssetInfo):
 class ComponentInfo(AssetInfo):
     """Component asset class."""
 
-    def __init__(self, asset_config:AssetConfig):
+    def __init__(self, asset_config: AssetConfig):
         """Instantiate Component asset class."""
         super().__init__(asset_config)
 
