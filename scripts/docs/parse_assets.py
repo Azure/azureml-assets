@@ -44,9 +44,8 @@ def parse_assets(input_dirs: List[Path],
 
         for category in asset_config.categories:
             references[asset_type][category].append((asset_name, asset_file_name, asset_description))
-
-        # If no categories are found, put the asset under "Uncategorized"
-        if len(asset_config.categories) == 0:
+        else:
+            # Put the asset under "Uncategorized"
             references[asset_type]["Uncategorized"].append((asset_name, asset_file_name, asset_description))
 
         references[asset_type]["All"].append((asset_name, asset_file_name, asset_description))
@@ -54,7 +53,6 @@ def parse_assets(input_dirs: List[Path],
     logger.print(f"{asset_count} asset(s) parsed")
 
     for asset_type in references:
-
         category_docs_links_list = []
 
         for category in references[asset_type]:
@@ -90,7 +88,7 @@ def parse_assets(input_dirs: List[Path],
         doc.add_heading(f"{asset_type.capitalize()}s", level=1)
 
         # Add list of asset categories
-        doc.add_heading("Components by categories", level=2)
+        doc.add_heading("By category", level=2)
         doc.add_unordered_list(category_docs_links_list)
 
         # alphabetize references with case-insensitivity
@@ -105,7 +103,7 @@ def parse_assets(input_dirs: List[Path],
         for asset_name, asset_file_name, asset_description in references[asset_type]["All"]:
             doc.add_unordered_list([snakemd.Paragraph(asset_name).insert_link(asset_name, asset_file_name)])
             # limit description to 300 chars
-            description = asset_description if len(asset_description) < 300 else (asset_description[:297] + "...")
+            description = asset_description if len(asset_description) <= 300 else (asset_description[:298] + "...")
             doc.add_raw("\n  > " + description)
 
         doc.add_unordered_list(asset_links_list)
