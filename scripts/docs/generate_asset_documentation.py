@@ -338,11 +338,13 @@ class Categories:
     _categories = {}
 
     def __init__(self):
+        """Instantiate root categories."""
         self._categories[AssetType.ENVIRONMENT.value] = {}
         self._categories[AssetType.COMPONENT.value] = {}
         self._categories[AssetType.MODEL.value] = {}
 
     def classify_asset(self, asset: AssetInfo):
+        """Classify an asset."""
         for category in asset.categories:
             cats = category.split("/")
             top = cats[0]
@@ -352,6 +354,7 @@ class Categories:
 
     # save should be category based
     def save(self):
+        """Save category documents."""
         for type, category in self._categories.items():
             # Create a new markdown file for each asset type
             doc = snakemd.new_doc()
@@ -380,10 +383,12 @@ class CategoryInfo:
     _parent = None
 
     def __init__(self, name: str, parent=None):
+        """Instantiate category."""
         self._name = name
         self._parent = parent
 
     def add_asset(self, asset: AssetInfo, sub_categories: List[str]):
+        """Add an asset to category."""
         if sub_categories:
             top = sub_categories[0]
             if top not in self._categories:
@@ -394,6 +399,7 @@ class CategoryInfo:
 
     @property
     def assets(self):
+        """Assets."""
         return self._assets
 
 
