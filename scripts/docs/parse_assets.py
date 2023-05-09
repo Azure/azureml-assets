@@ -10,13 +10,8 @@ from typing import List
 
 import azureml.assets as assets
 import azureml.assets.util as util
-from azureml.assets.util import logger
-
-from collections import defaultdict
 
 from generate_asset_documentation import AssetInfo, Categories
-
-PARSED_COUNT = "parsed_count"
 
 
 def parse_assets(input_dirs: List[Path],
@@ -30,8 +25,6 @@ def parse_assets(input_dirs: List[Path],
         pattern (re.Pattern, optional): Regex pattern for assets to parse. Defaults to None.
     """
     asset_count = 0
-
-    references = defaultdict(list)
 
     categories = Categories()
 
