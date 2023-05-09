@@ -384,7 +384,7 @@ class CategoryInfo:
         self._parent = parent
 
     def add_asset(self, asset: AssetInfo, sub_categories:List[str]):
-        if len(sub_categories)>0:
+        if sub_categories:
             top = sub_categories[0]
             if top not in self._categories:
                 self._categories[top] = CategoryInfo(top, self)
