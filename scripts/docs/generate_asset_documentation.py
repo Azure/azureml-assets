@@ -369,7 +369,7 @@ class Categories:
                 doc.add_raw("\n  > " + description)
 
             with open(f"{type}s/{type}s-documentation.md", 'w') as f:
-                f.write(str(doc))        
+                f.write(str(doc))
 
 
 class CategoryInfo:
@@ -383,7 +383,7 @@ class CategoryInfo:
         self._name = name
         self._parent = parent
 
-    def add_asset(self, asset: AssetInfo, sub_categories:List[str]):
+    def add_asset(self, asset: AssetInfo, sub_categories: List[str]):
         if sub_categories:
             top = sub_categories[0]
             if top not in self._categories:
@@ -395,6 +395,7 @@ class CategoryInfo:
     @property
     def assets(self):
         return self._assets
+
 
 # region attibutes
 # set attributes
