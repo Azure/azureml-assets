@@ -334,7 +334,8 @@ class ModelInfo(AssetInfo):
 
 
 class Categories:
-    """Categories structured by type"""
+    """Categories structured by type."""
+
     _categories = {}
 
     def __init__(self):
@@ -376,7 +377,8 @@ class Categories:
 
 
 class CategoryInfo:
-    """Category class"""
+    """Category class."""
+
     _name = None
     _assets = []
     _categories = {}
