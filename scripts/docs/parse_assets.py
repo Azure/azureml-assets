@@ -12,10 +12,9 @@ import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
-import snakemd
 from collections import defaultdict
 
-from generate_asset_documentation import AssetInfo
+from generate_asset_documentation import AssetInfo, Categories
 
 PARSED_COUNT = "parsed_count"
 
@@ -34,35 +33,17 @@ def parse_assets(input_dirs: List[Path],
 
     references = defaultdict(list)
 
+    categories = Categories()
+
     for asset_config in util.find_assets(input_dirs, asset_config_filename, pattern=pattern):
         asset_count += 1
 
         asset_info = AssetInfo.create_asset_info(asset_config)
+        categories.classify_asset(asset_info)
         # Save asset info. Revisit to save all docs after
         asset_info.save()
 
-        references[asset_info.type].append((asset_info.name, asset_info.filename, asset_info.description))
-
-    logger.print(f"{asset_count} asset(s) parsed")
-
-    for asset_type in references:
-        # Create a new markdown file for each asset type
-        doc = snakemd.new_doc()
-        doc.add_heading(asset_type.capitalize() + "s", level=1)
-
-        # Create glossary that links to each asset of the asset type
-        doc.add_heading("Glossary", level=2)
-
-        doc.add_horizontal_rule()
-
-        for asset_name, asset_file_name, asset_description in references[asset_type]:
-            doc.add_unordered_list([snakemd.Paragraph(asset_name).insert_link(asset_name, asset_file_name)])
-            # limit description to 300 chars
-            description = asset_description if len(asset_description) < 300 else (asset_description[:297] + "...")
-            doc.add_raw("\n  > " + description)
-
-        with open(f"{asset_type}s/{asset_type}s-documentation.md", 'w') as f:
-            f.write(str(doc))
+    categories.save()
 
 
 if __name__ == '__main__':
