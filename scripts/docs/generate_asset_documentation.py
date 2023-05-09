@@ -333,6 +333,78 @@ class ModelInfo(AssetInfo):
         return _doc
 
 
+class Categories:
+    """Categories structured by type."""
+
+    _categories = {}
+
+    def __init__(self):
+        """Instantiate root categories."""
+        self._categories[AssetType.ENVIRONMENT.value] = {}
+        self._categories[AssetType.COMPONENT.value] = {}
+        self._categories[AssetType.MODEL.value] = {}
+
+    def classify_asset(self, asset: AssetInfo):
+        """Classify an asset."""
+        for category in asset.categories:
+            cats = category.split("/")
+            top = cats[0]
+            if top not in self._categories[asset.type]:
+                self._categories[asset.type][top] = CategoryInfo(top)
+            self._categories[asset.type][top].add_asset(asset, cats[1:])
+
+    # save should be category based
+    def save(self):
+        """Save category documents."""
+        for type, category in self._categories.items():
+            # Create a new markdown file for each asset type
+            doc = snakemd.new_doc()
+            doc.add_heading(type.capitalize() + "s", level=1)
+
+            # Create glossary that links to each asset of the asset type
+            doc.add_heading("Glossary", level=2)
+
+            doc.add_horizontal_rule()
+
+            for asset in category[DEFAULT_CATEGORY].assets:
+                doc.add_unordered_list([snakemd.Paragraph(asset.name).insert_link(asset.name, asset.filename)])
+                # limit description to 300 chars
+                description = asset.description if len(asset.description) < 300 else (asset.description[:297] + "...")
+                doc.add_raw("\n  > " + description)
+
+            with open(f"{type}s/{type}s-documentation.md", 'w') as f:
+                f.write(str(doc))
+
+
+class CategoryInfo:
+    """Category class."""
+
+    _name = None
+    _assets = []
+    _categories = {}
+    _parent = None
+
+    def __init__(self, name: str, parent=None):
+        """Instantiate category."""
+        self._name = name
+        self._parent = parent
+
+    def add_asset(self, asset: AssetInfo, sub_categories: List[str]):
+        """Add an asset to category."""
+        if sub_categories:
+            top = sub_categories[0]
+            if top not in self._categories:
+                self._categories[top] = CategoryInfo(top, self)
+            self._categories[top].add_asset(asset, sub_categories[1:])
+        # Add assets to all parent categories
+        self._assets.append(asset)
+
+    @property
+    def assets(self):
+        """Assets."""
+        return self._assets
+
+
 # region attibutes
 # set attributes
 def get_comments_map(self, key):
