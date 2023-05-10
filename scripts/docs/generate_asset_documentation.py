@@ -422,7 +422,10 @@ class CategoryInfo:
                 doc.add_unordered_list([snakemd.Paragraph(child._name).insert_link(child._name, child._doc_name)])
 
         # Create glossary that links to each asset of the asset type
-        doc.add_heading("Assets in this category", level=2)
+        if self._is_root:
+            doc.add_heading(f"All {self._type}s", level=2)
+        else:
+            doc.add_heading(f"{self._type.capitalize()}s in this category", level=2)
 
         doc.add_horizontal_rule()
         for asset in self.assets:
