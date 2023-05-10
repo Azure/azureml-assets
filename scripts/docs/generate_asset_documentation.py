@@ -382,11 +382,11 @@ class CategoryInfo:
 
     @property
     def _doc_name(self):
-        return f"{self._category_full_path}-documentation.md".replace(" ", "-")
+        return f"{self._category_full_path}-documentation".replace(" ", "-")
 
     @property
     def _doc_full_path_name(self):
-        return f"{self._type}s/{self._doc_name}"
+        return f"{self._type}s/{self._doc_name}.md"
 
     @property
     def _is_root(self):
