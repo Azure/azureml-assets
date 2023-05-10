@@ -55,7 +55,10 @@ class AssetInfo:
     @property
     def categories(self) -> List[str]:
         """Return asset categories."""
-        return [DEFAULT_CATEGORY]
+        if self._asset_config.categories:
+            return ["/".join([DEFAULT_CATEGORY, cat]) for cat in self._asset_config.categories]
+        else:
+            return [DEFAULT_CATEGORY]
 
     @property
     def filename(self) -> str:
@@ -340,62 +343,62 @@ class Categories:
 
     def __init__(self):
         """Instantiate root categories."""
-        self._categories[AssetType.ENVIRONMENT.value] = {}
-        self._categories[AssetType.COMPONENT.value] = {}
-        self._categories[AssetType.MODEL.value] = {}
+        self._categories[AssetType.ENVIRONMENT.value] = None
+        self._categories[AssetType.COMPONENT.value] = None
+        self._categories[AssetType.MODEL.value] = None
 
     def classify_asset(self, asset: AssetInfo):
         """Classify an asset."""
         for category in asset.categories:
             cats = category.split("/")
             top = cats[0]
-            if top not in self._categories[asset.type]:
-                self._categories[asset.type][top] = CategoryInfo(top)
-            self._categories[asset.type][top].add_asset(asset, cats[1:])
+            if self._categories[asset.type] is None:
+                self._categories[asset.type] = CategoryInfo(top, asset.type)
+            self._categories[asset.type].add_asset(asset, cats[1:])
 
     # save should be category based
     def save(self):
         """Save category documents."""
         for type, category in self._categories.items():
-            # Create a new markdown file for each asset type
-            doc = snakemd.new_doc()
-            doc.add_heading(type.capitalize() + "s", level=1)
-
-            # Create glossary that links to each asset of the asset type
-            doc.add_heading("Glossary", level=2)
-
-            doc.add_horizontal_rule()
-
-            for asset in category[DEFAULT_CATEGORY].assets:
-                doc.add_unordered_list([snakemd.Paragraph(asset.name).insert_link(asset.name, asset.filename)])
-                # limit description to 300 chars
-                description = asset.description if len(asset.description) < 300 else (asset.description[:297] + "...")
-                doc.add_raw("\n  > " + description)
-
-            with open(f"{type}s/{type}s-documentation.md", 'w') as f:
-                f.write(str(doc))
+            if category:
+                category.save()
 
 
 class CategoryInfo:
     """Category class."""
 
-    _name = None
-    _assets = []
-    _categories = {}
-    _parent = None
-
-    def __init__(self, name: str, parent=None):
+    def __init__(self, name: str, type: str, parent=None):
         """Instantiate category."""
         self._name = name
         self._parent = parent
+        self._type = type
+        self._assets = []
+        self._sub_categories = {}
+
+    @property
+    def _category_full_path(self):
+        parent_category = self._parent._category_full_path if self._parent else None
+        return (parent_category + "-" + self._name) if parent_category else (self._type + "s")
+
+    @property
+    def _doc_name(self):
+        return f"{self._category_full_path}-documentation".replace(" ", "-")
+
+    @property
+    def _doc_full_path_name(self):
+        return f"{self._type}s/{self._doc_name}.md"
+
+    @property
+    def _is_root(self):
+        return self._name == DEFAULT_CATEGORY
 
     def add_asset(self, asset: AssetInfo, sub_categories: List[str]):
         """Add an asset to category."""
         if sub_categories:
             top = sub_categories[0]
-            if top not in self._categories:
-                self._categories[top] = CategoryInfo(top, self)
-            self._categories[top].add_asset(asset, sub_categories[1:])
+            if top not in self._sub_categories:
+                self._sub_categories[top] = CategoryInfo(top, self._type, self)
+            self._sub_categories[top].add_asset(asset, sub_categories[1:])
         # Add assets to all parent categories
         self._assets.append(asset)
 
@@ -403,6 +406,36 @@ class CategoryInfo:
     def assets(self):
         """Assets."""
         return self._assets
+
+    def save(self):
+        """Save category documents."""
+        doc = snakemd.new_doc()
+        if self._is_root:
+            doc.add_heading(self._type.capitalize() + "s", level=1)
+        else:
+            doc.add_heading(self._name.capitalize(), level=1)
+
+        if self._sub_categories:
+            doc.add_heading("Categories", level=2)
+            for name, child in self._sub_categories.items():
+                child.save()
+                doc.add_unordered_list([snakemd.Paragraph(child._name).insert_link(child._name, child._doc_name)])
+
+        # Create glossary that links to each asset of the asset type
+        if self._is_root:
+            doc.add_heading(f"All {self._type}s", level=2)
+        else:
+            doc.add_heading(f"{self._type.capitalize()}s in this category", level=2)
+
+        doc.add_horizontal_rule()
+        for asset in self.assets:
+            doc.add_unordered_list([snakemd.Paragraph(asset.name).insert_link(asset.name, asset.filename)])
+            # limit description to 300 chars
+            description = asset.description if len(asset.description) < 300 else (asset.description[:297] + "...")
+            doc.add_raw("\n  > " + description)
+
+        with open(self._doc_full_path_name, 'w') as f:
+            f.write(str(doc))
 
 
 # region attibutes
