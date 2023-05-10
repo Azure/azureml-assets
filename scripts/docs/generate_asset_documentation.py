@@ -367,7 +367,7 @@ class Categories:
 class CategoryInfo:
     """Category class."""
 
-    def __init__(self, name: str, type:str, parent=None):
+    def __init__(self, name:str, type:str, parent=None):
         """Instantiate category."""
         self._name = name
         self._parent = parent
@@ -436,7 +436,6 @@ class CategoryInfo:
 
         with open(self._doc_full_path_name, 'w') as f:
             f.write(str(doc))
-
 
 
 # region attibutes
