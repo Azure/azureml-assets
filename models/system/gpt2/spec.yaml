@@ -7,7 +7,6 @@ properties:
   finetuning-tasks: text-classification, token-classification
   languages: en
 tags:
-  Featured: ''
   Preview: ''
   license: mit
   min_inference_sku: Standard_DS2_v2
