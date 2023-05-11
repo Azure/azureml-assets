@@ -133,13 +133,13 @@ def delete_assets(args: argparse.Namespace):
 
 if __name__ == '__main__':
     # Quick function to convert comma-separated arg to Path list
-    def list_path(value: str):
+    def _list_path(value: str):
         return [Path(d) for d in value.split(",")]
 
     # Handle command-line args
     parser = argparse.ArgumentParser()
     shared_parser = argparse.ArgumentParser(add_help=False)
-    shared_parser.add_argument("-i", "--input-dirs", type=list_path, required=True,
+    shared_parser.add_argument("-i", "--input-dirs", type=_list_path, required=True,
                                help="Comma-separated list of directories containing assets")
     shared_parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
                                help="Asset config file name to search for")
