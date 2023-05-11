@@ -46,7 +46,7 @@ inputs:
     type: uri_file
     optional: true
     description: JSON payload which would be used to validate deployment
-  
+
   endpoint_name:
     type: string
     optional: true

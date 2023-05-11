@@ -190,15 +190,9 @@ def get_ml_client():
     return ml_client
 
 
-def create_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
-    """Create deployment and return endpoint and deloyment details."""
+def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
+    """Create endpoint and deployment and return details."""
     endpoint = ManagedOnlineEndpoint(name=endpoint_name, auth_mode="key")
-    try:
-        ml_client.begin_create_or_update(endpoint).wait()
-    except Exception as e:
-        error_msg = f"Error occured while creating endpoint - {e}"
-        logging.error(error_msg)
-        raise Exception(error_msg)
 
     # deployment
     deployment = ManagedOnlineDeployment(
@@ -227,14 +221,24 @@ def create_deployment(ml_client, model_id, endpoint_name, deployment_name, args)
         ),
         egress_public_network_access=args.egress_public_network_access,
     )
+
     try:
+        print(f"Creating endpoint {endpoint_name}")
+        ml_client.begin_create_or_update(endpoint).wait()
+    except Exception as e:
+        error_msg = f"Error occured while creating endpoint - {e}"
+        logging.error(error_msg)
+        raise Exception(error_msg)
+
+    try:
+        print(f"Creating deployment {deployment}")
         ml_client.online_deployments.begin_create_or_update(deployment).wait()
     except Exception as e:
         error_msg = f"Error occured while creating deployment - {e}"
         logging.error(error_msg)
         raise Exception(error_msg)
 
-    print("Deployment done with name ", deployment.name)
+    print(f"Deployment successful. Updating endpoint to take 100% traffic for deployment {deployment_name}")
 
     # deployment to take 100% traffic
     endpoint.traffic = {deployment.name: 100}
@@ -261,13 +265,13 @@ def main(args):
 
     # make sure underscores and slashes are replaced by hyphens and convert them to lower case
     endpoint_name = re.sub('[/_ ]', '-', model_name)
-    endpoint_name = f"{endpoint_name.lower()}-{str(time.time())}"
-    endpoint_name = endpoint_name[:32]
+    endpoint_name = f"{endpoint_name.lower()}-{int(time.time())}"
+    endpoint_name = endpoint_name[:32].lower()
 
     endpoint_name = args.endpoint_name if args.endpoint_name else endpoint_name
     deployment_name = args.deployment_name if args.deployment_name else "default"
 
-    endpoint, deployment = create_deployment(
+    endpoint, deployment = create_endpoint_and_deployment(
         ml_client=ml_client,
         endpoint_name=endpoint_name,
         deployment_name=deployment_name,
@@ -276,7 +280,7 @@ def main(args):
     )
 
     if args.inference_payload:
-        print("Invoking inference with test payload")
+        print("Invoking inference with test payload ...")
         try:
             response = ml_client.online_endpoints.invoke(
                 endpoint_name=endpoint_name,
@@ -287,6 +291,8 @@ def main(args):
         except Exception as e:
             print(f"Invocation failed with error: {e}")
             raise e
+
+    print("Saving deployment details ...")
 
     # write deployment details to file
     endpoint_type = "aml_online_inference"
