@@ -4,10 +4,8 @@
 """Tools to maintain asset source files."""
 
 import argparse
-import re
 import shutil
 from pathlib import Path
-from typing import List
 
 import azureml.assets as assets
 import azureml.assets.util as util
@@ -15,64 +13,6 @@ from azureml.assets.util import logger
 
 ASSET_COUNT = "asset_count"
 DELETED_COUNT = "deleted_count"
-
-
-def copy_asset(asset_config: assets.AssetConfig,
-               output_directory_root: Path,
-               release_directory_root: Path = None,
-               use_version_dir: bool = False) -> str:
-    """Copy asset to output directory.
-
-    Args:
-        asset_config (assets.AssetConfig): Asset config.
-        output_directory_root (Path, optional): Output directory.
-        release_directory_root (Path, optional): Release directory location. Defaults to None.
-        use_version_dir (bool, optional): Use version directory for output. Defaults to False.
-    """
-    if release_directory_root is not None and assets.release_tag_exists(asset_config, release_directory_root):
-        # Skip a released version
-        return None
-
-    # Copy asset to output directory
-    util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory_root, add_subdir=True,
-                                  use_version_dir=use_version_dir)
-    return asset_config.version
-
-
-def copy_assets(input_dirs: List[Path],
-                output_directory_root: Path,
-                asset_config_filename: str,
-                release_directory_root: Path = None,
-                use_version_dirs: bool = False,
-                pattern: re.Pattern = None):
-    """Copy assets to output directory.
-
-    Args:
-        input_dirs (List[Path]): List of directories to search for assets.
-        output_directory_root (Path, optional): Output directory
-        asset_config_filename (str): Asset config filename to search for.
-        release_directory_root (Path, optional): Release directory location. Defaults to None.
-        use_version_dirs (bool, optional): Use version directories for output. Defaults to False.
-        pattern (re.Pattern, optional): Regex pattern for assets to copy. Defaults to None.
-    """
-    # Find assets under release dir
-    asset_count = 0
-    copied_count = 0
-    for asset_config in util.find_assets(input_dirs, asset_config_filename, pattern=pattern):
-        asset_count += 1
-
-        # Copy asset if tag doesn't exist or release_directory_root isn't specified
-        version = copy_asset(asset_config=asset_config,
-                             output_directory_root=output_directory_root,
-                             release_directory_root=release_directory_root,
-                             use_version_dir=use_version_dirs)
-        if version:
-            logger.print(f"Copied {asset_config.type.value} {asset_config.name} version {version}")
-            copied_count += 1
-    logger.print(f"{copied_count} of {asset_count} asset(s) copied")
-
-    # Set variables
-    logger.set_output(DELETED_COUNT, copied_count)
 
 
 def list_assets(args: argparse.Namespace):
