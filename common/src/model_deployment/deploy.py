@@ -287,7 +287,7 @@ def main(args):
                 deployment_name=deployment_name,
                 request_file=args.inference_payload,
             )
-            print(f"Reponse:\n{response}")
+            print(f"Response:\n{response}")
         except Exception as e:
             print(f"Invocation failed with error: {e}")
             raise e
