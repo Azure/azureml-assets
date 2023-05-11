@@ -1,6 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
+  DEPRECATED: Please use tensorflow-2.11-cuda11 or tensorflow-2.12-cuda11 instead.
   An environment for deep learning with Tensorflow containing the Azure ML SDK and
   additional python packages.
 
@@ -20,4 +21,5 @@ tags:
   Training: ""
   Preview: ""
   Python: "3.8"
+  Deprecated: ""
 
