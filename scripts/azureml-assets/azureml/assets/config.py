@@ -912,6 +912,11 @@ class AssetConfig(Config):
         """Asset's spec file."""
         return self._append_to_file_path(self.spec)
 
+    @property
+    def categories(self) -> List[str]:
+        """List of categories."""
+        return self._yaml.get('categories', [])
+
     def spec_as_object(self, force_reload: bool = False) -> Spec:
         """Retrieve asset's spec file as an object.
 

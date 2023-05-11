@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths:
-      - scripts/**
+      - scripts/azureml-assets/**
   pull_request_target:
     branches:
       - main
     paths:
-      - scripts/**
+      - scripts/azureml-assets/**
     types:
       - opened
       - labeled

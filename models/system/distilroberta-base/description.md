@@ -7,7 +7,7 @@ DistilRoBERTa base is a distilled version of the RoBERTa-base model, with 6 laye
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
 Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
-Batch | coming soon
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a>| coming soon
 
 
 ### Finetuning samples
@@ -22,7 +22,7 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 ### Model Evaluation
 
 Task| Use case| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|--|
+|--|--|--|--|
 Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/imdb" target="_blank">imdb</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
 
 

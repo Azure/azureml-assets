@@ -12,6 +12,8 @@ COPYRIGHT = [
     "# Copyright (c) Microsoft Corporation.",
     "# Licensed under the MIT License."
 ]
+COPYRIGHT_SET = set(COPYRIGHT)
+HEADER_SIZE = 5
 
 
 def _test(testpaths: List[Path], excludes: List[Path] = []) -> bool:
@@ -19,19 +21,27 @@ def _test(testpaths: List[Path], excludes: List[Path] = []) -> bool:
     for testpath in testpaths:
         for file in testpath.rglob("*.py"):
             # Skip ignored files
-            if file.parent in excludes:
+            if any([p in excludes for p in file.parents]):
                 continue
 
             # Ignore zero-length files
             if file.stat().st_size == 0:
                 continue
 
-            # Read copyright
             with open(file, encoding="utf8") as f:
-                for i in range(0, len(COPYRIGHT)):
-                    if f.readline().rstrip() != COPYRIGHT[i]:
-                        badfiles.append(file)
+                # Read top HEADER_SIZE lines of file
+                header = []
+                for _ in range(0, HEADER_SIZE):
+                    line = f.readline()
+                    if not line:
+                        # Handle EOF
                         break
+                    header.append(line.rstrip())
+
+                # Check for copyright header
+                if not COPYRIGHT_SET <= set(header):
+                    badfiles.append(file)
+                    break
 
     if len(badfiles) > 0:
         print("File(s) missing copyright header:")

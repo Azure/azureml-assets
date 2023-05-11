@@ -6,26 +6,23 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union, Tuple
 
 import mltable
 import pandas as pd
 
-from azureml.core import Run, Workspace
-from azureml.data.abstract_dataset import AbstractDataset
-from azureml.exceptions import UserErrorException
+import mlflow
+from azureml.core import Run
 from raiutils.data_processing import serialize_json_safe
 
 from spacy.cli import download
-
-from azureml_model_serializer import ModelSerializer
+from azureml.rai.utils import ModelSerializer
+from azureml.rai.utils.dataset_manager import DownloadManager
 from responsibleai import __version__ as responsibleai_version
 from responsibleai_vision import RAIVisionInsights
 from responsibleai_vision import __version__ as responsibleai_vision_version
 from responsibleai_vision.common.constants import ExplainabilityLiterals
 
-# Local
-from aml_dataset_helper import AmlDatasetHelper
 from constants import TaskType
 
 print(download("en_core_web_sm"))
@@ -35,11 +32,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 IMAGE_DATA_TYPE = "image"
-
-
-class MLTableLiterals:
-    MLTABLE = "MLTable"
-    MLTABLE_RESOLVEDURI = "ResolvedUri"
 
 
 class DashboardInfo:
@@ -98,6 +90,7 @@ class RAIToolType:
 class ModelType:
     FASTAI = "fastai"
     PYFUNC = "pyfunc"
+    PYTORCH = "pytorch"
 
 
 class DatasetStoreType:
@@ -127,7 +120,13 @@ def parse_args():
     parser.add_argument(
         "--task_type", type=str, required=True,
         choices=[TaskType.IMAGE_CLASSIFICATION,
-                 TaskType.MULTILABEL_IMAGE_CLASSIFICATION]
+                 TaskType.MULTILABEL_IMAGE_CLASSIFICATION,
+                 TaskType.OBJECT_DETECTION]
+    )
+
+    parser.add_argument(
+        "--data_folder", type=str, help="which transform folder for OD",
+        required=False
     )
 
     parser.add_argument(
@@ -138,7 +137,6 @@ def parse_args():
         "--model_info", type=str, help="name:version", required=True
     )
 
-    parser.add_argument("--train_dataset", type=str, required=True)
     parser.add_argument("--test_dataset", type=str, required=True)
     parser.add_argument(
         "--dataset_type", type=str, required=False,
@@ -157,12 +155,17 @@ def parse_args():
     # Explanations
     parser.add_argument("--precompute_explanation", type=boolean_parser)
 
+    # Error analysis
+    parser.add_argument("--enable_error_analysis", type=boolean_parser)
+
     parser.add_argument("--use_model_dependency", type=boolean_parser,
                         help="Use model dependency")
+    parser.add_argument("--use_conda", type=boolean_parser,
+                        help="Use conda instead of pip")
 
     parser.add_argument(
         "--model_type", type=str, required=True,
-        choices=[ModelType.PYFUNC, ModelType.FASTAI]
+        choices=[ModelType.PYFUNC, ModelType.FASTAI, ModelType.PYTORCH]
     )
     # XAI args
     parser.add_argument(
@@ -240,69 +243,27 @@ def json_empty_is_none_parser(target: str) -> Union[Dict, List]:
         return parsed
 
 
-def get_dataset_from_mltable(
-        ws: Workspace,
-        mltable_uri: str
-) -> Optional[AbstractDataset]:
-    """
-    Get dataset from MLTable path
-
-    :param ws: workspace to get dataset from
-    :param mltable_uri: Path to mltable in workspace
-    :return: AbstractDataset
-
-    """
-    dataset = None
-    try:
-        dataset = AbstractDataset._load(mltable_uri, ws)
-    except (UserErrorException, ValueError) as e:
-        generic_msg = f"Error in loading the dataset from MLTable. Error: {e}"
-        _logger.error(generic_msg)
-        raise UserErrorException(generic_msg)
-    except Exception as e:
-        raise UserErrorException(str(e))
-    return dataset
-
-
-def get_pandas_df_from_streamed_dataset(
-    amldataset: AbstractDataset
-) -> pd.DataFrame:
-    """
-    Get the pandas dataframe from the tabular dataset
-    :param amldataset: AbstractDataset object
-    :return: Pandas Dataframe
-    """
-    dataset_helper = AmlDatasetHelper(amldataset, ignore_data_errors=True)
-    return dataset_helper.images_df
-
-
-def get_streamed_dataset(mltable_path: str) -> AbstractDataset:
-    """
-    Get the Tabular dataset given the mltable
-    :param mltable_path: Path to the MLTable
-    :return: AbstractDataset
-    """
-    my_run = Run.get_context()
-    ws = my_run.experiment.workspace
-    return get_dataset_from_mltable(ws, mltable_path)
-
-
 def load_mltable(mltable_path: str, dataset_type: str) -> pd.DataFrame:
     _logger.info("Loading MLTable: {0}".format(mltable_path))
     df: pd.DataFrame = None
+    is_mltable_from_datastore = False
     try:
         if dataset_type == DatasetStoreType.PRIVATE:
             # datasets from private datastore needs to be loaded via
             # azureml-dataprep package
-            dataset = get_streamed_dataset(mltable_path)
-            df = get_pandas_df_from_streamed_dataset(dataset)
+            dataset = DownloadManager(mltable_path)
+            # Flag to track the mltable loaded from private datastore
+            # since they need to be seralized & de-serialized in
+            # RAIVisionInsights class
+            is_mltable_from_datastore = True
+            df = dataset._images_df
         else:
             tbl = mltable.load(mltable_path)
             df: pd.DataFrame = tbl.to_pandas_dataframe()
     except Exception as e:
         _logger.info("Failed to load MLTable")
         _logger.info(e)
-    return df
+    return df, is_mltable_from_datastore
 
 
 def load_parquet(parquet_path: str) -> pd.DataFrame:
@@ -311,14 +272,15 @@ def load_parquet(parquet_path: str) -> pd.DataFrame:
     return df
 
 
-def load_dataset(dataset_path: str, dataset_type: str) -> pd.DataFrame:
+def load_dataset(dataset_path: str, dataset_type: str) -> \
+      Tuple[pd.DataFrame, bool]:
     _logger.info(f"Attempting to load: {dataset_path}")
-    df = load_mltable(dataset_path, dataset_type)
+    df, is_mltable_from_datastore = load_mltable(dataset_path, dataset_type)
     if df is None:
         df = load_parquet(dataset_path)
     print(df.dtypes)
     print(df.head(10))
-    return df
+    return df, is_mltable_from_datastore
 
 
 def fetch_model_id(model_info_path: str):
@@ -361,15 +323,14 @@ def add_properties_to_gather_run(
 
 
 def main(args):
-    _logger.info("Dealing with initialization dataset")
-
-    # Load training dataset
     _logger.info(f"Dataset type is {args.dataset_type}")
-    train_df = load_dataset(args.train_dataset, args.dataset_type)
 
     # Load evaluation dataset
-    _logger.info("Dealing with evaluation dataset")
-    test_df = load_dataset(args.test_dataset, args.dataset_type)
+    _logger.info("Loading evaluation dataset")
+    test_df, is_test_mltable_from_datastore = load_dataset(
+        args.test_dataset,
+        args.dataset_type
+    )
 
     if args.model_input is None or args.model_info is None:
         raise ValueError(
@@ -379,14 +340,13 @@ def main(args):
     model_id = args.model_info
     _logger.info(f"Loading model: {model_id}")
 
-    my_run = Run.get_context()
-    workspace = my_run.experiment.workspace
-
+    tracking_uri = mlflow.get_tracking_uri()
     model_serializer = ModelSerializer(
-        model_id, workspace=workspace,
+        model_id,
         model_type=args.model_type,
-        use_model_dependency=args.use_model_dependency
-    )
+        use_model_dependency=args.use_model_dependency,
+        use_conda=args.use_conda,
+        tracking_uri=tracking_uri)
     image_model = model_serializer.load("Ignored path")
 
     if args.task_type == TaskType.MULTILABEL_IMAGE_CLASSIFICATION:
@@ -399,10 +359,14 @@ def main(args):
     else:
         target_column = args.target_column_name
 
+    test_data_path = None
+    image_downloader = None
+    if is_test_mltable_from_datastore:
+        test_data_path = args.test_dataset
+        image_downloader = DownloadManager
     _logger.info("Creating RAI Vision Insights")
     rai_vi = RAIVisionInsights(
         model=image_model,
-        train=train_df,
         test=test_df,
         target_column=target_column,
         task_type=args.task_type,
@@ -413,7 +377,9 @@ def main(args):
             allow_none=True
         ),
         maximum_rows_for_test=args.maximum_rows_for_test_dataset,
-        serializer=model_serializer
+        serializer=model_serializer,
+        test_data_path=test_data_path,
+        image_downloader=image_downloader
     )
 
     included_tools: Dict[str, bool] = {
@@ -427,6 +393,11 @@ def main(args):
         _logger.info("Adding explanation")
         rai_vi.explainer.add()
         included_tools[RAIToolType.EXPLANATION] = True
+
+    if args.enable_error_analysis:
+        _logger.info("Adding error analysis")
+        rai_vi.error_analysis.add()
+        included_tools[RAIToolType.ERROR_ANALYSIS] = True
 
     _logger.info("Starting computation")
     # get keyword arguments

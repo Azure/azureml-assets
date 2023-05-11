@@ -156,15 +156,15 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
 
 def validate_and_prepare_pipeline_component(
     spec_path: Path,
-    final_version: str,
+    version_suffix: str,
     registry_name: str,
 ) -> bool:
     """Validate and update pipeline component spec.
 
     :param spec_path: Path of loaded component
     :type spec_path: Path
-    :param final_version: Final version string used to create component
-    :type final_version: str
+    :param version_suffix: version suffix
+    :type version_suffix: str
     :param registry_name: name of the registry to create component in
     :type registry_name: str
     :return: True for successful validation and update
@@ -205,13 +205,14 @@ def validate_and_prepare_pipeline_component(
         )
 
         if registry and registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
-            logger.log_error(
-                "Registry name for component's URI must be either "
-                + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{registry}'"
+            logger.log_warning(
+                f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
+                f"The URI for component '{name}' references registry '{registry}', "
+                "and publishing will fail if the release process does not have read access to it."
             )
-            return False
 
         # Check if component's env exists
+        final_version = version + "-" + version_suffix if version_suffix else version
         registry_name = registry or registry_name
         asset_details = None
         for ver in [version, final_version]:
@@ -241,15 +242,15 @@ def validate_and_prepare_pipeline_component(
 
 def validate_update_command_component(
     spec_path: Path,
-    final_version: str,
+    version_suffix: str,
     registry_name: str,
 ) -> bool:
     """Validate and update command component spec.
 
     :param spec_path: Path of loaded component
     :type spec_path: Path
-    :param final_version: Final version string used to create component
-    :type final_version: str
+    :param version_suffix: version suffix
+    :type version_suffix: str
     :param registry_name: name of the registry to create component in
     :type registry_name: str
     :return: True for successful validation and update
@@ -278,11 +279,11 @@ def validate_update_command_component(
     )
 
     if env_registry_name and env_registry_name not in [PROD_SYSTEM_REGISTRY, registry_name]:
-        logger.log_error(
-            "Registry name for component's env URI must be either "
-            + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{env_registry_name}'"
+        logger.log_warning(
+            f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
+            f"The URI for environment '{env_name}' references registry '{env_registry_name}', "
+            "and publishing will fail if the release process does not have read access to it."
         )
-        return False
 
     registry_name = env_registry_name or registry_name
 
@@ -305,6 +306,7 @@ def validate_update_command_component(
 
     env = None
     # Check if component's env exists
+    final_version = env_version + "-" + version_suffix if version_suffix else env_version
     for version in [env_version, final_version]:
         if (env := get_asset_details(
             assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name
@@ -551,28 +553,27 @@ if __name__ == "__main__":
                     version=final_version,
                 )
 
+                if get_asset_details(asset.type.value, asset.name, asset.version, registry_name):
+                    logger.print(f"{asset.name} {asset.version} already exists, skipping")
+                    continue
+
                 # Handle specific asset types
                 if asset.type == assets.AssetType.COMPONENT:
                     # load component and check if environment exists
                     component_type = asset.spec_as_object().type
                     if component_type == assets.ComponentType.PIPELINE.value:
                         if not validate_and_prepare_pipeline_component(
-                            asset.spec_with_path, final_version, registry_name
+                            asset.spec_with_path, passed_version, registry_name
                         ):
                             failure_list.append(asset)
                             continue
                     elif component_type is None or component_type == assets.ComponentType.COMMAND.value:
                         if not validate_update_command_component(
-                            asset.spec_with_path, final_version, registry_name
+                            asset.spec_with_path, passed_version, registry_name
                         ):
                             failure_list.append(asset)
                             continue
                 elif asset.type == assets.AssetType.MODEL:
-                    # Check if model already exists
-                    final_version = asset.version
-                    if get_asset_details(asset.type.value, asset.name, final_version, registry_name):
-                        logger.print(f"{asset.name} {final_version} already exists, skipping")
-                        continue
                     try:
                         model_config = asset.extra_config_as_object()
                         if not prepare_model(model_config, asset.spec_with_path, Path(work_dir)):

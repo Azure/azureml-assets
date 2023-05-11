@@ -1,0 +1,19 @@
+channels:
+- anaconda
+- pytorch
+- conda-forge
+dependencies:
+- pip<=21.2.4
+- python=3.8.13
+- ffmpeg=4.2.2
+- pip:
+  - mlflow<3,>=2.2
+  - cloudpickle==2.2.1
+  - azureml-evaluate-mlflow==0.0.6
+  - azureml-metrics==0.0.6
+  - torch>=1.9,!=1.12.0
+  - torchaudio
+  - wget
+  - more-itertools==9.1.0
+  - ffmpeg-python==0.2.0
+name: mlflow-env

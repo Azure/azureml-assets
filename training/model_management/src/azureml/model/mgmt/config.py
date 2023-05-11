@@ -23,6 +23,7 @@ class ModelFlavor(_CustomEnum):
     """Enum for the Flavors accepted in ModelConfig."""
 
     TRANSFORMERS = "transformers"
+    MMLAB_PYFUNC = "mmlab_pyfunc"
 
 
 class PathType(_CustomEnum):
