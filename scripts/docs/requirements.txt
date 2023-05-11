@@ -1,2 +1,2 @@
-azureml-assets
+#azureml-assets
 snakemd
