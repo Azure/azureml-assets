@@ -4,19 +4,19 @@ path: ./
 properties:
   SHA: e09df911dd96d8b052d2665dfbb309e9398a9d70
   datasets: squad_v2
-  finetuning-tasks: text-classification, token-classification, question-answering
-  languages: en
-  inference-recommended-sku: Standard_DS2_v2
-  inference-min-sku-spec: 2|0|7|14
-  evaluation-recommended-sku: Standard_DS2_v2
   evaluation-min-sku-spec: 2|0|7|14
+  evaluation-recommended-sku: Standard_DS2_v2
+  finetune-min-sku-spec: 4|1|28|176
   finetune-recommended-sku: Standard_ND40RS_v2
-  finetune-min-sku-spec: 4|1|28|176     # num_cpu_cores|num_gpu|ram_gb|memory_gb (this min sku spec is used to filter the computes shown to the user submitting a job from Model Catalog page)
+  finetuning-tasks: text-classification, token-classification, question-answering
+  inference-min-sku-spec: 2|0|7|14
+  inference-recommended-sku: Standard_DS2_v2
+  languages: en
 tags:
   Preview: ''
   license: cc-by-4.0
   task: question-answering
-version: 3
+version: 4
 description: |
   Roberta-base is a fine-tuned language model for extractive Question Answering in English, trained on the SQuAD2.0 dataset. It is based on the "roberta-base" model, developed by deepset and can be used with Haystack and Transformers. The model requires 4 Tesla v100s and has a batch size of 96, 2 epochs, and a learning rate of 3e-5. The model was evaluated on the SQuAD 2.0 dev set and achieved an exact match of 79.87 and an F1 score of 82.91. There is also a distilled version of this model available called "deepset/tinyroberta-squad2" which has a comparable prediction quality and runs twice as fast. Usage examples for the model are provided for Haystack and Transformers. The authors of the model are Branden Chan, Timo Möller, Malte Pietsch, and Tanay Soni from deepset.ai.
 
