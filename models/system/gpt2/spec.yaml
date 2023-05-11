@@ -13,7 +13,6 @@ properties:
   inference-recommended-sku: Standard_DS2_v2
   languages: en
 tags:
-  Featured: ''
   Preview: ''
   license: mit
   task: text-generation
