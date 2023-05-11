@@ -240,7 +240,7 @@ jobs:
         run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
   
       - name: Delete deprecated assets
-        run: python -u $main_dir/$scripts_assets_dir/asset_utils.py delete -i $release_dir -r ${{ runner.temp }}/$asset_list_artifact/$asst_list_file
+        run: python -u $main_dir/$scripts_assets_dir/asset_utils.py delete -i $release_dir -r ${{ runner.temp }}/$asset_list_artifact/$asset_list_file
   
       - name: Copy test files and scripts
         run: |
