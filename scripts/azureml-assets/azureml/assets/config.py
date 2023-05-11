@@ -720,6 +720,7 @@ class AssetType(Enum):
 
 DEFAULT_ASSET_FILENAME = "asset.yaml"
 VERSION_AUTO = "auto"
+PARTIAL_ASSET_NAME_TEMPLATE = "{type}/{name}"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
 FULL_ASSET_NAME_DELIMITER = "/"
 DEFAULT_DESCRIPTION_FILE = "description.md"
@@ -848,6 +849,11 @@ class AssetConfig(Config):
                 raise ValidationException(f"Tried to read asset name from spec, "
                                           f"but it includes a template tag: {name}")
         return name
+
+    @property
+    def partial_name(self) -> str:
+        """Asset name, including type."""
+        return PARTIAL_ASSET_NAME_TEMPLATE.format(type=self.type.value, name=self.name)
 
     @property
     def full_name(self) -> str:
