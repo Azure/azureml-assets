@@ -205,9 +205,11 @@ def validate_and_prepare_pipeline_component(
         )
 
         if registry and registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
-            logger.log_error(
-                "Registry name for component's URI must be either "
-                + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{registry}'"
+            logger.log_warning(
+                "Registry name for component's URI should be either "
+                + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'."
+                + f"Component publish would fail if release process does not have read access to {registry}."
+                + "Please contact to make sure, read access is provided inorder to be able to publish."
             )
             return False
 
@@ -279,9 +281,11 @@ def validate_update_command_component(
     )
 
     if env_registry_name and env_registry_name not in [PROD_SYSTEM_REGISTRY, registry_name]:
-        logger.log_error(
-            "Registry name for component's env URI must be either "
-            + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{env_registry_name}'"
+        logger.log_warning(
+            "Registry name for component's env URI should be either "
+            + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'."
+            + f"Component publish would fail if release process does not have read access to {env_registry_name}."
+            + "Please contact to make sure, read access is provided inorder to be able to publish."
         )
         return False
 
