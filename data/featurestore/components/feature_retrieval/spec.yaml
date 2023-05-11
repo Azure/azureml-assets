@@ -1,0 +1,62 @@
+$schema: http://azureml/sdk-2-0/SparkComponent.json
+
+name: feature_retrieval
+version: 1
+type: spark
+
+display_name: Feature Retrieval
+description: Retrieval component to be used to retrieve features from feature store.
+is_deterministic: true
+
+code: ../src
+entry:
+  file: retrieval.py
+
+inputs:
+  input_model:
+    type: custom_model
+    mode: direct
+    optional: true
+
+  feature_retrieval_spec:
+    type: uri_folder
+    mode: direct
+    optional: true
+
+  observation_data:
+    type: uri_folder
+    mode: direct
+
+  timestamp_column: 
+    type: string
+
+  observation_data_format:
+    type: string
+    enum:
+      - parquet
+      - csv
+      - delta
+
+outputs:
+  output_data:
+    type: uri_folder
+    mode: direct
+
+args: >-
+  $[[--input_model ${{inputs.input_model}}]]
+  $[[--feature_retrieval_spec ${{inputs.feature_retrieval_spec}}]]
+  --observation_data ${{inputs.observation_data}}
+  --timestamp_column ${{inputs.timestamp_column}}
+  --observation_data_format ${{inputs.observation_data_format}}
+  --output_data ${{outputs.output_data}}
+
+conf:
+  spark.synapse.library.python.env: |
+    dependencies:
+      - python=3.8
+      - pip=21.1.1
+      - pip:
+        - protobuf==3.19.6
+        - azure-ai-ml==1.7.0
+        - azureml-featurestore==1.0.0
+    name: fs_env
