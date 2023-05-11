@@ -28,6 +28,8 @@ env:
   scripts_release_dir: scripts/release
   scripts_setup_dir: scripts/setup
   scripts_dir: scripts
+  asset_list_artifact: assets-list
+  asset_list_file: assets.txt
   changed_assets_artifact: changed-assets
   releasable_assets_artifact: releasable-assets
   asset_config_filename: asset.yaml
@@ -90,6 +92,19 @@ jobs:
           path: |
             ${{ runner.temp }}/${{ env.changed_assets_artifact }}
             !${{ runner.temp }}/${{ env.changed_assets_artifact }}/environment
+      
+      - name: Create list of assets
+        run: |
+          artifact_dir=${{ runner.temp }}/$asset_list_artifact
+          mkdir -p $artifact_dir
+          python -u $scripts_assets_dir/asset_utils.py list -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -o $artifact_dir/$asset_list_file
+        working-directory: ${{ env.main_dir }}
+      
+      - name: Upload list of artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.asset_list_artifact }}
+          path: ${{ runner.temp }}/${{ env.asset_list_artifact }}
 
     outputs:
       updated_env_count: ${{ steps.find-updated-assets.outputs.updated_env_count }}
@@ -187,6 +202,12 @@ jobs:
           name: ${{ env.releasable_assets_artifact }}
           path: ${{ runner.temp }}/${{ env.releasable_assets_artifact }}
       
+      - name: Download list of assets
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.asset_list_artifact }}
+          path: ${{ runner.temp }}/${{ env.asset_list_artifact }}
+      
       - name: Clone branch
         uses: actions/checkout@v3
         with:
@@ -214,6 +235,9 @@ jobs:
       - name: Update release branch
         if: steps.download-artifact.outputs.download-path
         run: python -u $main_dir/$scripts_assets_dir/update_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -r $release_dir -c
+  
+      - name: Delete deprecated assets
+        run: python -u $main_dir/$scripts_assets_dir/asset_utils.py delete -i $release_dir -r ${{ runner.temp }}/$asset_list_artifact/$asset_list_file
   
       - name: Copy test files and scripts
         run: |
