@@ -5,6 +5,9 @@
 import os
 import argparse
 import json
+import logging
+import re
+import time
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import (
     ManagedOnlineEndpoint,
@@ -15,7 +18,7 @@ from azure.ai.ml.entities import (
 from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.core import Run
-import logging
+from pathlib import Path
 
 
 def parse_args():
@@ -25,8 +28,13 @@ def parse_args():
     # add arguments
     parser.add_argument(
         "--registration_details",
-        type=str,
+        type=Path,
         help="Json file that contains the ID of registered model to be deployed",
+    )
+    parser.add_argument(
+        "--inference_payload",
+        type=Path,
+        help="Json file with inference endpoint payload.",
     )
     parser.add_argument(
         "--endpoint_name",
@@ -56,13 +64,13 @@ def parse_args():
     parser.add_argument(
         "--request_timeout_ms",
         type=int,
-        default=5000,
-        help="Request timeout in ms. Max limit is 90000.",
+        default=60000,
+        help="Request timeout in ms. Max limit is 60000.",
     )
     parser.add_argument(
         "--max_queue_wait_ms",
         type=int,
-        default=500,
+        default=60000,
         help="Maximum queue wait time of a request in ms",
     )
     parser.add_argument(
@@ -149,17 +157,10 @@ def parse_args():
         parser.error("Arg max_concurrent_requests_per_instance cannot be less than 1")
     if args.request_timeout_ms < 1 or args.request_timeout_ms > 90000:
         parser.error("Arg request_timeout_ms should lie between 1 and 90000")
-    if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > 500:
-        parser.error("Arg max_queue_wait_ms should lie between 1 and 500")
+    if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > 90000:
+        parser.error("Arg max_queue_wait_ms should lie between 1 and 90000")
 
     return args
-
-
-def get_endpoint(args):
-    """Return online or batch endpoint."""
-    endpoint = ManagedOnlineEndpoint(name=args.endpoint_name, auth_mode="key")
-    print("Endpoint created with name ", endpoint.name)
-    return endpoint
 
 
 def get_ml_client():
@@ -189,17 +190,9 @@ def get_ml_client():
     return ml_client
 
 
-def main(args):
-    """Run main function."""
-    ml_client = get_ml_client()
-    # get registered model id
-    model_info = {}
-    with open(args.registration_details) as f:
-        model_info = json.load(f)
-    model_id = model_info["id"]
-
-    endpoint = get_endpoint(args)
-
+def create_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
+    """Create deployment and return endpoint and deloyment details."""
+    endpoint = ManagedOnlineEndpoint(name=endpoint_name, auth_mode="key")
     try:
         ml_client.begin_create_or_update(endpoint).wait()
     except Exception as e:
@@ -209,8 +202,8 @@ def main(args):
 
     # deployment
     deployment = ManagedOnlineDeployment(
-        name=args.deployment_name,
-        endpoint_name=endpoint.name,
+        name=deployment_name,
+        endpoint_name=endpoint_name,
         model=model_id,
         instance_type=args.instance_type,
         instance_count=args.instance_count,
@@ -247,18 +240,60 @@ def main(args):
     endpoint.traffic = {deployment.name: 100}
     try:
         ml_client.begin_create_or_update(endpoint).wait()
+        endpoint = ml_client.online_endpoints.get(endpoint.name)
     except Exception as e:
         error_msg = f"Error occured while updating endpoint traffic - {e}"
         logging.error(error_msg)
         raise Exception(error_msg)
 
+    return endpoint, deployment
+
+
+def main(args):
+    """Run main function."""
+    ml_client = get_ml_client()
+    # get registered model id
+    model_info = {}
+    with open(args.registration_details) as f:
+        model_info = json.load(f)
+    model_id = model_info["id"]
+    model_name = model_info["name"]
+
+    # make sure underscores and slashes are replaced by hyphens and convert them to lower case
+    endpoint_name = re.sub('[/_ ]', '-', model_name)
+    endpoint_name = f"{endpoint_name.lower()}-{str(time.time())}"
+    endpoint_name = endpoint_name[:32]
+
+    endpoint_name = args.endpoint_name if args.endpoint_name else endpoint_name
+    deployment_name = args.deployment_name if args.deployment_name else "default"
+
+    endpoint, deployment = create_deployment(
+        ml_client=ml_client,
+        endpoint_name=endpoint_name,
+        deployment_name=deployment_name,
+        model_id=model_id,
+        args=args
+    )
+
+    if args.inference_payload:
+        print("Invoking inference with test payload")
+        try:
+            response = ml_client.online_endpoints.invoke(
+                endpoint_name=endpoint_name,
+                deployment_name=deployment_name,
+                request_file=args.inference_payload,
+            )
+            print(f"Reponse:\n{response}")
+        except Exception as e:
+            print(f"Invocation failed with error: {e}")
+            raise e
+
     # write deployment details to file
     endpoint_type = "aml_online_inference"
-    endpoint_response = ml_client.online_endpoints.get(endpoint.name)
     deployment_details = {
         "endpoint_name": endpoint.name,
         "deployment_name": deployment.name,
-        "endpoint_uri": endpoint_response.__dict__["_scoring_uri"],
+        "endpoint_uri": endpoint.__dict__["_scoring_uri"],
         "endpoint_type": endpoint_type,
         "instance_type": args.instance_type,
         "instance_count": args.instance_count,
