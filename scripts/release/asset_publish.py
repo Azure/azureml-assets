@@ -281,10 +281,9 @@ def validate_update_command_component(
 
     if env_registry_name and env_registry_name not in [PROD_SYSTEM_REGISTRY, registry_name]:
         logger.log_warning(
-            f"Dependent asset should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'."
-            f" From environment: '{env_registry_name}' URI we got: '{env_registry_name}'."
-            + f" Component publish would fail if release process does not have read access to '{env_registry_name}'."
-            + " Please contact to make sure, read access is provided inorder to be able to publish."
+            f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
+            f"The URI for environment '{env_name}' references registry '{env_registry_name}', "
+            "and publishing will fail if the release process does not have read access to it."
         )
 
     registry_name = env_registry_name or registry_name
