@@ -6,8 +6,8 @@ The dolly-v2-12b model is a large, instruction-following language model created 
 
 ```json
 {
-    "inputs": {
-        "input_string": ["My name is John and I am", "Once upon a time,"]
+    "input_data": {
+        "input_string": ["Hello! How are you?" , "Explain to me the difference between nuclear fission and fusion."]
     }
 }
 ```
@@ -15,11 +15,7 @@ The dolly-v2-12b model is a large, instruction-following language model created 
 #### Sample output
 ```json
 [
-    {
-        "0": "My name is John and I am a student at UC Berkeley. It is my main interest to do research in the humanities. I am going to share"
-    },
-    {
-        "0": "Once upon a time, they were just another small family, only three. She says one day that her father was getting a new license"
-    }
+  "As a Large Language Model (LLM), I don't have feelings like humans do. But I can say that I will output this response tomorrow when I'm ready.",
+  "Nuclear fission and fusion are different methods of releasing energy from nuclear reactions. Nuclear fission involves splitting an atomic nucleus and releasing two or    more smaller atomic nuclei and nuclear fusion is a type of nuclear reaction in which two atomic nuclei merge to form a bigger atomic nucleus and release energy."
 ]
 ```
