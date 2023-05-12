@@ -61,7 +61,7 @@ elif args.observation_data_format == "csv":
 elif args.observation_data_format == "delta":
     entity_df = spark.read.format("delta").load(entity_df_path)
 else:
-    raise Exception("Please provide a valid observation_data_format type. " + \
+    raise Exception("Please provide a valid observation_data_format type. " +
                     "Supported values are 'parquet', 'csv' and 'delta' ")
 
 training_df = get_offline_features(
