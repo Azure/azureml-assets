@@ -291,6 +291,7 @@ class EnvironmentInfo(AssetInfo):
 
 class ComponentInfo(AssetInfo):
     """Component asset class."""
+
     def __init__(self, asset_config: AssetConfig):
         """Instantiate Component asset class."""
         super().__init__(asset_config)
