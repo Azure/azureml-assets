@@ -304,6 +304,9 @@ class ComponentInfo(AssetInfo):
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
 
+        link = "https://ml.azure.com/registries/azureml/components/{}/version/{}".format(self.name, self.version)
+        _doc.add_paragraph("**View in Studio**:  [{}]({})".format(link, link))
+
         self._add_doc_asset_inputs(_doc)
         self._add_doc_asset_outputs(_doc)
 
@@ -329,6 +332,10 @@ class ModelInfo(AssetInfo):
         self._add_doc_description(_doc)
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
+
+        link = "https://ml.azure.com/registries/azureml/models/{}/version/{}".format(self.name, self.version)
+        _doc.add_paragraph("**View in Studio**:  [{}]({})".format(link, link))
+
         self._add_doc_license_from_tags(_doc)
         self._add_doc_properties(_doc)
         self._add_doc_compute_sku(_doc)
@@ -416,6 +423,7 @@ class CategoryInfo:
             doc.add_heading(self._name.capitalize(), level=1)
 
         if self._sub_categories:
+            self._sub_categories = dict(sorted(self._sub_categories.items(), key=lambda i: i[0].lower()))
             doc.add_heading("Categories", level=2)
             for name, child in self._sub_categories.items():
                 child.save()
@@ -428,6 +436,9 @@ class CategoryInfo:
             doc.add_heading(f"{self._type.capitalize()}s in this category", level=2)
 
         doc.add_horizontal_rule()
+
+        self.assets.sort(key=lambda x: x.name.lower())
+
         for asset in self.assets:
             doc.add_unordered_list([snakemd.Paragraph(asset.name).insert_link(asset.name, asset.filename)])
             # limit description to 300 chars
