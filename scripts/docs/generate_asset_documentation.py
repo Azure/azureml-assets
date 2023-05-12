@@ -420,12 +420,12 @@ class CategoryInfo:
         if self._is_root:
             doc.add_heading(self._type.capitalize() + "s", level=1)
         else:
-            doc.add_heading(self._name.capitalize(), level=1)
+            doc.add_heading(self._name, level=1)
 
         if self._sub_categories:
-            self._sub_categories = dict(sorted(self._sub_categories.items(), key=lambda i: i[0].lower()))
+            sorted_sub_categories = dict(sorted(self._sub_categories.items(), key=lambda i: i[0].lower()))
             doc.add_heading("Categories", level=2)
-            for name, child in self._sub_categories.items():
+            for name, child in sorted_sub_categories.items():
                 child.save()
                 doc.add_unordered_list([snakemd.Paragraph(child._name).insert_link(child._name, child._doc_name)])
 
