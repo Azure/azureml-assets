@@ -17,18 +17,22 @@ inputs:
     type: custom_model
     mode: direct
     optional: true
+    description: Registered model containing feature_retrieval_spec.yaml
 
   feature_retrieval_spec:
     type: uri_folder
     mode: direct
     optional: true
+    description: Path to the feature_retrieval_spec.yaml containing features to be retrieved.
 
   observation_data:
     type: uri_folder
     mode: direct
+    description: Path to the observation data.
 
   timestamp_column: 
     type: string
+    description: Name of the column containing timestamp information.
 
   observation_data_format:
     type: string
@@ -36,11 +40,13 @@ inputs:
       - parquet
       - csv
       - delta
+    description: Format of the observation data.
 
 outputs:
   output_data:
     type: uri_folder
     mode: direct
+    description: Retrieved features.
 
 args: >-
   $[[--input_model ${{inputs.input_model}}]]
