@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: databricks-dolly-v2-12b
+path: ./
+properties:
+  SHA: 3f452b6e5a89b0e6c828c9bba2642bc577086eae
+  datasets: databricks/databricks-dolly-15k
+  inference-min-sku-spec: 4|1|28|176
+  inference-recommended-sku: Standard_ND40RS_v2
+  languages: en
+tags:
+  Preview: ''
+  license: mit
+  task: text-generation
+version: 1
