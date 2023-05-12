@@ -135,8 +135,8 @@ class AssetInfo:
         return doc
 
     def _add_doc_link(self, doc):
-        link = "https://ml.azure.com/registries/azureml/{}/{}/version/{}".format(
-            self.type + "s", self.name, self.version)
+        link = "https://ml.azure.com/registries/azureml/{}s/{}/version/{}".format(
+            self.type, self.name, self.version)
         doc.add_paragraph("**View in Studio**:  [{}]({})".format(link, link))
         # doc.add_paragraph("**View in Studio**:  <a href=\"{}\" target=\"_blank\">{}</a>".format(link, link))
 
