@@ -1,0 +1,5 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: web_classification_data
+description: Data asset to evaluate Web Classification sample, created from local file.
+type: uri_file
+path: web_classification_data.csv
