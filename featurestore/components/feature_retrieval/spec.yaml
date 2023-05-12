@@ -17,13 +17,13 @@ inputs:
     type: custom_model
     mode: direct
     optional: true
-    description: Registered model containing feature_retrieval_spec.yaml
+    description: Model containing feature_retrieval_spec.yaml
 
   feature_retrieval_spec:
     type: uri_folder
     mode: direct
     optional: true
-    description: Path to the feature_retrieval_spec.yaml containing features to be retrieved.
+    description: Path to a folder that contains the feature_retrieval_spec.yaml
 
   observation_data:
     type: uri_folder
@@ -32,7 +32,7 @@ inputs:
 
   timestamp_column: 
     type: string
-    description: Name of the column containing timestamp information.
+    description: Name of the timestamp column in the observation data for point-in-time feature retrieval.
 
   observation_data_format:
     type: string
@@ -46,7 +46,7 @@ outputs:
   output_data:
     type: uri_folder
     mode: direct
-    description: Retrieved features.
+    description: Observation data with retrieved features.
 
 args: >-
   $[[--input_model ${{inputs.input_model}}]]
