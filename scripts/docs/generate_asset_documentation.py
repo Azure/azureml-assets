@@ -133,6 +133,11 @@ class AssetInfo:
             tags.sort(key=lambda x: x[0].lower())
             doc.add_raw(" ".join(tags))
         return doc
+    
+    def _add_doc_link(self, doc):
+        link = "https://ml.azure.com/registries/azureml/{}/{}/version/{}".format(self.type + "s", self.name, self.version)
+        doc.add_paragraph("**View in Studio**:  [{}]({})".format(link, link))
+        # doc.add_paragraph("**View in Studio**:  <a href=\"{}\" target=\"_blank\">{}</a>".format(link, link))
 
     def _add_doc_mcr_image(self, doc):
         """Add MCR Image."""
@@ -275,10 +280,7 @@ class EnvironmentInfo(AssetInfo):
         self._add_doc_description(_doc)
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
-
-        link = "https://ml.azure.com/registries/azureml/environments/{}/version/{}".format(self.name, self.version)
-        _doc.add_paragraph("**View in Studio**:  [{}]({})".format(link, link))
-        # doc.add_paragraph("**View in Studio**:  <a href=\"{}\" target=\"_blank\">{}</a>".format(link, link))
+        self._add_doc_link(_doc)
 
         self._add_doc_mcr_image(_doc)
         self._add_doc_docker_context(_doc)
@@ -303,9 +305,7 @@ class ComponentInfo(AssetInfo):
         self._add_doc_description(_doc)
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
-
-        link = "https://ml.azure.com/registries/azureml/components/{}/version/{}".format(self.name, self.version)
-        _doc.add_paragraph("**View in Studio**:  [{}]({})".format(link, link))
+        self._add_doc_link(_doc)
 
         self._add_doc_asset_inputs(_doc)
         self._add_doc_asset_outputs(_doc)
@@ -332,9 +332,7 @@ class ModelInfo(AssetInfo):
         self._add_doc_description(_doc)
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
-
-        link = "https://ml.azure.com/registries/azureml/models/{}/version/{}".format(self.name, self.version)
-        _doc.add_paragraph("**View in Studio**:  [{}]({})".format(link, link))
+        self._add_doc_link(_doc)
 
         self._add_doc_license_from_tags(_doc)
         self._add_doc_properties(_doc)
