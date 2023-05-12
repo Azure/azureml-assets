@@ -133,7 +133,7 @@ class AssetInfo:
             tags.sort(key=lambda x: x[0].lower())
             doc.add_raw(" ".join(tags))
         return doc
-    
+
     def _add_doc_link(self, doc):
         link = "https://ml.azure.com/registries/azureml/{}/{}/version/{}".format(
             self.type + "s", self.name, self.version)
