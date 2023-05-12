@@ -64,5 +64,5 @@ conf:
       - pip:
         - protobuf==3.19.6
         - azure-ai-ml==1.7.0
-        - azureml-featurestore==1.0.0
+        - azureml-featurestore==0.1.0b1
     name: fs_env
