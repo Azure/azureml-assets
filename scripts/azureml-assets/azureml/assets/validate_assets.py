@@ -236,7 +236,6 @@ def validate_categories(asset_config: assets.AssetConfig) -> int:
     Returns:
         int: Number of errors.
     """
-
     if len(asset_config.categories) == 0:
         _log_error(asset_config, "Categories not found")
 
