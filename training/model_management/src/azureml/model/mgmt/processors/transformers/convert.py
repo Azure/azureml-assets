@@ -78,9 +78,8 @@ def _add_mlflow_signature(mlflow_model_path: Path, signature):
         yaml.dump(updated_yaml_dict, f)
 
 
-def _get_image_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = {}) -> Dict:
+def _get_image_model_to_save(input_dir: Path, output_dir: Path, temp_output_dir: Path, hf_conf: Dict = {}) -> Dict:
     """Save Huggingface image models to mlflow and return hftransformers accepted parameters."""
-    temp_output_dir = Path(output_dir).parent.absolute() / "tmp"
     model_dir = temp_output_dir / "model"
     copy_file_paths_to_destination(input_dir, model_dir, MODEL_FILE_PATTERN)
 
@@ -102,7 +101,7 @@ def _get_image_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = 
     }
 
 
-def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = {}) -> Dict:
+def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, temp_output_dir: Path, hf_conf: Dict = {}) -> Dict:
     """Save Huggingface stable diffusion model to mlflow and return hftransformers accepted parameters."""
     model = None
     try:
@@ -131,9 +130,8 @@ def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_co
     }
 
 
-def _get_whisper_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = {}) -> Dict:
+def _get_whisper_model_to_save(input_dir: Path, output_dir: Path, temp_output_dir: Path, hf_conf: Dict = {}) -> Dict:
     """Save whisper group of models to mlflow and return hftransformers accepted parameters."""
-    temp_output_dir = Path(output_dir).parent.absolute() / "tmp"
     model_dir = temp_output_dir / "model"
     copy_file_paths_to_destination(input_dir, model_dir, MODEL_FILE_PATTERN)
 
@@ -155,10 +153,9 @@ def _get_whisper_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict 
     }
 
 
-def _get_nlp_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = {}) -> Dict:
+def _get_nlp_model_to_save(input_dir: Path, output_dir: Path, temp_output_dir: Path, hf_conf: Dict = {}) -> Dict:
     """Save Huggingface NLP model to mlflow and return hftransformers accepted parameters."""
     # prepare model files in expected format
-    temp_output_dir = Path(output_dir).parent.absolute() / "tmp"
     model_dir = temp_output_dir / "model"
     copy_file_paths_to_destination(input_dir, model_dir, MODEL_FILE_PATTERN)
 
@@ -175,7 +172,7 @@ def _get_nlp_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = {}
 
 
 @log_execution_time
-def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
+def to_mlflow(input_dir: Path, output_dir: Path, temp_output_dir: Path, translate_params: Dict):
     """Convert Hugging face pytorch model to Mlflow."""
     signatures = translate_params.get('signature')
     model_id = translate_params['model_id']
@@ -195,13 +192,13 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     }
 
     if SupportedTextToImageVariants.has_value(task_category):
-        model_configs = _get_stable_difussion_model_to_save(input_dir, output_dir, hf_conf)
+        model_configs = _get_stable_difussion_model_to_save(input_dir, output_dir, temp_output_dir, hf_conf)
     elif SupportedNLPTasks.has_value(task_category):
-        model_configs = _get_nlp_model_to_save(input_dir, output_dir, hf_conf)
+        model_configs = _get_nlp_model_to_save(input_dir, output_dir, temp_output_dir, hf_conf)
     elif SupportedVisionTasks.has_value(task_category):
-        model_configs = _get_image_model_to_save(input_dir, output_dir, hf_conf)
+        model_configs = _get_image_model_to_save(input_dir, output_dir, temp_output_dir, hf_conf)
     elif SupportedASRVariants.has_value(task_category):
-        model_configs = _get_whisper_model_to_save(input_dir, output_dir, hf_conf)
+        model_configs = _get_whisper_model_to_save(input_dir, output_dir, temp_output_dir, hf_conf)
     else:
         raise Exception("Unsupported model or task type")
 

@@ -24,6 +24,7 @@ command: >-
   $[[--model_metadata ${{inputs.model_metadata}}]]
   $[[--model_import_job_path  ${{inputs.model_import_job_path }}]]
   --registration_details ${{outputs.registration_details}}
+  --temp_output_folder ${{outputs.temp_output_folder}}
 
 inputs:
   model_name:
@@ -59,6 +60,7 @@ inputs:
     type: uri_folder
     optional: false
     description: Path to the model directory
+    mode: ro_mount
 
   model_download_metadata:
     type: uri_file
@@ -79,6 +81,11 @@ outputs:
   registration_details:
     type: uri_file
     description: JSON file into which model registration details will be written
+
+  temp_output_folder:
+    type: uri_folder
+    description: Temporary folder to manage registration of large models
+    mode: rw_mount
 
 tags:
     Preview: ""

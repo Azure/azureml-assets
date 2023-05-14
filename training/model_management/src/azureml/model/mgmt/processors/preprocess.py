@@ -10,7 +10,13 @@ from pathlib import Path
 from typing import Dict
 
 
-def run_preprocess(mlflow_flavor: str, model_path: Path, output_dir: Path, **preprocess_args: Dict):
+def run_preprocess(
+    mlflow_flavor: str,
+    model_path: Path,
+    output_dir: Path,
+    temp_output_dir: Path,
+    **preprocess_args: Dict
+):
     """Preprocess model.
 
     :param mlflow_flavor: mlflow flavor for converting model to
@@ -24,7 +30,7 @@ def run_preprocess(mlflow_flavor: str, model_path: Path, output_dir: Path, **pre
     """
     print(f"Run preprocess for model with flavor: {mlflow_flavor} at path: {model_path}")
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
-        transformers.to_mlflow(model_path, output_dir, preprocess_args)
+        transformers.to_mlflow(model_path, output_dir, temp_output_dir, preprocess_args)
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         pyfunc.to_mlflow(model_path, output_dir, preprocess_args)
     else:

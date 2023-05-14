@@ -15,6 +15,7 @@ from azure.ai.ml.entities import Model
 from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.core import Run
+from pathlib import Path
 
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
@@ -78,6 +79,12 @@ def parse_args():
         help="JSON file that contains the job path of model to have lineage.",
         default=None,
     )
+    parser.add_argument(
+        "--temp_output_folder",
+        type=Path,
+        help="Temporary folder to handle large model operations",
+        default=None,
+    )
     args = parser.parse_args()
     print("args received ", args)
     return args
@@ -133,6 +140,7 @@ def main(args):
     model_description = args.model_description
     registry_name = args.registry_name
     model_path = args.model_path
+    temp_output_folder = args.temp_output_folder
     registration_details = args.registration_details
     model_version = args.model_version
     tags, properties, flavors = {}, {}, {}
@@ -166,9 +174,13 @@ def main(args):
 
     if model_type == "mlflow_model":
         # Make sure parent directory is mlflow_model_folder for mlflow model
-        shutil.copytree(model_path, "mlflow_model_folder", dirs_exist_ok=True)
-        model_path = "mlflow_model_folder"
+        print("mlflow_model")
+        if not os.path.exists(os.path.abspath(model_path + "/mlflow_model_folder")):   
+            print("For mlflow model, parent directory needs to be mlflow_model_folder. Creating a parent directory and copying model files ...")
+            shutil.copytree(model_path, (temp_output_folder / "/mlflow_model_folder"), dirs_exist_ok=True)
+            model_path = temp_output_folder / "mlflow_model_folder"
         mlmodel_path = os.path.join(model_path, "MLmodel")
+        print(f"mlmodel_path: {mlmodel_path}")
         with open(mlmodel_path, "r") as stream:
             metadata = yaml.safe_load(stream)
             flavors = metadata.get('flavors', flavors)
@@ -225,6 +237,8 @@ def main(args):
         outfile.write(json_object)
     print("Saved model registration details in output json file.")
 
+    print("Cleaning temp folder")
+    shutil.rmtree(temp_output_folder, ignore_errors=True)
 
 # run script
 if __name__ == "__main__":

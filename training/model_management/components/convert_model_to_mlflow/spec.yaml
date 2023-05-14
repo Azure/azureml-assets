@@ -22,6 +22,7 @@ command: >
   --model-path ${{inputs.model_path}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
   --model-import-job-path ${{outputs.model_import_job_path}}
+  --temp-output-folder ${{outputs.temp_output_folder}} 
 
 inputs:
   model_id:
@@ -76,7 +77,12 @@ outputs:
     type: mlflow_model
     description: Output path for the converted MLFlow model.
     mode: rw_mount
-    
+
+  temp_output_folder:
+    type: uri_folder
+    description: Temporary folder to manage conversion of large models
+    mode: rw_mount
+
   model_import_job_path:
     type: uri_file
     description: JSON file containing model job path for model lineage

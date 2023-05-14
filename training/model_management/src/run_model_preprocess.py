@@ -39,6 +39,12 @@ def _get_parser():
         help="Output MLFlow model",
     )
     parser.add_argument(
+        "--temp-output-folder",
+        type=Path,
+        required=True,
+        help="Temporary folder to manage conversion of large models",
+    )
+    parser.add_argument(
         "--model-import-job-path",
         type=Path,
         required=True,
@@ -75,6 +81,7 @@ if __name__ == "__main__":
     model_download_metadata_path = args.model_download_metadata
     model_path = args.model_path
     mlflow_model_output_dir = args.mlflow_model_output_dir
+    temp_output_dir = args.temp_output_folder
     model_import_job_path = args.model_import_job_path
     license_file_path = args.license_file_path
 
@@ -101,7 +108,7 @@ if __name__ == "__main__":
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         _validate_pyfunc_args(preprocess_args)
 
-    run_preprocess(mlflow_flavor, model_path, mlflow_model_output_dir, **preprocess_args)
+    run_preprocess(mlflow_flavor, model_path, mlflow_model_output_dir, temp_output_dir, **preprocess_args)
 
     # Copy license file in input model_path
     if license_file_path:
@@ -117,3 +124,6 @@ if __name__ == "__main__":
     json_object = json.dumps(model_path_dict, indent=4)
     with open(model_import_job_path, "w") as outfile:
         outfile.write(json_object)
+
+    print("Cleaning temp output folder")
+    shutil.rmtree(temp_output_dir, ignore_errors=True)
