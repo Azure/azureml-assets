@@ -175,10 +175,14 @@ def main(args):
     if model_type == "mlflow_model":
         # Make sure parent directory is mlflow_model_folder for mlflow model
         print("mlflow_model")
-        if not os.path.exists(os.path.abspath(model_path + "/mlflow_model_folder")):   
-            print("For mlflow model, parent directory needs to be mlflow_model_folder. Creating a parent directory and copying model files ...")
-            shutil.copytree(model_path, (temp_output_folder / "/mlflow_model_folder"), dirs_exist_ok=True)
-            model_path = temp_output_folder / "mlflow_model_folder"
+        if not Path(os.path.join(model_path, "mlflow_model_folder")).exists():   
+            print(
+                "For mlflow model, parent directory needs to be `mlflow_model_folder`."
+                + "Creating a parent directory and copying model files ..."
+            )
+            target_dir = temp_output_folder / "mlflow_model_folder"
+            shutil.copytree(model_path, target_dir, dirs_exist_ok=True)
+            model_path = target_dir
         mlmodel_path = os.path.join(model_path, "MLmodel")
         print(f"mlmodel_path: {mlmodel_path}")
         with open(mlmodel_path, "r") as stream:

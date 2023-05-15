@@ -60,7 +60,6 @@ inputs:
     type: uri_folder
     optional: false
     description: Path to the model directory
-    mode: ro_mount
 
   model_download_metadata:
     type: uri_file
