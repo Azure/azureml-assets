@@ -363,9 +363,9 @@ if __name__ == '__main__':
     if args.check_names:
         logger.print(f"Asset naming convention: {NAMING_CONVENTION_URL}")
 
-    # Share asset config convention URL
+    # Share asset config reference
     if args.check_categories:
-        logger.print(f"Asset config convention: {ASSET_CONFIG_CONVENTION_URL}")
+        logger.print(f"Asset config reference: {ASSET_CONFIG_URL}")
 
     # Validate assets
     success = validate_assets(input_dirs=input_dirs,
