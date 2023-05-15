@@ -206,7 +206,7 @@ inputs:
     type: integer
     default: 30
     optional: true
-    description: No of times system will try after failing the liveness probe
+    description: Number of times system will try after failing the liveness probe
 
   deployment_timeout_liveness_probe:
     type: integer
