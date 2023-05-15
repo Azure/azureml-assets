@@ -24,6 +24,9 @@ NAMING_CONVENTION_URL = "https://github.com/Azure/azureml-assets/wiki/Asset-nami
 INVALID_STRINGS = ["microsoft", ["azureml", "azure"], "aml"]
 COMMON_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
 
+# Asset config convention
+ASSET_CONFIG_CONVENTION_URL = "https://github.com/Azure/azureml-assets/wiki/Assets#assetyaml"
+
 # Environment naming convention
 ENVIRONMENT_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9.-]{0,254}$")
 COMMON_VERSION = r"[0-9]+(?:\.[0-9]+)?(?=-|$)"
@@ -359,6 +362,10 @@ if __name__ == '__main__':
     # Share asset naming convention URL
     if args.check_names:
         logger.print(f"Asset naming convention: {NAMING_CONVENTION_URL}")
+
+    # Share asset config convention URL
+    if args.check_categories:
+        logger.print(f"Asset config convention: {ASSET_CONFIG_CONVENTION_URL}")
 
     # Validate assets
     success = validate_assets(input_dirs=input_dirs,
