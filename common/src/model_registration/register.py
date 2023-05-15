@@ -175,7 +175,7 @@ def main(args):
     if model_type == "mlflow_model":
         # Make sure parent directory is mlflow_model_folder for mlflow model
         print("mlflow_model")
-        if not Path(os.path.join(model_path, "mlflow_model_folder")).exists():   
+        if not Path(os.path.join(model_path, "mlflow_model_folder")).exists():
             print(
                 "For mlflow model, parent directory needs to be `mlflow_model_folder`."
                 + "Creating a parent directory and copying model files ..."
@@ -243,6 +243,7 @@ def main(args):
 
     print("Cleaning temp folder")
     shutil.rmtree(temp_output_folder, ignore_errors=True)
+
 
 # run script
 if __name__ == "__main__":

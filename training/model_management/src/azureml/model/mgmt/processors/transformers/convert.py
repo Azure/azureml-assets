@@ -101,7 +101,7 @@ def _get_image_model_to_save(input_dir: Path, output_dir: Path, temp_output_dir:
     }
 
 
-def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, temp_output_dir: Path, hf_conf: Dict = {}) -> Dict:
+def _get_stable_difussion_model_to_save(input_dir: Path, output_dir: Path, hf_conf: Dict = {}) -> Dict:
     """Save Huggingface stable diffusion model to mlflow and return hftransformers accepted parameters."""
     model = None
     try:
