@@ -406,7 +406,8 @@ class CategoryInfo:
                 self._sub_categories[top] = CategoryInfo(top, self._type, self)
             self._sub_categories[top].add_asset(asset, sub_categories[1:])
         # Add assets to all parent categories
-        self._assets.append(asset)
+        if asset not in self._assets:
+            self._assets.append(asset)
 
     @property
     def assets(self):
