@@ -25,7 +25,7 @@ INVALID_STRINGS = ["microsoft", ["azureml", "azure"], "aml"]
 COMMON_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
 
 # Asset config convention
-ASSET_CONFIG_CONVENTION_URL = "https://github.com/Azure/azureml-assets/wiki/Assets#assetyaml"
+ASSET_CONFIG_URL = "https://github.com/Azure/azureml-assets/wiki/Assets#assetyaml"
 
 # Environment naming convention
 ENVIRONMENT_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9.-]{0,254}$")
