@@ -237,7 +237,7 @@ def validate_categories(asset_config: assets.AssetConfig) -> int:
         int: Number of errors.
     """
     if len(asset_config.categories) == 0:
-        _log_error(asset_config, "Categories not found")
+        _log_error(asset_config, "Categories not found. Please see https://github.com/Azure/azureml-assets/wiki/Assets#assetyaml")
 
     return len(asset_config.categories) == 0
 
