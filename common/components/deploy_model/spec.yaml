@@ -121,7 +121,7 @@ inputs:
 
   max_queue_wait_ms:
     type: integer
-    default: 500
+    default: 60000
     optional: true
     description: Maximum queue wait time of a request in ms
   
@@ -129,7 +129,7 @@ inputs:
     type: integer
     default: 10
     optional: true 
-    description: No of times system will try after failing the readiness probe
+    description: The number of times system will try after failing the readiness probe
 
   success_threshold_readiness_probe:
     type: integer
@@ -159,7 +159,7 @@ inputs:
     type: integer
     default: 30
     optional: true 
-    description: No of times system will try after failing the liveness probe
+    description: The number of times system will try after failing the liveness probe
   
   timeout_liveness_probe:
     type: integer

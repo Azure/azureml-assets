@@ -21,9 +21,24 @@ from azureml.core import Run
 from pathlib import Path
 
 
+MAX_REQUEST_TIMEOUT = 90000
+MAX_INSTANCE_COUNT = 20
+
+# PROBE CONSTANTS
+PROBE_FAILURE_THRESHOLD = 50
+PROBE_SUCCESS_THRESHOLD = 50
+PROBE_TIMEOUT = 500
+PROBE_PERIOD = 500
+PROBE_INITIAL_DELAY = 500
+
+
 def parse_args():
     """Return arguments."""
     parser = argparse.ArgumentParser()
+
+    # Defaults for managed online endpoint has been picked mostly from:
+    # https://learn.microsoft.com/en-us/azure/machine-learning/reference-yaml-deployment-managed-online
+    # Some of the defaults have been tweaked to cater to large models.
 
     # add arguments
     parser.add_argument(
@@ -46,14 +61,14 @@ def parse_args():
         "--instance_type",
         type=str,
         help="Compute instance type to deploy model",
-        default="Standard_F8s_v2",
+        default="Standard_NC24s_v3",
     )
     parser.add_argument(
         "--instance_count",
         type=int,
         help="Number of compute instances to deploy model",
         default=1,
-        choices=range(1, 20),
+        choices=range(1, MAX_INSTANCE_COUNT),
     )
     parser.add_argument(
         "--max_concurrent_requests_per_instance",
@@ -64,13 +79,13 @@ def parse_args():
     parser.add_argument(
         "--request_timeout_ms",
         type=int,
-        default=60000,
-        help="Request timeout in ms. Max limit is 60000.",
+        default=60000,  # 1min
+        help="Request timeout in ms.",
     )
     parser.add_argument(
         "--max_queue_wait_ms",
         type=int,
-        default=60000,
+        default=60000,  # 1min
         help="Maximum queue wait time of a request in ms",
     )
     parser.add_argument(
@@ -78,63 +93,63 @@ def parse_args():
         type=int,
         default=10,
         help="No of times system will try after failing the readiness probe",
-        choices=range(1, 50),
+        choices=range(1, PROBE_FAILURE_THRESHOLD),
     )
     parser.add_argument(
         "--success_threshold_readiness_probe",
         type=int,
         default=1,
         help="The minimum consecutive successes for the readiness probe to be considered successful, after fail",
-        choices=range(1, 50),
+        choices=range(1, PROBE_SUCCESS_THRESHOLD),
     )
     parser.add_argument(
         "--timeout_readiness_probe",
         type=int,
         default=10,
         help="The number of seconds after which the readiness probe times out",
-        choices=range(1, 500),
+        choices=range(1, PROBE_TIMEOUT)
     )
     parser.add_argument(
         "--period_readiness_probe",
         type=int,
         default=10,
         help="How often (in seconds) to perform the readiness probe",
-        choices=range(1, 500),
+        choices=range(1, PROBE_PERIOD),
     )
     parser.add_argument(
         "--initial_delay_readiness_probe",
         type=int,
         default=10,
         help="The number of seconds after the container has started before the readiness probe is initiated",
-        choices=range(1, 500),
+        choices=range(1, PROBE_INITIAL_DELAY),
     )
     parser.add_argument(
         "--failure_threshold_liveness_probe",
         type=int,
         default=30,
         help="No of times system will try after failing the liveness probe",
-        choices=range(1, 50),
+        choices=range(1, PROBE_FAILURE_THRESHOLD),
     )
     parser.add_argument(
         "--timeout_liveness_probe",
         type=int,
         default=10,
         help="The number of seconds after which the liveness probe times out",
-        choices=range(1, 500),
+        choices=range(1, PROBE_TIMEOUT),
     )
     parser.add_argument(
         "--period_liveness_probe",
         type=int,
         default=10,
         help="How often (in seconds) to perform the liveness probe",
-        choices=range(1, 500),
+        choices=range(1, PROBE_PERIOD),
     )
     parser.add_argument(
         "--initial_delay_liveness_probe",
         type=int,
         default=10,
         help="The number of seconds after the container has started before the liveness probe is initiated",
-        choices=range(1, 500),
+        choices=range(1, PROBE_INITIAL_DELAY),
     )
     parser.add_argument(
         "--egress_public_network_access",
@@ -150,15 +165,14 @@ def parse_args():
     # parse args
     args = parser.parse_args()
     print("args received ", args)
-    # return args
 
     # Validating passed input values
     if args.max_concurrent_requests_per_instance < 1:
         parser.error("Arg max_concurrent_requests_per_instance cannot be less than 1")
-    if args.request_timeout_ms < 1 or args.request_timeout_ms > 90000:
-        parser.error("Arg request_timeout_ms should lie between 1 and 90000")
-    if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > 90000:
-        parser.error("Arg max_queue_wait_ms should lie between 1 and 90000")
+    if args.request_timeout_ms < 1 or args.request_timeout_ms > MAX_REQUEST_TIMEOUT:
+        parser.error(f"Arg request_timeout_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
+    if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > MAX_REQUEST_TIMEOUT:
+        parser.error(f"Arg max_queue_wait_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
 
     return args
 
@@ -260,13 +274,19 @@ def main(args):
     model_info = {}
     with open(args.registration_details) as f:
         model_info = json.load(f)
-    model_id = model_info["id"]
-    model_name = model_info["name"]
+    model_id = model_info['id']
+    model_name = model_info['name']
 
-    # make sure underscores and slashes are replaced by hyphens and convert them to lower case
-    endpoint_name = re.sub('[/_ ]', '-', model_name)
-    endpoint_name = f"{endpoint_name.lower()}-{int(time.time())}"
-    endpoint_name = endpoint_name[:32].lower()
+    # Endpoint has following restrictions:
+    # 1. Name must begin with lowercase letter
+    # 2. Followed by lowercase letters, hyphen or numbers
+    # 3. End with a lowercase letter or number
+
+    # 1. Replace underscores and slashes by hyphens and convert them to lower case.
+    # 2. Take 21 chars from model name and append '-' & timstamp(10chars) to it
+    endpoint_name = re.sub('[^A-Za-z0-9]', '-', model_name).lower()[:21]
+    endpoint_name = f"{endpoint_name}-{int(time.time())}"
+    endpoint_name = endpoint_name
 
     endpoint_name = args.endpoint_name if args.endpoint_name else endpoint_name
     deployment_name = args.deployment_name if args.deployment_name else "default"
