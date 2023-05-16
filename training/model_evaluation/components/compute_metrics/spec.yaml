@@ -3,7 +3,7 @@ name: compute_metrics
 display_name: Compute Metrics
 description: Calculate model performance metics, given ground truth and prediction data.
 
-version: 0.0.5
+version: 0.0.11.preview
 type: command
 
 tags:
@@ -19,6 +19,7 @@ inputs:
       tabular-classification,
       tabular-classification-multilabel,
       tabular-regression,
+      tabular-forecasting,
       text-classification,
       text-classification-multilabel,
       text-named-entity-recognition,
@@ -26,7 +27,9 @@ inputs:
       question-answering,
       text-translation,
       text-generation,
-      fill-mask
+      fill-mask,
+      image-classification,
+      image-classification-multilabel,
     ]
     description: "Task type"
   ground_truth:
@@ -75,7 +78,7 @@ outputs:
     type: uri_folder
 
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/5
+environment: azureml://registries/azureml/environments/model-evaluation/versions/4
 command: >-
   python compute_metrics.py
   --task ${{inputs.task}}
