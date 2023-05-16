@@ -174,7 +174,7 @@ def main(args):
 
     if model_type == "mlflow_model":
         # Make sure parent directory is mlflow_model_folder for mlflow model
-        print("mlflow_model")
+        print("Model is of type MLFlow.")
         if not Path(os.path.join(model_path, "mlflow_model_folder")).exists():
             print(
                 "For mlflow model, parent directory needs to be `mlflow_model_folder`."
