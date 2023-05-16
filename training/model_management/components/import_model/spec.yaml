@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.4
+version: 0.0.5
 
 # Pipeline inputs
 inputs:
@@ -49,6 +49,19 @@ inputs:
     optional: true
     type: string
 
+  ## Inputs for mlflow local validation
+  local_validation_test_data:
+    type: uri_file
+    optional: true
+    description: Test data for mlflow local validation. Validation will be skipped if test data is not provided
+
+  local_validation_column_rename_map:
+    type: string
+    optional: true
+    description: |
+      Provide mapping for local validation test data column names, that should be renamed before inferencing
+      eg: col1:ren1; col2:ren2; col3:ren3
+
   ## Inputs for Model registration
   custom_model_name:
     type: string
@@ -75,6 +88,154 @@ inputs:
     optional: true
     description: A JSON or a YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
 
+  ## Inputs for model deployment and inference validation
+  inference_payload:
+    type: uri_file
+    optional: true
+    description: JSON payload which would be used to validate deployment
+
+  endpoint_name:
+    type: string
+    optional: true
+    description: Custom name for online inference endpoint
+
+  deployment_name:
+    type: string
+    optional: true
+    default: default
+    description: Custom deployment name for online inference endpoint
+
+  deployment_instance_type:
+    type: string
+    optional: true
+    enum:
+      - Standard_DS1_v2
+      - Standard_DS2_v2
+      - Standard_DS3_v2
+      - Standard_DS4_v2
+      - Standard_DS5_v2
+      - Standard_F2s_v2
+      - Standard_F4s_v2
+      - Standard_F8s_v2
+      - Standard_F16s_v2
+      - Standard_F32s_v2
+      - Standard_F48s_v2
+      - Standard_F64s_v2
+      - Standard_F72s_v2
+      - Standard_FX24mds
+      - Standard_FX36mds
+      - Standard_FX48mds
+      - Standard_E2s_v3
+      - Standard_E4s_v3
+      - Standard_E8s_v3
+      - Standard_E16s_v3
+      - Standard_E32s_v3
+      - Standard_E48s_v3
+      - Standard_E64s_v3
+      - Standard_NC4as_T4_v3
+      - Standard_NC6s_v2
+      - Standard_NC6s_v3
+      - Standard_NC8as_T4_v3
+      - Standard_NC12s_v2
+      - Standard_NC12s_v3
+      - Standard_NC16as_T4_v3
+      - Standard_NC24s_v2
+      - Standard_NC24s_v3
+      - Standard_NC64as_T4_v3
+      - Standard_ND40rs_v2
+      - Standard_ND96asr_v4
+      - Standard_ND96amsr_A100_v4
+    default: Standard_NC24s_v3
+    description: Compute instance type to deploy model. Make sure that instance type is available and have enough quota available.
+
+  deployment_instance_count:
+    type: integer
+    optional: true
+    default: 1
+    description: Number of instances you want to use for deployment. Make sure instance type have enough quota available.
+
+  deployment_max_concurrent_requests_per_instance:
+    type: integer
+    default: 1
+    optional: true
+    description: Maximum concurrent requests to be handled per instance
+
+  deployment_request_timeout_ms:
+    type: integer
+    default: 60000
+    optional: true
+    description: Request timeout in ms. Max limit is 90000.
+
+  deployment_max_queue_wait_ms:
+    type: integer
+    default: 60000
+    optional: true
+    description: Maximum queue wait time of a request in ms
+
+  deployment_failure_threshold_readiness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: No of times system will try after failing the readiness probe
+
+  deployment_success_threshold_readiness_probe:
+    type: integer
+    default: 1
+    optional: true
+    description: The minimum consecutive successes for the readiness probe to be considered successful after having failed
+
+  deployment_timeout_readiness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: The number of seconds after which the readiness probe times out
+
+  deployment_period_readiness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: How often (in seconds) to perform the readiness probe
+
+  deployment_initial_delay_readiness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: The number of seconds after the container has started before the readiness probe is initiated
+
+  deployment_failure_threshold_liveness_probe:
+    type: integer
+    default: 30
+    optional: true
+    description: Number of times system will try after failing the liveness probe
+
+  deployment_timeout_liveness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: The number of seconds after which the liveness probe times out
+
+  deployment_period_liveness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description:  How often (in seconds) to perform the liveness probe
+
+  deployment_initial_delay_liveness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: The number of seconds after the container has started before the liveness probe is initiated
+
+  deployment_egress_public_network_access:
+    type: string
+    default: enabled
+    optional: true
+    enum:
+      - enabled
+      - disabled
+    description: Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources used by it
+
+
 # Pipeline outputs
 outputs:
   mlflow_model_folder:
@@ -83,6 +244,10 @@ outputs:
 
   model_registration_details:
     description: Output file which captures transformations applied above and registration details in JSON file
+    type: uri_file
+
+  model_deployment_details:
+    description: Output file capturing mlflow model deployment details in JSON file
     type: uri_file
 
 jobs:
@@ -107,13 +272,26 @@ jobs:
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.download_model.outputs.model_output}}
     outputs:
-      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
+      mlflow_model_folder:
+        type: mlflow_model
       model_import_job_path:
         type: uri_file
+
+  mlflow_model_local_validation:
+    component: azureml:mlflow_model_local_validation:0.0.2
+    compute: ${{parent.inputs.compute}}
+    inputs:
+      model_path: ${{parent.jobs.convert_model_to_mlflow.outputs.mlflow_model_folder}}
+      test_data_path: ${{parent.inputs.local_validation_test_data}}
+      column_rename_map: ${{parent.inputs.local_validation_column_rename_map}}
+    outputs:
+      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
     component: azureml:register_model:0.0.2
     compute: ${{parent.inputs.compute}}
+    identity:
+      type: user_identity
     inputs:
       model_name: ${{parent.inputs.custom_model_name}}
       model_version: ${{parent.inputs.model_version}}
@@ -122,12 +300,39 @@ jobs:
       model_metadata: ${{parent.inputs.model_metadata}}
       model_type: mlflow_model
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
-      model_path: ${{parent.jobs.convert_model_to_mlflow.outputs.mlflow_model_folder}}
+      model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
       model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
     outputs:
       registration_details: ${{parent.outputs.model_registration_details}}
+
+
+  deploy_model:
+    component: azureml:deploy_model:0.0.1
+    compute: ${{parent.inputs.compute}}
     identity:
       type: user_identity
+    inputs:
+      registration_details: ${{parent.jobs.register_model.outputs.registration_details}}
+      inference_payload: ${{parent.inputs.inference_payload}}
+      endpoint_name: ${{parent.inputs.endpoint_name}}
+      deployment_name: ${{parent.inputs.deployment_name}}
+      instance_type: ${{parent.inputs.deployment_instance_type}}
+      instance_count: ${{parent.inputs.deployment_instance_count}}
+      max_concurrent_requests_per_instance: ${{parent.inputs.deployment_max_concurrent_requests_per_instance}}
+      request_timeout_ms: ${{parent.inputs.deployment_request_timeout_ms}}
+      max_queue_wait_ms: ${{parent.inputs.deployment_max_queue_wait_ms}}
+      failure_threshold_readiness_probe: ${{parent.inputs.deployment_failure_threshold_readiness_probe}}
+      success_threshold_readiness_probe: ${{parent.inputs.deployment_success_threshold_readiness_probe}}
+      timeout_readiness_probe: ${{parent.inputs.deployment_timeout_readiness_probe}}
+      period_readiness_probe: ${{parent.inputs.deployment_period_readiness_probe}}
+      initial_delay_readiness_probe: ${{parent.inputs.deployment_initial_delay_readiness_probe}}
+      failure_threshold_liveness_probe: ${{parent.inputs.deployment_failure_threshold_liveness_probe}}
+      timeout_liveness_probe: ${{parent.inputs.deployment_timeout_liveness_probe}}
+      period_liveness_probe: ${{parent.inputs.deployment_period_liveness_probe}}
+      initial_delay_liveness_probe: ${{parent.inputs.deployment_initial_delay_liveness_probe}}
+      egress_public_network_access: ${{parent.inputs.deployment_egress_public_network_access}}
+    outputs:
+      model_deployment_details: ${{parent.outputs.model_deployment_details}}
 
 tags:
     Preview: ""
