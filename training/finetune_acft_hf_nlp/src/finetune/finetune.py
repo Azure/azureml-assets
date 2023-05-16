@@ -1,5 +1,6 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
+# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# ---------------------------------------------------------
 
 """File containing function for finetune component."""
 
@@ -78,6 +79,12 @@ def get_parser():
 
     # Lora settings
     parser.add_argument("--apply_lora", type=str2bool, default="false", help="lora enabled")
+    parser.add_argument(
+        "--merge_lora_weights",
+        type=str2bool,
+        default=True,
+        help="if set to true, the lora trained weights will be merged to base model before saving"
+    )
     parser.add_argument("--lora_alpha", type=int, default=128, help="lora attn alpha")
     parser.add_argument("--lora_dropout", type=float, default=0.0, help="lora dropout value")
     parser.add_argument("--lora_r", default=8, type=int, help="lora dimension")
@@ -209,6 +216,12 @@ def get_parser():
         ),
     )
     parser.add_argument(
+        "--eval_accumulation_steps",
+        default=None,
+        type=int,
+        help="Number of predictions steps to accumulate before moving the tensors to the CPU.",
+    )
+    parser.add_argument(
         "--evaluation_strategy", type=str, default="epoch", help="The evaluation strategy to adopt during training",
     )
     parser.add_argument(
@@ -275,6 +288,10 @@ def get_parser():
     )
 
     parser.add_argument(
+        "--save_as_mlflow_model", type=str2bool, default="true", help="Save as mlflow model with pyfunc as flavour"
+    )
+
+    parser.add_argument(
         "--preprocess_output",
         default=None,
         type=str,
@@ -335,7 +352,7 @@ def finetune(args: Namespace):
 
     # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
     if args.apply_deepspeed and args.deepspeed is None:
-        args.deepspeed = "./zero1.json"
+        args.deepspeed = "./zero2.json"
     elif not args.apply_deepspeed:
         # do not use deepspeed config if provided when apply_deepspeed is set to false
         args.deepspeed = None
