@@ -192,7 +192,7 @@ def to_mlflow(input_dir: Path, output_dir: Path, temp_output_dir: Path, translat
     }
 
     if SupportedTextToImageVariants.has_value(task_category):
-        model_configs = _get_stable_difussion_model_to_save(input_dir, output_dir, temp_output_dir, hf_conf)
+        model_configs = _get_stable_difussion_model_to_save(input_dir, output_dir, hf_conf)
     elif SupportedNLPTasks.has_value(task_category):
         model_configs = _get_nlp_model_to_save(input_dir, output_dir, temp_output_dir, hf_conf)
     elif SupportedVisionTasks.has_value(task_category):
