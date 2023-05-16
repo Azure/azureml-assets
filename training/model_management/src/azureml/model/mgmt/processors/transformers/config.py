@@ -26,6 +26,14 @@ MODEL_FILE_PATTERN = r"^pytorch.*\.bin$"
 TOKENIZER_FILE_PATTERN = r"^tokenizer.*|vocab\.json$"
 
 
+# HF confs
+HF_CONFIG_ARGS = "config_hf_load_kwargs"
+HF_TOKENIZER_ARGS = "tokenizer_hf_load_kwargs"
+HF_MODEL_ARGS = "model_hf_load_args"
+HF_PIPELINE_ARGS = "pipeline_init_args"
+EXTRA_PIP_DEPENDENCIES = "extra_pip_requirements"
+
+
 class _CustomEnum(Enum):
     @classmethod
     def has_value(cls, value):

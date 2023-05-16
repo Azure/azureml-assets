@@ -7,6 +7,13 @@ import argparse
 import os
 import json
 from azureml.model.mgmt.config import ModelFlavor
+from azureml.model.mgmt.processors.transformers.config import (
+    EXTRA_PIP_DEPENDENCIES,
+    HF_CONFIG_ARGS,
+    HF_TOKENIZER_ARGS,
+    HF_MODEL_ARGS,
+    HF_PIPELINE_ARGS,
+)
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
@@ -18,6 +25,17 @@ def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
     parser.add_argument("--task-name", type=str, required=False, help="Hugging Face task type")
+    parser.add_argument("--hf-config-args", type=str, required=False, help="Hugging config init args")
+    parser.add_argument("--hf-tokenizer-args", type=str, required=False, help="Hugging tokenizer init args")
+    parser.add_argument("--hf-model-args", type=str, required=False, help="Hugging model init args")
+    parser.add_argument("--hf-pipeline-args", type=str, required=False, help="Hugging pipeline init args")
+    parser.add_argument(
+        "--extra-pip-dependencies",
+        type=str,
+        required=False, 
+        help="Extra pip dependecies which is not present in current env but needed to load model env."
+    )
+
     parser.add_argument(
         "--mlflow-flavor",
         type=str,
@@ -72,6 +90,12 @@ if __name__ == "__main__":
     model_id = args.model_id
     task_name = args.task_name
     mlflow_flavor = args.mlflow_flavor
+    hf_config_args = args.hf_config_args
+    hf_tokenizer_args = args.hf_tokenizer_args
+    hf_model_args = args.hf_model_args
+    hf_pipeline_args = args.hf_pipeline_args
+    extra_pip_dependencies = args.extra_pip_dependencies
+
     model_download_metadata_path = args.model_download_metadata
     model_path = args.model_path
     mlflow_model_output_dir = args.mlflow_model_output_dir
@@ -93,6 +117,11 @@ if __name__ == "__main__":
             preprocess_args.update(download_details.get("properties", {}))
     preprocess_args["task"] = task_name if task_name else preprocess_args.get("task")
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
+    preprocess_args[EXTRA_PIP_DEPENDENCIES] = extra_pip_dependencies
+    preprocess_args[HF_CONFIG_ARGS] = hf_config_args
+    preprocess_args[HF_TOKENIZER_ARGS] = hf_tokenizer_args
+    preprocess_args[HF_MODEL_ARGS] = hf_model_args
+    preprocess_args[HF_PIPELINE_ARGS] = hf_pipeline_args
 
     print(preprocess_args)
 

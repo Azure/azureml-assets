@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: convert_model_to_mlflow
-version: 0.0.5
+version: 0.0.6
 type: command
 
 is_deterministic: True
@@ -18,17 +18,23 @@ command: >
   $[[--task-name ${{inputs.task_name}}]]
   $[[--model-download-metadata ${{inputs.model_download_metadata}}]]
   $[[--license-file-path ${{inputs.license_file_path}}]]
+  $[[--hf-config-args "${{inputs.hf_config_args}}"]]
+  $[[--hf-tokenizer-args "${{inputs.hf_tokenizer_args}}"]]
+  $[[--hf-model-args "${{inputs.hf_model_args}}"]]
+  $[[--hf-pipeline-args "${{inputs.hf_pipeline_args}}"]]
+  $[[--extra-pip-dependencies "${{inputs.extra_pip_dependencies}}"]]
   --mlflow-flavor ${{inputs.mlflow_flavor}}
   --model-path ${{inputs.model_path}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
   --model-import-job-path ${{outputs.model_import_job_path}}
+  --temp-output-folder ${{outputs.temp_output_folder}}
 
 inputs:
   model_id:
     type: string
     description: Huggingface model id (https://huggingface.co/<model_id>). A required parameter for transformers flavor. Can be provided as input here or in model_download_metadata JSON file.
     optional: true
-  
+
   mlflow_flavor:
     type: string
     enum:
@@ -55,6 +61,43 @@ inputs:
     description: A Hugging face task on which model was trained on. A required parameter for transformers mlflow flavor. Can be provided as input here or in model_download_metadata JSON file.
     optional: true
 
+  hf_config_args:
+    type: string
+    description: |
+      Provide args that should be used to load Huggingface model config.
+      eg: trust_remote_code=True;
+    optional: true
+
+  hf_tokenizer_args:
+    type: string
+    description: |
+      Provide args that should be used to load Huggingface model tokenizer.
+      eg: trust_remote_code=True, low_cpu_mem_usage=True
+    optional: true
+
+  hf_model_args:
+    type: string
+    description: |
+      Provide args that should be used to load Huggingface model.
+      eg: trust_remote_code=True, device_map=auto
+    optional: true
+
+  hf_pipeline_args:
+    type: string
+    description: |
+      Provide pipeline args that should be used while loading the hugging face model.
+      Dont use quotes. If value cannot be eval'ed it will be taken as as string.
+      eg: trust_remote_code=True, device_map=auto
+    optional: true
+
+  extra_pip_dependencies:
+    type: string
+    description: |
+      Extra pip dependencies that MLFlow model should capture as part of conversion. This would be used to create environment while loading the model for inference.
+      Pip dependencies expressed as below. Do not use quotes for passing.
+      eg: pkg1==1.0, pkg2, pkg3==1.0
+    optional: true
+
   model_download_metadata:
     type: uri_file
     optional: true
@@ -77,6 +120,12 @@ outputs:
     description: Output path for the converted MLFlow model.
     mode: rw_mount
     
+
+  temp_output_folder:
+    type: uri_folder
+    description: Temporary folder to manage conversion of large models
+    mode: rw_mount
+
   model_import_job_path:
     type: uri_file
     description: JSON file containing model job path for model lineage

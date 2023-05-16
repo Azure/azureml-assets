@@ -7,9 +7,14 @@ import os
 import torch
 import yaml
 
-from .config import MODEL_FILE_PATTERN
 from azureml.evaluate import mlflow as hf_mlflow
 from azureml.model.mgmt.processors.transformers.config import (
+    EXTRA_PIP_DEPENDENCIES,
+    HF_CONFIG_ARGS,
+    HF_TOKENIZER_ARGS,
+    HF_MODEL_ARGS,
+    HF_PIPELINE_ARGS,
+    MODEL_FILE_PATTERN,
     SupportedTasks,
     SupportedTextToImageVariants,
     SupportedASRVariants,
@@ -18,8 +23,12 @@ from azureml.model.mgmt.processors.transformers.config import (
     TaskToClassMapping,
 )
 from azureml.model.mgmt.utils.common_utils import (
+    KV_COLON_SEP,
+    ITEM_COMMA_SEP,
     copy_file_paths_to_destination,
     log_execution_time,
+    get_dict_from_comma_separated_str,
+    get_list_from_comma_separated_str,
 )
 from pathlib import Path
 from transformers import (
@@ -31,6 +40,8 @@ from transformers import (
 )
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from typing import Dict
+
+
 
 
 def _get_default_task_signatures(task) -> Dict:
@@ -180,6 +191,20 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     signatures = translate_params.get('signature')
     model_id = translate_params['model_id']
     task = translate_params['task']
+
+    config_hf_load_kwargs = get_dict_from_comma_separated_str(
+        translate_params.get(HF_CONFIG_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True)
+    tokenizer_hf_load_kwargs = get_dict_from_comma_separated_str(
+        translate_params.get(HF_TOKENIZER_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True)
+    model_hf_load_args = get_dict_from_comma_separated_str(
+        translate_params.get(HF_MODEL_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True)
+    pipeline_init_args = get_dict_from_comma_separated_str(
+        translate_params.get(HF_PIPELINE_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True)
+    extra_pip_requirements = get_list_from_comma_separated_str(translate_params.get(EXTRA_PIP_DEPENDENCIES), ITEM_COMMA_SEP)
+
+    if pipeline_init_args and (model_hf_load_args or config_hf_load_kwargs or tokenizer_hf_load_kwargs):
+        raise Exception("model, config, tokenizer init args and pipeline init args are exclusive.")
+
     task_category = task
     if "stable-diffusion" in model_id:
         # TODO: check using tags for SD models
@@ -192,7 +217,13 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
         'task_type': task,
         'hf_pretrained_class': hf_pretrained_class,
         'huggingface_id': model_id,
+        'config_hf_load_kwargs': config_hf_load_kwargs,
+        'tokenizer_hf_load_kwargs': tokenizer_hf_load_kwargs,
+        'model_hf_load_args': model_hf_load_args,
+        'pipeline_init_args': pipeline_init_args,
     }
+
+    print(hf_conf)
 
     if SupportedTextToImageVariants.has_value(task_category):
         model_configs = _get_stable_difussion_model_to_save(input_dir, output_dir, hf_conf)
@@ -207,7 +238,7 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
 
     print(f"Saving hftranformers model to path {output_dir}")
     print(f"hftransformers parameters: \n{model_configs}\n")
-    hf_mlflow.hftransformers.save_model(**model_configs)
+    hf_mlflow.hftransformers.save_model(**model_configs, extra_pip_requirements=extra_pip_requirements)
 
     # add signatures
     signatures = signatures if signatures else _get_default_task_signatures(task)

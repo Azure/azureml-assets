@@ -15,7 +15,11 @@ from azureml.core.run import Run, _OfflineRun
 from contextlib import contextmanager
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
+
+
+KV_COLON_SEP = ":"
+ITEM_COMMA_SEP = ","
 
 
 def log_execution_time(func, logger=None):
@@ -113,3 +117,57 @@ def create_namespace_from_dict(var: Any):
         for key, val in var.__dict__.items():
             var.__dict__[key] = create_namespace_from_dict(val)
     return var
+
+
+def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str, do_eval: bool = False) -> Dict:
+    """Create and return dictionary from string.
+
+    :param dict_str: string to be parsed for creating dictionary
+    :type dict_str: str
+    :param item_sep: char separator used for item separation
+    :type item_sep: str
+    :param kv_sep: char separator used for key-value separation. Must be different from item separator
+    :type kv_sep: str
+    :param do_eval: Whether to eval parsed value string. Default is False
+    :type do_eval: bool
+    :return: Resultant dictionary
+    :rtype: Dict
+    """
+    if not dict_str:
+        return {}
+    item_sep = item_sep.strip()
+    kv_sep = kv_sep.strip()
+    if len(item_sep) > 1 or len(kv_sep) > 1:
+        raise Exception("Provide single char as separator")
+    if item_sep == kv_sep:
+        raise Exception("item_sep and kv_sep are equal.")
+    parsed_dict = {}
+    kv_pairs = dict_str.split(item_sep)
+    for item in kv_pairs:
+        split = item.split(kv_sep)
+        if len(split) == 2:
+            key = split[0].strip()
+            val = split[1].strip()
+            if do_eval:
+                try:
+                    val = eval(split[1].strip())
+                except Exception as e:
+                    print(f"Could not eval `{val}`. Error: {e}")
+            parsed_dict[key] = val
+    print(f"get_dict_from_comma_separated_str: {dict_str} => {parsed_dict}")
+    return parsed_dict
+
+
+def get_list_from_comma_separated_str(list_str: str, item_sep: str) -> List:
+    """Create and return list from string separted by `item_sep`.
+
+    :param dict_str: string to be parsed for creating list
+    :type dict_str: str
+    :param item_sep: char used for item separation
+    :type item_sep: str
+    :return: Resultant list
+    :rtype: List
+    """
+    if not list_str:
+        return []
+    return [x.strip() for x in list_str.split(item_sep) if x]
