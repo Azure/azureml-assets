@@ -71,14 +71,14 @@ inputs:
     type: string
     description: |
       Provide args that should be used to load Huggingface model tokenizer.
-      eg: trust_remote_code=True, low_cpu_mem_usage=True
+      eg: trust_remote_code=True, device_map=auto, 
     optional: true
 
   hf_model_args:
     type: string
     description: |
       Provide args that should be used to load Huggingface model.
-      eg: trust_remote_code=True, device_map=auto
+      eg: trust_remote_code=True, device_map=auto, low_cpu_mem_usage=True
     optional: true
 
   hf_pipeline_args:
