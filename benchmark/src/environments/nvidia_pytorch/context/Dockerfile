@@ -22,7 +22,7 @@ RUN mkdir /tmp/nccltests && \
 # Install dependencies missing in this container
 # NOTE: container already has matplotlib==3.5.1 tqdm==4.62.0
 RUN python -m pip install   azureml-defaults==1.41.0 \
-                            mlflow==1.25.1 \
+                            mlflow==2.3.2 \
                             azureml-mlflow==1.41.0 \
                             transformers==4.18.0 \
                             psutil==5.9.0 \
