@@ -280,9 +280,9 @@ def test_component():
             if not args.predictions_column_name:
                 args.predictions_column_name = metrics_config.get('predictions_column_name')
             if not args.ground_truths_column_name or (not is_ground_truths_mltable and not args.ground_truths):
-                message = ("For forecasting tasks, the table needs to be provided in jsonl format as the ground_truths parameter  "
-                           "or as mltable through ground_truths_mltable parameter. The table must contain time, prediction "
-                           "groud truth and time series IDs columns.")
+                message = ("For forecasting tasks, the table needs to be provided in jsonl format as the "
+                           "ground_truths parameter or as mltable through ground_truths_mltable parameter. The "
+                           "table must contain time, prediction groud truth and time series IDs columns.")
                 raise DataValidationException(message)
         runner = ModelEvaluationRunner(
             task=args.task,

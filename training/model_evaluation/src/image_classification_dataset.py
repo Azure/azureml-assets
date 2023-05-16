@@ -117,7 +117,8 @@ def get_classification_dataset(
     for index in range(len(test_dataset_wrapper)):
         image_path = test_dataset_wrapper.get_image_full_path(index)
         if is_valid_image(image_path):
-            df = df.append({ImageDataFrameParams.IMAGE_COLUMN_NAME: base64.encodebytes(read_image(image_path)).decode("utf-8"),
+            df = df.append({ImageDataFrameParams.IMAGE_COLUMN_NAME: \
+                                base64.encodebytes(read_image(image_path)).decode("utf-8"),
                             ImageDataFrameParams.LABEL_COLUMN_NAME: test_dataset_wrapper.label_at_index(index)
                             }, ignore_index=True)
 
