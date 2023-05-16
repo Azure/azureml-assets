@@ -23,7 +23,7 @@ from azureml.model.mgmt.processors.transformers.config import (
     TaskToClassMapping,
 )
 from azureml.model.mgmt.utils.common_utils import (
-    KV_COLON_SEP,
+    KV_EQ_SEP,
     ITEM_COMMA_SEP,
     copy_file_paths_to_destination,
     log_execution_time,
@@ -191,16 +191,16 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     task = translate_params['task']
 
     config_hf_load_kwargs = get_dict_from_comma_separated_str(
-        translate_params.get(HF_CONFIG_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True
+        translate_params.get(HF_CONFIG_ARGS), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
     )
     tokenizer_hf_load_kwargs = get_dict_from_comma_separated_str(
-        translate_params.get(HF_TOKENIZER_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True
+        translate_params.get(HF_TOKENIZER_ARGS), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
     )
     model_hf_load_args = get_dict_from_comma_separated_str(
-        translate_params.get(HF_MODEL_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True
+        translate_params.get(HF_MODEL_ARGS), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
     )
     pipeline_init_args = get_dict_from_comma_separated_str(
-        translate_params.get(HF_PIPELINE_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True
+        translate_params.get(HF_PIPELINE_ARGS), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
     )
     extra_pip_requirements = get_list_from_comma_separated_str(
         translate_params.get(EXTRA_PIP_DEPENDENCIES), ITEM_COMMA_SEP

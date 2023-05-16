@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Tuple
 
 
 KV_COLON_SEP = ":"
+KV_EQ_SEP = "="
 ITEM_COMMA_SEP = ","
 
 
