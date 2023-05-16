@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 
 description: >-
-  Runtime environment for PromptFlow.
+  Runtime environment for PromptFlow, refer to our [CHANGELOG](https://aka.ms/pf-runtime-changelog) for more details.
 
 name: "{{asset.name}}"
 version: "{{asset.version}}"
