@@ -184,7 +184,7 @@ def main(args):
             shutil.copytree(model_path, target_dir, dirs_exist_ok=True)
             model_path = target_dir
         mlmodel_path = os.path.join(model_path, "MLmodel")
-        print(f"mlmodel_path: {mlmodel_path}")
+        print(f"MLModel path: {mlmodel_path}")
         with open(mlmodel_path, "r") as stream:
             metadata = yaml.safe_load(stream)
             flavors = metadata.get('flavors', flavors)
