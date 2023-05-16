@@ -17,7 +17,7 @@ from tempfile import TemporaryDirectory
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 from urllib.parse import urlparse
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.WARNING)
+logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.WARNING)
 
 supported_languages = [
     "en",
@@ -222,8 +222,9 @@ def predict(
         model = model.to(device)
         audio_array = audio_processor(audio)
         input_features = tokenizer(audio_array, sampling_rate=16000, return_tensors="pt").input_features.to(device)
-        predicted_ids = model.generate(input_features, forced_decoder_ids=forced_decoder_ids,
-                                       max_new_tokens=max_new_tokens)
+        predicted_ids = model.generate(
+            input_features, forced_decoder_ids=forced_decoder_ids, max_new_tokens=max_new_tokens
+        )
         transcription = tokenizer.batch_decode(predicted_ids, skip_special_tokens=True)[0]
 
         result.append({"text": transcription})

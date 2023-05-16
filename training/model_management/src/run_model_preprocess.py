@@ -32,8 +32,8 @@ def _get_parser():
     parser.add_argument(
         "--extra-pip-dependencies",
         type=str,
-        required=False, 
-        help="Extra pip dependecies which is not present in current env but needed to load model env."
+        required=False,
+        help="Extra pip dependecies which is not present in current env but needed to load model env.",
     )
 
     parser.add_argument(

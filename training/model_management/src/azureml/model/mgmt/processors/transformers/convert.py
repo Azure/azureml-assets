@@ -42,8 +42,6 @@ from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
 from typing import Dict
 
 
-
-
 def _get_default_task_signatures(task) -> Dict:
     """Return mlflow i/p and o/p signature for a hftransformers supported task."""
     if task == SupportedTasks.TEXT_TO_IMAGE.value:
@@ -193,14 +191,20 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
     task = translate_params['task']
 
     config_hf_load_kwargs = get_dict_from_comma_separated_str(
-        translate_params.get(HF_CONFIG_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True)
+        translate_params.get(HF_CONFIG_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True
+    )
     tokenizer_hf_load_kwargs = get_dict_from_comma_separated_str(
-        translate_params.get(HF_TOKENIZER_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True)
+        translate_params.get(HF_TOKENIZER_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True
+    )
     model_hf_load_args = get_dict_from_comma_separated_str(
-        translate_params.get(HF_MODEL_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True)
+        translate_params.get(HF_MODEL_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True
+    )
     pipeline_init_args = get_dict_from_comma_separated_str(
-        translate_params.get(HF_PIPELINE_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True)
-    extra_pip_requirements = get_list_from_comma_separated_str(translate_params.get(EXTRA_PIP_DEPENDENCIES), ITEM_COMMA_SEP)
+        translate_params.get(HF_PIPELINE_ARGS), ITEM_COMMA_SEP, KV_COLON_SEP, do_eval=True
+    )
+    extra_pip_requirements = get_list_from_comma_separated_str(
+        translate_params.get(EXTRA_PIP_DEPENDENCIES), ITEM_COMMA_SEP
+    )
 
     if pipeline_init_args and (model_hf_load_args or config_hf_load_kwargs or tokenizer_hf_load_kwargs):
         raise Exception("model, config, tokenizer init args and pipeline init args are exclusive.")
