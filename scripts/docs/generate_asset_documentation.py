@@ -134,6 +134,12 @@ class AssetInfo:
             doc.add_raw(" ".join(tags))
         return doc
 
+    def _add_doc_link(self, doc):
+        link = "https://ml.azure.com/registries/azureml/{}s/{}/version/{}".format(
+            self.type, self.name, self.version)
+        doc.add_paragraph("**View in Studio**:  [{}]({})".format(link, link))
+        # doc.add_paragraph("**View in Studio**:  <a href=\"{}\" target=\"_blank\">{}</a>".format(link, link))
+
     def _add_doc_mcr_image(self, doc):
         """Add MCR Image."""
         img = ":".join([self._extra_config_object.get_full_image_name(), self.version])
@@ -275,10 +281,7 @@ class EnvironmentInfo(AssetInfo):
         self._add_doc_description(_doc)
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
-
-        link = "https://ml.azure.com/registries/azureml/environments/{}/version/{}".format(self.name, self.version)
-        _doc.add_paragraph("**View in Studio**:  [{}]({})".format(link, link))
-        # doc.add_paragraph("**View in Studio**:  <a href=\"{}\" target=\"_blank\">{}</a>".format(link, link))
+        self._add_doc_link(_doc)
 
         self._add_doc_mcr_image(_doc)
         self._add_doc_docker_context(_doc)
@@ -303,6 +306,7 @@ class ComponentInfo(AssetInfo):
         self._add_doc_description(_doc)
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
+        self._add_doc_link(_doc)
 
         self._add_doc_asset_inputs(_doc)
         self._add_doc_asset_outputs(_doc)
@@ -329,6 +333,8 @@ class ModelInfo(AssetInfo):
         self._add_doc_description(_doc)
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
+        self._add_doc_link(_doc)
+
         self._add_doc_license_from_tags(_doc)
         self._add_doc_properties(_doc)
         self._add_doc_compute_sku(_doc)
@@ -400,7 +406,8 @@ class CategoryInfo:
                 self._sub_categories[top] = CategoryInfo(top, self._type, self)
             self._sub_categories[top].add_asset(asset, sub_categories[1:])
         # Add assets to all parent categories
-        self._assets.append(asset)
+        if asset not in self._assets:
+            self._assets.append(asset)
 
     @property
     def assets(self):
@@ -413,11 +420,12 @@ class CategoryInfo:
         if self._is_root:
             doc.add_heading(self._type.capitalize() + "s", level=1)
         else:
-            doc.add_heading(self._name.capitalize(), level=1)
+            doc.add_heading(self._name, level=1)
 
         if self._sub_categories:
+            sorted_sub_categories = dict(sorted(self._sub_categories.items(), key=lambda i: i[0].lower()))
             doc.add_heading("Categories", level=2)
-            for name, child in self._sub_categories.items():
+            for name, child in sorted_sub_categories.items():
                 child.save()
                 doc.add_unordered_list([snakemd.Paragraph(child._name).insert_link(child._name, child._doc_name)])
 
@@ -428,6 +436,9 @@ class CategoryInfo:
             doc.add_heading(f"{self._type.capitalize()}s in this category", level=2)
 
         doc.add_horizontal_rule()
+
+        self.assets.sort(key=lambda x: x.name.lower())
+
         for asset in self.assets:
             doc.add_unordered_list([snakemd.Paragraph(asset.name).insert_link(asset.name, asset.filename)])
             # limit description to 300 chars

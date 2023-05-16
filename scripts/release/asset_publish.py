@@ -205,11 +205,11 @@ def validate_and_prepare_pipeline_component(
         )
 
         if registry and registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
-            logger.log_error(
-                "Registry name for component's URI must be either "
-                + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{registry}'"
+            logger.log_warning(
+                f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
+                f"The URI for component '{name}' references registry '{registry}', "
+                "and publishing will fail if the release process does not have read access to it."
             )
-            return False
 
         # Check if component's env exists
         final_version = version + "-" + version_suffix if version_suffix else version
@@ -279,11 +279,11 @@ def validate_update_command_component(
     )
 
     if env_registry_name and env_registry_name not in [PROD_SYSTEM_REGISTRY, registry_name]:
-        logger.log_error(
-            "Registry name for component's env URI must be either "
-            + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{env_registry_name}'"
+        logger.log_warning(
+            f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
+            f"The URI for environment '{env_name}' references registry '{env_registry_name}', "
+            "and publishing will fail if the release process does not have read access to it."
         )
-        return False
 
     registry_name = env_registry_name or registry_name
 
@@ -575,6 +575,7 @@ if __name__ == "__main__":
                             continue
                 elif asset.type == assets.AssetType.MODEL:
                     try:
+                        final_version = asset.version
                         model_config = asset.extra_config_as_object()
                         if not prepare_model(model_config, asset.spec_with_path, Path(work_dir)):
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")

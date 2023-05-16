@@ -24,6 +24,9 @@ NAMING_CONVENTION_URL = "https://github.com/Azure/azureml-assets/wiki/Asset-nami
 INVALID_STRINGS = ["microsoft", ["azureml", "azure"], "aml"]
 COMMON_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
 
+# Asset config convention
+ASSET_CONFIG_URL = "https://github.com/Azure/azureml-assets/wiki/Assets#assetyaml"
+
 # Environment naming convention
 ENVIRONMENT_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9.-]{0,254}$")
 COMMON_VERSION = r"[0-9]+(?:\.[0-9]+)?(?=-|$)"
@@ -227,11 +230,27 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
     return error_count
 
 
+def validate_categories(asset_config: assets.AssetConfig) -> int:
+    """Validate asset categories.
+
+    Args:
+        asset_config (AssetConfig): Asset config.
+
+    Returns:
+        int: Number of errors.
+    """
+    if not asset_config.categories:
+        _log_error(asset_config, "Categories not found")
+        return 1
+    return 0
+
+
 def validate_assets(input_dirs: List[Path],
                     asset_config_filename: str,
                     changed_files: List[Path] = None,
                     check_names: bool = False,
-                    check_images: bool = False) -> bool:
+                    check_images: bool = False,
+                    check_categories: bool = False) -> bool:
     """Validate assets.
 
     Args:
@@ -240,6 +259,7 @@ def validate_assets(input_dirs: List[Path],
         changed_files (List[Path], optional): List of changed files, used to filter assets. Defaults to None.
         check_names (bool, optional): Whether to check asset names. Defaults to False.
         check_images (bool, optional): Whether to check image names. Defaults to False.
+        check_categories (bool, optional): Whether to check asset categories. Defaults to False.
 
     Raises:
         ValidationException: If validation fails.
@@ -254,7 +274,6 @@ def validate_assets(input_dirs: List[Path],
     image_names = defaultdict(list)
     for asset_config_path in util.find_asset_config_files(input_dirs, asset_config_filename, changed_files):
         asset_count += 1
-
         # Load config
         try:
             asset_config = assets.AssetConfig(asset_config_path)
@@ -267,6 +286,10 @@ def validate_assets(input_dirs: List[Path],
         # Validate name
         if check_names:
             error_count += validate_name(asset_config)
+
+        # Validate categories
+        if check_categories:
+            error_count += validate_categories(asset_config)
 
         # Validate specific asset types
         if asset_config.type == assets.AssetType.ENVIRONMENT:
@@ -328,6 +351,8 @@ if __name__ == '__main__':
                         help="Check asset names")
     parser.add_argument("-I", "--check-images", action="store_true",
                         help="Check environment images")
+    parser.add_argument("-C", "--check-categories", action="store_true",
+                        help="Check asset categories")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
@@ -338,11 +363,16 @@ if __name__ == '__main__':
     if args.check_names:
         logger.print(f"Asset naming convention: {NAMING_CONVENTION_URL}")
 
+    # Share asset config reference
+    if args.check_categories:
+        logger.print(f"Asset config reference: {ASSET_CONFIG_URL}")
+
     # Validate assets
     success = validate_assets(input_dirs=input_dirs,
                               asset_config_filename=args.asset_config_filename,
                               changed_files=changed_files,
                               check_names=args.check_names,
-                              check_images=args.check_images)
+                              check_images=args.check_images,
+                              check_categories=args.check_categories)
     if not success:
         sys.exit(1)

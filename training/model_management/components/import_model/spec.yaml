@@ -4,6 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
+version: 0.0.5
 version: 0.0.6
 
 # Pipeline inputs
@@ -346,6 +347,11 @@ jobs:
       model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
     outputs:
       registration_details: ${{parent.outputs.model_registration_details}}
+
+
+  deploy_model:
+    component: azureml:deploy_model:0.0.1
+    compute: ${{parent.inputs.compute}}
 
   deploy_model:
     component: azureml:deploy_model:0.0.1
