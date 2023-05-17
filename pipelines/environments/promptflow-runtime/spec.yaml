@@ -15,6 +15,7 @@ os_type: linux
 tags:
   OS: Ubuntu20.04
   Python: 3.8
+  Preview: ""
 
 inference_config:
   liveness_route:
