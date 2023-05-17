@@ -1,0 +1,8 @@
+name: web_classification                 
+version: auto                  
+type: data              
+spec: spec.yaml           
+release_paths:                 
+- data.csv                       
+categories:                                   
+- prompt flow
