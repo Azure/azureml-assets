@@ -8,6 +8,7 @@ properties:
   inference-min-sku: Standard_DS5_v2
   languages: en
 tags:
+  Featured: ''
   Preview: ''
   license: mit
   task: text-generation
