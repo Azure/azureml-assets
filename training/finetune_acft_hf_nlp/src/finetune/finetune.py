@@ -18,6 +18,9 @@ from azureml.acft.accelerator.utils.run_utils import add_run_properties
 from azureml.acft.accelerator.utils.decorators import swallow_all_exceptions
 from azureml.acft.accelerator.utils.logging_utils import get_logger_app
 
+from azureml.acft.accelerator.utils.error_handling.exceptions import LLMException
+from azureml.acft.accelerator.utils.error_handling.error_definitions import LLMInternalError
+from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 # Refer this logging issue
 # https://github.com/Azure/azure-sdk-for-python/issues/23563
@@ -356,6 +359,19 @@ def finetune(args: Namespace):
     elif not args.apply_deepspeed:
         # do not use deepspeed config if provided when apply_deepspeed is set to false
         args.deepspeed = None
+    
+    if args.deepspeed:
+        with open(args.deepspeed, "r") as fp:
+            ds_data = json.load(fp)
+        ds_stage = ds_data.get("zero_optimization", {}).get("stage", None)
+        if ds_stage == 3 and not ds_data.get("zero_optimization", {}).get("stage3_gather_16bit_weights_on_model_save", True):
+            raise LLMException._with_error(
+                AzureMLError.create(LLMInternalError, error=(
+                    "stage3_gather_16bit_weights_on_model_save should be "
+                    "`true` in deepspeed stage 3 config"
+                    )
+                )
+            )
 
     if (
         not isinstance(args.evaluation_steps_interval, float) or
