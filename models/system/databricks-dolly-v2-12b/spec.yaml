@@ -5,7 +5,7 @@ properties:
   SHA: d0aa7ea43dc3548a8b499cc88605e150c4a2704d
   datasets: databricks/databricks-dolly-15k
   inference-min-sku-spec: 16|0|56|112
-  inference-recommended-sku: Standard_DS5_v2
+  inference-min-sku: Standard_DS5_v2
   languages: en
 tags:
   Featured: ''
