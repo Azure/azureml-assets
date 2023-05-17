@@ -1,4 +1,4 @@
-name: web_classification                 
+name: web-classification                 
 version: auto                  
 type: data              
 spec: spec.yaml           
