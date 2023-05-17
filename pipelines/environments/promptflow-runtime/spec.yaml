@@ -15,3 +15,14 @@ os_type: linux
 tags:
   OS: Ubuntu20.04
   Python: 3.8
+
+inference_config:
+  liveness_route:
+    port: 8080
+    path: /health
+  readiness_route:
+    port: 8080
+    path: /health
+  scoring_route:
+    port: 8080
+    path: /score
