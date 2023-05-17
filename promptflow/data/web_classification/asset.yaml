@@ -1,5 +1,5 @@
 name: web-classification                 
-version: auto                  
+version: 1.0.0
 type: data              
 spec: spec.yaml           
 categories:                                   
