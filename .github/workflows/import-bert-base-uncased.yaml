@@ -12,8 +12,8 @@ jobs:
   import-model-job:
     runs-on: ubuntu-latest
     steps:
-      -name: Clone azureml-examples Public repository
-       uses: actions/checkout@v2
-       with:
-        owner: 'Azure'
-        repository: 'Azure/azureml-examples'
+      - name: Clone Azure/azureml-examples PUBLIC repository
+        uses: actions/checkout@v2
+        with:
+          owner: 'Azure'
+          repository: 'Azure/azureml-examples'
