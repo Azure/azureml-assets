@@ -359,12 +359,13 @@ def finetune(args: Namespace):
     elif not args.apply_deepspeed:
         # do not use deepspeed config if provided when apply_deepspeed is set to false
         args.deepspeed = None
-    
+
     if args.deepspeed:
         with open(args.deepspeed, "r") as fp:
             ds_data = json.load(fp)
-        ds_stage = ds_data.get("zero_optimization", {}).get("stage", None)
-        if ds_stage == 3 and not ds_data.get("zero_optimization", {}).get("stage3_gather_16bit_weights_on_model_save", True):
+        zero_optimization_config = ds_data.get("zero_optimization", {})
+        ds_stage = zero_optimization_config.get("stage", None)
+        if ds_stage == 3 and not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
             raise LLMException._with_error(
                 AzureMLError.create(LLMInternalError, error=(
                     "stage3_gather_16bit_weights_on_model_save should be "
