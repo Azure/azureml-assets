@@ -172,6 +172,10 @@ class EvaluateModel:
             eval_data = X_test
             eval_data[label_column_name] = y_test
             targets = label_column_name
+            # Image classification evaluation needs integer batch size.
+            if self.task in [constants.TASK.IMAGE_CLASSIFICATION, constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL]:
+                if self.batch_size:
+                    self.batch_size = 1
             self.metrics_config.update(
                 {
                     "log_activity": log_activity,
@@ -223,7 +227,7 @@ def test_model():
     parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default=None)
     parser.add_argument("--output", type=str, dest="output")
     parser.add_argument("--device", type=str, required=False, default="cpu", dest="device")
-    parser.add_argument("--batch-size", type=int, required=False, default=1, dest="batch_size")
+    parser.add_argument("--batch-size", type=int, required=False, default=None, dest="batch_size")
     parser.add_argument("--label-column-name", type=str, dest="label_column_name", required=True)
     parser.add_argument("--input-column-names",
                         type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()],
