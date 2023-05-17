@@ -78,7 +78,7 @@ outputs:
     type: uri_folder
 
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/5
+environment: azureml://registries/azureml/environments/model-evaluation/versions/6
 command: >-
   python compute_metrics.py
   --task ${{inputs.task}}
