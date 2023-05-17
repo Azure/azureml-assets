@@ -12,8 +12,6 @@ from PIL import Image
 from typing import cast, Dict
 
 from azureml.automl.core.shared.constants import MLTableLiterals, MLTableDataLabel
-
-from azureml.acft.common_components import get_logger_app
 from azureml.acft.common_components.image.runtime_common.common import (
     utils,
 )
@@ -23,11 +21,12 @@ from azureml.acft.common_components.image.runtime_common.common.aml_dataset_base
 from azureml.acft.common_components.image.runtime_common.classification.io.read.dataset_wrappers import (
     AmlDatasetWrapper,
 )
-
 from azureml.core import Workspace
 from azureml.core.run import Run
 
-logger = get_logger_app(__name__)
+from logging_utilities import get_logger
+
+logger = get_logger(__name__)
 
 
 class SettingLiterals:
