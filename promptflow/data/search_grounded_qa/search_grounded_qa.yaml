@@ -1,5 +1,0 @@
-$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
-name: search_grounded_qa_data
-description: Data asset to evaluate Search Grounded QA sample, created from local file.
-type: uri_file
-path: search_grounded_qa_data.csv
