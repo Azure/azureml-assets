@@ -260,6 +260,10 @@ class Spec(Config):
             release_paths.extend(Config._expand_path(code_dir))
         return release_paths
 
+    @property
+    def inference_config(self) -> Dict[str, dict]:
+        """Inference config."""
+        return self._yaml.get('inference_config')
 
 class ModelType(Enum):
     """Enum for the Model Types accepted in ModelConfig."""
