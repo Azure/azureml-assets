@@ -6,6 +6,6 @@ dependencies:
   - pip=21.2.4
   - pip:
     - azure-core==1.26.4
-    - azure-ai-ml==1.7.0
+    - azure-ai-ml==1.7.1
     - azure-identity==1.13.0
     - azureml-core==1.50.0
