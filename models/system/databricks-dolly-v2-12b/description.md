@@ -3,6 +3,12 @@ The dolly-v2-12b model is a large, instruction-following language model created 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/databricks/dolly-v2-12b" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 
+> **NOTE:** It is recommended to use `Standard_NC24rs_v3` SKU and set the below mentioned  parameters in the advanced wizard when launching a finetune job. 
+> - `Precision` to `16`
+> - `Apply Deepspeed` to `true`
+> - `Train batch size` to `1`
+> - `Validation batch size` to `1`
+
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
