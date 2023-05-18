@@ -5,7 +5,7 @@ name: "model-management"
 version: "8"
 
 build:
-  path: "{{asset.repo.build_context.path}}"
+  path: "context"
   dockerfile_path: "Dockerfile"
 
 os_type: linux

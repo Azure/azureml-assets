@@ -8,7 +8,7 @@ name: "sklearn-1.0"
 version: "6"
 
 build:
-  path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
+  path: "context"
   dockerfile_path: "Dockerfile"
 
 os_type: linux

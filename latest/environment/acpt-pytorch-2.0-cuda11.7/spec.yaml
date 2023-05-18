@@ -12,7 +12,7 @@ name: "acpt-pytorch-2.0-cuda11.7"
 version: "7"
 
 build:
-  path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
+  path: "context"
   dockerfile_path: "Dockerfile"
 
 os_type: linux

@@ -6,10 +6,10 @@ description: >-
   additional python packages.
 
 name: "tensorflow-2.8-cuda11"
-version: "7"
+version: "8"
 
 build:
-  path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
+  path: "context"
   dockerfile_path: "Dockerfile"
 
 os_type: linux
