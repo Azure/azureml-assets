@@ -16,7 +16,7 @@ tags:
   Preview: ''
   license: apache-2.0
   task: fill-mask
-version: 4
+version: 5
 description: |
   BERT is a pre-trained language model created by the Hugging Face team that uses masked language modeling (MLM) on a large corpus of English data. Its primary uses are for sequence classification and question answering, and it is not intended for text generation. It is important to note that this particular BERT model is cased, making a distinction between 'english' and 'English'. The model can be fine-tuned for downstream tasks, and it is described as having 24 layers, 1024 hidden dimensions, 16 attention heads, and 336M parameters. It's most effective on use cases that involve using the entire sentence to make decisions, whereas tasks such as text-generations, you should use GPT2.
   <br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 

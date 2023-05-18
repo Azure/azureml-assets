@@ -16,7 +16,7 @@ tags:
   Preview: ''
   license: mit
   task: fill-mask
-version: 4
+version: 5
 description: |
   CamemBERT is a state-of-the-art language model for French developed by a team of researchers. It is based on the RoBERTa model and is available in 6 different versions on Hugging Face. It can be used for fill-in-the-blank tasks. However, it has been pretrained on a subcorpus of OSCAR which may contain lower quality data and personal and sensitive information. Also, there may be biases and historical stereotypes present in the model. The model is licensed under the MIT license, and more information can be found in the research paper and on the Camembert website. It was trained on the OSCAR dataset, which is a multilingual corpus obtained by language classification and filtering of the Common Crawl corpus using the Ungoliant architecture.
   <br>Please Note: This model accepts masks in `<mask>` format. See Sample input for reference. 
