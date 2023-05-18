@@ -8,7 +8,7 @@ version: "{{asset.version}}"
 
 build:
   path: "{{image.context.path}}"
-  dockerfile_path: "{{image.dockerfile.path}}"  
+  dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
 
