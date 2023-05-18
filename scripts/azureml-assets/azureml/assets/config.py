@@ -265,6 +265,7 @@ class Spec(Config):
         """Inference config."""
         return self._yaml.get('inference_config')
 
+
 class ModelType(Enum):
     """Enum for the Model Types accepted in ModelConfig."""
 
