@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: question_answering_pipeline
-version: 0.0.2
+version: 0.0.3
 type: pipeline
 display_name: Question Answering Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for extractive
@@ -499,7 +499,7 @@ outputs:
 jobs:
   question_answering_model_import:
     type: command
-    component: azureml://registries/azureml/components/question_answering_model_import/versions/0.0.2
+    component: azureml://registries/azureml/components/question_answering_model_import/versions/0.0.3
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       huggingface_id: ${{parent.inputs.huggingface_id}}
@@ -507,7 +507,7 @@ jobs:
       mlflow_model_path: ${{parent.inputs.mlflow_model_path}}
   question_answering_datapreprocess:
     type: command
-    component: azureml://registries/azureml/components/question_answering_datapreprocess/versions/0.0.2
+    component: azureml://registries/azureml/components/question_answering_datapreprocess/versions/0.0.3
     compute: ${{parent.inputs.compute_preprocess}}
     inputs:
       question_key: ${{parent.inputs.question_key}}
@@ -528,7 +528,7 @@ jobs:
       model_selector_output: ${{parent.jobs.question_answering_model_import.outputs.output_dir}}
   question_answering_finetune:
     type: command
-    component: azureml://registries/azureml/components/question_answering_finetune/versions/0.0.2
+    component: azureml://registries/azureml/components/question_answering_finetune/versions/0.0.3
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -582,7 +582,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
   model_prediction:
     type: command
-    component: azureml://registries/azureml/components/model_prediction/versions/0.0.3
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.6
     compute: ${{parent.inputs.compute_model_evaluation}}
     inputs:
       task: question-answering
@@ -595,7 +595,7 @@ jobs:
       mlflow_model: ${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}
   compute_metrics:
     type: command
-    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.3
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.6
     compute: ${{parent.inputs.compute_model_evaluation}}
     inputs:
       task: question-answering

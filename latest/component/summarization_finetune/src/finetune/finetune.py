@@ -17,6 +17,9 @@ from azureml.acft.accelerator.utils.run_utils import add_run_properties
 from azureml.acft.accelerator.utils.decorators import swallow_all_exceptions
 from azureml.acft.accelerator.utils.logging_utils import get_logger_app
 
+from azureml.acft.accelerator.utils.error_handling.exceptions import LLMException
+from azureml.acft.accelerator.utils.error_handling.error_definitions import LLMInternalError
+from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 # Refer this logging issue
 # https://github.com/Azure/azure-sdk-for-python/issues/23563
@@ -209,6 +212,12 @@ def get_parser():
         ),
     )
     parser.add_argument(
+        "--eval_accumulation_steps",
+        default=None,
+        type=int,
+        help="Number of predictions steps to accumulate before moving the tensors to the CPU.",
+    )
+    parser.add_argument(
         "--evaluation_strategy", type=str, default="epoch", help="The evaluation strategy to adopt during training",
     )
     parser.add_argument(
@@ -335,10 +344,33 @@ def finetune(args: Namespace):
 
     # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
     if args.apply_deepspeed and args.deepspeed is None:
-        args.deepspeed = "./zero1.json"
+        args.deepspeed = "./zero2.json"
     elif not args.apply_deepspeed:
         # do not use deepspeed config if provided when apply_deepspeed is set to false
         args.deepspeed = None
+
+    if args.deepspeed:
+        with open(args.deepspeed, "r") as fp:
+            ds_data = json.load(fp)
+        zero_optimization_config = ds_data.get("zero_optimization", {})
+        ds_stage = zero_optimization_config.get("stage", None)
+        # `apply_lora=true` is not supported with stage3 deepspeed config
+        if ds_stage == 3 and args.apply_lora:
+            raise LLMException._with_error(
+                AzureMLError.create(LLMInternalError, error=(
+                    "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
+                    )
+                )
+            )
+        # `stage3_gather_16bit_weights_on_model_save=false` is not supported for stage3 deepspeed config
+        if ds_stage == 3 and not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
+            raise LLMException._with_error(
+                AzureMLError.create(LLMInternalError, error=(
+                    "stage3_gather_16bit_weights_on_model_save should be "
+                    "`true` in deepspeed stage 3 config"
+                    )
+                )
+            )
 
     if (
         not isinstance(args.evaluation_steps_interval, float) or
