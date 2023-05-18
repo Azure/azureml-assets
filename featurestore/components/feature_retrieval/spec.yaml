@@ -60,9 +60,7 @@ conf:
   spark.synapse.library.python.env: |
     dependencies:
       - python=3.8
-      - pip=21.1.1
       - pip:
         - protobuf==3.19.6
-        - azure-ai-ml==1.7.0
         - azureml-featurestore==0.1.0b1
     name: fs_env
