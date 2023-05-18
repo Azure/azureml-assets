@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 
 name: feature_retrieval
-version: 1
+version: 0.1.0
 type: spark
 
 display_name: Feature Retrieval

@@ -73,12 +73,12 @@ logger.info("Printing head of the generated data.")
 logger.info(training_df.head(5))
 
 logger.info("Outputting dataset to parquet files.")
-training_df.write.mode("overwrite").parquet(os.path.join(args.output_data, "data"))
+training_df.write.mode("overwrite").parquet(os.path.join(args.output_data, "data/"))
 
 # Write feature_retrieval_spec.yaml to the output_folder
 if_destination_exists = PyIfDestinationExists.MERGE_WITH_OVERWRITE
 dest_uri = PyLocationInfo.from_uri(_ensure_azureml_full_path(args.output_data, sub_id, rg, ws))
-src_uri = feature_retrieval_spec_folder + FEATURE_RETRIEVAL_SPEC_YAML_FILENAME
+src_uri = os.path.join(feature_retrieval_spec_folder, FEATURE_RETRIEVAL_SPEC_YAML_FILENAME)
 
 Copier.copy_uri(dest_uri, src_uri, if_destination_exists, "")
 
