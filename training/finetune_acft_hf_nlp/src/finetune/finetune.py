@@ -365,6 +365,15 @@ def finetune(args: Namespace):
             ds_data = json.load(fp)
         zero_optimization_config = ds_data.get("zero_optimization", {})
         ds_stage = zero_optimization_config.get("stage", None)
+        # `apply_lora=true` is not supported with stage3 deepspeed config
+        if ds_stage == 3 and args.apply_lora:
+            raise LLMException._with_error(
+                AzureMLError.create(LLMInternalError, error=(
+                    "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
+                    )
+                )
+            )
+        # `stage3_gather_16bit_weights_on_model_save=false` is not supported for stage3 deepspeed config
         if ds_stage == 3 and not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
             raise LLMException._with_error(
                 AzureMLError.create(LLMInternalError, error=(
