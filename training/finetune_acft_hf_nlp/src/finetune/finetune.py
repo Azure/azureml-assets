@@ -340,7 +340,7 @@ def finetune(args: Namespace):
         args.model_name_or_path = model_name_or_path
     else:
         args.model_name_or_path = args.model_name
-    
+
     # set `ignore_mismatched_sizes` to `false` by default
     if hasattr(args, "model_name") and args.model_name in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
         logger.info(f"Forcing `ignore_mismatched_sizes` to False for {args.model_name}")
