@@ -81,12 +81,6 @@ def get_parser():
 
     # Lora settings
     parser.add_argument("--apply_lora", type=str2bool, default="false", help="lora enabled")
-    parser.add_argument(
-        "--merge_lora_weights",
-        type=str2bool,
-        default=True,
-        help="if set to true, the lora trained weights will be merged to base model before saving"
-    )
     parser.add_argument("--lora_alpha", type=int, default=128, help="lora attn alpha")
     parser.add_argument("--lora_dropout", type=float, default=0.0, help="lora dropout value")
     parser.add_argument("--lora_r", default=8, type=int, help="lora dimension")
