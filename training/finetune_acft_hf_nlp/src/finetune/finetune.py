@@ -284,10 +284,6 @@ def get_parser():
     )
 
     parser.add_argument(
-        "--save_as_mlflow_model", type=str2bool, default="true", help="Save as mlflow model with pyfunc as flavour"
-    )
-
-    parser.add_argument(
         "--preprocess_output",
         default=None,
         type=str,
