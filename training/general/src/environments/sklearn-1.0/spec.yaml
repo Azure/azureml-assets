@@ -7,7 +7,7 @@ name: "{{asset.name}}"
 version: "{{asset.version}}"
 
 build:
-  path: "{{asset.repo.url}}#{{asset.repo.commit_hash}}:{{asset.repo.build_context.path}}"
+  path: "{{image.context.path}}"
   dockerfile_path: "{{image.dockerfile.path}}"
 
 os_type: linux
