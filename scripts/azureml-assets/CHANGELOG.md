@@ -9,6 +9,7 @@
 
 ### 🚀 New Features
 - [#675](https://github.com/Azure/azureml-assets/pull/675) Read `inference_config` from spec files
+- [#678](https://github.com/Azure/azureml-assets/pull/678) Read `os_type` from spec files, create change log
 
 ### 🐛 Bugs Fixed
 
