@@ -37,6 +37,10 @@ RUN_PROPERTIES = {
 add_run_properties(ROOT_RUN_PROPERTIES, logger, add_to_root=True)
 add_run_properties(RUN_PROPERTIES, logger)
 
+IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
+    "databricks/dolly-v2-12b",
+]
+
 
 def str2bool(arg):
     """Convert string to bool."""
@@ -336,6 +340,11 @@ def finetune(args: Namespace):
         args.model_name_or_path = model_name_or_path
     else:
         args.model_name_or_path = args.model_name
+
+    # set `ignore_mismatched_sizes` to `false` by default
+    if hasattr(args, "model_name") and args.model_name in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
+        logger.info(f"Forcing `ignore_mismatched_sizes` to False for {args.model_name}")
+        setattr(args, "ignore_mismatched_sizes", False)
 
     # Below arguments are needed for HF training args
     args.output_dir = args.pytorch_model_folder
