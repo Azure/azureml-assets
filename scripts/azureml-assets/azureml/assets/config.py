@@ -265,6 +265,11 @@ class Spec(Config):
         """Inference config."""
         return self._yaml.get('inference_config')
 
+    @property
+    def os_type(self) -> str:
+        """OS type."""
+        return self._yaml.get('os_type')
+
 
 class ModelType(Enum):
     """Enum for the Model Types accepted in ModelConfig."""
