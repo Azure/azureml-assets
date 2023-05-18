@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+name: "web-classification"
+version: "1.0.0"
+description: Data asset to evaluate Web Classification sample.
+type: uri_file
+path: data.csv
