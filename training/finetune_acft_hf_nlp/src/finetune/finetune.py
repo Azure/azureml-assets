@@ -343,6 +343,7 @@ def finetune(args: Namespace):
     
     # set `ignore_mismatched_sizes` to `false` by default
     if args.model_name in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
+        logger.info(f"Forcing `ignore_mismatched_sizes` to False for {args.model_name}")
         setattr(args, "ignore_mismatched_sizes", False)
 
     # Below arguments are needed for HF training args
