@@ -7,7 +7,8 @@ The dolly-v2-12b model is a large, instruction-following language model created 
 > - `precision` to `16`
 > - `apply_deepspeed` to `true`
 > - `ignore_mismatched_sizes` to `false`
-
+> - `per_device_train_batch_size` to `1`
+> - `per_device_eval_batch_size` to `1`
 
 ### Finetuning samples
 
