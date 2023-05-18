@@ -4,11 +4,11 @@ The dolly-v2-12b model is a large, instruction-following language model created 
 
 
 > **NOTE:** It is recommended to use `Standard_NC24rs_v3` SKU and set the below mentioned  parameters in the advanced wizard when launching a finetune job. 
-> - `precision` to `16`
-> - `apply_deepspeed` to `true`
+> - `Precision` to `16`
+> - `Apply Deepspeed` to `true`
 > - `ignore_mismatched_sizes` to `false`
-> - `per_device_train_batch_size` to `1`
-> - `per_device_eval_batch_size` to `1`
+> - `Train batch size` to `1`
+> - `Validation batch size` to `1`
 
 ### Finetuning samples
 
