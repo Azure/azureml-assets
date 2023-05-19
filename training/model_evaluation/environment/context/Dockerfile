@@ -18,3 +18,5 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 RUN pip install azureml-acft-common-components["image"]=={{latest-pypi-version}}
+# Note: need to remove torchvision after the next common-components pypi release
+RUN pip install torchvision==0.14.0
