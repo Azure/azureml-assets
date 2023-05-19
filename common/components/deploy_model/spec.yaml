@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: deploy_model
-version: 0.0.1
+version: 0.0.2
 type: command
 
 is_deterministic: True
@@ -15,8 +15,9 @@ code: ../../src/model_deployment
 command: >-
   python deploy.py
   --registration_details ${{inputs.registration_details}}
-  --endpoint_name ${{inputs.endpoint_name}}
-  --deployment_name ${{inputs.deployment_name}}
+  $[[--inference_payload ${{inputs.inference_payload}}]]
+  $[[--endpoint_name ${{inputs.endpoint_name}}]]
+  $[[--deployment_name ${{inputs.deployment_name}}]]
   $[[--instance_type ${{inputs.instance_type}}]]
   $[[--instance_count ${{inputs.instance_count}}]]
   $[[--max_concurrent_requests_per_instance ${{inputs.max_concurrent_requests_per_instance}}]] 
@@ -41,14 +42,20 @@ inputs:
     optional: false
     description: Json file that contains the ID of registered model to be deployed
 
+  inference_payload:
+    type: uri_file
+    optional: true
+    description: JSON payload which would be used to validate deployment
+
   endpoint_name:
     type: string
-    optional: false
+    optional: true
     description: Name of the endpoint
 
   deployment_name:
     type: string
-    optional: false
+    optional: true
+    default: default
     description: Name of the deployment
   
   instance_type:
@@ -87,11 +94,12 @@ inputs:
       - Standard_NC16as_T4_v3
       - Standard_NC24s_v2
       - Standard_NC24s_v3
+      - Standard_NC24rs_v3
       - Standard_NC64as_T4_v3
       - Standard_ND40rs_v2
       - Standard_ND96asr_v4
       - Standard_ND96amsr_A100_v4
-    default: Standard_F8s_v2
+    default: Standard_NC24s_v3
     description: Compute instance type to deploy model. Make sure that instance type is available and have enough quota available.
 
   instance_count:
@@ -108,13 +116,13 @@ inputs:
 
   request_timeout_ms:
     type: integer
-    default: 5000
+    default: 60000
     optional: true
     description: Request timeout in ms. Max limit is 90000.
 
   max_queue_wait_ms:
     type: integer
-    default: 500
+    default: 60000
     optional: true
     description: Maximum queue wait time of a request in ms
   
@@ -122,7 +130,7 @@ inputs:
     type: integer
     default: 10
     optional: true 
-    description: No of times system will try after failing the readiness probe
+    description: The number of times system will try after failing the readiness probe
 
   success_threshold_readiness_probe:
     type: integer
@@ -152,7 +160,7 @@ inputs:
     type: integer
     default: 30
     optional: true 
-    description: No of times system will try after failing the liveness probe
+    description: The number of times system will try after failing the liveness probe
   
   timeout_liveness_probe:
     type: integer

@@ -7,8 +7,8 @@ from setuptools import setup, find_packages
 
 setup(
    name="azureml-assets",
-   version="0.0.1",
-   description="Scripts that support Azure Machine Learning assets.",
+   version="1.0.1",
+   description="Utilities for publishing assets to Azure Machine Learning system registries.",
    author="Microsoft Corp",
    packages=find_packages(),
    install_requires=[
@@ -17,4 +17,20 @@ setup(
       "pip>=21",
    ],
    python_requires=">=3.8,<4.0",
+   license="MIT",
+   classifiers=[
+      "Development Status :: 5 - Production/Stable",
+      "Intended Audience :: Developers",
+      "Topic :: Software Development :: Build Tools",
+      "License :: OSI Approved :: MIT License",
+      "Programming Language :: Python :: 3.8",
+      "Programming Language :: Python :: 3.9",
+      "Programming Language :: Python :: 3.10",
+      "Programming Language :: Python :: 3.11",
+   ],
+   project_urls={
+        # 'Documentation': "https://example.com/documentation/",
+        'Source': "https://github.com/Azure/azureml-assets/",
+        'Changelog': "https://github.com/Azure/azureml-assets/blob/main/scripts/azureml-assets/CHANGELOG.md",
+    },
 )
