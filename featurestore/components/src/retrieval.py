@@ -12,8 +12,8 @@ from azureml.dataprep.rslex import Copier, PyIfDestinationExists, PyLocationInfo
 from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.featurestore import FeatureStoreClient, get_offline_features
-from azureml.featurestore._identity import AzureMLHoboSparkOnBehalfOfCredential
 from azureml.featurestore._utils._constants import FEATURE_RETRIEVAL_SPEC_YAML_FILENAME
 from azureml.featurestore._utils.utils import _ensure_azureml_full_path
 
@@ -38,7 +38,7 @@ assert args.feature_retrieval_spec is not None or args.input_model is not None
 if args.feature_retrieval_spec is not None and args.input_model is not None:
     raise Exception("Only one of input_model or feature_retrieval_spec should be provided.")
 
-fs_client = FeatureStoreClient(credential=AzureMLHoboSparkOnBehalfOfCredential())
+fs_client = FeatureStoreClient(credential=AzureMLOnBehalfOfCredential())
 
 ensure_rslex_environment()
 

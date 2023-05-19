@@ -5,7 +5,7 @@ version: 0.1.0
 type: spark
 
 display_name: Feature Retrieval
-description: Retrieval component to be used to retrieve features from feature store.
+description: Retrieval component to be used to retrieve offline features from feature store.
 is_deterministic: true
 
 code: ../src
@@ -46,7 +46,7 @@ outputs:
   output_data:
     type: uri_folder
     mode: direct
-    description: Observation data with retrieved features.
+    description: Observation data with retrieved features written in parquet format.
 
 args: >-
   $[[--input_model ${{inputs.input_model}}]]
