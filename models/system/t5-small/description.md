@@ -6,8 +6,8 @@ T5 Small is a text-to-text transformer model with 60 million parameters. It is d
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-translation" target="_blank">translation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-translation" target="_blank">translation-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-translation" target="_blank">translation-batch-endpoint.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-translation" target="_blank">translation-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-t5-small_nb.yaml"><img alt="real-time-inference-t5-small" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-t5-small_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-translation" target="_blank">translation-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-translation" target="_blank">translation-batch-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-t5-small_nb.yaml"><img alt="real-time-inference-t5-small" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-t5-small_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples

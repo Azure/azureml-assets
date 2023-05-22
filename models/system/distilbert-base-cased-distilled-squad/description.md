@@ -7,8 +7,8 @@ The DistilBERT model requires significant computational power to train, as it wa
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-question-answering" target="_blank">question-answering-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-question-answering" target="_blank">question-answering-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-question-answering" target="_blank">question-answering-batch-endpoint.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-question-answering" target="_blank">question-answering-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-distilbert-base-cased-distilled-squad_nb.yaml"><img alt="real-time-inference-distilbert-base-cased-distilled-squad" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-distilbert-base-cased-distilled-squad_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-question-answering" target="_blank">question-answering-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-question-answering" target="_blank">question-answering-batch-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-distilbert-base-cased-distilled-squad_nb.yaml"><img alt="real-time-inference-distilbert-base-cased-distilled-squad" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-distilbert-base-cased-distilled-squad_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples

@@ -8,8 +8,8 @@ RoBERTa Large OpenAI Detector is a fine-tuned transformer-based language model d
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">entailment-contradiction-online.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">entailment-contradiction-online.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-roberta-large-openai-detector_nb.yaml"><img alt="real-time-inference-roberta-large-openai-detector" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-roberta-large-openai-detector_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-roberta-large-openai-detector_nb.yaml"><img alt="batch-inference-roberta-large-openai-detector" src="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-roberta-large-openai-detector_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Model Evaluation

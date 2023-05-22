@@ -6,8 +6,8 @@ The pysentimiento library is an open-source tool for non-commercial use and scie
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">entailment-contradiction-online.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">entailment-contradiction-online.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml"><img alt="real-time-inference-finiteautomata-bertweet-base-sentiment-analysis" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml"><img alt="batch-inference-finiteautomata-bertweet-base-sentiment-analysis" src="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples

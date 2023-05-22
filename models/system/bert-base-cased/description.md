@@ -6,8 +6,8 @@ The BERT model is a pre-trained model that has been trained on a large corpus of
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-cased_nb.yaml"><img alt="real-time-inference-bert-base-cased" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-cased_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-bert-base-cased_nb.yaml"><img alt="batch-inference-bert-base-cased" src="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-bert-base-cased_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples

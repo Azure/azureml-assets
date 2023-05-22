@@ -7,8 +7,8 @@ GPT-2 is a transformer-based language model intended for AI researchers and prac
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-<model_name>_nb.yaml"><img alt="real-time-inference-<model-name>" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-<model_name>_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-<model_name>_nb.yaml"><img alt="real-time-inference-<model-name>" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-<model_name>_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples

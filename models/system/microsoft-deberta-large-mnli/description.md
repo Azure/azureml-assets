@@ -7,8 +7,8 @@ DeBERTa is an improvement of BERT and RoBERTa using disentangled attention and e
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">entailment-contradiction-online.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">entailment-contradiction-online.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-microsoft-deberta-large-mnli_nb.yaml"><img alt="real-time-inference-microsoft-deberta-large-mnli" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-microsoft-deberta-large-mnli_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-microsoft-deberta-large-mnli_nb.yaml"><img alt="real-time-inference-microsoft-deberta-large-mnli" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-microsoft-deberta-large-mnli_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples

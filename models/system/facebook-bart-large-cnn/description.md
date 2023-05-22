@@ -7,8 +7,8 @@ The BART model is a transformer encoder-encoder model trained on English languag
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-summarization" target="_blank">summarization-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-summarization" target="_blank">summarization-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-summarization" target="_blank">summarization-batch-endpoint.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-summarization" target="_blank">summarization-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-facebook-bart-large-cnn_nb.yaml"><img alt="real-time-inference-facebook-bart-large-cnn" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-facebook-bart-large-cnn_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-summarization" target="_blank">summarization-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-summarization" target="_blank">summarization-batch-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-facebook-bart-large-cnn_nb.yaml"><img alt="real-time-inference-facebook-bart-large-cnn" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-facebook-bart-large-cnn_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples

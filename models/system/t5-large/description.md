@@ -6,8 +6,8 @@ The T5-Large is a text-to-text transfer transformer (T5) model with 770 million 
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-translation" target="_blank">translation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-translation" target="_blank">translation-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-translation" target="_blank">translation-batch-endpoint.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-translation" target="_blank">translation-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-t5-large_nb.yaml"><img alt="real-time-inference-t5-large" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-t5-large_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-translation" target="_blank">translation-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-translation" target="_blank">translation-batch-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-t5-large_nb.yaml"><img alt="real-time-inference-t5-large" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-t5-large_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples
