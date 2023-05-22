@@ -14,7 +14,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" targ
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml"><img alt="finetuning-text-classification-finiteautomata-bertweet-base-sentiment-analysis" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
 
 
 ### Model Evaluation
