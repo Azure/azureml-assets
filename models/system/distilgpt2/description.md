@@ -23,7 +23,7 @@ Token Classification|Named Entity Recognition|<a href="https://huggingface.co/da
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
-Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-text-generation_nb.yaml"><img alt="evaluation-text-generation" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-text-generation_nb.yaml/badge.svg"/></a></p>| <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
 
 ### Sample inputs and outputs (for real-time inference)
 

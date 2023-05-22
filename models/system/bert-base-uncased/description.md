@@ -6,7 +6,7 @@ BERT is a pre-trained model in the field of NLP (natural language processing) re
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-uncased_nb.yaml"><img src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-uncased_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a><p><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-uncased-cli.yaml"><img src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-uncased-cli.yaml/badge.svg"/></a></p>
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-uncased_nb.yaml"><img src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-uncased_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-uncased-cli.yaml"><img src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-uncased-cli.yaml/badge.svg"/></a></p>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-bert-base-uncased-nb.yaml"><img src="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-bert-base-uncased-nb.yaml/badge.svg"/></a></p>| coming soon
 
 
@@ -23,7 +23,7 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |--|--|--|--|--|
-Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a>|<a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
+Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a>|<a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-fill-mask_nb.yaml"><img alt="evaluation-fill-mask" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-fill-mask_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)

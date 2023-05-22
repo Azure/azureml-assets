@@ -13,9 +13,9 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank
 
 ### Model Evaluation
 
-Task | Use case | Dataset Python sample (Notebook) |CLI with YAML
-|--|--|--|--|
-Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
+Task | Use case | Dataset | Python sample (Notebook) |CLI with YAML
+|--|--|--|--|--|
+Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a> | <a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a> <p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/fill-mask_nb.yaml"><img alt="evaluation-fill-mask" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-fill-mask_nb.yaml/badge.svg"/></a></p> | <a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
 
 
 ### Finetuning samples

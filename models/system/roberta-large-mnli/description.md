@@ -16,7 +16,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" targ
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
-Text Classification|Textual Entailment|<a href="https://huggingface.co/datasets/glue/viewer/mnli/validation_matched" target="_blank">MNLI</a>|<a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a>
+Text Classification|Textual Entailment|<a href="https://huggingface.co/datasets/glue/viewer/mnli/validation_matched" target="_blank">MNLI</a>|<a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-text-classification_nb.yaml"><img alt="evaluation-text-classification" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-text-classification_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a>
 
 
 ### Finetuning samples

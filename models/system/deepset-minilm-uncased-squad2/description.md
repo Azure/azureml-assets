@@ -23,7 +23,7 @@ Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |--|--|--|--|--|
-Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad_v2" target="_blank">Squad v2</a>|<a href="https://aka.ms/azureml-eval-sdk-question-answering" target="_blank">evaluate-model-question-answering.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-question-answering" target="_blank">evaluate-model-question-answering.yml</a>
+Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad_v2" target="_blank">Squad v2</a>|<a href="https://aka.ms/azureml-eval-sdk-question-answering" target="_blank">evaluate-model-question-answering.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-question-answering_nb.yaml"><img alt="evaluation-question-answering" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-question-answering_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-eval-cli-question-answering" target="_blank">evaluate-model-question-answering.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)

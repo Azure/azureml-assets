@@ -23,7 +23,7 @@ Translation|Translate English to Romanian|<a href="https://huggingface.co/datase
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
-Summarization | Summarization | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">cnn_dailymail</a> | <a href="https://aka.ms/azureml-eval-sdk-summarization" target="_blank">evaluate-model-summarization.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-summarization" target="_blank">evaluate-model-summarization.yml</a>
+Summarization | Summarization | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">cnn_dailymail</a> | <a href="https://aka.ms/azureml-eval-sdk-summarization" target="_blank">evaluate-model-summarization.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-summarization_nb.yaml"><img alt="evaluation-summarization" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-summarization_nb.yaml/badge.svg"/></a></p>| <a href="https://aka.ms/azureml-eval-cli-summarization" target="_blank">evaluate-model-summarization.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)

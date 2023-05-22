@@ -23,7 +23,7 @@ Token Classification|Named Entity Recognition|<a href="https://huggingface.co/da
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
-Token Classification | Token Classification | <a href="https://huggingface.co/datasets/conll2003" target="_blank">CoNLL 2003</a> | <a href="https://aka.ms/azureml-eval-sdk-token-classification" target="_blank">evaluate-model-token-classification.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-token-classification" target="_blank">evaluate-model-token-classification.yml</a>
+Token Classification | Token Classification | <a href="https://huggingface.co/datasets/conll2003" target="_blank">CoNLL 2003</a> | <a href="https://aka.ms/azureml-eval-sdk-token-classification" target="_blank">evaluate-model-token-classification.ipynb</a> <p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-token-classification_nb.yaml"><img alt="evaluation-token-classification" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-token-classification_nb.yaml/badge.svg"/></a></p> | <a href="https://aka.ms/azureml-eval-cli-token-classification" target="_blank">evaluate-model-token-classification.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)

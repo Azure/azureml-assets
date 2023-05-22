@@ -22,7 +22,7 @@ Translation|Translate English to Romanian|<a href="https://huggingface.co/datase
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
-Translation | Translation | <a href="https://huggingface.co/datasets/wmt16/viewer/ro-en/train" target="_blank">wmt16/ro-en</a> | <a href="https://aka.ms/azureml-eval-sdk-translation" target="_blank">evaluate-model-translation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-translation" target="_blank">evaluate-model-translation.yml</a>
+Translation | Translation | <a href="https://huggingface.co/datasets/wmt16/viewer/ro-en/train" target="_blank">wmt16/ro-en</a> | <a href="https://aka.ms/azureml-eval-sdk-translation" target="_blank">evaluate-model-translation.ipynb</a> <p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-translation_nb.yaml"><img alt="evaluation-translation" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-translation_nb.yaml/badge.svg"/></a></p> | <a href="https://aka.ms/azureml-eval-cli-translation" target="_blank">evaluate-model-translation.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)
