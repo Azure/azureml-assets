@@ -79,12 +79,6 @@ def parse_args():
         help="JSON file that contains the job path of model to have lineage.",
         default=None,
     )
-    parser.add_argument(
-        "--temp_output_folder",
-        type=Path,
-        help="Temporary folder to handle large model operations",
-        default=None,
-    )
     args = parser.parse_args()
     print("args received ", args)
     return args
@@ -133,6 +127,14 @@ def is_model_available(ml_client, model_name, model_version):
     return is_available
 
 
+def move_files(src: str, dstn: str) -> None:
+    """Move files to dstn directory"""
+    os.makedirs(dstn, exist_ok=True)
+    for item in os.listdir(src):
+        src_path = os.path.join(src, item)
+        shutil.move(src_path, dstn)
+
+
 def main(args):
     """Run main function."""
     model_name = args.model_name
@@ -140,7 +142,6 @@ def main(args):
     model_description = args.model_description
     registry_name = args.registry_name
     model_path = args.model_path
-    temp_output_folder = args.temp_output_folder
     registration_details = args.registration_details
     model_version = args.model_version
     tags, properties, flavors = {}, {}, {}
@@ -175,14 +176,13 @@ def main(args):
     if model_type == "mlflow_model":
         # Make sure parent directory is mlflow_model_folder for mlflow model
         print("Model is of type MLFlow.")
-        if not Path(os.path.join(model_path, "mlflow_model_folder")).exists():
-            print(
-                "For mlflow model, parent directory needs to be `mlflow_model_folder`."
-                + "Creating a parent directory and copying model files ..."
-            )
-            target_dir = temp_output_folder / "mlflow_model_folder"
-            shutil.copytree(model_path, target_dir, dirs_exist_ok=True)
+
+        target_dir = os.path.join(model_path, "mlflow_model_folder")
+        if not os.path.exists(target_dir):
+            print("Moving model files to `mlflow_model_folder`")
+            move_files(model_path, target_dir)
             model_path = target_dir
+
         mlmodel_path = os.path.join(model_path, "MLmodel")
         print(f"MLModel path: {mlmodel_path}")
         with open(mlmodel_path, "r") as stream:
@@ -240,9 +240,6 @@ def main(args):
     with open(registration_details, "w") as outfile:
         outfile.write(json_object)
     print("Saved model registration details in output json file.")
-
-    print("Cleaning temp folder")
-    shutil.rmtree(temp_output_folder, ignore_errors=True)
 
 
 # run script
