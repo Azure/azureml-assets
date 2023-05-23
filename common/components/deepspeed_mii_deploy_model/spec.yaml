@@ -1,0 +1,182 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: ds_mii_deploy_model
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Deepseed MII deploy Huggingface model
+description: |
+  Deploy a Huggingface model using Deepspeed MII (https://github.com/microsoft/DeepSpeed-MII).
+  The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
+  You can also use Azure OBO (On Behalf Of) identity while submitting jobs. Read more at: [AzureML OBO](https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/)
+
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/2
+
+code: ../../src/deepspeed_mii_deployment
+command: >-
+  python deploy.py
+  --hf_model_id ${{inputs.hf_model_id}}
+  --hf_task_name ${{inputs.hf_task_name}}
+  --registration_details ${{inputs.registration_details}}
+  $[[--inference_payload ${{inputs.inference_payload}}]]
+  $[[--endpoint_name ${{inputs.endpoint_name}}]]
+  $[[--deployment_name ${{inputs.deployment_name}}]]
+  $[[--instance_type ${{inputs.instance_type}}]]
+  $[[--instance_count ${{inputs.instance_count}}]]
+  $[[--max_concurrent_requests_per_instance ${{inputs.max_concurrent_requests_per_instance}}]] 
+  $[[--request_timeout_ms ${{inputs.request_timeout_ms}}]]
+  $[[--max_queue_wait_ms ${{inputs.max_queue_wait_ms}}]]
+  $[[--failure_threshold_readiness_probe ${{inputs.failure_threshold_readiness_probe}}]]
+  $[[--success_threshold_readiness_probe ${{inputs.success_threshold_readiness_probe}}]]
+  $[[--timeout_readiness_probe ${{inputs.timeout_readiness_probe}}]]
+  $[[--period_readiness_probe ${{inputs.period_readiness_probe}}]]
+  $[[--initial_delay_readiness_probe ${{inputs.initial_delay_readiness_probe}}]]
+  $[[--failure_threshold_liveness_probe ${{inputs.failure_threshold_liveness_probe}}]]
+  $[[--timeout_liveness_probe ${{inputs.timeout_liveness_probe}}]]
+  $[[--period_liveness_probe ${{inputs.period_liveness_probe}}]]
+  $[[--initial_delay_liveness_probe ${{inputs.initial_delay_liveness_probe}}]]
+  $[[--egress_public_network_access ${{inputs.egress_public_network_access}}]]
+
+inputs:
+  # Model details
+  hf_model_id:
+    type: string
+    description: Hugging face model id 
+
+  hf_task_name:
+    type: string
+    description: Hugging face task name. Check (DeepSpeed-MII) for supported tasks
+
+  registration_details:
+    type: uri_file
+    description: File containing model registration details
+
+  inference_payload:
+    type: uri_file
+    optional: true
+    description: JSON payload which would be used to validate deployment
+
+  # Endpoint params
+  endpoint_name:
+    type: string
+    optional: true
+    description: Name of the endpoint
+
+  # Deployment params
+  deployment_name:
+    type: string
+    default: default
+    description: Name of the deployment
+
+  instance_type:
+    type: string
+    enum:
+      - Standard_NC4as_T4_v3
+      - Standard_NC6s_v2
+      - Standard_NC6s_v3
+      - Standard_NC8as_T4_v3
+      - Standard_NC12s_v2
+      - Standard_NC12s_v3
+      - Standard_NC16as_T4_v3
+      - Standard_NC24s_v2
+      - Standard_NC24s_v3
+      - Standard_NC24rs_v3
+      - Standard_NC64as_T4_v3
+      - Standard_ND40rs_v2
+      - Standard_ND96asr_v4
+      - Standard_ND96amsr_A100_v4
+    default: Standard_NC24s_v3
+    description: Compute instance type to deploy model. Make sure that instance type is available and have enough quota available.
+
+  instance_count:
+    type: integer
+    optional: true
+    default: 1
+    description: Number of instances you want to use for deployment. Make sure instance type have enough quota available.
+
+  max_concurrent_requests_per_instance:
+    type: integer
+    default: 1
+    optional: true
+    description: Maximum concurrent requests to be handled per instance
+
+  request_timeout_ms:
+    type: integer
+    default: 60000
+    optional: true
+    description: Request timeout in ms. Max limit is 90000.
+
+  max_queue_wait_ms:
+    type: integer
+    default: 60000
+    optional: true
+    description: Maximum queue wait time of a request in ms
+  
+  failure_threshold_readiness_probe:
+    type: integer
+    default: 10
+    optional: true 
+    description: The number of times system will try after failing the readiness probe
+
+  success_threshold_readiness_probe:
+    type: integer
+    default: 1
+    optional: true 
+    description: The minimum consecutive successes for the readiness probe to be considered successful after having failed
+  
+  timeout_readiness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: The number of seconds after which the readiness probe times out
+
+  period_readiness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: How often (in seconds) to perform the readiness probe
+
+  initial_delay_readiness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: The number of seconds after the container has started before the readiness probe is initiated
+
+  failure_threshold_liveness_probe:
+    type: integer
+    default: 30
+    optional: true 
+    description: The number of times system will try after failing the liveness probe
+  
+  timeout_liveness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: The number of seconds after which the liveness probe times out
+
+  period_liveness_probe:
+    type: integer
+    default: 10
+    optional: true 
+    description:  How often (in seconds) to perform the liveness probe
+
+  initial_delay_liveness_probe:
+    type: integer
+    default: 10
+    optional: true
+    description: The number of seconds after the container has started before the liveness probe is initiated
+  
+  egress_public_network_access:
+    type: string
+    default: enabled
+    optional: true 
+    enum:
+      - enabled
+      - disabled
+    description: Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources used by it
+
+outputs:
+  deployment_details:
+    type: uri_file
+    description: JSON file with Model deployment details

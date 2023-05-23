@@ -1,0 +1,12 @@
+image:
+  name: deepspeed-mii-deployment
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - requirements.txt
+publish:
+  location: mcr
+  visibility: unlisted

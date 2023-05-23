@@ -1,0 +1,22 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+description: Deepspeed MII model deployment environment
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
+inference_config:
+  liveness_route:
+    path: /
+    port: 5001
+  readiness_route:
+    path: /
+    port: 5001
+  scoring_route:
+    path: /score
+    port: 5001  
+
+build:
+  path: "{{image.context.path}}"
+  dockerfile_path: "{{image.dockerfile.path}}"
+
+os_type: linux
