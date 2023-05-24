@@ -12,7 +12,7 @@ from pathlib import Path
 from azureml.assets.config import AssetConfig, AssetType
 from glob import glob as search
 
-SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL]
+SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA]
 DEFAULT_CATEGORY = "Uncategorized"
 
 
@@ -96,6 +96,8 @@ class AssetInfo:
             return ComponentInfo(asset_config)
         if asset_config.type == AssetType.MODEL:
             return ModelInfo(asset_config)
+        if asset_config.type == AssetType.DATA:
+            return DataInfo(asset_config)
 
         raise Exception(f"Not supported asset type {asset_config.type}. Use {SUPPORTED_ASSET_TYPES}")
 
@@ -342,6 +344,27 @@ class ModelInfo(AssetInfo):
         return _doc
 
 
+
+class DataInfo(AssetInfo):
+    """Data asset class."""
+
+    def __init__(self, asset_config: AssetConfig):
+        """Instantiate Data asset class."""
+        super().__init__(asset_config)
+
+    @AssetInfo.doc.getter
+    def doc(self) -> snakemd.document.Document:
+        """Generate data markdown document."""
+        _doc = snakemd.new_doc()
+        self._add_doc_name(_doc)
+        self._add_doc_overview(_doc)
+        self._add_doc_description(_doc)
+        self._add_doc_asset_version(_doc)
+        self._add_doc_tags(_doc)
+        self._add_doc_link(_doc)
+
+        return _doc
+
 class Categories:
     """Categories structured by type."""
 
@@ -352,6 +375,7 @@ class Categories:
         self._categories[AssetType.ENVIRONMENT.value] = None
         self._categories[AssetType.COMPONENT.value] = None
         self._categories[AssetType.MODEL.value] = None
+        self._categories[AssetType.DATA.value] = None
 
     def classify_asset(self, asset: AssetInfo):
         """Classify an asset."""
