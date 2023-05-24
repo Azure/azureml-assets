@@ -15,7 +15,6 @@ from azure.ai.ml.entities import Model
 from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.core import Run
-from pathlib import Path
 
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
