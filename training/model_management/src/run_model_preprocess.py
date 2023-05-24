@@ -106,7 +106,7 @@ if __name__ == "__main__":
     run_preprocess(mlflow_flavor, model_path, working_dir, temp_output_dir, **preprocess_args)
 
     # Finishing touches
-    shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True) 
+    shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
     shutil.rmtree(working_dir, ignore_errors=True)
     shutil.rmtree(temp_output_dir, ignore_errors=True)
 
