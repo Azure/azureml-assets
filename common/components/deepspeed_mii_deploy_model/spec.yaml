@@ -105,7 +105,7 @@ inputs:
     type: integer
     default: 60000
     optional: true
-    description: Request timeout in ms. Max limit is 90000.
+    description: Request timeout in ms. Max is 90000.
 
   max_queue_wait_ms:
     type: integer
