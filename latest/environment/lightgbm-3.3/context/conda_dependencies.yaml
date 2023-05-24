@@ -14,10 +14,10 @@ dependencies:
   - psutil>=5.8,<5.9
   - tqdm>=4.59,<4.60
   - ipykernel~=6.0
-  - azureml-core==1.50.0
-  - azureml-defaults==1.50.0
-  - azureml-mlflow==1.50.0
-  - azureml-telemetry==1.50.0
+  - azureml-core==1.51.0
+  - azureml-defaults==1.51.0
+  - azureml-mlflow==1.51.0
+  - azureml-telemetry==1.51.0
   - scikit-learn~=0.24.1
   - debugpy~=1.6.3
   - xgboost~=1.4.0

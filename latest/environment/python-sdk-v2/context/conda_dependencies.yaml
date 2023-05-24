@@ -8,4 +8,4 @@ dependencies:
     - azure-core==1.26.4
     - azure-ai-ml==1.7.2
     - azure-identity==1.13.0
-    - azureml-core==1.50.0
+    - azureml-core==1.51.0
