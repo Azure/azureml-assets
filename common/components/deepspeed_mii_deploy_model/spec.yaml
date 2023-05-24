@@ -42,7 +42,7 @@ inputs:
   # Model details
   hf_model_id:
     type: string
-    description: Hugging face model id 
+    description: Hugging Face model ID
 
   hf_task_name:
     type: string
