@@ -174,7 +174,7 @@ inputs:
     enum:
       - enabled
       - disabled
-    description: Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources used by it
+    description: Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources it uses
 
 outputs:
   deployment_details:
