@@ -1,0 +1,5 @@
+name: model-monitoring-data-drift-spark
+version: 0.2
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml

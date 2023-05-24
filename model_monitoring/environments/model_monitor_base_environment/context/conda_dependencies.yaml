@@ -1,0 +1,10 @@
+name: model-monitoring-data-drift-spark
+channels:
+- conda-forge
+dependencies:
+- python=3.8
+- pip:
+  - azureml-mlflow~=1.49.0
+  - mltable~=1.1.0
+  - numpy~=1.18.5
+  - pandas~=1.4.3
