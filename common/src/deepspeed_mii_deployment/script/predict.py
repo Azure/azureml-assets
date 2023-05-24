@@ -2,7 +2,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
 
-"""Scoring script to infer Deepspeed MII deployed model."""
+"""Scoring script to infer DeepSpeed MII deployed model."""
 
 import json
 import torch
