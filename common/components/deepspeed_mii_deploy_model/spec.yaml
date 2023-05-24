@@ -87,7 +87,7 @@ inputs:
       - Standard_ND96asr_v4
       - Standard_ND96amsr_A100_v4
     default: Standard_NC24s_v3
-    description: Compute instance type to deploy model. Make sure that instance type is available and have enough quota available.
+    description: Compute instance type to deploy model. Make sure that instance type and sufficient quota are available.
 
   instance_count:
     type: integer
