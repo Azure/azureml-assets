@@ -344,7 +344,6 @@ class ModelInfo(AssetInfo):
         return _doc
 
 
-
 class DataInfo(AssetInfo):
     """Data asset class."""
 
@@ -364,6 +363,7 @@ class DataInfo(AssetInfo):
         self._add_doc_link(_doc)
 
         return _doc
+
 
 class Categories:
     """Categories structured by type."""
