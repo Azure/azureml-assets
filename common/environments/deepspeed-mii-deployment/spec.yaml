@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
-description: Deepspeed MII model deployment environment
+description: DeepSpeed MII model deployment environment
 
 name: "{{asset.name}}"
 version: "{{asset.version}}"
