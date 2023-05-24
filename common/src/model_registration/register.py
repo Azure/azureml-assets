@@ -127,7 +127,7 @@ def is_model_available(ml_client, model_name, model_version):
 
 
 def move_files(src: str, dstn: str) -> None:
-    """Move files to dstn directory"""
+    """Move files to dstn directory."""
     os.makedirs(dstn, exist_ok=True)
     for item in os.listdir(src):
         src_path = os.path.join(src, item)
