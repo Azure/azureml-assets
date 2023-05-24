@@ -46,7 +46,7 @@ inputs:
 
   hf_task_name:
     type: string
-    description: Hugging face task name. Check (DeepSpeed-MII) for supported tasks
+    description: Hugging Face task name. Check (DeepSpeed-MII) for supported tasks
 
   registration_details:
     type: uri_file
