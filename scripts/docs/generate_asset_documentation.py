@@ -37,7 +37,7 @@ class AssetInfo:
     def type(self) -> str:
         """Return asset type."""
         return self._asset_config.type.value
-    
+
     @property
     def pluralized_type(self) -> str:
         """Return pluralized asset type."""
