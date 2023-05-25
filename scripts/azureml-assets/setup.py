@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
    name="azureml-assets",
-   version="1.0.0",
+   version="1.0.1",
    description="Utilities for publishing assets to Azure Machine Learning system registries.",
    author="Microsoft Corp",
    packages=find_packages(),
@@ -28,4 +28,9 @@ setup(
       "Programming Language :: Python :: 3.10",
       "Programming Language :: Python :: 3.11",
    ],
+   project_urls={
+        # 'Documentation': "https://example.com/documentation/",
+        'Source': "https://github.com/Azure/azureml-assets/",
+        'Changelog': "https://github.com/Azure/azureml-assets/blob/main/scripts/azureml-assets/CHANGELOG.md",
+    },
 )

@@ -10,7 +10,7 @@ from functools import total_ordering
 from pathlib import Path
 from ruamel.yaml import YAML
 from setuptools._vendor.packaging import version
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 # Ignore setuptools warning about replacing distutils
 warnings.filterwarnings("ignore", message="Setuptools is replacing distutils.", category=UserWarning)
@@ -259,6 +259,16 @@ class Spec(Config):
         if code_dir:
             release_paths.extend(Config._expand_path(code_dir))
         return release_paths
+
+    @property
+    def inference_config(self) -> Dict[str, Dict[str, Union[str, int]]]:
+        """Inference config."""
+        return self._yaml.get('inference_config')
+
+    @property
+    def os_type(self) -> str:
+        """OS type."""
+        return self._yaml.get('os_type')
 
 
 class ModelType(Enum):
