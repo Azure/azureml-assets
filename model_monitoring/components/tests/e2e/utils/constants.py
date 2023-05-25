@@ -1,6 +1,5 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 
 """This file contains constants used by the e2e test suite."""
 
