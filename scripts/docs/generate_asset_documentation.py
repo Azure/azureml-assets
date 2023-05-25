@@ -14,7 +14,7 @@ from glob import glob as search
 
 SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA]
 DEFAULT_CATEGORY = "Uncategorized"
-ALREADY_PLURALIZED_TYPES = ["data"]
+PLURALIZED_ASSET_TYPE = {"environment": "environments", "component": "components", "model": "models", "data": "data"}
 
 
 class AssetInfo:
@@ -41,7 +41,7 @@ class AssetInfo:
     @property
     def pluralized_type(self) -> str:
         """Return pluralized asset type."""
-        return f"{self._asset_config.type.value}s"
+        return PLURALIZED_ASSET_TYPE[self._asset_config.type.value]
 
     @property
     def name(self) -> str:
@@ -412,9 +412,7 @@ class CategoryInfo:
         self._name = name
         self._parent = parent
         self._type = type
-        self._pluralized_type = type
-        if type not in ALREADY_PLURALIZED_TYPES:
-            self._pluralized_type = f"{type}s"
+        self._pluralized_type = PLURALIZED_ASSET_TYPE[type]
         self._assets = []
         self._sub_categories = {}
 
