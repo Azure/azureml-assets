@@ -374,6 +374,8 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         config_load_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
         tokenizer_load_args = self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
         config = self._hf_config_cls.from_pretrained(self._model_dir, local_files_only=True, **config_load_args)
-        tokenizer = self._hf_tokenizer_cls.from_pretrained(self._model_dir, local_files_only=True, **tokenizer_load_args)
+        tokenizer = self._hf_tokenizer_cls.from_pretrained(
+            self._model_dir, local_files_only=True, **tokenizer_load_args
+        )
 
         return super()._save(config=config, tokenizer=tokenizer)
