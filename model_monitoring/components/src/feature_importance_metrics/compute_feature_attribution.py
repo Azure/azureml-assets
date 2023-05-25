@@ -153,7 +153,8 @@ def configure_data(data):
 
 
 def drop_metadata_columns(baseline_data, production_data):
-    """Drop any columns from production data that are not in the baseline data. This is necessary because the production data could contain extra metadata columns which should be removed.
+    """Drop any columns from production data that are not in the baseline data.
+    This is necessary because the production data could contain extra metadata columns which should be removed.
 
     :param baseline_data: The baseline data meaning the data used to create the
     model monitor

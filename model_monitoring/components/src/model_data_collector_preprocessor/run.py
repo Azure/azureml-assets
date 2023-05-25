@@ -53,7 +53,7 @@ def mdc_preprocessor(
     table = table.extract_columns_from_partition_format(partitionFormat)
 
     # Filter on partitionFormat based on user data window
-    filterStr = f"PartitionDate >= datetime({start_datetime.year}, {start_datetime.month}, {start_datetime.day}, {start_datetime.hour}) and PartitionDate <= datetime({end_datetime.year}, {end_datetime.month}, {end_datetime.day}, {end_datetime.hour})"
+    filterStr = f"PartitionDate >= datetime({start_datetime.year}, {start_datetime.month}, {start_datetime.day}, {start_datetime.hour}) and PartitionDate <= datetime({end_datetime.year}, {end_datetime.month}, {end_datetime.day}, {end_datetime.hour})" # noqa
     table = table.filter(filterStr)
 
     # Data column is a list of objects, convert it into string because spark.read_json cannot read object
@@ -80,7 +80,8 @@ def mdc_preprocessor(
 
     if df.count() == 0:
         raise Exception(
-            "The window for this current run contains no data. Please visit aka.ms/mlmonitoringhelp for more information."
+            "The window for this current run contains no data. "
+            + "Please visit aka.ms/mlmonitoringhelp for more information."
         )
 
     # Output MLTable

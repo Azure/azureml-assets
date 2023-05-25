@@ -155,13 +155,14 @@ def _patch_spark_dataframewriter_format():
                 string indicating the format to emit data in. Accepted values are 'parquet', 'delimited',
                 and 'json_lines'. Defaults to 'delimited'.
             delimiter: str
-                the delimiter to use when emitting data. Defaults to ','. Ignored unless output_format is 'delimited'.
+                the delimiter to use when emitting data. Defaults to ','.
+                Ignored unless output_format is 'delimited'.
             overwrite: bool
-                boolean indicating whether to overwrite files if they already exist. Throws if one or more files is present,
-                and overwrite is set to False. Defaults to False.
+                boolean indicating whether to overwrite files if they already exist.
+                Throws if one or more files is present, and overwrite is set to False. Defaults to False.
             encoding: str
-                string representing the encoding format to use when emitting data. Ignored unless output_format is 'delimited'
-                or 'json_lines'. Defaults to 'utf8'.
+                string representing the encoding format to use when emitting data.
+                Ignored unless output_format is 'delimited' or 'json_lines'. Defaults to 'utf8'.
 
             Examples
             --------
@@ -238,13 +239,14 @@ def _patch_spark_dataframewriter_mltable():
             string indicating the format to emit data in. Accepted values are 'parquet', 'delimited',
             and 'json_lines'. Defaults to 'delimited'.
         delimiter: str
-            the delimiter to use when emitting data. Defaults to ','. Ignored unless output_format is 'delimited'.
+            the delimiter to use when emitting data. Defaults to ','.
+            Ignored unless output_format is 'delimited'.
         overwrite: bool
-            boolean indicating whether to overwrite files if they already exist. Throws if one or more files is present,
-            and overwrite is set to False. Defaults to False.
+            boolean indicating whether to overwrite files if they already exist.
+            Throws if one or more files is present, and overwrite is set to False. Defaults to False.
         encoding: str
-            string representing the encoding format to use when emitting data. Ignored unless output_format is 'delimited'
-            or 'json_lines'. Defaults to 'utf8'.
+            string representing the encoding format to use when emitting data.
+            Ignored unless output_format is 'delimited' or 'json_lines'. Defaults to 'utf8'.
 
         Examples
         --------
