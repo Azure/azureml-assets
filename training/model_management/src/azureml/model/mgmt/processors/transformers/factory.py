@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Factory module to create task based convertor classes."""
+
 from abc import ABC, abstractmethod
 from azureml.model.mgmt.processors.transformers.config import (
     SupportedASRModelFamily,
@@ -16,6 +21,7 @@ from .convertors import (
 
 
 def get_mlflow_convertor(model_dir, output_dir, translate_params):
+    """Instantiate and return hftransformers mlflow convertor."""
     task = translate_params["task"]
     if SupportedNLPTasks.has_value(task):
         return NLPMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, translate_params)
@@ -34,11 +40,13 @@ def get_mlflow_convertor(model_dir, output_dir, translate_params):
 class HFMLFlowConvertorInterface(ABC):
     @abstractmethod
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
+        """Create mlflow convertor."""
         raise NotImplementedError
 
 
 class NLPMLflowConvertorFactory(HFMLFlowConvertorInterface):
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
+        """Create mlflow convertor for NLP tasks."""
         return NLPMLflowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
@@ -48,6 +56,7 @@ class NLPMLflowConvertorFactory(HFMLFlowConvertorInterface):
 
 class VisionMLflowConvertorFactory(HFMLFlowConvertorInterface):
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
+        """Create mlflow convertor for vision tasks."""
         return VisionMLflowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
@@ -55,20 +64,9 @@ class VisionMLflowConvertorFactory(HFMLFlowConvertorInterface):
         )
 
 
-class DiffusersMLflowConvertorFactory(HFMLFlowConvertorInterface):
-    def create_mlflow_convertor(model_dir, output_dir, translate_params):
-        misc = translate_params["misc"]
-        if misc and SupportedTextToImageModelFamily.STABLE_DIFFUSION in misc:
-            return StableDiffusionMlflowConvertor(
-                model_dir=model_dir,
-                output_dir=output_dir,
-                translate_params=translate_params,
-            )
-        raise Exception("Unsupported diffuser model family")
-
-
 class ASRMLflowConvertorFactory(HFMLFlowConvertorInterface):
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
+        """Create mlflow convertor for ASR tasks."""
         misc = translate_params["misc"]
         if misc and SupportedASRModelFamily.WHISPER in misc:
             return WhisperMLFlowConvertor(
@@ -77,3 +75,16 @@ class ASRMLflowConvertorFactory(HFMLFlowConvertorInterface):
                 translate_params=translate_params,
             )
         raise Exception("Unsupported ASR model family")
+
+
+class DiffusersMLflowConvertorFactory(HFMLFlowConvertorInterface):
+    def create_mlflow_convertor(model_dir, output_dir, translate_params):
+        """Create mlflow convertor for diffusers."""
+        misc = translate_params["misc"]
+        if misc and SupportedTextToImageModelFamily.STABLE_DIFFUSION in misc:
+            return StableDiffusionMlflowConvertor(
+                model_dir=model_dir,
+                output_dir=output_dir,
+                translate_params=translate_params,
+            )
+        raise Exception("Unsupported diffuser model family")
