@@ -69,12 +69,12 @@ class AssetInfo:
     @property
     def filename(self) -> str:
         """Return asset filename."""
-        return f"{self.type}-{self.name}"
+        return f"{self.pluralized_type}-{self.name}"
 
     @property
     def directory(self) -> Path:
         """Return asset directory."""
-        return Path(f"{self.type}")
+        return Path(f"{self.pluralized_type}")
 
     @property
     def fullpath(self) -> str:
@@ -369,11 +369,6 @@ class DataInfo(AssetInfo):
 
         return _doc
 
-    @property
-    def pluralized_type(self) -> str:
-        """Return pluralized asset type."""
-        return f"{self._asset_config.type.value}"
-
 
 class Categories:
     """Categories structured by type."""
@@ -419,7 +414,7 @@ class CategoryInfo:
     @property
     def _category_full_path(self):
         parent_category = self._parent._category_full_path if self._parent else None
-        return (parent_category + "-" + self._name) if parent_category else (self._type)
+        return (parent_category + "-" + self._name) if parent_category else (self._pluralized_type)
 
     @property
     def _doc_name(self):
@@ -427,7 +422,7 @@ class CategoryInfo:
 
     @property
     def _doc_full_path_name(self):
-        return f"{self._type}/{self._doc_name}.md"
+        return f"{self._pluralized_type}/{self._doc_name}.md"
 
     @property
     def _is_root(self):
