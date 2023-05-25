@@ -14,6 +14,10 @@ from pathlib import Path
 import shutil
 
 
+WORKING_DIR = "working_dir"
+TMP_DIR = "tmp"
+
+
 def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
@@ -101,8 +105,8 @@ if __name__ == "__main__":
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         _validate_pyfunc_args(preprocess_args)
 
-    temp_output_dir = mlflow_model_output_dir / "tmp"
-    working_dir = mlflow_model_output_dir / "working_dir"
+    temp_output_dir = mlflow_model_output_dir / TMP_DIR
+    working_dir = mlflow_model_output_dir / WORKING_DIR
     run_preprocess(mlflow_flavor, model_path, working_dir, temp_output_dir, **preprocess_args)
 
     # Finishing touches
