@@ -63,5 +63,5 @@ class SignalFactory:
             )
         else:
             raise Exception(
-                f"Invalid signal type '{signal_type}'. Available signals are [{SignalType.DATA_DRIFT.name}, {SignalType.PREDICTION_DRIFT.name}, {SignalType.DATA_QUALITY.name}, {SignalType.FEATURE_ATTRIBUTION_DRIFT.name}]"
+                f"Invalid signal type '{signal_type}'. Available signals are [{SignalType.DATA_DRIFT.name}, {SignalType.PREDICTION_DRIFT.name}, {SignalType.DATA_QUALITY.name}, {SignalType.FEATURE_ATTRIBUTION_DRIFT.name}]" # noqa
             )
