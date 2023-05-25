@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:21a5aff01e75574d94cd25802026a9ac5be1936dc2afe2973537f2c47abd4bc5
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:34cf59d95d14e145329e112f100b8a7748973d6a9b978f0f75920bd415bbaca6
 
 WORKDIR /
 ENV CONDA_PREFIX=/azureml-envs/model-evaluation
