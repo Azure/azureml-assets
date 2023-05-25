@@ -157,7 +157,7 @@ def drop_metadata_columns(baseline_data, production_data):
     This is necessary because the production data could contain extra metadata columns which should be removed.
 
     :param baseline_data: The baseline data meaning the data used to create the
-    model monitor
+        model monitor
     :type baseline_data: pandas.DataFrame
     :param production_data: The production data meaning the most recent set of data
     sent to the model monitor, the current set of data

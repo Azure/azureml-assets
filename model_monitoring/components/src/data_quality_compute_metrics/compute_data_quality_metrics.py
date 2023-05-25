@@ -264,7 +264,8 @@ def compute_dtype_violation_count_modify_dataset(
     """
     Compute the number of data type violations for each column in the input DataFrame
         relative to the data types specified in the data_stats_table_mod DataFrame.
-        Modify the input DataFrame to cast columns with errors to their expected data type from the data_stats_table_mod.
+        Modify the input DataFrame to cast columns with errors to their expected
+        data type from the data_stats_table_mod.
 
     Args:
         df (pyspark.sql.DataFrame): Input DataFrame
