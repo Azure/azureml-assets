@@ -90,9 +90,7 @@ def compute_max_violation(
     df: pyspark.sql.DataFrame, data_stats_table: pyspark.sql.DataFrame
 ) -> pyspark.sql.DataFrame:
     """
-    Compute the maximum threshold violation count for numerical columns in the input PySpark DataFrame with respect
-        to the maximum value computed from the input data statistics table. Returns a PySpark DataFrame with columns
-        for violation count, feature name and metric name.
+    Compute the maximum threshold violation count for numerical columns in the input PySpark DataFrame.
 
     Args:
         df: Input PySpark DataFrame. (baseline or, target dataset)
@@ -149,9 +147,7 @@ def compute_min_violation(
     df: pyspark.sql.DataFrame, data_stats_table: pyspark.sql.DataFrame
 ) -> pyspark.sql.DataFrame:
     """
-    Compute the minimum threshold violation count for numerical columns in the input PySpark DataFrame
-        with respect to the minimum value computed from the input data statistics table.
-        Returns a PySpark DataFrame with columns for violation count, feature name and metric name.
+    Compute the minimum threshold violation count for numerical columns in the input PySpark DataFrame.
 
     Args:
         df: Input PySpark DataFrame.
@@ -208,8 +204,7 @@ def compute_set_violation(
     df: pyspark.sql.DataFrame, data_stats_table: pyspark.sql.DataFrame
 ) -> pyspark.sql.DataFrame:
     """
-    Compute the count of values in a column that are not in the allowed set of values specified
-        in the data_stats_table and returns a DataFrame with the results.
+    Compute the count of values in a column that are not in the allowed set of values specified.
 
     Args:
         df: A PySpark Pandas DataFrame containing the data to check.
@@ -262,10 +257,7 @@ def compute_dtype_violation_count_modify_dataset(
     df: pyspark.sql.DataFrame, data_stats_table_mod: pyspark.sql.DataFrame
 ) -> Tuple[pyspark.sql.DataFrame, pyspark.sql.DataFrame]:
     """
-    Compute the number of data type violations for each column in the input DataFrame
-        relative to the data types specified in the data_stats_table_mod DataFrame.
-        Modify the input DataFrame to cast columns with errors to their expected
-        data type from the data_stats_table_mod.
+    Compute the number of data type violations for each column in the input DataFrame.
 
     Args:
         df (pyspark.sql.DataFrame): Input DataFrame
