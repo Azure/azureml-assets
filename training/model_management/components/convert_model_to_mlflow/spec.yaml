@@ -22,9 +22,9 @@ command: >
   $[[--hf-tokenizer-args "${{inputs.hf_tokenizer_args}}"]]
   $[[--hf-model-args "${{inputs.hf_model_args}}"]]
   $[[--hf-pipeline-args "${{inputs.hf_pipeline_args}}"]]
-  $[[--hf-config-class ${{hf_config_class}}]]
-  $[[--hf-model-class ${{hf_model_class}}]]
-  $[[--hf-tokenizer-class ${{hf_tokenizer_class}}]]
+  $[[--hf-config-class ${{inputs.hf_config_class}}]]
+  $[[--hf-model-class ${{inputs.hf_model_class}}]]
+  $[[--hf-tokenizer-class ${{inputs.hf_tokenizer_class}}]]
   $[[--extra-pip-dependencies "${{inputs.extra_pip_dependencies}}"]]
   --mlflow-flavor ${{inputs.mlflow_flavor}}
   --model-path ${{inputs.model_path}}
