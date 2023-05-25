@@ -23,13 +23,6 @@ outputs:
   preprocessed_input_data:
     type: mltable
     mode: direct
-
-args: >-
-  --data_window_end ${{inputs.data_window_end}}
-  --data_window_start ${{inputs.data_window_start}}
-  --input_data ${{inputs.input_data}}
-  --preprocessed_input_data ${{outputs.preprocessed_input_data}}
-
 conf:
   spark.driver.cores: 1
   spark.driver.memory: 2g
@@ -53,3 +46,8 @@ conf:
         - azureml-fsspec
         - fsspec~=2023.4.0
     name: momo-base-spark
+args: >-
+  --data_window_end ${{inputs.data_window_end}}
+  --data_window_start ${{inputs.data_window_start}}
+  --input_data ${{inputs.input_data}}
+  --preprocessed_input_data ${{outputs.preprocessed_input_data}}

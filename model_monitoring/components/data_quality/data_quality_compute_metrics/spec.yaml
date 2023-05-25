@@ -31,14 +31,6 @@ outputs:
 code: ../../src/
 entry:
   file: ./data_quality_compute_metrics/run.py
-
-args: >-
-  --input_data ${{inputs.input_data}}
-  --data_statistics ${{inputs.data_statistics}}
-  --categorical_metrics ${{inputs.categorical_metrics}}
-  --numerical_metrics ${{inputs.numerical_metrics}}
-  --signal_metrics ${{outputs.signal_metrics}}
-
 conf:
   spark.driver.cores: 1
   spark.driver.memory: 2g
@@ -62,3 +54,9 @@ conf:
         - azureml-fsspec
         - fsspec~=2023.4.0
     name: momo-base-spark
+args: >-
+  --input_data ${{inputs.input_data}}
+  --data_statistics ${{inputs.data_statistics}}
+  --categorical_metrics ${{inputs.categorical_metrics}}
+  --numerical_metrics ${{inputs.numerical_metrics}}
+  --signal_metrics ${{outputs.signal_metrics}}

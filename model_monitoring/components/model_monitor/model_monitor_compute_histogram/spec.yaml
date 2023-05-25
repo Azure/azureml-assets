@@ -22,12 +22,6 @@ outputs:
   histogram:
     mode: direct
     type: mltable
-
-args: >-
-  --input_data ${{inputs.input_data}}
-  --histogram_buckets ${{inputs.histogram_buckets}}
-  --histogram ${{outputs.histogram}}
-
 conf:
   spark.driver.cores: 1
   spark.driver.memory: 2g
@@ -51,3 +45,7 @@ conf:
         - azureml-fsspec
         - fsspec~=2023.4.0
     name: momo-base-spark
+args: >-
+  --input_data ${{inputs.input_data}}
+  --histogram_buckets ${{inputs.histogram_buckets}}
+  --histogram ${{outputs.histogram}}

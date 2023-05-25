@@ -35,12 +35,6 @@ outputs:
   signal_output:
     type: uri_folder
     mode: direct
-
-
-args: >-
-  --signal_name ${{inputs.signal_name}} --monitor_name ${{inputs.monitor_name}} --signal_type ${{inputs.signal_type}} --signal_metrics ${{inputs.signal_metrics}} --metric_timestamp ${{inputs.metric_timestamp}} --signal_output ${{outputs.signal_output}} $[[--target_histogram ${{inputs.target_histogram}}]] $[[--baseline_histogram ${{inputs.baseline_histogram}}]]
-
-  
 conf:
   spark.driver.cores: 1
   spark.driver.memory: 2g
@@ -64,3 +58,5 @@ conf:
         - azureml-fsspec
         - fsspec~=2023.4.0
     name: momo-base-spark
+args: >-
+  --signal_name ${{inputs.signal_name}} --monitor_name ${{inputs.monitor_name}} --signal_type ${{inputs.signal_type}} --signal_metrics ${{inputs.signal_metrics}} --metric_timestamp ${{inputs.metric_timestamp}} --signal_output ${{outputs.signal_output}} $[[--target_histogram ${{inputs.target_histogram}}]] $[[--baseline_histogram ${{inputs.baseline_histogram}}]]

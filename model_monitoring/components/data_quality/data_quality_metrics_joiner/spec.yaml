@@ -26,14 +26,6 @@ outputs:
 code: ../../src/
 entry:
   file: ./data_quality_metrics_joiner/run.py
-
-args: >-
-  --baseline_metrics ${{inputs.baseline_metrics}}
-  --target_metrics ${{inputs.target_metrics}}
-  --numerical_threshold ${{inputs.numerical_threshold}}
-  --categorical_threshold ${{inputs.categorical_threshold}}
-  --signal_metrics ${{outputs.signal_metrics}}
-
 conf:
   spark.driver.cores: 1
   spark.driver.memory: 2g
@@ -57,3 +49,9 @@ conf:
         - azureml-fsspec
         - fsspec~=2023.4.0
     name: momo-base-spark
+args: >-
+  --baseline_metrics ${{inputs.baseline_metrics}}
+  --target_metrics ${{inputs.target_metrics}}
+  --numerical_threshold ${{inputs.numerical_threshold}}
+  --categorical_threshold ${{inputs.categorical_threshold}}
+  --signal_metrics ${{outputs.signal_metrics}}

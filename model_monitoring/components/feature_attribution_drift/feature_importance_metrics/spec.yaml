@@ -25,13 +25,6 @@ outputs:
   signal_metrics:
     type: mltable
     mode: direct
-
-args: >-
-  --baseline_data ${{inputs.baseline_data}}
-  $[[--target_column ${{inputs.target_column}}]]
-  $[[--task_type ${{inputs.task_type}}]]
-  --signal_metrics ${{outputs.signal_metrics}}
-
 conf:
   spark.driver.cores: 1
   spark.driver.memory: 2g
@@ -54,3 +47,8 @@ conf:
         - responsibleai~=0.27.0
         - scikit-learn<1.1
   name: responsibleai-spark
+args: >-
+  --baseline_data ${{inputs.baseline_data}}
+  $[[--target_column ${{inputs.target_column}}]]
+  $[[--task_type ${{inputs.task_type}}]]
+  --signal_metrics ${{outputs.signal_metrics}}

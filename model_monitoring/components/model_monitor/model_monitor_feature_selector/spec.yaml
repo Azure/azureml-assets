@@ -31,15 +31,6 @@ outputs:
   feature_names:
     type: mltable
     mode: direct
-
-args: >-
-  --input_data_1 ${{inputs.input_data_1}}
-  $[[--input_data_2 ${{inputs.input_data_2}}]]
-  --filter_type ${{inputs.filter_type}}
-  --filter_value ${{inputs.filter_value}}
-  $[[--feature_importance ${{inputs.feature_importance}}]]
-  --feature_names ${{outputs.feature_names}}
-
 conf:
   spark.driver.cores: 1
   spark.driver.memory: 2g
@@ -63,3 +54,10 @@ conf:
         - azureml-fsspec
         - fsspec~=2023.4.0
     name: momo-base-spark
+args: >-
+  --input_data_1 ${{inputs.input_data_1}}
+  $[[--input_data_2 ${{inputs.input_data_2}}]]
+  --filter_type ${{inputs.filter_type}}
+  --filter_value ${{inputs.filter_value}}
+  $[[--feature_importance ${{inputs.feature_importance}}]]
+  --feature_names ${{outputs.feature_names}}

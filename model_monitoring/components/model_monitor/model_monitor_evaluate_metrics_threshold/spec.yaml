@@ -20,9 +20,6 @@ inputs:
   notification_emails:
     type: string
     optional: true
-args: >-
-  --metrics_to_evaluate ${{inputs.signal_metrics}} --signal_name ${{inputs.signal_name}} $[[--notification_emails ${{inputs.notification_emails}}]]
-
 conf:
   spark.driver.cores: 1
   spark.driver.memory: 2g
@@ -46,3 +43,5 @@ conf:
         - azureml-fsspec
         - fsspec~=2023.4.0
     name: momo-base-spark
+args: >-
+  --metrics_to_evaluate ${{inputs.signal_metrics}} --signal_name ${{inputs.signal_name}} $[[--notification_emails ${{inputs.notification_emails}}]]

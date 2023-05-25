@@ -19,11 +19,6 @@ outputs:
 code: ../../src/
 entry:
   file: ./data_quality_statistics/run.py
-
-args: >-
-  --baseline_data ${{inputs.baseline_data}}
-  --data_statistics ${{outputs.data_statistics}}
-
 conf:
   spark.driver.cores: 1
   spark.driver.memory: 2g
@@ -47,3 +42,6 @@ conf:
         - azureml-fsspec
         - fsspec~=2023.4.0
     name: momo-base-spark
+args: >-
+  --baseline_data ${{inputs.baseline_data}}
+  --data_statistics ${{outputs.data_statistics}}
