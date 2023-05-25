@@ -23,12 +23,18 @@ def evaluate_metrics_threshold(
     """Evaluate the computed metrics against the threshold."""
     metrics_to_evaluate_df.show()
 
-    is_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(metrics_to_evaluate_df.threshold_value.isNull())
+    is_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(
+        metrics_to_evaluate_df.threshold_value.isNull()
+    )
     metrics_without_threshold_count = is_nan_metrics_threshold_df.count()
 
-    is_not_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(metrics_to_evaluate_df.threshold_value.isNotNull())
+    is_not_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(
+        metrics_to_evaluate_df.threshold_value.isNotNull()
+    )
 
-    is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.where(F.col("metric_value") > F.col("threshold_value"))
+    is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.where(
+        F.col("metric_value") > F.col("threshold_value")
+    )
 
     output_df = is_nan_metrics_threshold_df.union(is_not_nan_metrics_threshold_df)
     output_df.show()

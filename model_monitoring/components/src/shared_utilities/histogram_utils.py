@@ -14,33 +14,43 @@ def _get_smaller_df(baseline_df, production_df, baseline_count, production_count
 def _get_bin_width(baseline_df, production_df, baseline_count, production_count):
     """Calculate bin width using struges alogorithm."""
     # TODO: Unnecessary calculation, use count from summary and remove _get_smaller_df()
-    smaller_df = _get_smaller_df(baseline_df, production_df, baseline_count, production_count)
+    smaller_df = _get_smaller_df(
+        baseline_df, production_df, baseline_count, production_count
+    )
     num_bins = math.log2(smaller_df.count()) + 1
     return math.ceil(num_bins)
 
 
-def get_dual_histogram_bin_edges(baseline_df, production_df, baseline_count, production_count, numerical_columns):
+def get_dual_histogram_bin_edges(
+    baseline_df, production_df, baseline_count, production_count, numerical_columns
+):
     """Get histogram edges using fixed bin width."""
-    num_bins = _get_bin_width(baseline_df, production_df, baseline_count, production_count)
+    num_bins = _get_bin_width(
+        baseline_df, production_df, baseline_count, production_count
+    )
     all_bin_edges = {}
     for col in numerical_columns:
         # TODO: profile agg if required
-        baseline_col_min, baseline_col_max = baseline_df.agg(F.min(col), F.max(col)).collect()[0]
-        production_col_min, production_col_max = production_df.agg(F.min(col), F.max(col)).collect()[0]
+        baseline_col_min, baseline_col_max = baseline_df.agg(
+            F.min(col), F.max(col)
+        ).collect()[0]
+        production_col_min, production_col_max = production_df.agg(
+            F.min(col), F.max(col)
+        ).collect()[0]
 
         min_value = min(baseline_col_min, production_col_min)
         max_value = max(baseline_col_max, production_col_max)
 
-        bin_width = (max_value - min_value)/num_bins
+        bin_width = (max_value - min_value) / num_bins
 
         edges = []
         for bin in range(num_bins):
             bin = bin + 1
             if bin == 1:
                 edges.append(min_value)
-                edges.append(min_value + bin*bin_width)
+                edges.append(min_value + bin * bin_width)
             else:
-                edges.append(min_value + bin*bin_width)
+                edges.append(min_value + bin * bin_width)
 
         all_bin_edges[col] = edges
 

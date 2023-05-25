@@ -23,7 +23,7 @@ def amlfs_get_as_json(remote_path: str) -> dict:
     fs = AzureMachineLearningFileSystem(remote_path)
     local_path = str(uuid.uuid4())
     fs.get(rpath=remote_path, lpath=local_path)
-    with open(os.path.join(local_path, os.path.basename(remote_path)), 'r') as fp:
+    with open(os.path.join(local_path, os.path.basename(remote_path)), "r") as fp:
         return json.loads(fp.read())
 
 
@@ -39,7 +39,7 @@ def amlfs_put_as_json(payload: dict, remote_path: str, filename: str):
 
     local_path = os.path.join(str(uuid.uuid4()), filename)
     os.makedirs(os.path.dirname(local_path), exist_ok=True)
-    with open(local_path, 'w') as fp:
+    with open(local_path, "w") as fp:
         fp.write(content)
 
     fs = AzureMachineLearningFileSystem(remote_path)

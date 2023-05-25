@@ -128,7 +128,12 @@ def compute_max_violation(
             max_threshold_violation_count.append(None)
     max_violation_df = spark.createDataFrame(
         zip(max_threshold_violation_count, feature_name_list),
-        StructType([StructField("violationCount", IntegerType(), True), StructField("featureName", StringType(), True)])
+        StructType(
+            [
+                StructField("violationCount", IntegerType(), True),
+                StructField("featureName", StringType(), True),
+            ]
+        ),
     )
     max_violation_df = max_violation_df.withColumn(
         "metricName", lit("maxValueOutOfRange")
@@ -181,7 +186,12 @@ def compute_min_violation(
 
     min_violation_df = spark.createDataFrame(
         zip(min_threshold_violation_count, feature_name_list),
-        StructType([StructField("violationCount", IntegerType(), True), StructField("featureName", StringType(), True)])
+        StructType(
+            [
+                StructField("violationCount", IntegerType(), True),
+                StructField("featureName", StringType(), True),
+            ]
+        ),
     )
     min_violation_df = min_violation_df.withColumn(
         "metricName", lit("minValueOutOfRange")
@@ -227,7 +237,12 @@ def compute_set_violation(
 
     threshold_violation_df = spark.createDataFrame(
         zip(feature_name_list, set_threshold_violation_count),
-        schema=StructType([StructField("featureName", StringType(), True), StructField("violationCount", IntegerType(), True)])
+        schema=StructType(
+            [
+                StructField("featureName", StringType(), True),
+                StructField("violationCount", IntegerType(), True),
+            ]
+        ),
     )
     threshold_violation_df = threshold_violation_df.withColumn(
         "metricName", lit("setValueOutOfRange")
@@ -349,11 +364,14 @@ def compute_data_quality_metrics(df, data_stats_table):
     df.cache()
     data_stats_table.cache()
 
-    data_stats_table_mod = data_stats_table.withColumn("dataType", when(col("dataType") == "DoubleType()", "double")
-                                                       .when(col("dataType") == "StringType()", "string")
-                                                       .when(col("dataType") == "IntegerType()", "integer")
-                                                       .when(col("dataType") == "LongType()", "long")
-                                                       .otherwise(col("dataType")))
+    data_stats_table_mod = data_stats_table.withColumn(
+        "dataType",
+        when(col("dataType") == "DoubleType()", "double")
+        .when(col("dataType") == "StringType()", "string")
+        .when(col("dataType") == "IntegerType()", "integer")
+        .when(col("dataType") == "LongType()", "long")
+        .otherwise(col("dataType")),
+    )
 
     #########################
     # COMPUTE VIOLATIONS
@@ -409,7 +427,12 @@ def compute_data_quality_metrics(df, data_stats_table):
     df_length = (
         spark.createDataFrame(
             [(df.count(), "RowCount")],
-            schema=StructType([StructField("violationCount", IntegerType(), True), StructField("metricName", StringType(), True)])
+            schema=StructType(
+                [
+                    StructField("violationCount", IntegerType(), True),
+                    StructField("metricName", StringType(), True),
+                ]
+            ),
         )
         .withColumn("featureName", lit(""))
         .withColumn("dataType", lit(""))
@@ -464,9 +487,10 @@ def compute_data_quality_metrics(df, data_stats_table):
     # REMAP THE DATA TYPES
     # TODO: Expand datatype list below. Also NOTE this list does not match list in data drift.
     violation_df_remapped = violation_df_remapped.withColumn(
-        "dataType", when(col("dataType") == "DoubleType()", "Numerical")
+        "dataType",
+        when(col("dataType") == "DoubleType()", "Numerical")
         .when(col("dataType") == "StringType()", "Categorical")
-        .otherwise(col("dataType"))
+        .otherwise(col("dataType")),
     )
 
     #########################

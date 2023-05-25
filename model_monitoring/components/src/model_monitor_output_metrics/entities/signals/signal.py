@@ -46,7 +46,9 @@ class Signal:
             threshold = None
             if "threshold" in run_metric:
                 threshold = run_metric["threshold"]
-            publish_metric(run_metric["runId"], float(run_metric["value"]), threshold, step)
+            publish_metric(
+                run_metric["runId"], float(run_metric["value"]), threshold, step
+            )
 
     def to_dict(self) -> dict:
         """Convert to a dictionary object."""

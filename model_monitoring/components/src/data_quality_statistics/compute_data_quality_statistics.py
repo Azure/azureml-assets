@@ -31,18 +31,22 @@ def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     schema = df.schema
 
     # Define a new schema for the DataFrame that will hold the metadata
-    metadata_schema = StructType([
-        StructField("featureName", StringType(), True),
-        StructField("dataType", StringType(), True),
-    ])
+    metadata_schema = StructType(
+        [
+            StructField("featureName", StringType(), True),
+            StructField("dataType", StringType(), True),
+        ]
+    )
 
     # Iterate through the columns of the schema and extract the metadata
     metadata_rows = []
     for col_ in schema:
-        metadata_rows.append((
-            col_.name,
-            str(col_.dataType),
-        ))
+        metadata_rows.append(
+            (
+                col_.name,
+                str(col_.dataType),
+            )
+        )
 
     # Create a new DataFrame with the metadata
     metadata_df = spark.createDataFrame(metadata_rows, metadata_schema)
@@ -67,16 +71,22 @@ def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
     cat_col_names = [c[0] for c in df.dtypes if c[1] == "string"]
 
     # Compute the set of unique values for each categorical column
-    unique_vals = [df.select(col(c)).distinct().rdd.map(lambda x: x[0]).collect() for c in cat_col_names]
-    metadata_schema = StructType([
-        StructField("featureName", StringType(), True),
-        StructField("set", StringType(), True),
-    ])
+    unique_vals = [
+        df.select(col(c)).distinct().rdd.map(lambda x: x[0]).collect()
+        for c in cat_col_names
+    ]
+    metadata_schema = StructType(
+        [
+            StructField("featureName", StringType(), True),
+            StructField("set", StringType(), True),
+        ]
+    )
 
     # Create a new DataFrame with the results
     unique_vals_df = spark.createDataFrame(
         [(cat_col_names[i], unique_vals[i]) for i in range(len(cat_col_names))],
-        schema=metadata_schema)
+        schema=metadata_schema,
+    )
 
     unique_vals_df = unique_vals_df.to_pandas_on_spark()
 
@@ -127,8 +137,12 @@ def compute_data_quality_statistics(df):
     min_vals = compute_min_df(df=df.to_pandas_on_spark())
 
     # Join tables to get all metrics into one table
-    min_max_df = max_vals.merge(min_vals, left_on='featureName', right_on='featureName')
-    metric_df = min_max_df.merge(dtype_df, right_on="featureName", left_on='featureName', how="right")
-    metric_unique_df = metric_df.merge(unique_vals_df, right_on="featureName", left_on='featureName', how="left")
+    min_max_df = max_vals.merge(min_vals, left_on="featureName", right_on="featureName")
+    metric_df = min_max_df.merge(
+        dtype_df, right_on="featureName", left_on="featureName", how="right"
+    )
+    metric_unique_df = metric_df.merge(
+        unique_vals_df, right_on="featureName", left_on="featureName", how="left"
+    )
 
     return metric_unique_df

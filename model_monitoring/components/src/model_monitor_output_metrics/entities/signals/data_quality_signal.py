@@ -22,7 +22,9 @@ class DataQualitySignal(Signal):
         metrics: List[Row],
     ):
         """Build Data Quality signal."""
-        super().__init__(monitor_name, signal_name, "1.0.0", SignalType.DATA_QUALITY, metrics)
+        super().__init__(
+            monitor_name, signal_name, "1.0.0", SignalType.DATA_QUALITY, metrics
+        )
         self.feature_metrics: List[FeatureMetrics] = self._build_feature_metrics(
             monitor_name, signal_name, metrics
         )
@@ -72,8 +74,11 @@ class DataQualitySignal(Signal):
         """
         output = {}
         for metric in metrics:
-            if metric['metric_name'] == 'RowCount' and metric['feature_name'] == "":
-                self.row_count_metrics = {"baselineCount": metric['baseline_metric_value'], "targetCount": metric["target_metric_value"]}
+            if metric["metric_name"] == "RowCount" and metric["feature_name"] == "":
+                self.row_count_metrics = {
+                    "baselineCount": metric["baseline_metric_value"],
+                    "targetCount": metric["target_metric_value"],
+                }
 
             if not row_has_value(metric, "feature_name"):
                 continue
@@ -89,13 +94,17 @@ class DataQualitySignal(Signal):
                 )
 
             # Add the run metrics
-            run_id = get_or_create_run_id(monitor_name, signal_name, feature_name, metric["metric_name"])
+            run_id = get_or_create_run_id(
+                monitor_name, signal_name, feature_name, metric["metric_name"]
+            )
             run_metric = {
                 "runId": run_id,
                 "targetValue": float(metric["baseline_metric_value"]),
                 "baselineValue": float(metric["target_metric_value"]),
             }
-            run_metric = add_value_if_present(metric, "threshold_value", run_metric, "threshold")
+            run_metric = add_value_if_present(
+                metric, "threshold_value", run_metric, "threshold"
+            )
             self.run_metrics.append(run_metric)
             output[feature_name].run_metrics.append(
                 {
@@ -111,7 +120,9 @@ class DataQualitySignal(Signal):
                 "targetValue": metric["baseline_metric_value"],
                 "baselineValue": metric["target_metric_value"],
             }
-            feature_metrics = add_value_if_present(metric, "threshold_value", feature_metrics, "threshold")
+            feature_metrics = add_value_if_present(
+                metric, "threshold_value", feature_metrics, "threshold"
+            )
             output[feature_name].metrics.append(feature_metrics)
 
         return list(output.values())

@@ -10,7 +10,9 @@ from evaluate_metrics_threshold import (
 from shared_utilities.io_utils import read_mltable_in_spark
 
 
-def evaluate_metrics(signal_name: str, metrics_to_evaluate: str, notification_emails: str):
+def evaluate_metrics(
+    signal_name: str, metrics_to_evaluate: str, notification_emails: str
+):
     """Evaluate the computed metrics against the threshold."""
     metrics_to_evaluate_df = read_mltable_in_spark(metrics_to_evaluate)
 
@@ -31,7 +33,9 @@ def run():
     )
 
     if is_valid:
-        print("Successfully validated that the computed metrics are within the given threshold for categorical and numerical metrics.")
+        print(
+            "Successfully validated that the computed metrics are within the given threshold for categorical and numerical metrics."
+        )
     else:
         print("The metric evaluation job is completed.")
 

@@ -5,18 +5,24 @@
 
 import pyspark.sql as pyspark_sql
 from pyspark.sql.types import StructType, StructField, StringType, FloatType
-from shared_utilities.io_utils import init_spark, read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.io_utils import (
+    init_spark,
+    read_mltable_in_spark,
+    save_spark_df_as_mltable,
+)
 
 
 def _get_output_spark_df_schema():
     """Get Output DataFrame Schema."""
-    schema = StructType([
-        StructField("feature_name", StringType(), True),
-        StructField("metric_value", FloatType(), True),
-        StructField("data_type", StringType(), True),
-        StructField("metric_name", StringType(), True),
-        StructField("threshold_value", FloatType(), True)
-    ])
+    schema = StructType(
+        [
+            StructField("feature_name", StringType(), True),
+            StructField("metric_value", FloatType(), True),
+            StructField("data_type", StringType(), True),
+            StructField("metric_name", StringType(), True),
+            StructField("threshold_value", FloatType(), True),
+        ]
+    )
     return schema
 
 

@@ -90,7 +90,7 @@ class GenerationSafetyQualitySignal(Signal):
         }
         self.histogram = {
             "histogram": [],
-            "featureName": "AcceptableGroundednessScorePerInstance"
+            "featureName": "AcceptableGroundednessScorePerInstance",
         }
         for metric in metrics:
             if "GroundednessCount_" in metric["metric_name"]:

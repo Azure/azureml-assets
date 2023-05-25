@@ -984,7 +984,7 @@ class _JobManager:
         if end == -1:
             raise ValueError("Could not find ending curly brace.")
 
-        example = json5.loads(example[start: end + 1])
+        example = json5.loads(example[start : end + 1])
 
         # check if label keys are in example
         for label_key in label_keys:

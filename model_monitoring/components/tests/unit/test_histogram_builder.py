@@ -50,14 +50,28 @@ class TestHistogramBuilder:
             ),
         ]
 
-        target = HistogramBuilder(target_histograms=target_histogram, baseline_histograms=baseline_histogram).build(feature_name)
+        target = HistogramBuilder(
+            target_histograms=target_histogram, baseline_histograms=baseline_histogram
+        ).build(feature_name)
 
         assert target["featureName"] == feature_name
         assert len(target["histogram"]) == 2
 
         for i in range(0, 2):
-            assert target["histogram"][i]["baselineCount"] == baseline_histogram[i]["bucket_count"]
-            assert target["histogram"][i]["targetCount"] == target_histogram[i]["bucket_count"]
+            assert (
+                target["histogram"][i]["baselineCount"]
+                == baseline_histogram[i]["bucket_count"]
+            )
+            assert (
+                target["histogram"][i]["targetCount"]
+                == target_histogram[i]["bucket_count"]
+            )
             assert "category" not in target["histogram"][i]
-            assert target["histogram"][i]["lowerBound"] == baseline_histogram[i]["lower_bound"]
-            assert target["histogram"][i]["upperBound"] == baseline_histogram[i]["upper_bound"]
+            assert (
+                target["histogram"][i]["lowerBound"]
+                == baseline_histogram[i]["lower_bound"]
+            )
+            assert (
+                target["histogram"][i]["upperBound"]
+                == baseline_histogram[i]["upper_bound"]
+            )

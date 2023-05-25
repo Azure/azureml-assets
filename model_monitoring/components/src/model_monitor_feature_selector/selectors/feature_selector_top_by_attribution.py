@@ -23,8 +23,12 @@ class FeatureSelectorTopNByAttribution(FeatureSelector):
         self, input_df1: pyspark_sql.DataFrame, input_df2: pyspark_sql.DataFrame
     ) -> pyspark_sql.DataFrame:
         """Select the top N contributing features."""
-        feature_importance_names = self.feature_importance.select("feature").rdd.flatMap(lambda x: x).collect()
-        top_N_feature_importance_names = feature_importance_names[:self.N_value]
+        feature_importance_names = (
+            self.feature_importance.select("feature").rdd.flatMap(lambda x: x).collect()
+        )
+        top_N_feature_importance_names = feature_importance_names[: self.N_value]
         return (
             FeatureSelectorAll()
-            .select(input_df1, input_df2).filter(col("featureName").isin(top_N_feature_importance_names)))
+            .select(input_df1, input_df2)
+            .filter(col("featureName").isin(top_N_feature_importance_names))
+        )

@@ -23,7 +23,9 @@ class PredictionDriftSignal(Signal):
         metrics: List[Row],
     ):
         """Build Prediction Drift signal."""
-        super().__init__(monitor_name, signal_name, "1.0.0", SignalType.PREDICTION_DRIFT, metrics)
+        super().__init__(
+            monitor_name, signal_name, "1.0.0", SignalType.PREDICTION_DRIFT, metrics
+        )
         self.row_count_metrics = RowCountMetrics(metrics)
         self.feature_metrics: List[FeatureMetrics] = self._build_feature_metrics(
             monitor_name, signal_name, metrics
@@ -81,12 +83,16 @@ class PredictionDriftSignal(Signal):
                 )
 
             # Add the run metrics
-            run_id = get_or_create_run_id(monitor_name, signal_name, feature_name, metric["metric_name"])
+            run_id = get_or_create_run_id(
+                monitor_name, signal_name, feature_name, metric["metric_name"]
+            )
             run_metric = {
                 "runId": run_id,
                 "value": metric["metric_value"],
             }
-            run_metric = add_value_if_present(metric, "threshold_value", run_metric, "threshold")
+            run_metric = add_value_if_present(
+                metric, "threshold_value", run_metric, "threshold"
+            )
             self.run_metrics.append(run_metric)
 
             output[feature_name].run_metrics.append(
@@ -102,7 +108,9 @@ class PredictionDriftSignal(Signal):
                 "metricName": metric["metric_name"],
                 "metricValue": metric["metric_value"],
             }
-            feature_metric = add_value_if_present(metric, "threshold_value", feature_metric, "threshold")
+            feature_metric = add_value_if_present(
+                metric, "threshold_value", feature_metric, "threshold"
+            )
 
             output[feature_name].metrics.append(feature_metric)
 

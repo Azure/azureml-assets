@@ -8,33 +8,41 @@ class _DataframeWriterManager(object):
         self.dataframe = dataframe
         self.uri = uri
         self.total_partitions = dataframe.rdd.getNumPartitions()
-        self.output_format = kwargs.get('output_format', 'delimited')
-        self.delimiter = kwargs.get('delimiter', ',')
-        self.overwrite = kwargs.get('overwrite', False)
-        self.encoding = kwargs.get('encoding', 'utf8')
+        self.output_format = kwargs.get("output_format", "delimited")
+        self.delimiter = kwargs.get("delimiter", ",")
+        self.overwrite = kwargs.get("overwrite", False)
+        self.encoding = kwargs.get("encoding", "utf8")
 
-        if self.output_format == 'parquet':
-            self.extension = 'parquet'
-        elif self.output_format == 'delimited':
-            self.extension = 'csv'
-        elif self.output_format == 'json_lines':
-            self.extension = 'json'
+        if self.output_format == "parquet":
+            self.extension = "parquet"
+        elif self.output_format == "delimited":
+            self.extension = "csv"
+        elif self.output_format == "json_lines":
+            self.extension = "json"
         else:
-            raise NotImplementedError(f'Unsupported output format "{self.output_format}". Supported formats are "parquet", "delimited" and "json_lines".')
+            raise NotImplementedError(
+                f'Unsupported output format "{self.output_format}". Supported formats are "parquet", "delimited" and "json_lines".'
+            )
 
     def write(self):
         mode = "overwrite" if self.overwrite else "errorifexists"
 
-        if self.output_format == 'parquet':
+        if self.output_format == "parquet":
             self.dataframe.write.mode(mode).parquet(self.uri)
-        elif self.output_format == 'delimited':
-            self.dataframe.write.mode(mode).option('delimiter', self.delimiter).option("header", True).option('encoding', self.encoding).csv(self.uri)
-        elif self.output_format == 'json_lines':
-            self.dataframe.write.mode(mode).option('encoding', self.encoding).json(self.uri)
+        elif self.output_format == "delimited":
+            self.dataframe.write.mode(mode).option("delimiter", self.delimiter).option(
+                "header", True
+            ).option("encoding", self.encoding).csv(self.uri)
+        elif self.output_format == "json_lines":
+            self.dataframe.write.mode(mode).option("encoding", self.encoding).json(
+                self.uri
+            )
         else:
-            raise NotImplementedError(f'Unsupported output format "{self.output_format}". Supported formats are "parquet", "delimited" and "json_lines".')
+            raise NotImplementedError(
+                f'Unsupported output format "{self.output_format}". Supported formats are "parquet", "delimited" and "json_lines".'
+            )
 
-        base_path = self.uri.rstrip('/')
+        base_path = self.uri.rstrip("/")
         return base_path + "/*." + self.extension
 
 
@@ -45,23 +53,37 @@ def _write_mltable_yaml(uri, output_path_pattern, manager):
     import yaml
 
     mltable_obj = {
-        'paths': [{'pattern': output_path_pattern}],
+        "paths": [{"pattern": output_path_pattern}],
     }
 
-    if manager.output_format == 'parquet':
-        mltable_obj['transformations'] = ['read_parquet']
-    elif manager.output_format == 'delimited':
-        mltable_obj['transformations'] = [
-            {'read_delimited': {'delimiter': manager.delimiter, 'encoding': manager.encoding, 'header': 'all_files_same_headers'}},
+    if manager.output_format == "parquet":
+        mltable_obj["transformations"] = ["read_parquet"]
+    elif manager.output_format == "delimited":
+        mltable_obj["transformations"] = [
+            {
+                "read_delimited": {
+                    "delimiter": manager.delimiter,
+                    "encoding": manager.encoding,
+                    "header": "all_files_same_headers",
+                }
+            },
         ]
-    elif manager.output_format == 'json_lines':
-        mltable_obj['transformations'] = [
-            {'read_json_lines': {'encoding': manager.encoding, 'invalid_lines': 'error', 'include_path_column': False}},
+    elif manager.output_format == "json_lines":
+        mltable_obj["transformations"] = [
+            {
+                "read_json_lines": {
+                    "encoding": manager.encoding,
+                    "invalid_lines": "error",
+                    "include_path_column": False,
+                }
+            },
         ]
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        with rslex_uri_volume_mount(uri=uri, mount_point=temp_dir, options=MountOptions(read_only=False)):
-            with open(os.path.join(temp_dir, 'MLTable'), 'w') as yaml_file:
+        with rslex_uri_volume_mount(
+            uri=uri, mount_point=temp_dir, options=MountOptions(read_only=False)
+        ):
+            with open(os.path.join(temp_dir, "MLTable"), "w") as yaml_file:
                 yaml.dump(mltable_obj, yaml_file)
 
 
@@ -74,17 +96,17 @@ def _write_spark_dataframe(dataframe, uri, **kwargs):
     elif isinstance(dataframe.write._spark, SQLContext):
         spark_session = dataframe.write._spark.sparkSession
     else:
-        raise (f'Unsupported type for spark context: {type(dataframe.write._spark)}')
+        raise (f"Unsupported type for spark context: {type(dataframe.write._spark)}")
 
     spark_conf = spark_session.sparkContext.getConf()
     spark_conf_vars = {
-        'AZUREML_SYNAPSE_CLUSTER_IDENTIFIER': 'spark.synapse.clusteridentifier',
-        'AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT': 'spark.tokenServiceEndpoint',
+        "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",
+        "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT": "spark.tokenServiceEndpoint",
     }
 
     aux_envvars = {
-        'AZUREML_RUN_TOKEN': os.environ['AZUREML_RUN_TOKEN'],
-        'AZUREML_RUN_TOKEN_EXPIRY': os.environ['AZUREML_RUN_TOKEN_EXPIRY'],
+        "AZUREML_RUN_TOKEN": os.environ["AZUREML_RUN_TOKEN"],
+        "AZUREML_RUN_TOKEN_EXPIRY": os.environ["AZUREML_RUN_TOKEN_EXPIRY"],
     }
 
     for env_key, conf_key in spark_conf_vars.items():
@@ -145,7 +167,7 @@ def _patch_spark_dataframewriter_format():
                         resourcegroups/<resourcegroup-name>/workspaces/<workspace-name>/
                         datastores/<datastore-name>/paths/<mltable-path-on-datastore>/')
             """
-            if hasattr(self, '_optionsdict'):
+            if hasattr(self, "_optionsdict"):
                 options = {**self._optionsdict, **kwargs}
             else:
                 options = kwargs
@@ -155,7 +177,7 @@ def _patch_spark_dataframewriter_format():
     original_method = DataFrameWriter.format
 
     def format(dataframe_writer, source):
-        if source == 'mltable':
+        if source == "mltable":
             return MLTableWriter(dataframe_writer)
         else:
             return original_method(dataframe_writer, source)
@@ -170,7 +192,7 @@ def _patch_spark_dataframewriter_option():
     original_method = DataFrameWriter.option
 
     def option(dataframe_writer, key: str, value) -> "DataFrameWriter":
-        if not hasattr(dataframe_writer, '_optionsdict'):
+        if not hasattr(dataframe_writer, "_optionsdict"):
             dataframe_writer._optionsdict = dict()
 
         dataframe_writer._optionsdict[key] = value
@@ -186,7 +208,7 @@ def _patch_spark_dataframewriter_options():
     original_method = DataFrameWriter.options
 
     def options(dataframe_writer, **options) -> "DataFrameWriter":
-        if not hasattr(dataframe_writer, '_optionsdict'):
+        if not hasattr(dataframe_writer, "_optionsdict"):
             dataframe_writer._optionsdict = dict()
 
         dataframe_writer._optionsdict.update(options)
@@ -228,7 +250,7 @@ def _patch_spark_dataframewriter_mltable():
                     resourcegroups/<resourcegroup-name>/workspaces/<workspace-name>/
                     datastores/<datastore-name>/paths/<mltable-path-on-datastore>/')
         """
-        if hasattr(dataframe_writer, '_optionsdict'):
+        if hasattr(dataframe_writer, "_optionsdict"):
             options = {**dataframe_writer._optionsdict, **kwargs}
         else:
             options = kwargs
@@ -248,6 +270,11 @@ def patch_all():
     import azureml.dataprep.api._spark_helper
 
     def _my_get_partitions(dataflow):
-        return azureml.dataprep.api._dataframereader._execute('_spark_helper._get_partitions', dataflow, collect_results=True, allow_fallback_to_clex=False)[1]
+        return azureml.dataprep.api._dataframereader._execute(
+            "_spark_helper._get_partitions",
+            dataflow,
+            collect_results=True,
+            allow_fallback_to_clex=False,
+        )[1]
 
     azureml.dataprep.api._spark_helper._get_partitions = _my_get_partitions

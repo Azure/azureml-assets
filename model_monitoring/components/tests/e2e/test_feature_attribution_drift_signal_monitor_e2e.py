@@ -9,12 +9,16 @@ from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR,
     DATA_ASSET_IRIS_BASELINE_DATA,
-    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_OUTPUTS_NO_DRIFT
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_OUTPUTS_NO_DRIFT,
 )
 
 
-def _submit_feature_attribution_drift_model_monitor_job(ml_client, get_component, experiment_name, baseline_data, target_data):
-    feature_attr_drift_signal_monitor = get_component(COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR)
+def _submit_feature_attribution_drift_model_monitor_job(
+    ml_client, get_component, experiment_name, baseline_data, target_data
+):
+    feature_attr_drift_signal_monitor = get_component(
+        COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR
+    )
 
     @pipeline()
     def _feature_attr_drift_signal_monitor_e2e():
@@ -27,7 +31,9 @@ def _submit_feature_attribution_drift_model_monitor_job(ml_client, get_component
             target_column="target",
             monitor_current_time="2023-02-02T00:00:00Z",
         )
-        return {"signal_output": feature_attr_drift_signal_monitor_output.outputs.signal_output}
+        return {
+            "signal_output": feature_attr_drift_signal_monitor_output.outputs.signal_output
+        }
 
     pipeline_job = _feature_attr_drift_signal_monitor_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
@@ -55,7 +61,7 @@ class TestFeatureAttributionDriftModelMonitor:
             get_component,
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
-            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_OUTPUTS_NO_DRIFT
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_OUTPUTS_NO_DRIFT,
         )
 
         assert pipeline_job.status == "Completed"

@@ -182,14 +182,30 @@ def publish_data_drift_model_monitor_component(
         if component["name"] != "data_drift_signal_monitor_spark":
             continue
         print(f"Publishing {component['name']}..")
-        component["jobs"]["compute_feature_importances"]["component"] = f"azureml:feature_importance_metrics_spark:{asset_version}"
-        component["jobs"]["feature_selection"]["component"] = f"azureml:model_monitor_feature_selector_spark:{asset_version}"
-        component["jobs"]["compute_drift_metrics"]["component"] = f"azureml:data_drift_compute_metrics_spark:{asset_version}"
-        component["jobs"]["output_signal_metrics"]["component"] = f"azureml:model_monitor_output_metrics_spark:{asset_version}"
-        component["jobs"]["evaluate_metric_thresholds"]["component"] = f"azureml:model_monitor_evaluate_metrics_threshold_spark:{asset_version}"
-        component["jobs"]["compute_histogram_buckets"]["component"] = f"azureml:model_monitor_compute_histogram_buckets_spark:{asset_version}"
-        component["jobs"]["compute_baseline_histogram"]["component"] = f"azureml:model_monitor_compute_histogram_spark:{asset_version}"
-        component["jobs"]["compute_target_histogram"]["component"] = f"azureml:model_monitor_compute_histogram_spark:{asset_version}"
+        component["jobs"]["compute_feature_importances"][
+            "component"
+        ] = f"azureml:feature_importance_metrics_spark:{asset_version}"
+        component["jobs"]["feature_selection"][
+            "component"
+        ] = f"azureml:model_monitor_feature_selector_spark:{asset_version}"
+        component["jobs"]["compute_drift_metrics"][
+            "component"
+        ] = f"azureml:data_drift_compute_metrics_spark:{asset_version}"
+        component["jobs"]["output_signal_metrics"][
+            "component"
+        ] = f"azureml:model_monitor_output_metrics_spark:{asset_version}"
+        component["jobs"]["evaluate_metric_thresholds"][
+            "component"
+        ] = f"azureml:model_monitor_evaluate_metrics_threshold_spark:{asset_version}"
+        component["jobs"]["compute_histogram_buckets"][
+            "component"
+        ] = f"azureml:model_monitor_compute_histogram_buckets_spark:{asset_version}"
+        component["jobs"]["compute_baseline_histogram"][
+            "component"
+        ] = f"azureml:model_monitor_compute_histogram_spark:{asset_version}"
+        component["jobs"]["compute_target_histogram"][
+            "component"
+        ] = f"azureml:model_monitor_compute_histogram_spark:{asset_version}"
         component["version"] = asset_version
 
         spec_path = os.path.join(
@@ -223,11 +239,21 @@ def publish_feature_attr_drift_signal_monitor_component(
         if component["name"] != "feature_attribution_drift_signal_monitor_spark":
             continue
         print(f"Publishing {component['name']}..")
-        component["jobs"]["compute_baseline_explanations"]["component"] = f"azureml:feature_importance_metrics_spark:{asset_version}"
-        component["jobs"]["compute_production_explanations"]["component"] = f"azureml:feature_importance_metrics_spark:{asset_version}"
-        component["jobs"]["compute_feature_attribution"]["component"] = f"azureml:feature_attribution_drift_compute_metrics_spark:{asset_version}"
-        component["jobs"]["output_signal_metrics"]["component"] = f"azureml:model_monitor_output_metrics_spark:{asset_version}"
-        component["jobs"]["evaluate_metric_thresholds"]["component"] = f"azureml:model_monitor_evaluate_metrics_threshold_spark:{asset_version}"
+        component["jobs"]["compute_baseline_explanations"][
+            "component"
+        ] = f"azureml:feature_importance_metrics_spark:{asset_version}"
+        component["jobs"]["compute_production_explanations"][
+            "component"
+        ] = f"azureml:feature_importance_metrics_spark:{asset_version}"
+        component["jobs"]["compute_feature_attribution"][
+            "component"
+        ] = f"azureml:feature_attribution_drift_compute_metrics_spark:{asset_version}"
+        component["jobs"]["output_signal_metrics"][
+            "component"
+        ] = f"azureml:model_monitor_output_metrics_spark:{asset_version}"
+        component["jobs"]["evaluate_metric_thresholds"][
+            "component"
+        ] = f"azureml:model_monitor_evaluate_metrics_threshold_spark:{asset_version}"
         component["version"] = asset_version
 
         spec_path = os.path.join(
@@ -261,9 +287,15 @@ def publish_generation_safety_signal_monitor_component(
         if component["name"] != "generation_safety_quality_signal_monitor_spark":
             continue
         print(f"Publishing {component['name']}..")
-        component["jobs"]["compute_metrics"]["component"] = f"azureml:groundedness_compute_metrics_spark:{asset_version}"
-        component["jobs"]["compute_histogram"]["component"] = f"azureml:groundedness_compute_histogram_spark:{asset_version}"
-        component["jobs"]["output_signal_metrics"]["component"] = f"azureml:model_monitor_output_metrics_spark:{asset_version}"
+        component["jobs"]["compute_metrics"][
+            "component"
+        ] = f"azureml:groundedness_compute_metrics_spark:{asset_version}"
+        component["jobs"]["compute_histogram"][
+            "component"
+        ] = f"azureml:groundedness_compute_histogram_spark:{asset_version}"
+        component["jobs"]["output_signal_metrics"][
+            "component"
+        ] = f"azureml:model_monitor_output_metrics_spark:{asset_version}"
         component["version"] = asset_version
 
         spec_path = os.path.join(
@@ -297,10 +329,18 @@ def publish_prediction_drift_model_monitor_component(
         if component["name"] != "prediction_drift_signal_monitor_spark":
             continue
         print(f"Publishing {component['name']}..")
-        component["jobs"]["feature_selection"]["component"] = f"azureml:model_monitor_feature_selector_spark:{asset_version}"
-        component["jobs"]["compute_drift_metrics"]["component"] = f"azureml:data_drift_compute_metrics_spark:{asset_version}"
-        component["jobs"]["output_signal_metrics"]["component"] = f"azureml:model_monitor_output_metrics_spark:{asset_version}"
-        component["jobs"]["evaluate_metric_thresholds"]["component"] = f"azureml:model_monitor_evaluate_metrics_threshold_spark:{asset_version}"
+        component["jobs"]["feature_selection"][
+            "component"
+        ] = f"azureml:model_monitor_feature_selector_spark:{asset_version}"
+        component["jobs"]["compute_drift_metrics"][
+            "component"
+        ] = f"azureml:data_drift_compute_metrics_spark:{asset_version}"
+        component["jobs"]["output_signal_metrics"][
+            "component"
+        ] = f"azureml:model_monitor_output_metrics_spark:{asset_version}"
+        component["jobs"]["evaluate_metric_thresholds"][
+            "component"
+        ] = f"azureml:model_monitor_evaluate_metrics_threshold_spark:{asset_version}"
         component["version"] = asset_version
 
         spec_path = os.path.join(
@@ -334,14 +374,30 @@ def publish_data_quality_model_monitor_component(
         if component["name"] != "data_quality_signal_monitor_spark":
             continue
         print(f"Publishing {component['name']}..")
-        component["jobs"]["compute_feature_importances"]["component"] = f"azureml:feature_importance_metrics_spark:{asset_version}"
-        component["jobs"]["feature_selection"]["component"] = f"azureml:model_monitor_feature_selector_spark:{asset_version}"
-        component["jobs"]["compute_baseline_data_statistics"]["component"] = f"azureml:data_quality_data_statistics_spark:{asset_version}"
-        component["jobs"]["compute_baseline_data_quality"]["component"] = f"azureml:data_quality_compute_metrics_spark:{asset_version}"
-        component["jobs"]["compute_target_data_quality"]["component"] = f"azureml:data_quality_compute_metrics_spark:{asset_version}"
-        component["jobs"]["join_data_quality_metrics"]["component"] = f"azureml:data_quality_metrics_joiner_spark:{asset_version}"
-        component["jobs"]["output_signal_metrics"]["component"] = f"azureml:model_monitor_output_metrics_spark:{asset_version}"
-        component["jobs"]["evaluate_metric_thresholds"]["component"] = f"azureml:model_monitor_evaluate_metrics_threshold_spark:{asset_version}"
+        component["jobs"]["compute_feature_importances"][
+            "component"
+        ] = f"azureml:feature_importance_metrics_spark:{asset_version}"
+        component["jobs"]["feature_selection"][
+            "component"
+        ] = f"azureml:model_monitor_feature_selector_spark:{asset_version}"
+        component["jobs"]["compute_baseline_data_statistics"][
+            "component"
+        ] = f"azureml:data_quality_data_statistics_spark:{asset_version}"
+        component["jobs"]["compute_baseline_data_quality"][
+            "component"
+        ] = f"azureml:data_quality_compute_metrics_spark:{asset_version}"
+        component["jobs"]["compute_target_data_quality"][
+            "component"
+        ] = f"azureml:data_quality_compute_metrics_spark:{asset_version}"
+        component["jobs"]["join_data_quality_metrics"][
+            "component"
+        ] = f"azureml:data_quality_metrics_joiner_spark:{asset_version}"
+        component["jobs"]["output_signal_metrics"][
+            "component"
+        ] = f"azureml:model_monitor_output_metrics_spark:{asset_version}"
+        component["jobs"]["evaluate_metric_thresholds"][
+            "component"
+        ] = f"azureml:model_monitor_evaluate_metrics_threshold_spark:{asset_version}"
         component["version"] = asset_version
 
         spec_path = os.path.join(
@@ -361,7 +417,7 @@ def release_lock(
     publish_feature_attr_drift_signal_monitor_component,
     publish_generation_safety_signal_monitor_component,
     publish_command_components,
-    main_worker_lock
+    main_worker_lock,
 ):
     """Release the main worker lock."""
     if _is_main_worker(main_worker_lock):
@@ -376,6 +432,7 @@ def release_lock(
 @pytest.fixture(scope="session", autouse=True)
 def get_component(ml_client, asset_version):
     """Get a component from the test workspace with a given name."""
+
     def _get(component_name):
         return ml_client.components.get(name=component_name, version=asset_version)
 
@@ -388,9 +445,10 @@ def download_job_output(ml_client, unique_temporary_directory):
 
     def download_output(job: Job, output_name: str) -> str:
         ml_client.jobs.download(
-                    name=job.name,
-                    download_path=unique_temporary_directory,
-                    output_name=output_name,
-                )
+            name=job.name,
+            download_path=unique_temporary_directory,
+            output_name=output_name,
+        )
         return os.path.join(unique_temporary_directory, "named-outputs", output_name)
+
     return download_output

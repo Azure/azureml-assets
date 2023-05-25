@@ -9,11 +9,13 @@ from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_QUALITY_SIGNAL_MONITOR,
     DATA_ASSET_IRIS_BASELINE_DATA,
-    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT,
 )
 
 
-def _submit_data_quality_signal_monitor_job(ml_client, get_component, experiment_name, baseline_data, target_data):
+def _submit_data_quality_signal_monitor_job(
+    ml_client, get_component, experiment_name, baseline_data, target_data
+):
     dd_signal_monitor = get_component(COMPONENT_NAME_DATA_QUALITY_SIGNAL_MONITOR)
 
     @pipeline()
@@ -28,7 +30,7 @@ def _submit_data_quality_signal_monitor_job(ml_client, get_component, experiment
             filter_type="TopNByAttribution",
             filter_value="3",
             numerical_threshold=0.5,
-            categorical_threshold=0.5
+            categorical_threshold=0.5,
         )
         return {"signal_output": dd_signal_monitor_output.outputs.signal_output}
 
@@ -58,7 +60,7 @@ class TestDataQualityModelMonitor:
             get_component,
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
-            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT,
         )
 
         assert pipeline_job.status == "Completed"

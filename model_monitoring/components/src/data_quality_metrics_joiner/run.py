@@ -45,9 +45,12 @@ def run():
         .withColumn("metric_value", col("target_metric_value"))
     )
 
-    result_df = (
-        result_df.withColumn("threshold_value", when(result_df.data_type == "Numerical", col("baseline_metric_value") + args.numerical_threshold)
-                             .otherwise(col("baseline_metric_value") + args.categorical_threshold))
+    result_df = result_df.withColumn(
+        "threshold_value",
+        when(
+            result_df.data_type == "Numerical",
+            col("baseline_metric_value") + args.numerical_threshold,
+        ).otherwise(col("baseline_metric_value") + args.categorical_threshold),
     )
 
     result_df.show()

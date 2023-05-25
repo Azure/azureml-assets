@@ -6,28 +6,32 @@
 import argparse
 import logging
 import pandas as pd
-from pyspark.sql.types import (
-    StructType,
-    StructField,
-    StringType,
-    FloatType
+from pyspark.sql.types import StructType, StructField, StringType, FloatType
+from shared_utilities.io_utils import (
+    read_mltable_in_spark,
+    save_spark_df_as_mltable,
+    init_spark,
 )
-from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable, init_spark
 from shared_utilities import constants
 
 from responsibleai import RAIInsights
 from ml_wrappers.model.predictions_wrapper import (
     PredictionsModelWrapperClassification,
-    PredictionsModelWrapperRegression)
+    PredictionsModelWrapperRegression,
+)
 
 try:
     from lightgbm import LGBMClassifier, LGBMRegressor
 except ImportError:
     pass
 
-from feature_importance_utilities import compute_categorical_features, convert_pandas_to_spark
+from feature_importance_utilities import (
+    compute_categorical_features,
+    convert_pandas_to_spark,
+)
 
 from shared_utilities.patch_mltable import patch_all
+
 patch_all()
 
 _logger = logging.getLogger(__file__)
@@ -86,12 +90,24 @@ def create_lightgbm_model(X, y, task_type):
     :return: an appropriate model wrapper
     :rtype: LightGBMClassifier or LightGBMRegressor
     """
-    if (task_type == constants.CLASSIFICATION):
-        lgbm = LGBMClassifier(boosting_type='gbdt', learning_rate=0.1,
-                              max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
+    if task_type == constants.CLASSIFICATION:
+        lgbm = LGBMClassifier(
+            boosting_type="gbdt",
+            learning_rate=0.1,
+            max_depth=5,
+            n_estimators=200,
+            n_jobs=1,
+            random_state=777,
+        )
     else:
-        lgbm = LGBMRegressor(boosting_type='gbdt', learning_rate=0.1,
-                             max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
+        lgbm = LGBMRegressor(
+            boosting_type="gbdt",
+            learning_rate=0.1,
+            max_depth=5,
+            n_estimators=200,
+            n_jobs=1,
+            random_state=777,
+        )
 
     model = lgbm.fit(X, y)
 
@@ -117,17 +133,16 @@ def get_model_wrapper(task_type, target_column, baseline_data):
     # Transform categorical features into the appropriate type that is expected by LightGBM
     for column in x_train:
         col_type = x_train[column].dtype.name
-        if col_type == 'object' or col_type == 'category':
-            x_train[column] = x_train[column].astype('category')
+        if col_type == "object" or col_type == "category":
+            x_train[column] = x_train[column].astype("category")
     model = create_lightgbm_model(x_train, y_train, task_type)
     model_predict = model.predict(x_train)
 
     if task_type == constants.CLASSIFICATION:
         model_predict_proba = model.predict_proba(x_train)
         model_wrapper = PredictionsModelWrapperClassification(
-            x_train,
-            model_predict,
-            model_predict_proba)
+            x_train, model_predict, model_predict_proba
+        )
     else:
         model_wrapper = PredictionsModelWrapperRegression(x_train, model_predict)
 
@@ -135,7 +150,9 @@ def get_model_wrapper(task_type, target_column, baseline_data):
     return model_wrapper
 
 
-def compute_explanations(model_wrapper, data, categorical_features, target_column, task_type):
+def compute_explanations(
+    model_wrapper, data, categorical_features, target_column, task_type
+):
     """Compute explanations (feature importances) for a given dataset.
 
     :param model_wrapper: wrapper around a model that can be used to calculate explanations
@@ -153,17 +170,26 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     """
     # Create the RAI Insights object, use baseline as train and test data
     rai_i: RAIInsights = RAIInsights(
-        model_wrapper, data, data, target_column, task_type, categorical_features=categorical_features
+        model_wrapper,
+        data,
+        data,
+        target_column,
+        task_type,
+        categorical_features=categorical_features,
     )
 
     # Add the global explanations using batching to allow for larger input data sizes
     rai_i.explainer.add()
     evaluation_data = data.drop([target_column], axis=1)
-    explanationData = rai_i.explainer.request_explanations(local=False, data=evaluation_data)
-    return explanationData.precomputedExplanations.globalFeatureImportance['scores']
+    explanationData = rai_i.explainer.request_explanations(
+        local=False, data=evaluation_data
+    )
+    return explanationData.precomputedExplanations.globalFeatureImportance["scores"]
 
 
-def compute_feature_importance(task_type, target_column, baseline_data, categorical_features):
+def compute_feature_importance(
+    task_type, target_column, baseline_data, categorical_features
+):
     """Compute feature importance of baseline data.
 
     :param task_type: The task type (regression or classification) of the resulting model
@@ -180,7 +206,9 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
     """
     model_wrapper = get_model_wrapper(task_type, target_column, baseline_data)
 
-    baseline_explanations = compute_explanations(model_wrapper, baseline_data, categorical_features, target_column, task_type)
+    baseline_explanations = compute_explanations(
+        model_wrapper, baseline_data, categorical_features, target_column, task_type
+    )
     _logger.info("Successfully computed explanations for dataset")
 
     return baseline_explanations
@@ -196,12 +224,36 @@ def write_to_mltable(explanations, dataset, file_path, categorical_features):
     :param file_path: path to folder to save mltable
     :type file_path: string
     """
-    metrics_data = pd.DataFrame(columns=['feature', 'metric_value', 'metric_name', 'data_type', 'threshold_value'])
+    metrics_data = pd.DataFrame(
+        columns=[
+            "feature",
+            "metric_value",
+            "metric_name",
+            "data_type",
+            "threshold_value",
+        ]
+    )
     for index in range(len(explanations)):
-        dtype = 'Categorical' if dataset.iloc[:, index].name in categorical_features else 'Numerical'
-        new_row = {"feature": dataset.columns[index], "metric_value": explanations[index], "metric_name": "FeatureImportance", "data_type": dtype, "threshold_value": float("nan")}
+        dtype = (
+            "Categorical"
+            if dataset.iloc[:, index].name in categorical_features
+            else "Numerical"
+        )
+        new_row = {
+            "feature": dataset.columns[index],
+            "metric_value": explanations[index],
+            "metric_name": "FeatureImportance",
+            "data_type": dtype,
+            "threshold_value": float("nan"),
+        }
         metrics_data = metrics_data.append(new_row, ignore_index=True)
-    row_count_data = {"feature": "", "metric_value": len(dataset.index), "metric_name": "RowCount", "data_type": "", "threshold_value": float("nan")}
+    row_count_data = {
+        "feature": "",
+        "metric_value": len(dataset.index),
+        "metric_name": "RowCount",
+        "data_type": "",
+        "threshold_value": float("nan"),
+    }
     metrics_data = metrics_data.append(row_count_data, ignore_index=True)
     spark_data = convert_pandas_to_spark(metrics_data)
     save_spark_df_as_mltable(spark_data, file_path)
@@ -234,18 +286,33 @@ def run(args):
         return
 
     baseline_df = read_mltable_in_spark(args.baseline_data).toPandas()
-    task_type = args.task_type if args.task_type else determine_task_type(args.target_column, baseline_df)
+    task_type = (
+        args.task_type
+        if args.task_type
+        else determine_task_type(args.target_column, baseline_df)
+    )
     task_type = task_type.lower()
     _logger.info(f"Computed task type is {task_type}")
 
     try:
-        categorical_features = compute_categorical_features(baseline_df, args.target_column)
-        feature_importances = compute_feature_importance(task_type, args.target_column, baseline_df, categorical_features)
+        categorical_features = compute_categorical_features(
+            baseline_df, args.target_column
+        )
+        feature_importances = compute_feature_importance(
+            task_type, args.target_column, baseline_df, categorical_features
+        )
         _logger.info("Successfully executed the feature importance component.")
         feature_columns = baseline_df.drop([args.target_column], axis=1)
-        write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features)
+        write_to_mltable(
+            feature_importances,
+            feature_columns,
+            args.signal_metrics,
+            categorical_features,
+        )
     except Exception as e:
-        _logger.info(f"Error encountered when executing feature importance component: {e}")
+        _logger.info(
+            f"Error encountered when executing feature importance component: {e}"
+        )
         raise e
 
 

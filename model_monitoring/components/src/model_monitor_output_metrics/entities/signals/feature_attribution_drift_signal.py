@@ -23,7 +23,13 @@ class FeatureAttributionDriftSignal(Signal):
         metrics: List[Row],
     ):
         """Build Feature Attribution Drift signal."""
-        super().__init__(monitor_name, signal_name, "1.0.0", SignalType.FEATURE_ATTRIBUTION_DRIFT, metrics)
+        super().__init__(
+            monitor_name,
+            signal_name,
+            "1.0.0",
+            SignalType.FEATURE_ATTRIBUTION_DRIFT,
+            metrics,
+        )
         self.row_count_metrics = RowCountMetrics(metrics)
         self._build_metrics(monitor_name, signal_name, metrics)
 
@@ -33,7 +39,7 @@ class FeatureAttributionDriftSignal(Signal):
             "signalName": self.signal_name,
             "signalType": self.signal_type.name,
             "version": self.version,
-            "metrics": self.global_metrics
+            "metrics": self.global_metrics,
         }
         signal_payload["metrics"]["features"] = {}
 
@@ -61,21 +67,30 @@ class FeatureAttributionDriftSignal(Signal):
         for metric in metrics:
             if metric["metric_name"] == "NormalizedDiscountedCumulativeGain":
 
-                run_id = get_or_create_run_id(monitor_name=monitor_name, signal_name=signal_name, feature_name=None, metric_name=metric["metric_name"])
+                run_id = get_or_create_run_id(
+                    monitor_name=monitor_name,
+                    signal_name=signal_name,
+                    feature_name=None,
+                    metric_name=metric["metric_name"],
+                )
                 run_metric = {
                     "runId": run_id,
                     "value": metric["metric_value"],
                 }
-                run_metric = add_value_if_present(metric, "threshold_value", run_metric, "threshold")
+                run_metric = add_value_if_present(
+                    metric, "threshold_value", run_metric, "threshold"
+                )
                 self.run_metrics.append(run_metric)
 
                 global_metric = {
                     "metricValue": metric["metric_value"],
                     "runId": run_id,
                     "metricName": metric["metric_name"],
-                    "runMetricName": "value"
+                    "runMetricName": "value",
                 }
-                global_metric = add_value_if_present(metric, "threshold_value", global_metric, "threshold")
+                global_metric = add_value_if_present(
+                    metric, "threshold_value", global_metric, "threshold"
+                )
                 global_metric_cache[metric["metric_name"]] = global_metric
 
             if not row_has_value(metric, "feature_name"):

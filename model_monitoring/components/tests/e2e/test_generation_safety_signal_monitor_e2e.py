@@ -8,12 +8,14 @@ from azure.ai.ml import MLClient, Output
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR,
-    DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA
+    DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA,
 )
 
 
 def _submit_generation_safety_signal_monitor_job(ml_client, get_component, target_data):
-    generation_safety_model_monitor = get_component(COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR)
+    generation_safety_model_monitor = get_component(
+        COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR
+    )
 
     @pipeline()
     def _gen_safety_model_monitor_e2e():
@@ -31,7 +33,7 @@ def _submit_generation_safety_signal_monitor_job(ml_client, get_component, targe
             authorization_secret_name="aoai-raidev-api-key",
             azure_openai_api_version="2023-03-15-preview",
             sample_rate=1.0,
-            groundedness_threshold=3
+            groundedness_threshold=3,
         )
         return {"signal_output": dd_model_monitor_output.outputs.signal_output}
 
@@ -57,9 +59,7 @@ class TestGenerationSafetyModelMonitor:
     ):
         """Test the happy path scenario."""
         pipeline_job = _submit_generation_safety_signal_monitor_job(
-            ml_client,
-            get_component,
-            DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA
+            ml_client, get_component, DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA
         )
 
         assert pipeline_job.status == "Completed"

@@ -13,15 +13,16 @@ from azureml.core.authentication import AzureMLTokenAuthentication
 from mlflow import MlflowClient
 from mlflow.entities import Run
 
-DATE_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
-MODEL_MONITOR = 'Model Monitor'
-WARNING_EVENT_NAME = 'Microsoft.MachineLearning.Run.Warning'
+DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+MODEL_MONITOR = "Model Monitor"
+WARNING_EVENT_NAME = "Microsoft.MachineLearning.Run.Warning"
 ROOT_RUN_ID_TAG = "mlflow.rootRunId"
 AML_SEND_EMAIL_ADDRESSES_TAG = "azureml.notification.email.address"
 
 
 def _get_environment_variable_value(key, logger):
     import os
+
     value = os.environ.get(key)
 
     if value is None:
@@ -37,7 +38,7 @@ def _get_experiment_name(mlflow_client, experiment_id):
 
 def _get_run_id():
     logger = logging.getLogger("event_utils")
-    return _get_environment_variable_value('MLFLOW_RUN_ID', logger)
+    return _get_environment_variable_value("MLFLOW_RUN_ID", logger)
 
 
 def _get_service_context(mlflow_client, tracking_token, logger):
@@ -49,25 +50,21 @@ def _get_service_context(mlflow_client, tracking_token, logger):
         client_service_context._workspace_name,
         workspace_id=None,
         workspace_discovery_url=None,
-        authentication=AzureMLTokenAuthentication(tracking_token))
+        authentication=AzureMLTokenAuthentication(tracking_token),
+    )
 
 
 def _get_warning_event(run_id, message):
     time = _get_timestamp()
-    event_data = {
-        "RunId": run_id,
-        "Source": MODEL_MONITOR,
-        "Message": message}
+    event_data = {"RunId": run_id, "Source": MODEL_MONITOR, "Message": message}
 
-    return BaseEvent(
-        timestamp=time,
-        name=WARNING_EVENT_NAME,
-        data=event_data)
+    return BaseEvent(timestamp=time, name=WARNING_EVENT_NAME, data=event_data)
 
 
 def _get_timestamp():
     import datetime
     import pytz
+
     now = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
     return now.strftime(DATE_TIME_FORMAT)
 
@@ -84,7 +81,9 @@ def post_email_event(signal_name: str, emails: str, message: str):
     logger.info(f"Posting email event with message '{message}' to run '{root_run_id}'.")
     with mlflow.start_run(nested=True, run_id=root_run_id) as run:
         mlflow.set_tag(AML_SEND_EMAIL_ADDRESSES_TAG, emails)
-        mlflow.set_tag(f"azureml.modelmonitor.threshold.breached.{signal_name}", message)
+        mlflow.set_tag(
+            f"azureml.modelmonitor.threshold.breached.{signal_name}", message
+        )
 
 
 def post_warning_event(message):
@@ -100,7 +99,7 @@ def post_warning_event(message):
     if run_id is None:
         return
 
-    experiment_id = _get_environment_variable_value('MLFLOW_EXPERIMENT_ID', logger)
+    experiment_id = _get_environment_variable_value("MLFLOW_EXPERIMENT_ID", logger)
     if experiment_id is None:
         return
 
@@ -110,19 +109,23 @@ def post_warning_event(message):
         logger.error(f"Failed to get name of experiment '{experiment_id}'.")
         return
 
-    tracking_token = _get_environment_variable_value('MLFLOW_TRACKING_TOKEN', logger)
+    tracking_token = _get_environment_variable_value("MLFLOW_TRACKING_TOKEN", logger)
     if tracking_token is None:
         return
 
     service_context = _get_service_context(mlflow_client, tracking_token, logger)
     if service_context is None:
-        logger.error(f"Failed to get service context for the resource with tracking uri: '{mlflow.get_tracking_uri()}'.")
+        logger.error(
+            f"Failed to get service context for the resource with tracking uri: '{mlflow.get_tracking_uri()}'."
+        )
         return
 
     event_body = _get_warning_event(run_id, message)
 
     try:
-        client = RunClient(service_context, experiment_name, run_id, experiment_id=experiment_id)
+        client = RunClient(
+            service_context, experiment_name, run_id, experiment_id=experiment_id
+        )
         client.post_event(event_body)
 
     except Exception as e:

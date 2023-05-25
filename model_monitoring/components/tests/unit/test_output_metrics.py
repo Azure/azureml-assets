@@ -7,14 +7,25 @@ import pytest
 from typing import List
 from pyspark.sql import Row
 
-from model_monitor_output_metrics.entities.signals.data_drift_signal import DataDriftSignal
+from model_monitor_output_metrics.entities.signals.data_drift_signal import (
+    DataDriftSignal,
+)
 
 
 def _validate_metrics(payload: dict, row: Row):
     assert row["feature_name"] in payload["metrics"]["features"]
-    assert payload["metrics"]["features"][row["feature_name"]]["dataType"] == row["data_type"]
-    assert payload["metrics"]["features"][row["feature_name"]]["metrics"][0]["metricName"] == row["metric_name"]
-    assert payload["metrics"]["features"][row["feature_name"]]["metrics"][0]["metricValue"] == row["metric_value"]
+    assert (
+        payload["metrics"]["features"][row["feature_name"]]["dataType"]
+        == row["data_type"]
+    )
+    assert (
+        payload["metrics"]["features"][row["feature_name"]]["metrics"][0]["metricName"]
+        == row["metric_name"]
+    )
+    assert (
+        payload["metrics"]["features"][row["feature_name"]]["metrics"][0]["metricValue"]
+        == row["metric_value"]
+    )
 
 
 @pytest.mark.unit
@@ -58,7 +69,7 @@ class TestDataDriftOutputMetrics:
             signal_name=signal_name,
             metrics=signal_metrics,
             baseline_histogram=None,
-            target_histogram=None
+            target_histogram=None,
         )
 
         payload = data_drift_signal.to_dict()

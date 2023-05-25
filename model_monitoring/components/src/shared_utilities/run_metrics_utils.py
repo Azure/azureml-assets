@@ -48,7 +48,7 @@ def get_or_create_run_id(
 ) -> str:
     """Get or create a run id for a given monitor, signal, feature, and metric."""
     experiment_id = _get_experiment_id()
-    if (experiment_id is None):
+    if experiment_id is None:
         print("No experiment id found. Skipping publishing run metrics.")
         return None
     filter_query = _create_filter_query(

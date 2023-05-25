@@ -105,14 +105,18 @@ class DataDriftSignal(Signal):
                 )
 
             # Add the run metrics
-            run_id = get_or_create_run_id(monitor_name, signal_name, feature_name, metric["metric_name"])
+            run_id = get_or_create_run_id(
+                monitor_name, signal_name, feature_name, metric["metric_name"]
+            )
 
             run_metric = {
                 "runId": run_id,
                 "value": metric["metric_value"],
             }
 
-            run_metric = add_value_if_present(metric, "threshold_value", run_metric, "threshold")
+            run_metric = add_value_if_present(
+                metric, "threshold_value", run_metric, "threshold"
+            )
 
             self.run_metrics.append(run_metric)
 
@@ -129,9 +133,13 @@ class DataDriftSignal(Signal):
                 "metricName": metric["metric_name"],
                 "metricValue": metric["metric_value"],
             }
-            feature_metric = add_value_if_present(metric, "threshold_value", feature_metric, "threshold")
+            feature_metric = add_value_if_present(
+                metric, "threshold_value", feature_metric, "threshold"
+            )
             output[feature_name].metrics.append(feature_metric)
 
-            output[feature_name].histogram = f"signals/{self.signal_name}/{feature_name}.histogram.json"
+            output[
+                feature_name
+            ].histogram = f"signals/{self.signal_name}/{feature_name}.histogram.json"
 
         return list(output.values())

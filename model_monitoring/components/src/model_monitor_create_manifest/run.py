@@ -16,15 +16,14 @@ patch_all()
 
 def _generate_manifest(root_dir: str):
 
-    manifest = {
-        "version": "1.0.0",
-        "metricsFiles": {}
-    }
+    manifest = {"version": "1.0.0", "metricsFiles": {}}
 
     for signal_files in glob.glob(os.path.join(root_dir, "signals/*.json")):
-        with open(signal_files, 'r') as fp:
+        with open(signal_files, "r") as fp:
             signal = json.loads(fp.read())
-            manifest["metricsFiles"][signal["signalName"]] = f"signals/{os.path.basename(signal_files)}"
+            manifest["metricsFiles"][
+                signal["signalName"]
+            ] = f"signals/{os.path.basename(signal_files)}"
     return manifest
 
 
@@ -36,7 +35,9 @@ def run():
     parser.add_argument("--model_monitor_metrics_output", type=str)
 
     for i in range(2, 10):
-        parser.add_argument(f"--signal_outputs_{i}", type=str, required=False, nargs="?")
+        parser.add_argument(
+            f"--signal_outputs_{i}", type=str, required=False, nargs="?"
+        )
 
     args = parser.parse_args()
     args_dict = vars(args)
@@ -52,7 +53,11 @@ def run():
     for signal_output in signals_outputs:
         amlfs_download(remote_path=signal_output, local_path=temp_path)
     amlfs_upload(local_path=temp_path, remote_path=args.model_monitor_metrics_output)
-    amlfs_put_as_json(_generate_manifest(temp_path), args.model_monitor_metrics_output, "manifest.json")
+    amlfs_put_as_json(
+        _generate_manifest(temp_path),
+        args.model_monitor_metrics_output,
+        "manifest.json",
+    )
 
     print("*************** output metrics ***************")
     print("Successfully executed the create manifest component.")
