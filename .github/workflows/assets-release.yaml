@@ -9,17 +9,12 @@ on:
   schedule:
     - cron: '30 6 * * *'
   workflow_dispatch:
-    inputs:
-      asset_dirs:
-        description: Asset directories
-        default: .,!test,!scripts
-        required: true
 
 concurrency: ${{ github.workflow }}
 
 env:
-  default_asset_dirs: .,!test,!scripts
-  default_test_dirs: .,!test,!scripts,!.git,!.github
+  asset_dirs: .,!test,!scripts
+  test_dirs: .,!test,!scripts,!.git,!.github
   main_dir: main
   release_dir: release
   scripts_azureml_assets_dir: scripts/azureml-assets
@@ -74,7 +69,7 @@ jobs:
       # TODO: Consider using Git to detect changes
       - name: Find updated assets
         id: find-updated-assets
-        run: python -u $scripts_assets_dir/update_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -r ${{ github.workspace }}/$release_dir -o ${{ runner.temp }}/$changed_assets_artifact
+        run: python -u $scripts_assets_dir/update_assets.py -i "$asset_dirs" -r ${{ github.workspace }}/$release_dir -o ${{ runner.temp }}/$changed_assets_artifact
         working-directory: ${{ env.main_dir }}
 
       - name: Upload changed assets
@@ -97,7 +92,7 @@ jobs:
         run: |
           artifact_dir=${{ runner.temp }}/$asset_list_artifact
           mkdir -p $artifact_dir
-          python -u $scripts_assets_dir/asset_utils.py list -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -o $artifact_dir/$asset_list_file
+          python -u $scripts_assets_dir/asset_utils.py list -i "$asset_dirs" -o $artifact_dir/$asset_list_file
         working-directory: ${{ env.main_dir }}
       
       - name: Upload list of artifacts
@@ -241,7 +236,7 @@ jobs:
   
       - name: Copy test files and scripts
         run: |
-          python -u $main_dir/$scripts_release_dir/test_file_convert.py -i "${{ env.default_test_dirs }}" -r $release_dir -w $main_dir
+          python -u $main_dir/$scripts_release_dir/test_file_convert.py -i "$test_dirs" -r $release_dir -w $main_dir
 
       - name: Copy scripts
         run: | 
