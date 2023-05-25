@@ -19,6 +19,7 @@ inputs:
       tabular-classification,
       tabular-classification-multilabel,
       tabular-regression,
+      tabular-forecasting,
       text-classification,
       text-classification-multilabel,
       text-named-entity-recognition,
@@ -26,7 +27,9 @@ inputs:
       question-answering,
       text-translation,
       text-generation,
-      fill-mask
+      fill-mask,
+      image-classification,
+      image-classification-multilabel,
     ]
     description: "Task type"
   ground_truth:

@@ -29,12 +29,14 @@ class TASK:
     TEXT_CLASSIFICATION = "text-classification"
     TEXT_CLASSIFICATION_MULTILABEL = "text-classification-multilabel"
     NER = "text-named-entity-recognition"
-    FORECASTING = "forecasting"
     SUMMARIZATION = "text-summarization"
     QnA = "question-answering"
     TRANSLATION = "text-translation"
     TEXT_GENERATION = "text-generation"
     FILL_MASK = "fill-mask"
+    IMAGE_CLASSIFICATION = "image-classification"
+    IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
+    FORECASTING = "tabular-forecasting"
 
 
 ALL_TASKS = [
@@ -49,16 +51,24 @@ ALL_TASKS = [
     TASK.QnA,
     TASK.TRANSLATION,
     TASK.FILL_MASK,
-    TASK.TEXT_GENERATION
+    TASK.TEXT_GENERATION,
+    TASK.IMAGE_CLASSIFICATION,
+    TASK.IMAGE_CLASSIFICATION_MULTILABEL,
 ]
 
 CLASSIFICATION_SET = [
     TASK.CLASSIFICATION,
     TASK.CLASSIFICATION_MULTILABEL,
     TASK.TEXT_CLASSIFICATION,
-    TASK.TEXT_CLASSIFICATION_MULTILABEL
+    TASK.TEXT_CLASSIFICATION_MULTILABEL,
+    TASK.IMAGE_CLASSIFICATION,
+    TASK.IMAGE_CLASSIFICATION_MULTILABEL
 ]
-MULTIPLE_OUTPUTS_SET = [TASK.CLASSIFICATION_MULTILABEL, TASK.NER, TASK.TEXT_CLASSIFICATION_MULTILABEL]
+MULTIPLE_OUTPUTS_SET = [
+    TASK.CLASSIFICATION_MULTILABEL,
+    TASK.NER,
+    TASK.TEXT_CLASSIFICATION_MULTILABEL,
+    TASK.IMAGE_CLASSIFICATION_MULTILABEL]
 
 MLFLOW_MODEL_TYPE_MAP = {
     TASK.CLASSIFICATION: "classifier",
@@ -73,7 +83,14 @@ MLFLOW_MODEL_TYPE_MAP = {
     TASK.SUMMARIZATION: "summarization",
     TASK.TEXT_GENERATION: "text-generation",
     TASK.FILL_MASK: "fill-mask",
+    TASK.IMAGE_CLASSIFICATION: "image-classifier",
+    TASK.IMAGE_CLASSIFICATION_MULTILABEL: "image-classifier-multilabel"
 }
+
+IMAGE_TASKS = [
+    TASK.IMAGE_CLASSIFICATION,
+    TASK.IMAGE_CLASSIFICATION_MULTILABEL
+]
 
 
 class TelemetryConstants:
@@ -121,6 +138,20 @@ class ExceptionTypes:
     Service = "Service"
     Unclassified = "Unclassified"
     All = {User, System, Service, Unclassified}
+
+
+class ForecastingConfigContract:
+    """Forecasting data contract on forecasting metrics config."""
+
+    TIME_COLUMN_NAME = 'time_column_name'
+    TIME_SERIES_ID_COLUMN_NAMES = 'time_series_id_column_names'
+
+
+class ForecastColumns:
+    """The columns, returned in the forecast data frame."""
+
+    _ACTUAL_COLUMN_NAME = '_automl_actual'
+    _FORECAST_COLUMN_NAME = '_automl_forecast'
 
 
 ALLOWED_PIPELINE_PARAMS = set([

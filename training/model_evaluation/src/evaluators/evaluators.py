@@ -6,7 +6,9 @@
 import ast
 from abc import abstractmethod
 
-from constants import TASK
+# TODO: Import ForecastColumns from azureml.evaluate.mlflow, when it will be
+# available.
+from constants import TASK, ForecastingConfigContract, ForecastColumns
 import pandas as pd
 import numpy as np
 from azureml.metrics import compute_metrics, constants
@@ -35,6 +37,9 @@ class EvaluatorFactory:
             TASK.QnA: QnAEvaluator,
             TASK.FILL_MASK: FillMaskEvaluator,
             TASK.TEXT_GENERATION: TextGenerationEvaluator,
+            TASK.FORECASTING: ForecastingEvaluator,
+            TASK.IMAGE_CLASSIFICATION: ClassifierEvaluator,
+            TASK.IMAGE_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
         }
 
     def get_evaluator(self, task_type, metrics_config=None):
@@ -480,4 +485,55 @@ class TextGenerationEvaluator(Evaluator):
             y_test = np.reshape(y_test, (-1, 1))
         metrics = compute_metrics(task_type=constants.Tasks.TEXT_GENERATION, y_test=y_test.tolist(),
                                   y_pred=y_pred.tolist(), **self.metrics_config)
+        return metrics
+
+
+class ForecastingEvaluator(Evaluator):
+    """Forecasting Evaluator.
+
+    Args:
+        Evaluator (_type_): _description_
+    """
+
+    def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
+        super().__init__(task_type, metrics_config)
+
+    def evaluate(self, y_test, y_pred, X_test, **kwargs):
+        """Evaluate regression.
+
+        Args:
+            y_test (_type_): _description_
+            y_pred (_type_): _description_
+            X_test (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        y_pred = self._convert_predictions(y_pred)
+        y_test = self._convert_predictions(y_test)
+
+        # In the evaluation component we do not have the model, so we cannot aggregate data.
+        # In case user provided X_train or y train we will remove it from kwargs.
+        kwargs.pop('X_train', None)
+        kwargs.pop('y_train', None)
+        # Take forecasting-specific parameters from the model.
+        kwargs["time_series_id_column_names"] = self.metrics_config.get(
+            ForecastingConfigContract.TIME_SERIES_ID_COLUMN_NAMES)
+        kwargs["time_column_name"] = self.metrics_config.get(
+            ForecastingConfigContract.TIME_COLUMN_NAME)
+        metrics = compute_metrics(
+            task_type=constants.Tasks.FORECASTING,
+            y_test=y_test,
+            y_pred=y_pred,
+            X_test=X_test,
+            **kwargs
+        )
+        X_test[ForecastColumns._ACTUAL_COLUMN_NAME] = y_test
+        X_test[ForecastColumns._FORECAST_COLUMN_NAME] = y_pred
         return metrics

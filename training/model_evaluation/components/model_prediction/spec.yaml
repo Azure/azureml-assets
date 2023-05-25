@@ -24,7 +24,9 @@ inputs:
       question-answering,
       text-translation,
       text-generation,
-      fill-mask
+      fill-mask,
+      image-classification,
+      image-classification-multilabel,
     ]
     description: "Task type"
   test_data:
