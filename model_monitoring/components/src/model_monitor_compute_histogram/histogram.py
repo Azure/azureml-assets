@@ -54,7 +54,8 @@ def generate_categorical_histogram_rows(df, column_names: list) -> list:
         VISUALIZATION_MAX_CATEGORICAL_BUCKETS = 100
         if count_df.count() > VISUALIZATION_MAX_CATEGORICAL_BUCKETS:
             print(
-                f"WARNING: {column_name} has {count_df.count()} unique values. Only the top {VISUALIZATION_MAX_CATEGORICAL_BUCKETS} values will be visualized."
+                f"WARNING: {column_name} has {count_df.count()} unique values."
+                + "Only the top {VISUALIZATION_MAX_CATEGORICAL_BUCKETS} values will be visualized."
             )
             count_df = count_df.orderBy(F.desc("count")).limit(
                 VISUALIZATION_MAX_CATEGORICAL_BUCKETS

@@ -78,7 +78,7 @@ def get_null_count(df: ps.DataFrame) -> ps.DataFrame:
         df: Input PySpark Pandas DataFrame.
 
     Returns:
-        na_metric_df: A Pypsark Pandas DataFrame containing the number of null values 
+        na_metric_df: A Pypsark Pandas DataFrame containing the number of null values
     for each column of the input PySpark DataFrame.
     """
     na_metric_df = ps.DataFrame(df.isna().sum()).reset_index()

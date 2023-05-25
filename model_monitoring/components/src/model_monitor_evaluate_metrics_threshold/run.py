@@ -34,7 +34,8 @@ def run():
 
     if is_valid:
         print(
-            "Successfully validated that the computed metrics are within the given threshold for categorical and numerical metrics."
+            "Successfully validated that the computed metrics are within the "
+            + "given threshold for categorical and numerical metrics."
         )
     else:
         print("The metric evaluation job is completed.")

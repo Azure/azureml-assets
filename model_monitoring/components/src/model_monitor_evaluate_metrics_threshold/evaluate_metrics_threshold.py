@@ -11,8 +11,9 @@ def _generate_error_message(df, signal_name: str):
     """Generate the error message for the given thresholds."""
     df = df.select("feature_name", "data_type", "metric_name", "threshold_value")
     features_violating_threshold = df.toJSON().collect()
-    error_message = f"The signal '{signal_name}' has failed due to one or more features violating metric thresholds.\n"
-    error_message += f"The feature names and their corresponding computed metric values violating the threshold are \n{features_violating_threshold}\n"
+    error_message = f"The signal '{signal_name}' has failed due to one or more features violating metric thresholds.\n" 
+    error_message += f"The feature names and their corresponding computed metric values violating "
+    error_message += f"the threshold are \n{features_violating_threshold}\n"
 
     return error_message
 
