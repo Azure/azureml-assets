@@ -373,7 +373,6 @@ def release_lock(
     publish_prediction_drift_model_monitor_component,
     publish_data_drift_model_monitor_component,
     publish_feature_attr_drift_signal_monitor_component,
-    publish_generation_safety_signal_monitor_component,
     publish_command_components,
     main_worker_lock,
 ):
