@@ -49,7 +49,7 @@ def _jensen_shannon_categorical(
     output_df = (
         output_df.withColumnRenamed("FeatureName", "feature_name")
         .withColumnRenamed("js_dist", "metric_value")
-        .withColumn("data_type", F.lit("categorical"))
+        .withColumn("data_type", F.lit("Categorical"))
         .withColumn("metric_name", F.lit("JensenShannonDistance"))
     )
 

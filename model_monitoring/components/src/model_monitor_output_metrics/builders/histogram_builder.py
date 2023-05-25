@@ -47,9 +47,10 @@ class HistogramBuilder:
                 if feature_name not in histograms:
                     continue
                 if row["data_type"] == "categorical":
-                    histograms[feature_name]["histogram"][row["category_bucket"]][
-                        "targetCount"
-                    ] = row["bucket_count"]
+                    if row["category_bucket"] in histograms[feature_name]["histogram"]:
+                        histograms[feature_name]["histogram"][row["category_bucket"]][
+                            "targetCount"
+                        ] = row["bucket_count"]
                 else:
                     histograms[feature_name]["histogram"][row["lower_bound"]][
                         "targetCount"
