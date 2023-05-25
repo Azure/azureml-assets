@@ -15,6 +15,7 @@ from itertools import repeat
 from exceptions import (ModelEvaluationException,
                         ScoringException,
                         DataLoaderException)
+from image_classification_dataset import get_classification_dataset, ImageDataFrameParams
 from logging_utilities import custom_dimensions, get_logger, log_traceback
 from azureml.telemetry.activity import log_activity
 from utils import (read_config,
@@ -45,7 +46,8 @@ class EvaluateModel:
                  custom_dimensions: dict,
                  device: str = "cpu",
                  config_file: str = None,
-                 metrics_config: dict = None) -> None:
+                 metrics_config: dict = None,
+                 batch_size: int = 1) -> None:
         """
         Evaluate Model Object.
 
@@ -56,6 +58,8 @@ class EvaluateModel:
             custom_dimensions: str
             device: str
             config_file: str
+            metrics_config: dict,
+            batch_size: int
         """
         self.task = task
         self.model_uri = model_uri
@@ -66,9 +70,11 @@ class EvaluateModel:
         elif metrics_config:
             self.metrics_config = metrics_config
         self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL or
-                               task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL)
+                               task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL or
+                               task == constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL)
         self._has_multiple_output = task in constants.MULTIPLE_OUTPUTS_SET
         self.custom_dimensions = custom_dimensions
+        self.batch_size = batch_size
         try:
             self.device = torch.cuda.current_device() if device == "gpu" else -1
         except Exception:
@@ -120,7 +126,14 @@ class EvaluateModel:
         Returns: Dataframe
 
         """
-        data = read_data(test_data, is_mltable)
+        if self.task in [constants.TASK.IMAGE_CLASSIFICATION,
+                         constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL]:
+            df = get_classification_dataset(testing_mltable=test_data, multi_label=self.multilabel)
+            data = iter([df])
+            input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
+            label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
+        else:
+            data = read_data(test_data, is_mltable)
         data = map(_validate, data, repeat(input_column_names), repeat(label_column_name))
         data = map(prepare_data, data, repeat(self.task), repeat(label_column_name), repeat(self._has_multiple_output))
         return data  # X_test, y_test
@@ -159,13 +172,19 @@ class EvaluateModel:
             eval_data = X_test
             eval_data[label_column_name] = y_test
             targets = label_column_name
+            # Image classification evaluation needs integer batch size.
+            if self.task in [constants.TASK.IMAGE_CLASSIFICATION, constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL]:
+                if self.batch_size:
+                    self.batch_size = 1
             self.metrics_config.update(
                 {
                     "log_activity": log_activity,
                     # "log_traceback": log_traceback,
                     "custom_dimensions": self.custom_dimensions,
                     "output": self.output,
-                    "device": self.device
+                    "device": self.device,
+                    "multi_label": self.multilabel,
+                    "batch_size": self.batch_size,
                 }
             )
             result = None
@@ -251,7 +270,8 @@ def test_model():
             model_uri=model_uri,
             config_file=args.config_file_name,
             metrics_config=met_config,
-            device=args.device
+            device=args.device,
+            batch_size=args.batch_size
         )
         runner.score(test_data=data, label_column_name=args.label_column_name,
                      input_column_names=args.input_column_names, is_mltable=is_mltable)
