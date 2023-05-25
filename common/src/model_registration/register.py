@@ -18,6 +18,7 @@ from azureml.core import Run
 
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
+MLFLOW_MODEL_FOLDER = "mlflow_model_folder"
 
 
 def parse_args():
@@ -126,14 +127,6 @@ def is_model_available(ml_client, model_name, model_version):
     return is_available
 
 
-def move_files(src: str, dstn: str) -> None:
-    """Move files to dstn directory."""
-    os.makedirs(dstn, exist_ok=True)
-    for item in os.listdir(src):
-        src_path = os.path.join(src, item)
-        shutil.move(src_path, dstn)
-
-
 def main(args):
     """Run main function."""
     model_name = args.model_name
@@ -172,16 +165,16 @@ def main(args):
     if not model_name:
         raise Exception("Missing Model Name. Provide model_name as input or in the model_download_metadata JSON")
 
-    if model_type == "mlflow_model":
-        # Make sure parent directory is mlflow_model_folder for mlflow model
-        print("Model is of type MLFlow.")
-
-        target_dir = os.path.join(model_path, "mlflow_model_folder")
-        if not os.path.exists(target_dir):
-            print("Moving model files to `mlflow_model_folder`")
-            move_files(model_path, target_dir)
-            model_path = target_dir
-
+    # check if we can have lineage and update the model path for ws import
+    if not registry_name and args.model_import_job_path:
+        with open(args.model_import_job_path) as f:
+            model_import_job_path = json.load(f)
+        model_path = model_import_job_path.get("path", model_path)
+    elif model_type == "mlflow_model":
+        if not os.path.exists(os.path.join(model_path, MLFLOW_MODEL_FOLDER)):
+            print(f"Making sure, model parent directory is `{MLFLOW_MODEL_FOLDER}`")
+            shutil.copytree(model_path, MLFLOW_MODEL_FOLDER, dirs_exist_ok=True)
+            model_path = MLFLOW_MODEL_FOLDER
         mlmodel_path = os.path.join(model_path, "MLmodel")
         print(f"MLModel path: {mlmodel_path}")
         with open(mlmodel_path, "r") as stream:
@@ -199,12 +192,6 @@ def main(args):
                 model_version = str(int(max_version) + 1)
         except Exception:
             print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
-
-    # check if we can have lineage and update the model path for ws import
-    if not registry_name and args.model_import_job_path:
-        with open(args.model_import_job_path) as f:
-            model_import_job_path = json.load(f)
-        model_path = model_import_job_path.get("path", model_path)
 
     model = Model(
         name=model_name,
