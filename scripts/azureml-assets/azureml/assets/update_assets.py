@@ -109,7 +109,7 @@ def update_asset(asset_config: assets.AssetConfig,
             # Fatal error
             logger.log_error(f"Release directory {release_dir} exists, but it's missing an asset config file")
             exit(1)
-        
+
         release_asset_config = release_asset_configs[0]
         release_version = release_asset_config.version
         check_contents = True
