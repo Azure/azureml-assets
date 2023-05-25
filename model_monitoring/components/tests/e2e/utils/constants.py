@@ -3,16 +3,16 @@
 
 """This file contains constants used by the e2e test suite."""
 
-COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR = "data_drift_signal_monitor_spark"
-COMPONENT_NAME_PREDICTION_DRIFT_SIGNAL_MONITOR = "prediction_drift_signal_monitor_spark"
-COMPONENT_NAME_DATA_QUALITY_SIGNAL_MONITOR = "data_quality_signal_monitor_spark"
+COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR = "data_drift_signal_monitor"
+COMPONENT_NAME_PREDICTION_DRIFT_SIGNAL_MONITOR = "prediction_drift_signal_monitor"
+COMPONENT_NAME_DATA_QUALITY_SIGNAL_MONITOR = "data_quality_signal_monitor"
 COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR = (
-    "feature_attribution_drift_signal_monitor_spark"
+    "feature_attribution_drift_signal_monitor"
 )
-COMPONENT_NAME_CREATE_MANIFEST = "model_monitor_create_manifest_spark"
-COMPONENT_NAME_MDC_PREPROCESSOR = "model_data_collector_preprocessor_spark"
+COMPONENT_NAME_CREATE_MANIFEST = "model_monitor_create_manifest"
+COMPONENT_NAME_MDC_PREPROCESSOR = "model_data_collector_preprocessor"
 COMPONENT_NAME_GENERATION_SAFETY_QUALITY_SIGNAL_MONITOR = (
-    "generation_safety_quality_signal_monitor_spark"
+    "generation_safety_quality_signal_monitor"
 )
 
 # MDC-generated target dataset of an iris model. The data contains drift.
