@@ -45,6 +45,8 @@ class HFMLFlowConvertorInterface(ABC):
 
 
 class NLPMLflowConvertorFactory(HFMLFlowConvertorInterface):
+    """Factory class for NLP model family."""
+
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
         """Create mlflow convertor for NLP tasks."""
         return NLPMLflowConvertor(
@@ -55,6 +57,8 @@ class NLPMLflowConvertorFactory(HFMLFlowConvertorInterface):
 
 
 class VisionMLflowConvertorFactory(HFMLFlowConvertorInterface):
+    """Factory class for vision model family."""
+
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
         """Create mlflow convertor for vision tasks."""
         return VisionMLflowConvertor(
@@ -65,6 +69,8 @@ class VisionMLflowConvertorFactory(HFMLFlowConvertorInterface):
 
 
 class ASRMLflowConvertorFactory(HFMLFlowConvertorInterface):
+    """Factory class for ASR model family."""
+
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
         """Create mlflow convertor for ASR tasks."""
         misc = translate_params["misc"]
@@ -78,6 +84,8 @@ class ASRMLflowConvertorFactory(HFMLFlowConvertorInterface):
 
 
 class DiffusersMLflowConvertorFactory(HFMLFlowConvertorInterface):
+    """Factory class for diffusor model family."""
+
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
         """Create mlflow convertor for diffusers."""
         misc = translate_params["misc"]
