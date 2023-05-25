@@ -37,8 +37,8 @@ class FeatureSelectorFactory:
         elif feature_selector_type == FeatureSelectorType.TOP_N_BY_ATTRIBUTION.name:
             if not filter_value.isdigit():
                 raise ValueError(
-                    f"Invalid feature value. Please provide a valid integer value"
-                    + " when leveraging '{FeatureSelectorType.TOP_N_BY_ATTRIBUTION.name}'."
+                    "Invalid feature value. Please provide a valid integer value"
+                    + f" when leveraging '{FeatureSelectorType.TOP_N_BY_ATTRIBUTION.name}'."
                 )
             return FeatureSelectorTopNByAttribution(
                 filter_value=int(filter_value), feature_importance=feature_importance
