@@ -167,10 +167,11 @@ def main(args):
 
     # check if we can have lineage and update the model path for ws import
     if not registry_name and args.model_import_job_path:
+        print("Using model output of previous job as run lineage to register the model")
         with open(args.model_import_job_path) as f:
             model_import_job_path = json.load(f)
         model_path = model_import_job_path.get("path", model_path)
-    elif model_type == "mlflow_model":
+    elif model_type == AssetTypes.MLFLOW_MODEL:
         if not os.path.exists(os.path.join(model_path, MLFLOW_MODEL_FOLDER)):
             print(f"Making sure, model parent directory is `{MLFLOW_MODEL_FOLDER}`")
             shutil.copytree(model_path, MLFLOW_MODEL_FOLDER, dirs_exist_ok=True)
