@@ -78,6 +78,21 @@ inputs:
       eg: trust_remote_code=True, device_map=auto
     optional: true
 
+  hf_config_class:
+    type: string
+    description: AutoConfig class may not be sufficient to load config for some of the models. You can use this parameter to send Config class name as it is
+    optional: true
+
+  hf_model_class:
+    type: string
+    description: AutoModel classes may not be sufficient to load some of the models. You can use this parameter to send Model class name as it is
+    optional: true
+
+  hf_tokenizer_class:
+    type: string
+    description: AutoTokenizer class may not be sufficient to load tokenizer for some of the models. You can use this parameter to send Config class name as it is
+    optional: true
+
   extra_pip_dependencies:
     type: string
     description: |
@@ -312,6 +327,9 @@ jobs:
       hf_tokenizer_args:  ${{parent.inputs.hf_tokenizer_args}}
       hf_model_args: ${{parent.inputs.hf_model_args}}
       hf_pipeline_args: ${{parent.inputs.hf_pipeline_args}}
+      hf_config_class:  ${{parent.inputs.hf_config_class}}
+      hf_model_class:  ${{parent.inputs.hf_model_class}}
+      hf_tokenizer_class:  ${{parent.inputs.hf_tokenizer_class}}
       extra_pip_dependencies: ${{parent.inputs.extra_pip_dependencies}}
     outputs:
       mlflow_model_folder:

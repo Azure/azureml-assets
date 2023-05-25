@@ -13,7 +13,6 @@ from typing import List
 
 
 PROPERTIES = [
-    "commit_hash",
     "SHA",
     "last_modified",
     "model_id",
@@ -61,6 +60,7 @@ class HuggingfaceDownloader:
     def _get_model_properties(self):
         languages = []
         datasets = []
+        misc = []
         all_tags = self.model_info.tags
         props = {
             "model_id": self.model_info.modelId,
@@ -75,11 +75,15 @@ class HuggingfaceDownloader:
                 datasets.append(tag.split(":")[1])
             elif tag.startswith("license:"):
                 props["license"] = tag.split(":")[1]
+            else:
+                misc.append(tag.lower())
 
         if datasets:
             props["datasets"] = ", ".join(datasets)
         if languages:
             props["languages"] = ", ".join(languages)
+        if misc:
+            props["misc"] = misc
 
         return props
 
@@ -94,6 +98,7 @@ class HuggingfaceDownloader:
             "name": "-".join(self._model_id.split("/")),
             "tags": tags,
             "properties": props,
+            "misc": model_props.get("misc"),
         }
 
 

@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Tuple
 KV_COLON_SEP = ":"
 KV_EQ_SEP = "="
 ITEM_COMMA_SEP = ","
+ITEM_SEMI_COLON_SEP = ";"
 
 
 def log_execution_time(func, logger=None):

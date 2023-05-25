@@ -9,14 +9,17 @@ import logging
 import mlflow
 import shutil
 import sys
+import yaml
 import pandas as pd
 from pathlib import Path
 from typing import Dict
-import yaml
+from azureml.model.mgmt.utils.common_utils import (
+    KV_COLON_SEP,
+    ITEM_SEMI_COLON_SEP,
+    get_dict_from_comma_separated_str,
+)
 
 
-MLFLOW_MODEL_SCORING_SCRIPT = "validations/mlflow_model_scoring_script.py"
-CONDA_ENV_PREFIX = "/opt/conda/envs/inferencing"
 MLMODEL_FILE_NAME = "MLmodel"
 CONDA_YAML_FILE_NAME = "conda.yaml"
 
@@ -51,7 +54,7 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
     logger.info(f"data cols => {data.columns}")
     # validate model input signature matches with data provided
     if mlmodel.get("signature", None):
-        input_signatures_str = mlmodel['signature'].get("inputs", None)
+        input_signatures_str = mlmodel["signature"].get("inputs", None)
     else:
         logger.warning("signature is missing from MLModel file.")
 
@@ -119,15 +122,9 @@ if __name__ == "__main__":
         conda_dict = yaml.safe_load(f)
         logger.info(f"conda :\n{conda_dict}\n")
 
-    col_rename_map = {}
-    if col_rename_map_str:
-        mapping_list = col_rename_map_str.split(";")
-        print(mapping_list)
-        for item in mapping_list:
-            split = item.split(":")
-            if len(split) == 2:
-                col_rename_map[split[0].strip()] = split[1].strip()
-        logger.info(f"col_rename_map => {col_rename_map}")
+    col_rename_map = get_dict_from_comma_separated_str(
+        col_rename_map_str, ITEM_SEMI_COLON_SEP, KV_COLON_SEP, do_eval=True
+    )
 
     _load_and_infer_model(
         model_dir=model_dir,

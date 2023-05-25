@@ -4,18 +4,6 @@
 """HFTransformers Config."""
 
 from enum import Enum
-from transformers import (
-    AutoModelForTokenClassification,
-    AutoModelForSequenceClassification,
-    AutoModelForQuestionAnswering,
-    AutoModelForSeq2SeqLM,
-    AutoModelWithLMHead,
-    AutoModelForMaskedLM,
-    AutoModelForImageClassification,
-    WhisperForConditionalGeneration,
-)
-from diffusers import StableDiffusionPipeline
-from typing import Any
 
 
 MLFLOW_ARTIFACT_DIRECTORY = "mlflow_model_folder"
@@ -26,18 +14,33 @@ MODEL_FILE_PATTERN = r"^pytorch.*\.bin$"
 TOKENIZER_FILE_PATTERN = r"^tokenizer.*|vocab\.json$"
 
 
-# HF confs
-HF_CONFIG_ARGS = "config_hf_load_kwargs"
-HF_TOKENIZER_ARGS = "tokenizer_hf_load_kwargs"
-HF_MODEL_ARGS = "model_hf_load_args"
-HF_PIPELINE_ARGS = "pipeline_init_args"
-EXTRA_PIP_DEPENDENCIES = "extra_pip_requirements"
-
-
 class _CustomEnum(Enum):
     @classmethod
     def has_value(cls, value):
         return value in cls._value2member_map_
+
+
+class HF_CONF(_CustomEnum):
+    """Keys accepted by hftransformers hf_conf."""
+
+    # TODO: check if this exists in evaluate-mlflow package
+    CUSTOM_CONFIG_MODULE = "custom_config_module"
+    CUSTOM_MODLE_MODULE = "custom_model_module"
+    CUSTOM_TOKENIZER_MODULE = "custom_tokenizer_module"
+    EXTRA_PIP_DEPENDENCIES = "extra_pip_requirements"
+    FORCE_LOAD_CONFIG = "force_load_config"
+    FORCE_LOAD_TOKENIZER = "force_load_tokenizer"
+    HUGGINGFACE_ID = "huggingface_id"
+    HF_CONFIG_ARGS = "config_hf_load_kwargs"
+    HF_CONFIG_CLASS = "hf_config_class"
+    HF_MODEL_ARGS = "model_hf_load_args"
+    HF_PRETRAINED_CLASS = "hf_pretrained_class"
+    HF_TOKENIZER_ARGS = "tokenizer_hf_load_kwargs"
+    HF_TOKENIZER_CLASS = "hf_tokenizer_class"
+    HF_PIPELINE_ARGS = "pipeline_init_args"
+    HF_PREDICT_MODULE = "hf_predict_module"
+    TASK_TYPE = "task_type"
+    TRAIN_LABEL_LIST = "train_label_list"
 
 
 class SupportedVisionTasks(_CustomEnum):
@@ -58,24 +61,28 @@ class SupportedNLPTasks(_CustomEnum):
     TRANSLATION = "translation"
 
 
-class SupportedTextToImageVariants(_CustomEnum):
-    """Supported text to image variants."""
+class SupportedDiffusersTask(_CustomEnum):
+    """Supported diffusers task."""
+
+    TEXT_TO_IMAGE = "text-to-image"
+
+
+class SupportedTextToImageModelFamily(_CustomEnum):
+    """Supported text to image models."""
 
     STABLE_DIFFUSION = "stable-diffusion"
 
 
-class SupportedASRVariants(_CustomEnum):
-    """Supported text to image variants."""
+class SupportedASRModelFamily(_CustomEnum):
+    """Supported text to image models."""
 
-    WHISPER_ASR = "whisper-asr"
+    WHISPER = "whisper"
 
 
 class SupportedTasks(_CustomEnum):
     """Supported Hugging face tasks for conversion to mlflow."""
 
     # NLP tasks
-    MULTICLASS = "multiclass"
-    MULTILABEL = "multilabel"
     FILL_MASK = "fill-mask"
     TOKEN_CLASSIFICATION = "token-classification"
     QUESTION_ANSWERING = "question-answering"
@@ -89,29 +96,3 @@ class SupportedTasks(_CustomEnum):
     TEXT_TO_IMAGE = "text-to-image"
     # ASR
     AUTOMATIC_SPEECH_RECOGNITION = "automatic-speech-recognition"
-
-
-class TaskToClassMapping:
-    """Mapping of supported hugging face tasks to respective AutoModel classes."""
-
-    _task_loader_mapping = {
-        "fill-mask": AutoModelForMaskedLM,
-        "text-classification": AutoModelForSequenceClassification,
-        "token-classification": AutoModelForTokenClassification,
-        "question-answering": AutoModelForQuestionAnswering,
-        "summarization": AutoModelWithLMHead,
-        "text-generation": AutoModelWithLMHead,
-        "translation": AutoModelForSeq2SeqLM,
-        "image-classification": AutoModelForImageClassification,
-        "stable-diffusion": StableDiffusionPipeline,
-        "whisper-asr": WhisperForConditionalGeneration,
-    }
-
-    def get_loader_class(task_type) -> Any:
-        """Return loader class for a supported Hugging face task."""
-        return TaskToClassMapping._task_loader_mapping.get(task_type)
-
-    def get_loader_class_name(task_type) -> str:
-        """Return loader class name for a supported Hugging face task."""
-        cls = TaskToClassMapping.get_loader_class(task_type)
-        return cls.__name__ if cls else None

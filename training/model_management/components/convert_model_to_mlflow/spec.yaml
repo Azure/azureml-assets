@@ -22,6 +22,9 @@ command: >
   $[[--hf-tokenizer-args "${{inputs.hf_tokenizer_args}}"]]
   $[[--hf-model-args "${{inputs.hf_model_args}}"]]
   $[[--hf-pipeline-args "${{inputs.hf_pipeline_args}}"]]
+  $[[--hf-config-class ${{hf_config_class}}]]
+  $[[--hf-model-class ${{hf_model_class}}]]
+  $[[--hf-tokenizer-class ${{hf_tokenizer_class}}]]
   $[[--extra-pip-dependencies "${{inputs.extra_pip_dependencies}}"]]
   --mlflow-flavor ${{inputs.mlflow_flavor}}
   --model-path ${{inputs.model_path}}
@@ -87,6 +90,21 @@ inputs:
       Provide pipeline args that should be used while loading the hugging face model.
       Dont use quotes. If value cannot be eval'ed it will be taken as as string.
       eg: trust_remote_code=True, device_map=auto
+    optional: true
+
+  hf_config_class:
+    type: string
+    description: AutoConfig class may not be sufficient to load config for some of the models. You can use this parameter to send Config class name as it is
+    optional: true
+
+  hf_model_class:
+    type: string
+    description: AutoModel classes may not be sufficient to load some of the models. You can use this parameter to send Model class name as it is
+    optional: true
+
+  hf_tokenizer_class:
+    type: string
+    description: AutoTokenizer class may not be sufficient to load tokenizer for some of the models. You can use this parameter to send Config class name as it is
     optional: true
 
   extra_pip_dependencies:
