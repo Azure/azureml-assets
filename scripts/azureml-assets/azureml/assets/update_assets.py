@@ -180,6 +180,7 @@ def update_assets(input_dirs: List[Path],
         counters[ASSET_COUNT] += 1
 
         # Update asset if it's changed
+        logger.print(f"Verifying {asset_config.type.value} {asset_config.name} version {new_version}")
         new_version = update_asset(asset_config=asset_config,
                                    release_directory_root=release_directory_root,
                                    copy_only=copy_only,
