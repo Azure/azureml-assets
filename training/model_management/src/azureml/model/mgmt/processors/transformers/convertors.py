@@ -230,8 +230,8 @@ class ASRMLflowConvertor(HFMLFLowConvertor):
     def __init__(self, **kwargs):
         """Initialize mlflow convertor for ASR models."""
         super().__init__(**kwargs)
-        if self.task != SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
-            raise Exception(f"Unsupported ASR task {self.task}")
+        if self._task != SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
+            raise Exception(f"Unsupported ASR task {self._task}")
 
     def get_model_signature(self):
         """Return model signature for ASR models."""
@@ -310,12 +310,12 @@ class StableDiffusionMlflowConvertor(TextToImageDiffuserMLFlowConvertor):
     def save_as_mlflow(self):
         """Prepare SD model for save to mlflow."""
         hf_conf = self._hf_conf
-        hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = StableDiffusionPipeline
-        hf_conf[HF_CONF.CUSTOM_CONFIG_MODULE] = "diffusers"
-        hf_conf[HF_CONF.CUSTOM_MODLE_MODULE] = "diffusers"
-        hf_conf[HF_CONF.CUSTOM_TOKENIZER_MODULE] = "diffusers"
-        hf_conf[HF_CONF.FORCE_LOAD_CONFIG] = False
-        hf_conf[HF_CONF.FORCE_LOAD_TOKENIZER] = False
+        hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = StableDiffusionPipeline.__name__
+        hf_conf[HF_CONF.CUSTOM_CONFIG_MODULE.value] = "diffusers"
+        hf_conf[HF_CONF.CUSTOM_MODLE_MODULE.value] = "diffusers"
+        hf_conf[HF_CONF.CUSTOM_TOKENIZER_MODULE.value] = "diffusers"
+        hf_conf[HF_CONF.FORCE_LOAD_CONFIG.value] = False
+        hf_conf[HF_CONF.FORCE_LOAD_TOKENIZER.value] = False
         return super()._save()
 
 
