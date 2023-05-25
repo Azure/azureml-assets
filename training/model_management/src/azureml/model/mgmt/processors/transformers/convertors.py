@@ -68,6 +68,7 @@ class HFMLFLowConvertor(ABC):
         output_dir: Path,
         translate_params: Dict,
     ):
+        """Initialize mlflow convertor for HF models."""
         self._model_dir = model_dir
         self._output_dir = output_dir
         self._model_id = translate_params["model_id"]
@@ -181,6 +182,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
     CONDA_FILE_PATH = VISION_DIR / HFMLFLowConvertor.CONDA_FILE_NAME
 
     def __init__(self, **kwargs):
+        """Initialize mlflow convertor for vision models."""
         super().__init__(**kwargs)
         if not SupportedVisionTasks.has_value(self._task):
             raise Exception("Unsupported vision task")
@@ -226,6 +228,7 @@ class ASRMLflowConvertor(HFMLFLowConvertor):
     """HF MlfLow convertor base class for ASR models."""
 
     def __init__(self, **kwargs):
+        """Initialize mlflow convertor for ASR models."""
         super().__init__(**kwargs)
         if self.task != SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
             raise Exception(f"Unsupported ASR task {self.task}")
@@ -249,6 +252,7 @@ class WhisperMLFlowConvertor(ASRMLflowConvertor):
     CONDA_FILE_PATH = WHISPER_DIR / HFMLFLowConvertor.CONDA_FILE_NAME
 
     def __init__(self, **kwargs):
+        """Initialize mlflow convertor for whisper model."""
         super().__init__(**kwargs)
 
     def save_as_mlflow(self):
@@ -285,6 +289,7 @@ class TextToImageDiffuserMLFlowConvertor(HFMLFLowConvertor):
     """HF MlfLow convertor base class for text to image diffuser models."""
 
     def __init__(self, **kwargs):
+        """Initialize mlflow convertor for t2image models."""
         super().__init__(**kwargs)
 
     def get_model_signature(self):
@@ -299,6 +304,7 @@ class StableDiffusionMlflowConvertor(TextToImageDiffuserMLFlowConvertor):
     """HF MlfLow convertor class for stable diffusion models."""
 
     def __init__(self, **kwargs):
+        """Initialize mlflow convertor for SD models."""
         super().__init__(**kwargs)
 
     def save_as_mlflow(self):
@@ -327,6 +333,7 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
     }
 
     def __init__(self, **kwargs):
+        """Initialize mlflow convertor for NLP models."""
         super().__init__(**kwargs)
         if not SupportedNLPTasks.has_value(self._task):
             raise Exception("Unsupported NLP task")

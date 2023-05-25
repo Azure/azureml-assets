@@ -37,14 +37,16 @@ def get_mlflow_convertor(model_dir, output_dir, translate_params):
         raise Exception(f"{task} not supported for mlflow conversion using hftransformers")
 
 
-class HFMLFlowConvertorInterface(ABC):
+class HFMLFlowConvertorFactoryInterface(ABC):
+    """HF MLflow covertor factory interface."""
+
     @abstractmethod
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
         """Create mlflow convertor."""
         raise NotImplementedError
 
 
-class NLPMLflowConvertorFactory(HFMLFlowConvertorInterface):
+class NLPMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
     """Factory class for NLP model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
@@ -56,7 +58,7 @@ class NLPMLflowConvertorFactory(HFMLFlowConvertorInterface):
         )
 
 
-class VisionMLflowConvertorFactory(HFMLFlowConvertorInterface):
+class VisionMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
     """Factory class for vision model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
@@ -68,7 +70,7 @@ class VisionMLflowConvertorFactory(HFMLFlowConvertorInterface):
         )
 
 
-class ASRMLflowConvertorFactory(HFMLFlowConvertorInterface):
+class ASRMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
     """Factory class for ASR model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
@@ -83,7 +85,7 @@ class ASRMLflowConvertorFactory(HFMLFlowConvertorInterface):
         raise Exception("Unsupported ASR model family")
 
 
-class DiffusersMLflowConvertorFactory(HFMLFlowConvertorInterface):
+class DiffusersMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
     """Factory class for diffusor model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, translate_params):
