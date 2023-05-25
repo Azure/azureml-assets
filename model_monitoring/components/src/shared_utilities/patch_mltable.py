@@ -21,7 +21,8 @@ class _DataframeWriterManager(object):
             self.extension = "json"
         else:
             raise NotImplementedError(
-                f'Unsupported output format "{self.output_format}". Supported formats are "parquet", "delimited" and "json_lines".'
+                f'Unsupported output format "{self.output_format}".'
+                + ' Supported formats are "parquet", "delimited" and "json_lines".'
             )
 
     def write(self):
@@ -39,7 +40,8 @@ class _DataframeWriterManager(object):
             )
         else:
             raise NotImplementedError(
-                f'Unsupported output format "{self.output_format}". Supported formats are "parquet", "delimited" and "json_lines".'
+                f'Unsupported output format "{self.output_format}".'
+                + 'Supported formats are "parquet", "delimited" and "json_lines".'
             )
 
         base_path = self.uri.rstrip("/")

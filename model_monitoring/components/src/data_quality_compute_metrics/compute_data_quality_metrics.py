@@ -78,7 +78,8 @@ def get_null_count(df: ps.DataFrame) -> ps.DataFrame:
         df: Input PySpark Pandas DataFrame.
 
     Returns:
-        na_metric_df: A Pypsark Pandas DataFrame containing the number of null values for each column of the input PySpark DataFrame.
+        na_metric_df: A Pypsark Pandas DataFrame containing the number of null values 
+    for each column of the input PySpark DataFrame.
     """
     na_metric_df = ps.DataFrame(df.isna().sum()).reset_index()
     na_metric_df.columns = ["featureName", "violationCount"]
@@ -89,7 +90,9 @@ def compute_max_violation(
     df: pyspark.sql.DataFrame, data_stats_table: pyspark.sql.DataFrame
 ) -> pyspark.sql.DataFrame:
     """
-    Compute the maximum threshold violation count for numerical columns in the input PySpark DataFrame with respect to the maximum value computed from the input data statistics table. Returns a PySpark DataFrame with columns for violation count, feature name and metric name.
+    Compute the maximum threshold violation count for numerical columns in the input PySpark DataFrame with respect
+    to the maximum value computed from the input data statistics table. Returns a PySpark DataFrame with columns
+    for violation count, feature name and metric name.
 
     Args:
         df: Input PySpark DataFrame. (baseline or, target dataset)
@@ -146,7 +149,9 @@ def compute_min_violation(
     df: pyspark.sql.DataFrame, data_stats_table: pyspark.sql.DataFrame
 ) -> pyspark.sql.DataFrame:
     """
-    Compute the minimum threshold violation count for numerical columns in the input PySpark DataFrame with respect to the minimum value computed from the input data statistics table. Returns a PySpark DataFrame with columns for violation count, feature name and metric name.
+    Compute the minimum threshold violation count for numerical columns in the input PySpark DataFrame
+    with respect to the minimum value computed from the input data statistics table.
+    Returns a PySpark DataFrame with columns for violation count, feature name and metric name.
 
     Args:
         df: Input PySpark DataFrame.
@@ -203,14 +208,17 @@ def compute_set_violation(
     df: pyspark.sql.DataFrame, data_stats_table: pyspark.sql.DataFrame
 ) -> pyspark.sql.DataFrame:
     """
-    Compute the count of values in a column that are not in the allowed set of values specified in the data_stats_table and returns a DataFrame with the results.
+    Compute the count of values in a column that are not in the allowed set of values specified
+    in the data_stats_table and returns a DataFrame with the results.
 
     Args:
         df: A PySpark Pandas DataFrame containing the data to check.
-        data_stats_table: A PySpark DataFrame containing metadata about the data, including the allowed set of values for each column
+        data_stats_table: A PySpark DataFrame containing metadata about the data,
+        including the allowed set of values for each column
 
     Returns:
-        threshold_violation_df: A PySpark DataFrame with the count of values in each column that are not in the allowed set of values
+        threshold_violation_df: A PySpark DataFrame with the count of values in each column
+        that are not in the allowed set of values
     """
     set_threshold_violation_count = []
     feature_name_list = []
@@ -254,7 +262,9 @@ def compute_dtype_violation_count_modify_dataset(
     df: pyspark.sql.DataFrame, data_stats_table_mod: pyspark.sql.DataFrame
 ) -> Tuple[pyspark.sql.DataFrame, pyspark.sql.DataFrame]:
     """
-    Compute the number of data type violations for each column in the input DataFrame relative to the data types specified in the data_stats_table_mod DataFrame. Modify the input DataFrame to cast columns with errors to their expected data type from the data_stats_table_mod.
+    Compute the number of data type violations for each column in the input DataFrame
+    relative to the data types specified in the data_stats_table_mod DataFrame.
+    Modify the input DataFrame to cast columns with errors to their expected data type from the data_stats_table_mod.
 
     Args:
         df (pyspark.sql.DataFrame): Input DataFrame
@@ -262,8 +272,10 @@ def compute_dtype_violation_count_modify_dataset(
 
     Returns:
         Tuple[pyspark.sql.DataFrame, pyspark.sql.DataFrame]: A tuple of two DataFrames:
-        1. df: The modified input DataFrame with the data types of columns with errors cast to their expected data type from the data_stats_table_mod
-        2. df_conversion_errors: A DataFrame with the count of data type violations for each column in the input DataFrame and the corresponding metric name
+        1. df: The modified input DataFrame with the data types of columns with errors cast to their expected
+        data type from the data_stats_table_mod
+        2. df_conversion_errors: A DataFrame with the count of data type violations for each column in the
+        input DataFrame and the corresponding metric name
     """
     column_names = "featureName|violationCount"
     mySchema = StructType(
@@ -333,7 +345,8 @@ def impute_categorical_with_mode(df: pyspark.sql.DataFrame) -> pyspark.sql.DataF
     df (pyspark.sql.DataFrame): The input DataFrame
 
     Returns:
-    df (pyspark.sql.DataFrame): The input DataFrame with missing values in numerical columns imputed with mode/most frequent
+    df (pyspark.sql.DataFrame): The input DataFrame with missing values
+    in numerical columns imputed with mode/most frequent
     """
     categorical_col = [
         f.name for f in df.schema.fields if isinstance(f.dataType, StringType)
