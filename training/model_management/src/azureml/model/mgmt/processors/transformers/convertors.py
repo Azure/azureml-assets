@@ -272,7 +272,7 @@ class WhisperMLFlowConvertor(ASRMLflowConvertor):
         tokenizer_load_args.update({"padding": True, "truncation": True})
         config = self._hf_config_cls.from_pretrained(self._model_dir, local_files_only=True, **config_load_args)
         tokenizer = self._hf_tokenizer_cls.from_pretrained(
-            self._model_dir, padding=True, truncation=True, local_files_only=True, **tokenizer_load_args
+            self._model_dir, local_files_only=True, **tokenizer_load_args
         )
 
         conda_env = yaml.safe_load(WhisperMLFlowConvertor.CONDA_FILE_PATH)
