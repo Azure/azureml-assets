@@ -73,7 +73,7 @@ class HFMLFLowConvertor(ABC):
         self._output_dir = output_dir
         self._model_id = translate_params["model_id"]
         self._task = translate_params["task"]
-        self._misc = translate_params["misc"]
+        self._misc = translate_params.get("misc", [])
         self._signatures = translate_params.get("signature", None)
         self._config_cls_name = translate_params.get(HF_CONF.HF_CONFIG_CLASS.value, None)
         self._model_cls_name = translate_params.get(HF_CONF.HF_PRETRAINED_CLASS.value, None)
@@ -177,9 +177,8 @@ class HFMLFLowConvertor(ABC):
 class VisionMLflowConvertor(HFMLFLowConvertor):
     """HF MlfLow convertor for vision models."""
 
-    VISION_DIR = Path().parent / "vision"
+    VISION_DIR = Path(__file__).parent / "vision"
     PREDICT_FILE_PATH = VISION_DIR / HFMLFLowConvertor.PREDICT_FILE_NAME
-    CONDA_FILE_PATH = VISION_DIR / HFMLFLowConvertor.CONDA_FILE_NAME
 
     def __init__(self, **kwargs):
         """Initialize mlflow convertor for vision models."""
@@ -247,7 +246,7 @@ class WhisperMLFlowConvertor(ASRMLflowConvertor):
     """HF MlfLow convertor base class for ASR models."""
 
     MODEL_FAMILY = "whisper"
-    WHISPER_DIR = Path().parent / "whisper"
+    WHISPER_DIR = Path(__file__).parent / "whisper"
     PREDICT_FILE_PATH = WHISPER_DIR / HFMLFLowConvertor.PREDICT_FILE_NAME
     CONDA_FILE_PATH = WHISPER_DIR / HFMLFLowConvertor.CONDA_FILE_NAME
 
@@ -275,7 +274,10 @@ class WhisperMLFlowConvertor(ASRMLflowConvertor):
             self._model_dir, local_files_only=True, **tokenizer_load_args
         )
 
-        conda_env = yaml.safe_load(WhisperMLFlowConvertor.CONDA_FILE_PATH)
+        conda_env = {}
+        with open(WhisperMLFlowConvertor.CONDA_FILE_PATH) as f:
+            conda_env = yaml.safe_load(f)
+
         return super()._save(
             config=config,
             tokenizer=tokenizer,
