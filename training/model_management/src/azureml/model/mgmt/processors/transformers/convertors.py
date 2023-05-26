@@ -267,10 +267,9 @@ class WhisperMLFlowConvertor(ASRMLflowConvertor):
         hf_conf[HF_CONF.HF_TOKENIZER_CLASS.value] = self._hf_tokenizer_cls.__name__
         hf_conf[HF_CONF.HF_PREDICT_MODULE.value] = HFMLFLowConvertor.PREDICT_MODULE
 
-        hf_conf[HF_CONF.HF_TOKENIZER_ARGS.value].update({"padding": True, "truncation": True})
-
         config_load_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
         tokenizer_load_args = self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
+        tokenizer_load_args.update({"padding": True, "truncation": True})
         config = self._hf_config_cls.from_pretrained(self._model_dir, local_files_only=True, **config_load_args)
         tokenizer = self._hf_tokenizer_cls.from_pretrained(
             self._model_dir, padding=True, truncation=True, local_files_only=True, **tokenizer_load_args
