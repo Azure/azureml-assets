@@ -112,11 +112,9 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
     deployment = ManagedOnlineDeployment(
         name=deployment_name,
         code_configuration=code_configuration,
-        name=deployment_name,
         endpoint_name=endpoint_name,
         environment=DEPLOYMENT_ENV_ASSET_URI,
         environment_variables=env_vars,
-        endpoint_name=endpoint_name,
         model=model_id,
         instance_type=args.instance_type,
         instance_count=args.instance_count,
