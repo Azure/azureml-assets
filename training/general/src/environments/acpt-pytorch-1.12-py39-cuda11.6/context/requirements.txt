@@ -1,3 +1,4 @@
+ipykernel~=6.20.2
 azureml-core=={{latest-pypi-version}}
 azureml-dataset-runtime=={{latest-pypi-version}}
 azureml-defaults=={{latest-pypi-version}}
@@ -5,8 +6,9 @@ azure-ml=={{latest-pypi-version}}
 azure-ml-component=={{latest-pypi-version}}
 azureml-mlflow=={{latest-pypi-version}}
 azureml-contrib-services=={{latest-pypi-version}}
-azureml-automl-common-tools=={{latest-pypi-version}}
 torch-tb-profiler~=0.4.0
+py-spy==0.3.12
+debugpy~=1.6.3
 MarkupSafe==2.1.2
 regex
 pybind11
