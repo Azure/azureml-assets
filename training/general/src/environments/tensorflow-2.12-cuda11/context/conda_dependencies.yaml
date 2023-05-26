@@ -11,7 +11,6 @@ dependencies:
 - pip:
   - setuptools==65.5.1
   - wheel~=0.38.1
-  - matplotlib~=3.5.0
   - azureml-core=={{latest-pypi-version}}
   - azureml-defaults=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
