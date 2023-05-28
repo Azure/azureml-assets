@@ -16,6 +16,7 @@ env:
   src_dir: src
   momoComponentsRootPath: src/model_monitoring/components
   testsRootPath: src/model_monitoring/components/tests
+  pytest_report_folder: results
   pytest_report_file: junit3.xml
 
 permissions:
@@ -50,14 +51,14 @@ jobs:
         run: python -m pip install -r ${{ env.testsRootPath }}/requirements.txt
       
       - name: Test asset
-        run: python -m pytest --junitxml=${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8 -m unit
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8 -m unit
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ${{ env.pytest_reports }}
-          path: ${{ env.pytest_reports }}
+          name: ${{ env.pytest_report_folder }}
+          path: ${{ env.pytest_report_folder }}
   report:
       name: Publish test results
       if: always()
@@ -75,8 +76,8 @@ jobs:
           id: download-artifact
           uses: actions/download-artifact@v3
           with:
-            name: ${{ env.pytest_reports }}
-            path: ${{ env.pytest_reports }}
+            name: ${{ env.pytest_report_folder }}
+            path: ${{ env.pytest_report_folder }}
           continue-on-error: true
 
         - name: Publish test results
