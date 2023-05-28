@@ -13,8 +13,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 env:
-  momoComponentsRootPath: main/model_monitoring/components
-  testsRootPath: main/model_monitoring/components/tests
+  src_dir: src
+  momoComponentsRootPath: src/model_monitoring/components
+  testsRootPath: src/model_monitoring/components/tests
 
 permissions:
   # Required to clone repo
@@ -36,7 +37,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
-          path: ${{ env.main_dir }}
+          path: ${{ env.src_dir }}
       
       
       - name: Use Python 3.8
