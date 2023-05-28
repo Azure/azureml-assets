@@ -6,6 +6,7 @@ on:
       - main 
     paths:
       - model_monitoring/**
+      - .github/workflows/model-monitoring-ci.yml
       
 
 concurrency:
