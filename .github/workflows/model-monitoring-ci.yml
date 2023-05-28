@@ -1,15 +1,16 @@
 name: model-monitoring-ci
 
 on:
-  push:
+  pull_request:
     branches:
-      - main
-    paths: 
+      - main 
+    paths:
       - model_monitoring/**
-  workflow_dispatch:
+      
 
-concurrency: ${{ github.workflow }}
-
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 env:
   momoComponentsRootPath: main/model_monitoring/components
   testsRootPath: main/model_monitoring/components/tests
