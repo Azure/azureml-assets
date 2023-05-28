@@ -85,4 +85,4 @@ jobs:
           uses: EnricoMi/publish-unit-test-result-action@v2
           with:
             check_name: Test Results for ${{ github.workflow }}
-            junit_files: ${{ env.pytest_reports }}/**/*.xml
+            junit_files: ${{ env.pytest_report_folder }}/**/*.xml
