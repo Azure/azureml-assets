@@ -46,6 +46,7 @@ class Translator(PredictWrapper):
             self._validate_translation_langs(source_lang, target_lang)
             task_type = "translation_"+source_lang+"_to_"+target_lang
             logger.info("Updating hf conf with task type"+task_type)
+            print("Updating hf conf with task type"+task_type)
             kwargs["task_type"] = task_type
         try:
             y_pred = self.model.predict(X_test, **kwargs)
