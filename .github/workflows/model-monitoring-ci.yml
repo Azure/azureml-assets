@@ -41,7 +41,6 @@ jobs:
           fetch-depth: 1
           path: ${{ env.root_dir }}
       
-      
       - name: Use Python 3.8
         uses: actions/setup-python@v4
         with:
@@ -51,7 +50,7 @@ jobs:
         run: python -m pip install -r ${{ env.testsRootPath }}/requirements.txt
 
       - name: Test asset
-        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8 -m unit
+        run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
