@@ -15,6 +15,6 @@ properties:
 tags:
   Featured: ''
   Preview: ''
-  license: apache
+  license: apache-2.0
   task: text-generation
 version: 3
