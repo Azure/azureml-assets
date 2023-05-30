@@ -10,15 +10,11 @@ dependencies:
 - numpy~=1.22.0
 - pip:
   - wheel~=0.38.1
-  - matplotlib~=3.5.0
-  - psutil~=5.8.0
-  - tqdm~=4.62.0
-  - ipykernel~=6.20.2
   - azureml-core==1.51.0
   - azureml-defaults==1.51.0
   - azureml-mlflow==1.51.0
   - azureml-telemetry==1.51.0
+  - azureml-automl-common-tools==1.51.0
   - scikit-learn~=1.0.0
   - joblib~=1.2.0
-  - debugpy~=1.6.3
 
