@@ -32,7 +32,7 @@ defaults:
 jobs:
   run-e2e-tests:
     name: Run Monitoring Component Tests
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Clone branch
