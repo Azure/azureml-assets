@@ -1,5 +1,5 @@
 mlflow==2.3.0
 cloudpickle==2.2.1
 openmim==0.3.7
-torch==1.11.0
+torch==1.13.1
 torchvision==0.12.0
