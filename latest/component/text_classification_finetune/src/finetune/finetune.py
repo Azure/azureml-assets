@@ -38,7 +38,18 @@ add_run_properties(ROOT_RUN_PROPERTIES, logger, add_to_root=True)
 add_run_properties(RUN_PROPERTIES, logger)
 
 IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
-    "databricks/dolly-v2-12b",
+    "databricks/dolly-v1-6b",            # gptj
+    "databricks/dolly-v2-3b",            # gpt_neox
+    "databricks/dolly-v2-7b",            # gpt_neox
+    "databricks/dolly-v2-12b",           # gpt_neox
+    "openlm-research/open_llama_3b_350bt_preview",            # llama
+    "openlm-research/open_llama_7b_400bt_preview",            # llama
+    "openlm-research/open_llama_3b_600bt_preview",            # llama
+    "openlm-research/open_llama_7b_700bt_preview",            # llama
+    "decapoda-research/llama-7b-hf",            # llama
+    "decapoda-research/llama-13b-hf",           # llama
+    "decapoda-research/llama-30b-hf",           # llama
+    "decapoda-research/llama-65b-hf",           # llama
 ]
 
 
