@@ -15,6 +15,6 @@ properties:
 tags:
   Featured: ''
   Preview: ''
-  license: mit
+  license: apache
   task: text-generation
 version: 3
