@@ -26,7 +26,7 @@ from azureml.core.run import Run
 
 from logging_utilities import get_logger
 
-logger = get_logger(name=__name__)
+logger = get_logger(__name__)
 
 
 class SettingLiterals:
