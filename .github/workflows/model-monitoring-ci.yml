@@ -32,7 +32,7 @@ defaults:
 jobs:
   run-e2e-tests:
     name: Run Monitoring Component Tests
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Clone branch
@@ -47,7 +47,16 @@ jobs:
           python-version: '3.8'
 
       - name: Install dependencies
-        run: python -m pip install -r ${{ env.testsRootPath }}/requirements.txt
+        run: pip install -r ${{ env.testsRootPath }}/requirements.txt
+
+      - name: Login to Azure and create resources
+        if: steps.create-test-matrix.outputs.test_count > 0
+        uses: ./.github/actions/create-azure-resources
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          scripts-setup-dir: ${{ env.scripts_setup_dir }}
 
       - name: Test asset
         run: python -m pytest --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} ${{ env.momoComponentsRootPath }} -o log_level=DEBUG -n 8
