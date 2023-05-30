@@ -13,9 +13,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 env:
-  root_dir: root
-  momoComponentsRootPath: root/model_monitoring/components
-  testsRootPath: root/model_monitoring/components/tests
+  momoComponentsRootPath: model_monitoring/components
+  testsRootPath: model_monitoring/components/tests
   pytest_report_folder: results
   pytest_report_file: junit3.xml
 
