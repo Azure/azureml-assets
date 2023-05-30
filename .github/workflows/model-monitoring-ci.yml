@@ -50,7 +50,6 @@ jobs:
         run: pip install -r ${{ env.testsRootPath }}/requirements.txt
 
       - name: Login to Azure and create resources
-        if: steps.create-test-matrix.outputs.test_count > 0
         uses: ./.github/actions/create-azure-resources
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
