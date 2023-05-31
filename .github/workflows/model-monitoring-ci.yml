@@ -61,8 +61,8 @@ jobs:
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          RESOURCE_GROUP: ${{ secrets.resource_group }}
-          WORKSPACE_NAME: ${{ secrets.workspace }}
+          RESOURCE_GROUP: ${{ env.resource_group }}
+          WORKSPACE_NAME: ${{ env.workspace }}
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
