@@ -4,7 +4,7 @@ description: >-
   AzureML Responsible AI Vision environment.
 
 name: "responsibleai-vision-ubuntu20.04-py38-cpu"
-version: "20"
+version: "21"
 
 build:
   path: "context"
