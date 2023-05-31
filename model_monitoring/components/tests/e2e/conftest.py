@@ -23,6 +23,22 @@ from tests.e2e.utils.io_utils import (
 lock_file = ".lock"
 
 
+def _get_subscription_id():
+    return os.environ.get("SUBSCRIPTION_ID", "ea4faa5b-5e44-4236-91f6-5483d5b17d14")
+
+
+def _get_tenant_id():
+    return os.environ.get("TENANT_ID", "72f988bf-86f1-41af-91ab-2d7cd011db47")
+
+
+def _get_resource_group():
+    return os.environ.get("RESOURCE_GROUP", "model-monitoring-canary-int-rg")
+
+
+def _get_workspace_name():
+    return os.environ.get("WORKSPACE_NAME", "model-monitoring-canary-int-ws")
+
+
 def _is_main_worker(worker_id):
     return worker_id == "gw0" or worker_id == "master"
 
@@ -50,10 +66,10 @@ def main_worker_lock(worker_id):
 def ml_client() -> MLClient:
     """Return a MLClient used to manage AML resources."""
     ws = MLClient(
-        AzureCliCredential(tenant_id="72f988bf-86f1-41af-91ab-2d7cd011db47"),
-        subscription_id="ea4faa5b-5e44-4236-91f6-5483d5b17d14",
-        resource_group_name="model-monitoring-canary-int-rg",
-        workspace_name="model-monitoring-canary-int-ws",
+        AzureCliCredential(tenant_id=_get_tenant_id()),
+        subscription_id=_get_subscription_id(),
+        resource_group_name=_get_resource_group(),
+        workspace_name=_get_workspace_name(),
     )
     return ws
 
