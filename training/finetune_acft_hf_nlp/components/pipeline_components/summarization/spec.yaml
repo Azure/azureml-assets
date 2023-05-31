@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: summarization_pipeline
-version: 0.0.3
+version: 0.0.4
 type: pipeline
 display_name: Summarization Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for summarization task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/summarization_pipeline) to learn more.
@@ -422,7 +422,7 @@ outputs:
 jobs:
   summarization_model_import:
     type: command
-    component: azureml://registries/azureml/components/summarization_model_import/versions/0.0.3
+    component: azureml://registries/azureml/components/summarization_model_import/versions/0.0.4
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       huggingface_id: ${{parent.inputs.huggingface_id}}
@@ -430,7 +430,7 @@ jobs:
       mlflow_model_path: ${{parent.inputs.mlflow_model_path}}
   summarization_datapreprocess:
     type: command
-    component: azureml://registries/azureml/components/summarization_datapreprocess/versions/0.0.3
+    component: azureml://registries/azureml/components/summarization_datapreprocess/versions/0.0.4
     compute: ${{parent.inputs.compute_preprocess}}
     inputs:
       document_key: ${{parent.inputs.document_key}}
@@ -446,7 +446,7 @@ jobs:
       model_selector_output: ${{parent.jobs.summarization_model_import.outputs.output_dir}}
   summarization_finetune:
     type: command
-    component: azureml://registries/azureml/components/summarization_finetune/versions/0.0.3
+    component: azureml://registries/azureml/components/summarization_finetune/versions/0.0.4
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
