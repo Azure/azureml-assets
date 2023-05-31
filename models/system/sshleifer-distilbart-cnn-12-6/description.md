@@ -7,16 +7,16 @@ The RoBERTa Large model is a large transformer-based language model that was dev
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-summarization" target="_blank">summarization-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-summarization" target="_blank">summarization-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-summarization" target="_blank">summarization-batch-endpoint.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-summarization" target="_blank">summarization-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-sshleifer-distilbart-cnn-12-6_nb.yaml"><img alt="real-time-inference-sshleifer-distilbart-cnn-12-6" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-sshleifer-distilbart-cnn-12-6_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-summarization" target="_blank">summarization-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-summarization" target="_blank">summarization-batch-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-sshleifer-distilbart-cnn-12-6_nb.yaml"><img alt="real-time-inference-sshleifer-distilbart-cnn-12-6" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-sshleifer-distilbart-cnn-12-6_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |--|--|--|--|--|
-Summarization|News Summary|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">CNN DailyMail</a>|<a href="https://aka.ms/azureml-ft-sdk-news-summary" target="_blank">news-summary.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-news-summary" target="_blank">news-summary.sh</a>
-Translation|Translate English to Romanian|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">WMT16</a>|<a href="https://aka.ms/azureml-ft-sdk-translation" target="_blank">translate-english-to-romanian.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-translation" target="_blank">translate-english-to-romanian.sh</a>
+Summarization|News Summary|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">CNN DailyMail</a>|<a href="https://aka.ms/azureml-ft-sdk-news-summary" target="_blank">news-summary.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-summarization-sshleifer-distilbart-cnn-12-6_nb.yaml"><img alt="finetuning-summarization-sshleifer-distilbart-cnn-12-6" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-summarization-sshleifer-distilbart-cnn-12-6_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-news-summary" target="_blank">news-summary.sh</a>
+Translation|Translate English to Romanian|<a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank">WMT16</a>|<a href="https://aka.ms/azureml-ft-sdk-translation" target="_blank">translate-english-to-romanian.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-translation-sshleifer-distilbart-cnn-12-6_nb.yaml"><img alt="finetuning-translation-sshleifer-distilbart-cnn-12-6" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-stranslation-sshleifer-distilbart-cnn-12-6_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-translation" target="_blank">translate-english-to-romanian.sh</a>
 
 
 ### Model Evaluation

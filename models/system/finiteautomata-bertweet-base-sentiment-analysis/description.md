@@ -6,22 +6,22 @@ The pysentimiento library is an open-source tool for non-commercial use and scie
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">entailment-contradiction-online.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">entailment-contradiction-online.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml"><img alt="real-time-inference-finiteautomata-bertweet-base-sentiment-analysis" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml"><img alt="batch-inference-finiteautomata-bertweet-base-sentiment-analysis" src="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml"><img alt="finetuning-text-classification-finiteautomata-bertweet-base-sentiment-analysis" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-finiteautomata-bertweet-base-sentiment-analysis_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
 
 
 ### Model Evaluation
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
-Text Classification|Sentiment Classification|<a href="https://huggingface.co/datasets/glue/viewer/sst2/validation" target="_blank">SST2</a>|<a href="https://aka.ms/evaluate-model-sentiment-analysis" target="_blank">evaluate-model-sentiment-analysis.ipynb</a>|<a href="https://aka.ms/evaluate-model-sentiment-analysis-cli" target="_blank">evaluate-model-sentiment-analysis.yml</a>
+Text Classification|Sentiment Classification|<a href="https://huggingface.co/datasets/glue/viewer/sst2/validation" target="_blank">SST2</a>|<a href="https://aka.ms/evaluate-model-sentiment-analysis" target="_blank">evaluate-model-sentiment-analysis.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-text-classification_nb.yaml"><img alt="evaluation-text-classification" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-text-classification_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/evaluate-model-sentiment-analysis-cli" target="_blank">evaluate-model-sentiment-analysis.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)

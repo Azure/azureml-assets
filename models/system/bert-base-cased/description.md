@@ -6,24 +6,24 @@ The BERT model is a pre-trained model that has been trained on a large corpus of
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-fill-mask" target="_blank">fill-mask-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-cased_nb.yaml"><img alt="real-time-inference-bert-base-cased" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-bert-base-cased_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-fill-mask" target="_blank">fill-mask-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-fill-mask" target="_blank">fill-mask-batch-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-bert-base-cased_nb.yaml"><img alt="batch-inference-bert-base-cased" src="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-bert-base-cased_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
-Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-bert-base-cased_nb.yaml"><img alt="finetuning-text-classification-bert-base-cased" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-bert-base-cased_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-token-classification-bert-base-cased_nb.yaml"><img alt="finetuning-token-classification-bert-base-cased" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-token-classification-bert-base-cased_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-question-answering-bert-base-cased_nb.yaml"><img alt="finetuning-question-answering-bert-base-cased" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-question-answering-bert-base-cased_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
 
 
 ### Model Evaluation
 
 Task | Use case | Dataset | Python sample (Notebook) | CLI with YAML
 |--|--|--|--|--|
-Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a>|<a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
+Fill Mask|Fill Mask|<a href="https://huggingface.co/datasets/rcds/wikipedia-for-mask-filling" target="_blank">rcds/wikipedia-for-mask-filling</a>|<a href="https://aka.ms/azureml-eval-sdk-fill-mask/" target="_blank">evaluate-model-fill-mask.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-fill-mask_nb.yaml"><img alt="evaluation-fill-mask" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-fill-mask_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-eval-cli-fill-mask/" target="_blank">evaluate-model-fill-mask.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)

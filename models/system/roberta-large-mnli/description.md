@@ -8,23 +8,23 @@ Roberta-large-MNLI is a fine-tuned version of the RoBERTa large model on the Mul
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">entailment-contradiction-online.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-classification" target="_blank">entailment-contradiction-online.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-roberta-large-mnli_nb.yaml"><img alt="real-time-inference-roberta-large-mnli" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-roberta-large-mnli_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-text-classification" target="_blank">text-classification-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-classification" target="_blank">entailment-contradiction-batch.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-roberta-large-mnli_nb.yaml"><img alt="batch-inference-roberta-large-mnli" src="https://github.com/Azure/azureml-oss-models/actions/workflows/batch-inference-roberta-large-mnli_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Model Evaluation
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
-Text Classification|Textual Entailment|<a href="https://huggingface.co/datasets/glue/viewer/mnli/validation_matched" target="_blank">MNLI</a>|<a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a>|<a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a>
+Text Classification|Textual Entailment|<a href="https://huggingface.co/datasets/glue/viewer/mnli/validation_matched" target="_blank">MNLI</a>|<a href="https://aka.ms/azureml-eval-sdk-text-classification" target="_blank">evaluate-model-text-classification.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-text-classification_nb.yaml"><img alt="evaluation-text-classification" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-text-classification_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-eval-cli-text-classification" target="_blank">evaluate-model-text-classification.yml</a>
 
 
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-roberta-large-mnli_nb.yaml"><img alt="finetuning-text-classification-roberta-large-mnli" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-roberta-large-mnli_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-token-classification-roberta-large-mnli_nb.yaml"><img alt="finetuning-token-classification-roberta-large-mnli" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-token-classification-roberta-large-mnli_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
 
 
 ### Sample inputs and outputs (for real-time inference)

@@ -7,23 +7,23 @@ Summary: camembert-ner is a NER model fine-tuned from camemBERT on the Wikiner-f
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-token-classification" target="_blank">token-classification-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-token-classification" target="_blank">token-classification-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-token-classification" target="_blank">token-classification-batch-endpoint.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-token-classification" target="_blank">token-classification-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-jean-baptiste-camembert-ner_nb.yaml"><img alt="real-time-inference-jean-baptiste-camembert-ner" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-jean-baptiste-camembert-ner_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-token-classification" target="_blank">token-classification-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-token-classification" target="_blank">token-classification-batch-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-jean-baptiste-camembert-ner_nb.yaml"><img alt="real-time-inference-jean-baptiste-camembert-ner" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-jean-baptiste-camembert-ner_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-jean-baptiste-camembert-ner_nb.yaml"><img alt="finetuning-text-classification-jean-baptiste-camembert-ner" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-jean-baptiste-camembert-ner_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-token-classification-jean-baptiste-camembert-ner_nb.yaml"><img alt="finetuning-token-classification-jean-baptiste-camembert-ner" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-token-classification-jean-baptiste-camembert-ner_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
 
 
 ### Model Evaluation
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
-Token Classification | Token Classification | <a href="https://huggingface.co/datasets/conll2003" target="_blank">CoNLL 2003</a> | <a href="https://aka.ms/azureml-eval-sdk-token-classification" target="_blank">evaluate-model-token-classification.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-token-classification" target="_blank">evaluate-model-token-classification.yml</a>
+Token Classification | Token Classification | <a href="https://huggingface.co/datasets/conll2003" target="_blank">CoNLL 2003</a> | <a href="https://aka.ms/azureml-eval-sdk-token-classification" target="_blank">evaluate-model-token-classification.ipynb</a> <p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-token-classification_nb.yaml"><img alt="evaluation-token-classification" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-token-classification_nb.yaml/badge.svg"/></a></p> | <a href="https://aka.ms/azureml-eval-cli-token-classification" target="_blank">evaluate-model-token-classification.yml</a>
 
 
 ### Sample inputs and outputs (for real-time inference)

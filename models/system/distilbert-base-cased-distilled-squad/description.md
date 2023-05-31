@@ -7,24 +7,24 @@ The DistilBERT model requires significant computational power to train, as it wa
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-question-answering" target="_blank">question-answering-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-question-answering" target="_blank">question-answering-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-question-answering" target="_blank">question-answering-batch-endpoint.ipynb</a>| coming soon
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-question-answering" target="_blank">question-answering-online-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-distilbert-base-cased-distilled-squad_nb.yaml"><img alt="real-time-inference-distilbert-base-cased-distilled-squad" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-distilbert-base-cased-distilled-squad_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-infer-online-cli-question-answering" target="_blank">question-answering-online-endpoint.sh</a>
+Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-question-answering" target="_blank">question-answering-batch-endpoint.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-distilbert-base-cased-distilled-squad_nb.yaml"><img alt="real-time-inference-distilbert-base-cased-distilled-squad" src="https://github.com/Azure/azureml-oss-models/actions/workflows/real-time-inference-distilbert-base-cased-distilled-squad_nb.yaml/badge.svg"/></a></p>| coming soon
 
 
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
-Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
-Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-distilbert-base-cased-distilled-squad_nb.yaml"><img alt="finetuning-text-classification-distilbert-base-cased-distilled-squad" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-text-classification-distilbert-base-cased-distilled-squad_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-emotion-detection" target="_blank">emotion-detection.sh</a>
+Token Classification|Named Entity Recognition|<a href="https://huggingface.co/datasets/conll2003" target="_blank">Conll2003</a>|<a href="https://aka.ms/azureml-ft-sdk-token-classification" target="_blank">named-entity-recognition.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-token-classification-distilbert-base-cased-distilled-squad_nb.yaml"><img alt="finetuning-token-classification-distilbert-base-cased-distilled-squad" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-token-classification-distilbert-base-cased-distilled-squad_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-token-classification" target="_blank">named-entity-recognition.sh</a>
+Question Answering|Extractive Q&A|<a href="https://huggingface.co/datasets/squad" target="_blank">SQUAD (Wikipedia)</a>|<a href="https://aka.ms/azureml-ft-sdk-extractive-qa" target="_blank">extractive-qa.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-question-answering-distilbert-base-cased-distilled-squad_nb.yaml"><img alt="finetuning-question-answering-distilbert-base-cased-distilled-squad" src="https://github.com/Azure/azureml-oss-models/actions/workflows/finetuning-question-answering-distilbert-base-cased-distilled-squad_nb.yaml/badge.svg"/></a></p>|<a href="https://aka.ms/azureml-ft-cli-extractive-qa" target="_blank">extractive-qa.sh</a>
 
 
 ### Model Evaluation
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
-Question Answering | Extractive Q&A | <a href="https://huggingface.co/datasets/squad_v2" target="_blank">Squad v2</a> | <a href="https://aka.ms/azureml-eval-sdk-question-answering" target="_blank">evaluate-model-question-answering.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-question-answering" target="_blank">evaluate-model-question-answering.yml</a>
+Question Answering | Extractive Q&A | <a href="https://huggingface.co/datasets/squad_v2" target="_blank">Squad v2</a> | <a href="https://aka.ms/azureml-eval-sdk-question-answering" target="_blank">evaluate-model-question-answering.ipynb</a><p><a href="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-question-answering_nb.yaml"><img alt="evaluation-question-answering" src="https://github.com/Azure/azureml-oss-models/actions/workflows/evaluation-question-answering_nb.yaml/badge.svg"/></a></p> | <a href="https://aka.ms/azureml-eval-cli-question-answering" target="_blank">evaluate-model-question-answering.yml</a>
 
 
 #### Sample input
