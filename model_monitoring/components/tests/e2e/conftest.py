@@ -5,11 +5,13 @@
 
 from datetime import datetime
 import os
+from glob import glob
 from typing import List
 import time
 
 from azure.ai.ml import MLClient, load_component
-from azure.ai.ml.entities import Job
+from azure.ai.ml.constants import AssetTypes
+from azure.ai.ml.entities import Job, Data
 from azure.identity import AzureCliCredential
 import pytest
 
@@ -52,13 +54,24 @@ def _watch_file(file: str, timeout_in_seconds):
             break
 
 
+def _create_data_asset(ml_client: MLClient, name: str, path: str, type: AssetTypes):
+    my_data = Data(
+        path=path,
+        type=type,
+        name=name,
+        version='1'
+    )
+    print(f"Creating a {type} data asset with name '{name}'")
+    ml_client.data.create_or_update(my_data)
+
+
 @pytest.fixture(scope="session")
 def main_worker_lock(worker_id):
     """Lock until the main worker releases its lock."""
     if _is_main_worker(worker_id):
         return worker_id
 
-    _watch_file(file=lock_file, timeout_in_seconds=60)
+    _watch_file(file=lock_file, timeout_in_seconds=120)
     return worker_id
 
 
@@ -72,6 +85,28 @@ def ml_client() -> MLClient:
         workspace_name=_get_workspace_name(),
     )
     return ws
+
+
+@pytest.fixture(scope="session")
+def e2e_resources_directory(components_directory):
+    return os.path.abspath(os.path.join(components_directory, "tests", "e2e", "resources"))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def register_data_assets(main_worker_lock, ml_client, e2e_resources_directory) -> MLClient:
+    """Return a MLClient used to manage AML resources."""
+    if not _is_main_worker(main_worker_lock):
+        return
+
+    registered_data_assets = [x.name for x in ml_client.data.list()]
+    for directory in glob(f"{e2e_resources_directory}/*", recursive = False):
+        name = os.path.basename(directory)
+
+        if name not in registered_data_assets:
+            if "mltable" in name:
+                _create_data_asset(ml_client, name, directory, AssetTypes.MLTABLE)
+            if "uri_folder" in name:
+                _create_data_asset(ml_client, name, directory, AssetTypes.URI_FOLDER)
 
 
 @pytest.fixture(scope="session")
@@ -142,6 +177,12 @@ def test_suite_name() -> str:
     """Name of the test suite."""
     return os.environ.get("BUILD_SOURCEBRANCH", "local").replace("/", "_")
 
+
+@pytest.fixture(scope="session", autouse=True)
+def test_suite_name() -> str:
+    """Name of the test suite."""
+    return os.environ.get("BUILD_SOURCEBRANCH", "local").replace("/", "_")
+    
 
 @pytest.fixture(scope="session", autouse=True)
 def publish_command_components(
