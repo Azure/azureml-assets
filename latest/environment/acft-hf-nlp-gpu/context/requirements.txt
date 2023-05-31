@@ -1,5 +1,5 @@
-azureml-acft-accelerator==0.0.10
-azureml-acft-contrib-hf-nlp==0.0.10
+azureml-acft-accelerator==0.0.11
+azureml-acft-contrib-hf-nlp==0.0.11
 mltable==1.3.0
 datasets==2.12.0
 mpi4py==3.1.4
