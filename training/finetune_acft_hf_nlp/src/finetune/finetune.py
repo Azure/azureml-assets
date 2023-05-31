@@ -10,7 +10,7 @@ from argparse import Namespace
 
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
-from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants
+from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, HfModelTypes
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
@@ -51,6 +51,15 @@ IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     "decapoda-research/llama-30b-hf",           # llama
     "decapoda-research/llama-65b-hf",           # llama
 ]
+
+MLFLOW_HFTRANSFORMERS_MISC_CONF = {
+    # updating the parameters will override any existing misc conf keys
+    HfModelTypes.LLAMA: {
+        "tokenizer_hf_load_kwargs": {
+            "model_input_names": ["input_ids", "attention_mask"],
+        },
+    },
+}
 
 
 def str2bool(arg):
@@ -356,6 +365,20 @@ def finetune(args: Namespace):
     if hasattr(args, "model_name") and args.model_name in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
         logger.info(f"Forcing `ignore_mismatched_sizes` to False for {args.model_name}")
         setattr(args, "ignore_mismatched_sizes", False)
+    
+    model_name_or_type = None
+    # pass `mlflow_hftransformers_misc_conf` to be set in mlflow model
+    if hasattr(args, "model_name") and args.model_name in MLFLOW_HFTRANSFORMERS_MISC_CONF:
+        model_name_or_type = args.model_name
+    if hasattr(args, "model_type") and args.model_type in MLFLOW_HFTRANSFORMERS_MISC_CONF:
+        model_name_or_type = args.model_type
+    if model_name_or_type is not None:
+        mlflow_hftransformers_misc_conf = MLFLOW_HFTRANSFORMERS_MISC_CONF[model_name_or_type]
+        logger.info(
+            f"Forcing `mlflow_hftransformers_misc_conf` to set to {mlflow_hftransformers_misc_conf} "
+            f"for {model_name_or_type}"
+        )
+        setattr(args, "mlflow_hftransformers_misc_conf", mlflow_hftransformers_misc_conf)
 
     # Below arguments are needed for HF training args
     args.output_dir = args.pytorch_model_folder
