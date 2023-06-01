@@ -19,6 +19,7 @@ import pandas as pd
 from spacy.cli import download
 
 from responsibleai import __version__ as responsibleai_version
+from responsibleai.feature_metadata import FeatureMetadata
 
 from responsibleai_text import (
     RAITextInsights,
@@ -27,6 +28,8 @@ from responsibleai_text import (
 from raiutils.data_processing import serialize_json_safe
 
 from azureml.rai.utils import ModelSerializer
+
+from _telemetry._loggerfactory import _LoggerFactory, track
 
 # Local
 from constants import TaskType
@@ -38,6 +41,18 @@ logging.basicConfig(level=logging.INFO)
 
 
 TEXT_DATA_TYPE = "text"
+
+_ai_logger = None
+
+
+def _get_logger():
+    global _ai_logger
+    if _ai_logger is None:
+        _ai_logger = _LoggerFactory.get_logger(__file__)
+    return _ai_logger
+
+
+_get_logger()
 
 
 class DashboardInfo:
@@ -126,6 +141,7 @@ def parse_args():
     parser.add_argument("--test_dataset", type=str, required=True)
 
     parser.add_argument("--target_column_name", type=str, required=True)
+    parser.add_argument("--text_column_name", type=str, required=False)
 
     parser.add_argument("--maximum_rows_for_test_dataset", type=int,
                         default=5000)
@@ -134,6 +150,12 @@ def parse_args():
     )
 
     parser.add_argument("--classes", type=str, help="Optional[List[str]]")
+
+    parser.add_argument("--categorical_metadata_features", type=str,
+                        help="Optional[List[str]]")
+
+    parser.add_argument("--dropped_metadata_features", type=str,
+                        help="Optional[List[str]]")
 
     # Explanations
     parser.add_argument("--enable_explanation", type=boolean_parser)
@@ -250,6 +272,7 @@ def add_properties_to_gather_run(
     _logger.info("Properties added to gather run")
 
 
+@track(_get_logger)
 def main(args):
     _logger.info("Loading evaluation dataset")
     test_df = load_dataset(args.test_dataset)
@@ -269,6 +292,8 @@ def main(args):
         tracking_uri=tracking_uri)
     text_model = model_serializer.load("Ignored path")
 
+    text_column = args.text_column_name
+
     if args.task_type == TaskType.MULTILABEL_TEXT_CLASSIFICATION:
         target_column = get_from_args(
             args=args,
@@ -278,6 +303,20 @@ def main(args):
         )
     else:
         target_column = args.target_column_name
+
+    feature_metadata = FeatureMetadata()
+    feature_metadata.categorical_features = get_from_args(
+        args=args,
+        arg_name="categorical_metadata_features",
+        custom_parser=json_empty_is_none_parser,
+        allow_none=True
+    )
+    feature_metadata.dropped_features = get_from_args(
+        args=args,
+        arg_name="dropped_metadata_features",
+        custom_parser=json_empty_is_none_parser,
+        allow_none=True
+    )
 
     _logger.info("Creating RAI Text Insights")
     rai_ti = RAITextInsights(
@@ -291,6 +330,8 @@ def main(args):
         ),
         maximum_rows_for_test=args.maximum_rows_for_test_dataset,
         serializer=model_serializer,
+        feature_metadata=feature_metadata,
+        text_column=text_column
     )
 
     included_tools: Dict[str, bool] = {
