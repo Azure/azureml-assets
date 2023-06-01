@@ -365,7 +365,7 @@ def finetune(args: Namespace):
     if hasattr(args, "model_name") and args.model_name in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
         logger.info(f"Forcing `ignore_mismatched_sizes` to False for {args.model_name}")
         setattr(args, "ignore_mismatched_sizes", False)
-    
+
     model_name_or_type = None
     # pass `mlflow_hftransformers_misc_conf` to be set in mlflow model
     if hasattr(args, "model_name") and args.model_name in MLFLOW_HFTRANSFORMERS_MISC_CONF:
