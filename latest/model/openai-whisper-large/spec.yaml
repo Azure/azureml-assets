@@ -3,7 +3,7 @@ name: openai-whisper-large
 path: ./
 properties:
   SHA: e80f01dc6f24d14fdb05a0a3cfdb7f0ab2ec17fe
-  inference-min-sku-spec: 8|0|28|56
+  inference-min-sku-spec: 4|0|28|32
   inference-recommended-sku: Standard_DS4_v2
   languages: en, zh, de, es, ru, ko, fr, ja, pt, tr, pl, ca, nl, ar, sv, it, id, hi,
     fi, vi, he, uk, el, ms, cs, ro, da, hu, ta, no, th, ur, hr, bg, lt, la, mi, ml,
