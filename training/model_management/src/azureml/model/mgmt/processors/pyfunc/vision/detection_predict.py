@@ -38,21 +38,34 @@ def _create_temp_file(request_body: bytes, parent_dir: str) -> str:
 
 
 def _process_image(img: pd.Series) -> pd.Series:
-    """Process the image input (image url or base64 string) and return bytes.
+    """Process input image.
 
-    :param img: pandas series with image in base64 string format or url
+    If input image is in bytes format, return it as it is.
+    If input image is in base64 string format, decode it to bytes.
+    If input image is in url format, download it and return bytes.
+    https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
+
+    :param img: pandas series with image in base64 string format or url or bytes.
     :type img: pd.Series
     :return: decoded image in pandas series format.
     :rtype: Pandas Series
     """
     image = img[0]
-    if _is_valid_url(image):
-        image = requests.get(image).content
-        return pd.Series(image)
-    try:
-        return pd.Series(base64.b64decode(image))
-    except Exception:
-        raise ValueError("Invalid image format")
+    if isinstance(image, bytes):
+        return img
+    elif isinstance(image, str):
+        if _is_valid_url(image):
+            image = requests.get(image).content
+            return pd.Series(image)
+        else:
+            try:
+                return pd.Series(base64.b64decode(image))
+            except ValueError:
+                raise ValueError("The provided image string cannot be decoded."
+                                 "Expected format is base64 string or url string.")
+    else:
+        raise ValueError(f"Image received in {type(image)} format which is not supported."
+                         "Expected format is bytes, base64 string or url string.")
 
 
 def _is_valid_url(text: str) -> bool:

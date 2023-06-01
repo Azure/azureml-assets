@@ -47,7 +47,7 @@ def _get_default_task_signatures(task) -> Dict:
         }
     elif SupportedVisionTasks.has_value(task):
         return {
-            "inputs": '[{"name": "image", "type": "string"}]',
+            "inputs": '[{"name": "image", "type": "binary"}]',
             "outputs": '[{"name": "probs", "type": "string"}, {"name": "labels", "type": "string"}]',
         }
     elif SupportedNLPTasks.has_value(task):

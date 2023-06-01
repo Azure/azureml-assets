@@ -81,23 +81,32 @@ def create_temp_file(request_body: bytes, parent_dir: str) -> str:
 def _process_image(img: pd.Series) -> pd.Series:
     """Process input image.
 
+    If input image is in bytes format, return it as it is.
     If input image is in base64 string format, decode it to bytes.
     If input image is in url format, download it and return bytes.
     https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
 
-    :param img: pandas series with image in base64 string format or url.
+    :param img: pandas series with image in base64 string format or url or bytes.
     :type img: pd.Series
     :return: decoded image in pandas series format.
     :rtype: Pandas Series
     """
     image = img[0]
-    if _is_valid_url(image):
-        image = requests.get(image).content
-        return pd.Series(image)
-    try:
-        return pd.Series(base64.b64decode(image))
-    except Exception:
-        raise ValueError("Invalid image format")
+    if isinstance(image, bytes):
+        return img
+    elif isinstance(image, str):
+        if _is_valid_url(image):
+            image = requests.get(image).content
+            return pd.Series(image)
+        else:
+            try:
+                return pd.Series(base64.b64decode(image))
+            except ValueError:
+                raise ValueError("The provided image string cannot be decoded."
+                                 "Expected format is base64 string or url string.")
+    else:
+        raise ValueError(f"Image received in {type(image)} format which is not supported."
+                         "Expected format is bytes, base64 string or url string.")
 
 
 def _is_valid_url(text: str) -> bool:
@@ -163,13 +172,12 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
 
     with tempfile.TemporaryDirectory() as tmp_output_dir:
         image_path_list = decoded_images.iloc[:, 0].map(lambda row: create_temp_file(row, tmp_output_dir)).tolist()
-        predicted_indexes, conf_scores = run_inference_batch(
+        conf_scores = run_inference_batch(
             test_args,
             image_processor=tokenizer,
             model=model,
             image_path_list=image_path_list,
             task_type=task,
-            threshold=kwargs.get(MLFlowLiterals.THRESHOLD, None),
         )
 
     df_result = pd.DataFrame(
@@ -180,21 +188,9 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
     )
 
     labels = kwargs.get(MLFlowLiterals.TRAIN_LABEL_LIST)
-
-    if task == HFTaskLiterals.MULTI_CLASS_IMAGE_CLASSIFICATION:
-        predicted_labels = [labels[index] for index in predicted_indexes]
-    else:
-        predicted_labels = []
-        for predicted_index in predicted_indexes:
-            image_labels = []
-            for index, pred in enumerate(predicted_index):
-                if pred == 1:
-                    image_labels.append(labels[index])
-            predicted_labels.append(image_labels)
-
+    labels = [labels.tolist()] * len(conf_scores)
     df_result[MLFlowLiterals.PROBS], df_result[MLFlowLiterals.LABELS] = (
-        conf_scores.tolist(),
-        predicted_labels,
+        conf_scores.tolist(), labels,
     )
     return df_result
 
@@ -205,8 +201,7 @@ def run_inference_batch(
     model: AutoModelForImageClassification,
     image_path_list: List,
     task_type: HFTaskLiterals,
-    threshold: Optional[float] = None,
-) -> Tuple[torch.tensor, torch.tensor]:
+) -> Tuple[torch.tensor]:
     """Perform inference on batch of input images.
 
     :param test_args: Training arguments path.
@@ -219,10 +214,8 @@ def run_inference_batch(
     :type image_path_list: List
     :param task_type: Task type of the model.
     :type task_type: HFTaskLiterals
-    :param threshold: threshold for multi_label_classification
-    :type threshold: optional, float
-    :return: Predicted labels index, Predicted probabilities
-    :rtype: Tuple of torch.tensor, torch.tensor
+    :return: Predicted probabilities
+    :rtype: Tuple of torch.tensor
     """
 
     def collate_fn(examples: List[Dict[str, Any]]) -> Dict[str, torch.tensor]:
@@ -249,14 +242,7 @@ def run_inference_batch(
     results = trainer.predict(inference_dataset)
     if task_type == HFTaskLiterals.MULTI_CLASS_IMAGE_CLASSIFICATION:
         probs = torch.nn.functional.softmax(torch.from_numpy(results.predictions), dim=1).numpy()
-        y_pred = np.argmax(probs, axis=1)
     elif task_type == HFTaskLiterals.MULTI_LABEL_CLASSIFICATION:
         sigmoid = torch.nn.Sigmoid()
-        threshold = threshold or HFMiscellaneousConstants.DEFAULT_THRESHOLD
-
         probs = sigmoid(torch.from_numpy(results.predictions)).numpy()
-        y_pred = np.zeros(probs.shape)
-        # next, use threshold to turn them into integer predictions
-        y_pred[np.where(probs >= threshold)] = 1
-
-    return y_pred, probs
+    return probs
