@@ -99,7 +99,7 @@ def register_data_assets(main_worker_lock, ml_client, e2e_resources_directory) -
         return
 
     registered_data_assets = [x.name for x in ml_client.data.list()]
-    for directory in glob(f"{e2e_resources_directory}/*", recursive = False):
+    for directory in glob(f"{e2e_resources_directory}/*", recursive=False):
         name = os.path.basename(directory)
 
         if name not in registered_data_assets:
@@ -177,12 +177,6 @@ def test_suite_name() -> str:
     """Name of the test suite."""
     return os.environ.get("BUILD_SOURCEBRANCH", "local").replace("/", "_")
 
-
-@pytest.fixture(scope="session", autouse=True)
-def test_suite_name() -> str:
-    """Name of the test suite."""
-    return os.environ.get("BUILD_SOURCEBRANCH", "local").replace("/", "_")
-    
 
 @pytest.fixture(scope="session", autouse=True)
 def publish_command_components(
