@@ -89,6 +89,7 @@ def ml_client() -> MLClient:
 
 @pytest.fixture(scope="session")
 def e2e_resources_directory(components_directory):
+    """Return the path to the directory holding model monitoring's e2e resources."""
     return os.path.abspath(os.path.join(components_directory, "tests", "e2e", "resources"))
 
 
