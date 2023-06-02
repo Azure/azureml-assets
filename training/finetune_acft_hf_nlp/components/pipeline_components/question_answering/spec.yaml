@@ -69,7 +69,7 @@ inputs:
   answers_key:
     type: string
     optional: false
-    description: The value of this field is text in JSON format with two nested keys: answer_start_key and answer_text_key with their corresponding values. Special characters like \ and ' are invalid in the parameter value.
+    description: "The value of this field is text in JSON format with two nested keys: answer_start_key and answer_text_key with their corresponding values. Special characters like \ and ' are invalid in the parameter value."
 
   answer_start_key:
     type: string
