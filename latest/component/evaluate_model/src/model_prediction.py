@@ -158,7 +158,7 @@ class Inferencer:
             data = self.load_data(test_data, label_column_name, input_column_names, is_mltable=is_mltable)
 
         for idx, (X_test, y_test_chunk) in enumerate(data):
-            logger.info("batch: "+str(idx))
+            logger.info("batch: " + str(idx))
             y_transformer = None
             predictor_cls = get_predictor(self.task)
             predictor = predictor_cls(self.model)
@@ -290,9 +290,17 @@ def test_model():
             config_file=args.config_file_name,
             metrics_config=met_config
         )
-        preds, pred_probas, ground_truth = runner.predict(data, label_column_name=args.label_column_name,
-                                                          input_column_names=args.input_column_names,
-                                                          is_mltable=is_mltable)
+        try:
+            preds, pred_probas, ground_truth = runner.predict(data, label_column_name=args.label_column_name,
+                                                              input_column_names=args.input_column_names,
+                                                              is_mltable=is_mltable)
+        except Exception as e:
+            if isinstance(e, PredictException):
+                raise e
+            message = "Model Prediction Failed. See inner error."
+            raise PredictException(exception_message=message,
+                                   inner_exception=e)
+
         preds.to_json(args.predictions, orient="records", lines=True)
 
         preds_file_name = args.predictions.split(os.sep)[-1]

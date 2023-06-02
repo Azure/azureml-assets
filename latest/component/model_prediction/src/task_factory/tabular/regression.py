@@ -23,7 +23,7 @@ class TabularRegressor(PredictWrapper):
             _type_: _description_
         """
         if self.is_torch:
-            y_pred = self.model.predict(X_test, device=kwargs.get("device", "cpu"))
+            y_pred = self.model.predict(X_test, device=kwargs.get("device", -1))
         else:
             y_pred = self.model.predict(X_test)
         return y_pred

@@ -13,7 +13,7 @@ import numpy as np
 from azureml.telemetry.activity import log_activity
 
 import constants
-from exceptions import DataLoaderException, DataValidationException
+from exceptions import DataLoaderException, DataValidationException, ComputeMetricsException
 from logging_utilities import custom_dimensions, get_logger, log_traceback
 from utils import (read_compute_metrics_config,
                    check_and_return_if_mltable,
@@ -21,6 +21,7 @@ from utils import (read_compute_metrics_config,
                    evaluate_predictions)
 from run_utils import TestRun
 from validation import validate_compute_metrics_args
+from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 
 logger = get_logger(name=__name__)
 current_run = TestRun()
@@ -140,12 +141,28 @@ class ModelEvaluationRunner:
         with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME,
                           custom_dimensions=self.custom_dimensions):
             ground_true_regressors = None
+            rename_columns = {}
             if self.task == constants.TASK.FORECASTING:
                 ground_truth = self.ground_truth.pop(self.ground_truths_column_name).values
                 ground_true_regressors = self.ground_truth
                 self.ground_truth = ground_truth
-                if self.predictions_column_name and isinstance(self.predictions, pd.DataFrame):
-                    self.predictions = self.predictions.pop(self.predictions_column_name)
+                forecast_origin_column = self.metrics_config.get(
+                    constants.ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME,
+                    constants.ForecastColumns._FORECAST_ORIGIN_COLUMN_DEFAULT)
+                if isinstance(self.predictions, pd.DataFrame):
+                    # In rolling forecast scenarios we will need to convert the horizon origins to datetime
+                    # and give it a default name. Later we will rename this column back.
+                    if forecast_origin_column in ground_true_regressors:
+                        ground_true_regressors[forecast_origin_column] = pd.to_datetime(
+                            self.predictions[forecast_origin_column], unit='ms')
+                        if forecast_origin_column != constants.ForecastColumns._FORECAST_ORIGIN_COLUMN_DEFAULT:
+                            ground_true_regressors.rename({
+                                forecast_origin_column: constants.ForecastColumns._FORECAST_ORIGIN_COLUMN_DEFAULT},
+                                inplace=True, axis=1)
+                            rename_columns = {
+                                constants.ForecastColumns._FORECAST_ORIGIN_COLUMN_DEFAULT: forecast_origin_column}
+                    if self.predictions_column_name:
+                        self.predictions = self.predictions.pop(self.predictions_column_name)
             result = evaluate_predictions(self.ground_truth, self.predictions, self.predictions_probabilities,
                                           self.task, self.metrics_config, ground_true_regressors)
             if result:
@@ -154,6 +171,16 @@ class ModelEvaluationRunner:
                 for metrics, value in scalar_metrics.items():
                     formatted = f"{metrics}: {value}"
                     logger.info(formatted)
+                if self.task == constants.TASK.FORECASTING and rename_columns \
+                        and 'forecast_time_series_id_distribution_table' in result.artifacts:
+                    artifact_content = result.artifacts['forecast_time_series_id_distribution_table'].content
+                    ts_id_table = pd.DataFrame(artifact_content['data'])
+                    ts_id_table.rename(rename_columns, axis=1, inplace=True)
+                    artifact_content['data'] = ts_id_table.to_dict(orient='recrds')
+                    new_table = JsonEvaluationArtifact(
+                        uri=result.artifacts['forecast_time_series_id_distribution_table'].uri,
+                        content=artifact_content)
+                    result.artifacts['forecast_time_series_id_distribution_table'] = new_table
                 result.save(os.path.join(self.output, constants.EVALUATION_RESULTS_PATH))
         return
 
@@ -172,8 +199,12 @@ class ModelEvaluationRunner:
                 message = "Couldn't load data."
                 log_traceback(e, logger, message, True)
                 raise DataLoaderException(message, inner_exception=e)
-
-        self.compute_metrics()
+        try:
+            self.compute_metrics()
+        except Exception as e:
+            message = "Compute metrics failed. See Inner error."
+            raise ComputeMetricsException(exception_message=message,
+                                          inner_exception=e)
 
 
 def filter_ground_truths(data, task_type, column_name=None):
@@ -280,9 +311,11 @@ def test_component():
             if not args.predictions_column_name:
                 args.predictions_column_name = metrics_config.get('predictions_column_name')
             if not args.ground_truths_column_name or (not is_ground_truths_mltable and not args.ground_truths):
-                message = ("For forecasting tasks, the table needs to be provided in jsonl format as the "
-                           "ground_truths parameter or as mltable through ground_truths_mltable parameter. The "
-                           "table must contain time, prediction groud truth and time series IDs columns.")
+                message = (
+                    "For forecasting tasks, the table needs to be provided "
+                    "in jsonl format as the ground_truths parameter  "
+                    "or as mltable through ground_truths_mltable parameter. The table must contain time, prediction "
+                    "groud truth and time series IDs columns.")
                 raise DataValidationException(message)
         runner = ModelEvaluationRunner(
             task=args.task,

@@ -441,7 +441,8 @@ class ArgumentsSet:
         """
         args_map = {
             ForecastingConfigContract.TIME_COLUMN_NAME: "str(val)",
-            ForecastingConfigContract.TIME_SERIES_ID_COLUMN_NAMES: "val"
+            ForecastingConfigContract.TIME_SERIES_ID_COLUMN_NAMES: "val",
+            ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)"
         }
         return args_map
 

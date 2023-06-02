@@ -46,11 +46,18 @@ class Translator(PredictWrapper):
             self._validate_translation_langs(source_lang, target_lang)
             task_type = "translation_"+source_lang+"_to_"+target_lang
             logger.info("Updating hf conf with task type"+task_type)
-            print("Updating hf conf with task type"+task_type)
             kwargs["task_type"] = task_type
         try:
             y_pred = self.model.predict(X_test, **kwargs)
         except TypeError:
             y_pred = self.model.predict(X_test)
+        except RuntimeError as re:
+            device = kwargs.get("device", -1)
+            if device != -1:
+                logger.warning("Predict failed on GPU. Falling back to CPU")
+                kwargs["device"] = -1
+                y_pred = self.model.predict(X_test, **kwargs)
+            else:
+                raise re
 
         return y_pred

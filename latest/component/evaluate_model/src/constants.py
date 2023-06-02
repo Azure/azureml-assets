@@ -145,6 +145,7 @@ class ForecastingConfigContract:
 
     TIME_COLUMN_NAME = 'time_column_name'
     TIME_SERIES_ID_COLUMN_NAMES = 'time_series_id_column_names'
+    FORECAST_ORIGIN_COLUMN_NAME = 'forecast_origin_column_name'
 
 
 class ForecastColumns:
@@ -152,9 +153,12 @@ class ForecastColumns:
 
     _ACTUAL_COLUMN_NAME = '_automl_actual'
     _FORECAST_COLUMN_NAME = '_automl_forecast'
+    _FORECAST_ORIGIN_COLUMN_DEFAULT = '_automl_forecast_origin'
 
 
 ALLOWED_PIPELINE_PARAMS = set([
     "tokenizer_config",
-    "model_kwargs"
+    "model_kwargs",
+    "pipeline_init_args",
+    "trust_remote_code"
 ])
