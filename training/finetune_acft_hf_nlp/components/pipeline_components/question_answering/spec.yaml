@@ -29,11 +29,13 @@ inputs:
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
   num_nodes_finetune:
     type: integer
+    min: 1
     default: 1
     optional: true
     description: number of nodes to be used for finetuning (used for distributed training)
   number_of_gpu_to_use_finetuning:
     type: integer
+    min: 1
     default: 1
     optional: true
     description: number of gpus to be used per node for finetuning, should be equal
@@ -83,24 +85,28 @@ inputs:
 
   doc_stride:
     type: integer
+    min: 1
     default: 128
     optional: true
     description: The amount of context overlap to keep in case the number of tokens per example exceed __max_seq_length__
 
   n_best_size:
     type: integer
+    min: 1
     default: 20
     optional: true
     description: The `top_n` max probable start tokens and end tokens to be consider while generating possible answers.
 
   max_answer_length_in_tokens:
     type: integer
+    min: 1
     default: 30
     optional: true
     description: The maximum allowed answer length specified in token length. The default value for this parameter is 30. All the answers with above 30 tokens will not be considered as a possible answer.
 
   batch_size:
     type: integer
+    min: 1
     optional: true
     default: 1000
     description: Number of examples to batch before calling the tokenization function
@@ -174,6 +180,7 @@ inputs:
 
   num_train_epochs:
     type: integer
+    min: 1
     default: 1
     optional: true
     description: Number of epochs to run for finetune.
@@ -186,12 +193,14 @@ inputs:
 
   per_device_train_batch_size:
     type: integer
+    min: 1
     default: 1
     optional: true
     description: Per gpu batch size used for training. The effective training batch size is _per_device_train_batch_size_ * _num_gpus_ * _num_nodes_.
 
   per_device_eval_batch_size:
     type: integer
+    min: 1
     default: 1
     optional: true
     description: Per gpu batch size used for validation. The default value is 1. The effective validation batch size is _per_device_eval_batch_size_ * _num_gpus_ * _num_nodes_.
