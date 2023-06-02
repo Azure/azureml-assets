@@ -6,6 +6,7 @@ RUN ls -lh
 
 USER root
 RUN apt-get -y update
+RUN pip install --upgrade pip
 
 COPY requirements.txt .
 
