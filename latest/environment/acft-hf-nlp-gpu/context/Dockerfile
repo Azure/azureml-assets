@@ -1,15 +1,16 @@
 #PTCA image
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1131@sha256:c368e4e0f5b7ac9ff002b2a1e3f794af1dc2eef4ff63bc1f39b1072bb7a264a0
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1131@sha256:91fdc953a040ad0e0fafb7ca7e3820c5ce60ce3355c9ba81c7c09a86346701c3
 
 # ls root dir
 RUN ls -lh
 
 USER root
 RUN apt-get -y update
+RUN pip install --upgrade pip
 
 COPY requirements.txt .
 
-RUN pip install "azureml-evaluate-mlflow==0.0.11"
+RUN pip install "azureml-evaluate-mlflow==0.0.12"
 RUN pip install -r requirements.txt --no-cache-dir
 RUN python -m nltk.downloader punkt
 
