@@ -8,6 +8,8 @@ import argparse
 from pathlib import Path
 from argparse import Namespace
 
+import torch
+
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
 from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, HfModelTypes
@@ -17,8 +19,8 @@ from azureml.acft.accelerator.utils.run_utils import add_run_properties
 from azureml.acft.accelerator.utils.decorators import swallow_all_exceptions
 from azureml.acft.accelerator.utils.logging_utils import get_logger_app
 
-from azureml.acft.accelerator.utils.error_handling.exceptions import LLMException
-from azureml.acft.accelerator.utils.error_handling.error_definitions import LLMInternalError
+from azureml.acft.accelerator.utils.error_handling.exceptions import LLMException, ValidationException
+from azureml.acft.accelerator.utils.error_handling.error_definitions import LLMInternalError, SKUNotSupported
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 # Refer this logging issue
@@ -437,6 +439,9 @@ def finetune(args: Namespace):
 @swallow_all_exceptions(logger)
 def main():
     """Parse args and finetune."""
+    if not torch.cuda.is_available():
+        raise ValidationException._with_error(AzureMLError.create(SKUNotSupported))
+
     parser = get_parser()
     args, _ = parser.parse_known_args()
 
