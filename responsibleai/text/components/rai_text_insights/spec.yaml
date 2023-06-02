@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/CommandComponent.json
 name: rai_text_insights
 display_name: RAI Text Insights
-version: 0.0.5
+version: 0.0.6
 tags:
   Preview: ""
 type: command
@@ -19,10 +19,20 @@ inputs:
     type: mltable
   target_column_name:
     type: string
+  text_column_name:
+    type: string
+    optional: true
+    default: ''
   maximum_rows_for_test_dataset:
     type: integer
     default: 5000
   classes:
+    type: string # Optional[List[str]]
+    default: '[]'
+  categorical_metadata_features:
+    type: string # Optional[List[str]]
+    default: '[]'
+  dropped_metadata_features:
     type: string # Optional[List[str]]
     default: '[]'
   enable_explanation:
@@ -43,7 +53,7 @@ outputs:
   ux_json:
     type: path
 code: ../src
-environment: azureml://registries/azureml/environments/responsibleai-text-ubuntu20.04-py38-cpu/versions/17
+environment: azureml://registries/azureml/environments/responsibleai-text-ubuntu20.04-py38-cpu/versions/20
 command: >-
   python ./rai_text_insights.py
   --task_type ${{inputs.task_type}}
@@ -51,8 +61,11 @@ command: >-
   --model_info '${{inputs.model_info}}'
   --test_dataset ${{inputs.test_dataset}}
   --target_column_name '${{inputs.target_column_name}}'
+  $[[--text_column_name '${{inputs.text_column_name}}']]
   --maximum_rows_for_test_dataset ${{inputs.maximum_rows_for_test_dataset}}
   --classes '${{inputs.classes}}'
+  --categorical_metadata_features '${{inputs.categorical_metadata_features}}'
+  --dropped_metadata_features '${{inputs.dropped_metadata_features}}'
   --enable_explanation ${{inputs.enable_explanation}}
   --enable_error_analysis ${{inputs.enable_error_analysis}}
   --use_model_dependency ${{inputs.use_model_dependency}}
