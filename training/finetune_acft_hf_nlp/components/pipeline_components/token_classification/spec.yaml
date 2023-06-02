@@ -11,22 +11,22 @@ inputs:
     type: string
     optional: false
     description: compute to be used for model_import eg. provide 'FT-Cluster' if
-      your compute is named 'FT-Cluster'
+      your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
   compute_preprocess:
     type: string
     optional: false
     description: compute to be used for preprocess eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
   compute_finetune:
     type: string
     optional: false
     description: compute to be used for finetune eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
   compute_model_evaluation:
     type: string
     optional: false
     description: compute to be used for finetune eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
   num_nodes_finetune:
     type: integer
     default: 1
@@ -42,29 +42,29 @@ inputs:
   # Model Import parameters (See [docs](https://aka.ms/azureml/components/token_classification_model_import) to learn more)
   huggingface_id:
     type: string
-    description: The string can be any valid Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=token-classification&sort=downloads). Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms.
+    description: The string can be any valid Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=token-classification&sort=downloads). Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms. Special characters like \ and ' are invalid in the parameter value.
     optional: true
 
   pytorch_model_path:
     type: custom_model
     optional: true
-    description: Pytorch model asset path
+    description: Pytorch model asset path. Special characters like \ and ' are invalid in the parameter value.
 
   mlflow_model_path:
     type: mlflow_model
     optional: true
-    description: MLflow model asset path
+    description: MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.
 
   # Data PreProcess parameters (See [docs](https://aka.ms/azureml/components/token_classification_datapreprocess) to learn more)
   token_key:
     type: string
     optional: false
-    description: Key for tokens in each example line
+    description: Key for tokens in each example line. Special characters like \ and ' are invalid in the parameter value.
 
   tag_key:
     type: string
     optional: false
-    description: Key for tags in each example line
+    description: Key for tags in each example line. Special characters like \ and ' are invalid in the parameter value.
 
   batch_size:
     type: integer
@@ -75,32 +75,32 @@ inputs:
   train_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.
 
   test_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.
 
   train_mltable_path:
     type: mltable
     optional: true
-    description: Path to the registered training data asset in `mltable` format.
+    description: Path to the registered training data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.
 
   validation_mltable_path:
     type: mltable
     optional: true
-    description: Path to the registered validation data asset in `mltable` format.
+    description: Path to the registered validation data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.
 
   test_mltable_path:
     type: mltable
     optional: true
-    description: Path to the registered test data asset in `mltable` format.
+    description: Path to the registered test data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.
 
   # Finetune parameters (See [docs](https://aka.ms/azureml/components/token_classification_finetune) to learn more)
   apply_lora:
@@ -379,7 +379,7 @@ inputs:
   deepspeed:
     type: uri_file
     optional: true
-    description: Deepspeed config to be used for finetuning
+    description: Deepspeed config to be used for finetuning. Special characters like \ and ' are invalid in the parameter value.
 
   apply_ort:
     type: string
@@ -394,7 +394,7 @@ inputs:
   evaluation_config:
     type: uri_file
     optional: true
-    description: Additional parameters for Computing Metrics
+    description: Additional parameters for Computing Metrics. Special characters like \ and ' are invalid in the parameter value.
 
   evaluation_config_params:
     type: string
