@@ -12,6 +12,8 @@ from PIL import Image
 from typing import cast, Dict
 
 from azureml.automl.core.shared.constants import MLTableLiterals, MLTableDataLabel
+
+from azureml.acft.common_components import get_logger_app
 from azureml.acft.common_components.image.runtime_common.common import (
     utils,
 )
@@ -21,12 +23,11 @@ from azureml.acft.common_components.image.runtime_common.common.aml_dataset_base
 from azureml.acft.common_components.image.runtime_common.classification.io.read.dataset_wrappers import (
     AmlDatasetWrapper,
 )
+
 from azureml.core import Workspace
 from azureml.core.run import Run
 
-from logging_utilities import get_logger
-
-logger = get_logger(name=__name__)
+logger = get_logger_app(__name__)
 
 
 class SettingLiterals:
@@ -116,8 +117,7 @@ def get_classification_dataset(
     for index in range(len(test_dataset_wrapper)):
         image_path = test_dataset_wrapper.get_image_full_path(index)
         if is_valid_image(image_path):
-            df = df.append({ImageDataFrameParams.IMAGE_COLUMN_NAME:
-                            base64.encodebytes(read_image(image_path)).decode("utf-8"),
+            df = df.append({ImageDataFrameParams.IMAGE_COLUMN_NAME: base64.encodebytes(read_image(image_path)).decode("utf-8"),
                             ImageDataFrameParams.LABEL_COLUMN_NAME: test_dataset_wrapper.label_at_index(index)
                             }, ignore_index=True)
 
