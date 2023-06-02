@@ -41,5 +41,5 @@ outputs:
     description: Path to output directory which contains the component metadata and the model artifacts folder
 
 command: >-
-  python model_selector.py --task_name Translation $[[--huggingface_id ${{inputs.huggingface_id}}]] $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']] $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']] --output_dir ${{outputs.output_dir}}
+  python model_selector.py --task_name Translation $[[--huggingface_id '${{inputs.huggingface_id}}']] $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']] $[[--mlflow_model_path '${{inputs.mlflow_model_path}}']] --output_dir '${{outputs.output_dir}}'
 
