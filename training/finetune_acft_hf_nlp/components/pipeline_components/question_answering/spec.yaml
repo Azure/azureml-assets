@@ -449,7 +449,7 @@ jobs:
   question_answering_model_import:
     type: command
     component: azureml://registries/azureml/components/question_answering_model_import/versions/0.0.6
-    compute: ${{parent.inputs.compute_model_import}}
+    compute: '${{parent.inputs.compute_model_import}}'
     inputs:
       huggingface_id: '${{parent.inputs.huggingface_id}}'
       pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
@@ -457,7 +457,7 @@ jobs:
   question_answering_datapreprocess:
     type: command
     component: azureml://registries/azureml/components/question_answering_datapreprocess/versions/0.0.6
-    compute: ${{parent.inputs.compute_preprocess}}
+    compute: '${{parent.inputs.compute_preprocess}}'
     inputs:
       question_key: '${{parent.inputs.question_key}}'
       context_key: '${{parent.inputs.context_key}}'
@@ -478,7 +478,7 @@ jobs:
   question_answering_finetune:
     type: command
     component: azureml://registries/azureml/components/question_answering_finetune/versions/0.0.6
-    compute: ${{parent.inputs.compute_finetune}}
+    compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
       process_count_per_instance: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'

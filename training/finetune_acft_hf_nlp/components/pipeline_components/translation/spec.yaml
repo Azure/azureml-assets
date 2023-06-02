@@ -415,7 +415,7 @@ jobs:
   translation_model_import:
     type: command
     component: azureml://registries/azureml/components/translation_model_import/versions/0.0.6
-    compute: ${{parent.inputs.compute_model_import}}
+    compute: '${{parent.inputs.compute_model_import}}'
     inputs:
       huggingface_id: '${{parent.inputs.huggingface_id}}'
       pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
@@ -423,7 +423,7 @@ jobs:
   translation_datapreprocess:
     type: command
     component: azureml://registries/azureml/components/translation_datapreprocess/versions/0.0.6
-    compute: ${{parent.inputs.compute_preprocess}}
+    compute: '${{parent.inputs.compute_preprocess}}'
     inputs:
       source_lang: '${{parent.inputs.source_lang}}'
       target_lang: '${{parent.inputs.target_lang}}'
@@ -438,7 +438,7 @@ jobs:
   translation_finetune:
     type: command
     component: azureml://registries/azureml/components/translation_finetune/versions/0.0.6
-    compute: ${{parent.inputs.compute_finetune}}
+    compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
       process_count_per_instance: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'

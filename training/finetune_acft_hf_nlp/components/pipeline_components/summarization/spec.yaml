@@ -447,7 +447,7 @@ jobs:
   summarization_finetune:
     type: command
     component: azureml://registries/azureml/components/summarization_finetune/versions/0.0.6
-    compute: ${{parent.inputs.compute_finetune}}
+    compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
       process_count_per_instance: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
