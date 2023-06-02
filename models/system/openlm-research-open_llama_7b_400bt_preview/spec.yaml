@@ -1,0 +1,20 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: openlm-research-open_llama_7b_400bt_preview
+path: ./
+properties:
+  SHA: 02302cca2ce4f07a32e56c8ec91591d35445b16f
+  datasets: RedPajama
+  evaluation-min-sku-spec: 6|0|56|112
+  evaluation-recommended-sku: Standard_DS5_v2
+  inference-min-sku-spec: 6|0|56|112
+  inference-recommended-sku: Standard_DS5_v2
+  finetune-min-sku-spec: 4|1|28|176
+  finetune-recommended-sku: Standard_ND40RS_v2
+  finetuning-tasks: text-classification, token-classification, question-answering
+  languages: en
+tags:
+  Featured: ''
+  Preview: ''
+  license: apache-2.0
+  task: text-generation
+version: 1
