@@ -439,7 +439,6 @@ def finetune(args: Namespace):
 @swallow_all_exceptions(logger)
 def main():
     """Parse args and finetune."""
-
     if not torch.cuda.is_available():
         raise ValidationException._with_error(AzureMLError.create(SKUNotSupported))
 
