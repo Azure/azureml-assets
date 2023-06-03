@@ -124,7 +124,7 @@ def asset_version(main_worker_lock):
         os.remove(version_file)
         return
 
-    _watch_file(file=version_file, timeout_in_seconds=10)
+    _watch_file(file=version_file, timeout_in_seconds=120)
     version = ""
     with open(version_file, "r") as fp:
         version = fp.read()
@@ -176,7 +176,7 @@ def model_monitoring_components(model_monitoring_component_specs) -> List[dict]:
 @pytest.fixture(scope="session", autouse=True)
 def test_suite_name() -> str:
     """Name of the test suite."""
-    return os.environ.get("BUILD_SOURCEBRANCH", "local").replace("/", "_")
+    return os.environ.get("GITHUB_REF_NAME", "local").replace("/", "_")
 
 
 @pytest.fixture(scope="session", autouse=True)
