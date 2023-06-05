@@ -6,8 +6,11 @@
 import numpy as np
 
 from task_factory.base import PredictProbaWrapper, PredictWrapper
-
 from functools import partial
+from logging_utilities import get_logger
+
+
+logger = get_logger(name=__name__)
 
 
 class TabularClassifier(PredictWrapper, PredictProbaWrapper):
@@ -27,7 +30,7 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
         Returns:
             _type_: _description_
         """
-        device = kwargs.get("device", "cpu")
+        device = kwargs.get("device", -1)
         multilabel = kwargs.get("multilabel", False)
         if self.is_torch or self.is_hf:
             preds = self.model.predict(X_test, device)
@@ -90,6 +93,15 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
             y_pred = predict_fn(X_test, **kwargs)
         except TypeError:
             y_pred = predict_fn(X_test)
+        except RuntimeError as re:
+            device = kwargs.get("device", -1)
+            if device != -1:
+                logger.warning("Predict failed on GPU. Falling back to CPU")
+                self._ensure_model_on_cpu()
+                kwargs["device"] = -1
+                y_pred = predict_fn(X_test, **kwargs)
+            else:
+                raise re
         if y_transformer is not None:
             y_pred = y_transformer.transform(y_pred).toarray()
 
@@ -106,7 +118,17 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
         """
         _, pred_proba_fn = self._extract_predict_fn()
         if self.is_torch or self.is_hf:
-            y_pred_proba = pred_proba_fn(X_test, device=kwargs.get("device", "cpu"))
+            try:
+                y_pred_proba = pred_proba_fn(X_test, **kwargs)
+            except RuntimeError as re:
+                device = kwargs.get("device", -1)
+                if device != -1:
+                    logger.warning("Predict Proba failed on GPU. Falling back to CPU")
+                    self._ensure_model_on_cpu()
+                    kwargs["device"] = -1
+                    y_pred_proba = pred_proba_fn(X_test, **kwargs)
+                else:
+                    raise re
         else:
             y_pred_proba = pred_proba_fn(X_test)
         return y_pred_proba

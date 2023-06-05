@@ -5,6 +5,8 @@
 
 from enum import Enum
 
+from mlflow.types import DataType
+
 
 MLFLOW_ARTIFACT_DIRECTORY = "mlflow_model_folder"
 
@@ -34,9 +36,9 @@ class MLFlowSchemaLiterals:
     """MLFlow model signature related schema."""
 
     INPUT_IMAGE_KEY = "image_base64"
-    INPUT_COLUMN_IMAGE_DATA_TYPE = "string"
+    INPUT_COLUMN_IMAGE_DATA_TYPE = DataType.binary
     INPUT_COLUMN_IMAGE = "image"
-    OUTPUT_COLUMN_DATA_TYPE = "string"
+    OUTPUT_COLUMN_DATA_TYPE = DataType.string
     OUTPUT_COLUMN_FILENAME = "filename"
     OUTPUT_COLUMN_PROBS = "probs"
     OUTPUT_COLUMN_LABELS = "labels"

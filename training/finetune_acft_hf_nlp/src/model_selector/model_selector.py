@@ -73,7 +73,8 @@ def model_selector(args: Namespace):
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     if args.huggingface_id is not None:
-        args.model_name = args.huggingface_id
+        # remove the spaces at either ends of hf id
+        args.model_name = args.huggingface_id.strip()
     else:
         # TODO Revist whether `model_id` is still relevant
         args.model_name = args.model_id
