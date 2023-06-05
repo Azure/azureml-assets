@@ -61,7 +61,7 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
 
 @log_execution_time
 def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None:
-    """Convert Hugging face pytorch model to Mlflow.
+    """Convert pytorch model to Mlflow.
 
     :param input_dir: model input directory
     :type input_dir: Path
