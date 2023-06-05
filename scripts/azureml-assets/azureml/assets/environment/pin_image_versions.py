@@ -21,6 +21,7 @@ LATEST_IMAGE_TAG = re.compile(r"([^\"'\s]+):\{\{latest-image-tag(?::(.+))?\}\}")
 def log_attempt(retry_state):
     logger.log_debug(f"Unable to open url, retrying image manifest call... (Attempt: {retry_state.attempt_number}/3)")
 
+
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(5), after=log_attempt)
 def retrieve_manifest(request, repo, tag):
     try:
