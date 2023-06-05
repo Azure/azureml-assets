@@ -11,9 +11,24 @@ from urllib.request import Request, urlopen
 
 from azureml.assets.util import logger
 
+from tenacity import retry, stop_after_attempt, wait_fixed
+
 LATEST_TAG = "latest"
 # Handles registry/image_name:{{latest-image-tag}} and registry/image_name:{{latest-image-tag:regex}}
 LATEST_IMAGE_TAG = re.compile(r"([^\"'\s]+):\{\{latest-image-tag(?::(.+))?\}\}")
+
+
+def log_attempt(retry_state):
+    logger.log_debug(f"Unable to open url, retrying image manifest call... (Attempt: {retry_state.attempt_number}/3)")
+
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(5), after=log_attempt)
+def retrieve_manifest(request, repo, tag):
+    try:
+        response = urlopen(request)
+        logger.log_debug(f"Opened url {request.full_url}")
+        return response
+    except Exception as e:
+        raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
 
 
 def get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
@@ -28,10 +43,9 @@ def get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
         request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
                           method="HEAD",
                           headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
-        try:
-            response = urlopen(request)
-        except Exception as e:
-            raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
+
+        response = retrieve_manifest(request, repo, tag)
+
         digest = response.info()['Docker-Content-Digest']
 
         if tag == LATEST_TAG:
@@ -88,6 +102,7 @@ def get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
 def pin_images(contents: str) -> str:
     # Process MCR template tags
     while True:
+        print(contents)
         match = LATEST_IMAGE_TAG.search(contents)
         if not match:
             break
