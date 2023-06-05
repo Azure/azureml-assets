@@ -9,13 +9,13 @@ version: 0.0.6
 # Pipeline inputs
 inputs:
   # pipeline specific compute
-  compute_common:
+  compute:
     type: string
     description: Common compute for model download, mlflow conversion and registration
 
-  compute_local_validation:
+  local_validation_compute:
     type: string
-    description: Compute for local model validation. Please make sure to provide a compute that is sufficiently large enough to load model and perform local inferencing
+    description: Compute for Model local validation. Please make sure to provide a compute that is large enough to load the model and perform local inferencing
 
   ## Inputs for download model
   model_source:
@@ -105,7 +105,7 @@ outputs:
 jobs:
   download_model:
     component: azureml:download_model:0.0.3
-    compute: ${{parent.inputs.compute_common}}
+    compute: ${{parent.inputs.compute}}
     inputs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
@@ -117,7 +117,7 @@ jobs:
 
   convert_model_to_mlflow:
     component: azureml:convert_model_to_mlflow:0.0.5
-    compute: ${{parent.inputs.compute_common}}
+    compute: ${{parent.inputs.compute}}
     inputs:
       task_name: ${{parent.inputs.task_name}}
       license_file_path: ${{parent.inputs.license_file_path}}
@@ -131,7 +131,7 @@ jobs:
 
   mlflow_model_local_validation:
     component: azureml:mlflow_model_local_validation:0.0.2
-    compute: ${{parent.inputs.compute_local_validation}}
+    compute: ${{parent.inputs.local_validation_compute}}
     inputs:
       model_path: ${{parent.jobs.convert_model_to_mlflow.outputs.mlflow_model_folder}}
       test_data_path: ${{parent.inputs.local_validation_test_data}}
@@ -141,7 +141,7 @@ jobs:
 
   register_model:
     component: azureml:register_model:0.0.2
-    compute: ${{parent.inputs.compute_common}}
+    compute: ${{parent.inputs.compute}}
     identity:
       type: user_identity
     inputs:
