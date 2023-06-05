@@ -102,7 +102,6 @@ def get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
 def pin_images(contents: str) -> str:
     # Process MCR template tags
     while True:
-        print(contents)
         match = LATEST_IMAGE_TAG.search(contents)
         if not match:
             break
