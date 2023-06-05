@@ -7,7 +7,6 @@ import base64
 import io
 import logging
 
-import numpy as np
 import pandas as pd
 import tempfile
 
@@ -23,7 +22,7 @@ from transformers import (
     TrainingArguments,
     Trainer,
 )
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Tuple
 
 logger = logging.getLogger(__name__)
 
