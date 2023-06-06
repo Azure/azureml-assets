@@ -5,7 +5,8 @@
 
 from feature_importance_metrics.compute_feature_importance import determine_task_type
 from feature_importance_metrics.feature_importance_utilities import compute_categorical_features
-from feature_importance_metrics.compute_feature_attribution_drift import drop_metadata_columns, calculate_attribution_drift
+from feature_importance_metrics.compute_feature_attribution_drift import (
+    drop_metadata_columns, calculate_attribution_drift)
 import pytest
 import pandas as pd
 
@@ -14,11 +15,18 @@ import pandas as pd
 def get_fraud_data():
     """Return fraud data as pandas dataframe."""
     return pd.DataFrame({
-        "TRANSACTIONID": ["6175BE16-6602-4B7E-8225-D09BC4BCB59D", "2EBBE4D6-4527-473F-B5E9-D946C4FD18E1", "7B1FB72A-69D0-4A2A-A683-E451D470DBEB",  "946E2DF1-2DB6-43F4-AF26-790BFDCD2C78"],
-        "ACCOUNTID": ["A1176337474875483", "A1343835256155075", "A1343835256155076", "A1706480214256418"],
+        "TRANSACTIONID": ["6175BE16-6602-4B7E-8225-D09BC4BCB59D",
+                          "2EBBE4D6-4527-473F-B5E9-D946C4FD18E1",
+                          "7B1FB72A-69D0-4A2A-A683-E451D470DBEB",
+                          "946E2DF1-2DB6-43F4-AF26-790BFDCD2C78"],
+        "ACCOUNTID": ["A1176337474875483", "A1343835256155075",
+                      "A1343835256155076", "A1706480214256418"],
         "TRANSACTIONAMOUNT": [146161.99, 57487.200000000004,  227728.76, 59340.0],
         "LOCALHOUR": [16, 22, 16, 8],
-        "TIMESTAMP": ["2023-01-30T16:25:17.000Z", "2023-01-30T16:58:44.000Z", "2023-01-30T22:46:37.000Z", "2023-01-30T22:46:37.000Z"],
+        "TIMESTAMP": ["2023-01-30T16:25:17.000Z",
+                      "2023-01-30T16:58:44.000Z",
+                      "2023-01-30T22:46:37.000Z",
+                      "2023-01-30T22:46:37.000Z"],
         "TRANSACTIONAMOUNTUSD": [169547.9084, 57487.200000000004, 266442.6492, 67647.6],
         "ISPROXYIP": [False, True, False, False],
         "DIGITALITEMCOUNT": [15, 15, 15, 15],

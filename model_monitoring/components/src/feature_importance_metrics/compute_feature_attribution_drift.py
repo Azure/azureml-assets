@@ -51,7 +51,8 @@ def calculate_attribution_drift(baseline_explanations, production_explanations):
     return feature_attribution_drift
 
 
-def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations, feature_attribution_data, baseline_row_count, production_row_count):
+def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations,
+                                      feature_attribution_data, baseline_row_count, production_row_count):
     """Write feature importance values to mltable.
 
     :param explanations: feature importances with their corresponding feature names
@@ -65,7 +66,11 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
     :param production_row_count: number of columns in production data
     :type production_row_count: number
     """
-    metrics_data = pd.DataFrame(columns=[constants.FEATURE_NAME_COLUMN, constants.METRIC_VALUE_COLUMN, constants.FEATURE_CATEGORY_COLUMN, constants.METRIC_NAME_COLUMN, constants.THRESHOLD_VALUE])
+    metrics_data = pd.DataFrame(columns=[constants.FEATURE_NAME_COLUMN,
+                                         constants.METRIC_VALUE_COLUMN,
+                                         constants.FEATURE_CATEGORY_COLUMN,
+                                         constants.METRIC_NAME_COLUMN,
+                                         constants.THRESHOLD_VALUE])
     feature_attribution_drift = calculate_attribution_drift(baseline_explanations, production_explanations)
 
     ndcg_metric = {constants.FEATURE_NAME_COLUMN: "",
@@ -87,16 +92,20 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
                                  constants.THRESHOLD_VALUE: float("nan")}
     metrics_data = metrics_data.append(production_row_count_data, ignore_index=True)
 
-    for (_, baseline_feature), (_, production_feature) in zip(baseline_explanations.iterrows(), production_explanations.iterrows()):
-        baseline_feature_importance_data = {constants.FEATURE_NAME_COLUMN: baseline_feature[constants.FEATURE_COLUMN],
-                                            constants.METRIC_VALUE_COLUMN: baseline_feature[constants.METRIC_VALUE_COLUMN],
-                                            constants.FEATURE_CATEGORY_COLUMN: baseline_feature[constants.FEATURE_CATEGORY_COLUMN],
-                                            constants.METRIC_NAME_COLUMN: "BaselineFeatureImportance",
-                                            constants.THRESHOLD_VALUE: float("nan")}
-        production_feature_importance_data = {constants.FEATURE_NAME_COLUMN: production_feature[constants.FEATURE_COLUMN],
-                                              constants.METRIC_VALUE_COLUMN: production_feature[constants.METRIC_VALUE_COLUMN],
-                                              constants.FEATURE_CATEGORY_COLUMN: production_feature[constants.FEATURE_CATEGORY_COLUMN],
-                                              constants.METRIC_NAME_COLUMN: "ProductionFeatureImportance", constants.THRESHOLD_VALUE: float("nan")}
+    for (_, baseline_feature), (_, production_feature) in zip(baseline_explanations.iterrows(),
+                                                              production_explanations.iterrows()):
+        baseline_feature_importance_data = {
+            constants.FEATURE_NAME_COLUMN: baseline_feature[constants.FEATURE_COLUMN],
+            constants.METRIC_VALUE_COLUMN: baseline_feature[constants.METRIC_VALUE_COLUMN],
+            constants.FEATURE_CATEGORY_COLUMN: baseline_feature[constants.FEATURE_CATEGORY_COLUMN],
+            constants.METRIC_NAME_COLUMN: "BaselineFeatureImportance",
+            constants.THRESHOLD_VALUE: float("nan")}
+        production_feature_importance_data = {
+            constants.FEATURE_NAME_COLUMN: production_feature[constants.FEATURE_COLUMN],
+            constants.METRIC_VALUE_COLUMN: production_feature[constants.METRIC_VALUE_COLUMN],
+            constants.FEATURE_CATEGORY_COLUMN: production_feature[constants.FEATURE_CATEGORY_COLUMN],
+            constants.METRIC_NAME_COLUMN: "ProductionFeatureImportance",
+            constants.THRESHOLD_VALUE: float("nan")}
         metrics_data = metrics_data.append(baseline_feature_importance_data, ignore_index=True)
         metrics_data = metrics_data.append(production_feature_importance_data, ignore_index=True)
     spark_data = convert_pandas_to_spark(metrics_data)
@@ -120,7 +129,8 @@ def configure_data(data):
 
 
 def drop_metadata_columns(baseline_data, production_data):
-    """Drop any columns from production data that are not in the baseline data. This is necessary because the production data could contain extra metadata columns which should be removed.
+    """Drop any columns from production data that are not in the baseline data.
+    This is necessary because the production data could contain extra metadata columns which should be removed.
 
     :param baseline_data: The baseline data meaning the data used to create the
     model monitor
@@ -135,7 +145,8 @@ def drop_metadata_columns(baseline_data, production_data):
     production_data_features = production_data[constants.FEATURE_COLUMN].values
     for production_feature in production_data_features:
         if production_feature not in baseline_data_features:
-            production_data = production_data.drop(production_data[production_data.feature == production_feature].index, axis=0)
+            production_data = production_data.drop(
+                production_data[production_data.feature == production_feature].index, axis=0)
             _logger.info(f"Dropped {production_feature} column in production dataset")
     return production_data
 
@@ -146,7 +157,8 @@ def run(args):
         [baseline_explanations, baseline_row_count] = configure_data(args.baseline_data)
         [production_explanations, production_row_count] = configure_data(args.production_data)
         production_explanations = drop_metadata_columns(baseline_explanations, production_explanations)
-        compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations, args.signal_metrics, baseline_row_count, production_row_count)
+        compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations,
+                                          args.signal_metrics, baseline_row_count, production_row_count)
         _logger.info("Successfully executed the feature attribution component.")
     except Exception as e:
         _logger.info(f"Error encountered when executing feature attribution component: {e}")

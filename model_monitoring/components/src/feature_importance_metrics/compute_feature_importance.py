@@ -25,7 +25,8 @@ try:
 except ImportError:
     pass
 
-from feature_importance_metrics.feature_importance_utilities import compute_categorical_features, convert_pandas_to_spark
+from feature_importance_metrics.feature_importance_utilities import (
+    compute_categorical_features, convert_pandas_to_spark)
 
 from shared_utilities.patch_mltable import patch_all
 patch_all()
@@ -180,7 +181,8 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
     """
     model_wrapper = get_model_wrapper(task_type, target_column, baseline_data)
 
-    baseline_explanations = compute_explanations(model_wrapper, baseline_data, categorical_features, target_column, task_type)
+    baseline_explanations = compute_explanations(
+        model_wrapper, baseline_data, categorical_features, target_column, task_type)
     _logger.info("Successfully computed explanations for dataset")
 
     return baseline_explanations
@@ -196,9 +198,14 @@ def write_to_mltable(explanations, dataset, file_path, categorical_features):
     :param file_path: path to folder to save mltable
     :type file_path: string
     """
-    metrics_data = pd.DataFrame(columns=[constants.FEATURE_COLUMN, constants.METRIC_VALUE_COLUMN, constants.METRIC_NAME_COLUMN, constants.FEATURE_CATEGORY_COLUMN, constants.THRESHOLD_VALUE])
+    metrics_data = pd.DataFrame(columns=[constants.FEATURE_COLUMN,
+                                         constants.METRIC_VALUE_COLUMN,
+                                         constants.METRIC_NAME_COLUMN,
+                                         constants.FEATURE_CATEGORY_COLUMN,
+                                         constants.THRESHOLD_VALUE])
     for index in range(len(explanations)):
-        dtype = constants.CATEGORICAL_FEATURE_CATEGORY if dataset.iloc[:, index].name in categorical_features else constants.NUMERICAL_FEATURE_CATEGORY
+        dtype = constants.CATEGORICAL_FEATURE_CATEGORY if dataset.iloc[:, index].name in \
+                        categorical_features else constants.NUMERICAL_FEATURE_CATEGORY
         new_row = {constants.FEATURE_COLUMN: dataset.columns[index],
                    constants.METRIC_VALUE_COLUMN: explanations[index],
                    constants.METRIC_NAME_COLUMN: "FeatureImportance",
@@ -249,7 +256,8 @@ def run(args):
         _logger.info(f"Computed task type is {task_type}")
 
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
-        feature_importances = compute_feature_importance(task_type, args.target_column, baseline_df, categorical_features)
+        feature_importances = compute_feature_importance(
+            task_type, args.target_column, baseline_df, categorical_features)
         _logger.info("Successfully executed the feature importance component.")
         feature_columns = baseline_df.drop([args.target_column], axis=1)
         write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features)
