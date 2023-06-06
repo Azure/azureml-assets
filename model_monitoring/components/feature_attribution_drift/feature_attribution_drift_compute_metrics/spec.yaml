@@ -1,15 +1,15 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: feature_attribution_drift_compute_metrics
-version: 0.3.0
+name: feature_attribution_drift_compute_metrics_spark
+version: 0.3.1
 display_name: Feature Attribution Drift - Compute Metrics
 is_deterministic: true
 description: Feature attribution drift using model monitoring.
 
 code: ../../src
 entry:
-  file: ./feature_importance_metrics/compute_feature_attribution.py
+  file: ./feature_importance_metrics/compute_feature_attribution_drift.py
 
 inputs:
   baseline_data:
@@ -24,6 +24,13 @@ outputs:
   signal_metrics:
     type: mltable
     mode: direct
+
+args: >-
+  --baseline_data ${{inputs.baseline_data}}
+  --production_data ${{inputs.production_data}}
+  --target_column ${{inputs.target_column}}
+  --signal_metrics ${{outputs.signal_metrics}}
+
 conf:
   spark.driver.cores: 1
   spark.driver.memory: 2g
@@ -46,8 +53,3 @@ conf:
         - responsibleai~=0.27.0
         - scikit-learn<1.1
   name: responsibleai-spark
-args: >-
-  --baseline_data ${{inputs.baseline_data}}
-  --production_data ${{inputs.production_data}}
-  --target_column ${{inputs.target_column}}
-  --signal_metrics ${{outputs.signal_metrics}}
