@@ -87,7 +87,7 @@ def create_lightgbm_model(X, y, task_type):
     :return: an appropriate model wrapper
     :rtype: LightGBMClassifier or LightGBMRegressor
     """
-    if (task_type == constants.CLASSIFICATION):
+    if task_type == constants.CLASSIFICATION:
         lgbm = LGBMClassifier(boosting_type='gbdt', learning_rate=0.1,
                               max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
     else:
