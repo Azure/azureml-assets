@@ -5,11 +5,13 @@
 
 from datetime import datetime
 import os
+from glob import glob
 from typing import List
 import time
 
 from azure.ai.ml import MLClient, load_component
-from azure.ai.ml.entities import Job
+from azure.ai.ml.constants import AssetTypes
+from azure.ai.ml.entities import Job, Data
 from azure.identity import AzureCliCredential
 import pytest
 
@@ -21,6 +23,22 @@ from tests.e2e.utils.io_utils import (
 )
 
 lock_file = ".lock"
+
+
+def _get_subscription_id():
+    return os.environ.get("SUBSCRIPTION_ID", "")
+
+
+def _get_tenant_id():
+    return os.environ.get("TENANT_ID", "")
+
+
+def _get_resource_group():
+    return os.environ.get("RESOURCE_GROUP", "")
+
+
+def _get_workspace_name():
+    return os.environ.get("WORKSPACE_NAME", "")
 
 
 def _is_main_worker(worker_id):
@@ -36,13 +54,24 @@ def _watch_file(file: str, timeout_in_seconds):
             break
 
 
+def _create_data_asset(ml_client: MLClient, name: str, path: str, type: AssetTypes):
+    my_data = Data(
+        path=path,
+        type=type,
+        name=name,
+        version='1'
+    )
+    print(f"Creating a {type} data asset with name '{name}'")
+    ml_client.data.create_or_update(my_data)
+
+
 @pytest.fixture(scope="session")
 def main_worker_lock(worker_id):
     """Lock until the main worker releases its lock."""
     if _is_main_worker(worker_id):
         return worker_id
 
-    _watch_file(file=lock_file, timeout_in_seconds=60)
+    _watch_file(file=lock_file, timeout_in_seconds=120)
     return worker_id
 
 
@@ -50,12 +79,35 @@ def main_worker_lock(worker_id):
 def ml_client() -> MLClient:
     """Return a MLClient used to manage AML resources."""
     ws = MLClient(
-        AzureCliCredential(tenant_id="72f988bf-86f1-41af-91ab-2d7cd011db47"),
-        subscription_id="ea4faa5b-5e44-4236-91f6-5483d5b17d14",
-        resource_group_name="model-monitoring-canary-int-rg",
-        workspace_name="model-monitoring-canary-int-ws",
+        AzureCliCredential(tenant_id=_get_tenant_id()),
+        subscription_id=_get_subscription_id(),
+        resource_group_name=_get_resource_group(),
+        workspace_name=_get_workspace_name(),
     )
     return ws
+
+
+@pytest.fixture(scope="session")
+def e2e_resources_directory(components_directory):
+    """Return the path to the directory holding model monitoring's e2e resources."""
+    return os.path.abspath(os.path.join(components_directory, "tests", "e2e", "resources"))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def register_data_assets(main_worker_lock, ml_client, e2e_resources_directory) -> MLClient:
+    """Return a MLClient used to manage AML resources."""
+    if not _is_main_worker(main_worker_lock):
+        return
+
+    registered_data_assets = [x.name for x in ml_client.data.list()]
+    for directory in glob(f"{e2e_resources_directory}/*", recursive=False):
+        name = os.path.basename(directory)
+
+        if name not in registered_data_assets:
+            if "mltable" in name:
+                _create_data_asset(ml_client, name, directory, AssetTypes.MLTABLE)
+            if "uri_folder" in name:
+                _create_data_asset(ml_client, name, directory, AssetTypes.URI_FOLDER)
 
 
 @pytest.fixture(scope="session")
@@ -72,7 +124,7 @@ def asset_version(main_worker_lock):
         os.remove(version_file)
         return
 
-    _watch_file(file=version_file, timeout_in_seconds=10)
+    _watch_file(file=version_file, timeout_in_seconds=120)
     version = ""
     with open(version_file, "r") as fp:
         version = fp.read()
@@ -124,7 +176,7 @@ def model_monitoring_components(model_monitoring_component_specs) -> List[dict]:
 @pytest.fixture(scope="session", autouse=True)
 def test_suite_name() -> str:
     """Name of the test suite."""
-    return os.environ.get("BUILD_SOURCEBRANCH", "local").replace("/", "_")
+    return os.environ.get("GITHUB_REF_NAME", "local").replace("/", "_")
 
 
 @pytest.fixture(scope="session", autouse=True)
