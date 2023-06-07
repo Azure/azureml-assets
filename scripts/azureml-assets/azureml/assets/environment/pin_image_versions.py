@@ -44,7 +44,7 @@ def get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
         try:
             response = retrieve_manifest(request, repo, tag)
         except Exception as e:
-            raise Exception(f"Failed to retrieve tags for {repo}: {e}")
+            raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
 
         digest = response.info()['Docker-Content-Digest']
 
