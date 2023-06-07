@@ -61,7 +61,7 @@ class Inferencer:
         self.task = task
         self.metrics_config = {}
         if config_file:
-            self.metrics_config = read_config(config_file, task)
+            self.metrics_config = read_config(config_file, task, for_prediction=True)
         elif metrics_config:
             self.metrics_config = metrics_config
         self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL

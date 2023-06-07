@@ -587,7 +587,7 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
     return X_test, y_test
 
 
-def read_config(conf_folder, task_type):
+def read_config(conf_folder, task_type, for_prediction=False):
     """Util function for reading config.
 
     Args:
@@ -608,6 +608,9 @@ def read_config(conf_folder, task_type):
         error_message = f"Failed to load config file with error {repr(e)}"
         log_traceback(e, logger, error_message, is_critical=True)
         raise DataValidationException(error_message)
+
+    if for_prediction:
+        return data
 
     metrics_args = ArgumentsSet(task_type=task_type)
     metrics_config = {}
@@ -617,44 +620,6 @@ def read_config(conf_folder, task_type):
         if val is not None:
             # if arg == "y_transformer":
             #    val = os.path.join(conf_folder, val)
-            try:
-                metrics_config[arg] = eval(func)
-            except TypeError:
-                message = "Invalid dtype passed for config param '" + arg + "'."
-                logger.error(message)
-                raise DataValidationException(message)
-
-    return metrics_config
-
-
-def read_compute_metrics_config(conf_folder, task_type):
-    """Util function for reading config.
-
-    Args:
-        conf_folder (_type_): _description_
-        task_type (_type_): _description_
-
-    Raises:
-        DataValidationException: _description_
-
-    Returns:
-        _type_: _description_
-    """
-    try:
-        import json
-        with open(conf_folder, "r") as f:
-            data = json.load(f)
-    except Exception as e:
-        error_message = f"Failed to load config file with error {repr(e)}"
-        log_traceback(e, logger, error_message, is_critical=True)
-        raise DataValidationException(error_message)
-
-    metrics_args = ArgumentsSet(task_type=task_type)
-    metrics_config = {}
-    # logger.info(metrics_args)
-    for arg, func in metrics_args.args_set.items():
-        val = data.get(arg, None)
-        if val is not None:
             try:
                 metrics_config[arg] = eval(func)
             except TypeError:
