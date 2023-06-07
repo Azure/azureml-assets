@@ -59,12 +59,20 @@ def get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
     return latest_tag, latest_digest
 
 
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(5), retry=retry_if_not_exception_type(HTTPError) and retry_if_not_exception_message(match=r".*404.*"))
+def retrieve_tags(hostname, repo):
+    try:
+        response = urlopen(f"https://{hostname}/v2/{repo}/tags/list")
+    except Exception as e:
+        raise Exception(f"Failed to retrieve tags for {repo}: {e}")
+
+
 def get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
     (hostname, repo) = image.split("/", 1)
 
     # Retrieve tags
     try:
-        response = urlopen(f"https://{hostname}/v2/{repo}/tags/list")
+        response = retrieve_tags(hostname, repo)
     except Exception as e:
         raise Exception(f"Failed to retrieve tags for {repo}: {e}")
     tags = json.loads(response.read().decode("utf-8")).get("tags", [])
