@@ -19,7 +19,7 @@ Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn
 
 ### Model Performance
 
-SKU Name| Avg. Latency| Avg. Requests Per Second (s)
+SKU Name| Avg. Latency(s) | Avg. Requests Per Second
 |--|--|--|
 Standard_E16s_v3 | 0.04 | 49
 Standard_F32s_v2 | 0.02 | 54
