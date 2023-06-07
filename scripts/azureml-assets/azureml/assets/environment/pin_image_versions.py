@@ -26,7 +26,6 @@ def log_attempt(retry_state):
 def retrieve_manifest(request, repo, tag):
     try:
         response = urlopen(request)
-        logger.log_debug(f"Opened url {request.full_url}")
         return response
     except Exception as e:
         raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
