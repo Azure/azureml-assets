@@ -6,7 +6,7 @@
 
 ## 1.1.0 (2023-06-08)
 ### 🚀 New Features
-- Add deploy config classes
+- [#736](https://github.com/Azure/azureml-assets/pull/736) Add deploy config classes
 
 ## 1.0.1 (2023-05-18)
 ### 🚀 New Features
