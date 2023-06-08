@@ -20,12 +20,8 @@ LATEST_IMAGE_TAG = re.compile(r"([^\"'\s]+):\{\{latest-image-tag(?::(.+))?\}\}")
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(5), retry=retry_if_not_exception_type(HTTPError) and retry_if_not_exception_message(match=r".*404.*"))
-def retrieve_manifest(request, repo, tag):
-    try:
-        response = urlopen(request)
-        return response
-    except Exception as e:
-        raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
+def urlopen_with_retries(request):
+    return urlopen(request)
 
 
 def get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
@@ -42,7 +38,7 @@ def get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
                           headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
 
         try:
-            response = retrieve_manifest(request, repo, tag)
+            response = urlopen_with_retries(request)
         except Exception as e:
             raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
 
@@ -59,20 +55,12 @@ def get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
     return latest_tag, latest_digest
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_fixed(5), retry=retry_if_not_exception_type(HTTPError) and retry_if_not_exception_message(match=r".*404.*"))
-def retrieve_tags(hostname, repo):
-    try:
-        response = urlopen(f"https://{hostname}/v2/{repo}/tags/list")
-    except Exception as e:
-        raise Exception(f"Failed to retrieve tags for {repo}: {e}")
-
-
 def get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
     (hostname, repo) = image.split("/", 1)
 
     # Retrieve tags
     try:
-        response = retrieve_tags(hostname, repo)
+        response = urlopen_with_retries(f"https://{hostname}/v2/{repo}/tags/list")
     except Exception as e:
         raise Exception(f"Failed to retrieve tags for {repo}: {e}")
     tags = json.loads(response.read().decode("utf-8")).get("tags", [])
