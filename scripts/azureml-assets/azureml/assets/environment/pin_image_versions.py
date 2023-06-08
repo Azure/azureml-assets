@@ -19,7 +19,7 @@ LATEST_TAG = "latest"
 LATEST_IMAGE_TAG = re.compile(r"([^\"'\s]+):\{\{latest-image-tag(?::(.+))?\}\}")
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_fixed(5), retry=retry_if_not_exception_message(match=r".*404.*"))
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(5), retry=(retry_if_not_exception_type(HTTPError) & retry_if_not_exception_message(match=r".*404.*")))
 def urlopen_with_retries(request):
     return urlopen(request)
 
