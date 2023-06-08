@@ -90,6 +90,7 @@ class AssetVersionUpdate(Versions):
     stage: str = None
 
     def __post_init__(self):
+        """Convert field values to objects."""
         if self.tags:
             self.tags = AssetTags(**self.tags)
 
@@ -97,6 +98,7 @@ class AssetVersionUpdate(Versions):
 @dataclass
 class AssetUpdate:
     """Asset update class.
+
     Args:
         name (str): Asset name.
         updates (List[AssetVersionUpdate]): Updates to apply.
@@ -106,6 +108,7 @@ class AssetUpdate:
     updates: List[AssetVersionUpdate] = None
 
     def __post_init__(self):
+        """Convert field values to objects."""
         if self.updates:
             self.updates = [AssetVersionUpdate(**u) for u in self.updates]
 
@@ -134,6 +137,7 @@ class AssetDelete:
     deletes: List[AssetVersionDelete] = None
 
     def __post_init__(self):
+        """Convert field values to objects."""
         if self.deletes:
             self.deletes = [AssetVersionDelete(**d) for d in self.deletes]
 
@@ -153,6 +157,7 @@ class DeploymentConfig:
     delete: Dict[assets.AssetType, List[AssetDelete]] = None
 
     def __post_init__(self):
+        """Convert field values to objects."""
         if self.update:
             self.update = {k: self._convert_update_dict(v) for k, v in self.update.items()}
         if self.delete:
