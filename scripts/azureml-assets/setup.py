@@ -15,7 +15,7 @@ setup(
       "GitPython>=3.1",
       "ruamel.yaml==0.17.21",
       "pip>=21",
-      "marshmallow-3.19",
+      "marshmallow>=3.19",
    ],
    python_requires=">=3.8,<4.0",
    license="MIT",
