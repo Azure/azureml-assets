@@ -37,7 +37,7 @@ def _urlopen_with_retries(request: Union[Request, str]) -> HTTPResponse:
 
 def _get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
     """Get latest tag or digest for an image.
-    
+
     Args:
         image (str): Full image name, including hostname of the container registry.
         tags (List[str]): List of tags for the image.
