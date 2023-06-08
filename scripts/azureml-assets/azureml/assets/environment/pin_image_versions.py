@@ -9,7 +9,8 @@ import re
 import urllib.parse
 from pathlib import Path
 from typing import List, Tuple, Union
-from urllib.request import HTTPResponse, Request, urlopen
+from http.client import HTTPResponse
+from urllib.request import Request, urlopen
 
 from azureml.assets.util import logger
 
