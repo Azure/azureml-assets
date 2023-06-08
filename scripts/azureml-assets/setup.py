@@ -15,6 +15,7 @@ setup(
       "GitPython>=3.1",
       "ruamel.yaml==0.17.21",
       "pip>=21",
+      "tenacity>=8.2.2",
    ],
    python_requires=">=3.8,<4.0",
    license="MIT",
