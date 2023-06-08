@@ -16,6 +16,7 @@ from typing import Any, Dict, Optional
 import mlflow
 import mltable
 import pandas as pd
+from arg_helpers import get_from_args
 from azureml.core import Model, Run, Workspace
 from constants import DashboardInfo, PropertyKeyValues, RAIToolType
 from raiutils.exceptions import UserConfigValidationException
@@ -66,7 +67,12 @@ def fetch_model_id(model_info_path: str):
     model_info_path = os.path.join(model_info_path, DashboardInfo.MODEL_INFO_FILENAME)
     with open(model_info_path, "r") as json_file:
         model_info = json.load(json_file)
-    return model_info[DashboardInfo.MODEL_ID_KEY]
+    if DashboardInfo.MODEL_ID_KEY not in model_info:
+        raise UserConfigValidationException(
+            f"Invalid input, expecting key {DashboardInfo.MODEL_ID_KEY} to exist in the input json"
+        )
+    else:
+        return model_info[DashboardInfo.MODEL_ID_KEY]
 
 
 def load_mlflow_model(
@@ -130,7 +136,7 @@ def load_mlflow_model(
 def _classify_and_log_pip_install_error(elog):
     if elog is not None:
         if b"Could not find a version that satisfies the requirement" in elog:
-            _logger.warning("Detected unsatisfiable version requirment.")
+            _logger.warning("Detected unsatisfiable version requirement.")
 
         if b"package versions have conflicting dependencies" in elog:
             _logger.warning("Detected dependency conflict error.")
@@ -421,3 +427,15 @@ def default_object_hook(dict):
         del dict[data_type]
         return FeatureMetadata(**dict)
     return dict
+
+
+def get_arg(args, arg_name: str, custom_parser, allow_none: bool) -> Any:
+    try:
+        return get_from_args(args, arg_name, custom_parser, allow_none)
+    except ValueError as e:
+        raise UserConfigError(
+            f"Unable to parse {arg_name} from {args}."
+            f"Please check that {args} is valid input and that {arg_name} exists."
+            "For example, a json string with unquoted string value or key can cause this error."
+            f"Raw parsing error: {e}"
+        )

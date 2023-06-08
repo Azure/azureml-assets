@@ -8,13 +8,13 @@ import os
 import shutil
 
 from _telemetry._loggerfactory import _LoggerFactory, track
-from arg_helpers import (boolean_parser, get_from_args,
-                         json_empty_is_none_parser)
+from arg_helpers import boolean_parser, json_empty_is_none_parser
 from azureml.core import Run
 from constants import DashboardInfo, PropertyKeyValues
 from rai_component_utilities import (default_json_handler, fetch_model_id,
-                                     get_test_dataset_id, get_train_dataset_id,
-                                     load_dataset, load_mlflow_model)
+                                     get_arg, get_test_dataset_id,
+                                     get_train_dataset_id, load_dataset,
+                                     load_mlflow_model)
 from raiutils.exceptions import UserConfigValidationException
 from responsibleai.feature_metadata import FeatureMetadata
 
@@ -90,13 +90,13 @@ def create_constructor_arg_dict(args):
     """
     result = dict()
 
-    cat_col_names = get_from_args(
+    cat_col_names = get_arg(
         args, "categorical_column_names", custom_parser=json.loads, allow_none=True
     )
-    class_names = get_from_args(
+    class_names = get_arg(
         args, "classes", custom_parser=json_empty_is_none_parser, allow_none=True
     )
-    feature_metadata_dict = get_from_args(
+    feature_metadata_dict = get_arg(
         args, "feature_metadata", custom_parser=json.loads, allow_none=True
     )
     feature_metadata = FeatureMetadata()
