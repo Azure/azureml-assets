@@ -1,13 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Pin image versions in a Dockerfile."""
+
 import argparse
 import json
 import re
 import urllib.parse
 from pathlib import Path
-from typing import List, Tuple
-from urllib.request import Request, urlopen
+from typing import List, Tuple, Union
+from urllib.request import HTTPResponse, Request, urlopen
 
 from azureml.assets.util import logger
 
@@ -21,11 +23,28 @@ LATEST_IMAGE_TAG = re.compile(r"([^\"'\s]+):\{\{latest-image-tag(?::(.+))?\}\}")
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(5),
        retry=(retry_if_not_exception_type(HTTPError) & retry_if_not_exception_message(match=r".*404.*")))
-def urlopen_with_retries(request):
+def _urlopen_with_retries(request: Union[Request, str]) -> HTTPResponse:
+    """Execute urlopen with retries.
+
+    Args:
+        request (Union[Request, str]): Request to execute, or URL to open.
+
+    Returns:
+        HTTPResponse: Response from urlopen.
+    """
     return urlopen(request)
 
 
-def get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
+def _get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
+    """Get latest tag or digest for an image.
+    
+    Args:
+        image (str): Full image name, including hostname of the container registry.
+        tags (List[str]): List of tags for the image.
+
+    Returns:
+        Tuple[str, str]: Latest tag and digest, or (None, digest) if latest is not found.
+    """
     (hostname, repo) = image.split("/", 1)
 
     # Find another tag corresponding to latest
@@ -39,7 +58,7 @@ def get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
                           headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
 
         try:
-            response = urlopen_with_retries(request)
+            response = _urlopen_with_retries(request)
         except Exception as e:
             raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
 
@@ -56,12 +75,21 @@ def get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
     return latest_tag, latest_digest
 
 
-def get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
+def _get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
+    """Get suffix to use for latest image tag or digest.
+
+    Args:
+        image (str): Full image name, including hostname of the container registry.
+        regex (re.Pattern): Regex to use to filter tags.
+
+    Returns:
+        str: Suffix as :tag or @digest.
+    """
     (hostname, repo) = image.split("/", 1)
 
     # Retrieve tags
     try:
-        response = urlopen_with_retries(f"https://{hostname}/v2/{repo}/tags/list")
+        response = _urlopen_with_retries(f"https://{hostname}/v2/{repo}/tags/list")
     except Exception as e:
         raise Exception(f"Failed to retrieve tags for {repo}: {e}")
     tags = json.loads(response.read().decode("utf-8")).get("tags", [])
@@ -86,7 +114,7 @@ def get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
         tags_sorted.insert(0, LATEST_TAG)
 
         # Find another tag corresponding to latest, or default to digest
-        latest_tag, latest_digest = get_latest_tag_or_digest(image, tags)
+        latest_tag, latest_digest = _get_latest_tag_or_digest(image, tags)
 
     # Return tag or digest
     if latest_tag is not None:
@@ -97,6 +125,14 @@ def get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
 
 
 def pin_images(contents: str) -> str:
+    """Pin images in a Dockerfile.
+
+    Args:
+        contents (str): Contents of a Dockerfile.
+
+    Returns:
+        str: Contents of the Dockerfile with images pinned to latest versions.
+    """
     # Process MCR template tags
     while True:
         match = LATEST_IMAGE_TAG.search(contents)
@@ -109,7 +145,7 @@ def pin_images(contents: str) -> str:
             message += f" matching {regex}"
             regex = re.compile(regex)
         logger.log_debug(message)
-        suffix = get_latest_image_suffix(repo, regex)
+        suffix = _get_latest_image_suffix(repo, regex)
         logger.log_debug(f"Latest image reference is {repo}{suffix}")
         contents = contents[:match.start()] + f"{repo}{suffix}" + contents[match.end():]
 
@@ -117,6 +153,12 @@ def pin_images(contents: str) -> str:
 
 
 def transform_file(input_file: Path, output_file: Path = None):
+    """Transform a file.
+
+    Args:
+        input_file (Path): File to transform.
+        output_file (Path): File to which output will be written. Defaults to the input file.
+    """
     # Read file
     with open(input_file) as f:
         contents = f.read()
