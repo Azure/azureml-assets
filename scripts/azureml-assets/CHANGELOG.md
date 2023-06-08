@@ -7,7 +7,8 @@
 ## 1.1.0 (2023-06-06)
 
 ### 🚀 New Features
-- Retry image manifest calls
+- [#725](https://github.com/Azure/azureml-assets/pull/725) Retry image manifest calls
+
 
 ## 1.0.1 (2023-05-18)
 
