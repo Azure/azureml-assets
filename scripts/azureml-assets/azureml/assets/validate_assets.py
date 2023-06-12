@@ -272,31 +272,33 @@ def validate_assets(input_dirs: List[Path],
     Returns:
         bool: True if assets were successfully validated, otherwise False.
     """
+    # Gather list of just changed assets, for later filtering
+    changed_assets = util.find_asset_config_files(input_dirs, asset_config_filename, changed_files) if changed_files else None  # noqa
+
     # Find assets under input dirs
     asset_count = 0
     error_count = 0
     asset_dirs = defaultdict(list)
     image_names = defaultdict(list)
-    for asset_config_path in util.find_asset_config_files(input_dirs, asset_config_filename, changed_files):
+    for asset_config_path in util.find_asset_config_files(input_dirs, asset_config_filename):
         asset_count += 1
+        # Errors only "count" if changed_files was None or the asset was changed
+        validate_this = changed_assets is None or asset_config_path in changed_assets
+
         # Load config
         try:
             asset_config = assets.AssetConfig(asset_config_path)
         except Exception as e:
             _log_error(asset_config_path, e)
-            error_count += 1
+            if validate_this:
+                error_count += 1
             continue
+
+        # Populate dictionary of asset names to asset config paths
         asset_dirs[f"{asset_config.type.value} {asset_config.name}"].append(asset_config_path)
 
-        # Validate name
-        if check_names:
-            error_count += validate_name(asset_config)
-
-        # Validate categories
-        if check_categories:
-            error_count += validate_categories(asset_config)
-
-        # Validate specific asset types
+        # Populate dictionary of image names to asset config paths
+        environment_config = None
         if asset_config.type == assets.AssetType.ENVIRONMENT:
             try:
                 environment_config = asset_config.extra_config_as_object()
@@ -306,26 +308,39 @@ def validate_assets(input_dirs: List[Path],
                 if environment_config.publish_location:
                     image_name = f"{environment_config.publish_location.value}/{image_name}"
                 image_names[image_name].append(asset_config.file_path)
-
-                # Check image name
-                if check_images:
-                    error_count += validate_image_publishing(asset_config, environment_config)
             except Exception as e:
                 _log_error(environment_config.file_name_with_path, e)
+                if validate_this:
+                    error_count += 1
+
+        # Checks for changed assets only, or all assets if changed_files was None
+        if validate_this:
+            # Validate name
+            if check_names:
+                error_count += validate_name(asset_config)
+
+            # Validate categories
+            if check_categories:
+                error_count += validate_categories(asset_config)
+
+            # Validate specific asset types
+            if environment_config is not None:
+                if check_images:
+                    # Check image name
+                    error_count += validate_image_publishing(asset_config, environment_config)
+
+            # Validate spec
+            try:
+                spec = asset_config.spec_as_object()
+
+                # Ensure name and version aren't inconsistent
+                if not assets.Config._contains_template(spec.name) and asset_config.name != spec.name:
+                    raise ValidationException(f"Asset and spec name mismatch: {asset_config.name} != {spec.name}")
+                if not assets.Config._contains_template(spec.version) and asset_config.version != spec.version:
+                    raise ValidationException(f"Asset and spec version mismatch: {asset_config.version} != {spec.version}")
+            except Exception as e:
+                _log_error(spec.file_name_with_path, e)
                 error_count += 1
-
-        # Validate spec
-        try:
-            spec = asset_config.spec_as_object()
-
-            # Ensure name and version aren't inconsistent
-            if not assets.Config._contains_template(spec.name) and asset_config.name != spec.name:
-                raise ValidationException(f"Asset and spec name mismatch: {asset_config.name} != {spec.name}")
-            if not assets.Config._contains_template(spec.version) and asset_config.version != spec.version:
-                raise ValidationException(f"Asset and spec version mismatch: {asset_config.version} != {spec.version}")
-        except Exception as e:
-            _log_error(spec.file_name_with_path, e)
-            error_count += 1
 
     # Ensure unique assets
     for type_and_name, dirs in asset_dirs.items():
