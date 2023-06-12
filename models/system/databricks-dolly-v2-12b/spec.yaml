@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: databricks-dolly-v2-12b
 path: ./
 properties:
-  SHA: d0aa7ea43dc3548a8b499cc88605e150c4a2704d
+  SHA: 7dde7ac26ddcb679e0429fed1b6f751c1ffab1fb
   datasets: databricks/databricks-dolly-15k
   evaluation-min-sku-spec: 8|0|28|56
   evaluation-recommended-sku: Standard_DS4_v2
