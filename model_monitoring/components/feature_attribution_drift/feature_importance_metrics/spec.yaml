@@ -47,9 +47,9 @@ conf:
         - mltable~=1.3.0
         - responsibleai~=0.27.0
         - scikit-learn<1.1
-  name: responsibleai-spark
-  
-  args: >-
+    name: responsibleai-spark
+
+args: >-
   --baseline_data ${{inputs.baseline_data}}
   $[[--target_column ${{inputs.target_column}}]]
   $[[--task_type ${{inputs.task_type}}]]
