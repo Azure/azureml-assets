@@ -51,20 +51,18 @@ inputs:
     description: Comma separated values of feature column names
   mlflow_model:
     type: mlflow_model
-    optional: true
     description: "Mlflow Model - registered model or output of a job with type mlflow_model in a pipeline"
   model_uri:
     type: string
     optional: true
-    description: "The location, in URI format, of the MLflow model, for example:
+    description: "[DEPRECATED] The location, in URI format, of the MLflow model, for example:
                       - ``runs:/<mlflow_run_id>/run-relative/path/to/model``
                       - ``models:/<model_name>/<model_version>``
                       - ``models:/<model_name>/<stage>``"
   device:
     type: string
-    optional: true
-    default: cpu
-    enum: [cpu, gpu]
+    default: auto
+    enum: [auto, cpu, gpu]
   batch_size:
     type: integer
     optional: true
@@ -78,21 +76,21 @@ outputs:
     type: uri_folder
 
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/7
+environment: azureml://registries/azureml/environments/model-evaluation/versions/8
 command: >-
   python download_dependencies.py
-  $[[--mlflow-model '${{inputs.mlflow_model}}']]
+  --mlflow-model '${{inputs.mlflow_model}}'
   $[[--model-uri ${{inputs.model_uri}}]] ;
   python evaluate_model.py
-  $[[--data '${{inputs.test_data}}']]
-  $[[--data-mltable '${{inputs.test_data_mltable}}']]
   --task ${{inputs.task}}
   --output '${{outputs.evaluation_result}}'
   --label-column-name ${{inputs.test_data_label_column_name}}
-  $[[--input-column-names ${{inputs.test_data_input_column_names}}]]
-  $[[--mlflow-model '${{inputs.mlflow_model}}']]
+  --mlflow-model '${{inputs.mlflow_model}}'
+  --device ${{inputs.device}}
+  $[[--data '${{inputs.test_data}}']]
+  $[[--data-mltable '${{inputs.test_data_mltable}}']]
+  $[[--input-column-names '${{inputs.test_data_input_column_names}}']]
   $[[--model-uri ${{inputs.model_uri}}]]
   $[[--config-file-name '${{inputs.evaluation_config}}']]
-  $[[--device ${{inputs.device}}]]
   $[[--batch-size ${{inputs.batch_size}}]]
   $[[--config_str '${{inputs.evaluation_config_params}}']]
