@@ -31,6 +31,7 @@ import azureml.evaluate.mlflow as aml_mlflow
 from azureml.evaluate.mlflow.models.evaluation import EvaluationResult
 
 from exceptions import DataValidationException, ModelEvaluationException, DataLoaderException
+from copy import deepcopy
 
 
 logger = get_logger(name=__name__)
@@ -86,6 +87,32 @@ def filter_pipeline_params(evaluation_config):
     """
     filtered_params = {i: j for i, j in evaluation_config.items() if i in constants.ALLOWED_PIPELINE_PARAMS}
     return filtered_params
+
+
+def sanitize_device_and_device_map(evaluation_config, device):
+    """Check device_map and device in args.
+
+    Args:
+        evaluation_config (_type_): _description_
+        device (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    has_device_map_auto = False
+    if evaluation_config.get("pipeline_init_args"):
+        if evaluation_config["pipeline_init_args"].get("device_map"):
+            has_device_map_auto = evaluation_config["pipeline_init_args"]["device_map"] == "auto"
+    if has_device_map_auto:
+        return evaluation_config, None
+    else:
+        if device == "auto":
+            new_evaluation_config = deepcopy(evaluation_config)
+            if not new_evaluation_config.get("pipeline_init_args"):
+                new_evaluation_config["pipeline_init_args"] = {}
+            new_evaluation_config["pipeline_init_args"]["device_map"] = "auto"
+            return new_evaluation_config, None
+        return evaluation_config, device
 
 
 def load_transformer(filename):
@@ -587,7 +614,28 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
     return X_test, y_test
 
 
-def read_config(conf_folder, task_type):
+def fetch_compute_metrics_args(data, task_type):
+    """Fetch compute metrics arguments from evaluation config.
+
+    Args:
+        data (_type_): _description_
+    """
+    metrics_args = ArgumentsSet(task_type=task_type)
+    metrics_config = {}
+    for arg, func in metrics_args.args_set.items():
+        val = data.get(arg, None)
+        if val is not None:
+            try:
+                metrics_config[arg] = eval(func)
+            except TypeError:
+                message = "Invalid dtype passed for config param '" + arg + "'."
+                logger.error(message)
+                raise DataValidationException(message)
+
+    return metrics_config
+
+
+def read_config(conf_folder, task_type, for_prediction=False):
     """Util function for reading config.
 
     Args:
@@ -609,60 +657,9 @@ def read_config(conf_folder, task_type):
         log_traceback(e, logger, error_message, is_critical=True)
         raise DataValidationException(error_message)
 
-    metrics_args = ArgumentsSet(task_type=task_type)
-    metrics_config = {}
-    # logger.info(metrics_args)
-    for arg, func in metrics_args.args_set.items():
-        val = data.get(arg, None)
-        if val is not None:
-            # if arg == "y_transformer":
-            #    val = os.path.join(conf_folder, val)
-            try:
-                metrics_config[arg] = eval(func)
-            except TypeError:
-                message = "Invalid dtype passed for config param '" + arg + "'."
-                logger.error(message)
-                raise DataValidationException(message)
-
-    return metrics_config
-
-
-def read_compute_metrics_config(conf_folder, task_type):
-    """Util function for reading config.
-
-    Args:
-        conf_folder (_type_): _description_
-        task_type (_type_): _description_
-
-    Raises:
-        DataValidationException: _description_
-
-    Returns:
-        _type_: _description_
-    """
-    try:
-        import json
-        with open(conf_folder, "r") as f:
-            data = json.load(f)
-    except Exception as e:
-        error_message = f"Failed to load config file with error {repr(e)}"
-        log_traceback(e, logger, error_message, is_critical=True)
-        raise DataValidationException(error_message)
-
-    metrics_args = ArgumentsSet(task_type=task_type)
-    metrics_config = {}
-    # logger.info(metrics_args)
-    for arg, func in metrics_args.args_set.items():
-        val = data.get(arg, None)
-        if val is not None:
-            try:
-                metrics_config[arg] = eval(func)
-            except TypeError:
-                message = "Invalid dtype passed for config param '" + arg + "'."
-                logger.error(message)
-                raise DataValidationException(message)
-
-    return metrics_config
+    if for_prediction:
+        return data
+    return fetch_compute_metrics_args(data, task_type)
 
 
 def _validate_ner_line(line):

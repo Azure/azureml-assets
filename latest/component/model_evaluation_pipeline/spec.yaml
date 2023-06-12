@@ -32,7 +32,7 @@ inputs:
     description: "Test Data MLTable path"
   mlflow_model:
     type: mlflow_model
-    optional: true
+    optional: false
     description: "Mlflow Model (could be a registered model or part of another pipeline"
   label_column_name:
     type: string
@@ -45,14 +45,14 @@ inputs:
   model_uri:
     type: string
     optional: true
-    description: "The location, in URI format, of the MLflow model, for example: -\
-      \ ``runs:/<mlflow_run_id>/run-relative/path/to/model`` - ``models:/<model_name>/<model_version>``\
+    description: "[DEPRECATED] The location, in URI format, of the MLflow model, for\
+      \ example: - ``runs:/<mlflow_run_id>/run-relative/path/to/model`` - ``models:/<model_name>/<model_version>``\
       \ - ``models:/<model_name>/<stage>``"
   device:
     type: string
-    optional: true
-    default: cpu
-    enum: [cpu, gpu]
+    optional: false
+    default: auto
+    enum: [auto, cpu, gpu]
   batch_size:
     type: integer
     optional: true

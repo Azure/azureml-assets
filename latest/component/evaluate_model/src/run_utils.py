@@ -121,3 +121,18 @@ class TestRun:
         while cur_run.parent is not None:
             cur_run = cur_run.parent
         return cur_run
+
+    @property
+    def root_attribute(self):
+        """Get Root attribute of the pipeline.
+
+        Returns:
+            _type_: str
+        """
+        cur_attribute = self._run.name
+        first_parent = self._run.parent
+        if first_parent is not None and hasattr(first_parent, "parent"):
+            second_parent = first_parent.parent
+            if second_parent is not None and hasattr(second_parent, "name"):
+                cur_attribute = second_parent.name
+        return cur_attribute
