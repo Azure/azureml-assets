@@ -273,7 +273,7 @@ def validate_assets(input_dirs: List[Path],
         bool: True if assets were successfully validated, otherwise False.
     """
     # Gather list of just changed assets, for later filtering
-    changed_assets = util.find_asset_config_files(input_dirs, asset_config_filename, changed_files) if changed_files else None  # noqa
+    changed_assets = util.find_asset_config_files(input_dirs, asset_config_filename, changed_files) if changed_files else None  # noqa: E501
 
     # Find assets under input dirs
     asset_count = 0
