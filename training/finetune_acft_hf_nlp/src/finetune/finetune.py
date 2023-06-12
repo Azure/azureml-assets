@@ -363,6 +363,20 @@ def finetune(args: Namespace):
     else:
         args.model_name_or_path = args.model_name
 
+    # additional logging
+    if hasattr(args, "model_name"):
+        logger.info(f"Model name: {args.model_name}")
+    if hasattr(args, "task_name"):
+        logger.info(f"Task name: {args.task_name}")
+    if hasattr(args, "apply_lora"):
+        logger.info(f"enable LoRA: {args.apply_lora}")
+    if hasattr(args, "apply_deepspeed"):
+        logger.info(f"enable DeepSpeed: {args.apply_deepspeed}")
+    if hasattr(args, "apply_ort"):
+        logger.info(f"enable ORT: {args.apply_ort}")
+    if hasattr(args, "precision"):
+        logger.info(f"Precision: {args.precision}")
+
     # set `ignore_mismatched_sizes` to `false` by default
     if hasattr(args, "model_name") and args.model_name in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
         logger.info(f"Forcing `ignore_mismatched_sizes` to False for {args.model_name}")

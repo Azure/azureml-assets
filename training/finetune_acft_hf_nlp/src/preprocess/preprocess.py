@@ -152,6 +152,12 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
             copy_and_overwrite(str(model_name_or_path), parsed_args.model_name)
         parsed_args.model_name_or_path = parsed_args.model_name
 
+    # additional logging
+    if hasattr(parsed_args, "model_name"):
+        logger.info(f"Model name: {parsed_args.model_name}")
+    if hasattr(parsed_args, "task_name"):
+        logger.info(f"Task name: {parsed_args.task_name}")
+
     # update dataset paths
     parsed_args.train_data_path = parsed_args.train_file_path
     parsed_args.validation_data_path = parsed_args.validation_file_path
