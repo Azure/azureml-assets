@@ -9,3 +9,4 @@ dependencies:
   - azureml-mlflow==1.51.0
   - mldesigner==0.1.0b13
   - cryptography==39.0.1
+  - requests==2.31.0
