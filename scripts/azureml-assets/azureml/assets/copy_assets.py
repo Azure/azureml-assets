@@ -30,10 +30,15 @@ def copy_asset(asset_config: assets.AssetConfig,
     if release_directory_root is not None and assets.release_tag_exists(asset_config, release_directory_root):
         # Skip a released version
         return None
+    
+    if not assets.check_new_or_preview_release(asset_config) or not assets.previous_release_tag_exists(asset_config, release_directory_root):
+        # Skip if previous version was not released
+        return None
 
     # Copy asset to output directory
-    util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory_root, add_subdir=True,
-                                  use_version_dir=use_version_dir)
+    # util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory_root, add_subdir=True,
+    #                               use_version_dir=use_version_dir)
+
     return asset_config.version
 
 

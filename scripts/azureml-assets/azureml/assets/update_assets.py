@@ -48,6 +48,39 @@ def pin_env_files(env_config: assets.EnvironmentConfig):
             logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
 
+def check_new_or_preview_release(asset_config: assets.AssetConfig) -> bool:
+    """Check if release is preview or version 1.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config
+
+    Returns:
+        bool: True if the release is a preview or version 1, False otherwise
+    """
+    full_name_components = asset_config.full_name.split("/")
+    return "preview" in full_name_components[2] or int(full_name_components[2]) == 1
+
+
+def previous_release_tag_exists(asset_config: assets.AssetConfig, release_directory_root: Path) -> bool:
+    """Check repo for an asset's previous release tag.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config
+        release_directory_root (Path): Release branch location
+
+    Returns:
+        bool: True if the previous tag exists, False otherwise
+    """
+    # Check git repo for version-specific tag
+    repo = Repo(release_directory_root)
+
+    full_name_components = asset_config.full_name.split("/")
+    full_name_components[2] = str(int(full_name_components[2]) - 1)
+    previous_full_name = "/".join(full_name_components)
+    
+    return previous_full_name in repo.tags
+
+
 def release_tag_exists(asset_config: assets.AssetConfig, release_directory_root: Path) -> bool:
     """Check repo for an asset's release tag.
 
