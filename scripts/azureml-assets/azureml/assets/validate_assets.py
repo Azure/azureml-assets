@@ -289,9 +289,11 @@ def validate_assets(input_dirs: List[Path],
         try:
             asset_config = assets.AssetConfig(asset_config_path)
         except Exception as e:
-            _log_error(asset_config_path, e)
             if validate_this:
+                _log_error(asset_config_path, e)
                 error_count += 1
+            else:
+                _log_warning(asset_config_path, e)
             continue
 
         # Populate dictionary of asset names to asset config paths
@@ -309,9 +311,11 @@ def validate_assets(input_dirs: List[Path],
                     image_name = f"{environment_config.publish_location.value}/{image_name}"
                 image_names[image_name].append(asset_config.file_path)
             except Exception as e:
-                _log_error(environment_config.file_name_with_path, e)
                 if validate_this:
+                    _log_error(environment_config.file_name_with_path, e)
                     error_count += 1
+                else:
+                    _log_warning(environment_config.file_name_with_path, e)
 
         # Checks for changed assets only, or all assets if changed_files was None
         if validate_this:
