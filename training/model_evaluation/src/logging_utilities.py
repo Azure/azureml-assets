@@ -65,7 +65,7 @@ class CustomDimensions:
                  app_name=constants.TelemetryConstants.COMPONENT_NAME,
                  run_id=None,
                  common_core_version=azureml.core.__version__,
-                 model_evaluation_version="0.0.5",
+                 model_evaluation_version="0.0.9",
                  compute_target=None,
                  experiment_id=None,
                  parent_run_id=None,
@@ -73,7 +73,7 @@ class CustomDimensions:
                  region=None,
                  subscription_id=None,
                  task_type="",
-                 mode="") -> None:
+                 root_attribute="local") -> None:
         """__init__.
 
         Args:
@@ -101,7 +101,7 @@ class CustomDimensions:
         self.region = region
         self.subscription_id = subscription_id
         self.task_type = task_type
-        self.mode = mode
+        self.rootAttribution = root_attribute
         if self.run_id is None:
             run_obj = TestRun()
             self.run_id = run_obj.run.id
@@ -112,18 +112,13 @@ class CustomDimensions:
             self.parent_run_id = self.run_id
             if hasattr(run_obj.run, "parent"):
                 self.parent_run_id = run_obj.run.parent.id
+            self.rootAttribution = run_obj.root_attribute
         if self.task_type == "":
             import sys
             args = sys.argv
             if "--task" in args:
                 ind = args.index("--task")
                 self.task_type = sys.argv[ind+1]
-        if self.mode == "":
-            import sys
-            args = sys.argv
-            if "--mode" in args:
-                ind = args.index("--mode")
-                self.mode = sys.argv[ind+1]
 
 
 custom_dimensions = CustomDimensions()

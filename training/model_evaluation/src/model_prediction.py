@@ -28,7 +28,8 @@ from utils import (setup_model_dependencies,
                    read_data,
                    read_config,
                    prepare_data,
-                   filter_pipeline_params)
+                   filter_pipeline_params,
+                   sanitize_device_and_device_map)
 from run_utils import TestRun
 from validation import _validate, validate_args
 
@@ -61,7 +62,7 @@ class Inferencer:
         self.task = task
         self.metrics_config = {}
         if config_file:
-            self.metrics_config = read_config(config_file, task)
+            self.metrics_config = read_config(config_file, task, for_prediction=True)
         elif metrics_config:
             self.metrics_config = metrics_config
         self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL
@@ -69,7 +70,12 @@ class Inferencer:
                                or task == constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL)
         self.custom_dimensions = custom_dimensions
         try:
-            self.device = torch.cuda.current_device() if device == "gpu" else -1
+            if device == "gpu":
+                self.device = torch.cuda.current_device()
+            elif device == "cpu":
+                self.device = -1
+            else:
+                self.device = device
         except Exception:
             logger.warning("No GPU found. Using CPU instead")
             self.device = -1
@@ -162,9 +168,9 @@ class Inferencer:
             y_transformer = None
             predictor_cls = get_predictor(self.task)
             predictor = predictor_cls(self.model)
-            device = self.device  # torch.cuda.current_device() if torch.cuda.is_available() else "cpu"
             pred_probas_chunk = None
             pipeline_params = filter_pipeline_params(self.metrics_config)
+            pipeline_params, device = sanitize_device_and_device_map(pipeline_params, self.device)
             torch_error_message = "Model prediction Failed.\nPossible Reason:\n"\
                                   "1. Your input text exceeds max length of model.\n"\
                                   "\t\tYou can either keep truncation=True in tokenizer while logging model.\n"\
@@ -244,7 +250,7 @@ def test_model():
                         default=None, dest="prediction_probabilities_mltable")
     parser.add_argument("--ground-truth", type=str, required=False, default=None, dest="ground_truth")
     parser.add_argument("--ground-truth-mltable", type=str, required=False, default=None, dest="ground_truth_mltable")
-    parser.add_argument("--device", type=str, required=False, default="cpu", dest="device")
+    parser.add_argument("--device", type=str, required=False, default="auto", dest="device")
     parser.add_argument("--batch-size", type=int, required=False, default=None, dest="batch_size")
     parser.add_argument("--input-column-names",
                         type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()],

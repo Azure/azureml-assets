@@ -72,6 +72,7 @@ def _validate_task(args):
     """
     # if args.task is None:
     #     return
+    logger.info("Validating Task Type: "+args.task)
     assert_and_raise(
         condition=args.task in ALL_TASKS,
         exception_cls=ArgumentValidationException,

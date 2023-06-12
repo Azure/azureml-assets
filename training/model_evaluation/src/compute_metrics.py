@@ -15,7 +15,7 @@ from azureml.telemetry.activity import log_activity
 import constants
 from exceptions import DataLoaderException, DataValidationException, ComputeMetricsException
 from logging_utilities import custom_dimensions, get_logger, log_traceback
-from utils import (read_compute_metrics_config,
+from utils import (read_config,
                    check_and_return_if_mltable,
                    read_data,
                    evaluate_predictions)
@@ -68,7 +68,7 @@ class ModelEvaluationRunner:
 
         self.label_column_name, self.prediction_column_name, self.metrics_config = None, None, {}
         if config_file:
-            self.metrics_config = read_compute_metrics_config(config_file, self.task)
+            self.metrics_config = read_config(config_file, self.task)
         elif metrics_config:
             self.metrics_config = metrics_config
         self._is_multilabel = self.metrics_config.get("multilabel", False)
