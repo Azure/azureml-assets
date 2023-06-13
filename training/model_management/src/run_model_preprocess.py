@@ -137,8 +137,9 @@ if __name__ == "__main__":
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         _validate_pyfunc_args(preprocess_args)
 
-    with TemporaryDirectory(dir=mlflow_model_output_dir) as working_dir, \
-            TemporaryDirectory(dir=mlflow_model_output_dir) as temp_dir:
+    with TemporaryDirectory(dir=mlflow_model_output_dir) as working_dir, TemporaryDirectory(
+        dir=mlflow_model_output_dir
+    ) as temp_dir:
         run_preprocess(mlflow_flavor, model_path, working_dir, temp_dir, **preprocess_args)
         shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
 
