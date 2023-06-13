@@ -97,7 +97,7 @@ inputs:
     description: AutoTokenizer class may not be sufficient to load tokenizer for some of the models. You can use this parameter to send Config class name as it is
     optional: true
 
-  extra_pip_dependencies:
+  extra_pip_requirements:
     type: string
     description: |
       Extra pip dependencies that MLFlow model should capture as part of conversion. This would be used to create environment while loading the model for inference.
@@ -182,7 +182,7 @@ jobs:
       hf_config_class:  ${{parent.inputs.hf_config_class}}
       hf_model_class:  ${{parent.inputs.hf_model_class}}
       hf_tokenizer_class:  ${{parent.inputs.hf_tokenizer_class}}
-      extra_pip_dependencies: ${{parent.inputs.extra_pip_dependencies}}
+      extra_pip_requirements: ${{parent.inputs.extra_pip_requirements}}
     outputs:
       mlflow_model_folder:
         type: mlflow_model
