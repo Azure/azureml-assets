@@ -22,7 +22,7 @@ MLFLOW_ARTIFACT_DIRECTORY = "mlflow_model_folder"
 
 # HF flavor patterns
 MODEL_CONFIG_FILE_PATTERN = r"^config\.json$"
-MODEL_FILE_PATTERN = r"^pytorch.*\.bin$"
+MODEL_FILE_PATTERN = r"^pytorch.*$"
 TOKENIZER_FILE_PATTERN = r"^tokenizer.*|vocab\.json$"
 
 
