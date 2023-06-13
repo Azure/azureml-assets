@@ -448,10 +448,10 @@ def finetune(args: Namespace):
     logger.info(f"Process - {process_name}")
     if process_name in {'main', 'rank_0'}:
         # hotfix mlflow model deployment issue
-        mlflow_model_path = args.mlflow_model_folder
-        mlflow_conda_yaml = str(Path(mlflow_model_path, "conda.yaml"))
-        mlflow_req_file = str(Path(mlflow_model_path, "requirements.txt"))
         try:
+            mlflow_model_path = args.mlflow_model_folder
+            mlflow_conda_yaml = str(Path(mlflow_model_path, "conda.yaml"))
+            mlflow_req_file = str(Path(mlflow_model_path, "requirements.txt"))
             import yaml
             logger.info("Updating mlflow model requirements")
             with open(mlflow_conda_yaml, "r") as rptr:
@@ -460,7 +460,8 @@ def finetune(args: Namespace):
             for ele in mlflow_data["dependencies"]:
                 if type(ele) == dict and "pip" in ele:
                     for idx in range(len(ele["pip"])):
-                        if ele["pip"][idx].startswith("mlflow==") or ele["pip"][idx].startswith("mlflow<"):
+                        if ele["pip"][idx].startswith("mlflow==") or ele["pip"][idx].startswith("mlflow<") or \
+                                   ele["pip"][idx].startswith("mlflow>"):
                             ele["pip"][idx] = "mlflow==2.3.1"
                             break
                     ele["pip"].append("mlflow-skinny==2.3.2")
@@ -472,7 +473,8 @@ def finetune(args: Namespace):
                 mlflow_req_data = rptr.readlines()
             mlflow_req_data[-1] = str(mlflow_req_data[-1]) + "\n"
             for idx in range(len(mlflow_req_data)):
-                if mlflow_req_data[idx].startswith("mlflow==") or mlflow_req_data[idx].startswith("mlflow<"):
+                if mlflow_req_data[idx].startswith("mlflow==") or mlflow_req_data[idx].startswith("mlflow<") or \
+                            mlflow_req_data[idx].startswith("mlflow>"):
                     mlflow_req_data[idx] = "mlflow==2.3.1\n"
                     break
             mlflow_req_data.append("mlflow-skinny==2.3.2")

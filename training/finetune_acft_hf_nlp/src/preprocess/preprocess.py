@@ -168,8 +168,8 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
             tgt_lang = unparsed_args[tgt_lang_idx + 1]
             # fetching model_name as path is already updated above to model_name
             model_type = AzuremlAutoConfig.get_model_type(hf_model_name_or_path=parsed_args.model_name)
-        except Exception:
-            logger.info("Unable to parse languages, continuing preprocess!")
+        except Exception as e:
+            logger.info(f"Unable to parse languages, continuing preprocess! - {e}")
 
         if model_type == HfModelTypes.T5 and \
                 (src_lang not in T5_CODE2LANG_MAP or tgt_lang not in T5_CODE2LANG_MAP):
