@@ -4,9 +4,12 @@
 """Base Predictor."""
 
 from abc import abstractmethod, ABC
+from logging_utilities import get_logger
 import azureml.evaluate.mlflow as aml_mlflow
 import numpy as np
 import pandas as pd
+
+logger = get_logger(name=__name__)
 
 
 class BasePredictor(ABC):
@@ -22,6 +25,8 @@ class BasePredictor(ABC):
         if mlflow_model.metadata.flavors.get(aml_mlflow.pytorch.FLAVOR_NAME):
             is_torch = True
         if mlflow_model.metadata.flavors.get(aml_mlflow.hftransformers.FLAVOR_NAME):
+            is_hf = True
+        if mlflow_model.metadata.flavors.get(aml_mlflow.hftransformers.FLAVOR_NAME_MLMODEL_LOGGING):
             is_hf = True
 
         if is_torch:
@@ -49,6 +54,24 @@ class BasePredictor(ABC):
                         key = list(X_test.keys())[0]
                         X_test[input_names[0]] = X_test[key]
                         X_test.pop(key)
+
+    def _ensure_model_on_cpu(self):
+        """Ensure model is on cpu.
+
+        Args:
+            model (_type_): _description_
+        """
+        if self.is_hf:
+            if hasattr(self.model._model_impl, "hf_model"):
+                self.model._model_impl.hf_model.to("cpu")
+            else:
+                logger.warning("hf_model not found in mlflow model")
+        elif self.is_torch:
+            import torch
+            if isinstance(self.model._model_impl, torch.nn.Module):
+                self.model._model_impl.to("cpu")
+            else:
+                logger.warning("Torch model is not of type nn.Module")
 
 
 class PredictWrapper(BasePredictor):

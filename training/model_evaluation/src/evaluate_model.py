@@ -11,10 +11,12 @@ import json
 import constants
 import torch
 from itertools import repeat
+from copy import deepcopy
 
 from exceptions import (ModelEvaluationException,
                         ScoringException,
                         DataLoaderException)
+from image_classification_dataset import get_classification_dataset, ImageDataFrameParams
 from logging_utilities import custom_dimensions, get_logger, log_traceback
 from azureml.telemetry.activity import log_activity
 from utils import (read_config,
@@ -22,7 +24,10 @@ from utils import (read_config,
                    read_data,
                    prepare_data,
                    setup_model_dependencies,
-                   get_predictor)
+                   get_predictor,
+                   filter_pipeline_params,
+                   fetch_compute_metrics_args,
+                   sanitize_device_and_device_map)
 
 from run_utils import TestRun
 from validation import _validate, validate_args, validate_Xy
@@ -43,9 +48,10 @@ class EvaluateModel:
                  model_uri: str,
                  output: str,
                  custom_dimensions: dict,
-                 device: str = "cpu",
+                 device: str = "auto",
                  config_file: str = None,
-                 metrics_config: dict = None) -> None:
+                 metrics_config: dict = None,
+                 batch_size: int = 1) -> None:
         """
         Evaluate Model Object.
 
@@ -56,24 +62,40 @@ class EvaluateModel:
             custom_dimensions: str
             device: str
             config_file: str
+            metrics_config: dict,
+            batch_size: int
         """
         self.task = task
         self.model_uri = model_uri
         self.output = output
-        self.metrics_config = {}
-        if config_file:
-            self.metrics_config = read_config(config_file, task)
-        elif metrics_config:
-            self.metrics_config = metrics_config
         self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL or
-                               task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL)
+                               task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL or
+                               task == constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL)
         self._has_multiple_output = task in constants.MULTIPLE_OUTPUTS_SET
         self.custom_dimensions = custom_dimensions
+        self.batch_size = batch_size
+        self.metrics_config = {}
+        if config_file:
+            self.metrics_config = read_config(config_file, task, for_prediction=True)
+        elif metrics_config:
+            self.metrics_config = metrics_config
+        pipeline_params = filter_pipeline_params(self.metrics_config)
+        compute_metrics_config = fetch_compute_metrics_args(self.metrics_config, task_type=self.task)
         try:
-            self.device = torch.cuda.current_device() if device == "gpu" else -1
+            if device == "gpu":
+                self.device = torch.cuda.current_device()
+            elif device == "cpu":
+                self.device = -1
+            else:
+                self.device = device
         except Exception:
             logger.warning("No GPU found. Using CPU instead")
             self.device = -1
+        pipeline_params, self.device = sanitize_device_and_device_map(pipeline_params, self.device)
+        self.metrics_config = deepcopy(pipeline_params)
+        self.metrics_config.update(compute_metrics_config)
+        logger.info("Logging to check metrics config in evaluate_model: "+str(self.metrics_config))
+
         # self._setup_custom_environment()
 
     def _setup_custom_environment(self):
@@ -120,7 +142,14 @@ class EvaluateModel:
         Returns: Dataframe
 
         """
-        data = read_data(test_data, is_mltable)
+        if self.task in [constants.TASK.IMAGE_CLASSIFICATION,
+                         constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL]:
+            df = get_classification_dataset(testing_mltable=test_data, multi_label=self.multilabel)
+            data = iter([df])
+            input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
+            label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
+        else:
+            data = read_data(test_data, is_mltable)
         data = map(_validate, data, repeat(input_column_names), repeat(label_column_name))
         data = map(prepare_data, data, repeat(self.task), repeat(label_column_name), repeat(self._has_multiple_output))
         return data  # X_test, y_test
@@ -165,7 +194,9 @@ class EvaluateModel:
                     # "log_traceback": log_traceback,
                     "custom_dimensions": self.custom_dimensions,
                     "output": self.output,
-                    "device": self.device
+                    "device": self.device,
+                    "multi_label": self.multilabel,
+                    "batch_size": self.batch_size,
                 }
             )
             result = None
@@ -207,8 +238,8 @@ def test_model():
     parser.add_argument("--data-mltable", type=str, dest="data_mltable", required=False, default="")
     parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default=None)
     parser.add_argument("--output", type=str, dest="output")
-    parser.add_argument("--device", type=str, required=False, default="cpu", dest="device")
-    parser.add_argument("--batch-size", type=int, required=False, default=None, dest="batch_size")
+    parser.add_argument("--device", type=str, required=False, default="auto", dest="device")
+    parser.add_argument("--batch-size", type=int, required=False, default=1, dest="batch_size")
     parser.add_argument("--label-column-name", type=str, dest="label_column_name", required=True)
     parser.add_argument("--input-column-names",
                         type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()],
@@ -251,7 +282,8 @@ def test_model():
             model_uri=model_uri,
             config_file=args.config_file_name,
             metrics_config=met_config,
-            device=args.device
+            device=args.device,
+            batch_size=args.batch_size
         )
         runner.score(test_data=data, label_column_name=args.label_column_name,
                      input_column_names=args.input_column_names, is_mltable=is_mltable)

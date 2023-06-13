@@ -41,6 +41,9 @@ def list_assets(args: argparse.Namespace):
 def delete_assets(args: argparse.Namespace):
     """Delete assets that are not in the retention file.
 
+    NOTE: This is generally meant to be run against the release branch, where there's
+    no risk of deleting shared files like component source code.
+
     Args:
         args (argparse.Namespace): Args from argparse.
     """
@@ -55,16 +58,19 @@ def delete_assets(args: argparse.Namespace):
     for asset_config in util.find_assets(args.input_dirs, args.asset_config_filename):
         asset_count += 1
         if asset_config.partial_name not in retention_list:
+            # Get common directory, in case asset config file isn't at the root
+            common_dir, _ = util.find_common_directory(asset_config.release_paths)
+
             # Delete asset
             if args.dry_run:
-                logger.print(f"Would delete {asset_config.partial_name}")
+                logger.print(f"Would delete {asset_config.partial_name} from {common_dir}")
             else:
                 try:
-                    logger.print(f"Deleting {asset_config.partial_name}")
-                    shutil.rmtree(asset_config.file_path)
+                    logger.print(f"Deleting {asset_config.partial_name} from {common_dir}")
+                    shutil.rmtree(common_dir)
                     deleted_count += 1
                 except Exception as e:
-                    logger.log_warning(f"Failed to delete {asset_config.partial_name}: {e}")
+                    logger.log_warning(f"Failed to delete {common_dir}: {e}")
 
     # Set variables
     logger.set_output(ASSET_COUNT, asset_count)

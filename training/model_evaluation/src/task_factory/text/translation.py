@@ -51,5 +51,13 @@ class Translator(PredictWrapper):
             y_pred = self.model.predict(X_test, **kwargs)
         except TypeError:
             y_pred = self.model.predict(X_test)
+        except RuntimeError as re:
+            device = kwargs.get("device", -1)
+            if device != -1:
+                logger.warning("Predict failed on GPU. Falling back to CPU")
+                kwargs["device"] = -1
+                y_pred = self.model.predict(X_test, **kwargs)
+            else:
+                raise re
 
         return y_pred

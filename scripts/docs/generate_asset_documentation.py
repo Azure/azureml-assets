@@ -12,8 +12,9 @@ from pathlib import Path
 from azureml.assets.config import AssetConfig, AssetType
 from glob import glob as search
 
-SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL]
+SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA]
 DEFAULT_CATEGORY = "Uncategorized"
+PLURALIZED_ASSET_TYPE = {"environment": "environments", "component": "components", "model": "models", "data": "data"}
 
 
 class AssetInfo:
@@ -36,6 +37,11 @@ class AssetInfo:
     def type(self) -> str:
         """Return asset type."""
         return self._asset_config.type.value
+
+    @property
+    def pluralized_type(self) -> str:
+        """Return pluralized asset type."""
+        return PLURALIZED_ASSET_TYPE[self._asset_config.type.value]
 
     @property
     def name(self) -> str:
@@ -63,12 +69,12 @@ class AssetInfo:
     @property
     def filename(self) -> str:
         """Return asset filename."""
-        return f"{self.type}-{self.name}"
+        return f"{self.pluralized_type}-{self.name}"
 
     @property
     def directory(self) -> Path:
         """Return asset directory."""
-        return Path(f"{self.type}s")
+        return Path(f"{self.pluralized_type}")
 
     @property
     def fullpath(self) -> str:
@@ -89,13 +95,14 @@ class AssetInfo:
     @staticmethod
     def create_asset_info(asset_config):
         """Instantiate an asset info class."""
-        # TODO: Use AssetType.COMPONENT
         if asset_config.type == AssetType.ENVIRONMENT:
             return EnvironmentInfo(asset_config)
         if asset_config.type == AssetType.COMPONENT:
             return ComponentInfo(asset_config)
         if asset_config.type == AssetType.MODEL:
             return ModelInfo(asset_config)
+        if asset_config.type == AssetType.DATA:
+            return DataInfo(asset_config)
 
         raise Exception(f"Not supported asset type {asset_config.type}. Use {SUPPORTED_ASSET_TYPES}")
 
@@ -135,8 +142,8 @@ class AssetInfo:
         return doc
 
     def _add_doc_link(self, doc):
-        link = "https://ml.azure.com/registries/azureml/{}s/{}/version/{}".format(
-            self.type, self.name, self.version)
+        link = "https://ml.azure.com/registries/azureml/{}/{}/version/{}".format(
+            self.pluralized_type, self.name, self.version)
         doc.add_paragraph("**View in Studio**:  [{}]({})".format(link, link))
         # doc.add_paragraph("**View in Studio**:  <a href=\"{}\" target=\"_blank\">{}</a>".format(link, link))
 
@@ -342,6 +349,27 @@ class ModelInfo(AssetInfo):
         return _doc
 
 
+class DataInfo(AssetInfo):
+    """Data asset class."""
+
+    def __init__(self, asset_config: AssetConfig):
+        """Instantiate Data asset class."""
+        super().__init__(asset_config)
+
+    @AssetInfo.doc.getter
+    def doc(self) -> snakemd.document.Document:
+        """Generate data markdown document."""
+        _doc = snakemd.new_doc()
+        self._add_doc_name(_doc)
+        self._add_doc_overview(_doc)
+        self._add_doc_description(_doc)
+        self._add_doc_asset_version(_doc)
+        self._add_doc_tags(_doc)
+        self._add_doc_link(_doc)
+
+        return _doc
+
+
 class Categories:
     """Categories structured by type."""
 
@@ -352,6 +380,7 @@ class Categories:
         self._categories[AssetType.ENVIRONMENT.value] = None
         self._categories[AssetType.COMPONENT.value] = None
         self._categories[AssetType.MODEL.value] = None
+        self._categories[AssetType.DATA.value] = None
 
     def classify_asset(self, asset: AssetInfo):
         """Classify an asset."""
@@ -378,13 +407,14 @@ class CategoryInfo:
         self._name = name
         self._parent = parent
         self._type = type
+        self._pluralized_type = PLURALIZED_ASSET_TYPE[type]
         self._assets = []
         self._sub_categories = {}
 
     @property
     def _category_full_path(self):
         parent_category = self._parent._category_full_path if self._parent else None
-        return (parent_category + "-" + self._name) if parent_category else (self._type + "s")
+        return (parent_category + "-" + self._name) if parent_category else (self._pluralized_type)
 
     @property
     def _doc_name(self):
@@ -392,7 +422,7 @@ class CategoryInfo:
 
     @property
     def _doc_full_path_name(self):
-        return f"{self._type}s/{self._doc_name}.md"
+        return f"{self._pluralized_type}/{self._doc_name}.md"
 
     @property
     def _is_root(self):
@@ -418,7 +448,7 @@ class CategoryInfo:
         """Save category documents."""
         doc = snakemd.new_doc()
         if self._is_root:
-            doc.add_heading(self._type.capitalize() + "s", level=1)
+            doc.add_heading(self._pluralized_type.capitalize(), level=1)
         else:
             doc.add_heading(self._name, level=1)
 
@@ -431,9 +461,9 @@ class CategoryInfo:
 
         # Create glossary that links to each asset of the asset type
         if self._is_root:
-            doc.add_heading(f"All {self._type}s", level=2)
+            doc.add_heading(f"All {self._pluralized_type}", level=2)
         else:
-            doc.add_heading(f"{self._type.capitalize()}s in this category", level=2)
+            doc.add_heading(f"{self._pluralized_type.capitalize()} in this category", level=2)
 
         doc.add_horizontal_rule()
 

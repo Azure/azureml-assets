@@ -15,10 +15,13 @@ import mlflow
 from azureml.core import Run
 from raiutils.data_processing import serialize_json_safe
 
+from _telemetry._loggerfactory import _LoggerFactory, track
+
 from spacy.cli import download
 from azureml.rai.utils import ModelSerializer
 from azureml.rai.utils.dataset_manager import DownloadManager
 from responsibleai import __version__ as responsibleai_version
+from responsibleai.feature_metadata import FeatureMetadata
 from responsibleai_vision import RAIVisionInsights
 from responsibleai_vision import __version__ as responsibleai_vision_version
 from responsibleai_vision.common.constants import ExplainabilityLiterals
@@ -32,6 +35,19 @@ logging.basicConfig(level=logging.INFO)
 
 
 IMAGE_DATA_TYPE = "image"
+PORTABLE_PATH = "PortablePath"
+
+_ai_logger = None
+
+
+def _get_logger():
+    global _ai_logger
+    if _ai_logger is None:
+        _ai_logger = _LoggerFactory.get_logger(__file__)
+    return _ai_logger
+
+
+_get_logger()
 
 
 class DashboardInfo:
@@ -151,6 +167,12 @@ def parse_args():
         default=5000
     )
     parser.add_argument("--classes", type=str, help="Optional[List[str]]")
+
+    parser.add_argument("--categorical_metadata_features", type=str,
+                        help="Optional[List[str]]")
+
+    parser.add_argument("--dropped_metadata_features", type=str,
+                        help="Optional[List[str]]")
 
     # Explanations
     parser.add_argument("--precompute_explanation", type=boolean_parser)
@@ -322,6 +344,7 @@ def add_properties_to_gather_run(
     _logger.info("Properties added to gather run")
 
 
+@track(_get_logger)
 def main(args):
     _logger.info(f"Dataset type is {args.dataset_type}")
 
@@ -359,11 +382,31 @@ def main(args):
     else:
         target_column = args.target_column_name
 
+    feature_metadata = FeatureMetadata()
+    feature_metadata.categorical_features = get_from_args(
+        args=args,
+        arg_name="categorical_metadata_features",
+        custom_parser=json_empty_is_none_parser,
+        allow_none=True
+    )
+    feature_metadata.dropped_features = get_from_args(
+        args=args,
+        arg_name="dropped_metadata_features",
+        custom_parser=json_empty_is_none_parser,
+        allow_none=True
+    )
+
     test_data_path = None
     image_downloader = None
     if is_test_mltable_from_datastore:
         test_data_path = args.test_dataset
         image_downloader = DownloadManager
+        # Need to drop extra "portable path" column added by DownloadManager
+        # to exclude it from feature metadata
+        if feature_metadata.dropped_features is None:
+            feature_metadata.dropped_features = [PORTABLE_PATH]
+        else:
+            feature_metadata.dropped_features.append(PORTABLE_PATH)
     _logger.info("Creating RAI Vision Insights")
     rai_vi = RAIVisionInsights(
         model=image_model,
@@ -379,7 +422,8 @@ def main(args):
         maximum_rows_for_test=args.maximum_rows_for_test_dataset,
         serializer=model_serializer,
         test_data_path=test_data_path,
-        image_downloader=image_downloader
+        image_downloader=image_downloader,
+        feature_metadata=feature_metadata
     )
 
     included_tools: Dict[str, bool] = {

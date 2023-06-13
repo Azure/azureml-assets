@@ -7,3 +7,4 @@ dependencies:
 - pip:
   - mldesigner=={{latest-pypi-version:pre}}
   - cryptography==39.0.1
+  - requests==2.31.0

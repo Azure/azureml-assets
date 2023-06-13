@@ -4,7 +4,7 @@
 /training/ @azure/aml-training 
 /sample/ @Azure/aml-assets
 /data/ @Azure/azureml-data
-/models/ @azure/aml-training
+/models/ @azure/aml-training @azure/azureml-inference-idc
 /common/components/register_model/ @azure/aml-training
 /common/components/deploy_model/ @azure/aml-training
 /common/src/model_deployment/ @azure/aml-training

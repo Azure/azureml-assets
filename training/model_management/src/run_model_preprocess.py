@@ -15,6 +15,10 @@ from pathlib import Path
 import shutil
 
 
+WORKING_DIR = "working_dir"
+TMP_DIR = "tmp"
+
+
 def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
@@ -136,14 +140,20 @@ if __name__ == "__main__":
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         _validate_pyfunc_args(preprocess_args)
 
-    run_preprocess(mlflow_flavor, model_path, mlflow_model_output_dir, **preprocess_args)
+    temp_output_dir = mlflow_model_output_dir / TMP_DIR
+    working_dir = mlflow_model_output_dir / WORKING_DIR
+    run_preprocess(mlflow_flavor, model_path, working_dir, temp_output_dir, **preprocess_args)
 
-    # Copy license file in input model_path
+    # Finishing touches
+    shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
+    shutil.rmtree(working_dir, ignore_errors=True)
+    shutil.rmtree(temp_output_dir, ignore_errors=True)
+
+    # Copy license file to output model path
     if license_file_path:
         shutil.copy(license_file_path, mlflow_model_output_dir)
 
-    print(f"\nListing mlflow model directory: {mlflow_model_output_dir}:")
-    print(os.listdir(mlflow_model_output_dir))
+    print(f"\nlisting output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
 
     # Add job path
     this_job = os.environ["MLFLOW_RUN_ID"]

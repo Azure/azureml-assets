@@ -9,7 +9,7 @@ import pandas as pd
 import pickle
 import os
 
-from constants import TASK
+from constants import TASK, ForecastingConfigContract
 from logging_utilities import get_logger, log_traceback
 from mltable import load
 from task_factory.tabular.classification import TabularClassifier
@@ -22,6 +22,7 @@ from task_factory.text.summarization import Summarizer
 from task_factory.text.translation import Translator
 from task_factory.text.text_generation import TextGenerator
 from task_factory.text.fill_mask import FillMask
+from task_factory.image.classification import ImageMulticlassClassifier, ImageMultilabelClassifier
 from evaluators.evaluators import EvaluatorFactory
 from run_utils import TestRun
 from azureml.metrics import _scoring_utilities, constants as metrics_constants
@@ -30,6 +31,7 @@ import azureml.evaluate.mlflow as aml_mlflow
 from azureml.evaluate.mlflow.models.evaluation import EvaluationResult
 
 from exceptions import DataValidationException, ModelEvaluationException, DataLoaderException
+from copy import deepcopy
 
 
 logger = get_logger(name=__name__)
@@ -75,13 +77,42 @@ def filter_pipeline_params(evaluation_config):
     """Filter Pipeline params in evaluation_config.
 
     Args:
-        evaluation_config (_type_): _description_
+        filename (_type_): _description_
+
+    Raises:
+        DataValidationException: _description_
 
     Returns:
         _type_: _description_
     """
     filtered_params = {i: j for i, j in evaluation_config.items() if i in constants.ALLOWED_PIPELINE_PARAMS}
     return filtered_params
+
+
+def sanitize_device_and_device_map(evaluation_config, device):
+    """Check device_map and device in args.
+
+    Args:
+        evaluation_config (_type_): _description_
+        device (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    has_device_map_auto = False
+    if evaluation_config.get("pipeline_init_args"):
+        if evaluation_config["pipeline_init_args"].get("device_map"):
+            has_device_map_auto = evaluation_config["pipeline_init_args"]["device_map"] == "auto"
+    if has_device_map_auto:
+        return evaluation_config, None
+    else:
+        if device == "auto":
+            new_evaluation_config = deepcopy(evaluation_config)
+            if not new_evaluation_config.get("pipeline_init_args"):
+                new_evaluation_config["pipeline_init_args"] = {}
+            new_evaluation_config["pipeline_init_args"]["device_map"] = "auto"
+            return new_evaluation_config, None
+        return evaluation_config, device
 
 
 def load_transformer(filename):
@@ -131,7 +162,7 @@ def _log_metrics(metrics, artifacts):
             try:
                 list_scores[name] = list(score)
                 if name == metrics_constants.Metric.FMPerplexity:
-                    metrics["mean_"+name] = np.mean(score)
+                    metrics["mean_" + name] = np.mean(score)
             except TypeError:
                 logger.warning(f"{name} is not of type list.")
         elif name in metrics_constants.Metric.NONSCALAR_FULL_SET:
@@ -183,7 +214,7 @@ def _log_metrics(metrics, artifacts):
             raise ModelEvaluationException(f"Failed to log non-scalar metric {name} with value {score}")
 
 
-def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config):
+def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config, X_test=None):
     """Compute metrics mode method.
 
     Args:
@@ -192,12 +223,13 @@ def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config
         y_pred (_type_) : _description_
         task_type (_type_): _description_
         metrics_config (_type_): _description_
+        X_test (_type_): _description_
 
     Returns:
         _type_: _description_
     """
     evaluator = EvaluatorFactory().get_evaluator(task_type, metrics_config)
-    res = evaluator.evaluate(y_test, y_pred, y_pred_proba=y_pred_proba)
+    res = evaluator.evaluate(y_test, y_pred, y_pred_proba=y_pred_proba, X_test=X_test)
     metrics = res[metrics_constants.Metric.Metrics]
     artifacts = res[metrics_constants.Metric.Artifacts]
     _log_metrics(metrics, artifacts)
@@ -232,6 +264,8 @@ def get_predictor(task):
         TASK.TRANSLATION: Translator,
         TASK.TEXT_GENERATION: TextGenerator,
         TASK.FILL_MASK: FillMask,
+        TASK.IMAGE_CLASSIFICATION: ImageMulticlassClassifier,
+        TASK.IMAGE_CLASSIFICATION_MULTILABEL: ImageMultilabelClassifier,
     }
     return predictor_map.get(task)
 
@@ -294,6 +328,8 @@ class ArgumentsSet:
             self.args_set = self.text_generation
         if task_type == TASK.FILL_MASK:
             self.args_set = self.fill_mask
+        if task_type == TASK.FORECASTING:
+            self.args_set = self.forecasting
 
     @property
     def classification(self):
@@ -420,6 +456,20 @@ class ArgumentsSet:
             "model_id": "str(val)",
             "batch_size": "int(val)",
             "add_start_token": "bool(val)"
+        }
+        return args_map
+
+    @property
+    def forecasting(self):
+        """Forecasting arguments.
+
+        Returns:
+            _type_: _description_
+        """
+        args_map = {
+            ForecastingConfigContract.TIME_COLUMN_NAME: "str(val)",
+            ForecastingConfigContract.TIME_SERIES_ID_COLUMN_NAMES: "val",
+            ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)"
         }
         return args_map
 
@@ -557,14 +607,35 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
         if isinstance(y_test.iloc[0], np.ndarray) or isinstance(y_test.iloc[0], list):
             y_test = y_test.apply(lambda x: tuple(x))
         if not isinstance(y_test.iloc[0], str) and not isinstance(y_test.iloc[0], tuple):
-            message = "Ground Truths for Fill-Mask should be a string or an array found "+type(y_test.iloc[0])
+            message = "Ground Truths for Fill-Mask should be a string or an array found " + type(y_test.iloc[0])
             raise DataLoaderException(exception_message=message)
     if y_test is not None:
         y_test = y_test.values
     return X_test, y_test
 
 
-def read_config(conf_folder, task_type):
+def fetch_compute_metrics_args(data, task_type):
+    """Fetch compute metrics arguments from evaluation config.
+
+    Args:
+        data (_type_): _description_
+    """
+    metrics_args = ArgumentsSet(task_type=task_type)
+    metrics_config = {}
+    for arg, func in metrics_args.args_set.items():
+        val = data.get(arg, None)
+        if val is not None:
+            try:
+                metrics_config[arg] = eval(func)
+            except TypeError:
+                message = "Invalid dtype passed for config param '" + arg + "'."
+                logger.error(message)
+                raise DataValidationException(message)
+
+    return metrics_config
+
+
+def read_config(conf_folder, task_type, for_prediction=False):
     """Util function for reading config.
 
     Args:
@@ -586,60 +657,9 @@ def read_config(conf_folder, task_type):
         log_traceback(e, logger, error_message, is_critical=True)
         raise DataValidationException(error_message)
 
-    metrics_args = ArgumentsSet(task_type=task_type)
-    metrics_config = {}
-    # logger.info(metrics_args)
-    for arg, func in metrics_args.args_set.items():
-        val = data.get(arg, None)
-        if val is not None:
-            # if arg == "y_transformer":
-            #    val = os.path.join(conf_folder, val)
-            try:
-                metrics_config[arg] = eval(func)
-            except TypeError:
-                message = "Invalid dtype passed for config param '"+arg+"'."
-                logger.error(message)
-                raise DataValidationException(message)
-
-    return metrics_config
-
-
-def read_compute_metrics_config(conf_folder, task_type):
-    """Util function for reading config.
-
-    Args:
-        conf_folder (_type_): _description_
-        task_type (_type_): _description_
-
-    Raises:
-        DataValidationException: _description_
-
-    Returns:
-        _type_: _description_
-    """
-    try:
-        import json
-        with open(conf_folder, "r") as f:
-            data = json.load(f)
-    except Exception as e:
-        error_message = f"Failed to load config file with error {repr(e)}"
-        log_traceback(e, logger, error_message, is_critical=True)
-        raise DataValidationException(error_message)
-
-    metrics_args = ArgumentsSet(task_type=task_type)
-    metrics_config = {}
-    # logger.info(metrics_args)
-    for arg, func in metrics_args.args_set.items():
-        val = data.get(arg, None)
-        if val is not None:
-            try:
-                metrics_config[arg] = eval(func)
-            except TypeError:
-                message = "Invalid dtype passed for config param '"+arg+"'."
-                logger.error(message)
-                raise DataValidationException(message)
-
-    return metrics_config
+    if for_prediction:
+        return data
+    return fetch_compute_metrics_args(data, task_type)
 
 
 def _validate_ner_line(line):
@@ -692,7 +712,7 @@ def read_conll(stream_info, labels=None):
         info_link = "https://github.com/Azure/azureml-examples/blob/main/cli/jobs/automl-\
             standalone-jobs/cli-automl-text-ner-conll/validation-mltable-folder/MLTable"
         raise DataLoaderException("Invalid MLTABLE File for ConLL formatted data. \
-                                  See Sample Here : "+info_link)
+                                  See Sample Here : " + info_link)
     data = data.replace("-DOCSTART- O\n\n", "")
     data = data.split("\n\n")
 

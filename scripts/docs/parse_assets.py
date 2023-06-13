@@ -24,13 +24,9 @@ def parse_assets(input_dirs: List[Path],
         asset_config_filename (str): Asset config filename to search for.
         pattern (re.Pattern, optional): Regex pattern for assets to parse. Defaults to None.
     """
-    asset_count = 0
-
     categories = Categories()
 
     for asset_config in util.find_assets(input_dirs, asset_config_filename, pattern=pattern):
-        asset_count += 1
-
         asset_info = AssetInfo.create_asset_info(asset_config)
         categories.classify_asset(asset_info)
         # Save asset info. Revisit to save all docs after
@@ -47,7 +43,7 @@ if __name__ == '__main__':
     parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
                         help="Asset config file name to search for")
     parser.add_argument("-t", "--pattern", type=re.compile,
-                        help="Regex pattern to select assets to copy, in the format <type>/<name>/<version>")
+                        help="Regex pattern to select assets to parse, in the format <type>/<name>/<version>")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists

@@ -3,20 +3,26 @@
 
 """File containing function for finetune component."""
 
+import os
 import json
 import argparse
 from pathlib import Path
 from argparse import Namespace
 
+import torch
+
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
-from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants
+from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, HfModelTypes
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
 from azureml.acft.accelerator.utils.decorators import swallow_all_exceptions
 from azureml.acft.accelerator.utils.logging_utils import get_logger_app
 
+from azureml.acft.accelerator.utils.error_handling.exceptions import ValidationException
+from azureml.acft.accelerator.utils.error_handling.error_definitions import SKUNotSupported, ValidationError
+from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 # Refer this logging issue
 # https://github.com/Azure/azure-sdk-for-python/issues/23563
@@ -33,6 +39,30 @@ RUN_PROPERTIES = {
 
 add_run_properties(ROOT_RUN_PROPERTIES, logger, add_to_root=True)
 add_run_properties(RUN_PROPERTIES, logger)
+
+IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
+    "databricks/dolly-v1-6b",            # gptj
+    "databricks/dolly-v2-3b",            # gpt_neox
+    "databricks/dolly-v2-7b",            # gpt_neox
+    "databricks/dolly-v2-12b",           # gpt_neox
+    "openlm-research/open_llama_3b_350bt_preview",            # llama
+    "openlm-research/open_llama_7b_400bt_preview",            # llama
+    "openlm-research/open_llama_3b_600bt_preview",            # llama
+    "openlm-research/open_llama_7b_700bt_preview",            # llama
+    "decapoda-research/llama-7b-hf",            # llama
+    "decapoda-research/llama-13b-hf",           # llama
+    "decapoda-research/llama-30b-hf",           # llama
+    "decapoda-research/llama-65b-hf",           # llama
+]
+
+MLFLOW_HFTRANSFORMERS_MISC_CONF = {
+    # updating the parameters will override any existing misc conf keys
+    HfModelTypes.LLAMA: {
+        "tokenizer_hf_load_kwargs": {
+            "model_input_names": ["input_ids", "attention_mask"],
+        },
+    },
+}
 
 
 def str2bool(arg):
@@ -209,6 +239,12 @@ def get_parser():
         ),
     )
     parser.add_argument(
+        "--eval_accumulation_steps",
+        default=None,
+        type=int,
+        help="Number of predictions steps to accumulate before moving the tensors to the CPU.",
+    )
+    parser.add_argument(
         "--evaluation_strategy", type=str, default="epoch", help="The evaluation strategy to adopt during training",
     )
     parser.add_argument(
@@ -328,6 +364,33 @@ def finetune(args: Namespace):
     else:
         args.model_name_or_path = args.model_name
 
+    # additional logging
+    logger.info(f"Model name: {getattr(args, 'model_name', None)}")
+    logger.info(f"Task name: {getattr(args, 'task_name', None)}")
+    logger.info(f"enable LoRA: {getattr(args, 'apply_lora', None)}")
+    logger.info(f"enable DeepSpeed: {getattr(args, 'apply_deepspeed', None)}")
+    logger.info(f"enable ORT: {getattr(args, 'apply_ort', None)}")
+    logger.info(f"Precision: {getattr(args, 'precision', None)}")
+
+    # set `ignore_mismatched_sizes` to `false` by default
+    if hasattr(args, "model_name") and args.model_name in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
+        logger.info(f"Forcing `ignore_mismatched_sizes` to False for {args.model_name}")
+        setattr(args, "ignore_mismatched_sizes", False)
+
+    model_name_or_type = None
+    # pass `mlflow_hftransformers_misc_conf` to be set in mlflow model
+    if hasattr(args, "model_name") and args.model_name in MLFLOW_HFTRANSFORMERS_MISC_CONF:
+        model_name_or_type = args.model_name
+    if hasattr(args, "model_type") and args.model_type in MLFLOW_HFTRANSFORMERS_MISC_CONF:
+        model_name_or_type = args.model_type
+    if model_name_or_type is not None:
+        mlflow_hftransformers_misc_conf = MLFLOW_HFTRANSFORMERS_MISC_CONF[model_name_or_type]
+        logger.info(
+            f"Forcing `mlflow_hftransformers_misc_conf` to set to {mlflow_hftransformers_misc_conf} "
+            f"for {model_name_or_type}"
+        )
+        setattr(args, "mlflow_hftransformers_misc_conf", mlflow_hftransformers_misc_conf)
+
     # Below arguments are needed for HF training args
     args.output_dir = args.pytorch_model_folder
     Path(args.output_dir).mkdir(exist_ok=True, parents=True)
@@ -335,10 +398,33 @@ def finetune(args: Namespace):
 
     # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
     if args.apply_deepspeed and args.deepspeed is None:
-        args.deepspeed = "./zero1.json"
+        args.deepspeed = "./zero2.json"
     elif not args.apply_deepspeed:
         # do not use deepspeed config if provided when apply_deepspeed is set to false
         args.deepspeed = None
+
+    if args.deepspeed:
+        with open(args.deepspeed, "r") as fp:
+            ds_data = json.load(fp)
+        zero_optimization_config = ds_data.get("zero_optimization", {})
+        ds_stage = zero_optimization_config.get("stage", None)
+        # `apply_lora=true` is not supported with stage3 deepspeed config
+        if ds_stage == 3 and args.apply_lora:
+            raise ValidationException._with_error(
+                AzureMLError.create(ValidationError, error=(
+                    "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
+                    )
+                )
+            )
+        # `stage3_gather_16bit_weights_on_model_save=false` is not supported for stage3 deepspeed config
+        if ds_stage == 3 and not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
+            raise ValidationException._with_error(
+                AzureMLError.create(ValidationError, error=(
+                    "stage3_gather_16bit_weights_on_model_save should be "
+                    "`true` in deepspeed stage 3 config"
+                    )
+                )
+            )
 
     if (
         not isinstance(args.evaluation_steps_interval, float) or
@@ -358,10 +444,53 @@ def finetune(args: Namespace):
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
 
+    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
+    logger.info(f"Process - {process_name}")
+    if process_name in {'main', 'rank_0'}:
+        # hotfix mlflow model deployment issue
+        try:
+            mlflow_model_path = args.mlflow_model_folder
+            mlflow_conda_yaml = str(Path(mlflow_model_path, "conda.yaml"))
+            mlflow_req_file = str(Path(mlflow_model_path, "requirements.txt"))
+            import yaml
+            logger.info("Updating mlflow model requirements")
+            with open(mlflow_conda_yaml, "r") as rptr:
+                mlflow_data = yaml.safe_load(rptr)
+            logger.info(mlflow_data)
+            for ele in mlflow_data["dependencies"]:
+                if type(ele) == dict and "pip" in ele:
+                    for idx in range(len(ele["pip"])):
+                        if ele["pip"][idx].startswith("mlflow==") or ele["pip"][idx].startswith("mlflow<") or \
+                                   ele["pip"][idx].startswith("mlflow>"):
+                            ele["pip"][idx] = "mlflow==2.3.1"
+                            break
+                    ele["pip"].append("mlflow-skinny==2.3.2")
+                    break
+            with open(mlflow_conda_yaml, "w") as rptr:
+                yaml.dump(mlflow_data, rptr, sort_keys=False)
+            logger.info("Updated mlflow conda yaml file")
+            with open(mlflow_req_file, "r") as rptr:
+                mlflow_req_data = rptr.readlines()
+            mlflow_req_data[-1] = str(mlflow_req_data[-1]) + "\n"
+            for idx in range(len(mlflow_req_data)):
+                if mlflow_req_data[idx].startswith("mlflow==") or mlflow_req_data[idx].startswith("mlflow<") or \
+                            mlflow_req_data[idx].startswith("mlflow>"):
+                    mlflow_req_data[idx] = "mlflow==2.3.1\n"
+                    break
+            mlflow_req_data.append("mlflow-skinny==2.3.2")
+            with open(mlflow_req_file, "w") as rptr:
+                rptr.writelines(mlflow_req_data)
+            logger.info("Updated mlflow requirements text file")
+        except Exception as e:
+            logger.info(f"Skipping mlflow model changes! - {e}")
+
 
 @swallow_all_exceptions(logger)
 def main():
     """Parse args and finetune."""
+    if not torch.cuda.is_available():
+        raise ValidationException._with_error(AzureMLError.create(SKUNotSupported))
+
     parser = get_parser()
     args, _ = parser.parse_known_args()
 

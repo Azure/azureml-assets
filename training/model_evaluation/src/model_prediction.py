@@ -21,13 +21,15 @@ from exceptions import (ModelEvaluationException,
                         PredictException)
 from logging_utilities import custom_dimensions, get_logger, log_traceback
 from azureml.telemetry.activity import log_activity
+from image_classification_dataset import get_classification_dataset, ImageDataFrameParams
 from utils import (setup_model_dependencies,
                    check_and_return_if_mltable,
                    get_predictor,
                    read_data,
                    read_config,
                    prepare_data,
-                   filter_pipeline_params)
+                   filter_pipeline_params,
+                   sanitize_device_and_device_map)
 from run_utils import TestRun
 from validation import _validate, validate_args
 
@@ -60,14 +62,20 @@ class Inferencer:
         self.task = task
         self.metrics_config = {}
         if config_file:
-            self.metrics_config = read_config(config_file, task)
+            self.metrics_config = read_config(config_file, task, for_prediction=True)
         elif metrics_config:
             self.metrics_config = metrics_config
         self.multilabel = bool(task == constants.TASK.CLASSIFICATION_MULTILABEL
-                               or task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL)
+                               or task == constants.TASK.TEXT_CLASSIFICATION_MULTILABEL
+                               or task == constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL)
         self.custom_dimensions = custom_dimensions
         try:
-            self.device = torch.cuda.current_device() if device == "gpu" else -1
+            if device == "gpu":
+                self.device = torch.cuda.current_device()
+            elif device == "cpu":
+                self.device = -1
+            else:
+                self.device = device
         except Exception:
             logger.warning("No GPU found. Using CPU instead")
             self.device = -1
@@ -124,7 +132,16 @@ class Inferencer:
         Returns:
             _type_: _description_
         """
-        data = read_data(test_data, is_mltable, self.batch_size)
+        if self.task in [
+            constants.TASK.IMAGE_CLASSIFICATION,
+            constants.TASK.IMAGE_CLASSIFICATION_MULTILABEL
+        ]:
+            df = get_classification_dataset(testing_mltable=test_data, multi_label=self.multilabel)
+            data = iter([df])
+            input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
+            label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
+        else:
+            data = read_data(test_data, is_mltable)
         data = map(_validate, data, repeat(input_column_names), repeat(label_column_name))
         data = map(prepare_data, data, repeat(self.task), repeat(label_column_name))
         return data  # X_test, y_test
@@ -147,13 +164,13 @@ class Inferencer:
             data = self.load_data(test_data, label_column_name, input_column_names, is_mltable=is_mltable)
 
         for idx, (X_test, y_test_chunk) in enumerate(data):
-            logger.info("batch: "+str(idx))
+            logger.info("batch: " + str(idx))
             y_transformer = None
             predictor_cls = get_predictor(self.task)
             predictor = predictor_cls(self.model)
-            device = self.device  # torch.cuda.current_device() if torch.cuda.is_available() else "cpu"
             pred_probas_chunk = None
             pipeline_params = filter_pipeline_params(self.metrics_config)
+            pipeline_params, device = sanitize_device_and_device_map(pipeline_params, self.device)
             torch_error_message = "Model prediction Failed.\nPossible Reason:\n"\
                                   "1. Your input text exceeds max length of model.\n"\
                                   "\t\tYou can either keep truncation=True in tokenizer while logging model.\n"\
@@ -170,6 +187,9 @@ class Inferencer:
                                                           y_transformer=y_transformer, multilabel=self.multilabel,
                                                           source_lang=source_lang, target_lang=target_lang)
                 else:
+                    # batching is handled in mlflow predict for image tasks.
+                    if self.task in constants.IMAGE_TASKS and self.batch_size:
+                        pipeline_params.update({"batch_size": self.batch_size})
                     predictions_chunk = predictor.predict(X_test, device=device,
                                                           y_transformer=y_transformer,
                                                           multilabel=self.multilabel,
@@ -230,7 +250,7 @@ def test_model():
                         default=None, dest="prediction_probabilities_mltable")
     parser.add_argument("--ground-truth", type=str, required=False, default=None, dest="ground_truth")
     parser.add_argument("--ground-truth-mltable", type=str, required=False, default=None, dest="ground_truth_mltable")
-    parser.add_argument("--device", type=str, required=False, default="cpu", dest="device")
+    parser.add_argument("--device", type=str, required=False, default="auto", dest="device")
     parser.add_argument("--batch-size", type=int, required=False, default=None, dest="batch_size")
     parser.add_argument("--input-column-names",
                         type=lambda x: [i.strip() for i in x.split(",") if i and not i.isspace()],
@@ -276,9 +296,17 @@ def test_model():
             config_file=args.config_file_name,
             metrics_config=met_config
         )
-        preds, pred_probas, ground_truth = runner.predict(data, label_column_name=args.label_column_name,
-                                                          input_column_names=args.input_column_names,
-                                                          is_mltable=is_mltable)
+        try:
+            preds, pred_probas, ground_truth = runner.predict(data, label_column_name=args.label_column_name,
+                                                              input_column_names=args.input_column_names,
+                                                              is_mltable=is_mltable)
+        except Exception as e:
+            if isinstance(e, PredictException):
+                raise e
+            message = "Model Prediction Failed. See inner error."
+            raise PredictException(exception_message=message,
+                                   inner_exception=e)
+
         preds.to_json(args.predictions, orient="records", lines=True)
 
         preds_file_name = args.predictions.split(os.sep)[-1]

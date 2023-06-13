@@ -11,9 +11,9 @@ from typing import Dict
 
 
 @log_execution_time
-def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict):
+def to_mlflow(input_dir: Path, output_dir: Path, temp_dir: Path, translate_params: Dict):
     """Convert Hugging face pytorch model to Mlflow."""
     mlflow_convertor: HFMLFLowConvertor = get_mlflow_convertor(
-        model_dir=input_dir, output_dir=output_dir, translate_params=translate_params
+        model_dir=input_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
     )
     mlflow_convertor.save_as_mlflow()

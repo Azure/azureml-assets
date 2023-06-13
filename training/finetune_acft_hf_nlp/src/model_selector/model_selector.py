@@ -73,13 +73,18 @@ def model_selector(args: Namespace):
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     if args.huggingface_id is not None:
-        args.model_name = args.huggingface_id
+        # remove the spaces at either ends of hf id
+        args.model_name = args.huggingface_id.strip()
     else:
         # TODO Revist whether `model_id` is still relevant
         args.model_name = args.model_id
 
     task_runner = get_task_runner(task_name=args.task_name)()
     task_runner.run_modelselector(**vars(args))
+
+    # additional logging
+    logger.info(f"Model name: {getattr(args, 'model_name', None)}")
+    logger.info(f"Task name: {getattr(args, 'task_name', None)}")
 
 
 @swallow_all_exceptions(logger)

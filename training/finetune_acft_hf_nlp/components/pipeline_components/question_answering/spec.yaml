@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: question_answering_pipeline
-version: 0.0.2
+version: 0.0.7
 type: pipeline
 display_name: Question Answering Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for extractive question answering task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/question_answering_pipeline) to learn more.
@@ -11,29 +11,31 @@ inputs:
     type: string
     optional: false
     description: compute to be used for model_import eg. provide 'FT-Cluster' if
-      your compute is named 'FT-Cluster'
+      your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
   compute_preprocess:
     type: string
     optional: false
     description: compute to be used for preprocess eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
   compute_finetune:
     type: string
     optional: false
     description: compute to be used for finetune eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
   compute_model_evaluation:
     type: string
     optional: false
     description: compute to be used for finetune eg. provide 'FT-Cluster' if your
-      compute is named 'FT-Cluster'
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
   num_nodes_finetune:
     type: integer
+    min: 1
     default: 1
     optional: true
     description: number of nodes to be used for finetuning (used for distributed training)
   number_of_gpu_to_use_finetuning:
     type: integer
+    min: 1
     default: 1
     optional: true
     description: number of gpus to be used per node for finetuning, should be equal
@@ -42,65 +44,69 @@ inputs:
   # Model Import parameters (See [docs](https://aka.ms/azureml/components/question_answering_model_import) to learn more)
   huggingface_id:
     type: string
-    description: The string can be any valid Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=question-answering&sort=downloads). Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms.
+    description: The string can be any valid Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=question-answering&sort=downloads). Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms. Special characters like \ and ' are invalid in the parameter value.
     optional: true
 
   pytorch_model_path:
     type: custom_model
     optional: true
-    description: Pytorch model asset path
+    description: Pytorch model asset path. Special characters like \ and ' are invalid in the parameter value.
 
   mlflow_model_path:
     type: mlflow_model
     optional: true
-    description: MLflow model asset path
+    description: MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.
 
   # Data PreProcess parameters (See [docs](https://aka.ms/azureml/components/question_answering_datapreprocess) to learn more)
   question_key:
     type: string
     optional: false
-    description: The question whose answer needs to be extracted from the provided context 
+    description: The question whose answer needs to be extracted from the provided context. Special characters like \ and ' are invalid in the parameter value.
 
   context_key:
     type: string
     optional: false
-    description: The context that contains the answer to the question
+    description: The context that contains the answer to the question. Special characters like \ and ' are invalid in the parameter value.
 
   answers_key:
     type: string
     optional: false
-    description: "The value of this field is text in JSON format with two nested keys: answer_start_key and answer_text_key with their corresponding values"
+    description: "The value of this field is text in JSON format with two nested keys: answer_start_key and answer_text_key with their corresponding values. Special characters like \ and ' are invalid in the parameter value."
 
   answer_start_key:
     type: string
     optional: false
-    description: Refers to the position where the answer beings in context. Needs a value that maps to a nested key in the values of the answers_key parameter
+    description: Refers to the position where the answer beings in context. Needs a value that maps to a nested key in the values of the answers_key parameter. Special characters like \ and ' are invalid in the parameter value.
 
   answer_text_key:
     type: string
     optional: false
-    description: Contains the answer to the question. Needs a value that maps to a nested key in the values of the answers_key parameter
+    description: Contains the answer to the question. Needs a value that maps to a nested key in the values of the answers_key parameter. Special characters like \ and ' are invalid in the parameter value.
 
   doc_stride:
     type: integer
+    min: 1
     default: 128
     optional: true
     description: The amount of context overlap to keep in case the number of tokens per example exceed __max_seq_length__
 
   n_best_size:
     type: integer
+    min: 1
     default: 20
     optional: true
     description: The `top_n` max probable start tokens and end tokens to be consider while generating possible answers.
 
   max_answer_length_in_tokens:
     type: integer
+    min: 1
     default: 30
     optional: true
     description: The maximum allowed answer length specified in token length. The default value for this parameter is 30. All the answers with above 30 tokens will not be considered as a possible answer.
 
   batch_size:
     type: integer
+    min: 1
     optional: true
     default: 1000
     description: Number of examples to batch before calling the tokenization function
@@ -108,32 +114,32 @@ inputs:
   train_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.
 
   test_file_path:
     type: uri_file
     optional: true
-    description: Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    description: Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and ' are invalid in the parameter value.
 
   train_mltable_path:
     type: mltable
     optional: true
-    description: Path to the registered training data asset in `mltable` format.
+    description: Path to the registered training data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.
 
   validation_mltable_path:
     type: mltable
     optional: true
-    description: Path to the registered validation data asset in `mltable` format.
+    description: Path to the registered validation data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.
 
   test_mltable_path:
     type: mltable
     optional: true
-    description: Path to the registered test data asset in `mltable` format.
+    description: Path to the registered test data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.
 
   # Finetune parameters (See [docs](https://aka.ms/azureml/components/question_answering_finetune) to learn more)
   apply_lora:
@@ -174,6 +180,7 @@ inputs:
 
   num_train_epochs:
     type: integer
+    min: 1
     default: 1
     optional: true
     description: Number of epochs to run for finetune.
@@ -186,12 +193,14 @@ inputs:
 
   per_device_train_batch_size:
     type: integer
+    min: 1
     default: 1
     optional: true
     description: Per gpu batch size used for training. The effective training batch size is _per_device_train_batch_size_ * _num_gpus_ * _num_nodes_.
 
   per_device_eval_batch_size:
     type: integer
+    min: 1
     default: 1
     optional: true
     description: Per gpu batch size used for validation. The default value is 1. The effective validation batch size is _per_device_eval_batch_size_ * _num_gpus_ * _num_nodes_.
@@ -410,7 +419,7 @@ inputs:
   deepspeed:
     type: uri_file
     optional: true
-    description: Deepspeed config to be used for finetuning
+    description: Deepspeed config to be used for finetuning. Special characters like \ and ' are invalid in the parameter value.
 
   apply_ort:
     type: string
@@ -425,7 +434,7 @@ inputs:
   evaluation_config:
     type: uri_file
     optional: true
-    description: Additional parameters for Computing Metrics
+    description: Additional parameters for Computing Metrics. Special characters like \ and ' are invalid in the parameter value.
 
   evaluation_config_params:
     type: string
@@ -448,112 +457,112 @@ outputs:
 jobs:
   question_answering_model_import:
     type: command
-    component: azureml://registries/azureml/components/question_answering_model_import/versions/0.0.2
-    compute: ${{parent.inputs.compute_model_import}}
+    component: azureml://registries/azureml/components/question_answering_model_import/versions/0.0.7
+    compute: '${{parent.inputs.compute_model_import}}'
     inputs:
-      huggingface_id: ${{parent.inputs.huggingface_id}}
-      pytorch_model_path: ${{parent.inputs.pytorch_model_path}}
-      mlflow_model_path: ${{parent.inputs.mlflow_model_path}}
+      huggingface_id: '${{parent.inputs.huggingface_id}}'
+      pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
+      mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
   question_answering_datapreprocess:
     type: command
-    component: azureml://registries/azureml/components/question_answering_datapreprocess/versions/0.0.2
-    compute: ${{parent.inputs.compute_preprocess}}
+    component: azureml://registries/azureml/components/question_answering_datapreprocess/versions/0.0.7
+    compute: '${{parent.inputs.compute_preprocess}}'
     inputs:
-      question_key: ${{parent.inputs.question_key}}
-      context_key: ${{parent.inputs.context_key}}
-      answers_key: ${{parent.inputs.answers_key}}
-      answer_start_key: ${{parent.inputs.answer_start_key}}
-      answer_text_key: ${{parent.inputs.answer_text_key}}
-      doc_stride: ${{parent.inputs.doc_stride}}
-      n_best_size: ${{parent.inputs.n_best_size}}
-      max_answer_length_in_tokens: ${{parent.inputs.max_answer_length_in_tokens}}
-      batch_size: ${{parent.inputs.batch_size}}
-      train_file_path: ${{parent.inputs.train_file_path}}
-      validation_file_path: ${{parent.inputs.validation_file_path}}
-      test_file_path: ${{parent.inputs.test_file_path}}
-      train_mltable_path: ${{parent.inputs.train_mltable_path}}
-      validation_mltable_path: ${{parent.inputs.validation_mltable_path}}
-      test_mltable_path: ${{parent.inputs.test_mltable_path}}
-      model_selector_output: ${{parent.jobs.question_answering_model_import.outputs.output_dir}}
+      question_key: '${{parent.inputs.question_key}}'
+      context_key: '${{parent.inputs.context_key}}'
+      answers_key: '${{parent.inputs.answers_key}}'
+      answer_start_key: '${{parent.inputs.answer_start_key}}'
+      answer_text_key: '${{parent.inputs.answer_text_key}}'
+      doc_stride: '${{parent.inputs.doc_stride}}'
+      n_best_size: '${{parent.inputs.n_best_size}}'
+      max_answer_length_in_tokens: '${{parent.inputs.max_answer_length_in_tokens}}'
+      batch_size: '${{parent.inputs.batch_size}}'
+      train_file_path: '${{parent.inputs.train_file_path}}'
+      validation_file_path: '${{parent.inputs.validation_file_path}}'
+      test_file_path: '${{parent.inputs.test_file_path}}'
+      train_mltable_path: '${{parent.inputs.train_mltable_path}}'
+      validation_mltable_path: '${{parent.inputs.validation_mltable_path}}'
+      test_mltable_path: '${{parent.inputs.test_mltable_path}}'
+      model_selector_output: '${{parent.jobs.question_answering_model_import.outputs.output_dir}}'
   question_answering_finetune:
     type: command
-    component: azureml://registries/azureml/components/question_answering_finetune/versions/0.0.2
-    compute: ${{parent.inputs.compute_finetune}}
+    component: azureml://registries/azureml/components/question_answering_finetune/versions/0.0.7
+    compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
-      process_count_per_instance: ${{parent.inputs.number_of_gpu_to_use_finetuning}}
+      process_count_per_instance: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
     resources:
-      instance_count: ${{parent.inputs.num_nodes_finetune}}
+      instance_count: '${{parent.inputs.num_nodes_finetune}}'
     inputs:
-      apply_lora: ${{parent.inputs.apply_lora}}
-      merge_lora_weights: ${{parent.inputs.merge_lora_weights}}
-      lora_alpha: ${{parent.inputs.lora_alpha}}
-      lora_r: ${{parent.inputs.lora_r}}
-      lora_dropout: ${{parent.inputs.lora_dropout}}
-      num_train_epochs: ${{parent.inputs.num_train_epochs}}
-      max_steps: ${{parent.inputs.max_steps}}
-      per_device_train_batch_size: ${{parent.inputs.per_device_train_batch_size}}
-      per_device_eval_batch_size: ${{parent.inputs.per_device_eval_batch_size}}
-      auto_find_batch_size: ${{parent.inputs.auto_find_batch_size}}
-      optim: ${{parent.inputs.optim}}
-      learning_rate: ${{parent.inputs.learning_rate}}
-      warmup_steps: ${{parent.inputs.warmup_steps}}
-      weight_decay: ${{parent.inputs.weight_decay}}
-      adam_beta1: ${{parent.inputs.adam_beta1}}
-      adam_beta2: ${{parent.inputs.adam_beta2}}
-      adam_epsilon: ${{parent.inputs.adam_epsilon}}
-      gradient_accumulation_steps: ${{parent.inputs.gradient_accumulation_steps}}
-      lr_scheduler_type: ${{parent.inputs.lr_scheduler_type}}
-      precision: ${{parent.inputs.precision}}
-      seed: ${{parent.inputs.seed}}
-      enable_full_determinism: ${{parent.inputs.enable_full_determinism}}
-      dataloader_num_workers: ${{parent.inputs.dataloader_num_workers}}
-      ignore_mismatched_sizes: ${{parent.inputs.ignore_mismatched_sizes}}
-      max_grad_norm: ${{parent.inputs.max_grad_norm}}
-      evaluation_strategy: ${{parent.inputs.evaluation_strategy}}
-      evaluation_steps_interval: ${{parent.inputs.evaluation_steps_interval}}
-      eval_steps: ${{parent.inputs.eval_steps}}
-      logging_strategy: ${{parent.inputs.logging_strategy}}
-      logging_steps: ${{parent.inputs.logging_steps}}
-      metric_for_best_model: ${{parent.inputs.metric_for_best_model}}
-      resume_from_checkpoint: ${{parent.inputs.resume_from_checkpoint}}
-      save_total_limit: ${{parent.inputs.save_total_limit}}
-      apply_early_stopping: ${{parent.inputs.apply_early_stopping}}
-      early_stopping_patience: ${{parent.inputs.early_stopping_patience}}
-      early_stopping_threshold: ${{parent.inputs.early_stopping_threshold}}
-      apply_deepspeed: ${{parent.inputs.apply_deepspeed}}
-      deepspeed: ${{parent.inputs.deepspeed}}
-      apply_ort: ${{parent.inputs.apply_ort}}
-      preprocess_output: ${{parent.jobs.question_answering_datapreprocess.outputs.output_dir}}
-      model_selector_output: ${{parent.jobs.question_answering_model_import.outputs.output_dir}}
+      apply_lora: '${{parent.inputs.apply_lora}}'
+      merge_lora_weights: '${{parent.inputs.merge_lora_weights}}'
+      lora_alpha: '${{parent.inputs.lora_alpha}}'
+      lora_r: '${{parent.inputs.lora_r}}'
+      lora_dropout: '${{parent.inputs.lora_dropout}}'
+      num_train_epochs: '${{parent.inputs.num_train_epochs}}'
+      max_steps: '${{parent.inputs.max_steps}}'
+      per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
+      per_device_eval_batch_size: '${{parent.inputs.per_device_eval_batch_size}}'
+      auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
+      optim: '${{parent.inputs.optim}}'
+      learning_rate: '${{parent.inputs.learning_rate}}'
+      warmup_steps: '${{parent.inputs.warmup_steps}}'
+      weight_decay: '${{parent.inputs.weight_decay}}'
+      adam_beta1: '${{parent.inputs.adam_beta1}}'
+      adam_beta2: '${{parent.inputs.adam_beta2}}'
+      adam_epsilon: '${{parent.inputs.adam_epsilon}}'
+      gradient_accumulation_steps: '${{parent.inputs.gradient_accumulation_steps}}'
+      lr_scheduler_type: '${{parent.inputs.lr_scheduler_type}}'
+      precision: '${{parent.inputs.precision}}'
+      seed: '${{parent.inputs.seed}}'
+      enable_full_determinism: '${{parent.inputs.enable_full_determinism}}'
+      dataloader_num_workers: '${{parent.inputs.dataloader_num_workers}}'
+      ignore_mismatched_sizes: '${{parent.inputs.ignore_mismatched_sizes}}'
+      max_grad_norm: '${{parent.inputs.max_grad_norm}}'
+      evaluation_strategy: '${{parent.inputs.evaluation_strategy}}'
+      evaluation_steps_interval: '${{parent.inputs.evaluation_steps_interval}}'
+      eval_steps: '${{parent.inputs.eval_steps}}'
+      logging_strategy: '${{parent.inputs.logging_strategy}}'
+      logging_steps: '${{parent.inputs.logging_steps}}'
+      metric_for_best_model: '${{parent.inputs.metric_for_best_model}}'
+      resume_from_checkpoint: '${{parent.inputs.resume_from_checkpoint}}'
+      save_total_limit: '${{parent.inputs.save_total_limit}}'
+      apply_early_stopping: '${{parent.inputs.apply_early_stopping}}'
+      early_stopping_patience: '${{parent.inputs.early_stopping_patience}}'
+      early_stopping_threshold: '${{parent.inputs.early_stopping_threshold}}'
+      apply_deepspeed: '${{parent.inputs.apply_deepspeed}}'
+      deepspeed: '${{parent.inputs.deepspeed}}'
+      apply_ort: '${{parent.inputs.apply_ort}}'
+      preprocess_output: '${{parent.jobs.question_answering_datapreprocess.outputs.output_dir}}'
+      model_selector_output: '${{parent.jobs.question_answering_model_import.outputs.output_dir}}'
     outputs:
-      pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
-      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
+      pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
+      mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml://registries/azureml/components/model_prediction/versions/0.0.3
-    compute: ${{parent.inputs.compute_model_evaluation}}
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.9
+    compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: question-answering
-      test_data: ${{parent.jobs.question_answering_datapreprocess.outputs.output_dir}}
-      test_data_mltable: ${{parent.inputs.test_mltable_path}}
-      label_column_name: ${{parent.inputs.answers_key}}
-      input_column_names: ${{parent.inputs.question_key}},${{parent.inputs.context_key}}
-      batch_size: ${{parent.inputs.batch_size}}
-      device: gpu
-      mlflow_model: ${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}
+      test_data: '${{parent.jobs.question_answering_datapreprocess.outputs.output_dir}}'
+      test_data_mltable: '${{parent.inputs.test_mltable_path}}'
+      label_column_name: '${{parent.inputs.answers_key}}'
+      input_column_names: "'${{parent.inputs.question_key}}','${{parent.inputs.context_key}}'"
+      batch_size: '${{parent.inputs.batch_size}}'
+      device: auto
+      mlflow_model: '${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
-    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.3
-    compute: ${{parent.inputs.compute_model_evaluation}}
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.9
+    compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: question-answering
-      ground_truth: ${{parent.jobs.model_prediction.outputs.ground_truth}}
-      ground_truth_column_name: ${{parent.inputs.answers_key}}
-      prediction: ${{parent.jobs.model_prediction.outputs.predictions}}
+      ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
+      ground_truth_column_name: '${{parent.inputs.answers_key}}'
+      prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
       prediction_column_name: predictions
-      prediction_probabilities: ${{parent.jobs.model_prediction.outputs.prediction_probabilities}}
-      evaluation_config: ${{parent.inputs.evaluation_config}}
-      evaluation_config_params: ${{parent.inputs.evaluation_config_params}}
+      prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
+      evaluation_config: '${{parent.inputs.evaluation_config}}'
+      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
     outputs:
-      evaluation_result: ${{parent.outputs.evaluation_result}}
+      evaluation_result: '${{parent.outputs.evaluation_result}}'
