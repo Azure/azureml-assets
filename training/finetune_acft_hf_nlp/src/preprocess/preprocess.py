@@ -159,7 +159,7 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
     logger.info(f"Task name: {getattr(parsed_args, 'task_name', None)}")
 
     if getattr(parsed_args, "task_name", None) == Tasks.TRANSLATION and \
-        getattr(parsed_args, "model_name", None) is not None:
+            getattr(parsed_args, "model_name", None) is not None:
         model_type, src_lang, tgt_lang = None, None, None
         try:
             src_lang_idx = unparsed_args.index("--source_lang")
@@ -168,11 +168,11 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
             tgt_lang = unparsed_args[tgt_lang_idx + 1]
             # fetching model_name as path is already updated above to model_name
             model_type = AzuremlAutoConfig.get_model_type(hf_model_name_or_path=parsed_args.model_name)
-        except:
-            logger.info(f"Unable to parse languages, continuing preprocess")
-        
+        except Exception:
+            logger.info("Unable to parse languages, continuing preprocess!")
+
         if model_type == HfModelTypes.T5 and \
-            (src_lang not in T5_CODE2LANG_MAP or tgt_lang not in T5_CODE2LANG_MAP):
+                (src_lang not in T5_CODE2LANG_MAP or tgt_lang not in T5_CODE2LANG_MAP):
             raise ValidationException._with_error(
                 AzureMLError.create(ValidationError, error=(
                     "Either source or target language is not supported for T5. Supported languages are "
