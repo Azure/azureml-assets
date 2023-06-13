@@ -6,17 +6,14 @@
 import argparse
 import os
 import json
+import shutil
 from azureml.model.mgmt.config import ModelFlavor
 from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
 from pathlib import Path
-import shutil
-
-
-WORKING_DIR = "working_dir"
-TMP_DIR = "tmp"
+from tempfile import TemporaryDirectory
 
 
 def _get_parser():
@@ -140,14 +137,10 @@ if __name__ == "__main__":
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         _validate_pyfunc_args(preprocess_args)
 
-    temp_dir = mlflow_model_output_dir / TMP_DIR
-    working_dir = mlflow_model_output_dir / WORKING_DIR
-    run_preprocess(mlflow_flavor, model_path, working_dir, temp_dir, **preprocess_args)
-
-    # Finishing touches
-    shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
-    shutil.rmtree(working_dir, ignore_errors=True)
-    shutil.rmtree(temp_dir, ignore_errors=True)
+    with TemporaryDirectory(dir=mlflow_model_output_dir) as working_dir, \
+            TemporaryDirectory(dir=mlflow_model_output_dir) as temp_dir:
+        run_preprocess(mlflow_flavor, model_path, working_dir, temp_dir, **preprocess_args)
+        shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
 
     # Copy license file to output model path
     if license_file_path:
