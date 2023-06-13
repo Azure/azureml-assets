@@ -3,6 +3,7 @@
 
 """File containing function for finetune component."""
 
+import os
 import json
 import argparse
 from pathlib import Path
@@ -442,6 +443,44 @@ def finetune(args: Namespace):
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
+
+    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
+    logger.info(f"Process - {process_name}")
+    if process_name in {'main', 'rank_0'}:
+        # hotfix mlflow model deployment issue
+        mlflow_model_path = args.mlflow_model_folder
+        mlflow_conda_yaml = str(Path(mlflow_model_path, "conda.yaml"))
+        mlflow_req_file = str(Path(mlflow_model_path, "requirements.txt"))
+        try:
+            import yaml
+            logger.info("Updating mlflow model requirements")
+            with open(mlflow_conda_yaml, "r") as rptr:
+                mlflow_data = yaml.safe_load(rptr)
+            logger.info(mlflow_data)
+            for ele in mlflow_data["dependencies"]:
+                if type(ele) == dict and "pip" in ele:
+                    for idx in range(len(ele["pip"])):
+                        if ele["pip"][idx].startswith("mlflow==") or ele["pip"][idx].startswith("mlflow<"):
+                            ele["pip"][idx] = "mlflow==2.3.1"
+                            break
+                    ele["pip"].append("mlflow-skinny==2.3.2")
+                    break
+            with open(mlflow_conda_yaml, "w") as rptr:
+                yaml.dump(mlflow_data, rptr, sort_keys=False)
+            logger.info("Updated mlflow conda yaml file")
+            with open(mlflow_req_file, "r") as rptr:
+                mlflow_req_data = rptr.readlines()
+            mlflow_req_data[-1] = str(mlflow_req_data[-1]) + "\n"
+            for idx in range(len(mlflow_req_data)):
+                if mlflow_req_data[idx].startswith("mlflow==") or mlflow_req_data[idx].startswith("mlflow<"):
+                    mlflow_req_data[idx] = "mlflow==2.3.1\n"
+                    break
+            mlflow_req_data.append("mlflow-skinny==2.3.2")
+            with open(mlflow_req_file, "w") as rptr:
+                rptr.writelines(mlflow_req_data)
+            logger.info("Updated mlflow requirements text file")
+        except Exception as e:
+            logger.info("Skipping mlflow model changes! - {e}")
 
 
 @swallow_all_exceptions(logger)
