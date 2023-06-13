@@ -46,7 +46,6 @@ conf:
         - responsibleai~=0.27.0
         - scikit-learn<1.1
     name: responsibleai-spark
-
 args: >-
   --baseline_data ${{inputs.baseline_data}}
   --production_data ${{inputs.production_data}}
