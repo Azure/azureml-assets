@@ -516,7 +516,7 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml://registries/azureml/components/model_prediction/versions/0.0.6
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.9
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: text-classification
@@ -525,11 +525,11 @@ jobs:
       label_column_name: '${{parent.inputs.label_key}}'
       input_column_names: "'${{parent.inputs.sentence1_key}}','${{parent.inputs.sentence2_key}}'"
       batch_size: '${{parent.inputs.batch_size}}'
-      device: gpu
+      device: auto
       mlflow_model: '${{parent.jobs.text_classification_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
-    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.6
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.9
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: text-classification
