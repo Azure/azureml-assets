@@ -27,7 +27,7 @@ class HF_CONF(_CustomEnum):
     CUSTOM_CONFIG_MODULE = "custom_config_module"
     CUSTOM_MODLE_MODULE = "custom_model_module"
     CUSTOM_TOKENIZER_MODULE = "custom_tokenizer_module"
-    EXTRA_PIP_DEPENDENCIES = "extra_pip_requirements"
+    EXTRA_PIP_REQUIREMENTS = "extra_pip_requirements"
     FORCE_LOAD_CONFIG = "force_load_config"
     FORCE_LOAD_TOKENIZER = "force_load_tokenizer"
     HUGGINGFACE_ID = "huggingface_id"

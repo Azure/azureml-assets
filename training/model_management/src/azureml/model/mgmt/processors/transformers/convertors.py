@@ -83,7 +83,7 @@ class HFMLFLowConvertor(ABC):
         self._model_cls_name = translate_params.get(HF_CONF.HF_PRETRAINED_CLASS.value, None)
         self._tokenizer_cls_name = translate_params.get(HF_CONF.HF_TOKENIZER_CLASS.value, None)
         self._extra_pip_requirements = get_list_from_comma_separated_str(
-            translate_params.get(HF_CONF.EXTRA_PIP_DEPENDENCIES.value), ITEM_COMMA_SEP
+            translate_params.get(HF_CONF.EXTRA_PIP_REQUIREMENTS.value), ITEM_COMMA_SEP
         )
 
         if self._signatures:
@@ -151,7 +151,6 @@ class HFMLFLowConvertor(ABC):
         input_example=None,
         requirements_file=None,
         pip_requirements=None,
-        extra_pip_requirements=None,
         segregate=False,
     ):
         config = tokenizer = None
@@ -181,7 +180,7 @@ class HFMLFLowConvertor(ABC):
             input_example=input_example,
             requirements_file=requirements_file,
             pip_requirements=pip_requirements,
-            extra_pip_requirements=extra_pip_requirements,
+            extra_pip_requirements=self._extra_pip_requirements,
             path=self._output_dir,
         )
 

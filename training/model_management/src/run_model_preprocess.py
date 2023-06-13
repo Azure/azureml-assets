@@ -28,7 +28,7 @@ def _get_parser():
     parser.add_argument("--hf-model-class", type=str, required=False, help="Hugging Face model class ")
     parser.add_argument("--hf-tokenizer-class", type=str, required=False, help="Hugging tokenizer class")
     parser.add_argument(
-        "--extra-pip-dependencies",
+        "--extra-pip-requirements",
         type=str,
         required=False,
         help="Extra pip dependecies which is not present in current env but needed to load model env.",
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     hf_config_class = args.hf_config_class
     hf_model_class = args.hf_model_class
     hf_tokenizer_class = args.hf_tokenizer_class
-    extra_pip_dependencies = args.extra_pip_dependencies
+    extra_pip_requirements = args.extra_pip_requirements
 
     model_download_metadata_path = args.model_download_metadata
     model_path = args.model_path
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
     preprocess_args["task"] = task_name if task_name else preprocess_args.get("task")
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
-    preprocess_args[HF_CONF.EXTRA_PIP_DEPENDENCIES.value] = extra_pip_dependencies
+    preprocess_args[HF_CONF.EXTRA_PIP_REQUIREMENTS.value] = extra_pip_requirements
     preprocess_args[HF_CONF.HF_CONFIG_ARGS.value] = hf_config_args
     preprocess_args[HF_CONF.HF_TOKENIZER_ARGS.value] = hf_tokenizer_args
     preprocess_args[HF_CONF.HF_MODEL_ARGS.value] = hf_model_args

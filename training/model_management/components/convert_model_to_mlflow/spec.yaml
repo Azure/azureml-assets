@@ -25,7 +25,7 @@ command: >
   $[[--hf-config-class ${{inputs.hf_config_class}}]]
   $[[--hf-model-class ${{inputs.hf_model_class}}]]
   $[[--hf-tokenizer-class ${{inputs.hf_tokenizer_class}}]]
-  $[[--extra-pip-dependencies "${{inputs.extra_pip_dependencies}}"]]
+  $[[--extra-pip-requirements "${{inputs.extra_pip_requirements}}"]]
   --mlflow-flavor ${{inputs.mlflow_flavor}}
   --model-path ${{inputs.model_path}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
@@ -107,7 +107,7 @@ inputs:
     description: AutoTokenizer class may not be sufficient to load tokenizer for some of the models. You can use this parameter to send Config class name as it is
     optional: true
 
-  extra_pip_dependencies:
+  extra_pip_requirements:
     type: string
     description: |
       Extra pip dependencies that MLFlow model should capture as part of conversion. This would be used to create environment while loading the model for inference.
