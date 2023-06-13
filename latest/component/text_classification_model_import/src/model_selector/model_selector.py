@@ -82,6 +82,10 @@ def model_selector(args: Namespace):
     task_runner = get_task_runner(task_name=args.task_name)()
     task_runner.run_modelselector(**vars(args))
 
+    # additional logging
+    logger.info(f"Model name: {getattr(args, 'model_name', None)}")
+    logger.info(f"Task name: {getattr(args, 'task_name', None)}")
+
 
 @swallow_all_exceptions(logger)
 def main():

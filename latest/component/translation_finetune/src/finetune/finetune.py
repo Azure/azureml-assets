@@ -3,6 +3,7 @@
 
 """File containing function for finetune component."""
 
+import os
 import json
 import argparse
 from pathlib import Path
@@ -19,8 +20,8 @@ from azureml.acft.accelerator.utils.run_utils import add_run_properties
 from azureml.acft.accelerator.utils.decorators import swallow_all_exceptions
 from azureml.acft.accelerator.utils.logging_utils import get_logger_app
 
-from azureml.acft.accelerator.utils.error_handling.exceptions import LLMException, ValidationException
-from azureml.acft.accelerator.utils.error_handling.error_definitions import LLMInternalError, SKUNotSupported
+from azureml.acft.accelerator.utils.error_handling.exceptions import ValidationException
+from azureml.acft.accelerator.utils.error_handling.error_definitions import SKUNotSupported, ValidationError
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 # Refer this logging issue
@@ -363,6 +364,14 @@ def finetune(args: Namespace):
     else:
         args.model_name_or_path = args.model_name
 
+    # additional logging
+    logger.info(f"Model name: {getattr(args, 'model_name', None)}")
+    logger.info(f"Task name: {getattr(args, 'task_name', None)}")
+    logger.info(f"enable LoRA: {getattr(args, 'apply_lora', None)}")
+    logger.info(f"enable DeepSpeed: {getattr(args, 'apply_deepspeed', None)}")
+    logger.info(f"enable ORT: {getattr(args, 'apply_ort', None)}")
+    logger.info(f"Precision: {getattr(args, 'precision', None)}")
+
     # set `ignore_mismatched_sizes` to `false` by default
     if hasattr(args, "model_name") and args.model_name in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
         logger.info(f"Forcing `ignore_mismatched_sizes` to False for {args.model_name}")
@@ -401,16 +410,16 @@ def finetune(args: Namespace):
         ds_stage = zero_optimization_config.get("stage", None)
         # `apply_lora=true` is not supported with stage3 deepspeed config
         if ds_stage == 3 and args.apply_lora:
-            raise LLMException._with_error(
-                AzureMLError.create(LLMInternalError, error=(
+            raise ValidationException._with_error(
+                AzureMLError.create(ValidationError, error=(
                     "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
                     )
                 )
             )
         # `stage3_gather_16bit_weights_on_model_save=false` is not supported for stage3 deepspeed config
         if ds_stage == 3 and not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
-            raise LLMException._with_error(
-                AzureMLError.create(LLMInternalError, error=(
+            raise ValidationException._with_error(
+                AzureMLError.create(ValidationError, error=(
                     "stage3_gather_16bit_weights_on_model_save should be "
                     "`true` in deepspeed stage 3 config"
                     )
@@ -434,6 +443,46 @@ def finetune(args: Namespace):
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
+
+    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
+    logger.info(f"Process - {process_name}")
+    if process_name in {'main', 'rank_0'}:
+        # hotfix mlflow model deployment issue
+        try:
+            mlflow_model_path = args.mlflow_model_folder
+            mlflow_conda_yaml = str(Path(mlflow_model_path, "conda.yaml"))
+            mlflow_req_file = str(Path(mlflow_model_path, "requirements.txt"))
+            import yaml
+            logger.info("Updating mlflow model requirements")
+            with open(mlflow_conda_yaml, "r") as rptr:
+                mlflow_data = yaml.safe_load(rptr)
+            logger.info(mlflow_data)
+            for ele in mlflow_data["dependencies"]:
+                if type(ele) == dict and "pip" in ele:
+                    for idx in range(len(ele["pip"])):
+                        if ele["pip"][idx].startswith("mlflow==") or ele["pip"][idx].startswith("mlflow<") or \
+                                   ele["pip"][idx].startswith("mlflow>"):
+                            ele["pip"][idx] = "mlflow==2.3.1"
+                            break
+                    ele["pip"].append("mlflow-skinny==2.3.2")
+                    break
+            with open(mlflow_conda_yaml, "w") as rptr:
+                yaml.dump(mlflow_data, rptr, sort_keys=False)
+            logger.info("Updated mlflow conda yaml file")
+            with open(mlflow_req_file, "r") as rptr:
+                mlflow_req_data = rptr.readlines()
+            mlflow_req_data[-1] = str(mlflow_req_data[-1]) + "\n"
+            for idx in range(len(mlflow_req_data)):
+                if mlflow_req_data[idx].startswith("mlflow==") or mlflow_req_data[idx].startswith("mlflow<") or \
+                            mlflow_req_data[idx].startswith("mlflow>"):
+                    mlflow_req_data[idx] = "mlflow==2.3.1\n"
+                    break
+            mlflow_req_data.append("mlflow-skinny==2.3.2")
+            with open(mlflow_req_file, "w") as rptr:
+                rptr.writelines(mlflow_req_data)
+            logger.info("Updated mlflow requirements text file")
+        except Exception as e:
+            logger.info(f"Skipping mlflow model changes! - {e}")
 
 
 @swallow_all_exceptions(logger)
