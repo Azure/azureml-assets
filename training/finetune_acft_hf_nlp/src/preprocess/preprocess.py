@@ -153,10 +153,9 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
         parsed_args.model_name_or_path = parsed_args.model_name
 
     # additional logging
-    if hasattr(parsed_args, "model_name"):
-        logger.info(f"Model name: {parsed_args.model_name}")
-    if hasattr(parsed_args, "task_name"):
-        logger.info(f"Task name: {parsed_args.task_name}")
+    # additional logging
+    logger.info(f"Model name: {getattr(args, 'model_name', None)}")
+    logger.info(f"Task name: {getattr(args, 'task_name', None)}")
 
     # update dataset paths
     parsed_args.train_data_path = parsed_args.train_file_path
