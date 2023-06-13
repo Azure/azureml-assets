@@ -28,7 +28,9 @@ def get_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
     elif SupportedVisionTasks.has_value(task):
         return VisionMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
     elif SupportedDiffusersTask.has_value(task):
-        return DiffusersMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
+        return DiffusersMLflowConvertorFactory.create_mlflow_convertor(
+            model_dir, output_dir, temp_dir, translate_params
+        )
     elif task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
         return ASRMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
     else:

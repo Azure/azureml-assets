@@ -10,13 +10,7 @@ from pathlib import Path
 from typing import Dict
 
 
-def run_preprocess(
-    mlflow_flavor: str,
-    model_path: Path,
-    output_dir: Path,
-    temp_dir: Path,
-    **preprocess_args: Dict
-):
+def run_preprocess(mlflow_flavor: str, model_path: Path, output_dir: Path, temp_dir: Path, **preprocess_args: Dict):
     """Preprocess model.
 
     :param mlflow_flavor: mlflow flavor for converting model to

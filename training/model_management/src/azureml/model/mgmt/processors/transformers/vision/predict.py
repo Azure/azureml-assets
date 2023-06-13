@@ -101,11 +101,14 @@ def _process_image(img: pd.Series) -> pd.Series:
             try:
                 return pd.Series(base64.b64decode(image))
             except ValueError:
-                raise ValueError("The provided image string cannot be decoded."
-                                 "Expected format is base64 string or url string.")
+                raise ValueError(
+                    "The provided image string cannot be decoded." "Expected format is base64 string or url string."
+                )
     else:
-        raise ValueError(f"Image received in {type(image)} format which is not supported."
-                         "Expected format is bytes, base64 string or url string.")
+        raise ValueError(
+            f"Image received in {type(image)} format which is not supported."
+            "Expected format is bytes, base64 string or url string."
+        )
 
 
 def _is_valid_url(text: str) -> bool:
@@ -189,7 +192,8 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
     labels = kwargs.get(MLFlowLiterals.TRAIN_LABEL_LIST)
     labels = [labels.tolist()] * len(conf_scores)
     df_result[MLFlowLiterals.PROBS], df_result[MLFlowLiterals.LABELS] = (
-        conf_scores.tolist(), labels,
+        conf_scores.tolist(),
+        labels,
     )
     return df_result
 
