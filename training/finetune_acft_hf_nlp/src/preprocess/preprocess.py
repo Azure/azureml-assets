@@ -10,12 +10,14 @@ from argparse import Namespace
 
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
-from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants
+from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, Tasks, HfModelTypes
 from azureml.acft.contrib.hf.nlp.utils.data_utils import copy_and_overwrite
+from azureml.acft.contrib.hf.nlp.nlp_auto.config import AzuremlAutoConfig
+from azureml.acft.contrib.hf.nlp.tasks.translation.preprocess.preprocess_for_finetune import T5_CODE2LANG_MAP
 
 from azureml.acft.accelerator.utils.logging_utils import get_logger_app
-from azureml.acft.accelerator.utils.error_handling.exceptions import ValidationException, LLMException
-from azureml.acft.accelerator.utils.error_handling.error_definitions import PathNotFound, LLMInternalError
+from azureml.acft.accelerator.utils.error_handling.exceptions import ValidationException
+from azureml.acft.accelerator.utils.error_handling.error_definitions import PathNotFound, ValidationError
 from azureml.acft.accelerator.utils.decorators import swallow_all_exceptions
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
@@ -156,6 +158,28 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
     logger.info(f"Model name: {getattr(parsed_args, 'model_name', None)}")
     logger.info(f"Task name: {getattr(parsed_args, 'task_name', None)}")
 
+    if getattr(parsed_args, "task_name", None) == Tasks.TRANSLATION and \
+        getattr(parsed_args, "model_name", None) is not None:
+        model_type, src_lang, tgt_lang = None, None, None
+        try:
+            src_lang_idx = unparsed_args.index("--source_lang")
+            src_lang = unparsed_args[src_lang_idx + 1]
+            tgt_lang_idx = unparsed_args.index("--target_lang")
+            tgt_lang = unparsed_args[tgt_lang_idx + 1]
+            # fetching model_name as path is already updated above to model_name
+            model_type = AzuremlAutoConfig.get_model_type(hf_model_name_or_path=parsed_args.model_name)
+        except:
+            logger.info(f"Unable to parse languages, continuing preprocess")
+        
+        if model_type == HfModelTypes.T5 and \
+            (src_lang not in T5_CODE2LANG_MAP or tgt_lang not in T5_CODE2LANG_MAP):
+            raise ValidationException._with_error(
+                AzureMLError.create(ValidationError, error=(
+                    "Either source or target language is not supported for T5. Supported languages are "
+                    f"{list(T5_CODE2LANG_MAP.keys())}"
+                ))
+            )
+
     # update dataset paths
     parsed_args.train_data_path = parsed_args.train_file_path
     parsed_args.validation_data_path = parsed_args.validation_file_path
@@ -169,8 +193,8 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
 
     # raise errors and warnings
     if not parsed_args.train_data_path:
-        raise LLMException._with_error(
-            AzureMLError.create(LLMInternalError, error=(
+        raise ValidationException._with_error(
+            AzureMLError.create(ValidationError, error=(
                 "train_file_path or train_mltable_path need to be passed"
             ))
         )
