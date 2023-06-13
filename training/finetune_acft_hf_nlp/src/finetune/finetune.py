@@ -480,7 +480,7 @@ def finetune(args: Namespace):
                 rptr.writelines(mlflow_req_data)
             logger.info("Updated mlflow requirements text file")
         except Exception as e:
-            logger.info("Skipping mlflow model changes! - {e}")
+            logger.info(f"Skipping mlflow model changes! - {e}")
 
 
 @swallow_all_exceptions(logger)
