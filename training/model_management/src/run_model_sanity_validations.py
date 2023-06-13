@@ -13,15 +13,13 @@ import yaml
 import pandas as pd
 from pathlib import Path
 from typing import Dict
-from azureml.model.mgmt.utils.common_utils import (
-    KV_COLON_SEP,
-    ITEM_SEMI_COLON_SEP,
-    get_dict_from_comma_separated_str,
-)
 
 
 MLMODEL_FILE_NAME = "MLmodel"
 CONDA_YAML_FILE_NAME = "conda.yaml"
+KV_COLON_SEP = ":"
+ITEM_COMMA_SEP = ","
+ITEM_SEMI_COLON_SEP = ";"
 
 stdout_handler = logging.StreamHandler(stream=sys.stdout)
 handlers = [stdout_handler]
@@ -31,6 +29,45 @@ logging.basicConfig(
     handlers=handlers,
 )
 logger = logging.getLogger(__name__)
+
+
+def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str, do_eval: bool = False) -> Dict:
+    """Create and return dictionary from string.
+
+    :param dict_str: string to be parsed for creating dictionary
+    :type dict_str: str
+    :param item_sep: char separator used for item separation
+    :type item_sep: str
+    :param kv_sep: char separator used for key-value separation. Must be different from item separator
+    :type kv_sep: str
+    :param do_eval: Whether to eval parsed value string. Default is False
+    :type do_eval: bool
+    :return: Resultant dictionary
+    :rtype: Dict
+    """
+    if not dict_str:
+        return {}
+    item_sep = item_sep.strip()
+    kv_sep = kv_sep.strip()
+    if len(item_sep) > 1 or len(kv_sep) > 1:
+        raise Exception("Provide single char as separator")
+    if item_sep == kv_sep:
+        raise Exception("item_sep and kv_sep are equal.")
+    parsed_dict = {}
+    kv_pairs = dict_str.split(item_sep)
+    for item in kv_pairs:
+        split = item.split(kv_sep)
+        if len(split) == 2:
+            key = split[0].strip()
+            val = split[1].strip()
+            if do_eval:
+                try:
+                    val = eval(split[1].strip())
+                except Exception as e:
+                    print(f"Could not eval `{val}`. Error: {e}")
+            parsed_dict[key] = val
+    print(f"get_dict_from_comma_separated_str: {dict_str} => {parsed_dict}")
+    return parsed_dict
 
 
 def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: Dict) -> pd.DataFrame:

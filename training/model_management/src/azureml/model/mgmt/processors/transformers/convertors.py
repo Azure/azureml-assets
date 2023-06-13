@@ -10,6 +10,8 @@ from azureml.evaluate import mlflow as hf_mlflow
 from azureml.model.mgmt.processors.transformers.config import (
     HF_CONF,
     MODEL_FILE_PATTERN,
+    MODEL_CONFIG_FILE_PATTERN,
+    TOKENIZER_FILE_PATTERN,
     SupportedNLPTasks,
     SupportedTasks,
     SupportedVisionTasks,
@@ -66,11 +68,13 @@ class HFMLFLowConvertor(ABC):
         self,
         model_dir: Path,
         output_dir: Path,
+        temp_dir: Path,
         translate_params: Dict,
     ):
         """Initialize mlflow convertor for HF models."""
         self._model_dir = model_dir
         self._output_dir = output_dir
+        self._temp_dir = temp_dir
         self._model_id = translate_params["model_id"]
         self._task = translate_params["task"]
         self._misc = translate_params.get("misc", [])
@@ -142,26 +146,34 @@ class HFMLFLowConvertor(ABC):
 
     def _save(
         self,
-        config=None,
-        tokenizer=None,
         conda_env=None,
         code_paths=None,
         input_example=None,
         requirements_file=None,
         pip_requirements=None,
         extra_pip_requirements=None,
+        segregate=False,
     ):
-        if config or tokenizer:
-            print("Either of config and tokenizer is not null. Filtering out model files to save.")
-            tmp_model_dir = Path("tmp") / "model"
+        config = tokenizer = None
+        model = str(self._model_dir)
+        if segregate:
+            print("Segregate input model dir and present into separate folders for model, config and tokenizer")
+            tmp_model_dir = Path(self._temp_dir) / HF_CONF.HF_MODEL_PATH.value
+            tmp_config_dir = Path(self._temp_dir) / HF_CONF.HF_CONFIG_PATH.value
+            tmp_tokenizer_dir = Path(self._temp_dir) / HF_CONF.HF_TOKENIZER_PATH.value
             copy_file_paths_to_destination(self._model_dir, tmp_model_dir, MODEL_FILE_PATTERN)
-            self._model_dir = tmp_model_dir
+            copy_file_paths_to_destination(self._model_dir, tmp_config_dir, MODEL_CONFIG_FILE_PATTERN)
+            copy_file_paths_to_destination(self._model_dir, tmp_tokenizer_dir, TOKENIZER_FILE_PATTERN)
+            model = str(tmp_model_dir)
+            config = str(tmp_config_dir)
+            tokenizer = str(tmp_tokenizer_dir)
 
         self._signatures = self._signatures or self.get_model_signature()
+
         hf_mlflow.hftransformers.save_model(
             config=config,
             tokenizer=tokenizer,
-            hf_model=str(self._model_dir),
+            hf_model=model,
             hf_conf=self._hf_conf,
             conda_env=conda_env,
             code_paths=code_paths,
@@ -189,7 +201,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
     def get_model_signature(self):
         """Return model signature for vision models."""
         return ModelSignature(
-            inputs=Schema(inputs=[ColSpec(name="image", type=DataType.string)]),
+            inputs=Schema(inputs=[ColSpec(name="image", type=DataType.binary)]),
             outputs=Schema(
                 inputs=[ColSpec(name="probs", type=DataType.string), ColSpec(name="labels", type=DataType.string)]
             ),
@@ -202,24 +214,18 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else AutoConfig
         self._hf_tokenizer_cls = self._hf_tokenizer_cls if self._hf_tokenizer_cls else AutoImageProcessor
 
-        hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_model_cls.__name__
+        hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_config_cls.__name__
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = self._hf_model_cls.__name__
         hf_conf[HF_CONF.HF_TOKENIZER_CLASS.value] = self._hf_tokenizer_cls.__name__
         hf_conf[HF_CONF.HF_PREDICT_MODULE.value] = HFMLFLowConvertor.PREDICT_MODULE
 
         config_load_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
-        tokenizer_load_args = self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
         config = self._hf_config_cls.from_pretrained(self._model_dir, local_files_only=True, **config_load_args)
-        tokenizer = self._hf_tokenizer_cls.from_pretrained(
-            self._model_dir, config=config, local_files_only=True, **tokenizer_load_args
-        )
-
         hf_conf[HF_CONF.TRAIN_LABEL_LIST.value] = list(config.id2label.values())
 
         return super()._save(
-            config=config,
-            tokenizer=tokenizer,
             code_paths=[VisionMLflowConvertor.PREDICT_FILE_PATH],
+            segregate=True,
         )
 
 
@@ -261,28 +267,19 @@ class WhisperMLFlowConvertor(ASRMLflowConvertor):
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else WhisperConfig
         self._hf_tokenizer_cls = self._hf_tokenizer_cls if self._hf_tokenizer_cls else WhisperProcessor
 
-        hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_model_cls.__name__
+        hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_config_cls.__name__
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = self._hf_model_cls.__name__
         hf_conf[HF_CONF.HF_TOKENIZER_CLASS.value] = self._hf_tokenizer_cls.__name__
         hf_conf[HF_CONF.HF_PREDICT_MODULE.value] = HFMLFLowConvertor.PREDICT_MODULE
-
-        config_load_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
-        tokenizer_load_args = self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
-        tokenizer_load_args.update({"padding": True, "truncation": True})
-        config = self._hf_config_cls.from_pretrained(self._model_dir, local_files_only=True, **config_load_args)
-        tokenizer = self._hf_tokenizer_cls.from_pretrained(
-            self._model_dir, local_files_only=True, **tokenizer_load_args
-        )
 
         conda_env = {}
         with open(WhisperMLFlowConvertor.CONDA_FILE_PATH) as f:
             conda_env = yaml.safe_load(f)
 
         return super()._save(
-            config=config,
-            tokenizer=tokenizer,
             conda_env=conda_env,
             code_paths=[WhisperMLFlowConvertor.PREDICT_FILE_PATH],
+            segregate=True,
         )
 
 
@@ -368,15 +365,8 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else AutoConfig
         self._hf_tokenizer_cls = self._hf_tokenizer_cls if self._hf_tokenizer_cls else AutoTokenizer
 
-        hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_model_cls.__name__
+        hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_config_cls.__name__
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = self._hf_model_cls.__name__
         hf_conf[HF_CONF.HF_TOKENIZER_CLASS.value] = self._hf_tokenizer_cls.__name__
 
-        config_load_args = self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
-        tokenizer_load_args = self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
-        config = self._hf_config_cls.from_pretrained(self._model_dir, local_files_only=True, **config_load_args)
-        tokenizer = self._hf_tokenizer_cls.from_pretrained(
-            self._model_dir, local_files_only=True, **tokenizer_load_args
-        )
-
-        return super()._save(config=config, tokenizer=tokenizer)
+        return super()._save(segregate=True)

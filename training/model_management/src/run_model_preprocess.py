@@ -140,14 +140,14 @@ if __name__ == "__main__":
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         _validate_pyfunc_args(preprocess_args)
 
-    temp_output_dir = mlflow_model_output_dir / TMP_DIR
+    temp_dir = mlflow_model_output_dir / TMP_DIR
     working_dir = mlflow_model_output_dir / WORKING_DIR
-    run_preprocess(mlflow_flavor, model_path, working_dir, temp_output_dir, **preprocess_args)
+    run_preprocess(mlflow_flavor, model_path, working_dir, temp_dir, **preprocess_args)
 
     # Finishing touches
     shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
     shutil.rmtree(working_dir, ignore_errors=True)
-    shutil.rmtree(temp_output_dir, ignore_errors=True)
+    shutil.rmtree(temp_dir, ignore_errors=True)
 
     # Copy license file to output model path
     if license_file_path:

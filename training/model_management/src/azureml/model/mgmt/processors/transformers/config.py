@@ -9,9 +9,9 @@ from enum import Enum
 MLFLOW_ARTIFACT_DIRECTORY = "mlflow_model_folder"
 
 # HF flavor patterns
-MODEL_CONFIG_FILE_PATTERN = r"^config\.json$"
-MODEL_FILE_PATTERN = r"^pytorch.*$"
-TOKENIZER_FILE_PATTERN = r"^tokenizer.*|vocab\.json$"
+MODEL_CONFIG_FILE_PATTERN = r"^config\.json|.+\.py$"
+MODEL_FILE_PATTERN = r"^pytorch.*|.+\.py$"
+TOKENIZER_FILE_PATTERN = r"^.*token.*|.*vocab\.json|.+\.py$"
 
 
 class _CustomEnum(Enum):
@@ -41,6 +41,9 @@ class HF_CONF(_CustomEnum):
     HF_PREDICT_MODULE = "hf_predict_module"
     TASK_TYPE = "task_type"
     TRAIN_LABEL_LIST = "train_label_list"
+    HF_MODEL_PATH = "model"
+    HF_CONFIG_PATH = "config"
+    HF_TOKENIZER_PATH = "tokenizer"
 
 
 class SupportedVisionTasks(_CustomEnum):
