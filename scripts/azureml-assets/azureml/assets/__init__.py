@@ -24,8 +24,7 @@ from .deployment_config import (
 from .update_assets import (
     pin_env_files,
     release_tag_exists,
-    previous_release_tag_exists,
-    check_new_or_preview_release,
+    validate_new_release,
     update_asset,
     update_assets,
 )

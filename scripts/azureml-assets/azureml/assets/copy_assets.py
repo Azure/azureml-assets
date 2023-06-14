@@ -31,7 +31,8 @@ def copy_asset(asset_config: assets.AssetConfig,
         # Skip a released version
         return None
     
-    if not assets.check_new_or_preview_release(asset_config) or not assets.previous_release_tag_exists(asset_config, release_directory_root):
+
+    if not assets.validate_new_release(asset_config, release_directory_root):
         # Skip if previous version was not released
         return None
 

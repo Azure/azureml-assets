@@ -16,6 +16,8 @@ import azureml.assets.environment as environment
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
+from azureml.assets.config import AssetType
+
 ASSET_COUNT = "asset_count"
 UPDATED_COUNT = "updated_count"
 UPDATED_ENV_COUNT = "updated_env_count"
@@ -48,39 +50,6 @@ def pin_env_files(env_config: assets.EnvironmentConfig):
             logger.log_warning(f"Failed to pin versions in {file_to_pin}: File not found")
 
 
-def check_new_or_preview_release(asset_config: assets.AssetConfig) -> bool:
-    """Check if release is preview or version 1.
-
-    Args:
-        asset_config (assets.AssetConfig): Asset config
-
-    Returns:
-        bool: True if the release is a preview or version 1, False otherwise
-    """
-    full_name_components = asset_config.full_name.split("/")
-    return "preview" in full_name_components[2] or int(full_name_components[2]) == 1
-
-
-def previous_release_tag_exists(asset_config: assets.AssetConfig, release_directory_root: Path) -> bool:
-    """Check repo for an asset's previous release tag.
-
-    Args:
-        asset_config (assets.AssetConfig): Asset config
-        release_directory_root (Path): Release branch location
-
-    Returns:
-        bool: True if the previous tag exists, False otherwise
-    """
-    # Check git repo for version-specific tag
-    repo = Repo(release_directory_root)
-
-    full_name_components = asset_config.full_name.split("/")
-    full_name_components[2] = str(int(full_name_components[2]) - 1)
-    previous_full_name = "/".join(full_name_components)
-    
-    return previous_full_name in repo.tags
-
-
 def release_tag_exists(asset_config: assets.AssetConfig, release_directory_root: Path) -> bool:
     """Check repo for an asset's release tag.
 
@@ -94,6 +63,40 @@ def release_tag_exists(asset_config: assets.AssetConfig, release_directory_root:
     # Check git repo for version-specific tag
     repo = Repo(release_directory_root)
     return asset_config.full_name in repo.tags
+
+
+
+def validate_new_release(asset_config: assets.AssetConfig, release_directory_root: Path) -> bool:
+    """Check repo to see if an asset's previous version was released if a latest tag exists.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config
+        release_directory_root (Path): Release branch location
+
+    Returns:
+        bool: True if the previous tag exists, False otherwise
+    """
+    if asset_config.type != AssetType.ENVIRONMENT:
+        return True
+
+    repo = Repo(release_directory_root)
+    commits_tags = {}
+
+    for tag in repo.tags:
+        if tag.name.startswith(f"{asset_config.partial_name}/"):
+            commits_tags[tag.commit] = tag
+
+    ordered_commits = sorted(commits_tags.keys(), key=lambda c: c.authored_datetime)
+
+    # If no tags exist for this asset, return True
+    if len(ordered_commits) == 0:
+        return True
+
+    # Get the latest tag
+    latest_tag = commits_tags[ordered_commits[-1]].name
+    latest_version = int(latest_tag.split("/")[2])
+
+    return latest_version + 1 == int(asset_config.version)
 
 
 def update_asset(asset_config: assets.AssetConfig,
