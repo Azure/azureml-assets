@@ -10,6 +10,7 @@ numpy~=1.18.5
 pandas~=1.4.3
 pyspark
 pytest~=7.2.1
+responsibleai~=0.27.0
 ruamel.yaml==0.17.21
 scipy~=1.5.2
 pytest-xdist
