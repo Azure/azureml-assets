@@ -80,23 +80,17 @@ def validate_new_release(asset_config: assets.AssetConfig, release_directory_roo
         return True
 
     repo = Repo(release_directory_root)
-    commits_tags = {}
-
-    for tag in repo.tags:
-        if tag.name.startswith(f"{asset_config.partial_name}/"):
-            commits_tags[tag.commit] = tag
-
-    ordered_commits = sorted(commits_tags.keys(), key=lambda c: c.authored_datetime)
-
-    # If no tags exist for this asset, return True
-    if len(ordered_commits) == 0:
+    tags = [t for t in repo.tags if tag.name.startswith(f"{asset_config.partial_name}/")]
+    if not tags:
+       # No releases
         return True
 
     # Get the latest tag
-    latest_tag = commits_tags[ordered_commits[-1]].name
-    latest_version = int(latest_tag.split("/")[2])
+    ordered_tags = sorted(tags, key=lambda t: t.tag.tagged_date)
+    latest_tag = ordered_tags[-1].name
+    _, _, latest_version = assets.AssetConfig.parse_full_name(latest_tag)
 
-    return latest_version + 1 == int(asset_config.version)
+    return int(latest_version) + 1 == int(asset_config.version)
 
 
 def update_asset(asset_config: assets.AssetConfig,
