@@ -14,7 +14,8 @@ environment: azureml://registries/azureml/environments/python-sdk-v2/versions/2
 code: ../../src/model_deployment
 command: >-
   python deploy.py
-  --registration_details ${{inputs.registration_details}}
+  $[[--registration_details ${{inputs.registration_details}}]]
+  $[[--model_id ${{inputs.model_id}}]]
   $[[--inference_payload ${{inputs.inference_payload}}]]
   $[[--endpoint_name ${{inputs.endpoint_name}}]]
   $[[--deployment_name ${{inputs.deployment_name}}]]
@@ -39,8 +40,13 @@ inputs:
   # Output of registering component
   registration_details:
     type: uri_file
-    optional: false
+    optional: true
     description: Json file that contains the ID of registered model to be deployed
+
+  model_id:
+    type: string
+    optional: true 
+    description: Id of registered mlflow model
 
   inference_payload:
     type: uri_file
