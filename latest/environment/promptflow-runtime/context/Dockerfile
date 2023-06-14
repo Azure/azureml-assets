@@ -1,1 +1,1 @@
-FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime@sha256:0e6af04eab93f3888eb1e917ba357d490dd31b7cc427b38ac2fce7800172ea07
+FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime@sha256:fca25e6e385e671ee392a44964ce6ca6f9c3b2e1261e62e7cd203c2d0a7d71a0
