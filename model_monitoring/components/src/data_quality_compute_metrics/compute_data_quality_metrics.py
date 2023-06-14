@@ -285,7 +285,8 @@ def compute_dtype_violation_count_modify_dataset(
             .collect()
 
         if(len(dtype_baseline) == 0):
-            print(f"Feature '{column}' is not present in data statistics. Skipping data type violation count for '{column}'.")
+            print(f"Feature '{column}' is not present in data statistics. " +
+                  f"Skipping data type violation count for '{column}'.")
             continue
 
         dtype_baseline = dtype_baseline[0][0]
