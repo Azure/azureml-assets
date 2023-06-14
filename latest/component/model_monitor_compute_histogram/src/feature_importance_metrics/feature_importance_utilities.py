@@ -38,11 +38,11 @@ def compute_categorical_features(baseline_data, target_column):
         baseline_column = pd.Series(baseline_data[column])
         if baseline_column.name != target_column:
             column_type = baseline_column.dtype.name
-            if column_type == "object" or column_type == "bool":
+            if column_type == 'object' or column_type == 'bool':
                 categorical_features.append(baseline_column.name)
             # if the type is int and the ratio of distinct values to total values
             # is less than .05 than the column is considered categorical
-            elif column_type == "int64":
+            elif column_type == 'int64':
                 distinct_column_values = len(baseline_column.unique())
                 total_column_values = len(baseline_column)
                 distinct_value_ratio = distinct_column_values / total_column_values
