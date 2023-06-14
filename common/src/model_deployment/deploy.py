@@ -9,13 +9,12 @@ import logging
 import re
 import time
 
-from azure.ai.ml import MLClient,Input
+from azure.ai.ml import MLClient
 from azure.ai.ml.entities import (
     ManagedOnlineEndpoint,
     ManagedOnlineDeployment,
     OnlineRequestSettings,
     ProbeSettings,
-    Model,
 )
 from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
@@ -63,7 +62,9 @@ def parse_args():
         type=str,
         help="Name of the endpoint",
     )
-    parser.add_argument("--deployment_name", type=str, help="Name of the the deployment")
+    parser.add_argument(
+        "--deployment_name", type=str, help="Name of the the deployment"
+    )
     parser.add_argument(
         "--instance_type",
         type=str,
@@ -114,7 +115,7 @@ def parse_args():
         type=int,
         default=10,
         help="The number of seconds after which the readiness probe times out",
-        choices=range(1, PROBE_TIMEOUT)
+        choices=range(1, PROBE_TIMEOUT),
     )
     parser.add_argument(
         "--period_readiness_probe",
@@ -177,9 +178,13 @@ def parse_args():
     if args.max_concurrent_requests_per_instance < 1:
         parser.error("Arg max_concurrent_requests_per_instance cannot be less than 1")
     if args.request_timeout_ms < 1 or args.request_timeout_ms > MAX_REQUEST_TIMEOUT:
-        parser.error(f"Arg request_timeout_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
+        parser.error(
+            f"Arg request_timeout_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}"
+        )
     if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > MAX_REQUEST_TIMEOUT:
-        parser.error(f"Arg max_queue_wait_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
+        parser.error(
+            f"Arg max_queue_wait_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}"
+        )
 
     return args
 
@@ -211,7 +216,9 @@ def get_ml_client():
     return ml_client
 
 
-def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
+def create_endpoint_and_deployment(
+    ml_client, model_id, endpoint_name, deployment_name, args
+):
     """Create endpoint and deployment and return details."""
     endpoint = ManagedOnlineEndpoint(name=endpoint_name, auth_mode="key")
 
@@ -259,7 +266,9 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
         logging.error(error_msg)
         raise Exception(error_msg)
 
-    print(f"Deployment successful. Updating endpoint to take 100% traffic for deployment {deployment_name}")
+    print(
+        f"Deployment successful. Updating endpoint to take 100% traffic for deployment {deployment_name}"
+    )
 
     # deployment to take 100% traffic
     endpoint.traffic = {deployment.name: 100}
@@ -282,11 +291,11 @@ def main(args):
         model_info = {}
         with open(args.registration_details) as f:
             model_info = json.load(f)
-        model_id = model_info['id']
-        model_name = model_info['name']
+        model_id = model_info["id"]
+        model_name = model_info["name"]
     elif args.model_id:
         model_id = str(args.model_id)
-        model_name = model_id.split('/')[-3]
+        model_name = model_id.split("/")[-3]
     else:
         raise Exception("Arguments model_id and registration_details both are missing.")
 
@@ -298,7 +307,7 @@ def main(args):
     # 1. Replace underscores and slashes by hyphens and convert them to lower case.
     # 2. Take 21 chars from model name and append '-' & timstamp(10chars) to it
 
-    endpoint_name = re.sub('[^A-Za-z0-9]', '-', model_name).lower()[:21]
+    endpoint_name = re.sub("[^A-Za-z0-9]", "-", model_name).lower()[:21]
     endpoint_name = f"{endpoint_name}-{int(time.time())}"
     endpoint_name = endpoint_name
 
@@ -310,7 +319,7 @@ def main(args):
         endpoint_name=endpoint_name,
         deployment_name=deployment_name,
         model_id=model_id,
-        args=args
+        args=args,
     )
 
     if args.inference_payload:
@@ -342,6 +351,7 @@ def main(args):
     json_object = json.dumps(deployment_details, indent=4)
     with open(args.model_deployment_details, "w") as outfile:
         outfile.write(json_object)
+
 
 # run script
 if __name__ == "__main__":
