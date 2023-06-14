@@ -80,7 +80,7 @@ def validate_new_release(asset_config: assets.AssetConfig, release_directory_roo
         return True
 
     repo = Repo(release_directory_root)
-    tags = [t for t in repo.tags if tag.name.startswith(f"{asset_config.partial_name}/")]
+    tags = [t for t in repo.tags if t.name.startswith(f"{asset_config.partial_name}/")]
     if not tags:
        # No releases
         return True
