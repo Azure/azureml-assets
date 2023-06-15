@@ -86,7 +86,7 @@ def validate_new_release(asset_config: assets.AssetConfig, release_directory_roo
         return True
 
     # Get the latest tag
-    ordered_tags = sorted(tags, key=lambda t: t.tag.tagged_date)
+    ordered_tags = sorted(tags, key=lambda t: t.commit.authored_datetime)
     latest_tag = ordered_tags[-1].name
     _, _, latest_version = assets.AssetConfig.parse_full_name(latest_tag)
 
