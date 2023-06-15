@@ -76,7 +76,7 @@ outputs:
     type: mlflow_model
     description: Output path for the converted MLFlow model.
     mode: rw_mount
-    
+
   model_import_job_path:
     type: uri_file
     description: JSON file containing model job path for model lineage

@@ -18,6 +18,9 @@ from .config import (
     PublishVisibility,
     Spec,
 )
+from .deployment_config import (
+    DeploymentConfig,
+)
 from .update_assets import (
     pin_env_files,
     release_tag_exists,

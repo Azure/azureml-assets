@@ -39,7 +39,6 @@ inputs:
     description: "Test Data MLTable path"
   mlflow_model:
     type: mlflow_model
-    optional: true
     description: "Mlflow Model - registered model or output of a job with type mlflow_model in a pipeline"
   label_column_name:
     type: string
@@ -61,15 +60,14 @@ inputs:
   model_uri:
     type: string
     optional: true
-    description: "The location, in URI format, of the MLflow model, for example:
+    description: "[DEPRECATED] The location, in URI format, of the MLflow model, for example:
                       - ``runs:/<mlflow_run_id>/run-relative/path/to/model``
                       - ``models:/<model_name>/<model_version>``
                       - ``models:/<model_name>/<stage>``"
   device:
     type: string
-    optional: true
-    default: cpu
-    enum: [cpu, gpu]
+    default: auto
+    enum: [auto, cpu, gpu]
   batch_size:
     type: integer
     optional: true
@@ -89,11 +87,11 @@ outputs:
     type: mltable
 
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/7
+environment: azureml://registries/azureml/environments/model-evaluation/versions/8
 
 command: >-
   python download_dependencies.py
-  $[[--mlflow-model '${{inputs.mlflow_model}}']]
+  --mlflow-model '${{inputs.mlflow_model}}'
   $[[--model-uri ${{inputs.model_uri}}]] ;
   python model_prediction.py
   $[[--data '${{inputs.test_data}}']]
@@ -105,12 +103,12 @@ command: >-
   --prediction-probabilities-mltable '${{outputs.prediction_probabilities_mltable}}'
   --ground-truth '${{outputs.ground_truth}}'
   --ground-truth-mltable '${{outputs.ground_truth_mltable}}'
-  $[[--input-column-names ${{inputs.input_column_names}}]]
-  $[[--mlflow-model '${{inputs.mlflow_model}}']]
+  --mlflow-model '${{inputs.mlflow_model}}'
+  --device ${{inputs.device}}
+  $[[--input-column-names '${{inputs.input_column_names}}']]
   $[[--model-uri ${{inputs.model_uri}}]]
   $[[--label-column-name ${{inputs.label_column_name}}]]
   $[[--config-file-name '${{inputs.evaluation_config}}']]
-  $[[--device ${{inputs.device}}]]
   $[[--batch-size ${{inputs.batch_size}}]]
   $[[--config_str '${{inputs.evaluation_config_params}}']]
   
