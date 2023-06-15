@@ -12,13 +12,17 @@ import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
+import urllib.parse
+from urllib.request import Request, urlopen
+
 COPIED_COUNT = "copied_count"
 
 
 def copy_asset(asset_config: assets.AssetConfig,
                output_directory_root: Path,
                release_directory_root: Path = None,
-               use_version_dir: bool = False) -> str:
+               use_version_dir: bool = False,
+               check_previous_release: bool = False) -> str:
     """Copy asset to output directory.
 
     Args:
@@ -30,11 +34,27 @@ def copy_asset(asset_config: assets.AssetConfig,
     if release_directory_root is not None and assets.release_tag_exists(asset_config, release_directory_root):
         # Skip a released version
         return None
-    
 
-    if not assets.validate_new_release(asset_config, release_directory_root):
+    if check_previous_release:
         # Skip if previous version was not released
-        return None
+        tag = assets.validate_new_release(asset_config, release_directory_root)
+
+        if tag is not None:
+            image = asset_config.extra_config_as_object().get_full_image_name()
+
+            # Check against MCR by making a manifest call to see if tag exists
+            (hostname, repo) = image.split("/", 1)
+            encoded_tag = urllib.parse.quote(tag, safe="")
+
+            request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
+                            method="HEAD",
+                            headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
+            
+            try:
+                response = urlopen(request)
+            except Exception as e:
+                logger.log_error(f"Image {image} does not exist in MCR")
+                raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
 
     # Copy asset to output directory
     # util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory_root, add_subdir=True,
@@ -48,7 +68,8 @@ def copy_assets(input_dirs: List[Path],
                 asset_config_filename: str,
                 release_directory_root: Path = None,
                 use_version_dirs: bool = False,
-                pattern: re.Pattern = None):
+                pattern: re.Pattern = None,
+                check_previous_release: bool = False):
     """Copy assets to output directory.
 
     Args:
@@ -69,7 +90,8 @@ def copy_assets(input_dirs: List[Path],
         version = copy_asset(asset_config=asset_config,
                              output_directory_root=output_directory_root,
                              release_directory_root=release_directory_root,
-                             use_version_dir=use_version_dirs)
+                             use_version_dir=use_version_dirs,
+                             check_previous_release=check_previous_release)
         if version:
             logger.print(f"Copied {asset_config.type.value} {asset_config.name} version {version}")
             copied_count += 1
@@ -95,6 +117,8 @@ if __name__ == '__main__':
                         help="Use version directories when storing assets in output directory")
     parser.add_argument("-t", "--pattern", type=re.compile,
                         help="Regex pattern to select assets to copy, in the format <type>/<name>/<version>")
+    parser.add_argument("-p", "--check_previous_release", action="store_true",
+                        help="Checks if previous release exists")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
@@ -106,4 +130,5 @@ if __name__ == '__main__':
                 asset_config_filename=args.asset_config_filename,
                 release_directory_root=args.release_directory,
                 use_version_dirs=args.use_version_dirs,
-                pattern=args.pattern)
+                pattern=args.pattern,
+                check_previous_release=args.check_previous_release)
