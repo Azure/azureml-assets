@@ -20,7 +20,6 @@ def _get_output_spark_df_schema():
             StructField("metric_value", FloatType(), True),
             StructField("data_type", StringType(), True),
             StructField("metric_name", StringType(), True),
-            StructField("threshold_value", FloatType(), True),
         ]
     )
     return schema

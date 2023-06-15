@@ -278,12 +278,18 @@ def compute_dtype_violation_count_modify_dataset(
 
     # Loop through each column in the original DataFrame
     for column in df.columns:
-        dtype_baseline = (
-            data_stats_table_mod.select(["featureName", "dataType"])
-            .filter(data_stats_table_mod.featureName == column)
-            .select("dataType")
-            .collect()[0][0]
-        )
+
+        dtype_baseline = data_stats_table_mod.select(["featureName", "dataType"]) \
+            .filter(data_stats_table_mod.featureName == column) \
+            .select("dataType")\
+            .collect()
+
+        if not dtype_baseline:
+            print(f"Feature '{column}' is not present in data statistics. " +
+                  f"Skipping data type violation count for '{column}'.")
+            continue
+
+        dtype_baseline = dtype_baseline[0][0]
 
         # Cast the column to datatype from baseline reference column and count the number of errors
         num_errors = (

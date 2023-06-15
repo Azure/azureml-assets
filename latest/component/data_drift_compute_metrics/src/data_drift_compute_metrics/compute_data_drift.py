@@ -4,6 +4,8 @@
 """This file contains the core logic for data drift compute metrics component."""
 
 
+import pyspark.sql as pyspark_sql
+import pyspark.sql.functions as F
 from numerical_data_drift_metrics import compute_numerical_data_drift_measures_tests
 from categorical_data_drift_metrics import compute_categorical_data_drift_measures_tests
 from io_utils import get_output_spark_df
@@ -12,7 +14,6 @@ from shared_utilities.df_utils import (
     get_numerical_columns,
     get_categorical_columns,
 )
-import pyspark.sql as pyspark_sql
 
 
 def compute_data_drift_measures_tests(
@@ -75,16 +76,17 @@ def compute_data_drift_measures_tests(
         float(baseline_df_count),
         "",
         "BaselineRowCount",
-        float("nan"),
     ]
     target_count_row = [
         "",
         float(production_df_count),
         "",
         "TargetRowCount",
-        float("nan"),
     ]
     row_count_metric_df = get_output_spark_df([baseline_count_row, target_count_row])
+    row_count_metric_df = row_count_metric_df.withColumn(
+        "threshold_value", F.lit("nan").cast("float")
+    )
     output_df = output_df.union(row_count_metric_df)
 
     return output_df
