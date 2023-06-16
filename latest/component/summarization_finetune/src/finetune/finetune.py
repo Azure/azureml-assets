@@ -49,10 +49,22 @@ IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     "openlm-research/open_llama_7b_400bt_preview",            # llama
     "openlm-research/open_llama_3b_600bt_preview",            # llama
     "openlm-research/open_llama_7b_700bt_preview",            # llama
+    "openlm-research/open_llama_13b_600bt",                   # llama
     "decapoda-research/llama-7b-hf",            # llama
     "decapoda-research/llama-13b-hf",           # llama
     "decapoda-research/llama-30b-hf",           # llama
     "decapoda-research/llama-65b-hf",           # llama
+]
+
+
+# Gradient Checkpointing (GC) is not supported for all the HF models.
+# To support llama finetuning on Standard_ND40rs_v2, enabling GC for llama models for now
+ENABLE_GRADIENT_CHECKPOINTING = [
+    "openlm-research/open_llama_3b_350bt_preview",
+    "openlm-research/open_llama_7b_400bt_preview",
+    "openlm-research/open_llama_3b_600bt_preview",
+    "openlm-research/open_llama_7b_700bt_preview",
+    "openlm-research/open_llama_13b_600bt"
 ]
 
 MLFLOW_HFTRANSFORMERS_MISC_CONF = {
@@ -402,6 +414,11 @@ def finetune(args: Namespace):
     elif not args.apply_deepspeed:
         # do not use deepspeed config if provided when apply_deepspeed is set to false
         args.deepspeed = None
+
+    # enable gradient checkpointing
+    if hasattr(args, "model_name") and args.model_name in ENABLE_GRADIENT_CHECKPOINTING:
+        logger.info(f"Enabling gradient checkpointing for {args.model_name}")
+        setattr(args, "gradient_checkpointing", True)
 
     if args.deepspeed:
         with open(args.deepspeed, "r") as fp:
