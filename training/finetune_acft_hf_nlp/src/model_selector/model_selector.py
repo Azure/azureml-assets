@@ -82,6 +82,15 @@ def model_selector(args: Namespace):
     task_runner = get_task_runner(task_name=args.task_name)()
     task_runner.run_modelselector(**vars(args))
 
+    # for base curated models forward MLmodel info
+    if getattr(args, "mlflow_model_path", None) is not None:
+        import shutil
+        from azureml.acft.contrib.hf.nlp.constants.constants import MLFlowHFFlavourConstants
+        mlflow_config_file = Path(args.mlflow_model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
+        if mlflow_config_file.is_file():
+            shutil.copy(str(mlflow_config_file), args.output_dir)
+            logger.info("Copied MLmodel file to output dir")
+
     # additional logging
     logger.info(f"Model name: {getattr(args, 'model_name', None)}")
     logger.info(f"Task name: {getattr(args, 'task_name', None)}")

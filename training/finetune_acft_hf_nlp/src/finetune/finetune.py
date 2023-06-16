@@ -13,7 +13,7 @@ import torch
 
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
-from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, HfModelTypes
+from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, HfModelTypes, MLFlowHFFlavourConstants
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
@@ -60,6 +60,11 @@ MLFLOW_HFTRANSFORMERS_MISC_CONF = {
     HfModelTypes.LLAMA: {
         "tokenizer_hf_load_kwargs": {
             "model_input_names": ["input_ids", "attention_mask"],
+        },
+    },
+    "databricks/dolly-v2-12b": {
+        "model_hf_load_kwargs": {
+            "device_map": "auto",
         },
     },
 }
@@ -390,6 +395,22 @@ def finetune(args: Namespace):
             f"for {model_name_or_type}"
         )
         setattr(args, "mlflow_hftransformers_misc_conf", mlflow_hftransformers_misc_conf)
+
+    # if MLmodel file exists pass to finetuned model as `base_model_mlmodel`
+    mlflow_config_file = Path(args.model_selector_output, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
+    if mlflow_config_file.is_file():
+        import yaml
+        mlflow_data = None
+        try:
+            with open(mlflow_config_file, "r") as rptr:
+                mlflow_data = yaml.safe_load(rptr)
+        except Exception as e:
+            logger.info(f"Unable to load MLmodel file - {e}")
+        if mlflow_data is not None:
+            mlflow_hftransformers_misc_conf = getattr(args, "mlflow_hftransformers_misc_conf", {})
+            mlflow_hftransformers_misc_conf.update({"base_model_mlmodel": mlflow_data})
+            setattr(args, "mlflow_hftransformers_misc_conf", mlflow_hftransformers_misc_conf)
+            logger.info(f"Setting `base_model_mlmodel` in finetuned mlflow model - {mlflow_hftransformers_misc_conf}")
 
     # Below arguments are needed for HF training args
     args.output_dir = args.pytorch_model_folder
