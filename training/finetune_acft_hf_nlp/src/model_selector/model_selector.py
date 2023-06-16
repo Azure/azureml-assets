@@ -90,6 +90,10 @@ def model_selector(args: Namespace):
         if mlflow_config_file.is_file():
             shutil.copy(str(mlflow_config_file), args.output_dir)
             logger.info("Copied MLmodel file to output dir")
+        else:
+            logger.info("MLmodel file does not exist")
+    else:
+        logger.info("mlflow_model_path is empty")
 
     # additional logging
     logger.info(f"Model name: {getattr(args, 'model_name', None)}")

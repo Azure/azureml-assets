@@ -411,6 +411,10 @@ def finetune(args: Namespace):
             mlflow_hftransformers_misc_conf.update({"base_model_mlmodel": mlflow_data})
             setattr(args, "mlflow_hftransformers_misc_conf", mlflow_hftransformers_misc_conf)
             logger.info(f"Setting `base_model_mlmodel` in finetuned mlflow model - {mlflow_hftransformers_misc_conf}")
+        else:
+            logger.info("MLmodel file is empty")
+    else:
+        logger.info("MLmodel file does not exist")
 
     # Below arguments are needed for HF training args
     args.output_dir = args.pytorch_model_folder
