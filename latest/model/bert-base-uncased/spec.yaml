@@ -14,9 +14,31 @@ properties:
   languages: en
 tags:
   Preview: ''
+  computes_allow_list:
+  - Standard_NV12s_v3
+  - Standard_NV24s_v3
+  - Standard_NV48s_v3
+  - Standard_NC6s_v3
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_NC6s_v2
+  - Standard_NC12s_v2
+  - Standard_NC24s_v2
+  - Standard_NC24rs_v2
+  - Standard_NC4as_T4_v3
+  - Standard_NC8as_T4_v3
+  - Standard_NC16as_T4_v3
+  - Standard_NC64as_T4_v3
+  - Standard_ND6s
+  - Standard_ND12s
+  - Standard_ND24s
+  - Standard_ND24rs
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
   license: apache-2.0
   task: fill-mask
-version: 6
+version: 7
 description: |
   BERT is a pre-trained model in the field of NLP (natural language processing) released by Google. It is an AI language model that has been trained on a large corpus of English data using a self-supervised method, learning to predict masked words in a sentence and to predict if two sentences are consecutive or not. This model comes in several variations, including an English "uncased" version, Chinese and multilingual cased/uncased versions, and 24 smaller models. It is primarily used to fine-tune on downstream tasks for NLP, such as sequence classification, token classification, or question answering, although it can also be used for masked language modeling and next sentence prediction. The model was trained on BookCorpus and English Wikipedia data and its training procedure involved preprocessing the data, tokenizing it, and masking 15% of the tokens. The BERT model is fine-tuned on various tasks, and its test results on these tasks have shown impressive accuracy. 
   <br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 

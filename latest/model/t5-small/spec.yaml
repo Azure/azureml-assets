@@ -14,9 +14,31 @@ properties:
   languages: en, fr, ro, de
 tags:
   Preview: ''
+  computes_allow_list:
+  - Standard_NV12s_v3
+  - Standard_NV24s_v3
+  - Standard_NV48s_v3
+  - Standard_NC6s_v3
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_NC6s_v2
+  - Standard_NC12s_v2
+  - Standard_NC24s_v2
+  - Standard_NC24rs_v2
+  - Standard_NC4as_T4_v3
+  - Standard_NC8as_T4_v3
+  - Standard_NC16as_T4_v3
+  - Standard_NC64as_T4_v3
+  - Standard_ND6s
+  - Standard_ND12s
+  - Standard_ND24s
+  - Standard_ND24rs
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
   license: apache-2.0
   task: translation
-version: 5
+version: 6
 description: |
   T5 Small is a text-to-text transformer model with 60 million parameters. It is developed by a group of researchers and is based on the Text-To-Text Transfer Transformer (T5) framework, which allows for a unified text-to-text format for input and output of all NLP tasks. T5-Small can be trained for multiple NLP tasks such as machine translation, document summarization, question answering, classification, and even regression tasks. It is pre-trained on the Colossal Clean Crawled Corpus (C4) and a multi-task mixture of unsupervised and supervised tasks in various languages, such as English, French, Romanian and German. You can use the code provided to get started with the model and refer to the resources provided for more information on the model.
 

@@ -14,9 +14,31 @@ properties:
   languages: en
 tags:
   Preview: ''
+  computes_allow_list:
+  - Standard_NV12s_v3
+  - Standard_NV24s_v3
+  - Standard_NV48s_v3
+  - Standard_NC6s_v3
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_NC6s_v2
+  - Standard_NC12s_v2
+  - Standard_NC24s_v2
+  - Standard_NC24rs_v2
+  - Standard_NC4as_T4_v3
+  - Standard_NC8as_T4_v3
+  - Standard_NC16as_T4_v3
+  - Standard_NC64as_T4_v3
+  - Standard_ND6s
+  - Standard_ND12s
+  - Standard_ND24s
+  - Standard_ND24rs
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
   license: cc-by-4.0
   task: question-answering
-version: 5
+version: 6
 description: |
   Roberta-base is a fine-tuned language model for extractive Question Answering in English, trained on the SQuAD2.0 dataset. It is based on the "roberta-base" model, developed by deepset and can be used with Haystack and Transformers. The model requires 4 Tesla v100s and has a batch size of 96, 2 epochs, and a learning rate of 3e-5. The model was evaluated on the SQuAD 2.0 dev set and achieved an exact match of 79.87 and an F1 score of 82.91. There is also a distilled version of this model available called "deepset/tinyroberta-squad2" which has a comparable prediction quality and runs twice as fast. Usage examples for the model are provided for Haystack and Transformers. The authors of the model are Branden Chan, Timo Möller, Malte Pietsch, and Tanay Soni from deepset.ai.
 

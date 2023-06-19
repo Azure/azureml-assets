@@ -14,9 +14,31 @@ properties:
   languages: en
 tags:
   Preview: ''
+  computes_allow_list:
+  - Standard_NV12s_v3
+  - Standard_NV24s_v3
+  - Standard_NV48s_v3
+  - Standard_NC6s_v3
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_NC6s_v2
+  - Standard_NC12s_v2
+  - Standard_NC24s_v2
+  - Standard_NC24rs_v2
+  - Standard_NC4as_T4_v3
+  - Standard_NC8as_T4_v3
+  - Standard_NC16as_T4_v3
+  - Standard_NC64as_T4_v3
+  - Standard_ND6s
+  - Standard_ND12s
+  - Standard_ND24s
+  - Standard_ND24rs
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
   license: apache-2.0
   task: question-answering
-version: 5
+version: 6
 description: |
   The DistilBERT model is a distilled version of the BERT language model with 40% fewer parameters, 60% faster run time, but with 95% of BERT's performance. It is trained for question answering and has a F1 score of 87.1 on SQuAD V1.1. The model is licensed under the Apache 2.0 license and is developed by Hugging Face. The model is based on the Transformer architecture and trained in English. However, it's output should not be used to create hostile or alienating environments or produce false/biased content. Training the model requires 8 16GB V100 GPUs and 90 hours. The model card authors are from the Hugging Face team.
 

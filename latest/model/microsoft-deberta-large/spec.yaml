@@ -14,9 +14,31 @@ properties:
   languages: en
 tags:
   Preview: ''
+  computes_allow_list:
+  - Standard_NV12s_v3
+  - Standard_NV24s_v3
+  - Standard_NV48s_v3
+  - Standard_NC6s_v3
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_NC6s_v2
+  - Standard_NC12s_v2
+  - Standard_NC24s_v2
+  - Standard_NC24rs_v2
+  - Standard_NC4as_T4_v3
+  - Standard_NC8as_T4_v3
+  - Standard_NC16as_T4_v3
+  - Standard_NC64as_T4_v3
+  - Standard_ND6s
+  - Standard_ND12s
+  - Standard_ND24s
+  - Standard_ND24rs
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
   license: mit
   task: fill-mask
-version: 7
+version: 8
 description: |
   Decoding-enhanced BERT with Disentangled Attention is that it is an improvement of the BERT and RoBERTa models using disentangled attention and enhanced mask decoder. With 80GB training data, it outperforms the BERT and RoBERTa models in many Natural Language Understanding (NLU) tasks. Key results can be found on the SQuAD 1.1/2.0 and GLUE benchmark tasks when fine-tuned with the MNLI task. The details are available in the official repository and a related paper. If it's useful, cite the paper as described in the citation.
   <br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 
