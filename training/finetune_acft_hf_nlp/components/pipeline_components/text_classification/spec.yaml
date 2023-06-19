@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_classification_pipeline
-version: 0.0.7
+version: 0.0.8
 type: pipeline
 display_name: Text Classification Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for text classification task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/text_classification_pipeline) to learn more.
@@ -11,22 +11,26 @@ inputs:
     type: string
     optional: true
     default: Standard_d12_v2
-    description: Instance type to be used for model_import component in case of serverless compute, eg. standard_d12_v2
+    description: Instance type to be used for model_import component in case of serverless compute, eg. standard_d12_v2. 
+      The parameter compute_model_import must be set to 'serverless' for instance_type to be used
   instance_type_preprocess:
     type: string
     optional: true
     default: Standard_d12_v2
-    description: Instance type to be used for preprocess component in case of serverless compute, eg. standard_d12_v2
+    description: Instance type to be used for preprocess component in case of serverless compute, eg. standard_d12_v2. 
+      The parameter compute_preprocess must be set to 'serverless' for instance_type to be used
   instance_type_finetune:
     type: string
     optional: true
     default: Standard_nc24rs_v3
-    description: Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3
+    description: Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3. 
+      The parameter compute_finetune must be set to 'serverless' for instance_type to be used
   instance_type_model_evaluation:
     type: string
     optional: true
     default: Standard_ds4_v2
-    description: Instance type to be used for model_evaluation components in case of serverless compute, eg. standard_ds4_v2
+    description: Instance type to be used for model_evaluation components in case of serverless compute, eg. standard_ds4_v2. 
+      The parameter compute_model_evaluation must be set to 'serverless' for instance_type to be used
   num_nodes_finetune:
     type: integer
     min: 1
@@ -428,24 +432,28 @@ inputs:
     default: serverless
     description: compute to be used for model_import eg. provide 'FT-Cluster' if
       your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
+      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_preprocess:
     type: string
     optional: true
     default: serverless
     description: compute to be used for preprocess eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
+      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_finetune:
     type: string
     optional: true
     default: serverless
     description: compute to be used for finetune eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
+      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_model_evaluation:
     type: string
     optional: true
     default: serverless
     description: compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
+      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
 outputs:
   pytorch_model_folder:
@@ -463,7 +471,7 @@ outputs:
 jobs:
   text_classification_model_import:
     type: command
-    component: azureml://registries/azureml/components/text_classification_model_import/versions/0.0.7
+    component: azureml://registries/azureml/components/text_classification_model_import/versions/0.0.8
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -473,7 +481,7 @@ jobs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
   text_classification_datapreprocess:
     type: command
-    component: azureml://registries/azureml/components/text_classification_datapreprocess/versions/0.0.7
+    component: azureml://registries/azureml/components/text_classification_datapreprocess/versions/0.0.8
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -492,7 +500,7 @@ jobs:
       model_selector_output: '${{parent.jobs.text_classification_model_import.outputs.output_dir}}'
   text_classification_finetune:
     type: command
-    component: azureml://registries/azureml/components/text_classification_finetune/versions/0.0.7
+    component: azureml://registries/azureml/components/text_classification_finetune/versions/0.0.8
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
