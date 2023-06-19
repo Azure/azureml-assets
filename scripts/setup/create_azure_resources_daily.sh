@@ -50,7 +50,7 @@ else
     echo "Checking ${resource_name}"
     if ! az ml compute show --name $gpu_cluster --output none >/dev/null 2>&1; then
         echo "Creating ${resource_name}"
-        az ml compute create --name $gpu_cluster --size Standard_NC6 --min-instances 0 --max-instances 10 --type AmlCompute
+        az ml compute create --name $gpu_cluster --size Standard_NC4as_T4_v3 --min-instances 0 --max-instances 10 --type AmlCompute
     fi
 
     resource_name="compute cluster ${gpu_v100_cluster}"
