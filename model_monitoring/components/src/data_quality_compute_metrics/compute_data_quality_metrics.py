@@ -104,7 +104,7 @@ def compute_max_violation(
 
     numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint", "long"]
 
-    for row in data_stats_table.select("featureName").filter(col("min_value") != None).distinct().collect():
+    for row in data_stats_table.select("featureName").filter(col("min_value") is not None).distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
@@ -161,7 +161,7 @@ def compute_min_violation(
 
     numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint", "long"]
 
-    for row in data_stats_table.select("featureName").filter(col("max_value") != None).distinct().collect():
+    for row in data_stats_table.select("featureName").filter(col("max_value") is not None).distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
@@ -220,6 +220,7 @@ def compute_set_violation(
 
     for c in (
         data_stats_table.select("featureName")
+        .filter(col("set") != None)
         .distinct()
         .rdd.flatMap(lambda x: x)
         .collect()
@@ -235,7 +236,7 @@ def compute_set_violation(
             )
             feature_name_list.append(c)
         else:
-            set_threshold_violation_count.append(None)
+            set_threshold_violation_count.append(0)
             feature_name_list.append(c)
 
     threshold_violation_df = spark.createDataFrame(
@@ -501,6 +502,7 @@ def compute_data_quality_metrics(df, data_stats_table):
     violation_df_remapped = violation_df_remapped.withColumn(
         "dataType",
         when(col("dataType") == "DoubleType()", "Numerical")
+        .when(col("dataType") == "LongType()", "Numerical")
         .when(col("dataType") == "StringType()", "Categorical")
         .otherwise(col("dataType")),
     )
