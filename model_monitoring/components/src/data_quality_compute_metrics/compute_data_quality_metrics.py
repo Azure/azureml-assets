@@ -104,7 +104,7 @@ def compute_max_violation(
 
     numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint", "long"]
 
-    for row in data_stats_table.select("featureName").filter(col("min_value") is not None).distinct().collect():
+    for row in data_stats_table.filter(col("min_value").isNotNull()).select("featureName").distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
@@ -161,7 +161,7 @@ def compute_min_violation(
 
     numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint", "long"]
 
-    for row in data_stats_table.select("featureName").filter(col("max_value") is not None).distinct().collect():
+    for row in data_stats_table.filter(col("max_value").isNotNull()).select("featureName").distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
@@ -219,8 +219,9 @@ def compute_set_violation(
     feature_name_list = []
 
     for c in (
-        data_stats_table.select("featureName")
-        .filter(col("set") is not None)
+        data_stats_table
+        .filter(col("set").isNotNull())
+        .select("featureName")
         .distinct()
         .rdd.flatMap(lambda x: x)
         .collect()
