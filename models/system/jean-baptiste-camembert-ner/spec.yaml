@@ -38,4 +38,4 @@ tags:
   - Standard_ND96asr_v4
   license: mit
   task: token-classification
-version: 5
+version: 6

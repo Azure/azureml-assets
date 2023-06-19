@@ -38,4 +38,4 @@ tags:
   - Standard_ND96asr_v4
   license: mit
   task: text-classification
-version: 6
+version: 7
