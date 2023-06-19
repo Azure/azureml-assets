@@ -220,7 +220,7 @@ def compute_set_violation(
 
     for c in (
         data_stats_table.select("featureName")
-        .filter(col("set") != None)
+        .filter(col("set") is not None)
         .distinct()
         .rdd.flatMap(lambda x: x)
         .collect()
