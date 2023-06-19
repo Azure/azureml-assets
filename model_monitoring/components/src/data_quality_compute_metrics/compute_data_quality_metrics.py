@@ -102,9 +102,9 @@ def compute_max_violation(
     max_threshold_violation_count = []
     feature_name_list = []
 
-    numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint"]
+    numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint", "long"]
 
-    for row in data_stats_table.select("featureName").distinct().collect():
+    for row in data_stats_table.select("featureName").filter(col("min_value") != None).distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
@@ -159,9 +159,9 @@ def compute_min_violation(
     min_threshold_violation_count = []
     feature_name_list = []
 
-    numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint"]
+    numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint", "long"]
 
-    for row in data_stats_table.select("featureName").distinct().collect():
+    for row in data_stats_table.select("featureName").filter(col("max_value") != None).distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
