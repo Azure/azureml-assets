@@ -22,12 +22,11 @@ RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0'
 # Install azureml packages
 RUN pip install 'azureml-core=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
-                'azureml-rai-utils==0.0.2'
+                'azureml-rai-utils==0.0.3'
 
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-automl-dnn-vision=={{latest-pypi-version}}'
 
-# Work around to resolve error: The user requested ml-wrappers~=0.4.2; interpret-community 0.27.0 depends on ml-wrappers==0.2.2
 RUN pip install 'shap==0.40.0' \
                 'interpret-community==0.29.0' \
                 'Pillow>=9.1.0' \
