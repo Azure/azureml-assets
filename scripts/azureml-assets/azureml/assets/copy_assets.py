@@ -49,9 +49,9 @@ def copy_asset(asset_config: assets.AssetConfig,
             request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
                             method="HEAD",
                             headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
-            
+                            
             try:
-                response = urlopen(request)
+                response = assets._urlopen_with_retries(request)
             except Exception as e:
                 logger.log_error(f"Image {image} does not exist in MCR")
                 raise Exception(f"Failed to retrieve manifest for {repo}:{previous_release_version}: {e}")
