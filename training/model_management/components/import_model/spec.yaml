@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.6
+version: 0.0.7
 
 # Pipeline inputs
 inputs:
@@ -66,31 +66,31 @@ inputs:
       Provide mapping for local validation test data column names, that should be renamed before inferencing
       eg: col1:ren1; col2:ren2; col3:ren3
 
-  ## Inputs for Model registration
-  custom_model_name:
-    type: string
-    optional: true
-    description: Model name to use in the registration. If name already exists, the version will be auto incremented
+  # ## Inputs for Model registration
+  # custom_model_name:
+  #   type: string
+  #   optional: true
+  #   description: Model name to use in the registration. If name already exists, the version will be auto incremented
 
-  model_version:
-    type: string
-    optional: true
-    description: Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented
+  # model_version:
+  #   type: string
+  #   optional: true
+  #   description: Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented
 
-  model_description:
-    type: string
-    optional: true
-    description: Description of the model that will be shown in AzureML registry or workspace
+  # model_description:
+  #   type: string
+  #   optional: true
+  #   description: Description of the model that will be shown in AzureML registry or workspace
 
-  registry_name:
-    type: string
-    optional: true
-    description: Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
+  # registry_name:
+  #   type: string
+  #   optional: true
+  #   description: Name of the AzureML asset registry where the model will be registered. Model will be registered in a workspace if this is unspecified
 
-  model_metadata:
-    type: uri_file
-    optional: true
-    description: A JSON or a YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
+  # model_metadata:
+  #   type: uri_file
+  #   optional: true
+  #   description: A JSON or a YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
 
 # Pipeline outputs
 outputs:
@@ -98,9 +98,9 @@ outputs:
     description: Output path for the converted MLFlow model
     type: mlflow_model
 
-  model_registration_details:
-    description: Output file which captures transformations applied above and registration details in JSON file
-    type: uri_file
+  # model_registration_details:
+  #   description: Output file which captures transformations applied above and registration details in JSON file
+  #   type: uri_file
 
 jobs:
   download_model:
@@ -139,23 +139,23 @@ jobs:
     outputs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
-  register_model:
-    component: azureml:register_model:0.0.2
-    compute: ${{parent.inputs.compute}}
-    identity:
-      type: user_identity
-    inputs:
-      model_name: ${{parent.inputs.custom_model_name}}
-      model_version: ${{parent.inputs.model_version}}
-      model_description: ${{parent.inputs.model_description}}
-      registry_name: ${{parent.inputs.registry_name}}
-      model_metadata: ${{parent.inputs.model_metadata}}
-      model_type: mlflow_model
-      model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
-      model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
-      model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
-    outputs:
-      registration_details: ${{parent.outputs.model_registration_details}}
+  # register_model:
+  #   component: azureml:register_model:0.0.2
+  #   compute: ${{parent.inputs.compute}}
+  #   identity:
+  #     type: user_identity
+  #   inputs:
+  #     model_name: ${{parent.inputs.custom_model_name}}
+  #     model_version: ${{parent.inputs.model_version}}
+  #     model_description: ${{parent.inputs.model_description}}
+  #     registry_name: ${{parent.inputs.registry_name}}
+  #     model_metadata: ${{parent.inputs.model_metadata}}
+  #     model_type: mlflow_model
+  #     model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
+  #     model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
+  #     model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
+  #   outputs:
+  #     registration_details: ${{parent.outputs.model_registration_details}}
 
 tags:
     Preview: ""
