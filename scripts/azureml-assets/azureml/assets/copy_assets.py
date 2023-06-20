@@ -57,8 +57,8 @@ def copy_asset(asset_config: assets.AssetConfig,
                 raise Exception(f"Failed to retrieve manifest for {repo}:{previous_release_version}: {e}")
 
     # Copy asset to output directory
-    # util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory_root, add_subdir=True,
-    #                               use_version_dir=use_version_dir)
+    util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory_root, add_subdir=True,
+                                  use_version_dir=use_version_dir)
 
     return asset_config.version
 
