@@ -65,7 +65,6 @@ def release_tag_exists(asset_config: assets.AssetConfig, release_directory_root:
     return asset_config.full_name in repo.tags
 
 
-
 def get_latest_release_tag_version(asset_config: assets.AssetConfig, release_directory_root: Path) -> str:
     """Check repo to see if an asset's previous version was released if a latest tag exists.
 
@@ -83,7 +82,7 @@ def get_latest_release_tag_version(asset_config: assets.AssetConfig, release_dir
     tags = [t for t in repo.tags if t.name.startswith(f"{asset_config.partial_name}/")]
 
     if not tags:
-       # No releases
+        # No releases
         return None
 
     # Get the latest tag

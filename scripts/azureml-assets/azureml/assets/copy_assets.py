@@ -13,7 +13,7 @@ import azureml.assets.util as util
 from azureml.assets.util import logger
 
 import urllib.parse
-from urllib.request import Request, urlopen
+from urllib.request import Request
 
 COPIED_COUNT = "copied_count"
 
@@ -47,9 +47,9 @@ def copy_asset(asset_config: assets.AssetConfig,
             encoded_tag = urllib.parse.quote(previous_release_version, safe="")
 
             request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
-                            method="HEAD",
-                            headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
-                            
+                                method="HEAD",
+                                headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
+
             try:
                 response = assets._urlopen_with_retries(request)
             except Exception as e:
