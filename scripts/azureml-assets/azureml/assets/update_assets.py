@@ -66,7 +66,7 @@ def release_tag_exists(asset_config: assets.AssetConfig, release_directory_root:
 
 
 
-def validate_new_release(asset_config: assets.AssetConfig, release_directory_root: Path) -> str:
+def get_latest_release_tag_version(asset_config: assets.AssetConfig, release_directory_root: Path) -> str:
     """Check repo to see if an asset's previous version was released if a latest tag exists.
 
     Args:

@@ -37,14 +37,14 @@ def copy_asset(asset_config: assets.AssetConfig,
 
     if check_previous_release:
         # Skip if previous version was not released
-        tag = assets.validate_new_release(asset_config, release_directory_root)
+        previous_release_version = assets.get_latest_release_tag_version(asset_config, release_directory_root)
 
-        if tag is not None:
+        if previous_release_version is not None:
             image = asset_config.extra_config_as_object().get_full_image_name()
 
             # Check against MCR by making a manifest call to see if tag exists
             (hostname, repo) = image.split("/", 1)
-            encoded_tag = urllib.parse.quote(tag, safe="")
+            encoded_tag = urllib.parse.quote(previous_release_version, safe="")
 
             request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
                             method="HEAD",
@@ -54,7 +54,7 @@ def copy_asset(asset_config: assets.AssetConfig,
                 response = urlopen(request)
             except Exception as e:
                 logger.log_error(f"Image {image} does not exist in MCR")
-                raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
+                raise Exception(f"Failed to retrieve manifest for {repo}:{previous_release_version}: {e}")
 
     # Copy asset to output directory
     # util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory_root, add_subdir=True,
