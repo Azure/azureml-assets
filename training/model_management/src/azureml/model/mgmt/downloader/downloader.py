@@ -10,7 +10,7 @@ from azureml.model.mgmt.downloader.download_utils import download_model_for_path
 from huggingface_hub.hf_api import HfApi, ModelFilter, ModelInfo
 from pathlib import Path
 from typing import List
-
+import requests
 
 PROPERTIES = [
     "commit_hash",
@@ -23,7 +23,7 @@ PROPERTIES = [
     "finetuning_tasks",
 ]
 TAGS = ["task", "license"]
-
+SUPPORTED_TASKS = []
 
 class HuggingfaceDownloader:
     """Huggingface model downloader class."""
@@ -46,7 +46,23 @@ class HuggingfaceDownloader:
         self._model_uri = self.HF_ENDPOINT + f"/{model_id}"
         self._model_info = None
         self._hf_api = HfApi(endpoint=self.HF_ENDPOINT)
+        self.is_valid_id = None
 
+    @property
+    def is_valid_id(self):
+        """Returns true if Hugging face model id is valid."""
+        return self._is_valid_id
+    
+    @is_valid_id.setter
+    def is_valid_id(self, value):
+        """Validates Hugging face model id."""
+        if not value:
+            response = requests.get(self._model_uri)
+            if response.status_code == 404:
+                raise ValueError(f"Invalid Hugging face model id: {self._model_id}")
+            else:
+                self.is_valid_id = True
+        
     @property
     def model_info(self) -> ModelInfo:
         """Hugging face model info."""
@@ -57,7 +73,7 @@ class HuggingfaceDownloader:
                     self._model_info = info
                     break
         return self._model_info
-
+                        
     def _get_model_properties(self):
         languages = []
         datasets = []
