@@ -12,9 +12,6 @@ import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
-import urllib.parse
-from urllib.request import Request
-
 from urllib.error import HTTPError
 
 COPIED_COUNT = "copied_count"

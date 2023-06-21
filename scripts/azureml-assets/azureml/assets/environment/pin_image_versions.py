@@ -46,8 +46,8 @@ def _get_manifest(tag: str, hostname: str, repo: str):
     """
     encoded_tag = urllib.parse.quote(tag, safe="")
     request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
-                        method="HEAD",
-                        headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
+                      method="HEAD",
+                      headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
 
     return request
 
