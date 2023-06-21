@@ -59,7 +59,9 @@ class HuggingfaceDownloader:
         if not value:
             response = requests.get(self._model_uri)
             if response.status_code == 404:
-                raise ValueError(f"Invalid Hugging face model id: {self._model_id}. Please ensure that you are using a correct and existing model ID")
+                raise ValueError(
+                    f"Invalid Hugging face model id: {self._model_id}. Please ensure that you are using a correct and existing model ID"
+                )
             else:
                 self.is_valid_id = True
 
