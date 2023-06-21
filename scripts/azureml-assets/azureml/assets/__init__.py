@@ -28,9 +28,6 @@ from .update_assets import (
     update_asset,
     update_assets,
 )
-from .environment.pin_image_versions import (
-    _urlopen_with_retries,
-    _get_manifest
-)
+from .environment.pin_image_versions import get_manifest
 from .update_spec import create_template_data, update as update_spec
 from .validate_assets import validate_assets

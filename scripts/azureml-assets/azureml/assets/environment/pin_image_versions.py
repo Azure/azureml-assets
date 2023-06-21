@@ -36,20 +36,23 @@ def _urlopen_with_retries(request: Union[Request, str]) -> HTTPResponse:
     return urlopen(request)
 
 
-def _get_manifest(tag: str, hostname: str, repo: str):
+def get_manifest(tag: str, hostname: str, repo: str):
     """Retrieve manifest for an image.
 
     Args:
         tag (str): Tag for the image.
         hostname (str): Hostname of the container registry.
         repo (str): Repository of the image.
+
+    Returns:
+        HTTPResponse: Response from _urlopen_with_retries.
     """
     encoded_tag = urllib.parse.quote(tag, safe="")
     request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
                       method="HEAD",
                       headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
 
-    return request
+    return _urlopen_with_retries(request)
 
 
 def _get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
@@ -69,10 +72,8 @@ def _get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
     latest_digest = None
     for tag in tags:
         # Retrieve digest
-        request = _get_manifest(tag, hostname, repo)
-
         try:
-            response = _urlopen_with_retries(request)
+            response = get_manifest(tag, hostname, repo)
         except Exception as e:
             raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
 

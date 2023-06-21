@@ -44,10 +44,8 @@ def copy_asset(asset_config: assets.AssetConfig,
             # Check against MCR by making a manifest call to see if tag exists
             (hostname, repo) = image.split("/", 1)
 
-            request = assets._get_manifest(previous_release_version, hostname, repo)
-
             try:
-                response = assets._urlopen_with_retries(request)
+                response = assets.get_manifest(previous_release_version, hostname, repo)
             except HTTPError as e:
                 if e.code == 404:
                     logger.log_error(f"Image {image} not found in MCR. Please release {asset_config.name} version {previous_release_version} before continuing.")
