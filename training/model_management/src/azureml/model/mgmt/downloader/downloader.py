@@ -23,7 +23,6 @@ PROPERTIES = [
     "finetuning_tasks",
 ]
 TAGS = ["task", "license"]
-SUPPORTED_TASKS = []
 
 
 class HuggingfaceDownloader:
