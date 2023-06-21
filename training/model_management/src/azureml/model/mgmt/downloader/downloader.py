@@ -56,7 +56,7 @@ class HuggingfaceDownloader:
 
     @is_valid_id.setter
     def is_valid_id(self, value):
-        """Validates Hugging face model id."""
+        """Validate Hugging face model id."""
         if not value:
             response = requests.get(self._model_uri)
             if response.status_code == 404:
