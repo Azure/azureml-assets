@@ -15,6 +15,8 @@ from azureml.assets.util import logger
 import urllib.parse
 from urllib.request import Request
 
+from urllib.error import HTTPError
+
 COPIED_COUNT = "copied_count"
 
 
@@ -52,8 +54,13 @@ def copy_asset(asset_config: assets.AssetConfig,
 
             try:
                 response = assets._urlopen_with_retries(request)
+            except HTTPError as e:
+                if e.code == 404:
+                    logger.log_error(f"Image {image} does not exist in MCR")
+                else:
+                    logger.log_error(f"Unexpected error when looking for image {image} in MCR")
+                raise Exception(f"Failed to retrieve manifest for {repo}:{previous_release_version}: {e}")
             except Exception as e:
-                logger.log_error(f"Image {image} does not exist in MCR")
                 raise Exception(f"Failed to retrieve manifest for {repo}:{previous_release_version}: {e}")
 
     # Copy asset to output directory
