@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:60b340c2b7b83db890391136ca43f2f9a7f52c220c9e896b15790d6e43278d03
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:d87e60a40761fd1bb9efa97d94a9ec52b62a9e7081fd2acd5c7d94ba2852d60a
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/responsibleai
 
