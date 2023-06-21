@@ -6,9 +6,7 @@
 import langcodes
 from azureml.model.mgmt.config import PathType
 from azureml.model.mgmt.downloader.config import ModelSource
-from azureml.model.mgmt.downloader.download_utils import (
-    download_model_for_path_type,
-)
+from azureml.model.mgmt.downloader.download_utils import download_model_for_path_type
 from huggingface_hub.hf_api import HfApi, ModelFilter, ModelInfo
 from pathlib import Path
 from typing import List
@@ -134,9 +132,7 @@ class GITDownloader:
         """Download a publicly hosted GIT model and return details."""
         download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
         tags = {k: download_details[k] for k in TAGS if k in download_details}
-        props = {
-            k: download_details[k] for k in PROPERTIES if k in download_details
-        }
+        props = {k: download_details[k] for k in PROPERTIES if k in download_details}
         return {
             "name": self._model_uri.split("/")[-1],
             "tags": tags,
@@ -162,9 +158,7 @@ class AzureBlobstoreDownloader:
         """Download a model from a publicly accessible azure blobstorage and return details."""
         download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
         tags = {k: download_details[k] for k in TAGS if k in download_details}
-        props = {
-            k: download_details[k] for k in PROPERTIES if k in download_details
-        }
+        props = {k: download_details[k] for k in PROPERTIES if k in download_details}
         return {
             "name": self._model_uri.split("/")[-1],
             "tags": tags,
