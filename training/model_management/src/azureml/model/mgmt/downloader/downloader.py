@@ -25,6 +25,7 @@ PROPERTIES = [
 TAGS = ["task", "license"]
 SUPPORTED_TASKS = []
 
+
 class HuggingfaceDownloader:
     """Huggingface model downloader class."""
 
@@ -52,7 +53,7 @@ class HuggingfaceDownloader:
     def is_valid_id(self):
         """Returns true if Hugging face model id is valid."""
         return self._is_valid_id
-    
+
     @is_valid_id.setter
     def is_valid_id(self, value):
         """Validates Hugging face model id."""
@@ -62,18 +63,20 @@ class HuggingfaceDownloader:
                 raise ValueError(f"Invalid Hugging face model id: {self._model_id}")
             else:
                 self.is_valid_id = True
-        
+
     @property
     def model_info(self) -> ModelInfo:
         """Hugging face model info."""
         if not self._model_info:
-            model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
+            model_list: List[ModelInfo] = self._hf_api.list_models(
+                filter=ModelFilter(model_name=self._model_id)
+            )
             for info in model_list:
                 if self._model_id == info.modelId:
                     self._model_info = info
                     break
         return self._model_info
-                        
+
     def _get_model_properties(self):
         languages = []
         datasets = []
@@ -85,7 +88,10 @@ class HuggingfaceDownloader:
         }
 
         for tag in all_tags:
-            if langcodes.tag_is_valid(tag) and tag not in HuggingfaceDownloader.LANGUAGE_CODE_EXCEPTIONS:
+            if (
+                langcodes.tag_is_valid(tag)
+                and tag not in HuggingfaceDownloader.LANGUAGE_CODE_EXCEPTIONS
+            ):
                 languages.append(tag)
             elif tag.startswith("dataset:"):
                 datasets.append(tag.split(":")[1])
@@ -101,7 +107,9 @@ class HuggingfaceDownloader:
 
     def download_model(self, download_dir):
         """Download a Hugging face model and return details."""
-        download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
+        download_details = download_model_for_path_type(
+            self.URI_TYPE, self._model_uri, download_dir
+        )
         model_props = self._get_model_properties()
         model_props.update(download_details)
         tags = {k: model_props[k] for k in TAGS if k in model_props}
@@ -129,7 +137,9 @@ class GITDownloader:
 
     def download_model(self, download_dir):
         """Download a publicly hosted GIT model and return details."""
-        download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
+        download_details = download_model_for_path_type(
+            self.URI_TYPE, self._model_uri, download_dir
+        )
         tags = {k: download_details[k] for k in TAGS if k in download_details}
         props = {k: download_details[k] for k in PROPERTIES if k in download_details}
         return {
@@ -155,7 +165,9 @@ class AzureBlobstoreDownloader:
 
     def download_model(self, download_dir):
         """Download a model from a publicly accessible azure blobstorage and return details."""
-        download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
+        download_details = download_model_for_path_type(
+            self.URI_TYPE, self._model_uri, download_dir
+        )
         tags = {k: download_details[k] for k in TAGS if k in download_details}
         props = {k: download_details[k] for k in PROPERTIES if k in download_details}
         return {

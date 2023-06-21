@@ -79,7 +79,9 @@ def _download_azure_artifacts(model_uri, model_dir):
         # https://github.com/Azure/azureml-assets/issues/283
         exit_code, stdout = run_command(download_cmd)
         if exit_code != 0:
-            raise Exception(f"Failed to download model files with URL: {model_uri}. Error => {stdout}")
+            raise Exception(
+                f"Failed to download model files with URL: {model_uri}. Error => {stdout}"
+            )
         return {
             "download_time_utc": _get_system_time_utc(),
             "size": _round_size(_get_size(model_dir)),
@@ -89,7 +91,9 @@ def _download_azure_artifacts(model_uri, model_dir):
 
 
 @log_execution_time
-def download_model_for_path_type(model_path_type: PathType, model_uri: str, model_dir: Path) -> None:
+def download_model_for_path_type(
+    model_path_type: PathType, model_uri: str, model_dir: Path
+) -> None:
     """Download model based on path type.
 
     :param model_path_type: Model path type
@@ -101,7 +105,10 @@ def download_model_for_path_type(model_path_type: PathType, model_uri: str, mode
     """
     if model_path_type == PathType.GIT.value or model_path_type == PathType.GIT:
         return _download_git_model(model_uri, model_dir)
-    elif model_path_type == PathType.AZUREBLOB.value or model_path_type == PathType.AZUREBLOB:
+    elif (
+        model_path_type == PathType.AZUREBLOB.value
+        or model_path_type == PathType.AZUREBLOB
+    ):
         return _download_azure_artifacts(model_uri, model_dir)
     else:
         raise Exception("Unsupported Model Download Method.")
