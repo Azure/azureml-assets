@@ -50,7 +50,7 @@ def copy_asset(asset_config: assets.AssetConfig,
                 response = assets._urlopen_with_retries(request)
             except HTTPError as e:
                 if e.code == 404:
-                    logger.log_error(f"Image {image} does not exist in MCR")
+                    logger.log_error(f"Image {image} not found in MCR. Please release {asset_config.name} version {previous_release_version} before continuing.")
                 else:
                     logger.log_error(f"Unexpected error when looking for image {image} in MCR")
                 raise Exception(f"Failed to retrieve manifest for {repo}:{previous_release_version}: {e}")
