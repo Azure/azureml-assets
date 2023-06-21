@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:60b340c2b7b83db890391136ca43f2f9a7f52c220c9e896b15790d6e43278d03
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04@sha256:d87e60a40761fd1bb9efa97d94a9ec52b62a9e7081fd2acd5c7d94ba2852d60a
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/responsibleai-text
 
@@ -14,12 +14,13 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 
-# Install azureml packages
-RUN pip install 'azureml-dataset-runtime==1.51.0' \
-                'azureml-core==1.51.0' \
+# Install main azureml packages
+RUN pip install 'azureml-core==1.51.0.post1' \
                 'azureml-mlflow==1.51.0' \
+                'azureml-rai-utils==0.0.2'
+
+RUN pip install 'azureml-dataset-runtime==1.51.0' \
                 'azureml-telemetry==1.51.0' \
-                'azureml-rai-utils==0.0.2' \
                 'Werkzeug==2.2.3'
 
 RUN pip freeze
