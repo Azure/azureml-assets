@@ -46,11 +46,8 @@ def copy_asset(asset_config: assets.AssetConfig,
 
             # Check against MCR by making a manifest call to see if tag exists
             (hostname, repo) = image.split("/", 1)
-            encoded_tag = urllib.parse.quote(previous_release_version, safe="")
 
-            request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
-                                method="HEAD",
-                                headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
+            request = assets._get_manifest(previous_release_version, hostname, repo)
 
             try:
                 response = assets._urlopen_with_retries(request)
