@@ -16,7 +16,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Any, Dict, Tuple
+from applicationinsights import TelemetryClient
 
+tc = None
 
 def log_execution_time(func, logger=None):
     """Decorate method to log execution time."""
@@ -113,3 +115,27 @@ def create_namespace_from_dict(var: Any):
         for key, val in var.__dict__.items():
             var.__dict__[key] = create_namespace_from_dict(val)
     return var
+
+
+def init_tc():
+    if tc is None:
+        try:
+            tc = TelemetryClient("71b954a8-6b7d-43f5-986c-3d3a6605d803")
+        except Exception as e:
+            print(f"Exception while initializing app insights: {e}")
+            tc = None
+
+def tc_log(message):
+    try:
+        tc.track_event(name="FM_import_pipeline_debug_logs",
+                       properties={"message": message})
+        tc.flush()
+    except Exception as e:
+        print(f"Exception while logging to app insights: {e}")
+
+def tc_exception(e, message):
+    try:
+        tc.track_exception(value=e.__class__, properties={"exception": message})
+        tc.flush()
+    except Exception as e:
+        print(f"Exception while logging exception to app insights: {e}")

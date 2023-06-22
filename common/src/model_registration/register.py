@@ -17,11 +17,34 @@ from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.core import Run
 from applicationinsights import TelemetryClient
 
-tc = TelemetryClient("71b954a8-6b7d-43f5-986c-3d3a6605d803")
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
 MLFLOW_MODEL_FOLDER = "mlflow_model_folder"
 
+tc = None
+
+def init_tc():
+    if tc is None:
+        try:
+            tc = TelemetryClient("71b954a8-6b7d-43f5-986c-3d3a6605d803")
+        except Exception as e:
+            print(f"Exception while initializing app insights: {e}")
+            tc = None
+
+def tc_log(message):
+    try:
+        tc.track_event(name="FM_import_pipeline_debug_logs",
+                       properties={"message": message})
+        tc.flush()
+    except Exception as e:
+        print(f"Exception while logging to app insights: {e}")
+
+def tc_exception(e, message):
+    try:
+        tc.track_exception(value=e.__class__, properties={"exception": message})
+        tc.flush()
+    except Exception as e:
+        print(f"Exception while logging exception to app insights: {e}")
 
 def parse_args():
     """Return arguments."""
@@ -82,9 +105,7 @@ def parse_args():
         default=None,
     )
     args = parser.parse_args()
-    tc.track_event(name="FM_import_pipeline_debug_logs",
-                   properties={"message": f"Args received {args}"})
-    tc.flush()
+    tc_log(f"Args received {args}")
     print("args received ", args)
     return args
 
@@ -100,8 +121,7 @@ def get_ml_client(registry_name):
     except Exception as ex:
         # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
         print(f"Failed to get OBO credentials - {ex}")
-        tc.track_exception(value=ex.__class__, properties={"error": f"Failed to get obo credentials - {ex}"})
-        tc.flush()
+        tc_exception(ex, f"Failed to get OBO credentials - {ex}")
 
     if not has_obo_succeeded:
         try:
@@ -109,8 +129,7 @@ def get_ml_client(registry_name):
             credential = ManagedIdentityCredential(client_id=msi_client_id)
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
-            tc.track_exception(value=ex.__class__, properties={"error": f"Failed to get msi credentials - {ex}"})
-            tc.flush()
+            tc_exception(ex, f"Failed to get MSI credentials : {ex}")
             raise (f"Failed to get MSI credentials : {ex}")
 
     if registry_name is None:
@@ -122,9 +141,7 @@ def get_ml_client(registry_name):
             resource_group_name=ws._resource_group,
             workspace_name=ws._workspace_name,
         )
-    tc.track_event(name="FM_import_pipeline_debug_logs",
-                   properties={"message": "MLClient created successfully"})
-    tc.flush()
+    tc_log(f"Creating MLClient with registry name {registry_name}")
     return MLClient(credential=credential, registry_name=registry_name)
 
 
@@ -135,10 +152,8 @@ def is_model_available(ml_client, model_name, model_version):
         ml_client.models.get(name=model_name, version=model_version)
     except Exception as e:
         print(f"Model with name - {model_name} and version - {model_version} is not available. Error: {e}")
-        tc.track_exception(value=e.__class__,
-                           properties={"error": f"Model with name - {model_name} and \
-                                       version - {model_version} is not available. Error: {e}"})
-        tc.flush()
+        tc_exception(e, f"Model with name - {model_name} and version - "
+                     "{model_version} is not available. Error: {e}")
         is_available = False
     return is_available
 
@@ -154,10 +169,9 @@ def main(args):
     model_version = args.model_version
     tags, properties, flavors = {}, {}, {}
 
-    tc.track_event(name="FM_import_pipeline_debug_logs",
-                   properties={"message": f"Starting model registration for model {model_name} \
-                               with version {model_version} type {model_type} path {model_path}"})
-    tc.flush()
+    init_tc()
+    
+    tc_log(f"Args received {args}")
 
     ml_client = get_ml_client(registry_name)
 
@@ -181,40 +195,28 @@ def main(args):
 
     # validations
     if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
-        tc.track_event(name="FM_import_pipeline_debug_logs",
-                       properties={"message": f"Unsupported model type {model_type}"})
-        tc.flush()
+        tc_log(f"Unsupported model type {model_type}")
         raise Exception(f"Unsupported model type {model_type}")
 
     if not model_name:
-        tc.track_event(name="FM_import_pipeline_debug_logs",
-                       properties={"message": "Missing Model Name. Provide model_name as input \
-                                   or in the model_download_metadata JSON"})
-        tc.flush()
+        tc_log("Missing Model Name. Provide model_name as input or in the model_download_metadata JSON")
         raise Exception("Missing Model Name. Provide model_name as input or in the model_download_metadata JSON")
 
     # check if we can have lineage and update the model path for ws import
     if not registry_name and args.model_import_job_path:
-        tc.track_event(name="FM_import_pipeline_debug_logs",
-                       properties={"message": "Using model output of previous job as \
-                                   run lineage to register the model"})
-        tc.flush()
+        tc_log("Using model output of previous job as run lineage to register the model")
         print("Using model output of previous job as run lineage to register the model")
         with open(args.model_import_job_path) as f:
             model_import_job_path = json.load(f)
         model_path = model_import_job_path.get("path", model_path)
     elif model_type == AssetTypes.MLFLOW_MODEL:
         if not os.path.exists(os.path.join(model_path, MLFLOW_MODEL_FOLDER)):
-            tc.track_event(name="FM_import_pipeline_debug_logs",
-                           properties={"message": f"Making sure, model parent directory is `{MLFLOW_MODEL_FOLDER}`."})
-            tc.flush()
+            tc_log(f"Making sure, model parent directory is `{MLFLOW_MODEL_FOLDER}`")
             print(f"Making sure, model parent directory is `{MLFLOW_MODEL_FOLDER}`.")
             shutil.copytree(model_path, MLFLOW_MODEL_FOLDER, dirs_exist_ok=True)
             model_path = MLFLOW_MODEL_FOLDER
         mlmodel_path = os.path.join(model_path, "MLmodel")
-        tc.track_event(name="FM_import_pipeline_debug_logs",
-                       properties={"message": f"MLModel path: {mlmodel_path}"})
-        tc.flush()
+        tc_log(f"MLModel path: {mlmodel_path}")
         print(f"MLModel path: {mlmodel_path}")
         with open(mlmodel_path, "r") as stream:
             metadata = yaml.safe_load(stream)
@@ -230,10 +232,7 @@ def main(args):
                 max_version = (max(models_list, key=lambda x: int(x.version))).version
                 model_version = str(int(max_version) + 1)
         except Exception:
-            tc.track_event(name="FM_import_pipeline_debug_logs",
-                           properties={"message": f"Error in listing versions for model {model_name}. \
-                                       Trying to register model with version '1'."})
-            tc.flush()
+            tc_log(f"Error in listing versions for model {model_name}. Trying to register model with version '1'")
             print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
 
     model = Model(
@@ -249,13 +248,10 @@ def main(args):
 
     # register the model in workspace or registry
     print("Registering model ....")
-    tc.track_event(name="FM_import_pipeline_debug_logs",
-                   properties={"message": f"Registering model {model_name} with version {model_version}."})
+    tc_log(f"Registering model {model_name} with version {model_version}.")
     registered_model = ml_client.models.create_or_update(model)
     print(f"Model registered. AssetID : {registered_model.id}")
-    tc.track_event(name="FM_import_pipeline_debug_logs",
-                   properties={"message": f"Model registered. AssetID : {registered_model.id}"})
-    tc.flush()
+    tc_log(f"Model registered. AssetID : {registered_model.id}")
     # Registered model information
     model_info = {
         "id": registered_model.id,
@@ -273,9 +269,7 @@ def main(args):
     with open(registration_details, "w") as outfile:
         outfile.write(json_object)
     print("Saved model registration details in output json file.")
-    tc.track_event(name="FM_import_pipeline_debug_logs",
-                   properties={"message": "Saved model registration details in output json file."})
-    tc.flush()
+    tc_log("Saved model registration details in output json file.")
 
 
 # run script

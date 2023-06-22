@@ -6,9 +6,7 @@
 import argparse
 import json
 from azureml.model.mgmt.downloader import download_model, ModelSource
-from applicationinsights import TelemetryClient
-
-tc = TelemetryClient("71b954a8-6b7d-43f5-986c-3d3a6605d803")
+from azureml.model.mgmt.utils.common_utils import init_tc, tc_log
 
 
 def _get_parser():
@@ -23,37 +21,33 @@ def _get_parser():
 if __name__ == "__main__":
     parser = _get_parser()
     args, unknown_args_ = parser.parse_known_args()
-
+    init_tc()
     model_source = args.model_source
     model_id = args.model_id
     model_download_metadata_path = args.model_download_metadata
     model_output_dir = args.model_output_dir
 
     print("Print args")
-    tc.track_event(name="FM_import_pipeline_debug_logs",
-                   properties={"message": "Print args"})
+    tc_log("Print args")
+
     for arg, value in args.__dict__.items():
-        tc.track_event(name="FM_import_pipeline_debug_logs",
-                       properties={"message": f"{arg} => {value}"})
+        tc_log(f"{arg} => {value}")
         print(f"{arg} => {value}")
-    tc.flush()
+
     if not ModelSource.has_value(model_source):
-        tc.track_event(name="FM_import_pipeline_debug_logs",
-                       properties={"message": f"Unsupported model source {model_source}"})
-        tc.flush()
+        tc_log(f"Unsupported model source {model_source}")
         raise Exception(f"Unsupported model source {model_source}")
-    tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message": "Downloading model ..."})
+
+    tc_log("Downloading model ...")
     print("Downloading model ...")
     model_download_details = download_model(
         model_source=model_source, model_id=model_id, download_dir=model_output_dir
     )
-    tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message": f"Model files downloaded at: \
-                                                                     {model_output_dir} !!!"})
+    tc_log(f"Model files downloaded at: {model_output_dir}")
     print(f"Model files downloaded at: {model_output_dir} !!!")
 
     with open(model_download_metadata_path, "w") as f:
         json.dump(model_download_details, f)
-    tc.track_event(name="FM_import_pipeline_debug_logs",
-                   properties={"message": "Successfully persisted model info !!!"})
-    tc.flush()
+
+    tc_log("Successfully persisted model info ")
     print("Successfully persisted model info !!!")
