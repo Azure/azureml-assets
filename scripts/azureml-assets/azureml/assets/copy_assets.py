@@ -46,11 +46,12 @@ def copy_asset(asset_config: assets.AssetConfig,
             (hostname, repo) = image.split("/", 1)
 
             try:
-                response = assets.get_manifest(previous_release_version, hostname, repo)
+                _ = assets.get_manifest(previous_release_version, hostname, repo)
             except HTTPError as e:
                 if e.code == 404:
-                    logger.log_error(f"Image {image} not found in MCR. Please release {asset_config.name} version \
-                                      {previous_release_version} before continuing.")
+                    logger.log_error(f"Image {image} not found in MCR. Please release {asset_config.name} version "
+                                     f"{previous_release_version} before continuing.")
+
                     exit(1)
                 else:
                     logger.log_error(f"Unexpected error when looking for image {image} in MCR")
