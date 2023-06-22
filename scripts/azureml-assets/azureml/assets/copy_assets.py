@@ -7,13 +7,12 @@ import argparse
 import re
 from pathlib import Path
 from typing import List
+from urllib.error import HTTPError
 
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
 from azureml.assets.config import AssetType
-
-from urllib.error import HTTPError
 
 COPIED_COUNT = "copied_count"
 
