@@ -15,10 +15,10 @@ dependencies:
   - psutil>=5.8,<5.9
   - pandas>=1.1,<1.2
   - ipykernel~=6.0
-  - azureml-core=={{latest-pypi-version}}
-  - azureml-defaults=={{latest-pypi-version}}
-  - azureml-mlflow=={{latest-pypi-version}}
-  - azureml-telemetry=={{latest-pypi-version}}
+  - azureml-core==1.51.0
+  - azureml-defaults==1.51.0
+  - azureml-mlflow==1.51.0
+  - azureml-telemetry==1.51.0
   - azureml-evaluate-mlflow=={{latest-pypi-version}}
   - azureml-metrics=={{latest-pypi-version}}
   - xgboost==1.6.1
