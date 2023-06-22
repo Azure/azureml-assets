@@ -126,15 +126,14 @@ def init_tc():
             tc = TelemetryClient("71b954a8-6b7d-43f5-986c-3d3a6605d803")
         except Exception as e:
             print(f"Exception while initializing app insights: {e}")
-            tc = None
 
 
 def tc_log(message):
     """Log message to app insights."""
     global tc
     try:
-        tc.track_event(name="FM_import_pipeline_debug_logs",
-                       properties={"message": message})
+        tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message": message})
+        print(message)
         tc.flush()
     except Exception as e:
         print(f"Exception while logging to app insights: {e}")

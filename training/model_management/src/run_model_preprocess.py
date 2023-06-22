@@ -90,10 +90,8 @@ if __name__ == "__main__":
     license_file_path = args.license_file_path
 
     tc_log("Print args")
-    print("##### Print args #####")
     for arg, value in args.__dict__.items():
         tc_log(f"{arg} => {value}")
-        print(f"{arg} => {value}")
 
     if not ModelFlavor.has_value(mlflow_flavor):
         tc_log(f"Unsupported model flavor {mlflow_flavor}")
@@ -109,7 +107,6 @@ if __name__ == "__main__":
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
 
     tc_log(f"Preprocess args : {preprocess_args}")
-    print(preprocess_args)
 
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
         _validate_transformers_args(preprocess_args)
@@ -130,7 +127,6 @@ if __name__ == "__main__":
     if license_file_path:
         shutil.copy(license_file_path, mlflow_model_output_dir)
 
-    print(f"\nlisting output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
     tc_log(f"listing output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
 
     # Add job path

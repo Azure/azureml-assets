@@ -141,7 +141,7 @@ if __name__ == "__main__":
     col_rename_map = {}
     if col_rename_map_str:
         mapping_list = col_rename_map_str.split(";")
-        print(mapping_list)
+        tc_log(f"mapping_list => {mapping_list}")
         for item in mapping_list:
             split = item.split(":")
             if len(split) == 2:
