@@ -16,8 +16,6 @@ import azureml.assets.environment as environment
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
-from azureml.assets.config import AssetType
-
 ASSET_COUNT = "asset_count"
 UPDATED_COUNT = "updated_count"
 UPDATED_ENV_COUNT = "updated_env_count"
