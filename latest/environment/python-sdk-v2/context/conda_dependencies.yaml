@@ -9,3 +9,4 @@ dependencies:
     - azure-ai-ml==1.8.0
     - azure-identity==1.13.0
     - azureml-core==1.51.0.post1
+    - applicationinsights==0.11.10

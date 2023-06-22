@@ -6,3 +6,4 @@ ffmpeg-python==0.2.0
 langcodes==3.3.0
 sentencepiece==0.1.97
 wget==3.2
+applicationinsights==0.11.10
