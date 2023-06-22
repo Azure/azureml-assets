@@ -38,8 +38,8 @@ def tc_log(message):
     """Log message to app insights."""
     global tc
     try:
-        tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message": message})
         print(message)
+        tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message": message})
         tc.flush()
     except Exception as e:
         print(f"Exception while logging to app insights: {e}")
