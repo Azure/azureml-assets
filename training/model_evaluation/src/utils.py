@@ -303,6 +303,10 @@ class ArgumentsSet:
             self.args_set = self.fill_mask
         if task_type == TASK.FORECASTING:
             self.args_set = self.forecasting
+        if task_type == TASK.IMAGE_CLASSIFICATION:
+            self.args_set = self.image_classification
+        if task_type == TASK.IMAGE_CLASSIFICATION_MULTILABEL:
+            self.args_set = self.image_classification_multilabel
 
     @property
     def classification(self):
@@ -443,6 +447,31 @@ class ArgumentsSet:
             ForecastingConfigContract.TIME_COLUMN_NAME: "str(val)",
             ForecastingConfigContract.TIME_SERIES_ID_COLUMN_NAMES: "val",
             ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)"
+        }
+        return args_map
+
+    @property
+    def image_classification(self):
+        """Image Classification arguments.
+
+        Returns:
+            _type_: _description_
+        """
+        args_map = {
+            "metrics": "list(val)",
+        }
+        return args_map
+
+    @property
+    def image_classification_multilabel(self):
+        """Image Classification Multilabel arguments.
+
+        Returns:
+            _type_: _description_
+        """
+        args_map = {
+            "metrics": "list(val)",
+            "threshold": "float(val)",
         }
         return args_map
 

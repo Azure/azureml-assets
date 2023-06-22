@@ -182,8 +182,10 @@ class Inferencer:
                                                           source_lang=source_lang, target_lang=target_lang)
                 else:
                     # batching is handled in mlflow predict for image tasks.
-                    if self.task in constants.IMAGE_TASKS and self.batch_size:
-                        pipeline_params.update({"batch_size": self.batch_size})
+                    if self.task in constants.IMAGE_TASKS:
+                        pipeline_params.update(self.metrics_config)
+                        if self.batch_size:
+                            pipeline_params.update({"batch_size": self.batch_size})
                     predictions_chunk = predictor.predict(X_test, device=device,
                                                           y_transformer=y_transformer,
                                                           multilabel=self.multilabel,
