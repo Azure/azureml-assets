@@ -176,7 +176,7 @@ if __name__ == "__main__":
         tc.track_event(name="FM_import_pipeline_debug_logs",
                        properties={"message": f"col_rename_map => {col_rename_map}"})
         tc.flush()
-    
+
     _load_and_infer_model(
         model_dir=model_dir,
         data=_load_and_prepare_data(

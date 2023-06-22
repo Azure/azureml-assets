@@ -34,7 +34,7 @@ if __name__ == "__main__":
                    properties={"message": "Print args"})
     for arg, value in args.__dict__.items():
         tc.track_event(name="FM_import_pipeline_debug_logs",
-                       properties={"message": f"{arg} => {value}"})   
+                       properties={"message": f"{arg} => {value}"})
         print(f"{arg} => {value}")
     tc.flush()
     if not ModelSource.has_value(model_source):

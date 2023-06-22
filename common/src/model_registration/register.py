@@ -196,7 +196,8 @@ def main(args):
     # check if we can have lineage and update the model path for ws import
     if not registry_name and args.model_import_job_path:
         tc.track_event(name="FM_import_pipeline_debug_logs",
-                       properties={"message": "Using model output of previous job as run lineage to register the model"})
+                       properties={"message": "Using model output of previous job as \
+                                   run lineage to register the model"})
         tc.flush()
         print("Using model output of previous job as run lineage to register the model")
         with open(args.model_import_job_path) as f:
@@ -230,8 +231,8 @@ def main(args):
                 model_version = str(int(max_version) + 1)
         except Exception:
             tc.track_event(name="FM_import_pipeline_debug_logs",
-                            properties={"message": f"Error in listing versions for model {model_name}. \
-                                        Trying to register model with version '1'."})
+                           properties={"message": f"Error in listing versions for model {model_name}. \
+                                       Trying to register model with version '1'."})
             tc.flush()
             print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
 

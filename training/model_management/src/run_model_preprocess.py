@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     tc.track_event(name="FM_import_pipeline_debug_logs",
                    properties={"message": "##### Print args #####"})
-    
+
     print("##### Print args #####")
     for arg, value in args.__dict__.items():
         tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message": f"{arg} => {value}"})
