@@ -25,6 +25,7 @@ tc = None
 
 
 def init_tc():
+    """Initialize telemetry client."""
     global tc
     if tc is None:
         try:
@@ -35,6 +36,7 @@ def init_tc():
 
 
 def tc_log(message):
+    """Log message to app insights."""
     global tc
     try:
         tc.track_event(name="FM_import_pipeline_debug_logs",
@@ -45,6 +47,7 @@ def tc_log(message):
 
 
 def tc_exception(e, message):
+    """Log exception to app insights."""
     global tc
     try:
         tc.track_exception(value=e.__class__, properties={"exception": message})
