@@ -11,6 +11,7 @@ from typing import List
 import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
+from azureml.assets.config import AssetType
 
 from urllib.error import HTTPError
 
@@ -34,7 +35,7 @@ def copy_asset(asset_config: assets.AssetConfig,
         # Skip a released version
         return None
 
-    if check_previous_release:
+    if check_previous_release and asset_config.type == AssetType.ENVIRONMENT:
         # Skip if previous version was not released
         previous_release_version = assets.get_latest_release_tag_version(asset_config, release_directory_root)
 
@@ -49,9 +50,10 @@ def copy_asset(asset_config: assets.AssetConfig,
             except HTTPError as e:
                 if e.code == 404:
                     logger.log_error(f"Image {image} not found in MCR. Please release {asset_config.name} version {previous_release_version} before continuing.")
+                    exit(1)
                 else:
                     logger.log_error(f"Unexpected error when looking for image {image} in MCR")
-                raise Exception(f"Failed to retrieve manifest for {repo}:{previous_release_version}: {e}")
+                    raise Exception(f"Failed to retrieve manifest for {repo}:{previous_release_version}: {e}")
             except Exception as e:
                 raise Exception(f"Failed to retrieve manifest for {repo}:{previous_release_version}: {e}")
 

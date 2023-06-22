@@ -75,9 +75,6 @@ def get_latest_release_tag_version(asset_config: assets.AssetConfig, release_dir
     Returns:
         str: Latest version found, or None if asset is not an environment or no tags not found
     """
-    if asset_config.type != AssetType.ENVIRONMENT:
-        return None
-
     repo = Repo(release_directory_root)
     tags = [t for t in repo.tags if t.name.startswith(f"{asset_config.partial_name}/")]
 
