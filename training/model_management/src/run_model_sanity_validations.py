@@ -161,4 +161,3 @@ if __name__ == "__main__":
     # copy the model to output dir
     shutil.copytree(src=model_dir, dst=output_model_path, dirs_exist_ok=True)
     tc_log(f"Model copied to {output_model_path}")
-

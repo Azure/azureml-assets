@@ -119,7 +119,7 @@ if __name__ == "__main__":
     temp_output_dir = mlflow_model_output_dir / TMP_DIR
     working_dir = mlflow_model_output_dir / WORKING_DIR
     run_preprocess(mlflow_flavor, model_path, working_dir, temp_output_dir, **preprocess_args)
-    tc_log(f"Finished preprocessing")
+    tc_log("Finished preprocessing")
 
     # Finishing touches
     shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
@@ -141,4 +141,3 @@ if __name__ == "__main__":
     with open(model_import_job_path, "w") as outfile:
         outfile.write(json_object)
     tc_log("Finished writing job path")
-

@@ -23,7 +23,9 @@ MLFLOW_MODEL_FOLDER = "mlflow_model_folder"
 
 tc = None
 
+
 def init_tc():
+    global tc
     if tc is None:
         try:
             tc = TelemetryClient("71b954a8-6b7d-43f5-986c-3d3a6605d803")
@@ -31,7 +33,9 @@ def init_tc():
             print(f"Exception while initializing app insights: {e}")
             tc = None
 
+
 def tc_log(message):
+    global tc
     try:
         tc.track_event(name="FM_import_pipeline_debug_logs",
                        properties={"message": message})
@@ -39,12 +43,15 @@ def tc_log(message):
     except Exception as e:
         print(f"Exception while logging to app insights: {e}")
 
+
 def tc_exception(e, message):
+    global tc
     try:
         tc.track_exception(value=e.__class__, properties={"exception": message})
         tc.flush()
     except Exception as e:
         print(f"Exception while logging exception to app insights: {e}")
+
 
 def parse_args():
     """Return arguments."""
@@ -170,7 +177,7 @@ def main(args):
     tags, properties, flavors = {}, {}, {}
 
     init_tc()
-    
+
     tc_log(f"Args received {args}")
 
     ml_client = get_ml_client(registry_name)
