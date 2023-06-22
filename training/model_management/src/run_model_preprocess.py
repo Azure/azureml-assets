@@ -12,7 +12,9 @@ from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
 from pathlib import Path
 import shutil
+from applicationinsights import TelemetryClient
 
+tc = TelemetryClient("71b954a8-6b7d-43f5-986c-3d3a6605d803")
 
 WORKING_DIR = "working_dir"
 TMP_DIR = "tmp"
@@ -53,19 +55,34 @@ def _get_parser():
 
 def _validate_transformers_args(args):
     if not args.get("model_id"):
+        tc.track_event(name="FM_import_pipeline_debug_logs",
+                            properties={"message":f"model_id is a required parameter for hftransformers mlflow flavor."})
+        tc.flush()
         raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
     if not args.get("task"):
+        tc.track_event(name="FM_import_pipeline_debug_logs",
+                            properties={"message":f"task is a required parameter for hftransformers mlflow flavor."})
+        tc.flush()
         raise Exception("task is a required parameter for hftransformers mlflow flavor.")
     task = args["task"]
     if not SupportedTasks.has_value(task):
+        tc.track_event(name="FM_import_pipeline_debug_logs",
+                            properties={"message":f"Unsupported task {task} for hftransformers mlflow flavor."})
+        tc.flush()
         raise Exception(f"Unsupported task {task} for hftransformers mlflow flavor.")
 
 
 def _validate_pyfunc_args(pyfunc_args):
     if not pyfunc_args.get("task"):
+        tc.track_event(name="FM_import_pipeline_debug_logs",
+                            properties={"message":f"task is a required parameter for pyfunc flavor."})
+        tc.flush()
         raise Exception("task is a required parameter for pyfunc flavor.")
     task = pyfunc_args["task"]
     if not Tasks.has_value(task):
+        tc.track_event(name="FM_import_pipeline_debug_logs",
+                            properties={"message":f"Unsupported task {task} for pyfunc flavor."})
+        tc.flush()
         raise Exception(f"Unsupported task {task} for pyfunc flavor.")
 
 
@@ -82,11 +99,19 @@ if __name__ == "__main__":
     model_import_job_path = args.model_import_job_path
     license_file_path = args.license_file_path
 
+    tc.track_event(name="FM_import_pipeline_debug_logs",
+                            properties={"message":f"##### Print args #####"})
+    
     print("##### Print args #####")
     for arg, value in args.__dict__.items():
+        tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message":f"{arg} => {value}"})
         print(f"{arg} => {value}")
+    tc.flush()
 
     if not ModelFlavor.has_value(mlflow_flavor):
+        tc.track_event(name="FM_import_pipeline_debug_logs",
+                            properties={"message":f"Unsupported model flavor {mlflow_flavor}"})
+        tc.flush()
         raise Exception("Unsupported model flavor")
 
     preprocess_args = {}
@@ -98,6 +123,7 @@ if __name__ == "__main__":
     preprocess_args["task"] = task_name if task_name else preprocess_args.get("task")
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
 
+    tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message":f"Preprocess args => {preprocess_args}"})
     print(preprocess_args)
 
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
@@ -108,7 +134,7 @@ if __name__ == "__main__":
     temp_output_dir = mlflow_model_output_dir / TMP_DIR
     working_dir = mlflow_model_output_dir / WORKING_DIR
     run_preprocess(mlflow_flavor, model_path, working_dir, temp_output_dir, **preprocess_args)
-
+    tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message":f"##### Finished preprocessing #####"})
     # Finishing touches
     shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
     shutil.rmtree(working_dir, ignore_errors=True)
@@ -119,7 +145,9 @@ if __name__ == "__main__":
         shutil.copy(license_file_path, mlflow_model_output_dir)
 
     print(f"\nlisting output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
-
+    tc.track_event(name="FM_import_pipeline_debug_logs", 
+                   properties={"message":f"##### listing output directory files: \
+                               {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}"})
     # Add job path
     this_job = os.environ["MLFLOW_RUN_ID"]
     path = f"azureml://jobs/{this_job}/outputs/mlflow_model_folder"
@@ -127,3 +155,5 @@ if __name__ == "__main__":
     json_object = json.dumps(model_path_dict, indent=4)
     with open(model_import_job_path, "w") as outfile:
         outfile.write(json_object)
+    tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message":f"##### Finished writing job path #####"})
+    tc.flush()
