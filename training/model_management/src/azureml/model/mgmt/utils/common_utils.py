@@ -20,6 +20,7 @@ from applicationinsights import TelemetryClient
 
 tc = None
 
+
 def log_execution_time(func, logger=None):
     """Decorate method to log execution time."""
 
