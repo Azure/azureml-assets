@@ -36,7 +36,6 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
         return None
 
     ext = test_data_path.suffix
-    tc_log(f"file type: {ext}")
     logger.info(f"file type: {ext}")
     if ext == ".jsonl":
         data = pd.read_json(test_data_path, lines=True, dtype=False)
@@ -51,7 +50,6 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
         data.rename(columns=col_rename_map, inplace=True)
 
     # Validations
-    tc_log(f"data cols => {data.columns}")
     logger.info(f"data cols => {data.columns}")
     # validate model input signature matches with data provided
     if mlmodel.get("signature", None):
@@ -62,11 +60,9 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
 
     if input_signatures_str:
         input_signatures = json.loads(input_signatures_str)
-        tc_log(f"input_signatures: {input_signatures}")
         logger.info(f"input_signatures: {input_signatures}")
         for item in input_signatures:
             if item.get("name") not in data.columns:
-                tc_log(f"Missing {item.get('name')} in test data.")
                 logger.warning(f"Missing {item.get('name')} in test data.")
     else:
         tc_log("Input signature missing in MLmodel. Prediction might fail.")
@@ -91,7 +87,6 @@ def _load_and_infer_model(model_dir, data):
         tc_log("Predicting model with test data!!!")
         logger.info("Predicting model with test data!!!")
         pred_results = model.predict(data)
-        tc_log(f"prediction results\n{pred_results}")
         logger.info(f"prediction results\n{pred_results}")
 
     except Exception as e:
@@ -119,10 +114,10 @@ if __name__ == "__main__":
     col_rename_map_str: str = args.column_rename_map
     output_model_path: Path = args.output_model_path
 
-    tc_log("Logging args")
+    tc_log(f"model_dir => {model_dir}")
     logger.info("##### logger.info args #####")
     for arg, value in args.__dict__.items():
-        tc_log(f"{arg} => {value}")
+
         logger.info(f"{arg} => {value}")
 
     mlmodel_file_path = model_dir / MLMODEL_FILE_NAME
@@ -141,13 +136,11 @@ if __name__ == "__main__":
     col_rename_map = {}
     if col_rename_map_str:
         mapping_list = col_rename_map_str.split(";")
-        tc_log(f"mapping_list => {mapping_list}")
         for item in mapping_list:
             split = item.split(":")
             if len(split) == 2:
                 col_rename_map[split[0].strip()] = split[1].strip()
         logger.info(f"col_rename_map => {col_rename_map}")
-        tc_log(f"col_rename_map => {col_rename_map}")
 
     _load_and_infer_model(
         model_dir=model_dir,
