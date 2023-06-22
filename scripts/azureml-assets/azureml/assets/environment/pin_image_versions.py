@@ -115,7 +115,7 @@ def _get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
         tags_sorted.insert(0, LATEST_TAG)
 
         # Find another tag corresponding to latest, or default to digest
-        latest_tag, latest_digest = _get_latest_tag_or_digest(image, tags)
+        latest_tag, latest_digest = _get_latest_tag_or_digest(image, tags_sorted)
 
     # Return tag or digest
     if latest_tag is not None:
