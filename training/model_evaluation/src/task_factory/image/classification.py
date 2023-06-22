@@ -35,14 +35,15 @@ def _convert_predictions(preds: Union[pd.DataFrame, pd.Series, list, np.ndarray]
 
 MC_OUTPUT_SIGNATURE_ERROR_MESSAGE = (
     "The output of the model predict function should return List of labels for each image (List[str]). "
-    "The output of the model predict_proba function (optional) should return List of probabilities for each label (List[List[float]]). "
-    "The outermost List is for each image in a batch."
+    "The output of the model predict_proba function (optional) should return List of probabilities for each label "
+    "(List[List[float]]). The outermost List is for each image in a batch."
 )
 
 ML_OUTPUT_SIGNATURE_ERROR_MESSAGE = (
-    "The output of the model predict function should return List of only predicted labels for each image (List[List[str]]). "
-    "The output of the model predict_proba function (optional) should return List of probabilities for all labels (List[List[float]]). "
-    "The outermost List is for each image in a batch. The inner List is for each label in the label list."
+    "The output of the model predict function should return List of only predicted labels for each image "
+    "(List[List[str]]). The output of the model predict_proba function (optional) should return List of probabilities "
+    "for all labels (List[List[float]]). The outermost List is for each image in a batch. "
+    "The inner List is for each label in the label list."
 )
 
 
@@ -159,7 +160,7 @@ class ImageMultilabelClassifier(TabularClassifier):
                 return super().predict_proba(x_test, **kwargs)
             except (TypeError, AttributeError, NameError) as ex:
                 logger.warning(
-                    f"Error occured in predict_proba function: {str(ex)} {ML_OUTPUT_SIGNATURE_ERROR_MESSAGE}"
+                    f"Error occurred in predict_proba function: {str(ex)} {ML_OUTPUT_SIGNATURE_ERROR_MESSAGE}"
                 )
             return None
 
