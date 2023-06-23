@@ -54,10 +54,7 @@ class HuggingfaceDownloader:
             model_list = [
                 model.modelId for model in self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
             ]
-            if self._model_id in model_list:
-                self._is_valid_id = True
-            else:
-                self._is_valid_id = False
+            self._is_valid_id = self._model_id in model_list
         return self._is_valid_id
 
     @property
