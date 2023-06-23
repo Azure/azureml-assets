@@ -6,6 +6,7 @@
 from typing import List
 import json
 import os
+import re
 from pyspark.sql import Row
 from model_monitor_output_metrics.entities.row_count_metrics import RowCountMetrics
 from model_monitor_output_metrics.entities.signal_type import SignalType
@@ -15,7 +16,7 @@ from shared_utilities.io_utils import np_encoder
 
 
 class GenerationSafetyQualitySignal(Signal):
-    """Builder class which creates a Feature Attribution signal output."""
+    """Builder class which creates a Generation Safety Quality signal output."""
 
     def __init__(
         self,
@@ -23,7 +24,7 @@ class GenerationSafetyQualitySignal(Signal):
         signal_name: str,
         metrics: List[Row],
     ):
-        """Build Feature Attribution Drift signal."""
+        """Build Generation Safety Quality signal."""
         super().__init__(
             monitor_name,
             signal_name,
@@ -58,7 +59,7 @@ class GenerationSafetyQualitySignal(Signal):
         os.makedirs(histogram_directory, exist_ok=True)
 
         histogram_file = os.path.join(
-            histogram_directory, "AcceptableGroundednessScorePerInstance.histogram.json"
+            histogram_directory, "AcceptableAnnotationScorePerInstance.histogram.json"
         )
         with open(histogram_file, "w") as f:
             f.write(
@@ -71,7 +72,7 @@ class GenerationSafetyQualitySignal(Signal):
 
     def publish_metrics(self, step: int):
         """Publish metrics to AML Run Metrics."""
-        run_metric = self.global_metrics["AggregatedGroundednessPassRate"]
+        run_metric = self.global_metrics["AggregatedAnnotationPassRate"]
         publish_metric(
             run_metric["runId"],
             float(run_metric["metricValue"]),
@@ -83,21 +84,22 @@ class GenerationSafetyQualitySignal(Signal):
         """Build metrics."""
         rows = []
         global_metric_cache = {
-            "AcceptableGroundednessScorePerInstance": {
+            "AcceptableAnnotationScorePerInstance": {
                 "threshold": 0,
-                "histogram": f"signals/{self.signal_name}/AcceptableGroundednessScorePerInstance.histogram.json",
+                "histogram": f"signals/{self.signal_name}/AcceptableAnnotationScorePerInstance.histogram.json",
             }
         }
         self.histogram = {
             "histogram": [],
-            "featureName": "AcceptableGroundednessScorePerInstance",
+            "featureName": "AcceptableAnnotationScorePerInstance",
         }
         for metric in metrics:
-            if "GroundednessCount_" in metric["metric_name"]:
+            if "Count_" in metric["metric_name"]:
+                metric_name = metric["metric_name"].split("Count_")[0]
                 bucket = metric["metric_name"].split("_")[1]
                 rows.append(
                     Row(
-                        feature_bucket="Groundedness",
+                        feature_bucket=metric_name,
                         bucket_count=metric["metric_value"],
                         data_type="categorical",
                         category_bucket=bucket,
@@ -109,7 +111,8 @@ class GenerationSafetyQualitySignal(Signal):
                 }
                 self.histogram["histogram"].append(histogram_bucket)
 
-            if metric["metric_name"] == "AggregatedGroundednessPassRate":
+            re_match = re.search(r"Aggregated(.*)PassRate", metric["metric_name"])
+            if re_match is not None:
                 global_metric_cache[metric["metric_name"]] = {
                     "metricValue": metric["metric_value"],
                     "threshold": 0,
@@ -117,7 +120,7 @@ class GenerationSafetyQualitySignal(Signal):
                         monitor_name=monitor_name,
                         signal_name=signal_name,
                         feature_name=None,
-                        metric_name="AggregatedGroundednessPassRate",
+                        metric_name=metric["metric_name"],
                     ),
                     "metricName": metric["metric_name"],
                     "runMetricName": "value",
