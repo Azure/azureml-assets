@@ -44,17 +44,20 @@ class HuggingfaceDownloader:
         self._model_id = model_id
         self._model_uri = self.HF_ENDPOINT + f"/{model_id}"
         self._hf_api = HfApi(endpoint=self.HF_ENDPOINT)
-        self._is_valid_id = False
+        self._is_valid_id = None
         self._model_info = None
 
     @property
     def is_valid_id(self):
         """Returns true if Hugging face model id is valid."""
-        model_list = [
-            model.modelId for model in self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
-        ]
-        if self._model_id in model_list:
-            self._is_valid_id = True
+        if self._is_valid_id is None:
+            model_list = [
+                model.modelId for model in self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
+            ]
+            if self._model_id in model_list:
+                self._is_valid_id = True
+            else:
+                self._is_valid_id = False
         return self._is_valid_id
 
     @property
