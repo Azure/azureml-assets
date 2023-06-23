@@ -58,7 +58,10 @@ class HuggingfaceDownloader:
         if not value:
             model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
             if not model_list:
-                error_msg = f"Invalid Hugging face model id: {self._model_id}.Please ensure that you are using a correct and existing model ID"
+                error_msg = (
+                    f"Invalid Hugging face model id: {self._model_id}."
+                    "Please ensure that you are using a correct and existing model ID"
+                )
                 raise ValueError(error_msg)
             else:
                 self.is_valid_id = True
