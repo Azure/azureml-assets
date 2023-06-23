@@ -185,6 +185,18 @@ class DeploymentConfig:
             config = YAML().load(fp)
             return DeploymentConfigSchema().load(config)
 
+    def should_create(self, asset_type: assets.AssetType, asset_name: str) -> bool:
+        """Determine if an asset should be created.
+
+        Args:
+            asset_type (assets.AssetType): Asset type.
+            asset_name (str): Asset name.
+
+        Returns:
+            bool: True if the asset should be created.
+        """
+        return any(n in {"*", asset_name} for n in self.create.get(asset_type, []))
+
 
 class TagsSchema(Schema):
     """Tags schema."""
