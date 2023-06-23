@@ -5,7 +5,7 @@
 
 ## 1.2.0 (2023-06-23)
 ### 🚀 New Features
-- [#777](https://github.com/Azure/azureml-assets/pull/777) Make AssetConfig hashable
+- [#777](https://github.com/Azure/azureml-assets/pull/777) Make AssetConfig hashable, add DeploymentConfig.should_create()
 - [#747](https://github.com/Azure/azureml-assets/pull/747) Allow copy_assets to fail if previous environment version doesn't exist in MCR
 
 ### 🐛 Bugs Fixed
