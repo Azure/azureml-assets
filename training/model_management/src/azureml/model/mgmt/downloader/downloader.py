@@ -10,7 +10,6 @@ from azureml.model.mgmt.downloader.download_utils import download_model_for_path
 from huggingface_hub.hf_api import HfApi, ModelFilter, ModelInfo
 from pathlib import Path
 from typing import List
-import requests
 
 PROPERTIES = [
     "commit_hash",
