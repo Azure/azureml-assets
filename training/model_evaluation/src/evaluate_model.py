@@ -197,6 +197,8 @@ class EvaluateModel:
                     "device": self.device,
                     "multi_label": self.multilabel,
                     "batch_size": self.batch_size,
+                    # Image ML classification, identifies task as "multilabel" in azureml-evaluate-mlflow package
+                    "multilabel": self.multilabel,
                 }
             )
             result = None

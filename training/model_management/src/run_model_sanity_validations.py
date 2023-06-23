@@ -13,6 +13,7 @@ import pandas as pd
 from pathlib import Path
 from typing import Dict
 import yaml
+from azureml.model.mgmt.utils.common_utils import init_tc, tc_log, tc_exception
 
 
 MLFLOW_MODEL_SCORING_SCRIPT = "validations/mlflow_model_scoring_script.py"
@@ -41,6 +42,7 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
     elif ext == ".csv":
         data = pd.read_csv(test_data_path)
     else:
+        tc_log(f"Unsupported file type: {ext}")
         raise Exception("Unsupported file type")
 
     # translations
@@ -53,6 +55,7 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
     if mlmodel.get("signature", None):
         input_signatures_str = mlmodel['signature'].get("inputs", None)
     else:
+        tc_log("signature is missing from MLModel file.")
         logger.warning("signature is missing from MLModel file.")
 
     if input_signatures_str:
@@ -62,26 +65,32 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
             if item.get("name") not in data.columns:
                 logger.warning(f"Missing {item.get('name')} in test data.")
     else:
+        tc_log("Input signature missing in MLmodel. Prediction might fail.")
         logger.warning("Input signature missing in MLmodel. Prediction might fail.")
     return data
 
 
 def _load_and_infer_model(model_dir, data):
     if data is None:
+        tc_log("Data not shared. Could not infer the loaded model")
         logger.warning("Data not shared. Could not infer the loaded model")
         return
 
     try:
         model = mlflow.pyfunc.load_model(str(model_dir))
     except Exception as e:
+        tc_exception(e, f"Error in loading mlflow model: {e}")
         logger.error(f"Error in loading mlflow model: {e}")
         raise Exception(f"Error in loading mlflow model: {e}")
 
     try:
+        tc_log("Predicting model with test data!!!")
         logger.info("Predicting model with test data!!!")
         pred_results = model.predict(data)
         logger.info(f"prediction results\n{pred_results}")
+
     except Exception as e:
+        tc_exception(e, f"Error in predicting model: {e}")
         logger.error(f"Failed to infer model with provided dataset: {e}")
         raise Exception(f"Failed to infer model with provided dataset: {e}")
 
@@ -98,14 +107,17 @@ def _get_parser():
 if __name__ == "__main__":
     parser = _get_parser()
     args, _ = parser.parse_known_args()
+    init_tc()
 
     model_dir: Path = args.model_path
     test_data_path: Path = args.test_data_path
     col_rename_map_str: str = args.column_rename_map
     output_model_path: Path = args.output_model_path
 
+    tc_log(f"model_dir => {model_dir}")
     logger.info("##### logger.info args #####")
     for arg, value in args.__dict__.items():
+
         logger.info(f"{arg} => {value}")
 
     mlmodel_file_path = model_dir / MLMODEL_FILE_NAME
@@ -113,16 +125,17 @@ if __name__ == "__main__":
 
     with open(mlmodel_file_path) as f:
         mlmodel_dict = yaml.safe_load(f)
+        tc_log(f"mlmodel :\n{mlmodel_dict}\n")
         logger.info(f"mlmodel :\n{mlmodel_dict}\n")
 
     with open(conda_env_file_path) as f:
         conda_dict = yaml.safe_load(f)
+        tc_log(f"conda :\n{conda_dict}\n")
         logger.info(f"conda :\n{conda_dict}\n")
 
     col_rename_map = {}
     if col_rename_map_str:
         mapping_list = col_rename_map_str.split(";")
-        print(mapping_list)
         for item in mapping_list:
             split = item.split(":")
             if len(split) == 2:
@@ -140,3 +153,4 @@ if __name__ == "__main__":
 
     # copy the model to output dir
     shutil.copytree(src=model_dir, dst=output_model_path, dirs_exist_ok=True)
+    tc_log(f"Model copied to {output_model_path}")

@@ -6,3 +6,4 @@ ffmpeg-python=={{latest-pypi-version}}
 langcodes=={{latest-pypi-version}}
 sentencepiece==0.1.97
 wget==3.2
+applicationinsights=={{latest-pypi-version}}
