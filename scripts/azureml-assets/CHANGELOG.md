@@ -1,7 +1,16 @@
-## 1.2.0 (Unreleased)
+## 1.3.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
+
+## 1.2.0 (2023-06-23)
+### 🚀 New Features
+- Make AssetConfig hashable
+- [#747](https://github.com/Azure/azureml-assets/pull/747) Allow copy_assets to fail if previous environment version doesn't exist in MCR
+
+### 🐛 Bugs Fixed
+- [#745](https://github.com/Azure/azureml-assets/pull/745) Run uniqueness checks even on unchanged assets
+- [#770](https://github.com/Azure/azureml-assets/pull/770) Fix resolution of {{latest-image-tag}}
 
 ## 1.1.0 (2023-06-08)
 ### 🚀 New Features
