@@ -44,29 +44,21 @@ class HuggingfaceDownloader:
         self._model_id = model_id
         self._model_uri = self.HF_ENDPOINT + f"/{model_id}"
         self._hf_api = HfApi(endpoint=self.HF_ENDPOINT)
-        self.is_valid_id = None
+        self._is_valid_id = None
         self._model_info = None
 
     @property
     def is_valid_id(self):
         """Returns true if Hugging face model id is valid."""
-        return self._is_valid_id
-
-    @is_valid_id.setter
-    def is_valid_id(self, value):
-        """Validate Hugging face model id."""
-        if not value:
+        if not self._is_valid_id:
             model_list = [
                 model.modelId for model in self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
             ]
             if self._model_id not in model_list:
-                error_msg = (
-                    f"Invalid Hugging face model id: {self._model_id}."
-                    "Please ensure that you are using a correct and existing model ID"
-                )
-                raise ValueError(error_msg)
+                self._is_valid_id = False
             else:
-                self.is_valid_id = True
+                self._is_valid_id = True
+        return self._is_valid_id
 
     @property
     def model_info(self) -> ModelInfo:
@@ -106,16 +98,23 @@ class HuggingfaceDownloader:
 
     def download_model(self, download_dir):
         """Download a Hugging face model and return details."""
-        download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
-        model_props = self._get_model_properties()
-        model_props.update(download_details)
-        tags = {k: model_props[k] for k in TAGS if k in model_props}
-        props = {k: model_props[k] for k in PROPERTIES if k in model_props}
-        return {
-            "name": "-".join(self._model_id.split("/")),
-            "tags": tags,
-            "properties": props,
-        }
+        if self.is_valid_id:
+            download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
+            model_props = self._get_model_properties()
+            model_props.update(download_details)
+            tags = {k: model_props[k] for k in TAGS if k in model_props}
+            props = {k: model_props[k] for k in PROPERTIES if k in model_props}
+            return {
+                "name": "-".join(self._model_id.split("/")),
+                "tags": tags,
+                "properties": props,
+            }
+        else:
+            error_msg = (
+                    f"Invalid Hugging face model id: {self._model_id}."
+                    "Please ensure that you are using a correct and existing model ID"
+            )
+            raise ValueError(error_msg)
 
 
 class GITDownloader:
