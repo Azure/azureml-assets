@@ -134,7 +134,7 @@ def validate_and_correct_config(config, insight_data):
             f for f in fc["sensitive_features"] if f not in i_data.categorical_features
         ]
         _logger.warning(
-            "Non categorical features in fairness dropped: {}".format(dropped_features)
+            "Non categorical features dropped for fairness assessment: {}".format(dropped_features)
         )
         fc["sensitive_features"] = cat_features
     return config

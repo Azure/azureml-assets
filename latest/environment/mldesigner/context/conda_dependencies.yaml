@@ -6,7 +6,7 @@ dependencies:
 - pip=21.3.1
 - pip:
   - azure-ai-ml==1.8.0
-  - azureml-mlflow==1.51.0
+  - azureml-mlflow==1.52.0
   - mldesigner==0.1.0b13
   - cryptography==39.0.1
   - requests==2.31.0
