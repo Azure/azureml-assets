@@ -52,10 +52,13 @@ class HuggingfaceDownloader:
         """Returns true if Hugging face model id is valid."""
         if self._is_valid_id is None:
             try:
-                model_list = [
-                    model.modelId for model in self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
-                ]
-                self._is_valid_id = self._model_id in model_list
+                self._is_valid_id = False
+                model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
+                for info in model_list:
+                    if self._model_id == info.modelId:
+                        self._model_info = info
+                        self._is_valid_id = True
+                        break
             except Exception as e:
                 raise ValueError(f"Failed to validate model id : {e}")
 
@@ -64,15 +67,6 @@ class HuggingfaceDownloader:
     @property
     def model_info(self) -> ModelInfo:
         """Hugging face model info."""
-        if not self._model_info:
-            try:
-                model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
-                for info in model_list:
-                    if self._model_id == info.modelId:
-                        self._model_info = info
-                        break
-            except Exception as e:
-                raise ValueError(f"Failed to get HF model info: {e}")
         return self._model_info
 
     def _get_model_properties(self):
