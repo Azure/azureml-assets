@@ -6,7 +6,7 @@
 import argparse
 import json
 from azureml.model.mgmt.downloader import download_model, ModelSource
-from azureml.model.mgmt.utils.common_utils import init_tc, tc_log
+from azureml.model.mgmt.utils.common_utils import init_tc, tc_log, check_model_id
 
 
 def _get_parser():
@@ -29,18 +29,21 @@ if __name__ == "__main__":
 
     tc_log("Print args")
 
-    for arg, value in args.__dict__.items():
-        tc_log(f"{arg} => {value}")
-
     if not ModelSource.has_value(model_source):
-        tc_log(f"Unsupported model source {model_source}")
+        tc_log("Unsupported model source")
         raise Exception(f"Unsupported model source {model_source}")
+
+    if not check_model_id(model_id):
+        tc_log("Model id is not valid")
+        raise Exception(f"Model id {model_id} is not valid")
+
+    tc_log(f"Model source: {model_source}")
+    tc_log(f"Model id: {model_id}")
 
     tc_log("Downloading model ...")
     model_download_details = download_model(
         model_source=model_source, model_id=model_id, download_dir=model_output_dir
     )
-    tc_log(f"Model files downloaded at: {model_output_dir}")
 
     with open(model_download_metadata_path, "w") as f:
         json.dump(model_download_details, f)
