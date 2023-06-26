@@ -39,5 +39,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: summarization
-  version: 8
-version: 7
+version: 8
