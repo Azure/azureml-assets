@@ -34,5 +34,10 @@ tags:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   license: mit
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'true'
+    apply_ort: 'true'
   task: fill-mask
+  version: 9
 version: 8
