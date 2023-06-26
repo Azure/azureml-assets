@@ -65,11 +65,14 @@ class HuggingfaceDownloader:
     def model_info(self) -> ModelInfo:
         """Hugging face model info."""
         if not self._model_info:
-            model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
-            for info in model_list:
-                if self._model_id == info.modelId:
-                    self._model_info = info
-                    break
+            try:
+                model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
+                for info in model_list:
+                    if self._model_id == info.modelId:
+                        self._model_info = info
+                        break
+            except Exception as e:
+                raise ValueError(f"Failed to get HF model info: {e}")
         return self._model_info
 
     def _get_model_properties(self):
