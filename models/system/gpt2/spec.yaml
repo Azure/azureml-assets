@@ -42,4 +42,5 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: text-generation
+  version: 7
 version: 6
