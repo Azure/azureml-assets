@@ -236,7 +236,6 @@ def main(args):
     tc_log("Arguments:")
     tc_log(f"Model type: {model_type}")
 
-
     model = Model(
         name=model_name,
         version=model_version,

@@ -18,9 +18,10 @@ from subprocess import PIPE, run, STDOUT
 from typing import Any, Dict, Tuple
 from applicationinsights import TelemetryClient
 from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
+from typing import List
 
 tc = None
-
+HF_ENDPOINT = "https://huggingface.co"
 
 def log_execution_time(func, logger=None):
     """Decorate method to log execution time."""

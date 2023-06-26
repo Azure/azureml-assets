@@ -7,9 +7,6 @@ import argparse
 import json
 from azureml.model.mgmt.downloader import download_model, ModelSource
 from azureml.model.mgmt.utils.common_utils import init_tc, tc_log, check_model_id
-from typing import List
-
-HF_ENDPOINT = "https://huggingface.co"
 
 
 def _get_parser():
@@ -19,9 +16,6 @@ def _get_parser():
     parser.add_argument("--model-download-metadata", required=True, help="Model source info file path")
     parser.add_argument("--model-output-dir", required=True, help="Model download directory")
     return parser
-
-
-
 
 
 if __name__ == "__main__":
