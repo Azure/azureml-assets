@@ -23,6 +23,7 @@ from azureml.model.mgmt.utils.common_utils import (
     get_dict_from_comma_separated_str,
     get_list_from_comma_separated_str,
 )
+from azureml.model.mgmt.utils.logging_utils import logger
 from diffusers import StableDiffusionPipeline
 from mlflow.models import ModelSignature
 from mlflow.types.schema import ColSpec
@@ -45,6 +46,9 @@ from transformers import (
     WhisperProcessor,
 )
 from typing import Any, Dict
+
+
+logger = logger.get_logger(__name__)
 
 
 class HFMLFLowConvertor(ABC):
@@ -141,7 +145,7 @@ class HFMLFLowConvertor(ABC):
         try:
             return getattr(transformers, class_name)
         except Exception as e:
-            print(f"Error in loading class {e}")
+            logger.error(f"Error in loading class {e}")
             return None
 
     def _save(

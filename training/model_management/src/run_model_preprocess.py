@@ -14,6 +14,10 @@ from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from azureml.model.mgmt.utils.logging_utils import logger
+
+
+logger = logger.get_logger(__name__)
 
 
 def _get_parser():
@@ -103,9 +107,8 @@ if __name__ == "__main__":
     model_import_job_path = args.model_import_job_path
     license_file_path = args.license_file_path
 
-    print("##### Print args #####")
-    for arg, value in args.__dict__.items():
-        print(f"{arg} => {value}")
+    logger.info("##### Print args #####")
+    logger.info(f"args => {args.__dict__}")
 
     if not ModelFlavor.has_value(mlflow_flavor):
         raise Exception("Unsupported model flavor")
@@ -129,7 +132,7 @@ if __name__ == "__main__":
     preprocess_args[HF_CONF.HF_PRETRAINED_CLASS.value] = hf_model_class
     preprocess_args[HF_CONF.HF_TOKENIZER_CLASS.value] = hf_tokenizer_class
 
-    print(f"preprocess_args =>\n{preprocess_args}")
+    logger.info(f"preprocess_args =>\n{preprocess_args}")
 
     # TODO: move validations to respective convertors
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
@@ -147,7 +150,7 @@ if __name__ == "__main__":
     if license_file_path:
         shutil.copy(license_file_path, mlflow_model_output_dir)
 
-    print(f"\nlisting output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
+    logger.info(f"\nlisting output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
 
     # Add job path
     this_job = os.environ["MLFLOW_RUN_ID"]

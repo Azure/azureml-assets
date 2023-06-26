@@ -16,12 +16,16 @@ from contextlib import contextmanager
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Any, Dict, List, Tuple
+from azureml.model.mgmt.utils import logging_utils
 
 
 KV_COLON_SEP = ":"
 KV_EQ_SEP = "="
 ITEM_COMMA_SEP = ","
 ITEM_SEMI_COLON_SEP = ";"
+
+
+logger = logging_utils.get_logger()
 
 
 def log_execution_time(func, logger=None):
@@ -31,7 +35,7 @@ def log_execution_time(func, logger=None):
         t1 = time.time()
         result = func(*args, **kwargs)
         t2 = time.time()
-        print(f"{func.__name__!r} executed in {(t2-t1):.4f}s")
+        logger.info(f"{func.__name__!r} executed in {(t2-t1):.4f}s")
         return result
 
     return wrap_func
@@ -39,7 +43,7 @@ def log_execution_time(func, logger=None):
 
 def run_command(cmd: str, cwd: Path = "./") -> Tuple[int, str]:
     """Run the command and returns the result."""
-    print(cmd)
+    logger.info(cmd)
     result = run(
         cmd,
         cwd=cwd,
@@ -50,7 +54,7 @@ def run_command(cmd: str, cwd: Path = "./") -> Tuple[int, str]:
         errors="ignore",
     )
     if result.returncode != 0:
-        print(f"Failed with error {result.stdout}.")
+        logger.error(f"Failed with error {result.stdout}.")
     return result.returncode, result.stdout
 
 
@@ -154,9 +158,9 @@ def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str,
                 try:
                     val = eval(split[1].strip())
                 except Exception as e:
-                    print(f"Could not eval `{val}`. Error: {e}")
+                    logger.error(f"Could not eval `{val}`. Error: {e}")
             parsed_dict[key] = val
-    print(f"get_dict_from_comma_separated_str: {dict_str} => {parsed_dict}")
+    logger.info(f"get_dict_from_comma_separated_str: {dict_str} => {parsed_dict}")
     return parsed_dict
 
 
@@ -173,3 +177,28 @@ def get_list_from_comma_separated_str(list_str: str, item_sep: str) -> List:
     if not list_str:
         return []
     return [x.strip() for x in list_str.split(item_sep) if x]
+
+
+def retry(times):
+    """Retry Decorator.
+
+    :param times: The number of times to repeat the wrapped function/method
+    :type times: Int
+    """
+    def decorator(func):
+        def newfn(*args, **kwargs):
+            attempt = 1
+            while attempt <= times:
+                try:
+                    return func(*args, **kwargs)
+                except:
+                    attempt += 1
+                    ex_msg = "Exception thrown when attempting to run {}, attempt {} of {}".format(
+                        func.__name__, attempt, times
+                    )
+                    logger.warning(ex_msg)
+                    if attempt == times:
+                        logger.warning("Retried {} times when calling {}, now giving up!".format(times, func.__name__))
+                        raise
+        return newfn
+    return decorator

@@ -10,11 +10,15 @@ from pathlib import Path
 from typing import Dict
 
 import mlflow
+from azureml.model.mgmt.utils import logging_utils
 from azureml.model.mgmt.utils.common_utils import log_execution_time
 from mlflow.models.signature import ModelSignature
 from mlflow.types.schema import ColSpec, Schema
 
 from .vision.config import MLFlowSchemaLiterals, MMDetLiterals, Tasks
+
+
+logger = logging_utils.get_logger()
 
 
 def _prepare_artifacts_dict(input_dir: Path) -> Dict:
@@ -95,4 +99,4 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None
         metadata={"model_name": model_name},
     )
 
-    print("Model saved!!!")
+    logger.info("Model saved!!!")

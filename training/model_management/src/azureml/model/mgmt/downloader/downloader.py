@@ -10,7 +10,7 @@ from azureml.model.mgmt.downloader.download_utils import download_model_for_path
 from huggingface_hub.hf_api import HfApi, ModelFilter, ModelInfo
 from pathlib import Path
 from typing import List
-
+from azureml.model.mgmt.utils.common_utils import retry
 
 PROPERTIES = [
     "SHA",
@@ -46,15 +46,19 @@ class HuggingfaceDownloader:
         self._model_info = None
         self._hf_api = HfApi(endpoint=self.HF_ENDPOINT)
 
+    @retry(3)
+    def _fetch_model_info(self):
+        model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
+        for info in model_list:
+            if self._model_id == info.modelId:
+                return info
+        return None
+
     @property
     def model_info(self) -> ModelInfo:
         """Hugging face model info."""
         if not self._model_info:
-            model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
-            for info in model_list:
-                if self._model_id == info.modelId:
-                    self._model_info = info
-                    break
+            self._model_info = self._fetch_model_info()
         return self._model_info
 
     def _get_model_properties(self):
@@ -116,6 +120,7 @@ class GITDownloader:
         """
         self._model_uri = model_uri
 
+    @retry(3)
     def download_model(self, download_dir):
         """Download a publicly hosted GIT model and return details."""
         download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
@@ -142,6 +147,7 @@ class AzureBlobstoreDownloader:
         """
         self._model_uri = model_uri
 
+    @retry(3)
     def download_model(self, download_dir):
         """Download a model from a publicly accessible azure blobstorage and return details."""
         download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
