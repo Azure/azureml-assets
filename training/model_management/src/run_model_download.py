@@ -48,7 +48,7 @@ if __name__ == "__main__":
     if not ModelSource.has_value(model_source):
         tc_log("Unsupported model source")
         raise Exception(f"Unsupported model source {model_source}")
-    
+
     if not check_model_id(model_id):
         tc_log("Model id is not valid")
         raise Exception(f"Model id {model_id} is not valid")
