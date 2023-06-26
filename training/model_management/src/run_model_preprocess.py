@@ -89,8 +89,6 @@ if __name__ == "__main__":
     model_import_job_path = args.model_import_job_path
     license_file_path = args.license_file_path
 
-    
-
     if not ModelFlavor.has_value(mlflow_flavor):
         tc_log(f"Unsupported model flavor {mlflow_flavor}")
         raise Exception("Unsupported model flavor")

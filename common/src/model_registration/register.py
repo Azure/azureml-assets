@@ -245,7 +245,6 @@ def main(args):
     tc_log(f"model_metadata: {args.model_metadata}")
     tc_log(f"model_import_job_path: {args.model_import_job_path}")
 
-
     model = Model(
         name=model_name,
         version=model_version,
