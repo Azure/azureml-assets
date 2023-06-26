@@ -160,25 +160,25 @@ jobs:
     outputs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
-  # register_model:
-  #   component: azureml:register_model:0.0.3
-  #   compute: ${{parent.inputs.compute}}
-  #   resources:
-  #     instance_type: '${{parent.inputs.instance_type}}'
-  #   identity:
-  #     type: user_identity
-  #   inputs:
-  #     model_name: ${{parent.inputs.custom_model_name}}
-  #     model_version: ${{parent.inputs.model_version}}
-  #     model_description: ${{parent.inputs.model_description}}
-  #     registry_name: ${{parent.inputs.registry_name}}
-  #     model_metadata: ${{parent.inputs.model_metadata}}
-  #     model_type: mlflow_model
-  #     model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
-  #     model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
-  #     model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
-  #   outputs:
-  #     registration_details: ${{parent.outputs.model_registration_details}}
+  register_model:
+    component: azureml:register_model:0.0.3
+    compute: ${{parent.inputs.compute}}
+    resources:
+      instance_type: '${{parent.inputs.instance_type}}'
+    identity:
+      type: user_identity
+    inputs:
+      model_name: ${{parent.inputs.custom_model_name}}
+      model_version: ${{parent.inputs.model_version}}
+      model_description: ${{parent.inputs.model_description}}
+      registry_name: ${{parent.inputs.registry_name}}
+      model_metadata: ${{parent.inputs.model_metadata}}
+      model_type: mlflow_model
+      model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
+      model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
+      model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
+    outputs:
+      registration_details: ${{parent.outputs.model_registration_details}}
 
 tags:
     Preview: ""

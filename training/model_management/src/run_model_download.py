@@ -6,8 +6,7 @@
 import argparse
 import json
 from azureml.model.mgmt.downloader import download_model, ModelSource
-from azureml.model.mgmt.utils.common_utils import init_tc, tc_log
-from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
+from azureml.model.mgmt.utils.common_utils import init_tc, tc_log, check_model_id
 from typing import List
 
 HF_ENDPOINT = "https://huggingface.co"
@@ -22,16 +21,7 @@ def _get_parser():
     return parser
 
 
-def check_model_id(model_id):
-    """Hugging face model info."""
-    try:
-        model_list: List[ModelInfo] = HfApi(endpoint=HF_ENDPOINT).list_models(filter=ModelFilter(model_name=model_id))
-        for info in model_list:
-            if model_id == info.modelId:
-                return True
-    except Exception as e:
-        raise ValueError(f"Failed to validate model id : {e}")
-    return False
+
 
 
 if __name__ == "__main__":

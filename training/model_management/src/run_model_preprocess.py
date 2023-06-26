@@ -10,7 +10,7 @@ from azureml.model.mgmt.config import ModelFlavor
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
-from azureml.model.mgmt.utils.common_utils import init_tc, tc_log
+from azureml.model.mgmt.utils.common_utils import init_tc, tc_log, check_model_id
 from pathlib import Path
 import shutil
 
@@ -93,6 +93,10 @@ if __name__ == "__main__":
         tc_log(f"Unsupported model flavor {mlflow_flavor}")
         raise Exception("Unsupported model flavor")
 
+    if not check_model_id(model_id):
+        tc_log("Model id is not valid")
+        raise Exception(f"Model id {model_id} is not valid")
+
     preprocess_args = {}
     if model_download_metadata_path:
         with open(model_download_metadata_path) as f:
@@ -113,9 +117,6 @@ if __name__ == "__main__":
     tc_log(f"model_id: {model_id}")
     tc_log(f"task_name: {task_name}")
     tc_log(f"mlflow_flavor: {mlflow_flavor}")
-    tc_log(f"model_download_metadata_path: {model_download_metadata_path}")
-    tc_log(f"model_path: {model_path}")
-    tc_log(f"license_file_path: {license_file_path}")
 
     temp_output_dir = mlflow_model_output_dir / TMP_DIR
     working_dir = mlflow_model_output_dir / WORKING_DIR
