@@ -37,7 +37,12 @@ tags:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   license: apache-2.0
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'true'
+    apply_ort: 'true'
   task: text-classification
+  version: 8
 version: 7
 description: |
   This is a fine-tuned version of DistilBERT-base-uncased, trained on SST-2, which reached 91.3 % accuracy on the dev set. Developed by Hugging Face, it's mainly intended to be used for topic classification and can be fine-tuned on downstream tasks, but it's important to keep in mind that it has certain biases, such as biased predictions for certain underrepresented populations and that it should not be used to create hostile or alienating environments for people. Additionally, the authors used the Stanford Sentiment Treebank(sst2) corpora for training the model. 

@@ -37,7 +37,12 @@ tags:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   license: mit
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'true'
+    apply_ort: 'true'
   task: text-classification
+  version: 8
 version: 7
 description: |
   DeBERTa is an improvement of BERT and RoBERTa using disentangled attention and enhanced mask decoder. With 80GB training data, it outperforms BERT and RoBERTa on the majority of NLU tasks. The fine-tuned DeBERTa with MNLI task results in the best performance on SQuAD 1.1/2.0 and GLUE benchmark tasks. Further information is available in the official repository and the related paper.

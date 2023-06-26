@@ -36,7 +36,12 @@ tags:
   - Standard_ND24rs
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'true'
+    apply_ort: 'true'
   task: text-classification
+  version: 8
 version: 7
 description: |
   The pysentimiento library is an open-source tool for non-commercial use and scientific research purposes, used for Sentiment Analysis and Social NLP tasks. It was trained on about 40k tweets from the SemEval 2017 corpus, using the BERTweet - a RoBERTa model trained on English tweets and processes POS, NEG, and NEU labels. The Github repository link is https://github.com/finiteautomata/pysentimiento/  While using this model, it is important to keep in mind that they are trained with third-party datasets and are subject to their respective licenses.Additionally Publication details are also mentioned.
