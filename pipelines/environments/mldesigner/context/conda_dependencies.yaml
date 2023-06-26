@@ -8,5 +8,5 @@ dependencies:
   - azure-ai-ml=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - mldesigner=={{latest-pypi-version:pre}}
-  - cryptography==39.0.1
+  - cryptography==41.0.0
   - requests==2.31.0
