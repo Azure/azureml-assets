@@ -798,6 +798,10 @@ class AssetConfig(Config):
         # Compare versions using packaging's version object
         return version.parse(self.version) < version.parse(other.version)
 
+    def __hash__(self) -> int:
+        """Hash an AssetConfig object."""
+        return hash((self.type.value, self.name, self.version))
+
     def _validate(self):
         """Validate asset config.
 
