@@ -44,29 +44,20 @@ class HuggingfaceDownloader:
         self._model_id = model_id
         self._model_uri = self.HF_ENDPOINT + f"/{model_id}"
         self._hf_api = HfApi(endpoint=self.HF_ENDPOINT)
-        self._is_valid_id = None
         self._model_info = None
-
-    @property
-    def is_valid_id(self):
-        """Returns true if Hugging face model id is valid."""
-        if self._is_valid_id is None:
-            try:
-                self._is_valid_id = False
-                model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
-                for info in model_list:
-                    if self._model_id == info.modelId:
-                        self._model_info = info
-                        self._is_valid_id = True
-                        break
-            except Exception as e:
-                raise ValueError(f"Failed to validate model id : {e}")
-
-        return self._is_valid_id
 
     @property
     def model_info(self) -> ModelInfo:
         """Hugging face model info."""
+        if self._model_info is None:
+            try:
+                model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
+                for info in model_list:
+                    if self._model_id == info.modelId:
+                        self._model_info = info
+                        break
+            except Exception as e:
+                raise ValueError(f"Failed to validate model id : {e}")
         return self._model_info
 
     def _get_model_properties(self):
@@ -96,7 +87,7 @@ class HuggingfaceDownloader:
 
     def download_model(self, download_dir):
         """Download a Hugging face model and return details."""
-        if self.is_valid_id:
+        if self.model_info:
             download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
             model_props = self._get_model_properties()
             model_props.update(download_details)
