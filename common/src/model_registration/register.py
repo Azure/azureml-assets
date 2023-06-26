@@ -175,8 +175,6 @@ def main(args):
 
     init_tc()
 
-    tc_log(f"Args received {args}")
-
     ml_client = get_ml_client(registry_name)
 
     model_download_metadata = {}
@@ -234,6 +232,19 @@ def main(args):
                 model_version = str(int(max_version) + 1)
         except Exception:
             tc_log(f"Error in listing versions for model {model_name}. Trying to register model with version '1'")
+
+    tc_log("Arguments:")
+    tc_log(f"Model name: {model_name}")
+    tc_log(f"Model version: {model_version}")
+    tc_log(f"Model type: {model_type}")
+    tc_log(f"Model path: {model_path}")
+    tc_log(f"Model description: {model_description}")
+    tc_log(f"registry_name: {registry_name}")
+    tc_log(f"model_path: {model_path}")
+    tc_log(f"model_download_metadata: {model_download_metadata}")
+    tc_log(f"model_metadata: {args.model_metadata}")
+    tc_log(f"model_import_job_path: {args.model_import_job_path}")
+
 
     model = Model(
         name=model_name,

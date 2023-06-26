@@ -89,9 +89,7 @@ if __name__ == "__main__":
     model_import_job_path = args.model_import_job_path
     license_file_path = args.license_file_path
 
-    tc_log("Print args")
-    for arg, value in args.__dict__.items():
-        tc_log(f"{arg} => {value}")
+    
 
     if not ModelFlavor.has_value(mlflow_flavor):
         tc_log(f"Unsupported model flavor {mlflow_flavor}")
@@ -112,6 +110,14 @@ if __name__ == "__main__":
         _validate_transformers_args(preprocess_args)
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         _validate_pyfunc_args(preprocess_args)
+
+    tc_log("Print args")
+    tc_log(f"model_id: {model_id}")
+    tc_log(f"task_name: {task_name}")
+    tc_log(f"mlflow_flavor: {mlflow_flavor}")
+    tc_log(f"model_download_metadata_path: {model_download_metadata_path}")
+    tc_log(f"model_path: {model_path}")
+    tc_log(f"license_file_path: {license_file_path}")
 
     temp_output_dir = mlflow_model_output_dir / TMP_DIR
     working_dir = mlflow_model_output_dir / WORKING_DIR
