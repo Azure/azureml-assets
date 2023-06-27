@@ -28,7 +28,7 @@ dependencies:
   - accelerate==0.20.3
   - Pillow==9.4.0
   - azureml-evaluate-mlflow==0.0.14.post1
-  - wget=3.2
+  - wget==3.2
   - more-itertools==9.1.0
   - ffmpeg-python==0.2.0
 name: mlflow-env
