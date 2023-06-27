@@ -240,12 +240,12 @@ def validate_and_prepare_pipeline_component(
     return True
 
 
-def validate_update_command_component(
+def validate_update_component(
     spec_path: Path,
     version_suffix: str,
     registry_name: str,
 ) -> bool:
-    """Validate and update command component spec.
+    """Validate and update component spec.
 
     :param spec_path: Path of loaded component
     :type spec_path: Path
@@ -265,7 +265,7 @@ def validate_update_command_component(
 
     component_name = component_dict['name']
     component_env = component_dict['environment']
-    logger.print(f"Preparing command component {component_name}")
+    logger.print(f"Preparing component {component_name}")
 
     try:
         env_name, env_version, env_label, env_registry_name = get_parsed_details_from_asset_uri(
@@ -422,7 +422,9 @@ def get_asset_details(
     ]
     result = run_command(cmd)
     if result.returncode != 0:
-        logger.log_error(f"Failed to get asset details: {result.stderr}")
+        if "Could not find asset" not in result.stderr:
+            # Don't show the error if it's expected for new assets
+            logger.log_error(f"Failed to get asset details: {result.stderr}")
         return None
     return json.loads(result.stdout)
 
@@ -567,8 +569,9 @@ if __name__ == "__main__":
                         ):
                             failure_list.append(asset)
                             continue
-                    elif component_type is None or component_type == assets.ComponentType.COMMAND.value:
-                        if not validate_update_command_component(
+                    elif component_type is None or component_type in [assets.ComponentType.COMMAND.value,
+                                                                      assets.ComponentType.PARALLEL.value]:
+                        if not validate_update_component(
                             asset.spec_with_path, passed_version, registry_name
                         ):
                             failure_list.append(asset)
