@@ -140,7 +140,6 @@ def tc_log(message):
         tc.flush()
     except Exception as e:
         print(f"Exception while logging to app insights: {e}")
-    
 
 
 def tc_exception(e, message):

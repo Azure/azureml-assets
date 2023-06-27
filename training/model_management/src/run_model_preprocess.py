@@ -10,7 +10,7 @@ from azureml.model.mgmt.config import ModelFlavor
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
-from azureml.model.mgmt.utils.common_utils import init_tc, tc_log, check_model_id
+from azureml.model.mgmt.utils.common_utils import init_tc, tc_log
 from pathlib import Path
 import shutil
 
