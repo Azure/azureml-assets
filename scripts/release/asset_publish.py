@@ -342,7 +342,7 @@ def validate_update_component(
         # Parallel component
         obj_with_env = component_dict['task']
     else:
-        logger.log_error(f"Environment references not found in {component_name}")
+        logger.log_error(f"Environment reference not found in {component_name}")
         return False
 
     # Update environment reference
