@@ -22,6 +22,7 @@ command: |
   echo "conda env successfully created at $ENV_PREFIX"
   echo "Install appinsights additionally, for logging"
   conda install applicationinsights -p $ENV_PREFIX -c  conda-forge -y -q
+  conda list -p $ENV_PREFIX
   conda run -p $ENV_PREFIX python run_model_sanity_validations.py --model-path ${{inputs.model_path}} $[[--test-data-path ${{inputs.test_data_path}}]] $[[--column-rename-map "${{inputs.column_rename_map}}"]] --output-model-path ${{outputs.mlflow_model_folder}}
 
 inputs:
