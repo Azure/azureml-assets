@@ -12,6 +12,7 @@ from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
+from azureml.model.mgmt.utils.common_utils import init_tc, tc_log
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -65,25 +66,31 @@ def _get_parser():
 
 def _validate_transformers_args(args):
     if not args.get("model_id"):
+        tc_log("model_id is a required parameter for hftransformers mlflow flavor.")
         raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
     if not args.get("task"):
+        tc_log("task is a required parameter for hftransformers mlflow flavor.")
         raise Exception("task is a required parameter for hftransformers mlflow flavor.")
     task = args["task"]
     if not SupportedTasks.has_value(task):
+        tc_log(f"Unsupported task {task} for hftransformers mlflow flavor.")
         raise Exception(f"Unsupported task {task} for hftransformers mlflow flavor.")
 
 
 def _validate_pyfunc_args(pyfunc_args):
     if not pyfunc_args.get("task"):
+        tc_log("task is a required parameter for pyfunc flavor.")
         raise Exception("task is a required parameter for pyfunc flavor.")
     task = pyfunc_args["task"]
     if not Tasks.has_value(task):
+        tc_log(f"Unsupported task {task} for pyfunc flavor.")
         raise Exception(f"Unsupported task {task} for pyfunc flavor.")
 
 
 if __name__ == "__main__":
     parser = _get_parser()
     args, _ = parser.parse_known_args()
+    init_tc()
 
     model_id = args.model_id
     task_name = args.task_name
@@ -103,11 +110,8 @@ if __name__ == "__main__":
     model_import_job_path = args.model_import_job_path
     license_file_path = args.license_file_path
 
-    print("##### Print args #####")
-    for arg, value in args.__dict__.items():
-        print(f"{arg} => {value}")
-
     if not ModelFlavor.has_value(mlflow_flavor):
+        tc_log(f"Unsupported model flavor {mlflow_flavor}")
         raise Exception("Unsupported model flavor")
 
     preprocess_args = {}
@@ -129,13 +133,18 @@ if __name__ == "__main__":
     preprocess_args[HF_CONF.HF_PRETRAINED_CLASS.value] = hf_model_class
     preprocess_args[HF_CONF.HF_TOKENIZER_CLASS.value] = hf_tokenizer_class
 
-    print(f"preprocess_args =>\n{preprocess_args}")
+    tc_log(f"Preprocess args : {preprocess_args}")
 
     # TODO: move validations to respective convertors
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
         _validate_transformers_args(preprocess_args)
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         _validate_pyfunc_args(preprocess_args)
+
+    tc_log("Print args")
+    tc_log(f"model_id: {model_id}")
+    tc_log(f"task_name: {task_name}")
+    tc_log(f"mlflow_flavor: {mlflow_flavor}")
 
     with TemporaryDirectory(dir=mlflow_model_output_dir) as working_dir, TemporaryDirectory(
         dir=mlflow_model_output_dir
@@ -147,7 +156,7 @@ if __name__ == "__main__":
     if license_file_path:
         shutil.copy(license_file_path, mlflow_model_output_dir)
 
-    print(f"\nlisting output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
+    tc_log(f"listing output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
 
     # Add job path
     this_job = os.environ["MLFLOW_RUN_ID"]
@@ -156,3 +165,4 @@ if __name__ == "__main__":
     json_object = json.dumps(model_path_dict, indent=4)
     with open(model_import_job_path, "w") as outfile:
         outfile.write(json_object)
+    tc_log("Finished writing job path")

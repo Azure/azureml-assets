@@ -102,9 +102,9 @@ def compute_max_violation(
     max_threshold_violation_count = []
     feature_name_list = []
 
-    numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint"]
+    numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint", "long"]
 
-    for row in data_stats_table.select("featureName").distinct().collect():
+    for row in data_stats_table.filter(col("min_value").isNotNull()).select("featureName").distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
@@ -159,9 +159,9 @@ def compute_min_violation(
     min_threshold_violation_count = []
     feature_name_list = []
 
-    numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint"]
+    numerical_types = ["double", "float", "int", "bigint", "smallint", "tinyint", "long"]
 
-    for row in data_stats_table.select("featureName").distinct().collect():
+    for row in data_stats_table.filter(col("max_value").isNotNull()).select("featureName").distinct().collect():
         feature_name = row["featureName"]
 
         if feature_name not in df.columns:
@@ -219,7 +219,9 @@ def compute_set_violation(
     feature_name_list = []
 
     for c in (
-        data_stats_table.select("featureName")
+        data_stats_table
+        .filter(col("set").isNotNull())
+        .select("featureName")
         .distinct()
         .rdd.flatMap(lambda x: x)
         .collect()
@@ -235,7 +237,7 @@ def compute_set_violation(
             )
             feature_name_list.append(c)
         else:
-            set_threshold_violation_count.append(None)
+            set_threshold_violation_count.append(0)
             feature_name_list.append(c)
 
     threshold_violation_df = spark.createDataFrame(
@@ -278,12 +280,18 @@ def compute_dtype_violation_count_modify_dataset(
 
     # Loop through each column in the original DataFrame
     for column in df.columns:
-        dtype_baseline = (
-            data_stats_table_mod.select(["featureName", "dataType"])
-            .filter(data_stats_table_mod.featureName == column)
-            .select("dataType")
-            .collect()[0][0]
-        )
+
+        dtype_baseline = data_stats_table_mod.select(["featureName", "dataType"]) \
+            .filter(data_stats_table_mod.featureName == column) \
+            .select("dataType")\
+            .collect()
+
+        if not dtype_baseline:
+            print(f"Feature '{column}' is not present in data statistics. " +
+                  f"Skipping data type violation count for '{column}'.")
+            continue
+
+        dtype_baseline = dtype_baseline[0][0]
 
         # Cast the column to datatype from baseline reference column and count the number of errors
         num_errors = (
@@ -495,6 +503,7 @@ def compute_data_quality_metrics(df, data_stats_table):
     violation_df_remapped = violation_df_remapped.withColumn(
         "dataType",
         when(col("dataType") == "DoubleType()", "Numerical")
+        .when(col("dataType") == "LongType()", "Numerical")
         .when(col("dataType") == "StringType()", "Categorical")
         .otherwise(col("dataType")),
     )

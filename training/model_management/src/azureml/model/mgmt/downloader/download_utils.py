@@ -74,7 +74,7 @@ def _download_azure_artifacts(model_uri, model_dir):
     :type: Path
     """
     try:
-        download_cmd = f"azcopy cp --recursive=true {model_uri} {model_dir}"
+        download_cmd = f"azcopy cp --recursive=true '{model_uri}' {model_dir}"
         # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
         # https://github.com/Azure/azureml-assets/issues/283
         exit_code, stdout = run_command(download_cmd)

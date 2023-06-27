@@ -15,10 +15,44 @@ from azure.ai.ml.entities import Model
 from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.core import Run
+from applicationinsights import TelemetryClient
 
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
 MLFLOW_MODEL_FOLDER = "mlflow_model_folder"
+
+tc = None
+
+
+def init_tc():
+    """Initialize telemetry client."""
+    global tc
+    if tc is None:
+        try:
+            tc = TelemetryClient("71b954a8-6b7d-43f5-986c-3d3a6605d803")
+        except Exception as e:
+            print(f"Exception while initializing app insights: {e}")
+
+
+def tc_log(message):
+    """Log message to app insights."""
+    global tc
+    try:
+        print(message)
+        tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message": message})
+        tc.flush()
+    except Exception as e:
+        print(f"Exception while logging to app insights: {e}")
+
+
+def tc_exception(e, message):
+    """Log exception to app insights."""
+    global tc
+    try:
+        tc.track_exception(value=e.__class__, properties={"exception": message})
+        tc.flush()
+    except Exception as e:
+        print(f"Exception while logging exception to app insights: {e}")
 
 
 def parse_args():
@@ -80,7 +114,7 @@ def parse_args():
         default=None,
     )
     args = parser.parse_args()
-    print("args received ", args)
+    tc_log(f"Args received {args}")
     return args
 
 
@@ -94,7 +128,7 @@ def get_ml_client(registry_name):
         has_obo_succeeded = True
     except Exception as ex:
         # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
-        print(f"Failed to get OBO credentials - {ex}")
+        tc_exception(ex, f"Failed to get OBO credentials - {ex}")
 
     if not has_obo_succeeded:
         try:
@@ -102,6 +136,7 @@ def get_ml_client(registry_name):
             credential = ManagedIdentityCredential(client_id=msi_client_id)
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
+            tc_exception(ex, f"Failed to get MSI credentials : {ex}")
             raise (f"Failed to get MSI credentials : {ex}")
 
     if registry_name is None:
@@ -113,6 +148,7 @@ def get_ml_client(registry_name):
             resource_group_name=ws._resource_group,
             workspace_name=ws._workspace_name,
         )
+    tc_log(f"Creating MLClient with registry name {registry_name}")
     return MLClient(credential=credential, registry_name=registry_name)
 
 
@@ -122,7 +158,8 @@ def is_model_available(ml_client, model_name, model_version):
     try:
         ml_client.models.get(name=model_name, version=model_version)
     except Exception as e:
-        print(f"Model with name - {model_name} and version - {model_version} is not available. Error: {e}")
+        tc_exception(e, f"Model with name - {model_name} and version - "
+                     "{model_version} is not available. Error: {e}")
         is_available = False
     return is_available
 
@@ -137,6 +174,8 @@ def main(args):
     registration_details = args.registration_details
     model_version = args.model_version
     tags, properties, flavors = {}, {}, {}
+
+    init_tc()
 
     ml_client = get_ml_client(registry_name)
 
@@ -160,24 +199,26 @@ def main(args):
 
     # validations
     if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
+        tc_log(f"Unsupported model type {model_type}")
         raise Exception(f"Unsupported model type {model_type}")
 
     if not model_name:
+        tc_log("Missing Model Name. Provide model_name as input or in the model_download_metadata JSON")
         raise Exception("Missing Model Name. Provide model_name as input or in the model_download_metadata JSON")
 
     # check if we can have lineage and update the model path for ws import
     if not registry_name and args.model_import_job_path:
-        print("Using model output of previous job as run lineage to register the model")
+        tc_log("Using model output of previous job as run lineage to register the model")
         with open(args.model_import_job_path) as f:
             model_import_job_path = json.load(f)
         model_path = model_import_job_path.get("path", model_path)
     elif model_type == AssetTypes.MLFLOW_MODEL:
         if not os.path.exists(os.path.join(model_path, MLFLOW_MODEL_FOLDER)):
-            print(f"Making sure, model parent directory is `{MLFLOW_MODEL_FOLDER}`.")
+            tc_log(f"Making sure, model parent directory is `{MLFLOW_MODEL_FOLDER}`")
             shutil.copytree(model_path, MLFLOW_MODEL_FOLDER, dirs_exist_ok=True)
             model_path = MLFLOW_MODEL_FOLDER
         mlmodel_path = os.path.join(model_path, "MLmodel")
-        print(f"MLModel path: {mlmodel_path}")
+        tc_log(f"MLModel path: {mlmodel_path}")
         with open(mlmodel_path, "r") as stream:
             metadata = yaml.safe_load(stream)
             flavors = metadata.get('flavors', flavors)
@@ -192,7 +233,10 @@ def main(args):
                 max_version = (max(models_list, key=lambda x: int(x.version))).version
                 model_version = str(int(max_version) + 1)
         except Exception:
-            print(f"Error in listing versions for model {model_name}. Trying to register model with version '1'.")
+            tc_log(f"Error in listing versions for model {model_name}. Trying to register model with version '1'")
+
+    tc_log("Arguments:")
+    tc_log(f"Model type: {model_type}")
 
     model = Model(
         name=model_name,
@@ -206,10 +250,9 @@ def main(args):
     )
 
     # register the model in workspace or registry
-    print("Registering model ....")
+    tc_log(f"Registering model {model_name} with version {model_version}.")
     registered_model = ml_client.models.create_or_update(model)
-    print(f"Model registered. AssetID : {registered_model.id}")
-
+    tc_log(f"Model registered. AssetID : {registered_model.id}")
     # Registered model information
     model_info = {
         "id": registered_model.id,
@@ -226,7 +269,7 @@ def main(args):
 
     with open(registration_details, "w") as outfile:
         outfile.write(json_object)
-    print("Saved model registration details in output json file.")
+    tc_log("Saved model registration details in output json file.")
 
 
 # run script

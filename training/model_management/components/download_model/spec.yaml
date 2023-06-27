@@ -9,13 +9,13 @@ is_deterministic: True
 display_name: Download model
 description: Downloads a publicly available model
 
-environment: azureml://registries/azureml/environments/model-management/versions/7
+environment: azureml://registries/azureml/environments/model-management/versions/9
 
 code: ../../src/
 command: >
   python run_model_download.py
   --model-source ${{inputs.model_source}}
-  --model-id ${{inputs.model_id}}
+  --model-id '${{inputs.model_id}}'
   --model-download-metadata ${{outputs.model_download_metadata}}
   --model-output-dir ${{outputs.model_output}}
 
@@ -45,3 +45,4 @@ outputs:
 
 tags:
     Preview: ""
+

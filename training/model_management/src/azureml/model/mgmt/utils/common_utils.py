@@ -16,7 +16,12 @@ from contextlib import contextmanager
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Any, Dict, List, Tuple
+from applicationinsights import TelemetryClient
+from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
 
+
+tc = None
+HF_ENDPOINT = "https://huggingface.co"
 
 KV_COLON_SEP = ":"
 KV_EQ_SEP = "="
@@ -173,3 +178,46 @@ def get_list_from_comma_separated_str(list_str: str, item_sep: str) -> List:
     if not list_str:
         return []
     return [x.strip() for x in list_str.split(item_sep) if x]
+
+
+def init_tc():
+    """Initialize app insights telemetry client."""
+    global tc
+    if tc is None:
+        try:
+            tc = TelemetryClient("71b954a8-6b7d-43f5-986c-3d3a6605d803")
+        except Exception as e:
+            print(f"Exception while initializing app insights: {e}")
+
+
+def tc_log(message):
+    """Log message to app insights."""
+    global tc
+    try:
+        print(message)
+        tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message": message})
+        tc.flush()
+    except Exception as e:
+        print(f"Exception while logging to app insights: {e}")
+
+
+def tc_exception(e, message):
+    """Log exception to app insights."""
+    global tc
+    try:
+        tc.track_exception(value=e.__class__, properties={"exception": message})
+        tc.flush()
+    except Exception as e:
+        print(f"Exception while logging exception to app insights: {e}")
+
+
+def check_model_id(model_id):
+    """Hugging face model info."""
+    try:
+        model_list: List[ModelInfo] = HfApi(endpoint=HF_ENDPOINT).list_models(filter=ModelFilter(model_name=model_id))
+        for info in model_list:
+            if model_id == info.modelId:
+                return True
+    except Exception as e:
+        raise ValueError(f"Failed to validate model id : {e}")
+    return False

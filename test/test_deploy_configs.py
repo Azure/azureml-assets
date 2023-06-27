@@ -22,6 +22,7 @@ def test_load():
     # Test create
     assert config.create[AssetType.COMPONENT] == ["component1", "component2"]
     assert config.create[AssetType.MODEL] == ["model1", "model2"]
+    assert config.should_create(AssetType.COMPONENT, "component1") is True
 
     # Test update
     env_updates = config.update[AssetType.ENVIRONMENT]

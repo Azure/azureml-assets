@@ -11,7 +11,6 @@ from huggingface_hub.hf_api import HfApi, ModelFilter, ModelInfo
 from pathlib import Path
 from typing import List
 
-
 PROPERTIES = [
     "SHA",
     "last_modified",
@@ -43,18 +42,21 @@ class HuggingfaceDownloader:
         """
         self._model_id = model_id
         self._model_uri = self.HF_ENDPOINT + f"/{model_id}"
-        self._model_info = None
         self._hf_api = HfApi(endpoint=self.HF_ENDPOINT)
+        self._model_info = None
 
     @property
     def model_info(self) -> ModelInfo:
         """Hugging face model info."""
-        if not self._model_info:
-            model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
-            for info in model_list:
-                if self._model_id == info.modelId:
-                    self._model_info = info
-                    break
+        if self._model_info is None:
+            try:
+                model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
+                for info in model_list:
+                    if self._model_id == info.modelId:
+                        self._model_info = info
+                        break
+            except Exception as e:
+                raise ValueError(f"Failed to validate model id : {e}")
         return self._model_info
 
     def _get_model_properties(self):
@@ -89,17 +91,24 @@ class HuggingfaceDownloader:
 
     def download_model(self, download_dir):
         """Download a Hugging face model and return details."""
-        download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
-        model_props = self._get_model_properties()
-        model_props.update(download_details)
-        tags = {k: model_props[k] for k in TAGS if k in model_props}
-        props = {k: model_props[k] for k in PROPERTIES if k in model_props}
-        return {
-            "name": "-".join(self._model_id.split("/")),
-            "tags": tags,
-            "properties": props,
-            "misc": model_props.get("misc"),
-        }
+        if self.model_info:
+            download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
+            model_props = self._get_model_properties()
+            model_props.update(download_details)
+            tags = {k: model_props[k] for k in TAGS if k in model_props}
+            props = {k: model_props[k] for k in PROPERTIES if k in model_props}
+            return {
+                "name": "-".join(self._model_id.split("/")),
+                "tags": tags,
+                "properties": props,
+                "misc": model_props.get("misc"),
+            }
+        else:
+            error_msg = (
+                    f"Invalid Hugging face model id: {self._model_id}."
+                    "Please ensure that you are using a correct and existing model ID"
+            )
+            raise ValueError(error_msg)
 
 
 class GITDownloader:
