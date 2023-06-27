@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/distilbert-base-uncased-finetuned-sst-2-english/3d65bad/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model

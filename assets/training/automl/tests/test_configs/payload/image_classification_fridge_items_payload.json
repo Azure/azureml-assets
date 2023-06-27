@@ -1,0 +1,199 @@
+{
+    "graph": {
+        "datasetNodes": [
+            {
+                "id": "validation_data",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "path": "",
+                            "type": "MLTable",
+                            "assetId": ""
+                        }
+                    }
+                }
+            },
+            {
+                "id": "training_data",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "path": "",
+                            "type": "MLTable",
+                            "assetId": ""
+                        }
+                    }
+                }
+            }
+        ],
+        "moduleNodes": [
+            {
+                "id": "automl_node",
+                "moduleId": "module_id",
+                "comment": "",
+                "name": "automl_image_classification",
+                "moduleParameters": [],
+                "moduleMetadataParameters": [],
+                "moduleOutputSettings": [],
+                "useGraphDefaultCompute": false,
+                "useGraphDefaultDatastore": true,
+                "regenerateOutput": true
+            }
+        ],
+        "subGraphNodes": [],
+        "edges": [
+            {
+                "sourceOutputPort": {
+                    "nodeId": "validation_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "validation_data"
+                }
+            },
+            {
+                "sourceOutputPort": {
+                    "nodeId": "training_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "training_data"
+                }
+            }
+        ],
+        "entityInterface": {
+            "parameters": [],
+            "dataPathParameters": [],
+            "dataPathParameterList": [],
+            "ports": {
+                "inputs": [],
+                "outputs": [],
+                "controlOutputs": []
+            }
+        },
+        "defaultCompute": {
+            "name": "gpu-cluster",
+            "computeType": "BatchAi",
+            "mlcComputeInfo": {
+                "mlcComputeType": "AmlCompute"
+            }
+        },
+        "defaultDatastore": {
+            "dataStoreName": "workspaceblobstore"
+        }
+    },
+    "flattenedSubGraphs": {},
+    "pipelineRunSettings": [
+        {
+            "valueType": "Literal",
+            "name": "Priority Scope"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Priority Compute cluster"
+        },
+        {
+            "name": "Continue run on step failure",
+            "value": "True",
+            "valueType": "Literal"
+        }
+    ],
+    "moduleNodeRunSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "module_id",
+            "stepType": "automl",
+            "runSettings": [
+                {
+                    "useGraphDefaultCompute": true,
+                    "valueType": "Literal",
+                    "name": "Target",
+                    "value": "gpu-cluster",
+                    "mlcComputeType": "AmlCompute"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "PrimaryMetric",
+                    "value": "Accuracy"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "TargetColumnName",
+                    "value": "label"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "SearchSpace",
+                    "value": "[{\"learning_rate\":\"uniform(0.001,0.01)\",\"number_of_epochs\":\"choice(15, 30)\",\"model_name\":\"vitb16r224\"}]"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "SamplingAlgorithm",
+                    "value": "Random"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "PolicyType",
+                    "value": "Bandit"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "EvaluationInterval",
+                    "value": "2"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "DelayEvaluation",
+                    "value": "6"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "SlackFactor",
+                    "value": "0.2"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Timeout",
+                    "value": "1.00"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "MaxTrials",
+                    "value": "1"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "MaxConcurrentTrials",
+                    "value": "1"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "ValidationType"
+                }
+            ]
+        }
+    ],
+    "moduleNodeUIInputSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "module_id",
+            "moduleInputSettings": [
+                {
+                    "name": "training_data",
+                    "dataDeliveryMode": "Direct"
+                },
+                {
+                    "name": "validation_data",
+                    "dataDeliveryMode": "Direct"
+                }
+            ]
+        }
+    ],
+    "continueRunOnStepFailure": true,
+    "enforceRerun": true,
+    "experimentName": "automl_designer_validation",
+    "computeTarget": "gpu-cluster",
+    "displayName": "image_classification"
+}

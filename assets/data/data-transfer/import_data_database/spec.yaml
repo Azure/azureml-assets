@@ -1,0 +1,15 @@
+$schema: http://azureml/sdk-2-0/DataTransferComponent.json
+name: import_data_database
+display_name: import_data_database (Preview)
+description:
+  Component that import data from database as mltable data asset within an Azure Machine Learning pipeline.
+  For more details, you can look at the component documentation [here](https://aka.ms/ai-components) (Preview).
+version: 0.0.1
+type: data_transfer
+task: import_data
+
+source:
+  type: database
+outputs:
+  sink:
+    type: mltable

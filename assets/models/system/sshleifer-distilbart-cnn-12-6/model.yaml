@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/sshleifer-distilbart-cnn-12-6/a4f8f3e/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model

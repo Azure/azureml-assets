@@ -1,0 +1,26 @@
+[
+  {
+    "name": "High Tax",
+    "cohort_filter_list": [
+      {
+        "method": "greater",
+        "arg": [
+          300
+        ],
+        "column": "TAX"
+      }
+    ]
+  },
+  {
+    "name": "Low Tax",
+    "cohort_filter_list": [
+      {
+        "method": "less",
+        "arg": [
+          300
+        ],
+        "column": "TAX"
+      }
+    ]
+  }
+]

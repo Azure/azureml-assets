@@ -1,0 +1,190 @@
+{
+    "graph": {
+        "datasetNodes": [
+            {
+                "id": "validation_data",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "path": "",
+                            "type": "MLTable",
+                            "assetId": ""
+                        }
+                    }
+                }
+            },
+            {
+                "id": "training_data",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "path": "",
+                            "type": "MLTable",
+                            "assetId": ""
+                        }
+                    }
+                }
+            }
+        ],
+        "moduleNodes": [
+            {
+                "id": "automl_node",
+                "moduleId": "",
+                "comment": "",
+                "name": "automl_image_object_detection",
+                "moduleParameters": [],
+                "useGraphDefaultCompute": true,
+                "useGraphDefaultDatastore": true,
+                "regenerateOutput": true
+            }
+        ],
+        "subGraphNodes": [],
+        "controlReferenceNodes": [],
+        "edges": [
+            {
+                "sourceOutputPort": {
+                    "nodeId": "validation_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "validation_data"
+                }
+            },
+            {
+                "sourceOutputPort": {
+                    "nodeId": "training_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "training_data"
+                }
+            }
+        ],
+        "defaultCompute": {
+            "name": "gpu-cluster",
+            "computeType": "BatchAi",
+            "mlcComputeInfo": {
+                "mlcComputeType": "AmlCompute"
+            }
+        },
+        "defaultDatastore": {
+            "dataStoreName": "workspaceblobstore"
+        }
+    },
+    "flattenedSubGraphs": {},
+    "pipelineRunSettings": [
+        {
+            "valueType": "Literal",
+            "name": "Priority Scope"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Priority Compute cluster"
+        },
+        {
+            "name": "Continue run on step failure",
+            "value": "True",
+            "valueType": "Literal"
+        }
+    ],
+    "moduleNodeRunSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "",
+            "stepType": "automl",
+            "runSettings": [
+                {
+                    "useGraphDefaultCompute": true,
+                    "mlcComputeType": "AmlCompute",
+                    "valueType": "Literal",
+                    "name": "Target",
+                    "value": "gpu-cluster"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "PrimaryMetric",
+                    "value": "MeanAveragePrecision"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "TargetColumnName",
+                    "value": "label"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "SearchSpace",
+                    "value": "[{\"learning_rate\":\"uniform(0.0001, 0.001,)\",\"min_size\":\"choice(600, 800)\",\"optimizer\":\"choice(sgd, adam, adamw)\",\"model_name\":\"fasterrcnn_resnet50_fpn\"}]"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "SamplingAlgorithm",
+                    "value": "Random"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "PolicyType",
+                    "value": "Bandit"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "EvaluationInterval",
+                    "value": "2"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "DelayEvaluation",
+                    "value": "6"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "SlackFactor",
+                    "value": "0.2"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "Timeout",
+                    "value": "1.00"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "MaxTrials",
+                    "value": "1"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "MaxConcurrentTrials",
+                    "value": "1"
+                },
+                {
+                    "valueType": "Literal",
+                    "name": "ValidationType"
+                }
+            ]
+        }
+    ],
+    "moduleNodeUIInputSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "",
+            "moduleInputSettings": [
+                {
+                    "name": "training_data",
+                    "dataDeliveryMode": "Direct",
+                    "isConnected": true
+                },
+                {
+                    "name": "validation_data",
+                    "dataDeliveryMode": "Direct",
+                    "isConnected": true
+                }
+            ]
+        }
+    ],
+    "experimentName": "automl_designer_validation",
+    "computeTarget": "gpu-cluster",
+    "displayName": "image_object_detection",
+    "continueRunOnStepFailure": true,
+    "enforceRerun": true
+}

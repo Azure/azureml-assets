@@ -1,0 +1,34 @@
+channels:
+- anaconda
+- pytorch
+- conda-forge
+dependencies:
+- python=3.8.16
+- pip<=23.0.1
+- ffmpeg=4.2.2
+- pip:
+  - mlflow==2.3.1
+  - cloudpickle==2.2.1
+  - jsonpickle==3.0.1
+  - mlflow-skinny==2.3.1
+  - azureml-core==1.51.0.post1
+  - azureml-mlflow==1.51.0
+  - azureml-metrics==0.0.14.post1
+  - scikit-learn==0.24.2
+  - cryptography==41.0.1
+  - python-dateutil==2.8.2
+  - datasets==2.11.0
+  - soundfile==0.12.1
+  - librosa==0.10.0.post2
+  - diffusers==0.14.0
+  - sentencepiece==0.1.97
+  - transformers==4.30.2
+  - torch==2.0.1
+  - torchaudio
+  - accelerate==0.20.3
+  - Pillow==9.4.0
+  - azureml-evaluate-mlflow==0.0.14.post1
+  - wget==3.2
+  - more-itertools==9.1.0
+  - ffmpeg-python==0.2.0
+name: mlflow-env

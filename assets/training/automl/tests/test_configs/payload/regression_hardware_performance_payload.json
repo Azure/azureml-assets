@@ -1,0 +1,165 @@
+{
+    "graph": {
+        "datasetNodes": [
+            {
+                "id": "training_data",
+                "amlDataStoreName": "",
+                "relativePath": "",
+                "dataSetDefinition": {
+                    "dataTypeShortName": "MLTable",
+                    "value": {
+                        "assetDefinition": {
+                            "assetId": "",
+                            "path": "",
+                            "type": "MLTable"
+                        }
+                    }
+                }
+            }
+        ],
+        "moduleNodes": [
+            {
+                "id": "automl_node",
+                "moduleId": " ",
+                "moduleParameters": [],
+                "useGraphDefaultCompute": true,
+                "useGraphDefaultDatastore": true,
+                "regenerateOutput": true,
+                "comment": "",
+                "name": "automl_regression"
+            }
+        ],
+        "subGraphNodes": [],
+        "edges": [
+            {
+                "sourceOutputPort": {
+                    "nodeId": "training_data"
+                },
+                "destinationInputPort": {
+                    "nodeId": "automl_node",
+                    "portName": "training_data"
+                }
+            }
+        ],
+        "defaultCompute": {
+            "name": "cpu-cluster",
+            "mlcComputeInfo": {
+                "mlcComputeType": "AmlCompute"
+            }
+        },
+        "defaultDatastore": {
+            "dataStoreName": "workspaceblobstore"
+        }
+    },
+    "flattenedSubGraphs": {},
+    "pipelineRunSettings": [
+        {
+            "valueType": "Literal",
+            "name": "Priority Scope"
+        },
+        {
+            "valueType": "Literal",
+            "name": "Priority Compute cluster"
+        },
+        {
+            "name": "Continue run on step failure",
+            "value": "True",
+            "valueType": "Literal"
+        }
+    ],
+    "moduleNodeRunSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": "",
+            "stepType": "automl",
+            "runSettings": [
+                {
+                    "name": "Target",
+                    "value": "cpu-cluster",
+                    "useGraphDefaultCompute": true,
+                    "valueType": "Literal",
+                    "mlcComputeType": "AmlCompute"
+                },
+                {
+                    "name": "PrimaryMetric",
+                    "value": "R2Score",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "TargetColumnName",
+                    "value": "ERP",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "EnableModelExplainability",
+                    "value": "false",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "Use all supported models",
+                    "value": "True",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "BlockListModels",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "MaxTrials",
+                    "value": "4",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "Timeout",
+                    "value": "1",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "MaxConcurrentTrials",
+                    "value": "1",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "ExitScore",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "NCrossValidations",
+                    "value": "5",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "ValidationType",
+                    "value": "k-folder cross validation",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "TestDataSize",
+                    "valueType": "Literal"
+                },
+                {
+                    "name": "Mode",
+                    "value": "Auto",
+                    "valueType": "Literal"
+                }
+            ]
+        }
+    ],
+    "moduleNodeUIInputSettings": [
+        {
+            "nodeId": "automl_node",
+            "moduleId": " ",
+            "moduleInputSettings": [
+                {
+                    "name": "training_data",
+                    "dataDeliveryMode": "Direct"
+                }
+            ]
+        }
+    ],
+    "experimentName": "automl_designer_validation",
+    "computeTarget": "cpu-cluster",
+    "displayName": "regression",
+    "continueRunOnStepFailure": true,
+    "enforceRerun": true
+}
