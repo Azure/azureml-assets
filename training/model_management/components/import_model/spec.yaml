@@ -119,7 +119,7 @@ outputs:
 
 jobs:
   download_model:
-    component: azureml:download_model:0.0.3
+    component: azureml:download_model:0.0.4
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -133,7 +133,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.5
+    component: azureml:convert_model_to_mlflow:0.0.6
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -149,7 +149,7 @@ jobs:
         type: uri_file
 
   mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.2
+    component: azureml:mlflow_model_local_validation:0.0.3
     compute: ${{parent.inputs.local_validation_compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -161,7 +161,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml:register_model:0.0.2
+    component: azureml:register_model:0.0.3
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

@@ -17,8 +17,11 @@ from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Any, Dict, Tuple
 from applicationinsights import TelemetryClient
+from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
+from typing import List
 
 tc = None
+HF_ENDPOINT = "https://huggingface.co"
 
 
 def log_execution_time(func, logger=None):
@@ -148,4 +151,19 @@ def tc_exception(e, message):
         tc.flush()
     except Exception as e:
         print(f"Exception while logging exception to app insights: {e}")
+<<<<<<< HEAD
     
+=======
+
+
+def check_model_id(model_id):
+    """Hugging face model info."""
+    try:
+        model_list: List[ModelInfo] = HfApi(endpoint=HF_ENDPOINT).list_models(filter=ModelFilter(model_name=model_id))
+        for info in model_list:
+            if model_id == info.modelId:
+                return True
+    except Exception as e:
+        raise ValueError(f"Failed to validate model id : {e}")
+    return False
+>>>>>>> main
