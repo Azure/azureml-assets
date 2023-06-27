@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: microsoft-swinv2-base-patch4-window12-192-22k
+path: ./
+properties:
+  SHA: 787136395d17f54db4265d71143193d68107bf49
+  datasets: imagenet-1k
+  finetuning-tasks: image-classification
+tags:
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS3_v2
+  task: image-classification
+version: 1
