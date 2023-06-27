@@ -151,9 +151,6 @@ def tc_exception(e, message):
         tc.flush()
     except Exception as e:
         print(f"Exception while logging exception to app insights: {e}")
-<<<<<<< HEAD
-    
-=======
 
 
 def check_model_id(model_id):
@@ -166,4 +163,3 @@ def check_model_id(model_id):
     except Exception as e:
         raise ValueError(f"Failed to validate model id : {e}")
     return False
->>>>>>> main

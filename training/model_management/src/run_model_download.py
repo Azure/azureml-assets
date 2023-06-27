@@ -33,7 +33,7 @@ if __name__ == "__main__":
         tc_log("Unsupported model source")
         raise Exception(f"Unsupported model source {model_source}")
 
-    if not check_model_id(model_id):
+    if model_source == ModelSource.HUGGING_FACE and not check_model_id(model_id):
         tc_log("Model id is not valid")
         raise Exception(f"Model id {model_id} is not valid")
 

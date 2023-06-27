@@ -93,10 +93,6 @@ if __name__ == "__main__":
         tc_log(f"Unsupported model flavor {mlflow_flavor}")
         raise Exception("Unsupported model flavor")
 
-    if not check_model_id(model_id):
-        tc_log("Model id is not valid")
-        raise Exception(f"Model id {model_id} is not valid")
-
     preprocess_args = {}
     if model_download_metadata_path:
         with open(model_download_metadata_path) as f:
