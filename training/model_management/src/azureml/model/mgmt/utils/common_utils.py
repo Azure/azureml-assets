@@ -136,6 +136,7 @@ def tc_log(message):
         tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message": message})
     except Exception as e:
         print(f"Exception while logging to app insights: {e}")
+    tc.flush()
 
 
 def tc_exception(e, message):
@@ -145,3 +146,4 @@ def tc_exception(e, message):
         tc.track_exception(value=e.__class__, properties={"exception": message})
     except Exception as e:
         print(f"Exception while logging exception to app insights: {e}")
+    tc.flush()
