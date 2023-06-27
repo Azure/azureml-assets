@@ -1,0 +1,3 @@
+extra_config: model.yaml
+spec: spec.yaml
+type: model

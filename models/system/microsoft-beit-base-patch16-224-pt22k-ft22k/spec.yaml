@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: microsoft-beit-base-patch16-224-pt22k-ft22k
+path: ./
+properties:
+  SHA: 9da301148150e37e533abef672062fa49f6bda4f
+  datasets: imagenet, imagenet-21k
+  finetuning-tasks: image-classification
+tags:
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS3_v2
+  task: image-classification
+version: 1

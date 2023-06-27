@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: google-vit-base-patch16-224
+path: ./
+properties:
+  SHA: 2ddc9d4e473d7ba52128f0df4723e478fa14fb80
+  datasets: imagenet-1k, imagenet-21k
+  finetuning-tasks: image-classification
+tags:
+  Preview: ''
+  license: apache-2.0
+  min_inference_sku: Standard_DS3_v2
+  task: image-classification
+version: 1
