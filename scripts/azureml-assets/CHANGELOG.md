@@ -1,7 +1,11 @@
-## 1.3.0 (Unreleased)
+## 1.4.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
+
+## 1.3.0 (2023-06-27)
+### 🚀 New Features
+- [#789](https://github.com/Azure/azureml-assets/pull/789) Count assets by type when copying
 
 ## 1.2.0 (2023-06-23)
 ### 🚀 New Features
