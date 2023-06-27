@@ -5,7 +5,9 @@
 
 import argparse
 import re
+from collections import Counter
 from pathlib import Path
+from string import Template
 from typing import List
 from urllib.error import HTTPError
 
@@ -15,6 +17,7 @@ from azureml.assets.util import logger
 from azureml.assets.config import AssetType
 
 COPIED_COUNT = "copied_count"
+COPIED_TYPE_COUNT = Template("copied_${type}_count")
 
 
 def copy_asset(asset_config: assets.AssetConfig,
@@ -85,6 +88,7 @@ def copy_assets(input_dirs: List[Path],
     # Find assets under release dir
     asset_count = 0
     copied_count = 0
+    copied_type_counter = Counter()
     for asset_config in util.find_assets(input_dirs, asset_config_filename, pattern=pattern):
         asset_count += 1
 
@@ -97,10 +101,13 @@ def copy_assets(input_dirs: List[Path],
         if version:
             logger.print(f"Copied {asset_config.type.value} {asset_config.name} version {version}")
             copied_count += 1
+            copied_type_counter[asset_config.type] += 1
     logger.print(f"{copied_count} of {asset_count} asset(s) copied")
 
     # Set variables
     logger.set_output(COPIED_COUNT, copied_count)
+    for type, count in copied_type_counter.items():
+        logger.set_output(COPIED_TYPE_COUNT.substitute(type=type.value), count)
 
 
 if __name__ == '__main__':
