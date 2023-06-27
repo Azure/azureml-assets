@@ -126,9 +126,13 @@ if __name__ == '__main__':
                         help="Use version directories when storing assets in output directory")
     parser.add_argument("-t", "--pattern", type=re.compile,
                         help="Regex pattern to select assets to copy, in the format <type>/<name>/<version>")
-    parser.add_argument("-p", "--check_previous_release", action="store_true",
-                        help="Checks if previous release exists")
+    parser.add_argument("-p", "--check-previous-release", action="store_true",
+                        help="Check if previous release exists (environments only)")
     args = parser.parse_args()
+
+    # Ensure --release-directory is specified if --check-previous-release is
+    if args.check_previous_release and args.release_directory is None:
+        parser.error("--check-previous-release requires --release-directory")
 
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
