@@ -240,36 +240,25 @@ def validate_and_prepare_pipeline_component(
     return True
 
 
-def validate_update_component(
-    spec_path: Path,
+def get_environment_asset_id(
+    environment_id: str,
     version_suffix: str,
-    registry_name: str,
-) -> bool:
-    """Validate and update component spec.
+    registry_name: str
+) -> Union[object, None]:
+    """Convert an environment reference into a full asset ID.
 
-    :param spec_path: Path of loaded component
-    :type spec_path: Path
-    :param version_suffix: version suffix
+    :param environment_id: Environment asset ID, in short or long form
+    :type environment_id: str
+    :param version_suffix: Version suffix
     :type version_suffix: str
-    :param registry_name: name of the registry to create component in
+    :param registry_name: Name of the registry to create component in
     :type registry_name: str
-    :return: True for successful validation and update
-    :rtype: bool
+    :return: Environment's full asset ID if successful, else None
+    :rtype: Union[str, None]
     """
-    with open(spec_path) as f:
-        try:
-            component_dict = YAML().load(f)
-        except Exception:
-            logger.log_error(f"Error in loading component spec at {spec_path}")
-            return False
-
-    component_name = component_dict['name']
-    component_env = component_dict['environment']
-    logger.print(f"Preparing component {component_name}")
-
     try:
         env_name, env_version, env_label, env_registry_name = get_parsed_details_from_asset_uri(
-            assets.AssetType.ENVIRONMENT.value, component_env)
+            assets.AssetType.ENVIRONMENT.value, environment_id)
     except Exception as e:
         logger.log_error(e)
         return False
@@ -305,21 +294,70 @@ def validate_update_component(
             return False
 
     env = None
-    # Check if component's env exists
-    final_version = env_version + "-" + version_suffix if version_suffix else env_version
-    for version in [env_version, final_version]:
+    # Get environment
+    versions_to_try = [env_version]
+    if version_suffix:
+        versions_to_try.append(f"{env_version}-{version_suffix}")
+    for version in versions_to_try:
         if (env := get_asset_details(
             assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name
         )) is not None:
-            break
+            return env['id']
 
-    if not env:
-        logger.log_error(f"Could not find the env for {component_name}")
+    logger.log_error(f"Environment {env_name} not found in {registry_name}; tried version(s) {versions_to_try}")
+    return None
+
+
+def validate_update_component(
+    spec_path: Path,
+    version_suffix: str,
+    registry_name: str,
+) -> bool:
+    """Validate and update component spec.
+
+    :param spec_path: Path of loaded component
+    :type spec_path: Path
+    :param version_suffix: version suffix
+    :type version_suffix: str
+    :param registry_name: name of the registry to create component in
+    :type registry_name: str
+    :return: True for successful validation and update
+    :rtype: bool
+    """
+    with open(spec_path) as f:
+        try:
+            component_dict = YAML().load(f)
+        except Exception:
+            logger.log_error(f"Error in loading component spec at {spec_path}")
+            return False
+
+    component_name = component_dict['name']
+    logger.print(f"Preparing component {component_name}")
+
+    # Handle command and parallel components
+    if 'environment' in component_dict:
+        # Command component
+        obj_with_env = component_dict
+    elif 'task' in component_dict and 'environment' in component_dict['task']:
+        # Parallel component
+        obj_with_env = component_dict['task']
+    else:
+        logger.log_error(f"Environment references not found in {component_name}")
         return False
 
-    logger.print(f"Updating component env to {env['id']}")
-    component_dict['environment'] = env['id']
+    # Update environment reference
+    current_env_id = obj_with_env['environment']
+    new_env_id = get_environment_asset_id(current_env_id, version_suffix, registry_name)
+    if new_env_id is not None:
+        if current_env_id != new_env_id:
+            logger.print(f"Updating environment to {new_env_id}")
+            obj_with_env['environment'] = new_env_id
+        else:
+            logger.print(f"Existing environment reference {current_env_id} is valid")
+    else:
+        return False
 
+    # Update spec file
     try:
         util.dump_yaml(component_dict, spec_path)
     except Exception:
