@@ -4,15 +4,13 @@ on:
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - .github/**
-      - scripts/**
+    paths:
+      - assets/**
   pull_request_target:
     branches:
       - main
-    paths-ignore:
-      - .github/**
-      - scripts/**
+    paths:
+      - assets/**
     types:
       - opened
       - labeled
@@ -22,7 +20,7 @@ on:
     inputs:
       asset_dirs:
         description: Asset directories
-        default: .,!test,!scripts
+        default: assets
         required: true
 
 env:
@@ -55,7 +53,7 @@ jobs:
       id-token: write
     
     env:
-      default_asset_dirs: .,!test,!scripts
+      default_asset_dirs: assets
 
     steps:
       - name: Clone branch

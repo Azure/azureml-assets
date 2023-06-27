@@ -1,6 +1,0 @@
-$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
-name: "{{asset.name}}"
-version: "{{asset.version}}"
-description: Data asset of sample index for Faiss Index Lookup tool.
-type: uri_folder
-path: faiss_index_sample/
