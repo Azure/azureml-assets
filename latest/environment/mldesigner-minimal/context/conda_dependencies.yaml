@@ -6,5 +6,5 @@ dependencies:
 - pip=21.3.1
 - pip:
   - mldesigner==0.1.0b13
-  - cryptography==39.0.1
+  - cryptography==41.0.0
   - requests==2.31.0
