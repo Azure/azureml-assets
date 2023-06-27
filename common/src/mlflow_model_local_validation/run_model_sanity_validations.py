@@ -64,7 +64,7 @@ def tc_exception(e, message):
         print(f"Exception while logging exception to app insights: {e}")
 
 
-def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str, do_eval: bool = False) -> Dict:
+def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str) -> Dict:
     """Create and return dictionary from string.
 
     :param dict_str: string to be parsed for creating dictionary
@@ -73,8 +73,6 @@ def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str,
     :type item_sep: str
     :param kv_sep: char separator used for key-value separation. Must be different from item separator
     :type kv_sep: str
-    :param do_eval: Whether to eval parsed value string. Default is False
-    :type do_eval: bool
     :return: Resultant dictionary
     :rtype: Dict
     """
@@ -83,8 +81,10 @@ def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str,
     item_sep = item_sep.strip()
     kv_sep = kv_sep.strip()
     if len(item_sep) > 1 or len(kv_sep) > 1:
+        tc_exception("Provide single char as separator")
         raise Exception("Provide single char as separator")
     if item_sep == kv_sep:
+        tc_exception("item_sep and kv_sep are equal.")
         raise Exception("item_sep and kv_sep are equal.")
     parsed_dict = {}
     kv_pairs = dict_str.split(item_sep)
@@ -93,13 +93,8 @@ def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str,
         if len(split) == 2:
             key = split[0].strip()
             val = split[1].strip()
-            if do_eval:
-                try:
-                    val = eval(split[1].strip())
-                except Exception as e:
-                    print(f"Could not eval `{val}`. Error: {e}")
             parsed_dict[key] = val
-    print(f"get_dict_from_comma_separated_str: {dict_str} => {parsed_dict}")
+    tc_log(f"get_dict_from_comma_separated_str: {dict_str} => {parsed_dict}")
     return parsed_dict
 
 
@@ -203,10 +198,7 @@ if __name__ == "__main__":
         tc_log(f"conda :\n{conda_dict}\n")
         logger.info(f"conda :\n{conda_dict}\n")
 
-    col_rename_map = get_dict_from_comma_separated_str(
-        col_rename_map_str, ITEM_SEMI_COLON_SEP, KV_COLON_SEP, do_eval=True
-    )
-
+    col_rename_map = get_dict_from_comma_separated_str(col_rename_map_str, ITEM_SEMI_COLON_SEP, KV_COLON_SEP)
     _load_and_infer_model(
         model_dir=model_dir,
         data=_load_and_prepare_data(
