@@ -78,6 +78,12 @@ inputs:
     default: 1000
     description: Number of examples to batch before calling the tokenization function
 
+  pad_to_max_length:
+    type: string
+    optional: true
+    default: "false"
+    description: If true, all samples get padded to `max_seq_length`. If false, will pad the samples dynamically when batching to the maximum length in the batch
+
   train_file_path:
     type: uri_file
     optional: true
@@ -471,6 +477,7 @@ jobs:
       source_lang: '${{parent.inputs.source_lang}}'
       target_lang: '${{parent.inputs.target_lang}}'
       batch_size: '${{parent.inputs.batch_size}}'
+      pad_to_max_length: '${{parent.inputs.pad_to_max_length}}'
       train_file_path: '${{parent.inputs.train_file_path}}'
       validation_file_path: '${{parent.inputs.validation_file_path}}'
       test_file_path: '${{parent.inputs.test_file_path}}'

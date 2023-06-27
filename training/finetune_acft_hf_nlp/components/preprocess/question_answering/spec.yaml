@@ -68,6 +68,12 @@ inputs:
     default: 1000
     description: Number of examples to batch before calling the tokenization function
 
+  pad_to_max_length:
+    type: string
+    optional: true
+    default: "false"
+    description: If true, all samples get padded to `max_seq_length`. If false, will pad the samples dynamically when batching to the maximum length in the batch
+
   # Data inputs
   # Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split from train data happens if they are not passed.
   # If both validation and test files are missing, 10% of train data will be assigned to each of them and the remaining 80% will be used for training
@@ -114,4 +120,4 @@ outputs:
     description: The folder contains the tokenized output of the train, validation and test data along with the tokenizer files used to tokenize the data
 
 command: >-
-  python preprocess.py --task_name QuestionAnswering --question_key '${{inputs.question_key}}' --context_key '${{inputs.context_key}}' --answers_key '${{inputs.answers_key}}' --answer_start_key '${{inputs.answer_start_key}}' --answer_text_key '${{inputs.answer_text_key}}' $[[--doc_stride '${{inputs.doc_stride}}']] $[[--n_best_size '${{inputs.n_best_size}}']] $[[--max_answer_length_in_tokens '${{inputs.max_answer_length_in_tokens}}']] $[[--batch_size '${{inputs.batch_size}}']] $[[--train_file_path '${{inputs.train_file_path}}']] $[[--validation_file_path '${{inputs.validation_file_path}}']] $[[--test_file_path '${{inputs.test_file_path}}']] $[[--train_mltable_path '${{inputs.train_mltable_path}}']] $[[--validation_mltable_path '${{inputs.validation_mltable_path}}']] $[[--test_mltable_path '${{inputs.test_mltable_path}}']] --model_selector_output '${{inputs.model_selector_output}}' --output_dir '${{outputs.output_dir}}'
+  python preprocess.py --task_name QuestionAnswering --question_key '${{inputs.question_key}}' --context_key '${{inputs.context_key}}' --answers_key '${{inputs.answers_key}}' --answer_start_key '${{inputs.answer_start_key}}' --answer_text_key '${{inputs.answer_text_key}}' $[[--doc_stride '${{inputs.doc_stride}}']] $[[--n_best_size '${{inputs.n_best_size}}']] $[[--max_answer_length_in_tokens '${{inputs.max_answer_length_in_tokens}}']] $[[--batch_size '${{inputs.batch_size}}']] $[[--pad_to_max_length '${{inputs.pad_to_max_length}}']] $[[--train_file_path '${{inputs.train_file_path}}']] $[[--validation_file_path '${{inputs.validation_file_path}}']] $[[--test_file_path '${{inputs.test_file_path}}']] $[[--train_mltable_path '${{inputs.train_mltable_path}}']] $[[--validation_mltable_path '${{inputs.validation_mltable_path}}']] $[[--test_mltable_path '${{inputs.test_mltable_path}}']] --model_selector_output '${{inputs.model_selector_output}}' --output_dir '${{outputs.output_dir}}'
