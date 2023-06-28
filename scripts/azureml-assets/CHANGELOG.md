@@ -5,7 +5,7 @@
 
 ## 1.4.1 (2023-06-28)
 ### 🐛 Bugs Fixed
-- [#]() Fix version handling when building environment images
+- [#802](https://github.com/Azure/azureml-assets/pull/802) Fix version handling when building environment images
 
 ## 1.4.0 (2023-06-28)
 ### 🚀 New Features
