@@ -20,7 +20,7 @@ on:
 
 env:
   model_mgmt_root_dir: assets/training/model_management
-  model_mgmt_src_dir: assets/training/model_management/src
+  model_mgmt_src_dir: assets/training/model_management/src/azureml/
   model_mgmt_test_dir: assets/training/model_management/tests
   model_mgmt_unittests_dir: assets/training/model_management/tests/unittests
   model_mgmt_test_req: assets/training/model_management/tests/dev_requirements.txt
@@ -34,10 +34,10 @@ jobs:
       - name: Clone branch
         uses: actions/checkout@v3
 
-      - name: Use Python 3.8 or newer
+      - name: Use Python 3.8
         uses: actions/setup-python@v4
         with:
-          python-version: '>=3.8'
+          python-version: '==3.8'
 
       - name: Install dev requirements
         run: |
