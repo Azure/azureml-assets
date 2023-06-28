@@ -1,6 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: parallel
 
+tags:
+    Preview: ""
+
 version: 0.0.8
 name: llm_rag_generate_embeddings_parallel
 display_name: LLM - Generate Embeddings Parallel

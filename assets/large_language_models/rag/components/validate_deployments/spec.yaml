@@ -1,6 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
+tags:
+    Preview: ""
+
 version: 0.0.8
 name: llm_rag_validate_deployments
 display_name: LLM – Validate Deployments

@@ -1,6 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
+tags:
+    Preview: ""
+
 version: 0.0.19
 name: llm_ingest_git_to_faiss
 display_name: LLM - Git to FAISS Pipeline (With Test Data Generation and Auto Prompt)

@@ -1,6 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
+tags:
+    Preview: ""
+
 version: 0.0.6
 name: llm_ingest_dataset_to_faiss_qa_only
 display_name: LLM - Dataset to FAISS Pipeline (Only Test Data Generation)
