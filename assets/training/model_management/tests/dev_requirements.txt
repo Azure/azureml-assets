@@ -1,0 +1,20 @@
+azure-core
+azure-ai-ml
+azure-identity
+azureml-evaluate-mlflow
+ffmpeg-python
+langcodes
+sentencepiece
+accelerate
+wget
+applicationinsights
+
+## test
+mock
+pytest-cov
+pytest-forked
+pytest-xdist
+pytest-timeout
+pytest-mock
+pytest
+pydash
