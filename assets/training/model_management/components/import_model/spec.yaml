@@ -16,13 +16,13 @@ inputs:
     description: Common compute for model download, mlflow conversion and registration. eg. provide 'FT-Cluster' if
       your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute name is provided, instance_type field will be ignored and the respective cluster will be used
+
   instance_type:
     type: string
     optional: true
     default: STANDARD_NC6s_v3
     description: Instance type to be used for the component in case of serverless compute, eg. STANDARD_NC6s_v3. 
       The parameter compute must be set to 'serverless' for instance_type to be used
-  
 
   local_validation_compute:
     type: string
