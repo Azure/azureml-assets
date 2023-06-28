@@ -1,0 +1,194 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+name: llm_ingest_db_to_acs
+display_name: LLM - SQL Datastore to ACS Pipeline
+version: 0.0.5
+description: Single job pipeline to chunk data from AzureML sql data store, and create ACS embeddings index
+settings:
+  default_compute: serverless
+inputs:
+  db_datastore:
+    type: string
+    description: database datastore uri in the format of 'azureml://datastores/{datastore_name}'
+  embeddings_model:
+    type: string
+    description: The model used to generate embeddings. 'azure_open_ai://endpoint/{endpoint_name}/deployment/{deployment_name}/model/{model_name}'
+  chat_aoai_deployment_name:
+    type: string
+    optional: true
+    description: The name of the chat AOAI deployment
+  embedding_aoai_deployment_name:
+    type: string
+    description: The name of the embedding AOAI deployment
+  embeddings_dataset_name:
+    type: string
+    description: The name of the acs index
+  max_tables:
+    type: integer
+    optional: true
+  max_columns:
+    type: integer
+    optional: true
+  max_rows:
+    type: integer
+    optional: true
+  max_sampling_rows:
+    type: integer
+    optional: true
+  max_text_length:
+    type: integer
+    optional: true
+  selected_tables:
+    type: string
+    optional: true
+  column_settings:
+    type: string
+    optional: true
+  llm_config:
+    type: string
+    optional: true
+    description: The name of the llm config
+  serverless_instance_count:
+    type: integer
+    optional: true
+    default: "1"
+  serverless_instance_type:
+    type: string
+    optional: true
+    default: Standard_DS3_v2
+  embedding_connection:
+    type: string
+    optional: true
+    description: Azure OpenAI workspace connection ARM ID for embeddings
+  llm_connection:
+    type: string
+    optional: true
+    description: Azure OpenAI workspace connection ARM ID for LLM
+  acs_connection:
+    type: string
+    optional: true
+    description: Azure Cognitive Search workspace connection ARM ID
+  acs_config:
+    type: string
+    description: JSON describing the acs index to create or update for embeddings
+outputs:
+  grounding_index:
+    type: uri_folder
+  db_context:
+    type: uri_folder
+jobs:
+  db_meta_loading_generator:
+    resources:
+      instance_count: ${{parent.inputs.serverless_instance_count}}
+      instance_type: ${{parent.inputs.serverless_instance_type}}
+      properties:
+        compute_specification:
+          automatic: true
+    inputs:
+      asset_uri:
+        path: ${{parent.inputs.db_datastore}}
+      max_tables:
+        path: ${{parent.inputs.max_tables}}
+      max_columns:
+        path: ${{parent.inputs.max_columns}}
+      max_rows:
+        path: ${{parent.inputs.max_rows}}
+      max_sampling_rows:
+        path: ${{parent.inputs.max_sampling_rows}}
+      max_text_length:
+        path: ${{parent.inputs.max_text_length}}
+      selected_tables:
+        path: ${{parent.inputs.selected_tables}}
+      column_settings:
+        path: ${{parent.inputs.column_settings}}
+    outputs:
+      output_chunk_file:
+        type: uri_folder
+      output_grounding_context_file: ${{parent.outputs.db_context}}
+    component: azureml:llm_dbcopilot_grounding:0.0.5
+    type: command
+  generate_meta_embeddings:
+    resources:
+      instance_count: ${{parent.inputs.serverless_instance_count}}
+      instance_type: ${{parent.inputs.serverless_instance_type}}
+      properties:
+        compute_specification:
+          automatic: true
+    retry_settings:
+      timeout: 600
+      max_retries: 3
+    environment_variables:
+      AZUREML_WORKSPACE_CONNECTION_ID_AOAI: ${{parent.inputs.embedding_connection}}
+    inputs:
+      chunks_source:
+        path: ${{parent.jobs.db_meta_loading_generator.outputs.output_chunk_file}}
+      embeddings_model:
+        path: ${{parent.inputs.embeddings_model}}
+    outputs:
+      embeddings:
+        mode: upload
+        type: uri_folder
+    component: azureml:llm_rag_generate_embeddings_parallel:0.0.6
+    type: parallel
+  create_meta_acs_index_job:
+    environment_variables:
+      AZUREML_WORKSPACE_CONNECTION_ID_AOAI: ${{parent.inputs.embedding_connection}}
+      AZUREML_WORKSPACE_CONNECTION_ID_ACS: ${{parent.inputs.acs_connection}}
+    resources:
+      instance_count: ${{parent.inputs.serverless_instance_count}}
+      instance_type: ${{parent.inputs.serverless_instance_type}}
+      properties:
+        compute_specification:
+          automatic: true
+    inputs:
+      embeddings:
+        path: ${{parent.jobs.generate_meta_embeddings.outputs.embeddings}}
+      acs_config: ${{parent.inputs.acs_config}}
+    outputs:
+      index: ${{parent.outputs.grounding_index}}
+    component: azureml:llm_rag_update_acs_index:0.0.6
+    type: command
+  register_mlindex_asset_job:
+    resources:
+      instance_count: ${{parent.inputs.serverless_instance_count}}
+      instance_type: ${{parent.inputs.serverless_instance_type}}
+      properties:
+        compute_specification:
+          automatic: true
+    inputs:
+      storage_uri:
+        path: ${{parent.jobs.create_meta_acs_index_job.outputs.index}}
+      asset_name:
+        path: ${{parent.inputs.embeddings_dataset_name}}
+    outputs:
+      asset_id:
+        type: uri_file
+    component: azureml:llm_rag_register_mlindex_asset:0.0.6
+    type: command
+  create_prompt_flow:
+    environment_variables:
+      AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING: ${{parent.inputs.embedding_connection}}
+      AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT: ${{parent.inputs.llm_connection}}
+    resources:
+      instance_count: ${{parent.inputs.serverless_instance_count}}
+      instance_type: ${{parent.inputs.serverless_instance_type}}
+      properties:
+        compute_specification:
+          automatic: true
+    inputs:
+      index_name:
+        path: ${{parent.inputs.embeddings_dataset_name}}
+      grounding_embedding_uri:
+        path: ${{parent.jobs.create_meta_acs_index_job.outputs.index}}
+      db_context_uri:
+        path: ${{parent.jobs.db_meta_loading_generator.outputs.output_grounding_context_file}}
+      asset_uri:
+        path: ${{parent.inputs.db_datastore}}
+      embedding_aoai_deployment_name:
+        path: ${{parent.inputs.embedding_aoai_deployment_name}}
+      chat_aoai_deployment_name:
+        path: ${{parent.inputs.chat_aoai_deployment_name}}
+      llm_config:
+        path: ${{parent.inputs.llm_config}}
+    component: azureml:llm_dbcopilot_create_promptflow:0.0.5
+    type: command

@@ -1,0 +1,9 @@
+image:
+  name: llm-auto-prompt
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda_dependencies.yaml

@@ -1,0 +1,5 @@
+name: llm-dbcopilot-embeddings
+version: 0.3
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml

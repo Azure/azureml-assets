@@ -1,0 +1,38 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+name: llm_dbcopilot_grounding
+display_name: LLM - DBCopilot Grounding DB
+version: 0.0.5
+code: ../src
+environment: azureml:llm-dbcopilot-embeddings@latest
+inputs:
+  asset_uri:
+    type: string
+    optional: true
+  max_tables:
+    type: integer
+    optional: true
+  max_columns:
+    type: integer
+    optional: true
+  max_rows:
+    type: integer
+    optional: true
+  max_sampling_rows:
+    type: integer
+    optional: true
+  max_text_length:
+    type: integer
+    optional: true
+  selected_tables:
+    type: string
+    optional: true
+  column_settings:
+    type: string
+    optional: true
+outputs:
+  output_chunk_file:
+    type: uri_folder
+  output_grounding_context_file:
+    type: uri_folder
+command: python database_grounding.py --output_chunk_file '${{outputs.output_chunk_file}}' --output_grounding_context_file '${{outputs.output_grounding_context_file}}' $[[--asset_uri '${{inputs.asset_uri}}']] $[[--max_tables '${{inputs.max_tables}}']] $[[--max_columns '${{inputs.max_columns}}']] $[[--max_rows '${{inputs.max_rows}}']] $[[--max_sampling_rows '${{inputs.max_sampling_rows}}']] $[[--max_text_length '${{inputs.max_text_length}}']] $[[--selected_tables '${{inputs.selected_tables}}']] $[[--column_settings '${{inputs.column_settings}}']]

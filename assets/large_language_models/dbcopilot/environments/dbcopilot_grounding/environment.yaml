@@ -1,0 +1,9 @@
+image:
+  name: llm-dbcopilot-embeddings
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda_dependencies.yaml
