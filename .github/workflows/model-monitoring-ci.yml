@@ -5,7 +5,7 @@ on:
     branches:
       - main 
     paths:
-      - model_monitoring/**
+      - assets/model_monitoring/**
       - .github/workflows/model-monitoring-ci.yml
       
 
@@ -13,8 +13,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 env:
-  momoComponentsRootPath: model_monitoring/components
-  testsRootPath: model_monitoring/components/tests
+  momoComponentsRootPath: assets/model_monitoring/components
+  testsRootPath: assets/model_monitoring/components/tests
   pytest_report_folder: results
   pytest_report_file: junit3.xml
   scripts_setup_dir: scripts/setup
