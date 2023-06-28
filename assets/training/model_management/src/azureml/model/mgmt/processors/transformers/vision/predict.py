@@ -102,7 +102,7 @@ def _process_image(img: pd.Series) -> pd.Series:
                 return pd.Series(base64.b64decode(image))
             except ValueError:
                 raise ValueError(
-                    "The provided image string cannot be decoded." "Expected format is base64 string or url string."
+                    "The provided image string cannot be decoded. Expected format is Base64 or URL string."
                 )
     else:
         raise ValueError(
