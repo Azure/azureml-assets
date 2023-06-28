@@ -19,11 +19,11 @@ on:
         required: true
 
 env:
-  model_mgmt_root_dir: assets/training/model_management/
-  model_mgmt_src_dir: $model_mgmt_root_dir/src
-  model_mgmt_test_dir: $model_mgmt_root_dir/tests
-  model_mgmt_unittests_dir: $model_mgmt_test_dir/unittests
-  model_mgmt_test_req: $model_mgmt_test_dir/dev_requirements.txt
+  model_mgmt_root_dir: assets/training/model_management
+  model_mgmt_src_dir: assets/training/model_management/src
+  model_mgmt_test_dir: assets/training/model_management/tests
+  model_mgmt_unittests_dir: assets/training/model_management/tests/unittests
+  model_mgmt_test_req: assets/training/model_management/tests/dev_requirements.txt
 
 jobs:
   run_unit_tests:
