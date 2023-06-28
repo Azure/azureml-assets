@@ -1,7 +1,11 @@
-## 1.4.0 (Unreleased)
+## 1.5.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
+
+## 1.4.0 (2023-06-28)
+### 🚀 New Features
+- [#800](https://github.com/Azure/azureml-assets/pull/800) Only push images that are configured for publishing
 
 ## 1.3.0 (2023-06-27)
 ### 🚀 New Features
