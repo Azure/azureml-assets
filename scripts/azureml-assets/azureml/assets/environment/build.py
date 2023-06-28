@@ -238,7 +238,7 @@ def build_images(input_dirs: List[Path],
 
             # Tag with version from spec
             if tag_with_version:
-                version = asset_config.spec_as_object().version
+                version = asset_config.version
                 image_name = env_config.get_image_name_with_tag(version)
             else:
                 image_name = env_config.image_name
