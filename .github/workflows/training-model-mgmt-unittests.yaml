@@ -40,7 +40,9 @@ jobs:
           python-version: '>=3.8'
 
       - name: Install dev requirements
-        run: pip install -r $model_mgmt_test_req
+        run: |
+          apt-get update && apt-get upgrade && apt-get install -y build-essential
+          pip install -r $model_mgmt_test_req
 
       - name: Copy dir
         run: |

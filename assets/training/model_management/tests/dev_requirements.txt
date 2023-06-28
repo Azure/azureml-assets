@@ -1,20 +1,18 @@
-azure-core
+# src
 azure-ai-ml
 azure-identity
 azureml-evaluate-mlflow
 ffmpeg-python
 langcodes
-sentencepiece
-accelerate
 wget
 applicationinsights
 
 ## test
 mock
+pydash
+pytest
 pytest-cov
 pytest-forked
-pytest-xdist
-pytest-timeout
 pytest-mock
-pytest
-pydash
+pytest-timeout
+pytest-xdist
