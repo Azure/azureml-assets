@@ -71,6 +71,7 @@ def create_acr_task(image_name: str,
         })
 
     # Write YAML file to disk
+    print(f"Task YAML: {task}")
     task_file = build_context_dir / task_filename
     with open(task_file, "w") as f:
         yaml = YAML()
@@ -238,7 +239,7 @@ def build_images(input_dirs: List[Path],
 
             # Tag with version from spec
             if tag_with_version:
-                version = asset_config.spec_as_object().version
+                version = asset_config.version
                 image_name = env_config.get_image_name_with_tag(version)
             else:
                 image_name = env_config.image_name
