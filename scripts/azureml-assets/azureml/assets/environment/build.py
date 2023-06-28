@@ -62,6 +62,11 @@ def create_acr_task(image_name: str,
             'id': 'test',
             'cmd': f"$Registry/{image_name} {test_command}"
         })
+        task['steps'].append({
+            'id': 'scan',
+            'cmd': "wget https://github.com/aquasecurity/trivy/releases/download/v0.42.1/trivy_0.42.1_Linux-64bit.deb && dpkg -i trivy_0.42.1_Linux-64bit.deb && trivy fs --scanners vuln /",
+            'ignoreErrors': True
+        })
 
     # Add push step if requested
     if push:
