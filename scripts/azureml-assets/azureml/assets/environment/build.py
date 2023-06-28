@@ -71,7 +71,6 @@ def create_acr_task(image_name: str,
         })
 
     # Write YAML file to disk
-    print(f"Task YAML: {task}")
     task_file = build_context_dir / task_filename
     with open(task_file, "w") as f:
         yaml = YAML()
