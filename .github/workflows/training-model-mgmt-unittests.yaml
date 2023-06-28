@@ -40,7 +40,7 @@ jobs:
           python-version: '>=3.8'
 
       - name: Install dev requirements
-        run: pip install -r $scripts_azureml_assets_dir
+        run: pip install -r $model_mgmt_test_req
 
       - name: Copy dir
         run: |
