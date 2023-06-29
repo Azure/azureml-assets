@@ -323,7 +323,7 @@ if __name__ == '__main__':
                         help="If building on ACR, push after building and (optionally) testing")
     parser.add_argument("-v", "--use-version-dirs", action="store_true",
                         help="Use version directories when storing assets in output directory")
-    parser.add_argument("-t", "--trivy-url", type=str,
+    parser.add_argument("-U", "--trivy-url", type=str,
                         help="URL to download Trivy to scan for vulnerabilities")
     args = parser.parse_args()
 
