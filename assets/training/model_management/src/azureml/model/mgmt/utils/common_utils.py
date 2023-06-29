@@ -20,7 +20,6 @@ from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Any, Dict, List, Tuple
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from applicationinsights import TelemetryClient
 from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
 
 
