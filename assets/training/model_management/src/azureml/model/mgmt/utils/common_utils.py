@@ -15,13 +15,18 @@ from azureml.core.run import Run, _OfflineRun
 from contextlib import contextmanager
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 from applicationinsights import TelemetryClient
 from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
-from typing import List
+
 
 tc = None
 HF_ENDPOINT = "https://huggingface.co"
+
+KV_COLON_SEP = ":"
+KV_EQ_SEP = "="
+ITEM_COMMA_SEP = ","
+ITEM_SEMI_COLON_SEP = ";"
 
 
 def log_execution_time(func, logger=None):
@@ -119,6 +124,53 @@ def create_namespace_from_dict(var: Any):
         for key, val in var.__dict__.items():
             var.__dict__[key] = create_namespace_from_dict(val)
     return var
+
+
+def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str) -> Dict:
+    """Create and return dictionary from string.
+
+    :param dict_str: string to be parsed for creating dictionary
+    :type dict_str: str
+    :param item_sep: char separator used for item separation
+    :type item_sep: str
+    :param kv_sep: char separator used for key-value separation. Must be different from item separator
+    :type kv_sep: str
+    :return: Resultant dictionary
+    :rtype: Dict
+    """
+    if not dict_str:
+        return {}
+    item_sep = item_sep.strip()
+    kv_sep = kv_sep.strip()
+    if len(item_sep) > 1 or len(kv_sep) > 1:
+        raise Exception("Provide single char as separator")
+    if item_sep == kv_sep:
+        raise Exception("item_sep and kv_sep are equal.")
+    parsed_dict = {}
+    kv_pairs = dict_str.split(item_sep)
+    for item in kv_pairs:
+        split = item.split(kv_sep)
+        if len(split) == 2:
+            key = split[0].strip()
+            val = split[1].strip()
+            parsed_dict[key] = val
+    print(f"get_dict_from_comma_separated_str: {dict_str} => {parsed_dict}")
+    return parsed_dict
+
+
+def get_list_from_comma_separated_str(list_str: str, item_sep: str) -> List:
+    """Create and return list from string separted by `item_sep`.
+
+    :param dict_str: string to be parsed for creating list
+    :type dict_str: str
+    :param item_sep: char used for item separation
+    :type item_sep: str
+    :return: Resultant list
+    :rtype: List
+    """
+    if not list_str:
+        return []
+    return [x.strip() for x in list_str.split(item_sep) if x]
 
 
 def init_tc():
