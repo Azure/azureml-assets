@@ -15,6 +15,7 @@ from azureml.model.mgmt.processors.transformers.factory import (
 
 
 class TestFactoryModule(unittest.TestCase):
+    """Test HF Model Convertor Factory."""
 
     @patch('azureml.model.mgmt.processors.transformers.factory.NLPMLflowConvertorFactory')
     def test_get_nlp_mlflow_convertor(self, mock_nlp_factory):
@@ -34,7 +35,7 @@ class TestFactoryModule(unittest.TestCase):
         )
 
     @patch('azureml.model.mgmt.processors.transformers.factory.VisionMLflowConvertorFactory')
-    def test_get_nlp_mlflow_convertor(self, mock_vision_factory):
+    def test_get_vision_mlflow_convertor(self, mock_vision_factory):
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"

@@ -16,6 +16,8 @@ from azureml.model.mgmt.utils.common_utils import create_namespace_from_dict
 
 
 class TestDownloaders(unittest.TestCase):
+    """Test downloaders."""
+
     def test_huggingface_downloader(self):
         model_id = "username/model_name"
         download_dir = Path("path/to/download/dir")
@@ -67,6 +69,8 @@ class TestDownloaders(unittest.TestCase):
 
 
 class TestDownloadModel(unittest.TestCase):
+    """Test model download."""
+
     def test_download_model_with_huggingface_source(self):
         model_source = "Huggingface"
         model_id = "test_model_id"
