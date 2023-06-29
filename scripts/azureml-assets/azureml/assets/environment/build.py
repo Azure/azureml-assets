@@ -140,7 +140,8 @@ def build_image(asset_config: assets.AssetConfig,
                 temp_dir_path = Path(temp_dir)
                 shutil.copytree(build_context_dir, temp_dir_path, dirs_exist_ok=True)
                 build_context_dir = temp_dir_path
-                create_acr_task(image_name, build_context_dir, dockerfile, TASK_FILENAME, test_command, push, trivy_url)
+                create_acr_task(image_name, build_context_dir, dockerfile, TASK_FILENAME, test_command, 
+                                push, trivy_url)
                 cmd.append("run")
                 cmd.extend(common_args)
                 cmd.extend(["-f", TASK_FILENAME, "."])
@@ -265,7 +266,8 @@ def build_images(input_dirs: List[Path],
             build_log = build_logs_dir / f"{asset_config.name}.log"
             futures.append(pool.submit(build_image, asset_config, image_name,
                                        env_config.context_dir_with_path, env_config.dockerfile, build_log,
-                                       env_config.os.value, resource_group, registry, test_command, push_this_image, trivy_url))
+                                       env_config.os.value, resource_group, registry, test_command, 
+                                       push_this_image, trivy_url))
 
         # Wait for builds to complete
         for future in as_completed(futures):
