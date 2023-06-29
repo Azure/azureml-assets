@@ -14,7 +14,13 @@ from typing import Tuple
 from logging import Logger
 from azureml.core import Run, Workspace
 from azureml.core.run import _OfflineRun
-from azureml.rag.utils.logging import get_logger, enable_stdout_logging, enable_appinsights_logging, track_activity, _logger_factory
+from azureml.rag.utils.logging import (
+    get_logger,
+    enable_stdout_logging,
+    enable_appinsights_logging,
+    track_activity,
+    _logger_factory
+)
 
 logger = get_logger('flow_creation')
 
@@ -120,7 +126,8 @@ def get_deployment_and_model_name(s):
 def main(args, ws, current_run, activity_logger: Logger):
     """Extract main method."""
     activity_logger.info(
-        "[Promptflow Creation]: Received and parsed arguments for promptflow creation in RAG. Creating promptflow now...")
+        "[Promptflow Creation]: Received and parsed arguments for promptflow creation in RAG."
+        + " Creating promptflow now...")
     print("best_prompts: %s" % args.best_prompts)
     print("mlindex_name: %s" % args.mlindex_name)
     print("mlindex_asset_id: %s" % args.mlindex_asset_id)
@@ -139,7 +146,8 @@ def main(args, ws, current_run, activity_logger: Logger):
         "deployment_name")
     embedding_connection_name = get_connection_name(
         args.embedding_connection)
-    if completion_connection_name == "azureml-rag-default-aoai" and embedding_connection_name != "azureml-rag-default-aoai":
+    if (completion_connection_name == "azureml-rag-default-aoai" and
+            embedding_connection_name != "azureml-rag-default-aoai"):
         # default completion connection name to embedding ones if embedding conenction is provided
         completion_connection_name = embedding_connection_name
     embedding_deployment_name_and_model_name = get_deployment_and_model_name(
@@ -156,9 +164,16 @@ def main(args, ws, current_run, activity_logger: Logger):
     print("embedding_model_name: %s" % embedding_model_name)
 
     if args.best_prompts is None:
-        top_prompts = ['You are an AI assistant that helps users answer questions given a specific context. You will be given a context, and then asked a question based on that context. Your answer should be as precise as possible, and should only come from the context.',
-                       'You are an AI assistant that helps users answer questions given a specific context. You will be given a context and asked a question based on that context. Your answer should be as precise as possible and should only come from the context.',
-                       'You are an chat assistant for helping users answering question given a specific context.You are given a context and you\'ll be asked a question based on the context.Your answer should be as precise as possible and answer should be only from the context.']
+        top_prompts = [
+            'You are an AI assistant that helps users answer questions given a specific context. You will be '
+            + 'given a context, and then asked a question based on that context. Your answer should be as '
+            + 'precise as possible, and should only come from the context.',
+            'You are an AI assistant that helps users answer questions given a specific context. You will be '
+            + 'given a context and asked a question based on that context. Your answer should be as precise '
+            + 'as possible and should only come from the context.',
+            'You are an chat assistant for helping users answering question given a specific context.You are '
+            + 'given a context and you\'ll be asked a question based on the context.Your answer should be '
+            + 'as precise as possible and answer should be only from the context.']
     else:
         with open(args.best_prompts, "r") as f:
             promt_json = json.load(f)
@@ -235,12 +250,7 @@ def main(args, ws, current_run, activity_logger: Logger):
     headers = get_default_headers(
         RUN_TOKEN, content_type="application/json")
 
-    # Todo: comment out, test only
-    # promptflow_mt_url = "https://eastus2euap.api.azureml.ms/studioservice/api/subscriptions/96aede12-2f73-41cb-b983-6d11a904839b/resourcegroups/promptflow/providers/Microsoft.MachineLearningServices/workspaces/promptflow-canary/flows"
-    # headers = get_default_headers("eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyIsImtpZCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyJ9.eyJhdWQiOiJodHRwczovL21hbmFnZW1lbnQuY29yZS53aW5kb3dzLm5ldC8iLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC83MmY5ODhiZi04NmYxLTQxYWYtOTFhYi0yZDdjZDAxMWRiNDcvIiwiaWF0IjoxNjgyNzE4NDEwLCJuYmYiOjE2ODI3MTg0MTAsImV4cCI6MTY4MjcyMjkzMiwiX2NsYWltX25hbWVzIjp7Imdyb3VwcyI6InNyYzEifSwiX2NsYWltX3NvdXJjZXMiOnsic3JjMSI6eyJlbmRwb2ludCI6Imh0dHBzOi8vZ3JhcGgud2luZG93cy5uZXQvNzJmOTg4YmYtODZmMS00MWFmLTkxYWItMmQ3Y2QwMTFkYjQ3L3VzZXJzLzNjNmMwNThjLWNjNjctNDMwMC05MjgxLTRhMzM1OWZkYTM0My9nZXRNZW1iZXJPYmplY3RzIn19LCJhY3IiOiIxIiwiYWlvIjoiQVZRQXEvOFRBQUFBUE96bWhIY3dKdnFwUGNMaG41NjNyZEFER0hTZzRkTkNTY2JPUjAzemUyTmg5STEvSzI2YWRLN08rY1psTEllS0xzaVR5RlRXSE1WSGtjeGU3Rjk2S1cvRnY1UXkrR09PL2JMbk1FV1VxUjA9IiwiYW1yIjpbInJzYSIsIm1mYSJdLCJhcHBpZCI6IjA0YjA3Nzk1LThkZGItNDYxYS1iYmVlLTAyZjllMWJmN2I0NiIsImFwcGlkYWNyIjoiMCIsImRldmljZWlkIjoiOWZkY2Y2YWYtZTcyNi00ZTJiLWE5NjItYTQ3Y2U4NDJiYmQ3IiwiZmFtaWx5X25hbWUiOiJRaWFuIiwiZ2l2ZW5fbmFtZSI6IkNoYW8iLCJpcGFkZHIiOiIxMzEuMTA3LjE1OS4yMDkiLCJuYW1lIjoiQ2hhbyBRaWFuIiwib2lkIjoiM2M2YzA1OGMtY2M2Ny00MzAwLTkyODEtNGEzMzU5ZmRhMzQzIiwib25wcmVtX3NpZCI6IlMtMS01LTIxLTIxMjc1MjExODQtMTYwNDAxMjkyMC0xODg3OTI3NTI3LTI5NjYzMzY0IiwicHVpZCI6IjEwMDMwMDAwQTZBMjA1MEUiLCJyaCI6IjAuQVFFQXY0ajVjdkdHcjBHUnF5MTgwQkhiUjBaSWYza0F1dGRQdWtQYXdmajJNQk1hQUlNLiIsInNjcCI6InVzZXJfaW1wZXJzb25hdGlvbiIsInN1YiI6IkhWY3dvcnBsQmdqbjNpRGdnZUUzdFY0cjFGeXE0S01kUWFsTzJUYmc4dkUiLCJ0aWQiOiI3MmY5ODhiZi04NmYxLTQxYWYtOTFhYi0yZDdjZDAxMWRiNDciLCJ1bmlxdWVfbmFtZSI6ImNocWlAbWljcm9zb2Z0LmNvbSIsInVwbiI6ImNocWlAbWljcm9zb2Z0LmNvbSIsInV0aSI6ImNIY0o3ZTJISUVDSk5KamJkMklGQUEiLCJ2ZXIiOiIxLjAiLCJ3aWRzIjpbImI3OWZiZjRkLTNlZjktNDY4OS04MTQzLTc2YjE5NGU4NTUwOSJdLCJ4bXNfdGNkdCI6MTI4OTI0MTU0N30.DachgU03O-6IIF_gCaKfLAhCI69JXstDp6ZK12ol0cdhzheXKe69QVQvmSQ69K9fu31IlC3jbFATD7OfGtYhHQdd733I6fyIL7ancV1zKuXtfFr42d6SKgxdJPFn8FjMvmODlccbiI5lStYUcjMaoUQXxzyOnJnKVaNxuDuMK1_SKmqXoAAB7O2AjvnaAbV8djl4AhfTBqnUv7icoq5JJ7IJaySGgYOR_pYp8Ba6uqC-40MYGAC0GgqlvA0uLzP28HKySaBUxbEfiBe7JnY96zJxL4BvBg-wBqN0yDrCnL1XcRKRNELf4dFcOYAI64y2g2Y1ep4fBzyYkyqh4MjuMA",
-    #                               content_type="application/json")
-    response = try_request(
-        promptflow_mt_url, json_payload, headers, activity_logger)
+    response = try_request(promptflow_mt_url, json_payload, headers, activity_logger)
     pf_response_json = json.loads(response.text)
     flow_id = pf_response_json["flowResourceId"]
     activity_logger.info("[Promptflow Creation]: Flow creation Succeeded! Id is:" + flow_id, extra={
@@ -260,8 +270,9 @@ def main_wrapper(args, ws, current_run, logger):
         try:
             main(args, ws, current_run, activity_logger)
         except Exception:
+            # activity_logger doesn't log traceback
             activity_logger.error(
-                "[Promptflow Creation]: Failed with exception:" + traceback.format_exc())  # activity_logger doesn't log traceback
+                "[Promptflow Creation]: Failed with exception:" + traceback.format_exc())
             raise
 
 
@@ -277,14 +288,34 @@ if __name__ == '__main__':
     parser.add_argument("--mlindex_asset_id", type=str)
     parser.add_argument("--mlindex_name", type=str, required=False,
                         dest='mlindex_name', default='Baker_Example_With_Variants')
-    parser.add_argument("--llm_connection_name", type=str, required=False, dest='llm_connection_name',
-                        default='/subscriptions/dummy/resourceGroups/dummy/providers/Microsoft.MachineLearningServices/workspaces/dummy/connections/azureml-rag-default-aoai')
-    parser.add_argument("--llm_config", type=str, required=False, dest='llm_config',
-                        default='{"type": "azure_open_ai", "model_name": "gpt-35-turbo", "deployment_name": "gpt-35-turbo", "temperature": 0, "max_tokens": 2000}')
-    parser.add_argument("--embedding_connection", type=str, required=False, dest='embedding_connection',
-                        default='/subscriptions/dummy/resourceGroups/dummy/providers/Microsoft.MachineLearningServices/workspaces/dummy/connections/azureml-rag-default-aoai')
-    parser.add_argument("--embeddings_model", type=str, required=False, dest='embeddings_model',
-                        default='azure_open_ai://endpoint/dummy/deployment/text-embedding-ada-002/model/text-embedding-ada-002')
+    parser.add_argument(
+        "--llm_connection_name",
+        type=str,
+        required=False,
+        dest='llm_connection_name',
+        default='/subscriptions/dummy/resourceGroups/dummy/providers/'
+        + 'Microsoft.MachineLearningServices/workspaces/dummy/connections/azureml-rag-default-aoai')
+    parser.add_argument(
+        "--llm_config",
+        type=str,
+        required=False,
+        dest='llm_config',
+        default='{"type": "azure_open_ai", "model_name": "gpt-35-turbo", '
+        + '"deployment_name": "gpt-35-turbo", "temperature": 0, "max_tokens": 2000}')
+    parser.add_argument(
+        "--embedding_connection",
+        type=str,
+        required=False,
+        dest='embedding_connection',
+        default='/subscriptions/dummy/resourceGroups/dummy/providers/'
+        + 'Microsoft.MachineLearningServices/workspaces/dummy/connections/azureml-rag-default-aoai')
+    parser.add_argument(
+        "--embeddings_model",
+        type=str,
+        required=False,
+        dest='embeddings_model',
+        default='azure_open_ai://endpoint/dummy/deployment/text-embedding-ada-002/model/text-embedding-ada-002')
+
     args = parser.parse_args()
     ws, current_run = get_workspace_and_run()
 

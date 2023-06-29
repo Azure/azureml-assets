@@ -64,8 +64,12 @@ class ACS:
         docs_score = []
         for idx, result in enumerate(results):
             print(result)
-            metadata = {"source": result.get(self.config.source_key, f"Source {idx}"), "score": result["@search.score"]}
-            docs_score.append((Document(page_content=result[self.config.content_key], metadata=metadata), result["@search.score"]))
+            metadata = {
+                "source": result.get(self.config.source_key, f"Source {idx}"),
+                "score": result["@search.score"]}
+            docs_score.append((
+                Document(page_content=result[self.config.content_key], metadata=metadata),
+                result["@search.score"]))
         return docs_score
 
     def import_docs(self,
@@ -95,7 +99,8 @@ def validate_config(configuration, expected_keys):
             print("Missing expected key {key} in configuration!")
             missing_keys.append(key)
     if len(missing_keys) != 0:
-        raise ValueError(f"acs_config missing '{missing_keys}' fields. They are required when using Azure Cognitive Search")
+        raise ValueError(f"acs_config missing '{missing_keys}' fields."
+                         + "They are required when using Azure Cognitive Search")
     return
 
 
@@ -200,7 +205,9 @@ if __name__ == "__main__":
         connection_args['connection'] = {'id': connection_id}
         connection = get_connection_by_id_v2(connection_id)
         acs_config['endpoint'] = connection['properties']['target']
-        acs_config['api_version'] = connection['properties'].get('metadata', {}).get('apiVersion', "2023-07-01-preview")
+        acs_config['api_version'] = connection['properties'] \
+            .get('metadata', {}) \
+            .get('apiVersion', "2023-07-01-preview")
     elif 'endpoint_key_name' in acs_config:
         connection_args['connection_type'] = 'workspace_keyvault'
         ws = run.experiment.workspace

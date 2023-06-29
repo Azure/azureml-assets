@@ -107,7 +107,11 @@ def openai_init(llm_config, **openai_params):
         if llm_config.get("type") == "azure_open_ai":
             ws = current_run.experiment.workspace
             keyvault = ws.get_default_keyvault()
-            secrets = keyvault.get_secrets(secrets=["BAKER-OPENAI-API-BASE", "BAKER-OPENAI-API-KEY", "OPENAI-API-KEY", "OPENAI-API-BASE"])
+            secrets = keyvault.get_secrets(secrets=[
+                "BAKER-OPENAI-API-BASE",
+                "BAKER-OPENAI-API-KEY",
+                "OPENAI-API-KEY",
+                "OPENAI-API-BASE"])
             log_info(logger, "Run context and secrets retrieved", CUSTOM_DIMENSIONS)
 
             # hacky way to override OPENAI-API-KEY if Baker key existed
@@ -230,7 +234,11 @@ def read_mcq_data(test_data_path, text_keys, label_key, choices_key):
 
     _validate_keys(data_df, text_keys, label_key, choices_key)
     data, y = data_df[text_keys+[choices_key]], data_df[label_key]
-    X = pd.DataFrame(data.apply(lambda x: x[text_keys[0]] + convert_choices(x[choices_key]), axis=1), columns=text_keys)
+    X = pd.DataFrame(
+        data.apply(
+            lambda x: x[text_keys[0]] + convert_choices(x[choices_key]),
+            axis=1),
+        columns=text_keys)
     num_choices = max(data_df[choices_key].apply(lambda x: len(x["label"])))
     return X, y, num_choices
 
@@ -251,7 +259,11 @@ def read_squad_data(test_data_path, text_keys, label_key, context_key):
 
     _validate_keys(data_df, text_keys, label_key, context_key)
     data, y = data_df[text_keys+[context_key]], data_df[label_key]
-    X = pd.DataFrame(data.apply(lambda x: "Context: "+x[context_key]+"\nQuestion: "+x[text_keys[0]], axis=1), columns=text_keys)
+    X = pd.DataFrame(
+        data.apply(
+            lambda x: "Context: "+x[context_key]+"\nQuestion: "+x[text_keys[0]],
+            axis=1),
+        columns=text_keys)
     return X, y
 
 
@@ -279,14 +291,17 @@ def _create_retry_decorator() -> Callable[[Any], Any]:
 def completion_with_retry(**kwargs: Any) -> Any:
     """Use tenacity to retry the completion call.
 
-    Copied from: https://github.com/hwchase17/langchain/blob/42df78d3964170bab39d445aa2827dea10a312a7/langchain/llms/openai.py#L98
+    Copied from: https://github.com/hwchase17/langchain/blob/42df78d3964170bab39d445aa2827dea10a312a7 \
+        /langchain/llms/openai.py#L98
     """
     retry_decorator = _create_retry_decorator()
 
     @retry_decorator
     def _completion_with_retry(**kwargs: Any) -> Any:
         model_name = kwargs['model']
-        if model_name.startswith("gpt-3.5-turbo") or model_name.startswith("gpt-35-turbo") or model_name.startswith("gpt-4"):
+        if model_name.startswith("gpt-3.5-turbo") \
+            or model_name.startswith("gpt-35-turbo") \
+                or model_name.startswith("gpt-4"):
             kwargs['messages'] = [{'role': 'system', 'content': kwargs['prompt'][0]}]
             kwargs_copy = copy.deepcopy(kwargs)
             del kwargs_copy['prompt']
@@ -301,10 +316,15 @@ def completion_with_retry(**kwargs: Any) -> Any:
 
 def get_predictions(data, max_tokens=500, batch_size=20, temperature=0.0, **kwargs):
     """Get Predictions."""
-    log_info(logger, f"Max Tokens: {max_tokens}, Batch Size: {batch_size}, Temperature:{temperature}", CUSTOM_DIMENSIONS)
+    log_info(
+        logger,
+        f"Max Tokens: {max_tokens}, Batch Size: {batch_size}, Temperature:{temperature}",
+        CUSTOM_DIMENSIONS)
     y_pred = [""]*len(data)
     model_name = kwargs['llm_config']['model_name']
-    if model_name.startswith("gpt-3.5-turbo") or model_name.startswith("gpt-35-turbo") or model_name.startswith("gpt-4"):
+    if model_name.startswith("gpt-3.5-turbo") \
+        or model_name.startswith("gpt-35-turbo") \
+            or model_name.startswith("gpt-4"):
         chat = True
     else:
         chat = False
@@ -321,7 +341,10 @@ def get_predictions(data, max_tokens=500, batch_size=20, temperature=0.0, **kwar
                 temperature=temperature,
             )
         except openai.error.InvalidRequestError:
-            log_warning(logger, "Content filter warning encountered. Going via single prompt and skipping filtered results", CUSTOM_DIMENSIONS)
+            log_warning(
+                logger,
+                "Content filter warning encountered. Going via single prompt and skipping filtered results",
+                CUSTOM_DIMENSIONS)
             out = {"choices": []}
             for j in range(i, i+batch_size):
                 try:

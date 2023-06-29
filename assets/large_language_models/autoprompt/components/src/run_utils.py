@@ -213,7 +213,8 @@ def log_tsne(current_run, data):
     model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
     embeddings = model.encode(texts)
     # we might need to try with different values of perplexity based on dataset.
-    # source : https://scikit-learn.org/stable/auto_examples/manifold/plot_t_sne_perplexity.html#sphx-glr-auto-examples-manifold-plot-t-sne-perplexity-py
+    # source : https://scikit-learn.org/stable/auto_examples/manifold/plot_t_sne_perplexity.html \
+    #   #sphx-glr-auto-examples-manifold-plot-t-sne-perplexity-py
     # how to use perplexity effectively : https://distill.pub/2016/misread-tsne/
     perplexity_values = [10, 30, 50]
 
@@ -292,7 +293,10 @@ def log_results(results: TaskResults, y_true_test, top_k, predictions_file):
             if name.startswith("gpt_"):
                 if (isinstance(value, list) or isinstance(value, np.ndarray)) and len(value) > 0:
                     exception_cls_name = value[0]
-                    log_warning(logger, "Ignoring metric: " + name + "\n Computation Failed due to: " + exception_cls_name, CUSTOM_DIMENSIONS)
+                    log_warning(
+                        logger,
+                        "Ignoring metric: " + name + "\n Computation Failed due to: " + exception_cls_name,
+                        CUSTOM_DIMENSIONS)
             else:
                 log_warning(logger, "Ignoring metric: " + name + " due to error: " + repr(e), CUSTOM_DIMENSIONS)
                 traceback.print_exc()
@@ -317,14 +321,20 @@ def log_results(results: TaskResults, y_true_test, top_k, predictions_file):
             value = getattr(results, name, [np.nan]*len(y_true_test))
             val_pred_df[name] = value
         val_pred_df.to_csv("validation_predictions.csv", index=False)
-        current_run.upload_file("validation_predictions.csv", "validation_predictions.csv", datastore_name="workspaceblobstore")
+        current_run.upload_file(
+            "validation_predictions.csv",
+            "validation_predictions.csv",
+            datastore_name="workspaceblobstore")
 
         log_tsne(current_run, val_pred_df)
     except Exception as e:
         log_warning(logger, "Logging TSNE Plot failed with error:"+repr(e), CUSTOM_DIMENSIONS)
         traceback.print_exc()
 
-    current_run.upload_file("best_prompt_predictions.csv", "best_prompt_predictions.csv", datastore_name="workspaceblobstore")
+    current_run.upload_file(
+        "best_prompt_predictions.csv",
+        "best_prompt_predictions.csv",
+        datastore_name="workspaceblobstore")
     current_run.upload_file("all_dev_results.csv", "all_dev_results.csv", datastore_name="workspaceblobstore")
 
     top_k = min(top_k, dev_results_df.shape[0])

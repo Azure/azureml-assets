@@ -57,7 +57,9 @@ class AbstractiveQA(Task):
         unfinished_prompts = 0
 
         model_name = kwargs['llm_config']['model_name']
-        if model_name.startswith("gpt-3.5-turbo") or model_name.startswith("gpt-35-turbo") or model_name.startswith("gpt-4"):
+        if model_name.startswith("gpt-3.5-turbo") \
+            or model_name.startswith("gpt-35-turbo") \
+                or model_name.startswith("gpt-4"):
             chat = True
         else:
             chat = False
@@ -99,7 +101,11 @@ class AbstractiveQA(Task):
 
     def find_best_prompt(self, X, y, valid_x, valid_y, text_keys, **kwargs):
         """Find Best Prompt."""
-        with track_activity(logger, Activities.ABSTRACTIVE,  custom_dimensions=CUSTOM_DIMENSIONS) as abstractive_activity:
+        with track_activity(
+            logger,
+            Activities.ABSTRACTIVE,
+            custom_dimensions=CUSTOM_DIMENSIONS
+        ) as abstractive_activity:
             with track_activity(logger, Activities.GENERATE_PROMPT) as produce_prompt_activity:
                 try:
                     all_prompts = self.produce_prompts(**kwargs)
@@ -170,7 +176,10 @@ class AbstractiveQA(Task):
                     for metric_name, score in metrics["artifacts"].items():
                         if metric_name.startswith("gpt_"):
                             if not score or not isinstance(score, list) or not isinstance(score, np.ndarray):
-                                log_warning(logger, "Metrics package returned empty score for metric "+metric_name, CUSTOM_DIMENSIONS)
+                                log_warning(
+                                    logger,
+                                    "Metrics package returned empty score for metric " + metric_name,
+                                    CUSTOM_DIMENSIONS)
                             try:
                                 cur_score = [int(i) for i in score]
                             except Exception as ex:
@@ -179,9 +188,13 @@ class AbstractiveQA(Task):
                                         exception_cls_name = score[0]
                                         log_warning(logger,
                                                     "Ignoring metric: " + metric_name +
-                                                    "\nComputation Failed due to: " + exception_cls_name, CUSTOM_DIMENSIONS)
+                                                    "\nComputation Failed due to: " + exception_cls_name,
+                                                    CUSTOM_DIMENSIONS)
                                 else:
-                                    log_warning(logger, "Ignoring metric: " + metric_name + " due to error: " + repr(ex), CUSTOM_DIMENSIONS)
+                                    log_warning(
+                                        logger,
+                                        "Ignoring metric: " + metric_name + " due to error: " + repr(ex),
+                                        CUSTOM_DIMENSIONS)
                                 if metric_name == self.primary_metric:
                                     self.primary_metric = DEFAULT_FALLBACK_METRICS
                                 continue

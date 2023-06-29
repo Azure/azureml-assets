@@ -126,7 +126,6 @@ class ComponentBase:
     @staticmethod
     def parse_llm_config(config_str: str) -> Optional[str]:
         """parse_llm_config."""
-        # "llm_config": "{\"type\":\"azure_open_ai\",\"model_name\":\"gpt-35-turbo\",\"deployment_name\":\"chatgpt\",\"temperature\":\"0\",\"max_tokens\":\"1500\"}"
         config = json.loads(config_str)
         return config["deployment_name"]
 

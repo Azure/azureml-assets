@@ -108,10 +108,11 @@ def main():
                         default=10,
                         type=int,
                         required=False)
-    parser.add_argument("--llm_config",
-                        type=str,
-                        default='{"type": "azure_open_ai", "model_name": "text-davinci-002", "deployment_name": "text-davinci-002"}',
-                        required=False)
+    parser.add_argument(
+        "--llm_config",
+        type=str,
+        default='{"type": "azure_open_ai", "model_name": "text-davinci-002", "deployment_name": "text-davinci-002"}',
+        required=False)
     parser.add_argument("--openai_api_version",
                         type=str,
                         default="2022-12-01",

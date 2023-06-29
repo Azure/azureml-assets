@@ -8,7 +8,13 @@ import re
 import time
 import traceback
 
-from azureml.rag.utils.logging import get_logger, enable_stdout_logging, enable_appinsights_logging, track_activity, _logger_factory
+from azureml.rag.utils.logging import (
+    get_logger,
+    enable_stdout_logging,
+    enable_appinsights_logging,
+    track_activity,
+    _logger_factory
+)
 from azureml.rag._asset_client.client import get_rest_client, register_new_data_asset_version
 
 logger = get_logger('register_autoprompt_data')
@@ -38,7 +44,11 @@ def main(args, run, logger, activity_logger):
         },
         output_type="UriFile")
 
-    asset_id = re.sub('azureml://locations/(.*)/workspaces/(.*)/data', f'azureml://subscriptions/{ws._subscription_id}/resourcegroups/{ws._resource_group}/providers/Microsoft.MachineLearningServices/workspaces/{ws._workspace_name}/data', data_version.asset_id)
+    asset_id = re.sub(
+        'azureml://locations/(.*)/workspaces/(.*)/data',
+        f'azureml://subscriptions/{ws._subscription_id}/resourcegroups/'
+        + f'{ws._resource_group}/providers/Microsoft.MachineLearningServices/workspaces/{ws._workspace_name}/data',
+        data_version.asset_id)
     parent_run = ws.get_run(parent_run_id)
     parent_run.add_properties({"azureml.autopromptDataAssetId": asset_id})
 
@@ -54,7 +64,8 @@ def main_wrapper(args, run, logger):
             else:
                 logger.info("Register output is disabled, step will passthrough without registering Autoprompt asset.")
         except Exception:
-            activity_logger.error(f"register_qa_data failed with exception: {traceback.format_exc()}")  # activity_logger doesn't log traceback
+            # activity_logger doesn't log traceback
+            activity_logger.error(f"register_qa_data failed with exception: {traceback.format_exc()}")
             raise
 
 

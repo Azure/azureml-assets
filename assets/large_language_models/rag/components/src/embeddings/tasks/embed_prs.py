@@ -11,8 +11,13 @@ import traceback
 from azureml.rag.embeddings import EmbeddingsContainer
 from azureml.rag.tasks.embed import read_chunks_into_documents
 from azureml.rag.utils.azureml import get_workspace_from_environment
-from azureml.rag.utils.logging import get_logger, enable_stdout_logging, enable_appinsights_logging, track_activity, _logger_factory
-
+from azureml.rag.utils.logging import (
+    get_logger,
+    enable_stdout_logging,
+    enable_appinsights_logging,
+    track_activity,
+    _logger_factory
+)
 
 logger = get_logger('embed_prs')
 
@@ -34,12 +39,17 @@ def main(args, logger, activity_logger):
             mnt_options = MountOptions(
                 default_permission=0o555, allow_other=False, read_only=True)
             try:
-                with rslex_uri_volume_mount(args.embeddings_container, f'{os.getcwd()}/embeddings_container', options=mnt_options) as mount_context:
+                with rslex_uri_volume_mount(
+                    args.embeddings_container,
+                    f'{os.getcwd()}/embeddings_container', options=mnt_options
+                ) as mount_context:
                     embeddings_container_dir_name = None
                     # list all folders in embeddings_container and find the latest one
                     try:
-                        embeddings_container_dir_name = str(max([dir for dir in pathlib.Path(
-                            mount_context.mount_point).glob('*') if dir.is_dir() and dir.name != os.environ['AZUREML_RUN_ID']], key=os.path.getmtime).name)
+                        embeddings_container_dir_name = str(max(
+                            [dir for dir in pathlib.Path(mount_context.mount_point).glob('*')
+                                if dir.is_dir() and dir.name != os.environ['AZUREML_RUN_ID']],
+                            key=os.path.getmtime).name)
                     except Exception as e:
                         activity_logger.warn('Failed to get latest folder from embeddings_container.')
                         logger.warn(
@@ -48,19 +58,22 @@ def main(args, logger, activity_logger):
 
                     if embeddings_container_dir_name is not None:
                         logger.info(
-                            f'loading from previous embeddings from {embeddings_container_dir_name} in {mount_context.mount_point}')
+                            f'loading from previous embeddings from {embeddings_container_dir_name}'
+                            + f' in {mount_context.mount_point}')
                         try:
                             embeddings_container = EmbeddingsContainer.load(
                                 embeddings_container_dir_name, mount_context.mount_point)
                             if hasattr(activity_logger, 'activity_info'):
                                 activity_logger.activity_info["completionStatus"] = "Success"
                         except Exception as e:
-                            activity_logger.warn('Failed to load from embeddings_container_dir_name. Creating new Embeddings.')
+                            activity_logger.warn('Failed to load from embeddings_container_dir_name. '
+                                                 + 'Creating new Embeddings.')
                             logger.warn(
                                 f'Failed to load from previous embeddings with {e}.\nCreating new Embeddings.')
             except Exception as e:
                 activity_logger.warn('Failed to load from embeddings_container. Creating new Embeddings.')
-                logger.warn(f'Failed to load previous embeddings from mount with {e}, proceeding to create new embeddings.')
+                logger.warn(f'Failed to load previous embeddings from mount with {e}, '
+                            + 'proceeding to create new embeddings.')
 
     connection_args = {}
     connection_id = os.environ.get('AZUREML_WORKSPACE_CONNECTION_ID_AOAI')
@@ -78,7 +91,9 @@ def main(args, logger, activity_logger):
                 "key": "OPENAI-API-KEY"
             }
 
-    embeddings_container = embeddings_container if embeddings_container is not None else EmbeddingsContainer.from_uri(args.embeddings_model, **connection_args)
+    embeddings_container = embeddings_container \
+        if embeddings_container is not None \
+        else EmbeddingsContainer.from_uri(args.embeddings_model, **connection_args)
 
 
 def main_wrapper(args, logger):
@@ -87,7 +102,8 @@ def main_wrapper(args, logger):
         try:
             main(args, logger, activity_logger)
         except Exception:
-            activity_logger.error(f"embed_prs failed with exception: {traceback.format_exc()}")  # activity_logger doesn't log traceback
+            # activity_logger doesn't log traceback
+            activity_logger.error(f"embed_prs failed with exception: {traceback.format_exc()}")
             raise
 
 
@@ -127,7 +143,10 @@ def _run_internal(mini_batch, output_data, embeddings):
 
     # read chunks
     pre_embed = time.time()
-    embeddings = embeddings.embed_and_create_new_instance(read_chunks_into_documents((pathlib.Path(p) for p in mini_batch), chunk_format))
+    embeddings = embeddings.embed_and_create_new_instance(
+        read_chunks_into_documents(
+            (pathlib.Path(p) for p in mini_batch),
+            chunk_format))
     post_embed = time.time()
     logger.info(f"Embedding took {post_embed - pre_embed} seconds")
 

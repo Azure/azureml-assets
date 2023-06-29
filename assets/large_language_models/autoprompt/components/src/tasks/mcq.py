@@ -39,7 +39,11 @@ class MCQ(Task):
                 "input": [],
                 "predictions": []
             }
-            with track_activity(logger, Activities.EVALUATE_PROMPTS, custom_dimensions=CUSTOM_DIMENSIONS) as evaluate_prompts_activity:
+            with track_activity(
+                logger,
+                Activities.EVALUATE_PROMPTS,
+                custom_dimensions=CUSTOM_DIMENSIONS
+            ) as evaluate_prompts_activity:
                 for base_prompt in self.meta_prompts:
                     zs_texts = X[text_keys[0]].apply(lambda x: self.prompt_constructor(x, base_prompt)).tolist()
                     log_info(logger, "Sample Prompt", CUSTOM_DIMENSIONS)
@@ -100,7 +104,11 @@ class MCQ(Task):
             prompts_dict.sort(key=lambda x: (x["f1"], x["exact_match"]), reverse=True)
             self.best_prompt = prompts_dict[0]["prompt"]
 
-            with track_activity(logger, Activities.GENERATE_PREDICTIONS, custom_dimensions=CUSTOM_DIMENSIONS) as predict_activity_logger:
+            with track_activity(
+                logger,
+                Activities.GENERATE_PREDICTIONS,
+                custom_dimensions=CUSTOM_DIMENSIONS
+            ) as predict_activity_logger:
                 try:
                     valid_preds, valid_texts = self.infer(valid_x, text_keys, **kwargs)
                 except Exception as e:
