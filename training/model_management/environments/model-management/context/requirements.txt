@@ -1,9 +1,0 @@
-azure-core=={{latest-pypi-version}}
-azure-ai-ml=={{latest-pypi-version}}
-azure-identity=={{latest-pypi-version}}
-azureml-evaluate-mlflow=={{latest-pypi-version}}
-ffmpeg-python=={{latest-pypi-version}}
-langcodes=={{latest-pypi-version}}
-sentencepiece=={{latest-pypi-version}}
-accelerate=={{latest-pypi-version}}
-wget=={{latest-pypi-version}}

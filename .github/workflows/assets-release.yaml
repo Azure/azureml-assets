@@ -13,8 +13,7 @@ on:
 concurrency: ${{ github.workflow }}
 
 env:
-  asset_dirs: .,!test,!scripts
-  test_dirs: .,!test,!scripts,!.git,!.github
+  asset_dirs: assets
   main_dir: main
   release_dir: release
   scripts_azureml_assets_dir: scripts/azureml-assets
@@ -242,7 +241,7 @@ jobs:
   
       - name: Copy test files and scripts
         run: |
-          python -u $main_dir/$scripts_release_dir/test_file_convert.py -i "$test_dirs" -r $release_dir -w $main_dir
+          python -u $main_dir/$scripts_release_dir/test_file_convert.py -i "$asset_dirs" -r $release_dir -w $main_dir
 
       - name: Copy scripts
         run: | 

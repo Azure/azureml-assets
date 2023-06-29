@@ -63,6 +63,31 @@ def release_tag_exists(asset_config: assets.AssetConfig, release_directory_root:
     return asset_config.full_name in repo.tags
 
 
+def get_latest_release_tag_version(asset_config: assets.AssetConfig, release_directory_root: Path) -> str:
+    """Check repo to see if an asset's previous version was released if a latest tag exists.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config
+        release_directory_root (Path): Release branch location
+
+    Returns:
+        str: Latest version found, or None if asset is not an environment or no tags not found
+    """
+    repo = Repo(release_directory_root)
+    tags = [t for t in repo.tags if t.name.startswith(f"{asset_config.partial_name}/")]
+
+    if not tags:
+        # No releases
+        return None
+
+    # Get the latest tag
+    ordered_tags = sorted(tags, key=lambda t: t.commit.authored_datetime)
+    latest_tag = ordered_tags[-1].name
+    _, _, latest_version = assets.AssetConfig.parse_full_name(latest_tag)
+
+    return latest_version
+
+
 def update_asset(asset_config: assets.AssetConfig,
                  release_directory_root: Path,
                  copy_only: bool,
