@@ -1,0 +1,454 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+"""File for the deployment validation."""
+import openai
+import argparse
+import os
+import json
+import polling2
+import traceback
+from logging import Logger
+from azure.core.exceptions import ResourceNotFoundError, ResourceExistsError
+from azureml.rag.utils.connections import get_connection_by_id_v2, workspace_connection_to_credential
+import time
+from typing import Tuple
+from azureml.core import Run, Workspace
+from azureml.core.run import _OfflineRun
+from azure.identity import ManagedIdentityCredential, AzureCliCredential
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+from azure.mgmt.cognitiveservices import CognitiveServicesManagementClient
+from openai.error import InvalidRequestError
+from azureml.rag.utils.logging import (
+    get_logger,
+    enable_stdout_logging,
+    enable_appinsights_logging,
+    track_activity,
+    _logger_factory
+)
+
+logger = get_logger('validate_deployments')
+
+
+MAX_RETRIES = 3
+SLEEP_DURATION = 2
+
+
+def create_aoai_deployment(
+        id,
+        model,
+        client: CognitiveServicesManagementClient,
+        ws,
+        default_aoai_name,
+        activity_logger=None):
+    """Create AOAI default resource deployment."""
+    # Attempt deployment creation 3x
+    for index in range(MAX_RETRIES+1):
+        try:
+            deployment_result = client.deployments.begin_create_or_update(
+                resource_group_name=ws.resource_group,
+                account_name=default_aoai_name,
+                deployment_name=id,
+                deployment={
+                    "properties": {
+                        "model": {
+                            "format": "OpenAI",
+                            "name": model
+                        },
+                        "scaleSettings": {
+                            "scaleType": "Standard"
+                        }
+                    }
+                }
+            )
+            result = deployment_result.result()
+            print(f"Deployment result: {result}")
+        except ResourceExistsError:
+            activity_logger.info("ValidationFailed: Failed to create deployment due to existing deployment"
+                                 + " for model: {}".format(traceback.format_exc()))
+            raise Exception(
+                f"Found existing deployment for model {model} specified. Please re-submit Vector Index "
+                + "creation with existing deployment name.")
+        except Exception as ex:
+            if (index < MAX_RETRIES):
+                time.sleep(SLEEP_DURATION)
+                activity_logger.info(
+                    "Failed to create deployment. Attempting retry of create_or_update deployment...")
+            else:
+                activity_logger.info(
+                    "ValidationFailed: Failed to create deployment despite retries with the following "
+                    + "exception: {}".format(traceback.format_exc()))
+                raise ex
+
+
+def get_cognitive_services_client(ws):
+    """Get cognitive services client."""
+    client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID", None)
+    if os.environ.get("OBO_ENDPOINT"):
+        print("Using User Identity for authentication")
+        credential = AzureMLOnBehalfOfCredential()
+        os.environ['MSI_ENDPOINT'] = os.environ.get("OBO_ENDPOINT", "")
+    elif client_id:
+        print("Using Managed Identity for authentication")
+        credential = ManagedIdentityCredential(client_id=client_id)
+    else:
+        print("Using Azure CLI for authentication")
+        credential = AzureCliCredential()
+    client = CognitiveServicesManagementClient(
+        credential=credential, subscription_id=ws.subscription_id)
+    return client
+
+
+def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=None):
+    """Validate default aoai deployments and attempt creation if does not exist."""
+    try:
+        client = get_cognitive_services_client(ws)
+        response = client.deployments.get(
+            resource_group_name=ws.resource_group,
+            account_name=model_params["default_aoai_name"],
+            deployment_name=model_params["deployment_id"],
+        )
+        response_status = str.lower(response.properties.provisioning_state)
+        if (response_status != "succeeded"):
+            # log this becauase we need to find out what the possible states are
+            print(
+                f"Deployment is not yet in status 'succeeded'. Current status is: {response_status}")
+        if (response_status == "failed" or response_status == "deleting"):
+            # Do not allow polling to continue if deployment state is failed or deleting
+            activity_logger.info(
+                f"ValidationFailed: Deployment {model_params['deployment_id']} for model "
+                + f"{model_params['model_name']} is in failed or deleting state. Please resubmit job with a "
+                + "successful deployment.")
+            raise Exception(
+                f"Deployment {model_params['deployment_id']} for model {model_params['model_name']} is in failed "
+                + "or deleting state. Please resubmit job with a successful deployment.")
+        completion_succeeded = (response_status == "succeeded")
+        if (completion_succeeded):
+            activity_logger.info(
+                f"[Validate Deployments]: Default AOAI resource deployment {model_params['deployment_id']} for "
+                + f"model {model_params['model_name']} is in 'succeeded' status")
+        return completion_succeeded
+    except ResourceNotFoundError:
+        activity_logger.info(
+            f"ResourceNotFound: Attempting to create deployment {model_params['deployment_id']} for model "
+            + f"{model_params['model_name']} in default AOAI workspace...")
+        create_aoai_deployment(id=model_params["deployment_id"],
+                               model=model_params["model_name"],
+                               client=client,
+                               ws=ws,
+                               default_aoai_name=model_params["default_aoai_name"],
+                               activity_logger=activity_logger)
+
+
+def check_deployment_status(model_params, model_type, activity_logger=None):
+    """Check deployment status of the model deployment in AOAI.
+
+    Attempt to create the deployment, but if the deployment_name does not match what customer wanted,
+        throw Exception.
+    """
+    if (model_params == {}):
+        return True
+
+    openai.api_type = model_params["openai_api_type"]
+    openai.api_version = model_params["openai_api_version"]
+    openai.api_base = model_params["openai_api_base"]
+    openai.api_key = model_params["openai_api_key"]
+    if (model_params["openai_api_type"].lower() != "azure" or not model_params["deployment_id"]):
+        # If OAI (not-azure), just pass through validation
+        activity_logger.info(
+            "[Validate Deployments]: Not an Azure Open AI resource - pass through validation.",
+            extra={
+                'properties': {
+                    'openai_api_type': model_params["openai_api_type"].lower(),
+                    'deployment_id': model_params["deployment_id"]}})
+        return True
+
+    ws, _ = get_workspace_and_run()
+
+    if ("default_aoai_name" in model_params and
+            split_details(model_params["connection"], start=1)["connections"] == "Default_AzureOpenAI"):
+        # Special control plane validation for default AOAI connection
+        activity_logger.info(
+            "[Validate Deployments]: Default AOAI resource detected. Performing control plane validations now...",
+            extra={
+                'properties': {
+                    'model_type': model_type,
+                    'model_name': model_params["model_name"],
+                    'deployment_name': model_params["deployment_id"]}})
+        return validate_and_create_default_aoai_resource(ws, model_params, activity_logger)
+    else:
+        activity_logger.info(
+            "[Validate Deployments]: Non-default AOAI resource detected. Performing data plane validations now...",
+            extra={
+                'properties': {
+                    'model_type': model_type,
+                    'model_name': model_params["model_name"],
+                    'deployment_name': model_params["deployment_id"]}})
+        # Data plane validation for non-default AOAI resource
+        if model_type == "llm":
+            from langchain.llms import AzureOpenAI
+            from langchain.chat_models import AzureChatOpenAI
+            from langchain.chains import LLMChain
+            from langchain.prompts import PromptTemplate
+            if "gpt-" in model_params["model_name"]:
+                model_kwargs = {
+                    "engine": model_params["deployment_id"],
+                    "frequency_penalty": 0,
+                    "presence_penalty": 0
+                }
+                llm = AzureChatOpenAI(
+                    deployment_name=model_params["deployment_id"],
+                    model_name=model_params["model_name"],
+                    model_kwargs=model_kwargs,
+                    openai_api_key=model_params["openai_api_key"],
+                    openai_api_base=model_params["openai_api_base"],
+                    openai_api_version=model_params["openai_api_version"],
+                    openai_api_type=model_params["openai_api_type"])
+            else:
+                llm = AzureOpenAI(
+                    deployment_name=model_params["deployment_id"],
+                    model_name=model_params["model_name"],
+                    openai_api_key=model_params["openai_api_key"])
+            try:
+                template = "Answer the following question" + \
+                    "\n\nContext:\n{context}\n\nQuestion: {question}\n\n Answer:"
+                prompt = PromptTemplate(template=template, input_variables=[
+                                        "context", "question"])
+                llm_chain = LLMChain(prompt=prompt, llm=llm)
+                llm_chain.run({
+                    'context': "Say Yes if you received the the question",
+                    'question': "Did you receive the question?"
+                })
+            except InvalidRequestError as ex:
+                activity_logger.info("ValidationFailed: completion model deployment validation failed due to the "
+                                     + "following exception: {}.".format(traceback.format_exc()))
+                activity_logger.exception(
+                    "ValidationFailed with exception: completion model deployment validation failed due to the "
+                    + "following exception: {}.".format(traceback.format_exc()))
+                if ("Resource not found" in str(ex) or
+                        "The API deployment for this resource does not exist" in str(ex)):
+                    raise Exception(
+                        "DeploymentValidationFailed: please submit a model deployment which exists "
+                        + "in your AOAI workspace.")
+                else:
+                    raise
+        elif model_type == "embedding":
+            from langchain.embeddings import OpenAIEmbeddings
+            embeddings = OpenAIEmbeddings(
+                deployment=model_params["deployment_id"],
+                model=model_params["model_name"],
+                openai_api_key=model_params["openai_api_key"])
+            try:
+                embeddings.embed_query(
+                    "Embed this query to test if deployment exists")
+            except InvalidRequestError as ex:
+                activity_logger.info(
+                    "ValidationFailed: embeddings deployment validation failed due to the following exception: {}."
+                    .format(traceback.format_exc()))
+                if ("Resource not found" in str(ex) or
+                        "The API deployment for this resource does not exist" in str(ex)):
+                    raise Exception(
+                        "DeploymentValidationFailed: please submit an embedding deployment which exists "
+                        + "in your AOAI workspace.")
+                else:
+                    raise
+        return True
+
+
+def poll_on_deployment(completion_params, embedding_params={}, activity_logger=None):
+    """Poll on check_deployment_status for completion and embeddings model deployments."""
+    activity_logger.info(
+        "[Validate Deployments]: Starting to poll on deployment status validation.")
+    polling2.poll(
+        lambda: check_deployment_status(completion_params, "llm", activity_logger) and check_deployment_status(
+            embedding_params, "embedding", activity_logger),
+        timeout=1800,
+        step=10)
+
+
+def split_details(details, start):
+    """Split details of embeddings model uri."""
+    details = details.split('/')
+    dets = {}
+    for i in range(start, len(details), 2):
+        dets[details[i]] = details[i + 1]
+    return dets
+
+
+def get_workspace_and_run() -> Tuple[Workspace, Run]:
+    """get_workspace_and_run."""
+    run = Run.get_context()
+    if isinstance(run, _OfflineRun):  # for local testing
+        workspace = Workspace.from_config()
+    else:
+        workspace = run.experiment.workspace
+    return workspace, run
+
+
+def main(parser_args, activity_logger: Logger):
+    """Extract main method."""
+    completion_params = {}
+    embedding_params = {}
+
+    llm_config = json.loads(parser_args.llm_config)
+    print(f"Using llm_config: {json.dumps(llm_config, indent=2)}")
+    check_embeddings = parser_args.check_embeddings == "true" or parser_args.check_embeddings == "True"
+    check_completion = parser_args.check_completion == "true" or parser_args.check_completion == "True"
+    connection_id_completion = os.environ.get(
+        "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_COMPLETION", None)
+    connection_id_embedding = os.environ.get(
+        "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING", None)
+
+    activity_logger.info(
+        "[Validate Deployments]: Received and parsed arguments for validating deployments in RAG. "
+        + " Starting validation now...")
+
+    if connection_id_completion and check_completion:
+        connection = get_connection_by_id_v2(connection_id_completion)
+        credential = workspace_connection_to_credential(connection)
+        if hasattr(credential, 'key'):
+            completion_params["deployment_id"] = llm_config["deployment_name"]
+            print(
+                f"Completion model deployment name: {completion_params['deployment_id']}")
+            completion_params["model_name"] = llm_config["model_name"]
+            print(
+                f"Completion model name: {completion_params['model_name']}")
+            completion_params["openai_api_key"] = credential.key
+            completion_params["openai_api_base"] = connection['properties'].get('target', {
+            })
+            connection_metadata = connection['properties'].get('metadata', {})
+            completion_params["openai_api_type"] = connection_metadata.get(
+                'apiType',
+                connection_metadata.get('ApiType', "azure"))
+            completion_params["openai_api_version"] = connection_metadata.get(
+                'apiVersion',
+                connection_metadata.get('ApiVersion', "2023-03-15-preview"))
+            completion_params["connection"] = connection_id_completion
+            if "ResourceId" in connection["properties"]["metadata"]:
+                cog_workspace_details = split_details(
+                    connection["properties"]["metadata"]["ResourceId"], start=1)
+                completion_params["default_aoai_name"] = cog_workspace_details["accounts"]
+        if completion_params == {}:
+            activity_logger.info(
+                "ValidationFailed: Completion model LLM connection was unable to pull information")
+            raise Exception(
+                "Completion model LLM connection was unable to pull information")
+        activity_logger.info(
+            "[Validate Deployments]: Completion workspace connection retrieved and params populated successfully...",
+            extra={
+                'properties': {
+                    'connection': connection_id_completion,
+                    'openai_api_type': completion_params["openai_api_type"],
+                    'model_name': completion_params["model_name"],
+                    'deployment_name': completion_params["deployment_id"],
+                    'is_default_aoai': "default_aoai_name" in completion_params}})
+    elif check_completion:
+        activity_logger.info(
+            "ValidationFailed: ConnectionID for LLM is empty and check_embeddings = True")
+        raise Exception(
+            "ConnectionID for LLM is empty and check_completion = True")
+
+    # Embedding connection will not be passed in for Existing ACS scenario
+    if connection_id_embedding and check_embeddings:
+        connection = get_connection_by_id_v2(connection_id_embedding)
+        credential = workspace_connection_to_credential(connection)
+        _, details = parser_args.embeddings_model.split('://')
+        if hasattr(credential, 'key'):
+            embedding_params["deployment_id"] = split_details(details, start=0)[
+                "deployment"]
+            print(
+                f"Embedding deployment name: {embedding_params['deployment_id']}")
+            embedding_params["model_name"] = split_details(details, start=0)[
+                "model"]
+            print(
+                f"Embedding model name: {embedding_params['model_name']}")
+            embedding_params["openai_api_key"] = credential.key
+            embedding_params["openai_api_base"] = connection['properties'].get('target', {
+            })
+            connection_metadata = connection['properties'].get('metadata', {})
+            embedding_params["openai_api_type"] = connection_metadata.get(
+                'apiType',
+                connection_metadata.get('ApiType', "azure"))
+            embedding_params["openai_api_version"] = connection_metadata.get(
+                'apiVersion',
+                connection_metadata.get('ApiVersion', "2023-03-15-preview"))
+            embedding_params["connection"] = connection_id_embedding
+            if "ResourceId" in connection["properties"]["metadata"]:
+                cog_workspace_details = split_details(
+                    connection["properties"]["metadata"]["ResourceId"], start=1)
+                embedding_params["default_aoai_name"] = cog_workspace_details["accounts"]
+            print("Using workspace connection key for OpenAI embeddings")
+        if embedding_params == {}:
+            activity_logger.info(
+                "ValidationFailed: Embedding model connection was unable to pull information")
+            raise Exception(
+                "Embeddings connection was unable to pull information")
+        activity_logger.info(
+            "[Validate Deployments]: Embedding workspace connection retrieved and params populated successfully...",
+            extra={
+                'properties': {
+                    'connection': connection_id_embedding,
+                    'openai_api_type': embedding_params["openai_api_type"],
+                    'model_name': embedding_params["model_name"],
+                    'deployment_name': embedding_params["deployment_id"],
+                    'is_default_aoai': "default_aoai_name" in embedding_params}})
+    elif check_embeddings:
+        activity_logger.info(
+            "ValidationFailed: ConnectionID for Embeddings is empty and check_embeddings = True")
+        raise Exception(
+            "ConnectionID for Embeddings is empty and check_embeddings = True")
+
+    poll_on_deployment(completion_params,
+                       embedding_params, activity_logger)
+    # dummy output to allow step ordering
+    with open(parser_args.output_data, "w") as f:
+        json.dump({"deployment_validation_success": "true"}, f)
+
+    activity_logger.info(
+        "[Validate Deployments]: Success! Deployments have been validated.")
+
+
+def main_wrapper(parser_args, logger):
+    """Wrap around main function."""
+    with track_activity(
+        logger,
+        'validate_deployments',
+        custom_dimensions={
+            'llm_config': parser_args.llm_config,
+            'embeddings_model': parser_args.embeddings_model
+        }
+    ) as activity_logger:
+        try:
+            main(parser_args, activity_logger)
+        except Exception:
+            # activity_logger doesn't log traceback
+            activity_logger.error("ValidationFailed: validate_deployments failed with exception: "
+                                  + f"{traceback.format_exc()}")
+            raise
+
+
+if __name__ == "__main__":
+    enable_stdout_logging()
+    enable_appinsights_logging()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--check_embeddings", type=str,
+                        required=True, default="True")
+    parser.add_argument("--check_completion", type=str,
+                        required=True, default="True")
+    parser.add_argument(
+        "--llm_config",
+        type=str,
+        default='{"type": "azure_open_ai","model_name": "gpt-35-turbo", "deployment_name": '
+        + '"gpt-35-turbo", "temperature": 0, "max_tokens": 1500}')
+    parser.add_argument("--embeddings_model", type=str,
+                        default="azure_open_ai://deployment/text-embedding-ada-002/model/text-embedding-ada-002")
+    parser.add_argument("--output_data", type=str)
+    parser_args = parser.parse_args()
+
+    run = Run.get_context()
+    try:
+        main_wrapper(parser_args, logger)
+    finally:
+        if _logger_factory.appinsights:
+            _logger_factory.appinsights.flush()
+            time.sleep(5)  # wait for appinsights to send telemetry
