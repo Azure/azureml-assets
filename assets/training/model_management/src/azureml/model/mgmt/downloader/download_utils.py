@@ -61,7 +61,6 @@ def _download_git_model(model_uri: str, model_dir: Path) -> None:
         exit_code, stdout = run_command(clone_cmd)
         if exit_code != 0:
             msg = f"Could not clone repo {model_uri}. Error => {stdout}"
-            logger.error(msg)
             raise Exception(msg)
 
         git_path = os.path.join(model_dir, ".git")
@@ -90,7 +89,6 @@ def _download_azure_artifacts(model_uri, model_dir):
         exit_code, stdout = run_command(download_cmd)
         if exit_code != 0:
             msg = f"Failed to download model files with URL: {model_uri}. Error => {stdout}"
-            logger.error(msg)
             raise Exception(msg)
 
         return {
@@ -118,5 +116,4 @@ def download_model_for_path_type(model_path_type: PathType, model_uri: str, mode
     elif model_path_type == PathType.AZUREBLOB.value or model_path_type == PathType.AZUREBLOB:
         return _download_azure_artifacts(model_uri, model_dir)
     else:
-        logger.error("Unsupported Model Download Method.")
-        raise Exception("Unsupported Model Download Method.")
+        raise Exception(f"Unsupported Model download type: {model_path_type}")

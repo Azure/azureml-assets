@@ -111,10 +111,8 @@ def get_mlclient(registry_name=None, use_default=False):
 def copy_file_paths_to_destination(src_dir: Path, destn_dir: Path, regex: str) -> None:
     """Copy files to destination directory [Non-recursively] based on regex pattern provided."""
     if not Path(src_dir).is_dir():
-        logger.error("src path provided should be a dir")
         raise Exception("src path provided should be a dir")
     if Path(destn_dir).exists():
-        logger.error("destination dir should be empty")
         raise Exception("destination dir should be empty")
     os.makedirs(destn_dir)
     pattern = re.compile(regex)
@@ -151,10 +149,8 @@ def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str,
     item_sep = item_sep.strip()
     kv_sep = kv_sep.strip()
     if len(item_sep) > 1 or len(kv_sep) > 1:
-        logger.error("Provide single char as separator")
         raise Exception("Provide single char as separator")
     if item_sep == kv_sep:
-        logger.error("item_sep and kv_sep are equal.")
         raise Exception("item_sep and kv_sep are equal.")
     parsed_dict = {}
     kv_pairs = dict_str.split(item_sep)

@@ -59,7 +59,6 @@ class HuggingfaceDownloader:
                 if self._model_id == info.modelId:
                     return info
         except Exception as e:
-            logger.error(f"Failed to validate model id : {e}")
             raise ValueError(f"Failed to validate model id : {e}")
         return None
 
@@ -117,9 +116,8 @@ class HuggingfaceDownloader:
         else:
             error_msg = (
                 f"Invalid Hugging face model id: {self._model_id}."
-                "Please ensure that you are using a correct and existing model ID"
+                " Please ensure that you are using a correct and existing model ID"
             )
-            logger.error(error_msg)
             raise ValueError(error_msg)
 
 
@@ -186,6 +184,5 @@ def download_model(model_source: str, model_id: str, download_dir: Path):
     elif model_source == ModelSource.AZUREBLOB.value:
         downloader = AzureBlobstoreDownloader(model_uri=model_id)
     else:
-        logger.error(f"Download from {model_source} is not supported")
         raise Exception(f"Download from {model_source} is not supported")
     return downloader.download_model(download_dir)

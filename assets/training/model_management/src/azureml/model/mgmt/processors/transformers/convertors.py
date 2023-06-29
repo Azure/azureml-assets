@@ -107,7 +107,6 @@ class HFMLFLowConvertor(ABC):
         )
 
         if pipeline_init_args and (model_hf_load_args or config_hf_load_kwargs or tokenizer_hf_load_kwargs):
-            logger.error("set(model, config, tokenizer) init args and pipeline init args are exclusive.")
             raise Exception("set(model, config, tokenizer) init args and pipeline init args are exclusive.")
 
         self._hf_conf = {
@@ -200,7 +199,6 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         """Initialize mlflow convertor for vision models."""
         super().__init__(**kwargs)
         if not SupportedVisionTasks.has_value(self._task):
-            logger.error("Unsupported vision task")
             raise Exception("Unsupported vision task")
 
     def get_model_signature(self):
@@ -241,7 +239,6 @@ class ASRMLflowConvertor(HFMLFLowConvertor):
         """Initialize mlflow convertor for ASR models."""
         super().__init__(**kwargs)
         if self._task != SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
-            logger.error("Unsupported ASR task")
             raise Exception(f"Unsupported ASR task {self._task}")
 
     def get_model_signature(self):
@@ -340,7 +337,6 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         """Initialize mlflow convertor for NLP models."""
         super().__init__(**kwargs)
         if not SupportedNLPTasks.has_value(self._task):
-            logger.error("Unsupported NLP task")
             raise Exception("Unsupported NLP task")
 
     def get_model_signature(self):

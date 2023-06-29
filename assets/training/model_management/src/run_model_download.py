@@ -7,6 +7,7 @@ import argparse
 import json
 from azureml.model.mgmt.config import AppName
 from azureml.model.mgmt.downloader import download_model, ModelSource
+from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
 
 
@@ -23,7 +24,9 @@ def _get_parser():
     return parser
 
 
-if __name__ == "__main__":
+@swallow_all_exceptions(logger)
+def run():
+    """Run model download."""
     parser = _get_parser()
     args, unknown_args_ = parser.parse_known_args()
 
@@ -33,7 +36,6 @@ if __name__ == "__main__":
     model_output_dir = args.model_output_dir
 
     if not ModelSource.has_value(model_source):
-        logger.error("Unsupported model source")
         raise Exception(f"Unsupported model source {model_source}")
 
     logger.info(f"Model source: {model_source}")
@@ -48,3 +50,7 @@ if __name__ == "__main__":
         json.dump(model_download_details, f)
 
     logger.info("Download completed!!!")
+
+
+if __name__ == "__main__":
+    run()

@@ -12,6 +12,7 @@ from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
+from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -70,28 +71,25 @@ def _get_parser():
 
 def _validate_transformers_args(args):
     if not args.get("model_id"):
-        logger.error("model_id is a required parameter for hftransformers mlflow flavor.")
         raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
     if not args.get("task"):
-        logger.error("task is a required parameter for hftransformers mlflow flavor.")
         raise Exception("task is a required parameter for hftransformers mlflow flavor.")
     task = args["task"]
     if not SupportedTasks.has_value(task):
-        logger.error(f"Unsupported task {task} for hftransformers mlflow flavor.")
         raise Exception(f"Unsupported task {task} for hftransformers mlflow flavor.")
 
 
 def _validate_pyfunc_args(pyfunc_args):
     if not pyfunc_args.get("task"):
-        logger.error("task is a required parameter for pyfunc flavor.")
         raise Exception("task is a required parameter for pyfunc flavor.")
     task = pyfunc_args["task"]
     if not Tasks.has_value(task):
-        logger.error(f"Unsupported task {task} for pyfunc flavor.")
         raise Exception(f"Unsupported task {task} for pyfunc flavor.")
 
 
-if __name__ == "__main__":
+@swallow_all_exceptions(logger)
+def run():
+    """Run preprocess."""
     parser = _get_parser()
     args, _ = parser.parse_known_args()
 
@@ -114,8 +112,7 @@ if __name__ == "__main__":
     license_file_path = args.license_file_path
 
     if not ModelFlavor.has_value(mlflow_flavor):
-        logger.error(f"Unsupported model flavor {mlflow_flavor}")
-        raise Exception("Unsupported model flavor")
+        raise Exception(f"Unsupported model flavor {mlflow_flavor}")
 
     preprocess_args = {}
     if model_download_metadata_path:
@@ -164,3 +161,7 @@ if __name__ == "__main__":
     with open(model_import_job_path, "w") as outfile:
         outfile.write(json_object)
     logger.info("Finished writing job path")
+
+
+if __name__ == "__main__":
+    run()
