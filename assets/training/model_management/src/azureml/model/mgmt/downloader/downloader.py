@@ -11,6 +11,10 @@ from huggingface_hub.hf_api import HfApi, ModelFilter, ModelInfo
 from pathlib import Path
 from typing import List
 from azureml.model.mgmt.utils.common_utils import retry
+from azureml.model.mgmt.utils.logging_utils import get_logger
+
+
+logger = get_logger(__name__)
 
 
 PROPERTIES = [
@@ -49,20 +53,21 @@ class HuggingfaceDownloader:
 
     @retry(3)
     def _fetch_model_info(self):
-        model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
-        for info in model_list:
-            if self._model_id == info.modelId:
-                return info
+        try:
+            model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
+            for info in model_list:
+                if self._model_id == info.modelId:
+                    return info            
+        except Exception as e:
+            logger.error(f"Failed to validate model id : {e}")
+            raise ValueError(f"Failed to validate model id : {e}")
         return None
 
     @property
     def model_info(self) -> ModelInfo:
         """Hugging face model info."""
         if self._model_info is None:
-            try:
-                self._model_info = self._fetch_model_info()
-            except Exception as e:
-                raise ValueError(f"Failed to validate model id : {e}")
+            self._model_info = self._fetch_model_info()
         return self._model_info
 
     def _get_model_properties(self):
@@ -114,6 +119,7 @@ class HuggingfaceDownloader:
                     f"Invalid Hugging face model id: {self._model_id}."
                     "Please ensure that you are using a correct and existing model ID"
             )
+            logger.error(error_msg)
             raise ValueError(error_msg)
 
 
@@ -180,5 +186,6 @@ def download_model(model_source: str, model_id: str, download_dir: Path):
     elif model_source == ModelSource.AZUREBLOB.value:
         downloader = AzureBlobstoreDownloader(model_uri=model_id)
     else:
+        logger.error(f"Download from {model_source} is not supported")
         raise Exception(f"Download from {model_source} is not supported")
     return downloader.download_model(download_dir)

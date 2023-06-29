@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Any, Dict, List, Tuple
-from azureml.model.mgmt.utils import logging_utils
+from azureml.model.mgmt.utils.logging_utils import get_logger 
 from applicationinsights import TelemetryClient
 from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
 
@@ -30,10 +30,10 @@ ITEM_COMMA_SEP = ","
 ITEM_SEMI_COLON_SEP = ";"
 
 
-logger = logging_utils.get_logger()
+logger = get_logger(__name__)
 
 
-def log_execution_time(func, logger=None):
+def log_execution_time(func):
     """Decorate method to log execution time."""
 
     def wrap_func(*args, **kwargs):
@@ -111,8 +111,10 @@ def get_mlclient(registry_name=None, use_default=False):
 def copy_file_paths_to_destination(src_dir: Path, destn_dir: Path, regex: str) -> None:
     """Copy files to destination directory [Non-recursively] based on regex pattern provided."""
     if not Path(src_dir).is_dir():
+        logger.error("src path provided should be a dir")
         raise Exception("src path provided should be a dir")
     if Path(destn_dir).exists():
+        logger.error("destination dir should be empty")
         raise Exception("destination dir should be empty")
     os.makedirs(destn_dir)
     pattern = re.compile(regex)
@@ -149,8 +151,10 @@ def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str,
     item_sep = item_sep.strip()
     kv_sep = kv_sep.strip()
     if len(item_sep) > 1 or len(kv_sep) > 1:
+        logger.error("Provide single char as separator")
         raise Exception("Provide single char as separator")
     if item_sep == kv_sep:
+        logger.error("item_sep and kv_sep are equal.")
         raise Exception("item_sep and kv_sep are equal.")
     parsed_dict = {}
     kv_pairs = dict_str.split(item_sep)
@@ -207,46 +211,3 @@ def retry(times):
                         raise
         return newfn
     return decorator
-
-
-def init_tc():
-    """Initialize app insights telemetry client."""
-    global tc
-    if tc is None:
-        try:
-            tc = TelemetryClient("71b954a8-6b7d-43f5-986c-3d3a6605d803")
-        except Exception as e:
-            print(f"Exception while initializing app insights: {e}")
-
-
-def tc_log(message):
-    """Log message to app insights."""
-    global tc
-    try:
-        print(message)
-        tc.track_event(name="FM_import_pipeline_debug_logs", properties={"message": message})
-        tc.flush()
-    except Exception as e:
-        print(f"Exception while logging to app insights: {e}")
-
-
-def tc_exception(e, message):
-    """Log exception to app insights."""
-    global tc
-    try:
-        tc.track_exception(value=e.__class__, properties={"exception": message})
-        tc.flush()
-    except Exception as e:
-        print(f"Exception while logging exception to app insights: {e}")
-
-
-def check_model_id(model_id):
-    """Hugging face model info."""
-    try:
-        model_list: List[ModelInfo] = HfApi(endpoint=HF_ENDPOINT).list_models(filter=ModelFilter(model_name=model_id))
-        for info in model_list:
-            if model_id == info.modelId:
-                return True
-    except Exception as e:
-        raise ValueError(f"Failed to validate model id : {e}")
-    return False

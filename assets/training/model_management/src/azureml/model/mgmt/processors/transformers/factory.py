@@ -12,12 +12,16 @@ from azureml.model.mgmt.processors.transformers.config import (
     SupportedTextToImageModelFamily,
     SupportedVisionTasks,
 )
+from azureml.model.mgmt.utils.logging_utils import get_logger
 from .convertors import (
     NLPMLflowConvertor,
     VisionMLflowConvertor,
     WhisperMLFlowConvertor,
     StableDiffusionMlflowConvertor,
 )
+
+
+logger = get_logger(__name__)
 
 
 def get_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
@@ -34,6 +38,7 @@ def get_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
     elif task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
         return ASRMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
     else:
+        logger.error(f"{task} not supported for mlflow conversion using hftransformers")
         raise Exception(f"{task} not supported for mlflow conversion using hftransformers")
 
 
@@ -85,6 +90,7 @@ class ASRMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
                 temp_dir=temp_dir,
                 translate_params=translate_params,
             )
+        logger.error("Unsupported ASR model family")
         raise Exception("Unsupported ASR model family")
 
 
@@ -101,4 +107,5 @@ class DiffusersMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
                 temp_dir=temp_dir,
                 translate_params=translate_params,
             )
+        logger.error("Unsupported diffuser model family")
         raise Exception("Unsupported diffuser model family")

@@ -23,7 +23,7 @@ from azureml.model.mgmt.utils.common_utils import (
     get_dict_from_comma_separated_str,
     get_list_from_comma_separated_str,
 )
-from azureml.model.mgmt.utils.logging_utils import logger
+from azureml.model.mgmt.utils.logging_utils import get_logger
 from diffusers import StableDiffusionPipeline
 from mlflow.models import ModelSignature
 from mlflow.types.schema import ColSpec
@@ -48,7 +48,7 @@ from transformers import (
 from typing import Any, Dict
 
 
-logger = logger.get_logger(__name__)
+logger = get_logger(__name__)
 
 
 class HFMLFLowConvertor(ABC):
@@ -107,6 +107,7 @@ class HFMLFLowConvertor(ABC):
         )
 
         if pipeline_init_args and (model_hf_load_args or config_hf_load_kwargs or tokenizer_hf_load_kwargs):
+            logger.error("set(model, config, tokenizer) init args and pipeline init args are exclusive.")
             raise Exception("set(model, config, tokenizer) init args and pipeline init args are exclusive.")
 
         self._hf_conf = {
@@ -199,6 +200,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         """Initialize mlflow convertor for vision models."""
         super().__init__(**kwargs)
         if not SupportedVisionTasks.has_value(self._task):
+            logger.error("Unsupported vision task")
             raise Exception("Unsupported vision task")
 
     def get_model_signature(self):
@@ -239,6 +241,7 @@ class ASRMLflowConvertor(HFMLFLowConvertor):
         """Initialize mlflow convertor for ASR models."""
         super().__init__(**kwargs)
         if self._task != SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
+            logger.error("Unsupported ASR task")
             raise Exception(f"Unsupported ASR task {self._task}")
 
     def get_model_signature(self):
@@ -337,6 +340,7 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         """Initialize mlflow convertor for NLP models."""
         super().__init__(**kwargs)
         if not SupportedNLPTasks.has_value(self._task):
+            logger.error("Unsupported NLP task")
             raise Exception("Unsupported NLP task")
 
     def get_model_signature(self):
