@@ -16,7 +16,7 @@ from azureml.model.mgmt.utils.logging_utils import get_logger
 from .convertors import (
     NLPMLflowConvertor,
     VisionMLflowConvertor,
-    WhisperMLFlowConvertor,
+    WhisperMLflowConvertor,
     StableDiffusionMlflowConvertor,
 )
 
@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 
 
 def get_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
-    """Instantiate and return hftransformers mlflow convertor."""
+    """Instantiate and return hftransformers MLflow convertor."""
     task = translate_params["task"]
     if SupportedNLPTasks.has_value(task):
         return NLPMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
@@ -38,23 +38,23 @@ def get_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
     elif task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
         return ASRMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
     else:
-        raise Exception(f"{task} not supported for mlflow conversion using hftransformers")
+        raise Exception(f"{task} not supported for MLflow conversion using hftransformers")
 
 
-class HFMLFlowConvertorFactoryInterface(ABC):
+class HFMLflowConvertorFactoryInterface(ABC):
     """HF MLflow covertor factory interface."""
 
     @abstractmethod
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
-        """Create mlflow convertor."""
+        """Create MLflow convertor."""
         raise NotImplementedError
 
 
-class NLPMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
+class NLPMLflowConvertorFactory(HFMLflowConvertorFactoryInterface):
     """Factory class for NLP model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
-        """Create mlflow convertor for NLP tasks."""
+        """Create MLflow convertor for NLP tasks."""
         return NLPMLflowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
@@ -63,11 +63,11 @@ class NLPMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
         )
 
 
-class VisionMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
+class VisionMLflowConvertorFactory(HFMLflowConvertorFactoryInterface):
     """Factory class for vision model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
-        """Create mlflow convertor for vision tasks."""
+        """Create MLflow convertor for vision tasks."""
         return VisionMLflowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
@@ -76,14 +76,14 @@ class VisionMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
         )
 
 
-class ASRMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
+class ASRMLflowConvertorFactory(HFMLflowConvertorFactoryInterface):
     """Factory class for ASR model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
-        """Create mlflow convertor for ASR tasks."""
+        """Create MLflow convertor for ASR tasks."""
         misc = translate_params["misc"]
         if misc and SupportedASRModelFamily.WHISPER.value in misc:
-            return WhisperMLFlowConvertor(
+            return WhisperMLflowConvertor(
                 model_dir=model_dir,
                 output_dir=output_dir,
                 temp_dir=temp_dir,
@@ -92,11 +92,11 @@ class ASRMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
         raise Exception("Unsupported ASR model family")
 
 
-class DiffusersMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
+class DiffusersMLflowConvertorFactory(HFMLflowConvertorFactoryInterface):
     """Factory class for diffusor model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
-        """Create mlflow convertor for diffusers."""
+        """Create MLflow convertor for diffusers."""
         misc = translate_params["misc"]
         if misc and SupportedTextToImageModelFamily.STABLE_DIFFUSION.value in misc:
             return StableDiffusionMlflowConvertor(

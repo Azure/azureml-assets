@@ -17,15 +17,15 @@ logger = get_logger(__name__)
 def run_preprocess(mlflow_flavor: str, model_path: Path, output_dir: Path, temp_dir: Path, **preprocess_args: Dict):
     """Preprocess model.
 
-    :param mlflow_flavor: mlflow flavor for converting model to
+    :param mlflow_flavor: MLflow flavor for converting model to
     :type mlflow_flavor: str
     :param model_path: input model path
     :type model_path: Path
-    :param output_dir: directory where converted mlflow model would be saved to
+    :param output_dir: directory where converted MLflow model would be saved to
     :type output_dir: Path
     :param temp_dir: directory for temporary operations
     :type output_dir: Path
-    :param preprocess_args: additional preprocess args required by mlflow flavor
+    :param preprocess_args: additional preprocess args required by MLflow flavor
     :type preprocess_args: Dict
     """
     logger.info(f"Run preprocess for model with flavor: {mlflow_flavor} at path: {model_path}")
