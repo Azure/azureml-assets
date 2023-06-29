@@ -19,6 +19,7 @@ class TestFactoryModule(unittest.TestCase):
 
     @patch('azureml.model.mgmt.processors.transformers.factory.NLPMLflowConvertorFactory')
     def test_get_nlp_mlflow_convertor(self, mock_nlp_factory):
+        """Test NLP model MLflow convertor."""
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
@@ -36,6 +37,7 @@ class TestFactoryModule(unittest.TestCase):
 
     @patch('azureml.model.mgmt.processors.transformers.factory.VisionMLflowConvertorFactory')
     def test_get_vision_mlflow_convertor(self, mock_vision_factory):
+        """Test vision model MLflow convertor."""
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
@@ -53,6 +55,7 @@ class TestFactoryModule(unittest.TestCase):
 
     @patch('azureml.model.mgmt.processors.transformers.factory.DiffusersMLflowConvertorFactory')
     def test_get_diffusers_mlflow_convertor(self, mock_diffusers_factory):
+        """Test diffusers model MLflow convertor."""
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
@@ -70,6 +73,7 @@ class TestFactoryModule(unittest.TestCase):
 
     @patch('azureml.model.mgmt.processors.transformers.factory.ASRMLflowConvertorFactory')
     def test_get_asr_mlflow_convertor(self, mock_asr_factory):
+        """Test asr model MLflow convertor."""
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
@@ -86,6 +90,7 @@ class TestFactoryModule(unittest.TestCase):
         )
 
     def test_get_mlflow_convertor_unsupported_task(self):
+        """Test unsupported task case."""
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"

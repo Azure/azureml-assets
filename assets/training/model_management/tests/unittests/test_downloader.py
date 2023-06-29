@@ -19,6 +19,7 @@ class TestDownloaders(unittest.TestCase):
     """Test downloaders."""
 
     def test_huggingface_downloader(self):
+        """Test huggingface downloader."""
         model_id = "username/model_name"
         download_dir = Path("path/to/download/dir")
 
@@ -45,6 +46,7 @@ class TestDownloaders(unittest.TestCase):
             self.assertEqual(MockGITDownloader.call_count, 1)
 
     def test_git_downloader(self):
+        """Test git downloader."""
         model_uri = "https://github.com/some_model"
         download_dir = Path("path/to/download/dir")
 
@@ -57,6 +59,7 @@ class TestDownloaders(unittest.TestCase):
             self.assertEqual(download_details["properties"], {})
 
     def test_azure_blobstore_downloader(self):
+        """Test blobstorage downloader."""
         model_uri = "https://blobstorageaccount.blob.core.windows.net/models/model_folder"
         download_dir = Path("path/to/download/dir")
 
@@ -72,6 +75,7 @@ class TestDownloadModel(unittest.TestCase):
     """Test model download."""
 
     def test_download_model_with_huggingface_source(self):
+        """Test huggingface model download."""
         model_source = "Huggingface"
         model_id = "test_model_id"
         download_dir = Path("path/to/download/dir")
@@ -94,6 +98,7 @@ class TestDownloadModel(unittest.TestCase):
             mock_downloader.download_model.assert_called_once_with(download_dir)
 
     def test_download_model_with_git_source(self):
+        """Test GIT model download."""
         model_source = "GIT"
         model_id = "https://github.com/some_model"
         download_dir = Path("path/to/download/dir")
@@ -116,6 +121,7 @@ class TestDownloadModel(unittest.TestCase):
             mock_downloader.download_model.assert_called_once_with(download_dir)
 
     def test_download_model_with_azureblob_source(self):
+        """Test blobstorage model download."""
         model_source = "AzureBlob"
         model_id = "https://blobstorageaccount.blob.core.windows.net/models/model_folder"
         download_dir = Path("path/to/download/dir")
