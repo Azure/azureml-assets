@@ -61,7 +61,6 @@ class TestDownloaders(unittest.TestCase):
         with patch("azureml.model.mgmt.downloader.download_utils._download_azure_artifacts"):
             downloader = AzureBlobstoreDownloader(model_uri)
             download_details = downloader.download_model(download_dir)
-
             self.assertEqual(download_details["name"], "model_folder")
             self.assertEqual(download_details["tags"], {})
             self.assertEqual(download_details["properties"], {})

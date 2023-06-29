@@ -7,10 +7,6 @@ import unittest
 from unittest.mock import patch
 from azureml.model.mgmt.processors.transformers.factory import (
     get_mlflow_convertor,
-    NLPMLflowConvertorFactory,
-    VisionMLflowConvertorFactory,
-    ASRMLflowConvertorFactory,
-    DiffusersMLflowConvertorFactory,
     SupportedNLPTasks,
     SupportedVisionTasks,
     SupportedDiffusersTask,
