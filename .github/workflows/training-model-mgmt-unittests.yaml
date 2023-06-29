@@ -9,7 +9,7 @@ on:
       - main
       - ayushmishra/update_mlflow_convertor_params
     paths:
-      - assets/training/model_management/*
+      - assets/training/model_management/**
       - .github/workflows/training-model-mgmt-unittests.yaml
   workflow_dispatch:
     inputs:
