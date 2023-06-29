@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Exception Util."""
+"""Exceptions util."""
 
 import time
 import logging
@@ -17,14 +17,12 @@ class ModelImportErrorStrings:
 
     LOG_SAFE_GENERIC_ERROR = "{pii_safe_message:log_safe}"
     LOG_UNSAFE_GENERIC_ERROR = "An error occurred: [{error}]"
-    VALIDATION_ERROR = "Error while validating parameters [{error:log_safe}]"           " "
+    VALIDATION_ERROR = "Error while validating parameters [{error:log_safe}]"
     INVALID_HUGGING_FACE_MODEL_ID = (
         "Invalid Hugging face model id: {model_id}."
         " Please ensure that you are using a correct and existing model ID."
     )
-    ERROR_FETCHING_HUGGING_FACE_MODEL_INFO = (
-        "Error in fetching model info for {model_id}. Error [{error}]"
-    )
+    ERROR_FETCHING_HUGGING_FACE_MODEL_INFO = "Error in fetching model info for {model_id}. Error [{error}]"
     BLOBSTORAGE_DOWNLOAD_ERROR = "Failed to download artifacts from {uri}. Error: [{error}]"
     GIT_CLONE_ERROR = "Failed to clone {uri}. Error: [{error}]"
 
@@ -98,7 +96,6 @@ class HuggingFaceErrorInFetchingModelInfo(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.ERROR_FETCHING_HUGGING_FACE_MODEL_INFO
-
 
 
 def swallow_all_exceptions(logger: logging.Logger):

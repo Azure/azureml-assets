@@ -63,9 +63,7 @@ def _download_git_model(model_uri: str, model_dir: Path) -> None:
         clone_cmd = f"git clone --depth=1 {model_uri} {model_dir}"
         exit_code, stdout = run_command(clone_cmd)
         if exit_code != 0:
-            raise AzureMLException._with_error(
-                AzureMLError.create(GITCloneError, uri=model_uri, error=stdout)
-            )
+            raise AzureMLException._with_error(AzureMLError.create(GITCloneError, uri=model_uri, error=stdout))
 
         git_path = os.path.join(model_dir, ".git")
         shutil.rmtree(git_path, onerror=_onerror)
@@ -74,9 +72,7 @@ def _download_git_model(model_uri: str, model_dir: Path) -> None:
             "size": _round_size(_get_size(model_dir)),
         }
     except Exception as e:
-        raise AzureMLException._with_error(
-            AzureMLError.create(GITCloneError, uri=model_uri, error=e)
-        )
+        raise AzureMLException._with_error(AzureMLError.create(GITCloneError, uri=model_uri, error=e))
 
 
 def _download_azure_artifacts(model_uri, model_dir):
@@ -102,9 +98,7 @@ def _download_azure_artifacts(model_uri, model_dir):
             "size": _round_size(_get_size(model_dir)),
         }
     except Exception as e:
-        raise AzureMLException._with_error(
-            AzureMLError.create(BlobStorageDownloadError, uri=model_uri, error=e)
-        )
+        raise AzureMLException._with_error(AzureMLError.create(BlobStorageDownloadError, uri=model_uri, error=e))
 
 
 @log_execution_time

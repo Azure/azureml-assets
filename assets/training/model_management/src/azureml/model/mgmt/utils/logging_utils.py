@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Logging utils."""
+
 from azureml.core import Run
 from azureml.core.compute import ComputeTarget
 from azureml.model.mgmt.config import AppName, LoggerConfig
