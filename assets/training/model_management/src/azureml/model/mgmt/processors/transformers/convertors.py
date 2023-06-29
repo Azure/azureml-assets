@@ -90,16 +90,16 @@ class HFMLFLowConvertor(ABC):
             self._signatures = ModelSignature.from_dict(self._signatures)
 
         config_hf_load_kwargs = get_dict_from_comma_separated_str(
-            translate_params.get(HF_CONF.HF_CONFIG_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
+            translate_params.get(HF_CONF.HF_CONFIG_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP
         )
         tokenizer_hf_load_kwargs = get_dict_from_comma_separated_str(
-            translate_params.get(HF_CONF.HF_TOKENIZER_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
+            translate_params.get(HF_CONF.HF_TOKENIZER_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP
         )
         model_hf_load_args = get_dict_from_comma_separated_str(
-            translate_params.get(HF_CONF.HF_MODEL_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
+            translate_params.get(HF_CONF.HF_MODEL_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP
         )
         pipeline_init_args = get_dict_from_comma_separated_str(
-            translate_params.get(HF_CONF.HF_PIPELINE_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
+            translate_params.get(HF_CONF.HF_PIPELINE_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP
         )
 
         if pipeline_init_args and (model_hf_load_args or config_hf_load_kwargs or tokenizer_hf_load_kwargs):
