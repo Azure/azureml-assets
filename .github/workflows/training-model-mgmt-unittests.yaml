@@ -1,13 +1,9 @@
 name: training-model-mgmt-unittests
 
 on:
-  # push:
-  #   branches:
-  #     - release
   pull_request:
     branches:
       - main
-      - ayushmishra/update_mlflow_convertor_params
     paths:
       - assets/training/model_management/**
       - .github/workflows/training-model-mgmt-unittests.yaml
@@ -24,6 +20,7 @@ env:
   model_mgmt_test_dir: assets/training/model_management/tests
   model_mgmt_unittests_dir: assets/training/model_management/tests/unittests
   model_mgmt_test_req: assets/training/model_management/tests/dev_requirements.txt
+  pytest_reports: pytest-reports
 
 jobs:
   run_unit_tests:
@@ -50,4 +47,11 @@ jobs:
           ls -l $model_mgmt_unittests_dir
 
       - name: Execute tests
-        run: python -m pytest $model_mgmt_unittests_dir --tb=native --junitxml=./TEST-TEST.xml -x -n 1 -ra --show-capture=no
+        run: python -m pytest $model_mgmt_unittests_dir --tb=native --junitxml=$pytest_reports/test-result.xml -x -n 1 -ra --show-capture=no
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Test Results for ${{ github.workflow }}
+          junit_files: ${{ env.pytest_reports }}/**/*.xml
