@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """Arithmetic QA."""
 from constants import GENERAL_COT_PROMPTS, TaskTypes, Activities
 from tasks.base import Task, TaskResults

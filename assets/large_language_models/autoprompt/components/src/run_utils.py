@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """Run Logging Utilities."""
 import matplotlib.pyplot as plt
 import seaborn as sns

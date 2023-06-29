@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """Helper File for the autoprompt utility methods."""
 import pandas as pd
 import copy

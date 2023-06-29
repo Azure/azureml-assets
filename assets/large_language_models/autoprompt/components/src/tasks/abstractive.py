@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """Abstractive QA."""
 from constants import GENERAL_SQUAD_PROMPTS, META_PROMPTS_PREFIX, TaskTypes, DEFAULT_FALLBACK_METRICS, Activities
 from tasks.base import Task, TaskResults

@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """The component generates the ground truth for the examples."""
 import csv
 import json

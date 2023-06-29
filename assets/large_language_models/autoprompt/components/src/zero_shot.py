@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """File for the zero shot component."""
 from argparse import ArgumentParser
 from run_utils import (

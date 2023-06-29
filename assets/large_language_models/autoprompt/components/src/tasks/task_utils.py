@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """Task Utilities."""
 
 from tasks.abstractive import AbstractiveQA

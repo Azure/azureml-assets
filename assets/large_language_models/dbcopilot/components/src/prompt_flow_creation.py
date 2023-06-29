@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """The component create the example promptflow for db copilot."""
 import functools
 import json

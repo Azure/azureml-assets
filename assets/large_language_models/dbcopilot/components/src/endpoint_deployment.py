@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """The component deploys the endpoint for db copilot."""
 import json
 import logging

@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """File for the Git Data Import.
 
 Created on Feb 16, 2023

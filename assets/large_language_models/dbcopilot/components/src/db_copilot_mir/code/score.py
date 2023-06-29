@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """File for MIR endpoint score function."""
 import json
 import logging

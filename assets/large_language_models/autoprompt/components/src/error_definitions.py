@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """Error Definitions."""
 
 from azureml._common._error_definition import error_decorator

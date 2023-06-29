@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """Exceptions."""
 from azureml.exceptions import AzureMLException
 from constants import ExceptionLiterals

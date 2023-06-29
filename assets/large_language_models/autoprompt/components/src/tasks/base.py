@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """Base."""
 from abc import ABC, abstractmethod
 from constants import ALL_METRICS

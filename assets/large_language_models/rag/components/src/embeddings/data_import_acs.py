@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """File for the Azure Cognitive Search Data Import."""
 import os
 from dataclasses import dataclass

@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 """File for the ConstructPrompt Class."""
 from constants import TaskTypes
 
