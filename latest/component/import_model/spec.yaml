@@ -17,6 +17,7 @@ inputs:
       eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters
       like \ and ' are invalid in the parameter value. If compute name is provided,
       instance_type field will be ignored and the respective cluster will be used
+
   instance_type:
     type: string
     optional: true
@@ -24,7 +25,6 @@ inputs:
     description: Instance type to be used for the component in case of serverless
       compute, eg. STANDARD_NC6s_v3. The parameter compute must be set to 'serverless'
       for instance_type to be used
-
 
   local_validation_compute:
     type: string
@@ -74,6 +74,61 @@ inputs:
     optional: true
     type: string
 
+  hf_config_args:
+    type: string
+    description: |
+      Provide args that should be used to load Huggingface model config.
+      eg: trust_remote_code=True;
+    optional: true
+
+  hf_tokenizer_args:
+    type: string
+    description: |
+      Provide args that should be used to load Huggingface model tokenizer.
+      eg: trust_remote_code=True, device_map=auto, 
+    optional: true
+
+  hf_model_args:
+    type: string
+    description: |
+      Provide args that should be used to load Huggingface model.
+      eg: trust_remote_code=True, device_map=auto, low_cpu_mem_usage=True
+    optional: true
+
+  hf_pipeline_args:
+    type: string
+    description: |
+      Provide pipeline args that should be used while loading the hugging face model.
+      Dont use quotes. If value cannot be eval'ed it will be taken as as string.
+      eg: trust_remote_code=True, device_map=auto
+    optional: true
+
+  hf_config_class:
+    type: string
+    description: AutoConfig class may not be sufficient to load config for some of
+      the models. You can use this parameter to send Config class name as it is
+    optional: true
+
+  hf_model_class:
+    type: string
+    description: AutoModel classes may not be sufficient to load some of the models.
+      You can use this parameter to send Model class name as it is
+    optional: true
+
+  hf_tokenizer_class:
+    type: string
+    description: AutoTokenizer class may not be sufficient to load tokenizer for some
+      of the models. You can use this parameter to send Config class name as it is
+    optional: true
+
+  extra_pip_requirements:
+    type: string
+    description: |
+      Extra pip dependencies that MLflow model should capture as part of conversion. This would be used to create environment while loading the model for inference.
+      Pip dependencies expressed as below. Do not use quotes for passing.
+      eg: pkg1==1.0, pkg2, pkg3==1.0
+    optional: true
+
   ## Inputs for mlflow local validation
   local_validation_test_data:
     type: uri_file
@@ -122,7 +177,7 @@ inputs:
 # Pipeline outputs
 outputs:
   mlflow_model_folder:
-    description: Output path for the converted MLFlow model
+    description: Output path for the converted MLflow model
     type: mlflow_model
 
   model_registration_details:
@@ -155,6 +210,14 @@ jobs:
       license_file_path: ${{parent.inputs.license_file_path}}
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
       model_path: ${{parent.jobs.download_model.outputs.model_output}}
+      hf_config_args: ${{parent.inputs.hf_config_args}}
+      hf_tokenizer_args: ${{parent.inputs.hf_tokenizer_args}}
+      hf_model_args: ${{parent.inputs.hf_model_args}}
+      hf_pipeline_args: ${{parent.inputs.hf_pipeline_args}}
+      hf_config_class: ${{parent.inputs.hf_config_class}}
+      hf_model_class: ${{parent.inputs.hf_model_class}}
+      hf_tokenizer_class: ${{parent.inputs.hf_tokenizer_class}}
+      extra_pip_requirements: ${{parent.inputs.extra_pip_requirements}}
     outputs:
       mlflow_model_folder:
         type: mlflow_model

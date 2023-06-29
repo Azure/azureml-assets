@@ -17,7 +17,7 @@ import requests
 import torch
 from PIL import Image
 
-from config import Tasks, MMDetLiterals, MLFlowSchemaLiterals, ODLiterals
+from config import Tasks, MMDetLiterals, MLflowSchemaLiterals, ODLiterals
 
 
 def _create_temp_file(request_body: bytes, parent_dir: str) -> str:
@@ -61,11 +61,14 @@ def _process_image(img: pd.Series) -> pd.Series:
             try:
                 return pd.Series(base64.b64decode(image))
             except ValueError:
-                raise ValueError("The provided image string cannot be decoded."
-                                 "Expected format is base64 string or url string.")
+                raise ValueError(
+                    "The provided image string cannot be decoded. Expected format is Base64 or URL string."
+                )
     else:
-        raise ValueError(f"Image received in {type(image)} format which is not supported."
-                         "Expected format is bytes, base64 string or url string.")
+        raise ValueError(
+            f"Image received in {type(image)} format which is not supported."
+            "Expected format is bytes, base64 string or url string."
+        )
 
 
 def _is_valid_url(text: str) -> bool:
@@ -98,8 +101,8 @@ def _is_valid_url(text: str) -> bool:
         return False
 
 
-class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
-    """MLFlow model wrapper for AutoML for Images models."""
+class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
+    """MLflow model wrapper for AutoML for Images models."""
 
     def __init__(
         self,
@@ -165,7 +168,7 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :rtype: Pandas DataFrame with columns ["boxes"] for object detection
         """
         # process the images in image column
-        processed_images = input_data.loc[:, [MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
+        processed_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
             axis=1, func=_process_image
         )
 
