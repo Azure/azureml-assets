@@ -83,7 +83,7 @@ class SupportedASRModelFamily(_CustomEnum):
 
 
 class SupportedTasks(_CustomEnum):
-    """Supported Hugging face tasks for conversion to mlflow."""
+    """Supported Hugging face tasks for conversion to MLflow."""
 
     # NLP tasks
     FILL_MASK = "fill-mask"

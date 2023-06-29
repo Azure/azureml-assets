@@ -24,13 +24,6 @@ from pathlib import Path
 MAX_REQUEST_TIMEOUT = 90000
 MAX_INSTANCE_COUNT = 20
 
-# PROBE CONSTANTS
-PROBE_FAILURE_THRESHOLD = 50
-PROBE_SUCCESS_THRESHOLD = 50
-PROBE_TIMEOUT = 500
-PROBE_PERIOD = 500
-PROBE_INITIAL_DELAY = 500
-
 
 def parse_args():
     """Return arguments."""
@@ -93,63 +86,54 @@ def parse_args():
         type=int,
         default=10,
         help="No of times system will try after failing the readiness probe",
-        choices=range(1, PROBE_FAILURE_THRESHOLD),
     )
     parser.add_argument(
         "--success_threshold_readiness_probe",
         type=int,
         default=1,
         help="The minimum consecutive successes for the readiness probe to be considered successful, after fail",
-        choices=range(1, PROBE_SUCCESS_THRESHOLD),
     )
     parser.add_argument(
         "--timeout_readiness_probe",
         type=int,
         default=10,
         help="The number of seconds after which the readiness probe times out",
-        choices=range(1, PROBE_TIMEOUT)
     )
     parser.add_argument(
         "--period_readiness_probe",
         type=int,
         default=10,
         help="How often (in seconds) to perform the readiness probe",
-        choices=range(1, PROBE_PERIOD),
     )
     parser.add_argument(
         "--initial_delay_readiness_probe",
         type=int,
         default=10,
         help="The number of seconds after the container has started before the readiness probe is initiated",
-        choices=range(1, PROBE_INITIAL_DELAY),
     )
     parser.add_argument(
         "--failure_threshold_liveness_probe",
         type=int,
         default=30,
         help="No of times system will try after failing the liveness probe",
-        choices=range(1, PROBE_FAILURE_THRESHOLD),
     )
     parser.add_argument(
         "--timeout_liveness_probe",
         type=int,
         default=10,
         help="The number of seconds after which the liveness probe times out",
-        choices=range(1, PROBE_TIMEOUT),
     )
     parser.add_argument(
         "--period_liveness_probe",
         type=int,
         default=10,
         help="How often (in seconds) to perform the liveness probe",
-        choices=range(1, PROBE_PERIOD),
     )
     parser.add_argument(
         "--initial_delay_liveness_probe",
         type=int,
         default=10,
         help="The number of seconds after the container has started before the liveness probe is initiated",
-        choices=range(1, PROBE_INITIAL_DELAY),
     )
     parser.add_argument(
         "--egress_public_network_access",

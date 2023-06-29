@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Huggingface predict file for whisper mlflow model."""
+"""Huggingface predict file for whisper MLflow model."""
 
 import os
 import base64

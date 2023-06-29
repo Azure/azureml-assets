@@ -126,7 +126,7 @@ def create_namespace_from_dict(var: Any):
     return var
 
 
-def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str, do_eval: bool = False) -> Dict:
+def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str) -> Dict:
     """Create and return dictionary from string.
 
     :param dict_str: string to be parsed for creating dictionary
@@ -135,8 +135,6 @@ def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str,
     :type item_sep: str
     :param kv_sep: char separator used for key-value separation. Must be different from item separator
     :type kv_sep: str
-    :param do_eval: Whether to eval parsed value string. Default is False
-    :type do_eval: bool
     :return: Resultant dictionary
     :rtype: Dict
     """
@@ -155,11 +153,6 @@ def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str,
         if len(split) == 2:
             key = split[0].strip()
             val = split[1].strip()
-            if do_eval:
-                try:
-                    val = eval(split[1].strip())
-                except Exception as e:
-                    print(f"Could not eval `{val}`. Error: {e}")
             parsed_dict[key] = val
     print(f"get_dict_from_comma_separated_str: {dict_str} => {parsed_dict}")
     return parsed_dict

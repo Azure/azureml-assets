@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""HFTransformers mlflow model convertors."""
+"""HFTransformers MLflow model convertors."""
 
 import transformers
 import yaml
@@ -56,12 +56,12 @@ class HFMLFLowConvertor(ABC):
 
     @abstractmethod
     def get_model_signature(self):
-        """Return model signature for mlflow model."""
+        """Return model signature for MLflow model."""
         raise NotImplementedError
 
     @abstractmethod
     def save_as_mlflow(self):
-        """Prepare model for save to mlflow."""
+        """Prepare model for save to MLflow."""
         raise NotImplementedError
 
     def __init__(
@@ -71,7 +71,7 @@ class HFMLFLowConvertor(ABC):
         temp_dir: Path,
         translate_params: Dict,
     ):
-        """Initialize mlflow convertor for HF models."""
+        """Initialize MLflow convertor for HF models."""
         self._model_dir = model_dir
         self._output_dir = output_dir
         self._temp_dir = temp_dir
@@ -90,16 +90,16 @@ class HFMLFLowConvertor(ABC):
             self._signatures = ModelSignature.from_dict(self._signatures)
 
         config_hf_load_kwargs = get_dict_from_comma_separated_str(
-            translate_params.get(HF_CONF.HF_CONFIG_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
+            translate_params.get(HF_CONF.HF_CONFIG_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP
         )
         tokenizer_hf_load_kwargs = get_dict_from_comma_separated_str(
-            translate_params.get(HF_CONF.HF_TOKENIZER_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
+            translate_params.get(HF_CONF.HF_TOKENIZER_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP
         )
         model_hf_load_args = get_dict_from_comma_separated_str(
-            translate_params.get(HF_CONF.HF_MODEL_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
+            translate_params.get(HF_CONF.HF_MODEL_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP
         )
         pipeline_init_args = get_dict_from_comma_separated_str(
-            translate_params.get(HF_CONF.HF_PIPELINE_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP, do_eval=True
+            translate_params.get(HF_CONF.HF_PIPELINE_ARGS.value), ITEM_COMMA_SEP, KV_EQ_SEP
         )
 
         if pipeline_init_args and (model_hf_load_args or config_hf_load_kwargs or tokenizer_hf_load_kwargs):
@@ -192,7 +192,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
     PREDICT_FILE_PATH = VISION_DIR / HFMLFLowConvertor.PREDICT_FILE_NAME
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for vision models."""
+        """Initialize MLflow convertor for vision models."""
         super().__init__(**kwargs)
         if not SupportedVisionTasks.has_value(self._task):
             raise Exception("Unsupported vision task")
@@ -207,7 +207,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         )
 
     def save_as_mlflow(self):
-        """Prepare vision models for save to mlflow."""
+        """Prepare vision models for save to MLflow."""
         hf_conf = self._hf_conf
         self._hf_model_cls = self._hf_model_cls if self._hf_model_cls else AutoModelForImageClassification
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else AutoConfig
@@ -232,7 +232,7 @@ class ASRMLflowConvertor(HFMLFLowConvertor):
     """HF MlfLow convertor base class for ASR models."""
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for ASR models."""
+        """Initialize MLflow convertor for ASR models."""
         super().__init__(**kwargs)
         if self._task != SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
             raise Exception(f"Unsupported ASR task {self._task}")
@@ -247,7 +247,7 @@ class ASRMLflowConvertor(HFMLFLowConvertor):
         )
 
 
-class WhisperMLFlowConvertor(ASRMLflowConvertor):
+class WhisperMLflowConvertor(ASRMLflowConvertor):
     """HF MlfLow convertor base class for ASR models."""
 
     MODEL_FAMILY = "whisper"
@@ -256,11 +256,11 @@ class WhisperMLFlowConvertor(ASRMLflowConvertor):
     CONDA_FILE_PATH = WHISPER_DIR / HFMLFLowConvertor.CONDA_FILE_NAME
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for whisper model."""
+        """Initialize MLflow convertor for whisper model."""
         super().__init__(**kwargs)
 
     def save_as_mlflow(self):
-        """Prepare Whisper model for save to mlflow."""
+        """Prepare Whisper model for save to MLflow."""
         hf_conf = self._hf_conf
         self._hf_model_cls = self._hf_model_cls if self._hf_model_cls else WhisperForConditionalGeneration
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else WhisperConfig
@@ -272,21 +272,21 @@ class WhisperMLFlowConvertor(ASRMLflowConvertor):
         hf_conf[HF_CONF.HF_PREDICT_MODULE.value] = HFMLFLowConvertor.PREDICT_MODULE
 
         conda_env = {}
-        with open(WhisperMLFlowConvertor.CONDA_FILE_PATH) as f:
+        with open(WhisperMLflowConvertor.CONDA_FILE_PATH) as f:
             conda_env = yaml.safe_load(f)
 
         return super()._save(
             conda_env=conda_env,
-            code_paths=[WhisperMLFlowConvertor.PREDICT_FILE_PATH],
+            code_paths=[WhisperMLflowConvertor.PREDICT_FILE_PATH],
             segregate=True,
         )
 
 
-class TextToImageDiffuserMLFlowConvertor(HFMLFLowConvertor):
+class TextToImageDiffuserMLflowConvertor(HFMLFLowConvertor):
     """HF MlfLow convertor base class for text to image diffuser models."""
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for t2image models."""
+        """Initialize MLflow convertor for text to image models."""
         super().__init__(**kwargs)
 
     def get_model_signature(self):
@@ -297,15 +297,15 @@ class TextToImageDiffuserMLFlowConvertor(HFMLFLowConvertor):
         )
 
 
-class StableDiffusionMlflowConvertor(TextToImageDiffuserMLFlowConvertor):
+class StableDiffusionMlflowConvertor(TextToImageDiffuserMLflowConvertor):
     """HF MlfLow convertor class for stable diffusion models."""
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for SD models."""
+        """Initialize MLflow convertor for SD models."""
         super().__init__(**kwargs)
 
     def save_as_mlflow(self):
-        """Prepare SD model for save to mlflow."""
+        """Prepare SD model for save to MLflow."""
         hf_conf = self._hf_conf
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = StableDiffusionPipeline.__name__
         hf_conf[HF_CONF.CUSTOM_CONFIG_MODULE.value] = "diffusers"
@@ -330,7 +330,7 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
     }
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for NLP models."""
+        """Initialize MLflow convertor for NLP models."""
         super().__init__(**kwargs)
         if not SupportedNLPTasks.has_value(self._task):
             raise Exception("Unsupported NLP task")
@@ -354,7 +354,7 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         )
 
     def save_as_mlflow(self):
-        """Prepate NLP model for save to mlflow."""
+        """Prepate NLP model for save to MLflow."""
         hf_conf = self._hf_conf
         self._hf_model_cls = (
             self._hf_model_cls

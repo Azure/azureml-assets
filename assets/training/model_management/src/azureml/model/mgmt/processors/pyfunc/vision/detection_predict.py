@@ -17,7 +17,7 @@ import requests
 import torch
 from PIL import Image
 
-from config import Tasks, MMDetLiterals, MLFlowSchemaLiterals, ODLiterals
+from config import Tasks, MMDetLiterals, MLflowSchemaLiterals, ODLiterals
 
 
 def _create_temp_file(request_body: bytes, parent_dir: str) -> str:
@@ -101,8 +101,8 @@ def _is_valid_url(text: str) -> bool:
         return False
 
 
-class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
-    """MLFlow model wrapper for AutoML for Images models."""
+class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
+    """MLflow model wrapper for AutoML for Images models."""
 
     def __init__(
         self,
@@ -168,7 +168,7 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :rtype: Pandas DataFrame with columns ["boxes"] for object detection
         """
         # process the images in image column
-        processed_images = input_data.loc[:, [MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
+        processed_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
             axis=1, func=_process_image
         )
 

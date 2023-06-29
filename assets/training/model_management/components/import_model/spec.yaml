@@ -115,7 +115,7 @@ inputs:
   extra_pip_requirements:
     type: string
     description: |
-      Extra pip dependencies that MLFlow model should capture as part of conversion. This would be used to create environment while loading the model for inference.
+      Extra pip dependencies that MLflow model should capture as part of conversion. This would be used to create environment while loading the model for inference.
       Pip dependencies expressed as below. Do not use quotes for passing.
       eg: pkg1==1.0, pkg2, pkg3==1.0
     optional: true
@@ -162,7 +162,7 @@ inputs:
 # Pipeline outputs
 outputs:
   mlflow_model_folder:
-    description: Output path for the converted MLFlow model
+    description: Output path for the converted MLflow model
     type: mlflow_model
 
   model_registration_details:
