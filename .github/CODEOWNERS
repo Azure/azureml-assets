@@ -1,7 +1,7 @@
 *     @azure/aml-assets
 /assets/benchmark/ @azure/aims
 /assets/responsibleai/ @azure/aml-rai
-/assets/training/ @azure/aml-training
+/assets/training/ @azure/aml-training 
 /assets/sample/ @Azure/aml-assets
 /assets/data/ @Azure/azureml-data
 /assets/models/ @azure/aml-training @azure/azureml-inference-idc
@@ -10,4 +10,3 @@
 /assets/common/src/model_deployment/ @azure/aml-training
 /assets/common/src/model_registration/ @azure/aml-training
 /assets/model_monitoring/ @Azure/aml-model-monitoring
-/assets/large_language_models/ @azure/aml-training
