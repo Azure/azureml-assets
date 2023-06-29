@@ -5,16 +5,7 @@
 import os
 import argparse
 import json
-import logging
-import re
-import time
 from azure.ai.ml import MLClient
-from azure.ai.ml.entities import (
-    ManagedOnlineEndpoint,
-    ManagedOnlineDeployment,
-    OnlineRequestSettings,
-    ProbeSettings,
-)
 from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.core import Run
@@ -100,12 +91,14 @@ def main(args):
                 print(f"Failed to delete endpoint : {endpoint_name}", e)
         elif args.endpoint_name and args.deployment_name:
             try:
-                ml_client.online_deployments.begin_delete(name = args.deployment_name, endpoint_name=args.endpoint_name).wait()
+                ml_client.online_deployments.begin_delete(name=args.deployment_name,
+                                                          endpoint_name=args.endpoint_name).wait()
                 deployments = list(ml_client.online_deployments.list(endpoint_name=args.endpoint_name))
                 if not deployments:
                     ml_client.online_endpoints.begin_delete(name=args.endpoint_name).wait()
             except Exception as e:
                 print(e)
+
 
 # run script
 if __name__ == "__main__":
