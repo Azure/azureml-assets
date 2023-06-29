@@ -3,3 +3,4 @@ version: 0.10.0
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml
+categories: ["Retrieval Augmented Generation"]
