@@ -33,7 +33,8 @@ def create_acr_task(image_name: str,
                     dockerfile: str,
                     task_filename: str,
                     test_command: str = None,
-                    push: bool = False) -> Path:
+                    push: bool = False,
+                    trivy_url: str = None) -> Path:
     """Create ACR build task file.
 
     Args:
@@ -43,6 +44,7 @@ def create_acr_task(image_name: str,
         task_filename (str): File to which the task will be written.
         test_command (str, optional): Command used to test the image. Defaults to None.
         push (bool, optional): Push the image to the ACR. Defaults to False.
+        trivy_url (str, optional): URL to download Trivy for vulnerability scanning. Defaults to None.
 
     Returns:
         Path: The task file.
@@ -99,7 +101,8 @@ def build_image(asset_config: assets.AssetConfig,
                 resource_group: str = None,
                 registry: str = None,
                 test_command: str = None,
-                push: bool = False) -> Tuple[assets.AssetConfig, int, str]:
+                push: bool = False,
+                trivy_url: str = None) -> Tuple[assets.AssetConfig, int, str]:
     """Build a Docker image locally or via ACR task.
 
     Args:
@@ -113,6 +116,7 @@ def build_image(asset_config: assets.AssetConfig,
         registry (str, optional): ACR name. Defaults to None.
         test_command (str, optional): Command used to test the image. Defaults to None.
         push (bool, optional): Push the image to the ACR. Defaults to False.
+        trivy_url (str, optional): URL to download Trivy for vulnerability scanning. Defaults to None.
 
     Returns:
         Tuple[assets.AssetConfig, int, str]: Asset config, return code, and contents of stdout.
@@ -134,7 +138,7 @@ def build_image(asset_config: assets.AssetConfig,
                 temp_dir_path = Path(temp_dir)
                 shutil.copytree(build_context_dir, temp_dir_path, dirs_exist_ok=True)
                 build_context_dir = temp_dir_path
-                create_acr_task(image_name, build_context_dir, dockerfile, TASK_FILENAME, test_command, push)
+                create_acr_task(image_name, build_context_dir, dockerfile, TASK_FILENAME, test_command, push, trivy_url)
                 cmd.append("run")
                 cmd.extend(common_args)
                 cmd.extend(["-f", TASK_FILENAME, "."])
@@ -186,7 +190,8 @@ def build_images(input_dirs: List[Path],
                  registry: str = None,
                  test_command: str = None,
                  push: bool = False,
-                 use_version_dirs: bool = False) -> bool:
+                 use_version_dirs: bool = False,
+                 trivy_url: str = None) -> bool:
     """Build Docker images in parallel, either locally or via ACR.
 
     Args:
@@ -204,6 +209,7 @@ def build_images(input_dirs: List[Path],
         test_command (str, optional): Command used to test images. Defaults to None.
         push (bool, optional): Push images to ACR. Defaults to False.
         use_version_dirs (bool, optional): Use version directories for output. Defaults to False.
+        trivy_url (str, optional): URL to download Trivy for vulnerability scanning. Defaults to None.
 
     Returns:
         bool: True if all images were build successfully, otherwise False.
@@ -257,7 +263,7 @@ def build_images(input_dirs: List[Path],
             build_log = build_logs_dir / f"{asset_config.name}.log"
             futures.append(pool.submit(build_image, asset_config, image_name,
                                        env_config.context_dir_with_path, env_config.dockerfile, build_log,
-                                       env_config.os.value, resource_group, registry, test_command, push_this_image))
+                                       env_config.os.value, resource_group, registry, test_command, push_this_image, trivy_url))
 
         # Wait for builds to complete
         for future in as_completed(futures):
@@ -317,6 +323,8 @@ if __name__ == '__main__':
                         help="If building on ACR, push after building and (optionally) testing")
     parser.add_argument("-v", "--use-version-dirs", action="store_true",
                         help="Use version directories when storing assets in output directory")
+    parser.add_argument("-t", "--trivy-url", type=str,
+                        help="URL to download Trivy to scan for vulnerabilities")
     args = parser.parse_args()
 
     # Ensure dependent args are present
@@ -347,6 +355,7 @@ if __name__ == '__main__':
                            registry=args.registry,
                            test_command=args.test_command,
                            push=args.push,
-                           use_version_dirs=args.use_version_dirs)
+                           use_version_dirs=args.use_version_dirs,
+                           trivy_url=args.trivy_url)
     if not success:
         sys.exit(1)
