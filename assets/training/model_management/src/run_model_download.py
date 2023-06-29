@@ -41,7 +41,7 @@ def run():
     logger.info(f"Model source: {model_source}")
     logger.info(f"Model id: {model_id}")
 
-    logger.info("Downloading model ...")
+    logger.info("Downloading model")
     model_download_details = download_model(
         model_source=model_source, model_id=model_id, download_dir=model_output_dir
     )
@@ -49,7 +49,7 @@ def run():
     with open(model_download_metadata_path, "w") as f:
         json.dump(model_download_details, f)
 
-    logger.info("Download completed!!!")
+    logger.info("Download completed.")
 
 
 if __name__ == "__main__":

@@ -12,6 +12,23 @@ from azureml._common._error_definition import error_decorator  # type: ignore
 from azureml._common._error_definition.system_error import ClientError  # type: ignore
 
 
+class ModelImportErrorStrings:
+    """Error strings."""
+
+    LOG_SAFE_GENERIC_ERROR = "{pii_safe_message:log_safe}"
+    LOG_UNSAFE_GENERIC_ERROR = "An error occurred: [{error}]"
+    VALIDATION_ERROR = "Error while validating parameters [{error:log_safe}]"           " "
+    INVALID_HUGGING_FACE_MODEL_ID = (
+        "Invalid Hugging face model id: {model_id}."
+        " Please ensure that you are using a correct and existing model ID."
+    )
+    ERROR_FETCHING_HUGGING_FACE_MODEL_INFO = (
+        "Error in fetching model info for {model_id}. Error [{error}]"
+    )
+    BLOBSTORAGE_DOWNLOAD_ERROR = "Failed to download artifacts from {uri}. Error: [{error}]"
+    GIT_CLONE_ERROR = "Failed to clone {uri}. Error: [{error}]"
+
+
 class ModelImportException(AzureMLException):
     """Base exception for Model Import handling."""
 
@@ -32,12 +49,56 @@ class ModelImportException(AzureMLException):
 class ModelImportError(ClientError):
     """Internal Import Model Generic Error."""
 
-    GENERIC_ERROR = "An error occurred [{error}]"
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.LOG_UNSAFE_GENERIC_ERROR
+
+
+class InvalidHuggingfaceModelIDError(ClientError):
+    """Internal Import Model Generic Error."""
 
     @property
     def message_format(self) -> str:
         """Message format."""
-        return ModelImportError.GENERIC_ERROR
+        return ModelImportErrorStrings.INVALID_HUGGING_FACE_MODEL_ID
+
+
+class GITCloneError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.GIT_CLONE_ERROR
+
+
+class BlobStorageDownloadError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.BLOBSTORAGE_DOWNLOAD_ERROR
+
+
+class InvalidHuggingfaceModelIDError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.INVALID_HUGGING_FACE_MODEL_ID
+
+
+class HuggingFaceErrorInFetchingModelInfo(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.ERROR_FETCHING_HUGGING_FACE_MODEL_INFO
+
 
 
 def swallow_all_exceptions(logger: logging.Logger):
@@ -55,8 +116,11 @@ def swallow_all_exceptions(logger: logging.Logger):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                # This will be logged to exceptions table
-                azureml_exception = AzureMLException._with_error(AzureMLError.create(ModelImportError, error=e))
+                if isinstance(e, AzureMLException):
+                    azureml_exception = e
+                else:
+                    azureml_exception = AzureMLException._with_error(AzureMLError.create(ModelImportError, error=e))
+
                 logger.error("Exception {} when calling {}".format(azureml_exception, func.__name__))
                 for handler in logger.handlers:
                     handler.flush()

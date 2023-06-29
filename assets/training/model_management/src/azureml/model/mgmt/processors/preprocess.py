@@ -35,4 +35,4 @@ def run_preprocess(mlflow_flavor: str, model_path: Path, output_dir: Path, temp_
         pyfunc.to_mlflow(model_path, output_dir, preprocess_args)
     else:
         raise Exception(f"Unsupported model flavor: {mlflow_flavor}.")
-    logger.info("Model prepocessing completed !!!")
+    logger.info("Model prepocessing completed.")

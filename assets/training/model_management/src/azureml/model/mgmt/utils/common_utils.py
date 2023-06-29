@@ -10,8 +10,11 @@ import sys
 import time
 from argparse import Namespace
 from azure.ai.ml import MLClient
+from azureml._common._error_definition import AzureMLError
+from azureml._common.exceptions import AzureMLException
 from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
 from azureml.core.run import Run, _OfflineRun
+from azureml.model.mgmt.utils.exceptions import HuggingFaceErrorInFetchingModelInfo
 from contextlib import contextmanager
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
@@ -21,7 +24,6 @@ from applicationinsights import TelemetryClient
 from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
 
 
-tc = None
 HF_ENDPOINT = "https://huggingface.co"
 
 KV_COLON_SEP = ":"
@@ -59,7 +61,7 @@ def run_command(cmd: str, cwd: Path = "./") -> Tuple[int, str]:
         errors="ignore",
     )
     if result.returncode != 0:
-        logger.error(f"Failed with error {result.stdout}.")
+        logger.warning(f"Failed with error {result.stdout}.")
     return result.returncode, result.stdout
 
 
@@ -203,3 +205,17 @@ def retry(times):
         return newfn
 
     return decorator
+
+
+@retry(3)
+def fetch_huggingface_model_info(model_id) -> ModelInfo:
+    """Return Hugging face model info."""
+    try:
+        model_list: List[ModelInfo] = HfApi(endpoint=HF_ENDPOINT).list_models(filter=ModelFilter(model_name=model_id))
+        for info in model_list:
+            if model_id == info.modelId:
+                return info
+    except Exception as e:
+        raise AzureMLException._with_error(
+            AzureMLError.create(HuggingFaceErrorInFetchingModelInfo, model_id=model_id, error=e)
+        )
