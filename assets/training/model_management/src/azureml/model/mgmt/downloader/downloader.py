@@ -9,9 +9,8 @@ from azureml._common.exceptions import AzureMLException
 from azureml.model.mgmt.config import PathType
 from azureml.model.mgmt.downloader.config import ModelSource
 from azureml.model.mgmt.downloader.download_utils import download_model_for_path_type
-from huggingface_hub.hf_api import HfApi, ModelFilter, ModelInfo
+from huggingface_hub.hf_api import ModelInfo
 from pathlib import Path
-from typing import List
 from azureml.model.mgmt.utils.common_utils import retry, fetch_huggingface_model_info
 from azureml.model.mgmt.utils.exceptions import InvalidHuggingfaceModelIDError
 from azureml.model.mgmt.utils.logging_utils import get_logger
@@ -51,7 +50,6 @@ class HuggingfaceDownloader:
         """
         self._model_id = model_id
         self._model_uri = self.HF_ENDPOINT + f"/{model_id}"
-        self._hf_api = HfApi(endpoint=self.HF_ENDPOINT)
         self._model_info = None
 
     @property

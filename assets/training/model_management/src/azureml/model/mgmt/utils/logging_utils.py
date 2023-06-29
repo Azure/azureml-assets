@@ -96,7 +96,7 @@ class RunDetails:
         cur_attribute = self._run.name
         run = self._run.parent
         # update current run's root_attribute to the root run.
-        while run != None:
+        while run is not None:
             cur_attribute = run.name
             run = run.parent
         return cur_attribute

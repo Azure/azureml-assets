@@ -8,7 +8,6 @@ import logging
 from functools import wraps
 from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
-from azureml._common._error_definition import error_decorator  # type: ignore
 from azureml._common._error_definition.system_error import ClientError  # type: ignore
 
 
@@ -51,15 +50,6 @@ class ModelImportError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.LOG_UNSAFE_GENERIC_ERROR
-
-
-class InvalidHuggingfaceModelIDError(ClientError):
-    """Internal Import Model Generic Error."""
-
-    @property
-    def message_format(self) -> str:
-        """Message format."""
-        return ModelImportErrorStrings.INVALID_HUGGING_FACE_MODEL_ID
 
 
 class GITCloneError(ClientError):

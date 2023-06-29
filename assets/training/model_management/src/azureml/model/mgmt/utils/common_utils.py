@@ -191,7 +191,7 @@ def retry(times):
             while attempt <= times:
                 try:
                     return func(*args, **kwargs)
-                except:
+                except Exception:
                     attempt += 1
                     ex_msg = "Exception thrown when attempting to run {}, attempt {} of {}".format(
                         func.__name__, attempt, times
