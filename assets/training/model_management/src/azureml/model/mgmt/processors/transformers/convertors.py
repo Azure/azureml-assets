@@ -56,12 +56,12 @@ class HFMLFLowConvertor(ABC):
 
     @abstractmethod
     def get_model_signature(self):
-        """Return model signature for mlflow model."""
+        """Return model signature for MLflow model."""
         raise NotImplementedError
 
     @abstractmethod
     def save_as_mlflow(self):
-        """Prepare model for save to mlflow."""
+        """Prepare model for save to MLflow."""
         raise NotImplementedError
 
     def __init__(
@@ -71,7 +71,7 @@ class HFMLFLowConvertor(ABC):
         temp_dir: Path,
         translate_params: Dict,
     ):
-        """Initialize mlflow convertor for HF models."""
+        """Initialize MLflow convertor for HF models."""
         self._model_dir = model_dir
         self._output_dir = output_dir
         self._temp_dir = temp_dir
@@ -192,7 +192,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
     PREDICT_FILE_PATH = VISION_DIR / HFMLFLowConvertor.PREDICT_FILE_NAME
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for vision models."""
+        """Initialize MLflow convertor for vision models."""
         super().__init__(**kwargs)
         if not SupportedVisionTasks.has_value(self._task):
             raise Exception("Unsupported vision task")
@@ -207,7 +207,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         )
 
     def save_as_mlflow(self):
-        """Prepare vision models for save to mlflow."""
+        """Prepare vision models for save to MLflow."""
         hf_conf = self._hf_conf
         self._hf_model_cls = self._hf_model_cls if self._hf_model_cls else AutoModelForImageClassification
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else AutoConfig
@@ -232,7 +232,7 @@ class ASRMLflowConvertor(HFMLFLowConvertor):
     """HF MlfLow convertor base class for ASR models."""
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for ASR models."""
+        """Initialize MLflow convertor for ASR models."""
         super().__init__(**kwargs)
         if self._task != SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
             raise Exception(f"Unsupported ASR task {self._task}")
@@ -256,11 +256,11 @@ class WhisperMLflowConvertor(ASRMLflowConvertor):
     CONDA_FILE_PATH = WHISPER_DIR / HFMLFLowConvertor.CONDA_FILE_NAME
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for whisper model."""
+        """Initialize MLflow convertor for whisper model."""
         super().__init__(**kwargs)
 
     def save_as_mlflow(self):
-        """Prepare Whisper model for save to mlflow."""
+        """Prepare Whisper model for save to MLflow."""
         hf_conf = self._hf_conf
         self._hf_model_cls = self._hf_model_cls if self._hf_model_cls else WhisperForConditionalGeneration
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else WhisperConfig
@@ -286,7 +286,7 @@ class TextToImageDiffuserMLflowConvertor(HFMLFLowConvertor):
     """HF MlfLow convertor base class for text to image diffuser models."""
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for t2image models."""
+        """Initialize MLflow convertor for text to image models."""
         super().__init__(**kwargs)
 
     def get_model_signature(self):
@@ -301,11 +301,11 @@ class StableDiffusionMlflowConvertor(TextToImageDiffuserMLflowConvertor):
     """HF MlfLow convertor class for stable diffusion models."""
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for SD models."""
+        """Initialize MLflow convertor for SD models."""
         super().__init__(**kwargs)
 
     def save_as_mlflow(self):
-        """Prepare SD model for save to mlflow."""
+        """Prepare SD model for save to MLflow."""
         hf_conf = self._hf_conf
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = StableDiffusionPipeline.__name__
         hf_conf[HF_CONF.CUSTOM_CONFIG_MODULE.value] = "diffusers"
@@ -330,7 +330,7 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
     }
 
     def __init__(self, **kwargs):
-        """Initialize mlflow convertor for NLP models."""
+        """Initialize MLflow convertor for NLP models."""
         super().__init__(**kwargs)
         if not SupportedNLPTasks.has_value(self._task):
             raise Exception("Unsupported NLP task")
@@ -354,7 +354,7 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         )
 
     def save_as_mlflow(self):
-        """Prepate NLP model for save to mlflow."""
+        """Prepate NLP model for save to MLflow."""
         hf_conf = self._hf_conf
         self._hf_model_cls = (
             self._hf_model_cls

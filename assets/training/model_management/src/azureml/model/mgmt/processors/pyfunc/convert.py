@@ -18,7 +18,7 @@ from .vision.config import MLflowSchemaLiterals, MMDetLiterals, Tasks
 
 
 def _prepare_artifacts_dict(input_dir: Path) -> Dict:
-    """Prepare artifacts dict for mlflow model.
+    """Prepare artifacts dict for MLflow model.
 
     :param input_dir: input directory
     :type input_dir: Path
@@ -37,7 +37,7 @@ def _prepare_artifacts_dict(input_dir: Path) -> Dict:
 
 
 def _get_mlflow_signature(task_type: str) -> ModelSignature:
-    """Return mlflow model signature with input and output schema given the input task type.
+    """Return MLflow model signature with input and output schema given the input task type.
 
     :param task_type: Task type used in training
     :type task_type: str
@@ -61,13 +61,13 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
 
 @log_execution_time
 def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None:
-    """Convert pytorch model to Mlflow.
+    """Convert pytorch model to MLflow.
 
     :param input_dir: model input directory
     :type input_dir: Path
     :param output_dir: output directory
     :type output_dir: Path
-    :param translate_params: mlflow translation params
+    :param translate_params: MLflow translation params
     :type translate_params: Dict
     """
     model_name = translate_params.get("model_id")
