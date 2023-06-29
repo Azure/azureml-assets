@@ -191,6 +191,9 @@ def predict(
     device = kwargs.get("device", -1)
     max_new_tokens = kwargs.get("max_new_tokens", 448)
     batch_size = kwargs.get("batch_size", 8)
+    chunk_length_s = kwargs.get("chunk_length_s", 30)
+    chunk_length_s = min(chunk_length_s, 30)
+    stride_length_s = kwargs.get("stride_length_s", chunk_length_s/6)
 
     if device == -1 and torch.cuda.is_available():
         logging.warning('CUDA available. To switch to GPU device pass `"parameters": {"device" : 0}` in the input.')
@@ -209,7 +212,8 @@ def predict(
         model=model,
         tokenizer=tokenizer.tokenizer,
         feature_extractor=tokenizer.feature_extractor,
-        chunk_length_s=30,
+        chunk_length_s=chunk_length_s,
+        stride_length_s=stride_length_s,
         device=device,
         )
 
