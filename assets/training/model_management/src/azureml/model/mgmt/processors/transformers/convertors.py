@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""HFTransformers mlflow model convertors."""
+"""HFTransformers MLflow model convertors."""
 
 import transformers
 import yaml
@@ -247,7 +247,7 @@ class ASRMLflowConvertor(HFMLFLowConvertor):
         )
 
 
-class WhisperMLFlowConvertor(ASRMLflowConvertor):
+class WhisperMLflowConvertor(ASRMLflowConvertor):
     """HF MlfLow convertor base class for ASR models."""
 
     MODEL_FAMILY = "whisper"
@@ -272,17 +272,17 @@ class WhisperMLFlowConvertor(ASRMLflowConvertor):
         hf_conf[HF_CONF.HF_PREDICT_MODULE.value] = HFMLFLowConvertor.PREDICT_MODULE
 
         conda_env = {}
-        with open(WhisperMLFlowConvertor.CONDA_FILE_PATH) as f:
+        with open(WhisperMLflowConvertor.CONDA_FILE_PATH) as f:
             conda_env = yaml.safe_load(f)
 
         return super()._save(
             conda_env=conda_env,
-            code_paths=[WhisperMLFlowConvertor.PREDICT_FILE_PATH],
+            code_paths=[WhisperMLflowConvertor.PREDICT_FILE_PATH],
             segregate=True,
         )
 
 
-class TextToImageDiffuserMLFlowConvertor(HFMLFLowConvertor):
+class TextToImageDiffuserMLflowConvertor(HFMLFLowConvertor):
     """HF MlfLow convertor base class for text to image diffuser models."""
 
     def __init__(self, **kwargs):
@@ -297,7 +297,7 @@ class TextToImageDiffuserMLFlowConvertor(HFMLFLowConvertor):
         )
 
 
-class StableDiffusionMlflowConvertor(TextToImageDiffuserMLFlowConvertor):
+class StableDiffusionMlflowConvertor(TextToImageDiffuserMLflowConvertor):
     """HF MlfLow convertor class for stable diffusion models."""
 
     def __init__(self, **kwargs):

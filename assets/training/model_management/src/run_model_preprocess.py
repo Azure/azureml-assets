@@ -53,7 +53,7 @@ def _get_parser():
         "--mlflow-model-output-dir",
         type=Path,
         required=True,
-        help="Output MLFlow model",
+        help="Output MLflow model",
     )
     parser.add_argument(
         "--model-import-job-path",

@@ -15,7 +15,7 @@ from azureml.model.mgmt.processors.transformers.config import (
 from .convertors import (
     NLPMLflowConvertor,
     VisionMLflowConvertor,
-    WhisperMLFlowConvertor,
+    WhisperMLflowConvertor,
     StableDiffusionMlflowConvertor,
 )
 
@@ -37,7 +37,7 @@ def get_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         raise Exception(f"{task} not supported for mlflow conversion using hftransformers")
 
 
-class HFMLFlowConvertorFactoryInterface(ABC):
+class HFMLflowConvertorFactoryInterface(ABC):
     """HF MLflow covertor factory interface."""
 
     @abstractmethod
@@ -46,7 +46,7 @@ class HFMLFlowConvertorFactoryInterface(ABC):
         raise NotImplementedError
 
 
-class NLPMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
+class NLPMLflowConvertorFactory(HFMLflowConvertorFactoryInterface):
     """Factory class for NLP model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
@@ -59,7 +59,7 @@ class NLPMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
         )
 
 
-class VisionMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
+class VisionMLflowConvertorFactory(HFMLflowConvertorFactoryInterface):
     """Factory class for vision model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
@@ -72,14 +72,14 @@ class VisionMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
         )
 
 
-class ASRMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
+class ASRMLflowConvertorFactory(HFMLflowConvertorFactoryInterface):
     """Factory class for ASR model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create mlflow convertor for ASR tasks."""
         misc = translate_params["misc"]
         if misc and SupportedASRModelFamily.WHISPER.value in misc:
-            return WhisperMLFlowConvertor(
+            return WhisperMLflowConvertor(
                 model_dir=model_dir,
                 output_dir=output_dir,
                 temp_dir=temp_dir,
@@ -88,7 +88,7 @@ class ASRMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
         raise Exception("Unsupported ASR model family")
 
 
-class DiffusersMLflowConvertorFactory(HFMLFlowConvertorFactoryInterface):
+class DiffusersMLflowConvertorFactory(HFMLflowConvertorFactoryInterface):
     """Factory class for diffusor model family."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):

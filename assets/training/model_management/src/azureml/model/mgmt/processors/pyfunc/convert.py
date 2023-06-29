@@ -14,7 +14,7 @@ from azureml.model.mgmt.utils.common_utils import log_execution_time
 from mlflow.models.signature import ModelSignature
 from mlflow.types.schema import ColSpec, Schema
 
-from .vision.config import MLFlowSchemaLiterals, MMDetLiterals, Tasks
+from .vision.config import MLflowSchemaLiterals, MMDetLiterals, Tasks
 
 
 def _prepare_artifacts_dict(input_dir: Path) -> Dict:
@@ -45,13 +45,13 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
     :rtype: mlflow.models.signature.ModelSignature
     """
     input_schema = Schema(
-        [ColSpec(MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE)]
+        [ColSpec(MLflowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, MLflowSchemaLiterals.INPUT_COLUMN_IMAGE)]
     )
 
     if task_type == Tasks.MM_OBJECT_DETECTION.value:
         output_schema = Schema(
             [
-                ColSpec(MLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, MLFlowSchemaLiterals.OUTPUT_COLUMN_BOXES),
+                ColSpec(MLflowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, MLflowSchemaLiterals.OUTPUT_COLUMN_BOXES),
             ]
         )
     else:
@@ -74,9 +74,9 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None
     task = translate_params["task"]
 
     sys.path.append(os.path.join(os.path.dirname(__file__), "vision"))
-    from detection_predict import ImagesDetectionMLFlowModelWrapper
+    from detection_predict import ImagesDetectionMLflowModelWrapper
 
-    mlflow_model_wrapper = ImagesDetectionMLFlowModelWrapper(task_type=task)
+    mlflow_model_wrapper = ImagesDetectionMLflowModelWrapper(task_type=task)
     artifacts_dict = _prepare_artifacts_dict(input_dir)
     pip_requirements = os.path.join(os.path.dirname(__file__), "vision", "requirements.txt")
     code_path = [
