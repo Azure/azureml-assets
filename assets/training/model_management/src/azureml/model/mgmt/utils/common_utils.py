@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Any, Dict, List, Tuple
-from azureml.model.mgmt.utils.logging_utils import get_logger 
+from azureml.model.mgmt.utils.logging_utils import get_logger
 from applicationinsights import TelemetryClient
 from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
 
@@ -194,6 +194,7 @@ def retry(times):
     :param times: The number of times to repeat the wrapped function/method
     :type times: Int
     """
+
     def decorator(func):
         def newfn(*args, **kwargs):
             attempt = 1
@@ -209,5 +210,7 @@ def retry(times):
                     if attempt == times:
                         logger.warning("Retried {} times when calling {}, now giving up!".format(times, func.__name__))
                         raise
+
         return newfn
+
     return decorator

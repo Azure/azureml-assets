@@ -46,9 +46,9 @@ class LoggerConfig:
 
     CODEC = "base64"
     INSTRUMENTATION_KEY = b"NzFiOTU0YTgtNmI3ZC00M2Y1LTk4NmMtM2QzYTY2MDVkODAz"
-    MODEL_IMPORT_HANDLER_NAME = "ModelImportHandler" 
+    MODEL_IMPORT_HANDLER_NAME = "ModelImportHandler"
     APPINSIGHT_HANDLER_NAME = "AppInsightsHandler"
     LOGGER_NAME = "FM_IMPORT_MODEL"
     VERBOSITY_LEVEL = "DEBUG"
     OFFLINE_RUN_MESSAGE = "OFFLINE_RUN"
-    IMPORT_MODEL_VERSION = "0.0.5" ## Update when changing version in spec file.
+    IMPORT_MODEL_VERSION = "0.0.5"  ## Update when changing version in spec file.

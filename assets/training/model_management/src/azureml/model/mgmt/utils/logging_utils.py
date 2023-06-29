@@ -12,7 +12,7 @@ import logging
 import sys
 
 
-class RunDetails():
+class RunDetails:
     def __init__(self):
         self._run = Run.get_context()
 
@@ -141,25 +141,25 @@ class CustomDimensions:
         args = sys.argv
         if "--model-id" in args:
             ind = args.index("--model-id")
-            self.model_id = sys.argv[ind+1]
+            self.model_id = sys.argv[ind + 1]
 
         if "--model-source" in args:
             ind = args.index("--model-source")
-            self.model_source = sys.argv[ind+1]
+            self.model_source = sys.argv[ind + 1]
 
     def _add_model_preprocess_args(self):
         args = sys.argv
         if "--model-id" in args:
             ind = args.index("--model-id")
-            self.model_id = sys.argv[ind+1]
+            self.model_id = sys.argv[ind + 1]
 
         if "--task-name" in args:
             ind = args.index("--task-name")
-            self.task_name = sys.argv[ind+1]
+            self.task_name = sys.argv[ind + 1]
 
         if "--mlflow-flavor" in args:
             ind = args.index("--mlflow-flavor")
-            self.mlflow_flavor = sys.argv[ind+1]
+            self.mlflow_flavor = sys.argv[ind + 1]
 
 
 class ModelImportHandler(logging.StreamHandler):
@@ -210,9 +210,7 @@ def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL
         logger.addHandler(stream_handler)
 
     if LoggerConfig.APPINSIGHT_HANDLER_NAME not in handler_names:
-        instrumentation_key = codecs.decode(
-            LoggerConfig.INSTRUMENTATION_KEY, LoggerConfig.CODEC
-        ).decode("utf-8")
+        instrumentation_key = codecs.decode(LoggerConfig.INSTRUMENTATION_KEY, LoggerConfig.CODEC).decode("utf-8")
 
         appinsights_handler = get_telemetry_log_handler(
             instrumentation_key=instrumentation_key,

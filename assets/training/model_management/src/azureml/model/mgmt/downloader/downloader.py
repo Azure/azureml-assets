@@ -57,7 +57,7 @@ class HuggingfaceDownloader:
             model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
             for info in model_list:
                 if self._model_id == info.modelId:
-                    return info            
+                    return info
         except Exception as e:
             logger.error(f"Failed to validate model id : {e}")
             raise ValueError(f"Failed to validate model id : {e}")
@@ -116,8 +116,8 @@ class HuggingfaceDownloader:
             }
         else:
             error_msg = (
-                    f"Invalid Hugging face model id: {self._model_id}."
-                    "Please ensure that you are using a correct and existing model ID"
+                f"Invalid Hugging face model id: {self._model_id}."
+                "Please ensure that you are using a correct and existing model ID"
             )
             logger.error(error_msg)
             raise ValueError(error_msg)
