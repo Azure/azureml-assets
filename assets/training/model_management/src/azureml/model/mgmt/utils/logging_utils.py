@@ -18,17 +18,20 @@ import sys
 
 
 class RunDetails:
+    """RunDetails."""
+
     def __init__(self):
+        """Run details init."""
         self._run = Run.get_context()
 
     @property
     def run_id(self):
-        """RunID of existing run."""
+        """Run ID of the existing run."""
         return self._run.id
 
     @property
     def parent_run_id(self):
-        """Parent RunID of existing run."""
+        """Parent RunID of the existing run."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
         return self._run.parent.id
@@ -41,21 +44,21 @@ class RunDetails:
 
     @property
     def workspace_name(self):
-        """Return workspace."""
+        """Return workspace name."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
         return self.workspace.name
 
     @property
     def experiment_id(self):
-        """Return SubID."""
+        """Return experiment id."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
         return self._run.experiment.id
 
     @property
     def subscription_id(self):
-        """Return SubID."""
+        """Return subcription ID."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
         return self.workspace.subscription_id
@@ -69,7 +72,7 @@ class RunDetails:
 
     @property
     def compute(self):
-        """Return compute target for current run."""
+        """Return compute target for the current run."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
         details = self._run.get_details()
@@ -89,7 +92,7 @@ class RunDetails:
 
     @property
     def root_attribute(self):
-        """Root attribute of run."""
+        """Return root attribute of the run."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
 
@@ -102,6 +105,7 @@ class RunDetails:
         return cur_attribute
 
     def __str__(self):
+        """Run details to string."""
         return {
             "run_id": self.run_id,
             "parent_run_id": self.parent_run_id,
@@ -123,6 +127,7 @@ class CustomDimensions:
         run_details,
         app_name=AppName.IMPORT_MODEL,
     ) -> None:
+        """Init Custom dimensions."""
         # run_details
         self.run_id = run_details.run_id
         self.parent_run_id = run_details.parent_run_id
@@ -171,7 +176,7 @@ class ModelImportHandler(logging.StreamHandler):
     """Model Import handler for stream handling."""
 
     def emit(self, record: logging.LogRecord) -> None:
-        """Emits logs to stream after adding custom dimensions."""
+        """Emit logs to stream after adding custom dimensions."""
         new_properties = getattr(record, "properties", {})
         new_properties.update({'log_id': str(uuid.uuid4())})
         custom_dims_dict = custom_dimensions.__dict__
@@ -190,6 +195,7 @@ class ModelImportHandler(logging.StreamHandler):
 
 
 def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL):
+    """Return logger with adding necessary handlers."""
     logger = logging.getLogger(name)
 
     numeric_log_level = getattr(logging, level.upper(), None)
