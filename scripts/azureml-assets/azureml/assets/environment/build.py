@@ -64,16 +64,18 @@ def create_acr_task(image_name: str,
             'id': 'test',
             'cmd': f"$Registry/{image_name} {test_command}"
         })
-        task['steps'].append({
-            'id': 'scan',
-            'cmd': (
-                       f"$Registry/{image_name} "
-                       f"wget -O trivy.deb {trivy_url} && "
-                       "dpkg -i trivy.deb && "
-                       "trivy fs --scanners vuln /"
-                   ),
-            'ignoreErrors': True
-        })
+
+        if trivy_url is not None:
+            task['steps'].append({
+                'id': 'scan',
+                'cmd': (
+                        f"$Registry/{image_name} "
+                        f"wget -O trivy.deb {trivy_url} && "
+                        "dpkg -i trivy.deb && "
+                        "trivy fs --scanners vuln /"
+                    ),
+                'ignoreErrors': True
+            })
 
     # Add push step if requested
     if push:
