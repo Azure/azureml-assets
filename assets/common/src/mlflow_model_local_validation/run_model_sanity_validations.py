@@ -81,10 +81,10 @@ def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str)
     item_sep = item_sep.strip()
     kv_sep = kv_sep.strip()
     if len(item_sep) > 1 or len(kv_sep) > 1:
-        tc_log("Provide single char as separator")
+        tc_exception("Provide single char as separator")
         raise Exception("Provide single char as separator")
     if item_sep == kv_sep:
-        tc_log("item_sep and kv_sep are equal.")
+        tc_exception("item_sep and kv_sep are equal.")
         raise Exception("item_sep and kv_sep are equal.")
     parsed_dict = {}
     kv_pairs = dict_str.split(item_sep)
@@ -109,7 +109,7 @@ def _load_and_prepare_data(test_data_path: Path, mlmodel: Dict, col_rename_map: 
     elif ext == ".csv":
         data = pd.read_csv(test_data_path)
     else:
-        tc_log(f"Unsupported file type: {ext}")
+        tc_exception(f"Unsupported file type: {ext}")
         raise Exception("Unsupported file type")
 
     # translations
@@ -147,6 +147,7 @@ def _load_and_infer_model(model_dir, data):
         model = mlflow.pyfunc.load_model(str(model_dir))
     except Exception as e:
         tc_exception(e, f"Error in loading mlflow model: {e}")
+        logger.error(f"Error in loading mlflow model: {e}")
         raise Exception(f"Error in loading mlflow model: {e}")
 
     try:
@@ -156,6 +157,7 @@ def _load_and_infer_model(model_dir, data):
         logger.info(f"prediction results\n{pred_results}")
     except Exception as e:
         tc_exception(e, f"Error in predicting model: {e}")
+        logger.error(f"Failed to infer model with provided dataset: {e}")
         raise Exception(f"Failed to infer model with provided dataset: {e}")
 
 
