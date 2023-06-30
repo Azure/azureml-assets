@@ -231,9 +231,14 @@ def build_images(input_dirs: List[Path],
                                                   add_subdir=True, use_version_dir=use_version_dirs)
                 continue
 
+            # Don't push environments that aren't published
+            push_this_image = push and env_config.publish_enabled
+            if push and not push_this_image:
+                logger.print(f"Skipping push of image for {asset_config.name}: Not published")
+
             # Tag with version from spec
             if tag_with_version:
-                version = asset_config.spec_as_object().version
+                version = asset_config.version
                 image_name = env_config.get_image_name_with_tag(version)
             else:
                 image_name = env_config.image_name
@@ -242,7 +247,7 @@ def build_images(input_dirs: List[Path],
             build_log = build_logs_dir / f"{asset_config.name}.log"
             futures.append(pool.submit(build_image, asset_config, image_name,
                                        env_config.context_dir_with_path, env_config.dockerfile, build_log,
-                                       env_config.os.value, resource_group, registry, test_command, push))
+                                       env_config.os.value, resource_group, registry, test_command, push_this_image))
 
         # Wait for builds to complete
         for future in as_completed(futures):

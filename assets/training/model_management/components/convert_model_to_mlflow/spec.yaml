@@ -1,0 +1,145 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: convert_model_to_mlflow
+version: 0.0.6
+type: command
+
+is_deterministic: True
+
+display_name: Convert Hugging face models to MLflow
+description: Component converts Huggingface models to MLflow model packaging format
+
+environment: azureml://registries/azureml/environments/model-management/versions/9
+
+code: ../../src/
+command: >
+  python run_model_preprocess.py
+  $[[--model-id ${{inputs.model_id}}]]
+  $[[--task-name ${{inputs.task_name}}]]
+  $[[--model-download-metadata ${{inputs.model_download_metadata}}]]
+  $[[--license-file-path ${{inputs.license_file_path}}]]
+  $[[--hf-config-args "${{inputs.hf_config_args}}"]]
+  $[[--hf-tokenizer-args "${{inputs.hf_tokenizer_args}}"]]
+  $[[--hf-model-args "${{inputs.hf_model_args}}"]]
+  $[[--hf-pipeline-args "${{inputs.hf_pipeline_args}}"]]
+  $[[--hf-config-class ${{inputs.hf_config_class}}]]
+  $[[--hf-model-class ${{inputs.hf_model_class}}]]
+  $[[--hf-tokenizer-class ${{inputs.hf_tokenizer_class}}]]
+  $[[--extra-pip-requirements "${{inputs.extra_pip_requirements}}"]]
+  --mlflow-flavor ${{inputs.mlflow_flavor}}
+  --model-path ${{inputs.model_path}}
+  --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
+  --model-import-job-path ${{outputs.model_import_job_path}}
+
+inputs:
+  model_id:
+    type: string
+    description: Huggingface model id (https://huggingface.co/<model_id>). A required parameter for transformers flavor. Can be provided as input here or in model_download_metadata JSON file.
+    optional: true
+
+  mlflow_flavor:
+    type: string
+    enum:
+      - transformers
+      - mmlab_pyfunc
+    default: transformers
+    optional: false
+    description: Mlflow flavor to convert model into. Please note that, mmlab_pyfunc flavor is only supported for image object detection models.
+
+  task_name:
+    type: string
+    enum:
+      - text-classification
+      - fill-mask
+      - token-classification
+      - question-answering
+      - summarization
+      - text-generation
+      - text-classification
+      - translation
+      - image-classification
+      - image-object-detection
+      - text-to-image
+    description: A Hugging face task on which model was trained on. A required parameter for transformers mlflow flavor. Can be provided as input here or in model_download_metadata JSON file.
+    optional: true
+
+  hf_config_args:
+    type: string
+    description: |
+      Provide args that should be used to load Huggingface model config.
+      eg: trust_remote_code=True;
+    optional: true
+
+  hf_tokenizer_args:
+    type: string
+    description: |
+      Provide args that should be used to load Huggingface model tokenizer.
+      eg: trust_remote_code=True, device_map=auto, 
+    optional: true
+
+  hf_model_args:
+    type: string
+    description: |
+      Provide args that should be used to load Huggingface model.
+      eg: trust_remote_code=True, device_map=auto, low_cpu_mem_usage=True
+    optional: true
+
+  hf_pipeline_args:
+    type: string
+    description: |
+      Provide pipeline args that should be used while loading the hugging face model.
+      Dont use quotes. If value cannot be eval'ed it will be taken as as string.
+      eg: trust_remote_code=True, device_map=auto
+    optional: true
+
+  hf_config_class:
+    type: string
+    description: AutoConfig class may not be sufficient to load config for some of the models. You can use this parameter to send Config class name as it is
+    optional: true
+
+  hf_model_class:
+    type: string
+    description: AutoModel classes may not be sufficient to load some of the models. You can use this parameter to send Model class name as it is
+    optional: true
+
+  hf_tokenizer_class:
+    type: string
+    description: AutoTokenizer class may not be sufficient to load tokenizer for some of the models. You can use this parameter to send Config class name as it is
+    optional: true
+
+  extra_pip_requirements:
+    type: string
+    description: |
+      Extra pip dependencies that MLflow model should capture as part of conversion. This would be used to create environment while loading the model for inference.
+      Pip dependencies expressed as below. Do not use quotes for passing.
+      eg: pkg1==1.0, pkg2, pkg3==1.0
+    optional: true
+
+  model_download_metadata:
+    type: uri_file
+    optional: true
+    description: JSON file containing model download details.
+
+  model_path:
+    type: uri_folder
+    description: Path to the model.
+    mode: ro_mount
+    optional: false
+
+  license_file_path:
+    type: uri_file
+    description: Path to the license file
+    optional: true
+
+outputs:
+  mlflow_model_folder:
+    type: mlflow_model
+    description: Output path for the converted MLflow model.
+    mode: rw_mount
+
+  model_import_job_path:
+    type: uri_file
+    description: JSON file containing model job path for model lineage
+
+tags:
+    Preview: ""

@@ -4,25 +4,13 @@ on:
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - .github/**
-      - scripts/docs/**
-      - scripts/release/**
-      - scripts/setup/**
-      - scripts/test/**
-      - scripts/validation/**
-      - test/**
+    paths:
+      - assets/**
   pull_request_target:
     branches:
       - main
-    paths-ignore:
-      - .github/**
-      - scripts/docs/**
-      - scripts/release/**
-      - scripts/setup/**
-      - scripts/test/**
-      - scripts/validation/**
-      - test/**
+    paths:
+      - assets/**
     types:
       - opened
       - labeled
@@ -32,7 +20,7 @@ on:
     inputs:
       asset_dirs:
         description: Asset directories
-        default: .,!test,!scripts
+        default: assets
         required: true
 
 defaults:
@@ -57,7 +45,7 @@ jobs:
       id-token: write
 
     env:
-      default_asset_dirs: .,!test,!scripts
+      default_asset_dirs: assets
       scripts_azureml_assets_dir: scripts/azureml-assets
       scripts_environment_dir: scripts/azureml-assets/azureml/assets/environment
       scripts_setup_dir: scripts/setup
