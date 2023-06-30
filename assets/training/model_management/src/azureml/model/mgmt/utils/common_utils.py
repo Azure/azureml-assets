@@ -30,7 +30,7 @@ KV_EQ_SEP = "="
 ITEM_COMMA_SEP = ","
 ITEM_SEMI_COLON_SEP = ";"
 
-
+hf_api = HfApi(endpoint=HF_ENDPOINT)
 logger = get_logger(__name__)
 
 
@@ -213,7 +213,7 @@ def retry(times):
 def fetch_huggingface_model_info(model_id) -> ModelInfo:
     """Return Hugging face model info."""
     try:
-        model_list: List[ModelInfo] = HfApi(endpoint=HF_ENDPOINT).list_models(filter=ModelFilter(model_name=model_id))
+        model_list: List[ModelInfo] = hf_api.list_models(filter=ModelFilter(model_name=model_id))
         for info in model_list:
             if model_id == info.modelId:
                 return info

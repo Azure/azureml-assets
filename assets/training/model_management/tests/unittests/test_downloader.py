@@ -12,6 +12,7 @@ from azureml.model.mgmt.downloader.downloader import (
     AzureBlobstoreDownloader,
     download_model,
 )
+from azureml.model.mgmt.utils import common_utils
 from azureml.model.mgmt.utils.common_utils import create_namespace_from_dict
 
 
@@ -35,8 +36,8 @@ class TestDownloaders(unittest.TestCase):
                 })
             ]
 
+            common_utils.hf_api = mock_api
             downloader = HuggingfaceDownloader(model_id)
-            downloader._hf_api = mock_api
             downloader.download_model(download_dir)
 
             self.assertEqual(downloader.model_info.modelId, model_id)
