@@ -27,8 +27,12 @@ os.makedirs(workdir, exist_ok=False)
 
 
 def _parse_arguments():
-    """Parse the arguments passed to the script, check the validity of the arguments, and return the parsed arguments."""
-    parser = argparse.ArgumentParser(description="Online Endpoints Model Optimizer", formatter_class=argparse.RawTextHelpFormatter)
+    """
+    Parse the arguments passed to the script, check the validity of the arguments,
+    and return the parsed arguments.
+    """
+    parser = argparse.ArgumentParser(description="Online Endpoints Model Optimizer",
+                                     formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--config_path",
                         default=None,
                         type=str,
@@ -43,7 +47,7 @@ def _parse_arguments():
                         default=None,
                         type=str,
                         required=False,
-                        help="Input: Path to the code directory, including user script, requirements, data directory etc")
+                        help="Input: Path to the code directory, including user script, data directory etc")
     parser.add_argument("--optimized_parameters_path",
                         default=None,
                         type=str,
@@ -122,15 +126,19 @@ def _move_model_and_config_to_output_path(optimized_parameters_path, optimized_m
             parentpath = os.path.split(dirpath)
             prefix = os.path.split(parentpath[0])[1] + "_" + parentpath[1]
             if file.endswith("inference_config.json") and optimized_parameters_path is not None:
-                log.info(f"copy inference_config {os.path.join(dirpath, file)} to {optimized_parameters_path}/{prefix}_inference_config.json")
-                shutil.copy2(os.path.join(dirpath, file), f"{optimized_parameters_path}/{prefix}_inference_config.json")
+                log.info(f"copy inference_config {os.path.join(dirpath, file)} \
+                         to {optimized_parameters_path}/{prefix}_inference_config.json")
+                shutil.copy2(os.path.join(dirpath, file),
+                             f"{optimized_parameters_path}/{prefix}_inference_config.json")
             elif file.endswith("metrics.json"):
                 with open(os.path.join(dirpath, file), "r") as f:
                     metrics = json.load(f)
                     _report_job_metrics(f"metrics_value_{prefix}", metrics)
             elif file.endswith("model.onnx") and optimized_model_path is not None:
-                log.info(f"copy optimized model {os.path.join(dirpath, file)} to {optimized_model_path}/{prefix}_model.onnx")
-                shutil.copy2(os.path.join(dirpath, file), f"{optimized_model_path}/{prefix}_model.onnx")
+                log.info(f"copy optimized model {os.path.join(dirpath, file)} \
+                         to {optimized_model_path}/{prefix}_model.onnx")
+                shutil.copy2(os.path.join(dirpath, file),
+                             f"{optimized_model_path}/{prefix}_model.onnx")
             elif dirpath.endswith("model") and optimized_model_path is not None:
                 openvinopath = os.path.split(Path(Path(dirpath).parent))
                 prefix = os.path.split(openvinopath[0])[1] + "_" + openvinopath[1]
