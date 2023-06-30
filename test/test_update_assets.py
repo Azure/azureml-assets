@@ -73,7 +73,7 @@ def test_update_assets(test_subdir: str, skip_unreleased: bool, create_tag: bool
                 assets.pin_env_files(expected_asset_config.extra_config_as_object())
 
         assets.update_assets(input_dirs=main_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME,
-                             release_directory_root=temp_release_path, copy_only=False,
-                             skip_unreleased=skip_unreleased, output_directory_root=temp_output_path)
+                             output_directory_root=temp_output_path, release_directory_root=temp_release_path,
+                             skip_unreleased=skip_unreleased, use_version_dirs=False)
 
         assert util.are_dir_trees_equal(temp_output_path, temp_expected_path, True)
