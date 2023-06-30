@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: Jean-Baptiste-camembert-ner
+name: jean-baptiste-camembert-ner
 path: ./
 properties:
   SHA: cc63721791a6e1d60f4764997bbb311667ec75d8
