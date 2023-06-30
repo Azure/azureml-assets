@@ -171,9 +171,6 @@ class HFMLFLowConvertor(ABC):
             config = str(tmp_config_dir)
             tokenizer = str(tmp_tokenizer_dir)
 
-        # set experimental flag
-        self._hf_conf["exp"] = True
-
         hf_mlflow.hftransformers.save_model(
             config=config,
             tokenizer=tokenizer,
