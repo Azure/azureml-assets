@@ -1,6 +1,8 @@
 general:
-  includes: 
+  includes:
   - "./general/jobs/"
   jobs:
-    olive-optimizer-built-in-component: 
+    olive-optimizer-built-in-component:
       job: "./general/jobs/olive-optimizer-built-in-component/pipeline.yml"
+    olive-optimizer-gpu-built-in-component:
+      job: "./general/jobs/olive-optimizer-gpu-built-in-component/pipeline.yml"
