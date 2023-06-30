@@ -36,6 +36,7 @@ class RunDetails:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
         return self._run.parent.id
 
+    @property
     def workspace(self):
         """Return workspace."""
         if "OfflineRun" in self.run_id:
