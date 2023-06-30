@@ -1,0 +1,9 @@
+image:
+  name: olive-optimizer
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - requirements.txt

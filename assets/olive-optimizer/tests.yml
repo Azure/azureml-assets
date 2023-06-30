@@ -1,0 +1,6 @@
+general:
+  includes: 
+  - "./general/jobs/"
+  jobs:
+    olive-optimizer-built-in-component: 
+      job: "./general/jobs/olive-optimizer-built-in-component/pipeline.yml"

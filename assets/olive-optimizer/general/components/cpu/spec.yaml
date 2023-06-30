@@ -1,0 +1,43 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+version: 0.0.1
+name: olive_optimizer
+display_name: Olive Optimizer - CPU
+is_deterministic: false
+
+code: ../../src
+
+description: An CPU version optimizer based on "OLive". "OLive" (for ONNX Runtime(ORT) Go Live) is a python package that automates the process of accelerating models with ONNX Runtime(ORT). For detailed info please refer to https://github.com/microsoft/OLive
+
+inputs:
+  config:
+    type: uri_file
+    optional: False
+    description: "A Json file that provides detailed Olive configurations."
+  code_path:
+    type: uri_folder
+    optional: True
+    description: "A code folder that contains all the files that are needed for Olive."
+  model:
+    type: uri_folder
+    optional: True
+    description: "A folder that contains the model files that are needed for Olive."
+
+outputs:
+  optimized_parameters:
+    type: uri_folder
+    description: "A folder that contains the inference parameters file(s) for corresponding optimized model(s)."
+  optimized_model:
+    type: uri_folder
+    description: "A folder that contains the optimized model(s)."
+
+environment: azureml:olive-optimizer:0.1
+
+command: >-
+    python -m olive_optimizer.run
+    --config_path ${{inputs.config}}
+    $[[--code ${{inputs.code_path}}]]
+    $[[--model_path ${{inputs.model}}]]
+    --optimized_parameters_path ${{outputs.optimized_parameters}}
+    --optimized_model_path ${{outputs.optimized_model}}
