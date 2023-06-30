@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Huggingface predict file for whisper mlflow model."""
+"""Huggingface predict file for whisper MLflow model."""
 
 import os
 import base64
@@ -17,7 +17,7 @@ from tempfile import TemporaryDirectory
 from transformers import WhisperProcessor, WhisperForConditionalGeneration, pipeline
 from urllib.parse import urlparse
 
-logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.WARNING)
+logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.WARNING)
 
 supported_languages = [
     "en",

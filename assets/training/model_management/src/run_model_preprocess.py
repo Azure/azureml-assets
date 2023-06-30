@@ -6,23 +6,35 @@
 import argparse
 import os
 import json
+import shutil
 from azureml.model.mgmt.config import ModelFlavor
+from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
 from azureml.model.mgmt.utils.common_utils import init_tc, tc_log
 from pathlib import Path
-import shutil
-
-
-WORKING_DIR = "working_dir"
-TMP_DIR = "tmp"
+from tempfile import TemporaryDirectory
 
 
 def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-id", type=str, required=False, help="Hugging Face model ID")
     parser.add_argument("--task-name", type=str, required=False, help="Hugging Face task type")
+    parser.add_argument("--hf-config-args", type=str, required=False, help="Hugging Face config init args")
+    parser.add_argument("--hf-tokenizer-args", type=str, required=False, help="Hugging Face tokenizer init args")
+    parser.add_argument("--hf-model-args", type=str, required=False, help="Hugging Face model init args")
+    parser.add_argument("--hf-pipeline-args", type=str, required=False, help="Hugging Face pipeline init args")
+    parser.add_argument("--hf-config-class", type=str, required=False, help="Hugging Face config class")
+    parser.add_argument("--hf-model-class", type=str, required=False, help="Hugging Face model class ")
+    parser.add_argument("--hf-tokenizer-class", type=str, required=False, help="Hugging tokenizer class")
+    parser.add_argument(
+        "--extra-pip-requirements",
+        type=str,
+        required=False,
+        help="Extra pip dependecies which is not present in current env but needed to load model env.",
+    )
+
     parser.add_argument(
         "--mlflow-flavor",
         type=str,
@@ -41,7 +53,7 @@ def _get_parser():
         "--mlflow-model-output-dir",
         type=Path,
         required=True,
-        help="Output MLFlow model",
+        help="Output MLflow model",
     )
     parser.add_argument(
         "--model-import-job-path",
@@ -83,6 +95,15 @@ if __name__ == "__main__":
     model_id = args.model_id
     task_name = args.task_name
     mlflow_flavor = args.mlflow_flavor
+    hf_config_args = args.hf_config_args
+    hf_tokenizer_args = args.hf_tokenizer_args
+    hf_model_args = args.hf_model_args
+    hf_pipeline_args = args.hf_pipeline_args
+    hf_config_class = args.hf_config_class
+    hf_model_class = args.hf_model_class
+    hf_tokenizer_class = args.hf_tokenizer_class
+    extra_pip_requirements = args.extra_pip_requirements
+
     model_download_metadata_path = args.model_download_metadata
     model_path = args.model_path
     mlflow_model_output_dir = args.mlflow_model_output_dir
@@ -99,11 +120,22 @@ if __name__ == "__main__":
             download_details = json.load(f)
             preprocess_args.update(download_details.get("tags", {}))
             preprocess_args.update(download_details.get("properties", {}))
+            preprocess_args["misc"] = download_details.get("misc", [])
+
     preprocess_args["task"] = task_name if task_name else preprocess_args.get("task")
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
+    preprocess_args[HF_CONF.EXTRA_PIP_REQUIREMENTS.value] = extra_pip_requirements
+    preprocess_args[HF_CONF.HF_CONFIG_ARGS.value] = hf_config_args
+    preprocess_args[HF_CONF.HF_TOKENIZER_ARGS.value] = hf_tokenizer_args
+    preprocess_args[HF_CONF.HF_MODEL_ARGS.value] = hf_model_args
+    preprocess_args[HF_CONF.HF_PIPELINE_ARGS.value] = hf_pipeline_args
+    preprocess_args[HF_CONF.HF_CONFIG_CLASS.value] = hf_config_class
+    preprocess_args[HF_CONF.HF_PRETRAINED_CLASS.value] = hf_model_class
+    preprocess_args[HF_CONF.HF_TOKENIZER_CLASS.value] = hf_tokenizer_class
 
     tc_log(f"Preprocess args : {preprocess_args}")
 
+    # TODO: move validations to respective convertors
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
         _validate_transformers_args(preprocess_args)
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
@@ -114,15 +146,11 @@ if __name__ == "__main__":
     tc_log(f"task_name: {task_name}")
     tc_log(f"mlflow_flavor: {mlflow_flavor}")
 
-    temp_output_dir = mlflow_model_output_dir / TMP_DIR
-    working_dir = mlflow_model_output_dir / WORKING_DIR
-    run_preprocess(mlflow_flavor, model_path, working_dir, temp_output_dir, **preprocess_args)
-    tc_log("Finished preprocessing")
-
-    # Finishing touches
-    shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
-    shutil.rmtree(working_dir, ignore_errors=True)
-    shutil.rmtree(temp_output_dir, ignore_errors=True)
+    with TemporaryDirectory(dir=mlflow_model_output_dir) as working_dir, TemporaryDirectory(
+        dir=mlflow_model_output_dir
+    ) as temp_dir:
+        run_preprocess(mlflow_flavor, model_path, working_dir, temp_dir, **preprocess_args)
+        shutil.copytree(working_dir, mlflow_model_output_dir, dirs_exist_ok=True)
 
     # Copy license file to output model path
     if license_file_path:
