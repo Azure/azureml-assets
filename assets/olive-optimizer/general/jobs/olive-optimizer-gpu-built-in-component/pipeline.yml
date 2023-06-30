@@ -15,6 +15,6 @@ jobs:
         path: ./resources/bert.json
       code_path:
         type: uri_folder
-        path: ./resources/code
+        path: ../olive-optimizer-built-in-component/resources/code
     resources:
       instance_count: 1
