@@ -12,11 +12,6 @@ on:
       - assets/common/src/mlflow_model_local_validation/**
       - .github/workflows/training-model-mgmt-unittests.yaml
   workflow_dispatch:
-    inputs:
-      asset_dirs:
-        description: Asset directories
-        default: assets
-        required: true
 
 env:
   model_mgmt_root_dir: assets/training/model_management
