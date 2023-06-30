@@ -4,12 +4,20 @@
 """Downloader Module."""
 
 import langcodes
+from azureml._common._error_definition import AzureMLError
+from azureml._common.exceptions import AzureMLException
 from azureml.model.mgmt.config import PathType
 from azureml.model.mgmt.downloader.config import ModelSource
 from azureml.model.mgmt.downloader.download_utils import download_model_for_path_type
-from huggingface_hub.hf_api import HfApi, ModelFilter, ModelInfo
+from huggingface_hub.hf_api import ModelInfo
 from pathlib import Path
-from typing import List
+from azureml.model.mgmt.utils.common_utils import retry, fetch_huggingface_model_info
+from azureml.model.mgmt.utils.exceptions import InvalidHuggingfaceModelIDError
+from azureml.model.mgmt.utils.logging_utils import get_logger
+
+
+logger = get_logger(__name__)
+
 
 PROPERTIES = [
     "SHA",
@@ -42,21 +50,13 @@ class HuggingfaceDownloader:
         """
         self._model_id = model_id
         self._model_uri = self.HF_ENDPOINT + f"/{model_id}"
-        self._hf_api = HfApi(endpoint=self.HF_ENDPOINT)
         self._model_info = None
 
     @property
     def model_info(self) -> ModelInfo:
         """Hugging face model info."""
         if self._model_info is None:
-            try:
-                model_list: List[ModelInfo] = self._hf_api.list_models(filter=ModelFilter(model_name=self._model_id))
-                for info in model_list:
-                    if self._model_id == info.modelId:
-                        self._model_info = info
-                        break
-            except Exception as e:
-                raise ValueError(f"Failed to validate model id : {e}")
+            self._model_info = fetch_huggingface_model_info(self._model_id)
         return self._model_info
 
     def _get_model_properties(self):
@@ -104,11 +104,9 @@ class HuggingfaceDownloader:
                 "misc": model_props.get("misc"),
             }
         else:
-            error_msg = (
-                    f"Invalid Hugging face model id: {self._model_id}."
-                    "Please ensure that you are using a correct and existing model ID"
+            raise AzureMLException._with_error(
+                AzureMLError.create(InvalidHuggingfaceModelIDError, model_id=self._model_id)
             )
-            raise ValueError(error_msg)
 
 
 class GITDownloader:
@@ -125,6 +123,7 @@ class GITDownloader:
         """
         self._model_uri = model_uri
 
+    @retry(3)
     def download_model(self, download_dir):
         """Download a publicly hosted GIT model and return details."""
         download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
@@ -151,6 +150,7 @@ class AzureBlobstoreDownloader:
         """
         self._model_uri = model_uri
 
+    @retry(3)
     def download_model(self, download_dir):
         """Download a model from a publicly accessible azure blobstorage and return details."""
         download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)

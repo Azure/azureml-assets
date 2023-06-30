@@ -8,8 +8,15 @@ import shutil
 import stat
 from datetime import datetime
 from pathlib import Path
+from azureml._common._error_definition import AzureMLError
+from azureml._common.exceptions import AzureMLException
 from azureml.model.mgmt.config import PathType
 from azureml.model.mgmt.utils.common_utils import run_command, log_execution_time
+from azureml.model.mgmt.utils.exceptions import BlobStorageDownloadError, GITCloneError
+from azureml.model.mgmt.utils.logging_utils import get_logger
+
+
+logger = get_logger(__name__)
 
 
 def _get_system_time_utc():
@@ -51,18 +58,21 @@ def _download_git_model(model_uri: str, model_dir: Path) -> None:
     :param model_dir: local directory to clone model to
     :type: Path
     """
-    # do shallow fetch
-    clone_cmd = f"git clone --depth=1 {model_uri} {model_dir}"
-    exit_code, stdout = run_command(clone_cmd)
-    if exit_code != 0:
-        raise Exception(f"Could not clone repo {model_uri}. Error => {stdout}")
+    try:
+        # do shallow fetch
+        clone_cmd = f"git clone --depth=1 {model_uri} {model_dir}"
+        exit_code, stdout = run_command(clone_cmd)
+        if exit_code != 0:
+            raise AzureMLException._with_error(AzureMLError.create(GITCloneError, uri=model_uri, error=stdout))
 
-    git_path = os.path.join(model_dir, ".git")
-    shutil.rmtree(git_path, onerror=_onerror)
-    return {
-        "download_time_utc": _get_system_time_utc(),
-        "size": _round_size(_get_size(model_dir)),
-    }
+        git_path = os.path.join(model_dir, ".git")
+        shutil.rmtree(git_path, onerror=_onerror)
+        return {
+            "download_time_utc": _get_system_time_utc(),
+            "size": _round_size(_get_size(model_dir)),
+        }
+    except Exception as e:
+        raise AzureMLException._with_error(AzureMLError.create(GITCloneError, uri=model_uri, error=e))
 
 
 def _download_azure_artifacts(model_uri, model_dir):
@@ -79,13 +89,16 @@ def _download_azure_artifacts(model_uri, model_dir):
         # https://github.com/Azure/azureml-assets/issues/283
         exit_code, stdout = run_command(download_cmd)
         if exit_code != 0:
-            raise Exception(f"Failed to download model files with URL: {model_uri}. Error => {stdout}")
+            raise AzureMLException._with_error(
+                AzureMLError.create(BlobStorageDownloadError, uri=model_uri, error=stdout)
+            )
+
         return {
             "download_time_utc": _get_system_time_utc(),
             "size": _round_size(_get_size(model_dir)),
         }
     except Exception as e:
-        raise e
+        raise AzureMLException._with_error(AzureMLError.create(BlobStorageDownloadError, uri=model_uri, error=e))
 
 
 @log_execution_time
@@ -104,4 +117,4 @@ def download_model_for_path_type(model_path_type: PathType, model_uri: str, mode
     elif model_path_type == PathType.AZUREBLOB.value or model_path_type == PathType.AZUREBLOB:
         return _download_azure_artifacts(model_uri, model_dir)
     else:
-        raise Exception("Unsupported Model Download Method.")
+        raise Exception(f"Unsupported Model download type: {model_path_type}")
