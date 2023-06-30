@@ -232,7 +232,7 @@ jobs:
       
       - name: Update release branch
         if: steps.download-artifact.outputs.download-path
-        run: python -u $main_dir/$scripts_assets_dir/copy_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -o $release_dir
+        run: python -u $main_dir/$scripts_assets_dir/copy_assets.py -i ${{ runner.temp }}/$releasable_assets_artifact -o $release_dir/latest
   
       - name: Delete deprecated assets
         run: python -u $main_dir/$scripts_assets_dir/asset_utils.py delete -i $release_dir -r ${{ runner.temp }}/$asset_list_artifact/$asset_list_file
