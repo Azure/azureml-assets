@@ -70,7 +70,7 @@ def create_acr_task(image_name: str,
                 'id': 'scan',
                 'cmd': (
                         f"$Registry/{image_name} "
-                        f"wget -O trivy.deb {trivy_url} && "
+                        f"curl -sSfL -o trivy.deb {trivy_url} && "
                         "dpkg -i trivy.deb && "
                         "trivy fs --scanners vuln /"
                     ),
