@@ -1,13 +1,8 @@
 # src
-azure-ai-ml
-azure-identity
-scipy==1.5.3
-numpy==1.24.4
 azureml-evaluate-mlflow
-ffmpeg-python
 langcodes
-wget
-applicationinsights
+azureml-automl-core
+azureml-telemetry
 
 ## test
 mock
