@@ -171,7 +171,7 @@ outputs:
 
 jobs:
   download_model:
-    component: azureml:download_model:0.0.4
+    component: azureml:download_model:0.0.5
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -185,7 +185,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.6
+    component: azureml:convert_model_to_mlflow:0.0.7
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
