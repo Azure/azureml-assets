@@ -158,6 +158,9 @@ def get_dict_from_comma_separated_str(dict_str: str, item_sep: str, kv_sep: str)
         if len(split) == 2:
             key = split[0].strip()
             val = split[1].strip()
+            # basic boolean conv. of input value
+            if val.lower() == "true" or val.lower() == "false":
+                val = bool(val.lower())
             parsed_dict[key] = val
     logger.info(f"get_dict_from_comma_separated_str: {dict_str} => {parsed_dict}")
     return parsed_dict
@@ -174,7 +177,7 @@ def get_list_from_comma_separated_str(list_str: str, item_sep: str) -> List:
     :rtype: List
     """
     if not list_str:
-        return []
+        return None
     return [x.strip() for x in list_str.split(item_sep) if x]
 
 
