@@ -136,7 +136,7 @@ jobs:
       embeddings:
         mode: upload
         type: uri_folder
-    component: azureml:llm_rag_generate_embeddings_parallel:0.0.6
+    component: azureml:llm_rag_generate_embeddings_parallel:0.0.8
     type: parallel
   create_meta_acs_index_job:
     environment_variables:
