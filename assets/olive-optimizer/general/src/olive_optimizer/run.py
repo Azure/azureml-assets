@@ -16,7 +16,10 @@ from zipfile import ZipFile
 from azureml.core import Run
 from olive.workflows import run as olive_run
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(stream=sys.stdout,
+                    level=logging.INFO,
+                    format='%(asctime)s %(levelname)-8s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S')
 log = logging.getLogger("online_endpoints_model_optimizer.optimize")
 
 # output env vars
