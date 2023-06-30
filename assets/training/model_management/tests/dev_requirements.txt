@@ -1,4 +1,5 @@
 # src
+azure-ai-ml
 azureml-evaluate-mlflow
 langcodes
 azureml-automl-core
