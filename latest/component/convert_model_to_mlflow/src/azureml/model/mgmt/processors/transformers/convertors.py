@@ -171,8 +171,6 @@ class HFMLFLowConvertor(ABC):
             config = str(tmp_config_dir)
             tokenizer = str(tmp_tokenizer_dir)
 
-        self._signatures = self._signatures or self.get_model_signature()
-
         hf_mlflow.hftransformers.save_model(
             config=config,
             tokenizer=tokenizer,
