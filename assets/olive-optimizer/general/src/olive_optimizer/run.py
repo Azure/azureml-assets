@@ -30,10 +30,7 @@ os.makedirs(workdir, exist_ok=False)
 
 
 def _parse_arguments():
-    """Parse the arguments passed to the script, check the validity of the arguments,
-       and return the parsed arguments.
-    """
-
+    """Parse the arguments passed to the script, check the validity of the arguments."""
     parser = argparse.ArgumentParser(description="Online Endpoints Model Optimizer",
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("--config_path",
@@ -98,7 +95,6 @@ def _parse_arguments():
 
 def _validate_config(config):
     """Validate the config file."""
-
     if "aml_system" in config['systems'] or "docker_system" in config['systems']:
         raise Exception("aml_system or docker_system is not supported yet, will exit!")
     if "engine" not in config.keys():
@@ -107,7 +103,6 @@ def _validate_config(config):
 
 def _set_default_setting(config):
     """Set default setting for the config file."""
-
     log.info(f"set output_dir to: {output_path}")
     config['engine']['output_dir'] = output_path
     if "output_model_num" not in config['engine']['search_strategy'].keys():
@@ -121,7 +116,6 @@ def _set_default_setting(config):
 
 def _move_model_and_config_to_output_path(optimized_parameters_path, optimized_model_path):
     """Move the optimized model and config to output path."""
-
     os.chdir(output_path)
 
     with ZipFile("OutputModels.zip", mode="r") as zip_ref:
@@ -154,7 +148,6 @@ def _move_model_and_config_to_output_path(optimized_parameters_path, optimized_m
 
 def _report_job_metrics(name, values):
     """Report job metrics."""
-
     job_metrics = {}
     for param in values:
         log.info(f"Report job metrics for {param}")
@@ -168,7 +161,6 @@ def _report_job_metrics(name, values):
 
 def run():
     """Invoke the olive_run."""
-
     config, model_folder_path, code_folder_path, optimized_parameters_path, optimized_model_path = _parse_arguments()
     os.chdir(workdir)
     if code_folder_path is not None:

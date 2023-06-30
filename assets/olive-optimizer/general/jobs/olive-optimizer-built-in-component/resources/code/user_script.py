@@ -15,7 +15,6 @@ disable_progress_bar()
 
 def create_input_tensors(model):
     """Create model input tensors."""
-
     return {
         "input_ids": torch.ones(1, 128, dtype=torch.int64),
         "attention_mask": torch.ones(1, 128, dtype=torch.int64),
@@ -28,7 +27,6 @@ class BertDataset:
 
     def __init__(self, model_name_or_path):
         """__init__."""
-
         self.model_name_or_path = model_name_or_path
 
         self.task_name = "mrpc"
@@ -44,8 +42,7 @@ class BertDataset:
         self.setup_dataset()
 
     def setup_dataset(self):
-        """setuo dataset."""
-
+        """Setup dataset."""
         self.raw_datasets = load_dataset("glue", self.task_name, cache_dir=None)
         self.raw_datasets = self.raw_datasets.map(
             self.preprocess_function,
@@ -55,34 +52,31 @@ class BertDataset:
         )
 
     def preprocess_function(self, examples):
-        """pre-process."""
-
+        """Pre-process."""
         sentence1_key, sentence2_key = ("sentence1", "sentence2")
         args = (examples[sentence1_key], examples[sentence2_key])
         result = self.tokenizer(*args, padding=self.padding, max_length=self.max_seq_length, truncation=True)
         return result
 
     def get_eval_dataset(self):
-        """get eval dataset."""
-
+        """Get eval dataset."""
         self.eval_dataset = self.raw_datasets["validation"]
         return self.eval_dataset
 
 
 class BertDatasetWrapper(Dataset):
+    """BertDatasetWrapper class for bert dataset wrapper."""
+
     def __init__(self, dataset):
         """__init__."""
-
         self.dataset = dataset
 
     def __len__(self):
         """__len__."""
-
         return len(self.dataset)
 
     def __getitem__(self, index):
-        """get item."""
-
+        """Get item."""
         sample = self.dataset[index]
         data = sample
         input_dict = {
@@ -95,8 +89,7 @@ class BertDatasetWrapper(Dataset):
 
 
 def post_process(output):
-    """post process."""
-
+    """Post process."""
     if isinstance(output, transformers.modeling_outputs.SequenceClassifierOutput):
         _, preds = torch.max(output[0], dim=1)
     else:
@@ -105,8 +98,7 @@ def post_process(output):
 
 
 def create_dataloader(data_dir, batchsize):
-    """create dataloader."""
-
+    """Create dataloader."""
     bert_dataset = BertDataset("Intel/bert-base-uncased-mrpc")
     eval_dataloader = torch.utils.data.DataLoader(
         BertDatasetWrapper(bert_dataset.get_eval_dataset()), batch_size=batchsize, drop_last=True
@@ -115,16 +107,16 @@ def create_dataloader(data_dir, batchsize):
 
 
 class GlueCalibrationDataReader(CalibrationDataReader):
+    """GlueCalibrationDataReader class for glue calibration data reader."""
+
     def __init__(self, data_dir: str, batch_size: int = 16):
         """__init__."""
-
         super().__init__()
         self.dataloader = create_dataloader(data_dir, batch_size)
         self.iter = iter(self.dataloader)
 
     def get_next(self):
-        """get next."""
-
+        """Get next."""
         if self.iter is None:
             self.iter = iter(self.dataloader)
         try:
@@ -136,20 +128,17 @@ class GlueCalibrationDataReader(CalibrationDataReader):
         return batch
 
     def rewind(self):
-        """rewind."""
-
+        """Rewind."""
         self.iter = None
 
 
 def glue_calibration_reader(data_dir, batch_size=1):
-    """glue calibration reader function."""
-
+    """Glue calibration reader function."""
     return GlueCalibrationDataReader(data_dir, batch_size=batch_size)
 
 
 def load_pytorch_origin_model(model_path):
-    """load pytorch origin model."""
-
+    """Load pytorch origin model."""
     model = AutoModelForSequenceClassification.from_pretrained("Intel/bert-base-uncased-mrpc")
     model.eval()
     return model
