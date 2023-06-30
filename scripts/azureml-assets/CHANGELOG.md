@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.4.2 (2023-06-30)
+### 🐛 Bugs Fixed
+- [#821](https://github.com/Azure/azureml-assets/pull/821) Make release directory optional for update_assets.py
+
 ## 1.4.1 (2023-06-28)
 ### 🐛 Bugs Fixed
 - [#802](https://github.com/Azure/azureml-assets/pull/802) Fix version handling when building environment images
