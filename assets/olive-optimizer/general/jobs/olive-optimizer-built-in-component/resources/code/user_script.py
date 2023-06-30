@@ -42,7 +42,7 @@ class BertDataset:
         self.setup_dataset()
 
     def setup_dataset(self):
-        """Setup dataset."""
+        """Dataset setup."""
         self.raw_datasets = load_dataset("glue", self.task_name, cache_dir=None)
         self.raw_datasets = self.raw_datasets.map(
             self.preprocess_function,
