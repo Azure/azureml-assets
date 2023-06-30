@@ -41,7 +41,6 @@ def _test(testpaths: List[Path], excludes: List[Path] = []) -> bool:
                 # Check for copyright header
                 if not COPYRIGHT_SET <= set(header):
                     badfiles.append(file)
-                    break
 
     if len(badfiles) > 0:
         print("File(s) missing copyright header:")
