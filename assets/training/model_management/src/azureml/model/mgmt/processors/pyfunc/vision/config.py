@@ -32,8 +32,8 @@ class MMDetLiterals:
     AUGMENTATIONS_PATH = "augmentations_path"
 
 
-class MLFlowSchemaLiterals:
-    """MLFlow model signature related schema."""
+class MLflowSchemaLiterals:
+    """MLflow model signature related schema."""
 
     INPUT_IMAGE_KEY = "image_base64"
     INPUT_COLUMN_IMAGE_DATA_TYPE = DataType.binary
