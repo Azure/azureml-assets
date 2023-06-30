@@ -11,7 +11,7 @@ MLFLOW_ARTIFACT_DIRECTORY = "mlflow_model_folder"
 # HF flavor patterns
 MODEL_CONFIG_FILE_PATTERN = r"^config\.json|.+\.py$"
 MODEL_FILE_PATTERN = r"^pytorch.*|.+\.py$"
-TOKENIZER_FILE_PATTERN = r"^.*token.*|.*vocab\.json|.+\.py$"
+TOKENIZER_FILE_PATTERN = r"^.*token.*|.*vocab.*|.*processor.*|.+\.py$"
 
 
 class _CustomEnum(Enum):
