@@ -27,6 +27,12 @@ jobs:
     name: Run
     runs-on: ubuntu-latest
 
+    permissions:
+      # Required for EnricoMi/publish-unit-test-result-action
+      checks: write
+      issues: read
+      pull-requests: write
+
     steps:
       - name: Clone branch
         uses: actions/checkout@v3
