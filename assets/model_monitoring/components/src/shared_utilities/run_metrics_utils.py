@@ -60,18 +60,14 @@ def get_or_create_run_id(
         filter_string=filter_query,
         order_by=["start_time"],
     )
-    if len(runs) == 0:
 
-        run_id = (
-            mlflow.client.MlflowClient()
-            .create_run(
-                experiment_id=experiment_id,
-                tags=_create_run_tags(
-                    monitor_name, signal_name, feature_name, metric_name
-                ),
-            )
-            .info.run_id
-        )
+    if len(runs) == 0:
+        with mlflow.start_run(
+            nested=True,
+            tags=_create_run_tags(monitor_name, signal_name, feature_name, metric_name)
+            ) as run:
+            run_id = run.info.run_id 
+
         print(f"Created run metric with id '{run_id}'.")
     else:
         run_id = runs.iloc[0].run_id
