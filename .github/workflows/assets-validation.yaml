@@ -7,20 +7,17 @@ on:
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - .github/**
-      - scripts/**
-      - test/**
+    paths:
+      - assets/**
   workflow_dispatch:
     inputs:
       asset_dirs:
         description: Asset directories
-        default: .,!test,!scripts
+        default: assets
         required: true
 
 env:
-  default_asset_dirs: .,!test,!scripts
-  default_test_dirs: .,!test,!scripts,!.git,!.github
+  default_asset_dirs: assets
   scripts_azureml_assets_dir: scripts/azureml-assets
   scripts_assets_dir: scripts/azureml-assets/azureml/assets
   scripts_release_dir: scripts/release
@@ -55,9 +52,9 @@ jobs:
         run: pip install -e $scripts_azureml_assets_dir
       
       - name: Validate assets
-        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}" -I -C
+        run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}" -n -I -C
 
       - name: Check test coverage
         run: |
           mkdir -p ${{ runner.temp }}/test_coverage
-          python -u $scripts_release_dir/test_file_convert.py -i "${{ env.default_test_dirs }}" -r ${{ runner.temp }}/test_coverage
+          python -u $scripts_release_dir/test_file_convert.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -r ${{ runner.temp }}/test_coverage

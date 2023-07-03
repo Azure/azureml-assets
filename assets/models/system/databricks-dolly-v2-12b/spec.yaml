@@ -1,0 +1,20 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: databricks-dolly-v2-12b
+path: ./
+properties:
+  SHA: 7dde7ac26ddcb679e0429fed1b6f751c1ffab1fb
+  datasets: databricks/databricks-dolly-15k
+  evaluation-min-sku-spec: 8|0|28|56
+  evaluation-recommended-sku: Standard_DS4_v2
+  inference-min-sku-spec: 16|0|64|128
+  inference-recommended-sku: Standard_NC24s_v3
+  languages: en
+tags:
+  Featured: ''
+  Preview: ''
+  computes_allow_list:
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  license: mit
+  task: text-generation
+version: 7
