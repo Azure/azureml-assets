@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.6
+version: 0.0.7
 
 # Pipeline inputs
 inputs:
@@ -112,6 +112,12 @@ inputs:
     description: AutoTokenizer class may not be sufficient to load tokenizer for some of the models. You can use this parameter to send Config class name as it is
     optional: true
 
+  hf_use_experimental_features:
+    type: boolean
+    description: Enable experimental features for hugging face mlflow model conversion
+    default: false
+    optional: true
+
   extra_pip_requirements:
     type: string
     description: |
@@ -201,6 +207,7 @@ jobs:
       hf_config_class:  ${{parent.inputs.hf_config_class}}
       hf_model_class:  ${{parent.inputs.hf_model_class}}
       hf_tokenizer_class:  ${{parent.inputs.hf_tokenizer_class}}
+      hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
       extra_pip_requirements: ${{parent.inputs.extra_pip_requirements}}
     outputs:
       mlflow_model_folder:

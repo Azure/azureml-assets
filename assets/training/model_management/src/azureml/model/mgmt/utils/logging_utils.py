@@ -134,7 +134,7 @@ class CustomDimensions:
         self.parent_run_id = run_details.parent_run_id
         self.subscription_id = run_details.subscription_id
         self.workspace_name = run_details.workspace_name
-        self.rootAttribution = run_details.root_attribute
+        self.root_attribution = run_details.root_attribute
         self.region = run_details.region
         self.experiment_id = run_details.experiment_id
         self.compute_target = run_details.compute
