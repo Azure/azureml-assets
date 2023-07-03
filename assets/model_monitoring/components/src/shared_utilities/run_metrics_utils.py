@@ -69,7 +69,7 @@ def _get_or_create_parent_run_id(monitor_name: str):
             )
             .info.run_id
         )
-        with mlflow.start_run(run_id=metric_run_id) as run:
+        with mlflow.start_run(run_id=metric_run_id):
             print(f"Creating parent metric run with name '{run_name}' and id '{metric_run_id}'.")
     else:
         metric_run_id = runs.iloc[0].run_id
