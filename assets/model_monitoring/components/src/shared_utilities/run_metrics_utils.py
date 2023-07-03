@@ -52,7 +52,7 @@ def _get_or_create_parent_run_id(monitor_name: str):
         print("No experiment id found. Skipping publishing run metrics.")
         return None
     filter_query = _create_filter_query(
-        monitor_name=monitor_name, metric_name="azureml.metrics"
+        monitor_name=monitor_name, signal_name=None, feature_name=None, metric_name="azureml.metrics"
     )
     runs = mlflow.search_runs(
         experiment_ids=[experiment_id],
