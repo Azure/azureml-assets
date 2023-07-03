@@ -9,6 +9,8 @@ import os
 def _get_experiment_id():
     return os.environ.get("MLFLOW_EXPERIMENT_ID")
 
+def _get_current_run_id():
+    return os.environ.get("MLFLOW_RUN_ID")
 
 def _create_filter_query(
     monitor_name: str, signal_name: str, feature_name: str, metric_name: str
@@ -62,11 +64,12 @@ def get_or_create_run_id(
     )
 
     if len(runs) == 0:
-        with mlflow.start_run(
-            nested=True,
-            tags=_create_run_tags(monitor_name, signal_name, feature_name, metric_name)
-            ) as run:
-            run_id = run.info.run_id 
+        with mlflow.start_run(run_id=_get_current_run_id()):
+            with mlflow.start_run(
+                nested=True,
+                tags=_create_run_tags(monitor_name, signal_name, feature_name, metric_name)
+                ) as run:
+                run_id = run.info.run_id 
 
         print(f"Created run metric with id '{run_id}'.")
     else:
