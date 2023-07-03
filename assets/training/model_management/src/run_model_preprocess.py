@@ -143,6 +143,9 @@ def run():
     preprocess_args[HF_CONF.HF_TOKENIZER_CLASS.value] = hf_tokenizer_class
     preprocess_args[HF_CONF.HF_USE_EXPERIMENTAL_FEATURES .value] = hf_use_experimental_features
 
+    # update custom dimensions with input parameters
+    custom_dimensions.update_custom_dimensions(preprocess_args)
+
     logger.info(f"Preprocess args : {preprocess_args}")
 
     # TODO: move validations to respective convertors
