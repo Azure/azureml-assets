@@ -178,13 +178,9 @@ def parse_args():
     if args.max_concurrent_requests_per_instance < 1:
         parser.error("Arg max_concurrent_requests_per_instance cannot be less than 1")
     if args.request_timeout_ms < 1 or args.request_timeout_ms > MAX_REQUEST_TIMEOUT:
-        parser.error(
-            f"Arg request_timeout_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}"
-        )
+        parser.error(f"Arg request_timeout_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
     if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > MAX_REQUEST_TIMEOUT:
-        parser.error(
-            f"Arg max_queue_wait_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}"
-        )
+        parser.error(f"Arg max_queue_wait_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
 
     return args
 
@@ -216,9 +212,7 @@ def get_ml_client():
     return ml_client
 
 
-def create_endpoint_and_deployment(
-    ml_client, model_id, endpoint_name, deployment_name, args
-):
+def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
     """Create endpoint and deployment and return details."""
     endpoint = ManagedOnlineEndpoint(name=endpoint_name, auth_mode="key")
 
@@ -266,9 +260,7 @@ def create_endpoint_and_deployment(
         logging.error(error_msg)
         raise Exception(error_msg)
 
-    print(
-        f"Deployment successful. Updating endpoint to take 100% traffic for deployment {deployment_name}"
-    )
+    print(f"Deployment successful. Updating endpoint to take 100% traffic for deployment {deployment_name}")
 
     # deployment to take 100% traffic
     endpoint.traffic = {deployment.name: 100}
