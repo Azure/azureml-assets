@@ -102,13 +102,13 @@ def _is_valid_url(text: str) -> bool:
 
 
 class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
-    """The MLflow model wrapper for AutoML Images models."""
+    """Wrapper to convert AutoML Images models to MLflow."""
 
     def __init__(
         self,
         task_type: str,
     ) -> None:
-        """The MLflow model wrapper for AutoML Images models.
+        """Wrapper to convert AutoML Images models to MLflow.
 
         :param task_type: Task type used in training.
         :type task_type: str
