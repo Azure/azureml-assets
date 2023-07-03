@@ -38,7 +38,7 @@ def _get_parser():
         type=bool,
         required=False,
         default=False, 
-        help="Enable experimental features for hugging face mlflow model conversion"
+        help="Enable experimental features for hugging face MLflow model conversion"
     )
 
     parser.add_argument(
@@ -79,12 +79,12 @@ def _get_parser():
 
 def _validate_transformers_args(args):
     if not args.get("model_id"):
-        raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
+        raise Exception("model_id is a required parameter for hftransformers MLflow flavor.")
     if not args.get("task"):
-        raise Exception("task is a required parameter for hftransformers mlflow flavor.")
+        raise Exception("task is a required parameter for hftransformers MLflow flavor.")
     task = args["task"]
     if not SupportedTasks.has_value(task):
-        raise Exception(f"Unsupported task {task} for hftransformers mlflow flavor.")
+        raise Exception(f"Unsupported task {task} for hftransformers MLflow flavor.")
 
 
 def _validate_pyfunc_args(pyfunc_args):

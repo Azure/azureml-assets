@@ -13,7 +13,7 @@ inputs:
     type: string
     optional: true
     default: serverless
-    description: Common compute for model download, mlflow conversion and registration. eg. provide 'FT-Cluster' if
+    description: Common compute for model download, MLflow conversion and registration. eg. provide 'FT-Cluster' if
       your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute name is provided, instance_type field will be ignored and the respective cluster will be used
 
@@ -114,7 +114,7 @@ inputs:
 
   hf_use_experimental_features:
     type: boolean
-    description: Enable experimental features for hugging face mlflow model conversion
+    description: Enable experimental features for hugging face MLflow model conversion
     default: false
     optional: true
 
@@ -126,11 +126,11 @@ inputs:
       eg: pkg1==1.0, pkg2, pkg3==1.0
     optional: true
 
-  ## Inputs for mlflow local validation
+  ## Inputs for MLflow local validation
   local_validation_test_data:
     type: uri_file
     optional: true
-    description: Test data for mlflow local validation. Validation will be skipped if test data is not provided
+    description: Test data for MLflow local validation. Validation will be skipped if test data is not provided
 
   local_validation_column_rename_map:
     type: string

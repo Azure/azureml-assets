@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Mlflow PythonModel wrapper class that loads the Mlflow model, preprocess inputs and performs inference."""
+"""MLflow PythonModel wrapper class that loads the MLflow model, preprocess inputs and performs inference."""
 
 import base64
 import io
@@ -108,7 +108,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         self,
         task_type: str,
     ) -> None:
-        """Mlflow model wrapper for AutoML for Images models.
+        """MLflow model wrapper for AutoML for Images models.
 
         :param task_type: Task type used in training.
         :type task_type: str
@@ -119,9 +119,9 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         self._task_type = task_type
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
-        """Load a Mlflow model with pyfunc.load_model().
+        """Load a MLflow model with pyfunc.load_model().
 
-        :param context: Mlflow context containing artifacts that the model can use for inference
+        :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
         print("Inside load_context()")
@@ -159,7 +159,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
         """Perform inference on the input data.
 
-        :param context: Mlflow context containing artifacts that the model can use for inference
+        :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         :param input_data: Input images for prediction
         :type input_data: Pandas DataFrame with a first column name ["image"] of images where each

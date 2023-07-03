@@ -45,7 +45,7 @@ inputs:
       - mmlab_pyfunc
     default: transformers
     optional: false
-    description: Mlflow flavor to convert model into. Please note that, mmlab_pyfunc flavor is only supported for image object detection models.
+    description: MLflow flavor to convert model into. Please note that, mmlab_pyfunc flavor is only supported for image object detection models.
 
   task_name:
     type: string
@@ -61,7 +61,7 @@ inputs:
       - image-classification
       - image-object-detection
       - text-to-image
-    description: A Hugging face task on which model was trained on. A required parameter for transformers mlflow flavor. Can be provided as input here or in model_download_metadata JSON file.
+    description: A Hugging face task on which model was trained on. A required parameter for transformers MLflow flavor. Can be provided as input here or in model_download_metadata JSON file.
     optional: true
 
   hf_config_args:
@@ -110,7 +110,7 @@ inputs:
 
   hf_use_experimental_features:
     type: boolean
-    description: Enable experimental features for hugging face mlflow model conversion
+    description: Enable experimental features for hugging face MLflow model conversion
     default: false
     optional: true
 
