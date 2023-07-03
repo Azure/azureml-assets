@@ -37,7 +37,7 @@ def _get_parser():
         "--hf-use-experimental-features",
         type=bool,
         required=False,
-        default=False, 
+        default=False,
         help="Enable experimental features for hugging face MLflow model conversion"
     )
 
