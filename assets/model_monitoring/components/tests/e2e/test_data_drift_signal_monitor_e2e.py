@@ -23,8 +23,8 @@ def _submit_data_drift_model_monitor_job(
         dd_signal_monitor_output = dd_model_monitor(
             target_data=target_data,
             baseline_data=baseline_data,
-            signal_name="my_test_create_manifest_signal1",
-            monitor_name="my_test_model_monitor1",
+            signal_name="my_test_create_manifest_signal",
+            monitor_name="my_test_model_monitor",
             monitor_current_time="2023-02-02T00:00:00Z",
             target_column="target",
             filter_type="TopNByAttribution",
