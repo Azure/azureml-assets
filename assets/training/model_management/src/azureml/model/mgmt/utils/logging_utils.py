@@ -108,7 +108,7 @@ class RunDetails:
     def __str__(self):
         """Run details to string."""
         return (
-            "RunDetails:\n" + 
+            "RunDetails:\n" +
             f"\nrun_id: {self.run_id},\n" +
             f"parent_run_id: {self.parent_run_id},\n" +
             f"subscription_id: {self.subscription_id},\n" +
@@ -151,7 +151,7 @@ class CustomDimensions:
 
     def update_custom_dimensions(self, properties: dict):
         """Add/update properties in custom dimensions."""
-        assert(isinstance(properties, dict))
+        assert isinstance(properties, dict)
         self.__dict__.update(properties)
 
     def _add_model_download_args(self):
