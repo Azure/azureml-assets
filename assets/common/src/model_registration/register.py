@@ -137,10 +137,12 @@ def get_ml_client(registry_name):
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
             tc_exception(ex, f"Failed to get MSI credentials : {ex}")
-            error_msg = ("Kindly make sure that compute used by model_registration component"
-                        "has MSI(Managed Service Identity) associated with it."
-                        "Click here to know more -"
-                "https://learn.microsoft.com/en-us/azure/machine-learning/how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli :{ex}")
+            error_msg = (
+                "Kindly make sure that compute used by model_registration component"
+                "has MSI(Managed Service Identity) associated with it."
+                "Click here to know more -"
+                "https://learn.microsoft.com/en-us/azure/machine-learning/how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli :{ex}"
+                )
             raise Exception(error_msg)
 
     if registry_name is None:
