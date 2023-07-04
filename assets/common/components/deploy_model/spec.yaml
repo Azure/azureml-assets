@@ -46,7 +46,10 @@ inputs:
   model_id:
     type: string
     optional: true 
-    description: Asset ID of the model registered in workspace/registry. For example - azureml://registries/azureml/models/microsoft-deberta-large-mnli/versions/8
+    description: |
+      Asset ID of the model registered in workspace/registry. Asset ID format looks like below.\
+      Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version>\
+      Workspace - azureml:<model-name>:<version>
 
   inference_payload:
     type: uri_file
