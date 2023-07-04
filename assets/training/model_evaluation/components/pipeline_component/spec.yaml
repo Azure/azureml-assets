@@ -33,13 +33,9 @@ inputs:
     ]
     description: "Task type"
   test_data: 
-    type: uri_file
-    optional: true
+    type: uri_folder
+    optional: false
     description: "Test Data"
-  test_data_mltable:
-    type: mltable
-    optional: true
-    description: "Test Data MLTable path"
   mlflow_model:
     type: mlflow_model 
     optional: false
