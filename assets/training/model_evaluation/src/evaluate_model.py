@@ -16,6 +16,10 @@ from copy import deepcopy
 from exceptions import (ModelEvaluationException,
                         ScoringException,
                         DataLoaderException)
+from error_definitions import (ModelEvaluationInternalError,
+                               BadEvaluationConfigParam,
+                               BadInputData)
+from azureml._common._error_definition.azureml_error import AzureMLError
 from image_classification_dataset import get_classification_dataset, ImageDataFrameParams
 from logging_utilities import custom_dimensions, get_logger, log_traceback
 from azureml.telemetry.activity import log_activity
@@ -91,43 +95,44 @@ class EvaluateModel:
         except Exception:
             logger.warning("No GPU found. Using CPU instead")
             self.device = -1
-        pipeline_params, self.device = sanitize_device_and_device_map(pipeline_params, self.device)
+        #pipeline_params, self.device = sanitize_device_and_device_map(pipeline_params, self.device)
         self.metrics_config = deepcopy(pipeline_params)
         self.metrics_config.update(compute_metrics_config)
         logger.info("Logging to check metrics config in evaluate_model: "+str(self.metrics_config))
 
         # self._setup_custom_environment()
 
-    def _setup_custom_environment(self):
-        """Set custom environment using model's conda.yaml.
-
-        Raises:
-            ModelEvaluationException: _description_
-            ModelEvaluationException: _description_
-        """
-        with log_activity(logger, constants.TelemetryConstants.ENVIRONMENT_SETUP,
-                          custom_dimensions=self.custom_dimensions):
-            logger.info("Setting up model dependencies")
-            try:
-                logger.info("Fetching requirements")
-                requirements = aml_mlflow.pyfunc.get_model_dependencies(self.model_uri)
-            except Exception as e:
-                message = f"Failed to fetch requirements from model_uri with error {repr(e)}"
-                log_traceback(e, logger, message)
-                raise ModelEvaluationException(message, inner_exception=e)
-            try:
-                logger.info("Installing Dependencies")
-                setup_model_dependencies(requirements)
-            except Exception as e:
-                message = f"Failed to install model dependencies. {repr(e)}"
-                log_traceback(e, logger, message=message)
-                raise ModelEvaluationException(message, inner_exception=e)
-
     def _validate_schema(self, X_test):
-        model = aml_mlflow.aml.load_model(self.model_uri, constants.MLFLOW_MODEL_TYPE_MAP[self.task])
+        self.model = aml_mlflow.aml.load_model(self.model_uri, constants.MLFLOW_MODEL_TYPE_MAP[self.task])
         predictor_cls = get_predictor(self.task)
-        predictor = predictor_cls(model)
+        predictor = predictor_cls(self.model)
         predictor._ensure_base_model_input_schema(X_test=X_test)
+        device = None
+        if self.device == "auto":
+            model_device = None
+            if predictor.is_hf:
+                hf_device_map = getattr(predictor.model._model_impl.hf_model, "hf_device_map", None)
+                if hf_device_map is not None:
+                    logger.info("hf_device_map: "+str(hf_device_map))
+                    unique_devices = set(hf_device_map.values())
+                    logger.info("Unique devices for model: "+str(unique_devices))
+                    if len(unique_devices) == 1:
+                        model_device = predictor.model._model_impl.hf_model.device
+                    #device = next(iter(hf_device_map.values()))
+                else:
+                    model_device = predictor.model._model_impl.hf_model.device
+            elif predictor.is_torch:
+                model_device = predictor.model.getattr("device", None)
+            logger.info("Model Device: "+ str(model_device))
+            if model_device is not None:
+                if model_device.type == "cpu":
+                    device = -1
+                else:
+                    device = model_device.index
+            logger.info("Device: "+str(device))
+        else:
+            device = self.device
+        self.device = device
 
     def load_data(self, test_data, label_column_name, input_column_names=None, is_mltable=True):
         """
@@ -168,13 +173,18 @@ class EvaluateModel:
 
         """
         with log_activity(logger, activity_name=constants.TelemetryConstants.DATA_LOADING,
-                          custom_dimensions=self.custom_dimensions):
+                          custom_dimensions=self.custom_dimensions) as data_loader_activity:
             try:
                 data = self.load_data(test_data, label_column_name, input_column_names, is_mltable=is_mltable)
             except Exception as e:
-                message = "Couldn't load data."
-                log_traceback(e, logger, message, True)
-                raise DataLoaderException(message, inner_exception=e)
+                message = "Load data failed."
+                exception = DataLoaderException._with_error(
+                    AzureMLError.create(BadInputData, error=repr(e))
+                )
+                exception.inner_exception = e
+                log_traceback(exception, logger, message, True)
+                data_loader_activity.exception(exception.message)
+                raise exception
 
         # No batching support for evaluate model component. Length of data is always 1.
         X_test, y_test = list(data)[0]
@@ -197,15 +207,13 @@ class EvaluateModel:
                     "device": self.device,
                     "multi_label": self.multilabel,
                     "batch_size": self.batch_size,
-                    # Image ML classification, identifies task as "multilabel" in azureml-evaluate-mlflow package
-                    "multilabel": self.multilabel,
                 }
             )
             result = None
             try:
                 # print(self.metrics_config)
                 result = aml_mlflow.evaluate(
-                    self.model_uri,
+                    self.model,
                     eval_data,
                     targets=targets,
                     feature_names=list(feature_names),
@@ -216,8 +224,12 @@ class EvaluateModel:
                 )
             except Exception as e:
                 message = f"mlflow.evaluate failed with {repr(e)}"
-                log_traceback(e, logger, message, True)
-                raise ScoringException(message, inner_exception=e)
+                exception = ScoringException._with_error(
+                    AzureMLError.create(ModelEvaluationInternalError, error=repr(e))
+                )
+                exception.inner_exception = e
+                log_traceback(exception, logger, message, True)
+                raise exception
             if result is not None:
                 scalar_metrics = result.metrics
                 logger.info("Computed metrics:")
@@ -237,7 +249,7 @@ def test_model():
     parser.add_argument("--mlflow-model", type=str, dest="mlflow_model", required=False, default=None)
     parser.add_argument("--task", type=str, dest="task", choices=constants.ALL_TASKS, required=True)
     parser.add_argument("--data", type=str, dest="data", required=False, default=None)
-    parser.add_argument("--data-mltable", type=str, dest="data_mltable", required=False, default="")
+    #parser.add_argument("--data-mltable", type=str, dest="data_mltable", required=False, default="")
     parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default=None)
     parser.add_argument("--output", type=str, dest="output")
     parser.add_argument("--device", type=str, required=False, default="auto", dest="device")
@@ -253,10 +265,16 @@ def test_model():
     custom_dimensions.app_name = constants.TelemetryConstants.EVALUATE_MODEL_NAME
     custom_dims_dict = vars(custom_dimensions)
     # logger.info("Evaluation Config file name:"+args.config_file_name)
-    with log_activity(logger, constants.TelemetryConstants.EVALUATE_MODEL_NAME, custom_dimensions=custom_dims_dict):
+    with log_activity(logger, constants.TelemetryConstants.EVALUATE_MODEL_NAME,
+                      custom_dimensions=custom_dims_dict) as evaluate_model_activity:
         logger.info("Validating arguments")
-        with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME, custom_dimensions=custom_dims_dict):
-            validate_args(args)
+        with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME,
+                          custom_dimensions=custom_dims_dict) as validation_activity:
+            try:
+                validate_args(args)
+            except Exception as e:
+                validation_activity.exception(repr(e))
+                raise e
 
         model_uri = args.model_uri.strip()
         mlflow_model = args.mlflow_model
@@ -273,22 +291,30 @@ def test_model():
                     met_config = json.loads(args.config_str)
                 except Exception as e:
                     message = "Unable to load evaluation_config_params. String is not JSON serielized."
-                    raise DataLoaderException(message,
-                                              inner_exception=e)
-        is_mltable, data = check_and_return_if_mltable(args.data, args.data_mltable)
-
-        runner = EvaluateModel(
-            task=args.task,
-            output=args.output,
-            custom_dimensions=custom_dims_dict,
-            model_uri=model_uri,
-            config_file=args.config_file_name,
-            metrics_config=met_config,
-            device=args.device,
-            batch_size=args.batch_size
-        )
-        runner.score(test_data=data, label_column_name=args.label_column_name,
-                     input_column_names=args.input_column_names, is_mltable=is_mltable)
+                    exception = DataLoaderException._with_error(
+                        AzureMLError.create(BadEvaluationConfigParam, error=repr(e))
+                    )
+                    log_traceback(exception=exception, logger=logger, message=message)
+                    evaluate_model_activity.exception(exception.message)
+                    raise exception
+        data = args.data
+        is_mltable = check_and_return_if_mltable(data)
+        try:
+            runner = EvaluateModel(
+                task=args.task,
+                output=args.output,
+                custom_dimensions=custom_dims_dict,
+                model_uri=model_uri,
+                config_file=args.config_file_name,
+                metrics_config=met_config,
+                device=args.device,
+                batch_size=args.batch_size
+            )
+            runner.score(test_data=data, label_column_name=args.label_column_name,
+                        input_column_names=args.input_column_names, is_mltable=is_mltable)
+        except Exception as e:
+            evaluate_model_activity.exception(repr(e))
+            raise e
 
     test_run.add_properties(properties=constants.RUN_PROPERTIES)
     try:

@@ -29,15 +29,21 @@ from azureml.metrics import _scoring_utilities, constants as metrics_constants
 from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 import azureml.evaluate.mlflow as aml_mlflow
 from azureml.evaluate.mlflow.models.evaluation import EvaluationResult
-
-from exceptions import DataValidationException, ModelEvaluationException, DataLoaderException
+from azureml._common._error_definition.azureml_error import AzureMLError
+from error_definitions import (BadRegressionData,
+                               MetricsLoggingError,
+                               BadInputData,
+                               BadEvaluationConfigFile)
+from exceptions import (DataValidationException,
+                        DataLoaderException,
+                        ComputeMetricsException)
 from copy import deepcopy
 
 
 logger = get_logger(name=__name__)
 
 
-def assert_and_raise(condition, exception_cls, message):
+def assert_and_raise(condition, exception_cls, error_cls, message_kwargs={}):
     """Assert condition and raise the error if false.
 
     Args:
@@ -49,8 +55,10 @@ def assert_and_raise(condition, exception_cls, message):
         exception: _description_
     """
     if not condition:
-        exception = exception_cls(message)
-        log_traceback(exception, logger, message, is_critical=True)
+        exception = exception_cls._with_error(
+            AzureMLError.create(error_cls, **message_kwargs)
+        )
+        log_traceback(exception, logger, is_critical=True)
         raise exception
 
 
@@ -78,9 +86,6 @@ def filter_pipeline_params(evaluation_config):
 
     Args:
         filename (_type_): _description_
-
-    Raises:
-        DataValidationException: _description_
 
     Returns:
         _type_: _description_
@@ -177,22 +182,39 @@ def _log_metrics(metrics, artifacts):
     for name, score in metrics.items():
         try:
             run.log(name, score)
-        except Exception:
-            raise ModelEvaluationException(f"Failed to log scalar metric {name} with value {score}")
+        except Exception as e:
+            exception = ComputeMetricsException._with_error(
+                AzureMLError.create(MetricsLoggingError, metric_name=name, error=repr(e))
+            )
+            exception.inner_exception = e
+            log_traceback(exception, logger)
+            raise exception
 
     for name, score in table_scores.items():
         try:
             run.log_table(name, score)
-        except Exception:
-            raise ModelEvaluationException(f"Failed to log table metric {name} with value {score}")
+        except Exception as e:
+            exception = ComputeMetricsException._with_error(
+                AzureMLError.create(MetricsLoggingError, metric_name=name, error=repr(e))
+            )
+            exception.inner_exception = e
+            log_traceback(exception, logger)
+            raise exception
+
 
     for name, score in list_scores.items():
         try:
             # TODO: Add checks for logging longer lists
             pass
             # run.log_list(name, score)
-        except Exception:
-            raise ModelEvaluationException(f"Failed to log list metric {name} with value {score}")
+        except Exception as e:
+            exception = ComputeMetricsException._with_error(
+                AzureMLError.create(MetricsLoggingError, metric_name=name, error=repr(e))
+            )
+            exception.inner_exception = e
+            log_traceback(exception, logger)
+            raise exception
+
 
     # Log the non-scalar metrics. (Currently, these are all artifact-based.)
     for name, score in nonscalar_scores.items():
@@ -210,8 +232,14 @@ def _log_metrics(metrics, artifacts):
                 pass
             else:
                 logger.warning("Unsupported non-scalar metric {}. Will not log.".format(name))
-        except Exception:
-            raise ModelEvaluationException(f"Failed to log non-scalar metric {name} with value {score}")
+        except Exception as e:
+            exception = ComputeMetricsException._with_error(
+                AzureMLError.create(MetricsLoggingError, metric_name=name, error=repr(e))
+            )
+            exception.inner_exception = e
+            log_traceback(exception, logger)
+            raise exception
+
 
 
 def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config, X_test=None):
@@ -330,10 +358,6 @@ class ArgumentsSet:
             self.args_set = self.fill_mask
         if task_type == TASK.FORECASTING:
             self.args_set = self.forecasting
-        if task_type == TASK.IMAGE_CLASSIFICATION:
-            self.args_set = self.image_classification
-        if task_type == TASK.IMAGE_CLASSIFICATION_MULTILABEL:
-            self.args_set = self.image_classification_multilabel
 
     @property
     def classification(self):
@@ -477,31 +501,6 @@ class ArgumentsSet:
         }
         return args_map
 
-    @property
-    def image_classification(self):
-        """Image Classification arguments.
-
-        Returns:
-            _type_: _description_
-        """
-        args_map = {
-            "metrics": "list(val)",
-        }
-        return args_map
-
-    @property
-    def image_classification_multilabel(self):
-        """Image Classification Multilabel arguments.
-
-        Returns:
-            _type_: _description_
-        """
-        args_map = {
-            "metrics": "list(val)",
-            "threshold": "float(val)",
-        }
-        return args_map
-
 
 def setup_model_dependencies(requirements):
     """Install pip dependencies dynamically.
@@ -515,7 +514,7 @@ def setup_model_dependencies(requirements):
     pip.main(pip_args)
 
 
-def check_and_return_if_mltable(data, data_mltable):
+def check_and_return_if_mltable(data):
     """Is current director MLTable or not.
 
     Args:
@@ -525,9 +524,12 @@ def check_and_return_if_mltable(data, data_mltable):
     Returns:
         _type_: _description_
     """
-    is_mltable = data_mltable is not None and data_mltable != ""
-    data = data_mltable if is_mltable else data
-    return is_mltable, data
+    is_mltable = False
+    if os.path.isdir(data):
+        local_yaml_path = os.path.join(data, 'MLTable')
+        if os.path.exists(local_yaml_path):
+            is_mltable = True
+    return is_mltable
 
 
 def read_data(file_path, is_mltable=True, batch_size=None):
@@ -550,8 +552,10 @@ def read_data(file_path, is_mltable=True, batch_size=None):
         logger.warn("Received URI_FOLDER instead of URI_FILE. Checking if part of LLM Pipeline")
         if constants.LLM_FT_PREPROCESS_FILENAME not in os.listdir(file_path):
             message = "Test Data is a folder. JSON Lines File expected"
-            logger.error(message)
-            raise DataLoaderException(message)
+            exception = DataLoaderException._with_error(
+                AzureMLError.create(BadInputData, error=message)
+            )
+            log_traceback(exception, logger)
         logger.info("Found LLM Preprocess args")
         import json
         with open(os.path.join(file_path, constants.LLM_FT_PREPROCESS_FILENAME)) as f:
@@ -566,9 +570,12 @@ def read_data(file_path, is_mltable=True, batch_size=None):
             if not batch_size:
                 data = iter([data])
     except Exception as e:
-        message = "Failed to load input data"
-        log_traceback(e, logger, message, is_critical=True)
-        raise DataLoaderException(message, inner_exception=e)
+        exception = DataLoaderException._with_error(
+            AzureMLError.create(BadInputData, error=repr(e))
+        )
+        exception.inner_exception = e
+        log_traceback(exception, logger)
+        raise exception
     return data
 
 
@@ -597,15 +604,19 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
             try:
                 y_test = y_test.astype(np.float64)
             except Exception as e:
-                message = "Expected target columns of type float found " + str(y_test.dtype) + " instead"
-                log_traceback(e, logger, message=message)
-                raise ModelEvaluationException(message, inner_exception=e)
-
+                exception = DataLoaderException._with_error(
+                    AzureMLError.create(BadRegressionData, error=repr(e))
+                )
+                exception.inner_exception = e
+                log_traceback(exception, logger)
+                raise exception
+                
     if task == constants.TASK.NER:
         if len(X_test.columns) > 1 and "tokens" not in X_test.columns:
-            raise DataLoaderException(
-                "Too many feature columns in dataset. Only 1 feature column should be passed for NER."
-            )
+            message = "Too many feature columns in dataset. Only 1 feature column should be passed for NER."
+            exception = DataLoaderException(message)
+            log_traceback(exception, logger, message)
+            raise exception
         if len(X_test.columns) > 1:
             X_test = X_test["tokens"]
         if len(X_test.columns) == 1:
@@ -631,13 +642,17 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
         if not isinstance(y_test.iloc[0], str):
             message = "Ground Truths for Question-answering should be a string \
                        or an array found " + type(y_test.iloc[0])
-            raise DataLoaderException(exception_message=message)
+            exception = DataLoaderException(exception_message=message)
+            log_traceback(exception, logger, message)
+            raise exception
     if task == constants.TASK.FILL_MASK and y_test is not None:
         if isinstance(y_test.iloc[0], np.ndarray) or isinstance(y_test.iloc[0], list):
             y_test = y_test.apply(lambda x: tuple(x))
         if not isinstance(y_test.iloc[0], str) and not isinstance(y_test.iloc[0], tuple):
             message = "Ground Truths for Fill-Mask should be a string or an array found " + type(y_test.iloc[0])
-            raise DataLoaderException(exception_message=message)
+            exception = DataLoaderException(exception_message=message)
+            log_traceback(exception, logger, message)
+            raise exception
     if y_test is not None:
         y_test = y_test.values
     return X_test, y_test
@@ -682,38 +697,16 @@ def read_config(conf_folder, task_type, for_prediction=False):
         with open(conf_folder, "r") as f:
             data = json.load(f)
     except Exception as e:
-        error_message = f"Failed to load config file with error {repr(e)}"
-        log_traceback(e, logger, error_message, is_critical=True)
-        raise DataValidationException(error_message)
+        exception = DataValidationException._with_error(
+            AzureMLError.create(BadEvaluationConfigFile, error=repr(e))
+        )
+        exception.inner_exception = e
+        log_traceback(e, logger, is_critical=True)
+        raise exception
 
     if for_prediction:
         return data
     return fetch_compute_metrics_args(data, task_type)
-
-
-def _validate_ner_line(line):
-    """Validate Conll data line.
-
-    Args:
-        line (_type_): _description_
-    """
-    assert_and_raise(condition=(line == '\n' or line.count(' ') == 1),
-                     exception_cls=DataValidationException,
-                     message="Invalid or Unsupported NER Data Format")
-
-    if line != '\n':
-        token, label = line.split(' ')
-        assert_and_raise(
-            condition=len(token) != 0,
-            exception_cls=DataValidationException,
-            message="Invalid or Unsupported NER Data Format"
-        )
-
-        assert_and_raise(
-            condition=(label.strip() == "O" or label.startswith("I-") or label.startswith("B-")),
-            exception_cls=DataValidationException,
-            message="Invalid Label format"
-        )
 
 
 def read_conll(stream_info, labels=None):
@@ -753,7 +746,6 @@ def read_conll(stream_info, labels=None):
         toks = sentence.split("\n")
         cur_sentence, cur_target = [], []
         for splits in toks:
-            # _validate_ner_line(sentence)
             item = splits.split(" ")
             cur_sentence.append(item[0])
             lab = item[-1].strip()

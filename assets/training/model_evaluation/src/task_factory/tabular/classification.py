@@ -96,8 +96,10 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
         except RuntimeError as re:
             device = kwargs.get("device", -1)
             if device != -1:
+                logger.info(repr(re))
                 logger.warning("Predict failed on GPU. Falling back to CPU")
                 self._ensure_model_on_cpu()
+                logger.info("Model Device: "+str(self.model._model_impl.hf_model.device))
                 kwargs["device"] = -1
                 y_pred = predict_fn(X_test, **kwargs)
             else:

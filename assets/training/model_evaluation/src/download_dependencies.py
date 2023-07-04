@@ -43,7 +43,7 @@ def main():
                 print("Traceback:")
                 traceback.print_exc()
     pipmain(["install", "--upgrade", "mltable"])
-
+    pipmain(["install", "--upgrade", "azureml-evaluate-mlflow"])
 
 if __name__ == "__main__":
     main()

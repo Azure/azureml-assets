@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: model_evaluation_pipeline
-version: 0.0.9
+version: 0.0.10
 type: pipeline
 display_name: Model Evaluation Pipeline
 description: Pipeline component for model evaluation for supported tasks. \
@@ -85,11 +85,10 @@ outputs:
 jobs:
   model_prediction:
     type: command
-    component: azureml://registries/azureml/components/model_prediction/versions/0.0.9
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.10
     inputs:
       task: ${{parent.inputs.task}}
       test_data: ${{parent.inputs.test_data}}
-      test_data_mltable: ${{parent.inputs.test_data_mltable}}
       mlflow_model: ${{parent.inputs.mlflow_model}}
       label_column_name: ${{parent.inputs.label_column_name}}
       input_column_names: ${{parent.inputs.input_column_names}}
@@ -101,7 +100,7 @@ jobs:
   
   compute_metrics:
     type: command
-    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.9
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.10
     inputs:
       task: ${{parent.inputs.task}}
       ground_truth: ${{parent.jobs.model_prediction.outputs.ground_truth}}

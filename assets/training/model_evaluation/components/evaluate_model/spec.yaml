@@ -3,7 +3,7 @@ name: evaluate_model
 display_name: Evaluate Model
 description: Evaluate MLFlow models for supported task types.
 
-version: 0.0.9
+version: 0.0.10
 
 tags:
   type: evaluation
@@ -13,6 +13,7 @@ tags:
 inputs:
   task:
     type: string
+    optional: false
     default: tabular-classification
     enum: [
       tabular-classification,
@@ -31,19 +32,16 @@ inputs:
     ]
     description: "Task type"
   test_data:
-    type: uri_file
-    optional: true
+    type: uri_folder
+    optional: false
     description: "Test Data as JSON Lines URI_FILE"
-  test_data_mltable:
-    type: mltable
-    optional: true
-    description: "Test Data as MLTable folder"
   evaluation_config:
     type: uri_file
     description: "Additional parameters required for evaluation."
     optional: true
   test_data_label_column_name:
     type: string
+    optional: false
     description: Column name of target values
   test_data_input_column_names:
     type: string
@@ -51,6 +49,7 @@ inputs:
     description: Comma separated values of feature column names
   mlflow_model:
     type: mlflow_model
+    optional: false
     description: "Mlflow Model - registered model or output of a job with type mlflow_model in a pipeline"
   model_uri:
     type: string
@@ -61,6 +60,7 @@ inputs:
                       - ``models:/<model_name>/<stage>``"
   device:
     type: string
+    optional: false
     default: auto
     enum: [auto, cpu, gpu]
   batch_size:
@@ -76,7 +76,7 @@ outputs:
     type: uri_folder
 
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/8
+environment: azureml://registries/azureml/environments/model-evaluation/versions/9
 command: >-
   python download_dependencies.py
   --mlflow-model '${{inputs.mlflow_model}}'
@@ -87,8 +87,7 @@ command: >-
   --label-column-name ${{inputs.test_data_label_column_name}}
   --mlflow-model '${{inputs.mlflow_model}}'
   --device ${{inputs.device}}
-  $[[--data '${{inputs.test_data}}']]
-  $[[--data-mltable '${{inputs.test_data_mltable}}']]
+  --data '${{inputs.test_data}}'
   $[[--input-column-names '${{inputs.test_data_input_column_names}}']]
   $[[--model-uri ${{inputs.model_uri}}]]
   $[[--config-file-name '${{inputs.evaluation_config}}']]

@@ -63,15 +63,35 @@ class BasePredictor(ABC):
         """
         if self.is_hf:
             if hasattr(self.model._model_impl, "hf_model"):
-                self.model._model_impl.hf_model.to("cpu")
+                self.model._model_impl.hf_model = self.model._model_impl.hf_model.cpu()
             else:
                 logger.warning("hf_model not found in mlflow model")
         elif self.is_torch:
             import torch
-            if isinstance(self.model._model_impl, torch.nn.Module):
-                self.model._model_impl.to("cpu")
+            if isinstance(self.model, torch.nn.Module):
+                self.model = self.model.cpu()
+            elif hasattr(self.model, "_model_impl") and isinstance(self.model._model_impl, torch.nn.Module):
+                self.model._model_impl = self.model._model_impl.cpu()
             else:
                 logger.warning("Torch model is not of type nn.Module")
+
+    def _get_model_device(self):
+        """Fetch Model device."""
+        device = None
+        if self.is_hf:
+            if hasattr(self.model._model_impl, "hf_model"):
+                device = self.model._model_impl.hf_model.device
+            else:
+                logger.warning("hf_model not found in mlflow model")
+        elif self.is_torch:
+            import torch
+            if isinstance(self.model, torch.nn.Module):
+                device = self.model.device
+            elif hasattr(self.model, "_model_impl") and isinstance(self.model._model_impl, torch.nn.Module):
+                device = self.model._model_impl.device
+            else:
+                logger.warning("Torch model is not of type nn.Module")
+        return device
 
 
 class PredictWrapper(BasePredictor):

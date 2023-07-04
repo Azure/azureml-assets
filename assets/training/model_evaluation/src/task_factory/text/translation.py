@@ -4,7 +4,6 @@
 """Text Translation."""
 
 from task_factory.base import PredictWrapper
-from exceptions import DataValidationException
 from logging_utilities import get_logger
 
 logger = get_logger(name=__name__)
@@ -25,10 +24,10 @@ class Translator(PredictWrapper):
             target_lang (_type_): _description_
         """
         if len(source_lang) != 2:
-            raise DataValidationException("Invalid language id passed for source language "+source_lang)
+            raise ValueError("Invalid language id passed for source language "+source_lang)
 
         if len(target_lang) != 2:
-            raise DataValidationException("Invalid language id passed for target language "+target_lang)
+            raise ValueError("Invalid language id passed for target language "+target_lang)
 
     def predict(self, X_test, **kwargs):
         """Predict.
@@ -53,9 +52,24 @@ class Translator(PredictWrapper):
             y_pred = self.model.predict(X_test)
         except RuntimeError as re:
             device = kwargs.get("device", -1)
+            model_device = self._get_model_device()
+            logger.info("Failed on GPU with error: "+repr(re))
+            passed_on_device = False
+            if device is None and model_device is not None:
+                logger.info("Trying with model device.")
+                kwargs["device"] = model_device.index
+                if kwargs["device"] is not None:
+                    try:
+                        y_pred = self.model.predict(X_test, **kwargs)
+                        passed_on_device = True
+                    except:
+                        pass
+            if passed_on_device:
+                return y_pred
             if device != -1:
                 logger.warning("Predict failed on GPU. Falling back to CPU")
                 kwargs["device"] = -1
+                self._ensure_model_on_cpu()
                 y_pred = self.model.predict(X_test, **kwargs)
             else:
                 raise re
