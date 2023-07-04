@@ -8,13 +8,13 @@ is_deterministic: false
 
 code: ../../src
 
-description: An GPU version optimizer based on "OLive". "OLive" (for ONNX Runtime(ORT) Go Live) is a python package that automates the process of accelerating models with ONNX Runtime(ORT). For detailed info please refer to https://github.com/microsoft/OLive
+description: An GPU version optimizer based on "Olive". "Olive" (for ONNX Runtime(ORT) Go Live) is a Python package that automates the process of accelerating models with ONNX Runtime(ORT). For detailed info please refer to https://github.com/microsoft/Olive
 
 inputs:
   config:
     type: uri_file
     optional: False
-    description: "A Json file that provides detailed Olive configurations."
+    description: "A JSON file that provides detailed Olive configurations."
   code_path:
     type: uri_folder
     optional: True

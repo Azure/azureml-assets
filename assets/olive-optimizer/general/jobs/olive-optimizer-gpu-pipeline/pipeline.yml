@@ -1,20 +1,20 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
-display_name: olive-optimizer-built-in-component
-description: Use a built-in olive_optimizer component to optimize a bert model.
+name: olive-optimizer-gpu-pipeline
+description: Use olive_optimizer_gpu component to optimize a bert model.
 
-compute: azureml:cpu-cluster
+compute: azureml:gpu-cluster
 
 jobs:
   optimize:
     type: command
-    component: file:../../components/cpu/spec.yaml
+    component: azureml:olive_optimizer_gpu:0.0.1
     inputs:
       config:
         type: uri_file
         path: ./resources/bert.json
       code_path:
         type: uri_folder
-        path: ./resources/code
+        path: ../olive-optimizer-pipeline/resources/code
     resources:
       instance_count: 1

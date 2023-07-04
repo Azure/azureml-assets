@@ -1,6 +1,6 @@
 name: olive-optimizer-gpu
-version: 0.1
+version: auto
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml
-categories: ["Olive Optimizer"]
+categories: ["Olive"]
