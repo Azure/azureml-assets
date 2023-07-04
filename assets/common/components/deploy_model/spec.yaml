@@ -47,8 +47,8 @@ inputs:
     type: string
     optional: true 
     description: |
-      Asset ID of the model registered in workspace/registry. Asset ID format looks like below.\
-      Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version>\
+      Asset ID of the model registered in workspace/registry. Asset ID format looks like below.
+      Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version>
       Workspace - azureml:<model-name>:<version>
 
   inference_payload:
