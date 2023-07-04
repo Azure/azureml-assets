@@ -46,7 +46,7 @@ inputs:
   model_id:
     type: string
     optional: true 
-    description: Id of registered mlflow model
+    description: Asset ID of the model registered in workspace/registry. For example - azureml://registries/azureml/models/microsoft-deberta-large-mnli/versions/8
 
   inference_payload:
     type: uri_file
