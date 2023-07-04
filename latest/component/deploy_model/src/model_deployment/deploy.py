@@ -8,6 +8,7 @@ import json
 import logging
 import re
 import time
+
 from azure.ai.ml import MLClient
 from azure.ai.ml.entities import (
     ManagedOnlineEndpoint,
@@ -38,6 +39,11 @@ def parse_args():
         "--registration_details",
         type=Path,
         help="Json file that contains the ID of registered model to be deployed",
+    )
+    parser.add_argument(
+        "--model_id",
+        type=str,
+        help="Registered mlflow model id",
     )
     parser.add_argument(
         "--inference_payload",
@@ -255,11 +261,17 @@ def main(args):
     """Run main function."""
     ml_client = get_ml_client()
     # get registered model id
-    model_info = {}
-    with open(args.registration_details) as f:
-        model_info = json.load(f)
-    model_id = model_info['id']
-    model_name = model_info['name']
+    if args.registration_details:
+        model_info = {}
+        with open(args.registration_details) as f:
+            model_info = json.load(f)
+        model_id = model_info["id"]
+        model_name = model_info["name"]
+    elif args.model_id:
+        model_id = str(args.model_id)
+        model_name = model_id.split("/")[-3]
+    else:
+        raise Exception("Arguments model_id and registration_details both are missing.")
 
     # Endpoint has following restrictions:
     # 1. Name must begin with lowercase letter
@@ -268,7 +280,8 @@ def main(args):
 
     # 1. Replace underscores and slashes by hyphens and convert them to lower case.
     # 2. Take 21 chars from model name and append '-' & timstamp(10chars) to it
-    endpoint_name = re.sub('[^A-Za-z0-9]', '-', model_name).lower()[:21]
+
+    endpoint_name = re.sub("[^A-Za-z0-9]", "-", model_name).lower()[:21]
     endpoint_name = f"{endpoint_name}-{int(time.time())}"
     endpoint_name = endpoint_name
 
