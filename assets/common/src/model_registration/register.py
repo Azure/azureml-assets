@@ -159,9 +159,8 @@ def is_model_available(ml_client, model_name, model_version):
     try:
         ml_client.models.get(name=model_name, version=model_version)
     except Exception as e:
-        tc_exception(
-            e, f"Model with name - {model_name} and version - " "{model_version} is not available. Error: {e}"
-        )
+        tc_exception(e, f"Model with name - {model_name} and version - " 
+                     "{model_version} is not available. Error: {e}")
         is_available = False
     return is_available
 
@@ -223,7 +222,7 @@ def main(args):
         tc_log(f"MLModel path: {mlmodel_path}")
         with open(mlmodel_path, "r") as stream:
             metadata = yaml.safe_load(stream)
-            flavors = metadata.get("flavors", flavors)
+            flavors = metadata.get('flavors', flavors)
 
     if not model_version or is_model_available(ml_client, model_name, model_version):
         # hack to get current model versions in registry

@@ -161,16 +161,6 @@ def parse_args():
     return args
 
 
-def tc_exception(e, message):
-    """Log exception to app insights."""
-    global tc
-    try:
-        tc.track_exception(value=e.__class__, properties={"exception": message})
-        tc.flush()
-    except Exception as e:
-        print(f"Exception while logging exception to app insights: {e}")
-
-
 def get_ml_client():
     """Return ML Client."""
     has_obo_succeeded = False
