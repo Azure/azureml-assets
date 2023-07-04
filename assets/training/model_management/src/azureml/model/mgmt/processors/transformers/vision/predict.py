@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Huggingface predict file for Image classification mlflow model."""
+"""Huggingface predict file for Image classification MLflow model."""
 
 import base64
 import io
@@ -41,16 +41,16 @@ class HFMiscellaneousConstants:
     DEFAULT_THRESHOLD = 0.5
 
 
-class MLFlowSchemaLiterals:
-    """MLFlow model signature related schema."""
+class MLflowSchemaLiterals:
+    """MLflow model signature related schema."""
 
     INPUT_COLUMN_IMAGE = "image"
     OUTPUT_COLUMN_PROBS = "probs"
     OUTPUT_COLUMN_LABELS = "labels"
 
 
-class MLFlowLiterals:
-    """Constants related to MLFlow."""
+class MLflowLiterals:
+    """Constants related to MLflow."""
 
     PROBS = "probs"
     LABELS = "labels"
@@ -101,11 +101,14 @@ def _process_image(img: pd.Series) -> pd.Series:
             try:
                 return pd.Series(base64.b64decode(image))
             except ValueError:
-                raise ValueError("The provided image string cannot be decoded."
-                                 "Expected format is base64 string or url string.")
+                raise ValueError(
+                    "The provided image string cannot be decoded. Expected format is Base64 or URL string."
+                )
     else:
-        raise ValueError(f"Image received in {type(image)} format which is not supported."
-                         "Expected format is bytes, base64 string or url string.")
+        raise ValueError(
+            f"Image received in {type(image)} format which is not supported."
+            "Expected format is bytes, base64 string or url string."
+        )
 
 
 def _is_valid_url(text: str) -> bool:
@@ -155,14 +158,14 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
     ['filename', 'boxes'] for object detection, instance segmentation
     """
     # Decode the base64 image column
-    decoded_images = input_data.loc[:, [MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(axis=1, func=_process_image)
+    decoded_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(axis=1, func=_process_image)
 
     # arguments for Trainer
     test_args = TrainingArguments(
         output_dir=".",
         do_train=False,
         do_predict=True,
-        per_device_eval_batch_size=kwargs.get(MLFlowLiterals.BATCH_SIZE_KEY, 1),
+        per_device_eval_batch_size=kwargs.get(MLflowLiterals.BATCH_SIZE_KEY, 1),
         dataloader_drop_last=False,
         remove_unused_columns=False,
     )
@@ -181,15 +184,16 @@ def predict(input_data: pd.DataFrame, task, model, tokenizer, **kwargs) -> pd.Da
 
     df_result = pd.DataFrame(
         columns=[
-            MLFlowSchemaLiterals.OUTPUT_COLUMN_PROBS,
-            MLFlowSchemaLiterals.OUTPUT_COLUMN_LABELS,
+            MLflowSchemaLiterals.OUTPUT_COLUMN_PROBS,
+            MLflowSchemaLiterals.OUTPUT_COLUMN_LABELS,
         ]
     )
 
-    labels = kwargs.get(MLFlowLiterals.TRAIN_LABEL_LIST)
+    labels = kwargs.get(MLflowLiterals.TRAIN_LABEL_LIST)
     labels = [labels.tolist()] * len(conf_scores)
-    df_result[MLFlowLiterals.PROBS], df_result[MLFlowLiterals.LABELS] = (
-        conf_scores.tolist(), labels,
+    df_result[MLflowLiterals.PROBS], df_result[MLflowLiterals.LABELS] = (
+        conf_scores.tolist(),
+        labels,
     )
     return df_result
 

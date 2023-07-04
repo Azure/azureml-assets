@@ -10,15 +10,19 @@ from pathlib import Path
 from typing import Dict
 
 import mlflow
+from azureml.model.mgmt.utils import logging_utils
 from azureml.model.mgmt.utils.common_utils import log_execution_time
 from mlflow.models.signature import ModelSignature
 from mlflow.types.schema import ColSpec, Schema
 
-from .vision.config import MLFlowSchemaLiterals, MMDetLiterals, Tasks
+from .vision.config import MLflowSchemaLiterals, MMDetLiterals, Tasks
+
+
+logger = logging_utils.get_logger()
 
 
 def _prepare_artifacts_dict(input_dir: Path) -> Dict:
-    """Prepare artifacts dict for mlflow model.
+    """Prepare artifacts dict for MLflow model.
 
     :param input_dir: input directory
     :type input_dir: Path
@@ -37,7 +41,7 @@ def _prepare_artifacts_dict(input_dir: Path) -> Dict:
 
 
 def _get_mlflow_signature(task_type: str) -> ModelSignature:
-    """Return mlflow model signature with input and output schema given the input task type.
+    """Return MLflow model signature with input and output schema given the input task type.
 
     :param task_type: Task type used in training
     :type task_type: str
@@ -45,13 +49,13 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
     :rtype: mlflow.models.signature.ModelSignature
     """
     input_schema = Schema(
-        [ColSpec(MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE)]
+        [ColSpec(MLflowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, MLflowSchemaLiterals.INPUT_COLUMN_IMAGE)]
     )
 
     if task_type == Tasks.MM_OBJECT_DETECTION.value:
         output_schema = Schema(
             [
-                ColSpec(MLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, MLFlowSchemaLiterals.OUTPUT_COLUMN_BOXES),
+                ColSpec(MLflowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, MLflowSchemaLiterals.OUTPUT_COLUMN_BOXES),
             ]
         )
     else:
@@ -61,22 +65,22 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
 
 @log_execution_time
 def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None:
-    """Convert pytorch model to Mlflow.
+    """Convert pytorch model to MLflow.
 
     :param input_dir: model input directory
     :type input_dir: Path
     :param output_dir: output directory
     :type output_dir: Path
-    :param translate_params: mlflow translation params
+    :param translate_params: MLflow translation params
     :type translate_params: Dict
     """
     model_name = translate_params.get("model_id")
     task = translate_params["task"]
 
     sys.path.append(os.path.join(os.path.dirname(__file__), "vision"))
-    from detection_predict import ImagesDetectionMLFlowModelWrapper
+    from detection_predict import ImagesDetectionMLflowModelWrapper
 
-    mlflow_model_wrapper = ImagesDetectionMLFlowModelWrapper(task_type=task)
+    mlflow_model_wrapper = ImagesDetectionMLflowModelWrapper(task_type=task)
     artifacts_dict = _prepare_artifacts_dict(input_dir)
     pip_requirements = os.path.join(os.path.dirname(__file__), "vision", "requirements.txt")
     code_path = [
@@ -95,4 +99,4 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None
         metadata={"model_name": model_name},
     )
 
-    print("Model saved!!!")
+    logger.info("Model saved successfully.")
