@@ -180,8 +180,13 @@ def get_ml_client():
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
             print(f"Failed to get MSI credentials : {ex}")
-            error_msg = ("Kindly make sure that compute used by model_deployment component has MSI(Managed Service Identity) associated with it."
-                f"Click here to know more - https://learn.microsoft.com/en-us/azure/machine-learning/how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli :{ex}")
+            error_msg = (
+                "Kindly make sure that compute used by model_deployment component"
+                "has MSI(Managed Service Identity) associated with it."
+                "Click here to know more -"
+                "https://learn.microsoft.com/en-us/azure/machine-learning/"
+                f"how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli :{ex}"
+                )
             raise Exception(error_msg)
 
     run = Run.get_context(allow_offline=False)
