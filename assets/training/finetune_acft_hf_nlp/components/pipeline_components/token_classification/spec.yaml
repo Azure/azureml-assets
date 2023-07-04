@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: token_classification_pipeline
-version: 0.0.9
+version: 0.0.10
 type: pipeline
 display_name: Token Classification Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for token classification task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/token_classification_pipeline) to learn more.
@@ -538,14 +538,13 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml://registries/azureml/components/model_prediction/versions/0.0.9
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.10
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
     inputs:
       task: text-named-entity-recognition
       test_data: '${{parent.jobs.token_classification_datapreprocess.outputs.output_dir}}'
-      test_data_mltable: '${{parent.inputs.test_mltable_path}}'
       label_column_name: '${{parent.inputs.tag_key}}'
       input_column_names: '${{parent.inputs.token_key}}'
       batch_size: '${{parent.inputs.batch_size}}'
@@ -553,7 +552,7 @@ jobs:
       mlflow_model: '${{parent.jobs.token_classification_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
-    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.9
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.10
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
