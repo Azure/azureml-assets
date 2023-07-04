@@ -160,7 +160,7 @@ def is_model_available(ml_client, model_name, model_version):
     try:
         ml_client.models.get(name=model_name, version=model_version)
     except Exception as e:
-        tc_exception(e, f"Model with name - {model_name} and version - " 
+        tc_exception(e, f"Model with name - {model_name} and version - "
                      "{model_version} is not available. Error: {e}")
         is_available = False
     return is_available
