@@ -137,7 +137,8 @@ def get_ml_client(registry_name):
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
             tc_exception(ex, f"Failed to get MSI credentials : {ex}")
-            raise (f"Failed to get MSI credentials : {ex}")
+            error_msg = f"Kindly make sure that compute used by model_registration component has MSI(Managed Service Identity) associated with it. Click here to know more - https://learn.microsoft.com/en-us/azure/machine-learning/how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli :{ex}"
+            raise(error_msg)
 
     if registry_name is None:
         run = Run.get_context(allow_offline=False)
@@ -158,8 +159,9 @@ def is_model_available(ml_client, model_name, model_version):
     try:
         ml_client.models.get(name=model_name, version=model_version)
     except Exception as e:
-        tc_exception(e, f"Model with name - {model_name} and version - "
-                     "{model_version} is not available. Error: {e}")
+        tc_exception(
+            e, f"Model with name - {model_name} and version - " "{model_version} is not available. Error: {e}"
+        )
         is_available = False
     return is_available
 
@@ -221,7 +223,7 @@ def main(args):
         tc_log(f"MLModel path: {mlmodel_path}")
         with open(mlmodel_path, "r") as stream:
             metadata = yaml.safe_load(stream)
-            flavors = metadata.get('flavors', flavors)
+            flavors = metadata.get("flavors", flavors)
 
     if not model_version or is_model_available(ml_client, model_name, model_version):
         # hack to get current model versions in registry

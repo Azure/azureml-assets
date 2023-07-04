@@ -161,21 +161,38 @@ def parse_args():
     return args
 
 
-def get_ml_client():
-    """Return ML client."""
-    credential = AzureMLOnBehalfOfCredential()
+def tc_exception(e, message):
+    """Log exception to app insights."""
+    global tc
     try:
+        tc.track_exception(value=e.__class__, properties={"exception": message})
+        tc.flush()
+    except Exception as e:
+        print(f"Exception while logging exception to app insights: {e}")
+
+
+def get_ml_client():
+    """Return ML Client."""
+    has_obo_succeeded = False
+    try:
+        credential = AzureMLOnBehalfOfCredential()
         # Check if given credential can get token successfully.
         credential.get_token("https://management.azure.com/.default")
+        has_obo_succeeded = True
     except Exception as ex:
-        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential not work
-        print(f"Failed to get obo credentials - {ex}")
-        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-        credential = ManagedIdentityCredential(client_id=msi_client_id)
-    try:
-        credential.get_token("https://management.azure.com/.default")
-    except Exception as ex:
-        raise (f"Failed to get credentials : {ex}")
+        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
+        print(f"Failed to get OBO credentials - {ex}")
+
+    if not has_obo_succeeded:
+        try:
+            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+            credential = ManagedIdentityCredential(client_id=msi_client_id)
+            credential.get_token("https://management.azure.com/.default")
+        except Exception as ex:
+            print(f"Failed to get MSI credentials : {ex}")
+            error_msg = f"Kindly make sure that compute used by model_deployment component has MSI(Managed Service Identity) associated with it. Click here to know more - https://learn.microsoft.com/en-us/azure/machine-learning/how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli :{ex}"
+            raise(error_msg)
+        
     run = Run.get_context(allow_offline=False)
     ws = run.experiment.workspace
 
