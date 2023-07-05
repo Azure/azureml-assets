@@ -29,7 +29,8 @@ from log_utils.exceptions import (
     NonMsiAttachedComputeError,
     OnlineEndpointInvocationError,
     EndpointCreationError,
-    DeploymentCreationError
+    DeploymentCreationError,
+    UserIdentityMissingError
 )
 
 MAX_REQUEST_TIMEOUT = 90000
@@ -191,7 +192,11 @@ def get_ml_client():
         has_obo_succeeded = True
     except Exception as ex:
         # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
-        logger.exception(f"Failed to get OBO credentials - {ex}")
+        logger.exception(
+            AzureMLException._with_error(
+                AzureMLError.create(UserIdentityMissingError, exception=ex)
+            )
+        )
 
     if not has_obo_succeeded:
         try:
