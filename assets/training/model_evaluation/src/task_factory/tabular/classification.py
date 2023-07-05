@@ -9,7 +9,6 @@ from task_factory.base import PredictProbaWrapper, PredictWrapper
 from functools import partial
 from logging_utilities import get_logger
 
-
 logger = get_logger(name=__name__)
 
 
@@ -99,7 +98,7 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
                 logger.info(repr(re))
                 logger.warning("Predict failed on GPU. Falling back to CPU")
                 self._ensure_model_on_cpu()
-                logger.info("Model Device: "+str(self.model._model_impl.hf_model.device))
+                logger.info("Model Device: " + str(self.model._model_impl.hf_model.device))
                 kwargs["device"] = -1
                 y_pred = predict_fn(X_test, **kwargs)
             else:

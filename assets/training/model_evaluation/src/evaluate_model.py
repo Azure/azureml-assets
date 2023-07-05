@@ -13,8 +13,7 @@ import torch
 from itertools import repeat
 from copy import deepcopy
 
-from exceptions import (ModelEvaluationException,
-                        ScoringException,
+from exceptions import (ScoringException,
                         DataLoaderException)
 from error_definitions import (ModelEvaluationInternalError,
                                BadEvaluationConfigParam,
@@ -27,11 +26,9 @@ from utils import (read_config,
                    check_and_return_if_mltable,
                    read_data,
                    prepare_data,
-                   setup_model_dependencies,
                    get_predictor,
                    filter_pipeline_params,
-                   fetch_compute_metrics_args,
-                   sanitize_device_and_device_map)
+                   fetch_compute_metrics_args)
 
 from run_utils import TestRun
 from validation import _validate, validate_args, validate_Xy
@@ -95,10 +92,10 @@ class EvaluateModel:
         except Exception:
             logger.warning("No GPU found. Using CPU instead")
             self.device = -1
-        #pipeline_params, self.device = sanitize_device_and_device_map(pipeline_params, self.device)
+        # pipeline_params, self.device = sanitize_device_and_device_map(pipeline_params, self.device)
         self.metrics_config = deepcopy(pipeline_params)
         self.metrics_config.update(compute_metrics_config)
-        logger.info("Logging to check metrics config in evaluate_model: "+str(self.metrics_config))
+        logger.info("Logging to check metrics config in evaluate_model: " + str(self.metrics_config))
 
         # self._setup_custom_environment()
 
@@ -113,23 +110,23 @@ class EvaluateModel:
             if predictor.is_hf:
                 hf_device_map = getattr(predictor.model._model_impl.hf_model, "hf_device_map", None)
                 if hf_device_map is not None:
-                    logger.info("hf_device_map: "+str(hf_device_map))
+                    logger.info("hf_device_map: " + str(hf_device_map))
                     unique_devices = set(hf_device_map.values())
-                    logger.info("Unique devices for model: "+str(unique_devices))
+                    logger.info("Unique devices for model: " + str(unique_devices))
                     if len(unique_devices) == 1:
                         model_device = predictor.model._model_impl.hf_model.device
-                    #device = next(iter(hf_device_map.values()))
+                    # device = next(iter(hf_device_map.values()))
                 else:
                     model_device = predictor.model._model_impl.hf_model.device
             elif predictor.is_torch:
                 model_device = predictor.model.getattr("device", None)
-            logger.info("Model Device: "+ str(model_device))
+            logger.info("Model Device: " + str(model_device))
             if model_device is not None:
                 if model_device.type == "cpu":
                     device = -1
                 else:
                     device = model_device.index
-            logger.info("Device: "+str(device))
+            logger.info("Device: " + str(device))
         else:
             device = self.device
         self.device = device
@@ -249,7 +246,7 @@ def test_model():
     parser.add_argument("--mlflow-model", type=str, dest="mlflow_model", required=False, default=None)
     parser.add_argument("--task", type=str, dest="task", choices=constants.ALL_TASKS, required=True)
     parser.add_argument("--data", type=str, dest="data", required=False, default=None)
-    #parser.add_argument("--data-mltable", type=str, dest="data_mltable", required=False, default="")
+    # parser.add_argument("--data-mltable", type=str, dest="data_mltable", required=False, default="")
     parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default=None)
     parser.add_argument("--output", type=str, dest="output")
     parser.add_argument("--device", type=str, required=False, default="auto", dest="device")
@@ -311,7 +308,7 @@ def test_model():
                 batch_size=args.batch_size
             )
             runner.score(test_data=data, label_column_name=args.label_column_name,
-                        input_column_names=args.input_column_names, is_mltable=is_mltable)
+                         input_column_names=args.input_column_names, is_mltable=is_mltable)
         except Exception as e:
             evaluate_model_activity.exception(repr(e))
             raise e

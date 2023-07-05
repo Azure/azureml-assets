@@ -24,10 +24,10 @@ class Translator(PredictWrapper):
             target_lang (_type_): _description_
         """
         if len(source_lang) != 2:
-            raise ValueError("Invalid language id passed for source language "+source_lang)
+            raise ValueError("Invalid language id passed for source language " + source_lang)
 
         if len(target_lang) != 2:
-            raise ValueError("Invalid language id passed for target language "+target_lang)
+            raise ValueError("Invalid language id passed for target language " + target_lang)
 
     def predict(self, X_test, **kwargs):
         """Predict.
@@ -43,8 +43,8 @@ class Translator(PredictWrapper):
         target_lang = kwargs.pop("target_lang", None)
         if self.is_hf and source_lang is not None and target_lang is not None:
             self._validate_translation_langs(source_lang, target_lang)
-            task_type = "translation_"+source_lang+"_to_"+target_lang
-            logger.info("Updating hf conf with task type"+task_type)
+            task_type = "translation_" + source_lang + "_to_" + target_lang
+            logger.info("Updating hf conf with task type" + task_type)
             kwargs["task_type"] = task_type
         try:
             y_pred = self.model.predict(X_test, **kwargs)
@@ -53,7 +53,7 @@ class Translator(PredictWrapper):
         except RuntimeError as re:
             device = kwargs.get("device", -1)
             model_device = self._get_model_device()
-            logger.info("Failed on GPU with error: "+repr(re))
+            logger.info("Failed on GPU with error: " + repr(re))
             passed_on_device = False
             if device is None and model_device is not None:
                 logger.info("Trying with model device.")
@@ -62,7 +62,7 @@ class Translator(PredictWrapper):
                     try:
                         y_pred = self.model.predict(X_test, **kwargs)
                         passed_on_device = True
-                    except:
+                    except Exception:
                         pass
             if passed_on_device:
                 return y_pred

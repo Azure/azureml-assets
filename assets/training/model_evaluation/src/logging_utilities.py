@@ -122,7 +122,7 @@ class CustomDimensions:
             args = sys.argv
             if "--task" in args:
                 ind = args.index("--task")
-                self.task_type = sys.argv[ind+1]
+                self.task_type = sys.argv[ind + 1]
 
 
 custom_dimensions = CustomDimensions()
@@ -216,7 +216,7 @@ def get_logger(logging_level: str = 'DEBUG',
 
 
 def _get_error_details(
-    exception: BaseException, logger: Union[logging.Logger, logging.LoggerAdapter]
+        exception: BaseException, logger: Union[logging.Logger, logging.LoggerAdapter]
 ) -> Tuple[str, str, str]:
     """
     Extract the error details from the base exception.
@@ -231,7 +231,7 @@ def _get_error_details(
     error_code = constants.ExceptionTypes.Unclassified
     error_type = constants.ExceptionTypes.Unclassified
     exception_target = default_target
-    
+
     if isinstance(exception, AzureMLException):
         try:
             serialized_ex = json.loads(exception._serialize_json())

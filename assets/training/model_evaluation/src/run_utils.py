@@ -6,8 +6,7 @@ from azureml.core import Run
 from azureml.core.run import _OfflineRun
 import azureml.evaluate.mlflow as aml_mlflow
 import os
- 
- 
+
 known_modules = set([
     "model_prediction",
     "compute_metrics",
@@ -147,6 +146,11 @@ class TestRun:
 
     @property
     def get_extra_run_info(self):
+        """Get run details of the pipeline.
+
+        Returns:
+            _type_: _description_
+        """
         info = {}
         try:
             import re

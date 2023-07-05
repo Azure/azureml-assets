@@ -14,8 +14,8 @@ from azureml.telemetry.activity import log_activity
 
 import constants
 from exceptions import DataLoaderException, DataValidationException, ComputeMetricsException
-from error_definitions import (ComputeMetricsInternalError, 
-                               BadForecastData, 
+from error_definitions import (ComputeMetricsInternalError,
+                               BadForecastData,
                                BadEvaluationConfigParam,
                                InvalidGroundTruthColumnNameData,
                                BadInputData)
@@ -276,10 +276,10 @@ def test_component():
                         required=False, default="")
     parser.add_argument("--output", type=str, dest="output")
     parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default="")
-    #parser.add_argument("--ground_truths_mltable", type=str, dest="ground_truths_mltable",
+    # parser.add_argument("--ground_truths_mltable", type=str, dest="ground_truths_mltable",
     #                    required=False, default="")
-    #parser.add_argument("--predictions_mltable", type=str, dest="predictions_mltable", required=False, default="")
-    #parser.add_argument("--prediction_probabilities_mltable", type=str,
+    # parser.add_argument("--predictions_mltable", type=str, dest="predictions_mltable", required=False, default="")
+    # parser.add_argument("--prediction_probabilities_mltable", type=str,
     #                    dest="prediction_probabilities_mltable", required=False, default="")
     parser.add_argument("--ground_truths_column_name", type=str,
                         dest="ground_truths_column_name", required=False, default=None)

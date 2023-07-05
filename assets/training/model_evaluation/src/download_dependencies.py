@@ -6,6 +6,7 @@
 from mlflow.pyfunc import _get_model_dependencies
 from argparse import ArgumentParser
 import traceback
+
 try:
     from pip import main as pipmain
 except ImportError:
@@ -44,6 +45,7 @@ def main():
                 traceback.print_exc()
     pipmain(["install", "--upgrade", "mltable"])
     pipmain(["install", "--upgrade", "azureml-evaluate-mlflow"])
+
 
 if __name__ == "__main__":
     main()

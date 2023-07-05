@@ -9,14 +9,10 @@ import pandas as pd
 import constants
 import torch
 import ast
-import traceback
-import mltable
 import json
-import os
 from itertools import repeat
 
-from exceptions import (ModelEvaluationException,
-                        ModelValidationException,
+from exceptions import (ModelValidationException,
                         DataLoaderException,
                         PredictException)
 from error_definitions import (ModelPredictionInternalError,
@@ -25,18 +21,15 @@ from error_definitions import (ModelPredictionInternalError,
 from logging_utilities import custom_dimensions, get_logger, log_traceback
 from azureml.telemetry.activity import log_activity
 from image_classification_dataset import get_classification_dataset, ImageDataFrameParams
-from utils import (setup_model_dependencies,
-                   check_and_return_if_mltable,
+from utils import (check_and_return_if_mltable,
                    get_predictor,
                    read_data,
                    read_config,
                    prepare_data,
-                   filter_pipeline_params,
-                   sanitize_device_and_device_map)
+                   filter_pipeline_params)
 from run_utils import TestRun
 from validation import _validate, validate_args
 from azureml._common._error_definition.azureml_error import AzureMLError
-
 
 logger = get_logger(name=__name__)
 current_run = TestRun()
@@ -99,7 +92,6 @@ class Inferencer:
                 log_traceback(e, logger)
                 model_loader_activity.exception(exception.message)
                 raise exception
-
 
     def load_data(self, test_data, label_column_name=None, input_column_names=None, is_mltable=True):
         """Load Data.
@@ -165,33 +157,33 @@ class Inferencer:
                 if predictor.is_hf:
                     hf_device_map = getattr(predictor.model._model_impl.hf_model, "hf_device_map", None)
                     if hf_device_map is not None:
-                        logger.info("hf_device_map: "+str(hf_device_map))
+                        logger.info("hf_device_map: " + str(hf_device_map))
                         unique_devices = set(hf_device_map.values())
-                        logger.info("Unique devices for model: "+str(unique_devices))
+                        logger.info("Unique devices for model: " + str(unique_devices))
                         if len(unique_devices) == 1:
                             model_device = predictor.model._model_impl.hf_model.device
-                        #device = next(iter(hf_device_map.values()))
+                        # device = next(iter(hf_device_map.values()))
                     else:
                         model_device = predictor.model._model_impl.hf_model.device
                 elif predictor.is_torch:
                     model_device = predictor.model.getattr("device", None)
-                logger.info("Model Device: "+ str(model_device))
+                logger.info("Model Device: " + str(model_device))
                 if model_device is not None:
                     if model_device.type == "cpu":
                         device = -1
                     else:
                         device = model_device.index
-                logger.info("Device: "+str(device))
+                logger.info("Device: " + str(device))
             else:
                 device = self.device
-            #pipeline_params, device = sanitize_device_and_device_map(pipeline_params, self.device)
-            torch_error_message = "Model prediction Failed.\nPossible Reason:\n"\
-                                  "1. Your input text exceeds max length of model.\n"\
-                                  "\t\tYou can either keep truncation=True in tokenizer while logging model.\n"\
-                                  "\t\tOr you can pass tokenizer_config in evaluation_config.\n"\
-                                  "2. Your tokenizer's vocab size doesn't match with model's vocab size.\n"\
-                                  "\t\tTo fix this check your model/tokenizer config.\n"\
-                                  "3. If it is Cuda Assertion Error, check your test data."\
+            # pipeline_params, device = sanitize_device_and_device_map(pipeline_params, self.device)
+            torch_error_message = "Model prediction Failed.\nPossible Reason:\n" \
+                                  "1. Your input text exceeds max length of model.\n" \
+                                  "\t\tYou can either keep truncation=True in tokenizer while logging model.\n" \
+                                  "\t\tOr you can pass tokenizer_config in evaluation_config.\n" \
+                                  "2. Your tokenizer's vocab size doesn't match with model's vocab size.\n" \
+                                  "\t\tTo fix this check your model/tokenizer config.\n" \
+                                  "3. If it is Cuda Assertion Error, check your test data." \
                                   "Whether that input can be passed directly to model or not."
             try:
                 if self.task == constants.TASK.TRANSLATION:
@@ -265,13 +257,13 @@ def test_model():
     parser.add_argument("--data-mltable", type=str, dest="data_mltable", required=False, default="")
     parser.add_argument("--label-column-name", type=str, dest="label_column_name", required=False, default=None)
     parser.add_argument("--predictions", type=str, dest="predictions")
-    #parser.add_argument("--predictions-mltable", type=str, dest="predictions_mltable")
+    # parser.add_argument("--predictions-mltable", type=str, dest="predictions_mltable")
     parser.add_argument("--prediction-probabilities", type=str, required=False,
                         default=None, dest="prediction_probabilities")
-    #parser.add_argument("--prediction-probabilities-mltable", type=str, required=False,
+    # parser.add_argument("--prediction-probabilities-mltable", type=str, required=False,
     #                    default=None, dest="prediction_probabilities_mltable")
     parser.add_argument("--ground-truth", type=str, required=False, default=None, dest="ground_truth")
-    #parser.add_argument("--ground-truth-mltable", type=str, required=False, default=None, dest="ground_truth_mltable")
+    # parser.add_argument("--ground-truth-mltable", type=str, required=False, default=None, dest="ground_truth_mltable")
     parser.add_argument("--device", type=str, required=False, default="auto", dest="device")
     parser.add_argument("--batch-size", type=int, required=False, default=None, dest="batch_size")
     parser.add_argument("--input-column-names",
@@ -345,27 +337,27 @@ def test_model():
 
         preds.to_json(args.predictions, orient="records", lines=True)
 
-        #preds_file_name = args.predictions.split(os.sep)[-1]
-        #preds_mltable_file_path = args.predictions_mltable + os.sep + preds_file_name
-        #preds.to_json(preds_mltable_file_path, orient="records", lines=True)
-        #preds_mltable = mltable.from_json_lines_files(paths=[{'file': preds_mltable_file_path}])
-        #preds_mltable.save(args.predictions_mltable)
+        # preds_file_name = args.predictions.split(os.sep)[-1]
+        # preds_mltable_file_path = args.predictions_mltable + os.sep + preds_file_name
+        # preds.to_json(preds_mltable_file_path, orient="records", lines=True)
+        # preds_mltable = mltable.from_json_lines_files(paths=[{'file': preds_mltable_file_path}])
+        # preds_mltable.save(args.predictions_mltable)
         if pred_probas is not None:
             pred_probas.to_json(args.prediction_probabilities, orient="records", lines=True)
 
-            #pred_probas_file_name = args.prediction_probabilities.split(os.sep)[-1]
-            #pred_probas_mltable_file_path = args.prediction_probabilities_mltable + os.sep + pred_probas_file_name
-            #pred_probas.to_json(pred_probas_mltable_file_path, orient="records", lines=True)
-            #pred_probas_mltable = mltable.from_json_lines_files(paths=[{'file': pred_probas_mltable_file_path}])
-            #pred_probas_mltable.save(args.prediction_probabilities_mltable)
+            # pred_probas_file_name = args.prediction_probabilities.split(os.sep)[-1]
+            # pred_probas_mltable_file_path = args.prediction_probabilities_mltable + os.sep + pred_probas_file_name
+            # pred_probas.to_json(pred_probas_mltable_file_path, orient="records", lines=True)
+            # pred_probas_mltable = mltable.from_json_lines_files(paths=[{'file': pred_probas_mltable_file_path}])
+            # pred_probas_mltable.save(args.prediction_probabilities_mltable)
         if ground_truth is not None:
             ground_truth.to_json(args.ground_truth, orient="records", lines=True)
 
-            #ground_truth_file_name = args.ground_truth.split(os.sep)[-1]
-            #ground_truth_mltable_file_path = args.ground_truth_mltable + os.sep + ground_truth_file_name
-            #ground_truth.to_json(ground_truth_mltable_file_path, orient="records", lines=True)
-            #ground_truth_mltable = mltable.from_json_lines_files(paths=[{'file': ground_truth_mltable_file_path}])
-            #ground_truth_mltable.save(args.ground_truth_mltable)
+            # ground_truth_file_name = args.ground_truth.split(os.sep)[-1]
+            # ground_truth_mltable_file_path = args.ground_truth_mltable + os.sep + ground_truth_file_name
+            # ground_truth.to_json(ground_truth_mltable_file_path, orient="records", lines=True)
+            # ground_truth_mltable = mltable.from_json_lines_files(paths=[{'file': ground_truth_mltable_file_path}])
+            # ground_truth_mltable.save(args.ground_truth_mltable)
     try:
         root_run.add_properties(properties=constants.ROOT_RUN_PROPERTIES)
     except Exception:

@@ -146,10 +146,10 @@ class ErrorStrings:
     GenericComputeMetricsError = "Compute metrics failed due to [{error}]"
 
     # Arguments related
-    InvalidTaskType = "Given Task Type [{TaskName}] is not supported. "+\
-                      "Please see the list of supported task types:\n"+\
+    InvalidTaskType = "Given Task Type [{TaskName}] is not supported. " + \
+                      "Please see the list of supported task types:\n" + \
                       "\n".join(ALL_TASKS)
-    InvalidModel = "Either correct Model URI or Mlflow Model should be passed.\n"\
+    InvalidModel = "Either correct Model URI or Mlflow Model should be passed.\n" \
                    "If you have passed Model URI, your Model URI is incorrect."
     BadModelData = "Model load failed due to error: [{error}]"
     InvalidTestData = "Either test_data or test_data_mltable should be passed."
@@ -165,11 +165,11 @@ class ErrorStrings:
     BadInputData = "Failed to load data with error: [{error}]"
     BadEvaluationConfigFile = "Evaluation Config file failed to load due to [{error}]"
     BadEvaluationConfigParam = "Evaluation Config Params failed to load due to [{error}]"
-    
-    BadForecastGroundTruthData = "For forecasting tasks, the table needs to be provided "\
-                                 "in jsonl format as the ground_truths parameter  "\
-                                 "or as mltable through ground_truths_mltable parameter."\
-                                 "The table must contain time, prediction "\
+
+    BadForecastGroundTruthData = "For forecasting tasks, the table needs to be provided " \
+                                 "in jsonl format as the ground_truths parameter  " \
+                                 "or as mltable through ground_truths_mltable parameter." \
+                                 "The table must contain time, prediction " \
                                  "groud truth and time series IDs columns."
     BadRegressionColumnType = "Expected target columns of type float found [{y_test_dtype}] instead"
 

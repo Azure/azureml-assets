@@ -8,7 +8,6 @@ import pandas as pd
 import ast
 from logging_utilities import get_logger
 
-
 logger = get_logger(name=__name__)
 
 

@@ -5,25 +5,23 @@
 
 from azureml._common._error_definition import error_decorator
 from azureml._common._error_definition.user_error import (
-    UserError,
     BadArgument,
-    BadData,
-    Memory
+    BadData
 )
 from azureml._common._error_definition.system_error import ClientError
 from constants import ErrorStrings
 
 
 class ModelEvaluationInternalError(ClientError):
-    """Model Evaluation Internal Error
+    """Model Evaluation Internal Error.
 
     Args:
         ClientError (_type_): _description_
     """
+
     @property
     def message_format(self) -> str:
         """Message format."""
-
         return ErrorStrings.GenericModelEvaluationError
 
 

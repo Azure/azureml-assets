@@ -39,7 +39,6 @@ from exceptions import (DataValidationException,
                         ComputeMetricsException)
 from copy import deepcopy
 
-
 logger = get_logger(name=__name__)
 
 
@@ -201,7 +200,6 @@ def _log_metrics(metrics, artifacts):
             log_traceback(exception, logger)
             raise exception
 
-
     for name, score in list_scores.items():
         try:
             # TODO: Add checks for logging longer lists
@@ -214,7 +212,6 @@ def _log_metrics(metrics, artifacts):
             exception.inner_exception = e
             log_traceback(exception, logger)
             raise exception
-
 
     # Log the non-scalar metrics. (Currently, these are all artifact-based.)
     for name, score in nonscalar_scores.items():
@@ -239,7 +236,6 @@ def _log_metrics(metrics, artifacts):
             exception.inner_exception = e
             log_traceback(exception, logger)
             raise exception
-
 
 
 def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config, X_test=None):
@@ -610,7 +606,7 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
                 exception.inner_exception = e
                 log_traceback(exception, logger)
                 raise exception
-                
+
     if task == constants.TASK.NER:
         if len(X_test.columns) > 1 and "tokens" not in X_test.columns:
             message = "Too many feature columns in dataset. Only 1 feature column should be passed for NER."

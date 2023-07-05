@@ -7,7 +7,7 @@ import traceback
 from exceptions import ModelValidationException, DataValidationException, ArgumentValidationException
 from constants import ALL_TASKS, TASK
 from logging_utilities import get_logger, log_traceback
-from utils import assert_and_raise, check_and_return_if_mltable
+from utils import assert_and_raise
 from typing import Union
 from error_definitions import (
     InvalidTaskType,
@@ -19,7 +19,6 @@ from error_definitions import (
     InvalidTestData
 )
 from azureml._common._error_definition.azureml_error import AzureMLError
-
 
 logger = get_logger(name=__name__)
 
@@ -81,7 +80,7 @@ def _validate_task(args):
     """
     # if args.task is None:
     #     return
-    logger.info("Validating Task Type: "+args.task)
+    logger.info("Validating Task Type: " + args.task)
     assert_and_raise(
         condition=args.task in ALL_TASKS,
         exception_cls=ArgumentValidationException,
@@ -105,7 +104,7 @@ def _validate_mode(args):
 
 
 def _validate_test_data(args):
-    #_, _data = check_and_return_if_mltable(args.data)
+    # _, _data = check_and_return_if_mltable(args.data)
     _data = args.data
     assert_and_raise(
         condition=(_data is not None and _data != ""),
@@ -115,7 +114,7 @@ def _validate_test_data(args):
 
 
 def _validate_compute_metrics_data(args):
-    #_, predictions = check_and_return_if_mltable(args.predictions, args.predictions_mltable)
+    # _, predictions = check_and_return_if_mltable(args.predictions, args.predictions_mltable)
     predictions = args.predictions
     assert_and_raise(
         condition=(predictions is not None and predictions != ""),
@@ -123,7 +122,7 @@ def _validate_compute_metrics_data(args):
         error_cls=InvalidPredictionsData
     )
     if args.task != TASK.FILL_MASK:
-        #_, ground_truths = check_and_return_if_mltable(args.ground_truths, args.ground_truths_mltable)
+        # _, ground_truths = check_and_return_if_mltable(args.ground_truths, args.ground_truths_mltable)
         ground_truths = args.ground_truths
         assert_and_raise(
             condition=(ground_truths is not None and ground_truths != ""),
@@ -192,7 +191,7 @@ def validate_Xy(X_test, y_test):
         y_pred (_type_): _description_
         mode (_type_): _description_
     """
-    message = "Invalid data. No feature matrix found."
+    # message = "Invalid data. No feature matrix found."
     assert_and_raise(
         condition=X_test is not None,
         exception_cls=DataValidationException,
@@ -254,13 +253,13 @@ def _clean_and_validate_dataset(data, keep_columns):
     data_columns = data.columns
     to_remove_columns = [col.strip() for col in data_columns if col.strip() not in keep_columns]
     data = data.drop(to_remove_columns, axis=1)
-    message = "input_column_names is not a subset of input test dataset columns.\
-                 input_column_names include "+str(keep_columns)+" whereas data has "+str(list(data.columns))
+    # message = "input_column_names is not a subset of input test dataset columns.\
+    #              input_column_names include " + str(keep_columns) + " whereas data has " + str(list(data.columns))
     assert_and_raise(
         condition=sorted(keep_columns) == sorted(data.columns),
         exception_cls=DataValidationException,
         error_cls=BadFeatureColumnData,
-        message_kwargs={"keep_columns": str(keep_columns), "data_columns":str(list(data.columns))}
+        message_kwargs={"keep_columns": str(keep_columns), "data_columns": str(list(data.columns))}
     )
 
     # remove the null values

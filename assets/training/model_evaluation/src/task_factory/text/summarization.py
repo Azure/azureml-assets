@@ -6,7 +6,6 @@
 from task_factory.base import PredictWrapper
 from logging_utilities import get_logger
 
-
 logger = get_logger(name=__name__)
 
 
@@ -34,7 +33,7 @@ class Summarizer(PredictWrapper):
         except RuntimeError as re:
             device = kwargs.get("device", -1)
             model_device = self._get_model_device()
-            logger.info("Failed on GPU with error: "+repr(re))
+            logger.info("Failed on GPU with error: " + repr(re))
             passed_on_device = False
             if device is None and model_device is not None:
                 logger.info("Trying with model device.")
@@ -43,7 +42,7 @@ class Summarizer(PredictWrapper):
                     try:
                         y_pred = self.model.predict(X_test, **kwargs)
                         passed_on_device = True
-                    except:
+                    except Exception:
                         pass
             if passed_on_device:
                 return y_pred

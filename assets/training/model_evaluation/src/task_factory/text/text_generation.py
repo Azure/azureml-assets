@@ -6,7 +6,6 @@
 from task_factory.base import PredictWrapper
 from logging_utilities import get_logger
 
-
 logger = get_logger(name=__name__)
 
 
