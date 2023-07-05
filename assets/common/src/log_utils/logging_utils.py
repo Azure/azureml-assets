@@ -98,27 +98,28 @@ class RunDetails:
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
 
-        cur_attribute = self._run.name
+        cur_attribute = self._run.id
         run = self._run.parent
         # update current run's root_attribute to the root run.
         while run is not None:
-            cur_attribute = run.name
+            cur_attribute = run.id
             run = run.parent
         return cur_attribute
 
     def __str__(self):
         """Run details to string."""
-        return {
-            "run_id": self.run_id,
-            "parent_run_id": self.parent_run_id,
-            "subscription_id": self.subscription_id,
-            "workspace_name": self.workspace_name,
-            "root_attribute": self.root_attribute,
-            "experiment_id": self.experiment_id,
-            "region": self.region,
-            "compute": self.compute,
-            "vm_size": self.vm_size,
-        }
+        return (
+            "RunDetails:\n" +
+            f"\nrun_id: {self.run_id},\n" +
+            f"parent_run_id: {self.parent_run_id},\n" +
+            f"subscription_id: {self.subscription_id},\n" +
+            f"workspace_name: {self.workspace_name},\n" +
+            f"root_attribute: {self.root_attribute},\n" +
+            f"experiment_id: {self.experiment_id},\n" +
+            f"region: {self.region},\n" +
+            f"compute: {self.compute},\n" +
+            f"vm_size: {self.vm_size},\n"
+        )
 
 
 class CustomDimensions:
@@ -135,7 +136,7 @@ class CustomDimensions:
         self.parent_run_id = run_details.parent_run_id
         self.subscription_id = run_details.subscription_id
         self.workspace_name = run_details.workspace_name
-        self.rootAttribution = run_details.root_attribute
+        self.root_attribution = run_details.root_attribute
         self.region = run_details.region
         self.experiment_id = run_details.experiment_id
         self.compute_target = run_details.compute
@@ -169,6 +170,11 @@ class CustomDimensions:
         if "--model_version" in args:
             ind = args.index("--model_version")
             self.mlflow_flavor = sys.argv[ind + 1]
+
+    def update_custom_dimensions(self, properties: dict):
+        """Add/update properties in custom dimensions."""
+        assert isinstance(properties, dict)
+        self.__dict__.update(properties)
 
 class ModelImportHandler(logging.StreamHandler):
     """Model Import handler for stream handling."""

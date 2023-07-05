@@ -5,7 +5,6 @@
 import os
 import argparse
 import json
-import logging
 import re
 import time
 
@@ -19,12 +18,25 @@ from azure.ai.ml.entities import (
 from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.core import Run
+from azureml._common._error_definition import AzureMLError
+from azureml._common.exceptions import AzureMLException
 from pathlib import Path
 
+from log_utils.config import AppName
+from log_utils.logging_utils import custom_dimensions, get_logger
+from log_utils.exceptions import (
+    swallow_all_exceptions, 
+    NonMsiAttachedComputeError, 
+    OnlineEndpointInvocationError,
+    EndpointCreationError,
+    DeploymentCreationError
+)
 
 MAX_REQUEST_TIMEOUT = 90000
 MAX_INSTANCE_COUNT = 20
 
+logger = get_logger(__name__)
+custom_dimensions.app_name = AppName.DEPLOY_MODEL
 
 def parse_args():
     """Return arguments."""
@@ -154,34 +166,42 @@ def parse_args():
     )
     # parse args
     args = parser.parse_args()
+    logger.info(f"Args received {args}")
     print("args received ", args)
 
     # Validating passed input values
     if args.max_concurrent_requests_per_instance < 1:
-        parser.error("Arg max_concurrent_requests_per_instance cannot be less than 1")
+        raise Exception("Arg max_concurrent_requests_per_instance cannot be less than 1")
     if args.request_timeout_ms < 1 or args.request_timeout_ms > MAX_REQUEST_TIMEOUT:
-        parser.error(f"Arg request_timeout_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
+        raise Exception(f"Arg request_timeout_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
     if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > MAX_REQUEST_TIMEOUT:
-        parser.error(f"Arg max_queue_wait_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
+        raise Exception(f"Arg max_queue_wait_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
 
     return args
 
 
 def get_ml_client():
-    """Return ML client."""
-    credential = AzureMLOnBehalfOfCredential()
+    """Return ML Client."""
+    has_obo_succeeded = False
     try:
+        credential = AzureMLOnBehalfOfCredential()
         # Check if given credential can get token successfully.
         credential.get_token("https://management.azure.com/.default")
+        has_obo_succeeded = True
     except Exception as ex:
-        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential not work
-        print(f"Failed to get obo credentials - {ex}")
-        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-        credential = ManagedIdentityCredential(client_id=msi_client_id)
-    try:
-        credential.get_token("https://management.azure.com/.default")
-    except Exception as ex:
-        raise (f"Failed to get credentials : {ex}")
+        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
+        logger.exception(f"Failed to get OBO credentials - {ex}")
+
+    if not has_obo_succeeded:
+        try:
+            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+            credential = ManagedIdentityCredential(client_id=msi_client_id)
+            credential.get_token("https://management.azure.com/.default")
+        except Exception as ex:
+            raise AzureMLException._with_error(
+                AzureMLError.create(NonMsiAttachedComputeError, exception=ex)
+            )
+
     run = Run.get_context(allow_offline=False)
     ws = run.experiment.workspace
 
@@ -191,7 +211,9 @@ def get_ml_client():
         resource_group_name=ws._resource_group,
         workspace_name=ws._workspace_name,
     )
+    logger.info(f"MLClient created for workspace - {ws._workspace_name}")
     return ml_client
+
 
 
 def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
@@ -227,22 +249,22 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
     )
 
     try:
-        print(f"Creating endpoint {endpoint_name}")
+        logger.info(f"Creating endpoint {endpoint_name}")
         ml_client.begin_create_or_update(endpoint).wait()
     except Exception as e:
-        error_msg = f"Error occured while creating endpoint - {e}"
-        logging.error(error_msg)
-        raise Exception(error_msg)
+        raise AzureMLException._with_error(
+            AzureMLError.create(EndpointCreationError, exception=e)
+        )
 
     try:
-        print(f"Creating deployment {deployment}")
+        logger.info(f"Creating deployment {deployment}")
         ml_client.online_deployments.begin_create_or_update(deployment).wait()
     except Exception as e:
-        error_msg = f"Error occured while creating deployment - {e}"
-        logging.error(error_msg)
-        raise Exception(error_msg)
+        raise AzureMLException._with_error(
+            AzureMLError.create(DeploymentCreationError, exception=e)
+        )
 
-    print(f"Deployment successful. Updating endpoint to take 100% traffic for deployment {deployment_name}")
+    logger.info(f"Deployment successful. Updating endpoint to take 100% traffic for deployment {deployment_name}")
 
     # deployment to take 100% traffic
     endpoint.traffic = {deployment.name: 100}
@@ -251,14 +273,15 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
         endpoint = ml_client.online_endpoints.get(endpoint.name)
     except Exception as e:
         error_msg = f"Error occured while updating endpoint traffic - {e}"
-        logging.error(error_msg)
         raise Exception(error_msg)
-
+    
+    logger.info(f"Endpoint updated to take 100% traffic for deployment {deployment_name}")
     return endpoint, deployment
 
-
-def main(args):
+@swallow_all_exceptions(logger)
+def main():
     """Run main function."""
+    args = parse_args()
     ml_client = get_ml_client()
     # get registered model id
     if args.registration_details:
@@ -305,9 +328,11 @@ def main(args):
                 request_file=args.inference_payload,
             )
             print(f"Response:\n{response}")
+            logger.info(f"Endpoint invoked successfully with response :{response}")
         except Exception as e:
-            print(f"Invocation failed with error: {e}")
-            raise e
+            raise AzureMLException._with_error(
+                AzureMLError.create(OnlineEndpointInvocationError, exception=e)
+            )
 
     print("Saving deployment details ...")
 
@@ -325,11 +350,10 @@ def main(args):
     json_object = json.dumps(deployment_details, indent=4)
     with open(args.model_deployment_details, "w") as outfile:
         outfile.write(json_object)
+    logger.info("Saved deployment details in output json file.")
 
 
 # run script
 if __name__ == "__main__":
-    args = parse_args()
-
     # run main function
-    main(args)
+    main()

@@ -17,13 +17,18 @@ class ModelImportErrorStrings:
     LOG_SAFE_GENERIC_ERROR = "{pii_safe_message:log_safe}"
     LOG_UNSAFE_GENERIC_ERROR = "An error occurred: [{error}]"
     VALIDATION_ERROR = "Error while validating parameters [{error:log_safe}]"
-    INVALID_HUGGING_FACE_MODEL_ID = (
-        "Invalid Hugging face model id: {model_id}."
-        " Please ensure that you are using a correct and existing model ID."
+    NON_MSI_ATTACHED_COMPUTE_ERROR = (
+        "Kindly make sure that compute used by model_registration component"
+        "has MSI(Managed Service Identity) associated with it."
+        "Click here to know more -"
+        "https://learn.microsoft.com/en-us/azure/machine-learning/"
+        "how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli :{exception}"
     )
-    ERROR_FETCHING_HUGGING_FACE_MODEL_INFO = "Error in fetching model info for {model_id}. Error [{error}]"
-    BLOBSTORAGE_DOWNLOAD_ERROR = "Failed to download artifacts from {uri}. Error: [{error}]"
-    GIT_CLONE_ERROR = "Failed to clone {uri}. Error: [{error}]"
+    UNSUPPORTED_MODEL_TYPE_ERROR = "Unsupported model type : {model_type}"
+    MISSING_MODEL_NAME_ERROR = "Missing Model Name. Provide model_name as input or in the model_download_metadata JSON"
+    ENDPOINT_CREATION_ERROR = "Error occured while creating endpoint - {exception}"
+    DEPLOYMENT_CREATION_ERROR = "Error occured while creating deployment - {exception}"
+    ONLINE_ENDPOINT_INVOCATION_ERROR = "Invocation failed with error: {exception}"
 
 
 class ModelImportException(AzureMLException):
@@ -51,41 +56,53 @@ class ModelImportError(ClientError):
         return ModelImportErrorStrings.LOG_UNSAFE_GENERIC_ERROR
 
 
-class GITCloneError(ClientError):
+class NonMsiAttachedComputeError(ClientError):
     """Internal Import Model Generic Error."""
 
     @property
     def message_format(self) -> str:
         """Message format."""
-        return ModelImportErrorStrings.GIT_CLONE_ERROR
-
-
-class BlobStorageDownloadError(ClientError):
+        return ModelImportErrorStrings.NON_MSI_ATTACHED_COMPUTE_ERROR
+    
+class UnSupportedModelTypeError(ClientError):
     """Internal Import Model Generic Error."""
 
     @property
     def message_format(self) -> str:
         """Message format."""
-        return ModelImportErrorStrings.BLOBSTORAGE_DOWNLOAD_ERROR
+        return ModelImportErrorStrings.UNSUPPORTED_MODEL_TYPE_ERROR
 
-
-class InvalidHuggingfaceModelIDError(ClientError):
+class MissingModelNameError(ClientError):
     """Internal Import Model Generic Error."""
 
     @property
     def message_format(self) -> str:
         """Message format."""
-        return ModelImportErrorStrings.INVALID_HUGGING_FACE_MODEL_ID
+        return ModelImportErrorStrings.MISSING_MODEL_NAME_ERROR
 
-
-class HuggingFaceErrorInFetchingModelInfo(ClientError):
+class EndpointCreationError(ClientError):
     """Internal Import Model Generic Error."""
 
     @property
     def message_format(self) -> str:
         """Message format."""
-        return ModelImportErrorStrings.ERROR_FETCHING_HUGGING_FACE_MODEL_INFO
+        return ModelImportErrorStrings.ENDPOINT_CREATION_ERROR
 
+class DeploymentCreationError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.DEPLOYMENT_CREATION_ERROR
+
+class OnlineEndpointInvocationError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.ONLINE_ENDPOINT_INVOCATION_ERROR
 
 def swallow_all_exceptions(logger: logging.Logger):
     """Swallow all exceptions.

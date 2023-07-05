@@ -15,17 +15,23 @@ from azure.ai.ml.entities import Model
 from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.core import Run
+from azureml._common._error_definition import AzureMLError
+from azureml._common.exceptions import AzureMLException
 
 from log_utils.config import AppName
 from log_utils.logging_utils import custom_dimensions, get_logger
-from log_utils.exceptions import swallow_all_exceptions
+from log_utils.exceptions import (
+    swallow_all_exceptions, 
+    NonMsiAttachedComputeError, 
+    UnSupportedModelTypeError, 
+    MissingModelNameError
+)
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
 MLFLOW_MODEL_FOLDER = "mlflow_model_folder"
 
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.REGISTER_MODEL
-
 
 def parse_args():
     """Return arguments."""
@@ -100,7 +106,7 @@ def get_ml_client(registry_name):
         has_obo_succeeded = True
     except Exception as ex:
         # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
-        logger.info(f"Failed to get OBO credentials - {ex}")
+        logger.exception(f"Failed to get OBO credentials - {ex}")
 
     if not has_obo_succeeded:
         try:
@@ -108,7 +114,9 @@ def get_ml_client(registry_name):
             credential = ManagedIdentityCredential(client_id=msi_client_id)
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
-            raise (f"Failed to get MSI credentials : {ex}")
+            raise AzureMLException._with_error(
+                AzureMLError.create(NonMsiAttachedComputeError, exception=ex)
+            )
 
     if registry_name is None:
         run = Run.get_context(allow_offline=False)
@@ -129,7 +137,7 @@ def is_model_available(ml_client, model_name, model_version):
     try:
         ml_client.models.get(name=model_name, version=model_version)
     except Exception as e:
-        logger.info(f"Model with name - {model_name} and version - {model_version} is not available. Error: {e}")
+        logger.exception(f"Model with name - {model_name} and version - {model_version} is not available. Error: {e}")
         is_available = False
     return is_available
 
@@ -169,10 +177,14 @@ def main():
 
     # validations
     if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
-        raise Exception(f"Unsupported model type {model_type}")
+        raise AzureMLException._with_error(
+                AzureMLError.create(UnSupportedModelTypeError, model_type=model_type)
+            )
 
     if not model_name:
-        raise Exception("Missing Model Name. Provide model_name as input or in the model_download_metadata JSON")
+         raise AzureMLException._with_error(
+                AzureMLError.create(MissingModelNameError)
+            )
 
     # check if we can have lineage and update the model path for ws import
     if not registry_name and args.model_import_job_path:
@@ -201,7 +213,7 @@ def main():
                 max_version = (max(models_list, key=lambda x: int(x.version))).version
                 model_version = str(int(max_version) + 1)
         except Exception:
-            logger.info(f"Error in listing versions for model {model_name}. Trying to register model with version '1'")
+            logger.exception(f"Error in listing versions for model {model_name}. Trying to register model with version '1'")
 
 
     model = Model(
