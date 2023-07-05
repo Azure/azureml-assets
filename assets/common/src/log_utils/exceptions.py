@@ -36,6 +36,7 @@ class ModelImportException(AzureMLException):
 
     def __init__(self, exception_message, **kwargs):
         """Initialize a new instance of LLMException.
+
         :param exception_message: A message describing the error
         :type exception_message: str
         """
@@ -112,6 +113,7 @@ class OnlineEndpointInvocationError(ClientError):
 
 def swallow_all_exceptions(logger: logging.Logger):
     """Swallow all exceptions.
+
     1. Catch all the exceptions arising in the functions wherever used
     2. Raise the exception as an AzureML Exception so that it does not get scrubbed by PII scrubber
     :param logger: The logger to be used for logging the exception raised
