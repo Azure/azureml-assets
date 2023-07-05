@@ -74,7 +74,8 @@ def create_acr_task(image_name: str,
                         "dpkg -i trivy.deb && "
                         f"aquasec/trivy image --scanners vuln --ignore-unfixed $Registry/{image_name}"
                     ),
-                'ignoreErrors': True
+                'ignoreErrors': True,
+                'privileged': True
             })
 
     # Add push step if requested
