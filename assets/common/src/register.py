@@ -21,9 +21,9 @@ from azureml._common.exceptions import AzureMLException
 from log_utils.config import AppName
 from log_utils.logging_utils import custom_dimensions, get_logger
 from log_utils.exceptions import (
-    swallow_all_exceptions, 
-    NonMsiAttachedComputeError, 
-    UnSupportedModelTypeError, 
+    swallow_all_exceptions,
+    NonMsiAttachedComputeError,
+    UnSupportedModelTypeError,
     MissingModelNameError
 )
 
@@ -32,6 +32,7 @@ MLFLOW_MODEL_FOLDER = "mlflow_model_folder"
 
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.REGISTER_MODEL
+
 
 def parse_args():
     """Return arguments."""
@@ -141,6 +142,7 @@ def is_model_available(ml_client, model_name, model_version):
         is_available = False
     return is_available
 
+
 @swallow_all_exceptions(logger)
 def main():
     """Run main function."""
@@ -153,7 +155,6 @@ def main():
     registration_details = args.registration_details
     model_version = args.model_version
     tags, properties, flavors = {}, {}, {}
-
 
     ml_client = get_ml_client(registry_name)
 
@@ -182,9 +183,9 @@ def main():
             )
 
     if not model_name:
-         raise AzureMLException._with_error(
-                AzureMLError.create(MissingModelNameError)
-            )
+        raise AzureMLException._with_error(
+            AzureMLError.create(MissingModelNameError)
+        )
 
     # check if we can have lineage and update the model path for ws import
     if not registry_name and args.model_import_job_path:
@@ -213,8 +214,11 @@ def main():
                 max_version = (max(models_list, key=lambda x: int(x.version))).version
                 model_version = str(int(max_version) + 1)
         except Exception:
-            logger.exception(f"Error in listing versions for model {model_name}. Trying to register model with version '1'")
-
+            exception_msg = (
+                f"Error in listing versions for model {model_name}."
+                "Trying to register model with version '1'"
+            )
+            logger.exception(exception_msg)
 
     model = Model(
         name=model_name,

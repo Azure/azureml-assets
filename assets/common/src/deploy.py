@@ -25,8 +25,8 @@ from pathlib import Path
 from log_utils.config import AppName
 from log_utils.logging_utils import custom_dimensions, get_logger
 from log_utils.exceptions import (
-    swallow_all_exceptions, 
-    NonMsiAttachedComputeError, 
+    swallow_all_exceptions,
+    NonMsiAttachedComputeError,
     OnlineEndpointInvocationError,
     EndpointCreationError,
     DeploymentCreationError
@@ -37,6 +37,7 @@ MAX_INSTANCE_COUNT = 20
 
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.DEPLOY_MODEL
+
 
 def parse_args():
     """Return arguments."""
@@ -215,7 +216,6 @@ def get_ml_client():
     return ml_client
 
 
-
 def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
     """Create endpoint and deployment and return details."""
     endpoint = ManagedOnlineEndpoint(name=endpoint_name, auth_mode="key")
@@ -274,9 +274,10 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
     except Exception as e:
         error_msg = f"Error occured while updating endpoint traffic - {e}"
         raise Exception(error_msg)
-    
+
     logger.info(f"Endpoint updated to take 100% traffic for deployment {deployment_name}")
     return endpoint, deployment
+
 
 @swallow_all_exceptions(logger)
 def main():

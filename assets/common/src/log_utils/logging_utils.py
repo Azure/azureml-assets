@@ -176,6 +176,7 @@ class CustomDimensions:
         assert isinstance(properties, dict)
         self.__dict__.update(properties)
 
+
 class ModelImportHandler(logging.StreamHandler):
     """Model Import handler for stream handling."""
 

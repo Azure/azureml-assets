@@ -12,6 +12,7 @@ class AppName:
     DEPLOY_MODEL = "deploy_model"
     MLFLOW_MODEL_LOCAL_VALIDATION = "mlflow_model_local_validation"
 
+
 class LoggerConfig:
     """Logger Config."""
 

@@ -63,7 +63,8 @@ class NonMsiAttachedComputeError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.NON_MSI_ATTACHED_COMPUTE_ERROR
-    
+
+
 class UnSupportedModelTypeError(ClientError):
     """Internal Import Model Generic Error."""
 
@@ -71,6 +72,7 @@ class UnSupportedModelTypeError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.UNSUPPORTED_MODEL_TYPE_ERROR
+
 
 class MissingModelNameError(ClientError):
     """Internal Import Model Generic Error."""
@@ -80,6 +82,7 @@ class MissingModelNameError(ClientError):
         """Message format."""
         return ModelImportErrorStrings.MISSING_MODEL_NAME_ERROR
 
+
 class EndpointCreationError(ClientError):
     """Internal Import Model Generic Error."""
 
@@ -87,6 +90,7 @@ class EndpointCreationError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.ENDPOINT_CREATION_ERROR
+
 
 class DeploymentCreationError(ClientError):
     """Internal Import Model Generic Error."""
@@ -96,6 +100,7 @@ class DeploymentCreationError(ClientError):
         """Message format."""
         return ModelImportErrorStrings.DEPLOYMENT_CREATION_ERROR
 
+
 class OnlineEndpointInvocationError(ClientError):
     """Internal Import Model Generic Error."""
 
@@ -103,6 +108,7 @@ class OnlineEndpointInvocationError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.ONLINE_ENDPOINT_INVOCATION_ERROR
+
 
 def swallow_all_exceptions(logger: logging.Logger):
     """Swallow all exceptions.
