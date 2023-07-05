@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: huggingface/salesforce-xgen-7b-4k-base/7dde7ac/mlflow_model_folder
+  container_path: huggingface/salesforce-xgen-7b-4k-base/9936980/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

@@ -17,15 +17,6 @@ Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
 
 
-### Model Performance
-
-SKU Name| Avg. Requests Per Second | Avg. Latency(s) 
-|--|--|--|
-Standard_E16s_v3 | 0.03 | 50.34
-Standard_F32s_v2 | 0.03 | 59.1
-Standard_NC24s_v3 | 1.08 | 34.9
-
-
 ### Sample inputs and outputs (for real-time inference)
 
 ```json
