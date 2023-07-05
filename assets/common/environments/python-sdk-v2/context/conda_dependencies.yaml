@@ -10,3 +10,5 @@ dependencies:
     - azure-identity=={{latest-pypi-version}}
     - azureml-core=={{latest-pypi-version}}
     - applicationinsights=={{latest-pypi-version}}
+    - azureml-automl-core=={{latest-pypi-version}}
+    - azureml-telemetry=={{latest-pypi-version}}

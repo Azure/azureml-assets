@@ -11,7 +11,7 @@ description: Validates if a MLFLow model can be loaded on a compute and is usabl
 
 environment: azureml://registries/azureml/environments/python-sdk-v2/versions/4
 
-code: ../../src/mlflow_model_local_validation/
+code: ../../src
 command: |
   set -ex
   export ENV_PREFIX="/opt/conda/envs/inferencing"
