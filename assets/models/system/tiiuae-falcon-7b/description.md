@@ -14,13 +14,6 @@ Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
 
-### Model Evaluation
-
-Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
-|--|--|--|--|--|
-Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
-
-
 ### Sample inputs and outputs (for real-time inference)
 
 ```json
