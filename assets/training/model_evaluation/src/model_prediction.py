@@ -257,13 +257,9 @@ def test_model():
     parser.add_argument("--data-mltable", type=str, dest="data_mltable", required=False, default="")
     parser.add_argument("--label-column-name", type=str, dest="label_column_name", required=False, default=None)
     parser.add_argument("--predictions", type=str, dest="predictions")
-    # parser.add_argument("--predictions-mltable", type=str, dest="predictions_mltable")
     parser.add_argument("--prediction-probabilities", type=str, required=False,
                         default=None, dest="prediction_probabilities")
-    # parser.add_argument("--prediction-probabilities-mltable", type=str, required=False,
-    #                    default=None, dest="prediction_probabilities_mltable")
     parser.add_argument("--ground-truth", type=str, required=False, default=None, dest="ground_truth")
-    # parser.add_argument("--ground-truth-mltable", type=str, required=False, default=None, dest="ground_truth_mltable")
     parser.add_argument("--device", type=str, required=False, default="auto", dest="device")
     parser.add_argument("--batch-size", type=int, required=False, default=None, dest="batch_size")
     parser.add_argument("--input-column-names",
@@ -336,28 +332,10 @@ def test_model():
             raise exception
 
         preds.to_json(args.predictions, orient="records", lines=True)
-
-        # preds_file_name = args.predictions.split(os.sep)[-1]
-        # preds_mltable_file_path = args.predictions_mltable + os.sep + preds_file_name
-        # preds.to_json(preds_mltable_file_path, orient="records", lines=True)
-        # preds_mltable = mltable.from_json_lines_files(paths=[{'file': preds_mltable_file_path}])
-        # preds_mltable.save(args.predictions_mltable)
         if pred_probas is not None:
             pred_probas.to_json(args.prediction_probabilities, orient="records", lines=True)
-
-            # pred_probas_file_name = args.prediction_probabilities.split(os.sep)[-1]
-            # pred_probas_mltable_file_path = args.prediction_probabilities_mltable + os.sep + pred_probas_file_name
-            # pred_probas.to_json(pred_probas_mltable_file_path, orient="records", lines=True)
-            # pred_probas_mltable = mltable.from_json_lines_files(paths=[{'file': pred_probas_mltable_file_path}])
-            # pred_probas_mltable.save(args.prediction_probabilities_mltable)
         if ground_truth is not None:
             ground_truth.to_json(args.ground_truth, orient="records", lines=True)
-
-            # ground_truth_file_name = args.ground_truth.split(os.sep)[-1]
-            # ground_truth_mltable_file_path = args.ground_truth_mltable + os.sep + ground_truth_file_name
-            # ground_truth.to_json(ground_truth_mltable_file_path, orient="records", lines=True)
-            # ground_truth_mltable = mltable.from_json_lines_files(paths=[{'file': ground_truth_mltable_file_path}])
-            # ground_truth_mltable.save(args.ground_truth_mltable)
     try:
         root_run.add_properties(properties=constants.ROOT_RUN_PROPERTIES)
     except Exception:
