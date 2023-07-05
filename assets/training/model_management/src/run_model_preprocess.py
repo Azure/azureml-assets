@@ -141,7 +141,7 @@ def run():
     preprocess_args[HF_CONF.HF_CONFIG_CLASS.value] = hf_config_class
     preprocess_args[HF_CONF.HF_PRETRAINED_CLASS.value] = hf_model_class
     preprocess_args[HF_CONF.HF_TOKENIZER_CLASS.value] = hf_tokenizer_class
-    preprocess_args[HF_CONF.HF_USE_EXPERIMENTAL_FEATURES .value] = hf_use_experimental_features
+    preprocess_args[HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value] = hf_use_experimental_features
 
     # update custom dimensions with input parameters
     custom_dimensions.update_custom_dimensions(preprocess_args)

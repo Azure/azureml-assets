@@ -81,7 +81,7 @@ class HFMLFLowConvertor(ABC):
         self._temp_dir = temp_dir
         self._model_id = translate_params["model_id"]
         self._task = translate_params["task"]
-        self._experimental = translate_params.get(HF_CONF.HF_USE_EXPERIMENTAL_FEATURES, False)
+        self._experimental = translate_params.get(HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value, False)
         self._misc = translate_params.get("misc", [])
         self._signatures = translate_params.get("signature", None)
         self._config_cls_name = translate_params.get(HF_CONF.HF_CONFIG_CLASS.value, None)
