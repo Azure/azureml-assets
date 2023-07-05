@@ -16,7 +16,6 @@ from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_ml
 from shared_utilities import constants
 
 from responsibleai import RAIInsights
-from raiutils.models import ModelTask
 from ml_wrappers.model.predictions_wrapper import (
     PredictionsModelWrapperClassification,
     PredictionsModelWrapperRegression)
@@ -38,8 +37,9 @@ logging.basicConfig(level=logging.INFO)
 # Activates printing of local importances to MLTable *instead* of global importances
 # Will break feature attribution drift component if activated
 # Once sample tables are implemented, this variable should be determined in the spec.yaml
-# for FAD and the code should be modified to write to samples table 
+# for FAD and the code should be modified to write to samples table
 local_importances = False
+
 
 def parse_args():
     """Parse arguments."""
@@ -170,6 +170,7 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
 
     return globalExplanationData.precomputedExplanations.globalFeatureImportance['scores']
 
+
 def compute_local_explanations(model_wrapper, data, categorical_features, target_column, task_type):
     """Compute local explanations (feature importances) for a given dataset.
 
@@ -203,6 +204,7 @@ def compute_local_explanations(model_wrapper, data, categorical_features, target
 
     return explanations
 
+
 def compute_feature_importance(task_type, target_column, baseline_data, categorical_features):
     """Compute feature importance of baseline data.
 
@@ -226,6 +228,7 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
 
     return baseline_explanations
 
+
 def compute_local_feature_importance(task_type, target_column, baseline_data, categorical_features):
     """Compute local feature importance of baseline data.
 
@@ -248,6 +251,7 @@ def compute_local_feature_importance(task_type, target_column, baseline_data, ca
     _logger.info("Successfully computed local explanations for dataset")
 
     return baseline_explanations
+
 
 def write_to_mltable(explanations, dataset, file_path, categorical_features):
     """Write feature importance values to mltable.
@@ -283,6 +287,7 @@ def write_to_mltable(explanations, dataset, file_path, categorical_features):
     spark_data = convert_pandas_to_spark(metrics_data)
     save_spark_df_as_mltable(spark_data, file_path)
 
+
 def write_to_mltable_local(explanations, file_path, feature_names, task_type):
     """Write feature importance values to mltable.
 
@@ -306,7 +311,7 @@ def write_to_mltable_local(explanations, file_path, feature_names, task_type):
     # Populate importances
     for index in range(len(explanations)):
         new_row = {}
-        # TODO: CorrelationId is currently just index of row in input data, should be updated 
+        # TODO: CorrelationId is currently just index of row in input data, should be updated
         # to reflect actually CorrelationId for the row
         new_row[constants.CORRELATION_ID] = index
 
@@ -327,7 +332,6 @@ def write_to_mltable_local(explanations, file_path, feature_names, task_type):
 
     spark_data = convert_pandas_to_spark(metrics_data)
     save_spark_df_as_mltable(spark_data, file_path)
-    
 
 
 def write_empty_signal_metrics_dataframe():
@@ -364,13 +368,13 @@ def run(args):
 
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
         feature_names = get_feature_names(baseline_df, args.target_column)
-        
+
         if local_importances:
             feature_importances_local = compute_local_feature_importance(
                 task_type, args.target_column, baseline_df, categorical_features
             )
             write_to_mltable_local(feature_importances_local, args.signal_metrics, feature_names, task_type)
-    
+
         else:
             feature_importances = compute_feature_importance(
                 task_type, args.target_column, baseline_df, categorical_features)

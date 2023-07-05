@@ -51,6 +51,7 @@ def compute_categorical_features(baseline_data, target_column):
     _logger.info("Successfully categorized columns")
     return categorical_features
 
+
 def get_feature_names(baseline_data, target_column):
     """Get the list of feature names
 
