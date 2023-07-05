@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: tiiuae-falcon-7b
+path: ./
+properties:
+  SHA: 2f5c3cd4eace6be6c0f12981f377fb35e5bf6ee5
+  datasets: tiiuae/falcon-refinedweb
+  languages: en
+tags:
+  Featured: ''
+  Preview: ''
+  license: apache-2.0
+  task: text-generation
+version: 1
