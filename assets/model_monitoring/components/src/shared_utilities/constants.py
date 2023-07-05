@@ -58,3 +58,6 @@ REGRESSION = 'regression'
 FEATURE_COLUMN = 'feature'
 ROW_COUNT_COLUMN_NAME = 'RowCount'
 THRESHOLD_VALUE = 'threshold_value'
+
+CORRELATION_ID = 'correlation_id'
+CLASS = 'class_index'

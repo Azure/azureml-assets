@@ -50,3 +50,22 @@ def compute_categorical_features(baseline_data, target_column):
                     categorical_features.append(baseline_column.name)
     _logger.info("Successfully categorized columns")
     return categorical_features
+
+def get_feature_names(baseline_data, target_column):
+    """Get the list of feature names
+
+    :param baseline_data: The baseline data meaning the data used to create the
+    model monitor
+    :type baseline_data: pandas.DataFrame
+    :param target_column: the column to predict
+    :type target_column: string
+    :return: feature names
+    :rtype: list[string]
+    """
+
+    feature_names = []
+    for column in baseline_data.columns:
+        baseline_column = pd.Series(baseline_data[column])
+        if baseline_column.name != target_column:
+            feature_names.append(baseline_column.name)
+    return feature_names
