@@ -72,7 +72,7 @@ def create_acr_task(image_name: str,
                         f"$Registry/{image_name} "
                         f"curl -sSfL -o trivy.deb {trivy_url} && "
                         "dpkg -i trivy.deb && "
-                        "trivy fs --ignore-unfixed --scanners vuln /"
+                        f"trivy image --ignore-unfixed --scannerd vuln $Registry/{image_name}"
                     ),
                 'ignoreErrors': True
             })
