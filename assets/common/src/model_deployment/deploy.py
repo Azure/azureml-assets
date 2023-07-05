@@ -168,20 +168,33 @@ def parse_args():
 
 
 def get_ml_client():
-    """Return ML client."""
-    credential = AzureMLOnBehalfOfCredential()
+    """Return ML Client."""
+    has_obo_succeeded = False
     try:
+        credential = AzureMLOnBehalfOfCredential()
         # Check if given credential can get token successfully.
         credential.get_token("https://management.azure.com/.default")
+        has_obo_succeeded = True
     except Exception as ex:
-        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential not work
-        print(f"Failed to get obo credentials - {ex}")
-        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-        credential = ManagedIdentityCredential(client_id=msi_client_id)
-    try:
-        credential.get_token("https://management.azure.com/.default")
-    except Exception as ex:
-        raise (f"Failed to get credentials : {ex}")
+        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
+        print(f"Failed to get OBO credentials - {ex}")
+
+    if not has_obo_succeeded:
+        try:
+            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+            credential = ManagedIdentityCredential(client_id=msi_client_id)
+            credential.get_token("https://management.azure.com/.default")
+        except Exception as ex:
+            print(f"Failed to get MSI credentials : {ex}")
+            error_msg = (
+                "Kindly make sure that compute used by model_deployment component"
+                "has MSI(Managed Service Identity) associated with it."
+                "Click here to know more -"
+                "https://learn.microsoft.com/en-us/azure/machine-learning/"
+                f"how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli :{ex}"
+                )
+            raise Exception(error_msg)
+
     run = Run.get_context(allow_offline=False)
     ws = run.experiment.workspace
 
