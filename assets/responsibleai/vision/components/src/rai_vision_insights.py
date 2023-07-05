@@ -12,6 +12,7 @@ import mltable
 import pandas as pd
 
 import mlflow
+from ml_wrappers.common.constants import Device
 from azureml.core import Run
 from raiutils.data_processing import serialize_json_safe
 
@@ -141,11 +142,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--data_folder", type=str, help="which transform folder for OD",
-        required=False
-    )
-
-    parser.add_argument(
         "--model_input", type=str, help="model local path on remote",
         required=True
     )
@@ -226,6 +222,18 @@ def parse_args():
             ),
         type=float, required=False,
     )
+
+    parser.add_argument("--image_width_in_inches", type=float,
+                        required=False, help="Image width in inches")
+
+    parser.add_argument("--max_evals", type=int, required=False,
+                        help="Maximum number of evaluations for shap")
+
+    parser.add_argument("--num_masks", type=int, required=False,
+                        help="Number of masks for DRISE")
+
+    parser.add_argument("--mask_res", type=int, required=False,
+                        help="Mask resolution for DRISE")
 
     # Outputs
     parser.add_argument("--dashboard", type=str, required=True)
@@ -382,6 +390,11 @@ def main(args):
     else:
         target_column = args.target_column_name
 
+    image_width_in_inches = args.image_width_in_inches
+    max_evals = args.max_evals
+    num_masks = args.num_masks
+    mask_res = args.mask_res
+
     feature_metadata = FeatureMetadata()
     feature_metadata.categorical_features = get_from_args(
         args=args,
@@ -423,7 +436,12 @@ def main(args):
         serializer=model_serializer,
         test_data_path=test_data_path,
         image_downloader=image_downloader,
-        feature_metadata=feature_metadata
+        feature_metadata=feature_metadata,
+        image_width=image_width_in_inches,
+        max_evals=max_evals,
+        num_masks=num_masks,
+        mask_res=mask_res,
+        device=Device.CPU.value
     )
 
     included_tools: Dict[str, bool] = {
