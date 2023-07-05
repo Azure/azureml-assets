@@ -29,6 +29,13 @@ class ModelImportErrorStrings:
     ENDPOINT_CREATION_ERROR = "Error occured while creating endpoint - {exception}"
     DEPLOYMENT_CREATION_ERROR = "Error occured while creating deployment - {exception}"
     ONLINE_ENDPOINT_INVOCATION_ERROR = "Invocation failed with error: {exception}"
+    USER_IDENTITY_MISSING_ERROR = (
+        "Failing to get AzureMLOnBehalfOfCredential - {exception}" 
+        "https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/ \n"
+        "Kindly set UserIdentity as identity type if submitting job using sdk or cli. Please take reference from given links :\n"
+        "sdk - https://aka.ms/azureml-import-model \n"
+        "cli - https://aka.ms/obo-cli-sample"
+    )
 
 
 class ModelImportException(AzureMLException):
@@ -110,7 +117,14 @@ class OnlineEndpointInvocationError(ClientError):
         """Message format."""
         return ModelImportErrorStrings.ONLINE_ENDPOINT_INVOCATION_ERROR
 
+class UserIdentityMissingError(ClientError):
+    """Internal Import Model Generic Error."""
 
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.USER_IDENTITY_MISSING_ERROR
+    
 def swallow_all_exceptions(logger: logging.Logger):
     """Swallow all exceptions.
 
