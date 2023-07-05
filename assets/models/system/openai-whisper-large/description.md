@@ -16,8 +16,8 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-asr" target="_blank">asr-
 ```json
 {
     "inputs": {
-        "audio": ["https://audiovisionfiles.blob.core.windows.net/audio/audio.m4a", "https://audiovisionfiles.blob.core.windows.net/audio/audio.m4a"],
-        "language": ["en", "fr"]
+        "audio": ["https://huggingface.co/datasets/Narsil/asr_dummy/resolve/main/1.flac", "https://huggingface.co/datasets/Narsil/asr_dummy/resolve/main/2.flac"],
+        "language": ["en", "en"]
     }
 }
 ```
@@ -26,10 +26,10 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-asr" target="_blank">asr-
 ```json
 [
     {
-        "text": "This is a bright day."
+        "text": "He hoped there would be stew for dinner, turnips and carrots and bruised potatoes and fat mutton pieces to be ladled out in thick, peppered flour-fattened sauce."
     },
     {
-        "text": "This is a bright day."
+        "text": "Stuff it into you. His belly counseled him."
     }
 ]
 ```
