@@ -12,6 +12,7 @@ description:
 environment: azureml://registries/azureml/environments/python-sdk-v2/versions/5
 
 code: ../../src
+command: >-
   python deploy.py
   $[[--registration_details ${{inputs.registration_details}}]]
   $[[--model_id ${{inputs.model_id}}]]
