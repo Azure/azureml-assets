@@ -53,7 +53,7 @@ def compute_categorical_features(baseline_data, target_column):
 
 
 def get_feature_names(baseline_data, target_column):
-    """Get the list of feature names
+    """Get the list of feature names.
 
     :param baseline_data: The baseline data meaning the data used to create the
     model monitor
@@ -63,7 +63,6 @@ def get_feature_names(baseline_data, target_column):
     :return: feature names
     :rtype: list[string]
     """
-
     feature_names = []
     for column in baseline_data.columns:
         baseline_column = pd.Series(baseline_data[column])
