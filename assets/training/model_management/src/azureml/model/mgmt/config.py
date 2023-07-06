@@ -31,3 +31,24 @@ class PathType(_CustomEnum):
 
     AZUREBLOB = "AzureBlob"  # Model files hosted on an AZUREBLOB blobstore with public read access.
     GIT = "GIT"  # Model hosted on a public GIT repo that can be cloned by GIT LFS.
+
+
+class AppName:
+    """Component AppName."""
+
+    IMPORT_MODEL = "import_model"
+    DOWNLOAD_MODEL = "download_model"
+    CONVERT_MODEL_TO_MLFLOW = "convert_model_to_mlflow"
+
+
+class LoggerConfig:
+    """Logger Config."""
+
+    CODEC = "base64"
+    INSTRUMENTATION_KEY = b"NzFiOTU0YTgtNmI3ZC00M2Y1LTk4NmMtM2QzYTY2MDVkODAz"
+    MODEL_IMPORT_HANDLER_NAME = "ModelImportHandler"
+    APPINSIGHT_HANDLER_NAME = "AppInsightsHandler"
+    LOGGER_NAME = "FM_IMPORT_MODEL"
+    VERBOSITY_LEVEL = "DEBUG"
+    OFFLINE_RUN_MESSAGE = "OFFLINE_RUN"
+    IMPORT_MODEL_VERSION = "0.0.7"  # Update when changing version in spec file.

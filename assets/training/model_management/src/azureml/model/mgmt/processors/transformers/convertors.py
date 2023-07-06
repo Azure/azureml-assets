@@ -23,6 +23,7 @@ from azureml.model.mgmt.utils.common_utils import (
     get_dict_from_comma_separated_str,
     get_list_from_comma_separated_str,
 )
+from azureml.model.mgmt.utils.logging_utils import get_logger
 from diffusers import StableDiffusionPipeline
 from mlflow.models import ModelSignature
 from mlflow.types.schema import ColSpec
@@ -45,6 +46,9 @@ from transformers import (
     WhisperProcessor,
 )
 from typing import Any, Dict
+
+
+logger = get_logger(__name__)
 
 
 class HFMLFLowConvertor(ABC):
@@ -77,6 +81,7 @@ class HFMLFLowConvertor(ABC):
         self._temp_dir = temp_dir
         self._model_id = translate_params["model_id"]
         self._task = translate_params["task"]
+        self._experimental = translate_params.get(HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value, False)
         self._misc = translate_params.get("misc", [])
         self._signatures = translate_params.get("signature", None)
         self._config_cls_name = translate_params.get(HF_CONF.HF_CONFIG_CLASS.value, None)
@@ -141,7 +146,7 @@ class HFMLFLowConvertor(ABC):
         try:
             return getattr(transformers, class_name)
         except Exception as e:
-            print(f"Error in loading class {e}")
+            logger.error(f"Error in loading class {e}")
             return None
 
     def _save(
@@ -167,7 +172,10 @@ class HFMLFLowConvertor(ABC):
             config = str(tmp_config_dir)
             tokenizer = str(tmp_tokenizer_dir)
 
-        self._signatures = self._signatures or self.get_model_signature()
+        # Set experimental flag
+        if self._experimental:
+            logger.info("Experimental features enabled for MLflow conversion")
+            self._hf_conf["exp"] = True
 
         hf_mlflow.hftransformers.save_model(
             config=config,
@@ -212,6 +220,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         self._hf_model_cls = self._hf_model_cls if self._hf_model_cls else AutoModelForImageClassification
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else AutoConfig
         self._hf_tokenizer_cls = self._hf_tokenizer_cls if self._hf_tokenizer_cls else AutoImageProcessor
+        self._signatures = self._signatures or self.get_model_signature()
 
         hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_config_cls.__name__
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = self._hf_model_cls.__name__

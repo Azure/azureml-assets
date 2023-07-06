@@ -12,12 +12,16 @@ from azureml.model.mgmt.processors.transformers.config import (
     SupportedTextToImageModelFamily,
     SupportedVisionTasks,
 )
+from azureml.model.mgmt.utils.logging_utils import get_logger
 from .convertors import (
     NLPMLflowConvertor,
     VisionMLflowConvertor,
     WhisperMLflowConvertor,
     StableDiffusionMlflowConvertor,
 )
+
+
+logger = get_logger(__name__)
 
 
 def get_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):

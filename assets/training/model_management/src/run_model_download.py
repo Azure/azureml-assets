@@ -5,8 +5,14 @@
 
 import argparse
 import json
+from azureml.model.mgmt.config import AppName
 from azureml.model.mgmt.downloader import download_model, ModelSource
-from azureml.model.mgmt.utils.common_utils import init_tc, tc_log, check_model_id
+from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
+from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
+
+
+logger = get_logger(__name__)
+custom_dimensions.app_name = AppName.DOWNLOAD_MODEL
 
 
 def _get_parser():
@@ -18,29 +24,24 @@ def _get_parser():
     return parser
 
 
-if __name__ == "__main__":
+@swallow_all_exceptions(logger)
+def run():
+    """Run model download."""
     parser = _get_parser()
     args, unknown_args_ = parser.parse_known_args()
-    init_tc()
+
     model_source = args.model_source
     model_id = args.model_id
     model_download_metadata_path = args.model_download_metadata
     model_output_dir = args.model_output_dir
 
-    tc_log("Print args")
-
     if not ModelSource.has_value(model_source):
-        tc_log("Unsupported model source")
         raise Exception(f"Unsupported model source {model_source}")
 
-    if model_source == ModelSource.HUGGING_FACE and not check_model_id(model_id):
-        tc_log("Model id is not valid")
-        raise Exception(f"Model id {model_id} is not valid")
+    logger.info(f"Model source: {model_source}")
+    logger.info(f"Model id: {model_id}")
 
-    tc_log(f"Model source: {model_source}")
-    tc_log(f"Model id: {model_id}")
-
-    tc_log("Downloading model ...")
+    logger.info("Downloading model")
     model_download_details = download_model(
         model_source=model_source, model_id=model_id, download_dir=model_output_dir
     )
@@ -48,4 +49,8 @@ if __name__ == "__main__":
     with open(model_download_metadata_path, "w") as f:
         json.dump(model_download_details, f)
 
-    tc_log("Successfully persisted model info ")
+    logger.info("Download completed.")
+
+
+if __name__ == "__main__":
+    run()

@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: deploy_model
-version: 0.0.2
+version: 0.0.3
 type: command
 
 is_deterministic: True
@@ -9,12 +9,13 @@ display_name: Deploy model
 description:
   Deploy a model to a workspace. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
 
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/4
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/5
 
-code: ../../src/model_deployment
+code: ../../src
 command: >-
   python deploy.py
-  --registration_details ${{inputs.registration_details}}
+  $[[--registration_details ${{inputs.registration_details}}]]
+  $[[--model_id ${{inputs.model_id}}]]
   $[[--inference_payload ${{inputs.inference_payload}}]]
   $[[--endpoint_name ${{inputs.endpoint_name}}]]
   $[[--deployment_name ${{inputs.deployment_name}}]]
@@ -39,8 +40,16 @@ inputs:
   # Output of registering component
   registration_details:
     type: uri_file
-    optional: false
+    optional: true
     description: Json file that contains the ID of registered model to be deployed
+
+  model_id:
+    type: string
+    optional: true 
+    description: |
+      Asset ID of the model registered in workspace/registry.
+      Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version>
+      Workspace - azureml:<model-name>:<version>
 
   inference_payload:
     type: uri_file

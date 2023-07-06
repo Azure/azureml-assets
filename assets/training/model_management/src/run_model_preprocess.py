@@ -7,14 +7,19 @@ import argparse
 import os
 import json
 import shutil
-from azureml.model.mgmt.config import ModelFlavor
+from azureml.model.mgmt.config import AppName, ModelFlavor
 from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
-from azureml.model.mgmt.utils.common_utils import init_tc, tc_log
+from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
+from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+
+logger = get_logger(__name__)
+custom_dimensions.app_name = AppName.CONVERT_MODEL_TO_MLFLOW
 
 
 def _get_parser():
@@ -28,6 +33,14 @@ def _get_parser():
     parser.add_argument("--hf-config-class", type=str, required=False, help="Hugging Face config class")
     parser.add_argument("--hf-model-class", type=str, required=False, help="Hugging Face model class ")
     parser.add_argument("--hf-tokenizer-class", type=str, required=False, help="Hugging tokenizer class")
+    parser.add_argument(
+        "--hf-use-experimental-features",
+        type=bool,
+        required=False,
+        default=False,
+        help="Enable experimental features for hugging face MLflow model conversion"
+    )
+
     parser.add_argument(
         "--extra-pip-requirements",
         type=str,
@@ -66,31 +79,27 @@ def _get_parser():
 
 def _validate_transformers_args(args):
     if not args.get("model_id"):
-        tc_log("model_id is a required parameter for hftransformers mlflow flavor.")
-        raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
+        raise Exception("model_id is a required parameter for hftransformers MLflow flavor.")
     if not args.get("task"):
-        tc_log("task is a required parameter for hftransformers mlflow flavor.")
-        raise Exception("task is a required parameter for hftransformers mlflow flavor.")
+        raise Exception("task is a required parameter for hftransformers MLflow flavor.")
     task = args["task"]
     if not SupportedTasks.has_value(task):
-        tc_log(f"Unsupported task {task} for hftransformers mlflow flavor.")
-        raise Exception(f"Unsupported task {task} for hftransformers mlflow flavor.")
+        raise Exception(f"Unsupported task {task} for hftransformers MLflow flavor.")
 
 
 def _validate_pyfunc_args(pyfunc_args):
     if not pyfunc_args.get("task"):
-        tc_log("task is a required parameter for pyfunc flavor.")
         raise Exception("task is a required parameter for pyfunc flavor.")
     task = pyfunc_args["task"]
     if not Tasks.has_value(task):
-        tc_log(f"Unsupported task {task} for pyfunc flavor.")
         raise Exception(f"Unsupported task {task} for pyfunc flavor.")
 
 
-if __name__ == "__main__":
+@swallow_all_exceptions(logger)
+def run():
+    """Run preprocess."""
     parser = _get_parser()
     args, _ = parser.parse_known_args()
-    init_tc()
 
     model_id = args.model_id
     task_name = args.task_name
@@ -102,6 +111,7 @@ if __name__ == "__main__":
     hf_config_class = args.hf_config_class
     hf_model_class = args.hf_model_class
     hf_tokenizer_class = args.hf_tokenizer_class
+    hf_use_experimental_features = args.hf_use_experimental_features
     extra_pip_requirements = args.extra_pip_requirements
 
     model_download_metadata_path = args.model_download_metadata
@@ -111,8 +121,7 @@ if __name__ == "__main__":
     license_file_path = args.license_file_path
 
     if not ModelFlavor.has_value(mlflow_flavor):
-        tc_log(f"Unsupported model flavor {mlflow_flavor}")
-        raise Exception("Unsupported model flavor")
+        raise Exception(f"Unsupported model flavor {mlflow_flavor}")
 
     preprocess_args = {}
     if model_download_metadata_path:
@@ -132,19 +141,18 @@ if __name__ == "__main__":
     preprocess_args[HF_CONF.HF_CONFIG_CLASS.value] = hf_config_class
     preprocess_args[HF_CONF.HF_PRETRAINED_CLASS.value] = hf_model_class
     preprocess_args[HF_CONF.HF_TOKENIZER_CLASS.value] = hf_tokenizer_class
+    preprocess_args[HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value] = hf_use_experimental_features
 
-    tc_log(f"Preprocess args : {preprocess_args}")
+    # update custom dimensions with input parameters
+    custom_dimensions.update_custom_dimensions(preprocess_args)
+
+    logger.info(f"Preprocess args : {preprocess_args}")
 
     # TODO: move validations to respective convertors
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
         _validate_transformers_args(preprocess_args)
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         _validate_pyfunc_args(preprocess_args)
-
-    tc_log("Print args")
-    tc_log(f"model_id: {model_id}")
-    tc_log(f"task_name: {task_name}")
-    tc_log(f"mlflow_flavor: {mlflow_flavor}")
 
     with TemporaryDirectory(dir=mlflow_model_output_dir) as working_dir, TemporaryDirectory(
         dir=mlflow_model_output_dir
@@ -156,7 +164,7 @@ if __name__ == "__main__":
     if license_file_path:
         shutil.copy(license_file_path, mlflow_model_output_dir)
 
-    tc_log(f"listing output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
+    logger.info(f"listing output directory files: {mlflow_model_output_dir}:\n{os.listdir(mlflow_model_output_dir)}")
 
     # Add job path
     this_job = os.environ["MLFLOW_RUN_ID"]
@@ -165,4 +173,8 @@ if __name__ == "__main__":
     json_object = json.dumps(model_path_dict, indent=4)
     with open(model_import_job_path, "w") as outfile:
         outfile.write(json_object)
-    tc_log("Finished writing job path")
+    logger.info("Finished writing job path")
+
+
+if __name__ == "__main__":
+    run()

@@ -19,7 +19,7 @@ def _download_and_register_image_data(mlclient: MLClient, download_url: str, tar
     """Download image data and register them to ws."""
     data_file = os.path.join(target_directory, (asset_name + ".zip"))
     urllib.request.urlretrieve(download_url, filename=data_file)
-    logger.info(f"Downloaded files to {data_file}!!!")
+    logger.info(f"Downloaded files to {data_file}.")
     # extract files
     with ZipFile(data_file, "r") as zip:
         logger.info("extracting files...")

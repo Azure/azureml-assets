@@ -5,8 +5,8 @@ dependencies:
   - python=3.8
   - pip=21.2.4
   - pip:
-    - azure-core=={{latest-pypi-version}}
     - azure-ai-ml=={{latest-pypi-version}}
     - azure-identity=={{latest-pypi-version}}
     - azureml-core=={{latest-pypi-version}}
-    - applicationinsights=={{latest-pypi-version}}
+    - azureml-automl-core=={{latest-pypi-version}}
+    - azureml-telemetry=={{latest-pypi-version}}
