@@ -3,7 +3,6 @@
 
 """File containing function for finetune component."""
 
-import os
 import json
 import argparse
 from pathlib import Path
@@ -13,7 +12,12 @@ import torch
 
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
-from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, HfModelTypes
+from azureml.acft.contrib.hf.nlp.constants.constants import (
+    SaveFileConstants,
+    Tasks,
+    HfModelTypes,
+    MLFlowHFFlavourConstants,
+)
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
@@ -40,32 +44,39 @@ RUN_PROPERTIES = {
 add_run_properties(ROOT_RUN_PROPERTIES, logger, add_to_root=True)
 add_run_properties(RUN_PROPERTIES, logger)
 
+# mlflow model task based signature for inference
+MLFLOW_MODEL_SIGNATURES = {
+    Tasks.SINGLE_LABEL_CLASSIFICATION: {
+        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.MULTI_LABEL_CLASSIFICATION: {
+        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.NAMED_ENTITY_RECOGNITION: {
+        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.QUESTION_ANSWERING: {
+        "inputs": '[{"name": "question", "type": "string"}, {"name": "context", "type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.SUMMARIZATION: {
+        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+    Tasks.TRANSLATION: {
+        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+    },
+}
+
 IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
-    "databricks/dolly-v1-6b",            # gptj
-    "databricks/dolly-v2-3b",            # gpt_neox
-    "databricks/dolly-v2-7b",            # gpt_neox
-    "databricks/dolly-v2-12b",           # gpt_neox
-    "openlm-research/open_llama_3b_350bt_preview",            # llama
-    "openlm-research/open_llama_7b_400bt_preview",            # llama
-    "openlm-research/open_llama_3b_600bt_preview",            # llama
-    "openlm-research/open_llama_7b_700bt_preview",            # llama
-    "openlm-research/open_llama_13b_600bt",                   # llama
-    "decapoda-research/llama-7b-hf",            # llama
-    "decapoda-research/llama-13b-hf",           # llama
-    "decapoda-research/llama-30b-hf",           # llama
-    "decapoda-research/llama-65b-hf",           # llama
+    HfModelTypes.LLAMA,
+    HfModelTypes.GPT_NEOX   # dolly
 ]
 
-
-# Gradient Checkpointing (GC) is not supported for all the HF models.
-# To support llama finetuning on Standard_ND40rs_v2, enabling GC for llama models for now
-ENABLE_GRADIENT_CHECKPOINTING = [
-    "openlm-research/open_llama_3b_350bt_preview",
-    "openlm-research/open_llama_7b_400bt_preview",
-    "openlm-research/open_llama_3b_600bt_preview",
-    "openlm-research/open_llama_7b_700bt_preview",
-    "openlm-research/open_llama_13b_600bt"
-]
 
 MLFLOW_HFTRANSFORMERS_MISC_CONF = {
     # updating the parameters will override any existing misc conf keys
@@ -385,9 +396,20 @@ def finetune(args: Namespace):
     logger.info(f"Precision: {getattr(args, 'precision', None)}")
 
     # set `ignore_mismatched_sizes` to `false` by default
-    if hasattr(args, "model_name") and args.model_name in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
-        logger.info(f"Forcing `ignore_mismatched_sizes` to False for {args.model_name}")
+    if hasattr(args, "model_type") and args.model_type in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
+        logger.info(f"Identified model type: {args.model_type}. Forcing `ignore_mismatched_sizes` to False.")
         setattr(args, "ignore_mismatched_sizes", False)
+
+    # set `mlflow_ft_conf` - contains all mlflow related properties
+    setattr(args, "mlflow_ft_conf", {})
+
+    # set task based mlflow_model_signature
+    if getattr(args, "task_name", None) is not None and args.task_name in MLFLOW_MODEL_SIGNATURES:
+        args.mlflow_ft_conf["mlflow_model_signature"] = MLFLOW_MODEL_SIGNATURES[args.task_name]
+        logger.info(
+                    f"Adding mlflow model signature for task {args.task_name} - "
+                    f"{MLFLOW_MODEL_SIGNATURES[args.task_name]}"
+                )
 
     model_name_or_type = None
     # pass `mlflow_hftransformers_misc_conf` to be set in mlflow model
@@ -401,7 +423,30 @@ def finetune(args: Namespace):
             f"Forcing `mlflow_hftransformers_misc_conf` to set to {mlflow_hftransformers_misc_conf} "
             f"for {model_name_or_type}"
         )
-        setattr(args, "mlflow_hftransformers_misc_conf", mlflow_hftransformers_misc_conf)
+        args.mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = mlflow_hftransformers_misc_conf
+
+    # if MLmodel file exists pass to finetuned model as `base_model_mlmodel`
+    mlflow_config_file = Path(args.model_selector_output, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
+    if mlflow_config_file.is_file():
+        import yaml
+        mlflow_data = None
+        try:
+            with open(mlflow_config_file, "r") as rptr:
+                mlflow_data = yaml.safe_load(rptr)
+        except Exception as e:
+            logger.info(f"Unable to load MLmodel file - {e}")
+        if mlflow_data is not None:
+            # pass base model MLmodel file data if available
+            mlflow_hftransformers_misc_conf = args.mlflow_ft_conf.get("mlflow_hftransformers_misc_conf", {})
+            mlflow_hftransformers_misc_conf.update({"base_model_mlmodel": mlflow_data})
+            args.mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = mlflow_hftransformers_misc_conf
+            logger.info(f"Setting `base_model_mlmodel` in finetuned mlflow model - {mlflow_hftransformers_misc_conf}")
+        else:
+            logger.info("MLmodel file is empty")
+    else:
+        logger.info("MLmodel file does not exist")
+
+    logger.info(f"FT MLFlow config - {args.mlflow_ft_conf}")
 
     # Below arguments are needed for HF training args
     args.output_dir = args.pytorch_model_folder
@@ -414,11 +459,6 @@ def finetune(args: Namespace):
     elif not args.apply_deepspeed:
         # do not use deepspeed config if provided when apply_deepspeed is set to false
         args.deepspeed = None
-
-    # enable gradient checkpointing
-    if hasattr(args, "model_name") and args.model_name in ENABLE_GRADIENT_CHECKPOINTING:
-        logger.info(f"Enabling gradient checkpointing for {args.model_name}")
-        setattr(args, "gradient_checkpointing", True)
 
     if args.deepspeed:
         with open(args.deepspeed, "r") as fp:
@@ -460,46 +500,6 @@ def finetune(args: Namespace):
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
-
-    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
-    logger.info(f"Process - {process_name}")
-    if process_name in {'main', 'rank_0'}:
-        # hotfix mlflow model deployment issue
-        try:
-            mlflow_model_path = args.mlflow_model_folder
-            mlflow_conda_yaml = str(Path(mlflow_model_path, "conda.yaml"))
-            mlflow_req_file = str(Path(mlflow_model_path, "requirements.txt"))
-            import yaml
-            logger.info("Updating mlflow model requirements")
-            with open(mlflow_conda_yaml, "r") as rptr:
-                mlflow_data = yaml.safe_load(rptr)
-            logger.info(mlflow_data)
-            for ele in mlflow_data["dependencies"]:
-                if type(ele) == dict and "pip" in ele:
-                    for idx in range(len(ele["pip"])):
-                        if ele["pip"][idx].startswith("mlflow==") or ele["pip"][idx].startswith("mlflow<") or \
-                                   ele["pip"][idx].startswith("mlflow>"):
-                            ele["pip"][idx] = "mlflow==2.3.1"
-                            break
-                    ele["pip"].append("mlflow-skinny==2.3.2")
-                    break
-            with open(mlflow_conda_yaml, "w") as rptr:
-                yaml.dump(mlflow_data, rptr, sort_keys=False)
-            logger.info("Updated mlflow conda yaml file")
-            with open(mlflow_req_file, "r") as rptr:
-                mlflow_req_data = rptr.readlines()
-            mlflow_req_data[-1] = str(mlflow_req_data[-1]) + "\n"
-            for idx in range(len(mlflow_req_data)):
-                if mlflow_req_data[idx].startswith("mlflow==") or mlflow_req_data[idx].startswith("mlflow<") or \
-                            mlflow_req_data[idx].startswith("mlflow>"):
-                    mlflow_req_data[idx] = "mlflow==2.3.1\n"
-                    break
-            mlflow_req_data.append("mlflow-skinny==2.3.2")
-            with open(mlflow_req_file, "w") as rptr:
-                rptr.writelines(mlflow_req_data)
-            logger.info("Updated mlflow requirements text file")
-        except Exception as e:
-            logger.info(f"Skipping mlflow model changes! - {e}")
 
 
 @swallow_all_exceptions(logger)
