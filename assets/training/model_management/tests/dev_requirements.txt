@@ -1,0 +1,16 @@
+# src
+azure-ai-ml
+azureml-evaluate-mlflow
+langcodes
+azureml-automl-core
+azureml-telemetry
+
+## test
+mock
+pydash
+pytest
+pytest-cov
+pytest-forked
+pytest-mock
+pytest-timeout
+pytest-xdist
