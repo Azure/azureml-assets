@@ -63,8 +63,8 @@ class TestComputeForecast(unittest.TestCase):
             norm_df = norm_ob.get_group(ts) if norm_ob is not None else x_one
 
             arr_rv.append(rmse / np.abs(norm_df[
-                TestComputeForecast.TGT].max() - norm_df[
-                    TestComputeForecast.TGT].min()))
+                                            TestComputeForecast.TGT].max() - norm_df[
+                                            TestComputeForecast.TGT].min()))
         return aggregate_fn(arr_rv)
 
     def test_without_time_series_ids_mean(self):

@@ -69,7 +69,8 @@ class Inferencer:
         self.custom_dimensions = custom_dimensions
         try:
             if device == "gpu":
-                self.device = torch.cuda.current_device()  # torch.cuda.current_device() Removing current_Device for fixed behaviour
+                # torch.cuda.current_device() Removing current_Device for fixed behaviour
+                self.device = torch.cuda.current_device()
             elif device == "cpu":
                 self.device = -1
             elif task == constants.TASK.NER:
