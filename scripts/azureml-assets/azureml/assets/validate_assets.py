@@ -323,11 +323,10 @@ def validate_assets(input_dirs: List[Path],
         if validate_this:
             # Validate name
             if check_names:
-                print(f"Checking {asset_config.full_name}")
-                if check_names_skip_pattern is not None and check_names_skip_pattern.fullmatch(asset_config.full_name):
-                    logger.log_debug(f"Skipping name validation for {asset_config.full_name}")
-                else:
+                if check_names_skip_pattern is None or not check_names_skip_pattern.fullmatch(asset_config.full_name):
                     error_count += validate_name(asset_config)
+                else:
+                    logger.log_debug(f"Skipping name validation for {asset_config.full_name}")
 
             # Validate categories
             if check_categories:
