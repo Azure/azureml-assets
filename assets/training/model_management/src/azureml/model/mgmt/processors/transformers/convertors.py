@@ -81,6 +81,7 @@ class HFMLFLowConvertor(ABC):
         self._temp_dir = temp_dir
         self._model_id = translate_params["model_id"]
         self._task = translate_params["task"]
+        self._experimental = translate_params.get(HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value, False)
         self._misc = translate_params.get("misc", [])
         self._signatures = translate_params.get("signature", None)
         self._config_cls_name = translate_params.get(HF_CONF.HF_CONFIG_CLASS.value, None)
@@ -171,6 +172,11 @@ class HFMLFLowConvertor(ABC):
             config = str(tmp_config_dir)
             tokenizer = str(tmp_tokenizer_dir)
 
+        # Set experimental flag
+        if self._experimental:
+            logger.info("Experimental features enabled for MLflow conversion")
+            self._hf_conf["exp"] = True
+
         hf_mlflow.hftransformers.save_model(
             config=config,
             tokenizer=tokenizer,
@@ -214,6 +220,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         self._hf_model_cls = self._hf_model_cls if self._hf_model_cls else AutoModelForImageClassification
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else AutoConfig
         self._hf_tokenizer_cls = self._hf_tokenizer_cls if self._hf_tokenizer_cls else AutoImageProcessor
+        self._signatures = self._signatures or self.get_model_signature()
 
         hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_config_cls.__name__
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = self._hf_model_cls.__name__

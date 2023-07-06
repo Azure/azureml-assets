@@ -44,6 +44,7 @@ class HF_CONF(_CustomEnum):
     HF_MODEL_PATH = "model"
     HF_CONFIG_PATH = "config"
     HF_TOKENIZER_PATH = "tokenizer"
+    HF_USE_EXPERIMENTAL_FEATURES = "exp"
 
 
 class SupportedVisionTasks(_CustomEnum):

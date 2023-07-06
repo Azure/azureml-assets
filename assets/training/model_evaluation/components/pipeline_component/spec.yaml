@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: model_evaluation_pipeline
-version: 0.0.9
+version: 0.0.10
 type: pipeline
 display_name: Model Evaluation Pipeline
 description: Pipeline component for model evaluation for supported tasks. \
@@ -12,7 +12,14 @@ tags:
   Preview: ""
 
 inputs:
-# model prediction
+  compute_name:
+    type: string
+    default: serverless
+
+  instance_type:
+    type: string
+    default: STANDARD_NC24S_V3
+  # model prediction
   task:
     type: string
     default: tabular-classification
@@ -33,13 +40,9 @@ inputs:
     ]
     description: "Task type"
   test_data: 
-    type: uri_file
-    optional: true
+    type: uri_folder
+    optional: false
     description: "Test Data"
-  test_data_mltable:
-    type: mltable
-    optional: true
-    description: "Test Data MLTable path"
   mlflow_model:
     type: mlflow_model 
     optional: false
@@ -85,11 +88,13 @@ outputs:
 jobs:
   model_prediction:
     type: command
-    component: azureml://registries/azureml/components/model_prediction/versions/0.0.9
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.10
+    compute: ${{parent.inputs.compute_name}}
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
     inputs:
       task: ${{parent.inputs.task}}
       test_data: ${{parent.inputs.test_data}}
-      test_data_mltable: ${{parent.inputs.test_data_mltable}}
       mlflow_model: ${{parent.inputs.mlflow_model}}
       label_column_name: ${{parent.inputs.label_column_name}}
       input_column_names: ${{parent.inputs.input_column_names}}
@@ -101,7 +106,10 @@ jobs:
   
   compute_metrics:
     type: command
-    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.9
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.10
+    compute: ${{parent.inputs.compute_name}}
+    resources:
+      instance_type: ${{parent.inputs.instance_type}}
     inputs:
       task: ${{parent.inputs.task}}
       ground_truth: ${{parent.jobs.model_prediction.outputs.ground_truth}}

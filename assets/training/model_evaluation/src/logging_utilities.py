@@ -8,8 +8,11 @@ import constants
 import uuid
 import json
 import azureml.core
+import traceback
+import atexit
 
 from azureml.telemetry.logging_handler import get_appinsights_log_handler
+from azureml.telemetry import INSTRUMENTATION_KEY
 from azureml.exceptions import AzureMLException
 from run_utils import TestRun
 from typing import Tuple, Union
@@ -73,7 +76,7 @@ class CustomDimensions:
                  region=None,
                  subscription_id=None,
                  task_type="",
-                 root_attribute="local") -> None:
+                 root_attribute="") -> None:
         """__init__.
 
         Args:
@@ -93,7 +96,7 @@ class CustomDimensions:
         self.app_name = app_name
         self.run_id = run_id
         self.common_core_version = common_core_version
-        self.model_evaluation_version = model_evaluation_version
+        self.moduleVersion = model_evaluation_version
         self.compute_target = compute_target
         self.experiment_id = experiment_id
         self.parent_run_id = parent_run_id
@@ -109,16 +112,17 @@ class CustomDimensions:
             self.region = run_obj.region
             self.experiment_id = run_obj.experiment.id
             self.subscription_id = run_obj.subscription
-            self.parent_run_id = self.run_id
-            if hasattr(run_obj.run, "parent"):
-                self.parent_run_id = run_obj.run.parent.id
+            self.parent_run_id = run_obj.root_run.id
             self.rootAttribution = run_obj.root_attribute
+            run_info = run_obj.get_extra_run_info
+            self.moduleVersion = run_info.get("moduleVersion", model_evaluation_version)
+            self.location = run_info.get("location", "")
         if self.task_type == "":
             import sys
             args = sys.argv
             if "--task" in args:
                 ind = args.index("--task")
-                self.task_type = sys.argv[ind+1]
+                self.task_type = sys.argv[ind + 1]
 
 
 custom_dimensions = CustomDimensions()
@@ -195,7 +199,7 @@ def get_logger(logging_level: str = 'DEBUG',
         current_logger.propagate = False
         current_logger.setLevel(logging.CRITICAL)
         appinsights_handler = get_appinsights_log_handler(
-            instrumentation_key=constants.TelemetryConstants.INSTRUMENTATION_KEY,
+            instrumentation_key=INSTRUMENTATION_KEY,
             logger=current_logger, properties=custom_dimensions
         )
         formatter = AppInsightsPIIStrippingFormatter(
@@ -205,13 +209,14 @@ def get_logger(logging_level: str = 'DEBUG',
         appinsights_handler.setFormatter(formatter)
         appinsights_handler.setLevel(numeric_log_level)
         appinsights_handler.set_name(constants.TelemetryConstants.APP_INSIGHT_HANDLER_NAME)
+        atexit.register(appinsights_handler.flush)
         logger.addHandler(appinsights_handler)
 
     return logger
 
 
 def _get_error_details(
-    exception: BaseException, logger: Union[logging.Logger, logging.LoggerAdapter]
+        exception: BaseException, logger: Union[logging.Logger, logging.LoggerAdapter]
 ) -> Tuple[str, str, str]:
     """
     Extract the error details from the base exception.
@@ -223,6 +228,9 @@ def _get_error_details(
     :return: An error code, error type (i.e. UserError or SystemError) and exception's target
     """
     default_target = "Unspecified"
+    error_code = constants.ExceptionTypes.Unclassified
+    error_type = constants.ExceptionTypes.Unclassified
+    exception_target = default_target
 
     if isinstance(exception, AzureMLException):
         try:
@@ -244,13 +252,10 @@ def _get_error_details(
                 "Failed to parse error details while logging traceback from exception of type {}".format(exception)
             )
 
-    error_code = constants.ExceptionTypes.Unclassified
-    error_type = constants.ExceptionTypes.Unclassified
-    exception_target = default_target
     return error_code, error_type, exception_target
 
 
-def log_traceback(exception, logger, message, is_critical=False):
+def log_traceback(exception: AzureMLException, logger, message=None, is_critical=False):
     """Log exceptions without PII in APP Insights and full tracebacks in logger.
 
     Args:
@@ -259,20 +264,25 @@ def log_traceback(exception, logger, message, is_critical=False):
         message (_type_): _description_
         is_critical (bool, optional): _description_. Defaults to False.
     """
+    if message is None:
+        message = exception.message
     exception_class_name = exception.__class__.__name__
 
     error_code, error_type, exception_target = _get_error_details(exception, logger)
-
-    message = [
-        "Type: {}".format(error_code),
+    traceback_obj = exception.__traceback__
+    traceback_message = message
+    if traceback_obj is None:
+        if getattr(traceback_obj, "inner_exception", None):
+            traceback_obj = exception.inner_exception.__traceback__
+    if traceback_obj is not None:
+        traceback_message = "\n".join(traceback.format_tb(traceback_obj))
+    logger_message = [
+        "Type: {}".format(error_type),
+        "Code: {}".format(error_code),
         "Class: {}".format(exception_class_name),
         "Message: {}".format(message),
-        "Traceback:",
-        message,
-        "ExceptionTarget: {}".format(exception_target),
+        "Traceback: {}".format(traceback_message),
+        "ExceptionTarget: {}".format(exception_target)
     ]
 
-    if is_critical:
-        logger.critical("\n".join(message))
-    else:
-        logger.error("\n".join(message))
+    logger.info("\n".join(logger_message))
