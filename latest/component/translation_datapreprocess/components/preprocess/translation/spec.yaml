@@ -9,7 +9,7 @@ display_name: Translation DataPreProcess
 description: Component to preprocess data for translation task. See [docs](https://aka.ms/azureml/components/translation_datapreprocess)
   to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/13
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/14
 
 code: ../../../src/preprocess
 
