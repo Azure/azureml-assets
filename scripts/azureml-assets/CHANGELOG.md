@@ -5,7 +5,7 @@
 
 ## 1.5.0 (2023-07-06)
 ### 🚀 New Features
-- []() Add regex arg to skip name validation
+- [#847](https://github.com/Azure/azureml-assets/pull/847) Add regex arg to skip name validation
 
 ## 1.4.1 (2023-06-28)
 ### 🐛 Bugs Fixed
