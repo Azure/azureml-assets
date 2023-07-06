@@ -1,0 +1,10 @@
+image:
+  name: automl-gpu
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - conda_dependencies.yaml
+
