@@ -7,9 +7,18 @@ import traceback
 from exceptions import ModelValidationException, DataValidationException, ArgumentValidationException
 from constants import ALL_TASKS, TASK
 from logging_utilities import get_logger, log_traceback
-from utils import assert_and_raise, check_and_return_if_mltable
+from utils import assert_and_raise
 from typing import Union
-
+from error_definitions import (
+    InvalidTaskType,
+    InvalidGroundTruthData,
+    InvalidPredictionsData,
+    InvalidModel,
+    BadLabelColumnData,
+    BadFeatureColumnData,
+    InvalidTestData
+)
+from azureml._common._error_definition.azureml_error import AzureMLError
 
 logger = get_logger(name=__name__)
 
@@ -40,7 +49,7 @@ def _validate_model(args):
     """
     assert_and_raise(condition=(len(args.model_uri) > 0) or (args.mlflow_model is not None),
                      exception_cls=ModelValidationException,
-                     message="Either Model URI or Mlflow Model is required")
+                     error_cls=InvalidModel)
 
     mlflow_model, model_uri = False, False
 
@@ -56,11 +65,10 @@ def _validate_model(args):
             logger.warn("Invalid model uri passed")
             args.model_uri = ""
 
-    error_message = "Invalid mlflow_model/model_uri passed. See documentation for mlflow_model and model_uri format."
     assert_and_raise(
         condition=(len(args.model_uri) > 0) or (args.mlflow_model is not None),
         exception_cls=ModelValidationException,
-        message=error_message
+        error_cls=InvalidModel
     )
 
 
@@ -72,14 +80,16 @@ def _validate_task(args):
     """
     # if args.task is None:
     #     return
-    logger.info("Validating Task Type: "+args.task)
+    logger.info("Validating Task Type: " + args.task)
     assert_and_raise(
         condition=args.task in ALL_TASKS,
         exception_cls=ArgumentValidationException,
-        message="Invalid task type. It should be either classification, regression, forecasting or NER"
+        error_cls=InvalidTaskType,
+        message_kwargs={"TaskName": args.task}
     )
 
 
+# Deprecated
 def _validate_mode(args):
     """Validate Mode.
 
@@ -94,27 +104,30 @@ def _validate_mode(args):
 
 
 def _validate_test_data(args):
-    _, _data = check_and_return_if_mltable(args.data, args.data_mltable)
+    # _, _data = check_and_return_if_mltable(args.data)
+    _data = args.data
     assert_and_raise(
         condition=(_data is not None and _data != ""),
         exception_cls=DataValidationException,
-        message="Either test_data or test_data_mltable should be passed."
+        error_cls=InvalidTestData
     )
 
 
 def _validate_compute_metrics_data(args):
-    _, predictions = check_and_return_if_mltable(args.predictions, args.predictions_mltable)
+    # _, predictions = check_and_return_if_mltable(args.predictions, args.predictions_mltable)
+    predictions = args.predictions
     assert_and_raise(
         condition=(predictions is not None and predictions != ""),
         exception_cls=DataValidationException,
-        message="Either predictions or predictions_mltable should be passed."
+        error_cls=InvalidPredictionsData
     )
     if args.task != TASK.FILL_MASK:
-        _, ground_truths = check_and_return_if_mltable(args.ground_truths, args.ground_truths_mltable)
+        # _, ground_truths = check_and_return_if_mltable(args.ground_truths, args.ground_truths_mltable)
+        ground_truths = args.ground_truths
         assert_and_raise(
             condition=(ground_truths is not None and ground_truths != ""),
             exception_cls=DataValidationException,
-            message="Either ground_truths or ground_truths_mltable should be passed."
+            error_cls=InvalidGroundTruthData
         )
 
 
@@ -139,6 +152,7 @@ def validate_compute_metrics_args(args):
     _validate_compute_metrics_data(args)
 
 
+# Deprecated
 def _validate_Xy(X_test, y_test, y_pred, mode):
     """Validate Input X and Y.
 
@@ -177,16 +191,16 @@ def validate_Xy(X_test, y_test):
         y_pred (_type_): _description_
         mode (_type_): _description_
     """
-    message = "Invalid data. No feature matrix found."
+    # message = "Invalid data. No feature matrix found."
     assert_and_raise(
         condition=X_test is not None,
         exception_cls=DataValidationException,
-        message=message
+        error_cls=InvalidTestData
     )
     assert_and_raise(
         condition=y_test is not None,
         exception_cls=DataValidationException,
-        message="No label column found in test data."
+        error_cls=BadLabelColumnData
     )
 
 
@@ -239,12 +253,13 @@ def _clean_and_validate_dataset(data, keep_columns):
     data_columns = data.columns
     to_remove_columns = [col.strip() for col in data_columns if col.strip() not in keep_columns]
     data = data.drop(to_remove_columns, axis=1)
-    message = "input_column_names is not a subset of input test dataset columns.\
-                 input_column_names include "+str(keep_columns)+" whereas data has "+str(list(data.columns))
+    # message = "input_column_names is not a subset of input test dataset columns.\
+    #              input_column_names include " + str(keep_columns) + " whereas data has " + str(list(data.columns))
     assert_and_raise(
         condition=sorted(keep_columns) == sorted(data.columns),
         exception_cls=DataValidationException,
-        message=message
+        error_cls=BadFeatureColumnData,
+        message_kwargs={"keep_columns": str(keep_columns), "data_columns": str(list(data.columns))}
     )
 
     # remove the null values
@@ -257,7 +272,11 @@ def _clean_and_validate_dataset(data, keep_columns):
     post_filter_examples = data.shape[0]
     logger.info(f"Number of examples after postprocessing: {post_filter_examples}")
     if post_filter_examples == 0:
-        raise Exception("Found no examples after data preprocessing")
+        exception = DataValidationException._with_error(
+            AzureMLError.create(InvalidTestData)
+        )
+        log_traceback(exception=exception, logger=logger)
+        raise exception
 
     # logging
     if pre_filter_examples == post_filter_examples:
