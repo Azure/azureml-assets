@@ -442,11 +442,6 @@ def finetune(args: Namespace):
             mlflow_hftransformers_misc_conf.update({"base_model_mlmodel": mlflow_data})
             args.mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = mlflow_hftransformers_misc_conf
             logger.info(f"Setting `base_model_mlmodel` in finetuned mlflow model - {mlflow_hftransformers_misc_conf}")
-
-            # pass base model signature if available
-            mlflow_model_signature = mlflow_data.get("signature", {})
-            args.mlflow_ft_conf["mlflow_model_signature"].update(mlflow_model_signature)
-            logger.info(f"Updating signature from base model - {mlflow_model_signature}")
         else:
             logger.info("MLmodel file is empty")
     else:
