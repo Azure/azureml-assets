@@ -4,35 +4,33 @@
 """Entry script for Model Evaluation Component."""
 
 import argparse
+
 import azureml.evaluate.mlflow as aml_mlflow
 import pandas as pd
 import constants
 import torch
 import ast
-import traceback
-import mltable
 import json
-import os
 from itertools import repeat
 
-from exceptions import (ModelEvaluationException,
-                        ModelValidationException,
+from exceptions import (ModelValidationException,
                         DataLoaderException,
                         PredictException)
+from error_definitions import (ModelPredictionInternalError,
+                               BadEvaluationConfigParam,
+                               BadModel)
 from logging_utilities import custom_dimensions, get_logger, log_traceback
 from azureml.telemetry.activity import log_activity
 from image_classification_dataset import get_classification_dataset, ImageDataFrameParams
-from utils import (setup_model_dependencies,
-                   check_and_return_if_mltable,
+from utils import (check_and_return_if_mltable,
                    get_predictor,
                    read_data,
                    read_config,
                    prepare_data,
-                   filter_pipeline_params,
-                   sanitize_device_and_device_map)
+                   filter_pipeline_params)
 from run_utils import TestRun
 from validation import _validate, validate_args
-
+from azureml._common._error_definition.azureml_error import AzureMLError
 
 logger = get_logger(name=__name__)
 current_run = TestRun()
@@ -71,9 +69,11 @@ class Inferencer:
         self.custom_dimensions = custom_dimensions
         try:
             if device == "gpu":
-                self.device = torch.cuda.current_device()
+                self.device = torch.cuda.current_device()  # torch.cuda.current_device() Removing current_Device for fixed behaviour
             elif device == "cpu":
                 self.device = -1
+            elif task == constants.TASK.NER:
+                self.device = torch.cuda.current_device()
             else:
                 self.device = device
         except Exception:
@@ -82,40 +82,20 @@ class Inferencer:
         self.batch_size = batch_size
         # self._setup_custom_environment()
         with log_activity(logger, constants.TelemetryConstants.LOAD_MODEL,
-                          custom_dimensions=self.custom_dimensions):
+                          custom_dimensions=self.custom_dimensions) as model_loader_activity:
             logger.info("Loading model")
             try:
-                self.model = aml_mlflow.aml.load_model(self.model_uri, constants.MLFLOW_MODEL_TYPE_MAP[self.task])
+                predictor_cls = get_predictor(self.task)
+                self.predictor = predictor_cls(self.model_uri, self.task, self.device)
+                logger.info(f"model loaded, Device: {getattr(self.predictor.model, 'device', 'not present')}")
             except Exception as e:
-                traceback.print_exc()
-                message = "Job failed while loading the model"
-                log_traceback(e, logger, message)
-                raise ModelValidationException(message, inner_exception=e)
-
-    def _setup_custom_environment(self):
-        """Set Custom dimensions.
-
-        Raises:
-            ModelEvaluationException: _description_
-            ModelEvaluationException: _description_
-        """
-        with log_activity(logger, constants.TelemetryConstants.ENVIRONMENT_SETUP,
-                          custom_dimensions=self.custom_dimensions):
-            logger.info("Setting up model dependencies")
-            try:
-                logger.info("Fetching requirements")
-                requirements = aml_mlflow.pyfunc.get_model_dependencies(self.model_uri)
-            except Exception as e:
-                message = f"Failed to fetch requirements from model_uri with error {repr(e)}"
-                log_traceback(e, logger, message)
-                raise ModelEvaluationException(message, inner_exception=e)
-            try:
-                logger.info("Installing Dependencies")
-                setup_model_dependencies(requirements)
-            except Exception as e:
-                message = f"Failed to install model dependencies. {repr(e)}"
-                log_traceback(e, logger, message=message)
-                raise ModelEvaluationException(message, inner_exception=e)
+                exception = ModelValidationException._with_error(
+                    AzureMLError.create(BadModel, error=repr(e))
+                )
+                exception.inner_exception = e
+                log_traceback(exception, logger)
+                model_loader_activity.exception(exception.message)
+                raise exception
 
     def load_data(self, test_data, label_column_name=None, input_column_names=None, is_mltable=True):
         """Load Data.
@@ -160,53 +140,85 @@ class Inferencer:
         predictions, pred_probas, y_test = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
         with log_activity(logger, constants.TelemetryConstants.DATA_LOADING,
-                          custom_dimensions=self.custom_dimensions):
-            data = self.load_data(test_data, label_column_name, input_column_names, is_mltable=is_mltable)
-
+                          custom_dimensions=self.custom_dimensions) as data_loader_activity:
+            logger.info("Loading Data")
+            try:
+                data = self.load_data(test_data, label_column_name, input_column_names, is_mltable=is_mltable)
+            except Exception as e:
+                data_loader_activity.exception(repr(e))
+                raise e
         for idx, (X_test, y_test_chunk) in enumerate(data):
             logger.info("batch: " + str(idx))
             y_transformer = None
-            predictor_cls = get_predictor(self.task)
-            predictor = predictor_cls(self.model)
+
             pred_probas_chunk = None
             pipeline_params = filter_pipeline_params(self.metrics_config)
-            pipeline_params, device = sanitize_device_and_device_map(pipeline_params, self.device)
-            torch_error_message = "Model prediction Failed.\nPossible Reason:\n"\
-                                  "1. Your input text exceeds max length of model.\n"\
-                                  "\t\tYou can either keep truncation=True in tokenizer while logging model.\n"\
-                                  "\t\tOr you can pass tokenizer_config in evaluation_config.\n"\
-                                  "2. Your tokenizer's vocab size doesn't match with model's vocab size.\n"\
-                                  "\t\tTo fix this check your model/tokenizer config.\n"\
-                                  "3. If it is Cuda Assertion Error, check your test data."\
+            # if self.device == "auto" and torch.cuda.is_available():
+            #     self.device = torch.cuda.current_device()
+            # model_device = None
+            # if predictor.is_hf:
+            #     hf_device_map = getattr(predictor.model._model_impl.hf_model, "hf_device_map", None)
+            #     if hf_device_map is not None:
+            #         logger.info("hf_device_map: " + str(hf_device_map))
+            #         unique_devices = set(hf_device_map.values())
+            #         logger.info("Unique devices for model: " + str(unique_devices))
+            #         if len(unique_devices) == 1:
+            #             model_device = predictor.model._model_impl.hf_model.device
+            #         # device = next(iter(hf_device_map.values()))
+            #     else:
+            #         model_device = predictor.model._model_impl.hf_model.device
+            # elif predictor.is_torch:
+            #     model_device = predictor.model.getattr("device", None)
+            # logger.info("Model Device: " + str(model_device))
+            # if model_device is not None:
+            #     if model_device.type == "cpu":
+            #         device = -1
+            #     else:
+            #         device = model_device.index
+            # logger.info("Device: " + str(device))
+            # else:
+            #     device = self.device
+            # pipeline_params, device = sanitize_device_and_device_map(pipeline_params, self.device)
+            torch_error_message = "Model prediction Failed.\nPossible Reason:\n" \
+                                  "1. Your input text exceeds max length of model.\n" \
+                                  "\t\tYou can either keep truncation=True in tokenizer while logging model.\n" \
+                                  "\t\tOr you can pass tokenizer_config in evaluation_config.\n" \
+                                  "2. Your tokenizer's vocab size doesn't match with model's vocab size.\n" \
+                                  "\t\tTo fix this check your model/tokenizer config.\n" \
+                                  "3. If it is Cuda Assertion Error, check your test data." \
                                   "Whether that input can be passed directly to model or not."
             try:
                 if self.task == constants.TASK.TRANSLATION:
                     source_lang = self.metrics_config.get("source_lang", None)
                     target_lang = self.metrics_config.get("target_lang", None)
-                    predictions_chunk = predictor.predict(X_test, device=device,
-                                                          y_transformer=y_transformer, multilabel=self.multilabel,
-                                                          source_lang=source_lang, target_lang=target_lang)
+                    predictions_chunk = self.predictor.predict(X_test, y_transformer=y_transformer,
+                                                               multilabel=self.multilabel,
+                                                               source_lang=source_lang, target_lang=target_lang)
                 else:
                     # batching is handled in mlflow predict for image tasks.
-                    if self.task in constants.IMAGE_TASKS:
-                        pipeline_params.update(self.metrics_config)
-                        if self.batch_size:
-                            pipeline_params.update({"batch_size": self.batch_size})
-                    predictions_chunk = predictor.predict(X_test, device=device,
-                                                          y_transformer=y_transformer,
-                                                          multilabel=self.multilabel,
-                                                          **pipeline_params)
+                    if self.task in constants.IMAGE_TASKS and self.batch_size:
+                        pipeline_params.update({"batch_size": self.batch_size})
+                    predictions_chunk = self.predictor.predict(X_test, y_transformer=y_transformer,
+                                                               multilabel=self.multilabel,
+                                                               **pipeline_params)
                 if self.task in constants.CLASSIFICATION_SET:
-                    pred_probas_chunk = predictor.predict_proba(X_test, device=device,
-                                                                y_transformer=y_transformer,
-                                                                multilabel=self.multilabel,
-                                                                **pipeline_params)
+                    pred_probas_chunk = self.predictor.predict_proba(X_test, y_transformer=y_transformer,
+                                                                     multilabel=self.multilabel,
+                                                                     **pipeline_params)
             except IndexError as e:
-                raise PredictException(exception_message=torch_error_message,
-                                       inner_exception=e)
+                exception = PredictException._with_error(
+                    AzureMLError.create(ModelPredictionInternalError, error=repr(e))
+                )
+                exception.inner_exception = e
+                log_traceback(exception, logger, torch_error_message)
+                raise exception
             except RuntimeError as e:
-                raise PredictException(exception_message=torch_error_message,
-                                       inner_exception=e)
+                exception = PredictException._with_error(
+                    AzureMLError.create(ModelPredictionInternalError, error=repr(e))
+                )
+                exception.inner_exception = e
+                log_traceback(exception, logger, torch_error_message)
+                raise exception
             if not isinstance(predictions_chunk, pd.DataFrame):
                 predictions_df = pd.DataFrame()
                 predictions_df["predictions"] = predictions_chunk
@@ -245,13 +257,9 @@ def test_model():
     parser.add_argument("--data-mltable", type=str, dest="data_mltable", required=False, default="")
     parser.add_argument("--label-column-name", type=str, dest="label_column_name", required=False, default=None)
     parser.add_argument("--predictions", type=str, dest="predictions")
-    parser.add_argument("--predictions-mltable", type=str, dest="predictions_mltable")
     parser.add_argument("--prediction-probabilities", type=str, required=False,
                         default=None, dest="prediction_probabilities")
-    parser.add_argument("--prediction-probabilities-mltable", type=str, required=False,
-                        default=None, dest="prediction_probabilities_mltable")
     parser.add_argument("--ground-truth", type=str, required=False, default=None, dest="ground_truth")
-    parser.add_argument("--ground-truth-mltable", type=str, required=False, default=None, dest="ground_truth_mltable")
     parser.add_argument("--device", type=str, required=False, default="auto", dest="device")
     parser.add_argument("--batch-size", type=int, required=False, default=None, dest="batch_size")
     parser.add_argument("--input-column-names",
@@ -264,10 +272,16 @@ def test_model():
     # print(args)
     custom_dimensions.app_name = constants.TelemetryConstants.MODEL_PREDICTION_NAME
     custom_dims_dict = vars(custom_dimensions)
-    with log_activity(logger, constants.TelemetryConstants.MODEL_PREDICTION_NAME, custom_dimensions=custom_dims_dict):
+    with log_activity(logger, constants.TelemetryConstants.MODEL_PREDICTION_NAME,
+                      custom_dimensions=custom_dims_dict) as model_prediction_activity:
         logger.info("Validating arguments")
-        with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME, custom_dimensions=custom_dims_dict):
-            validate_args(args)
+        with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME,
+                          custom_dimensions=custom_dims_dict) as validation_activity:
+            try:
+                validate_args(args)
+            except Exception as e:
+                validation_activity.exception(repr(e))
+                raise e
 
         model_uri = args.model_uri.strip()
         mlflow_model = args.mlflow_model
@@ -284,10 +298,14 @@ def test_model():
                     met_config = json.loads(args.config_str)
                 except Exception as e:
                     message = "Unable to load evaluation_config_params. String is not JSON serielized."
-                    raise DataLoaderException(message,
-                                              inner_exception=e)
+                    exception = DataLoaderException._with_error(
+                        AzureMLError.create(BadEvaluationConfigParam, error=repr(e))
+                    )
+                    log_traceback(exception=exception, logger=logger, message=message)
+                    raise exception
 
-        is_mltable, data = check_and_return_if_mltable(args.data, args.data_mltable)
+        data = args.data
+        is_mltable = check_and_return_if_mltable(data)
 
         runner = Inferencer(
             task=args.task,
@@ -304,34 +322,20 @@ def test_model():
                                                               is_mltable=is_mltable)
         except Exception as e:
             if isinstance(e, PredictException):
-                raise e
-            message = "Model Prediction Failed. See inner error."
-            raise PredictException(exception_message=message,
-                                   inner_exception=e)
+                exception = e
+            else:
+                exception = PredictException._with_error(
+                    AzureMLError.create(ModelPredictionInternalError, error=repr(e))
+                )
+            log_traceback(exception, logger)
+            model_prediction_activity.exception(exception.message)
+            raise exception
 
         preds.to_json(args.predictions, orient="records", lines=True)
-
-        preds_file_name = args.predictions.split(os.sep)[-1]
-        preds_mltable_file_path = args.predictions_mltable + os.sep + preds_file_name
-        preds.to_json(preds_mltable_file_path, orient="records", lines=True)
-        preds_mltable = mltable.from_json_lines_files(paths=[{'file': preds_mltable_file_path}])
-        preds_mltable.save(args.predictions_mltable)
         if pred_probas is not None:
             pred_probas.to_json(args.prediction_probabilities, orient="records", lines=True)
-
-            pred_probas_file_name = args.prediction_probabilities.split(os.sep)[-1]
-            pred_probas_mltable_file_path = args.prediction_probabilities_mltable + os.sep + pred_probas_file_name
-            pred_probas.to_json(pred_probas_mltable_file_path, orient="records", lines=True)
-            pred_probas_mltable = mltable.from_json_lines_files(paths=[{'file': pred_probas_mltable_file_path}])
-            pred_probas_mltable.save(args.prediction_probabilities_mltable)
         if ground_truth is not None:
             ground_truth.to_json(args.ground_truth, orient="records", lines=True)
-
-            ground_truth_file_name = args.ground_truth.split(os.sep)[-1]
-            ground_truth_mltable_file_path = args.ground_truth_mltable + os.sep + ground_truth_file_name
-            ground_truth.to_json(ground_truth_mltable_file_path, orient="records", lines=True)
-            ground_truth_mltable = mltable.from_json_lines_files(paths=[{'file': ground_truth_mltable_file_path}])
-            ground_truth_mltable.save(args.ground_truth_mltable)
     try:
         root_run.add_properties(properties=constants.ROOT_RUN_PROPERTIES)
     except Exception:

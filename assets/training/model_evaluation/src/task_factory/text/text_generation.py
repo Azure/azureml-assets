@@ -6,7 +6,6 @@
 from task_factory.base import PredictWrapper
 from logging_utilities import get_logger
 
-
 logger = get_logger(name=__name__)
 
 
@@ -31,14 +30,7 @@ class TextGenerator(PredictWrapper):
             y_pred = self.model.predict(X_test, **kwargs)
         except TypeError:
             y_pred = self.model.predict(X_test)
-        except RuntimeError as re:
-            device = kwargs.get("device", -1)
-            if device != -1:
-                logger.warning("Predict failed on GPU. Falling back to CPU")
-                self._ensure_model_on_cpu()
-                kwargs["device"] = -1
-                y_pred = self.model.predict(X_test, **kwargs)
-            else:
-                raise re
+        except RuntimeError:
+            return self.handle_device_failure(X_test, **kwargs)
 
         return y_pred
