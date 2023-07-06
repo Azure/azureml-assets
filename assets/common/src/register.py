@@ -11,8 +11,6 @@ import yaml
 
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.entities import Model
-from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from azureml.core import Run
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 

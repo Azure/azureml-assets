@@ -9,17 +9,15 @@ from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.identity import ManagedIdentityCredential
-from azureml.core.run import Run, _OfflineRun
 
-from utils.config import AppName
-from utils.logging_utils import custom_dimensions, get_logger
+from utils.logging_utils import get_logger
 from utils.exceptions import NonMsiAttachedComputeError, UserIdentityMissingError
 
 
 logger = get_logger(__name__)
 
 
-def get_mlclient(registry_name:str = None):
+def get_mlclient(registry_name: str = None):
     """Return ML Client."""
     has_obo_succeeded = False
     try:

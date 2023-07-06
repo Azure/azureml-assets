@@ -3,16 +3,18 @@
 
 """Logging utils."""
 
-from azureml.core import Run
-from azureml.core.compute import ComputeTarget
-from utils.config import AppName, LoggerConfig
-from azureml.telemetry import get_telemetry_log_handler 
-from azureml.telemetry._telemetry_formatter import ExceptionFormatter
 import platform
 import uuid
 import codecs
 import logging
 import sys
+
+from azureml.core import Run
+from azureml.core.compute import ComputeTarget
+from azureml.telemetry import get_telemetry_log_handler
+from azureml.telemetry._telemetry_formatter import ExceptionFormatter
+
+from utils.config import AppName, LoggerConfig
 
 
 class RunDetails:

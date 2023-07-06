@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """Run Model deployment module."""
-import os
 import argparse
 import json
 import re
@@ -14,7 +13,6 @@ from azure.ai.ml.entities import (
     OnlineRequestSettings,
     ProbeSettings,
 )
-from azureml.core import Run
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 from pathlib import Path
