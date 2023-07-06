@@ -26,7 +26,7 @@ def get_mlclient(registry_name: str = None):
         # Check if given credential can get token successfully.
         credential.get_token("https://management.azure.com/.default")
         has_obo_succeeded = True
-    except Exception as ex:
+    except Exception:
         # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
         logger.warning(AzureMLError.create(UserIdentityMissingError))
 
