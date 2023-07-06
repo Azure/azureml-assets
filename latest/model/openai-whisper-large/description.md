@@ -16,8 +16,8 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-asr" target="_blank">asr-
 ```json
 {
     "inputs": {
-        "audio": ["https://audiovisionfiles.blob.core.windows.net/audio/audio.m4a", "https://audiovisionfiles.blob.core.windows.net/audio/audio.m4a"],
-        "language": ["en", "fr"]
+        "audio": ["https://datasets-server.huggingface.co/assets/librispeech_asr/--/all/train.clean.100/84/audio/audio.mp3"],
+        "language": ["en"]
     }
 }
 ```
@@ -26,10 +26,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-asr" target="_blank">asr-
 ```json
 [
     {
-        "text": "This is a bright day."
-    },
-    {
-        "text": "This is a bright day."
+        "text": "Since that day, he had never been heard of. In vain, Marguerite dismissed her guests, changed her way of life. The Duke was not to be heard of. I was the gainer in so."
     }
 ]
 ```
