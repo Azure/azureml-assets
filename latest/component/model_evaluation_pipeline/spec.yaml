@@ -97,7 +97,7 @@ jobs:
 
   compute_metrics:
     type: command
-    component: azureml://registries/azureml/components/model_prediction/versions/0.0.10
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.10
     compute: ${{parent.inputs.compute_name}}
     resources:
       instance_type: ${{parent.inputs.instance_type}}
