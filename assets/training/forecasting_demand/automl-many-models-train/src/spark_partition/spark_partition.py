@@ -48,7 +48,8 @@ if __name__ == "__main__":
     for old_col in partition_column_names:
         new_col = str(uuid.uuid4())
         new_partition_columns.append(new_col)
-        sdf = sdf.withColumn(new_col,  getattr(sdf, old_col))
+        sdf = sdf.withColumn(new_col, getattr(sdf, old_col))
 
-    sdf.write.option("header", True).partitionBy(new_partition_columns).mode("overwrite").parquet(args.partitioned_data)
+    sdf.write.option("header", True).partitionBy(new_partition_columns).mode(
+        "overwrite").parquet(args.partitioned_data)
     print("Done")

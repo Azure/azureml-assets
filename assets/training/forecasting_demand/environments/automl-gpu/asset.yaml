@@ -3,3 +3,4 @@ version: 0.1
 type: environment
 spec: spec.yaml
 extra_config: environment.yaml
+categories: ["Demand Forecasting"]

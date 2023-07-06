@@ -1,5 +1,5 @@
 image:
-  name: automl-gpu
+  name: azureml/curated/automl-gpu
   os: linux
   context:
     dir: context
@@ -7,4 +7,6 @@ image:
     template_files:
     - Dockerfile
     - conda_dependencies.yaml
-
+  publish:
+    location: mcr
+    visibility: public
