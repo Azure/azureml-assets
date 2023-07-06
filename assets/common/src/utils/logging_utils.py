@@ -5,12 +5,9 @@
 
 from azureml.core import Run
 from azureml.core.compute import ComputeTarget
-from log_utils.config import AppName, LoggerConfig
-
-from azureml.telemetry import get_telemetry_log_handler
-from azureml.automl.core.shared.telemetry_formatter import (
-    AppInsightsPIIStrippingFormatter,
-)
+from utils.config import AppName, LoggerConfig
+from azureml.telemetry import get_telemetry_log_handler 
+from azureml.telemetry._telemetry_formatter import ExceptionFormatter
 import platform
 import uuid
 import codecs
@@ -233,7 +230,7 @@ def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL
             component_name="automl",
         )
 
-        formatter = AppInsightsPIIStrippingFormatter(
+        formatter = ExceptionFormatter(
             fmt=(
                 "%(asctime)s [{}] [{}] [%(module)s] %(funcName)s +%(lineno)s: %(levelname)-8s [%(process)d]"
                 " %(message)s \n".format(app_name, run_details.run_id)

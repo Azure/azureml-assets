@@ -9,24 +9,22 @@ import os
 import shutil
 import yaml
 
-from azure.ai.ml import MLClient
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.entities import Model
-from azure.identity import ManagedIdentityCredential
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azureml.core import Run
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 
-from log_utils.config import AppName
-from log_utils.logging_utils import custom_dimensions, get_logger
-from log_utils.exceptions import (
+from utils.common_utils import get_mlclient
+from utils.config import AppName
+from utils.logging_utils import custom_dimensions, get_logger
+from utils.exceptions import (
     swallow_all_exceptions,
-    NonMsiAttachedComputeError,
     UnSupportedModelTypeError,
     MissingModelNameError,
-    UserIdentityMissingError
 )
+
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
 MLFLOW_MODEL_FOLDER = "mlflow_model_folder"
@@ -98,45 +96,6 @@ def parse_args():
     return args
 
 
-def get_ml_client(registry_name):
-    """Return ML Client."""
-    has_obo_succeeded = False
-    try:
-        credential = AzureMLOnBehalfOfCredential()
-        # Check if given credential can get token successfully.
-        credential.get_token("https://management.azure.com/.default")
-        has_obo_succeeded = True
-    except Exception as ex:
-        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
-        logger.exception(
-            AzureMLException._with_error(
-                AzureMLError.create(UserIdentityMissingError, exception=ex)
-            )
-        )
-
-    if not has_obo_succeeded:
-        try:
-            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-            credential = ManagedIdentityCredential(client_id=msi_client_id)
-            credential.get_token("https://management.azure.com/.default")
-        except Exception as ex:
-            raise AzureMLException._with_error(
-                AzureMLError.create(NonMsiAttachedComputeError, exception=ex)
-            )
-
-    if registry_name is None:
-        run = Run.get_context(allow_offline=False)
-        ws = run.experiment.workspace
-        return MLClient(
-            credential=credential,
-            subscription_id=ws._subscription_id,
-            resource_group_name=ws._resource_group,
-            workspace_name=ws._workspace_name,
-        )
-    logger.info(f"Creating MLClient with registry name {registry_name}")
-    return MLClient(credential=credential, registry_name=registry_name)
-
-
 def is_model_available(ml_client, model_name, model_version):
     """Return true if model is available else false."""
     is_available = True
@@ -161,7 +120,7 @@ def main():
     model_version = args.model_version
     tags, properties, flavors = {}, {}, {}
 
-    ml_client = get_ml_client(registry_name)
+    ml_client = get_mlclient(registry_name)
 
     model_download_metadata = {}
     if args.model_download_metadata:
