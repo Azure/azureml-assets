@@ -4,7 +4,7 @@ display_name: Compute Metrics
 description: Calculate model performance metics, given ground truth and prediction
   data.
 
-version: 0.0.9
+version: 0.0.10
 type: command
 
 tags:
@@ -15,6 +15,7 @@ tags:
 inputs:
   task:
     type: string
+    optional: false
     default: tabular-classification
     enum: [tabular-classification, tabular-classification-multilabel, tabular-regression,
       tabular-forecasting, text-classification, text-classification-multilabel, text-named-entity-recognition,
@@ -22,39 +23,27 @@ inputs:
       image-classification, image-classification-multilabel]
     description: "Task type"
   ground_truth:
-    type: uri_file
-    optional: true
+    type: uri_folder
+    optional: false
     description: "Ground Truths of Test Data as a 1-column JSON Lines file"
-  ground_truth_mltable:
-    type: mltable
-    optional: true
-    description: "Ground Truth of Test Data as MLTable folder"
   ground_truth_column_name:
     type: string
     optional: true
     description: "Column name which contains ground truths in provided uri file for\
       \ ground_truth. (Optional if we have one column name.)"
   prediction:
-    type: uri_file
-    optional: true
+    type: uri_folder
+    optional: false
     description: "Model Predictions as a 1-column JSON Lines file"
-  prediction_mltable:
-    type: mltable
-    optional: true
-    description: "Model Predictions as MLTable folder"
   prediction_column_name:
     type: string
     optional: true
     description: "Column name which contains ground truths in provided uri file for\
       \ prediction. (Optional if we have one column name.)"
   prediction_probabilities:
-    type: uri_file
+    type: uri_folder
     optional: true
     description: "Predictions Probabilities as 1-column JSON Lines file"
-  prediction_probabilities_mltable:
-    type: mltable
-    optional: true
-    description: "Predictions Probabilities as MLTable folder"
   evaluation_config:
     type: uri_file
     optional: true
@@ -69,17 +58,15 @@ outputs:
     type: uri_folder
 
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/8
+environment: azureml://registries/azureml/environments/model-evaluation/versions/9
+
 command: >-
   python compute_metrics.py
   --task ${{inputs.task}}
-  $[[--ground_truths '${{inputs.ground_truth}}']]
-  $[[--ground_truths_mltable '${{inputs.ground_truth_mltable}}']]
-  $[[--predictions '${{inputs.prediction}}']]
-  $[[--predictions_mltable '${{inputs.prediction_mltable}}']]
+  --ground_truths '${{inputs.ground_truth}}'
+  --predictions '${{inputs.prediction}}'
   --output '${{outputs.evaluation_result}}'
   $[[--prediction_probabilities '${{inputs.prediction_probabilities}}']]
-  $[[--prediction_probabilities_mltable '${{inputs.prediction_probabilities_mltable}}']]
   $[[--config-file-name '${{inputs.evaluation_config}}']]
   $[[--ground_truths_column_name ${{inputs.ground_truth_column_name}}]]
   $[[--predictions_column_name ${{inputs.prediction_column_name}}]]
