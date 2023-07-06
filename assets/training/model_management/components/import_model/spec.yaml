@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.6
+version: 0.0.7
 
 # Pipeline inputs
 inputs:
@@ -13,7 +13,7 @@ inputs:
     type: string
     optional: true
     default: serverless
-    description: Common compute for model download, mlflow conversion and registration. eg. provide 'FT-Cluster' if
+    description: Common compute for model download, MLflow conversion and registration. eg. provide 'FT-Cluster' if
       your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute name is provided, instance_type field will be ignored and the respective cluster will be used
 
@@ -112,6 +112,12 @@ inputs:
     description: AutoTokenizer class may not be sufficient to load tokenizer for some of the models. You can use this parameter to send Config class name as it is
     optional: true
 
+  hf_use_experimental_features:
+    type: boolean
+    description: Enable experimental features for hugging face MLflow model conversion
+    default: false
+    optional: true
+
   extra_pip_requirements:
     type: string
     description: |
@@ -120,11 +126,11 @@ inputs:
       eg: pkg1==1.0, pkg2, pkg3==1.0
     optional: true
 
-  ## Inputs for mlflow local validation
+  ## Inputs for MLflow local validation
   local_validation_test_data:
     type: uri_file
     optional: true
-    description: Test data for mlflow local validation. Validation will be skipped if test data is not provided
+    description: Test data for MLflow local validation. Validation will be skipped if test data is not provided
 
   local_validation_column_rename_map:
     type: string
@@ -171,7 +177,7 @@ outputs:
 
 jobs:
   download_model:
-    component: azureml:download_model:0.0.5
+    component: azureml:download_model:0.0.6
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -185,7 +191,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.7
+    component: azureml:convert_model_to_mlflow:0.0.8
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -201,6 +207,7 @@ jobs:
       hf_config_class:  ${{parent.inputs.hf_config_class}}
       hf_model_class:  ${{parent.inputs.hf_model_class}}
       hf_tokenizer_class:  ${{parent.inputs.hf_tokenizer_class}}
+      hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
       extra_pip_requirements: ${{parent.inputs.extra_pip_requirements}}
     outputs:
       mlflow_model_folder:
@@ -221,7 +228,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml:register_model:0.0.3
+    component: azureml:register_model:0.0.4
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

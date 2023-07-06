@@ -5,7 +5,8 @@
 
 from azureml.core import Run
 from azureml.core.compute import ComputeTarget
-from azureml.model.mgmt.config import AppName, LoggerConfig
+from log_utils.config import AppName, LoggerConfig
+
 from azureml.telemetry import get_telemetry_log_handler
 from azureml.automl.core.shared.telemetry_formatter import (
     AppInsightsPIIStrippingFormatter,
@@ -146,37 +147,34 @@ class CustomDimensions:
         self.app_name = app_name
         self.import_model_version = LoggerConfig.IMPORT_MODEL_VERSION
 
-        self._add_model_download_args()
-        self._add_model_preprocess_args()
+        self._add_model_registration_args()
+
+    def _add_model_registration_args(self):
+        args = sys.argv
+        if "--model_type" in args:
+            ind = args.index("--model_type")
+            self.model_id = sys.argv[ind + 1]
+
+        if "--model_name" in args:
+            ind = args.index("--model_name")
+            self.task_name = sys.argv[ind + 1]
+
+        if "--model_description" in args:
+            ind = args.index("--model_description")
+            self.mlflow_flavor = sys.argv[ind + 1]
+
+        if "--registry_name" in args:
+            ind = args.index("--registry_name")
+            self.task_name = sys.argv[ind + 1]
+
+        if "--model_version" in args:
+            ind = args.index("--model_version")
+            self.mlflow_flavor = sys.argv[ind + 1]
 
     def update_custom_dimensions(self, properties: dict):
         """Add/update properties in custom dimensions."""
         assert isinstance(properties, dict)
         self.__dict__.update(properties)
-
-    def _add_model_download_args(self):
-        args = sys.argv
-        if "--model-id" in args:
-            ind = args.index("--model-id")
-            self.model_id = sys.argv[ind + 1]
-
-        if "--model-source" in args:
-            ind = args.index("--model-source")
-            self.model_source = sys.argv[ind + 1]
-
-    def _add_model_preprocess_args(self):
-        args = sys.argv
-        if "--model-id" in args:
-            ind = args.index("--model-id")
-            self.model_id = sys.argv[ind + 1]
-
-        if "--task-name" in args:
-            ind = args.index("--task-name")
-            self.task_name = sys.argv[ind + 1]
-
-        if "--mlflow-flavor" in args:
-            ind = args.index("--mlflow-flavor")
-            self.mlflow_flavor = sys.argv[ind + 1]
 
 
 class ModelImportHandler(logging.StreamHandler):

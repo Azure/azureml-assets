@@ -14,5 +14,4 @@ RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.ya
 
 RUN pip install azureml-metrics==0.0.14.post1
 
-# Ideally we wouldn't use a private package - need to move this to pypi
 ENV LD_LIBRARY_PATH $AZUREML_CONDA_ENVIRONMENT_PATH/lib:$LD_LIBRARY_PATH
