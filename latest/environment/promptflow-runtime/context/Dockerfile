@@ -1,1 +1,1 @@
-FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime:20230704.v1
+FROM mcr.microsoft.com/azureml/promptflow/promptflow-runtime:20230705.v2
