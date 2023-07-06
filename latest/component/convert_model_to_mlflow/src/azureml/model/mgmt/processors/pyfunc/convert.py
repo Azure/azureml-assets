@@ -45,7 +45,7 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
 
     :param task_type: Task type used in training
     :type task_type: str
-    :return: mlflow model signature.
+    :return: MLflow model signature.
     :rtype: mlflow.models.signature.ModelSignature
     """
     input_schema = Schema(
