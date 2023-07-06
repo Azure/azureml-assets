@@ -34,6 +34,14 @@ def _get_parser():
     parser.add_argument("--hf-model-class", type=str, required=False, help="Hugging Face model class ")
     parser.add_argument("--hf-tokenizer-class", type=str, required=False, help="Hugging tokenizer class")
     parser.add_argument(
+        "--hf-use-experimental-features",
+        type=bool,
+        required=False,
+        default=False,
+        help="Enable experimental features for hugging face MLflow model conversion"
+    )
+
+    parser.add_argument(
         "--extra-pip-requirements",
         type=str,
         required=False,
@@ -71,12 +79,12 @@ def _get_parser():
 
 def _validate_transformers_args(args):
     if not args.get("model_id"):
-        raise Exception("model_id is a required parameter for hftransformers mlflow flavor.")
+        raise Exception("model_id is a required parameter for hftransformers MLflow flavor.")
     if not args.get("task"):
-        raise Exception("task is a required parameter for hftransformers mlflow flavor.")
+        raise Exception("task is a required parameter for hftransformers MLflow flavor.")
     task = args["task"]
     if not SupportedTasks.has_value(task):
-        raise Exception(f"Unsupported task {task} for hftransformers mlflow flavor.")
+        raise Exception(f"Unsupported task {task} for hftransformers MLflow flavor.")
 
 
 def _validate_pyfunc_args(pyfunc_args):
@@ -103,6 +111,7 @@ def run():
     hf_config_class = args.hf_config_class
     hf_model_class = args.hf_model_class
     hf_tokenizer_class = args.hf_tokenizer_class
+    hf_use_experimental_features = args.hf_use_experimental_features
     extra_pip_requirements = args.extra_pip_requirements
 
     model_download_metadata_path = args.model_download_metadata
@@ -132,6 +141,10 @@ def run():
     preprocess_args[HF_CONF.HF_CONFIG_CLASS.value] = hf_config_class
     preprocess_args[HF_CONF.HF_PRETRAINED_CLASS.value] = hf_model_class
     preprocess_args[HF_CONF.HF_TOKENIZER_CLASS.value] = hf_tokenizer_class
+    preprocess_args[HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value] = hf_use_experimental_features
+
+    # update custom dimensions with input parameters
+    custom_dimensions.update_custom_dimensions(preprocess_args)
 
     logger.info(f"Preprocess args : {preprocess_args}")
 
