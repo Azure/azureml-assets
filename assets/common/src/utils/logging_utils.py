@@ -88,8 +88,11 @@ class RunDetails:
         if compute_name == "":
             return "No compute found."
         # TODO: Use V2 way of determining this.
-        cpu_cluster = ComputeTarget(workspace=self._run.experiment.workspace, name=compute_name)
-        return cpu_cluster.vm_size
+        try:
+            cpu_cluster = ComputeTarget(workspace=self._run.experiment.workspace, name=compute_name)
+            return cpu_cluster.vm_size
+        except Exception:
+            return None
 
     @property
     def root_attribute(self):
