@@ -51,4 +51,4 @@ class LoggerConfig:
     LOGGER_NAME = "FM_IMPORT_MODEL"
     VERBOSITY_LEVEL = "DEBUG"
     OFFLINE_RUN_MESSAGE = "OFFLINE_RUN"
-    IMPORT_MODEL_VERSION = "0.0.7"  # Update when changing version in spec file.
+    IMPORT_MODEL_VERSION = "0.0.8"  # Update when changing version in spec file.

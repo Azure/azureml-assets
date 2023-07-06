@@ -28,11 +28,7 @@ def get_mlclient(registry_name: str = None):
         has_obo_succeeded = True
     except Exception as ex:
         # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
-        logger.exception(
-            AzureMLException._with_error(
-                AzureMLError.create(UserIdentityMissingError, exception=ex)
-            )
-        )
+        logger.warning(AzureMLError.create(UserIdentityMissingError))
 
     if not has_obo_succeeded:
         try:
