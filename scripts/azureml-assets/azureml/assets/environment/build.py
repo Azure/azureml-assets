@@ -68,13 +68,9 @@ def create_acr_task(image_name: str,
         if trivy_url is not None:
             task['steps'].append({
                 'id': 'scan',
-                'cmd': (
-                        f"$Registry/{image_name} "
-                        f"curl -sSfL -o trivy.deb {trivy_url} && "
-                        "dpkg -i trivy.deb && "
-                        "trivy fs --scanners vuln /"
-                    ),
-                'ignoreErrors': True
+                'cmd': f"aquasec/trivy -q image --scanners vuln --ignore-unfixed $Registry/{image_name}",
+                'ignoreErrors': True,
+                'privileged': True
             })
 
     # Add push step if requested

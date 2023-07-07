@@ -5,6 +5,13 @@
 from azureml.core import Run
 from azureml.core.run import _OfflineRun
 import azureml.evaluate.mlflow as aml_mlflow
+import os
+
+known_modules = set([
+    "model_prediction",
+    "compute_metrics",
+    "evaluate_model"
+])
 
 
 class DummyWorkspace:
@@ -136,3 +143,28 @@ class TestRun:
             if second_parent is not None and hasattr(second_parent, "name"):
                 cur_attribute = second_parent.name
         return cur_attribute
+
+    @property
+    def get_extra_run_info(self):
+        """Get run details of the pipeline.
+
+        Returns:
+            _type_: _description_
+        """
+        info = {}
+        try:
+            import re
+            location = os.environ.get("AZUREML_SERVICE_ENDPOINT")
+            location = re.compile("//(.*?)\\.").search(location).group(1)
+        except Exception:
+            location = os.environ.get("AZUREML_SERVICE_ENDPOINT", "")
+        info["location"] = location
+        try:
+            if hasattr(self._run, 'experiment'):
+                module_name = self._run.properties.get('azureml.moduleName', 'Unknown')
+                info["moduleName"] = module_name if module_name in known_modules else 'Unknown'
+                if info["moduleName"] != 'Unknown':
+                    info["moduleVersion"] = self._run.properties.get('azureml.moduleVersion', 'Unknown')
+        except Exception:
+            pass
+        return info
