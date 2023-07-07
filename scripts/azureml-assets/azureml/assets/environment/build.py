@@ -22,7 +22,9 @@ import azureml.assets.util as util
 from azureml.assets.util import logger
 
 TASK_FILENAME = "_acr_build_task.yaml"
-STEP_TIMEOUT_SECONDS = 60 * 90
+BUILD_STEP_TIMEOUT_SECONDS = 60 * 90
+SCAN_STEP_TIMEOUT_SECONDS = 60 * 20
+TRIVY_TIMEOUT = "15m0s"
 SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
@@ -52,7 +54,7 @@ def create_acr_task(image_name: str,
     # Start task with just the build step
     task = {
         'version': 'v1.1.0',
-        'stepTimeout': STEP_TIMEOUT_SECONDS,
+        'stepTimeout': BUILD_STEP_TIMEOUT_SECONDS,
         'steps': [{
             'id': "build",
             'build': f"-t $Registry/{image_name} -f {dockerfile} ."
@@ -68,7 +70,9 @@ def create_acr_task(image_name: str,
         if trivy_url is not None:
             task['steps'].append({
                 'id': 'scan',
-                'cmd': f"aquasec/trivy -q image --scanners vuln --ignore-unfixed $Registry/{image_name}",
+                'stepTimeout': SCAN_STEP_TIMEOUT_SECONDS,
+                'cmd': f"aquasec/trivy -q --timeout {TRIVY_TIMEOUT} image --scanners vuln --ignore-unfixed "
+                       f"$Registry/{image_name}",
                 'ignoreErrors': True,
                 'privileged': True
             })
