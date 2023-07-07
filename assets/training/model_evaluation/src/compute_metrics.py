@@ -14,6 +14,11 @@ from azureml.telemetry.activity import log_activity
 
 import constants
 from exceptions import DataLoaderException, DataValidationException, ComputeMetricsException
+from error_definitions import (ComputeMetricsInternalError,
+                               BadForecastData,
+                               BadEvaluationConfigParam,
+                               InvalidGroundTruthColumnNameData,
+                               BadInputData)
 from logging_utilities import custom_dimensions, get_logger, log_traceback
 from utils import (read_config,
                    check_and_return_if_mltable,
@@ -22,6 +27,7 @@ from utils import (read_config,
 from run_utils import TestRun
 from validation import validate_compute_metrics_args
 from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
+from azureml._common._error_definition.azureml_error import AzureMLError
 
 logger = get_logger(name=__name__)
 current_run = TestRun()
@@ -93,8 +99,11 @@ class ModelEvaluationRunner:
             df = list(df)[0]
             dfs.append(df)
         if not dfs:
-            logger.error("No JSONL files found in data directory")
-            raise DataLoaderException(f"No JSONL files found in the directory {path}")
+            exception = DataLoaderException._with_error(
+                AzureMLError.create(BadInputData, error="No JSON Lines files found in folder.")
+            )
+            log_traceback(exception, logger)
+            raise exception
         data = pd.concat(dfs, ignore_index=True)
         return iter([data])
 
@@ -138,8 +147,7 @@ class ModelEvaluationRunner:
 
     def compute_metrics(self):
         """Compute Metrics Mode."""
-        with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME,
-                          custom_dimensions=self.custom_dimensions):
+        try:
             ground_true_regressors = None
             rename_columns = {}
             if self.task == constants.TASK.FORECASTING:
@@ -182,6 +190,13 @@ class ModelEvaluationRunner:
                         content=artifact_content)
                     result.artifacts['forecast_time_series_id_distribution_table'] = new_table
                 result.save(os.path.join(self.output, constants.EVALUATION_RESULTS_PATH))
+        except Exception as e:
+            exception = ComputeMetricsException._with_error(
+                AzureMLError.create(ComputeMetricsInternalError, error=repr(e))
+            )
+            exception.inner_exception = e
+            log_traceback(exception, logger)
+            raise exception
         return
 
     def run(self):
@@ -193,18 +208,23 @@ class ModelEvaluationRunner:
         with log_activity(logger, activity_name=constants.TelemetryConstants.DATA_LOADING,
                           custom_dimensions=self.custom_dimensions):
             try:
-                print("Loading data ", self.predictions_probabilities, type(self.predictions_probabilities))
                 self.ground_truth, self.predictions, self.predictions_probabilities = self.load_data()
             except Exception as e:
-                message = "Couldn't load data."
-                log_traceback(e, logger, message, True)
-                raise DataLoaderException(message, inner_exception=e)
+                exception = DataLoaderException._with_error(
+                    AzureMLError.create(BadInputData, error=repr(e))
+                )
+                exception.inner_exception = e
+                log_traceback(exception, logger)
+                raise exception
         try:
             self.compute_metrics()
         except Exception as e:
-            message = "Compute metrics failed. See Inner error."
-            raise ComputeMetricsException(exception_message=message,
-                                          inner_exception=e)
+            exception = ComputeMetricsException._with_error(
+                AzureMLError.create(ComputeMetricsInternalError, error=repr(e))
+            )
+            exception.inner_exception = e
+            log_traceback(exception, logger)
+            raise exception
 
 
 def filter_ground_truths(data, task_type, column_name=None):
@@ -229,9 +249,12 @@ def filter_ground_truths(data, task_type, column_name=None):
                         lambda x: x[column_name][0] if len(x[column_name]) > 0 else ""
                     )
             except Exception as e:
-                message = "Invalid ground truths column name"
-                log_traceback(e, logger, message, True)
-                raise DataLoaderException(message, inner_exception=e)
+                exception = DataValidationException._with_error(
+                    AzureMLError.create(InvalidGroundTruthColumnNameData)
+                )
+                exception.inner_exception = e
+                log_traceback(exception, logger)
+                raise exception
         if column_name in data.columns:
             if isinstance(data[column_name].iloc[0], list) or isinstance(data[column_name].iloc[0], np.ndarray):
                 logger.warning("Multiple ground truths are not supported for the Question and Answering currently.\
@@ -253,11 +276,11 @@ def test_component():
                         required=False, default="")
     parser.add_argument("--output", type=str, dest="output")
     parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default="")
-    parser.add_argument("--ground_truths_mltable", type=str, dest="ground_truths_mltable",
-                        required=False, default="")
-    parser.add_argument("--predictions_mltable", type=str, dest="predictions_mltable", required=False, default="")
-    parser.add_argument("--prediction_probabilities_mltable", type=str,
-                        dest="prediction_probabilities_mltable", required=False, default="")
+    # parser.add_argument("--ground_truths_mltable", type=str, dest="ground_truths_mltable",
+    #                    required=False, default="")
+    # parser.add_argument("--predictions_mltable", type=str, dest="predictions_mltable", required=False, default="")
+    # parser.add_argument("--prediction_probabilities_mltable", type=str,
+    #                    dest="prediction_probabilities_mltable", required=False, default="")
     parser.add_argument("--ground_truths_column_name", type=str,
                         dest="ground_truths_column_name", required=False, default=None)
     parser.add_argument("--predictions_column_name", type=str,
@@ -268,18 +291,23 @@ def test_component():
     custom_dimensions.app_name = constants.TelemetryConstants.COMPUTE_METRICS_NAME
     custom_dims_dict = vars(custom_dimensions)
     with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME,
-                      custom_dimensions=custom_dims_dict):
+                      custom_dimensions=custom_dims_dict) as compute_metrics_activity:
         logger.info("Validating arguments")
         with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME,
-                          custom_dimensions=custom_dims_dict):
-            validate_compute_metrics_args(args)
+                          custom_dimensions=custom_dims_dict) as validation_activity:
+            try:
+                validate_compute_metrics_args(args)
+            except Exception as e:
+                validation_activity.exception(repr(e))
+                raise e
 
-        is_ground_truths_mltable, ground_truths = check_and_return_if_mltable(args.ground_truths,
-                                                                              args.ground_truths_mltable)
-        is_predictions_mltable, predictions = check_and_return_if_mltable(args.predictions,
-                                                                          args.predictions_mltable)
-        is_prediction_probabilities_mltable, prediction_probabilities = check_and_return_if_mltable(
-            args.prediction_probabilities, args.prediction_probabilities_mltable
+        ground_truths = args.ground_truths
+        is_ground_truths_mltable = check_and_return_if_mltable(ground_truths)
+        predictions = args.predictions
+        is_predictions_mltable = check_and_return_if_mltable(predictions)
+        prediction_probabilities = args.prediction_probabilities
+        is_prediction_probabilities_mltable = check_and_return_if_mltable(
+            args.prediction_probabilities
         )
 
         met_config = None
@@ -292,8 +320,11 @@ def test_component():
                     met_config = json.loads(args.config_str)
                 except Exception as e:
                     message = "Unable to load evaluation_config_params. String is not JSON serielized."
-                    raise DataLoaderException(message,
-                                              inner_exception=e)
+                    exception = DataLoaderException._with_error(
+                        AzureMLError.create(BadEvaluationConfigParam, error=repr(e))
+                    )
+                    log_traceback(exception=exception, logger=logger, message=message)
+                    raise exception
         if args.task == constants.TASK.FORECASTING:
             metrics_config = {}
             if met_config:
@@ -311,28 +342,33 @@ def test_component():
             if not args.predictions_column_name:
                 args.predictions_column_name = metrics_config.get('predictions_column_name')
             if not args.ground_truths_column_name or (not is_ground_truths_mltable and not args.ground_truths):
-                message = (
-                    "For forecasting tasks, the table needs to be provided "
-                    "in jsonl format as the ground_truths parameter  "
-                    "or as mltable through ground_truths_mltable parameter. The table must contain time, prediction "
-                    "groud truth and time series IDs columns.")
-                raise DataValidationException(message)
-        runner = ModelEvaluationRunner(
-            task=args.task,
-            ground_truth=ground_truths,
-            predictions=predictions,
-            prediction_probabilities=prediction_probabilities,
-            output=args.output,
-            custom_dimensions=custom_dims_dict,
-            config_file=args.config_file_name,
-            metrics_config=met_config,
-            is_ground_truth_mltable=is_ground_truths_mltable,
-            is_predictions_mltable=is_predictions_mltable,
-            is_prediction_probabilities_mltable=is_prediction_probabilities_mltable,
-            ground_truths_column_name=args.ground_truths_column_name,
-            predictions_column_name=args.predictions_column_name
-        )
-        runner.run()
+                exception = DataValidationException._with_error(
+                    AzureMLError.create(BadForecastData)
+                )
+                log_traceback(exception, logger)
+                raise exception
+
+        try:
+            runner = ModelEvaluationRunner(
+                task=args.task,
+                ground_truth=ground_truths,
+                predictions=predictions,
+                prediction_probabilities=prediction_probabilities,
+                output=args.output,
+                custom_dimensions=custom_dims_dict,
+                config_file=args.config_file_name,
+                metrics_config=met_config,
+                is_ground_truth_mltable=is_ground_truths_mltable,
+                is_predictions_mltable=is_predictions_mltable,
+                is_prediction_probabilities_mltable=is_prediction_probabilities_mltable,
+                ground_truths_column_name=args.ground_truths_column_name,
+                predictions_column_name=args.predictions_column_name
+            )
+            runner.run()
+        except Exception as e:
+            compute_metrics_activity.exception(repr(e))
+            raise e
+
     test_run.add_properties(properties=constants.RUN_PROPERTIES)
     try:
         root_run.add_properties(properties=constants.ROOT_RUN_PROPERTIES)

@@ -2,36 +2,31 @@
 # Licensed under the MIT License.
 
 """Run Model deployment module."""
-import os
 import argparse
 import json
 import re
 import time
 
-from azure.ai.ml import MLClient
 from azure.ai.ml.entities import (
     ManagedOnlineEndpoint,
     ManagedOnlineDeployment,
     OnlineRequestSettings,
     ProbeSettings,
 )
-from azure.identity import ManagedIdentityCredential
-from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from azureml.core import Run
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 from pathlib import Path
 
-from log_utils.config import AppName
-from log_utils.logging_utils import custom_dimensions, get_logger
-from log_utils.exceptions import (
+from utils.config import AppName
+from utils.common_utils import get_mlclient
+from utils.logging_utils import custom_dimensions, get_logger
+from utils.exceptions import (
     swallow_all_exceptions,
-    NonMsiAttachedComputeError,
     OnlineEndpointInvocationError,
     EndpointCreationError,
     DeploymentCreationError,
-    UserIdentityMissingError
 )
+
 
 MAX_REQUEST_TIMEOUT = 90000
 MAX_INSTANCE_COUNT = 20
@@ -182,45 +177,6 @@ def parse_args():
     return args
 
 
-def get_ml_client():
-    """Return ML Client."""
-    has_obo_succeeded = False
-    try:
-        credential = AzureMLOnBehalfOfCredential()
-        # Check if given credential can get token successfully.
-        credential.get_token("https://management.azure.com/.default")
-        has_obo_succeeded = True
-    except Exception as ex:
-        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
-        logger.exception(
-            AzureMLException._with_error(
-                AzureMLError.create(UserIdentityMissingError, exception=ex)
-            )
-        )
-
-    if not has_obo_succeeded:
-        try:
-            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-            credential = ManagedIdentityCredential(client_id=msi_client_id)
-            credential.get_token("https://management.azure.com/.default")
-        except Exception as ex:
-            raise AzureMLException._with_error(
-                AzureMLError.create(NonMsiAttachedComputeError, exception=ex)
-            )
-
-    run = Run.get_context(allow_offline=False)
-    ws = run.experiment.workspace
-
-    ml_client = MLClient(
-        credential=credential,
-        subscription_id=ws._subscription_id,
-        resource_group_name=ws._resource_group,
-        workspace_name=ws._workspace_name,
-    )
-    logger.info(f"MLClient created for workspace - {ws._workspace_name}")
-    return ml_client
-
-
 def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
     """Create endpoint and deployment and return details."""
     endpoint = ManagedOnlineEndpoint(name=endpoint_name, auth_mode="key")
@@ -288,7 +244,7 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
 def main():
     """Run main function."""
     args = parse_args()
-    ml_client = get_ml_client()
+    ml_client = get_mlclient()
     # get registered model id
     if args.registration_details:
         model_info = {}
