@@ -219,8 +219,8 @@ outputs:
     type: custom_model
 
 code: ../src
- 
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:115
+
+environment:  azureml://registries/azureml/environments/AzureML-AutoML-DNN-Vision-GPU/versions/117
 
 command: >-
   python -m instance_segmentation.run
