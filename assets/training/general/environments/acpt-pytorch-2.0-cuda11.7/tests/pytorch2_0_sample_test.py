@@ -14,6 +14,7 @@ BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "../../acpt-tests/src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
+os.environ['DS_ACCELERATOR'] = 'cuda'
 
 
 def test_pytorch_2_0():
@@ -41,6 +42,7 @@ def test_pytorch_2_0():
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
         command="pip install -r requirements.txt" \
+                " && export DS_ACCELERATOR='cuda'"\
                 " && python pretrain_glue.py --tensorboard_log_dir \"/outputs/runs/\"" \
                 " --deepspeed ds_config.json --num_train_epochs 5 --output_dir outputs --disable_tqdm 1" \
                 " --local_rank $RANK --evaluation_strategy \"epoch\" --logging_strategy \"epoch\"" \
