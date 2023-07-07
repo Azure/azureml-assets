@@ -5,6 +5,8 @@ properties:
   SHA: 2f5c3cd4eace6be6c0f12981f377fb35e5bf6ee5
   datasets: tiiuae/falcon-refinedweb
   languages: en
+  inference-min-sku-spec: 8|0|64|128
+  inference-recommended-sku: Standard_NC12s_v3
 tags:
   Featured: ''
   Preview: ''
