@@ -62,8 +62,8 @@ def create_acr_task(image_name: str,
 
     # Output conda export command
     task['steps'].append({
-        'id': 'output',
-        'cmd': 'docker run mcr.microsoft.com/azureml/aml-olive-optimizer conda env export'
+        'id': 'conda_export',
+        'cmd': '$Registry/{image_name} conda env export'
     })
 
     # Add test command if provided
