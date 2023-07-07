@@ -8,5 +8,5 @@ sentencepiece==0.1.99
 accelerate==0.20.3
 wget==3.2
 applicationinsights==0.11.10
-azureml-automl-core==1.52.0
+azureml-automl-core==1.52.0.post1
 azureml-telemetry==1.52.0

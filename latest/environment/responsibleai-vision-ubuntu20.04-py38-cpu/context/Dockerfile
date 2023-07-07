@@ -25,7 +25,7 @@ RUN pip install 'azureml-core==1.52.0' \
                 'azureml-rai-utils==0.0.3'
 
 RUN pip install 'azureml-dataset-runtime==1.52.0' \
-                'azureml-automl-dnn-vision==1.52.0'
+                'azureml-automl-dnn-vision==1.52.0.post1'
 
 RUN pip install 'shap==0.40.0' \
                 'interpret-community==0.29.0' \
