@@ -30,6 +30,7 @@ from utils.exceptions import (
 
 MAX_REQUEST_TIMEOUT = 90000
 MAX_INSTANCE_COUNT = 20
+MAX_DEPLOYMENT_LOG_TAIL_LINES = 10000
 
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.DEPLOY_MODEL
@@ -221,6 +222,14 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
         logger.info(f"Creating deployment {deployment}")
         ml_client.online_deployments.begin_create_or_update(deployment).wait()
     except Exception as e:
+        logger.error("Deployment failed. Printing deployment logs")
+        logs = ml_client.online_deployments.get_logs(
+            name=deployment_name,
+            endpoint_name=endpoint_name,
+            lines=MAX_DEPLOYMENT_LOG_TAIL_LINES
+        )
+        logger.error(logs)
+
         raise AzureMLException._with_error(
             AzureMLError.create(DeploymentCreationError, exception=e)
         )
@@ -233,7 +242,7 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
         ml_client.begin_create_or_update(endpoint).wait()
         endpoint = ml_client.online_endpoints.get(endpoint.name)
     except Exception as e:
-        error_msg = f"Error occured while updating endpoint traffic - {e}"
+        error_msg = f"Error occured while updating endpoint traffic. Deployment should be usable. Exception - {e}"
         raise Exception(error_msg)
 
     logger.info(f"Endpoint updated to take 100% traffic for deployment {deployment_name}")
