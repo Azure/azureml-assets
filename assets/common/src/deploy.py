@@ -233,7 +233,7 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
             )
             logger.error(logs)
         except Exception as e:
-            logger.error("Error in fetching deployment logs: {e}")
+            logger.error(f"Error in fetching deployment logs: {e}")
 
         raise AzureMLException._with_error(
             AzureMLError.create(DeploymentCreationError, exception=e)
