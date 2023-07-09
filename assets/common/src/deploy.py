@@ -213,6 +213,8 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
     try:
         logger.info(f"Creating endpoint {endpoint_name}")
         ml_client.begin_create_or_update(endpoint).wait()
+        endpoint = ml_client.online_endpoints.get(endpoint.name)
+        logger.info(f"Endpoint created {endpoint.id}")
     except Exception as e:
         raise AzureMLException._with_error(
             AzureMLError.create(EndpointCreationError, exception=e)
@@ -222,13 +224,16 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
         logger.info(f"Creating deployment {deployment}")
         ml_client.online_deployments.begin_create_or_update(deployment).wait()
     except Exception as e:
-        logger.error("Deployment failed. Printing deployment logs")
-        logs = ml_client.online_deployments.get_logs(
-            name=deployment_name,
-            endpoint_name=endpoint_name,
-            lines=MAX_DEPLOYMENT_LOG_TAIL_LINES
-        )
-        logger.error(logs)
+        try:
+            logger.error("Deployment failed. Printing deployment logs")
+            logs = ml_client.online_deployments.get_logs(
+                name=deployment_name,
+                endpoint_name=endpoint_name,
+                lines=MAX_DEPLOYMENT_LOG_TAIL_LINES
+            )
+            logger.error(logs)
+        except Exception as e:
+            logger.error("Error in fetching deployment logs: {e}")
 
         raise AzureMLException._with_error(
             AzureMLError.create(DeploymentCreationError, exception=e)
