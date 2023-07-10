@@ -92,7 +92,7 @@ def parse_args():
     parser.add_argument(
         "--idle_time_before_scale_down",
         type=int,
-        default=120, # 2min
+        default=120,  # 2min
         help="Idle time before scale down of the compute cluster",
     )
     parser.add_argument(
@@ -122,7 +122,7 @@ def parse_args():
     parser.add_argument(
         "--timeout",
         type=int,
-        default=30, # 30sec
+        default=30,  # 30sec
         help="Timeout in seconds",
     )
     parser.add_argument(
@@ -212,16 +212,16 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
             AzureMLError.create(DeploymentCreationError, exception=e)
         )
 
-    logger.info(f"Deployment successful.")
+    logger.info("Deployment successful.")
 
     # set the deployment as default
     try:
         logger.info(f"Updating endpoint to make {deployment_name} as default deployment")
-        endpoint = ml_client.batch_endpoints.get(endpoint_name) 
+        endpoint = ml_client.batch_endpoints.get(endpoint_name)
         endpoint.defaults.deployment_name = deployment_name
         ml_client.begin_create_or_update(endpoint).wait()
 
-        endpoint = ml_client.batch_endpoints.get(endpoint_name) 
+        endpoint = ml_client.batch_endpoints.get(endpoint_name)
     except Exception as e:
         error_msg = f"Error occured while updating deployment - {e}"
         raise Exception(error_msg)
@@ -276,7 +276,6 @@ def main():
     if args.inference_payload:
         print("Invoking inference with test payload ...")
         try:
-            
             input = Input(type="uri_folder", path=rf"{args.inference_payload}")
 
             job = ml_client.batch_endpoints.invoke(
@@ -291,7 +290,7 @@ def main():
                 name=scoring_job.name, download_path=".", output_name="score"
             )
 
-            logger.info(f"Endpoint invoked successfully.")
+            logger.info("Endpoint invoked successfully.")
         except Exception as e:
             raise AzureMLException._with_error(
                 AzureMLError.create(OnlineEndpointInvocationError, exception=e)
