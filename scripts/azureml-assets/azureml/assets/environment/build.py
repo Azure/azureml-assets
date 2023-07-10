@@ -60,6 +60,13 @@ def create_acr_task(image_name: str,
             'build': f"-t $Registry/{image_name} -f {dockerfile} ."
         }]}
 
+    # Add output conda export command
+    task['steps'].append({
+        'id': 'conda_export',
+        'cmd': f"$Registry/{image_name} conda env export",
+        'ignoreErrors': True
+    })
+
     # Add test command if provided
     if test_command:
         task['steps'].append({
