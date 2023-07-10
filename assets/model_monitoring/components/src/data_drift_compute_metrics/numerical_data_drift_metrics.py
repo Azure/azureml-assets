@@ -315,7 +315,11 @@ def compute_numerical_data_drift_measures_tests(
         )
     elif numerical_metric == "TwoSampleKolmogorovSmirnovTest":
         output_df = _ks2sample_pandas_impl(
-            baseline_df, production_df, numerical_columns
+            baseline_df,
+            production_df,
+            baseline_df_count,
+            production_df_count,
+            numerical_columns,
         )
     else:
         raise Exception(f"Invalid metric {numerical_metric} for numerical feature")
