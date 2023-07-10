@@ -77,6 +77,3 @@ def test_tensorflow_2_12():
             ml_client.jobs.stream(returned_job.name)
 
     assert status == JobStatus.COMPLETED
-
-if __name__ == "__main__":
-    test_tensorflow_2_12()

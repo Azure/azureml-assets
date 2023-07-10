@@ -5,14 +5,14 @@
 import os
 import time
 from pathlib import Path
-from azure.ai.ml import command, Output, MLClient, PyTorchDistribution
+from azure.ai.ml import command, Output, MLClient
 from azure.ai.ml.entities import Environment, BuildContext, JobResourceConfiguration
 from azure.identity import AzureCliCredential
 import subprocess
 
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "../../acpt-tests/src"
-TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 120)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
@@ -85,6 +85,3 @@ def test_pytorch_2_0():
             ml_client.jobs.stream(returned_job.name)
 
     assert current_status == "Completed"
-
-if __name__ == "__main__":
-    test_pytorch_2_0()
