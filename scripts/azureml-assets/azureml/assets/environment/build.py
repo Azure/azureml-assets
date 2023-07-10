@@ -63,7 +63,8 @@ def create_acr_task(image_name: str,
     # Add output conda export command
     task['steps'].append({
         'id': 'conda_export',
-        'cmd': '$Registry/{image_name} conda env export',
+        'cmd': f"$Registry/{image_name} conda env export",
+
         'ignoreErrors': True
     })
 
