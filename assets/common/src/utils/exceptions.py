@@ -137,7 +137,7 @@ class BatchEndpointInvocationError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.BATCH_ENDPOINT_INVOCATION_ERROR
-    
+
 
 class UserIdentityMissingError(ClientError):
     """Internal Import Model Generic Error."""
