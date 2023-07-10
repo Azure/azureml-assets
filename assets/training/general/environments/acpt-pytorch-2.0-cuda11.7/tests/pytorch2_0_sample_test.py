@@ -14,7 +14,6 @@ BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "../../acpt-tests/src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 120)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
-os.environ['DS_ACCELERATOR'] = 'cuda'
 
 
 def test_pytorch_2_0():
