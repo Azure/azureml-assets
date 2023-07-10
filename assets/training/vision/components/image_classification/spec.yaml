@@ -188,7 +188,7 @@ outputs:
 
 code: ../src
 
-environment: azureml://registries/azureml/environments/AzureML-AutoML-DNN-Vision-GPU/versions/117
+environment: azureml:AzureML-AutoML-DNN-Vision-GPU:118
 
 command: >-
   python -m image_classification.run
