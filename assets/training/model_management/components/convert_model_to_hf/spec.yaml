@@ -1,0 +1,58 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: convert_model_to_hf
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Convert Lllama model to HF
+description: Component converts Llama models to Hugging face format.
+
+environment: azureml://registries/azureml/environments/model-management/versions/12
+
+code: ../../src/
+command: >
+  python convert_to_hf.py
+  --model-path ${{inputs.model_path}}
+  $[[--model-size ${{inputs.model_size}}]]
+  --convert-to-hf ${{inputs.convert_to_hf}}
+  --hf-model-output-dir ${{outputs.hf_model_folder}}
+  
+
+inputs:
+  model_path:
+    type: uri_folder
+    description: Path to the zipped llama model.
+    mode: ro_mount
+    optional: false
+
+  model_size:
+    type: string
+    optional: true
+    enum:
+      - 7B
+      - 13B
+      - 30B
+      - 65B
+      - tokenizer_only
+    description: Model Size
+    default: 7B
+  
+  convert_to_hf:
+    type: boolean
+    optional: false
+    enum:
+      - True
+      - False 
+    description: Parameter to identify whether we need to convert in HF format or not.
+    default: False 
+
+outputs:
+  hf_model_folder:
+    type: uri_folder
+    description: Output path for the converted HF model.
+    mode: rw_mount
+
+tags:
+    Preview: ""

@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.8
+version: 0.0.9
 
 # Pipeline inputs
 inputs:
@@ -45,6 +45,28 @@ inputs:
   model_id:
     type: string
     description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
+
+  ## Inputs for the HF conversion
+  model_size:
+    type: string
+    optional: true
+    enum:
+      - 7B
+      - 13B
+      - 30B
+      - 65B
+      - tokenizer_only
+    description: Model Size
+    default: 7B
+
+  convert_to_hf:
+    type: boolean
+    optional: false
+    enum:
+      - True
+      - False 
+    description: Parameter to identify whether we need to convert in HF format or not.
+    default: False 
 
   ## Inputs for the MlFLow conversion
   license_file_path:
@@ -177,7 +199,7 @@ outputs:
 
 jobs:
   download_model:
-    component: azureml:download_model:0.0.7
+    component: azureml:download_model:0.0.8
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -190,8 +212,21 @@ jobs:
       model_output:
         type: uri_folder
 
+  convert_model_to_hf:
+    component: azureml:download_model:0.0.1
+    compute: ${{parent.inputs.compute}}
+    resources:
+      instance_type: '${{parent.inputs.instance_type}}'
+    inputs:
+      model_path: ${{parent.jobs.download_model.outputs.model_output}}
+      model_size: ${{parent.inputs.model_size}}
+      convert_to_hf: ${{parent.inputs.convert_to_hf}}
+    outputs:
+      hf_model_folder:
+        type: uri_folder
+
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.9
+    component: azureml:convert_model_to_mlflow:0.0.10
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -199,7 +234,7 @@ jobs:
       task_name: ${{parent.inputs.task_name}}
       license_file_path: ${{parent.inputs.license_file_path}}
       model_download_metadata: ${{parent.jobs.download_model.outputs.model_download_metadata}}
-      model_path: ${{parent.jobs.download_model.outputs.model_output}}
+      model_path: ${{parent.jobs.download_model.outputs.hf_model_folder}}
       hf_config_args: ${{parent.inputs.hf_config_args}}
       hf_tokenizer_args:  ${{parent.inputs.hf_tokenizer_args}}
       hf_model_args: ${{parent.inputs.hf_model_args}}
