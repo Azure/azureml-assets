@@ -1,0 +1,191 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: batch_deploy_model
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Batch deploy model
+description:
+  Batch deploy a model to a workspace. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
+
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/6
+
+code: ../../src
+command: >-
+  python batch_deploy.py
+  $[[--registration_details ${{inputs.registration_details}}]]
+  $[[--model_id ${{inputs.model_id}}]]
+  $[[--inference_payload ${{inputs.inference_payload}}]]
+  $[[--endpoint_name ${{inputs.endpoint_name}}]]
+  $[[--deployment_name ${{inputs.deployment_name}}]]
+  $[[--compute_name ${{inputs.compute_name}}]]
+  $[[--size ${{inputs.size}}]]
+  $[[--min_instances ${{inputs.min_instances}}]]
+  $[[--max_instances ${{inputs.max_instances}}]]
+  $[[--idle_time_before_scale_down ${{inputs.idle_time_before_scale_down}}]]
+  $[[--output_file_name ${{inputs.output_file_name}}]]
+  $[[--max_concurrency_per_instance ${{inputs.max_concurrency_per_instance}}]]
+  $[[--error_threshold ${{inputs.error_threshold}}]]
+  $[[--max_retries ${{inputs.max_retries}}]]
+  $[[--timeout ${{inputs.timeout}}]]
+  $[[--logging_level ${{inputs.logging_level}}]]
+  $[[--mini_batch_size ${{inputs.mini_batch_size}}]]
+  $[[--instance_count ${{inputs.instance_count}}]]
+  --model_deployment_details ${{outputs.model_deployment_details}}
+
+inputs:
+  # Output of registering component
+  registration_details:
+    type: uri_file
+    optional: true
+    description: Json file that contains the ID of registered model to be deployed
+
+  model_id:
+    type: string
+    optional: true 
+    description: |
+      Asset ID of the model registered in workspace/registry.
+      Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version>
+      Workspace - azureml:<model-name>:<version>
+
+  inference_payload:
+    type: uri_folder
+    optional: true
+    description: Folder containing files used to validate deployment
+
+  endpoint_name:
+    type: string
+    optional: true
+    description: Name of the endpoint
+
+  deployment_name:
+    type: string
+    optional: true
+    default: default
+    description: Name of the deployment
+    
+  compute_name:
+    type: string
+    optional: true
+    default: cpu-cluster
+    description: Name of the deployment
+  
+  size:
+    type: string
+    optional: true
+    enum:
+      - Standard_DS1_v2
+      - Standard_DS2_v2
+      - Standard_DS3_v2
+      - Standard_DS4_v2
+      - Standard_DS5_v2
+      - Standard_F2s_v2
+      - Standard_F4s_v2
+      - Standard_F8s_v2
+      - Standard_F16s_v2
+      - Standard_F32s_v2
+      - Standard_F48s_v2
+      - Standard_F64s_v2
+      - Standard_F72s_v2
+      - Standard_FX24mds
+      - Standard_FX36mds
+      - Standard_FX48mds
+      - Standard_E2s_v3
+      - Standard_E4s_v3
+      - Standard_E8s_v3
+      - Standard_E16s_v3
+      - Standard_E32s_v3
+      - Standard_E48s_v3
+      - Standard_E64s_v3
+      - Standard_NC4as_T4_v3
+      - Standard_NC6s_v2
+      - Standard_NC6s_v3
+      - Standard_NC8as_T4_v3
+      - Standard_NC12s_v2
+      - Standard_NC12s_v3
+      - Standard_NC16as_T4_v3
+      - Standard_NC24s_v2
+      - Standard_NC24s_v3
+      - Standard_NC24rs_v3
+      - Standard_NC64as_T4_v3
+      - Standard_ND40rs_v2
+      - Standard_ND96asr_v4
+      - Standard_ND96amsr_A100_v4
+    default: Standard_NC24s_v3
+    description: Compute instance size to deploy model. Make sure that instance type is available and have enough quota available.
+
+  min_instances:
+    type: integer
+    optional: true
+    default: 0
+    description: Minimum instances of the compute cluster
+
+  max_instances:
+    type: integer
+    optional: true
+    default: 3
+    description: Maximum instances of the compute cluster
+
+  idle_time_before_scale_down:
+    type: integer
+    optional: true
+    default: 120
+    description: Idle time before scale down of the compute cluster
+
+  output_file_name:
+    type: string
+    optional: true
+    default: predictions.csv
+    description: Name of the output file
+
+  max_concurrency_per_instance:
+    type: integer
+    optional: true
+    default: 1
+    description: Maximum number of parallelism per instance
+
+  error_threshold:
+    type: integer
+    optional: true
+    default: -1
+    description: Error threshold before batch inference is aborted
+
+  max_retries:
+    type: integer
+    optional: true
+    default: 3
+    description: Number of retries in failure
+
+  timeout:
+    type: integer
+    optional: true
+    default: 30
+    description: Timeout in seconds
+
+  logging_level:
+    type: string
+    optional: true
+    default: info
+    description: Logging level for batch inference operation
+
+  mini_batch_size:
+    type: integer
+    optional: true
+    default: 10
+    description: Size of the mini-batch passed to each batch invocation
+
+  instance_count:
+    type: integer
+    optional: true
+    default: 1
+    description: Number of compute instances to deploy model
+
+outputs:
+  model_deployment_details:
+    type: uri_file
+    description: Json file to which deployment details will be written
+
+tags:
+    Preview: ""
+    Internal: ""
