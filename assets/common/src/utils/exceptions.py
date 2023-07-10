@@ -30,6 +30,7 @@ class ModelImportErrorStrings:
     ENDPOINT_CREATION_ERROR = "Error occured while creating endpoint - {exception}"
     DEPLOYMENT_CREATION_ERROR = "Error occured while creating deployment - {exception}"
     ONLINE_ENDPOINT_INVOCATION_ERROR = "Invocation failed with error: {exception}"
+    BATCH_ENDPOINT_INVOCATION_ERROR = "Invocation failed with error: {exception}"
     USER_IDENTITY_MISSING_ERROR = (
         "Failed to get AzureMLOnBehalfOfCredential."
         " Kindly set UserIdentity as identity type if submitting job using sdk or cli."
@@ -128,6 +129,15 @@ class OnlineEndpointInvocationError(ClientError):
         """Message format."""
         return ModelImportErrorStrings.ONLINE_ENDPOINT_INVOCATION_ERROR
 
+
+class BatchEndpointInvocationError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.BATCH_ENDPOINT_INVOCATION_ERROR
+    
 
 class UserIdentityMissingError(ClientError):
     """Internal Import Model Generic Error."""

@@ -23,7 +23,7 @@ from utils.common_utils import get_mlclient
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.exceptions import (
     swallow_all_exceptions,
-    OnlineEndpointInvocationError,
+    BatchEndpointInvocationError,
     EndpointCreationError,
     DeploymentCreationError,
     ComputeCreationError,
@@ -40,8 +40,8 @@ def parse_args():
     """Return arguments."""
     parser = argparse.ArgumentParser()
 
-    # Defaults for managed online endpoint has been picked mostly from:
-    # https://learn.microsoft.com/en-us/azure/machine-learning/reference-yaml-deployment-managed-online
+    # Defaults for batch endpoint has been picked mostly from:
+    # https://learn.microsoft.com/en-us/azure/machine-learning/reference-yaml-deployment-batch
     # Some of the defaults have been tweaked to cater to large models.
 
     # add arguments
@@ -292,7 +292,7 @@ def main():
             logger.info("Endpoint invoked successfully.")
         except Exception as e:
             raise AzureMLException._with_error(
-                AzureMLError.create(OnlineEndpointInvocationError, exception=e)
+                AzureMLError.create(BatchEndpointInvocationError, exception=e)
             )
 
     print("Saving deployment details ...")
