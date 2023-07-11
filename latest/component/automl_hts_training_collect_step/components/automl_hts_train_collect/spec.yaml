@@ -1,0 +1,34 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: automl_hts_training_collect_step
+version: 0.0.1
+tags:
+  Preview: ''
+display_name: AutoML HTS - Collection Training Results
+type: command
+
+inputs:
+  setup_metadata:
+    type: uri_folder
+    description: 'Metadata from setup step.'
+  input_metadata:
+    type: uri_folder
+    description: 'Metadata from train step.'
+  enable_event_logger:
+    type: boolean
+    optional: true
+    description: 'Enable event logger.'
+    default: true
+
+outputs:
+  metadata:
+    type: uri_folder
+    description: 'Output metadata that contains train status.'
+
+code: ../../src/collect
+environment: azureml:automl-gpu:0.1
+
+command: >-
+  python collect.py  --input-metadata ${{inputs.input_metadata}}
+  --setup-metadata ${{inputs.setup_metadata}}
+  --output-metadata ${{outputs.metadata}}
+  $[[--enable-event-logger ${{inputs.enable_event_logger}}]]
