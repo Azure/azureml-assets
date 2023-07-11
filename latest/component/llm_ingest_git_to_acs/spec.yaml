@@ -420,7 +420,7 @@ jobs:
     mini_batch_size: "3"
     mini_batch_error_threshold: 0
     logging_level: "INFO"
-    component: 'azureml:llm_rag_generate_embeddings_parallel:0.0.8'
+    component: 'azureml:llm_rag_generate_embeddings_parallel:0.0.9'
     inputs:
       chunks_source:
         type: uri_folder
