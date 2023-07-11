@@ -6,8 +6,9 @@
 # Column Names of Computed Metrics Parquet
 FEATURE_NAME_COLUMN = 'feature_name'
 FEATURE_CATEGORY_COLUMN = 'data_type'
-METRIC_NAME_COLUMN = 'metric_name'
-METRIC_VALUE_COLUMN = 'metric_value'
+METRIC_NAME_COLUMN = 'metric'
+METRIC_VALUE_COLUMN = 'value'
+DIMENSION_COLUMN = 'dimension'
 
 # Column Names of Histogram
 BUCKET_COUNT_COLUMN = 'bucket_count'
@@ -57,4 +58,4 @@ REGRESSION = 'regression'
 # Column names/values for feature attribution drift and feature importance
 FEATURE_COLUMN = 'feature'
 ROW_COUNT_COLUMN_NAME = 'RowCount'
-THRESHOLD_VALUE = 'threshold_value'
+THRESHOLD_VALUE = 'threshold'

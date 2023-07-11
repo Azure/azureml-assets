@@ -47,10 +47,10 @@ def _jensen_shannon_categorical(
 
     output_df = output_df.select("FeatureName", "DistributionBalanceMeasure.js_dist")
     output_df = (
-        output_df.withColumnRenamed("FeatureName", "feature_name")
-        .withColumnRenamed("js_dist", "metric_value")
+        output_df.withColumnRenamed("FeatureName", "group")
+        .withColumnRenamed("js_dist", "value")
         .withColumn("data_type", F.lit("Categorical"))
-        .withColumn("metric_name", F.lit("JensenShannonDistance"))
+        .withColumn("metric", F.lit("JensenShannonDistance"))
     )
 
     return output_df
@@ -200,7 +200,9 @@ def compute_categorical_data_drift_measures_tests(
     else:
         raise Exception(f"Invalid metric {categorical_metric} for categorical feature")
 
-    output_df = output_df.withColumn(
-        "threshold_value", F.lit(categorical_threshold).cast("float")
+    output_df = (
+        output_df
+            .withColumn("threshold", F.lit(categorical_threshold).cast("float"))
+            .withColumn("dimension", F.lit(None).cast("string"))
     )
     return output_df

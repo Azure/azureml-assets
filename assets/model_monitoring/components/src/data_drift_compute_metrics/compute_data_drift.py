@@ -85,7 +85,7 @@ def compute_data_drift_measures_tests(
     ]
     row_count_metric_df = get_output_spark_df([baseline_count_row, target_count_row])
     row_count_metric_df = row_count_metric_df.withColumn(
-        "threshold_value", F.lit("nan").cast("float")
+        "threshold", F.lit("nan").cast("float")
     )
     output_df = output_df.union(row_count_metric_df)
 

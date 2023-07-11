@@ -123,10 +123,10 @@ def _jensen_shannon_numerical(
         "FeatureName", "DistributionBalanceMeasure.js_dist"
     )
     output_df = (
-        output_df.withColumnRenamed("FeatureName", "feature_name")
-        .withColumnRenamed("js_dist", "metric_value")
+        output_df.withColumnRenamed("FeatureName", "group")
+        .withColumnRenamed("js_dist", "value")
         .withColumn("data_type", F.lit("numerical"))
-        .withColumn("metric_name", F.lit("JensenShannonDistance"))
+        .withColumn("metric", F.lit("JensenShannonDistance"))
     )
 
     return output_df
@@ -176,10 +176,10 @@ def _normalized_wasserstein(
     )
 
     output_df = (
-        output_df.withColumnRenamed("FeatureName", "feature_name")
-        .withColumnRenamed("wasserstein_dist", "metric_value")
+        output_df.withColumnRenamed("FeatureName", "group")
+        .withColumnRenamed("wasserstein_dist", "value")
         .withColumn("data_type", F.lit("Numerical"))
-        .withColumn("metric_name", F.lit("NormalizedWassersteinDistance"))
+        .withColumn("metric", F.lit("NormalizedWassersteinDistance"))
     )
 
     # Normalize wasserstein distance
@@ -201,8 +201,8 @@ def _normalized_wasserstein(
     mapping = spark.sparkContext.broadcast(baseline_df_stdev)
 
     output_df = output_df.withColumn(
-        "metric_value",
-        normalize_value(mapping)(F.col("metric_value"), F.col("feature_name")),
+        "value",
+        normalize_value(mapping)(F.col("value"), F.col("group")),
     )
     return output_df
 
@@ -320,7 +320,7 @@ def compute_numerical_data_drift_measures_tests(
     else:
         raise Exception(f"Invalid metric {numerical_metric} for numerical feature")
 
-    output_df = output_df.withColumn(
-        "threshold_value", F.lit(numerical_threshold).cast("float")
-    )
+    output_df = output_df \
+        .withColumn("threshold", F.lit(numerical_threshold).cast("float")) \
+        .withColumn("dimension", F.lit(None).cast("string"))
     return output_df
