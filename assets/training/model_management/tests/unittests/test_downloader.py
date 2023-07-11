@@ -24,16 +24,19 @@ class TestDownloaders(unittest.TestCase):
         model_id = "username/model_name"
         download_dir = Path("path/to/download/dir")
 
-        with patch("huggingface_hub.hf_api.HfApi") as MockHfApi, \
-                patch("azureml.model.mgmt.downloader.download_utils._download_git_model") as MockGITDownloader:
+        with patch("huggingface_hub.hf_api.HfApi") as MockHfApi, patch(
+            "azureml.model.mgmt.downloader.download_utils._download_git_model"
+        ) as MockGITDownloader:
             mock_api = MockHfApi.return_value
             mock_api.list_models.return_value = [
-                create_namespace_from_dict({
-                    "modelId": "username/model_name",
-                    "pipeline_tag": "task_name",
-                    "tags": ["tag1", "tag2", "tag3"],
-                    "sha": "123456789",
-                })
+                create_namespace_from_dict(
+                    {
+                        "modelId": "username/model_name",
+                        "pipeline_tag": "task_name",
+                        "tags": ["tag1", "tag2", "tag3"],
+                        "sha": "123456789",
+                    }
+                )
             ]
 
             common_utils.hf_api = mock_api
@@ -91,11 +94,14 @@ class TestDownloadModel(unittest.TestCase):
 
             result = download_model(model_source, model_id, download_dir)
 
-            self.assertEqual(result, {
-                "name": "model_name",
-                "tags": {"tag1": "value1"},
-                "properties": {"prop1": "value1"},
-            })
+            self.assertEqual(
+                result,
+                {
+                    "name": "model_name",
+                    "tags": {"tag1": "value1"},
+                    "properties": {"prop1": "value1"},
+                },
+            )
             mock_downloader.download_model.assert_called_once_with(download_dir)
 
     def test_download_model_with_git_source(self):
@@ -114,11 +120,14 @@ class TestDownloadModel(unittest.TestCase):
 
             result = download_model(model_source, model_id, download_dir)
 
-            self.assertEqual(result, {
-                "name": "some_model",
-                "tags": {"tag2": "value2"},
-                "properties": {"prop2": "value2"},
-            })
+            self.assertEqual(
+                result,
+                {
+                    "name": "some_model",
+                    "tags": {"tag2": "value2"},
+                    "properties": {"prop2": "value2"},
+                },
+            )
             mock_downloader.download_model.assert_called_once_with(download_dir)
 
     def test_download_model_with_azureblob_source(self):
@@ -137,9 +146,12 @@ class TestDownloadModel(unittest.TestCase):
 
             result = download_model(model_source, model_id, download_dir)
 
-            self.assertEqual(result, {
-                "name": "model_folder",
-                "tags": {"tag3": "value3"},
-                "properties": {"prop3": "value3"},
-            })
+            self.assertEqual(
+                result,
+                {
+                    "name": "model_folder",
+                    "tags": {"tag3": "value3"},
+                    "properties": {"prop3": "value3"},
+                },
+            )
             mock_downloader.download_model.assert_called_once_with(download_dir)

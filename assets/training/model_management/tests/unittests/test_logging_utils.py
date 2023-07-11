@@ -22,10 +22,8 @@ class TestRunUtilities(unittest.TestCase):
         self.run.get_context.return_value = self.run
         self.run.id = "mock_run_id"
         self.run.get_details.return_value = {
-            "target": "mock_compute", 
-            "properties": {
-                "azureml.moduleid": "mock_asset_id"
-            }
+            "target": "mock_compute",
+            "properties": {"azureml.moduleid": "mock_asset_id"},
         }
         self.run.experiment.workspace = self.workspace
         self.workspace.name = "mock_workspace_name"
@@ -45,7 +43,6 @@ class TestRunUtilities(unittest.TestCase):
         sys.argv.append("--mlflow-flavor")
         sys.argv.append("transformers")
 
-
     def test_run_details_properties(self):
         """Test run details with mock object."""
         run_details = RunDetails()
@@ -53,12 +50,9 @@ class TestRunUtilities(unittest.TestCase):
 
         self.assertEqual(run_details.run_id, "mock_run_id")
         self.assertEqual(run_details.parent_run_id, "mock_parent_run_id")
-        self.assertEqual(run_details.run_details, {
-            "target": "mock_compute", 
-            "properties": {
-                "azureml.moduleid": "mock_asset_id"
-            }
-        })
+        self.assertEqual(
+            run_details.run_details, {"target": "mock_compute", "properties": {"azureml.moduleid": "mock_asset_id"}}
+        )
         self.assertEqual(run_details.workspace, self.workspace)
         self.assertEqual(run_details.workspace_name, "mock_workspace_name")
         self.assertEqual(run_details.experiment_id, "mock_experiment_id")
@@ -93,6 +87,7 @@ class TestRunUtilities(unittest.TestCase):
         self.assertEqual(run_details.root_attribute, LoggerConfig.OFFLINE_RUN_MESSAGE)
 
     def test_custom_dimensions(self):
+        """Test custom dimensions."""
         run_details = RunDetails()
         run_details._run = self.run
         custom_dimensions = CustomDimensions(run_details)

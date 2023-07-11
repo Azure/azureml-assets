@@ -17,7 +17,7 @@ from azureml.model.mgmt.processors.transformers.factory import (
 class TestFactoryModule(unittest.TestCase):
     """Test HF Model Convertor Factory."""
 
-    @patch('azureml.model.mgmt.processors.transformers.factory.NLPMLflowConvertorFactory')
+    @patch("azureml.model.mgmt.processors.transformers.factory.NLPMLflowConvertorFactory")
     def test_get_nlp_mlflow_convertor(self, mock_nlp_factory):
         """Test NLP model MLflow convertor."""
         model_dir = "/path/to/model_dir"
@@ -35,7 +35,7 @@ class TestFactoryModule(unittest.TestCase):
             translate_params,
         )
 
-    @patch('azureml.model.mgmt.processors.transformers.factory.VisionMLflowConvertorFactory')
+    @patch("azureml.model.mgmt.processors.transformers.factory.VisionMLflowConvertorFactory")
     def test_get_vision_mlflow_convertor(self, mock_vision_factory):
         """Test vision model MLflow convertor."""
         model_dir = "/path/to/model_dir"
@@ -53,7 +53,7 @@ class TestFactoryModule(unittest.TestCase):
             translate_params,
         )
 
-    @patch('azureml.model.mgmt.processors.transformers.factory.DiffusersMLflowConvertorFactory')
+    @patch("azureml.model.mgmt.processors.transformers.factory.DiffusersMLflowConvertorFactory")
     def test_get_diffusers_mlflow_convertor(self, mock_diffusers_factory):
         """Test diffusers model MLflow convertor."""
         model_dir = "/path/to/model_dir"
@@ -71,7 +71,7 @@ class TestFactoryModule(unittest.TestCase):
             translate_params,
         )
 
-    @patch('azureml.model.mgmt.processors.transformers.factory.ASRMLflowConvertorFactory')
+    @patch("azureml.model.mgmt.processors.transformers.factory.ASRMLflowConvertorFactory")
     def test_get_asr_mlflow_convertor(self, mock_asr_factory):
         """Test asr model MLflow convertor."""
         model_dir = "/path/to/model_dir"
