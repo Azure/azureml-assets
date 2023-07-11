@@ -151,8 +151,9 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     :type task_type: string
     :param local_explanations: If local explanations are wanted
     :type local_explanations: boolean
-    :return: global explanation scores for the input data and, if specified, local explanations scores
-    :rtype: list[float]
+    :return: if local_explanations is false, the global explanation scores for the input data; if local_explanations
+    is true, the tuple of global and local explanation scores
+    :rtype: if local_explanations is false, list[float]; if local_explanations is true, (list[float], list[float])
     """
     # Create the RAI Insights object, use baseline as train and test data
     rai_i: RAIInsights = RAIInsights(
@@ -169,6 +170,7 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
 
     # Compute local explanations, if desired
     if local_explanations:
+        _logger.info("Computing local explanations")
         localExplanations = []
         for index, data in evaluation_data.iterrows():
             localExplanation = rai_i.explainer.request_explanations(local=True, data=pd.DataFrame(data).T)
@@ -178,7 +180,8 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     return globalExplanation
 
 
-def compute_feature_importance(task_type, target_column, baseline_data, categorical_features, local_explanations):
+def compute_feature_importance(task_type, target_column, baseline_data, categorical_features,
+                               is_local_explanations_enabled):
     """Compute feature importance of baseline data.
 
     :param task_type: The task type (regression or classification) of the resulting model
@@ -190,15 +193,15 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
     :type baseline_data: pandas.DataFrame
     :param categorical_features: The column names which are categorical in type
     :type categorical_features: list[string]
-    :param local_explanations: If local explanations are wanted
-    :type local_explanations: boolean
+    :param is_local_explanations_enabled: If local explanations are requested
+    :type is_local_explanations_enabled: boolean
     :return: list of feature importances in the order of the columns in the baseline data
     :rtype: list[float]
     """
     model_wrapper = get_model_wrapper(task_type, target_column, baseline_data)
 
     baseline_explanations = compute_explanations(
-        model_wrapper, baseline_data, categorical_features, target_column, task_type, local_explanations)
+        model_wrapper, baseline_data, categorical_features, target_column, task_type, is_local_explanations_enabled)
     _logger.info("Successfully computed explanations for dataset")
 
     return baseline_explanations
@@ -240,7 +243,7 @@ def write_to_mltable(explanations, dataset, file_path, categorical_features):
 
 
 def write_to_mltable_local(explanations, file_path, feature_names, task_type):
-    """Write feature importance values to mltable.
+    """Write local feature importance values to mltable.
 
     :param explanations: list of feature importances in the order of the baseline columns
     :type explanations: list[float]
@@ -312,10 +315,10 @@ def run(args):
             write_empty_signal_metrics_dataframe()
             return
 
-        # Activates printing of local importances to MLTable *instead* of global importances
-        # Will break feature attribution drift component if activated
-        # Once sample tables are implemented, this variable should be determined in the spec.yaml
-        # for FAD and the code should be modified to write to samples table
+        # Activates printing of local importances to MLTable; Will break feature attribution
+        # drift component if activated. Once sample tables are implemented, this variable
+        # should be determined in the spec.yaml for FAD and the code should be modified to
+        # write to samples table
         local_explanations = False
 
         baseline_df = read_mltable_in_spark(args.baseline_data).toPandas()
@@ -333,12 +336,9 @@ def run(args):
         if local_explanations:
             write_to_mltable_local(feature_importances[1], args.signal_metrics, feature_names, task_type)
 
-        # TODO: Once sample tables are implemented global explanations should always be output. Currently
-        # using else clause since both explanations cannot be written to the same MLtable
-        else:
-            _logger.info("Successfully executed the feature importance component.")
-            feature_columns = baseline_df.drop([args.target_column], axis=1)
-            write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features)
+        _logger.info("Successfully executed the feature importance component.")
+        feature_columns = baseline_df.drop([args.target_column], axis=1)
+        write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features)
 
     except Exception as e:
         _logger.info(f"Error encountered when executing feature importance component: {e}")
