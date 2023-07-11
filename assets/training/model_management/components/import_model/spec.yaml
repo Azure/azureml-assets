@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.9
+version: 0.0.10
 
 # Pipeline inputs
 inputs:
@@ -177,7 +177,7 @@ outputs:
 
 jobs:
   download_model:
-    component: azureml:download_model:0.0.8
+    component: azureml:download_model:0.0.9
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -191,7 +191,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.10
+    component: azureml:convert_model_to_mlflow:0.0.11
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -228,7 +228,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml:register_model:0.0.5
+    component: azureml:register_model:0.0.6
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
