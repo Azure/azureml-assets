@@ -23,4 +23,4 @@ class LoggerConfig:
     LOGGER_NAME = "FM_IMPORT_MODEL"
     VERBOSITY_LEVEL = "DEBUG"
     OFFLINE_RUN_MESSAGE = "OFFLINE_RUN"
-    IMPORT_MODEL_VERSION = "0.0.9"  # Update when changing version in spec file.
+    ASSET_NOT_FOUND = "AssetID missing in run details"

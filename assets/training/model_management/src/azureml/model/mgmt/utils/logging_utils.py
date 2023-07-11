@@ -22,6 +22,7 @@ class RunDetails:
 
     def __init__(self):
         """Run details init."""
+        self._run_details = None
         self._run = Run.get_context()
 
     @property
@@ -35,6 +36,14 @@ class RunDetails:
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
         return self._run.parent.id
+
+    @property
+    def run_details(self):
+        """Run details of the existing run."""
+        if "OfflineRun" in self.run_id:
+            return LoggerConfig.OFFLINE_RUN_MESSAGE
+        self._run_details = self._run_details or self._run.get_details()
+        return self._run_details
 
     @property
     def workspace(self):
@@ -76,8 +85,7 @@ class RunDetails:
         """Return compute target for the current run."""
         if "OfflineRun" in self.run_id:
             return LoggerConfig.OFFLINE_RUN_MESSAGE
-        details = self._run.get_details()
-        return details.get("target", "")
+        return self.run_details.get("target", "")
 
     @property
     def vm_size(self):
@@ -87,12 +95,21 @@ class RunDetails:
         compute_name = self.compute
         if compute_name == "":
             return "No compute found."
+
         # TODO: Use V2 way of determining this.
         try:
             cpu_cluster = ComputeTarget(workspace=self._run.experiment.workspace, name=compute_name)
             return cpu_cluster.vm_size
         except Exception:
             return None
+
+    @property
+    def component_asset_id(self):
+        """Run properties."""
+        if "OfflineRun" in self.run_id:
+            return LoggerConfig.OFFLINE_RUN_MESSAGE
+        run_properties = self.run_details.get("properties", {})
+        return run_properties.get("azureml.moduleid", LoggerConfig.ASSET_NOT_FOUND)
 
     @property
     def root_attribute(self):
@@ -120,7 +137,8 @@ class RunDetails:
             f"experiment_id: {self.experiment_id},\n" +
             f"region: {self.region},\n" +
             f"compute: {self.compute},\n" +
-            f"vm_size: {self.vm_size},\n"
+            f"vm_size: {self.vm_size},\n" +
+            f"component_asset_id : {self.component_asset_id}\n"
         )
 
 
@@ -143,11 +161,11 @@ class CustomDimensions:
         self.experiment_id = run_details.experiment_id
         self.compute_target = run_details.compute
         self.vm_size = run_details.vm_size
+        self.component_asset_id = run_details.component_asset_id
 
         # component execution info
         self.os_info = platform.system()
         self.app_name = app_name
-        self.import_model_version = LoggerConfig.IMPORT_MODEL_VERSION
 
         self._add_model_download_args()
         self._add_model_preprocess_args()
