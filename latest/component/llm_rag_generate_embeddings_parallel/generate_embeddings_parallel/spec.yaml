@@ -64,7 +64,7 @@ input_data: ${{inputs.chunks_source}}
 
 retry_settings:
   max_retries: 3
-  timeout: 600
+  timeout: 3600
 
 task:
   type: run_function

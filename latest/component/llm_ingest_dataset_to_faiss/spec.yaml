@@ -4,7 +4,7 @@ type: pipeline
 tags:
   Preview: ""
 
-version: 0.0.18
+version: 0.0.19
 name: llm_ingest_dataset_to_faiss
 display_name: LLM - Dataset to FAISS Pipeline (With Test Data Generation and Auto
   Prompt
@@ -375,7 +375,7 @@ jobs:
         compute_specification:
           automatic: true
     retry_settings:
-      timeout: 600
+      timeout: 3600
       max_retries: 3
     mini_batch_size: "3"
     mini_batch_error_threshold: 0

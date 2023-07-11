@@ -4,7 +4,7 @@ type: pipeline
 tags:
   Preview: ""
 
-version: 0.0.6
+version: 0.0.7
 name: llm_ingest_dataset_to_faiss_basic
 display_name: LLM - Dataset to FAISS Pipeline
 is_deterministic: false
@@ -154,7 +154,6 @@ jobs:
       chunk_overlap: ${{parent.inputs.chunk_overlap}}
       data_source_url: ${{parent.inputs.data_source_url}}
       document_path_replacement_regex: ${{parent.inputs.document_path_replacement_regex}}
-      include_summary: ${{parent.inputs.chunk_prepend_summary}}
       max_sample_files: ${{parent.inputs.max_sample_files}}
     outputs:
       output_chunks:
@@ -188,7 +187,7 @@ jobs:
         compute_specification:
           automatic: true
     retry_settings:
-      timeout: 600
+      timeout: 3600
       max_retries: 3
     mini_batch_size: "3"
     mini_batch_error_threshold: 0
