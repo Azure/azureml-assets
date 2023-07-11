@@ -84,12 +84,14 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
                                          constants.THRESHOLD_VALUE])
     feature_attribution_drift = calculate_attribution_drift(baseline_explanations, production_explanations)
 
-    ndcg_metric =_create_signal_metric_row(group="", value= feature_attribution_drift, metric= "NormalizedDiscountedCumulativeGain", data_type="", threshold= float("nan"), dimension="")
-            constants.FEATURE_NAME_COLUMN: "",
-                   constants.METRIC_VALUE_COLUMN: feature_attribution_drift,
-                   constants.METRIC_NAME_COLUMN: "NormalizedDiscountedCumulativeGain",
-                   constants.FEATURE_CATEGORY_COLUMN: "",
-                   constants.THRESHOLD_VALUE: float("nan")}
+    ndcg_metric = _create_signal_metric_row(
+        group="",
+        value=feature_attribution_drift,
+        metric="NormalizedDiscountedCumulativeGain",
+        data_type="",
+        threshold=float("nan"),
+        dimension="",
+    )
     metrics_data = metrics_data.append(ndcg_metric, ignore_index=True)
     baseline_row_count_data = {constants.FEATURE_NAME_COLUMN: "",
                                constants.METRIC_VALUE_COLUMN: baseline_row_count,
