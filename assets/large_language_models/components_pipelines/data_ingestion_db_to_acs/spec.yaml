@@ -122,7 +122,7 @@ jobs:
         compute_specification:
           automatic: true
     retry_settings:
-      timeout: 600
+      timeout: 3600
       max_retries: 3
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI: ${{parent.inputs.embedding_connection}}
