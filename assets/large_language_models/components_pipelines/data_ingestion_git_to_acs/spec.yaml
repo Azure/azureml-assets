@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.18
+version: 0.0.19
 name: llm_ingest_git_to_acs
 display_name: LLM - Git to ACS Pipeline (With Test Data Generation and Auto Prompt)
 is_deterministic: false
@@ -389,7 +389,7 @@ jobs:
         compute_specification:
           automatic: true
     retry_settings:
-      timeout: 600
+      timeout: 3600
       max_retries: 3
     mini_batch_size: "3"
     mini_batch_error_threshold: 0

@@ -6,7 +6,7 @@ tags:
 
 name: llm_ingest_db_to_faiss
 display_name: LLM - SQL Datastore to FAISS Pipeline
-version: 0.0.5
+version: 0.0.6
 
 description: Single job pipeline to chunk data from AzureML sql data store, and create FAISS embeddings index
 
@@ -114,7 +114,7 @@ jobs:
         compute_specification:
           automatic: true
     retry_settings:
-      timeout: 600
+      timeout: 3600
       max_retries: 3
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI: ${{parent.inputs.embedding_connection}}
