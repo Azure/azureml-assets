@@ -6,11 +6,11 @@ import logging
 from typing import Dict
 
 from component_base import ComponentBase, main_entry_point
-from db_copilot.db_provider.grounding import GroundingConfig
-from db_copilot_tool.tools.grounding_service_manager import (
-    DBExecutorConfig,
-    GroundingServiceManager,
-)
+from db_copilot.db_provider.grounding.grounding_service import GroundingConfig
+from db_copilot_tool.contracts.embedding_config import EmbeddingConfig
+from db_copilot_tool.tools.db_executor_factory import DBExecutorConfig
+from db_copilot_tool.tools.db_provider_adapter import DBProviderServiceAdapter, DBProviderServiceConfig
+from db_copilot_tool.tools.dummy_embedding_service import DummyEmbeddingService
 
 
 @main_entry_point("ground")
@@ -37,9 +37,12 @@ class DataBaseGrounding(ComponentBase):
         column_settings: str = None,
     ):
         """Ground database tables and columns."""
+        from utils.asset_utils import get_datastore_uri
+
         logging.info("Grounding...")
+        embedding_config = EmbeddingConfig()
+
         grounding_config = GroundingConfig()
-        db_executor_config = DBExecutorConfig()
         if max_tables:
             grounding_config.max_tables = max_tables
         if max_columns:
@@ -50,6 +53,8 @@ class DataBaseGrounding(ComponentBase):
             grounding_config.max_sampling_rows = max_sampling_rows
         if max_text_length:
             grounding_config.max_text_length = max_text_length
+
+        db_executor_config = DBExecutorConfig()
         if selected_tables:
             db_executor_config.tables = json.loads(selected_tables)
             if not isinstance(db_executor_config.tables, list):
@@ -58,13 +63,15 @@ class DataBaseGrounding(ComponentBase):
             db_executor_config.column_settings = json.loads(column_settings)
             if not isinstance(db_executor_config.column_settings, dict):
                 raise ValueError("column_settings must be a dict")
-
-        grounding_service_manager = GroundingServiceManager.from_uri(
-            asset_uri,
-            grounding_config,
-            db_executor_config,
-            self.workspace,
+        datastore_uri = get_datastore_uri(self.workspace, asset_uri)
+        db_provider_config = DBProviderServiceConfig(
+            db_uri=datastore_uri,
+            embedding_service_config=embedding_config,
+            grounding_config=grounding_config,
+            db_executor_config=db_executor_config,
         )
 
-        grounding_service_manager.dump_chunk(output_chunk_file)
-        grounding_service_manager.dump(output_grounding_context_file)
+        db_provider = DBProviderServiceAdapter(db_provider_config, workspace=self.workspace)
+        assert isinstance(db_provider.embedding_service, DummyEmbeddingService)
+        db_provider.embedding_service.dump(output_chunk_file)
+        db_provider.dump_context(output_grounding_context_file)

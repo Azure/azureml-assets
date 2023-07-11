@@ -11,8 +11,7 @@ import retrying
 @retrying.retry(
     wait_fixed=1000,
     stop_max_attempt_number=3,
-    retry_on_exception=lambda e: isinstance(e, requests.exceptions.HTTPError)
-    and e.response.status_code >= 500,
+    retry_on_exception=lambda e: isinstance(e, requests.exceptions.HTTPError) and e.response.status_code >= 500,
 )
 def request(method, url, json=None, headers=None):
     """Request with retry."""
