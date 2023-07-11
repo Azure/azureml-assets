@@ -43,6 +43,40 @@ def _create_run_tags(
     return tags
 
 
+def _get_or_create_parent_run_id(monitor_name: str):
+    """Get or create a parent run id which will hold all of the underlying metric runs."""
+    experiment_id = _get_experiment_id()
+    if experiment_id is None:
+        print("No experiment id found. Skipping publishing run metrics.")
+        return None
+    filter_query = _create_filter_query(
+        monitor_name=monitor_name, signal_name=None, feature_name=None, metric_name="azureml.metrics"
+    )
+    runs = mlflow.search_runs(
+        experiment_ids=[experiment_id],
+        filter_string=filter_query,
+        order_by=["start_time"],
+    )
+    if len(runs) == 0:
+        print("No parent metric run found. Creating a new parent run.")
+        run_name = f"{monitor_name} - Metrics"
+        metric_run_id = (
+            mlflow.client.MlflowClient()
+            .create_run(
+                experiment_id=_get_experiment_id(),
+                run_name=run_name,
+                tags=_create_run_tags(monitor_name, None, None, "azureml.metrics"),
+            )
+            .info.run_id
+        )
+        with mlflow.start_run(run_id=metric_run_id):
+            print(f"Creating parent metric run with name '{run_name}' and id '{metric_run_id}'.")
+    else:
+        metric_run_id = runs.iloc[0].run_id
+        print(f"Found run with id '{metric_run_id}' matching filter.")
+    return metric_run_id
+
+
 def get_or_create_run_id(
     monitor_name: str, signal_name: str, feature_name: str, metric_name: str
 ) -> str:
@@ -54,28 +88,24 @@ def get_or_create_run_id(
     filter_query = _create_filter_query(
         monitor_name, signal_name, feature_name, metric_name
     )
-    print(f"Fetching run metric with filter: {filter_query}")
+    print(f"Fetching run with filter: {filter_query}")
     runs = mlflow.search_runs(
         experiment_ids=[experiment_id],
         filter_string=filter_query,
         order_by=["start_time"],
     )
-    if len(runs) == 0:
 
-        run_id = (
-            mlflow.client.MlflowClient()
-            .create_run(
-                experiment_id=experiment_id,
-                tags=_create_run_tags(
-                    monitor_name, signal_name, feature_name, metric_name
-                ),
-            )
-            .info.run_id
-        )
-        print(f"Created run metric with id '{run_id}'.")
+    if len(runs) == 0:
+        print("No run with matching filter found. Creating a new run.")
+        with mlflow.start_run(run_id=_get_or_create_parent_run_id(monitor_name)) as current_run:
+            print(f"Current parent run id: {current_run.info.run_id}")
+            with mlflow.start_run(nested=True) as nested_run:
+                run_id = nested_run.info.run_id
+
+        print(f"Created child run with id '{run_id}'.")
     else:
         run_id = runs.iloc[0].run_id
-        print(f"Fetching run metric with id '{run_id}'")
+        print(f"Found run with id '{run_id}' matching filter.")
     return run_id
 
 

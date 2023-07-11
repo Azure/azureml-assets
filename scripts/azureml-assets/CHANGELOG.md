@@ -3,9 +3,13 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.5.1 (2023-07-06)
+## 1.5.2 (2023-07-12)
 ### 🐛 Bugs Fixed
 - [#821](https://github.com/Azure/azureml-assets/pull/821) Make release directory optional for update_assets.py
+
+## 1.5.1 (2023-07-11)
+### 🐛 Bugs Fixed
+- [#872](https://github.com/Azure/azureml-assets/pull/872) Be more restrictive when pinning image tags
 
 ## 1.5.0 (2023-07-06)
 ### 🚀 New Features

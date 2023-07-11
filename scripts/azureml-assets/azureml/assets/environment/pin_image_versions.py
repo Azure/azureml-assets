@@ -111,7 +111,7 @@ def _get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
 
     # Filter tags and sort in descending order because this should be faster
     tags_sorted = sorted([t for t in tags if t != LATEST_TAG and
-                         (regex is None or regex.search(t) is not None)], reverse=True)
+                         (regex is None or regex.fullmatch(t) is not None)], reverse=True)
 
     # Handle regex
     if regex is not None:

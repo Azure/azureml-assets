@@ -19,10 +19,10 @@ class ModelImportErrorStrings:
     VALIDATION_ERROR = "Error while validating parameters [{error:log_safe}]"
     NON_MSI_ATTACHED_COMPUTE_ERROR = (
         "Kindly make sure that compute used by model_registration component"
-        "has MSI(Managed Service Identity) associated with it."
-        "Click here to know more -"
-        "https://learn.microsoft.com/en-us/azure/machine-learning/"
-        "how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli :{exception}"
+        " has MSI(Managed Service Identity) associated with it."
+        " Click here to know more -"
+        " https://learn.microsoft.com/en-us/azure/machine-learning/"
+        " how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli. Exception : {exception}"
     )
     UNSUPPORTED_MODEL_TYPE_ERROR = "Unsupported model type : {model_type}"
     MISSING_MODEL_NAME_ERROR = "Missing Model Name. Provide model_name as input or in the model_download_metadata JSON"
@@ -30,12 +30,12 @@ class ModelImportErrorStrings:
     DEPLOYMENT_CREATION_ERROR = "Error occured while creating deployment - {exception}"
     ONLINE_ENDPOINT_INVOCATION_ERROR = "Invocation failed with error: {exception}"
     USER_IDENTITY_MISSING_ERROR = (
-        "Failing to get AzureMLOnBehalfOfCredential - {exception}"
-        "https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/ \n"
-        "Kindly set UserIdentity as identity type if submitting job using sdk or cli."
-        "Please take reference from given links :\n"
-        "sdk - https://aka.ms/azureml-import-model \n"
-        "cli - https://aka.ms/obo-cli-sample"
+        "Failed to get AzureMLOnBehalfOfCredential."
+        " Kindly set UserIdentity as identity type if submitting job using sdk or cli."
+        " Please take reference from given links :\n"
+        " About - https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/ \n"
+        " sdk - https://aka.ms/azureml-import-model \n"
+        " cli - https://aka.ms/obo-cli-sample"
     )
 
 

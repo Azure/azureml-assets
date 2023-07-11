@@ -3,19 +3,18 @@
 
 """Logging utils."""
 
-from azureml.core import Run
-from azureml.core.compute import ComputeTarget
-from log_utils.config import AppName, LoggerConfig
-
-from azureml.telemetry import get_telemetry_log_handler
-from azureml.automl.core.shared.telemetry_formatter import (
-    AppInsightsPIIStrippingFormatter,
-)
 import platform
 import uuid
 import codecs
 import logging
 import sys
+
+from azureml.core import Run
+from azureml.core.compute import ComputeTarget
+from azureml.telemetry import get_telemetry_log_handler
+from azureml.telemetry._telemetry_formatter import ExceptionFormatter
+
+from utils.config import AppName, LoggerConfig
 
 
 class RunDetails:
@@ -89,8 +88,11 @@ class RunDetails:
         if compute_name == "":
             return "No compute found."
         # TODO: Use V2 way of determining this.
-        cpu_cluster = ComputeTarget(workspace=self._run.experiment.workspace, name=compute_name)
-        return cpu_cluster.vm_size
+        try:
+            cpu_cluster = ComputeTarget(workspace=self._run.experiment.workspace, name=compute_name)
+            return cpu_cluster.vm_size
+        except Exception:
+            return None
 
     @property
     def root_attribute(self):
@@ -233,7 +235,7 @@ def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL
             component_name="automl",
         )
 
-        formatter = AppInsightsPIIStrippingFormatter(
+        formatter = ExceptionFormatter(
             fmt=(
                 "%(asctime)s [{}] [{}] [%(module)s] %(funcName)s +%(lineno)s: %(levelname)-8s [%(process)d]"
                 " %(message)s \n".format(app_name, run_details.run_id)
