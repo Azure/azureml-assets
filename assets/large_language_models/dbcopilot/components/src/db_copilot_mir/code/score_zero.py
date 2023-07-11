@@ -69,9 +69,7 @@ def init():
                         db_copilot_config,
                         embedding_aoai_connection=embedding_aoai_connection,
                         chat_aoai_connection=chat_aoai_connection,
-                        history_service=HistoryService(
-                            db_copilot_config.history_service_config
-                        ),
+                        history_service=HistoryService(db_copilot_config.history_service_config),
                     )
                     # trigger grounding
                     db_copilot_adapter.db_provider_service
@@ -188,16 +186,11 @@ def run(request: AMLRequest):
                     db_copilot_config,
                     embedding_aoai_connection=embedding_aoai_connection,
                     chat_aoai_connection=chat_aoai_connection,
-                    history_service=HistoryService(
-                        db_copilot_config.history_service_config
-                    ),
+                    history_service=HistoryService(db_copilot_config.history_service_config),
                 )
                 if request_body.visibility == Visibility.Shared:
                     db_copilots_shared.set(
-                        request_body.db_name
-                        if request_body.db_name
-                        else request_body.datastore_uri,
-                        db_copilot,
+                        request_body.db_name if request_body.db_name else request_body.datastore_uri, db_copilot
                     )
                 else:
                     db_copilots.set(session_id, db_copilot)
@@ -207,39 +200,25 @@ def run(request: AMLRequest):
             request_body.request_type == RequestType.Grounding and request_body.question
         ):
             logging.info("Chat request")
-            if (
-                not session_id
-                and not request_body.datastore_uri
-                and not request_body.db_name
-            ):
-                return AMLResponse(
-                    "Session id or datasotre_uri or db_name is required", 400
-                )
+            if not session_id and not request_body.datastore_uri and not request_body.db_name:
+                return AMLResponse("Session id or datasotre_uri or db_name is required", 400)
             if not request_body.question:
                 return AMLResponse("Question is required", 400)
             if request_body.db_name or request_body.datastore_uri:
                 db_copilot: DBCopilotAdapter = db_copilots_shared.get(
-                    request_body.db_name
-                    if request_body.db_name
-                    else request_body.datastore_uri,
-                    None,
+                    request_body.db_name if request_body.db_name else request_body.datastore_uri, None
                 )
             else:
                 db_copilot: DBCopilotAdapter = db_copilots.get(session_id, None)
             if db_copilot is None:
-                return AMLResponse(
-                    f"No db_copilot is available for session {session_id}", 400
-                )
+                return AMLResponse(f"No db_copilot is available for session {session_id}", 400)
             if request_body.is_stream:
                 return Response(
                     stream_with_context(
                         (
                             json.dumps(item)
                             for item in db_copilot.stream_generate(
-                                request_body.question,
-                                session_id,
-                                request_body.temperature,
-                                request_body.top_p,
+                                request_body.question, session_id, request_body.temperature, request_body.top_p
                             )
                         )
                     ),
@@ -250,10 +229,7 @@ def run(request: AMLRequest):
                 return AMLResponse(
                     list(
                         db_copilot.generate(
-                            request_body.question,
-                            session_id,
-                            request_body.temperature,
-                            request_body.top_p,
+                            request_body.question, session_id, request_body.temperature, request_body.top_p
                         )
                     ),
                     json_str=True,

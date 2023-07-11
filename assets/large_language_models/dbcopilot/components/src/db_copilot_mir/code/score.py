@@ -9,7 +9,6 @@ from typing import Optional
 from azureml.contrib.services.aml_request import AMLRequest, rawhttp
 from azureml.contrib.services.aml_response import AMLResponse
 from db_copilot_tool.contracts.db_copilot_config import DBCopilotConfig
-from db_copilot_tool.db_copilot_tool import DBCopilot
 from db_copilot_tool.history_service.history_service import HistoryService
 from db_copilot_tool.telemetry import set_print_logger
 from db_copilot_tool.tools.db_copilot_adapter import DBCopilotAdapter

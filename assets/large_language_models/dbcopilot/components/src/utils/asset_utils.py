@@ -69,8 +69,8 @@ def parse_data_asset(asset_id: str) -> Tuple[str, str]:
 def parse_datastore_uri(uri: str):
     """parse_datastore_uri."""
     regexes = [
-        r"azureml://subscriptions/(?P<subscription_id>[^/]+)/resourcegroups/(?P<resource_group>[^/]+)/workspaces/(?P<workspace_name>[^/]+)/datastores/(?P<datastore_name>[^/]+)/paths/(?P<relative_path>[^/]+)",
-        r"azureml://subscriptions/(?P<subscription_id>[^/]+)/resourcegroups/(?P<resource_group>[^/]+)/workspaces/(?P<workspace_name>[^/]+)/datastores/(?P<datastore_name>[^/]+)",
+        r"azureml://subscriptions/(?P<subscription_id>[^/]+)/resourcegroups/(?P<resource_group>[^/]+)/workspaces/(?P<workspace_name>[^/]+)/datastores/(?P<datastore_name>[^/]+)/paths/(?P<relative_path>[^/]+)",  # noqa: E501
+        r"azureml://subscriptions/(?P<subscription_id>[^/]+)/resourcegroups/(?P<resource_group>[^/]+)/workspaces/(?P<workspace_name>[^/]+)/datastores/(?P<datastore_name>[^/]+)",  # noqa: E501
         r"azureml://datastores/(?P<datastore_name>[^/]+)/paths/(?P<relative_path>[^/]+)",
         r"azureml://datastores/(?P<datastore_name>[^/]+)",
     ]
@@ -90,12 +90,11 @@ def get_datastore_uri(workspace: Workspace, datastore_uri: str):
         if "subscription_id" in parsed_uri:
             datastore_uri = datastore_uri
         else:
-            datastore_uri = f"azureml://subscriptions/{workspace.subscription_id}/resourcegroups/{workspace.resource_group}/workspaces/{workspace.name}/datastores/{parsed_uri['datastore_name']}"
+            datastore_uri = f"azureml://subscriptions/{workspace.subscription_id}/resourcegroups/{workspace.resource_group}/workspaces/{workspace.name}/datastores/{parsed_uri['datastore_name']}"  # noqa: E501
             if "relative_path" in parsed_uri:
-                datastore_uri = datastore_uri + \
-                    f"/paths/{parsed_uri['relative_path']}"
+                datastore_uri = datastore_uri + f"/paths/{parsed_uri['relative_path']}"
     else:
-        datastore_uri = f"azureml://subscriptions/{workspace.subscription_id}/resourcegroups/{workspace.resource_group}/workspaces/{workspace.name}/datastores/{datastore_uri}"
+        datastore_uri = f"azureml://subscriptions/{workspace.subscription_id}/resourcegroups/{workspace.resource_group}/workspaces/{workspace.name}/datastores/{datastore_uri}"  # noqa: E501
     return datastore_uri
 
 
@@ -120,7 +119,7 @@ def get_full_env_path(credential, path: str) -> str:
 
 def parse_connection(connection_uri: str):
     """parse_connection."""
-    regex = r"/subscriptions/(?P<subscription_id>[^/]+)/resourceGroups/(?P<resource_group>[^/]+)/providers/Microsoft.MachineLearningServices/workspaces/(?P<workspace_name>[^/]+)/connections/(?P<connection_name>[^/]+)"
+    regex = r"/subscriptions/(?P<subscription_id>[^/]+)/resourceGroups/(?P<resource_group>[^/]+)/providers/Microsoft.MachineLearningServices/workspaces/(?P<workspace_name>[^/]+)/connections/(?P<connection_name>[^/]+)"  # noqa: E501
     match = re.match(regex, connection_uri)
     if match:
         return match.groupdict()

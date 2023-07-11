@@ -54,7 +54,7 @@ class RawEndpointDeployment(EndpointDeploymentBase):
                 json.dump(app_config, f)
             logging.info("Starting deploy endpoint")
             extra_environment_variables = {
-                "RSLEX-MOUNT": f"azureml://subscriptions/{self.workspace.subscription_id}/resourcegroups/{self.workspace.resource_group}/workspaces/{self.workspace.name}/datastores/workspaceblobstore"
+                "RSLEX-MOUNT": f"azureml://subscriptions/{self.workspace.subscription_id}/resourcegroups/{self.workspace.resource_group}/workspaces/{self.workspace.name}/datastores/workspaceblobstore"  # noqa: E501
             }
             self._deploy_endpoint(
                 mir_environment,

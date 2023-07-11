@@ -6,11 +6,9 @@ import os
 from typing import Dict
 
 from component_base import ComponentBase, main_entry_point
+from db_copilot.contract.db_core import DatabaseType
 from db_copilot_tool.contracts.embedding_config import EmbeddingConfig
 from db_copilot_tool.tools.dummy_embedding_service import DummyEmbeddingService
-
-"""ground_examples."""
-from db_copilot.contract.db_core import DatabaseType
 from db_copilot_tool.tools.in_context_learning_agent import InContextLearningAgent
 
 

@@ -75,16 +75,10 @@ class EndpointDeployment(EndpointDeploymentBase):
         with tempfile.TemporaryDirectory() as code_dir:
             logging.info("code_dir: %s", code_dir)
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            shutil.copytree(
-                os.path.join(current_dir, "db_copilot_mir/code"),
-                code_dir,
-                dirs_exist_ok=True,
-            )
+            shutil.copytree(os.path.join(current_dir, "db_copilot_mir/code"), code_dir, dirs_exist_ok=True)
             with open(os.path.join(code_dir, "secrets.json"), "w") as f:
                 json.dump(secrets_dict, f)
             logging.info("dumped secrets to secrets.json")
             with open(os.path.join(code_dir, "db_copilot_config.json"), "w") as f:
                 json.dump(asdict(config), f)
-            self._deploy_endpoint(
-                mir_environment, endpoint_name, deployment_name, code_dir
-            )
+            self._deploy_endpoint(mir_environment, endpoint_name, deployment_name, code_dir)

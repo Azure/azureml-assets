@@ -79,7 +79,7 @@ class EndpointDeploymentBase(OBOComponentBase):
                     logging.info("Using workspace connection key for OpenAI")
         else:
             raise ValueError(
-                "Please specify the connection id (AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING & AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT) for embedding and chat"
+                "Please specify the connection id (AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING & AZUREML_WORKSPACE_CONNECTION_ID_AOAI_CHAT) for embedding and chat"  # noqa: E501
             )
 
         return secrets

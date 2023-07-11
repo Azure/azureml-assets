@@ -91,17 +91,9 @@ def run(request: AMLRequest):
         is_stream = is_stream in ("true", "True")
     if api:
         api.lstrip("/")
-    url = (
-        f"http://localhost:{app_port}/{api}" if api else f"http://localhost:{app_port}"
-    )
+    url = f"http://localhost:{app_port}/{api}" if api else f"http://localhost:{app_port}"
     logging.info(f"Router url: {url}. Is stream: {is_stream}")
-    response = requests.request(
-        request.method,
-        url,
-        headers=request.headers,
-        data=request.data,
-        stream=is_stream,
-    )
+    response = requests.request(request.method, url, headers=request.headers, data=request.data, stream=is_stream)
     logging.info("Request processed")
     if is_stream:
 
@@ -111,8 +103,6 @@ def run(request: AMLRequest):
                 yield content
             logging.info("Stream complete")
 
-        return Response(
-            stream_with_context(generate()), mimetype="application/json", status=200
-        )
+        return Response(stream_with_context(generate()), mimetype="application/json", status=200)
     else:
         return AMLResponse(response.text, response.status_code)

@@ -9,10 +9,7 @@ from component_base import ComponentBase, main_entry_point
 from db_copilot.db_provider.grounding.grounding_service import GroundingConfig
 from db_copilot_tool.contracts.embedding_config import EmbeddingConfig
 from db_copilot_tool.tools.db_executor_factory import DBExecutorConfig
-from db_copilot_tool.tools.db_provider_adapter import (
-    DBProviderServiceAdapter,
-    DBProviderServiceConfig,
-)
+from db_copilot_tool.tools.db_provider_adapter import DBProviderServiceAdapter, DBProviderServiceConfig
 from db_copilot_tool.tools.dummy_embedding_service import DummyEmbeddingService
 
 
@@ -74,9 +71,7 @@ class DataBaseGrounding(ComponentBase):
             db_executor_config=db_executor_config,
         )
 
-        db_provider = DBProviderServiceAdapter(
-            db_provider_config, workspace=self.workspace
-        )
+        db_provider = DBProviderServiceAdapter(db_provider_config, workspace=self.workspace)
         assert isinstance(db_provider.embedding_service, DummyEmbeddingService)
         db_provider.embedding_service.dump(output_chunk_file)
         db_provider.dump_context(output_grounding_context_file)

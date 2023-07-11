@@ -27,9 +27,7 @@ class AppConfig:
 
 def start_flask_app(config: AppConfig):
     """Start the flask app."""
-    logging.info(
-        f"Starting Flask app: {config.module_name}.{config.app_name} at port {config.port}"
-    )
+    logging.info(f"Starting Flask app: {config.module_name}.{config.app_name} at port {config.port}")
     app_module = importlib.import_module(f"app_code.{config.module_name}")
     app = getattr(app_module, config.app_name)
     assert isinstance(app, Flask)
