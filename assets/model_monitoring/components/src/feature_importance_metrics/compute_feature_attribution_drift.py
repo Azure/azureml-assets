@@ -34,6 +34,17 @@ def parse_args():
     return args
 
 
+def _create_signal_metric_row(group, value, metric, data_type, threshold, dimension):
+    return {
+        constants.FEATURE_NAME_COLUMN: group,
+        constants.METRIC_VALUE_COLUMN: value,
+        constants.METRIC_NAME_COLUMN: metric,
+        constants.FEATURE_CATEGORY_COLUMN: data_type,
+        constants.THRESHOLD_VALUE: threshold,
+        constants.DIMENSION_COLUMN: dimension
+        }
+
+
 def calculate_attribution_drift(baseline_explanations, production_explanations):
     """Compute feature attribution drift given two sets of explanations.
 
@@ -73,7 +84,8 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
                                          constants.THRESHOLD_VALUE])
     feature_attribution_drift = calculate_attribution_drift(baseline_explanations, production_explanations)
 
-    ndcg_metric = {constants.FEATURE_NAME_COLUMN: "",
+    ndcg_metric =_create_signal_metric_row(group="", value= feature_attribution_drift, metric= "NormalizedDiscountedCumulativeGain", data_type="", threshold= float("nan"), dimension="")
+            constants.FEATURE_NAME_COLUMN: "",
                    constants.METRIC_VALUE_COLUMN: feature_attribution_drift,
                    constants.METRIC_NAME_COLUMN: "NormalizedDiscountedCumulativeGain",
                    constants.FEATURE_CATEGORY_COLUMN: "",
