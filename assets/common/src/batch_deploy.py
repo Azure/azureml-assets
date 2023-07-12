@@ -159,11 +159,11 @@ def parse_args():
 
 def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
     """Create endpoint and deployment and return details."""
-    if(args.compute_name):
+    if args.compute_name:
         compute_name = args.compute_name
         try:
             compute_cluster = ml_client.compute.get(compute_name)
-        except Exception as e:
+        except Exception:
             compute_cluster = AmlCompute(
                 name=compute_name,
                 size=args.size,
