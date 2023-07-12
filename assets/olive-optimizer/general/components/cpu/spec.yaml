@@ -32,7 +32,7 @@ outputs:
     type: uri_folder
     description: "A folder that contains the optimized model(s)."
 
-environment: azureml:olive-optimizer:0.1
+environment: azureml:olive-optimizer@latest
 
 command: >-
     python -m olive_optimizer.run

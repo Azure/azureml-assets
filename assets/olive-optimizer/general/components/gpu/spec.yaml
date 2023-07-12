@@ -32,7 +32,7 @@ outputs:
     type: uri_folder
     description: "A folder that contains the optimized model(s)."
 
-environment: azureml:olive-optimizer-gpu:0.1
+environment: azureml:olive-optimizer-gpu@latest
 
 command: >
     python -m olive_optimizer.run
