@@ -267,7 +267,7 @@ jobs:
     inputs:
       embeddings:
         type: uri_folder
-        path: ${{parent.jobs.embeddings_parallel_job.outputs.embeddings}}
+        path: ${{parent.jobs.embeddings_job.outputs.embeddings}}
       acs_config: ${{parent.inputs.acs_config}}
     outputs:
       index: ${{parent.outputs.acs_index}}
