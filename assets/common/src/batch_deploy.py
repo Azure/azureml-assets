@@ -53,12 +53,12 @@ def parse_args():
     parser.add_argument(
         "--model_id",
         type=str,
-        help="Registered mlflow model id",
+        help="Asset ID of the model registered in workspace/registry.",
     )
     parser.add_argument(
         "--inference_payload",
         type=Path,
-        help="Folder with inference endpoint data.",
+        help="Folder containing files used to validate deployment",
     )
     parser.add_argument(
         "--endpoint_name",
@@ -69,78 +69,78 @@ def parse_args():
     parser.add_argument(
         "--compute_name",
         type=str,
-        help="Name of the compute cluster",
+        help="Name of the compute target to execute the batch scoring jobs on",
     )
     parser.add_argument(
         "--size",
         type=str,
-        help="Size of the compute cluster",
+        help="Compute instance size to deploy model",
         default="Standard_NC24s_v3",
     )
     parser.add_argument(
         "--min_instances",
         type=int,
         default=0,
-        help="Minimum instances of the compute cluster",
+        help="Minimum number of instances of the compute cluster",
     )
     parser.add_argument(
         "--max_instances",
         type=int,
-        default=3,
-        help="Maximum instances of the compute cluster",
+        default=1,
+        help="Maximum number of instances of the compute cluster",
     )
     parser.add_argument(
         "--idle_time_before_scale_down",
         type=int,
         default=120,  # 2min
-        help="Idle time before scale down of the compute cluster",
+        help="Node Idle Time before scaling down amlCompute",
     )
     parser.add_argument(
         "--output_file_name",
         type=str,
         default="predictions.csv",
-        help="Name of the output file",
+        help="Name of the batch scoring output file",
     )
     parser.add_argument(
         "--max_concurrency_per_instance",
         type=int,
         default=1,
-        help="Maximum number of parallelism per instance",
+        help="The maximum number of parallel scoring_script runs per instance",
     )
     parser.add_argument(
         "--error_threshold",
         type=int,
         default=-1,
-        help="Error threshold before batch inference is aborted",
+        help="The number of file failures that should be ignored",
     )
     parser.add_argument(
         "--max_retries",
         type=int,
         default=3,
-        help="Number of retries in failure",
+        help="The maximum number of retries for a failed or timed-out mini batch",
     )
     parser.add_argument(
         "--timeout",
         type=int,
-        default=30,  # 30sec
-        help="Timeout in seconds",
+        default=500,  # 500sec
+        help="The timeout in seconds for scoring a single mini batch.",
     )
     parser.add_argument(
         "--logging_level",
         type=str,
         default="info",
-        help="Logging level for batch inference operation",
+        help="The log verbosity level",
     )
     parser.add_argument(
         "--mini_batch_size",
         type=int,
         default=10,
-        help="Size of the mini-batch passed to each batch invocation",
+        help="The number of files the code_configuration.scoring_script can process in one run() call",
     )
     parser.add_argument(
         "--instance_count",
         type=int,
-        help="Number of compute instances to deploy model",
+        help="The number of nodes to use for each batch scoring job",
         default=1,
         choices=range(1, MAX_INSTANCE_COUNT),
     )
@@ -157,15 +157,43 @@ def parse_args():
     return args
 
 
-def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, compute_name, args):
+def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
     """Create endpoint and deployment and return details."""
-    compute_cluster = AmlCompute(
-        name=compute_name,
-        size=args.size,
-        min_instances=args.min_instances,
-        max_instances=args.max_instances,
-        idle_time_before_scale_down=args.idle_time_before_scale_down,
-    )
+    if(args.compute_name):
+        compute_name = args.compute_name
+        try:
+            compute_cluster = ml_client.compute.get(compute_name)
+        except Exception as e:
+            compute_cluster = AmlCompute(
+                name=compute_name,
+                size=args.size,
+                min_instances=args.min_instances,
+                max_instances=args.max_instances,
+                idle_time_before_scale_down=args.idle_time_before_scale_down,
+            )
+            try:
+                print(f"Creating compute cluster {compute_name}")
+                ml_client.begin_create_or_update(compute_cluster).wait()
+            except Exception as e:
+                raise AzureMLException._with_error(
+                    AzureMLError.create(ComputeCreationError, exception=e)
+                )
+    else:
+        compute_name = "cpu-cluster"
+        compute_cluster = AmlCompute(
+            name=compute_name,
+            size=args.size,
+            min_instances=args.min_instances,
+            max_instances=args.max_instances,
+            idle_time_before_scale_down=args.idle_time_before_scale_down,
+        )
+        try:
+            print(f"Creating compute cluster {compute_name}")
+            ml_client.begin_create_or_update(compute_cluster).wait()
+        except Exception as e:
+            raise AzureMLException._with_error(
+                AzureMLError.create(ComputeCreationError, exception=e)
+            )
 
     endpoint = BatchEndpoint(name=endpoint_name)
 
@@ -186,14 +214,6 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
         mini_batch_size=args.mini_batch_size,
         instance_count=args.instance_count,
     )
-
-    try:
-        print(f"Creating compute cluster {compute_name}")
-        ml_client.begin_create_or_update(compute_cluster).wait()
-    except Exception as e:
-        raise AzureMLException._with_error(
-            AzureMLError.create(ComputeCreationError, exception=e)
-        )
 
     try:
         logger.info(f"Creating endpoint {endpoint_name}")
@@ -261,14 +281,12 @@ def main():
 
     endpoint_name = args.endpoint_name if args.endpoint_name else endpoint_name
     deployment_name = args.deployment_name if args.deployment_name else "default"
-    compute_name = args.compute_name if args.compute_name else "cpu-cluster"
 
     endpoint, deployment = create_endpoint_and_deployment(
         ml_client=ml_client,
         endpoint_name=endpoint_name,
         deployment_name=deployment_name,
         model_id=model_id,
-        compute_name=compute_name,
         args=args
     )
 

@@ -69,7 +69,7 @@ inputs:
     type: string
     optional: true
     default: cpu-cluster
-    description: Name of the deployment
+    description: Name of the compute target to execute the batch scoring jobs on
   
   size:
     type: string
@@ -119,67 +119,67 @@ inputs:
     type: integer
     optional: true
     default: 0
-    description: Minimum instances of the compute cluster
+    description: Minimum number of instances of the compute cluster
 
   max_instances:
     type: integer
     optional: true
-    default: 3
-    description: Maximum instances of the compute cluster
+    default: 1
+    description: Maximum number of instances of the compute cluster
 
   idle_time_before_scale_down:
     type: integer
     optional: true
     default: 120
-    description: Idle time before scale down of the compute cluster
+    description: Node Idle Time before scaling down amlCompute
 
   output_file_name:
     type: string
     optional: true
     default: predictions.csv
-    description: Name of the output file
+    description: Name of the batch scoring output file.
 
   max_concurrency_per_instance:
     type: integer
     optional: true
     default: 1
-    description: Maximum number of parallelism per instance
+    description: The maximum number of parallel scoring_script runs per instance.
 
   error_threshold:
     type: integer
     optional: true
     default: -1
-    description: Error threshold before batch inference is aborted
+    description: The number of file failures that should be ignored.
 
   max_retries:
     type: integer
     optional: true
     default: 3
-    description: Number of retries in failure
+    description: The maximum number of retries for a failed or timed-out mini batch.
 
   timeout:
     type: integer
     optional: true
-    default: 30
-    description: Timeout in seconds
+    default: 500
+    description: The timeout in seconds for scoring a single mini batch.
 
   logging_level:
     type: string
     optional: true
     default: info
-    description: Logging level for batch inference operation
+    description: The log verbosity level.
 
   mini_batch_size:
     type: integer
     optional: true
     default: 10
-    description: Size of the mini-batch passed to each batch invocation
+    description: The number of files the code_configuration.scoring_script can process in one run() call.
 
   instance_count:
     type: integer
     optional: true
     default: 1
-    description: Number of compute instances to deploy model
+    description: The number of nodes to use for each batch scoring job.
 
 outputs:
   model_deployment_details:
