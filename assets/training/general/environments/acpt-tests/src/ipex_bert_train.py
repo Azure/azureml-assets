@@ -2,89 +2,64 @@
 # Licensed under the MIT License.
 
 import torch
-from transformers import Trainer, TrainingArguments, AutoTokenizer, AutoModelForSequenceClassification
-from transformers.integrations import MLflowCallback
-from datasets import load_dataset
+from torch.utils.data import DataLoader
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, AdamW
 import argparse
-import mlflow
-import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--intel-extension", action="store_true")
 args = parser.parse_args()
 
+# Intel(R) Extension for PyTorch* cpu package is optimized for Intel CPU
+device = "cpu"
 
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
+# Create dummy dataset
+texts = [
+    "This is a positive sentence.",
+    "This is a negative sentence.",
+    "I'm feeling great today.",
+    "I'm not happy with the outcome.",
+]
+labels = [1, 0, 1, 0]
 
-# Load the dataset
-dataset = load_dataset('glue', 'mrpc')
-train_dataset, test_dataset = dataset['train'], dataset['validation']
+# Tokenizer data
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+encoded_inputs = tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
 
-# Load the tokenizer and encode the data
-tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
-def tokenize_function(examples):
-    return tokenizer(
-        examples['sentence1'],
-        examples['sentence2'],
-        truncation=True,
-        max_length=128,  # Set the maximum sequence length
-        padding='max_length'  # Pad all sequences to the same length
-    )
+# Create dataloader
+dataset = torch.utils.data.TensorDataset(encoded_inputs["input_ids"], encoded_inputs["attention_mask"], torch.tensor(labels))
+dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
 
-train_dataset = train_dataset.map(tokenize_function, batched=True)
-test_dataset = test_dataset.map(tokenize_function, batched=True)
-
-# Load the model
-model = AutoModelForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2).to(device)
+# Load the pre-trained model
+model = AutoModelForSequenceClassification.from_pretrained("bert-base-uncased").to(device)
 model.train()
 
-# Define optimizer and scheduler
-optimizer = torch.optim.AdamW(model.parameters(), betas=(0.8, 0.999), weight_decay=3e-07)
-scheduler = torch.optim.lr_scheduler.LinearLR(optimizer)
+optimizer = AdamW(model.parameters(), lr=1e-3)
 
+# Optimize using Intel(R) Extension for PyTorch*
 if (args.intel_extension):
-    # Optimize using Intel(R) Extension for PyTorch*
     print("Intel Optimizations Enabled")
     import intel_extension_for_pytorch as ipex
     model, optimizer = ipex.optimize(model,optimizer=optimizer)
 
-# Define the training arguments
-training_args = TrainingArguments(
-    output_dir='outputs',
-    num_train_epochs=5,
-    per_device_train_batch_size=93,
-    per_device_eval_batch_size=93,
-    warmup_steps=500,
-    weight_decay=0.01,
-    logging_steps=1000,
-    evaluation_strategy='epoch',
-    eval_steps=100,
-    learning_rate=3e-05
-)
+num_epochs = 3
+for epoch in range(num_epochs):
+    total_loss = 0
 
-# Define the Trainer
-trainer = Trainer(
-    model=model,
-    args=training_args,
-    train_dataset=train_dataset,
-    eval_dataset=test_dataset,
-    optimizers=[optimizer,scheduler]
-)
+    for batch in dataloader:
+        input_ids, attention_mask, target = batch
+        input_ids = input_ids.to(device)
+        attention_mask = attention_mask.to(device)
+        target = target.to(device)
 
-trainer.pop_callback(MLflowCallback)
-start = time.time()
+        optimizer.zero_grad()
 
-# Train the model
-result = trainer.train()
+        outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=target)
+        loss = outputs.loss
+        total_loss += loss.item()
 
-print(f"Time: {result.metrics['train_runtime']:.2f}")
-print(f"Samples/second: {result.metrics['train_samples_per_second']:.2f}")
-print("Training...")
+        loss.backward()
+        optimizer.step()
 
-mlflow.log_metric(
-    "time/epoch", (time.time() - start) / 60 / training_args.num_train_epochs
-)
-
-# Evaluate the model 
-print("Evaluation...")
-trainer.evaluate()
+    avg_loss = total_loss / len(dataloader)
+    print(f"Epoch {epoch + 1}/{num_epochs}, Average Loss: {avg_loss:.4f}")

@@ -6,7 +6,7 @@ import os
 import time
 from pathlib import Path
 from azure.ai.ml import command, Output, MLClient, PyTorchDistribution
-from azure.ai.ml.entities import Environment, BuildContext, JobResourceConfiguration
+from azure.ai.ml.entities import Environment, BuildContext, JobResourceConfiguration, AmlCompute
 from azure.identity import AzureCliCredential
 import subprocess
 
@@ -116,10 +116,28 @@ def test_ipex_2_0():
     )
     ml_client.environments.create_or_update(env_docker_context)
 
+    cpu_compute_target = "cpu-xeon-cluster"
+
+    try:
+        cpu_cluster = ml_client.compute.get(cpu_compute_target)
+    except Exception:
+        cpu_cluster = AmlCompute(
+            name="cpu-xeon-cluster",
+            type="amlcompute",
+            size="STANDARD_D4d_V4",
+            min_instances=0,
+            max_instances=1,
+            idle_time_before_scale_down=120,
+            tier="Dedicated",
+        )
+
+        ml_client.begin_create_or_update(cpu_cluster).result()
+
     # create the command
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
         command="pip install -r requirements.txt" \
+                " && python -m pip install oneccl_bind_pt~=2.0 -f https://developer.intel.com/ipex-whl-stable-cpu"
                 " && python ipex_bert_train.py --intel-extension",
         outputs={
             "output": Output(
@@ -129,7 +147,7 @@ def test_ipex_2_0():
             )
         },
         environment=f"{env_name}@latest",
-        compute=os.environ.get("cpu_cluster"),
+        compute=cpu_compute_target,
         display_name="IPEX_BERT_train",
         description="Pretrain the BERT model on the GLUE dataset.",
         experiment_name="pytorch20_ipex20_Experiment",
