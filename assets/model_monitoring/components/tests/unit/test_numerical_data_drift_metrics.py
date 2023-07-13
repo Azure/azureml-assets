@@ -15,16 +15,20 @@ import unittest
 class TestComputeDataDriftMetrics(unittest.TestCase):
     """Test class for data drift compute metrics component component and utilities."""
 
-    def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance(self):
+    @pytest.mark.parameterized("x_n_obs,y_n_obs,x_mean,y_mean,expected", [
+        (100_000, 100_000, 100_000, 100_000),
+        (100_000, 10_000, 100_000, 100_000),
+        (50, 50, 50, 50),
+        (50, 50, 100, 250),
+        (0, 0, 0, 0)])
+    def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance(self, x_n_obs, y_n_obs, x_mean, y_mean, expected):
         """Test compute normalized wasserstein distance for numerical metrics."""
-        n_obs = 100_000
-        mean = 50
         std_dev = 15
         column_values = ['column1']
         numerical_threshold = 100
 
-        x = np.random.normal(mean, std_dev, n_obs)
-        y = np.random.normal(mean, std_dev, n_obs)
+        x = np.random.normal(x_mean, std_dev, x_n_obs)
+        y = np.random.normal(y_mean, std_dev, y_n_obs)
 
         x_pd_df = pd.DataFrame(data=x, columns=column_values)
         y_pd_df = pd.DataFrame(data=y, columns=column_values)
@@ -43,4 +47,4 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
             column_values,
             numerical_threshold)
 
-        self.assertAlmostEqual(0, output_df['column1'], 5)
+        self.assertAlmostEqual(float(expected), output_df['column1'], 5)
