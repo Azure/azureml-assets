@@ -7,9 +7,10 @@ import os
 import json
 import polling2
 import traceback
+import requests
 from logging import Logger
 from azure.core.exceptions import ResourceNotFoundError, ResourceExistsError
-from azureml.rag.utils.connections import get_connection_by_id_v2, workspace_connection_to_credential
+from azureml.rag.utils.connections import get_connection_by_id_v2 #, workspace_connection_to_credential
 import time
 from typing import Tuple
 from azureml.core import Run, Workspace
@@ -284,15 +285,13 @@ def get_workspace_and_run() -> Tuple[Workspace, Run]:
     return workspace, run
 
 
-def main(parser_args, activity_logger: Logger):
-    """Extract main method."""
+def validate_aoai_deployments(parser_args, check_completion, check_embeddings, activity_logger: Logger):
+    """Poll or create deployments in AOAI."""
     completion_params = {}
     embedding_params = {}
 
     llm_config = json.loads(parser_args.llm_config)
     print(f"Using llm_config: {json.dumps(llm_config, indent=2)}")
-    check_embeddings = parser_args.check_embeddings == "true" or parser_args.check_embeddings == "True"
-    check_completion = parser_args.check_completion == "true" or parser_args.check_completion == "True"
     connection_id_completion = os.environ.get(
         "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_COMPLETION", None)
     connection_id_embedding = os.environ.get(
@@ -404,8 +403,112 @@ def main(parser_args, activity_logger: Logger):
         json.dump({"deployment_validation_success": "true"}, f)
 
     activity_logger.info(
-        "[Validate Deployments]: Success! Deployments have been validated.")
+        "[Validate Deployments]: Success! AOAI deployments have been validated.")
 
+def workspace_connection_to_credential(ws_connection):
+    """Get a credential for a workspace connection."""
+    if ws_connection['properties']['authType'] == 'ApiKey':
+        from azure.core.credentials import AzureKeyCredential
+        return AzureKeyCredential(ws_connection['properties']['credentials']['key'])
+    elif ws_connection['properties']['authType'] == 'PAT':
+        from azure.core.credentials import AccessToken
+        return AccessToken(ws_connection['properties']['credentials']['pat'], ws_connection['properties'].get('expiresOn', None))
+    elif ws_connection['properties']['authType'] == 'CustomKeys':
+        # OpenAI connections are made with CustomKeys auth, so we can try to access the key using known structure
+        from azure.core.credentials import AzureKeyCredential
+        if ws_connection.get("metadata", {}).get("azureml.flow.connection_type", None) == "OpenAI":
+            # Try to get the the key with api_key, if fail, default to regular CustomKeys handling
+            try:
+                key = ws_connection['properties']['credentials']['keys']['api_key']
+                return AzureKeyCredential(key)
+            except Exception as e:
+                logger.warning(f"Could not get key using api_key, using default handling: {e}")
+        key_dict = ws_connection['properties']['credentials']['keys']
+        if len(key_dict.keys()) != 1:
+            raise ValueError(f"Only connections with a single key can be used. Number of keys present: {len(key_dict.keys())}")
+        return AzureKeyCredential(ws_connection['properties']['credentials']['keys'][list(key_dict.keys())[0]])
+    else:
+        raise ValueError(f"Unknown auth type '{ws_connection['properties']['authType']}'")
+
+def get_openai_model(model, key, activity_logger: Logger):
+    """Get model info from OpenAI"""
+    endpoint = f"https://api.openai.com/v1/models/{model}"
+    headers = {"Authorization": f"Bearer {key}"}
+    try:
+        response = requests.get(endpoint, headers=headers)
+        response.raise_for_status()
+    except:
+        activity_logger.exception(f"Unable to get model information from OpenAI for model {model}")
+        raise
+
+def validate_openai_deployments(parser_args, check_completion, check_embeddings, activity_logger: Logger):
+    """Call OpenAI to check for model ids"""     
+    
+    connection_id_completion = os.environ.get(
+        "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_COMPLETION", None)
+    
+    if connection_id_completion and check_completion:
+        llm_config = json.loads(parser_args.llm_config)
+        print(f"Using llm_config: {json.dumps(llm_config, indent=2)}")
+        connection = get_connection_by_id_v2(connection_id_completion)
+        credential = workspace_connection_to_credential(connection)
+        model = llm_config["model_name"]
+        print(f"Completion model name: {model}")
+        get_openai_model(model, credential.key, activity_logger)
+    elif check_completion:
+        activity_logger.info(
+            "ValidationFailed: ConnectionID for LLM is empty and check_embeddings = True")
+        raise Exception(
+            "ConnectionID for LLM is empty and check_completion = True")
+    
+    connection_id_embedding = os.environ.get(
+        "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING", None)
+    
+    if connection_id_embedding and check_embeddings:
+        connection = get_connection_by_id_v2(connection_id_embedding)
+        credential = workspace_connection_to_credential(connection)
+        _, details = parser_args.embeddings_model.split('://')
+        model = split_details(details, start=0)["model"]
+        print(f"Embeddings model name: {model}")
+        get_openai_model(model, credential.key, activity_logger)
+    elif check_embeddings:
+        activity_logger.info(
+            "ValidationFailed: ConnectionID for Embeddings is empty and check_embeddings = True")
+        raise Exception(
+            "ConnectionID for Embeddings is empty and check_embeddings = True")
+
+    activity_logger.info(
+        "[Validate Deployments]: Success! OpenAI deployments have been validated.")
+
+
+def main(parser_args, activity_logger: Logger):
+    
+    # Determine if embeddings model is AOAI or OpenAI
+    check_aoai_embeddings = (parser_args.check_embeddings == "true" or parser_args.check_embeddings == "True") and parser_args.embeddings_model.startswith("azure_open_ai")
+    check_openai_embeddings = (parser_args.check_embeddings == "true" or parser_args.check_embeddings == "True") and parser_args.embeddings_model.startswith("open_ai")
+
+
+    # Determine if completion model is AOAI or OpenAI
+    llm_config = json.loads(parser_args.llm_config)
+    model_type = llm_config.get("type")
+    check_aoai_completion = (parser_args.check_completion  == "true" or parser_args.check_completion  == "True") and model_type == "azure_open_ai"
+    check_openai_completion = (parser_args.check_completion  == "true" or parser_args.check_completion  == "True") and model_type == "open_ai"
+    
+    # Validate aoai models, if any
+    if check_aoai_embeddings or check_aoai_completion:
+        completion_to_check = "Completion model" if check_aoai_completion else ""
+        embeddings_to_check = "Embeddings model" if check_aoai_embeddings else ""
+        use_and = " and " if (check_aoai_embeddings and check_aoai_completion) else ""
+        activity_logger.info(f"[Validate Deployments]: Validating {completion_to_check}{use_and}{embeddings_to_check} using AOAI")
+        validate_aoai_deployments(parser_args, check_aoai_completion, check_aoai_embeddings, activity_logger)
+    
+    # validate openai models, if any
+    if check_openai_completion or check_openai_embeddings:
+        completion_to_check = "Completion model" if check_openai_completion else ""
+        embeddings_to_check = "Embeddings model" if check_openai_embeddings else ""
+        use_and = " and " if (check_openai_embeddings and check_openai_completion) else ""
+        activity_logger.info(f"[Validate Deployments]: Validating {completion_to_check}{use_and}{embeddings_to_check} using OpenAI")
+        validate_openai_deployments(parser_args, check_openai_completion, check_openai_embeddings, activity_logger)
 
 def main_wrapper(parser_args, logger):
     """Wrap around main function."""
@@ -438,10 +541,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--llm_config",
         type=str,
-        default='{"type": "azure_open_ai","model_name": "gpt-35-turbo", "deployment_name": '
-        + '"gpt-35-turbo", "temperature": 0, "max_tokens": 1500}')
+        default='{"type": "open_ai","model_name": "dummy", "deployment_name": '
+        + '"gpt-3.5-turbo", "temperature": 0, "max_tokens": 1500}')
     parser.add_argument("--embeddings_model", type=str,
-                        default="azure_open_ai://deployment/text-embedding-ada-002/model/text-embedding-ada-002")
+                        default="open_ai://model/text-embedding-ada-002")
     parser.add_argument("--output_data", type=str)
     parser_args = parser.parse_args()
 
