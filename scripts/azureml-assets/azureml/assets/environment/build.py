@@ -140,7 +140,6 @@ def build_image(asset_config: assets.AssetConfig,
                             test_command=test_command, push=push, trivy_url=trivy_url)
             cmd = ["az", "acr", "run", "-g", resource_group, "-r", registry, "--platform", env_config.os.value,
                    "-f", TASK_FILENAME, "."]
-            cmd.append(".")
         else:
             # Build locally
             build_context_dir = env_config.context_dir_with_path
