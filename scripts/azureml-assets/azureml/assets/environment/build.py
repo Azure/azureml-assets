@@ -148,9 +148,10 @@ def build_image(asset_config: assets.AssetConfig,
                    "-f", TASK_FILENAME, "."]
         else:
             # Build locally
+            build_context_dir = env_config.context_dir_with_path
             cmd = ["docker", "build", "--file", env_config.dockerfile, "--progress", "plain", "--tag", image_name, "."]
         p = run(cmd,
-                cwd=env_config.context_dir_with_path,
+                cwd=build_context_dir,
                 stdout=PIPE,
                 stderr=STDOUT)
     end = timer()
