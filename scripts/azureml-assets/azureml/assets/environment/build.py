@@ -31,27 +31,22 @@ COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 
 
 def create_acr_task(image_name: str,
-                    build_context_dir: Path,
                     dockerfile: str,
                     os: assets.Os,
                     task_filename: str,
                     test_command: str = None,
                     push: bool = False,
-                    trivy_url: str = None) -> Path:
+                    trivy_url: str = None):
     """Create ACR build task file.
 
     Args:
         image_name (str): Image name.
-        build_context_dir (Path): Build context directory.
         dockerfile (str): Dockerfile name.
         os (assets.Os): Operating system of the image.
         task_filename (str): File to which the task will be written.
         test_command (str, optional): Command used to test the image. Defaults to None.
         push (bool, optional): Push the image to the ACR. Defaults to False.
         trivy_url (str, optional): URL to download Trivy for vulnerability scanning. Defaults to None.
-
-    Returns:
-        Path: The task file.
     """
     # Start task with just the build step
     task = {
@@ -100,13 +95,10 @@ def create_acr_task(image_name: str,
         })
 
     # Write YAML file to disk
-    task_file = build_context_dir / task_filename
-    with open(task_file, "w") as f:
+    with open(task_filename, "w") as f:
         yaml = YAML()
         yaml.default_flow_style = False
         YAML().dump(task, f)
-
-    return task_file
 
 
 def build_image(asset_config: assets.AssetConfig,
@@ -142,8 +134,9 @@ def build_image(asset_config: assets.AssetConfig,
             temp_dir_path = Path(temp_dir)
             shutil.copytree(env_config.context_dir_with_path, temp_dir_path, dirs_exist_ok=True)
             build_context_dir = temp_dir_path
-            create_acr_task(image_name, build_context_dir, env_config.dockerfile, TASK_FILENAME, test_command,
-                            push, trivy_url)
+            create_acr_task(image_name=image_name, dockerfile=env_config.dockerfile,
+                            task_filename=build_context_dir / TASK_FILENAME, test_command=test_command,
+                            push=push, trivy_url=trivy_url)
             cmd = ["az", "acr", "run", "-g", resource_group, "-r", registry, "--platform", env_config.os.value,
                    "-f", TASK_FILENAME, "."]
         else:
@@ -266,8 +259,10 @@ def build_images(input_dirs: List[Path],
 
             # Start building image
             build_log = build_logs_dir / f"{asset_config.name}.log"
-            futures.append(pool.submit(build_image, asset_config, env_config, image_name, build_log, resource_group,
-                                       registry, test_command, push_this_image, trivy_url))
+            futures.append(pool.submit(build_image, asset_config=asset_config, env_config=env_config,
+                                       image_name=image_name, build_log=build_log, resource_group=resource_group,
+                                       registry=registry, test_command=test_command, push=push_this_image,
+                                       trivy_url=trivy_url))
 
         # Wait for builds to complete
         for future in as_completed(futures):
