@@ -7,7 +7,7 @@ dependencies:
 - pip=21.3.1
 - scikit-learn==0.24.1
 - pip:
-  - azureml-rag[cognitive_search,data_generation]>=0.1.11
+  - azureml-rag[cognitive_search,data_generation]>=0.1.13
   - psutil~=5.8.0
   - pandas~=1.1.5
   - openai~=0.27.4
