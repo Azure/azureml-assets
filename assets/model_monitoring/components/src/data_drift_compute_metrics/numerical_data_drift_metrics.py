@@ -7,6 +7,7 @@ import pandas as pd
 import pyspark.sql as pyspark_sql
 import pyspark.sql.functions as F
 from scipy.stats import ks_2samp, wasserstein_distance
+from synapse.ml.exploratory import DistributionBalanceMeasure
 from io_utils import get_output_spark_df, init_spark
 from shared_utilities.histogram_utils import (
     get_dual_histogram_bin_edges,
@@ -139,27 +140,26 @@ def _normalized_wasserstein(
     numerical_columns: list,
 ):
     # TODO: Update to leverage DistributionBalanceMeasure again after reference distribution is supported in SynapeML.
-    
     # Filter the numerical_columns list to keep only the columns present in both DataFrames
     common_numerical_columns = [
         col for col in numerical_columns if col in baseline_df.columns and col in production_df.columns
     ]
-    
+
     # Compute the Wasserstein distance for each column
     wasserstein_distances = {}
     for column in common_numerical_columns:
         baseline_col_values = baseline_df.select(column).rdd.flatMap(lambda x: x).collect()
         production_col_values = production_df.select(column).rdd.flatMap(lambda x: x).collect()
-        
+
         distance = wasserstein_distance(baseline_col_values, production_col_values)
-        
+
         # Normalize the Wasserstein distance by dividing it by the norm
         std_dev = baseline_df.select(F.stddev(column)).collect()[0][0]
         norm = max(std_dev, 0.001)
-        
+
         normalized_distance = distance / norm
         wasserstein_distances[column] = normalized_distance
-    
+
     return wasserstein_distances
 
 

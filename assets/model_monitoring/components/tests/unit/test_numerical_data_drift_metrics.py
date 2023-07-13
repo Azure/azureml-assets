@@ -3,18 +3,18 @@
 
 """This file contains unit tests for the Data Drift compute metrics component component."""
 
-# from data_drift_compute_metrics.io_utils import get_output_spark_df, init_spark
+from data_drift_compute_metrics.io_utils import init_spark
 from data_drift_compute_metrics.numerical_data_drift_metrics import compute_numerical_data_drift_measures_tests
 import pandas as pd
-import pyspark.sql as pyspark_sql
 import pytest
 import numpy as np
 import unittest
 
+
 @pytest.mark.unit
-class TestComputeDataDriftMetrics:
+class TestComputeDataDriftMetrics(unittest.TestCase):
     """Test class for data drift compute metrics component component and utilities."""
-    
+
     def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance(self):
         n_obs = 100_000
         mean = 50
@@ -24,12 +24,12 @@ class TestComputeDataDriftMetrics:
 
         x = np.random.normal(mean, std_dev, n_obs)
         y = np.random.normal(mean, std_dev, n_obs)
-        
-        x_pd_df = pd.DataFrame(data = x, columns = column_values)
-        y_pd_df = pd.DataFrame(data = y, columns = column_values)
-        
+
+        x_pd_df = pd.DataFrame(data=x, columns=column_values)
+        y_pd_df = pd.DataFrame(data=y, columns=column_values)
+
         spark = init_spark()
-        
+
         x_df = spark.createDataFrame(x_pd_df)
         y_df = spark.createDataFrame(y_pd_df)
 
@@ -41,5 +41,5 @@ class TestComputeDataDriftMetrics:
             "NormalizedWassersteinDistance",
             column_values,
             numerical_threshold)
-        
-        assertAlmostEqual(0, output_df['column1'], 5)
+
+        self.assertAlmostEqual(0, output_df['column1'], 5)
