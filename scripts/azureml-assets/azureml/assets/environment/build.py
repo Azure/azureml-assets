@@ -89,7 +89,7 @@ def create_acr_task(image_name: str,
                 'privileged': True
             })
         else:
-            logger.log_warning("Vulnerability scanning is not supported on Windows")
+            logger.log_warning(f"Skipped vulnerability scan for Windows image {image_name} - not supported")
 
     # Add push step if requested
     if push:
