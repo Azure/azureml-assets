@@ -1,6 +1,6 @@
 image:
   name: azureml/curated/windows
-  os: linux
+  os: windows
   context:
     dir: context
     dockerfile: Dockerfile
