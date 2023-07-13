@@ -132,14 +132,32 @@ def build_image(asset_config: assets.AssetConfig,
     with tempfile.TemporaryDirectory() as temp_dir:
         if registry is not None:
             # Build on ACR
-            temp_dir_path = Path(temp_dir)
-            shutil.copytree(env_config.context_dir_with_path, temp_dir_path, dirs_exist_ok=True)
-            build_context_dir = temp_dir_path
-            create_acr_task(image_name=image_name, dockerfile=env_config.dockerfile,
-                            os=env_config.os, task_filename=build_context_dir / TASK_FILENAME,
-                            test_command=test_command, push=push, trivy_url=trivy_url)
-            cmd = ["az", "acr", "run", "-g", resource_group, "-r", registry, "--platform", env_config.os.value,
-                   "-f", TASK_FILENAME, "."]
+            cmd = ["az", "acr"]
+            common_args = ["-g", resource_group, "-r", registry, "--platform", env_config.os.value]
+            if env_config.os is assets.Os.LINUX:
+                # Build Linux images via ACR task
+                temp_dir_path = Path(temp_dir)
+                shutil.copytree(env_config.context_dir_with_path, temp_dir_path, dirs_exist_ok=True)
+                build_context_dir = temp_dir_path
+                create_acr_task(image_name=image_name, dockerfile=env_config.dockerfile,
+                                os=env_config.os, task_filename=build_context_dir / TASK_FILENAME,
+                                test_command=test_command, push=push, trivy_url=trivy_url)
+                cmd.append("run")
+                cmd.extend(common_args)
+                cmd.extend(["-f", TASK_FILENAME])
+            else:
+                # Build Windows images directly because they're not supported under ACR task
+                cmd.append("build")
+                cmd.extend(common_args)
+                cmd.extend(["--file", env_config.dockerfile, "--image", image_name, "--timeout",
+                            str(BUILD_STEP_TIMEOUT_SECONDS)])
+                if not push:
+                    cmd.append("--no-push")
+                if test_command:
+                    logger.log_warning("Test command not supported for Windows images")
+                if trivy_url:
+                    logger.log_warning("Vulnerability scanning not supported for Windows images")
+            cmd.append(".")
         else:
             # Build locally
             build_context_dir = env_config.context_dir_with_path
