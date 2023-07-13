@@ -59,13 +59,14 @@ def create_acr_task(image_name: str,
 
     # Add command to output packages
     if os is assets.Os.LINUX:
-        cmd = f"$Registry/{image_name} [ -n \"$CONDA_DEFAULT_ENV\" ] && conda env export || pip freeze"
+        # Quoted string required to handle && and ||
+        cmd = r'"[ -n \"$CONDA_DEFAULT_ENV\" ] && conda env export || pip freeze"'
     else:
-        # Assumes Windows batch
-        cmd = f"$Registry/{image_name} if defined CONDA_DEFAULT_ENV (conda env export) else (pip freeze)"
+        # Requires Windows batch
+        cmd = "if defined CONDA_DEFAULT_ENV (conda env export) else (pip freeze)"
     task['steps'].append({
         'id': "conda_export",
-        'cmd': cmd,
+        'cmd': f"$Registry/{image_name} {cmd}",
         'ignoreErrors': True
     })
 
