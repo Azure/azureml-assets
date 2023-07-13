@@ -65,7 +65,7 @@ def create_acr_task(image_name: str,
         # Requires Windows batch
         cmd = r'cmd /C "if defined CONDA_DEFAULT_ENV (conda env export) else (pip freeze)"'
     task['steps'].append({
-        'id': "conda_export",
+        'id': "package_export",
         'cmd': f"$Registry/{image_name} {cmd}",
         'ignoreErrors': True
     })
