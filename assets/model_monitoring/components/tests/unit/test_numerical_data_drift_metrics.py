@@ -21,7 +21,9 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
         (50, 50, 50, 50),
         (50, 50, 100, 250),
         (0, 0, 0, 0)])
-    def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance(self, x_n_obs, y_n_obs, x_mean, y_mean, expected):
+    def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance(
+        self, x_n_obs, y_n_obs, x_mean, y_mean, expected
+    ):
         """Test compute normalized wasserstein distance for numerical metrics."""
         std_dev = 15
         column_values = ['column1']
