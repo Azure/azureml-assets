@@ -265,8 +265,8 @@ def build_images(input_dirs: List[Path],
 
             # Start building image
             build_log = build_logs_dir / f"{asset_config.name}.log"
-            futures.append(pool.submit(build_image, asset_config, image_name, build_log, resource_group, registry,
-                                       test_command, push_this_image, trivy_url))
+            futures.append(pool.submit(build_image, asset_config, env_config, image_name, build_log, resource_group,
+                                       registry, test_command, push_this_image, trivy_url))
 
         # Wait for builds to complete
         for future in as_completed(futures):
