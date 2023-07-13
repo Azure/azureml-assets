@@ -79,14 +79,17 @@ def create_acr_task(image_name: str,
 
     # Add vulnerability scanning step if requested
     if trivy_url is not None:
-        task['steps'].append({
-            'id': "scan",
-            'stepTimeout': SCAN_STEP_TIMEOUT_SECONDS,
-            'cmd': f"aquasec/trivy -q --timeout {TRIVY_TIMEOUT} image --scanners vuln --ignore-unfixed "
-                   f"$Registry/{image_name}",
-            'ignoreErrors': True,
-            'privileged': True
-        })
+        if os is assets.Os.LINUX:
+            task['steps'].append({
+                'id': "scan",
+                'stepTimeout': SCAN_STEP_TIMEOUT_SECONDS,
+                'cmd': f"aquasec/trivy -q --timeout {TRIVY_TIMEOUT} image --scanners vuln --ignore-unfixed "
+                    f"$Registry/{image_name}",
+                'ignoreErrors': True,
+                'privileged': True
+            })
+        else:
+            logger.log_warning("Vulnerability scanning is not supported on Windows")
 
     # Add push step if requested
     if push:
