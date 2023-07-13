@@ -146,7 +146,7 @@ def _normalized_wasserstein(
     ]
 
     # Compute the Wasserstein distance for each column
-    wasserstein_distances = {}
+    rows = {}
     for column in common_numerical_columns:
         baseline_col_values = baseline_df.select(column).rdd.flatMap(lambda x: x).collect()
         production_col_values = production_df.select(column).rdd.flatMap(lambda x: x).collect()
@@ -158,9 +158,11 @@ def _normalized_wasserstein(
         norm = max(std_dev, 0.001)
 
         normalized_distance = distance / norm
-        wasserstein_distances[column] = normalized_distance
+        row = [column, float(normalized_distance), "numerical", "NormalizedWassersteinDistance"]
+        rows.append(row)
 
-    return wasserstein_distances
+    output_df = get_output_spark_df(rows)
+    return output_df
 
 
 def _ks2sample_pandas_impl(
