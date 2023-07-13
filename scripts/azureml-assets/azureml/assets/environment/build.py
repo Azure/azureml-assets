@@ -135,8 +135,8 @@ def build_image(asset_config: assets.AssetConfig,
             shutil.copytree(env_config.context_dir_with_path, temp_dir_path, dirs_exist_ok=True)
             build_context_dir = temp_dir_path
             create_acr_task(image_name=image_name, dockerfile=env_config.dockerfile,
-                            task_filename=build_context_dir / TASK_FILENAME, test_command=test_command,
-                            push=push, trivy_url=trivy_url)
+                            os=env_config.os, task_filename=build_context_dir / TASK_FILENAME,
+                            test_command=test_command, push=push, trivy_url=trivy_url)
             cmd = ["az", "acr", "run", "-g", resource_group, "-r", registry, "--platform", env_config.os.value,
                    "-f", TASK_FILENAME, "."]
         else:
