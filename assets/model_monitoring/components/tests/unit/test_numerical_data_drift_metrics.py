@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 """This file contains unit tests for the Data Drift compute metrics component component."""
 
 # from data_drift_compute_metrics.io_utils import get_output_spark_df, init_spark
