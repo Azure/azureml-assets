@@ -82,7 +82,7 @@ def create_acr_task(image_name: str,
         })
 
     # Add vulnerability scanning step if requested
-    if trivy_url is not None:       
+    if trivy_url is not None:
         task['steps'].append({
             'id': "scan",
             'stepTimeout': SCAN_STEP_TIMEOUT_SECONDS,
