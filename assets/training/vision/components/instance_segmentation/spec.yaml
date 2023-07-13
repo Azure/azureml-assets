@@ -220,7 +220,7 @@ outputs:
 
 code: ../src
  
-environment: azureml:automl-dnn-vision-gpu:118
+environment: azureml:automl-dnn-vision-gpu:@latest
 
 command: >-
   python -m instance_segmentation.run
