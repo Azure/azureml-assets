@@ -16,6 +16,8 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
     """Test class for data drift compute metrics component component and utilities."""
 
     def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance(self):
+        """Test compute normalized wasserstein distance for numerical metrics."""
+
         n_obs = 100_000
         mean = 50
         std_dev = 15
