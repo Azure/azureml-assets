@@ -29,7 +29,6 @@ class TestComputeDataDriftMetrics:
         y_pd_df = pd.DataFrame(data = y, columns = column_values)
         
         spark = init_spark()
-        broadcasted_prod_df_map = spark.sparkContext.broadcast(mapping)
         
         x_df = spark.createDataFrame(x_pd_df)
         y_df = spark.createDataFrame(y_pd_df)
