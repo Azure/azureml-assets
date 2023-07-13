@@ -1,5 +1,5 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT License.
+# # Copyright (c) Microsoft Corporation.
+# # Licensed under the MIT License.
 
 import torch
 from torch.utils.data import DataLoader
@@ -38,9 +38,9 @@ optimizer = AdamW(model.parameters(), lr=1e-3)
 
 # Optimize using Intel(R) Extension for PyTorch*
 if (args.intel_extension):
-    print("Intel Optimizations Enabled")
     import intel_extension_for_pytorch as ipex
     model, optimizer = ipex.optimize(model,optimizer=optimizer)
+    print("Intel Optimizations Enabled")
 
 num_epochs = 3
 for epoch in range(num_epochs):
@@ -63,3 +63,5 @@ for epoch in range(num_epochs):
 
     avg_loss = total_loss / len(dataloader)
     print(f"Epoch {epoch + 1}/{num_epochs}, Average Loss: {avg_loss:.4f}")
+
+print('Training complete')

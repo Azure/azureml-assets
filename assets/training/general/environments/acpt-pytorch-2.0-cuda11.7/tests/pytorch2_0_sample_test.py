@@ -116,15 +116,15 @@ def test_ipex_2_0():
     )
     ml_client.environments.create_or_update(env_docker_context)
 
-    cpu_compute_target = "cpu-xeon-cluster"
+    cpu_compute_target = "cpu-cluster-ipex-test"
 
     try:
         cpu_cluster = ml_client.compute.get(cpu_compute_target)
     except Exception:
         cpu_cluster = AmlCompute(
-            name="cpu-xeon-cluster",
+            name=cpu_compute_target,
             type="amlcompute",
-            size="STANDARD_D4d_V4",
+            size = "Standard_D3_v2",
             min_instances=0,
             max_instances=1,
             idle_time_before_scale_down=120,
@@ -137,7 +137,7 @@ def test_ipex_2_0():
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
         command="pip install -r requirements.txt" \
-                " && python -m pip install oneccl_bind_pt~=2.0 -f https://developer.intel.com/ipex-whl-stable-cpu"
+                " && pip uninstall accelerate -y"
                 " && python ipex_bert_train.py --intel-extension",
         outputs={
             "output": Output(
