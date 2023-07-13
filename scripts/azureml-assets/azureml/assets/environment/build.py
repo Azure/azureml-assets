@@ -84,7 +84,7 @@ def create_acr_task(image_name: str,
                 'id': "scan",
                 'stepTimeout': SCAN_STEP_TIMEOUT_SECONDS,
                 'cmd': f"aquasec/trivy -q --timeout {TRIVY_TIMEOUT} image --scanners vuln --ignore-unfixed "
-                    f"$Registry/{image_name}",
+                       f"$Registry/{image_name}",
                 'ignoreErrors': True,
                 'privileged': True
             })
