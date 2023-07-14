@@ -10,7 +10,7 @@ import traceback
 import requests
 from logging import Logger
 from azure.core.exceptions import ResourceNotFoundError, ResourceExistsError
-from azureml.rag.utils.connections import get_connection_by_id_v2 #, workspace_connection_to_credential
+from azureml.rag.utils.connections import get_connection_by_id_v2, workspace_connection_to_credential
 import time
 from typing import Tuple
 from azureml.core import Run, Workspace
@@ -405,30 +405,6 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
     activity_logger.info(
         "[Validate Deployments]: Success! AOAI deployments have been validated.")
 
-def workspace_connection_to_credential(ws_connection):
-    """Get a credential for a workspace connection."""
-    if ws_connection['properties']['authType'] == 'ApiKey':
-        from azure.core.credentials import AzureKeyCredential
-        return AzureKeyCredential(ws_connection['properties']['credentials']['key'])
-    elif ws_connection['properties']['authType'] == 'PAT':
-        from azure.core.credentials import AccessToken
-        return AccessToken(ws_connection['properties']['credentials']['pat'], ws_connection['properties'].get('expiresOn', None))
-    elif ws_connection['properties']['authType'] == 'CustomKeys':
-        # OpenAI connections are made with CustomKeys auth, so we can try to access the key using known structure
-        from azure.core.credentials import AzureKeyCredential
-        if ws_connection.get("metadata", {}).get("azureml.flow.connection_type", None) == "OpenAI":
-            # Try to get the the key with api_key, if fail, default to regular CustomKeys handling
-            try:
-                key = ws_connection['properties']['credentials']['keys']['api_key']
-                return AzureKeyCredential(key)
-            except Exception as e:
-                logger.warning(f"Could not get key using api_key, using default handling: {e}")
-        key_dict = ws_connection['properties']['credentials']['keys']
-        if len(key_dict.keys()) != 1:
-            raise ValueError(f"Only connections with a single key can be used. Number of keys present: {len(key_dict.keys())}")
-        return AzureKeyCredential(ws_connection['properties']['credentials']['keys'][list(key_dict.keys())[0]])
-    else:
-        raise ValueError(f"Unknown auth type '{ws_connection['properties']['authType']}'")
 
 def get_openai_model(model, key, activity_logger: Logger):
     """Get model info from OpenAI"""
@@ -440,6 +416,7 @@ def get_openai_model(model, key, activity_logger: Logger):
     except:
         activity_logger.exception(f"Unable to get model information from OpenAI for model {model}")
         raise
+
 
 def validate_openai_deployments(parser_args, check_completion, check_embeddings, activity_logger: Logger):
     """Call OpenAI to check for model ids"""     
@@ -510,6 +487,7 @@ def main(parser_args, activity_logger: Logger):
         use_and = " and " if (check_openai_embeddings and check_openai_completion) else ""
         activity_logger.info(f"[Validate Deployments]: Validating {completion_to_check}{use_and}{embeddings_to_check} using OpenAI")
         validate_openai_deployments(parser_args, check_openai_completion, check_openai_embeddings, activity_logger)
+
 
 def main_wrapper(parser_args, logger):
     """Wrap around main function."""
