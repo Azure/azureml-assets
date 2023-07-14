@@ -69,6 +69,7 @@ class AbstractiveQA(Task):
                 out = completion_with_retry(
                         model=model_name,
                         deployment_id=kwargs['llm_config']['deployment_name'],
+                        api_type=kwargs['llm_config']['type'],
                         prompt=[self.meta_prompt_prefix+prompt_text],
                         max_tokens=250,
                         temperature=1.5,

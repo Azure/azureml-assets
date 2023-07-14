@@ -105,28 +105,28 @@ def main():
                         type=str,
                         required=False)
     parser.add_argument("--n_prompts",
-                        default=10,
+                        default=2,
                         type=int,
                         required=False)
     parser.add_argument(
         "--llm_config",
         type=str,
-        default='{"type": "azure_open_ai", "model_name": "text-davinci-002", "deployment_name": "text-davinci-002"}',
+        default='{"type": "open_ai", "model_name": "gpt-3.5-turbo", "deployment_name": "gpt-3.5-turbo"}',
         required=False)
     parser.add_argument("--openai_api_version",
                         type=str,
-                        default="2022-12-01",
+                        default="2020-11-07",
                         required=True)
     parser.add_argument("--openai_api_type",
                         type=str,
-                        default="azure",
+                        default="open_ai",
                         required=True)
     parser.add_argument("--best_of",
-                        default=100,
+                        default=2,
                         type=int,
                         required=False)
     parser.add_argument("--top_k",
-                        default=3,
+                        default=2,
                         type=int,
                         required=False)
 
@@ -203,6 +203,10 @@ def main():
                                                                       choices_key)
     dev_data_df = pd.read_json(dev_data, lines=True, dtype=False)
     val_data_df = pd.read_json(test_data, lines=True, dtype=False)
+
+    if llm_config.get("type") == "open_ai":
+        print("removing deployment id")
+        del openai_params["deployment_id"]
 
     keyword_args = {
         "openai_params": openai_params,

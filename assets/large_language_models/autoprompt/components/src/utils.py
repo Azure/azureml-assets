@@ -6,7 +6,7 @@ import copy
 import logging
 from run_utils import current_run, TestRun
 from typing import Callable, Any
-from azureml.rag.utils.connections import get_connection_by_id_v2, workspace_connection_to_credential
+from azureml.rag.utils.connections import get_connection_by_id_v2 #, workspace_connection_to_credential
 from constants import TaskTypes
 from logging_utilities import get_logger, log_info, log_traceback, log_warning
 from error_definitions import (
@@ -84,6 +84,30 @@ def make_and_log_exception(error_cls: ErrorDefinition,
         activity_logger.exception(exception_obj.message)
     raise exception_obj
 
+def workspace_connection_to_credential(ws_connection):
+    """Get a credential for a workspace connection."""
+    if ws_connection['properties']['authType'] == 'ApiKey':
+        from azure.core.credentials import AzureKeyCredential
+        return AzureKeyCredential(ws_connection['properties']['credentials']['key'])
+    elif ws_connection['properties']['authType'] == 'PAT':
+        from azure.core.credentials import AccessToken
+        return AccessToken(ws_connection['properties']['credentials']['pat'], ws_connection['properties'].get('expiresOn', None))
+    elif ws_connection['properties']['authType'] == 'CustomKeys':
+        # OpenAI connections are made with CustomKeys auth, so we can try to access the key using known structure
+        from azure.core.credentials import AzureKeyCredential
+        if ws_connection.get("metadata", {}).get("azureml.flow.connection_type", None) == "OpenAI":
+            # Try to get the the key with api_key, if fail, default to regular CustomKeys handling
+            try:
+                key = ws_connection['properties']['credentials']['keys']['api_key']
+                return AzureKeyCredential(key)
+            except Exception as e:
+                logger.warning(f"Could not get key using api_key, using default handling: {e}")
+        key_dict = ws_connection['properties']['credentials']['keys']
+        if len(key_dict.keys()) != 1:
+            raise ValueError(f"Only connections with a single key can be used. Number of keys present: {len(key_dict.keys())}")
+        return AzureKeyCredential(ws_connection['properties']['credentials']['keys'][list(key_dict.keys())[0]])
+    else:
+        raise ValueError(f"Unknown auth type '{ws_connection['properties']['authType']}'")
 
 def openai_init(llm_config, **openai_params):
     """Initialize OpenAI Params."""
@@ -98,13 +122,15 @@ def openai_init(llm_config, **openai_params):
         credential = workspace_connection_to_credential(connection)
         if hasattr(credential, 'key'):
             llm_config["key"] = credential.key
-            llm_config["base"] = connection['properties'].get('target', {})
-            openai_api_type = connection['properties'].get('metadata', {}).get('apiType', "azure")
-            openai_api_version = connection['properties'].get('metadata', {}).get('apiVersion', "2023-03-15-preview")
+            # Only change base, version, and type in AOAI case, otherwise trust input
+            if connection.get('properties', {}).get("category", None) == "AzureOpenAI":
+                llm_config["base"] = connection['properties'].get('target', {})
+                openai_api_type = connection['properties'].get('metadata', {}).get('apiType', "azure")
+                openai_api_version = connection['properties'].get('metadata', {}).get('apiVersion', "2023-03-15-preview")
             log_info(logger, "Using workspace connection key for OpenAI", CUSTOM_DIMENSIONS)
             fetch_from_connection = True
     if not fetch_from_connection:
-        if llm_config.get("type") == "azure_open_ai":
+        if llm_config.get("type") == "azure_open_ai" or llm_config.get("type") == "open_ai":
             ws = current_run.experiment.workspace
             keyvault = ws.get_default_keyvault()
             secrets = keyvault.get_secrets(secrets=[
@@ -120,22 +146,29 @@ def openai_init(llm_config, **openai_params):
             if secrets["BAKER-OPENAI-API-KEY"] is not None:
                 secrets["OPENAI-API-KEY"] = secrets["BAKER-OPENAI-API-KEY"]
             llm_config["key"] = secrets["OPENAI-API-KEY"]
-            llm_config["base"] = secrets["OPENAI-API-BASE"]
+            if llm_config.get("type") == "azure_open_ai": 
+                llm_config["base"] = secrets["OPENAI-API-BASE"]
         else:
             raise NotImplementedError(f"LLM type '{llm_config['type']}' not supported!")
 
-    openai.api_version = openai_api_version
+    
     openai.api_type = openai_api_type
-    openai.api_base = llm_config["base"]
+    if llm_config.get("type") == "azure_open_ai":
+        openai.api_base = llm_config["base"]
+        openai.api_version = openai_api_version
     openai.api_key = llm_config["key"]
 
     openai_final_params = {
-        "api_version": openai_api_version,
         "api_type": openai_api_type,
-        "api_base": llm_config["base"],
         "api_key": llm_config["key"],
         "deployment_id": llm_config['deployment_name']
     }
+
+    # Only add base and version in AOAI case
+    if llm_config.get("type") == "azure_open_ai":
+        openai_final_params["api_base"] =  llm_config["base"]
+        openai_final_params["api_version"] = openai_api_version
+
     return openai_final_params
 
 
@@ -299,6 +332,7 @@ def completion_with_retry(**kwargs: Any) -> Any:
     @retry_decorator
     def _completion_with_retry(**kwargs: Any) -> Any:
         model_name = kwargs['model']
+
         if model_name.startswith("gpt-3.5-turbo") \
             or model_name.startswith("gpt-35-turbo") \
                 or model_name.startswith("gpt-4"):
@@ -307,9 +341,17 @@ def completion_with_retry(**kwargs: Any) -> Any:
             del kwargs_copy['prompt']
             if 'best_of' in kwargs_copy:
                 del kwargs_copy['best_of']
+            if kwargs_copy["api_type"] == "open_ai":
+                del kwargs_copy["deployment_id"]
+                del kwargs_copy["api_type"]
+            print(kwargs_copy)
             return openai.ChatCompletion.create(**kwargs_copy)
         else:
-            return openai.Completion.create(**kwargs)
+            kwargs_copy = copy.deepcopy(kwargs)
+            if kwargs_copy["api_type"] == "open_ai":
+                del kwargs_copy["deployment_id"]
+                del kwargs_copy["api_type"]
+            return openai.Completion.create(**kwargs_copy)
 
     return _completion_with_retry(**kwargs)
 
@@ -336,6 +378,7 @@ def get_predictions(data, max_tokens=500, batch_size=20, temperature=0.0, **kwar
             out = completion_with_retry(
                 model=model_name,
                 deployment_id=kwargs['llm_config']['deployment_name'],
+                api_type=kwargs['llm_config']['type'],
                 prompt=data_batch,
                 max_tokens=max_tokens,
                 temperature=temperature,
@@ -351,6 +394,7 @@ def get_predictions(data, max_tokens=500, batch_size=20, temperature=0.0, **kwar
                     cur_out = completion_with_retry(
                         model=model_name,
                         deployment_id=kwargs['llm_config']['deployment_name'],
+                        api_type=kwargs['llm_config']['type'],
                         prompt=data[j],
                         max_tokens=max_tokens,
                         temperature=temperature,
