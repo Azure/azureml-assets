@@ -14,8 +14,8 @@ dependencies:
   - cpuonly
   - pip:
     - numpy==1.22.0
-    - responsibleai~=0.28.0
-    - raiwidgets~=0.28.0
+    - responsibleai~=0.29.0
+    - raiwidgets~=0.29.0
     - pyarrow
     - azure-core==1.25.1
     - mlflow
