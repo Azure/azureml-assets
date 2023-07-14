@@ -452,6 +452,7 @@ def finetune(args: Namespace):
     args.output_dir = args.pytorch_model_folder
     Path(args.output_dir).mkdir(exist_ok=True, parents=True)
     args.fp16 = bool(args.precision == 16)
+    args.finetune_in_8bit = bool(args.precision == 8)  # 8 bit finetune
 
     # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
     if args.apply_deepspeed and args.deepspeed is None:
