@@ -33,7 +33,7 @@ from utils.exceptions import (
 MAX_INSTANCE_COUNT = 20
 
 logger = get_logger(__name__)
-custom_dimensions.app_name = AppName.DEPLOY_MODEL
+custom_dimensions.app_name = AppName.BATCH_DEPLOY_MODEL
 
 
 def parse_args():
@@ -157,29 +157,12 @@ def parse_args():
     return args
 
 
-def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deployment_name, args):
-    """Create endpoint and deployment and return details."""
-    if args.compute_name:
-        compute_name = args.compute_name
-        try:
-            compute_cluster = ml_client.compute.get(compute_name)
-        except Exception:
-            compute_cluster = AmlCompute(
-                name=compute_name,
-                size=args.size,
-                min_instances=args.min_instances,
-                max_instances=args.max_instances,
-                idle_time_before_scale_down=args.idle_time_before_scale_down,
-            )
-            try:
-                print(f"Creating compute cluster {compute_name}")
-                ml_client.begin_create_or_update(compute_cluster).wait()
-            except Exception as e:
-                raise AzureMLException._with_error(
-                    AzureMLError.create(ComputeCreationError, exception=e)
-                )
-    else:
-        compute_name = "cpu-cluster"
+def get_or_create_compute(ml_client, compute_name, args):
+    """Get or create the compute cluster."""
+    try:
+        compute_cluster = ml_client.compute.get(compute_name)
+        logger.info(f"Using compute cluster {compute_name}.")
+    except Exception:
         compute_cluster = AmlCompute(
             name=compute_name,
             size=args.size,
@@ -188,13 +171,17 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
             idle_time_before_scale_down=args.idle_time_before_scale_down,
         )
         try:
-            print(f"Creating compute cluster {compute_name}")
+            logger.info(f"Creating compute cluster {compute_name}")
             ml_client.begin_create_or_update(compute_cluster).wait()
         except Exception as e:
             raise AzureMLException._with_error(
                 AzureMLError.create(ComputeCreationError, exception=e)
             )
+    return compute_cluster
 
+
+def create_endpoint_and_deployment(ml_client, compute_name, model_id, endpoint_name, deployment_name, args):
+    """Create endpoint and deployment and return details."""
     endpoint = BatchEndpoint(name=endpoint_name)
 
     # deployment
@@ -281,9 +268,17 @@ def main():
 
     endpoint_name = args.endpoint_name if args.endpoint_name else endpoint_name
     deployment_name = args.deployment_name if args.deployment_name else "default"
+    compute_name = args.compute_name if args.compute_name else "cpu-cluster"
+
+    compute_cluster = get_or_create_compute(
+        ml_client=ml_client,
+        compute_name=compute_name,
+        args=args
+    )
 
     endpoint, deployment = create_endpoint_and_deployment(
         ml_client=ml_client,
+        compute_name=compute_name,
         endpoint_name=endpoint_name,
         deployment_name=deployment_name,
         model_id=model_id,
@@ -316,15 +311,15 @@ def main():
     print("Saving deployment details ...")
 
     # write deployment details to file
-    endpoint_type = "aml_online_inference"
+    endpoint_type = "aml_batch_inference"
     deployment_details = {
         "endpoint_name": endpoint.name,
         "deployment_name": deployment.name,
         "endpoint_uri": endpoint.__dict__["_scoring_uri"],
         "endpoint_type": endpoint_type,
-        "size": args.size,
-        "instance_count": args.instance_count,
-        "max_concurrency_per_instance": args.max_concurrency_per_instance,
+        "compute_size": compute_cluster.size,
+        "instance_count": deployment.instance_count,
+        "max_concurrency_per_instance": deployment.max_concurrency_per_instance,
     }
     json_object = json.dumps(deployment_details, indent=4)
     with open(args.model_deployment_details, "w") as outfile:
