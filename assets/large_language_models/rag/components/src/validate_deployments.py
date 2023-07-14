@@ -482,7 +482,8 @@ def validate_openai_deployments(parser_args, check_completion, check_embeddings,
 
 
 def main(parser_args, activity_logger: Logger):
-    
+    """Extract main method."""
+
     # Determine if embeddings model is AOAI or OpenAI
     check_aoai_embeddings = (parser_args.check_embeddings == "true" or parser_args.check_embeddings == "True") and parser_args.embeddings_model.startswith("azure_open_ai")
     check_openai_embeddings = (parser_args.check_embeddings == "true" or parser_args.check_embeddings == "True") and parser_args.embeddings_model.startswith("open_ai")
