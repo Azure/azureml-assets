@@ -17,6 +17,7 @@ test_cases = [
                 [100_000, 100_000, 50, 250, 13.3184],
              ]
 
+
 @pytest.mark.unit
 class TestComputeDataDriftMetrics(unittest.TestCase):
     """Test class for data drift compute metrics component component and utilities."""
