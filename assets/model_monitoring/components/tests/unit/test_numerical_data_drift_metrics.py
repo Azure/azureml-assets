@@ -21,6 +21,7 @@ test_cases = [
 @pytest.mark.unit
 class TestComputeDataDriftMetrics(unittest.TestCase):
     """Test class for data drift compute metrics component component and utilities."""
+
     def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance(self):
         """Test compute normalized wasserstein distance for numerical metrics."""
         for x_n_obs, y_n_obs, x_mean, y_mean, expected in test_cases:
