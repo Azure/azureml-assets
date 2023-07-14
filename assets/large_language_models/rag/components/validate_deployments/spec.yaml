@@ -41,7 +41,7 @@ outputs:
   output_data:
     type: uri_file
 
-environment: azureml://registries/georgedyre-baker/environments/llm-rag/versions/0.0.2
+environment: azureml:llm-rag@latest
 code: '../src'
 command: >-
   python validate_deployments.py
