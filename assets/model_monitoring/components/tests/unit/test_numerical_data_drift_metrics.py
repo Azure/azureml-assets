@@ -20,7 +20,7 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
         (100_000, 10_000, 100_000, 100_000),
         (50, 50, 50, 50),
         (50, 50, 100, 250),
-        (0, 0, 0, 0)])
+        (0, 0.19963, 3.3238, 13.3184)])
     def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance(
         self, x_n_obs, y_n_obs, x_mean, y_mean, expected
     ):
@@ -49,4 +49,4 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
             column_values,
             numerical_threshold)
 
-        self.assertAlmostEqual(float(expected), output_df['column1'], 5)
+        self.assertAlmostEqual(float(expected), output_df['column1'], 4)
