@@ -5,9 +5,6 @@
 /assets/sample/ @Azure/aml-assets
 /assets/data/ @Azure/azureml-data
 /assets/models/ @azure/aml-training @azure/azureml-inference-idc
-/assets/common/components/register_model/ @azure/aml-training
-/assets/common/components/deploy_model/ @azure/aml-training
-/assets/common/src/model_deployment/ @azure/aml-training
-/assets/common/src/model_registration/ @azure/aml-training
+/assets/common/ @azure/aml-training
 /assets/model_monitoring/ @Azure/aml-model-monitoring
 /assets/large_language_models/ @azure/aml-training

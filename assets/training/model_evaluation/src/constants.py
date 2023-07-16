@@ -117,8 +117,6 @@ class TelemetryConstants:
     LOGGER_NAME = "model_evaluation_component"
     APP_INSIGHT_HANDLER_NAME = "AppInsightsHandler"
 
-    INSTRUMENTATION_KEY = "71b954a8-6b7d-43f5-986c-3d3a6605d803"   # Vienna SDK
-
 
 class ExceptionLiterals:
     """Exception Constants."""
@@ -138,6 +136,45 @@ class ExceptionTypes:
     Service = "Service"
     Unclassified = "Unclassified"
     All = {User, System, Service, Unclassified}
+
+
+class ErrorStrings:
+    """Error Strings."""
+
+    GenericModelEvaluationError = "Model Evaluation failed due to [{error}]"
+    GenericModelPredictionError = "Model Prediction failed due to [{error}]"
+    GenericComputeMetricsError = "Compute metrics failed due to [{error}]"
+
+    # Arguments related
+    InvalidTaskType = "Given Task Type [{TaskName}] is not supported. " + \
+                      "Please see the list of supported task types:\n" + \
+                      "\n".join(ALL_TASKS)
+    InvalidModel = "Either correct Model URI or Mlflow Model should be passed.\n" \
+                   "If you have passed Model URI, your Model URI is incorrect."
+    BadModelData = "Model load failed due to error: [{error}]"
+    InvalidTestData = "Either test_data or test_data_mltable should be passed."
+    InvalidPredictionsData = "Either predictions or predictions_mltable should be passed."
+    InvalidGroundTruthData = "Either ground_truth or ground_truth_mltable should be passed."
+    InvalidGroundTruthColumnNameData = "Ground truth column name not found in input data."
+    InvalidPredictionColumnNameData = "Prediction Column name not found in input data."
+
+    # Data Asset related
+    BadLabelColumnName = "No label column found in test data."
+    BadFeatureColumnNames = "input_column_names is not a subset of input test dataset columns.\
+                 input_column_names include [{keep_columns}] whereas data has [{data_columns}]"
+    BadInputData = "Failed to load data with error: [{error}]"
+    BadEvaluationConfigFile = "Evaluation Config file failed to load due to [{error}]"
+    BadEvaluationConfigParam = "Evaluation Config Params failed to load due to [{error}]"
+
+    BadForecastGroundTruthData = "For forecasting tasks, the table needs to be provided " \
+                                 "in jsonl format as the ground_truths parameter  " \
+                                 "or as mltable through ground_truths_mltable parameter." \
+                                 "The table must contain time, prediction " \
+                                 "groud truth and time series IDs columns."
+    BadRegressionColumnType = "Expected target columns of type float found [{y_test_dtype}] instead"
+
+    # Logging Related
+    MetricLoggingError = "Failed to log metric {metric_name} due to [{error}]"
 
 
 class ForecastingConfigContract:
@@ -160,5 +197,7 @@ ALLOWED_PIPELINE_PARAMS = set([
     "tokenizer_config",
     "model_kwargs",
     "pipeline_init_args",
-    "trust_remote_code"
+    "trust_remote_code",
+    "source_lang",
+    "target_lang"
 ])

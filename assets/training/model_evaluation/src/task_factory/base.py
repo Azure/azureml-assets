@@ -4,10 +4,14 @@
 """Base Predictor."""
 
 from abc import abstractmethod, ABC
+
+import torch
 from logging_utilities import get_logger
 import azureml.evaluate.mlflow as aml_mlflow
 import numpy as np
 import pandas as pd
+
+from utils_load import load_model
 
 logger = get_logger(name=__name__)
 
@@ -15,24 +19,27 @@ logger = get_logger(name=__name__)
 class BasePredictor(ABC):
     """Abstract Class for Predictors."""
 
-    def __init__(self, mlflow_model):
+    def __init__(self, model_uri, task_type, device=None):
         """__init__.
 
         Args:
             mlflow_model (_type_): _description_
         """
+        self.model = load_model(model_uri=model_uri, device=device, task=task_type)
         is_torch, is_hf = False, False
-        if mlflow_model.metadata.flavors.get(aml_mlflow.pytorch.FLAVOR_NAME):
+        if self.model.metadata.flavors.get(aml_mlflow.pytorch.FLAVOR_NAME):
             is_torch = True
-        if mlflow_model.metadata.flavors.get(aml_mlflow.hftransformers.FLAVOR_NAME):
+        if self.model.metadata.flavors.get(aml_mlflow.hftransformers.FLAVOR_NAME):
             is_hf = True
-        if mlflow_model.metadata.flavors.get(aml_mlflow.hftransformers.FLAVOR_NAME_MLMODEL_LOGGING):
+        if self.model.metadata.flavors.get(aml_mlflow.hftransformers.FLAVOR_NAME_MLMODEL_LOGGING):
             is_hf = True
 
         if is_torch:
-            self.model = mlflow_model._model_impl
-        else:
-            self.model = mlflow_model
+            self.model = self.model._model_impl
+        self.model_uri = model_uri
+        self.task_type = task_type
+        self.current_device = device
+        self.device = device
         self.is_torch = is_torch
         self.is_hf = is_hf
         super().__init__()
@@ -63,15 +70,67 @@ class BasePredictor(ABC):
         """
         if self.is_hf:
             if hasattr(self.model._model_impl, "hf_model"):
-                self.model._model_impl.hf_model.to("cpu")
+                self.model._model_impl.hf_model = self.model._model_impl.hf_model.cpu()
             else:
                 logger.warning("hf_model not found in mlflow model")
         elif self.is_torch:
             import torch
-            if isinstance(self.model._model_impl, torch.nn.Module):
-                self.model._model_impl.to("cpu")
+            if isinstance(self.model, torch.nn.Module):
+                self.model = self.model.cpu()
+            elif hasattr(self.model, "_model_impl") and isinstance(self.model._model_impl, torch.nn.Module):
+                self.model._model_impl = self.model._model_impl.cpu()
             else:
                 logger.warning("Torch model is not of type nn.Module")
+
+    def _get_model_device(self):
+        """Fetch Model device."""
+        device = None
+        if self.is_hf:
+            if hasattr(self.model._model_impl, "hf_model"):
+                device = self.model._model_impl.hf_model.device
+            else:
+                logger.warning("hf_model not found in mlflow model")
+        elif self.is_torch:
+            import torch
+            if isinstance(self.model, torch.nn.Module):
+                device = self.model.device
+            elif hasattr(self.model, "_model_impl") and isinstance(self.model._model_impl, torch.nn.Module):
+                device = self.model._model_impl.device
+            else:
+                logger.warning("Torch model is not of type nn.Module")
+        return device
+
+    def handle_device_failure(self, X_test, **kwargs):
+        """Handle device failure."""
+        if self.device == "auto" and torch.cuda.is_available():
+            try:
+                cuda_current_device = torch.cuda.current_device()
+                logger.info("Loading model and prediction with cuda current device ")
+                if self.current_device != cuda_current_device:
+                    logger.info(
+                        f"Current Device: {self.current_device} does not match expected device {cuda_current_device}")
+                    self.model = load_model(self.model_uri, cuda_current_device, self.task_type)
+                    self.current_device = cuda_current_device
+                kwargs["device"] = self.current_device
+                return self.model.predict(X_test, **kwargs)
+            except TypeError:
+                return self.model.predict(X_test)
+            except Exception as e:
+                logger.info("Failed on GPU with error: " + repr(e))
+        if self.device != -1:
+            logger.warning("Predict failed on GPU. Falling back to CPU")
+            try:
+                logger.info("Loading model and prediction with cuda current device. Trying CPU ")
+                if self.current_device != -1:
+                    self.current_device = -1
+                    self._ensure_model_on_cpu()
+                kwargs["device"] = -1
+                return self.model.predict(X_test, **kwargs)
+            except TypeError:
+                return self.model.predict(X_test)
+            except Exception as e:
+                logger.info("Failed on CPU with error: " + repr(e))
+                raise e
 
 
 class PredictWrapper(BasePredictor):
