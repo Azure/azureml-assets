@@ -3,8 +3,8 @@
 
 """This file contains unit tests for the Data Drift compute metrics component component."""
 
-from data_drift_compute_metrics.io_utils import init_spark
 from data_drift_compute_metrics.numerical_data_drift_metrics import compute_numerical_data_drift_measures_tests
+from shared_utilities.io_utils import init_spark
 import pandas as pd
 import pytest
 import numpy as np
