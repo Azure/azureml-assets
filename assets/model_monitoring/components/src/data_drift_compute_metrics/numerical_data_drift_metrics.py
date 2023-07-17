@@ -123,7 +123,7 @@ def _jensen_shannon_numerical(
     for column in common_numerical_columns:
         js_distance = distance.jensenshannon(baseline_histograms_percent[column], prod_histograms_percent[column], base=2)
 
-        row = [column, float(js_distance), "numerical", "JensenShannonDistance"] = js_distance
+        row = [column, float(js_distance), "numerical", "JensenShannonDistance"]
         rows.append(row)
 
     output_df = get_output_spark_df(rows)
