@@ -1,12 +1,12 @@
-azureml-acft-accelerator=={{latest-pypi-version}}
-azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
+https://automlcesdkdataresources.blob.core.windows.net/dev-wheels/peft/azureml_acft_accelerator-0.1.0.0-py3-none-any.whl
+https://automlcesdkdataresources.blob.core.windows.net/dev-wheels/peft/azureml_acft_contrib_hf_nlp-0.1.0.0-py3-none-any.whl
 mltable==1.3.0
 datasets==2.12.0
 mpi4py==3.1.4
 sentencepiece==0.1.99
-transformers==4.29.1
+# transformers==4.29.1
 optimum==1.6.4
-accelerate==0.19.0
+# accelerate==0.19.0
 diffusers==0.16.1
 onnxruntime-training==1.14.1
 rouge-score==0.1.2

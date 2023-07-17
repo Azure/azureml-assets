@@ -1,6 +1,5 @@
 #PTCA image
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1131:{{latest-image-tag}}
-
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1131
 # ls root dir
 RUN ls -lh
 
@@ -13,6 +12,9 @@ COPY requirements.txt .
 RUN pip install "azureml-evaluate-mlflow=={{latest-pypi-version}}"
 RUN pip install -r requirements.txt --no-cache-dir
 RUN python -m nltk.downloader punkt
+
+RUN pip install git+https://github.com/huggingface/transformers
+RUN pip install git+https://github.com/huggingface/accelerate
 
 # Check versions
 RUN pip list
