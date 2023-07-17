@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.5.2 (2023-07-13)
+### 🐛 Bugs Fixed
+- [#882](https://github.com/Azure/azureml-assets/pull/882) Create package list using pip if conda is unavailable
+
 ## 1.5.1 (2023-07-11)
 ### 🚀 New Features
 - [#856](https://github.com/Azure/azureml-assets/pull/856) Add ACR task step to output conda export
