@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 import pyspark.sql as pyspark_sql
 import pyspark.sql.functions as F
+from scipy.spatial import distance
 from scipy.stats import ks_2samp, wasserstein_distance
-from synapse.ml.exploratory import DistributionBalanceMeasure
 from io_utils import get_output_spark_df, init_spark
 from shared_utilities.histogram_utils import (
     get_dual_histogram_bin_edges,
@@ -87,6 +87,7 @@ def _jensen_shannon_numerical(
     production_df_count,
     numerical_columns: list,
 ):
+    # TODO: Update to leverage SynapeML library again once the logarithmic base issue in entropy is fixed.
     """Calculate Jensen Shannon metric for numerical columns."""
     bin_edges = get_dual_histogram_bin_edges(
         baseline_df,
@@ -95,40 +96,30 @@ def _jensen_shannon_numerical(
         production_df_count,
         numerical_columns,
     )
+
     baseline_histograms = get_histograms(baseline_df, bin_edges, numerical_columns)
     prod_histograms = get_histograms(production_df, bin_edges, numerical_columns)
 
-    baseline_freq_count_map = _calculate_column_value_frequency_bin_map_in_df(
-        baseline_histograms, numerical_columns, baseline_df_count
-    )
-    production_freq_count_map = _calculate_column_value_frequency_bin_map_in_df(
-        prod_histograms, numerical_columns, production_df_count
-    )
+    baseline_histograms_counts = {key: value[1] for key,value in baseline_histograms.items()}
+    prod_histograms_counts = {key: value[1] for key,value in prod_histograms.items()}
 
-    reference_distribution = list(
-        baseline_freq_count_map["feature_bucket_frequency_map"].values()
-    )
+    baseline_histograms_percent = {key : [value / baseline_df_count for value in values] for key, values in baseline_histograms_counts.items()}
+    prod_histograms_percent = {key : [value / production_df_count for value in values] for key, values in prod_histograms_counts.items()}
 
-    transformed_production_df = _map_production_df_columns_with_bins(
-        production_df, production_freq_count_map
-    )
-    distributionBalanceMeasure = (
-        DistributionBalanceMeasure()
-        .setSensitiveCols(numerical_columns)
-        .setReferenceDistribution(reference_distribution)
-        .transform(transformed_production_df.select(numerical_columns))
-    )
+    # Filter the numerical_columns list to keep only the columns present in both DataFrames
+    common_numerical_columns = [
+        col for col in numerical_columns if col in baseline_df.columns and col in production_df.columns
+    ]
 
-    output_df = distributionBalanceMeasure.select(
-        "FeatureName", "DistributionBalanceMeasure.js_dist"
-    )
-    output_df = (
-        output_df.withColumnRenamed("FeatureName", "feature_name")
-        .withColumnRenamed("js_dist", "metric_value")
-        .withColumn("data_type", F.lit("numerical"))
-        .withColumn("metric_name", F.lit("JensenShannonDistance"))
-    )
+    # Compute the JS distance for each column
+    row = {}
+    for column in common_numerical_columns:
+        js_distance = distance.jensenshannon(baseline_histograms_percent[column], prod_histograms_percent[column], base=2)
 
+        row[column, float(js_distance), "numerical", "JensenShannonDistance"] = js_distance
+        rows.append(row)
+
+    output_df = get_output_spark_df(rows)
     return output_df
 
 
