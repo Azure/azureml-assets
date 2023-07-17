@@ -16,10 +16,11 @@ def _get_output_spark_df_schema():
     """Get Output DataFrame Schema."""
     schema = StructType(
         [
-            StructField("feature_name", StringType(), True),
-            StructField("metric_value", FloatType(), True),
+            StructField("dimension", StringType(), True),
+            StructField("group", StringType(), True),
+            StructField("value", FloatType(), True),
             StructField("data_type", StringType(), True),
-            StructField("metric_name", StringType(), True),
+            StructField("metric", StringType(), True),
         ]
     )
     return schema

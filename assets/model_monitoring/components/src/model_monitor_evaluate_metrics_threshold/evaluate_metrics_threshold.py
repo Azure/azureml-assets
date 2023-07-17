@@ -9,7 +9,7 @@ from shared_utilities.event_utils import post_warning_event, post_email_event
 
 def _generate_error_message(df, signal_name: str):
     """Generate the error message for the given thresholds."""
-    df = df.select("feature_name", "data_type", "metric_name", "threshold_value")
+    df = df.select("group", "dimension", "metric", "threshold")
     features_violating_threshold = df.toJSON().collect()
     error_message = f"The signal '{signal_name}' has failed due to one or more features violating metric thresholds.\n"
     error_message += "The feature names and their corresponding computed metric values violating "
@@ -34,7 +34,7 @@ def evaluate_metrics_threshold(
     )
 
     is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.where(
-        F.col("metric_value") > F.col("threshold_value")
+        F.col("value") > F.col("threshold")
     )
 
     output_df = is_nan_metrics_threshold_df.union(is_not_nan_metrics_threshold_df)

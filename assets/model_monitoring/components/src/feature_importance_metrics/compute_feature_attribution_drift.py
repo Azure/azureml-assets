@@ -34,6 +34,17 @@ def parse_args():
     return args
 
 
+def _create_signal_metric_row(group, value, metric, data_type, threshold, dimension):
+    return {
+        constants.FEATURE_NAME_COLUMN: group,
+        constants.METRIC_VALUE_COLUMN: value,
+        constants.METRIC_NAME_COLUMN: metric,
+        constants.FEATURE_CATEGORY_COLUMN: data_type,
+        constants.THRESHOLD_VALUE: threshold,
+        constants.DIMENSION_COLUMN: dimension
+        }
+
+
 def calculate_attribution_drift(baseline_explanations, production_explanations):
     """Compute feature attribution drift given two sets of explanations.
 
@@ -74,18 +85,21 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
     feature_attribution_drift = calculate_attribution_drift(baseline_explanations, production_explanations)
 
     ndcg_metric = {constants.FEATURE_NAME_COLUMN: "",
+                   constants.DIMENSION_COLUMN: "",
                    constants.METRIC_VALUE_COLUMN: feature_attribution_drift,
                    constants.METRIC_NAME_COLUMN: "NormalizedDiscountedCumulativeGain",
                    constants.FEATURE_CATEGORY_COLUMN: "",
                    constants.THRESHOLD_VALUE: float("nan")}
     metrics_data = metrics_data.append(ndcg_metric, ignore_index=True)
     baseline_row_count_data = {constants.FEATURE_NAME_COLUMN: "",
+                               constants.DIMENSION_COLUMN: "",
                                constants.METRIC_VALUE_COLUMN: baseline_row_count,
                                constants.METRIC_NAME_COLUMN: "BaselineRowCount",
                                constants.FEATURE_CATEGORY_COLUMN: "",
                                constants.THRESHOLD_VALUE: float("nan")}
     metrics_data = metrics_data.append(baseline_row_count_data, ignore_index=True)
     production_row_count_data = {constants.FEATURE_NAME_COLUMN: "",
+                                 constants.DIMENSION_COLUMN: "",              
                                  constants.METRIC_VALUE_COLUMN: production_row_count,
                                  constants.METRIC_NAME_COLUMN: "TargetRowCount",
                                  constants.FEATURE_CATEGORY_COLUMN: "",
@@ -96,12 +110,14 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
                                                               production_explanations.iterrows()):
         baseline_feature_importance_data = {
             constants.FEATURE_NAME_COLUMN: baseline_feature[constants.FEATURE_COLUMN],
+            constants.DIMENSION_COLUMN: "",
             constants.METRIC_VALUE_COLUMN: baseline_feature[constants.METRIC_VALUE_COLUMN],
             constants.FEATURE_CATEGORY_COLUMN: baseline_feature[constants.FEATURE_CATEGORY_COLUMN],
             constants.METRIC_NAME_COLUMN: "BaselineFeatureImportance",
             constants.THRESHOLD_VALUE: float("nan")}
         production_feature_importance_data = {
             constants.FEATURE_NAME_COLUMN: production_feature[constants.FEATURE_COLUMN],
+            constants.DIMENSION_COLUMN: "",
             constants.METRIC_VALUE_COLUMN: production_feature[constants.METRIC_VALUE_COLUMN],
             constants.FEATURE_CATEGORY_COLUMN: production_feature[constants.FEATURE_CATEGORY_COLUMN],
             constants.METRIC_NAME_COLUMN: "ProductionFeatureImportance",
