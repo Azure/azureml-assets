@@ -6,7 +6,6 @@
 import numpy as np
 import pyspark.sql as pyspark_sql
 import pyspark.sql.functions as F
-from synapse.ml.exploratory import DistributionBalanceMeasure
 from scipy.stats import chisquare
 from io_utils import get_output_spark_df
 
@@ -31,27 +30,38 @@ def _jensen_shannon_categorical(
     baseline_df: pyspark_sql.DataFrame,
     production_df: pyspark_sql.DataFrame,
     baseline_count: int,
+    production_count: int,
     categorical_columns: list,
 ):
     """Jensen Shannon computation for categorical column."""
-    reference_distribution = get_column_value_frequency(
+    # TODO: Update to leverage SynapeML library again once the logarithmic base issue in entropy is fixed.
+    baseline_distribution = get_column_value_frequency(
         baseline_df, categorical_columns, baseline_count
     )
+    baseline_percent = {k: v for entry in baseline_distribution for k, v in entry.items()}
 
-    output_df = (
-        DistributionBalanceMeasure()
-        .setSensitiveCols(categorical_columns)
-        .setReferenceDistribution(reference_distribution)
-        .transform(production_df.select(categorical_columns))
+    production_distribution = get_column_value_frequency(
+        production_df, categorical_columns, production_count
     )
+    production_percent = {k: v for entry in production_distribution for k, v in entry.items()}
 
-    output_df = output_df.select("FeatureName", "DistributionBalanceMeasure.js_dist")
-    output_df = (
-        output_df.withColumnRenamed("FeatureName", "feature_name")
-        .withColumnRenamed("js_dist", "metric_value")
-        .withColumn("data_type", F.lit("Categorical"))
-        .withColumn("metric_name", F.lit("JensenShannonDistance"))
-    )
+    # Filter the categorical_columns list to keep only the columns present in both DataFrames
+    common_categorical_columns = [
+        col for col in categorical_columns if col in baseline_df.columns and col in production_df.columns
+    ]
+
+    # Compute the JS distance for each column
+    rows = []
+    for column in common_categorical_columns:
+        js_distance = distance.jensenshannon(
+            baseline_percent[column],
+            production_percent[column],
+            base=2)
+
+        row = [column, float(js_distance), "categorical", "JensenShannonDistance"]
+        rows.append(row)
+
+    output_df = get_output_spark_df(rows)
 
     return output_df
 
@@ -179,7 +189,7 @@ def compute_categorical_data_drift_measures_tests(
     """Compute Data drift metrics and tests for numerical columns."""
     if categorical_metric == "JensenShannonDistance":
         output_df = _jensen_shannon_categorical(
-            baseline_df, production_df, baseline_count, categorical_columns
+            baseline_df, production_df, baseline_count, production_count, categorical_columns
         )
     elif categorical_metric == "PopulationStabilityIndex":
         output_df = _psi_categorical(
