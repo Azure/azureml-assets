@@ -12,6 +12,7 @@ tags:
   Preview: ''
   license: apache-2.0
   task: text-generation
+  author: tiiuae
   inference_compute_allow_list:
   - Standard_E8s_v3
   - Standard_E16s_v3
