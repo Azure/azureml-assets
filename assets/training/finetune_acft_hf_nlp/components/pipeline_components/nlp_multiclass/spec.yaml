@@ -31,14 +31,6 @@ inputs:
     optional: true
     description: number of gpus to be used per node for finetuning, should be equal
       to number of gpu per node in the compute SKU used for finetune
-  pytorch_continual_finetuning_model_path:
-    type: custom_model
-    optional: True
-    description: Input folder path containing pytorch model for further finetuning. Proper model/huggingface id must be passed.
-  mlflow_continual_finetuning_model_path:
-    type: mlflow_model
-    optional: True
-    description: Input folder path containing mlflow model for further finetuning. Proper model/huggingface id must be passed.
   model_name:
     type: string
     enum:
