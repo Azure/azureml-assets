@@ -3,7 +3,7 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.5.2 (2023-07-12)
+## 1.5.2 (2023-07-17)
 ### 🐛 Bugs Fixed
 - [#821](https://github.com/Azure/azureml-assets/pull/821) Make release directory optional for update_assets.py
 
