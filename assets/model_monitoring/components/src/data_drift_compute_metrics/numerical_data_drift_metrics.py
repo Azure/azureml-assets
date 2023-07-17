@@ -105,13 +105,17 @@ def _jensen_shannon_numerical(
 
     baseline_histograms_percent = {}
     for key, values in baseline_histograms_counts.items():
+        value_list = []
         for value in values:
-            baseline_histograms_percent[key] = value / baseline_df_count
+            value_list.append(value / baseline_df_count)
+        baseline_histograms_percent[key] = value_list
 
     prod_histograms_percent = {}
     for key, values in prod_histograms_counts.items():
+        value_list = []
         for value in values:
-            prod_histograms_percent[key] = value / production_df_count
+            value_list.append(value / production_df_count)
+        prod_histograms_percent[key] = value_list
 
     # Filter the numerical_columns list to keep only the columns present in both DataFrames
     common_numerical_columns = [
