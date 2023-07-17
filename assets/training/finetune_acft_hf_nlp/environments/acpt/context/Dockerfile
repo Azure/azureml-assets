@@ -9,7 +9,7 @@ RUN pip install --upgrade pip
 
 COPY requirements.txt .
 
-RUN pip install "azureml-evaluate-mlflow=={{latest-pypi-version}}"
+RUN pip install "azureml-evaluate-mlflow"
 RUN pip install -r requirements.txt --no-cache-dir
 RUN python -m nltk.downloader punkt
 
