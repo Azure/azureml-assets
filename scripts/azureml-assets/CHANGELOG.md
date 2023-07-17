@@ -1,10 +1,10 @@
-## 1.6.0 (Unreleased)
+## 1.7.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
 
-## 1.5.2 (2023-07-17)
-### 🐛 Bugs Fixed
+## 1.6.0 (2023-07-17)
+### 🚀 New Features
 - [#821](https://github.com/Azure/azureml-assets/pull/821) Make release directory optional for update_assets.py
 
 ## 1.5.1 (2023-07-11)
