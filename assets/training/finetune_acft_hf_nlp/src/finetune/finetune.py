@@ -7,6 +7,7 @@ import json
 import argparse
 from pathlib import Path
 from argparse import Namespace
+from copy import deepcopy
 
 import torch
 
@@ -17,21 +18,29 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     Tasks,
     HfModelTypes,
     MLFlowHFFlavourConstants,
+    LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
+from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
-from azureml.acft.accelerator.utils.decorators import swallow_all_exceptions
-from azureml.acft.accelerator.utils.logging_utils import get_logger_app
+from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
+from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
+from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
+from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 
-from azureml.acft.accelerator.utils.error_handling.exceptions import ValidationException
-from azureml.acft.accelerator.utils.error_handling.error_definitions import SKUNotSupported, ValidationError
+from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
+    swallow_all_exceptions,
+)
+from azureml.acft.common_components.utils.error_handling.error_definitions import SKUNotSupported
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 # Refer this logging issue
 # https://github.com/Azure/azure-sdk-for-python/issues/23563
 
-logger = get_logger_app()
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.finetune.finetune")
+
+COMPONENT_NAME = "ACFT-Finetune"
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
@@ -74,7 +83,9 @@ MLFLOW_MODEL_SIGNATURES = {
 
 IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.LLAMA,
-    HfModelTypes.GPT_NEOX   # dolly
+    HfModelTypes.GPT_NEOX,   # dolly
+    HfModelTypes.FALCON,
+    HfModelTypes.REFINEDWEBMODEL,   # falcon
 ]
 
 
@@ -380,6 +391,16 @@ def finetune(args: Namespace):
             if not hasattr(args, key):  # add keys that don't already exist
                 setattr(args, key, value)
 
+    set_logging_parameters(
+        task_type=args.task_name,
+        acft_custom_dimensions={
+            LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
+            LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
+            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
+        },
+        azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+    )
+
     # Update the model name or path
     model_name_or_path = Path(args.model_selector_output, args.model_name)
     if model_name_or_path.is_dir():
@@ -400,12 +421,30 @@ def finetune(args: Namespace):
         logger.info(f"Identified model type: {args.model_type}. Forcing `ignore_mismatched_sizes` to False.")
         setattr(args, "ignore_mismatched_sizes", False)
 
-    # set `mlflow_ft_conf` - contains all mlflow related properties
-    setattr(args, "mlflow_ft_conf", {})
+    # read FT config
+    ft_config_path = Path(args.model_selector_output, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)
+    if ft_config_path.is_file():
+        with open(ft_config_path, "r") as rptr:
+            ft_config = json.load(rptr)
+            setattr(args, "finetune_config", ft_config)
+            logger.info("Added finetune config to `component_args`")
+    else:
+        logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
+        setattr(args, "finetune_config", {})
+
+
+    # `mlflow_ft_conf` - contains all mlflow related properties
+    mlflow_ft_conf = {
+        "mlflow_model_signature": {},
+        "mlflow_hftransformers_misc_conf": {},
+    }
 
     # set task based mlflow_model_signature
     if getattr(args, "task_name", None) is not None and args.task_name in MLFLOW_MODEL_SIGNATURES:
-        args.mlflow_ft_conf["mlflow_model_signature"] = MLFLOW_MODEL_SIGNATURES[args.task_name]
+        mlflow_ft_conf["mlflow_model_signature"] = deep_update(
+            mlflow_ft_conf["mlflow_model_signature"],
+            MLFLOW_MODEL_SIGNATURES[args.task_name],
+        )
         logger.info(
                     f"Adding mlflow model signature for task {args.task_name} - "
                     f"{MLFLOW_MODEL_SIGNATURES[args.task_name]}"
@@ -423,7 +462,10 @@ def finetune(args: Namespace):
             f"Forcing `mlflow_hftransformers_misc_conf` to set to {mlflow_hftransformers_misc_conf} "
             f"for {model_name_or_type}"
         )
-        args.mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = mlflow_hftransformers_misc_conf
+        mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = deep_update(
+            mlflow_ft_conf["mlflow_hftransformers_misc_conf"],
+            mlflow_hftransformers_misc_conf,
+        )
 
     # if MLmodel file exists pass to finetuned model as `base_model_mlmodel`
     mlflow_config_file = Path(args.model_selector_output, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
@@ -437,16 +479,23 @@ def finetune(args: Namespace):
             logger.info(f"Unable to load MLmodel file - {e}")
         if mlflow_data is not None:
             # pass base model MLmodel file data if available
-            mlflow_hftransformers_misc_conf = args.mlflow_ft_conf.get("mlflow_hftransformers_misc_conf", {})
+            mlflow_hftransformers_misc_conf = mlflow_ft_conf.get("mlflow_hftransformers_misc_conf", {})
             mlflow_hftransformers_misc_conf.update({"base_model_mlmodel": mlflow_data})
-            args.mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = mlflow_hftransformers_misc_conf
+            mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = deep_update(
+                mlflow_ft_conf["mlflow_hftransformers_misc_conf"],
+                mlflow_hftransformers_misc_conf,
+            )
             logger.info(f"Setting `base_model_mlmodel` in finetuned mlflow model - {mlflow_hftransformers_misc_conf}")
         else:
             logger.info("MLmodel file is empty")
     else:
         logger.info("MLmodel file does not exist")
 
-    logger.info(f"FT MLFlow config - {args.mlflow_ft_conf}")
+    logger.info(f"FT MLFlow config - {mlflow_ft_conf}")
+
+    mlflow_ft_conf = deep_update(mlflow_ft_conf, args.finetune_config.get("mlflow_ft_conf", {}))
+    args.finetune_config["mlflow_ft_conf"] = deepcopy(mlflow_ft_conf)
+    logger.info(f"Updated FT MLFlow config - {args.finetune_config['mlflow_ft_conf']}")
 
     # Below arguments are needed for HF training args
     args.output_dir = args.pytorch_model_folder
@@ -468,16 +517,16 @@ def finetune(args: Namespace):
         ds_stage = zero_optimization_config.get("stage", None)
         # `apply_lora=true` is not supported with stage3 deepspeed config
         if ds_stage == 3 and args.apply_lora:
-            raise ValidationException._with_error(
-                AzureMLError.create(ValidationError, error=(
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(ACFTUserError, error=(
                     "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
                     )
                 )
             )
         # `stage3_gather_16bit_weights_on_model_save=false` is not supported for stage3 deepspeed config
         if ds_stage == 3 and not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
-            raise ValidationException._with_error(
-                AzureMLError.create(ValidationError, error=(
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(ACFTUserError, error=(
                     "stage3_gather_16bit_weights_on_model_save should be "
                     "`true` in deepspeed stage 3 config"
                     )
@@ -496,6 +545,11 @@ def finetune(args: Namespace):
     args.save_strategy = args.evaluation_strategy
     args.save_steps = args.eval_steps
 
+    if args.task_name in [Tasks.NLP_MULTICLASS, Tasks.NLP_MULTILABEL, Tasks.NLP_NER]:
+        # Disable adding prefixes to logger for NLP Tasks.
+        args.set_log_prefix = False
+        logger.info(f"Using log prefix - {args.set_log_prefix}")
+
     logger.info(args)
 
     # Saving the args is done in `run_finetune` to handle the distributed training
@@ -503,11 +557,11 @@ def finetune(args: Namespace):
     hf_task_runner.run_finetune(args)
 
 
-@swallow_all_exceptions(logger)
+@swallow_all_exceptions(time_delay=60)
 def main():
     """Parse args and finetune."""
     if not torch.cuda.is_available():
-        raise ValidationException._with_error(AzureMLError.create(SKUNotSupported))
+        raise ACFTValidationException._with_error(AzureMLError.create(SKUNotSupported))
 
     parser = get_parser()
     args, _ = parser.parse_known_args()
