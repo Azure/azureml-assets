@@ -11,7 +11,6 @@ import numpy as np
 import unittest
 
 test_cases = [
-
                 [100_000, 10_000, 50, 50, 0.19963],
                 [100_000, 100_000, 50, 100, 3.3238],
                 [100_000, 100_000, 50, 250, 13.3184],
@@ -48,10 +47,8 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
                 "NormalizedWassersteinDistance",
                 column_values,
                 numerical_threshold)
-        output_arr = output_df.to_numpy()
 
-        self.assertAlmostEqual(0.0, output_arr['NormalizedWassersteinDistance'], 4)
-
+        self.assertAlmostEqual(0.0, output_df.first()['NormalizedWassersteinDistance'], 4)
 
     def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance(self):
         """Test compute normalized wasserstein distance for numerical metrics."""
@@ -79,6 +76,5 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
                 "NormalizedWassersteinDistance",
                 column_values,
                 numerical_threshold)
-            output_arr = output_df.to_numpy()
 
-            self.assertAlmostEqual(float(expected), output_arr['NormalizedWassersteinDistance'], 4)
+            self.assertAlmostEqual(float(expected), output_df.first()['NormalizedWassersteinDistance'], 4)
