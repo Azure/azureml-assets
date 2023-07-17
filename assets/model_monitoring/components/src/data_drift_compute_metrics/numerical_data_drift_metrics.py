@@ -119,12 +119,9 @@ def _jensen_shannon_numerical(
     ]
 
     # Compute the JS distance for each column
-    rows = {}
+    rows = []
     for column in common_numerical_columns:
-        js_distance = distance.jensenshannon(
-            baseline_histograms_percent[column],
-            prod_histograms_percent[column],
-            base=2)
+        js_distance = distance.jensenshannon(baseline_histograms_percent[column], prod_histograms_percent[column], base=2)
 
         row = [column, float(js_distance), "numerical", "JensenShannonDistance"] = js_distance
         rows.append(row)
@@ -147,7 +144,7 @@ def _normalized_wasserstein(
     ]
 
     # Compute the Wasserstein distance for each column
-    rows = {}
+    rows = []
     for column in common_numerical_columns:
         baseline_col_values = baseline_df.select(column).rdd.flatMap(lambda x: x).collect()
         production_col_values = production_df.select(column).rdd.flatMap(lambda x: x).collect()
