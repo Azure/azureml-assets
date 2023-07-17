@@ -13,8 +13,5 @@ RUN pip install "azureml-evaluate-mlflow"
 RUN pip install -r requirements.txt --no-cache-dir
 RUN python -m nltk.downloader punkt
 
-RUN pip install git+https://github.com/huggingface/transformers
-RUN pip install git+https://github.com/huggingface/accelerate
-
 # Check versions
 RUN pip list

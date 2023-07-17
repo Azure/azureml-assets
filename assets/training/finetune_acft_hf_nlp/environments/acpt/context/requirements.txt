@@ -5,9 +5,14 @@ datasets==2.12.0
 mpi4py==3.1.4
 sentencepiece==0.1.99
 # transformers==4.29.1
+git+https://github.com/huggingface/transformers
 optimum==1.6.4
 # accelerate==0.19.0
+git+https://github.com/huggingface/accelerate
+azureml-acft-common_components
+peft
 diffusers==0.16.1
 onnxruntime-training==1.14.1
 rouge-score==0.1.2
 sacrebleu==2.2.1
+bitsandbytes
