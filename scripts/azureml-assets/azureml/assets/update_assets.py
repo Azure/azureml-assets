@@ -123,12 +123,12 @@ def update_asset(asset_config: assets.AssetConfig,
         temp_dir_path = Path(temp_dir)
 
         # Copy asset to temp directory and pin image/package versions
-        util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=temp_dir_path, add_subdir=True)
+        temp_asset_dir = util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=temp_dir_path,
+                                                       add_subdir=True)
         temp_asset_config = util.find_assets(input_dirs=temp_dir_path, asset_config_filename=asset_config.file_name)[0]
         if temp_asset_config.type == assets.AssetType.ENVIRONMENT:
             temp_env_config = temp_asset_config.extra_config_as_object()
-            if temp_env_config:
-                pin_env_files(temp_env_config)
+            pin_env_files(temp_env_config)
 
         # Get version info, set a few defaults
         main_version = asset_config.version
@@ -151,8 +151,6 @@ def update_asset(asset_config: assets.AssetConfig,
 
                 # Compare temporary version with one in release
                 assets.update_spec(temp_asset_config, version=release_version)
-                temp_asset_dir = util.get_asset_output_dir(asset_config=asset_config,
-                                                           output_directory_root=temp_dir_path)
                 dirs_equal = util.are_dir_trees_equal(temp_asset_dir, release_dir)
                 if dirs_equal and output_is_release:
                     return None
