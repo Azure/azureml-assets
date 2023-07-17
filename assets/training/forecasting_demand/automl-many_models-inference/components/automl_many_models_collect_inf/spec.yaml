@@ -35,7 +35,7 @@ outputs:
     description: 'jsonl used for evaluation components.'
 
 code: ../src/collect
-environment: azureml:automl-gpu:0.1
+environment: azureml://registries/azureml/environments/automl-gpu/versions/1
 
 command: >-
   python collect.py 

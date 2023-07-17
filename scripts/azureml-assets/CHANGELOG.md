@@ -7,13 +7,21 @@
 ### 🚀 New Features
 - [#821](https://github.com/Azure/azureml-assets/pull/821) Make release directory optional for update_assets.py
 
+## 1.5.2 (2023-07-13)
+### 🐛 Bugs Fixed
+- [#882](https://github.com/Azure/azureml-assets/pull/882) Create package list using pip if conda is unavailable
+
 ## 1.5.1 (2023-07-11)
+### 🚀 New Features
+- [#856](https://github.com/Azure/azureml-assets/pull/856) Add ACR task step to output conda export
+
 ### 🐛 Bugs Fixed
 - [#872](https://github.com/Azure/azureml-assets/pull/872) Be more restrictive when pinning image tags
 
 ## 1.5.0 (2023-07-06)
 ### 🚀 New Features
 - [#847](https://github.com/Azure/azureml-assets/pull/847) Add regex arg to skip name validation
+- [#801](https://github.com/Azure/azureml-assets/pull/801) Enable vulnerability scanning of environment images
 
 ## 1.4.1 (2023-06-28)
 ### 🐛 Bugs Fixed
