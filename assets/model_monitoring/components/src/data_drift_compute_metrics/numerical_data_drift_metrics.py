@@ -100,11 +100,18 @@ def _jensen_shannon_numerical(
     baseline_histograms = get_histograms(baseline_df, bin_edges, numerical_columns)
     prod_histograms = get_histograms(production_df, bin_edges, numerical_columns)
 
-    baseline_histograms_counts = {key: value[1] for key,value in baseline_histograms.items()}
-    prod_histograms_counts = {key: value[1] for key,value in prod_histograms.items()}
+    baseline_histograms_counts = {key: value[1] for key, value in baseline_histograms.items()}
+    prod_histograms_counts = {key: value[1] for key, value in prod_histograms.items()}
 
-    baseline_histograms_percent = {key : [value / baseline_df_count for value in values] for key, values in baseline_histograms_counts.items()}
-    prod_histograms_percent = {key : [value / production_df_count for value in values] for key, values in prod_histograms_counts.items()}
+    baseline_histograms_percent = {}
+    for key, values in baseline_histograms_counts.items():
+        for value in values:
+            baseline_histograms_percent[key] = value / baseline_df_count
+
+    prod_histograms_percent = {}
+    for key, values in prod_histograms_counts.items():
+        for value in values:
+            prod_histograms_percent[key] = value / production_df_count
 
     # Filter the numerical_columns list to keep only the columns present in both DataFrames
     common_numerical_columns = [
@@ -112,7 +119,7 @@ def _jensen_shannon_numerical(
     ]
 
     # Compute the JS distance for each column
-    row = {}
+    rows = {}
     for column in common_numerical_columns:
         js_distance = distance.jensenshannon(baseline_histograms_percent[column], prod_histograms_percent[column], base=2)
 

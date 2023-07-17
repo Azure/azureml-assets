@@ -52,6 +52,10 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
 
     def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance(self):
         """Test compute normalized wasserstein distance for numerical metrics."""
+        std_dev = 15
+        column_values = ['column1']
+        numerical_threshold = 100
+
         for x_n_obs, y_n_obs, x_mean, y_mean, expected in test_cases:
             x = np.random.normal(x_mean, std_dev, x_n_obs)
             y = np.random.normal(y_mean, std_dev, y_n_obs)
