@@ -6,7 +6,7 @@ import os
 import time
 from pathlib import Path
 from azure.ai.ml import command, Output, MLClient, PyTorchDistribution
-from azure.ai.ml.entities import Environment, BuildContext, JobResourceConfiguration, AmlCompute
+from azure.ai.ml.entities import Environment, BuildContext, JobResourceConfiguration
 from azure.identity import AzureCliCredential
 import subprocess
 
