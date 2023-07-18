@@ -218,13 +218,13 @@ class HFMLFLowConvertor(ABC):
                 pkg_name = conda_deps[i].split("=")[0]
                 if pkg_name in package_details:
                     pkg_version = package_details[pkg_name]
-                    logger.info(f"updating with {pkg_name} {pkg_version}")
+                    logger.info(f"updating with {pkg_name}={pkg_version}")
                     conda_deps[i] = f"{pkg_name}={pkg_version}"
                     package_details.pop(pkg_name)
 
         for pkg_name, pkg_version in package_details.items():
-            logger.info(f"adding  {pkg_name}=={pkg_version}")
-            conda_deps.append(f"{pkg_name}=={pkg_version}")
+            logger.info(f"adding  {pkg_name}={pkg_version}")
+            conda_deps.append(f"{pkg_name}={pkg_version}")
 
         with open(conda_file_path, "w") as f:
             yaml.safe_dump(conda_dict, f)

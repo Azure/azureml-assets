@@ -25,9 +25,7 @@ from unittest.mock import patch
 def config():
     """Test model config."""
     return {
-        "architectures": [
-            "BertForMaskedLM"
-        ],
+        "architectures": ["BertForMaskedLM"],
         "attention_probs_dropout_prob": 0.1,
         "gradient_checkpointing": False,
         "hidden_act": "gelu",
@@ -45,16 +43,14 @@ def config():
         "transformers_version": "4.6.0.dev0",
         "type_vocab_size": 2,
         "use_cache": True,
-        "vocab_size": 28996
+        "vocab_size": 28996,
     }
 
 
 @pytest.fixture
 def tokenizer_config():
     """Test tokenizer config."""
-    return {
-        "do_lower_case": False
-    }
+    return {"do_lower_case": False}
 
 
 @pytest.fixture
@@ -72,7 +68,7 @@ def tokenizer():
                 "single_word": False,
                 "lstrip": False,
                 "rstrip": False,
-                "normalized": False
+                "normalized": False,
             },
         ],
         "normalizer": {
@@ -91,17 +87,14 @@ def tokenizer():
             "unk_token": "[UNK]",
             "continuing_subword_prefix": "##",
             "max_input_chars_per_word": 100,
-        }
+        },
     }
 
 
 @pytest.fixture
 def translate_params():
     """Test translate params used in hf MLflow conversion."""
-    return {
-        "task": "fill-mask",
-        "model_id": "bert-base-cased"
-    }
+    return {"task": "fill-mask", "model_id": "bert-base-cased"}
 
 
 @pytest.fixture
@@ -130,13 +123,10 @@ def model_path(config, tokenizer, tokenizer_config, vocab):
     json_file_details = {
         config_file_name: config,
         tokenizer_file_name: tokenizer,
-        tokenizer_config_file_name: tokenizer_config,        
+        tokenizer_config_file_name: tokenizer_config,
     }
 
-    txt_file_details = {
-        vocab_file_name: vocab,
-        pytorch_model_file_name: "Model"
-    }
+    txt_file_details = {vocab_file_name: vocab, pytorch_model_file_name: "Model"}
 
     with TemporaryDirectory() as working_dir:
         for file_name, details in json_file_details.items():
@@ -153,7 +143,7 @@ def model_path(config, tokenizer, tokenizer_config, vocab):
 class TestFactoryModule(unittest.TestCase):
     """Test HF Model Convertor Factory."""
 
-    @patch('azureml.model.mgmt.processors.transformers.factory.NLPMLflowConvertorFactory')
+    @patch("azureml.model.mgmt.processors.transformers.factory.NLPMLflowConvertorFactory")
     def test_get_nlp_mlflow_convertor(self, mock_nlp_factory):
         """Test NLP model MLflow convertor."""
         model_dir = "/path/to/model_dir"
@@ -171,7 +161,7 @@ class TestFactoryModule(unittest.TestCase):
             translate_params,
         )
 
-    @patch('azureml.model.mgmt.processors.transformers.factory.VisionMLflowConvertorFactory')
+    @patch("azureml.model.mgmt.processors.transformers.factory.VisionMLflowConvertorFactory")
     def test_get_vision_mlflow_convertor(self, mock_vision_factory):
         """Test vision model MLflow convertor."""
         model_dir = "/path/to/model_dir"
@@ -189,7 +179,7 @@ class TestFactoryModule(unittest.TestCase):
             translate_params,
         )
 
-    @patch('azureml.model.mgmt.processors.transformers.factory.DiffusersMLflowConvertorFactory')
+    @patch("azureml.model.mgmt.processors.transformers.factory.DiffusersMLflowConvertorFactory")
     def test_get_diffusers_mlflow_convertor(self, mock_diffusers_factory):
         """Test diffusers model MLflow convertor."""
         model_dir = "/path/to/model_dir"
@@ -207,7 +197,7 @@ class TestFactoryModule(unittest.TestCase):
             translate_params,
         )
 
-    @patch('azureml.model.mgmt.processors.transformers.factory.ASRMLflowConvertorFactory')
+    @patch("azureml.model.mgmt.processors.transformers.factory.ASRMLflowConvertorFactory")
     def test_get_asr_mlflow_convertor(self, mock_asr_factory):
         """Test asr model MLflow convertor."""
         model_dir = "/path/to/model_dir"
@@ -238,7 +228,7 @@ class TestFactoryModule(unittest.TestCase):
         self.assertTrue("unsupported_task" in str(context.exception))
 
 
-class TestHFMLFLowConvertor():
+class TestHFMLFLowConvertor:
     """Test HF Model Convertor Factory."""
 
     def test_mlflow_conda_dep(self, model_path, translate_params):
@@ -246,14 +236,11 @@ class TestHFMLFLowConvertor():
         with TemporaryDirectory() as output_dir, TemporaryDirectory() as temp_dir:
             # save model
             nlp_mlflow_convertor = NLPMLflowConvertor(
-                model_dir = model_path,
-                output_dir = output_dir, 
-                temp_dir = temp_dir,
-                translate_params = translate_params
+                model_dir=model_path, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
             )
             nlp_mlflow_convertor = nlp_mlflow_convertor.save_as_mlflow()
 
-            # validate pycocotools 
+            # validate pycocotools
             conda_file_path = os.path.join(output_dir, HFMLFLowConvertor.CONDA_FILE_NAME)
             with open(conda_file_path) as f:
                 conda_dict = yaml.safe_load(f)
