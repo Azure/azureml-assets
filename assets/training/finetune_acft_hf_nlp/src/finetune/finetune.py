@@ -501,8 +501,6 @@ def finetune(args: Namespace):
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
 
-## Hack
-def pin_pycocotools() -> None:
     conda_yaml_file_path = Path(args.model_selector_output, "conda.yaml")
     if conda_yaml_file_path.is_file():
         import yaml
