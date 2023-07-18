@@ -43,7 +43,9 @@ class ModelImportErrorStrings:
     CONDA_FILE_MISSING_ERROR = (
         "Invalid MLflow model structure. Please make sure conda.yaml exists in MLflow model parent dir."
     )
-    MLFLOW_LOCAL_VALIDATION_ERROR = "Error in validating MLflow model. For more details please take a look at the previous logs."
+    MLFLOW_LOCAL_VALIDATION_ERROR = (
+        "Error in validating MLflow model. For more details please take a look at the previous logs."
+    )
 
 
 class ModelImportException(AzureMLException):

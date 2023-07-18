@@ -85,7 +85,7 @@ def run():
                 logger.info(f"[SCRIPT_LOG] {line}")
 
     if exit_code != 0:
-        logger.warning(f"Local validation failed. Error {stdout}")    
+        logger.warning(f"Local validation failed. Error {stdout}")
         raise AzureMLException._with_error(AzureMLError.create(MlflowModelValidationError))
 
     # copy the model to output dir
