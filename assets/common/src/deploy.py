@@ -265,11 +265,13 @@ def main():
         model_info = {}
 
         registration_details_file = args.registration_details/"model_registration_details.json"
-
-        with open(registration_details_file) as f:
-            model_info = json.load(f)
-        model_id = model_info["id"]
-        model_name = model_info["name"]
+        try:
+            with open(registration_details_file) as f:
+                model_info = json.load(f)
+            model_id = model_info["id"]
+            model_name = model_info["name"]
+        except Exception as e:
+            raise Exception("registration_details json file is missing.")
     elif args.model_id:
         model_id = str(args.model_id)
         model_name = model_id.split("/")[-3]

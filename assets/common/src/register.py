@@ -9,6 +9,7 @@ import os
 import shutil
 import yaml
 
+from pathlib import Path
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.entities import Model
 from azureml._common._error_definition import AzureMLError
@@ -62,7 +63,7 @@ def parse_args():
     )
     parser.add_argument(
         "--registration_details",
-        type=str,
+        type=Path,
         help="A folder which contains a JSON file into which model registration details will be written",
     )
     parser.add_argument(
