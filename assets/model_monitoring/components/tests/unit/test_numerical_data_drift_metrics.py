@@ -5,7 +5,6 @@
 
 from data_drift_compute_metrics.numerical_data_drift_metrics import compute_numerical_data_drift_measures_tests
 from shared_utilities.io_utils import init_spark
-from pyspark.sql.functions import col
 import pandas as pd
 import pyspark.sql as pyspark_sql
 import pytest
@@ -25,7 +24,7 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
 
     def get_metric_value(self, df: pyspark_sql.DataFrame, metric_name: str, metric_value: str):
         """Get metric value of the first row of a given column from a dataframe."""
-        return df.filter(f"metric_name = '{metric_name}'").select(col('metric_value')).first().metric_value
+        return df.filter(f"metric_name = '{metric_name}'").select("metric_value").first().metric_value
 
     def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance_identical_distribution(self):
         """Test compute normalized wasserstein distance for numerical metrics when inputs are identitcal."""
