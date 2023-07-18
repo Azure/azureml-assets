@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""This script is used for local inferencing against MLflow model input.
+"""This script is used for local inferencing against MLflow model input."""
+
+"""
 Script uses minimal required dependency to process data and load mlflow model.
 Please refrain from adding any additional dependencies that could cause failure while running the script.
 """
