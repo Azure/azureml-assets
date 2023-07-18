@@ -4,7 +4,7 @@ azure-ai-ml~=1.8.0
 azureml-evaluate-mlflow~=0.0.19
 azureml-automl-core~=1.52.0.post1
 azureml-telemetry~=1.52.0
-pycocotools~=2.0.6
+pycocotools~=2.0.4
 langcodes
 
 ## test
