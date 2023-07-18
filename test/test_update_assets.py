@@ -16,23 +16,25 @@ RESOURCES_DIR = Path("resources/update")
 
 
 @pytest.mark.parametrize(
-    "test_subdir,skip_unreleased,create_tag",
+    "test_subdir,skip_unreleased,create_tag,use_release_dir",
     [
-        ("in-subdir", False, True),
-        ("in-parent-dir", False, False),
-        ("manual-version", False, True),
-        ("manual-version-unreleased", False, False),
-        ("manual-version-unreleased-skip", True, False),
-        ("with-description", False, True),
+        ("in-subdir", False, True, True),
+        ("in-parent-dir", False, False, True),
+        ("manual-version", False, True, True),
+        ("manual-version-unreleased", False, False, True),
+        ("manual-version-unreleased-skip", True, False, True),
+        ("manual-version-no-release-dir", False, False, False),
+        ("with-description", False, True, True),
     ]
 )
-def test_update_assets(test_subdir: str, skip_unreleased: bool, create_tag: bool):
+def test_update_assets(test_subdir: str, skip_unreleased: bool, create_tag: bool, use_release_dir: bool):
     """Test update_assets function.
 
     Args:
         test_subdir (str): Test subdirectory
         skip_unreleased (bool): Value to pass to update_assets
         create_tag (bool): Create release tag in temp repo
+        use_release_dir (bool): Use release directory
     """
     this_dir = Path(__file__).parent
     test_dir = this_dir / RESOURCES_DIR / test_subdir
@@ -48,22 +50,23 @@ def test_update_assets(test_subdir: str, skip_unreleased: bool, create_tag: bool
         temp_output_path = Path(temp_dir2)
         temp_expected_path = Path(temp_dir3)
 
-        # Create fake release branch
-        shutil.copytree(release_dir, temp_release_path, dirs_exist_ok=True)
-        repo = Repo.init(temp_release_path)
-        for path in (temp_release_path / "latest").rglob("*"):
-            if path.is_dir():
-                continue
-            rel_path = path.relative_to(temp_release_path)
-            repo.index.add(str(rel_path))
-        repo.git.config("user.email", "<>")
-        repo.git.config("user.name", "Unit Test")
-        repo.git.commit("-m", "Initial commit")
+        if use_release_dir:
+            # Create fake release branch
+            shutil.copytree(release_dir, temp_release_path, dirs_exist_ok=True)
+            repo = Repo.init(temp_release_path)
+            for path in (temp_release_path / "latest").rglob("*"):
+                if path.is_dir():
+                    continue
+                rel_path = path.relative_to(temp_release_path)
+                repo.index.add(str(rel_path))
+            repo.git.config("user.email", "<>")
+            repo.git.config("user.name", "Unit Test")
+            repo.git.commit("-m", "Initial commit")
 
-        # Create tag
-        if create_tag:
-            asset_config = util.find_assets(input_dirs=temp_release_path)[0]
-            repo.create_tag(asset_config.full_name)
+            # Create tag
+            if create_tag:
+                asset_config = util.find_assets(input_dirs=temp_release_path)[0]
+                repo.create_tag(asset_config.full_name)
 
         # Create updatable expected dir
         if expected_dir.exists():
@@ -72,8 +75,9 @@ def test_update_assets(test_subdir: str, skip_unreleased: bool, create_tag: bool
             if expected_asset_config.type == assets.AssetType.ENVIRONMENT:
                 assets.pin_env_files(expected_asset_config.extra_config_as_object())
 
+        release_directory_root = temp_release_path if use_release_dir else None
         assets.update_assets(input_dirs=main_dir, asset_config_filename=assets.DEFAULT_ASSET_FILENAME,
-                             release_directory_root=temp_release_path, copy_only=False,
-                             skip_unreleased=skip_unreleased, output_directory_root=temp_output_path)
+                             output_directory_root=temp_output_path, release_directory_root=release_directory_root,
+                             skip_unreleased=skip_unreleased, use_version_dirs=False)
 
         assert util.are_dir_trees_equal(temp_output_path, temp_expected_path, True)
