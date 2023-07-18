@@ -1,10 +1,10 @@
 # src
+pycocotools==2.0.4
 azure-ai-ml
 azureml-evaluate-mlflow
 langcodes
 azureml-automl-core
 azureml-telemetry
-pycocotools==2.0.4
 
 ## test
 mock
