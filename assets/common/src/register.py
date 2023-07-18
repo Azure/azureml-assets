@@ -211,10 +211,7 @@ def main():
     }
     json_object = json.dumps(model_info, indent=4)
 
-    if not os.path.exists(registration_details):
-        os.makedirs(registration_details)
-
-    registration_file =  os.path.join(registration_details, "model_registration_details")
+    registration_file =  os.path.join(registration_details, "model_registration_details.json")
 
     with open(registration_file, "w") as outfile:
         outfile.write(json_object)

@@ -47,7 +47,7 @@ def parse_args():
 
     # add arguments
     parser.add_argument(
-        "--model_registration_details",
+        "--registration_details",
         type=Path,
         help="A folder thant contains a Json file that has the ID of registered model to be deployed",
     )
@@ -261,9 +261,12 @@ def main():
     args = parse_args()
     ml_client = get_mlclient()
     # get registered model id
-    if args.model_registration_details:
+    if args.registration_details:
         model_info = {}
-        with open(args.model_registration_details) as f:
+
+        registration_details_file = args.registration_details/"model_registration_details.json"
+
+        with open(registration_details_file) as f:
             model_info = json.load(f)
         model_id = model_info["id"]
         model_name = model_info["name"]
