@@ -31,6 +31,19 @@ from utils.exceptions import (
 
 
 MAX_INSTANCE_COUNT = 20
+DEFAULT_COMPUTE_SIZE = "Standard_NC24s_v3"
+DEFAULT_MIN_INSTANCES = 0
+DEFAULT_MAX_INSTANCES = 1
+DEFAULT_IDLE_TIME_BEFORE_SCALE_DOWN = 120
+DEFAULT_OUTPUT_FILE_NAME = "predictions.csv"
+DEFAULT_MAX_CONCURRENCY_PER_INSTANCE = 1
+DEFAULT_ERROR_THRESHOLD = -1
+DEFAULT_MAX_RETRIES = 3
+DEFAULT_TIMEOUT = 500
+DEFAULT_LOGGING_LEVEL = "info"
+DEFAULT_MINI_BATCH_SIZE = 10
+DEFAULT_INSTANCE_COUNT = 1
+
 
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.BATCH_DEPLOY_MODEL
@@ -75,73 +88,73 @@ def parse_args():
         "--size",
         type=str,
         help="Compute instance size to deploy model",
-        default="Standard_NC24s_v3",
+        default=DEFAULT_COMPUTE_SIZE,
     )
     parser.add_argument(
         "--min_instances",
         type=int,
-        default=0,
+        default=DEFAULT_MIN_INSTANCES,
         help="Minimum number of instances of the compute cluster",
     )
     parser.add_argument(
         "--max_instances",
         type=int,
-        default=1,
+        default=DEFAULT_MAX_INSTANCES,
         help="Maximum number of instances of the compute cluster",
     )
     parser.add_argument(
         "--idle_time_before_scale_down",
         type=int,
-        default=120,  # 2min
+        default=DEFAULT_IDLE_TIME_BEFORE_SCALE_DOWN,
         help="Node Idle Time before scaling down amlCompute",
     )
     parser.add_argument(
         "--output_file_name",
         type=str,
-        default="predictions.csv",
+        default=DEFAULT_OUTPUT_FILE_NAME,
         help="Name of the batch scoring output file",
     )
     parser.add_argument(
         "--max_concurrency_per_instance",
         type=int,
-        default=1,
+        default=DEFAULT_MAX_CONCURRENCY_PER_INSTANCE,
         help="The maximum number of parallel scoring_script runs per instance",
     )
     parser.add_argument(
         "--error_threshold",
         type=int,
-        default=-1,
+        default=DEFAULT_ERROR_THRESHOLD,
         help="The number of file failures that should be ignored",
     )
     parser.add_argument(
         "--max_retries",
         type=int,
-        default=3,
+        default=DEFAULT_MAX_RETRIES,
         help="The maximum number of retries for a failed or timed-out mini batch",
     )
     parser.add_argument(
         "--timeout",
         type=int,
-        default=500,  # 500sec
+        default=DEFAULT_TIMEOUT,
         help="The timeout in seconds for scoring a single mini batch.",
     )
     parser.add_argument(
         "--logging_level",
         type=str,
-        default="info",
+        default=DEFAULT_LOGGING_LEVEL,
         help="The log verbosity level",
     )
     parser.add_argument(
         "--mini_batch_size",
         type=int,
-        default=10,
+        default=DEFAULT_MINI_BATCH_SIZE,
         help="The number of files the code_configuration.scoring_script can process in one run() call",
     )
     parser.add_argument(
         "--instance_count",
         type=int,
         help="The number of nodes to use for each batch scoring job",
-        default=1,
+        default=DEFAULT_INSTANCE_COUNT,
         choices=range(1, MAX_INSTANCE_COUNT),
     )
     parser.add_argument(
