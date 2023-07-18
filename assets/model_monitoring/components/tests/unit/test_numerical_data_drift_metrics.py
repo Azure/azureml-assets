@@ -22,7 +22,8 @@ test_cases = [
 class TestComputeDataDriftMetrics(unittest.TestCase):
     """Test class for data drift compute metrics component component and utilities."""
 
-    def _get_metric_value(df: pyspark_sql.DataFrame, metric_name: str, metric_value: str):
+    def get_metric_value(df: pyspark.sql.DataFrame, metric_name: str, metric_value: str):
+        """Get metric value of the first row of a given column from a dataframe."""
         return df.filter(f"metric_name = '{metric_name}'").select(col('metric_value')).first().metric_value
 
     def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance_identical_distribution(self):
@@ -52,7 +53,7 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
                 column_values,
                 numerical_threshold)
 
-        metric_value = _get_metric_value(output_df, "NormalizedWassersteinDistance")
+        metric_value = get_metric_value(output_df, "NormalizedWassersteinDistance")
         self.assertAlmostEqual(0.0, metric_value, 4)
 
     def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance(self):
@@ -82,5 +83,5 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
                 column_values,
                 numerical_threshold)
 
-            metric_value = _get_metric_value(output_df, "NormalizedWassersteinDistance")
+            metric_value = get_metric_value(output_df, "NormalizedWassersteinDistance")
             self.assertAlmostEqual(float(expected), metric_value, 4)
