@@ -4,7 +4,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV ACCEPT_EULA=Y
 
 # Build python3.9 as the default python
-RUN apt-get update && \
+RUN apt-get -y update && \
+    apt-get -y upgrade && \
     apt-get install -y --no-install-recommends \
         software-properties-common gnupg\
     && add-apt-repository -y ppa:deadsnakes \
@@ -19,7 +20,8 @@ ENV PATH=/venv/bin:$PATH
 # Install TensorRT
 RUN v="8.4.1-1+cuda11.6" &&\
     apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub &&\
-    apt-get update &&\
+    apt-get -y update && \
+    apt-get -y upgrade && \
     apt-get install -y libnvinfer8=${v} libnvonnxparsers8=${v} libnvparsers8=${v} libnvinfer-plugin8=${v} \
         libnvinfer-dev=${v} libnvonnxparsers-dev=${v} libnvparsers-dev=${v} libnvinfer-plugin-dev=${v} \
         python3-libnvinfer=${v} libnvinfer-samples=${v}
