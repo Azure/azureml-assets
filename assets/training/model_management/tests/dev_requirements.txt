@@ -1,12 +1,12 @@
 # src
 pycocotools==2.0.6
+mlflow==2.3.1
+mlflow-skinny==2.3.1
 azure-ai-ml
 azureml-evaluate-mlflow
 langcodes
 azureml-automl-core
 azureml-telemetry
-mlflow==2.2.1
-mlflow-skinny==2.2.1
 
 ## test
 mock
