@@ -29,6 +29,7 @@ def get_column_value_frequency(
 
 
 def create_frequency_arrays_of_all_categories(
+    """Calculate frequency arrays of all the categories for a column."""
     baseline_frequencies: dict, production_frequencies: dict
 ):
     # Get all categories from both the baseline and production dataset
