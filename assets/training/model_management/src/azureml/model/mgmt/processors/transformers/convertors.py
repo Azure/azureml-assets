@@ -194,43 +194,37 @@ class HFMLFLowConvertor(ABC):
             path=self._output_dir,
         )
 
-        # pin pycocotools==2.0.6
-        self._update_pip_dependencies({"pycocotools": "2.0.6"})
+        # pin pycocotools==2.0.4
+        self._update_conda_dependencies({"pycocotools": "2.0.4"})
 
-    def _update_pip_dependencies(self, package_details):
-        """Update pip dependencies.
+    def _update_conda_dependencies(self, package_details):
+        """Update conda dependencies.
 
         Sample:
-            pkg_details = {"azureml-evaluate-mlflow": "0.0.16a0"}
+            pkg_details = {"pycocotools": "2.0.4"}
         """
         conda_file_path = os.path.join(self._output_dir, HFMLFLowConvertor.CONDA_FILE_NAME)
-        requirements_file_path = os.path.join(self._output_dir, HFMLFLowConvertor.REQUIREMENTS_FILE_NAME)
 
-        if not os.path.exists(conda_file_path) or not os.path.exists(requirements_file_path):
-            logger.warning("Malformed mlflow model. Please make sure conda.yaml and requirements.txt exists")
+        if not os.path.exists(conda_file_path):
+            logger.warning("Malformed mlflow model. Please make sure conda.yaml exists")
             return
 
         with open(conda_file_path) as f:
             conda_dict = yaml.safe_load(f)
 
-        pip_dependency = [item for item in conda_dict["dependencies"] if isinstance(item, dict) and "pip" in item][0]
-        pip_list = pip_dependency["pip"]
-
-        for i in range(len(pip_list)):
-            pkg_name = pip_list[i].split("==")[0]
-            if pkg_name in package_details:
-                pkg_version = package_details[pkg_name]
-                logger.info(f"updating with {pkg_name} {pkg_version}")
-                pip_list[i] = f"{pkg_name}=={pkg_version}"
-                package_details.pop(pkg_name)
+        conda_deps = conda_dict["dependencies"]
+        for i in range(len(conda_deps)):
+            if isinstance(conda_deps[i], str):
+                pkg_name = conda_deps[i].split("=")[0]
+                if pkg_name in package_details:
+                    pkg_version = package_details[pkg_name]
+                    logger.info(f"updating with {pkg_name} {pkg_version}")
+                    conda_deps[i] = f"{pkg_name}={pkg_version}"
+                    package_details.pop(pkg_name)
 
         for pkg_name, pkg_version in package_details.items():
             logger.info(f"adding  {pkg_name}=={pkg_version}")
-            pip_list.append(f"{pkg_name}=={pkg_version}")
-
-        pip_list_str = "\n".join(pip_list)
-        Path(requirements_file_path).write_text(pip_list_str)
-        logger.info("updated requirements.txt")
+            conda_deps.append(f"{pkg_name}=={pkg_version}")
 
         with open(conda_file_path, "w") as f:
             yaml.safe_dump(conda_dict, f)
