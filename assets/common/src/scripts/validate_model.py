@@ -3,10 +3,8 @@
 
 """This script is used for local inferencing against MLflow model input."""
 
-"""
-Script uses minimal required dependency to process data and load mlflow model.
-Please refrain from adding any additional dependencies that could cause failure while running the script.
-"""
+# Script uses minimal required dependency to process data and load mlflow model.
+# Please refrain from adding any additional dependencies that could cause failure while running the script.
 
 import argparse
 import json
