@@ -112,7 +112,8 @@ def update_asset(asset_config: assets.AssetConfig,
         exit(1)
 
     # Identify output directory
-    output_is_release = release_directory_root is not None and output_directory_root.samefile(release_directory_root)
+    output_is_release = (release_directory_root is not None and output_directory_root.exists()
+                         and output_directory_root.samefile(release_directory_root))
     if output_is_release:
         # Prevent release directory corruption
         use_version_dir = False
