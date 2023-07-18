@@ -7,7 +7,6 @@ import argparse
 import json
 import re
 import urllib.parse
-from functools import lru_cache
 from pathlib import Path
 from typing import List, Tuple, Union
 from http.client import HTTPResponse
@@ -90,7 +89,7 @@ def _get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
 
     return latest_tag, latest_digest
 
-@lru_cache
+
 def _get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
     """Get suffix to use for latest image tag or digest.
 
