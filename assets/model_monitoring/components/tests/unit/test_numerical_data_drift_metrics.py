@@ -22,7 +22,7 @@ test_cases = [
 class TestComputeDataDriftMetrics(unittest.TestCase):
     """Test class for data drift compute metrics component component and utilities."""
 
-    def get_metric_value(self, df: pyspark_sql.DataFrame, metric_name: str, metric_value: str):
+    def get_metric_value(self, df: pyspark_sql.DataFrame, metric_name: str):
         """Get metric value of the first row of a given column from a dataframe."""
         df.show()
         return df.filter(f"metric_name = '{metric_name}'").first().metric_value
