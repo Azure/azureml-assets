@@ -27,6 +27,3 @@ RUN v="8.4.1-1+cuda11.6" &&\
 RUN pip install --upgrade pip && pip install --upgrade setuptools
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-
-RUN pip list
-# TODO copy license

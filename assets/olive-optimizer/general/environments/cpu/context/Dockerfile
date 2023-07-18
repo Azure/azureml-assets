@@ -20,5 +20,3 @@ ENV PATH=/venv/bin:$PATH
 RUN pip install --upgrade pip && pip install --upgrade setuptools
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-
-RUN pip list
