@@ -89,7 +89,8 @@ def test_update_assets(test_subdir: str, skip_unreleased: bool, create_tag: bool
 
         release_directory_root = temp_release_path if use_release_dir else None
         assets.update_assets(input_dirs=input_dirs, asset_config_filename=assets.DEFAULT_ASSET_FILENAME,
-                             output_directory_root=output_directory_root, release_directory_root=release_directory_root,
+                             output_directory_root=output_directory_root,
+                             release_directory_root=release_directory_root,
                              skip_unreleased=skip_unreleased, use_version_dirs=False)
 
         assert util.are_dir_trees_equal(temp_output_path, temp_expected_path, True)
