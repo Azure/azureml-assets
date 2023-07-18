@@ -1,10 +1,11 @@
-# src
-azure-ai-ml
-azureml-evaluate-mlflow
+## src
+# Pinning as dependencies are not correctly reflected
+azure-ai-ml~=1.8.0
+azureml-evaluate-mlflow~=0.0.19
+azureml-automl-core~=1.52.0.post1
+azureml-telemetry~=1.52.0
+pycocotools~=2.0.6
 langcodes
-azureml-automl-core
-azureml-telemetry
-pycocotools==2.0.6
 
 ## test
 mock
