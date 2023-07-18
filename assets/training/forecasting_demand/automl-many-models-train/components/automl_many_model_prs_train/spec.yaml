@@ -59,7 +59,7 @@ task:
   type: run_function
   code: ../../src/train
   entry_script: train.py
-  environment: azureml:automl-gpu:1
+  environment: azureml://registries/azureml/environments/automl-gpu/versions/1
   program_arguments: >-
     --input-metadata ${{inputs.metadata}}
     --error_threshold -1
