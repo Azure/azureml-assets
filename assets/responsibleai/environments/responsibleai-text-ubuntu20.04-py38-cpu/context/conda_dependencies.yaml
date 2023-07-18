@@ -12,6 +12,7 @@ dependencies:
   - torchvision
   - captum
   - cpuonly
+  - pycocotools==2.0.4
   - pip:
     - numpy==1.22.0
     - responsibleai~=0.29.0
