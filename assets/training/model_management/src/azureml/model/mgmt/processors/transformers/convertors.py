@@ -216,10 +216,6 @@ class HFMLFLowConvertor(ABC):
         pip_dependency = [item for item in conda_dict["dependencies"] if isinstance(item, dict) and "pip" in item][0]
         pip_list = pip_dependency["pip"]
 
-        if not pip_list:
-            logger.warning("pip list is empty in conda file. Returning")
-            return
-
         for i in range(len(pip_list)):
             pkg_name = pip_list[i].split("==")[0]
             if pkg_name in package_details:
