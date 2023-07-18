@@ -4,6 +4,7 @@ azureml-evaluate-mlflow
 langcodes
 azureml-automl-core
 azureml-telemetry
+pycocotools==2.0.4
 
 ## test
 mock
