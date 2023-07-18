@@ -9,7 +9,7 @@ import tempfile
 from collections import Counter
 from git import Repo
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 import azureml.assets as assets
 import azureml.assets.environment as environment
