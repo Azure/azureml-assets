@@ -24,7 +24,8 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
 
     def get_metric_value(self, df: pyspark_sql.DataFrame, metric_name: str, metric_value: str):
         """Get metric value of the first row of a given column from a dataframe."""
-        return df.filter(f"metric_name = '{metric_name}'").select("metric_value").first().metric_value
+        df.show()
+        return df.filter(f"metric_name = '{metric_name}'").first().metric_value
 
     def test_compute_numerical_data_drift_metrics_normalized_wasserstein_distance_identical_distribution(self):
         """Test compute normalized wasserstein distance for numerical metrics when inputs are identitcal."""
