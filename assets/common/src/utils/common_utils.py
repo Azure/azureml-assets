@@ -4,18 +4,37 @@
 """Common utils."""
 
 import os
+import sys
 from azure.ai.ml import MLClient
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.identity import ManagedIdentityCredential
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 from azureml.core.run import Run
+from pathlib import Path
+from subprocess import PIPE, run, STDOUT
+from typing import Tuple
 
 from utils.logging_utils import get_logger
 from utils.exceptions import NonMsiAttachedComputeError, UserIdentityMissingError
 
 
 logger = get_logger(__name__)
+
+
+def run_command(cmd: str, cwd: Path = "./") -> Tuple[int, str]:
+    """Run the command and returns the result."""
+    logger.info(cmd)
+    result = run(
+        cmd,
+        cwd=cwd,
+        shell=True,
+        stdout=PIPE,
+        stderr=STDOUT,
+        encoding=sys.stdout.encoding,
+        errors="ignore",
+    )
+    return result.returncode, result.stdout
 
 
 def get_mlclient(registry_name: str = None):
@@ -36,9 +55,7 @@ def get_mlclient(registry_name: str = None):
             credential = ManagedIdentityCredential(client_id=msi_client_id)
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
-            raise AzureMLException._with_error(
-                AzureMLError.create(NonMsiAttachedComputeError, exception=ex)
-            )
+            raise AzureMLException._with_error(AzureMLError.create(NonMsiAttachedComputeError, exception=ex))
 
     if registry_name is None:
         run = Run.get_context(allow_offline=False)
