@@ -153,7 +153,7 @@ def update_asset(asset_config: assets.AssetConfig,
                 # Compare temporary version with one in release
                 assets.update_spec(temp_asset_config, version=release_version)
                 dirs_equal = util.are_dir_trees_equal(temp_asset_dir, release_dir)
-                if dirs_equal and output_is_release:
+                if dirs_equal:
                     return None
 
             # See if the asset version is unreleased
@@ -240,7 +240,8 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--output-directory", required=True, type=Path,
                         help="Copy new/updated assets into this directory, can be the same as --release-directory")
     parser.add_argument("-r", "--release-directory", type=Path,
-                        help="Directory to which the release branch has been cloned")
+                        help="Directory to which the release branch has been cloned; if specified, only unreleased "
+                        "and updated assets will be copied to the output directory")
     parser.add_argument("-s", "--skip-unreleased", action="store_true",
                         help="Skip unreleased explicitly-versioned assets in the release branch")
     parser.add_argument("-v", "--use-version-dirs", action="store_true",
