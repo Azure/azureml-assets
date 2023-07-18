@@ -5,6 +5,7 @@
 
 from data_drift_compute_metrics.numerical_data_drift_metrics import compute_numerical_data_drift_measures_tests
 from shared_utilities.io_utils import init_spark
+from pyspark.sql import DataFrame
 from pyspark.sql.functions import col
 import pandas as pd
 import pytest
