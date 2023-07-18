@@ -77,8 +77,8 @@ inputs:
 
 outputs:
   registration_details:
-    type: uri_file
-    description: JSON file into which model registration details will be written
+    type: uri_folder
+    description: A folder which contains a JSON file into which model registration details will be written
 
 tags:
     Preview: ""

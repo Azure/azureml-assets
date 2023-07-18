@@ -63,7 +63,7 @@ def parse_args():
     parser.add_argument(
         "--registration_details",
         type=str,
-        help="JSON file into which model registration details will be written",
+        help="A folder which contains a JSON file into which model registration details will be written",
     )
     parser.add_argument(
         "--model_download_metadata",
@@ -211,7 +211,12 @@ def main():
     }
     json_object = json.dumps(model_info, indent=4)
 
-    with open(registration_details, "w") as outfile:
+    if not os.path.exists(registration_details):
+        os.makedirs(registration_details)
+
+    registration_file =  os.path.join(registration_details, "model_registration_details")
+
+    with open(registration_file, "w") as outfile:
         outfile.write(json_object)
     logger.info("Saved model registration details in output json file.")
 

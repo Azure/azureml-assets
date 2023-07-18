@@ -38,10 +38,10 @@ command: >-
 
 inputs:
   # Output of registering component
-  registration_details:
-    type: uri_file
+  model_registration_details:
+    type: uri_folder
     optional: true
-    description: Json file that contains the ID of registered model to be deployed
+    description: A folder that contains a Json file that has the ID of registered model to be deployed
 
   model_id:
     type: string

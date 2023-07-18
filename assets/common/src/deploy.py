@@ -4,6 +4,7 @@
 """Run Model deployment module."""
 import argparse
 import json
+import os.path
 import re
 import time
 
@@ -46,9 +47,9 @@ def parse_args():
 
     # add arguments
     parser.add_argument(
-        "--registration_details",
+        "--model_registration_details",
         type=Path,
-        help="Json file that contains the ID of registered model to be deployed",
+        help="A folder thant contains a Json file that has the ID of registered model to be deployed",
     )
     parser.add_argument(
         "--model_id",
@@ -260,9 +261,9 @@ def main():
     args = parse_args()
     ml_client = get_mlclient()
     # get registered model id
-    if args.registration_details:
+    if args.model_registration_details:
         model_info = {}
-        with open(args.registration_details) as f:
+        with open(args.model_registration_details) as f:
             model_info = json.load(f)
         model_id = model_info["id"]
         model_name = model_info["name"]
