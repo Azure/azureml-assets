@@ -5,6 +5,7 @@
 
 import argparse
 import re
+from functools import lru_cache
 from pathlib import Path
 from pip._internal.index.collector import LinkCollector
 from pip._internal.index.package_finder import PackageFinder
@@ -52,6 +53,7 @@ def create_package_finder(index_urls: List[str]) -> PackageFinder:
         )
 
 
+@lru_cache
 def get_latest_package_version(package: str,
                                package_finder: PackageFinder,
                                include_pre: bool = False) -> str:
