@@ -4,6 +4,7 @@
 """HFTransformers MLflow model convertors."""
 
 import transformers
+import os
 import yaml
 from abc import ABC, abstractmethod
 from azureml.evaluate import mlflow as hf_mlflow
@@ -55,6 +56,7 @@ class HFMLFLowConvertor(ABC):
     """HF MlfLow convertor base class."""
 
     CONDA_FILE_NAME = "conda.yaml"
+    REQUIREMENTS_FILE_NAME = "requirements.txt"
     PREDICT_FILE_NAME = "predict.py"
     PREDICT_MODULE = "predict"
 
@@ -191,6 +193,52 @@ class HFMLFLowConvertor(ABC):
             extra_pip_requirements=self._extra_pip_requirements,
             path=self._output_dir,
         )
+
+        # pin pycocotools==2.0.4
+        self._update_dependencies({"pycocotools": "2.0.4"})
+
+    def _update_dependencies(self, package_details):
+        """Update dependencies.
+
+        Sample:
+            pkg_details = {"azureml-evaluate-mlflow": "0.0.16a0"}
+        """
+        conda_file_path = os.path.join(self._output_dir, HFMLFLowConvertor.CONDA_FILE_NAME)
+        requirements_file_path = os.path.join(self._output_dir, HFMLFLowConvertor.REQUIREMENTS_FILE_NAME)
+
+        if not os.path.exists(conda_file_path) or not os.path.exists(requirements_file_path):
+            logger.warning("Malformed mlflow model. Please make sure conda.yaml and requirements.txt exists")
+            return
+
+        with open(conda_file_path) as f:
+            conda_dict = yaml.safe_load(f)
+
+        pip_dependency = [item for item in conda_dict["dependencies"] if isinstance(item, dict) and "pip" in item][0]
+        pip_list = pip_dependency["pip"]
+
+        if not pip_list:
+            logger.warning("pip list is empty in conda file. Returning")
+            return
+
+        for i in range(len(pip_list)):
+            pkg_name = pip_list[i].split("==")[0]
+            if pkg_name in package_details:
+                pkg_version = package_details[pkg_name]
+                logger.info(f"updating with {pkg_name} {pkg_version}")
+                pip_list[i] = f"{pkg_name}=={pkg_version}"
+                package_details.pop(pkg_name)    
+
+        for pkg_name, pkg_version in package_details.items():
+            logger.info(f"adding  {pkg_name}=={pkg_version}")
+            pip_list.append(f"{pkg_name}=={pkg_version}")
+
+        pip_list_str = "\n".join(pip_list)
+        Path(requirements_file_path).write_text(pip_list_str)
+        logger.info("updated requirements.txt")
+
+        with open(conda_file_path, "w") as f:
+            yaml.safe_dump(conda_dict, f)
+            logger.info("updated conda.yaml")
 
 
 class VisionMLflowConvertor(HFMLFLowConvertor):
