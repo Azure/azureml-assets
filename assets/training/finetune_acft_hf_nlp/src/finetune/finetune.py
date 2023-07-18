@@ -501,6 +501,26 @@ def finetune(args: Namespace):
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
 
+## Hack
+def pin_pycocotools() -> None:
+    conda_yaml_file_path = Path(args.model_selector_output, "conda.yml")
+    if conda_yaml_file_path.is_file():
+        import yaml
+        with open(conda_yaml_file_path, "r") as rptr:
+            conda_data = yaml.safe_load(rptr)
+
+        if conda_data is not None:
+            dependencies = conda_data.get("dependencies", [])
+            if isinstance(dependencies, list):
+                dependencies.append("pycocotools=2.0.4")
+
+            conda_data["dependencies"] = dependencies
+            with open(conda_yaml_file_path, "w") as wptr:
+                yaml.dump(conda_data, wptr)
+            logger.info(f"Updated conda dependencies - {dependencies}")
+        else:
+            logger.info("conda.yml file is empty")
+
 
 @swallow_all_exceptions(logger)
 def main():
