@@ -23,20 +23,21 @@ def get_column_value_frequency(
             .withColumn("val_ratio", (F.col("count") / total_count))
         )
         entry = {str(row[column]): row["val_ratio"] for row in new_df.collect()}
-        
+
         column_entries[column] = entry
     return column_entries
 
+
 def create_frequency_arrays_of_all_categories(
-    baseline_frequencies: dict, production_frequencies: dict):
-    
-    #get all categories from both the baseline and production dataset 
+    baseline_frequencies: dict, production_frequencies: dict
+):
+    # Get all categories from both the baseline and production dataset
     distinct_keys = set(baseline_frequencies.keys()) | set(production_frequencies.keys())
-    
-    #transform  dictionaries into arrays
-    baseline_frequency_array=[baseline_frequencies.get(key,0) for key in distinct_keys]
-    production_frequency_array=[production_frequencies.get(key,0) for key in distinct_keys]
-    
+
+    # Transform  dictionaries into arrays
+    baseline_frequency_array = [baseline_frequencies.get(key, 0) for key in distinct_keys]
+    production_frequency_array = [production_frequencies.get(key, 0) for key in distinct_keys]
+
     return baseline_frequency_array, production_frequency_array
 
 
@@ -52,11 +53,11 @@ def _jensen_shannon_categorical(
     baseline_distribution = get_column_value_frequency(
         baseline_df, categorical_columns, baseline_count
     )
-   
+
     production_distribution = get_column_value_frequency(
         production_df, categorical_columns, production_count
     )
-   
+
     # Filter the categorical_columns list to keep only the columns present in both DataFrames
     common_categorical_columns = [
         col for col in categorical_columns if col in baseline_df.columns and col in production_df.columns
@@ -69,7 +70,7 @@ def _jensen_shannon_categorical(
         baseline_frequencies, production_frequencies = create_frequency_arrays_of_all_categories(
             baseline_distribution[column],
             production_distribution[column]
-        ) 
+        )
 
         js_distance = distance.jensenshannon(
             baseline_frequencies,
