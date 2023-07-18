@@ -8,7 +8,7 @@ import pyspark.sql as pyspark_sql
 import pyspark.sql.functions as F
 from scipy.spatial import distance
 from scipy.stats import chisquare
-from io_utils import get_output_spark_df
+from data_drift_compute_metrics.io_utils import get_output_spark_df
 
 
 def get_column_value_frequency(
