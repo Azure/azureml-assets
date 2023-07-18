@@ -194,11 +194,11 @@ class HFMLFLowConvertor(ABC):
             path=self._output_dir,
         )
 
-        # pin pycocotools==2.0.4
-        self._update_dependencies({"pycocotools": "2.0.4"})
+        # pin pycocotools==2.0.6
+        self._update_pip_dependencies({"pycocotools": "2.0.6"})
 
-    def _update_dependencies(self, package_details):
-        """Update dependencies.
+    def _update_pip_dependencies(self, package_details):
+        """Update pip dependencies.
 
         Sample:
             pkg_details = {"azureml-evaluate-mlflow": "0.0.16a0"}

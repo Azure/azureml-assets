@@ -1,5 +1,5 @@
 # src
-pycocotools==2.0.4
+pycocotools==2.0.6
 azure-ai-ml
 azureml-evaluate-mlflow
 langcodes
