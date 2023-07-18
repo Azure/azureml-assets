@@ -503,7 +503,7 @@ def finetune(args: Namespace):
 
 ## Hack
 def pin_pycocotools() -> None:
-    conda_yaml_file_path = Path(args.model_selector_output, "conda.yml")
+    conda_yaml_file_path = Path(args.model_selector_output, "conda.yaml")
     if conda_yaml_file_path.is_file():
         import yaml
         with open(conda_yaml_file_path, "r") as rptr:
