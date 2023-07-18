@@ -226,7 +226,7 @@ class HFMLFLowConvertor(ABC):
                 pkg_version = package_details[pkg_name]
                 logger.info(f"updating with {pkg_name} {pkg_version}")
                 pip_list[i] = f"{pkg_name}=={pkg_version}"
-                package_details.pop(pkg_name)    
+                package_details.pop(pkg_name)
 
         for pkg_name, pkg_version in package_details.items():
             logger.info(f"adding  {pkg_name}=={pkg_version}")
