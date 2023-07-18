@@ -15,7 +15,7 @@ def get_column_value_frequency(
     df: pyspark_sql.DataFrame, categorical_columns: list, total_count: int
 ):
     """Calculate frequency of value in a column."""
-    entries = []
+    column_entries = {}
     for column in categorical_columns:
         new_df = (
             df.groupBy(column)
@@ -23,8 +23,21 @@ def get_column_value_frequency(
             .withColumn("val_ratio", (F.col("count") / total_count))
         )
         entry = {str(row[column]): row["val_ratio"] for row in new_df.collect()}
-        entries.append(entry)
-    return entries
+        
+        column_entries[column] = entry
+    return column_entries
+
+def create_frequency_arrays_of_all_categories(
+    baseline_frequencies: dict, production_frequencies: dict):
+    
+    #get all categories from both the baseline and production dataset 
+    distinct_keys = set(baseline_frequencies.keys()) | set(production_frequencies.keys())
+    
+    #transform  dictionaries into arrays
+    baseline_frequency_array=[baseline_frequencies.get(key,0) for key in distinct_keys]
+    production_frequency_array=[production_frequencies.get(key,0) for key in distinct_keys]
+    
+    return baseline_frequency_array, production_frequency_array
 
 
 def _jensen_shannon_categorical(
@@ -39,13 +52,11 @@ def _jensen_shannon_categorical(
     baseline_distribution = get_column_value_frequency(
         baseline_df, categorical_columns, baseline_count
     )
-    baseline_percent = {k: v for entry in baseline_distribution for k, v in entry.items()}
-
+   
     production_distribution = get_column_value_frequency(
         production_df, categorical_columns, production_count
     )
-    production_percent = {k: v for entry in production_distribution for k, v in entry.items()}
-
+   
     # Filter the categorical_columns list to keep only the columns present in both DataFrames
     common_categorical_columns = [
         col for col in categorical_columns if col in baseline_df.columns and col in production_df.columns
@@ -54,9 +65,15 @@ def _jensen_shannon_categorical(
     # Compute the JS distance for each column
     rows = []
     for column in common_categorical_columns:
+
+        baseline_frequencies, production_frequencies = create_frequency_arrays_of_all_categories(
+            baseline_distribution[column],
+            production_distribution[column]
+        ) 
+
         js_distance = distance.jensenshannon(
-            baseline_percent[column],
-            production_percent[column],
+            baseline_frequencies,
+            production_frequencies,
             base=2)
 
         row = [column, float(js_distance), "categorical", "JensenShannonDistance"]
