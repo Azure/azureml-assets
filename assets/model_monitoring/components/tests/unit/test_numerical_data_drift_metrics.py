@@ -5,9 +5,9 @@
 
 from data_drift_compute_metrics.numerical_data_drift_metrics import compute_numerical_data_drift_measures_tests
 from shared_utilities.io_utils import init_spark
-from pyspark.sql import DataFrame
 from pyspark.sql.functions import col
 import pandas as pd
+import pyspark.sql as pyspark_sql
 import pytest
 import numpy as np
 import unittest
@@ -23,7 +23,7 @@ test_cases = [
 class TestComputeDataDriftMetrics(unittest.TestCase):
     """Test class for data drift compute metrics component component and utilities."""
 
-    def get_metric_value(df: pyspark.sql.DataFrame, metric_name: str, metric_value: str):
+    def get_metric_value(df: pyspark_sql.DataFrame, metric_name: str, metric_value: str):
         """Get metric value of the first row of a given column from a dataframe."""
         return df.filter(f"metric_name = '{metric_name}'").select(col('metric_value')).first().metric_value
 
