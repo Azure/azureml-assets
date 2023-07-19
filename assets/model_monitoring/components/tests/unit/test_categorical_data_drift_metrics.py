@@ -24,158 +24,74 @@ distance_measures = [
     "PearsonsChiSquaredTest",
 ]
 
-# Sample strings to generate categorical variables
-s_a=('a'* 100 + 
-     'b'* 100 + 
-     'c'* 100 + 
-     'd'* 100 + 
-     'e'* 100 + 
-     'f'* 100 + 
-     'g'* 100 + 
-     'h'* 100)
-
-s_b=('a'* 97 + 
-     'b'* 105 + 
-     'c'* 99 + 
-     'd'* 98 + 
-     'e'* 101 + 
-     'f'* 102 + 
-     'g'* 97 + 
-     'h'* 103)
-
-s_c=('a'* 10 + 
-     'b'* 11 + 
-     'c'* 9 + 
-     'd'* 10 + 
-     'e'* 10 + 
-     'f'* 10 + 
-     'g'* 13 + 
-     'h'* 10)
-
-s_d=('a'* 180 + 
-     'b'* 80 + 
-     'c'* 70 + 
-     'd'* 170 + 
-     'e'* 200 + 
-     'f'* 10 + 
-     'g'* 130 + 
-     'h'* 100)
-
-
-s_e=('a'* 100 + 
-     'b'* 100 + 
-     'c'* 100 + 
-     'd'* 100 + 
-     'e'* 100 + 
-     'f'* 100 + 
-     'g'* 100 +
-     'h'* 1)
-
-s_f=('a'* 100 + 
-     'b'* 100 + 
-     'c'* 100 + 
-     'f'* 100 + 
-     'g'* 100 +
-     'h'* 1)
-
-s_g=('i'* 1 +
-     'j'* 1 +
-     'k'* 2)
-
-s_h=('a'* 100 +
-     'b'* 100)
-
-s_i=('a'* 34 +
-     'b'* 34)
-
-s_j=('a'* 92 +
-     'b'* 23)
-
-s_k=('c'* 100 +
-     'd'* 100)
-
-
-# convert to lists
-a_list = [letter for letter in s_a]
-b_list = [letter for letter in s_b]
-c_list = [letter for letter in s_c]
-d_list = [letter for letter in s_d]
-e_list = [letter for letter in s_e]
-f_list = [letter for letter in s_f]
-g_list = [letter for letter in s_g]
-h_list = [letter for letter in s_h]
-i_list = [letter for letter in s_i]
-j_list = [letter for letter in s_j]
-k_list = [letter for letter in s_k]
-
-# shuffle lists
-random.shuffle(a_list)
-random.shuffle(b_list)
-random.shuffle(c_list)
-random.shuffle(d_list)
-random.shuffle(e_list)
-random.shuffle(f_list)
-random.shuffle(g_list)
-random.shuffle(h_list)
-random.shuffle(i_list)
-random.shuffle(j_list)
-random.shuffle(k_list)
+# Sample categorical distributions
+s_a = 'a'*100 + 'b'*100 + 'c'*100 + 'd'*100 + 'e'*100 + 'f'*100 + 'g'*100 + 'h'*100
+s_b = 'a'*97  + 'b'*105 + 'c'*99  + 'd'*98  + 'e'*101 + 'f'*102 + 'g'*97  + 'h'*103  
+s_c = 'a'*10  + 'b'*11  + 'c'*9   + 'd'*10  + 'e'*10  + 'f'*10  + 'g'*13  + 'h'*10  
+s_d = 'a'*180 + 'b'*80  + 'c'*70  + 'd'*170 + 'e'*200 + 'f'*10  + 'g'*130 + 'h'*100  
+s_e = 'a'*100 + 'b'*100 + 'c'*100 + 'd'*100 + 'e'*100 + 'f'*100 + 'g'*100 + 'h'*1  
+s_f = 'a'*100 + 'b'*100 + 'c'*100 + 'f'*100 + 'g'*100 + 'h'*1  
+s_g = 'i'*1   + 'j'*1   + 'k'*2  
+s_h = 'a'*100 + 'b'*100  
+s_i = 'a'*34  + 'b'*34  
+s_j = 'a'*92  + 'b'*23  
+s_k = 'c'*100 + 'd'*100  
 
 test_cases = [
     {"name": "1a",
      "scenario": "Distance between identical distributions should be exaclty 0.",
-     "baseline_col": b_list,
-     "production_col": b_list,
+     "baseline_col": s_b,
+     "production_col": s_b,
     },
     {"name": "1b",
      "scenario": "Minimal drift. Both distributions contain the same categories.",
-     "baseline_col": a_list,
-     "production_col": b_list,
+     "baseline_col": s_a,
+     "production_col": s_b,
     },
     {"name": "1c",
      "scenario": "Marginal drift. Both distributions contain the same categories.",
-     "baseline_col": a_list,
-     "production_col": c_list,
+     "baseline_col": s_a,
+     "production_col": s_c,
     },
     {"name": "1d",
      "scenario": "Drifted distributions. Both distributions contain the same categories.",
-     "baseline_col": a_list,
-     "production_col": d_list,
+     "baseline_col": s_a,
+     "production_col": s_d,
     },
     {"name": "1e",
      "scenario": "Drift caused by a single category. Both distributions contain the same categories.",
-     "baseline_col": a_list,
-     "production_col": e_list,
+     "baseline_col": s_a,
+     "production_col": s_e,
     },
     {"name": "1f",
      "scenario": "Drifted distributions. Production dataset is missing some categories.",
-     "baseline_col": a_list,
-     "production_col": f_list,
+     "baseline_col": s_a,
+     "production_col": s_f,
     },
     {"name": "1g",
      "scenario": "Distributions with no categories in common. Bound distance measures (Jensen-Shannon) should reach their maximum theoretical value.",
-     "baseline_col": a_list,
-     "production_col": g_list,
+     "baseline_col": s_a,
+     "production_col": s_g,
     },
     {"name": "2a",
      "scenario": "Dual value identical distributions with the same sample size. Distance measures should be 0.",
-     "baseline_col": h_list,
-     "production_col": h_list,
+     "baseline_col": s_h,
+     "production_col": s_h,
     },
     {"name": "2b",
      "scenario": "Dual value identical distributions with different sample sizes. Distance measures should be 0.",
-     "baseline_col": h_list,
-     "production_col": i_list,
+     "baseline_col": s_h,
+     "production_col": s_i,
     },
     {"name": "2c",
      "scenario": "Drifted Dual value distributions.",
-     "baseline_col": h_list,
-     "production_col": j_list,
+     "baseline_col": s_h,
+     "production_col": s_j,
     },
     {"name": "2d",
      "scenario": "Dual value distributions with different values. Bound distance measures (Jensen-Shannon) should reach their maximum theoretical value.",
-     "baseline_col": h_list,
-     "production_col": k_list,
+     "baseline_col": s_h,
+     "production_col": s_k,
     },
 ]
 
@@ -196,6 +112,7 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
        
     def get_metric_value(self, df: pyspark_sql.DataFrame, metric_name: str):
         """Get metric value of the first row of a given column from a dataframe."""
+        #df.show()
         return df.filter(f"metric_name = '{metric_name}'").first().metric_value
 
     def create_spark_df(self, categorical_data):
@@ -203,6 +120,12 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
         pd_df = pd.DataFrame(data=categorical_data, columns=column_values)
         df = self.spark.createDataFrame(pd_df)
         return df
+
+    def create_categorical_data_from_string(self, sample_string: str):
+        cat_list = [letter for letter in sample_string]
+        random.shuffle(cat_list)
+        return cat_list
+
 
     # # # EXPECTED JENSEN-SHANNON DISTANCE # # # 
 
@@ -269,8 +192,8 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
             print(f'###########################################')
 
             for test_case in test_cases:
-                x = test_case['baseline_col']
-                y = test_case['production_col']
+                x = self.create_categorical_data_from_string(test_case['baseline_col'])
+                y = self.create_categorical_data_from_string(test_case['production_col'])
 
                 if distance_measure == "JensenShannonDistance":
                     expected_distance = self.jensen_shannon_distance_categorical(x,y)
