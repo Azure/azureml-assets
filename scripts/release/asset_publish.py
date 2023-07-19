@@ -29,12 +29,21 @@ from ruamel.yaml import YAML
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PROD_SYSTEM_REGISTRY = "azureml"
-CREATE_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
+CREATE_ORDER = [assets.AssetType.DATA, assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT,
+                assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)/(?:versions/(.+)|labels/(.+))")
-REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/${asset_type}s/(.+)/(?:versions/(.+)|labels/(.+))")
+REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/$asset_type/(.+)/(?:versions/(.+)|labels/(.+))")
 BEARER = r"Bearer.*"
 LATEST_LABEL = "latest"
+
+
+def pluralize_asset_type(asset_type: Union[assets.AssetType, str]) -> str:
+    """Return pluralized asset type."""
+    # Convert to string if enum
+    if isinstance(asset_type, assets.AssetType):
+        asset_type = asset_type.value
+    return f"{asset_type}s" if asset_type != "data" else asset_type
 
 
 def find_test_files(dir: Path):
@@ -52,7 +61,7 @@ def find_test_files(dir: Path):
     return test_jobs
 
 
-def preprocess_test_files(test_jobs, asset_ids: dict):
+def preprocess_test_files(test_jobs: List[str], asset_ids: Dict[str, str]):
     """Preprocess test files to generate asset ids."""
     for test_job in test_jobs:
         logger.print(f"Processing test job {test_job}")
@@ -398,12 +407,12 @@ def asset_create_command(
 
 
 def create_asset(
-    asset,
-    registry_name,
-    resource_group,
-    workspace_name,
-    version,
-    failure_list,
+    asset: assets.AssetConfig,
+    registry_name: str,
+    resource_group: str,
+    workspace_name: str,
+    version: str,
+    failure_list: List[str],
     debug_mode: bool = None
 ):
     """Create asset in registry."""
@@ -479,7 +488,8 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
         `label` and `registry_name` will be None for workspace URI.
     :rtype: Tuple
     """
-    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(asset_type=asset_type))
+    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(
+                                        asset_type=pluralize_asset_type(asset_type)))
     asset_registry_name = None
     if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
         asset_registry_name, asset_name, asset_version, asset_label = match.groups()
@@ -565,7 +575,7 @@ if __name__ == "__main__":
         assets_by_type[asset.type.value].append(asset)
 
     for create_asset_type in CREATE_ORDER:
-        logger.print(f"Creating {create_asset_type.value}s.")
+        logger.print(f"Creating {create_asset_type.value} assets.")
         if create_asset_type.value not in create_list:
             continue
 
@@ -588,7 +598,7 @@ if __name__ == "__main__":
                 logger.print(f"Creating {asset.name} {final_version}")
                 asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
                     registry_name=registry_name,
-                    asset_type=f"{asset.type.value}s",
+                    asset_type=pluralize_asset_type(asset.type),
                     asset_name=asset.name,
                     version=final_version,
                 )
@@ -644,7 +654,7 @@ if __name__ == "__main__":
         yaml = YAML()
         yaml.default_flow_style = False
         for asset_type, asset_names in failed_assets.items():
-            logger.log_warning(f"Failed to create {asset_type}s: {asset_names}")
+            logger.log_warning(f"Failed to create {asset_type} assets: {asset_names}")
         # the following dump process will generate a yaml file for the report
         # process in the end of the publishing script
         with open(failed_list_file, "w") as file:
