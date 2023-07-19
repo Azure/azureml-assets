@@ -169,7 +169,7 @@ jobs:
 
   check-release-assets:
     name: Check releaseable assets
-    if: always()
+    if: "!cancelled()"
     runs-on: ubuntu-latest
     needs:
       - identify-updated-assets
@@ -189,7 +189,7 @@ jobs:
 
   release-assets:
     name: Release assets
-    if: always() && github.ref == 'refs/heads/main'
+    if: "!cancelled() && github.ref == 'refs/heads/main'"
     runs-on: ubuntu-latest
     needs: check-release-assets
     

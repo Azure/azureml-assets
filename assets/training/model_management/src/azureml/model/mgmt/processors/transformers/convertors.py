@@ -4,6 +4,7 @@
 """HFTransformers MLflow model convertors."""
 
 import transformers
+import os
 import yaml
 from abc import ABC, abstractmethod
 from azureml.evaluate import mlflow as hf_mlflow
@@ -55,6 +56,7 @@ class HFMLFLowConvertor(ABC):
     """HF MlfLow convertor base class."""
 
     CONDA_FILE_NAME = "conda.yaml"
+    REQUIREMENTS_FILE_NAME = "requirements.txt"
     PREDICT_FILE_NAME = "predict.py"
     PREDICT_MODULE = "predict"
 
@@ -191,6 +193,42 @@ class HFMLFLowConvertor(ABC):
             extra_pip_requirements=self._extra_pip_requirements,
             path=self._output_dir,
         )
+
+        # pin pycocotools==2.0.4
+        self._update_conda_dependencies({"pycocotools": "2.0.4"})
+
+    def _update_conda_dependencies(self, package_details):
+        """Update conda dependencies.
+
+        Sample:
+            pkg_details = {"pycocotools": "2.0.4"}
+        """
+        conda_file_path = os.path.join(self._output_dir, HFMLFLowConvertor.CONDA_FILE_NAME)
+
+        if not os.path.exists(conda_file_path):
+            logger.warning("Malformed mlflow model. Please make sure conda.yaml exists")
+            return
+
+        with open(conda_file_path) as f:
+            conda_dict = yaml.safe_load(f)
+
+        conda_deps = conda_dict["dependencies"]
+        for i in range(len(conda_deps)):
+            if isinstance(conda_deps[i], str):
+                pkg_name = conda_deps[i].split("=")[0]
+                if pkg_name in package_details:
+                    pkg_version = package_details[pkg_name]
+                    logger.info(f"updating with {pkg_name}={pkg_version}")
+                    conda_deps[i] = f"{pkg_name}={pkg_version}"
+                    package_details.pop(pkg_name)
+
+        for pkg_name, pkg_version in package_details.items():
+            logger.info(f"adding  {pkg_name}={pkg_version}")
+            conda_deps.append(f"{pkg_name}={pkg_version}")
+
+        with open(conda_file_path, "w") as f:
+            yaml.safe_dump(conda_dict, f)
+            logger.info("updated conda.yaml")
 
 
 class VisionMLflowConvertor(HFMLFLowConvertor):

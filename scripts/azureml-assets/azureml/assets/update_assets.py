@@ -88,8 +88,19 @@ def get_latest_release_tag_version(asset_config: assets.AssetConfig, release_dir
     return latest_version
 
 
+def _update_asset_files(asset_config: assets.AssetConfig):
+    """Update asset files.
+
+    Args:
+        asset_config (assets.AssetConfig): Asset config
+    """
+    if asset_config.type == assets.AssetType.ENVIRONMENT:
+        env_config = asset_config.extra_config_as_object()
+        pin_env_files(env_config)
+
+
 def update_asset(asset_config: assets.AssetConfig,
-                 output_directory_root: Path,
+                 output_directory_root: Path = None,
                  release_directory_root: Path = None,
                  skip_unreleased: bool = False,
                  use_version_dir: bool = False) -> str:
@@ -97,8 +108,8 @@ def update_asset(asset_config: assets.AssetConfig,
 
     Args:
         asset_config (assets.AssetConfig): Asset config
-        output_directory_root (Path): Output directory for updated assets
-        release_directory_root (Path, optional): Release branch location
+        output_directory_root (Path, optional): Output directory for updated assets. Defaults to None.
+        release_directory_root (Path, optional): Release branch location. Defaults to None.
         skip_unreleased (bool, optional): Skip unreleased explicitly-versioned assets. Defaults to False.
         use_version_dir (bool, optional): Use version directory for output. Defaults to False.
 
@@ -111,25 +122,17 @@ def update_asset(asset_config: assets.AssetConfig,
                          "directory was specified to compare against")
         exit(1)
 
-    # Identify output directory
-    output_is_release = (release_directory_root is not None and output_directory_root.exists()
-                         and output_directory_root.samefile(release_directory_root))
-    if output_is_release:
-        # Prevent release directory corruption
-        use_version_dir = False
-    output_directory = util.get_asset_output_dir(asset_config, output_directory_root, use_version_dir)
-
     # To keep things simple, we'll create a temporary directory for each update
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_dir_path = Path(temp_dir)
 
         # Copy asset to temp directory and pin image/package versions
-        temp_asset_dir = util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=temp_dir_path,
-                                                       add_subdir=True)
-        temp_asset_config = util.find_assets(input_dirs=temp_dir_path, asset_config_filename=asset_config.file_name)[0]
-        if temp_asset_config.type == assets.AssetType.ENVIRONMENT:
-            temp_env_config = temp_asset_config.extra_config_as_object()
-            pin_env_files(temp_env_config)
+        if output_directory_root is not None or release_directory_root is not None:
+            temp_asset_dir = util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=temp_dir_path,
+                                                           add_subdir=True)
+            temp_asset_config = util.find_assets(input_dirs=temp_dir_path,
+                                                 asset_config_filename=asset_config.file_name)[0]
+            _update_asset_files(temp_asset_config)
 
         # Get version info, set a few defaults
         main_version = asset_config.version
@@ -150,10 +153,12 @@ def update_asset(asset_config: assets.AssetConfig,
                 release_asset_config = release_asset_configs[0]
                 release_version = release_asset_config.version
 
-                # Compare temporary version with one in release
+                # Update spec file
                 assets.update_spec(temp_asset_config, version=release_version)
+
+                # Compare temporary version with one in release
                 dirs_equal = util.are_dir_trees_equal(temp_asset_dir, release_dir)
-                if dirs_equal and output_is_release:
+                if dirs_equal:
                     return None
 
             # See if the asset version is unreleased
@@ -173,7 +178,22 @@ def update_asset(asset_config: assets.AssetConfig,
             new_version = release_version
         else:
             # Increment auto version
-            new_version = int(release_version) + 1 if release_version else 1
+            new_version = str(int(release_version) + 1 if release_version else 1)
+
+        # Just update in place if no output directory
+        if output_directory_root is None:
+            _update_asset_files(asset_config)
+            assets.update_spec(asset_config, version=new_version)
+            return new_version
+
+        # Identify asset's output directory
+        output_is_release = (release_directory_root is not None and output_directory_root is not None
+                             and output_directory_root.exists()
+                             and output_directory_root.samefile(release_directory_root))
+        if output_is_release:
+            # Prevent release directory corruption
+            use_version_dir = False
+        output_directory = util.get_asset_output_dir(asset_config, output_directory_root, use_version_dir)
 
         # Copy and replace any existing directory
         util.copy_replace_dir(source=temp_asset_dir, dest=output_directory)
@@ -182,14 +202,14 @@ def update_asset(asset_config: assets.AssetConfig,
         asset_config_relative_path = temp_asset_config.file_name_with_path.relative_to(temp_asset_dir)
         output_asset_config = assets.AssetConfig(output_directory / asset_config_relative_path)
         shutil.copyfile(asset_config.spec_with_path, output_asset_config.spec_with_path)
-        assets.update_spec(output_asset_config, version=str(new_version))
+        assets.update_spec(output_asset_config, version=new_version)
 
         return new_version
 
 
 def update_assets(input_dirs: List[Path],
                   asset_config_filename: str,
-                  output_directory_root: Path,
+                  output_directory_root: Path = None,
                   release_directory_root: Path = None,
                   skip_unreleased: bool = False,
                   use_version_dirs: bool = False):
@@ -198,8 +218,8 @@ def update_assets(input_dirs: List[Path],
     Args:
         input_dirs (List[Path]): List of directories to search for assets.
         asset_config_filename (str): Asset config filename to search for
-        output_directory_root (Path): Output directory for updated assets
-        release_directory_root (Path, optional): Release directory location
+        output_directory_root (Path, optional): Output directory for updated assets. Defaults to None.
+        release_directory_root (Path, optional): Release directory location. Defaults to None.
         skip_unreleased (bool, optional): Skip unreleased explicitly-versioned assets. Defaults to False.
         use_version_dirs (bool, optional): Use version directories for output. Defaults to False.
     """
@@ -237,10 +257,12 @@ if __name__ == '__main__':
                         help="Comma-separated list of directories containing assets")
     parser.add_argument("-a", "--asset-config-filename", default=assets.DEFAULT_ASSET_FILENAME,
                         help="Asset config file name to search for")
-    parser.add_argument("-o", "--output-directory", required=True, type=Path,
-                        help="Copy new/updated assets into this directory, can be the same as --release-directory")
+    parser.add_argument("-o", "--output-directory", type=Path,
+                        help="Copy new/updated assets into this directory, can be the same as --release-directory "
+                        "and if omitted, assets will be updated in place")
     parser.add_argument("-r", "--release-directory", type=Path,
-                        help="Directory to which the release branch has been cloned")
+                        help="Directory to which the release branch has been cloned; if specified, only unreleased "
+                        "and updated assets will be copied to the output directory")
     parser.add_argument("-s", "--skip-unreleased", action="store_true",
                         help="Skip unreleased explicitly-versioned assets in the release branch")
     parser.add_argument("-v", "--use-version-dirs", action="store_true",
@@ -250,6 +272,8 @@ if __name__ == '__main__':
     # Check interdependencies
     if args.skip_unreleased and args.release_directory is None:
         parser.error("--skip-unreleased requires --release-directory")
+    if args.use_version_dirs and args.output_directory is None:
+        parser.error("--use-version-dirs requires --output-directory")
 
     # Convert comma-separated values to lists
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
