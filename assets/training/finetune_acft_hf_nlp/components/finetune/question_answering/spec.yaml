@@ -163,6 +163,7 @@ inputs:
       - "32"
       - "16"
       - "8"
+      - "4"
     default: "32"
     optional: true
     description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
