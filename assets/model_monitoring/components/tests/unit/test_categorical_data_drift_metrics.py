@@ -39,7 +39,7 @@ s_k = 'c'*100 + 'd'*100
 
 test_cases = [
     {"name": "1a",
-     "scenario": "Distance between identical distributions should be exaclty 0.",
+     "scenario": "Distance between identical distributions should be exactly 0.",
      "baseline_col": s_b,
      "production_col": s_b,
     },

@@ -27,7 +27,7 @@ distance_measures = [
 
 test_cases = [
     {"name": "1a",
-     "scenario": "Distance between identical distributions should be exaclty 0",
+     "scenario": "Distance between identical distributions should be exactly 0",
      "x_mean": 50,
      "y_mean": 50,
      "x_std_dev": 15,
@@ -45,7 +45,7 @@ test_cases = [
      "y_obs": 10_000,
     },
     {"name": "1c",
-     "scenario": "Non-zero distance between distributions with the same mean and sample size, but differnt std_dev",
+     "scenario": "Non-zero distance between distributions with the same mean and sample size, but different std_dev",
      "x_mean": 50,
      "y_mean": 50,
      "x_std_dev": 15,
@@ -54,7 +54,7 @@ test_cases = [
      "y_obs": 100_000,
     },
     {"name": "2a",
-    "scenario": "Confirming distance of moderately drifted distribution against Scipy",
+    "scenario": "Confirming distance of moderately drifted distribution against SciPy",
      "x_mean": 50,
      "y_mean": 53,
      "x_std_dev": 15,
