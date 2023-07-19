@@ -144,7 +144,7 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
 
     # # # EXPECTED PSI # # #
     
-    def psi_categorical(self, x_list, y_list, smoothing = 'evi'):
+    def psi_categorical(self, x_list, y_list):
         
         # unique values observed in x and y
         values = set(x_list + y_list)
