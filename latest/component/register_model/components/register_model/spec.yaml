@@ -24,7 +24,7 @@ command: >-
   $[[--model_description "${{inputs.model_description}}"]]
   $[[--model_metadata ${{inputs.model_metadata}}]]
   $[[--model_import_job_path  ${{inputs.model_import_job_path }}]]
-  --registration_details ${{outputs.registration_details}}
+  --registration_details_folder ${{outputs.registration_details_folder}}
 
 inputs:
   model_name:
@@ -82,9 +82,10 @@ inputs:
     description: JSON file that contains the job path of model to have lineage.
 
 outputs:
-  registration_details:
-    type: uri_file
-    description: JSON file into which model registration details will be written
+  registration_details_folder:
+    type: uri_folder
+    description: Folder containing model registration details in a JSON file named
+      model_registration_details.json
 
 tags:
   Preview: ""
