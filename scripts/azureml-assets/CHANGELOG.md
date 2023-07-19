@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.7.1 (2023-07-19)
+### 🐛 Bugs Fixed
+- [#907](https://github.com/Azure/azureml-assets/pull/907) Handle path parameter for data assets
+
 ## 1.7.0 (2023-07-18)
 ### 🚀 New Features
 - [#902](https://github.com/Azure/azureml-assets/pull/902) Make output directory optional for update_assets.py
