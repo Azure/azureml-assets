@@ -214,7 +214,7 @@ def main():
 
     registration_file =  os.path.join(registration_details, "model_registration_details.json")
 
-    with open(registration_file, "w") as outfile:
+    with open(registration_file, "w+") as outfile:
         outfile.write(json_object)
     logger.info("Saved model registration details in output json file.")
 
