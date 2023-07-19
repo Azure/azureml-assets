@@ -9,7 +9,6 @@ dependencies:
   - python=3.8
   - pip
   - pytorch
-  - torchvision
   - captum
   - cpuonly
   - pycocotools==2.0.4
