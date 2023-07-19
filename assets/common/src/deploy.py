@@ -261,10 +261,8 @@ def main():
     args = parse_args()
     ml_client = get_mlclient()
     # get registered model id
-    if args.registration_details_folder and \
-            os.path.exists(args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE):
-        model_info = {}
-        registration_details_file = args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
+    registration_details_file = args.registration_details_folder / ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
+    if registration_details_file.exists():
         try:
             with open(registration_details_file) as f:
                 model_info = json.load(f)
