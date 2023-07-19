@@ -172,8 +172,8 @@ outputs:
     type: mlflow_model
 
   model_registration_details:
-    description: Output file which captures transformations applied above and registration details in JSON file
-    type: uri_file
+    description: Output folder with a file which captures transformations applied above and registration details in JSON file
+    type: uri_folder
 
 jobs:
   download_model:

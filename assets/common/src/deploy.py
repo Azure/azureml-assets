@@ -17,7 +17,7 @@ from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 from pathlib import Path
 
-from utils.config import AppName
+from utils.config import AppName, ComponentVariables
 from utils.common_utils import get_mlclient
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.exceptions import (
@@ -46,9 +46,9 @@ def parse_args():
 
     # add arguments
     parser.add_argument(
-        "--registration_details",
+        "--registration_details_folder",
         type=Path,
-        help="Json file that contains the ID of registered model to be deployed",
+        help="Folder containing model registration details in a JSON file named model_registration_details.json",
     )
     parser.add_argument(
         "--model_id",
@@ -232,8 +232,8 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
                 lines=MAX_DEPLOYMENT_LOG_TAIL_LINES
             )
             logger.error(logs)
-        except Exception as e:
-            logger.error(f"Error in fetching deployment logs: {e}")
+        except Exception as ex:
+            logger.error(f"Error in fetching deployment logs: {ex}")
 
         raise AzureMLException._with_error(
             AzureMLError.create(DeploymentCreationError, exception=e)
@@ -260,12 +260,15 @@ def main():
     args = parse_args()
     ml_client = get_mlclient()
     # get registered model id
-    if args.registration_details:
-        model_info = {}
-        with open(args.registration_details) as f:
-            model_info = json.load(f)
-        model_id = model_info["id"]
-        model_name = model_info["name"]
+    registration_details_file = args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
+    if registration_details_file.exists():
+        try:
+            with open(registration_details_file) as f:
+                model_info = json.load(f)
+            model_id = model_info["id"]
+            model_name = model_info["name"]
+        except Exception as e:
+            raise Exception(f"model_registration_details json file is missing model information {e}.")
     elif args.model_id:
         model_id = str(args.model_id)
         model_name = model_id.split("/")[-3]
