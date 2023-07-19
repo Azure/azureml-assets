@@ -149,7 +149,6 @@ def _chisquaretest(
     chisqtest_rows = []
 
     for column in categorical_columns:
-        print(column)
         baseline_prod_unique_values = (
             production_df.select(column).union(baseline_df.select(column)).distinct()
         )

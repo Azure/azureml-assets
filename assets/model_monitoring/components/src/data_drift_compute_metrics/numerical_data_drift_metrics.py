@@ -187,7 +187,6 @@ def _ks2sample_pandas_impl(
             rows.append(row)
 
         output_df = get_output_spark_df(rows)
-        output_df.show(truncate=False)
         return output_df
     else:
         raise Exception(
