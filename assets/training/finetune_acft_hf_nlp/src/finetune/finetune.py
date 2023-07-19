@@ -3,6 +3,7 @@
 
 """File containing function for finetune component."""
 
+import os
 import json
 import argparse
 from pathlib import Path
@@ -394,6 +395,9 @@ def finetune(args: Namespace):
     logger.info(f"enable DeepSpeed: {getattr(args, 'apply_deepspeed', None)}")
     logger.info(f"enable ORT: {getattr(args, 'apply_ort', None)}")
     logger.info(f"Precision: {getattr(args, 'precision', None)}")
+    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
+    rank0_process = bool(process_name in {'main', 'rank_0'})
+    logger.info(f"Process - {process_name} | rank0_process: {rank0_process}")
 
     # set `ignore_mismatched_sizes` to `false` by default
     if hasattr(args, "model_type") and args.model_type in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
@@ -500,6 +504,24 @@ def finetune(args: Namespace):
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
+
+    conda_yaml_file_path = Path(args.mlflow_model_folder, "conda.yaml")
+    if rank0_process and conda_yaml_file_path.is_file():
+        import yaml
+        with open(conda_yaml_file_path, "r") as rptr:
+            conda_data = yaml.safe_load(rptr)
+
+        if conda_data is not None:
+            dependencies = conda_data.get("dependencies", [])
+            if isinstance(dependencies, list) and not any(['pycocotools' in dep for dep in dependencies]):
+                dependencies.append("pycocotools=2.0.4")
+
+            conda_data["dependencies"] = dependencies
+            with open(conda_yaml_file_path, "w") as wptr:
+                yaml.dump(conda_data, wptr)
+            logger.info(f"Updated conda dependencies - {dependencies}")
+        else:
+            logger.info("conda.yaml file is empty")
 
 
 @swallow_all_exceptions(logger)
