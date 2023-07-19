@@ -4,6 +4,7 @@
 """Run Model deployment module."""
 import argparse
 import json
+import os.path
 import re
 import time
 
@@ -17,7 +18,7 @@ from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 from pathlib import Path
 
-from utils.config import AppName
+from utils.config import AppName, ComponentVariables
 from utils.common_utils import get_mlclient
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.exceptions import (
@@ -46,9 +47,9 @@ def parse_args():
 
     # add arguments
     parser.add_argument(
-        "--registration_details",
+        "--registration_details_folder",
         type=Path,
-        help="A folder thant contains a Json file that has the ID of registered model to be deployed",
+        help="Folder containing model registration details in a JSON file named model_registration_details.json",
     )
     parser.add_argument(
         "--model_id",
@@ -260,17 +261,17 @@ def main():
     args = parse_args()
     ml_client = get_mlclient()
     # get registered model id
-    if args.registration_details:
+    if args.registration_details_folder and \
+            os.path.exists(args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE):
         model_info = {}
-
-        registration_details_file = args.registration_details/"model_registration_details.json"
+        registration_details_file = args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
         try:
             with open(registration_details_file) as f:
                 model_info = json.load(f)
             model_id = model_info["id"]
             model_name = model_info["name"]
         except Exception as e:
-            raise Exception(f"registration_details json file is missing due to exception {e}.")
+            raise Exception(f"model_registration_details json file is missing model information {e}.")
     elif args.model_id:
         model_id = str(args.model_id)
         model_name = model_id.split("/")[-3]

@@ -16,7 +16,7 @@ from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 
 from utils.common_utils import get_mlclient
-from utils.config import AppName
+from utils.config import AppName, ComponentVariables
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.exceptions import (
     swallow_all_exceptions,
@@ -62,7 +62,7 @@ def parse_args():
         default=None,
     )
     parser.add_argument(
-        "--registration_details",
+        "--registration_details_folder",
         type=Path,
         help="A folder which contains a JSON file into which model registration details will be written",
     )
@@ -115,7 +115,7 @@ def main():
     model_description = args.model_description
     registry_name = args.registry_name
     model_path = args.model_path
-    registration_details = args.registration_details
+    registration_details_folder = args.registration_details_folder
     model_version = args.model_version
     tags, properties, flavors = {}, {}, {}
 
@@ -212,7 +212,7 @@ def main():
     }
     json_object = json.dumps(model_info, indent=4)
 
-    registration_file = registration_details/"model_registration_details.json"
+    registration_file = registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
 
     with open(registration_file, "w+") as outfile:
         outfile.write(json_object)
