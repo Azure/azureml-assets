@@ -29,4 +29,5 @@ class LoggerConfig:
 
 class ComponentVariables:
     """Component Variables."""
+
     REGISTRATION_DETAILS_JSON_FILE = "model_registration_details.json"
