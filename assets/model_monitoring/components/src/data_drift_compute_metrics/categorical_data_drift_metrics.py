@@ -113,8 +113,13 @@ def _psi_categorical(
         baseline_frequencies = {**all_unique_values_dict, **count_baseline_df_dict}
 
         baseline_ratios = {}
+        number_of_categories_baseline = len(baseline_frequencies)
+        # Add 1 to every bin to avoid infinity when bin is 0 (laplace smoothing)
+        # Modfiy denomitatior to keep ratios normalized
         for value in baseline_frequencies:
-            baseline_ratios[value] = (baseline_frequencies[value] + 1) / baseline_count
+            baseline_ratios[value] = (
+                baseline_frequencies[value] + 1
+                ) / (baseline_count + number_of_categories_baseline)
 
         count_prod_df = production_df.groupBy(column).count()
         count_prod_df_dict = {
@@ -123,11 +128,13 @@ def _psi_categorical(
         production_frequencies = {**all_unique_values_dict, **count_prod_df_dict}
 
         production_ratios = {}
+        number_of_categories_production = len(production_frequencies)
+        # Add 1 to every bin to avoid infinity when bin is 0 (laplace smoothing)
+        # Modfiy denomitatior to keep ratios normalized
         for value in production_frequencies:
-            # Add 1 to every value to avoid infinity when value is 0
             production_ratios[value] = (
                 production_frequencies[value] + 1
-            ) / production_count
+            ) / (production_count + number_of_categories_production)
 
         psi = 0
         for i in baseline_ratios:
