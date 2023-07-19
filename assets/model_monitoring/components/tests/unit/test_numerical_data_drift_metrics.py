@@ -3,7 +3,7 @@
 
 """
 This file contains unit tests for the Numerical Data Drift Metrics.
-It compares the drift measures of metrics implemented in Spark against their Scipy implementation 
+It compares the drift measures of metrics implemented in Spark against their SciPy implementation 
 """
 
 from data_drift_compute_metrics.numerical_data_drift_metrics import compute_numerical_data_drift_measures_tests
@@ -200,7 +200,6 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
     
     def get_metric_value(self, df: pyspark_sql.DataFrame, metric_name: str):
         """Get metric value of the first row of a given column from a dataframe."""
-        #df.show()
         return df.filter(f"metric_name = '{metric_name}'").first().metric_value
 
     def create_spark_df(self, numerical_data):
@@ -334,10 +333,8 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
                     print('-------------------------')
                     print(f'test: {test_case["name"]}')
                     print(f'test scenario: {test_case["scenario"]}')
-                    print((
-                        f'expected value:{self.round_to_n_significant_digits(expected_distance,4)},' 
-                        f'measured value:{self.round_to_n_significant_digits(metric_value,4)}'
-                        ))
+                    print(f'expected value: {self.round_to_n_significant_digits(expected_distance,4)}') 
+                    print(f'measured value: {self.round_to_n_significant_digits(metric_value,4)}')
 
                     if(abs(expected_distance) < 1e-6):
                         self.assertAlmostEqual(metric_value, 0, 6)
