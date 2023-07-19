@@ -36,9 +36,7 @@ def get_mlclient(registry_name: str = None):
             credential = ManagedIdentityCredential(client_id=msi_client_id)
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
-            raise AzureMLException._with_error(
-                AzureMLError.create(NonMsiAttachedComputeError, exception=ex)
-            )
+            raise AzureMLException._with_error(AzureMLError.create(NonMsiAttachedComputeError, exception=ex))
 
     if registry_name is None:
         run = Run.get_context(allow_offline=False)
