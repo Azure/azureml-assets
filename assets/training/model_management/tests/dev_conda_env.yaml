@@ -1,0 +1,26 @@
+channels:
+- conda-forge
+dependencies:
+- python=3.8.0
+- pip<=23.1.2
+- pycocotools==2.0.4
+- pip:
+  ## src requirements
+  - mlflow~=2.3.1
+  - mlflow-skinny~=2.3.1
+  - azureml-mlflow~=1.51.0
+  - azure-ai-ml~=1.8.0
+  - azureml-core~=1.52.0
+  - azureml-telemetry~=1.52.0
+  - azureml-evaluate-mlflow~=0.0.19
+  - langcodes
+  ## Test requirements
+  - mock
+  - pydash
+  - pytest
+  - pytest-cov
+  - pytest-forked
+  - pytest-mock
+  - pytest-timeout
+  - pytest-xdist
+name: model_mgmt

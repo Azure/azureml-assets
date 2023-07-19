@@ -31,25 +31,22 @@ COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
 
 
 def create_acr_task(image_name: str,
-                    build_context_dir: Path,
                     dockerfile: str,
+                    os: assets.Os,
                     task_filename: str,
                     test_command: str = None,
                     push: bool = False,
-                    trivy_url: str = None) -> Path:
+                    trivy_url: str = None):
     """Create ACR build task file.
 
     Args:
         image_name (str): Image name.
-        build_context_dir (Path): Build context directory.
         dockerfile (str): Dockerfile name.
+        os (assets.Os): Operating system of the image.
         task_filename (str): File to which the task will be written.
         test_command (str, optional): Command used to test the image. Defaults to None.
         push (bool, optional): Push the image to the ACR. Defaults to False.
         trivy_url (str, optional): URL to download Trivy for vulnerability scanning. Defaults to None.
-
-    Returns:
-        Path: The task file.
     """
     # Start task with just the build step
     task = {
@@ -60,53 +57,58 @@ def create_acr_task(image_name: str,
             'build': f"-t $Registry/{image_name} -f {dockerfile} ."
         }]}
 
-    # Add output conda export command
+    # Add command to output packages
+    if os is assets.Os.LINUX:
+        # Quoted string required to handle && and ||
+        cmd = r'/bin/sh -c "[ -n \"\$CONDA_DEFAULT_ENV\" ] && conda env export || pip freeze"'
+    else:
+        # Requires Windows batch
+        cmd = r'cmd /C "if defined CONDA_DEFAULT_ENV (conda env export) else (pip freeze)"'
     task['steps'].append({
-        'id': 'conda_export',
-        'cmd': f"$Registry/{image_name} conda env export",
+        'id': "package_export",
+        'cmd': f"$Registry/{image_name} {cmd}",
         'ignoreErrors': True
     })
 
     # Add test command if provided
     if test_command:
         task['steps'].append({
-            'id': 'test',
+            'id': "test",
             'cmd': f"$Registry/{image_name} {test_command}"
         })
 
-        if trivy_url is not None:
+    # Add vulnerability scanning step if requested
+    if trivy_url is not None:
+        if os is assets.Os.LINUX:
             task['steps'].append({
-                'id': 'scan',
+                'id': "scan",
                 'stepTimeout': SCAN_STEP_TIMEOUT_SECONDS,
                 'cmd': f"aquasec/trivy -q --timeout {TRIVY_TIMEOUT} image --scanners vuln --ignore-unfixed "
                        f"$Registry/{image_name}",
                 'ignoreErrors': True,
                 'privileged': True
             })
+        else:
+            logger.log_warning(f"Skipped vulnerability scan for Windows image {image_name} - not supported")
 
     # Add push step if requested
     if push:
         task['steps'].append({
-            'id': 'push',
+            'id': "push",
             'push': [f"$Registry/{image_name}"]
         })
 
     # Write YAML file to disk
-    task_file = build_context_dir / task_filename
-    with open(task_file, "w") as f:
+    with open(task_filename, "w") as f:
         yaml = YAML()
         yaml.default_flow_style = False
         YAML().dump(task, f)
 
-    return task_file
-
 
 def build_image(asset_config: assets.AssetConfig,
+                env_config: assets.EnvironmentConfig,
                 image_name: str,
-                build_context_dir: Path,
-                dockerfile: str,
                 build_log: Path,
-                build_os: str = None,
                 resource_group: str = None,
                 registry: str = None,
                 test_command: str = None,
@@ -116,11 +118,9 @@ def build_image(asset_config: assets.AssetConfig,
 
     Args:
         asset_config (assets.AssetConfig): Asset config.
+        env_config (assets.EnvironmentConfig): Environment config.
         image_name (str): Image name.
-        build_context_dir (Path): Build context directory.
-        dockerfile (str): Dockerfile name.
         build_log (Path): File to which the build log will be written.
-        build_os (str, optional): Operating system used to build the image on ACR. Defaults to None.
         resource_group (str, optional): Resource group of the ACR. Defaults to None.
         registry (str, optional): ACR name. Defaults to None.
         test_command (str, optional): Command used to test the image. Defaults to None.
@@ -134,27 +134,19 @@ def build_image(asset_config: assets.AssetConfig,
     start = timer()
     with tempfile.TemporaryDirectory() as temp_dir:
         if registry is not None:
-            # Build on ACR
-            cmd = ["az", "acr"]
-            common_args = ["-g", resource_group, "-r", registry, "--platform", build_os]
-            if not test_command and push:
-                # Simple build and push
-                cmd.append("build")
-                cmd.extend(common_args)
-                cmd.extend(["--file", dockerfile, "--image", image_name, "."])
-            else:
-                # Use ACR task from build context in temp dir
-                temp_dir_path = Path(temp_dir)
-                shutil.copytree(build_context_dir, temp_dir_path, dirs_exist_ok=True)
-                build_context_dir = temp_dir_path
-                create_acr_task(image_name, build_context_dir, dockerfile, TASK_FILENAME, test_command,
-                                push, trivy_url)
-                cmd.append("run")
-                cmd.extend(common_args)
-                cmd.extend(["-f", TASK_FILENAME, "."])
+            # Build via ACR task
+            temp_dir_path = Path(temp_dir)
+            shutil.copytree(env_config.context_dir_with_path, temp_dir_path, dirs_exist_ok=True)
+            build_context_dir = temp_dir_path
+            create_acr_task(image_name=image_name, dockerfile=env_config.dockerfile,
+                            os=env_config.os, task_filename=build_context_dir / TASK_FILENAME,
+                            test_command=test_command, push=push, trivy_url=trivy_url)
+            cmd = ["az", "acr", "run", "-g", resource_group, "-r", registry, "--platform", env_config.os.value,
+                   "-f", TASK_FILENAME, "."]
         else:
             # Build locally
-            cmd = ["docker", "build", "--file", dockerfile, "--progress", "plain", "--tag", image_name, "."]
+            build_context_dir = env_config.context_dir_with_path
+            cmd = ["docker", "build", "--file", env_config.dockerfile, "--progress", "plain", "--tag", image_name, "."]
         p = run(cmd,
                 cwd=build_context_dir,
                 stdout=PIPE,
@@ -195,7 +187,7 @@ def build_images(input_dirs: List[Path],
                  max_parallel: int,
                  changed_files: List[Path],
                  tag_with_version: bool,
-                 os_to_build: str = None,
+                 os_to_build: assets.Os = None,
                  resource_group: str = None,
                  registry: str = None,
                  test_command: str = None,
@@ -213,7 +205,7 @@ def build_images(input_dirs: List[Path],
         max_parallel (int): Maximum number of images to build in parallel.
         changed_files (List[Path]): List of changed files, used to filter environments.
         tag_with_version (bool): Tag image with asset version.
-        os_to_build (str, optional): Operating system to build on via ACR. Defaults to None.
+        os_to_build (assets.Os, optional): Operating system to build on via ACR. Defaults to None.
         resource_group (str, optional): Resource group name for ACR builds. Defaults to None.
         registry (str, optional): ACR name. Defaults to None.
         test_command (str, optional): Command used to test images. Defaults to None.
@@ -233,9 +225,9 @@ def build_images(input_dirs: List[Path],
             env_config = asset_config.extra_config_as_object()
 
             # Filter by OS
-            if os_to_build and env_config.os.value != os_to_build:
+            if os_to_build and env_config.os != os_to_build:
                 logger.print(f"Skipping build of image for {asset_config.name}: "
-                             f"Operating system {env_config.os.value} != {os_to_build}")
+                             f"Operating system {env_config.os.value} != {os_to_build.value}")
                 continue
 
             # Pin versions
@@ -271,10 +263,10 @@ def build_images(input_dirs: List[Path],
 
             # Start building image
             build_log = build_logs_dir / f"{asset_config.name}.log"
-            futures.append(pool.submit(build_image, asset_config, image_name,
-                                       env_config.context_dir_with_path, env_config.dockerfile, build_log,
-                                       env_config.os.value, resource_group, registry, test_command,
-                                       push_this_image, trivy_url))
+            futures.append(pool.submit(build_image, asset_config=asset_config, env_config=env_config,
+                                       image_name=image_name, build_log=build_log, resource_group=resource_group,
+                                       registry=registry, test_command=test_command, push=push_this_image,
+                                       trivy_url=trivy_url))
 
         # Wait for builds to complete
         for future in as_completed(futures):
@@ -348,9 +340,10 @@ if __name__ == '__main__':
     if args.use_version_dirs and not args.output_directory:
         parser.error("--use-version-dirs requires --output-directory")
 
-    # Convert comma-separated values to lists
+    # Reformat arg values
     input_dirs = [Path(d) for d in args.input_dirs.split(",")]
     changed_files = [Path(f) for f in args.changed_files.split(",")] if args.changed_files else []
+    os_to_build = assets.Os(args.os_to_build) if args.os_to_build else None
 
     # Build images
     success = build_images(input_dirs=input_dirs,
@@ -361,7 +354,7 @@ if __name__ == '__main__':
                            max_parallel=args.max_parallel,
                            changed_files=changed_files,
                            tag_with_version=args.tag_with_version,
-                           os_to_build=args.os_to_build,
+                           os_to_build=os_to_build,
                            resource_group=args.resource_group,
                            registry=args.registry,
                            test_command=args.test_command,
