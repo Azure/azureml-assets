@@ -113,8 +113,7 @@ def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-path", type=Path, required=True, help="Model input path")
     parser.add_argument("--test-data-path", type=Path, required=False, help="Test dataset path")
-    parser.add_argument("--column-rename-map", type=str, required=False, help="")
-    parser.add_argument("--output-model-path", type=Path, required=True, help="Output model path")
+    parser.add_argument("--column-rename-map", type=str, required=False, help="Column rename map as string")
     return parser
 
 
@@ -125,7 +124,6 @@ if __name__ == "__main__":
     model_dir: Path = args.model_path
     test_data_path: Path = args.test_data_path
     col_rename_map_str: str = args.column_rename_map
-    output_model_path: Path = args.output_model_path
 
     mlmodel_file_path = model_dir / MLMODEL_FILE_NAME
     conda_env_file_path = model_dir / CONDA_YAML_FILE_NAME
