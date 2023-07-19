@@ -26,6 +26,7 @@ class LoggerConfig:
     IMPORT_MODEL_VERSION = "0.0.9"  # Update when changing version in spec file.
     ASSET_NOT_FOUND = "AssetID missing in run details"
 
+
 class ComponentVariables:
     """Component Variables."""
     REGISTRATION_DETAILS_JSON_FILE = "model_registration_details.json"

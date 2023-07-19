@@ -4,7 +4,6 @@
 """Run Model deployment module."""
 import argparse
 import json
-import os.path
 import re
 import time
 
