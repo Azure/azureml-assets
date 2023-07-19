@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: mlflow_model_local_validation
-version: 0.0.2
+version: 0.0.3
 type: command
 
 is_deterministic: true
@@ -10,21 +10,15 @@ display_name: MLFlow model local validation
 description: Validates if a MLFLow model can be loaded on a compute and is usable
   for inferencing.
 
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/4
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/6
 
-code: ../../src/mlflow_model_local_validation/
-command: |
-  set -ex
-  export ENV_PREFIX="/opt/conda/envs/inferencing"
-  echo $ENV_PREFIX
-  ls -ltr ${{inputs.model_path}}
-  cp ${{inputs.model_path}}/conda.yaml ./
-  conda env create -p $ENV_PREFIX -f conda.yaml -q
-  echo "conda env successfully created at $ENV_PREFIX"
-  echo "Install appinsights additionally, for logging"
-  conda install applicationinsights -p $ENV_PREFIX -c  conda-forge -y -q
-  conda list -p $ENV_PREFIX
-  conda run -p $ENV_PREFIX python run_model_sanity_validations.py --model-path ${{inputs.model_path}} $[[--test-data-path ${{inputs.test_data_path}}]] $[[--column-rename-map "${{inputs.column_rename_map}}"]] --output-model-path ${{outputs.mlflow_model_folder}}
+code: ../../src/
+command: >-
+  python run_mlflow_model_local_validation.py
+  --model-path ${{inputs.model_path}}
+  $[[--test-data-path ${{inputs.test_data_path}}]]
+  $[[--column-rename-map "${{inputs.column_rename_map}}"]]
+  --output-model-path ${{outputs.mlflow_model_folder}}
 
 inputs:
   model_path:
