@@ -1,7 +1,19 @@
-## 1.6.0 (Unreleased)
+## 1.8.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
+
+## 1.7.0 (2023-07-18)
+### 🚀 New Features
+- [#902](https://github.com/Azure/azureml-assets/pull/902) Make output directory optional for update_assets.py
+
+## 1.6.0 (2023-07-17)
+### 🚀 New Features
+- [#821](https://github.com/Azure/azureml-assets/pull/821) Make release directory optional for update_assets.py
+
+## 1.5.2 (2023-07-13)
+### 🐛 Bugs Fixed
+- [#882](https://github.com/Azure/azureml-assets/pull/882) Create package list using pip if conda is unavailable
 
 ## 1.5.1 (2023-07-11)
 ### 🚀 New Features

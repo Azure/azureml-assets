@@ -17,4 +17,4 @@ tags:
   - Standard_ND96asr_v4
   license: mit
   task: text-generation
-version: 7
+version: 8
