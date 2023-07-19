@@ -261,7 +261,7 @@ def main():
     args = parse_args()
     ml_client = get_mlclient()
     # get registered model id
-    registration_details_file = args.registration_details_folder / ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
+    registration_details_file = args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
     if registration_details_file.exists():
         try:
             with open(registration_details_file) as f:
