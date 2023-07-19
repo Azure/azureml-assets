@@ -78,7 +78,7 @@ def _jensen_shannon_categorical(
             production_frequencies,
             base=2)
 
-        row = [column, float(js_distance), "categorical", "JensenShannonDistance"]
+        row = [column, float(js_distance), "Categorical", "JensenShannonDistance"]
         rows.append(row)
 
     output_df = get_output_spark_df(rows)
@@ -135,7 +135,7 @@ def _psi_categorical(
                 production_ratios[i] / baseline_ratios[i]
             )
 
-        psi_row = [column, float(psi), "categorical", "PopulationStabilityIndex"]
+        psi_row = [column, float(psi), "Categorical", "PopulationStabilityIndex"]
         psi_rows.append(psi_row)
 
     output_df = get_output_spark_df(psi_rows)
@@ -188,7 +188,7 @@ def _chisquaretest(
         chisqtest_row = [
             column,
             float(chisqtest_val),
-            "categorical",
+            "Categorical",
             "PearsonsChiSquaredTest",
         ]
         chisqtest_rows.append(chisqtest_row)
