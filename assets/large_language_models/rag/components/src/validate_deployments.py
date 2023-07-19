@@ -413,17 +413,17 @@ def get_openai_model(model, key, activity_logger: Logger):
     try:
         response = requests.get(endpoint, headers=headers)
         response.raise_for_status()
-    except:
-        activity_logger.exception(f"Unable to get model information from OpenAI for model {model}")
+    except Exception as e:
+        activity_logger.exception(
+            f"Unable to get model information from OpenAI for model {model}: Exception Type: {type(e)}")
         raise
 
 
 def validate_openai_deployments(parser_args, check_completion, check_embeddings, activity_logger: Logger):
-    """Call OpenAI to check for model ids"""     
-    
+    """Call OpenAI to check for model ids"""
     connection_id_completion = os.environ.get(
         "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_COMPLETION", None)
-    
+
     if connection_id_completion and check_completion:
         llm_config = json.loads(parser_args.llm_config)
         print(f"Using llm_config: {json.dumps(llm_config, indent=2)}")
@@ -437,10 +437,10 @@ def validate_openai_deployments(parser_args, check_completion, check_embeddings,
             "ValidationFailed: ConnectionID for LLM is empty and check_embeddings = True")
         raise Exception(
             "ConnectionID for LLM is empty and check_completion = True")
-    
+
     connection_id_embedding = os.environ.get(
         "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING", None)
-    
+
     if connection_id_embedding and check_embeddings:
         connection = get_connection_by_id_v2(connection_id_embedding)
         credential = workspace_connection_to_credential(connection)
@@ -462,30 +462,36 @@ def main(parser_args, activity_logger: Logger):
     """Extract main method."""
 
     # Determine if embeddings model is AOAI or OpenAI
-    check_aoai_embeddings = (parser_args.check_embeddings == "true" or parser_args.check_embeddings == "True") and parser_args.embeddings_model.startswith("azure_open_ai")
-    check_openai_embeddings = (parser_args.check_embeddings == "true" or parser_args.check_embeddings == "True") and parser_args.embeddings_model.startswith("open_ai")
-
+    embeddings_model = parser_args.embeddings_model
+    check_aoai_embeddings = (parser_args.check_embeddings == "true" or
+                             parser_args.check_embeddings == "True") and embeddings_model.startswith("azure_open_ai")
+    check_openai_embeddings = (parser_args.check_embeddings == "true" or
+                               parser_args.check_embeddings == "True") and embeddings_model.startswith("open_ai")
 
     # Determine if completion model is AOAI or OpenAI
     llm_config = json.loads(parser_args.llm_config)
     model_type = llm_config.get("type")
-    check_aoai_completion = (parser_args.check_completion  == "true" or parser_args.check_completion  == "True") and model_type == "azure_open_ai"
-    check_openai_completion = (parser_args.check_completion  == "true" or parser_args.check_completion  == "True") and model_type == "open_ai"
-    
+    check_aoai_completion = (parser_args.check_completion == "true" or
+                             parser_args.check_completion == "True") and model_type == "azure_open_ai"
+    check_openai_completion = (parser_args.check_completion == "true" or
+                               parser_args.check_completion == "True") and model_type == "open_ai"
+
     # Validate aoai models, if any
     if check_aoai_embeddings or check_aoai_completion:
         completion_to_check = "Completion model" if check_aoai_completion else ""
         embeddings_to_check = "Embeddings model" if check_aoai_embeddings else ""
         use_and = " and " if (check_aoai_embeddings and check_aoai_completion) else ""
-        activity_logger.info(f"[Validate Deployments]: Validating {completion_to_check}{use_and}{embeddings_to_check} using AOAI")
+        activity_logger.info(
+            f"[Validate Deployments]: Validating {completion_to_check}{use_and}{embeddings_to_check} using AOAI")
         validate_aoai_deployments(parser_args, check_aoai_completion, check_aoai_embeddings, activity_logger)
-    
+
     # validate openai models, if any
     if check_openai_completion or check_openai_embeddings:
         completion_to_check = "Completion model" if check_openai_completion else ""
         embeddings_to_check = "Embeddings model" if check_openai_embeddings else ""
         use_and = " and " if (check_openai_embeddings and check_openai_completion) else ""
-        activity_logger.info(f"[Validate Deployments]: Validating {completion_to_check}{use_and}{embeddings_to_check} using OpenAI")
+        activity_logger.info(
+            f"[Validate Deployments]: Validating {completion_to_check}{use_and}{embeddings_to_check} using OpenAI")
         validate_openai_deployments(parser_args, check_openai_completion, check_openai_embeddings, activity_logger)
 
 
