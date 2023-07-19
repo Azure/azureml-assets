@@ -261,7 +261,7 @@ jobs:
       model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
       model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
     outputs:
-      registration_details: ${{parent.outputs.model_registration_details}}
+      registration_details_folder: ${{parent.outputs.model_registration_details}}
 
 tags:
   Preview: ""
