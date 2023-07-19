@@ -212,7 +212,7 @@ def main():
     }
     json_object = json.dumps(model_info, indent=4)
 
-    registration_file =  os.path.join(registration_details, "model_registration_details.json")
+    registration_file = registration_details/"model_registration_details.json"
 
     with open(registration_file, "w+") as outfile:
         outfile.write(json_object)

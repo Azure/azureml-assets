@@ -4,7 +4,6 @@
 """Run Model deployment module."""
 import argparse
 import json
-import os.path
 import re
 import time
 
@@ -271,7 +270,7 @@ def main():
             model_id = model_info["id"]
             model_name = model_info["name"]
         except Exception as e:
-            raise Exception("registration_details json file is missing.")
+            raise Exception(f"registration_details json file is missing due to exception {e}.")
     elif args.model_id:
         model_id = str(args.model_id)
         model_name = model_id.split("/")[-3]
