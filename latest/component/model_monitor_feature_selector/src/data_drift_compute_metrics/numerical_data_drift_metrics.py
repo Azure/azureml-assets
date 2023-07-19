@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 import pyspark.sql as pyspark_sql
 import pyspark.sql.functions as F
-from scipy.stats import ks_2samp
-from synapse.ml.exploratory import DistributionBalanceMeasure
+from scipy.spatial import distance
+from scipy.stats import ks_2samp, wasserstein_distance
 from io_utils import get_output_spark_df, init_spark
 from shared_utilities.histogram_utils import (
     get_dual_histogram_bin_edges,
@@ -87,6 +87,7 @@ def _jensen_shannon_numerical(
     production_df_count,
     numerical_columns: list,
 ):
+    # TODO: Update to leverage SynapeML library again once the logarithmic base issue in entropy is fixed.
     """Calculate Jensen Shannon metric for numerical columns."""
     bin_edges = get_dual_histogram_bin_edges(
         baseline_df,
@@ -95,40 +96,44 @@ def _jensen_shannon_numerical(
         production_df_count,
         numerical_columns,
     )
+
     baseline_histograms = get_histograms(baseline_df, bin_edges, numerical_columns)
     prod_histograms = get_histograms(production_df, bin_edges, numerical_columns)
 
-    baseline_freq_count_map = _calculate_column_value_frequency_bin_map_in_df(
-        baseline_histograms, numerical_columns, baseline_df_count
-    )
-    production_freq_count_map = _calculate_column_value_frequency_bin_map_in_df(
-        prod_histograms, numerical_columns, production_df_count
-    )
+    baseline_histograms_counts = {key: value[1] for key, value in baseline_histograms.items()}
+    prod_histograms_counts = {key: value[1] for key, value in prod_histograms.items()}
 
-    reference_distribution = list(
-        baseline_freq_count_map["feature_bucket_frequency_map"].values()
-    )
+    baseline_histograms_percent = {}
+    for key, values in baseline_histograms_counts.items():
+        value_list = []
+        for value in values:
+            value_list.append(value / baseline_df_count)
+        baseline_histograms_percent[key] = value_list
 
-    transformed_production_df = _map_production_df_columns_with_bins(
-        production_df, production_freq_count_map
-    )
-    distributionBalanceMeasure = (
-        DistributionBalanceMeasure()
-        .setSensitiveCols(numerical_columns)
-        .setReferenceDistribution(reference_distribution)
-        .transform(transformed_production_df.select(numerical_columns))
-    )
+    prod_histograms_percent = {}
+    for key, values in prod_histograms_counts.items():
+        value_list = []
+        for value in values:
+            value_list.append(value / production_df_count)
+        prod_histograms_percent[key] = value_list
 
-    output_df = distributionBalanceMeasure.select(
-        "FeatureName", "DistributionBalanceMeasure.js_dist"
-    )
-    output_df = (
-        output_df.withColumnRenamed("FeatureName", "feature_name")
-        .withColumnRenamed("js_dist", "metric_value")
-        .withColumn("data_type", F.lit("numerical"))
-        .withColumn("metric_name", F.lit("JensenShannonDistance"))
-    )
+    # Filter the numerical_columns list to keep only the columns present in both DataFrames
+    common_numerical_columns = [
+        col for col in numerical_columns if col in baseline_df.columns and col in production_df.columns
+    ]
 
+    # Compute the JS distance for each column
+    rows = []
+    for column in common_numerical_columns:
+        js_distance = distance.jensenshannon(
+            baseline_histograms_percent[column],
+            prod_histograms_percent[column],
+            base=2)
+
+        row = [column, float(js_distance), "Numerical", "JensenShannonDistance"]
+        rows.append(row)
+
+    output_df = get_output_spark_df(rows)
     return output_df
 
 
@@ -139,71 +144,29 @@ def _normalized_wasserstein(
     production_df_count: int,
     numerical_columns: list,
 ):
-    """Calculate normalized Wassserstein distance for numerical columns."""
-    bin_edges = get_dual_histogram_bin_edges(
-        baseline_df,
-        production_df,
-        baseline_df_count,
-        production_df_count,
-        numerical_columns,
-    )
-    baseline_histograms = get_histograms(baseline_df, bin_edges, numerical_columns)
-    prod_histograms = get_histograms(production_df, bin_edges, numerical_columns)
+    # TODO: Update to leverage DistributionBalanceMeasure again after reference distribution is supported in SynapeML.
+    # Filter the numerical_columns list to keep only the columns present in both DataFrames
+    common_numerical_columns = [
+        col for col in numerical_columns if col in baseline_df.columns and col in production_df.columns
+    ]
 
-    baseline_freq_count_map = _calculate_column_value_frequency_bin_map_in_df(
-        baseline_histograms, numerical_columns, baseline_df_count
-    )
-    production_freq_count_map = _calculate_column_value_frequency_bin_map_in_df(
-        prod_histograms, numerical_columns, production_df_count
-    )
+    # Compute the Wasserstein distance for each column
+    rows = []
+    for column in common_numerical_columns:
+        baseline_col_values = baseline_df.select(column).rdd.flatMap(lambda x: x).collect()
+        production_col_values = production_df.select(column).rdd.flatMap(lambda x: x).collect()
 
-    reference_distribution = list(
-        baseline_freq_count_map["feature_bucket_frequency_map"].values()
-    )
-    transformed_production_df = _map_production_df_columns_with_bins(
-        production_df, production_freq_count_map
-    )
+        distance = wasserstein_distance(baseline_col_values, production_col_values)
 
-    distribution_balance_measures = (
-        DistributionBalanceMeasure()
-        .setSensitiveCols(numerical_columns)
-        .setReferenceDistribution(reference_distribution)
-        .transform(transformed_production_df.select(numerical_columns))
-    )
+        # Normalize the Wasserstein distance by dividing it by the norm
+        std_dev = baseline_df.select(F.stddev(column)).collect()[0][0]
+        norm = max(std_dev, 0.001)
 
-    output_df = distribution_balance_measures.select(
-        "FeatureName", "DistributionBalanceMeasure.wasserstein_dist"
-    )
+        normalized_distance = distance / norm
+        row = [column, float(normalized_distance), "Numerical", "NormalizedWassersteinDistance"]
+        rows.append(row)
 
-    output_df = (
-        output_df.withColumnRenamed("FeatureName", "feature_name")
-        .withColumnRenamed("wasserstein_dist", "metric_value")
-        .withColumn("data_type", F.lit("Numerical"))
-        .withColumn("metric_name", F.lit("NormalizedWassersteinDistance"))
-    )
-
-    # Normalize wasserstein distance
-    baseline_df_stats = baseline_df.summary()
-    baseline_df_stdev = (
-        baseline_df_stats.where(F.col("summary") == "stddev").drop("summary").first()
-    )
-    baseline_df_stdev = baseline_df_stdev.asDict()
-
-    def normalize_value(mapping):
-        def f(wasserstein_dist_col, feature_name):
-            std_dev = float(mapping.value.get(feature_name))
-            norm = max(std_dev, 0.001)
-            return wasserstein_dist_col / norm
-
-        return F.udf(f)
-
-    spark = init_spark()
-    mapping = spark.sparkContext.broadcast(baseline_df_stdev)
-
-    output_df = output_df.withColumn(
-        "metric_value",
-        normalize_value(mapping)(F.col("metric_value"), F.col("feature_name")),
-    )
+    output_df = get_output_spark_df(rows)
     return output_df
 
 
@@ -220,7 +183,7 @@ def _ks2sample_pandas_impl(
             baseline_col = pd.Series(baseline_df[column])
             production_col = pd.Series(production_df[column])
             ks2s = ks_2samp(baseline_col, production_col).pvalue
-            row = [column, float(ks2s), "numerical", "TwoSampleKolmogorovSmirnovTest"]
+            row = [column, float(ks2s), "Numerical", "TwoSampleKolmogorovSmirnovTest"]
             rows.append(row)
 
         output_df = get_output_spark_df(rows)
@@ -272,7 +235,7 @@ def _psi_numerical(
                 production_percent[i] / baseline_percent[i]
             )
 
-        row = [column, float(psi), "numerical", "PopulationStabilityIndex"]
+        row = [column, float(psi), "Numerical", "PopulationStabilityIndex"]
         rows.append(row)
 
     output_df = get_output_spark_df(rows)
