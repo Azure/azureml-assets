@@ -407,7 +407,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
 
 
 def get_openai_model(model, key, activity_logger: Logger):
-    """Get model info from OpenAI"""
+    """Get model info from OpenAI."""
     endpoint = f"https://api.openai.com/v1/models/{model}"
     headers = {"Authorization": f"Bearer {key}"}
     try:
@@ -420,7 +420,7 @@ def get_openai_model(model, key, activity_logger: Logger):
 
 
 def validate_openai_deployments(parser_args, check_completion, check_embeddings, activity_logger: Logger):
-    """Call OpenAI to check for model ids"""
+    """Call OpenAI to check for model ids."""
     connection_id_completion = os.environ.get(
         "AZUREML_WORKSPACE_CONNECTION_ID_AOAI_COMPLETION", None)
 
@@ -460,7 +460,6 @@ def validate_openai_deployments(parser_args, check_completion, check_embeddings,
 
 def main(parser_args, activity_logger: Logger):
     """Extract main method."""
-
     # Determine if embeddings model is AOAI or OpenAI
     embeddings_model = parser_args.embeddings_model
     check_aoai_embeddings = (parser_args.check_embeddings == "true" or
