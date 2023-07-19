@@ -348,7 +348,7 @@ def validate_assets(input_dirs: List[Path],
                 if not assets.Config._contains_template(spec.version) and asset_config.version != spec.version:
                     raise ValidationException(f"Asset and spec version mismatch: {asset_config.version} != {spec.version}")  # noqa: E501
             except Exception as e:
-                _log_error(spec.file_name_with_path, e)
+                _log_error(asset_config.spec_with_path, e)
                 error_count += 1
 
     # Ensure unique assets
