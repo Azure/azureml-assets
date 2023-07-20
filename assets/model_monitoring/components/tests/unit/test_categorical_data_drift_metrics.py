@@ -111,9 +111,7 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
     """Test class for data drift compute metrics component and utilities."""
 
     def __init__(self, *args, **kwargs):
-        """
-        Initialize TestComputeDataDriftMetrics with the provided arguments and initialize the Spark session.
-        """
+        """Initialize TestComputeDataDriftMetrics with the provided arguments and initialize the Spark session."""
         super(TestComputeDataDriftMetrics, self).__init__(*args, **kwargs)
         self.spark = init_spark()
 
