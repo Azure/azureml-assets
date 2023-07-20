@@ -1,7 +1,11 @@
-## 1.8.0 (Unreleased)
+## 1.9.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
+
+## 1.8.0 (2023-07-20)
+### 🚀 New Features
+- [#913](https://github.com/Azure/azureml-assets/pull/913) Output variable with list of built images
 
 ## 1.7.2 (2023-07-20)
 ### 🐛 Bugs Fixed
