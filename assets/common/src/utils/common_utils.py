@@ -78,4 +78,4 @@ def get_model_name(model_id: str):
     if match:
         return match.group(2) or match.group(5)
     else:
-        raise Exception("Inavlid model_id : {model_id}")
+        raise Exception(f"Inavlid model_id : {model_id}")
