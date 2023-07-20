@@ -17,7 +17,7 @@ from typing import Tuple
 import re
 
 from utils.logging_utils import get_logger
-from utils.exceptions import NonMsiAttachedComputeError, UserIdentityMissingError
+from utils.exceptions import NonMsiAttachedComputeError, UserIdentityMissingError, InvalidModelIDError
 
 
 logger = get_logger(__name__)
@@ -78,4 +78,4 @@ def get_model_name(model_id: str):
     if match:
         return match.group(2) or match.group(5)
     else:
-        raise Exception(f"Inavlid model_id : {model_id}")
+        raise AzureMLException._with_error(AzureMLError.create(InvalidModelIDError, model_id=model_id))

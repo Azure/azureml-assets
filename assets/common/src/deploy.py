@@ -263,7 +263,6 @@ def main():
 
     if args.model_id:
         model_id = str(args.model_id)
-        model_name = get_model_name(model_id)
     elif args.registration_details_folder:
         registration_details_file = args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
         if registration_details_file.exists():
@@ -271,7 +270,6 @@ def main():
                 with open(registration_details_file) as f:
                     model_info = json.load(f)
                 model_id = model_info["id"]
-                model_name = model_info.get("name", "") or get_model_name(model_id)
             except Exception as e:
                 raise Exception(f"model_registration_details json file is missing model information {e}.")
         else:
@@ -286,7 +284,8 @@ def main():
 
     # 1. Replace underscores and slashes by hyphens and convert them to lower case.
     # 2. Take 21 chars from model name and append '-' & timstamp(10chars) to it
-
+    model_name = get_model_name(model_id)
+    
     endpoint_name = re.sub("[^A-Za-z0-9]", "-", model_name).lower()[:21]
     endpoint_name = f"{endpoint_name}-{int(time.time())}"
     endpoint_name = endpoint_name

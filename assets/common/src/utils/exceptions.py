@@ -46,6 +46,17 @@ class ModelImportErrorStrings:
     MLFLOW_LOCAL_VALIDATION_ERROR = (
         "Error in validating MLflow model. For more details please take a look at the previous logs."
     )
+    INVALID_MODEL_ID_ERROR = (
+        "Given Model ID : {model_id} is invalid. \n"
+        "Model ID should follow one of this format :\n"
+        "Workspace Model: \n"
+        "    azureml:<model-name>:<version> \n"
+        "    azureml://locations/<location>/workspaces/<workspace-name>/models/<model-name>/versions/<version> \n"
+        "    /subscriptions/<subscription_id>/resourceGroups/<resource_group>/providers/"
+        "Microsoft.MachineLearningServices/workspaces/<workspace-name>/models/<model-name>/versions/<version> \n"
+        "Registry Model: \n"
+        "    azureml://registries/<registry-name>/models/<model-name>/versions/<version> \n"
+    )
 
 
 class ModelImportException(AzureMLException):
@@ -163,6 +174,13 @@ class MlflowModelValidationError(ClientError):
         """Message format."""
         return ModelImportErrorStrings.MLFLOW_LOCAL_VALIDATION_ERROR
 
+class InvalidModelIDError(ClientError):
+    """MLflow local validation error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.INVALID_MODEL_ID_ERROR
 
 def swallow_all_exceptions(logger: logging.Logger):
     """Swallow all exceptions.
