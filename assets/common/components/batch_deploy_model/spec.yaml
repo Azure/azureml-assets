@@ -16,7 +16,8 @@ command: >-
   python batch_deploy.py
   $[[--registration_details ${{inputs.registration_details}}]]
   $[[--model_id ${{inputs.model_id}}]]
-  $[[--inference_payload ${{inputs.inference_payload}}]]
+  $[[--inference_payload_file ${{inputs.inference_payload_file}}]]
+  $[[--inference_payload_folder ${{inputs.inference_payload_folder}}]]
   $[[--endpoint_name ${{inputs.endpoint_name}}]]
   $[[--deployment_name ${{inputs.deployment_name}}]]
   $[[--compute_name ${{inputs.compute_name}}]]
@@ -49,7 +50,12 @@ inputs:
       Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version>
       Workspace - azureml:<model-name>:<version>
 
-  inference_payload:
+  inference_payload_file:
+    type: uri_file
+    optional: true
+    description: File containing data used to validate deployment
+
+  inference_payload_folder:
     type: uri_folder
     optional: true
     description: Folder containing files used to validate deployment

@@ -34,12 +34,12 @@ MAX_INSTANCE_COUNT = 20
 DEFAULT_COMPUTE_SIZE = "Standard_NC24s_v3"
 DEFAULT_MIN_INSTANCES = 0
 DEFAULT_MAX_INSTANCES = 1
-DEFAULT_IDLE_TIME_BEFORE_SCALE_DOWN = 120
+DEFAULT_IDLE_TIME_BEFORE_SCALE_DOWN = 120  # 2min
 DEFAULT_OUTPUT_FILE_NAME = "predictions.csv"
 DEFAULT_MAX_CONCURRENCY_PER_INSTANCE = 1
 DEFAULT_ERROR_THRESHOLD = -1
 DEFAULT_MAX_RETRIES = 3
-DEFAULT_TIMEOUT = 500
+DEFAULT_TIMEOUT = 500  # 500sec
 DEFAULT_LOGGING_LEVEL = "info"
 DEFAULT_MINI_BATCH_SIZE = 10
 DEFAULT_INSTANCE_COUNT = 1
@@ -69,7 +69,12 @@ def parse_args():
         help="Asset ID of the model registered in workspace/registry.",
     )
     parser.add_argument(
-        "--inference_payload",
+        "--inference_payload_file",
+        type=Path,
+        help="File containing data used to validate deployment",
+    )
+    parser.add_argument(
+        "--inference_payload_folder",
         type=Path,
         help="Folder containing files used to validate deployment",
     )
@@ -168,6 +173,21 @@ def parse_args():
     print("args received ", args)
 
     return args
+
+
+def invoke_endpoint_job(ml_client, endpoint, input):
+    """Invoke a job using the endpoint"""
+    job = ml_client.batch_endpoints.invoke(
+        endpoint_name=endpoint.name, input=input
+    )
+
+    ml_client.jobs.stream(job.name)
+
+    scoring_job = list(ml_client.jobs.list(parent_job_name=job.name))[0]
+
+    ml_client.jobs.download(
+        name=scoring_job.name, download_path=".", output_name="score"
+    )
 
 
 def get_or_create_compute(ml_client, compute_name, args):
@@ -298,24 +318,37 @@ def main():
         args=args
     )
 
-    if args.inference_payload:
-        print("Invoking inference with test payload ...")
+    if args.inference_payload_file and args.inference_payload_folder:
+        logger.warning("Dump all csv files under uri_folder instead of providing multiple inputs.")
+    
+    if args.inference_payload_folder:
+        print("Invoking inference with folder test payload ...")
         try:
-            input = Input(type="uri_folder", path=rf"{args.inference_payload}")
+            input = Input(type="uri_folder", path=rf"{args.inference_payload_folder}")
 
-            job = ml_client.batch_endpoints.invoke(
-                endpoint_name=endpoint.name, input=input
+            invoke_endpoint_job(
+                ml_client=ml_client,
+                endpoint=endpoint,
+                input=input,
+            )
+            
+            logger.info("Endpoint invoked successfully with folder test payload.")
+        except Exception as e:
+            raise AzureMLException._with_error(
+                AzureMLError.create(BatchEndpointInvocationError, exception=e)
+            )
+    elif args.inference_payload_file:
+        print("Invoking inference with file test payload ...")
+        try:
+            input = Input(type="uri_file", path=rf"{args.inference_payload_file}")
+
+            invoke_endpoint_job(
+                ml_client=ml_client,
+                endpoint=endpoint,
+                input=input,
             )
 
-            ml_client.jobs.stream(job.name)
-
-            scoring_job = list(ml_client.jobs.list(parent_job_name=job.name))[0]
-
-            ml_client.jobs.download(
-                name=scoring_job.name, download_path=".", output_name="score"
-            )
-
-            logger.info("Endpoint invoked successfully.")
+            logger.info("Endpoint invoked successfully with file test payload.")
         except Exception as e:
             raise AzureMLException._with_error(
                 AzureMLError.create(BatchEndpointInvocationError, exception=e)
