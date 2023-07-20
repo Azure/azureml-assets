@@ -28,6 +28,7 @@ TRIVY_TIMEOUT = "15m0s"
 SUCCESS_COUNT = "success_count"
 FAILED_COUNT = "failed_count"
 COUNTERS = [SUCCESS_COUNT, FAILED_COUNT]
+BUILT_IMAGES = "built_images"
 
 
 def create_acr_task(image_name: str,
@@ -113,7 +114,7 @@ def build_image(asset_config: assets.AssetConfig,
                 registry: str = None,
                 test_command: str = None,
                 push: bool = False,
-                trivy_url: str = None) -> Tuple[assets.AssetConfig, int, str]:
+                trivy_url: str = None) -> Tuple[assets.AssetConfig, str, int, str]:
     """Build a Docker image locally or via ACR task.
 
     Args:
@@ -128,7 +129,7 @@ def build_image(asset_config: assets.AssetConfig,
         trivy_url (str, optional): URL to download Trivy for vulnerability scanning. Defaults to None.
 
     Returns:
-        Tuple[assets.AssetConfig, int, str]: Asset config, return code, and contents of stdout.
+        Tuple[assets.AssetConfig, str, int, str]: Asset config, image name, return code, and contents of stdout.
     """
     logger.print(f"Building image for {asset_config.name}")
     start = timer()
@@ -156,7 +157,7 @@ def build_image(asset_config: assets.AssetConfig,
     os.makedirs(build_log.parent, exist_ok=True)
     with open(build_log, "w") as f:
         f.write(p.stdout.decode())
-    return (asset_config, p.returncode, p.stdout.decode())
+    return (asset_config, image_name, p.returncode, p.stdout.decode())
 
 
 # Doesn't support ACR yet
@@ -269,8 +270,9 @@ def build_images(input_dirs: List[Path],
                                        trivy_url=trivy_url))
 
         # Wait for builds to complete
+        built_images = []
         for future in as_completed(futures):
-            (asset_config, return_code, output) = future.result()
+            (asset_config, image_name, return_code, output) = future.result()
             logger.start_group(f"{asset_config.name} build log")
             logger.print(output)
             logger.end_group()
@@ -281,6 +283,7 @@ def build_images(input_dirs: List[Path],
             else:
                 logger.log_debug(f"Successfully built image for {asset_config.name}")
                 counters[SUCCESS_COUNT] += 1
+                built_images.append(image_name)
                 if output_directory:
                     util.copy_asset_to_output_dir(asset_config=asset_config, output_directory=output_directory,
                                                   add_subdir=True, use_version_dir=use_version_dirs)
@@ -288,6 +291,7 @@ def build_images(input_dirs: List[Path],
     # Set variables
     for counter_name in COUNTERS:
         logger.set_output(counter_name, counters[counter_name])
+    logger.set_output(BUILT_IMAGES, ",".join(built_images))
 
     if counters[FAILED_COUNT] > 0:
         logger.log_error(f"{counters[FAILED_COUNT]} environment image(s) failed to build")
