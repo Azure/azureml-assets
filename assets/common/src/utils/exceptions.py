@@ -38,6 +38,15 @@ class ModelImportErrorStrings:
         " cli - https://aka.ms/obo-cli-sample"
     )
 
+    # local validation error strings
+    CONDA_ENV_CREATION_ERROR = "Caught error while creating conda env using MLflow model conda.yaml"
+    CONDA_FILE_MISSING_ERROR = (
+        "Invalid MLflow model structure. Please make sure conda.yaml exists in MLflow model parent dir."
+    )
+    MLFLOW_LOCAL_VALIDATION_ERROR = (
+        "Error in validating MLflow model. For more details please take a look at the previous logs."
+    )
+
 
 class ModelImportException(AzureMLException):
     """Base exception for Model Import handling."""
@@ -126,6 +135,33 @@ class UserIdentityMissingError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.USER_IDENTITY_MISSING_ERROR
+
+
+class CondaEnvCreationError(ClientError):
+    """Conda env creation error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.CONDA_ENV_CREATION_ERROR
+
+
+class CondaFileMissingError(ClientError):
+    """Conda file missing error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.CONDA_FILE_MISSING_ERROR
+
+
+class MlflowModelValidationError(ClientError):
+    """MLflow local validation error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.MLFLOW_LOCAL_VALIDATION_ERROR
 
 
 def swallow_all_exceptions(logger: logging.Logger):
