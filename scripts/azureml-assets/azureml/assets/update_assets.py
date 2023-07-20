@@ -165,8 +165,8 @@ def update_asset(asset_config: assets.AssetConfig,
                 pending_release = not release_tag_exists(release_asset_config, release_directory_root)
                 if pending_release and not auto_version and main_version != release_version and skip_unreleased:
                     # Skip the unreleased asset version
-                    logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} because "
-                                    f"version {release_version} hasn't been released yet")
+                    logger.log_warning(f"Skipping {release_asset_config.type.value} {release_asset_config.name} "
+                                       f"because version {release_version} hasn't been released yet")
                     return None
 
         # Determine new version
