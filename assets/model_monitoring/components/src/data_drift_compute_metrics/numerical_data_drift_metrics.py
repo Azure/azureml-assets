@@ -221,11 +221,14 @@ def _psi_numerical(
         production_hist_count = prod_histograms[column][1]
         production_hist_count = [count + 1 for count in production_hist_count]
 
+        # Normalize counts to get percentages. Note that we had to add the number of histogram bins
+        # to the denominator to account for the laplace smoothing
         baseline_percent = [
-            (count / baseline_df_count) for count in baseline_hist_count
+            (count / (baseline_df_count + len(baseline_hist_count))) for count in baseline_hist_count
         ]
+
         production_percent = [
-            (count / production_df_count) for count in production_hist_count
+            (count / (production_df_count + len(production_hist_count))) for count in production_hist_count
         ]
 
         psi = 0.0

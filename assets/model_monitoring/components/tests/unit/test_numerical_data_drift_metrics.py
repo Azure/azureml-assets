@@ -99,7 +99,7 @@ test_cases = [
     },
     {
      "name": "3a",
-     "scenario": "Large drift. Bound distnace measures (Jensen-Shannon) approaching maximum theoretical values.",
+     "scenario": "Large drift. Bound distance measures (Jensen-Shannon) approaching maximum theoretical values.",
      "x_mean": 50,
      "y_mean": 100,
      "x_std_dev": 15,
@@ -109,7 +109,7 @@ test_cases = [
     },
     {
      "name": "3b",
-     "scenario": "Extreme drift scenario. Bound distnace measures (JSD) should reach their maximum theoretical value.",
+     "scenario": "Extreme drift scenario. Bound distance measures (JSD) should reach their maximum theoretical value.",
      "x_mean": 50,
      "y_mean": 250,
      "x_std_dev": 15,
@@ -149,7 +149,7 @@ test_cases = [
     },
     {
      "name": "5c",
-     "scenario": "Non-zero distance between distributions with the same mean and sample size, but differnt std_dev.",
+     "scenario": "Non-zero distance between distributions with the same mean and sample size, but different std_dev.",
      "x_mean": 50,
      "y_mean": 50,
      "x_std_dev": 15,
@@ -198,6 +198,26 @@ test_cases = [
      "y_std_dev": 5,
      "x_obs": 9_000,
      "y_obs": 900,
+    },
+    {
+     "name": "7a",
+     "scenario": "Very low sample size test. n_obs = 100.",
+     "x_mean": 50,
+     "y_mean": 52,
+     "x_std_dev": 15,
+     "y_std_dev": 15,
+     "x_obs": 100,
+     "y_obs": 100,
+    },
+    {
+     "name": "7b",
+     "scenario": "Extremely low sample size test. n_obs = 20.",
+     "x_mean": 50,
+     "y_mean": 52,
+     "x_std_dev": 15,
+     "y_std_dev": 15,
+     "x_obs": 20,
+     "y_obs": 20,
     },
 ]
 
@@ -334,8 +354,10 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
         x_count = x_count + 1
         y_count = y_count + 1
 
-        x_percent = x_count / len(x_array)
-        y_percent = y_count / len(y_array)
+        # normalize counts to get percentages. Note that we had to add the number of histogram bins
+        # to the denominator to account for the laplace smoothing
+        x_percent = x_count / (len(x_array) + len(x_count))
+        y_percent = y_count / (len(y_array) + len(y_count))
 
         psi = 0.0
         for i in range(len(x_percent)):

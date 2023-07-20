@@ -103,6 +103,12 @@ test_cases = [
      "baseline_col": {'a': 100, 'b': 100},
      "production_col": {'c': 100, 'd': 100},
     },
+    {
+     "name": "3a",
+     "scenario": "Distributions with low sample sizes.",
+     "baseline_col": {'a': 3, 'b': 1, 'c': 4},
+     "production_col": {'a': 2, 'b': 3},
+    },
 ]
 
 
