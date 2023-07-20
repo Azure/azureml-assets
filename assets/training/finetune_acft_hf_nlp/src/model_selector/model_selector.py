@@ -52,6 +52,10 @@ ACFT_CONFIG = {
                 "config_hf_load_kwargs": {
                     "trust_remote_code": True,
                 },
+                "tokenizer_hf_load_kwargs": {
+                    "model_input_names": ["input_ids", "attention_mask"],
+                    "return_token_type_ids": False,
+                },
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
                 },
@@ -81,6 +85,10 @@ ACFT_CONFIG = {
             "mlflow_hftransformers_misc_conf": {
                 "config_hf_load_kwargs": {
                     "trust_remote_code": True,
+                },
+                "tokenizer_hf_load_kwargs": {
+                    "model_input_names": ["input_ids", "attention_mask"],
+                    "return_token_type_ids": False,
                 },
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
@@ -219,8 +227,8 @@ def model_selector(args: Namespace):
         try:
             with open(ft_config_path, "r") as rptr:
                 ft_config_data = json.load(rptr)
-        except Exception as e:
-            logger.info(f"Unable to load {SaveFileConstants.ACFT_CONFIG_SAVE_PATH} - {e}")
+        except:
+            logger.info(f"Unable to load {SaveFileConstants.ACFT_CONFIG_SAVE_PATH}")
             ft_config_data = {}
     else:
         logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
