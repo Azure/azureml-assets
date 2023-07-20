@@ -50,12 +50,12 @@ class ModelImportErrorStrings:
         "Given Model ID : {model_id} is invalid. \n"
         "Model ID should follow one of this format :\n"
         "Workspace Model: \n"
-        "    azureml:<model-name>:<version> \n"
-        "    azureml://locations/<location>/workspaces/<workspace-name>/models/<model-name>/versions/<version> \n"
-        "    /subscriptions/<subscription_id>/resourceGroups/<resource_group>/providers/"
+        "    1) azureml:<model-name>:<version> \n"
+        "    2) azureml://locations/<location>/workspaces/<workspace-name>/models/<model-name>/versions/<version> \n"
+        "    3) /subscriptions/<subscription_id>/resourceGroups/<resource_group>/providers/"
         "Microsoft.MachineLearningServices/workspaces/<workspace-name>/models/<model-name>/versions/<version> \n"
         "Registry Model: \n"
-        "    azureml://registries/<registry-name>/models/<model-name>/versions/<version> \n"
+        "    1) azureml://registries/<registry-name>/models/<model-name>/versions/<version> \n"
     )
 
 
