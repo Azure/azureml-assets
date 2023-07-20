@@ -285,7 +285,7 @@ def main():
     # 1. Replace underscores and slashes by hyphens and convert them to lower case.
     # 2. Take 21 chars from model name and append '-' & timstamp(10chars) to it
     model_name = get_model_name(model_id)
-    
+
     endpoint_name = re.sub("[^A-Za-z0-9]", "-", model_name).lower()[:21]
     endpoint_name = f"{endpoint_name}-{int(time.time())}"
     endpoint_name = endpoint_name

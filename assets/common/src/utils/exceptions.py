@@ -174,6 +174,7 @@ class MlflowModelValidationError(ClientError):
         """Message format."""
         return ModelImportErrorStrings.MLFLOW_LOCAL_VALIDATION_ERROR
 
+
 class InvalidModelIDError(ClientError):
     """MLflow local validation error."""
 
@@ -181,6 +182,7 @@ class InvalidModelIDError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.INVALID_MODEL_ID_ERROR
+
 
 def swallow_all_exceptions(logger: logging.Logger):
     """Swallow all exceptions.
