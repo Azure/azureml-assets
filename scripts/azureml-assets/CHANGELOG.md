@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.7.2 (2023-07-20)
+### 🐛 Bugs Fixed
+- [#912](https://github.com/Azure/azureml-assets/pull/912) Fix indentation in update_assets.py
+
 ## 1.7.1 (2023-07-19)
 ### 🐛 Bugs Fixed
 - [#907](https://github.com/Azure/azureml-assets/pull/907) Handle path parameter for data assets
