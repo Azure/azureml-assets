@@ -72,7 +72,7 @@ def get_mlclient(registry_name: str = None):
 
 
 def get_model_name(model_id: str):
-    "Returns model name from model_id."
+    "Return model name from model_id."
     pattern = r'/(models|workspaces)/([^/:]+)(:|/versions/)(\d+)$|:([^/:]+):(\d+)$'
     match = re.search(pattern, model_id)
     if match:
