@@ -175,20 +175,29 @@ def parse_args():
     return args
 
 
-def invoke_endpoint_job(ml_client, endpoint, input):
+def invoke_endpoint_job(ml_client, endpoint, type, args):
     """Invoke a job using the endpoint"""
-    job = ml_client.batch_endpoints.invoke(
-        endpoint_name=endpoint.name, input=input
-    )
+    print(f"Invoking inference with {type} test payload ...")
+    try:
+        input = Input(type=type, path=rf"{args.inference_payload_folder}")
 
-    ml_client.jobs.stream(job.name)
+        job = ml_client.batch_endpoints.invoke(
+            endpoint_name=endpoint.name, input=input
+        )
 
-    scoring_job = list(ml_client.jobs.list(parent_job_name=job.name))[0]
+        ml_client.jobs.stream(job.name)
 
-    ml_client.jobs.download(
-        name=scoring_job.name, download_path=".", output_name="score"
-    )
+        scoring_job = list(ml_client.jobs.list(parent_job_name=job.name))[0]
 
+        ml_client.jobs.download(
+            name=scoring_job.name, download_path=".", output_name="score"
+        )
+
+        logger.info(f"Endpoint invoked successfully with {type} test payload.")
+    except Exception as e:
+        raise AzureMLException._with_error(
+            AzureMLError.create(BatchEndpointInvocationError, exception=e)
+        )
 
 def get_or_create_compute(ml_client, compute_name, args):
     """Get or create the compute cluster."""
@@ -322,37 +331,19 @@ def main():
         logger.warning("Dump all csv files under uri_folder instead of providing multiple inputs.")
     
     if args.inference_payload_folder:
-        print("Invoking inference with folder test payload ...")
-        try:
-            input = Input(type="uri_folder", path=rf"{args.inference_payload_folder}")
-
-            invoke_endpoint_job(
-                ml_client=ml_client,
-                endpoint=endpoint,
-                input=input,
-            )
-            
-            logger.info("Endpoint invoked successfully with folder test payload.")
-        except Exception as e:
-            raise AzureMLException._with_error(
-                AzureMLError.create(BatchEndpointInvocationError, exception=e)
-            )
+        invoke_endpoint_job(
+            ml_client=ml_client,
+            endpoint=endpoint,
+            type="uri_folder",
+            args=args,
+        )
     elif args.inference_payload_file:
-        print("Invoking inference with file test payload ...")
-        try:
-            input = Input(type="uri_file", path=rf"{args.inference_payload_file}")
-
-            invoke_endpoint_job(
-                ml_client=ml_client,
-                endpoint=endpoint,
-                input=input,
-            )
-
-            logger.info("Endpoint invoked successfully with file test payload.")
-        except Exception as e:
-            raise AzureMLException._with_error(
-                AzureMLError.create(BatchEndpointInvocationError, exception=e)
-            )
+        invoke_endpoint_job(
+            ml_client=ml_client,
+            endpoint=endpoint,
+            type="uri_file",
+            args=args,
+        )
 
     print("Saving deployment details ...")
 
