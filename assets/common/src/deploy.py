@@ -263,7 +263,7 @@ def main():
 
     if args.model_id:
         model_id = str(args.model_id)
-        model_name = get_model_name(model_id) 
+        model_name = get_model_name(model_id)
     elif args.registration_details_folder:
         registration_details_file = args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
         if registration_details_file.exists():
@@ -275,7 +275,7 @@ def main():
             except Exception as e:
                 raise Exception(f"model_registration_details json file is missing model information {e}.")
         else:
-            raise Exception(f"{ComponentVariables.REGISTRATION_DETAILS_JSON_FILE} is missing inside registartion details folder.")
+            raise Exception(f"{ComponentVariables.REGISTRATION_DETAILS_JSON_FILE} is missing inside folder.")
     else:
         raise Exception("Arguments model_id and registration_details both are missing.")
 

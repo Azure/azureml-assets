@@ -70,6 +70,7 @@ def get_mlclient(registry_name: str = None):
     logger.info(f"Creating MLClient with registry name {registry_name}")
     return MLClient(credential=credential, registry_name=registry_name)
 
+
 def get_model_name(model_id: str):
     "Returns model name from model_id."
     pattern = r'/(models|workspaces)/([^/:]+)(:|/versions/)(\d+)$|:([^/:]+):(\d+)$'
