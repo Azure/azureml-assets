@@ -179,7 +179,11 @@ def invoke_endpoint_job(ml_client, endpoint, type, args):
     """Invoke a job using the endpoint"""
     print(f"Invoking inference with {type} test payload ...")
     try:
-        input = Input(type=type, path=rf"{args.inference_payload_folder}")
+        if type=="uri_folder":
+            path = args.inference_payload_folder
+        else:
+            path = args.inference_payload_file
+        input = Input(type=type, path=rf"{path}")
 
         job = ml_client.batch_endpoints.invoke(
             endpoint_name=endpoint.name, input=input
