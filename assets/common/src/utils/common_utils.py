@@ -14,6 +14,7 @@ from azureml.core.run import Run
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Tuple
+import re
 
 from utils.logging_utils import get_logger
 from utils.exceptions import NonMsiAttachedComputeError, UserIdentityMissingError
@@ -68,3 +69,12 @@ def get_mlclient(registry_name: str = None):
         )
     logger.info(f"Creating MLClient with registry name {registry_name}")
     return MLClient(credential=credential, registry_name=registry_name)
+
+def get_model_name(model_id: str):
+    "Returns model name from model_id."
+    pattern = r'/(models|workspaces)/([^/:]+)(:|/versions/)(\d+)$|:([^/:]+):(\d+)$'
+    match = re.search(pattern, model_id)
+    if match:
+        return match.group(2) or match.group(5)
+    else:
+        raise Exception("Inavlid model_id : {model_id}")

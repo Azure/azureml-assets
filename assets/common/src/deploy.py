@@ -18,7 +18,7 @@ from azureml._common.exceptions import AzureMLException
 from pathlib import Path
 
 from utils.config import AppName, ComponentVariables
-from utils.common_utils import get_mlclient
+from utils.common_utils import get_mlclient, get_model_name
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.exceptions import (
     swallow_all_exceptions,
@@ -260,18 +260,22 @@ def main():
     args = parse_args()
     ml_client = get_mlclient()
     # get registered model id
-    registration_details_file = args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
-    if registration_details_file.exists():
-        try:
-            with open(registration_details_file) as f:
-                model_info = json.load(f)
-            model_id = model_info["id"]
-            model_name = model_info["name"]
-        except Exception as e:
-            raise Exception(f"model_registration_details json file is missing model information {e}.")
-    elif args.model_id:
+
+    if args.model_id:
         model_id = str(args.model_id)
-        model_name = model_id.split("/")[-3]
+        model_name = get_model_name(model_id) 
+    elif args.registration_details_folder:
+        registration_details_file = args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
+        if registration_details_file.exists():
+            try:
+                with open(registration_details_file) as f:
+                    model_info = json.load(f)
+                model_id = model_info["id"]
+                model_name = model_info.get("name", "") or get_model_name(model_id)
+            except Exception as e:
+                raise Exception(f"model_registration_details json file is missing model information {e}.")
+        else:
+            raise Exception(f"{ComponentVariables.REGISTRATION_DETAILS_JSON_FILE} is missing inside registartion details folder.")
     else:
         raise Exception("Arguments model_id and registration_details both are missing.")
 
