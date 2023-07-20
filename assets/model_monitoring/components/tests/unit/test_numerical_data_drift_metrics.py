@@ -169,7 +169,7 @@ test_cases = [
     {
      "name": "6b",
      "scenario": (
-         "Weak distance value dependence on sample size. " 
+         "Weak distance value dependence on sample size. "
          "Distance should be close to test 6a (might not be the case for KS-Test)."),
      "x_mean": 50,
      "y_mean": 51,
