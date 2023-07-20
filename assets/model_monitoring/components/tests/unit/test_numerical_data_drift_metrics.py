@@ -3,6 +3,7 @@
 
 """
 This file contains unit tests for the Numerical Data Drift Metrics.
+
 It compares the drift measures of metrics implemented in Spark against their SciPy implementation.
 """
 
@@ -206,10 +207,20 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
     """Test class for data drift compute metrics component component and utilities."""
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize TestComputeDataDriftMetrics with the provided arguments and initialize the Spark session.
+        """
         super(TestComputeDataDriftMetrics, self).__init__(*args, **kwargs)
         self.spark = init_spark()
 
     def round_to_n_significant_digits(self, number, n):
+        """
+        Round a given number to n significant digits.
+
+        :param number: The number to round.
+        :param n: The number of significant digits to round to.
+        :return: The rounded number.
+        """
         if number == 0:
             return 0
         else:
@@ -220,12 +231,24 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
         return df.filter(f"metric_name = '{metric_name}'").first().metric_value
 
     def create_spark_df(self, numerical_data):
+        """
+        Create a Spark DataFrame from the given numerical data.
+
+        :param numerical_data: A list of numerical data.
+        :return: A Spark DataFrame with the numerical data.
+        """
         column_values = ['column1']
         pd_df = pd.DataFrame(data=numerical_data, columns=column_values)
         df = self.spark.createDataFrame(pd_df)
         return df
 
     def create_test_distributions(self, dist_params: dict):
+        """
+        Create test distributions based on the given parameters.
+
+        :param dist_params: A dictionary containing distribution parameters.
+        :return: A tuple of two numpy arrays representing the test distributions.
+        """
         np.random.seed(0)
         x = np.random.normal(dist_params["x_mean"], dist_params["x_std_dev"], dist_params["x_obs"])
         np.random.seed(0)
@@ -233,7 +256,13 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
         return x, y
 
     def compute_optimal_histogram_bin_edges(self, x_array, y_array):
+        """
+        Compute the optimal histogram bin edges for two arrays of numerical data.
 
+        :param x_array: A numpy array of the first distribution's data.
+        :param y_array: A numpy array of the second distribution's data.
+        :return: A numpy array of the optimal bin edges.
+        """
         # find overall min and max values for both distributions
         min_value = min(np.amin(x_array), np.amin(y_array))
         max_value = max(np.amax(x_array), np.amax(y_array))
@@ -261,12 +290,26 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
     # # # EXPECTED NORMALIZED WASSERSTEIN DISTANCE # # #
 
     def normed_wasserstein_distance_numerical(self, x_array, y_array):
+        """
+        Compute the normalized Wasserstein distance between two arrays of numerical data.
+
+        :param x_array: A numpy array of the first distribution's data.
+        :param y_array: A numpy array of the second distribution's data.
+        :return: The normalized Wasserstein distance between the two distributions.
+        """
         norm = max(np.std(x_array), 0.001)
         return wasserstein_distance(x_array, y_array) / norm
 
     # # # EXPECTED JENSEN-SHANNON DISTANCE # # #
 
     def jensen_shannon_distance_numerical(self, x_array, y_array):
+        """
+        Compute the Jensen-Shannon distance between two arrays of numerical data.
+
+        :param x_array: A numpy array of the first distribution's data.
+        :param y_array: A numpy array of the second distribution's data.
+        :return: The Jensen-Shannon distance between the two distributions.
+        """
         bin_edges = self.compute_optimal_histogram_bin_edges(x_array, y_array)
         x_percent = np.histogram(x_array, bins=bin_edges)[0] / len(x_array)
         y_percent = np.histogram(y_array, bins=bin_edges)[0] / len(y_array)
@@ -276,6 +319,13 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
     # # # EXPECTED PSI # # #
 
     def psi_numerical(self, x_array, y_array):
+        """
+        Compute the Population Stability Index (PSI) between two arrays of numerical data.
+
+        :param x_array: A numpy array of the first distribution's data.
+        :param y_array: A numpy array of the second distribution's data.
+        :return: The PSI between the two distributions.
+        """
         bin_edges = self.compute_optimal_histogram_bin_edges(x_array, y_array)
 
         x_count = np.histogram(x_array, bins=bin_edges)[0]
@@ -298,6 +348,13 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
     # # # EXPECTED TWO SAMPLE KS TEST # # #
 
     def two_sample_ks_test_numerical(self, x_array, y_array):
+        """
+        Compute the Two-Sample Kolmogorov-Smirnov test between two arrays of numerical data.
+
+        :param x_array: A numpy array of the first distribution's data.
+        :param y_array: A numpy array of the second distribution's data.
+        :return: The two sample ks-test between the two distributions.
+        """
         return ks_2samp(x_array, y_array).pvalue
 
     # # # MAIN TEST FUNCTION # # #

@@ -3,6 +3,7 @@
 
 """
 This file contains unit tests for the Categorical Data Drift Metrics.
+
 It compares the drift measures of metrics implemented in Spark against their SciPy implementation
 """
 
@@ -107,13 +108,23 @@ test_cases = [
 
 @pytest.mark.unit
 class TestComputeDataDriftMetrics(unittest.TestCase):
-    """Test class for data drift compute metrics component component and utilities."""
+    """Test class for data drift compute metrics component and utilities."""
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialize TestComputeDataDriftMetrics with the provided arguments and initialize the Spark session.
+        """
         super(TestComputeDataDriftMetrics, self).__init__(*args, **kwargs)
         self.spark = init_spark()
 
     def round_to_n_significant_digits(self, number, n):
+        """
+        Round a given number to n significant digits.
+
+        :param number: The number to round.
+        :param n: The number of significant digits to round to.
+        :return: The rounded number.
+        """
         if number == 0:
             return 0
         else:
@@ -124,12 +135,24 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
         return df.filter(f"metric_name = '{metric_name}'").first().metric_value
 
     def create_spark_df(self, categorical_data):
+        """
+        Create a Spark DataFrame from the given categorical data.
+
+        :param categorical_data: A list of categorical data.
+        :return: A Spark DataFrame with the categorical data.
+        """
         column_values = ['column1']
         pd_df = pd.DataFrame(data=categorical_data, columns=column_values)
         df = self.spark.createDataFrame(pd_df)
         return df
 
     def create_categorical_data_from_dict(self, sample_dict: dict):
+        """
+        Create a list of categorical data from the given dictionary.
+
+        :param sample_dict: A dictionary mapping categories to their frequencies.
+        :return: A list of categorical data.
+        """
         cat_list = []
         for key, value in sample_dict.items():
             for i in range(value):
@@ -140,7 +163,13 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
     # # # EXPECTED JENSEN-SHANNON DISTANCE # # #
 
     def jensen_shannon_distance_categorical(self, x_list, y_list):
+        """
+        Compute the Jensen-Shannon distance between two lists of categorical data.
 
+        :param x_list: A list of categorical data for the first distribution.
+        :param y_list: A list of categorical data for the second distribution.
+        :return: The Jensen-Shannon distance between the two distributions.
+        """
         # unique values observed in x and y
         values = set(x_list + y_list)
 
@@ -155,7 +184,13 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
     # # # EXPECTED PSI # # #
 
     def psi_categorical(self, x_list, y_list):
+        """
+        Compute the Population Stability Index (PSI) between two lists of categorical data.
 
+        :param x_list: A list of categorical data for the first distribution.
+        :param y_list: A list of categorical data for the second distribution.
+        :return: The PSI between the two distributions.
+        """
         # unique values observed in x and y
         values = set(x_list + y_list)
 
@@ -179,6 +214,13 @@ class TestComputeDataDriftMetrics(unittest.TestCase):
     # # # EXPECTED CHI SQUARED TEST # # #
 
     def chi_squared_test_categorical(self, x_list, y_list):
+        """
+        Compute the Pearson's Chi-squared test between two lists of categorical data.
+
+        :param x_list: A list of categorical data for the first distribution.
+        :param y_list: A list of categorical data for the second distribution.
+        :return: The p-value of the Pearson's Chi-squared test between the two distributions.
+        """
         values = set(x_list + y_list)
 
         x_counts = np.array([x_list.count(value) for value in values])
