@@ -14,9 +14,10 @@ from azureml.core.run import Run
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Tuple
+import re
 
 from utils.logging_utils import get_logger
-from utils.exceptions import NonMsiAttachedComputeError, UserIdentityMissingError
+from utils.exceptions import NonMsiAttachedComputeError, UserIdentityMissingError, InvalidModelIDError
 
 
 logger = get_logger(__name__)
@@ -68,3 +69,13 @@ def get_mlclient(registry_name: str = None):
         )
     logger.info(f"Creating MLClient with registry name {registry_name}")
     return MLClient(credential=credential, registry_name=registry_name)
+
+
+def get_model_name(model_id: str):
+    """Return model name from model_id."""
+    pattern = r'/(models)/([^/:]+)(:|/versions/)(\d+)$|:([^/:]+):(\d+)$'
+    match = re.search(pattern, model_id)
+    if match:
+        return match.group(2) or match.group(5)
+    else:
+        raise AzureMLException._with_error(AzureMLError.create(InvalidModelIDError, model_id=model_id))
