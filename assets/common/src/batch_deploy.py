@@ -176,7 +176,7 @@ def parse_args():
 
 
 def invoke_endpoint_job(ml_client, endpoint, type, args):
-    """Invoke a job using the endpoint"""
+    """Invoke a job using the endpoint."""
     print(f"Invoking inference with {type} test payload ...")
     try:
         if type == "uri_folder":
