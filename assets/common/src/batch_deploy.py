@@ -179,7 +179,7 @@ def invoke_endpoint_job(ml_client, endpoint, type, args):
     """Invoke a job using the endpoint"""
     print(f"Invoking inference with {type} test payload ...")
     try:
-        if type=="uri_folder":
+        if type == "uri_folder":
             path = args.inference_payload_folder
         else:
             path = args.inference_payload_file
@@ -202,6 +202,7 @@ def invoke_endpoint_job(ml_client, endpoint, type, args):
         raise AzureMLException._with_error(
             AzureMLError.create(BatchEndpointInvocationError, exception=e)
         )
+
 
 def get_or_create_compute(ml_client, compute_name, args):
     """Get or create the compute cluster."""
@@ -290,7 +291,7 @@ def main():
     args = parse_args()
     ml_client = get_mlclient()
     # get registered model id
-    
+
     if args.model_id:
         model_id = str(args.model_id)
     elif args.registration_details_folder:
@@ -341,7 +342,7 @@ def main():
 
     if args.inference_payload_file and args.inference_payload_folder:
         logger.warning("Dump all csv files under uri_folder instead of providing multiple inputs.")
-    
+
     if args.inference_payload_folder:
         invoke_endpoint_job(
             ml_client=ml_client,
