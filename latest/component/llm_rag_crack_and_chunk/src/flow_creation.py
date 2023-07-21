@@ -246,7 +246,7 @@ def main(args, ws, current_run, activity_logger: Logger):
     ###########################################################################
     # ### construct PF MT service endpoints ### #
     promptflow_mt_url = SERVICE_ENDPOINT + \
-        "/flow/api" + WORKSPACE_SCOPE + "/flows"
+        "/studioservice/api" + WORKSPACE_SCOPE + "/flows"
     headers = get_default_headers(
         RUN_TOKEN, content_type="application/json")
 
