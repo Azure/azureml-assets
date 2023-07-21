@@ -223,12 +223,12 @@ test_cases = [
 
 
 @pytest.mark.unit
-class TestComputeDataDriftMetrics(unittest.TestCase):
-    """Test class for data drift compute metrics component component and utilities."""
+class TestComputeNumericalDataDriftMetrics(unittest.TestCase):
+    """Test class for numerical data drift compute metrics component and utilities."""
 
     def __init__(self, *args, **kwargs):
-        """Initialize TestComputeDataDriftMetrics with the provided arguments and initialize the Spark session."""
-        super(TestComputeDataDriftMetrics, self).__init__(*args, **kwargs)
+        """Initialize TestComputeNumericalDataDriftMetrics and initialize the Spark session"""
+        super(TestComputeNumericalDataDriftMetrics, self).__init__(*args, **kwargs)
         self.spark = init_spark()
 
     def round_to_n_significant_digits(self, number, n):
