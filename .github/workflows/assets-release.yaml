@@ -100,7 +100,7 @@ jobs:
           echo "::error::List of assets is empty. Please check the main branch and this workflow."
           exit 1
 
-      - name: Upload list of artifacts
+      - name: Upload list of assets
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.asset_list_artifact }}
@@ -188,7 +188,7 @@ jobs:
       has_releasable_assets: ${{ steps.download-artifact.outputs.download-path }}
 
   release-assets:
-    name: Release assets
+    name: Update release branch
     if: "!cancelled() && github.ref == 'refs/heads/main'"
     runs-on: ubuntu-latest
     needs: check-release-assets
