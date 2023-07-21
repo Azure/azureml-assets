@@ -14,11 +14,13 @@ on:
   workflow_dispatch:
 
 env:
+  conda_env_prefix: /opt/conda/envs/model_mgmt
   model_mgmt_root_dir: assets/training/model_management
   model_mgmt_src_dir: assets/training/model_management/src/azureml/
   model_mgmt_test_dir: assets/training/model_management/tests
   model_mgmt_unittests_dir: assets/training/model_management/tests/unittests
   model_mgmt_test_req: assets/training/model_management/tests/dev_requirements.txt
+  model_mgmt_conda_yaml: assets/training/model_management/tests/dev_conda_env.yaml
   pytest_reports: pytest-reports
 
 jobs:
@@ -41,10 +43,14 @@ jobs:
         with:
           python-version: '==3.8'
 
-      - name: Install dev requirements
+      - name: Create conda env
         run: |
+          set -ex
           apt-get update && apt-get upgrade && apt-get install -y build-essential
-          pip install -r $model_mgmt_test_req
+          echo $conda_env_prefix
+          conda env create -p $conda_env_prefix -f $model_mgmt_conda_yaml -q
+          echo "conda env successfully created at $conda_env_prefix"
+          conda list -p $conda_env_prefix
 
       - name: Copy dir
         run: |
@@ -52,7 +58,7 @@ jobs:
           ls -l $model_mgmt_unittests_dir
 
       - name: Execute tests
-        run: python -m pytest $model_mgmt_unittests_dir --tb=native --junitxml=$pytest_reports/test-result.xml -x -n 1 -ra --show-capture=no
+        run: conda run -p $conda_env_prefix python -m pytest $model_mgmt_unittests_dir --tb=native --junitxml=$pytest_reports/test-result.xml -x -n 1 -ra --show-capture=no
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2

@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.6
+version: 0.0.10
 name: llm_ingest_dataset_to_acs_basic
 display_name: LLM - Dataset to ACS Pipeline
 is_deterministic: false
@@ -118,7 +118,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.8'
+    component: 'azureml:llm_rag_validate_deployments:0.0.9'
     identity:
       type: user_identity
     inputs:
@@ -165,7 +165,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_create_promptflow:0.0.17'
+    component: 'azureml:llm_rag_create_promptflow:0.0.18'
     inputs:
       mlindex_asset_id: ${{parent.jobs.register_mlindex_asset_job.outputs.asset_id}}
       mlindex_name: ${{parent.inputs.embeddings_dataset_name}}
@@ -174,7 +174,7 @@ jobs:
       embedding_connection: ${{parent.inputs.embedding_connection}}
       embeddings_model: ${{parent.inputs.embeddings_model}}
   ############
-  embeddings_parallel_job:
+  embeddings_job:
     type: command
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
@@ -182,13 +182,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    retry_settings:
-      timeout: 600
-      max_retries: 3
-    mini_batch_size: "3"
-    mini_batch_error_threshold: 0
-    logging_level: "INFO"
-    component: 'azureml:llm_rag_generate_embeddings_parallel:0.0.8'
+    component: 'azureml:llm_rag_generate_embeddings:0.0.3'
     inputs:
       chunks_source:
         type: uri_folder
@@ -202,6 +196,34 @@ jobs:
     environment_variables:
        AZUREML_WORKSPACE_CONNECTION_ID_AOAI : ${{parent.inputs.embedding_connection}}
   ############
+  # embeddings_parallel_job:
+  #   type: command
+  #   resources:
+  #     instance_count: ${{parent.inputs.serverless_instance_count}}
+  #     instance_type: ${{parent.inputs.serverless_instance_type}}
+  #     properties:
+  #       compute_specification:
+  #         automatic: true
+  #   retry_settings:
+  #     timeout: 3600
+  #     max_retries: 3
+  #   mini_batch_size: "3"
+  #   mini_batch_error_threshold: 0
+  #   logging_level: "INFO"
+  #   component: 'azureml:llm_rag_generate_embeddings_parallel:0.0.10'
+  #   inputs:
+  #     chunks_source:
+  #       type: uri_folder
+  #       path: ${{parent.jobs.data_chunking_job.outputs.output_chunks}}
+  #     embeddings_container: ${{parent.inputs.embeddings_container}}
+  #     embeddings_model: ${{parent.inputs.embeddings_model}}
+  #     deployment_validation: ${{parent.jobs.validate_deployments_job.outputs.output_data}}
+  #   outputs:
+  #     embeddings:
+  #       type: uri_folder
+  #   environment_variables:
+  #      AZUREML_WORKSPACE_CONNECTION_ID_AOAI : ${{parent.inputs.embedding_connection}}
+  ############
   create_acs_index_job:
     type: command
     resources:
@@ -214,7 +236,7 @@ jobs:
     inputs:
       embeddings:
         type: uri_folder
-        path: ${{parent.jobs.embeddings_parallel_job.outputs.embeddings}}
+        path: ${{parent.jobs.embeddings_job.outputs.embeddings}}
       acs_config: ${{parent.inputs.acs_config}}
     outputs:
       index: ${{parent.outputs.acs_index}}

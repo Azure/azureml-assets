@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.8
+version: 0.0.10
 
 # Pipeline inputs
 inputs:
@@ -172,12 +172,12 @@ outputs:
     type: mlflow_model
 
   model_registration_details:
-    description: Output file which captures transformations applied above and registration details in JSON file
-    type: uri_file
+    description: Output folder with a file which captures transformations applied above and registration details in JSON file
+    type: uri_folder
 
 jobs:
   download_model:
-    component: azureml:download_model:0.0.7
+    component: azureml:download_model:0.0.9
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -191,7 +191,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.9
+    component: azureml:convert_model_to_mlflow:0.0.11
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -216,7 +216,7 @@ jobs:
         type: uri_file
 
   mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.2
+    component: azureml:mlflow_model_local_validation:0.0.3
     compute: ${{parent.inputs.local_validation_compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -228,7 +228,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml:register_model:0.0.5
+    component: azureml:register_model:0.0.6
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -245,7 +245,7 @@ jobs:
       model_path: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
       model_import_job_path: ${{parent.jobs.convert_model_to_mlflow.outputs.model_import_job_path}}
     outputs:
-      registration_details: ${{parent.outputs.model_registration_details}}
+      registration_details_folder: ${{parent.outputs.model_registration_details}}
 
 tags:
     Preview: ""

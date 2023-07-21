@@ -6,7 +6,7 @@ tags:
 
 name: llm_ingest_db_to_acs
 display_name: LLM - SQL Datastore to ACS Pipeline
-version: 0.0.5
+version: 0.0.7
 
 description: Single job pipeline to chunk data from AzureML sql data store, and create ACS embeddings index
 
@@ -115,28 +115,48 @@ jobs:
     component: azureml:llm_dbcopilot_grounding:0.0.5
     type: command
   generate_meta_embeddings:
+    type: command
     resources:
       instance_count: ${{parent.inputs.serverless_instance_count}}
       instance_type: ${{parent.inputs.serverless_instance_type}}
       properties:
         compute_specification:
           automatic: true
-    retry_settings:
-      timeout: 600
-      max_retries: 3
-    environment_variables:
-      AZUREML_WORKSPACE_CONNECTION_ID_AOAI: ${{parent.inputs.embedding_connection}}
+    component: 'azureml:llm_rag_generate_embeddings:0.0.2'
     inputs:
       chunks_source:
+        type: uri_folder
         path: ${{parent.jobs.db_meta_loading_generator.outputs.output_chunk_file}}
-      embeddings_model:
-        path: ${{parent.inputs.embeddings_model}}
+      embeddings_model: ${{parent.inputs.embeddings_model}}
     outputs:
       embeddings:
         mode: upload
         type: uri_folder
-    component: azureml:llm_rag_generate_embeddings_parallel:0.0.8
-    type: parallel
+    environment_variables:
+       AZUREML_WORKSPACE_CONNECTION_ID_AOAI : ${{parent.inputs.embedding_connection}}
+  # generate_meta_embeddings:
+  #   resources:
+  #     instance_count: ${{parent.inputs.serverless_instance_count}}
+  #     instance_type: ${{parent.inputs.serverless_instance_type}}
+  #     properties:
+  #       compute_specification:
+  #         automatic: true
+  #   retry_settings:
+  #     timeout: 3600
+  #     max_retries: 3
+  #   environment_variables:
+  #     AZUREML_WORKSPACE_CONNECTION_ID_AOAI: ${{parent.inputs.embedding_connection}}
+  #   inputs:
+  #     chunks_source:
+  #       path: ${{parent.jobs.db_meta_loading_generator.outputs.output_chunk_file}}
+  #     embeddings_model:
+  #       path: ${{parent.inputs.embeddings_model}}
+  #   outputs:
+  #     embeddings:
+  #       mode: upload
+  #       type: uri_folder
+  #   component: azureml:llm_rag_generate_embeddings_parallel:0.0.9
+  #   type: parallel
   create_meta_acs_index_job:
     environment_variables:
       AZUREML_WORKSPACE_CONNECTION_ID_AOAI: ${{parent.inputs.embedding_connection}}
