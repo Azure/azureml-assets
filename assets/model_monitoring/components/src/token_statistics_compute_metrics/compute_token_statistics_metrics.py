@@ -1,6 +1,12 @@
 import uuid
 from pyspark.sql.functions import col, udf, sum, avg, percentile_approx, min, count, lit
 from pyspark.sql.types import StringType
+from pyspark.context import SparkContext
+from pyspark.sql.session import SparkSession
+
+# Init spark session
+sc = SparkContext.getOrCreate()
+spark = SparkSession(sc)
 
 def impute_ids_for_failed_calls(token_df):
     """Impute ids for failed calls
@@ -43,28 +49,28 @@ def check_data_quality(token_df):
     ]
 
     if set(expected_columns).issubset(token_df.columns) == False:
-        print(f"token_df columns are not as expected. Expected: {expected_columns}, ")
+        print(f"Error: token_df columns are not as expected. Expected: {expected_columns}, ")
         print(f"Actual: {token_df.columns}")
-        return 
+        return spark.createDataFrame([], token_df.schema)
 
     # check that status_code, id and node_id column has no null values
     null_status_code_count =  token_df.filter(token_df["status_code"].isNull()).count()
     if null_status_code_count != 0:
-        print(f"token_df contains {null_status_code_count} null values in status_code column")
+        print(f"Error: token_df contains {null_status_code_count} null values in status_code column")
         print(f"filtering out the rows with null status_code")
         # filter out the rows with null status_code
         token_df = token_df.filter(token_df["status_code"].isNotNull())
         
     null_id_count =  token_df.filter(token_df["id"].isNull()).count()
     if null_id_count != 0:
-        print(f"token_df contains {null_id_count} null values in id column")
+        print(f"Error: token_df contains {null_id_count} null values in id column")
         print(f"filtering out the rows with null id")
         # filter out the rows with null id
         token_df = token_df.filter(token_df["id"].isNotNull())
     
     null_node_id_count =  token_df.filter(token_df["node_id"].isNull()).count()
     if null_node_id_count != 0:
-        print(f"token_df contains {null_node_id_count} null values in node_id column")
+        print(f"Error: token_df contains {null_node_id_count} null values in node_id column")
         print(f"filtering out the rows with null node_id")
         # filter out the rows with null node_id
         token_df = token_df.filter(token_df["node_id"].isNotNull())
@@ -77,7 +83,7 @@ def check_data_quality(token_df):
             token_df[column].isNull()
         ).count()
         if null_count != 0:
-            print(f"token_df contains {null_count} null values in {column} column for rows where status_code is 200")
+            print(f"Error: token_df contains {null_count} null values in {column} column for rows where status_code is 200")
             print(f"filtering out the rows with null {column}")
             # filter out the rows with null column
             token_df = token_df.filter(token_df[column].isNotNull())
@@ -135,14 +141,31 @@ def compute_sum_df(token_df, columns, dimensions, metric_prefix=""):
 def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, ratio_metric_name, dimensions):
     '''
     Needs the metric df with columns group, group_pivot, metric_name, metric_value. 
+    The numerator_metric_df and denominator_metric_df should have the same number of rows. 
     Returns a metric df with columns group, group_pivot, metric_name, metric_value,
     where metric_name is the ratio_metric_name and 
     metric_value is the ratio of the metric_value of the numerator_metric_df to the metric_value of the denominator_metric_df
+    null metric_values in the numerator_metric_df are replaced with 0
     '''
+
+    # check if the numerator_metric_df has more number of rows as the denominator_metric_df
+    # this is the error case as we expect a denominator row for each numerator row
+    if numerator_metric_df.count() > denominator_metric_df.count():
+        print(f"Error: The number of rows in the numerator_metric_df is greater the number of rows in the denominator_metric_df")
+        print(f"numerator_metric_df count: {numerator_metric_df.count()}")
+        print(f"numerator_metric_df sample: {numerator_metric_df.take(10)}")
+        print(f"denominator_metric_df count: {denominator_metric_df.count()}")
+        print(f"denominator_metric_df sample: {denominator_metric_df.take(10)}")
+        return spark.createDataFrame([], numerator_metric_df.schema)
+
     ratio_df = numerator_metric_df.withColumnRenamed("metric_value","numerator")\
     .join(
-            denominator_metric_df.withColumnRenamed("metric_value","denominator"), on=dimensions, how="inner",
+            denominator_metric_df.withColumnRenamed("metric_value","denominator"), on=dimensions, how="rightouter",
         ).select(dimensions+["numerator","denominator"])
+
+    # if the numerator has null values then replace them with 0 
+    ratio_df = ratio_df.fillna(0, subset=["numerator"])
+
     ratio_df = ratio_df.withColumn(
             "metric_value",
             ratio_df["numerator"]
@@ -155,6 +178,17 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
     ratio_df = ratio_df.select(
             dimensions + ["metric_name", "metric_value"]
         )
+    
+    # Check that the number of rows in the ratio_df is same as the number of rows in the denominator_metric_df
+    # Else something wrong likely happened in the join
+    if ratio_df.count() != denominator_metric_df.count():
+        print(f"Error: The number of rows in the ratio_df is not same as the number of rows in the numerator_metric_df")
+        print(f"denominator_metric_df count: {denominator_metric_df.count()}")
+        print(f"denominator_metric_df sample: {denominator_metric_df.take(10)}")
+        print(f"ratio_df count: {ratio_df.count()}")
+        print(f"ratio_df sample: {ratio_df.take(10)}")
+        return
+    
     return ratio_df
 
 def compute_GPU_utilization_metrics(token_df):
@@ -256,9 +290,6 @@ def compute_GPU_waste_metrics(token_df):
         -- Sum of prompt_tokens, completion_tokens, total_tokens for calls with finish_reason as "length"
         -- Average of prompt_tokens, completion_tokens, total_tokens for calls with finish_reason as "length"
         -- %age of total tokens wasted due to truncation
-    - Waste due to unused reserved tokens
-        -- min, 1st percentile and 5th percentile of max_tokens-completion_tokens for calls with 200 status code
-        -- %age of reserved tokens wasted
     """
     # check if the token_df has the expected dimension columns
     dimensions=['group','group_pivot']
@@ -316,45 +347,6 @@ def compute_GPU_waste_metrics(token_df):
         dimensions=dimensions
     )
 
-    percentage_total_tokens_wasted_due_to_truncation = compute_percentage_metric_df(
-        numerator_metric_df=gpu_waste_sum_truncation,
-        denominator_metric_df=gpu_utilization_sum,
-        ratio_metric_name="percentage_total_tokens_wasted_due_to_truncation",
-        dimensions=dimensions
-    )
-
-    # Waste due to unused reserved tokens. 
-    # TODO: There are new developments in AOAI that mitigate some of this waste. Need to update this metric accordingly. 
-    tail_waste_due_to_unused_reserved_tokens = token_df.filter(token_df["status_code"] == 200).groupBy(dimensions)\
-        .agg(
-        min("unused_reserved_tokens").cast("float").alias("min_unused_reserved_tokens"), 
-        percentile_approx("unused_reserved_tokens", 0.01).cast("float").alias("1st_percentile_unused_reserved_tokens"),
-        percentile_approx("unused_reserved_tokens", 0.05).cast("float").alias("5th_percentile_unused_reserved_tokens")
-    ).selectExpr("group", "group_pivot", "stack(3, 'min_unused_reserved_tokens', min_unused_reserved_tokens,\
-                  '1st_percentile_unused_reserved_tokens', 1st_percentile_unused_reserved_tokens,\
-                  '5th_percentile_unused_reserved_tokens', 5th_percentile_unused_reserved_tokens) as (metric_name, metric_value)")
-
-    sum_waste_due_to_unused_reserved_tokens = compute_sum_df(
-        token_df=token_df,
-        columns=["unused_reserved_tokens"],
-        dimensions=dimensions,
-        metric_prefix="gpu_waste"
-    )
-
-    sum_reserved_tokens = compute_sum_df(
-        token_df=token_df,
-        columns=["max_tokens"],
-        dimensions=dimensions,
-        metric_prefix="reserved_tokens"
-    )
-
-    percentage_reserved_tokens_wasted = compute_percentage_metric_df(
-        numerator_metric_df=sum_waste_due_to_unused_reserved_tokens,
-        denominator_metric_df=sum_reserved_tokens,
-        ratio_metric_name="percentage_reserved_tokens_wasted",
-        dimensions=dimensions
-    )
-
     # Union all the metric dfs
     gpu_waste_metrics = calls_wasted_due_to_truncation.unionAll(
         percentage_calls_wasted_due_to_truncation
@@ -362,15 +354,6 @@ def compute_GPU_waste_metrics(token_df):
         gpu_waste_sum_truncation
     ).unionAll(
         gpu_waste_avg_truncation
-    ).unionAll(
-        percentage_total_tokens_wasted_due_to_truncation
-    ).unionAll(
-        tail_waste_due_to_unused_reserved_tokens
-    ).unionAll(
-        sum_waste_due_to_unused_reserved_tokens
-    ).unionAll(
-        sum_reserved_tokens
-    ).unionAll(
-        percentage_reserved_tokens_wasted
     )
+
     return gpu_waste_metrics

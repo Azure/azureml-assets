@@ -11,9 +11,14 @@ from shared_utilities.io_utils import (
 )
 from pyspark.sql.functions import lit
 from compute_token_statistics_metrics import *
+from pyspark.context import SparkContext
+from pyspark.sql.session import SparkSession
 
 def run():
-    spark = init_spark()
+    # Init spark session
+    sc = SparkContext.getOrCreate()
+    spark = SparkSession(sc)
+
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--token_dataset", type=str)
@@ -44,22 +49,17 @@ def run():
     token_df = token_df.withColumn("total_tokens",\
                                     token_df["prompt_tokens"] + token_df["completion_tokens"])
 
-    # unused reserved tokens = max tokens - completion tokens
-    token_df = token_df.withColumn("unused_reserved_tokens",\
-                                    token_df["max_tokens"] - token_df["completion_tokens"])
-
-   
 
     # compute GPU utilization metrics for group
     ## create a copy of token_df where group_pivot is set to Aggregate
-    token_df_null_group_pivot = token_df.withColumn("group_pivot", lit('Aggregate').cast("string"))
+    token_df_aggregate_group_pivot = token_df.withColumn("group_pivot", lit('Aggregate').cast("string"))
     ## compute GPU utilization metrics for group
-    gpu_utilization_metrics_group_only = compute_GPU_utilization_metrics(token_df_null_group_pivot)
+    gpu_utilization_metrics_group_only = compute_GPU_utilization_metrics(token_df_aggregate_group_pivot)
     ## compute GPU waste metrics for group
     ## These metrics are computed if we have max_tokens and finish_reason in the dataset
     gpu_waste_metrics_group_only = spark.createDataFrame([], gpu_utilization_metrics_group_only.schema)
-    if ("finish_reason" in token_df_null_group_pivot.columns) and ("max_tokens" in token_df_null_group_pivot.columns):
-        gpu_waste_metrics_group_only = compute_GPU_waste_metrics(token_df_null_group_pivot)
+    if ("finish_reason" in token_df_aggregate_group_pivot.columns) and ("max_tokens" in token_df_aggregate_group_pivot.columns):
+        gpu_waste_metrics_group_only = compute_GPU_waste_metrics(token_df_aggregate_group_pivot)
 
     gpu_utilization_metrics = spark.createDataFrame([], gpu_utilization_metrics_group_only.schema)
     gpu_waste_metrics = spark.createDataFrame([], gpu_utilization_metrics_group_only.schema)
