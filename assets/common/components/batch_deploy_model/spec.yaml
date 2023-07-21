@@ -14,7 +14,7 @@ environment: azureml://registries/azureml/environments/python-sdk-v2/versions/6
 code: ../../src
 command: >-
   python batch_deploy.py
-  $[[--registration_details ${{inputs.registration_details}}]]
+  $[[--registration_details_folder ${{inputs.registration_details_folder}}]]
   $[[--model_id ${{inputs.model_id}}]]
   $[[--inference_payload_file ${{inputs.inference_payload_file}}]]
   $[[--inference_payload_folder ${{inputs.inference_payload_folder}}]]
@@ -37,10 +37,10 @@ command: >-
 
 inputs:
   # Output of registering component
-  registration_details:
-    type: uri_file
+  registration_details_folder:
+    type: uri_folder
     optional: true
-    description: Json file that contains the ID of registered model to be deployed
+    description: Folder containing model registration details in a JSON file named model_registration_details.json
 
   model_id:
     type: string
