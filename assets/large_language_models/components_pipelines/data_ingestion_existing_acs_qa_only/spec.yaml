@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.6
+version: 0.0.7
 name: llm_ingest_existing_acs_qa_only
 display_name: LLM - Existing ACS Pipeline (Only Test Data)
 is_deterministic: false
@@ -132,7 +132,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.8'
+    component: 'azureml:llm_rag_validate_deployments:0.0.9'
     identity:
       type: user_identity
     inputs:
@@ -198,7 +198,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_qa_data_generation:0.0.10'
+    component: 'azureml:llm_rag_qa_data_generation:0.0.11'
     inputs:
       openai_api_version: ${{parent.inputs.openai_api_version}}
       openai_api_type: ${{parent.inputs.openai_api_type}}
@@ -233,7 +233,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_create_promptflow:0.0.17'
+    component: 'azureml:llm_rag_create_promptflow:0.0.18'
     inputs:
       mlindex_asset_id: ${{parent.jobs.register_mlindex_asset_job.outputs.asset_id}}
       mlindex_name: ${{parent.inputs.embeddings_dataset_name}}
