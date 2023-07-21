@@ -141,9 +141,9 @@ def main(args, ws, current_run, activity_logger: Logger):
     completion_connection_name = get_connection_name(
         args.llm_connection_name)
     completion_config = json.loads(args.llm_config)
-    completion_model_name = completion_config.get("model_name")
+    completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
     completion_deployment_name = completion_config.get(
-        "deployment_name")
+        "deployment_name", "gpt-35-turbo")
     embedding_connection_name = get_connection_name(
         args.embedding_connection)
     if (completion_connection_name == "azureml-rag-default-aoai" and

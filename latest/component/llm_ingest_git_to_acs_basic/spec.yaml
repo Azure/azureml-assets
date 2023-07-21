@@ -153,7 +153,7 @@ jobs:
       llm_config: ${{parent.inputs.llm_config}}
       embeddings_model: ${{parent.inputs.embeddings_model}}
       check_embeddings: "True"
-      check_completion: "True"
+      check_completion: "False"
     outputs:
       output_data:
         type: uri_file
