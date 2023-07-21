@@ -34,9 +34,9 @@ def run():
     token_df = token_df.withColumnRenamed("node_id", "group")
 
     #  designate the group_pivot column 
-    #  if group_pivot_column_name is null, then add a column with null values
+    #  if group_pivot_column_name is null, then add a column with value Not Provided
     if group_pivot_column_name is None:
-        token_df = token_df.withColumn("group_pivot", lit(None).cast("string"))
+        token_df = token_df.withColumn("group_pivot", lit('Not Provided').cast("string"))
     else:
         token_df = token_df.withColumnRenamed(group_pivot_column_name, "group_pivot")
 
@@ -51,8 +51,8 @@ def run():
    
 
     # compute GPU utilization metrics for group
-    ## create a copy of token_df where group_pivot is set to null
-    token_df_null_group_pivot = token_df.withColumn("group_pivot", lit(None).cast("string"))
+    ## create a copy of token_df where group_pivot is set to Aggregate
+    token_df_null_group_pivot = token_df.withColumn("group_pivot", lit('Aggregate').cast("string"))
     ## compute GPU utilization metrics for group
     gpu_utilization_metrics_group_only = compute_GPU_utilization_metrics(token_df_null_group_pivot)
     ## compute GPU waste metrics for group

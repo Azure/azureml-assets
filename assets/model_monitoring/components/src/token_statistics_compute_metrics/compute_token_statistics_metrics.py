@@ -97,7 +97,7 @@ def compute_conditional_counts_df(token_df, dimensions, condition_column, condit
     count('*').cast("float").alias("metric_value"),
     )
 
-def compute_avg_df(token_df, columns, dimensions):
+def compute_avg_df(token_df, columns, dimensions, metric_prefix=""):
     '''
     Needs the token_df with columns dimensions, columns
     Returns a metric df with columns group, group_pivot, metric_name, metric_value
@@ -109,12 +109,12 @@ def compute_avg_df(token_df, columns, dimensions):
     # restrict the token_df to only expected columns
     token_df = token_df.select(dimensions + columns + ['status_code'])
     
-    avg_columns = [avg(col).cast("float").alias(f"avg_{col}") for col in columns]
-    stack_columns = ["'avg_" + col + "', avg_" + col for col in columns]
+    avg_columns = [avg(col).cast("float").alias(f"{metric_prefix}_avg_{col}") for col in columns]
+    stack_columns = ["'"+ metric_prefix +"_avg_" + col + "', " + metric_prefix + "_avg_" + col for col in columns]
     stack_expr = "stack(" + str(len(columns)) + ", " + ", ".join(stack_columns) + ") as (metric_name, metric_value)"
     return token_df.filter(token_df["status_code"] == 200).groupBy(dimensions).agg(*avg_columns).selectExpr("group", "group_pivot", stack_expr)
 
-def compute_sum_df(token_df, columns, dimensions):
+def compute_sum_df(token_df, columns, dimensions, metric_prefix=""):
     '''
     Needs the token_df with columns dimensions, columns
     Returns a metric df with columns group, group_pivot, metric_name, metric_value
@@ -126,8 +126,8 @@ def compute_sum_df(token_df, columns, dimensions):
     # restrict the token_df to only expected columns
     token_df = token_df.select(dimensions + columns + ['status_code'])
 
-    sum_columns = [sum(col).cast("float").alias(f"sum_{col}") for col in columns]
-    stack_columns = ["'sum_" + col + "', sum_" + col for col in columns]
+    sum_columns = [sum(col).cast("float").alias(f"{metric_prefix}_sum_{col}") for col in columns]
+    stack_columns = ["'"+ metric_prefix +"_sum_" + col + "', " + metric_prefix + "_sum_" + col for col in columns]
     stack_expr = "stack(" + str(len(columns)) + ", " + ", ".join(stack_columns) + ") as (metric_name, metric_value)"
     return token_df.filter(token_df["status_code"] == 200).groupBy(dimensions).agg(*sum_columns).selectExpr("group", "group_pivot", stack_expr)
 
@@ -220,14 +220,16 @@ def compute_GPU_utilization_metrics(token_df):
     gpu_utilization_sum = compute_sum_df(
         token_df=token_df,
         columns=["prompt_tokens", "completion_tokens", "total_tokens"],
-        dimensions=dimensions
+        dimensions=dimensions,
+        metric_prefix="gpu_utilization"
     )
     
 
     gpu_utilization_avg = compute_avg_df(
         token_df=token_df,
         columns=["prompt_tokens", "completion_tokens", "total_tokens"],
-        dimensions=dimensions
+        dimensions=dimensions,
+        metric_prefix="gpu_utilization"
     )
     
     # Union all the metric dfs
@@ -292,17 +294,19 @@ def compute_GPU_waste_metrics(token_df):
         dimensions=dimensions
     )
     
-    # Waste due to truncation
+    # Waste due to truncation of response. This happens when the max_tokens is set to a value so small that the response is truncated. 
     gpu_waste_sum_truncation = compute_sum_df(
         token_df=token_df,
         columns=["prompt_tokens", "completion_tokens", "total_tokens"],
-        dimensions=dimensions
+        dimensions=dimensions,
+        metric_prefix="gpu_waste_due_to_response_truncation"
     )
     
     gpu_waste_avg_truncation = compute_avg_df(
         token_df=token_df,
         columns=["prompt_tokens", "completion_tokens", "total_tokens"],
-        dimensions=dimensions
+        dimensions=dimensions,
+        metric_prefix="gpu_waste_due_to_response_truncation"
     )
     
     # GPU utlization for the successful calls
@@ -319,7 +323,8 @@ def compute_GPU_waste_metrics(token_df):
         dimensions=dimensions
     )
 
-    # Waste due to unused reserved tokens
+    # Waste due to unused reserved tokens. 
+    # TODO: There are new developments in AOAI that mitigate some of this waste. Need to update this metric accordingly. 
     tail_waste_due_to_unused_reserved_tokens = token_df.filter(token_df["status_code"] == 200).groupBy(dimensions)\
         .agg(
         min("unused_reserved_tokens").cast("float").alias("min_unused_reserved_tokens"), 
@@ -332,13 +337,15 @@ def compute_GPU_waste_metrics(token_df):
     sum_waste_due_to_unused_reserved_tokens = compute_sum_df(
         token_df=token_df,
         columns=["unused_reserved_tokens"],
-        dimensions=dimensions
+        dimensions=dimensions,
+        metric_prefix="gpu_waste"
     )
 
     sum_reserved_tokens = compute_sum_df(
         token_df=token_df,
         columns=["max_tokens"],
-        dimensions=dimensions
+        dimensions=dimensions,
+        metric_prefix="reserved_tokens"
     )
 
     percentage_reserved_tokens_wasted = compute_percentage_metric_df(
