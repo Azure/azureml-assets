@@ -61,3 +61,9 @@ class ODLiterals:
     TOP_Y = "topY"
     BOTTOM_X = "bottomX"
     BOTTOM_Y = "bottomY"
+
+
+class ISLiterals(ODLiterals):
+    """IS constants."""
+
+    POLYGON = "polygon"
