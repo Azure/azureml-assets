@@ -190,6 +190,7 @@ def invoke_endpoint_job(ml_client, endpoint, type, args):
         )
 
         ml_client.jobs.stream(job.name)
+        logger.info(f"Endpoint invoked successfully with {type} test payload.")
 
         scoring_job = list(ml_client.jobs.list(parent_job_name=job.name))[0]
 
@@ -197,7 +198,7 @@ def invoke_endpoint_job(ml_client, endpoint, type, args):
             name=scoring_job.name, download_path=args.batch_job_output_folder, output_name="score"
         )
 
-        logger.info(f"Endpoint invoked successfully with {type} test payload. Output stored in {args.output_file_name} file.")
+        logger.info(f"Output stored in {args.output_file_name} file.")
     except Exception as e:
         raise AzureMLException._with_error(
             AzureMLError.create(BatchEndpointInvocationError, exception=e)
