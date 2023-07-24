@@ -133,7 +133,11 @@
               ],
               "name": "input"
             }
-          }
+          },
+          "description": "Use Open AI's embedding model to create an embedding vector representing the input text.",
+          "module": "promptflow.tools.embedding",
+          "function": "embedding",
+          "is_builtin": true
         },
         {
           "name": "Vector Search",
