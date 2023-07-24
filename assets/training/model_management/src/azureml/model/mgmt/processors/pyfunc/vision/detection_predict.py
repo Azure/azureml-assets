@@ -17,7 +17,7 @@ import pandas as pd
 import requests
 import torch
 from PIL import Image
-from config import Tasks, MMDetLiterals, MLFlowSchemaLiterals, ODLiterals, ISLiterals
+from config import Tasks, MMDetLiterals, MLflowSchemaLiterals, ODLiterals, ISLiterals
 
 try:
     from mmcv import concat_list
@@ -271,7 +271,7 @@ class ImagesDetectionMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :rtype: Pandas DataFrame with columns ["boxes"] for object detection
         """
         # process the images in image column
-        processed_images = input_data.loc[:, [MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
+        processed_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
             axis=1, func=_process_image
         )
 
