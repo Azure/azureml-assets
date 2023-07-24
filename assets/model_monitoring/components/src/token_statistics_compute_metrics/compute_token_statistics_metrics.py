@@ -267,19 +267,14 @@ def compute_GPU_utilization_metrics(token_df):
     )
     
     # Union all the metric dfs
-    gpu_utilization_metrics = call_counts.unionAll(
-        calls_failed_due_to_overload
-    ).unionAll(
-        percent_calls_failed_due_to_overload
-    ).unionAll(
-        calls_succeeded
-    ).unionAll(
-        percentage_calls_succeeded
-    ).unionAll(
-        gpu_utilization_sum
-    ).unionAll(
-        gpu_utilization_avg
-    )
+    gpu_utilization_metrics = call_counts\
+    .unionAll(calls_failed_due_to_overload)\
+    .unionAll(percent_calls_failed_due_to_overload)\
+    .unionAll(calls_succeeded)\
+    .unionAll(percentage_calls_succeeded)\
+    .unionAll(gpu_utilization_sum)\
+    .unionAll(gpu_utilization_avg)
+    
     return gpu_utilization_metrics
 
 def compute_GPU_waste_metrics(token_df):
@@ -348,12 +343,9 @@ def compute_GPU_waste_metrics(token_df):
     )
 
     # Union all the metric dfs
-    gpu_waste_metrics = calls_wasted_due_to_truncation.unionAll(
-        percentage_calls_wasted_due_to_truncation
-    ).unionAll(
-        gpu_waste_sum_truncation
-    ).unionAll(
-        gpu_waste_avg_truncation
-    )
+    gpu_waste_metrics = calls_wasted_due_to_truncation\
+    .unionAll(percentage_calls_wasted_due_to_truncation)\
+    .unionAll(gpu_waste_sum_truncation)\
+    .unionAll(gpu_waste_avg_truncation)
 
     return gpu_waste_metrics

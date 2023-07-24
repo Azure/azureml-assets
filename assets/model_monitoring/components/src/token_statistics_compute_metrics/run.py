@@ -4,25 +4,25 @@
 """Entry script for Annotation Metrics Computing Spark Component."""
 
 import argparse
+from pyspark.sql.functions import lit
+from pyspark.context import SparkContext
+from pyspark.sql.session import SparkSession
 from shared_utilities.io_utils import (
     read_mltable_in_spark,
     save_spark_df_as_mltable,
     init_spark,
 )
-from pyspark.sql.functions import lit
 from compute_token_statistics_metrics import *
-from pyspark.context import SparkContext
-from pyspark.sql.session import SparkSession
+
 
 def run():
     # Init spark session
-    sc = SparkContext.getOrCreate()
-    spark = SparkSession(sc)
+    spark = init_spark()
 
     # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("--token_dataset", type=str)
-    parser.add_argument("--group_pivot_column_name", type=str)
+    parser.add_argument("--group_pivot_column_name", type=str, required=False, nargs="?")
     parser.add_argument("--signal_metrics", type=str)
 
     args = parser.parse_args()
@@ -41,7 +41,7 @@ def run():
     #  designate the group_pivot column 
     #  if group_pivot_column_name is null, then add a column with value Not Provided
     if group_pivot_column_name is None:
-        token_df = token_df.withColumn("group_pivot", lit('Not Provided').cast("string"))
+        token_df = token_df.withColumn("group_pivot", lit('').cast("string"))
     else:
         token_df = token_df.withColumnRenamed(group_pivot_column_name, "group_pivot")
 
@@ -83,6 +83,7 @@ def run():
 
     # Save metrics in default blob store and log it in active run
     save_spark_df_as_mltable(GPU_token_stats_metrics, args.signal_metrics)
+    
 
 if __name__ == "__main__":
     run()
