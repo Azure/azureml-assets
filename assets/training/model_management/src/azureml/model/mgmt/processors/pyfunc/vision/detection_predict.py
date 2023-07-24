@@ -19,12 +19,6 @@ import torch
 from PIL import Image
 from config import Tasks, MMDetLiterals, MLflowSchemaLiterals, ODLiterals, ISLiterals
 
-try:
-    from mmcv import concat_list
-    from mmdet.core.mask.structures import bitmap_to_polygon
-except ImportError as ex:
-    print(f"Import error: {ex}")
-
 
 def _create_temp_file(img: Image.Image, parent_dir: str) -> str:
     """Create temporory file, save image and return path to the file.
@@ -123,7 +117,7 @@ def _normalize_polygon(polygon: List[np.ndarray], image_size: Tuple[int, int]) -
             x = float(x) / image_size[0]
             y = float(y) / image_size[1]
             normalized_points.extend([x, y])
-        normalized_polygon.append(np.array(normalized_points))
+        normalized_polygon.append(normalized_points)
     return normalized_polygon
 
 
@@ -191,6 +185,9 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         :return: List of predictions having bounding boxes and masks.
         :rtype: List[Dict[str, List]]
         """
+        from mmcv import concat_list
+        from mmdet.core.mask.structures import bitmap_to_polygon
+
         predictions = []
         for (predicted_bbox, predicted_mask), image_size in zip(batch_predictions, image_sizes):
             if isinstance(predicted_mask, tuple):
