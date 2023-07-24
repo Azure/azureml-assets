@@ -43,6 +43,7 @@ DEFAULT_TIMEOUT = 500  # 500sec
 DEFAULT_LOGGING_LEVEL = "info"
 DEFAULT_MINI_BATCH_SIZE = 10
 DEFAULT_INSTANCE_COUNT = 1
+DEPLOYMENT_DETAILS_JSON_FILE_NAME = "model_deployment_details.json"
 
 
 logger = get_logger(__name__)
@@ -373,7 +374,7 @@ def main():
         "max_concurrency_per_instance": deployment.max_concurrency_per_instance,
     }
     json_object = json.dumps(deployment_details, indent=4)
-    file_path = str(args.batch_job_output_folder) + "/model_deployment_details.json"
+    file_path = args.batch_job_output_folder / DEPLOYMENT_DETAILS_JSON_FILE_NAME
     with open(file_path, "w") as outfile:
         outfile.write(json_object)
     logger.info("Saved deployment details in output json file.")
