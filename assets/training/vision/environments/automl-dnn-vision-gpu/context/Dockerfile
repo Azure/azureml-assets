@@ -14,7 +14,7 @@ ENV ENABLE_METADATA=true
 
 # Create conda environment
 COPY conda_dependencies.yaml .
-RUN conda create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
+RUN conda env create -p $AZUREML_CONDA_ENVIRONMENT_PATH -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH && \
     conda clean -a -y
