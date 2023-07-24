@@ -213,6 +213,12 @@ def get_parser():
         help="Number of updates steps to accumulate the gradients for, before performing a backward/update pass",
     )
     parser.add_argument(
+        "--eval_accumulation_steps",
+        default=None,
+        type=int,
+        help="Number of predictions steps to accumulate before moving the tensors to the CPU.",
+    )
+    parser.add_argument(
         "--lr_scheduler_type",
         default="linear",
         type=str,
@@ -261,12 +267,6 @@ def get_parser():
         help=(
             "Maximum gradient norm (for gradient clipping)"
         ),
-    )
-    parser.add_argument(
-        "--eval_accumulation_steps",
-        default=None,
-        type=int,
-        help="Number of predictions steps to accumulate before moving the tensors to the CPU.",
     )
     parser.add_argument(
         "--evaluation_strategy", type=str, default="epoch", help="The evaluation strategy to adopt during training",
