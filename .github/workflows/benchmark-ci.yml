@@ -4,12 +4,12 @@ on:
     branches:
       - main
     paths:
-      - benchmark/**
+      - assets/benchmark/**
   pull_request_target:
     branches:
       - main
     paths:
-      - benchmark/**
+      - assets/benchmark/**
     types:
       - opened
       - labeled
@@ -44,7 +44,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: benchmark/
+        working-directory: assets/benchmark/
 
     steps:
     - name: Clone branch
@@ -76,12 +76,12 @@ jobs:
       uses: EnricoMi/publish-unit-test-result-action@v2
       with:
         check_name: Test Results for ${{ github.workflow }}
-        files: benchmark/test-build-result.xml
+        files: assets/benchmark/test-build-result.xml
 
     - name: Code Coverage Summary Report
       uses: irongut/CodeCoverageSummary@v1.0.2
       with:
-        filename: benchmark/coverage.xml
+        filename: assets/benchmark/coverage.xml
         badge: true
         format: markdown
         output: both
@@ -109,7 +109,7 @@ jobs:
       
     defaults:
       run:
-        working-directory: benchmark/
+        working-directory: assets/benchmark/
 
     env:
       scripts_setup_dir: scripts/setup

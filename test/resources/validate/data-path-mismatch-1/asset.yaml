@@ -1,0 +1,4 @@
+name: ask-wikipedia             
+version: 1.0.0
+type: data              
+spec: spec.yaml

@@ -254,6 +254,7 @@ def validate_assets(input_dirs: List[Path],
                     asset_config_filename: str,
                     changed_files: List[Path] = None,
                     check_names: bool = False,
+                    check_names_skip_pattern: re.Pattern = None,
                     check_images: bool = False,
                     check_categories: bool = False) -> bool:
     """Validate assets.
@@ -263,6 +264,7 @@ def validate_assets(input_dirs: List[Path],
         asset_config_filename (str): Asset config filename to search for.
         changed_files (List[Path], optional): List of changed files, used to filter assets. Defaults to None.
         check_names (bool, optional): Whether to check asset names. Defaults to False.
+        check_names_skip_pattern (re.Pattern, optional): Regex pattern to skip name validation. Defaults to None.
         check_images (bool, optional): Whether to check image names. Defaults to False.
         check_categories (bool, optional): Whether to check asset categories. Defaults to False.
 
@@ -321,7 +323,10 @@ def validate_assets(input_dirs: List[Path],
         if validate_this:
             # Validate name
             if check_names:
-                error_count += validate_name(asset_config)
+                if check_names_skip_pattern is None or not check_names_skip_pattern.fullmatch(asset_config.full_name):
+                    error_count += validate_name(asset_config)
+                else:
+                    logger.log_debug(f"Skipping name validation for {asset_config.full_name}")
 
             # Validate categories
             if check_categories:
@@ -343,7 +348,7 @@ def validate_assets(input_dirs: List[Path],
                 if not assets.Config._contains_template(spec.version) and asset_config.version != spec.version:
                     raise ValidationException(f"Asset and spec version mismatch: {asset_config.version} != {spec.version}")  # noqa: E501
             except Exception as e:
-                _log_error(spec.file_name_with_path, e)
+                _log_error(asset_config.spec_with_path, e)
                 error_count += 1
 
     # Ensure unique assets
@@ -379,6 +384,8 @@ if __name__ == '__main__':
                         help="Check environment images")
     parser.add_argument("-C", "--check-categories", action="store_true",
                         help="Check asset categories")
+    parser.add_argument("-N", "--check-names-skip-pattern", type=re.compile,
+                        help="Regex pattern to skip name validation, in the format <type>/<name>/<version>")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
@@ -398,6 +405,7 @@ if __name__ == '__main__':
                               asset_config_filename=args.asset_config_filename,
                               changed_files=changed_files,
                               check_names=args.check_names,
+                              check_names_skip_pattern=args.check_names_skip_pattern,
                               check_images=args.check_images,
                               check_categories=args.check_categories)
     if not success:
