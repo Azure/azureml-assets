@@ -122,7 +122,7 @@ def _normalize_polygon(polygon: List[np.ndarray], image_size: Tuple[int, int]) -
 
 
 class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
-    """MLFlow model wrapper for Images Detection models."""
+    """MLflow model wrapper for Images Detection models."""
 
     def __init__(
         self,
