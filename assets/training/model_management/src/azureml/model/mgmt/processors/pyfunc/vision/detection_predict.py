@@ -108,6 +108,7 @@ def _is_valid_url(text: str) -> bool:
 
 def _normalize_polygon(polygon: List[np.ndarray], image_size: Tuple[int, int]) -> List[np.ndarray]:
     """Normalize polygon coordinates.
+
     :param polygon: List of un-normalized polygons. Each points in polygon is a list of x, y coordinates.
     :rtype: List[np.ndarray]
     :param image_size: Image size
@@ -147,6 +148,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         self, results: List[np.ndarray], image_sizes: List[Tuple[int, int]]
     ) -> List[Dict[str, List]]:
         """Post process object detection model results.
+
         :param results: List of numpy arrays containing bounding boxes, labels and scores.
         :type results: List[np.ndarray]
         :param image_sizes: List of image sizes.
@@ -181,6 +183,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         self, batch_predictions: List[Tuple[List[np.ndarray], List[np.ndarray]]], image_sizes: List[Tuple[int, int]]
     ) -> List[Dict[str, List]]:
         """Post process instance segmentation model results.
+
         :param batch_predictions: List of tuples containing bounding boxes and masks.
         :type batch_predictions: List[Tuple[List[np.ndarray], List[np.ndarray]]]
         :param image_sizes: List of image sizes.
