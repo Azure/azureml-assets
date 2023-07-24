@@ -163,9 +163,9 @@ def parse_args():
         choices=range(1, MAX_INSTANCE_COUNT),
     )
     parser.add_argument(
-        "--model_deployment_details",
-        type=str,
-        help="Json file to which deployment details will be written",
+        "--batch_job_output_folder",
+        type=Path,
+        help="Folder to which batch job outputs will be saved",
     )
     # parse args
     args = parser.parse_args()
@@ -194,10 +194,10 @@ def invoke_endpoint_job(ml_client, endpoint, type, args):
         scoring_job = list(ml_client.jobs.list(parent_job_name=job.name))[0]
 
         ml_client.jobs.download(
-            name=scoring_job.name, download_path=".", output_name="score"
+            name=scoring_job.name, download_path=args.batch_job_output_folder, output_name="score"
         )
 
-        logger.info(f"Endpoint invoked successfully with {type} test payload.")
+        logger.info(f"Endpoint invoked successfully with {type} test payload. Output stored in {args.output_file_name} file.")
     except Exception as e:
         raise AzureMLException._with_error(
             AzureMLError.create(BatchEndpointInvocationError, exception=e)
@@ -205,7 +205,7 @@ def invoke_endpoint_job(ml_client, endpoint, type, args):
 
 
 def get_or_create_compute(ml_client, compute_name, args):
-    """Get or create the compute cluster."""
+    """Get or create the compute cluster and return details."""
     try:
         compute_cluster = ml_client.compute.get(compute_name)
         logger.info(f"Using compute cluster {compute_name}.")
@@ -372,7 +372,8 @@ def main():
         "max_concurrency_per_instance": deployment.max_concurrency_per_instance,
     }
     json_object = json.dumps(deployment_details, indent=4)
-    with open(args.model_deployment_details, "w") as outfile:
+    file_path = str(args.batch_job_output_folder) + "/model_deployment_details.json"
+    with open(file_path, "w") as outfile:
         outfile.write(json_object)
     logger.info("Saved deployment details in output json file.")
 

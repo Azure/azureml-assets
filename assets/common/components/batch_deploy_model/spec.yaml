@@ -33,7 +33,7 @@ command: >-
   $[[--logging_level ${{inputs.logging_level}}]]
   $[[--mini_batch_size ${{inputs.mini_batch_size}}]]
   $[[--instance_count ${{inputs.instance_count}}]]
-  --model_deployment_details ${{outputs.model_deployment_details}}
+  --batch_job_output_folder ${{outputs.batch_job_output_folder}}
 
 inputs:
   # Output of registering component
@@ -188,9 +188,9 @@ inputs:
     description: The number of nodes to use for each batch scoring job.
 
 outputs:
-  model_deployment_details:
-    type: uri_file
-    description: Json file to which deployment details will be written
+  batch_job_output_folder:
+    type: uri_folder
+    description: Folder to which batch job outputs will be saved.
 
 tags:
     Preview: ""
