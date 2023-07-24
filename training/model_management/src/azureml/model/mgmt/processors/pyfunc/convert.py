@@ -48,7 +48,7 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
         [ColSpec(MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE)]
     )
 
-    if task_type == Tasks.MM_OBJECT_DETECTION.value:
+    if task_type in [Tasks.MM_OBJECT_DETECTION.value, Tasks.MM_INSTANCE_SEGMENTATION.value]:
         output_schema = Schema(
             [
                 ColSpec(MLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, MLFlowSchemaLiterals.OUTPUT_COLUMN_BOXES),
