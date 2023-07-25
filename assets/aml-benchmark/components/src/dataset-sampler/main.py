@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 
 class SamplingStyle(Enum):
     """Enum for sampling style."""
-    
+
     head: str = "head"
     tail: str = "tail"
     random: str = "random"
@@ -167,7 +167,7 @@ def sample_from_random(
 def main(args: argparse.Namespace) -> None:
     """
     Entry function for Dataset Sampler Component.
-    
+
     :param args: Command-line arguments
     :return: None
     """

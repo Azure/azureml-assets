@@ -14,13 +14,14 @@ env:
   conda_env_prefix: /opt/conda/envs/aml_benchmark
   aml_benchmark_src_dir: assets/aml-benchmark/components/src
   aml_benchmark_conda_yaml: assets/aml-benchmark/dev_conda_env.yaml
-  pytest_reports: pytest-reports
+  pytest_report_folder: pytest-reports
+  pytest_report_file: test-result.xml
 
 jobs:
   check-execution-context:
     uses: Azure/azureml-assets/.github/workflows/check-execution-context.yaml@main
 
-  run_tests:
+  run-tests:
     name: Run AML Benchmark Tests
     runs-on: ubuntu-latest
     needs: check-execution-context
@@ -68,7 +69,7 @@ jobs:
         run: cd $aml_benchmark_src_dir
 
       - name: Execute tests
-        run: conda run -p $conda_env_prefix python -m pytest ../../tests --tb=native --junitxml=$pytest_reports/test-result.xml -x -n 8 -ra --show-capture=no
+        run: conda run -p $conda_env_prefix python -m pytest ../../tests --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} --tb=native -o log_level=DEBUG -n 8
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -80,4 +81,4 @@ jobs:
         if: always()
         with:
           check_name: Test Results for ${{ github.workflow }}
-          junit_files: ${{ env.pytest_reports }}/**/*.xml
+          junit_files: ${{ env.pytest_report_folder }}/**/*.xml
