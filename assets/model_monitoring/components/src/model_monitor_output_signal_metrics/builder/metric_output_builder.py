@@ -12,41 +12,50 @@ class MetricOutputBuilder:
 
     def __init__(self, metrics: List[Row]):
         """Construct a MetricOutputBuilder instance."""
+        self.metrics_dict = self._build(metrics)
+    
+    def get_metrics_dict(self) -> dict:
+        """Get the metrics object."""
+        return self.metrics_dict
+    
+    def _build(self, metrics: List[Row]) -> dict:
         metrics_dict = {}
         for metric in metrics:
             metric_name = metrics["metric_name"]
-            node_id = metric["group"]
 
-            if "Aggregate" in metric["group_pivot"]:
-                # Add an aggregate metric.
+            group_names = []
+            if "group" in metric:
+                node_id = metric["group"]
+                group_names.Append(node_id)
+
+                if metric["group_pivot"] != "Aggregate":
+                    group_pivot = metric["group_pivot"] # Null case?
+                    group_names.Append(group_pivot)
+
                 new_metric = {
-                    node_id: {
-                        "value": metric["metric_value"],
-                        "threshold": metric["metric_threshold"],
-                    }
+                    "value": metric["metric_value"],
+                    "threshold": metric["metric_threshold"],
                 }
-                if metric_name in metrics_dict:
-                    metrics_dict[metric_name].update(new_metric)
-                else:
-                    metrics_dict[metric_name] = new_metric
+                self._add_metric(metrics_dict, metric_name, new_metric, group_names)
             else:
-                # Add a group-scoped metric.
-                # TODO: Support nested groups.
-                group_pivot = metric["group_pivot"]
-                new_group_metric = {
-                    metric["group_pivot"]: {
-                        "value": metric["metric_value"],
-                        "threshold": metric["metric_threshold"],
-                    }
-                }
+                print(f"Error: metric {metric_name} contains null values in node_id column.")
+                continue
 
-                if metric_name in metrics_dict and node_id in metrics_dict[metric_name]:
-                    metrics_dict[metric_name][node_id].update(new_group_metric)
-                else:
-                    metrics_dict[metric_name][node_id] = new_group_metric
+        return metrics_dict
+    
+    def _add_metric(self, metrics_dict: dict, metric_name: str, metric: dict, group_names: list[str]):
+        if metric_name not in metrics_dict:
+            metrics_dict[metric_name] = {}
 
-        self.metric_dict = metrics_dict
-
-    def get_metrics_object(self) -> dict:
-        """Get the metrics object."""
-        return self.metric_dict
+        cur_dict = metrics_dict
+        for group_name, idx in enumerate(group_names):
+            if idx < len(groups) - 1:
+                if group_name not in cur_dict:
+                    cur_dict[group_name] = {}
+                cur_dict = cur_dict[group_name]
+            
+            if group_name in cur_dict:
+                # this should not happend
+                raise "duplicate metrics exception"
+            else:
+                cur_dict[group_name] = metric
