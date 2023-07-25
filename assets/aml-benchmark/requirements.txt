@@ -1,0 +1,10 @@
+pytest
+pytest-xdist
+azure-ai-ml
+mlflow
+azureml-mlflow
+mltable
+azureml-dataprep[pandas]
+azure-identity
+azureml-telemetry
+azureml-core

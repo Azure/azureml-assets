@@ -1,0 +1,19 @@
+channels:
+- conda-forge
+dependencies:
+- python=3.8.0
+- pip<=23.1.2
+- pip:
+  ## src requirements
+  - mlflow~=2.3.1
+  - azureml-mlflow~=1.51.0
+  - azure-ai-ml~=1.8.0
+  - azure-identity~=1.13.0
+  - azureml-core~=1.52.0
+  - azureml-telemetry~=1.52.0
+  - mltable
+  - azureml-dataprep[pandas]
+  ## Test requirements
+  - pytest
+  - pytest-xdist
+name: aml_benchmark
