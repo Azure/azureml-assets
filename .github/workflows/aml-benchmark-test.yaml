@@ -52,10 +52,10 @@ jobs:
         run: |
           set -ex
           apt-get update && apt-get upgrade && apt-get install -y build-essential
-          echo $conda_env_prefix
-          conda env create -p $conda_env_prefix -f $aml_benchmark_conda_yaml -q
-          echo "conda env successfully created at $conda_env_prefix"
-          conda list -p $conda_env_prefix
+          echo ${{ env.conda_env_prefix }}
+          conda env create -p ${{ env.conda_env_prefix }} -f ${{ env.aml_benchmark_conda_yaml }} -q
+          echo "conda env successfully created at ${{ env.conda_env_prefix }}"
+          conda list -p ${{ env.conda_env_prefix }}
 
       - name: Log in to Azure and create resources
         uses: ./.github/actions/create-azure-resources
@@ -66,10 +66,14 @@ jobs:
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
       
       - name: Change directory to src directory
-        run: cd $aml_benchmark_src_dir
+        run: |
+          cd ${{ env.aml_benchmark_src_dir }}
+          pwd
 
       - name: Execute tests
-        run: conda run -p $conda_env_prefix python -m pytest ../../tests --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} --tb=native -o log_level=DEBUG -n 8
+        run: |
+          pwd
+          conda run -p ${{ env.conda_env_prefix }}python -m pytest ../../tests --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} --tb=native -o log_level=DEBUG -n 8
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
