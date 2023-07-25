@@ -259,7 +259,7 @@ outputs:
 
 code: ../src
 
-environment: azureml:AzureML-AutoML-DNN-Vision-GPU:115
+environment: azureml:automl-dnn-vision-gpu@latest
 
 command: >-
   python -m object_detection.run
