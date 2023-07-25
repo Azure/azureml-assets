@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Utility file for tests."""
+
 import os
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
@@ -68,6 +70,7 @@ def get_mlclient(registry_name: Union[str, None] = None) -> MLClient:
 def load_yaml_pipeline(file_name: str, base_path: str = "pipelines") -> Job:
     """
     Load the YAML pipeline and return the pipeline job.
+
     :param file_name: name of the file to load.
     :param base_path: name of the base path to load the file from.
 
@@ -85,7 +88,7 @@ def download_outputs(
     all: bool = False,
 ) -> None:
     """
-    Downloads outputs of the job.
+    Download outputs of the job.
 
     :param job_name: Name of a job.
     :type job_name: str

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Tests for Dataset Sampler Component."""
+
 from utils import load_yaml_pipeline, get_mlclient, Constants, download_outputs, get_mlflow_logged_params
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input

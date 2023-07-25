@@ -21,7 +21,7 @@ Inside the `aml-benchmark` directory, there are two subdirectories-
 
 # Before creating a PR, please make sure to do the following:
 
-## Run tests
+## 1. Run tests
 * create a `config.json` with your workspace details at the root of this repository. The contents of this file has the following template-
 ```
 {
@@ -30,18 +30,24 @@ Inside the `aml-benchmark` directory, there are two subdirectories-
     "workspace_name": "<workspace-name>"
 }
 ```
-* From the root of this repo, Run `pip install -r assets/aml-benchmark/requirements.txt` to install the dependencies.
+* From the root of this repo, run `pip install -r assets/aml-benchmark/requirements.txt` to install the dependencies.
 * Run `cd assets/aml-benchmark/components/src` to change the directory, current directory must be set to **assets/aml-benchmark/components/src**.
 * Run `pytest ../../tests -n <no_of_workers>` to run the tests.
 
-## Run code health check
+## 2. Run code health check
 In the root of the repo, run the following in **powershell**:
 ```
 python scripts/validation/code_health.py -i assets/aml-benchmark/
 ```
 
-## Run copyright validation check
+## 3. Run copyright validation check
 In the root of the repo, run the following in **powershell**:
 ```
 python scripts/validation/copyright_validation.py -i assets/aml-benchmark/
+```
+
+## 4. Run doc style check
+In the root of the repo, run the following in **powershell**:
+```
+python scripts/validation/doc_style.py -i assets/aml-benchmark/
 ```

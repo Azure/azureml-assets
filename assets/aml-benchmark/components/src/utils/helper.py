@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Contains helper functions for the benchmarking components."""
+
 from typing import Any
 import logging
 import os
@@ -10,7 +12,7 @@ import mlflow
 
 def log_mlflow_params(**kwargs: Any) -> None:
     """
-    Logs the provided key-value pairs as parameters in MLflow.
+    Log the provided key-value pairs as parameters in MLflow.
 
     If a file path is provided in the value, the checksum of the file is
     calculated and logged as the parameter value. If `None` is provided as
@@ -34,7 +36,7 @@ def log_mlflow_params(**kwargs: Any) -> None:
 
 def get_logger(filename: str) -> logging.Logger:
     """
-    Creates and configures a logger based on the provided filename.
+    Create and configure a logger based on the provided filename.
 
     This function creates a logger with the specified filename and configures it
     by setting the logging level to INFO, adding a StreamHandler to the logger,

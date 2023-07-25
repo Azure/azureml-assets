@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Entry script for Dataset Sampler Component."""
+
 import argparse
 from enum import Enum
 import random
@@ -17,12 +19,15 @@ logger = get_logger(__name__)
 
 
 class SamplingStyle(Enum):
+    """Enum for sampling style."""
+    
     head: str = "head"
     tail: str = "tail"
     random: str = "random"
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description=f"{__file__}")
     parser.add_argument(
         "--dataset",
@@ -62,7 +67,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def count_lines(input_file_path: str) -> int:
-    """Count the number of lines in a file
+    """Count the number of lines in a file.
 
     :param input_file_path: Path to file
     :type input_file_path: str
@@ -160,6 +165,12 @@ def sample_from_random(
 
 
 def main(args: argparse.Namespace) -> None:
+    """
+    Entry function for Dataset Sampler Component.
+    
+    :param args: Command-line arguments
+    :return: None
+    """
     input_file_path = resolve_io_path(args.dataset)
     logger.info(f"Input file: {input_file_path}")
     output_file_path = args.output_dataset
