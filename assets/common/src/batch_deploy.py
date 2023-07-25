@@ -6,6 +6,8 @@ import argparse
 import json
 import re
 import time
+import shutil
+import os
 
 from azure.ai.ml import Input
 from azure.ai.ml.entities import (
@@ -176,6 +178,33 @@ def parse_args():
     return args
 
 
+def download_batch_output(ml_client, job, args):
+    """Download the output file."""
+    scoring_job = list(ml_client.jobs.list(parent_job_name=job.name))[0]
+
+    logger.info(f"Downloading the {args.output_file_name} file.")
+    ml_client.jobs.download(
+        name=scoring_job.name, download_path=args.batch_job_output_folder, output_name="score"
+    )
+
+    named_outputs_folder = "named-outputs"
+    score_folder = "score"
+    source_folder = args.batch_job_output_folder / named_outputs_folder / score_folder
+    destination_folder = args.batch_job_output_folder / score_folder
+
+    if not os.path.exists(destination_folder):
+        os.makedirs(destination_folder)
+
+    for root, dirs, files in os.walk(source_folder):
+        for file in files:
+            source_path = os.path.join(root, file)
+            destination_path = os.path.join(destination_folder, file)
+            shutil.move(source_path, destination_path)
+    
+    shutil.rmtree(args.batch_job_output_folder / named_outputs_folder)
+    logger.info(f"Successfully downloaded the {args.output_file_name} file.")
+
+
 def invoke_endpoint_job(ml_client, endpoint, type, args):
     """Invoke a job using the endpoint."""
     print(f"Invoking inference with {type} test payload ...")
@@ -192,14 +221,8 @@ def invoke_endpoint_job(ml_client, endpoint, type, args):
 
         ml_client.jobs.stream(job.name)
         logger.info(f"Endpoint invoked successfully with {type} test payload.")
+        download_batch_output(ml_client, job, args)
 
-        scoring_job = list(ml_client.jobs.list(parent_job_name=job.name))[0]
-
-        ml_client.jobs.download(
-            name=scoring_job.name, download_path=args.batch_job_output_folder, output_name="score"
-        )
-
-        logger.info(f"Output stored in {args.output_file_name} file.")
     except Exception as e:
         raise AzureMLException._with_error(
             AzureMLError.create(BatchEndpointInvocationError, exception=e)
