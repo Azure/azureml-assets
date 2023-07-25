@@ -200,7 +200,7 @@ def download_batch_output(ml_client, job, args):
             source_path = os.path.join(root, file)
             destination_path = os.path.join(destination_folder, file)
             shutil.move(source_path, destination_path)
-    
+
     shutil.rmtree(args.batch_job_output_folder / named_outputs_folder)
     logger.info(f"Successfully downloaded the {args.output_file_name} file.")
 
