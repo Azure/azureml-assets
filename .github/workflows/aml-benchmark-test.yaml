@@ -12,8 +12,8 @@ on:
 env:
   scripts_setup_dir: scripts/setup
   conda_env_prefix: /opt/conda/envs/aml_benchmark
-  aml_benchmark_src_dir: assets/aml-benchmark/components/src
   aml_benchmark_conda_yaml: assets/aml-benchmark/dev_conda_env.yaml
+  working_dir: assets/aml-benchmark/components/src
   pytest_report_folder: pytest-reports
   pytest_report_file: test-result.xml
 
@@ -64,16 +64,12 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           scripts-setup-dir: ${{ env.scripts_setup_dir }}
-      
-      - name: Change directory to src directory
-        run: |
-          cd ${{ env.aml_benchmark_src_dir }}
-          pwd
 
       - name: Execute tests
         run: |
+          cd ${{ env.working_dir }}
           pwd
-          conda run -p ${{ env.conda_env_prefix }}python -m pytest ../../tests --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} --tb=native -o log_level=DEBUG -n 8
+          conda run -p ${{ env.conda_env_prefix }} python -m pytest ../../tests --junitxml=${{ env.pytest_report_folder }}/${{ env.pytest_report_file }} --tb=native -o log_level=DEBUG -n 8
         env:
           SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -85,4 +81,4 @@ jobs:
         if: always()
         with:
           check_name: Test Results for ${{ github.workflow }}
-          junit_files: ${{ env.pytest_report_folder }}/**/*.xml
+          junit_files: ${{ env.working_dir }}/${{ env.pytest_report_folder }}/**/*.xml
