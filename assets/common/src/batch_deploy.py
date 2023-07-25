@@ -46,6 +46,8 @@ DEFAULT_LOGGING_LEVEL = "info"
 DEFAULT_MINI_BATCH_SIZE = 10
 DEFAULT_INSTANCE_COUNT = 1
 DEPLOYMENT_DETAILS_JSON_FILE_NAME = "model_deployment_details.json"
+NAMED_OUTPUTS_FOLDER = "named-outputs"
+SCORE_FOLDER = "score"
 
 
 logger = get_logger(__name__)
@@ -187,21 +189,12 @@ def download_batch_output(ml_client, job, args):
         name=scoring_job.name, download_path=args.batch_job_output_folder, output_name="score"
     )
 
-    named_outputs_folder = "named-outputs"
-    score_folder = "score"
-    source_folder = args.batch_job_output_folder / named_outputs_folder / score_folder
-    destination_folder = args.batch_job_output_folder / score_folder
+    source_folder = args.batch_job_output_folder / NAMED_OUTPUTS_FOLDER / SCORE_FOLDER
+    destination_folder = args.batch_job_output_folder / SCORE_FOLDER
 
-    if not os.path.exists(destination_folder):
-        os.makedirs(destination_folder)
+    shutil.copytree(source_folder, destination_folder)
 
-    for root, dirs, files in os.walk(source_folder):
-        for file in files:
-            source_path = os.path.join(root, file)
-            destination_path = os.path.join(destination_folder, file)
-            shutil.move(source_path, destination_path)
-
-    shutil.rmtree(args.batch_job_output_folder / named_outputs_folder)
+    shutil.rmtree(args.batch_job_output_folder / NAMED_OUTPUTS_FOLDER)
     logger.info(f"Successfully downloaded the {args.output_file_name} file.")
 
 
