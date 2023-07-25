@@ -26,9 +26,11 @@ class ModelImportErrorStrings:
     )
     UNSUPPORTED_MODEL_TYPE_ERROR = "Unsupported model type : {model_type}"
     MISSING_MODEL_NAME_ERROR = "Missing Model Name. Provide model_name as input or in the model_download_metadata JSON"
+    COMPUTE_CREATION_ERROR = "Error occured while creating compute cluster - {exception}"
     ENDPOINT_CREATION_ERROR = "Error occured while creating endpoint - {exception}"
     DEPLOYMENT_CREATION_ERROR = "Error occured while creating deployment - {exception}"
     ONLINE_ENDPOINT_INVOCATION_ERROR = "Invocation failed with error: {exception}"
+    BATCH_ENDPOINT_INVOCATION_ERROR = "Invocation failed with error: {exception}"
     USER_IDENTITY_MISSING_ERROR = (
         "Failed to get AzureMLOnBehalfOfCredential."
         " Kindly set UserIdentity as identity type if submitting job using sdk or cli."
@@ -112,6 +114,15 @@ class MissingModelNameError(ClientError):
         return ModelImportErrorStrings.MISSING_MODEL_NAME_ERROR
 
 
+class ComputeCreationError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.COMPUTE_CREATION_ERROR
+
+
 class EndpointCreationError(ClientError):
     """Internal Import Model Generic Error."""
 
@@ -137,6 +148,15 @@ class OnlineEndpointInvocationError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.ONLINE_ENDPOINT_INVOCATION_ERROR
+
+
+class BatchEndpointInvocationError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.BATCH_ENDPOINT_INVOCATION_ERROR
 
 
 class UserIdentityMissingError(ClientError):

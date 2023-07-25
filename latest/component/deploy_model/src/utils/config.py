@@ -10,6 +10,7 @@ class AppName:
     IMPORT_MODEL = "import_model"
     REGISTER_MODEL = "register_model"
     DEPLOY_MODEL = "deploy_model"
+    BATCH_DEPLOY_MODEL = "batch_deploy_model"
     MLFLOW_MODEL_LOCAL_VALIDATION = "mlflow_model_local_validation"
 
 
