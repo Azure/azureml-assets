@@ -7,7 +7,6 @@ import json
 import re
 import time
 import shutil
-import os
 
 from azure.ai.ml import Input
 from azure.ai.ml.entities import (
