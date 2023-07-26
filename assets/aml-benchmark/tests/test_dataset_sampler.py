@@ -14,9 +14,12 @@ import subprocess
 import hashlib
 import shutil
 import mltable
+import uuid
+import random
 
 
 def _verify_and_get_output_records(
+    input_path: str,
     output_path: str,
     sampling_style: str = "head",
     sampling_ratio: Union[float, None] = None,
@@ -24,19 +27,15 @@ def _verify_and_get_output_records(
 ) -> List[Dict[str, Any]]:
     """Verify the output and get output records.
 
+    :param input_path: The input file path.
     :param output_path: The output file path.
-    :type output_path: str
     :param sampling_style: The sampling style, defaults to "head".
-    :type sampling_style: str, optional
     :param sampling_ratio: The sampling ratio, defaults to None.
-    :type sampling_ratio: Union[float, None], optional
     :param n_samples: The number of samples, defaults to None.
-    :type n_samples: Union[int, None], optional
     :return: output records
-    :rtype: List[Dict[str, Any]]
     """
     # Read the input file
-    with open(Constants.INPUT_FILE_PATH, "r") as f:
+    with open(input_path, "r") as f:
         input_records = [json.loads(line) for line in f]
 
     # Read the output file
@@ -80,7 +79,9 @@ class TestDatasetSamplerComponent:
         """Dataset Sampler component test."""
         ml_client = get_mlclient()
 
+        input_file_path = self._create_input_file(temp_dir)
         pipeline_job = self._get_pipeline_job(
+            input_file_path,
             sampling_style,
             sampling_ratio,
             n_samples,
@@ -95,10 +96,10 @@ class TestDatasetSamplerComponent:
         print(pipeline_job)
 
         self._verify_and_get_output_records(
-            pipeline_job, sampling_style, sampling_ratio, n_samples, temp_dir
+            pipeline_job, sampling_style, sampling_ratio, n_samples, input_file_path, temp_dir
         )
         self._verify_logged_params(
-            pipeline_job.name, sampling_style, sampling_ratio, n_samples
+            pipeline_job.name, input_file_path, sampling_style, sampling_ratio, n_samples
         )
 
     @pytest.mark.parametrize(
@@ -118,10 +119,12 @@ class TestDatasetSamplerComponent:
         sampling_style = "random"
         ml_client = get_mlclient()
         output_records = []
+        input_file_path = self._create_input_file(temp_dir)
 
         # run the pipeline twice to verify reproducibility
         for _ in range(2):
             pipeline_job = self._get_pipeline_job(
+                input_file_path,
                 sampling_style,
                 sampling_ratio,
                 n_samples,
@@ -141,18 +144,37 @@ class TestDatasetSamplerComponent:
                     sampling_style,
                     sampling_ratio,
                     n_samples,
+                    input_file_path,
                     temp_dir,
                 )
             )
             self._verify_logged_params(
-                pipeline_job.name, sampling_style, sampling_ratio, n_samples
+                pipeline_job.name, input_file_path, sampling_style, sampling_ratio, n_samples
             )
 
         # verify the output of two runs are the same
         assert output_records[0] == output_records[1]
 
+    def _create_input_file(self, directory: str) -> str:
+        """Create .jsonl input file.
+
+        :param directory: The existing directory to create the file in.
+        :return: The created input file path.
+        """
+        file_name = uuid.uuid4().hex + ".jsonl"
+        file_path = os.path.join(directory, file_name)
+
+        # create input file with 20 records
+        with open(file_path, "w") as f:
+            for i in range(20):
+                record = {"id": i, "name": f"Person {uuid.uuid4().hex}", "age": random.randint(18, 50)}
+                f.write(json.dumps(record) + "\n")
+
+        return file_path
+
     def _get_pipeline_job(
         self,
+        input_file_path: str,
         sampling_style: str,
         sampling_ratio: Union[float, None],
         n_samples: Union[int, None],
@@ -160,21 +182,17 @@ class TestDatasetSamplerComponent:
     ) -> Job:
         """Get the pipeline job.
 
+        :param input_file_path: The input file path.
         :param sampling_style: The sampling style.
-        :type sampling_style: str
         :param sampling_ratio: The sampling ratio.
-        :type sampling_ratio: Union[float, None]
         :param n_samples: The number of samples.
-        :type n_samples: Union[int, None]
         :param display_name: The display name for job.
-        :type display_name: str
         :return: The pipeline job.
-        :rtype: Job
         """
         pipeline_job = load_yaml_pipeline("dataset_sampler_pipeline.yaml")
 
         # set the pipeline inputs
-        pipeline_job.inputs.dataset = Input(type="uri_file", path=Constants.INPUT_FILE_PATH)
+        pipeline_job.inputs.dataset = Input(type="uri_file", path=input_file_path)
         pipeline_job.inputs.sampling_style = sampling_style
         pipeline_job.inputs.sampling_ratio = sampling_ratio
         pipeline_job.inputs.n_samples = n_samples
@@ -188,22 +206,18 @@ class TestDatasetSamplerComponent:
         sampling_style: str,
         sampling_ratio: Union[float, None],
         n_samples: Union[int, None],
+        input_file_path: str,
         output_dir: str,
     ) -> List[Dict[str, Any]]:
         """Verify the output and get output records.
 
         :param job: The job object.
-        :type job: Job
         :param sampling_style: The sampling style.
-        :type sampling_style: str
         :param sampling_ratio: The sampling ratio.
-        :type sampling_ratio: Union[float, None]
         :param n_samples: The number of samples.
-        :type n_samples: Union[int, None]
+        :param input_file_path: The input file path.
         :param output_dir: The existing output directory to download the output in.
-        :type output_dir: str
         :return: output records
-        :rtype: List[Dict[str, Any]]
         """
         output_name = job.outputs.output_dataset.port_name
         download_outputs(
@@ -215,12 +229,13 @@ class TestDatasetSamplerComponent:
             output_file_name="output_dataset.jsonl"  # taken from the pipeline's output path
         )
         return _verify_and_get_output_records(
-            output_file_path, sampling_style, sampling_ratio, n_samples
+            input_file_path, output_file_path, sampling_style, sampling_ratio, n_samples
         )
 
     def _verify_logged_params(
         self,
         job_name: str,
+        input_file_path: str,
         sampling_style: str = "head",
         sampling_ratio: Union[float, None] = None,
         n_samples: Union[int, None] = None,
@@ -229,23 +244,18 @@ class TestDatasetSamplerComponent:
         """Verify the logged parameters.
 
         :param job_name: The job name.
-        :type job_name: str
+        :param input_file_path: The input file path.
         :param sampling_style: The sampling style, defaults to "head"
-        :type sampling_style: str, optional
         :param sampling_ratio: The sampling ratio, defaults to None
-        :type sampling_ratio: Union[float, None], optional
         :param n_samples: The number of samples, defaults to None
-        :type n_samples: Union[int, None], optional
         :param random_seed: The random seed, defaults to 0
-        :type random_seed: int, optional
         :return: None.
-        :rtype: NoneType
         """
         logged_params = get_mlflow_logged_params(job_name, self.EXP_NAME)
 
         # compute input dataset checksum
         input_dataset_checksum = hashlib.md5(
-            open(Constants.INPUT_FILE_PATH, "rb").read()
+            open(input_file_path, "rb").read()
         ).hexdigest()
 
         # verify the logged parameters
@@ -344,7 +354,7 @@ class TestDatasetSamplerScript:
         )
 
         # Verify the output file
-        _verify_and_get_output_records(out_file_path, n_samples=5)
+        _verify_and_get_output_records(Constants.INPUT_FILE_PATH, out_file_path, n_samples=5)
 
     @pytest.mark.parametrize("sampling_ratio", [0, -0.6, 1.1, None])
     def test_invalid_sampling_ratio(
