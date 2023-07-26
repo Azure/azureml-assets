@@ -3,12 +3,16 @@
 
 """This file contains the core logic for feature attribution drift component."""
 import pandas as pd
-import logging
+from datetime import datetime
 from shared_utilities.io_utils import init_spark
 
-_logger = logging.getLogger(__file__)
-logging.basicConfig(level=logging.INFO)
 
+def log_time_and_message(message):
+    """Print the time in addition to message for logging purposes.
+    :param message: The message to be printed after the time
+    : type message: string
+    """
+    print(f"[{datetime.now()}] {message}")
 
 def convert_pandas_to_spark(pandas_data):
     """Convert pandas.Dataframe to pySpark.Dataframe.
@@ -48,5 +52,5 @@ def compute_categorical_features(baseline_data, target_column):
                 distinct_value_ratio = distinct_column_values / total_column_values
                 if distinct_value_ratio < 0.05:
                     categorical_features.append(baseline_column.name)
-    _logger.info("Successfully categorized columns")
+    print("Successfully categorized columns")
     return categorical_features

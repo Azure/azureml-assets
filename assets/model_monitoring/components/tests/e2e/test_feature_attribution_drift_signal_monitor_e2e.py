@@ -48,7 +48,7 @@ def _submit_feature_attribution_drift_model_monitor_job(
     return ml_client.jobs.get(pipeline_job.name)
 
 
-@pytest.mark.e2e
+@pytest.mark.e2e2
 class TestFeatureAttributionDriftModelMonitor:
     """Test class."""
 
