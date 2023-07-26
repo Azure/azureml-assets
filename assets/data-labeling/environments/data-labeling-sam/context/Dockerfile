@@ -1,20 +1,25 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1131:biweekly.202305.3
+FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
-# Install pip dependencies
-COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
+WORKDIR /
 
-# Inference requirements
-COPY --from=mcr.microsoft.com/azureml/o16n-base/python-assets:20230419.v1 /artifacts /var/
-RUN /var/requirements/install_system_requirements.sh && \
-    cp /var/configuration/rsyslog.conf /etc/rsyslog.conf && \
-    cp /var/configuration/nginx.conf /etc/nginx/sites-available/app && \
-    ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
-    rm -f /etc/nginx/sites-enabled/default
-ENV SVDIR=/var/runit
-ENV WORKER_TIMEOUT=400
-EXPOSE 5001 8883 8888
+ENV CONDA_PREFIX=/azureml-envs/data-labeling-sam
+ENV CONDA_DEFAULT_ENV=$CONDA_PREFIX
+ENV PATH=$CONDA_PREFIX/bin:$PATH
 
-# support Deepspeed launcher requirement of passwordless ssh login
-RUN apt-get update
-RUN apt-get install -y openssh-server openssh-client
+# This is needed for mpi to locate libpython
+ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcairo2-dev \
+    pkg-config \
+    python3-dev && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /usr/share/man/*
+
+# Create conda environment
+COPY conda_dependencies.yaml .
+RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
+    rm conda_dependencies.yaml && \
+    conda run -p $CONDA_PREFIX pip cache purge && \
+    conda clean -a -y

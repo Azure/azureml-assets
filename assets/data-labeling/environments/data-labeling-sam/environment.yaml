@@ -6,7 +6,7 @@ image:
     dockerfile: Dockerfile
     template_files:
     - Dockerfile
-    - requirements.txt
+    - conda_dependencies.yaml
   publish:
     location: mcr
     visibility: public
