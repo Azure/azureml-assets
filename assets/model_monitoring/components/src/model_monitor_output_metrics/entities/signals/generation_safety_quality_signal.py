@@ -15,7 +15,7 @@ from shared_utilities.io_utils import np_encoder
 
 
 class GenerationSafetyQualitySignal(Signal):
-    """Builder class which creates a Feature Attribution signal output."""
+    """Builder class which creates a Generation Safety Quality signal output."""
 
     def __init__(
         self,
@@ -23,12 +23,12 @@ class GenerationSafetyQualitySignal(Signal):
         signal_name: str,
         metrics: List[Row],
     ):
-        """Build Feature Attribution Drift signal."""
+        """Build Generation Safety Quality signal."""
         super().__init__(
             monitor_name,
             signal_name,
             "1.0.0",
-            SignalType.FEATURE_ATTRIBUTION_DRIFT,
+            SignalType.GENERATION_SAFETY_SIGNAL_QUALITY,
             metrics,
         )
         self.row_count_metrics = RowCountMetrics(metrics)
