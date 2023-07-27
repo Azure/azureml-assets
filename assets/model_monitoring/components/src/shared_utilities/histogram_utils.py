@@ -11,21 +11,20 @@ def _get_smaller_df(baseline_df, production_df, baseline_count, production_count
     return baseline_df if baseline_count < production_count else production_df
 
 
-def _get_bin_width(baseline_df, production_df, baseline_count, production_count):
+def _get_number_of_bins (baseline_df, production_df, baseline_count, production_count):
     """Calculate bin width using struges alogorithm."""
     # TODO: Unnecessary calculation, use count from summary and remove _get_smaller_df()
     smaller_df = _get_smaller_df(
         baseline_df, production_df, baseline_count, production_count
     )
-    num_bins = math.log2(smaller_df.count()) + 1
-    return math.ceil(num_bins)
+    return math.ceil(math.log2(smaller_df.count()) + 1)
 
 
 def get_dual_histogram_bin_edges(
     baseline_df, production_df, baseline_count, production_count, numerical_columns
 ):
     """Get histogram edges using fixed bin width."""
-    num_bins = _get_bin_width(
+    num_bins = _get_number_of_bins (
         baseline_df, production_df, baseline_count, production_count
     )
     all_bin_edges = {}
