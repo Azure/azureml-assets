@@ -10,7 +10,7 @@ from functools import total_ordering
 from pathlib import Path
 from ruamel.yaml import YAML
 from setuptools._vendor.packaging import version
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 # Ignore setuptools warning about replacing distutils
 warnings.filterwarnings("ignore", message="Setuptools is replacing distutils.", category=UserWarning)
@@ -166,6 +166,13 @@ class ComponentType(Enum):
     SWEEP = 'sweep'  # A sweep component.
 
 
+class DataAssetType(Enum):
+    """Enum for data asset types."""
+
+    URI_FILE = 'uri_file'  # A single file.
+    URI_FOLDER = 'uri_folder'  # A folder containing files.
+
+
 class Spec(Config):
     """Load and access spec file properties.
 
@@ -200,6 +207,15 @@ class Spec(Config):
 
         if self.code_dir and not self.code_dir_with_path.exists():
             raise ValidationException(f"code directory {self.code_dir} not found")
+        if self._data_path:
+            path = self.data_path_with_path
+            if path.exists():
+                if self.type == DataAssetType.URI_FILE.value and path.is_dir():
+                    raise ValidationException(f"type is {self.type} but {self._data_path} is a directory")
+                elif self.type == DataAssetType.URI_FOLDER.value and not path.is_dir():
+                    raise ValidationException(f"type is {self.type} but {self._data_path} is a file")
+            else:
+                raise ValidationException(f"data path {self._data_path} not found")
 
     @property
     def name(self) -> str:
@@ -234,6 +250,7 @@ class Spec(Config):
         For eg:
             `custom_model` or `mlflow_model` for a model asset.
             `command`, `pipeline` etc. for a component asset.
+            `uri_file`, `uri_folder` for a data asset.
         """
         return self._yaml.get('type')
 
@@ -252,13 +269,41 @@ class Spec(Config):
         return self._append_to_file_path(dir) if dir else None
 
     @property
+    def _data_path(self) -> str:
+        """Data asset path."""
+        return self._yaml.get('path')
+
+    @property
+    def data_path_with_path(self) -> Path:
+        """Data asset path, relative to spec file's parent directory."""
+        data_path = self._data_path
+        return self._append_to_file_path(data_path) if data_path else None
+
+    @property
     def release_paths(self) -> List[Path]:
         """Files that are required to create this asset."""
         release_paths = super().release_paths
+
+        # Add files from components
         code_dir = self.code_dir_with_path
         if code_dir:
             release_paths.extend(Config._expand_path(code_dir))
+
+        # Add files from data assets
+        data_path = self.data_path_with_path
+        if data_path:
+            release_paths.extend(Config._expand_path(data_path))
         return release_paths
+
+    @property
+    def inference_config(self) -> Dict[str, Dict[str, Union[str, int]]]:
+        """Inference config."""
+        return self._yaml.get('inference_config')
+
+    @property
+    def os_type(self) -> str:
+        """OS type."""
+        return self._yaml.get('os_type')
 
 
 class ModelType(Enum):
@@ -720,6 +765,7 @@ class AssetType(Enum):
 
 DEFAULT_ASSET_FILENAME = "asset.yaml"
 VERSION_AUTO = "auto"
+PARTIAL_ASSET_NAME_TEMPLATE = "{type}/{name}"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
 FULL_ASSET_NAME_DELIMITER = "/"
 DEFAULT_DESCRIPTION_FILE = "description.md"
@@ -744,6 +790,7 @@ class AssetConfig(Config):
             enabled: true
             pip_requirements: tests/requirements.txt
             tests_dir: tests
+        categories: ["PyTorch", "Training"] # List of categories
     """
 
     def __init__(self, file_name: Path):
@@ -785,6 +832,10 @@ class AssetConfig(Config):
 
         # Compare versions using packaging's version object
         return version.parse(self.version) < version.parse(other.version)
+
+    def __hash__(self) -> int:
+        """Hash an AssetConfig object."""
+        return hash((self.type.value, self.name, self.version))
 
     def _validate(self):
         """Validate asset config.
@@ -850,6 +901,11 @@ class AssetConfig(Config):
         return name
 
     @property
+    def partial_name(self) -> str:
+        """Asset name, including type."""
+        return PARTIAL_ASSET_NAME_TEMPLATE.format(type=self.type.value, name=self.name)
+
+    @property
     def full_name(self) -> str:
         """Full asset name, including type and version."""
         return FULL_ASSET_NAME_TEMPLATE.format(type=self.type.value, name=self.name, version=self.version)
@@ -911,6 +967,11 @@ class AssetConfig(Config):
     def spec_with_path(self) -> Path:
         """Asset's spec file."""
         return self._append_to_file_path(self.spec)
+
+    @property
+    def categories(self) -> List[str]:
+        """List of categories."""
+        return self._yaml.get('categories', [])
 
     def spec_as_object(self, force_reload: bool = False) -> Spec:
         """Retrieve asset's spec file as an object.

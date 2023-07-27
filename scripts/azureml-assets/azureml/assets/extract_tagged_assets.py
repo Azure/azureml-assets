@@ -19,24 +19,38 @@ EXTRACTED_COUNT = "extracted_count"
 
 def extract_tag_released_assets(release_directory_root: Path,
                                 output_directory_root: Path,
-                                pattern: re.Pattern = None):
-    """Extract selected assets from release branch copy into output directory.
+                                pattern: re.Pattern = None,
+                                include_deprecated: bool = False):
+    """Extract selected assets from release branch and copy into output directory.
 
     Args:
         release_directory_root (Path): Release directory location.
         output_directory_root (Path): Output directory.
         pattern (re.Pattern, optional): Regex pattern for assets to extract and copy. Defaults to None.
+        include_deprecated (bool, optional): Include deprecated assets. Defaults to False.
     """
-    repo = Repo(release_directory_root)
+    # Gather list of asset in release branch HEAD
+    asset_list = set()
+    if not include_deprecated:
+        for asset_config in util.find_assets(input_dirs=release_directory_root):
+            # Store as type/name
+            asset_list.add(asset_config.partial_name)
 
     # Initialize counters
     matched_count = 0
     extracted_count = 0
 
     # Select tags
+    repo = Repo(release_directory_root)
     commits_tags = defaultdict(list)
     for tag in repo.tags:
         if not pattern or pattern.fullmatch(tag.name):
+            # Skip deprecated assets, if specified
+            if not include_deprecated:
+                type, name, _ = assets.AssetConfig.parse_full_name(tag.name)
+                partial_name = f"{type.value}/{name}"
+                if partial_name not in asset_list:
+                    continue
             commits_tags[tag.commit].append(tag)
             matched_count += 1
 
@@ -79,8 +93,11 @@ if __name__ == "__main__":
                         help="Directory to which unreleased assets will be written")
     parser.add_argument("-t", "--pattern", type=re.compile,
                         help="Regex pattern to select assets to extract, in the format <type>/<name>/<version>")
+    parser.add_argument("-d", "--include-deprecated", action="store_true",
+                        help="Include deprecated assets")
     args = parser.parse_args()
 
     extract_tag_released_assets(release_directory_root=args.release_directory,
                                 output_directory_root=args.output_directory,
-                                pattern=args.pattern)
+                                pattern=args.pattern,
+                                include_deprecated=args.include_deprecated)
