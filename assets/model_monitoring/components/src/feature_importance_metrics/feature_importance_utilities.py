@@ -9,6 +9,7 @@ from shared_utilities.io_utils import init_spark
 
 def log_time_and_message(message):
     """Print the time in addition to message for logging purposes.
+    
     :param message: The message to be printed after the time
     : type message: string
     """
