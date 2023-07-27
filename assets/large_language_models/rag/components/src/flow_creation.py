@@ -144,6 +144,9 @@ def main(args, ws, current_run, activity_logger: Logger):
     completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
     completion_deployment_name = completion_config.get(
         "deployment_name", "gpt-35-turbo")
+    # Set default if key exsits but is set to None (as it is for basic pipelines)
+    completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
+    completion_deployment_name = "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
     embedding_connection_name = get_connection_name(
         args.embedding_connection)
     if (completion_connection_name == "azureml-rag-default-aoai" and
