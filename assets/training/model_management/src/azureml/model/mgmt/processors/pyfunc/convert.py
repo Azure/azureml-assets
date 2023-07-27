@@ -36,6 +36,7 @@ def _prepare_artifacts_dict(input_dir: Path) -> Dict:
     artifacts_dict = {
         MMDetLiterals.CONFIG_PATH: os.path.join(input_dir, metadata.get("pytorch_model_path")),
         MMDetLiterals.WEIGHTS_PATH: os.path.join(input_dir, metadata.get("model_weights_path_or_url")),
+        MMDetLiterals.METAFILE_PATH: os.path.join(input_dir, metadata.get("model_metafile_path")),
     }
     return artifacts_dict
 
