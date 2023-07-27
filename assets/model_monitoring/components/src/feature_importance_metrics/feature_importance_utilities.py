@@ -14,6 +14,7 @@ def log_time_and_message(message):
     """
     print(f"[{datetime.now()}] {message}")
 
+
 def convert_pandas_to_spark(pandas_data):
     """Convert pandas.Dataframe to pySpark.Dataframe.
 

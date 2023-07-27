@@ -200,24 +200,27 @@ def write_to_mltable(explanations, dataset, file_path, categorical_features):
     for index in range(len(explanations)):
         dtype = constants.CATEGORICAL_FEATURE_CATEGORY if dataset.iloc[:, index].name in \
                         categorical_features else constants.NUMERICAL_FEATURE_CATEGORY
-        new_row = {constants.FEATURE_COLUMN: dataset.columns[index],
-                   constants.METRIC_VALUE_COLUMN: explanations[index],
-                   constants.METRIC_NAME_COLUMN: "FeatureImportance",
-                   constants.FEATURE_CATEGORY_COLUMN: dtype,
-                   constants.THRESHOLD_VALUE: float("nan")}
+        new_row = pd.DataFrame(
+                {constants.FEATURE_COLUMN: dataset.columns[index],
+                 constants.METRIC_VALUE_COLUMN: explanations[index],
+                 constants.METRIC_NAME_COLUMN: "FeatureImportance",
+                 constants.FEATURE_CATEGORY_COLUMN: dtype,
+                 constants.THRESHOLD_VALUE: float("nan")}, index=[0])
         explanation_data.append(new_row)
-    row_count_data = {constants.FEATURE_COLUMN: "",
-                      constants.METRIC_VALUE_COLUMN: len(dataset.index),
-                      constants.METRIC_NAME_COLUMN: constants.ROW_COUNT_COLUMN_NAME,
-                      constants.FEATURE_CATEGORY_COLUMN: "",
-                      constants.THRESHOLD_VALUE: float("nan")}
+    row_count_data = pd.DataFrame(
+                {constants.FEATURE_COLUMN: "",
+                 constants.METRIC_VALUE_COLUMN: len(dataset.index),
+                 constants.METRIC_NAME_COLUMN: constants.ROW_COUNT_COLUMN_NAME,
+                 constants.FEATURE_CATEGORY_COLUMN: "",
+                 constants.THRESHOLD_VALUE: float("nan")}, index=[0])
     explanation_data.append(row_count_data)
-    
+
     metrics_data = pd.DataFrame(columns=[constants.FEATURE_COLUMN,
-                                        constants.METRIC_VALUE_COLUMN,
-                                        constants.METRIC_NAME_COLUMN,
-                                        constants.FEATURE_CATEGORY_COLUMN,
-                                        constants.THRESHOLD_VALUE])
+                                         constants.METRIC_VALUE_COLUMN,
+                                         constants.METRIC_NAME_COLUMN,
+                                         constants.FEATURE_CATEGORY_COLUMN,
+                                         constants.THRESHOLD_VALUE], index=[0])
+    print(explanation_data)
     metrics_data = pd.concat(explanation_data)
     spark_data = convert_pandas_to_spark(metrics_data)
     save_spark_df_as_mltable(spark_data, file_path)

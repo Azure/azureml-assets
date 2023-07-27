@@ -65,47 +65,48 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
     feature_attribution_drift = calculate_attribution_drift(baseline_explanations, production_explanations)
     data = []
     log_time_and_message("Begin writing metric to mltable")
-    ndcg_metric = {constants.FEATURE_NAME_COLUMN: "",
-                   constants.METRIC_VALUE_COLUMN: feature_attribution_drift,
-                   constants.METRIC_NAME_COLUMN: "NormalizedDiscountedCumulativeGain",
-                   constants.FEATURE_CATEGORY_COLUMN: "",
-                   constants.THRESHOLD_VALUE: float("nan")}
+    ndcg_metric = pd.DataFrame({constants.FEATURE_NAME_COLUMN: "",
+                                constants.METRIC_VALUE_COLUMN: feature_attribution_drift,
+                                constants.METRIC_NAME_COLUMN: "NormalizedDiscountedCumulativeGain",
+                                constants.FEATURE_CATEGORY_COLUMN: "",
+                                constants.THRESHOLD_VALUE: float("nan")}, index=[0])
     data.append(ndcg_metric)
-    baseline_row_count_data = {constants.FEATURE_NAME_COLUMN: "",
-                               constants.METRIC_VALUE_COLUMN: baseline_row_count,
-                               constants.METRIC_NAME_COLUMN: "BaselineRowCount",
-                               constants.FEATURE_CATEGORY_COLUMN: "",
-                               constants.THRESHOLD_VALUE: float("nan")}
+    baseline_row_count_data = pd.DataFrame({constants.FEATURE_NAME_COLUMN: "",
+                                            constants.METRIC_VALUE_COLUMN: baseline_row_count,
+                                            constants.METRIC_NAME_COLUMN: "BaselineRowCount",
+                                            constants.FEATURE_CATEGORY_COLUMN: "",
+                                            constants.THRESHOLD_VALUE: float("nan")}, index=[0])
     data.append(baseline_row_count_data)
-    production_row_count_data = {constants.FEATURE_NAME_COLUMN: "",
-                                 constants.METRIC_VALUE_COLUMN: production_row_count,
-                                 constants.METRIC_NAME_COLUMN: "TargetRowCount",
-                                 constants.FEATURE_CATEGORY_COLUMN: "",
-                                 constants.THRESHOLD_VALUE: float("nan")}
+    production_row_count_data = pd.DataFrame({constants.FEATURE_NAME_COLUMN: "",
+                                              constants.METRIC_VALUE_COLUMN: production_row_count,
+                                              constants.METRIC_NAME_COLUMN: "TargetRowCount",
+                                              constants.FEATURE_CATEGORY_COLUMN: "",
+                                              constants.THRESHOLD_VALUE: float("nan")}, index=[0])
     data.append(production_row_count_data)
 
     for (_, baseline_feature), (_, production_feature) in zip(baseline_explanations.iterrows(),
                                                               production_explanations.iterrows()):
-        baseline_feature_importance_data = {
-            constants.FEATURE_NAME_COLUMN: baseline_feature[constants.FEATURE_COLUMN],
-            constants.METRIC_VALUE_COLUMN: baseline_feature[constants.METRIC_VALUE_COLUMN],
-            constants.FEATURE_CATEGORY_COLUMN: baseline_feature[constants.FEATURE_CATEGORY_COLUMN],
-            constants.METRIC_NAME_COLUMN: "BaselineFeatureImportance",
-            constants.THRESHOLD_VALUE: float("nan")}
-        production_feature_importance_data = {
+        baseline_feature_importance_data = pd.DataFrame({
+                    constants.FEATURE_NAME_COLUMN: baseline_feature[constants.FEATURE_COLUMN],
+                    constants.METRIC_VALUE_COLUMN: baseline_feature[constants.METRIC_VALUE_COLUMN],
+                    constants.FEATURE_CATEGORY_COLUMN: baseline_feature[constants.FEATURE_CATEGORY_COLUMN],
+                    constants.METRIC_NAME_COLUMN: "BaselineFeatureImportance",
+                    constants.THRESHOLD_VALUE: float("nan")}, index=[0])
+        production_feature_importance_data = pd.DataFrame({
             constants.FEATURE_NAME_COLUMN: production_feature[constants.FEATURE_COLUMN],
             constants.METRIC_VALUE_COLUMN: production_feature[constants.METRIC_VALUE_COLUMN],
             constants.FEATURE_CATEGORY_COLUMN: production_feature[constants.FEATURE_CATEGORY_COLUMN],
             constants.METRIC_NAME_COLUMN: "ProductionFeatureImportance",
-            constants.THRESHOLD_VALUE: float("nan")}
+            constants.THRESHOLD_VALUE: float("nan")}, index=[0])
         data.append(baseline_feature_importance_data)
         data.append(production_feature_importance_data)
-        
-    metrics_data = pd.DataFrame(columns=[constants.FEATURE_NAME_COLUMN,
-                                        constants.METRIC_VALUE_COLUMN,
-                                        constants.FEATURE_CATEGORY_COLUMN,
-                                        constants.METRIC_NAME_COLUMN,
-                                        constants.THRESHOLD_VALUE])
+
+    metrics_data = pd.DataFrame(
+            columns=[constants.FEATURE_NAME_COLUMN,
+                     constants.METRIC_VALUE_COLUMN,
+                     constants.FEATURE_CATEGORY_COLUMN,
+                     constants.METRIC_NAME_COLUMN,
+                     constants.THRESHOLD_VALUE])
     metrics_data = pd.concat(data)
     spark_data = convert_pandas_to_spark(metrics_data)
     save_spark_df_as_mltable(spark_data, feature_attribution_data)
