@@ -70,6 +70,8 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
                                          constants.METRIC_VALUE_COLUMN,
                                          constants.FEATURE_CATEGORY_COLUMN,
                                          constants.METRIC_NAME_COLUMN,
+                                         constants.GROUP_COLUMN,
+                                         constants.GROUP_PIVOT_COLUMN,
                                          constants.THRESHOLD_VALUE])
     feature_attribution_drift = calculate_attribution_drift(baseline_explanations, production_explanations)
 
@@ -83,12 +85,16 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
                                constants.METRIC_VALUE_COLUMN: baseline_row_count,
                                constants.METRIC_NAME_COLUMN: "BaselineRowCount",
                                constants.FEATURE_CATEGORY_COLUMN: "",
+                               constants.GROUP_COLUMN: "",
+                               constants.GROUP_PIVOT_COLUMN: "",
                                constants.THRESHOLD_VALUE: float("nan")}
     metrics_data = metrics_data.append(baseline_row_count_data, ignore_index=True)
     production_row_count_data = {constants.FEATURE_NAME_COLUMN: "",
                                  constants.METRIC_VALUE_COLUMN: production_row_count,
                                  constants.METRIC_NAME_COLUMN: "TargetRowCount",
                                  constants.FEATURE_CATEGORY_COLUMN: "",
+                                 constants.GROUP_COLUMN: "",
+                                 constants.GROUP_PIVOT_COLUMN: "",
                                  constants.THRESHOLD_VALUE: float("nan")}
     metrics_data = metrics_data.append(production_row_count_data, ignore_index=True)
 
@@ -99,12 +105,16 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
             constants.METRIC_VALUE_COLUMN: baseline_feature[constants.METRIC_VALUE_COLUMN],
             constants.FEATURE_CATEGORY_COLUMN: baseline_feature[constants.FEATURE_CATEGORY_COLUMN],
             constants.METRIC_NAME_COLUMN: "BaselineFeatureImportance",
+            constants.GROUP_COLUMN: production_feature[constants.FEATURE_CATEGORY_COLUMN],
+            constants.GROUP_PIVOT_COLUMN: "",
             constants.THRESHOLD_VALUE: float("nan")}
         production_feature_importance_data = {
             constants.FEATURE_NAME_COLUMN: production_feature[constants.FEATURE_COLUMN],
             constants.METRIC_VALUE_COLUMN: production_feature[constants.METRIC_VALUE_COLUMN],
             constants.FEATURE_CATEGORY_COLUMN: production_feature[constants.FEATURE_CATEGORY_COLUMN],
             constants.METRIC_NAME_COLUMN: "ProductionFeatureImportance",
+            constants.GROUP_COLUMN: production_feature[constants.FEATURE_CATEGORY_COLUMN],
+            constants.GROUP_PIVOT_COLUMN: "",
             constants.THRESHOLD_VALUE: float("nan")}
         metrics_data = metrics_data.append(baseline_feature_importance_data, ignore_index=True)
         metrics_data = metrics_data.append(production_feature_importance_data, ignore_index=True)
