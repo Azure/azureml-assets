@@ -4,7 +4,6 @@
 """Entry script for Data Drift Compute Histogram Component."""
 
 import argparse
-import logging
 import pandas as pd
 import numpy as np
 from sklearn.metrics import ndcg_score
@@ -12,13 +11,10 @@ from sklearn.metrics import ndcg_score
 from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
 from shared_utilities import constants
 
-from feature_importance_metrics.feature_importance_utilities import convert_pandas_to_spark
+from feature_importance_metrics.feature_importance_utilities import convert_pandas_to_spark, log_time_and_message
 
 from shared_utilities.patch_mltable import patch_all
 patch_all()
-
-_logger = logging.getLogger(__file__)
-logging.basicConfig(level=logging.INFO)
 
 
 def parse_args():
@@ -47,7 +43,7 @@ def calculate_attribution_drift(baseline_explanations, production_explanations):
     true_relevance = np.asarray([baseline_explanations[constants.METRIC_VALUE_COLUMN]])
     relevance_score = np.asarray([production_explanations[constants.METRIC_VALUE_COLUMN]])
     feature_attribution_drift = ndcg_score(true_relevance, relevance_score)
-    _logger.info(f"feature attribution drift calculated: {feature_attribution_drift}")
+    log_time_and_message(f"feature attribution drift calculated: {feature_attribution_drift}")
     return feature_attribution_drift
 
 
@@ -66,48 +62,52 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
     :param production_row_count: number of columns in production data
     :type production_row_count: number
     """
-    metrics_data = pd.DataFrame(columns=[constants.FEATURE_NAME_COLUMN,
-                                         constants.METRIC_VALUE_COLUMN,
-                                         constants.FEATURE_CATEGORY_COLUMN,
-                                         constants.METRIC_NAME_COLUMN,
-                                         constants.THRESHOLD_VALUE])
     feature_attribution_drift = calculate_attribution_drift(baseline_explanations, production_explanations)
-
-    ndcg_metric = {constants.FEATURE_NAME_COLUMN: "",
-                   constants.METRIC_VALUE_COLUMN: feature_attribution_drift,
-                   constants.METRIC_NAME_COLUMN: "NormalizedDiscountedCumulativeGain",
-                   constants.FEATURE_CATEGORY_COLUMN: "",
-                   constants.THRESHOLD_VALUE: float("nan")}
-    metrics_data = metrics_data.append(ndcg_metric, ignore_index=True)
-    baseline_row_count_data = {constants.FEATURE_NAME_COLUMN: "",
-                               constants.METRIC_VALUE_COLUMN: baseline_row_count,
-                               constants.METRIC_NAME_COLUMN: "BaselineRowCount",
-                               constants.FEATURE_CATEGORY_COLUMN: "",
-                               constants.THRESHOLD_VALUE: float("nan")}
-    metrics_data = metrics_data.append(baseline_row_count_data, ignore_index=True)
-    production_row_count_data = {constants.FEATURE_NAME_COLUMN: "",
-                                 constants.METRIC_VALUE_COLUMN: production_row_count,
-                                 constants.METRIC_NAME_COLUMN: "TargetRowCount",
-                                 constants.FEATURE_CATEGORY_COLUMN: "",
-                                 constants.THRESHOLD_VALUE: float("nan")}
-    metrics_data = metrics_data.append(production_row_count_data, ignore_index=True)
+    data = []
+    log_time_and_message("Begin writing metric to mltable")
+    ndcg_metric = pd.DataFrame({constants.FEATURE_NAME_COLUMN: "",
+                                constants.METRIC_VALUE_COLUMN: feature_attribution_drift,
+                                constants.METRIC_NAME_COLUMN: "NormalizedDiscountedCumulativeGain",
+                                constants.FEATURE_CATEGORY_COLUMN: "",
+                                constants.THRESHOLD_VALUE: float("nan")}, index=[0])
+    data.append(ndcg_metric)
+    baseline_row_count_data = pd.DataFrame({constants.FEATURE_NAME_COLUMN: "",
+                                            constants.METRIC_VALUE_COLUMN: baseline_row_count,
+                                            constants.METRIC_NAME_COLUMN: "BaselineRowCount",
+                                            constants.FEATURE_CATEGORY_COLUMN: "",
+                                            constants.THRESHOLD_VALUE: float("nan")}, index=[0])
+    data.append(baseline_row_count_data)
+    production_row_count_data = pd.DataFrame({constants.FEATURE_NAME_COLUMN: "",
+                                              constants.METRIC_VALUE_COLUMN: production_row_count,
+                                              constants.METRIC_NAME_COLUMN: "TargetRowCount",
+                                              constants.FEATURE_CATEGORY_COLUMN: "",
+                                              constants.THRESHOLD_VALUE: float("nan")}, index=[0])
+    data.append(production_row_count_data)
 
     for (_, baseline_feature), (_, production_feature) in zip(baseline_explanations.iterrows(),
                                                               production_explanations.iterrows()):
-        baseline_feature_importance_data = {
-            constants.FEATURE_NAME_COLUMN: baseline_feature[constants.FEATURE_COLUMN],
-            constants.METRIC_VALUE_COLUMN: baseline_feature[constants.METRIC_VALUE_COLUMN],
-            constants.FEATURE_CATEGORY_COLUMN: baseline_feature[constants.FEATURE_CATEGORY_COLUMN],
-            constants.METRIC_NAME_COLUMN: "BaselineFeatureImportance",
-            constants.THRESHOLD_VALUE: float("nan")}
-        production_feature_importance_data = {
+        baseline_feature_importance_data = pd.DataFrame({
+                    constants.FEATURE_NAME_COLUMN: baseline_feature[constants.FEATURE_COLUMN],
+                    constants.METRIC_VALUE_COLUMN: baseline_feature[constants.METRIC_VALUE_COLUMN],
+                    constants.FEATURE_CATEGORY_COLUMN: baseline_feature[constants.FEATURE_CATEGORY_COLUMN],
+                    constants.METRIC_NAME_COLUMN: "BaselineFeatureImportance",
+                    constants.THRESHOLD_VALUE: float("nan")}, index=[0])
+        production_feature_importance_data = pd.DataFrame({
             constants.FEATURE_NAME_COLUMN: production_feature[constants.FEATURE_COLUMN],
             constants.METRIC_VALUE_COLUMN: production_feature[constants.METRIC_VALUE_COLUMN],
             constants.FEATURE_CATEGORY_COLUMN: production_feature[constants.FEATURE_CATEGORY_COLUMN],
             constants.METRIC_NAME_COLUMN: "ProductionFeatureImportance",
-            constants.THRESHOLD_VALUE: float("nan")}
-        metrics_data = metrics_data.append(baseline_feature_importance_data, ignore_index=True)
-        metrics_data = metrics_data.append(production_feature_importance_data, ignore_index=True)
+            constants.THRESHOLD_VALUE: float("nan")}, index=[0])
+        data.append(baseline_feature_importance_data)
+        data.append(production_feature_importance_data)
+
+    metrics_data = pd.DataFrame(
+            columns=[constants.FEATURE_NAME_COLUMN,
+                     constants.METRIC_VALUE_COLUMN,
+                     constants.FEATURE_CATEGORY_COLUMN,
+                     constants.METRIC_NAME_COLUMN,
+                     constants.THRESHOLD_VALUE])
+    metrics_data = pd.concat(data)
     spark_data = convert_pandas_to_spark(metrics_data)
     save_spark_df_as_mltable(spark_data, feature_attribution_data)
 
@@ -140,27 +140,30 @@ def drop_metadata_columns(baseline_data, production_data):
     :return: production data with removed columns
     :rtype: pandas.DataFrame
     """
+    log_time_and_message("Attempting to drop any target columns that do not appear in the baseline data")
     baseline_data_features = baseline_data[constants.FEATURE_COLUMN].values
     production_data_features = production_data[constants.FEATURE_COLUMN].values
     for production_feature in production_data_features:
         if production_feature not in baseline_data_features:
             production_data = production_data.drop(
                 production_data[production_data.feature == production_feature].index, axis=0)
-            _logger.info(f"Dropped {production_feature} column in production dataset")
+            log_time_and_message(f"Dropped {production_feature} column in target dataset")
     return production_data
 
 
 def run(args):
     """Calculate feature attribution drift."""
     try:
+        log_time_and_message("Reading in baseline data")
         [baseline_explanations, baseline_row_count] = configure_data(args.baseline_data)
+        log_time_and_message("Reading in target data")
         [production_explanations, production_row_count] = configure_data(args.production_data)
         production_explanations = drop_metadata_columns(baseline_explanations, production_explanations)
         compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations,
                                           args.signal_metrics, baseline_row_count, production_row_count)
-        _logger.info("Successfully executed the feature attribution component.")
+        log_time_and_message("Successfully executed the feature attribution component.")
     except Exception as e:
-        _logger.info(f"Error encountered when executing feature attribution component: {e}")
+        log_time_and_message(f"Error encountered when executing feature attribution component: {e}")
         raise e
 
 

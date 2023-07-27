@@ -4,7 +4,6 @@
 """Entry script for Data Drift Compute Histogram Component."""
 
 import argparse
-import logging
 import pandas as pd
 from pyspark.sql.types import (
     StructType,
@@ -15,7 +14,7 @@ from pyspark.sql.types import (
 from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable, init_spark
 from shared_utilities import constants
 
-from responsibleai import RAIInsights
+from responsibleai import RAIInsights, FeatureMetadata
 from ml_wrappers.model.predictions_wrapper import (
     PredictionsModelWrapperClassification,
     PredictionsModelWrapperRegression)
@@ -26,13 +25,10 @@ except ImportError:
     pass
 
 from feature_importance_metrics.feature_importance_utilities import (
-    compute_categorical_features, convert_pandas_to_spark)
+    compute_categorical_features, convert_pandas_to_spark, log_time_and_message)
 
 from shared_utilities.patch_mltable import patch_all
 patch_all()
-
-_logger = logging.getLogger(__file__)
-logging.basicConfig(level=logging.INFO)
 
 
 def parse_args():
@@ -95,8 +91,7 @@ def create_lightgbm_model(X, y, task_type):
                              max_depth=5, n_estimators=200, n_jobs=1, random_state=777)
 
     model = lgbm.fit(X, y)
-
-    _logger.info(f"Created lightgbm model using task_type: {task_type}")
+    log_time_and_message(f"Created lightgbm model using task_type: {task_type}")
     return model
 
 
@@ -132,7 +127,7 @@ def get_model_wrapper(task_type, target_column, baseline_data):
     else:
         model_wrapper = PredictionsModelWrapperRegression(x_train, model_predict)
 
-    _logger.info("Created ml wrapper")
+    log_time_and_message("Created ml wrapper")
     return model_wrapper
 
 
@@ -153,13 +148,15 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     :rtype: list[float]
     """
     # Create the RAI Insights object, use baseline as train and test data
+    feature_metadata = FeatureMetadata(categorical_features=categorical_features, dropped_features=[])
     rai_i: RAIInsights = RAIInsights(
-        model_wrapper, data, data, target_column, task_type, categorical_features=categorical_features
+        model_wrapper, data, data, target_column, task_type, feature_metadata=feature_metadata
     )
-
+    log_time_and_message("Created RAIInsights")
     # Add the global explanations using batching to allow for larger input data sizes
     rai_i.explainer.add()
     evaluation_data = data.drop([target_column], axis=1)
+    log_time_and_message("Requesting explanations")
     explanationData = rai_i.explainer.request_explanations(local=False, data=evaluation_data)
     return explanationData.precomputedExplanations.globalFeatureImportance['scores']
 
@@ -183,7 +180,7 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
 
     baseline_explanations = compute_explanations(
         model_wrapper, baseline_data, categorical_features, target_column, task_type)
-    _logger.info("Successfully computed explanations for dataset")
+    log_time_and_message("Successfully computed explanations for dataset")
 
     return baseline_explanations
 
@@ -198,27 +195,33 @@ def write_to_mltable(explanations, dataset, file_path, categorical_features):
     :param file_path: path to folder to save mltable
     :type file_path: string
     """
+    log_time_and_message("Begin writing explanations to mltable")
+    explanation_data = []
+    for index in range(len(explanations)):
+        dtype = constants.CATEGORICAL_FEATURE_CATEGORY if dataset.iloc[:, index].name in \
+                        categorical_features else constants.NUMERICAL_FEATURE_CATEGORY
+        new_row = pd.DataFrame(
+                {constants.FEATURE_COLUMN: dataset.columns[index],
+                 constants.METRIC_VALUE_COLUMN: explanations[index],
+                 constants.METRIC_NAME_COLUMN: "FeatureImportance",
+                 constants.FEATURE_CATEGORY_COLUMN: dtype,
+                 constants.THRESHOLD_VALUE: float("nan")}, index=[0])
+        explanation_data.append(new_row)
+    row_count_data = pd.DataFrame(
+                {constants.FEATURE_COLUMN: "",
+                 constants.METRIC_VALUE_COLUMN: len(dataset.index),
+                 constants.METRIC_NAME_COLUMN: constants.ROW_COUNT_COLUMN_NAME,
+                 constants.FEATURE_CATEGORY_COLUMN: "",
+                 constants.THRESHOLD_VALUE: float("nan")}, index=[0])
+    explanation_data.append(row_count_data)
+
     metrics_data = pd.DataFrame(columns=[constants.FEATURE_COLUMN,
                                          constants.METRIC_VALUE_COLUMN,
                                          constants.METRIC_NAME_COLUMN,
                                          constants.FEATURE_CATEGORY_COLUMN,
-                                         constants.THRESHOLD_VALUE])
-    for index in range(len(explanations)):
-        dtype = constants.CATEGORICAL_FEATURE_CATEGORY if dataset.iloc[:, index].name in \
-                        categorical_features else constants.NUMERICAL_FEATURE_CATEGORY
-        new_row = {constants.FEATURE_COLUMN: dataset.columns[index],
-                   constants.METRIC_VALUE_COLUMN: explanations[index],
-                   constants.METRIC_NAME_COLUMN: "FeatureImportance",
-                   constants.FEATURE_CATEGORY_COLUMN: dtype,
-                   constants.THRESHOLD_VALUE: float("nan")}
-        metrics_data = metrics_data.append(new_row, ignore_index=True)
-    row_count_data = {constants.FEATURE_COLUMN: "",
-                      constants.METRIC_VALUE_COLUMN: len(dataset.index),
-                      constants.METRIC_NAME_COLUMN: constants.ROW_COUNT_COLUMN_NAME,
-                      constants.FEATURE_CATEGORY_COLUMN: "",
-                      constants.THRESHOLD_VALUE: float("nan")}
-    metrics_data = metrics_data.append(row_count_data, ignore_index=True)
-
+                                         constants.THRESHOLD_VALUE], index=[0])
+    print(explanation_data)
+    metrics_data = pd.concat(explanation_data)
     spark_data = convert_pandas_to_spark(metrics_data)
     save_spark_df_as_mltable(spark_data, file_path)
 
@@ -245,24 +248,24 @@ def run(args):
     try:
         # Check to see if target is present. If not, we'll return an empty dataframe
         if args.target_column is None:
-            _logger.warning("No target column given, creating an empty dataframe.")
+            log_time_and_message("No target column given, creating an empty dataframe.")
             # Define a new schema for the DataFrame that will hold the metadata
             write_empty_signal_metrics_dataframe()
             return
-
+        log_time_and_message("Reading data in spark and converting to pandas")
         baseline_df = read_mltable_in_spark(args.baseline_data).toPandas()
         task_type = args.task_type if args.task_type else determine_task_type(args.target_column, baseline_df)
         task_type = task_type.lower()
-        _logger.info(f"Computed task type is {task_type}")
+        log_time_and_message(f"Computed task type is {task_type}")
 
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
         feature_importances = compute_feature_importance(
             task_type, args.target_column, baseline_df, categorical_features)
-        _logger.info("Successfully executed the feature importance component.")
         feature_columns = baseline_df.drop([args.target_column], axis=1)
         write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features)
+        log_time_and_message("Successfully executed the feature importance component.")
     except Exception as e:
-        _logger.info(f"Error encountered when executing feature importance component: {e}")
+        log_time_and_message(f"Error encountered when executing feature importance component: {e}")
         raise e
 
 
