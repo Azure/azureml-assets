@@ -135,6 +135,7 @@ def compute_avg_df(token_df, columns, dimensions, metric_prefix=""):
     token_df_avg_pivot = token_df_avg.selectExpr("group", "group_pivot", stack_expr)
     return token_df_avg_pivot
 
+
 def compute_sum_df(token_df, columns, dimensions, metric_prefix=""):
     '''
     Needs the token_df with columns dimensions, columns
