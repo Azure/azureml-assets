@@ -30,6 +30,7 @@ class MMDetLiterals:
     CONFIG_PATH = "config_path"
     WEIGHTS_PATH = "weights_path"
     AUGMENTATIONS_PATH = "augmentations_path"
+    METAFILE_PATH = "model_metadata"
 
 
 class MLflowSchemaLiterals:
