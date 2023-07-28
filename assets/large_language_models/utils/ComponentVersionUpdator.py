@@ -1,74 +1,79 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""
+Helper File to Update Large Langauge Model Versions.
+
+Utility File for incrementing, synchronizing, and updating all LLM versions.
+Also checks Environments are tagging latest.
+"""
+
 from typing import List, Dict, Any, Tuple
 import os
 import re
 import yaml
 
+
 class Component():
+    """Base Component Class."""
+
     def __init__(self, registry: str, name: str, version: str, version_file: str = ''):
+        """Initialize the class."""
         self.registry = registry
         self.name = name
         self.version = version
         self.version_file = version_file
 
-    def __str__(self):
-        r = 'Component('
-        if len(self.registry) > 0:
-            r += f'{self.registry}, '
-        r += f'{self.name}, {self.version}'
-        if len(self.version_file) > 0:
-            r += f', {self.version_file}'
-        return r + ')'
-    
-    def __repr__(self):
-        return str(self)
-    
-    def __read_yaml_file__(self) -> Any:
+    def __read_file__(self) -> Any:
+        """Read the component text from file."""
         with open(self.version_file, 'r') as file:
             return file.read()
 
-    def __write_yaml_file__(self, yaml_data) -> None:
+    def __write_file__(self, yaml_data) -> None:
+        """Write the updated component text to file."""
         with open(self.version_file, 'w') as outfile:
             outfile.write(yaml_data)
 
     def increment_component(self):
+        """Get and increment the component version."""
         old_version = self.version
         v_parts = [int(x) for x in self.version.split('.')]
         v_parts[-1] += 1
         self.version = ".".join([str(x) for x in v_parts])
 
-        text_data = self.__read_yaml_file__()
+        text_data = self.__read_file__()
 
         text_data = text_data.replace(
             f'version: {old_version}',
             f'version: {self.version}'
         )
 
-        self.__write_yaml_file__(text_data)
+        self.__write_file__(text_data)
 
 
 class Pipeline(Component):
-    def __init__(self, registry: str, name: str, version: str, version_file: str = '', components: List[Component] = []):
+    """Component Pipeline Class."""
+
+    def __init__(
+            self,
+            registry: str,
+            name: str,
+            version: str,
+            version_file: str = '',
+            components: List[Component] = []
+            ):
+        """Initialize the class."""
         super(Pipeline, self).__init__(registry, name, version, version_file)
         self.components = components
 
-    def __str__(self):
-        r = 'Component('
-        if len(self.registry) > 0:
-            r += f'{self.registry}, '
-        r += f'{self.name}, {self.version}'
-        if len(self.version_file) > 0:
-            r += f', {self.version_file}'
-        if self.components is not None and len(self.components) > 0:
-            r += f', deps:{self.components}'
-        return r + ')'
-
     def increment_component(self, comp_assets_all: Dict[str, Component]):
+        """Get and increment the component version, then update all the child components."""
         old_version = self.version
         v_parts = [int(x) for x in self.version.split('.')]
         v_parts[-1] += 1
         self.version = ".".join([str(x) for x in v_parts])
 
-        text_data = self.__read_yaml_file__()
+        text_data = self.__read_file__()
 
         text_data = text_data.replace(
             f'version: {old_version}',
@@ -86,21 +91,22 @@ class Pipeline(Component):
             new_version_str = sub_comp_str.replace(
                 sub_comp.version,
                 new_version)
-            
+
             text_data = text_data.replace(
                 sub_comp_str,
                 new_version_str
             )
 
-        self.__write_yaml_file__(text_data)
+        self.__write_file__(text_data)
 
 
 def validate_environment(compt_name: str, env_value: str) -> None:
+    """Ensure all environments are using the latest tag and not specific versions."""
     match = re.findall(
         r'azureml://registries/([^/]+)/environments/([^/]+)/versions/([\d\.]+)',
         env_value,
         flags=re.IGNORECASE)
-    
+
     if len(match) <= 0:
         match = re.findall(
             r'([^:]+):([^\:\@]+)[\:\@]([^\:\@]+)',
@@ -110,12 +116,14 @@ def validate_environment(compt_name: str, env_value: str) -> None:
     if str(match[0][2]) != "latest":
         print('Error', compt_name, 'environment', match[0][1], 'is not using the latest tag')
 
-def parse_component(comp_ref:str) -> Component:
+
+def parse_component(comp_ref: str) -> Component:
+    """Get the registry, name, and version from the component str."""
     match = re.findall(
         r'azureml://registries/([^/]+)/components/([^/]+)/versions/([\d\.]+)',
         comp_ref,
         flags=re.IGNORECASE)
-    
+
     if len(match) <= 0:
         match = re.findall(
             r'([^:]+):([^:]+):([\.\d]+)',
@@ -124,16 +132,19 @@ def parse_component(comp_ref:str) -> Component:
 
     return Component(match[0][0], match[0][1], str(match[0][2]))
 
-def parse_jobs(jobs_value:str) -> List[Component]:
+
+def parse_jobs(jobs_value: str) -> List[Component]:
+    """Pull the sub components from the Pipeline component."""
     deps = []
     for job_name in jobs_value:
         if 'component' in jobs_value[job_name]:
             deps.append(parse_component(jobs_value[job_name]['component']))
     return deps
 
+
 target_fields = {
-    'version': lambda x:str(x),
-    'name': lambda x:x,
+    'version': lambda x: str(x),
+    'name': lambda x: x,
     'jobs': parse_jobs
 }
 
@@ -141,7 +152,9 @@ validate_fields = {
     'environment': validate_environment
 }
 
+
 def generate_assets(folder_path: List[str]) -> Tuple[Dict[str, Component], Dict[str, Pipeline]]:
+    """Walk the file tree and pull out all the components and component pipelines."""
     comp_assets_all = {}
     pipe_assets_all = {}
     for root, _, files in os.walk(folder_path):
@@ -154,12 +167,16 @@ def generate_assets(folder_path: List[str]) -> Tuple[Dict[str, Component], Dict[
 
     return (comp_assets_all, pipe_assets_all)
 
+
 def parse_yaml(file_path: str) -> Any:
+    """Read a yaml file."""
     with open(file_path, 'r') as file:
         yaml_data = yaml.safe_load(file)
     return yaml_data
 
-def parse_asset_yamls(files:List[str], root:str) -> Component:
+
+def parse_asset_yamls(files: List[str], root: str) -> Component:
+    """Read a yaml file and ."""
     comp = {}
     for file in files:
         file_path = os.path.join(root, file)
@@ -167,7 +184,7 @@ def parse_asset_yamls(files:List[str], root:str) -> Component:
         if file.lower().startswith('asset.y'):
             yml = parse_yaml(file_path)
             comp['type'] = yml['type']
-        elif file.lower().startswith('spec.y'):         
+        elif file.lower().startswith('spec.y'):
             yml = parse_yaml(file_path)
         else:
             continue
@@ -179,7 +196,7 @@ def parse_asset_yamls(files:List[str], root:str) -> Component:
 
                 if field == 'version':
                     comp['version_file'] = file_path
-        
+
         for field in validate_fields:
             if field in yml and (type(yml[field]) is not str or r'{{' not in yml[field]):
                 validate_fields[field](comp['name'], yml[field])
@@ -198,6 +215,7 @@ def parse_asset_yamls(files:List[str], root:str) -> Component:
         return None
 
     raise Exception('Oops')
+
 
 folder_path = '.'
 (comp_assets_all, pipe_assets_all) = generate_assets(folder_path)
