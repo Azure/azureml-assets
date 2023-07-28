@@ -12,6 +12,7 @@ from pyspark.sql.types import StringType
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
 
+
 def impute_ids_for_failed_calls(token_df):
     """Impute ids for failed calls
     if the id string is null or empty, then generate a new id using the following logic:
@@ -24,20 +25,21 @@ def impute_ids_for_failed_calls(token_df):
         "id",
         udf(
             lambda id, status_code: id if ((id is not None) or (status_code == 200))
-              else uuid.uuid4().hex,
+            else uuid.uuid4().hex,
             StringType(),
         )(col("id"), col("status_code"))
     )
 
     return token_df
 
+
 def check_data_quality(token_df):
     """check for any violation of assumptions about the data
-    - check that the token_df columns contains: 
-        ['node_id': id the of the node in prompt flow that is calling the LLM. 
+    - check that the token_df columns contains:
+        ['node_id': id the of the node in prompt flow that is calling the LLM.
          'id': request id for the call.
          'status_code': the status code returned by the API call. Need for call success and RAI metrics.
-         'completion_tokens': token count for the final response. 
+         'completion_tokens': token count for the final response.
          'prompt_tokens': token count for the prompt in the request.
          ]
     - check that status_code, id column has no null values
@@ -52,30 +54,30 @@ def check_data_quality(token_df):
         "prompt_tokens",
     ]
 
-    if set(expected_columns).issubset(token_df.columns) == False:
+    if set(expected_columns).issubset(token_df.columns) is False:
         print(f"Error: token_df columns are not as expected. Expected: {expected_columns}, ")
         print(f"Actual: {token_df.columns}")
         return spark.createDataFrame([], token_df.schema)
 
     # check that status_code, id and node_id column has no null values
-    null_status_code_count =  token_df.filter(token_df["status_code"].isNull()).count()
+    null_status_code_count = token_df.filter(token_df["status_code"].isNull()).count()
     if null_status_code_count != 0:
         print(f"Error: token_df contains {null_status_code_count} null values in status_code column")
-        print(f"filtering out the rows with null status_code")
+        print("filtering out the rows with null status_code")
         # filter out the rows with null status_code
         token_df = token_df.filter(token_df["status_code"].isNotNull())
-        
-    null_id_count =  token_df.filter(token_df["id"].isNull()).count()
+    
+    null_id_count = token_df.filter(token_df["id"].isNull()).count()
     if null_id_count != 0:
         print(f"Error: token_df contains {null_id_count} null values in id column")
-        print(f"filtering out the rows with null id")
+        print("filtering out the rows with null id")
         # filter out the rows with null id
         token_df = token_df.filter(token_df["id"].isNotNull())
-    
-    null_node_id_count =  token_df.filter(token_df["node_id"].isNull()).count()
+
+    null_node_id_count = token_df.filter(token_df["node_id"].isNull()).count()
     if null_node_id_count != 0:
         print(f"Error: token_df contains {null_node_id_count} null values in node_id column")
-        print(f"filtering out the rows with null node_id")
+        print("filtering out the rows with null node_id")
         # filter out the rows with null node_id
         token_df = token_df.filter(token_df["node_id"].isNotNull())
 
@@ -87,11 +89,13 @@ def check_data_quality(token_df):
             token_df[column].isNull()
         ).count()
         if null_count != 0:
-            print(f"Error: token_df contains {null_count} null values in {column} column for rows where status_code is 200")
+            print(f"Error: token_df contains {null_count} null values"\
+                + f" in {column} column for rows where status_code is 200")
             print(f"filtering out the rows with null {column}")
             # filter out the rows with null column
             token_df = token_df.filter(token_df[column].isNotNull())
     return token_df
+
 
 def compute_conditional_counts_df(token_df, dimensions, condition_column, condition_value, metric_name):
     '''
@@ -99,13 +103,14 @@ def compute_conditional_counts_df(token_df, dimensions, condition_column, condit
     Returns a metric df with columns group, group_pivot, metric_name, metric_value
     '''
     # check if the token_df has the expected columns
-    if set(dimensions + [condition_column]).issubset(token_df.columns) == False:
+    if set(dimensions + [condition_column]).issubset(token_df.columns) is False:
         return
-    
+
     return token_df.filter(token_df[condition_column] == condition_value).groupBy(dimensions).agg(
         lit(metric_name).alias('metric_name'),
         count('*').cast("float").alias("metric_value"),
     )
+
 
 def compute_avg_df(token_df, columns, dimensions, metric_prefix=""):
     '''
@@ -114,18 +119,18 @@ def compute_avg_df(token_df, columns, dimensions, metric_prefix=""):
     where metric_name is the column name and metric_value is the average of the column
     '''
     # check if the token_df has the expected columns
-    if set(dimensions + columns + ['status_code']).issubset(token_df.columns) == False:
+    if set(dimensions + columns + ['status_code']).issubset(token_df.columns) is False:
         return
     # restrict the token_df to only expected columns
     token_df = token_df.select(dimensions + columns + ['status_code'])
-    
+
     avg_columns = [avg(col).cast("float").alias(f"{metric_prefix}_avg_{col}") for col in columns]
 
     # averge of the columns by dimensions for rows where status_code is 200
     token_df_avg = token_df.filter(token_df["status_code"] == 200).groupBy(dimensions).agg(*avg_columns)
 
     # unpivots the column avgs to a data frame with group, group_pivot, metric_name and metric_value columns
-    stack_columns = ["'"+ metric_prefix +"_avg_" + col + "', " + metric_prefix + "_avg_" + col for col in columns]
+    stack_columns = ["'" + metric_prefix + "_avg_" + col + "', " + metric_prefix + "_avg_" + col for col in columns]
     stack_expr = "stack(" + str(len(columns)) + ", " + ", ".join(stack_columns) + ") as (metric_name, metric_value)"
     token_df_avg_pivot = token_df_avg.selectExpr("group", "group_pivot", stack_expr)
     return token_df_avg_pivot
@@ -143,9 +148,13 @@ def compute_sum_df(token_df, columns, dimensions, metric_prefix=""):
     token_df = token_df.select(dimensions + columns + ['status_code'])
 
     sum_columns = [sum(col).cast("float").alias(f"{metric_prefix}_sum_{col}") for col in columns]
+    token_df_sum = token_df.filter(token_df["status_code"] == 200).groupBy(dimensions).agg(*sum_columns)
+
+    # unpivots the column sums to a data frame with group, group_pivot, metric_name and metric_value columns
     stack_columns = ["'"+ metric_prefix +"_sum_" + col + "', " + metric_prefix + "_sum_" + col for col in columns]
     stack_expr = "stack(" + str(len(columns)) + ", " + ", ".join(stack_columns) + ") as (metric_name, metric_value)"
-    return token_df.filter(token_df["status_code"] == 200).groupBy(dimensions).agg(*sum_columns).selectExpr("group", "group_pivot", stack_expr)
+    token_df_sum_pivot = token_df_sum.selectExpr("group", "group_pivot", stack_expr)
+    return token_df_sum_pivot
 
 
 def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, ratio_metric_name, dimensions):
@@ -154,16 +163,18 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
     The numerator_metric_df and denominator_metric_df should have the same number of rows. 
     Returns a metric df with columns group, group_pivot, metric_name, metric_value,
     where metric_name is the ratio_metric_name and 
-    metric_value is the ratio of the metric_value of the numerator_metric_df to the metric_value of the denominator_metric_df
+    metric_value is the ratio of the metric_value of the numerator_metric_df 
+    to the metric_value of the denominator_metric_df
     null metric_values in the numerator_metric_df are replaced with 0
     '''
 
     # Check if the numerator_metric_df has more number of rows as the denominator_metric_df
     # this is the error case as we expect a denominator row for each numerator row.
     # It is expected that at times there are fewer numerator rows than denominator rows.
-    # In that case we will impute 0 values for the numerator when computing the ratio. 
+    # In that case we will impute 0 values for the numerator when computing the ratio.
     if numerator_metric_df.count() > denominator_metric_df.count():
-        print(f"Error: The number of rows in the numerator_metric_df is greater the number of rows in the denominator_metric_df")
+        print(f"Error: The number of rows in the numerator_metric_df is greater"\
+              + " the number of rows in the denominator_metric_df")
         print(f"numerator_metric_df count: {numerator_metric_df.count()}")
         print(f"numerator_metric_df sample: {numerator_metric_df.take(10)}")
         print(f"denominator_metric_df count: {denominator_metric_df.count()}")
@@ -175,7 +186,7 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
             denominator_metric_df.withColumnRenamed("metric_value","denominator"), on=dimensions, how="rightouter",
         ).select(dimensions+["numerator","denominator"])
 
-    # if the numerator has null values then replace them with 0 
+    # if the numerator has null values then replace them with 0
     ratio_df = ratio_df.fillna(0, subset=["numerator"])
 
     ratio_df = ratio_df.withColumn(
@@ -199,9 +210,9 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
         print(f"denominator_metric_df sample: {denominator_metric_df.take(10)}")
         print(f"ratio_df count: {ratio_df.count()}")
         print(f"ratio_df sample: {ratio_df.take(10)}")
-        return
-    
+        return spark.createDataFrame([], numerator_metric_df.schema)
     return ratio_df
+
 
 def compute_GPU_utilization_metrics(token_df):
     """Compute GPU utilization metrics for each group and group_pivot:
@@ -287,6 +298,7 @@ def compute_GPU_utilization_metrics(token_df):
     .unionAll(gpu_utilization_avg)
     
     return gpu_utilization_metrics
+
 
 def compute_GPU_waste_metrics(token_df):
     """Compute GPU waste metrics:
