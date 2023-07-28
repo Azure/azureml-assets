@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import uuid
 from pyspark.context import SparkContext
 from pyspark.sql.functions import avg, col, count, lit, sum, udf
