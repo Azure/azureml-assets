@@ -130,7 +130,7 @@ def _jensen_shannon_numerical(
             prod_histograms_percent[column],
             base=2)
 
-        row = [column, float(js_distance), "Numerical", "JensenShannonDistance"]
+        row = [column, float(js_distance), "Numerical", "JensenShannonDistance", column, ""]
         rows.append(row)
 
     output_df = get_output_spark_df(rows)
@@ -163,7 +163,7 @@ def _normalized_wasserstein(
         norm = max(std_dev, 0.001)
 
         normalized_distance = distance / norm
-        row = [column, float(normalized_distance), "Numerical", "NormalizedWassersteinDistance"]
+        row = [column, float(normalized_distance), "Numerical", "NormalizedWassersteinDistance", column, ""]
         rows.append(row)
 
     output_df = get_output_spark_df(rows)
@@ -183,7 +183,7 @@ def _ks2sample_pandas_impl(
             baseline_col = pd.Series(baseline_df[column])
             production_col = pd.Series(production_df[column])
             ks2s = ks_2samp(baseline_col, production_col).pvalue
-            row = [column, float(ks2s), "Numerical", "TwoSampleKolmogorovSmirnovTest"]
+            row = [column, float(ks2s), "Numerical", "TwoSampleKolmogorovSmirnovTest", column, ""]
             rows.append(row)
 
         output_df = get_output_spark_df(rows)
@@ -237,7 +237,7 @@ def _psi_numerical(
                 production_percent[i] / baseline_percent[i]
             )
 
-        row = [column, float(psi), "Numerical", "PopulationStabilityIndex"]
+        row = [column, float(psi), "Numerical", "PopulationStabilityIndex", column, ""]
         rows.append(row)
 
     output_df = get_output_spark_df(rows)

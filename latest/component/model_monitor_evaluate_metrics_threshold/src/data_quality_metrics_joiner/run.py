@@ -4,7 +4,7 @@
 """Entry script for Data Quality Metrics Joiner Spark Component."""
 
 import argparse
-from pyspark.sql.functions import col, when
+from pyspark.sql.functions import col, when, lit
 from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
 
 
@@ -42,6 +42,8 @@ def run():
         result_df.withColumnRenamed("featureName", "feature_name")
         .withColumnRenamed("metricName", "metric_name")
         .withColumnRenamed("dataType", "data_type")
+        .withColumn("group", col("feature_name"))
+        .withColumn("group_pivot", lit(""))
         .withColumn("metric_value", col("target_metric_value"))
     )
 

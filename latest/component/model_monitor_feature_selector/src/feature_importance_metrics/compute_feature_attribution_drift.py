@@ -69,18 +69,24 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
                                 constants.METRIC_VALUE_COLUMN: feature_attribution_drift,
                                 constants.METRIC_NAME_COLUMN: "NormalizedDiscountedCumulativeGain",
                                 constants.FEATURE_CATEGORY_COLUMN: "",
+                                constants.GROUP_COLUMN: "",
+                                constants.GROUP_PIVOT_COLUMN: "",
                                 constants.THRESHOLD_VALUE: float("nan")}, index=[0])
     data.append(ndcg_metric)
     baseline_row_count_data = pd.DataFrame({constants.FEATURE_NAME_COLUMN: "",
                                             constants.METRIC_VALUE_COLUMN: baseline_row_count,
                                             constants.METRIC_NAME_COLUMN: "BaselineRowCount",
                                             constants.FEATURE_CATEGORY_COLUMN: "",
+                                            constants.GROUP_COLUMN: "",
+                                            constants.GROUP_PIVOT_COLUMN: "",
                                             constants.THRESHOLD_VALUE: float("nan")}, index=[0])
     data.append(baseline_row_count_data)
     production_row_count_data = pd.DataFrame({constants.FEATURE_NAME_COLUMN: "",
                                               constants.METRIC_VALUE_COLUMN: production_row_count,
                                               constants.METRIC_NAME_COLUMN: "TargetRowCount",
                                               constants.FEATURE_CATEGORY_COLUMN: "",
+                                              constants.GROUP_COLUMN: "",
+                                              constants.GROUP_PIVOT_COLUMN: "",
                                               constants.THRESHOLD_VALUE: float("nan")}, index=[0])
     data.append(production_row_count_data)
 
@@ -91,12 +97,16 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
                     constants.METRIC_VALUE_COLUMN: baseline_feature[constants.METRIC_VALUE_COLUMN],
                     constants.FEATURE_CATEGORY_COLUMN: baseline_feature[constants.FEATURE_CATEGORY_COLUMN],
                     constants.METRIC_NAME_COLUMN: "BaselineFeatureImportance",
+                    constants.GROUP_COLUMN: baseline_feature[constants.FEATURE_CATEGORY_COLUMN],
+                    constants.GROUP_PIVOT_COLUMN: "",
                     constants.THRESHOLD_VALUE: float("nan")}, index=[0])
         production_feature_importance_data = pd.DataFrame({
             constants.FEATURE_NAME_COLUMN: production_feature[constants.FEATURE_COLUMN],
             constants.METRIC_VALUE_COLUMN: production_feature[constants.METRIC_VALUE_COLUMN],
             constants.FEATURE_CATEGORY_COLUMN: production_feature[constants.FEATURE_CATEGORY_COLUMN],
             constants.METRIC_NAME_COLUMN: "ProductionFeatureImportance",
+            constants.GROUP_COLUMN: baseline_feature[constants.FEATURE_CATEGORY_COLUMN],
+            constants.GROUP_PIVOT_COLUMN: "",
             constants.THRESHOLD_VALUE: float("nan")}, index=[0])
         data.append(baseline_feature_importance_data)
         data.append(production_feature_importance_data)
@@ -106,6 +116,8 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
                      constants.METRIC_VALUE_COLUMN,
                      constants.FEATURE_CATEGORY_COLUMN,
                      constants.METRIC_NAME_COLUMN,
+                     constants.GROUP_COLUMN,
+                     constants.GROUP_PIVOT_COLUMN,
                      constants.THRESHOLD_VALUE])
     metrics_data = pd.concat(data)
     spark_data = convert_pandas_to_spark(metrics_data)

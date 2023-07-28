@@ -5,6 +5,8 @@
 
 # Column Names of Computed Metrics Parquet
 FEATURE_NAME_COLUMN = 'feature_name'
+GROUP_COLUMN = 'group'
+GROUP_PIVOT_COLUMN = 'group_pivot'
 FEATURE_CATEGORY_COLUMN = 'data_type'
 METRIC_NAME_COLUMN = 'metric_name'
 METRIC_VALUE_COLUMN = 'metric_value'
