@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: register_model
-version: 0.0.6
+version: 0.0.7
 type: command
 
 is_deterministic: True
@@ -29,12 +29,12 @@ inputs:
   model_name:
     type: string
     optional: true
-    description: Model name to use in the registration. If name already exists, the version will be auto incremented
+    description: Model name to use in the registration. If name already exists, the version will be auto incremented. Model name should satisfy pattern `^[a-zA-Z0-9-]+$`
 
   model_version:
     type: string
     optional: true 
-    description: Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented
+    description: Model version in workspace/registry. If the same model name and version exists, the version will be auto incremented. Model version must be a numeric string
 
   model_type:
     type: string

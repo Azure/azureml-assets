@@ -6,6 +6,7 @@
 import argparse
 import json
 import os
+import re
 import shutil
 import yaml
 
@@ -27,6 +28,9 @@ from utils.exceptions import (
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
 MLFLOW_MODEL_FOLDER = "mlflow_model_folder"
+# omitting underscores which is supported in model name for consistency
+VALID_MODEL_NAME_PATTERN = r"^[a-zA-Z0-9-]+$"
+NEGATIVE_MODEL_NAME_PATTERN = r"[^a-zA-Z0-9-]"
 
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.REGISTER_MODEL
@@ -141,14 +145,16 @@ def main():
 
     # validations
     if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
-        raise AzureMLException._with_error(
-                AzureMLError.create(UnSupportedModelTypeError, model_type=model_type)
-            )
+        raise AzureMLException._with_error(AzureMLError.create(UnSupportedModelTypeError, model_type=model_type))
 
     if not model_name:
-        raise AzureMLException._with_error(
-            AzureMLError.create(MissingModelNameError)
-        )
+        raise AzureMLException._with_error(AzureMLError.create(MissingModelNameError))
+
+    if not re.match(VALID_MODEL_NAME_PATTERN, model_name):
+        # update model name to one supported for registration
+        logger.info(f"Updating model name to match pattern `{VALID_MODEL_NAME_PATTERN}`")
+        model_name = re.sub(NEGATIVE_MODEL_NAME_PATTERN, "-", model_name)
+        logger.info(f"Updated model_name = {model_name}")
 
     # check if we can have lineage and update the model path for ws import
     if not registry_name and args.model_import_job_path:
@@ -165,7 +171,7 @@ def main():
         logger.info(f"MLModel path: {mlmodel_path}")
         with open(mlmodel_path, "r") as stream:
             metadata = yaml.safe_load(stream)
-            flavors = metadata.get('flavors', flavors)
+            flavors = metadata.get("flavors", flavors)
 
     if not model_version or is_model_available(ml_client, model_name, model_version):
         # hack to get current model versions in registry
@@ -178,8 +184,7 @@ def main():
                 model_version = str(int(max_version) + 1)
         except Exception:
             exception_msg = (
-                f"Error in listing versions for model {model_name}."
-                "Trying to register model with version '1'"
+                f"Error in listing versions for model {model_name}." "Trying to register model with version '1'"
             )
             logger.exception(exception_msg)
 
@@ -212,7 +217,7 @@ def main():
     }
     json_object = json.dumps(model_info, indent=4)
 
-    registration_file = registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
+    registration_file = registration_details_folder / ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
 
     with open(registration_file, "w+") as outfile:
         outfile.write(json_object)
