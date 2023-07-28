@@ -57,8 +57,8 @@ def run():
     # These metrics are computed if we have max_tokens and finish_reason in the dataset
     gpu_waste_metrics_group_only = spark.createDataFrame([], gpu_utilization_metrics_group_only.schema)
     if ("finish_reason" in token_df_aggregate_group_pivot.columns)\
-        and ("max_tokens" in token_df_aggregate_group_pivot.columns):
-            gpu_waste_metrics_group_only = compute_GPU_waste_metrics(token_df_aggregate_group_pivot)
+            and ("max_tokens" in token_df_aggregate_group_pivot.columns):
+        gpu_waste_metrics_group_only = compute_GPU_waste_metrics(token_df_aggregate_group_pivot)
 
     gpu_utilization_metrics = spark.createDataFrame([], gpu_utilization_metrics_group_only.schema)
     gpu_waste_metrics = spark.createDataFrame([], gpu_utilization_metrics_group_only.schema)
