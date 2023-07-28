@@ -66,7 +66,7 @@ def check_data_quality(token_df):
         print("filtering out the rows with null status_code")
         # filter out the rows with null status_code
         token_df = token_df.filter(token_df["status_code"].isNotNull())
-    
+
     null_id_count = token_df.filter(token_df["id"].isNull()).count()
     if null_id_count != 0:
         print(f"Error: token_df contains {null_id_count} null values in id column")
@@ -89,8 +89,8 @@ def check_data_quality(token_df):
             token_df[column].isNull()
         ).count()
         if null_count != 0:
-            print(f"Error: token_df contains {null_count} null values"\
-                + f" in {column} column for rows where status_code is 200")
+            print(f"Error: token_df contains {null_count} null values"
+                  + f" in {column} column for rows where status_code is 200")
             print(f"filtering out the rows with null {column}")
             # filter out the rows with null column
             token_df = token_df.filter(token_df[column].isNotNull())
@@ -143,7 +143,7 @@ def compute_sum_df(token_df, columns, dimensions, metric_prefix=""):
     where metric_name is the column name and metric_value is the sum of the column
     '''
     # check if the token_df has the expected columns
-    if set(dimensions + columns + ['status_code']).issubset(token_df.columns) == False:
+    if set(dimensions + columns + ['status_code']).issubset(token_df.columns) is False:
         return
     # restrict the token_df to only expected columns
     token_df = token_df.select(dimensions + columns + ['status_code'])
@@ -152,7 +152,7 @@ def compute_sum_df(token_df, columns, dimensions, metric_prefix=""):
     token_df_sum = token_df.filter(token_df["status_code"] == 200).groupBy(dimensions).agg(*sum_columns)
 
     # unpivots the column sums to a data frame with group, group_pivot, metric_name and metric_value columns
-    stack_columns = ["'"+ metric_prefix +"_sum_" + col + "', " + metric_prefix + "_sum_" + col for col in columns]
+    stack_columns = ["'" + metric_prefix + "_sum_" + col + "', " + metric_prefix + "_sum_" + col for col in columns]
     stack_expr = "stack(" + str(len(columns)) + ", " + ", ".join(stack_columns) + ") as (metric_name, metric_value)"
     token_df_sum_pivot = token_df_sum.selectExpr("group", "group_pivot", stack_expr)
     return token_df_sum_pivot
@@ -160,11 +160,11 @@ def compute_sum_df(token_df, columns, dimensions, metric_prefix=""):
 
 def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, ratio_metric_name, dimensions):
     '''
-    Needs the metric df with columns group, group_pivot, metric_name, metric_value. 
-    The numerator_metric_df and denominator_metric_df should have the same number of rows. 
+    Needs the metric df with columns group, group_pivot, metric_name, metric_value.
+    The numerator_metric_df and denominator_metric_df should have the same number of rows.
     Returns a metric df with columns group, group_pivot, metric_name, metric_value,
-    where metric_name is the ratio_metric_name and 
-    metric_value is the ratio of the metric_value of the numerator_metric_df 
+    where metric_name is the ratio_metric_name and
+    metric_value is the ratio of the metric_value of the numerator_metric_df
     to the metric_value of the denominator_metric_df
     null metric_values in the numerator_metric_df are replaced with 0
     '''
@@ -174,7 +174,7 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
     # It is expected that at times there are fewer numerator rows than denominator rows.
     # In that case we will impute 0 values for the numerator when computing the ratio.
     if numerator_metric_df.count() > denominator_metric_df.count():
-        print(f"Error: The number of rows in the numerator_metric_df is greater"\
+        print("Error: The number of rows in the numerator_metric_df is greater"
               + " the number of rows in the denominator_metric_df")
         print(f"numerator_metric_df count: {numerator_metric_df.count()}")
         print(f"numerator_metric_df sample: {numerator_metric_df.take(10)}")
@@ -182,10 +182,10 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
         print(f"denominator_metric_df sample: {denominator_metric_df.take(10)}")
         return spark.createDataFrame([], numerator_metric_df.schema)
 
-    ratio_df = numerator_metric_df.withColumnRenamed("metric_value","numerator")\
+    ratio_df = numerator_metric_df.withColumnRenamed("metric_value", "numerator")\
         .join(
-            denominator_metric_df.withColumnRenamed("metric_value","denominator"), on=dimensions, how="rightouter",
-        ).select(dimensions+["numerator","denominator"])
+            denominator_metric_df.withColumnRenamed("metric_value", "denominator"), on=dimensions, how="rightouter",
+        ).select(dimensions+["numerator", "denominator"])
 
     # if the numerator has null values then replace them with 0
     ratio_df = ratio_df.fillna(0, subset=["numerator"])
@@ -202,11 +202,12 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
     ratio_df = ratio_df.select(
             dimensions + ["metric_name", "metric_value"]
         )
-    
+
     # Check that the number of rows in the ratio_df is same as the number of rows in the denominator_metric_df
     # Else something wrong likely happened in the join
     if ratio_df.count() != denominator_metric_df.count():
-        print(f"Error: The number of rows in the ratio_df is not same as the number of rows in the numerator_metric_df")
+        print(f"Error: The number of rows in the ratio_df is not same as the number"
+              + " of rows in the numerator_metric_df")
         print(f"denominator_metric_df count: {denominator_metric_df.count()}")
         print(f"denominator_metric_df sample: {denominator_metric_df.take(10)}")
         print(f"ratio_df count: {ratio_df.count()}")
@@ -218,7 +219,7 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
 def compute_GPU_utilization_metrics(token_df):
     """Compute GPU utilization metrics for each group and group_pivot:
     - Expect the token_df to have the following columns:group, group_pivot
-    - Calls failed due to overload: 
+    - Calls failed due to overload:
         -- total number of calls with 429 status code
         -- %age of calls with 429 status code
     - Calls Succeeded:
@@ -229,8 +230,8 @@ def compute_GPU_utilization_metrics(token_df):
         -- Average of prompt_tokens, completion_tokens, total_tokens for calls with 200 status code
     """
     # check if the token_df has the expected dimension columns
-    dimensions=['group','group_pivot']
-    if set(dimensions).issubset(token_df.columns) == False:
+    dimensions=['group', 'group_pivot']
+    if set(dimensions).issubset(token_df.columns) is False:
         return
 
     # Call Counts
@@ -238,9 +239,9 @@ def compute_GPU_utilization_metrics(token_df):
         lit("num_calls").alias('metric_name'),
         count('*').cast("float").alias("metric_value"),
     )
-    
+
     # Calls failed due to overload
-    calls_failed_due_to_overload =compute_conditional_counts_df(
+    calls_failed_due_to_overload = compute_conditional_counts_df(
         token_df=token_df,
         dimensions=dimensions,
         condition_column="status_code",
@@ -280,7 +281,6 @@ def compute_GPU_utilization_metrics(token_df):
         dimensions=dimensions,
         metric_prefix="gpu_utilization"
     )
-    
 
     gpu_utilization_avg = compute_avg_df(
         token_df=token_df,
@@ -288,16 +288,16 @@ def compute_GPU_utilization_metrics(token_df):
         dimensions=dimensions,
         metric_prefix="gpu_utilization"
     )
-    
+
     # Union all the metric dfs
     gpu_utilization_metrics = call_counts\
-    .unionAll(calls_failed_due_to_overload)\
-    .unionAll(percent_calls_failed_due_to_overload)\
-    .unionAll(calls_succeeded)\
-    .unionAll(percentage_calls_succeeded)\
-    .unionAll(gpu_utilization_sum)\
-    .unionAll(gpu_utilization_avg)
-    
+        .unionAll(calls_failed_due_to_overload)\
+        .unionAll(percent_calls_failed_due_to_overload)\
+        .unionAll(calls_succeeded)\
+        .unionAll(percentage_calls_succeeded)\
+        .unionAll(gpu_utilization_sum)\
+        .unionAll(gpu_utilization_avg)
+
     return gpu_utilization_metrics
 
 
@@ -312,9 +312,9 @@ def compute_GPU_waste_metrics(token_df):
     """
     # check if the token_df has the expected dimension columns
     dimensions=['group','group_pivot']
-    if set(dimensions).issubset(token_df.columns) == False:
+    if set(dimensions).issubset(token_df.columns) is False:
         return
-    
+
     # These metrics are computed if we have max_tokens and finish_reason in the dataset
     if ("finish_reason" not in token_df.columns) or ("max_tokens" not in token_df.columns):
         return
@@ -328,7 +328,7 @@ def compute_GPU_waste_metrics(token_df):
         metric_name="num_calls_with_status_code_200"
     )
 
-    calls_wasted_due_to_truncation =compute_conditional_counts_df(
+    calls_wasted_due_to_truncation = compute_conditional_counts_df(
         token_df=token_df,
         dimensions=dimensions,
         condition_column="finish_reason",
@@ -342,29 +342,23 @@ def compute_GPU_waste_metrics(token_df):
         ratio_metric_name="percentage_calls_wasted_due_to_truncation",
         dimensions=dimensions
     )
-    
-    # Waste due to truncation of response. This happens when the max_tokens is set to a value so small that the response is truncated. 
+
+    # Waste due to truncation of response.
+    # This happens when the max_tokens is set to a value so small that the response is truncated.
     gpu_waste_sum_truncation = compute_sum_df(
         token_df=token_df,
         columns=["prompt_tokens", "completion_tokens", "total_tokens"],
         dimensions=dimensions,
         metric_prefix="gpu_waste_due_to_response_truncation"
     )
-    
+
     gpu_waste_avg_truncation = compute_avg_df(
         token_df=token_df,
         columns=["prompt_tokens", "completion_tokens", "total_tokens"],
         dimensions=dimensions,
         metric_prefix="gpu_waste_due_to_response_truncation"
     )
-    
-    # GPU utilization for the successful calls
-    gpu_utilization_sum = compute_sum_df(
-        token_df=token_df,
-        columns=["prompt_tokens", "completion_tokens", "total_tokens"],
-        dimensions=dimensions
-    )
-
+ 
     # Union all the metric dfs
     gpu_waste_metrics = calls_wasted_due_to_truncation\
     .unionAll(percentage_calls_wasted_due_to_truncation)\
