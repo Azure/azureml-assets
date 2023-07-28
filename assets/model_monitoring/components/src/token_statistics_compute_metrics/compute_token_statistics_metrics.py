@@ -206,7 +206,7 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
     # Check that the number of rows in the ratio_df is same as the number of rows in the denominator_metric_df
     # Else something wrong likely happened in the join
     if ratio_df.count() != denominator_metric_df.count():
-        print(f"Error: The number of rows in the ratio_df is not same as the number"
+        print("Error: The number of rows in the ratio_df is not same as the number"
               + " of rows in the numerator_metric_df")
         print(f"denominator_metric_df count: {denominator_metric_df.count()}")
         print(f"denominator_metric_df sample: {denominator_metric_df.take(10)}")
@@ -230,7 +230,7 @@ def compute_GPU_utilization_metrics(token_df):
         -- Average of prompt_tokens, completion_tokens, total_tokens for calls with 200 status code
     """
     # check if the token_df has the expected dimension columns
-    dimensions=['group', 'group_pivot']
+    dimensions = ['group', 'group_pivot']
     if set(dimensions).issubset(token_df.columns) is False:
         return
 
@@ -311,7 +311,7 @@ def compute_GPU_waste_metrics(token_df):
         -- %age of total tokens wasted due to truncation
     """
     # check if the token_df has the expected dimension columns
-    dimensions=['group','group_pivot']
+    dimensions = ['group', 'group_pivot']
     if set(dimensions).issubset(token_df.columns) is False:
         return
 
@@ -358,11 +358,11 @@ def compute_GPU_waste_metrics(token_df):
         dimensions=dimensions,
         metric_prefix="gpu_waste_due_to_response_truncation"
     )
- 
+
     # Union all the metric dfs
     gpu_waste_metrics = calls_wasted_due_to_truncation\
-    .unionAll(percentage_calls_wasted_due_to_truncation)\
-    .unionAll(gpu_waste_sum_truncation)\
-    .unionAll(gpu_waste_avg_truncation)
+        .unionAll(percentage_calls_wasted_due_to_truncation)\
+        .unionAll(gpu_waste_sum_truncation)\
+        .unionAll(gpu_waste_avg_truncation)
 
     return gpu_waste_metrics

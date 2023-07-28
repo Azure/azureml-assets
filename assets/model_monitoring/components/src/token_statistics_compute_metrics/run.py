@@ -46,7 +46,7 @@ def run():
 
     # total tokens = prompt tokens + completion tokens
     token_df = token_df.withColumn("total_tokens",
-                    token_df["prompt_tokens"] + token_df["completion_tokens"])
+                                   token_df["prompt_tokens"] + token_df["completion_tokens"])
 
     # compute GPU utilization metrics for group
     # create a copy of token_df where group_pivot is set to Aggregate
@@ -58,7 +58,7 @@ def run():
     gpu_waste_metrics_group_only = spark.createDataFrame([], gpu_utilization_metrics_group_only.schema)
     if ("finish_reason" in token_df_aggregate_group_pivot.columns)\
         and ("max_tokens" in token_df_aggregate_group_pivot.columns):
-        gpu_waste_metrics_group_only = compute_GPU_waste_metrics(token_df_aggregate_group_pivot)
+            gpu_waste_metrics_group_only = compute_GPU_waste_metrics(token_df_aggregate_group_pivot)
 
     gpu_utilization_metrics = spark.createDataFrame([], gpu_utilization_metrics_group_only.schema)
     gpu_waste_metrics = spark.createDataFrame([], gpu_utilization_metrics_group_only.schema)
@@ -74,14 +74,15 @@ def run():
 
     # Union the metrics
     GPU_token_stats_metrics = gpu_utilization_metrics.unionAll(gpu_waste_metrics)\
-    .unionAll(gpu_utilization_metrics_group_only)\
-    .unionAll(gpu_waste_metrics_group_only)
+        .unionAll(gpu_utilization_metrics_group_only)\
+        .unionAll(gpu_waste_metrics_group_only)
 
     # Add threshold_value column and set the value to null
     GPU_token_stats_metrics = GPU_token_stats_metrics.withColumn("threshold_value", lit(None).cast("float"))
 
     # Save metrics in default blob store and log it in active run
     save_spark_df_as_mltable(GPU_token_stats_metrics, args.signal_metrics)
+
 
 if __name__ == "__main__":
     run()
