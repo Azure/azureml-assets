@@ -13,7 +13,6 @@ inputs:
     mode: direct
   group_pivot_column_name:
     type: string
-    default: "user_id"
 outputs:
   signal_metrics:
     type: mltable

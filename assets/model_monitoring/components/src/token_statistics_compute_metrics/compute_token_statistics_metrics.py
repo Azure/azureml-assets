@@ -1,8 +1,9 @@
 import uuid
-from pyspark.sql.functions import col, udf, sum, avg, percentile_approx, min, count, lit
-from pyspark.sql.types import StringType
 from pyspark.context import SparkContext
+from pyspark.sql.functions import avg, col, count, lit, sum, udf
 from pyspark.sql.session import SparkSession
+from pyspark.sql.types import StringType
+
 
 # Init spark session
 sc = SparkContext.getOrCreate()
@@ -99,8 +100,8 @@ def compute_conditional_counts_df(token_df, dimensions, condition_column, condit
         return
     
     return token_df.filter(token_df[condition_column] == condition_value).groupBy(dimensions).agg(
-    lit(metric_name).alias('metric_name'),
-    count('*').cast("float").alias("metric_value"),
+        lit(metric_name).alias('metric_name'),
+        count('*').cast("float").alias("metric_value"),
     )
 
 def compute_avg_df(token_df, columns, dimensions, metric_prefix=""):
@@ -116,9 +117,15 @@ def compute_avg_df(token_df, columns, dimensions, metric_prefix=""):
     token_df = token_df.select(dimensions + columns + ['status_code'])
     
     avg_columns = [avg(col).cast("float").alias(f"{metric_prefix}_avg_{col}") for col in columns]
+
+    # averge of the columns by dimensions for rows where status_code is 200
+    token_df_avg = token_df.filter(token_df["status_code"] == 200).groupBy(dimensions).agg(*avg_columns)
+
+    # unpivots the column avgs to a data frame with group, group_pivot, metric_name and metric_value columns
     stack_columns = ["'"+ metric_prefix +"_avg_" + col + "', " + metric_prefix + "_avg_" + col for col in columns]
     stack_expr = "stack(" + str(len(columns)) + ", " + ", ".join(stack_columns) + ") as (metric_name, metric_value)"
-    return token_df.filter(token_df["status_code"] == 200).groupBy(dimensions).agg(*avg_columns).selectExpr("group", "group_pivot", stack_expr)
+    token_df_avg_pivot = token_df_avg.selectExpr("group", "group_pivot", stack_expr)
+    return token_df_avg_pivot
 
 def compute_sum_df(token_df, columns, dimensions, metric_prefix=""):
     '''
@@ -148,8 +155,10 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
     null metric_values in the numerator_metric_df are replaced with 0
     '''
 
-    # check if the numerator_metric_df has more number of rows as the denominator_metric_df
-    # this is the error case as we expect a denominator row for each numerator row
+    # Check if the numerator_metric_df has more number of rows as the denominator_metric_df
+    # this is the error case as we expect a denominator row for each numerator row.
+    # It is expected that at times there are fewer numerator rows than denominator rows.
+    # In that case we will impute 0 values for the numerator when computing the ratio. 
     if numerator_metric_df.count() > denominator_metric_df.count():
         print(f"Error: The number of rows in the numerator_metric_df is greater the number of rows in the denominator_metric_df")
         print(f"numerator_metric_df count: {numerator_metric_df.count()}")
@@ -159,7 +168,7 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
         return spark.createDataFrame([], numerator_metric_df.schema)
 
     ratio_df = numerator_metric_df.withColumnRenamed("metric_value","numerator")\
-    .join(
+        .join(
             denominator_metric_df.withColumnRenamed("metric_value","denominator"), on=dimensions, how="rightouter",
         ).select(dimensions+["numerator","denominator"])
 
@@ -200,7 +209,7 @@ def compute_GPU_utilization_metrics(token_df):
     - Calls Succeeded:
         -- total number of calls with 200 status code
         -- %age of calls with 200 status code
-    - GPU utlization for the successful calls
+    - GPU utilization for the successful calls
         -- Sum of prompt_tokens, completion_tokens, total_tokens for calls with 200 status code
         -- Average of prompt_tokens, completion_tokens, total_tokens for calls with 200 status code
     """
@@ -211,12 +220,11 @@ def compute_GPU_utilization_metrics(token_df):
 
     # Call Counts
     call_counts = token_df.groupBy(dimensions).agg(
-    lit("num_calls").alias('metric_name'),
-    count('*').cast("float").alias("metric_value"),
+        lit("num_calls").alias('metric_name'),
+        count('*').cast("float").alias("metric_value"),
     )
     
     # Calls failed due to overload
-    
     calls_failed_due_to_overload =compute_conditional_counts_df(
         token_df=token_df,
         dimensions=dimensions,
@@ -250,7 +258,7 @@ def compute_GPU_utilization_metrics(token_df):
         dimensions=dimensions
     )
 
-    # GPU utlization for the successful calls
+    # GPU utilization for the successful calls
     gpu_utilization_sum = compute_sum_df(
         token_df=token_df,
         columns=["prompt_tokens", "completion_tokens", "total_tokens"],
@@ -312,7 +320,6 @@ def compute_GPU_waste_metrics(token_df):
         metric_name="num_calls_with_finish_reason_length"
     )
 
-    
     percentage_calls_wasted_due_to_truncation = compute_percentage_metric_df(
         numerator_metric_df=calls_wasted_due_to_truncation,
         denominator_metric_df=calls_succeeded,
@@ -335,7 +342,7 @@ def compute_GPU_waste_metrics(token_df):
         metric_prefix="gpu_waste_due_to_response_truncation"
     )
     
-    # GPU utlization for the successful calls
+    # GPU utilization for the successful calls
     gpu_utilization_sum = compute_sum_df(
         token_df=token_df,
         columns=["prompt_tokens", "completion_tokens", "total_tokens"],
