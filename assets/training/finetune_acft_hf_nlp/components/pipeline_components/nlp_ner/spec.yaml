@@ -241,13 +241,13 @@ outputs:
 jobs:
   model_import:
     type: command
-    component: azureml:token_classification_model_import:0.0.10
+    component: azureml:token_classification_model_import:0.0.12
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       huggingface_id: ${{parent.inputs.model_name}}
   preprocess:
     type: command
-    component: azureml:token_classification_datapreprocess:0.0.10
+    component: azureml:token_classification_datapreprocess:0.0.12
     compute: ${{parent.inputs.compute_preprocess}}
     inputs:
       task_name: ${{parent.inputs.task_name}}
@@ -259,7 +259,7 @@ jobs:
       model_selector_output: ${{parent.jobs.model_import.outputs.output_dir}}
   finetune:
     type: command
-    component: azureml:token_classification_finetune:0.0.10
+    component: azureml:token_classification_finetune:0.0.12
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
