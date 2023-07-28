@@ -1,0 +1,32 @@
+name: automl-dnn-vision-gpu
+channels:
+- conda-forge
+- cerebis
+dependencies:
+- python=3.8
+- pip=21.3.1
+- numpy~=1.22.3
+- libffi=3.3
+- pycocotools=2.0.4
+- shap=0.39.0
+- recordclass=0.14.3
+- llvmlite=0.36.0
+- setuptools=65.5.1
+- wheel=0.38.1
+- pip:
+  - --extra-index-url https://download.pytorch.org/whl/cu113
+  - torch==1.11.0+cu113
+  - torchvision==0.12.0+cu113
+  - cryptography==41.0.0
+  - azureml-mlflow=={{latest-pypi-version}}
+  - azureml-dataset-runtime=={{latest-pypi-version}}
+  - azureml-telemetry=={{latest-pypi-version}}
+  - azureml-responsibleai=={{latest-pypi-version}}
+  - azureml-automl-core=={{latest-pypi-version}}
+  - azureml-automl-runtime=={{latest-pypi-version}}
+  - azureml-train-automl-client=={{latest-pypi-version}}
+  - azureml-defaults=={{latest-pypi-version}}
+  - azureml-interpret=={{latest-pypi-version}}
+  - azureml-train-automl-runtime=={{latest-pypi-version}}
+  - azureml-automl-dnn-vision=={{latest-pypi-version}}
+  - azureml-dataprep>=2.24.4

@@ -1,7 +1,31 @@
-## 1.6.0 (Unreleased)
+## 1.9.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
+
+## 1.8.0 (2023-07-20)
+### 🚀 New Features
+- [#913](https://github.com/Azure/azureml-assets/pull/913) Output variable with list of built images
+
+## 1.7.2 (2023-07-20)
+### 🐛 Bugs Fixed
+- [#912](https://github.com/Azure/azureml-assets/pull/912) Fix indentation in update_assets.py
+
+## 1.7.1 (2023-07-19)
+### 🐛 Bugs Fixed
+- [#907](https://github.com/Azure/azureml-assets/pull/907) Handle path parameter for data assets
+
+## 1.7.0 (2023-07-18)
+### 🚀 New Features
+- [#902](https://github.com/Azure/azureml-assets/pull/902) Make output directory optional for update_assets.py
+
+## 1.6.0 (2023-07-17)
+### 🚀 New Features
+- [#821](https://github.com/Azure/azureml-assets/pull/821) Make release directory optional for update_assets.py
+
+## 1.5.2 (2023-07-13)
+### 🐛 Bugs Fixed
+- [#882](https://github.com/Azure/azureml-assets/pull/882) Create package list using pip if conda is unavailable
 
 ## 1.5.1 (2023-07-11)
 ### 🚀 New Features

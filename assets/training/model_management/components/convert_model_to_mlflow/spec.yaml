@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: convert_model_to_mlflow
-version: 0.0.10
+version: 0.0.11
 type: command
 
 is_deterministic: True
@@ -60,6 +60,7 @@ inputs:
       - translation
       - image-classification
       - image-object-detection
+      - image-instance-segmentation
       - text-to-image
     description: A Hugging face task on which model was trained on. A required parameter for transformers MLflow flavor. Can be provided as input here or in model_download_metadata JSON file.
     optional: true
