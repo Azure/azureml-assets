@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.6
+version: 0.0.9
 name: llm_ingest_existing_acs_basic
 display_name: LLM - Existing ACS Pipeline
 is_deterministic: false
@@ -97,28 +97,6 @@ inputs:
 #  compute: azureml:cpu-cluster
 jobs:
   #############
-  validate_deployments_job:
-    type: command
-    resources:
-      instance_count: ${{parent.inputs.serverless_instance_count}}
-      instance_type: ${{parent.inputs.serverless_instance_type}}
-      properties:
-        compute_specification:
-          automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.8'
-    identity:
-      type: user_identity
-    inputs:
-      llm_config: ${{parent.inputs.llm_config}}
-      check_embeddings: "False"
-      check_completion: "True"
-    outputs:
-      output_data:
-        type: uri_file
-    environment_variables:
-       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_EMBEDDING : ${{parent.inputs.embedding_connection}}
-       AZUREML_WORKSPACE_CONNECTION_ID_AOAI_COMPLETION: ${{parent.inputs.llm_connection}}
-  #############
   data_import_job:
     type: command
     resources:
@@ -171,7 +149,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_create_promptflow:0.0.17'
+    component: 'azureml:llm_rag_create_promptflow:0.0.20'
     inputs:
       mlindex_asset_id: ${{parent.jobs.register_mlindex_asset_job.outputs.asset_id}}
       mlindex_name: ${{parent.inputs.embeddings_dataset_name}}
