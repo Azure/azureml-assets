@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.12
+version: 0.0.13
 name: llm_ingest_git_to_faiss_basic
 display_name: LLM - Git to FAISS Pipeline
 is_deterministic: false
