@@ -19,7 +19,7 @@ dependencies:
   - azureml-mlflow=={{latest-pypi-version}}
   - scikit-learn==0.24.1
   - mltable
-  - transformers==4.21.1
+  - transformers==4.30.0
   - torch~=1.11
   - openai~=0.27.4
   - azure-ai-ml~=1.8.0
