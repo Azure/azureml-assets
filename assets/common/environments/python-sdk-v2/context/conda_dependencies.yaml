@@ -11,3 +11,5 @@ dependencies:
     - azureml-core=={{latest-pypi-version}}
     # v1 package for logging and telemetry. Switch to using application-insights and implementing custom logging
     - azureml-telemetry=={{latest-pypi-version}}
+    - cryptography=={{latest-pypi-version}}
+    - certifi==={{latest-pypi-version}}

@@ -10,3 +10,7 @@ wget=={{latest-pypi-version}}
 applicationinsights=={{latest-pypi-version}}
 azureml-automl-core=={{latest-pypi-version}}
 azureml-telemetry=={{latest-pypi-version}}
+cryptography=={{latest-pypi-version}}
+scipy=={{latest-pypi-version}}
+aiohttp==={{latest-pypi-version}}
+certifi==={{latest-pypi-version}}
