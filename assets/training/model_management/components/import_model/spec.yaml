@@ -24,14 +24,6 @@ inputs:
     description: Instance type to be used for the component in case of serverless compute, eg. STANDARD_NC6s_v3. 
       The parameter compute must be set to 'serverless' for instance_type to be used
 
-  local_validation_compute:
-    type: string
-    optional: true
-    default: serverless
-    description: Compute for Model local validation. Please make sure to provide a compute that is large enough to load the model and perform local inferencing. 
-      eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
-      If compute name is provided, instance_type field will be ignored and the respective cluster will be used.
-
   ## Inputs for download model
   model_source:
     type: string
