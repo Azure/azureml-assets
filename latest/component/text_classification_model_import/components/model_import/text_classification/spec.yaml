@@ -9,7 +9,7 @@ display_name: Text Classification Model Import
 description: Component to import PyTorch / MLFlow model. See [docs](https://aka.ms/azureml/components/text_classification_model_import)
   to learn more.
 
-environment: azureml:acft-hf-nlp-gpu:16
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/16
 
 code: ../../../src/model_selector
 
