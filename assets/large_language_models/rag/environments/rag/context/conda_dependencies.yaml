@@ -21,7 +21,7 @@ dependencies:
   - inference-schema==1.4
   - nltk==3.8.1
   - azureml-mlflow~=1.49
-  - pymssql~=2.2.7
+  - pymssql==2.2.7
   - sqlalchemy==1.4.46
   - azure-identity==1.12.0
   - azure-keyvault-secrets==4.6.0
