@@ -272,7 +272,7 @@ def get_git_lfs_blob_size_in_kb(git_dir: Path) -> int:
     """
     try:
         # 1. Execute git lfs ls-files -s command to get size of all blobs recursively
-        # 2. Filter size using awk utility and translate them to KB. 
+        # 2. Filter size using awk utility and translate them to KB.
         #    Expectation is that each blob dimension would be in [KB, MB, GB]
         # 3. Perform sum and return total size in KB
         cmd = (
