@@ -174,17 +174,12 @@ def main():
             flavors = metadata.get("flavors", flavors)
 
     if not model_version or is_model_available(ml_client, model_name, model_version):
-        # hack to get current model versions in registry
         model_version = "1"
-        models_list = []
         try:
-            models_list = ml_client.models.list(name=model_name)
-            if models_list:
-                max_version = (max(models_list, key=lambda x: int(x.version))).version
-                model_version = str(int(max_version) + 1)
+            model = ml_client.models.get(name=model_name, label="latest").version
         except Exception:
             exception_msg = (
-                f"Error in listing versions for model {model_name}." "Trying to register model with version '1'"
+                f"Error in fetching registration info for {model_name}." "Trying to register model with version '1'"
             )
             logger.exception(exception_msg)
 
