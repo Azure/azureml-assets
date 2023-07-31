@@ -176,12 +176,14 @@ def main():
     if not model_version or is_model_available(ml_client, model_name, model_version):
         model_version = "1"
         try:
-            model_version = str(int(ml_client.models.get(name=model_name, label="latest").version + 1))
-        except Exception:
+            model_version = str(int(ml_client.models.get(name=model_name, label="latest").version) + 1)
+        except Exception as e:
             exception_msg = (
-                f"Error in fetching registration info for {model_name}." "Trying to register model with version '1'"
+                f"Error in fetching registration info for {model_name}. "
+                "Trying to register model with version '1' "
+                f"Error => {e}"
             )
-            logger.exception(exception_msg)
+            logger.warning(exception_msg)
 
     model = Model(
         name=model_name,
