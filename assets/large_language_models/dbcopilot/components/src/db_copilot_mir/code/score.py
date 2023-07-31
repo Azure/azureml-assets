@@ -100,8 +100,8 @@ def run(request: AMLRequest):
                     (
                         json.dumps(item)
                         for item in db_copilot.stream_generate(
-                        question, session_id, temperature, top_p
-                    )
+                            question, session_id, temperature, top_p
+                        )
                     )
                 ),
                 mimetype="application/json",

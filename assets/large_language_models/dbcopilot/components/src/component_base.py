@@ -19,6 +19,7 @@ from azureml.core import Run, Workspace
 from azureml.core.authentication import AzureCliAuthentication, MsiAuthentication
 from db_copilot_tool.telemetry import set_print_logger, track_function
 
+
 def main_entry_point(function_name: str):
     """main_entry_point."""
 

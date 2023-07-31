@@ -12,6 +12,7 @@ from component_base import main_entry_point
 from db_copilot_tool.contracts.db_copilot_config import DBCopilotConfig
 from endpoint_deployment_base import EndpointDeploymentBase
 
+
 @main_entry_point("deploy")
 class EndpointDeployment(EndpointDeploymentBase):
     """EndpointDeployment Class."""

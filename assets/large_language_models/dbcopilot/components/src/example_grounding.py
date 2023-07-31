@@ -11,6 +11,7 @@ from db_copilot_tool.contracts.embedding_config import EmbeddingConfig
 from db_copilot_tool.tools.dummy_embedding_service import DummyEmbeddingService
 from db_copilot_tool.tools.in_context_learning_agent import InContextLearningAgent
 
+
 @main_entry_point("ground")
 class ExampleGrounding(ComponentBase):
     """ExampleGrounding Class."""
