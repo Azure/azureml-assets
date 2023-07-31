@@ -4,11 +4,24 @@
 """Downloader Module."""
 
 import langcodes
+import os
+import shutil
+import stat
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 from azureml.model.mgmt.config import PathType
 from azureml.model.mgmt.downloader.config import ModelSource
-from azureml.model.mgmt.downloader.download_utils import download_model_for_path_type
+from azureml.model.mgmt.utils.common_utils import (
+    BUFFER_SPACE,
+    run_command,
+    log_execution_time,
+    round_size,
+    get_system_time_utc,
+    get_file_or_folder_size,
+    get_vm_available_space_in_kb,
+    get_git_lfs_blob_size_in_kb,
+)
+from azureml.model.mgmt.utils.exceptions import BlobStorageDownloadError, GITCloneError, VMNotSufficientForOperation
 from huggingface_hub.hf_api import ModelInfo
 from pathlib import Path
 from azureml.model.mgmt.utils.common_utils import retry, fetch_huggingface_model_info
@@ -31,7 +44,138 @@ PROPERTIES = [
 TAGS = ["task", "license"]
 
 
-class HuggingfaceDownloader:
+class AzureBlobstoreDownloader:
+    """Downloader class for model hosted on a public azure blobstorage."""
+
+    URI_TYPE = PathType.AZUREBLOB.value
+
+    def __init__(self, model_uri: str, download_dir: Path):
+        """Azure blobstore downloader init.
+
+        param model_uri: blobstore path to the model.
+            eg: https://blobstorageaccount.blob.core.windows.net/models/model_folder
+        type model_uri: str
+        param download_dir: Directory path to download artifacts to
+        type download_dir: Path
+        """
+        self._model_uri = model_uri
+        self._download_dir = download_dir
+
+    @log_execution_time
+    def _download(self):
+        try:
+            download_cmd = f"azcopy cp --recursive=true '{self._model_uri}' {self._download_dir}"
+            # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
+            # https://github.com/Azure/azureml-assets/issues/283
+            exit_code, stdout = run_command(download_cmd)
+            if exit_code != 0:
+                raise AzureMLException._with_error(
+                    AzureMLError.create(BlobStorageDownloadError, uri=self._model_uri, error=stdout)
+                )
+
+            return {
+                "download_time_utc": get_system_time_utc(),
+                "size": round_size(get_file_or_folder_size(self._download_dir)),
+            }
+        except Exception as e:
+            raise AzureMLException._with_error(
+                AzureMLError.create(BlobStorageDownloadError, uri=self._model_uri, error=e)
+            )
+
+    @retry(3)
+    def download_model(self):
+        """Download a model from a publicly accessible azure blobstorage and return details."""
+        download_details = self._download()
+        tags = {k: download_details[k] for k in TAGS if k in download_details}
+        props = {k: download_details[k] for k in PROPERTIES if k in download_details}
+        return {
+            "name": self._model_uri.split("/")[-1],
+            "tags": tags,
+            "properties": props,
+        }
+
+
+class GITDownloader:
+    """Downloader class for model hosted on public git repositories."""
+
+    URI_TYPE = PathType.GIT.value
+
+    def __init__(self, model_uri: str, download_dir: Path):
+        """GIT downloader init.
+
+        param model_uri: GIT repository URL for the model.
+            eg: https://github.com/some_model
+        type model_uri: str
+        param download_dir: Directory path to download artifacts to
+        type download_dir: Path
+        """
+        self._model_uri = model_uri
+        self._download_dir = download_dir
+
+    def _onerror(func, path, exc_info):
+        """Error Handler for shutil rmtree."""
+        if not os.access(path, os.W_OK):
+            os.chmod(path, stat.S_IWUSR)
+            func(path)
+        else:
+            raise
+
+    @log_execution_time
+    def _download(self):
+        try:
+            # do shallow fetch
+            logger.info("Cloning non LFS files first")
+            clone_cmd = f"GIT_LFS_SKIP_SMUDGE=1 git clone --depth=1 {self._model_uri} {self._download_dir}"
+            exit_code, stdout = run_command(clone_cmd)
+            if exit_code != 0:
+                raise AzureMLException._with_error(
+                    AzureMLError.create(GITCloneError, uri=self._model_uri, error=stdout)
+                )
+
+            logger.info(f"Done. Checking if its safe to pull LFS files")
+            available_size_on_vm = get_vm_available_space_in_kb()
+            total_blob_size_in_kb = get_git_lfs_blob_size_in_kb(git_dir=self._download_dir)
+            if available_size_on_vm - total_blob_size_in_kb < BUFFER_SPACE:
+                details = (
+                    f"Compute not sufficient to download model files keeping 1GB buffer space. "
+                    f"AVAILABLE_SIZE_IN_KB = {available_size_on_vm} "
+                    f"Remaining model size to download: {total_blob_size_in_kb}"
+                )
+                raise AzureMLException._with_error(
+                    AzureMLError.create(VMNotSufficientForOperation, operation="download", details=details)
+                )
+
+            logger.info("Done. Downloading LFS files")
+            clone_cmd = f"cd {self._download_dir} && git lfs pull"
+            exit_code, stdout = run_command(clone_cmd)
+            if exit_code != 0:
+                raise AzureMLException._with_error(
+                    AzureMLError.create(GITCloneError, uri=self._model_uri, error=stdout)
+                )
+
+            git_path = os.path.join(self._download_dir, ".git")
+            shutil.rmtree(git_path, onerror=self._onerror)
+            return {
+                "download_time_utc": get_system_time_utc(),
+                "size": round_size(get_file_or_folder_size(self._download_dir)),
+            }
+        except Exception as e:
+            raise AzureMLException._with_error(AzureMLError.create(GITCloneError, uri=self._model_uri, error=e))
+
+    @retry(3)
+    def download_model(self):
+        """Download a publicly hosted GIT model and return details."""
+        download_details = self._download()
+        tags = {k: download_details[k] for k in TAGS if k in download_details}
+        props = {k: download_details[k] for k in PROPERTIES if k in download_details}
+        return {
+            "name": self._model_uri.split("/")[-1],
+            "tags": tags,
+            "properties": props,
+        }
+
+
+class HuggingfaceDownloader(GITDownloader):
     """Huggingface model downloader class."""
 
     HF_ENDPOINT = "https://huggingface.co"
@@ -42,15 +186,19 @@ class HuggingfaceDownloader:
     # jax is also a language code used to represent the language spoken by the Jaintia people.
     LANGUAGE_CODE_EXCEPTIONS = ["jax", "vit"]
 
-    def __init__(self, model_id: str):
+    def __init__(self, model_id: str, download_dir: Path):
         """Huggingface downloader init.
 
         param model_id: https://huggingface.co/<model_id>
         type model_id: str
+        param download_dir: Directory path to download artifacts to
+        type download_dir: Path
         """
         self._model_id = model_id
         self._model_uri = self.HF_ENDPOINT + f"/{model_id}"
+        self._download_dir = download_dir
         self._model_info = None
+        super().__init__(self._model_uri, download_dir)
 
     @property
     def model_info(self) -> ModelInfo:
@@ -89,10 +237,10 @@ class HuggingfaceDownloader:
 
         return props
 
-    def download_model(self, download_dir):
+    def download_model(self):
         """Download a Hugging face model and return details."""
         if self.model_info:
-            download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
+            download_details = self._download()
             model_props = self._get_model_properties()
             model_props.update(download_details)
             tags = {k: model_props[k] for k in TAGS if k in model_props}
@@ -109,68 +257,14 @@ class HuggingfaceDownloader:
             )
 
 
-class GITDownloader:
-    """Downloader class for model hosted on public git repositories."""
-
-    URI_TYPE = PathType.GIT.value
-
-    def __init__(self, model_uri):
-        """GIT downloader init.
-
-        param model_uri: GIT repository URL for the model.
-            eg: https://github.com/some_model
-        type model_uri: str
-        """
-        self._model_uri = model_uri
-
-    @retry(3)
-    def download_model(self, download_dir):
-        """Download a publicly hosted GIT model and return details."""
-        download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
-        tags = {k: download_details[k] for k in TAGS if k in download_details}
-        props = {k: download_details[k] for k in PROPERTIES if k in download_details}
-        return {
-            "name": self._model_uri.split("/")[-1],
-            "tags": tags,
-            "properties": props,
-        }
-
-
-class AzureBlobstoreDownloader:
-    """Downloader class for model hosted on a public azure blobstorage."""
-
-    URI_TYPE = PathType.AZUREBLOB.value
-
-    def __init__(self, model_uri: str):
-        """Azure blobstore downloader init.
-
-        param model_uri: blobstore path to the model.
-            eg: https://blobstorageaccount.blob.core.windows.net/models/model_folder
-        type model_uri: str
-        """
-        self._model_uri = model_uri
-
-    @retry(3)
-    def download_model(self, download_dir):
-        """Download a model from a publicly accessible azure blobstorage and return details."""
-        download_details = download_model_for_path_type(self.URI_TYPE, self._model_uri, download_dir)
-        tags = {k: download_details[k] for k in TAGS if k in download_details}
-        props = {k: download_details[k] for k in PROPERTIES if k in download_details}
-        return {
-            "name": self._model_uri.split("/")[-1],
-            "tags": tags,
-            "properties": props,
-        }
-
-
 def download_model(model_source: str, model_id: str, download_dir: Path):
     """Download model and return model information."""
     if model_source == ModelSource.HUGGING_FACE.value:
-        downloader = HuggingfaceDownloader(model_id=model_id)
+        downloader = HuggingfaceDownloader(model_id=model_id, download_dir=download_dir)
     elif model_source == ModelSource.GIT.value:
-        downloader = GITDownloader(model_uri=model_id)
+        downloader = GITDownloader(model_uri=model_id, download_dir=download_dir)
     elif model_source == ModelSource.AZUREBLOB.value:
-        downloader = AzureBlobstoreDownloader(model_uri=model_id)
+        downloader = AzureBlobstoreDownloader(model_uri=model_id, download_dir=download_dir)
     else:
         raise Exception(f"Download from {model_source} is not supported")
-    return downloader.download_model(download_dir)
+    return downloader.download_model()
