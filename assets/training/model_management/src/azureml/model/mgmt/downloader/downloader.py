@@ -139,7 +139,9 @@ class GITDownloader:
                 details = (
                     f"Compute not sufficient to download model files keeping 1GB buffer space. "
                     f"AVAILABLE_SIZE_IN_KB = {available_size_on_vm} "
-                    f"Remaining model size to download: {total_blob_size_in_kb}"
+                    f"Remaining model size to download: {total_blob_size_in_kb}."
+                    "Please select optimal SKU for your model size from here: "
+                    "https://learn.microsoft.com/en-us/azure/virtual-machines/sizes"
                 )
                 raise AzureMLException._with_error(
                     AzureMLError.create(VMNotSufficientForOperation, operation="download", details=details)
