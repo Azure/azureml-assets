@@ -3,6 +3,8 @@ $schema: https://azuremlschemas.azureedge.net/latest/parallelComponent.schema.js
 name: automl_many_models_training_step
 display_name: AutoML Many Models - AutoML Training
 version: 0.0.1
+tags:
+  Preview: ''
 is_deterministic: false
 
 type: parallel

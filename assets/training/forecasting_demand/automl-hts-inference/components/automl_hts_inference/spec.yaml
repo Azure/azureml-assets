@@ -5,6 +5,8 @@ name: automl_hts_inference
 display_name: AutoML Hierarchical Timeseries Forecasting - Inference
 description: Enables inference for hts components.
 version: 0.0.1
+tags:
+  Preview: ''
 is_deterministic: false
 
 inputs:
