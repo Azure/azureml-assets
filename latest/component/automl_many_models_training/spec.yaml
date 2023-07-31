@@ -5,8 +5,6 @@ name: automl_many_models_training
 display_name: AutoML - Many Models Training
 description: Enables AutoML many models training.
 version: 0.0.1
-tags:
-  Preview: ''
 is_deterministic: false
 
 inputs:
