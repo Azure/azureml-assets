@@ -5,6 +5,7 @@
 
 import re
 import os
+import psutil
 import shutil
 import sys
 import time
@@ -250,20 +251,15 @@ def round_size(size: int) -> str:
     return f"{size:.2f} {dim[count]}"
 
 
-def get_vm_available_space_in_kb():
-    """Return available VM size in KB.
+def get_filesystem_available_space_in_kb(path: Path = "./"):
+    """Return filesystem available size in KB.
 
     :return: Return available size on VM in KB
     :rtype: int
     """
-    try:
-        cmd = "df -k | awk '/\/$/ {print $4}'"
-        exit_code, stdout = run_command(cmd)
-        if exit_code != 0:
-            raise Exception(f"Error in fetching available size. Error {stdout}")
-        return int(stdout)
-    except Exception as e:
-        raise AzureMLException._with_error(AzureMLError.create(GenericRunCMDError, error=e))
+    partition = psutil.disk_usage(path)
+    available_size_bytes = partition.free
+    return available_size_bytes / 1024
 
 
 def get_git_lfs_blob_size_in_kb(git_dir: Path) -> int:
@@ -275,8 +271,12 @@ def get_git_lfs_blob_size_in_kb(git_dir: Path) -> int:
     :rtype: int
     """
     try:
+        # 1. Execute git lfs ls-files -s command to get size of all blobs recursively
+        # 2. Filter size using awk utility and translate them to KB. 
+        #    Expectation is that each blob dimension would be in [KB, MB, GB]
+        # 3. Perform sum and return total size in KB
         cmd = (
-            f"cd {git_dir} && "
+            f"cd {str(git_dir)} && "
             "git lfs ls-files -s | "
             "awk -F'[()]| ' 'BEGIN { CONVFMT = \"%.0f\" }{"
             'size=$5; unit=$6; if(unit=="GB") size*=1024*1024; else if(unit=="MB") size*=1024; print size}\' | '

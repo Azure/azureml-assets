@@ -18,7 +18,7 @@ from azureml.model.mgmt.utils.common_utils import (
     round_size,
     get_system_time_utc,
     get_file_or_folder_size,
-    get_vm_available_space_in_kb,
+    get_filesystem_available_space_in_kb,
     get_git_lfs_blob_size_in_kb,
 )
 from azureml.model.mgmt.utils.exceptions import BlobStorageDownloadError, GITCloneError, VMNotSufficientForOperation
@@ -132,8 +132,8 @@ class GITDownloader:
                     AzureMLError.create(GITCloneError, uri=self._model_uri, error=stdout)
                 )
 
-            logger.info(f"Done. Checking if its safe to pull LFS files")
-            available_size_on_vm = get_vm_available_space_in_kb()
+            logger.info("Done. Checking if its safe to pull LFS files")
+            available_size_on_vm = get_filesystem_available_space_in_kb()
             total_blob_size_in_kb = get_git_lfs_blob_size_in_kb(git_dir=self._download_dir)
             if available_size_on_vm - total_blob_size_in_kb < BUFFER_SPACE:
                 details = (
