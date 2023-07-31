@@ -9,7 +9,7 @@ import re
 import subprocess
 import sys
 import tempfile
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import mlflow
 import numpy as np
@@ -20,7 +20,7 @@ from PIL import Image
 from config import Tasks, MMDetLiterals, MLflowSchemaLiterals, ODLiterals, ISLiterals
 
 
-def _create_temp_file(img: Image.Image, parent_dir: str) -> str:
+def _create_temp_file(request_body: bytes, parent_dir: str) -> str:
     """Create temporory file, save image and return path to the file.
 
     :param request_body: Image
@@ -32,6 +32,7 @@ def _create_temp_file(img: Image.Image, parent_dir: str) -> str:
     """
     with tempfile.NamedTemporaryFile(dir=parent_dir, mode="wb", delete=False) as image_file_fp:
         img_path = image_file_fp.name + ".png"
+        img = Image.open(io.BytesIO(request_body))
         img.save(img_path)
         return img_path
 
@@ -138,86 +139,42 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         self._inference_detector = None
         self._task_type = task_type
 
-    def _process_object_detection_results(
-        self, results: List[np.ndarray], image_sizes: List[Tuple[int, int]]
-    ) -> List[Dict[str, List]]:
-        """Post process object detection model results.
-
-        :param results: List of numpy arrays containing bounding boxes, labels and scores.
-        :type results: List[np.ndarray]
-        :param image_sizes: List of image sizes.
-        :type image_sizes: List[Tuple[int, int]]
-        :return: List of predictions having bounding boxes.
-        :rtype: List[Dict[str, List]]
+    def _post_process_model_results(self, batch_results: List) -> List[Dict[str, Any]]:
+        """Convert model results to OD or IS output format.
+        :param batch_results: List of model results for images in batch.
+        :type batch_results: List
+        :return: List of predictions for images in batch.
+        If task type is OD, each prediction is a dict of bbox, labels and classes.
+        If task type is IS, each prediction is a dict of bbox, labels, classes and polygons.
+        :rtype: List[Dict[str, Any]]
         """
         predictions = []
-        for result, image_size in zip(results, image_sizes):
-            bboxes = np.vstack(result)
-            labels = [np.full(bbox.shape[0], i, dtype=np.int32) for i, bbox in enumerate(result)]
-            labels = np.concatenate(labels)
+        for result in batch_results:
+            image_height, image_width = result.ori_shape
+            pred_instances = result.pred_instances
+            bboxes = pred_instances.bboxes.numpy()
+            labels = pred_instances.labels.numpy()
+            scores = pred_instances.scores.numpy()
+            masks = pred_instances.masks.numpy() if self._task_type == Tasks.MM_INSTANCE_SEGMENTATION.value else None
 
             cur_image_preds = {ODLiterals.BOXES: []}
-            for bbox, label in zip(bboxes, labels):
-                cur_image_preds[ODLiterals.BOXES].append(
-                    {
-                        ODLiterals.BOX: {
-                            ODLiterals.TOP_X: float(bbox[0]) / image_size[0],
-                            ODLiterals.TOP_Y: float(bbox[1]) / image_size[1],
-                            ODLiterals.BOTTOM_X: float(bbox[2]) / image_size[0],
-                            ODLiterals.BOTTOM_Y: float(bbox[3]) / image_size[1],
-                        },
-                        ODLiterals.LABEL: self._model.CLASSES[label],
-                        ODLiterals.SCORE: float(bbox[4]),
-                    }
-                )
-            predictions.append(cur_image_preds)
-        return predictions
+            for i in range(len(labels)):
+                box = {
+                    ODLiterals.BOX: {
+                        ODLiterals.TOP_X: float(bboxes[i][0]) / image_width,
+                        ODLiterals.TOP_Y: float(bboxes[i][1]) / image_height,
+                        ODLiterals.BOTTOM_X: float(bboxes[i][2]) / image_width,
+                        ODLiterals.BOTTOM_Y: float(bboxes[i][3]) / image_height,
+                    },
+                    ODLiterals.LABEL: self.classes[labels[i]],
+                    ODLiterals.SCORE: float(scores[i]),
+                }
+                if masks is not None:
+                    from mmdet.structures.mask import bitmap_to_polygon
 
-    def _process_instance_segmentation_results(
-        self, batch_predictions: List[Tuple[List[np.ndarray], List[np.ndarray]]], image_sizes: List[Tuple[int, int]]
-    ) -> List[Dict[str, List]]:
-        """Post process instance segmentation model results.
-
-        :param batch_predictions: List of tuples containing bounding boxes and masks.
-        :type batch_predictions: List[Tuple[List[np.ndarray], List[np.ndarray]]]
-        :param image_sizes: List of image sizes.
-        :type image_sizes: List[Tuple[int, int]]
-        :return: List of predictions having bounding boxes and masks.
-        :rtype: List[Dict[str, List]]
-        """
-        from mmcv import concat_list
-        from mmdet.core.mask.structures import bitmap_to_polygon
-
-        predictions = []
-        for (predicted_bbox, predicted_mask), image_size in zip(batch_predictions, image_sizes):
-            if isinstance(predicted_mask, tuple):
-                predicted_mask = predicted_mask[0]  # ms rcnn
-            bboxes = np.vstack(predicted_bbox)
-            labels = [np.full(bbox.shape[0], i, dtype=np.int32) for i, bbox in enumerate(predicted_bbox)]
-            labels = np.concatenate(labels)
-
-            masks = concat_list(predicted_mask)  # Concatenate a list of list into a single list.
-            if isinstance(masks[0], torch.Tensor):
-                masks = torch.stack(masks, dim=0)
-            else:
-                masks = torch.as_tensor(np.stack(masks, axis=0))
-
-            cur_image_preds = {ISLiterals.BOXES: []}
-            for bbox, label, mask in zip(bboxes, labels, masks):
-                polygon, _ = bitmap_to_polygon(mask)
-                cur_image_preds[ISLiterals.BOXES].append(
-                    {
-                        ISLiterals.BOX: {
-                            ISLiterals.TOP_X: float(bbox[0]) / image_size[0],
-                            ISLiterals.TOP_Y: float(bbox[1]) / image_size[1],
-                            ISLiterals.BOTTOM_X: float(bbox[2]) / image_size[0],
-                            ISLiterals.BOTTOM_Y: float(bbox[3]) / image_size[1],
-                        },
-                        ISLiterals.LABEL: self._model.CLASSES[label],
-                        ISLiterals.SCORE: float(bbox[4]),
-                        ISLiterals.POLYGON: _normalize_polygon(polygon, image_size),
-                    }
-                )
+                    polygon, _ = bitmap_to_polygon(masks[i])
+                    box[ISLiterals.POLYGON] = _normalize_polygon(polygon, (image_width, image_height))
+                cur_image_preds[ODLiterals.BOXES].append(box)
             predictions.append(cur_image_preds)
         return predictions
 
@@ -231,8 +188,8 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
 
         if self._task_type in [Tasks.MM_OBJECT_DETECTION.value, Tasks.MM_INSTANCE_SEGMENTATION.value]:
             # Install mmcv and mmdet using mim, with pip installation is not working
-            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmcv-full==1.7.1"])
-            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmdet==2.28.2"])
+            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmcv==2.0.1"])
+            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmdet==3.1.0"])
             # mmdet installs opencv-python but it results in error while importing libGL.so.1. So, we
             # need to re-install headless version of opencv-python.
             subprocess.check_call(
@@ -241,7 +198,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
 
             # importing mmdet/mmcv afte installing using mim
             from mmdet.apis import inference_detector, init_detector
-            from mmcv import Config
+            from mmengine.config import Config
 
             self._inference_detector = inference_detector
             try:
@@ -251,6 +208,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
                 _config = Config.fromfile(model_config_path)
                 self._model = init_detector(_config, model_weights_path, device=_map_location)
+                self.classes = self._model.dataset_meta[MMDetLiterals.CLASSES]
 
                 print("Model loaded successfully")
             except Exception:
@@ -276,18 +234,11 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         )
 
         with tempfile.TemporaryDirectory() as tmp_output_dir:
-            image_path_list = []
-            # Save image sizes to use it for normalization
-            image_original_size_list = []
-            for _, image in processed_images.iterrows():
-                img = Image.open(io.BytesIO(image[0]))
-                image_path_list.append(_create_temp_file(img, tmp_output_dir))
-                image_original_size_list.append(img.size)
+            image_path_list = (
+                processed_images.iloc[:, 0].map(lambda row: _create_temp_file(row, tmp_output_dir)).tolist()
+            )
 
             results = self._inference_detector(imgs=image_path_list, model=self._model)
 
-            if self._task_type == Tasks.MM_OBJECT_DETECTION.value:
-                predictions = self._process_object_detection_results(results, image_original_size_list)
-            elif self._task_type == Tasks.MM_INSTANCE_SEGMENTATION.value:
-                predictions = self._process_instance_segmentation_results(results, image_original_size_list)
+            predictions = self._post_process_model_results(results)
             return pd.DataFrame(predictions)

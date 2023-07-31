@@ -31,6 +31,7 @@ class MMDetLiterals:
     WEIGHTS_PATH = "weights_path"
     AUGMENTATIONS_PATH = "augmentations_path"
     METAFILE_PATH = "model_metadata"
+    CLASSES = "classes"
 
 
 class MLflowSchemaLiterals:
@@ -64,7 +65,7 @@ class ODLiterals:
     BOTTOM_Y = "bottomY"
 
 
-class ISLiterals(ODLiterals):
+class ISLiterals:
     """IS constants."""
 
     POLYGON = "polygon"
