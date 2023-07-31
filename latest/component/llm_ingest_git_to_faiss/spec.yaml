@@ -4,7 +4,7 @@ type: pipeline
 tags:
   Preview: ""
 
-version: 0.0.25
+version: 0.0.26
 name: llm_ingest_git_to_faiss
 display_name: LLM - Git to FAISS Pipeline (With Test Data Generation and Auto Prompt)
 is_deterministic: false
@@ -244,7 +244,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.9'
+    component: 'azureml:llm_rag_validate_deployments:0.0.10'
     identity:
       type: user_identity
     inputs:
@@ -267,7 +267,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_git_clone:0.0.8'
+    component: 'azureml:llm_rag_git_clone:0.0.9'
     inputs:
       git_repository: ${{parent.inputs.git_repository}}
       branch_name: ${{parent.inputs.branch_name}}
@@ -287,7 +287,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_crack_and_chunk:0.0.8'
+    component: 'azureml:llm_rag_crack_and_chunk:0.0.9'
     inputs:
       input_data: ${{parent.jobs.git_clone_job.outputs.output_data}}
       input_glob: ${{parent.inputs.input_glob}}
@@ -311,7 +311,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_qa_data_generation:0.0.11'
+    component: 'azureml:llm_rag_qa_data_generation:0.0.12'
     inputs:
       openai_api_version: ${{parent.inputs.openai_api_version}}
       openai_api_type: ${{parent.inputs.openai_api_type}}
@@ -332,7 +332,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_qa_data_asset:0.0.2'
+    component: 'azureml:llm_rag_register_qa_data_asset:0.0.3'
     inputs:
       storage_uri: ${{parent.jobs.data_generation_job.outputs.output_data}}
       register_output: ${{parent.inputs.register_outputs}}
@@ -346,7 +346,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: azureml:llm_autoprompt_qna:0.0.7
+    component: azureml:llm_autoprompt_qna:0.0.8
     inputs:
       openai_api_version: ${{parent.inputs.openai_api_version}}
       openai_api_type: ${{parent.inputs.openai_api_type}}
@@ -380,7 +380,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_autoprompt_data_asset:0.0.2'
+    component: 'azureml:llm_rag_register_autoprompt_data_asset:0.0.3'
     inputs:
       storage_uri: ${{parent.jobs.hard_prompt_sweep_job.outputs.best_prompt}}
       register_output: ${{parent.inputs.register_outputs}}
@@ -394,7 +394,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_create_promptflow:0.0.20'
+    component: 'azureml:llm_rag_create_promptflow:0.0.21'
     inputs:
       best_prompts: ${{parent.jobs.hard_prompt_sweep_job.outputs.best_prompt}}
       mlindex_asset_id: ${{parent.jobs.register_mlindex_asset_job.outputs.asset_id}}
@@ -412,7 +412,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_generate_embeddings:0.0.3'
+    component: 'azureml:llm_rag_generate_embeddings:0.0.4'
     inputs:
       chunks_source:
         type: uri_folder
@@ -462,7 +462,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_create_faiss_index:0.0.8'
+    component: 'azureml:llm_rag_create_faiss_index:0.0.9'
     inputs:
       embeddings:
         type: uri_folder
@@ -480,7 +480,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_mlindex_asset:0.0.8'
+    component: 'azureml:llm_rag_register_mlindex_asset:0.0.9'
     inputs:
       storage_uri: ${{parent.jobs.create_faiss_index_job.outputs.index}}
       asset_name: ${{parent.inputs.embeddings_dataset_name}}

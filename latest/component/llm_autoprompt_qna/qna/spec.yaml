@@ -4,7 +4,7 @@ type: command
 tags:
   Preview: ""
 
-version: 0.0.7
+version: 0.0.8
 name: llm_autoprompt_qna
 display_name: LLM - Auto Prompt for QnA
 is_deterministic: true
