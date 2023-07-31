@@ -25,5 +25,5 @@ RUN /bin/bash -c "source ~/.bashrc"
 
 
 # Workaround: install packages with extra index url. Will be removed after the packages are published to pypi
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/dbcopilot-0.3.20230613.dev4-py3-none-any.whl
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.3-py3-none-any.whl
+RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/dbcopilot-0.3.20230714.1-py3-none-any.whl
+RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.7-py3-none-any.whl
