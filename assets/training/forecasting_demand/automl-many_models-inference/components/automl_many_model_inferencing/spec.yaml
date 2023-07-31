@@ -5,8 +5,6 @@ name: automl_many_models_inference
 display_name: AutoML Many Models - Inference
 description: Inference components for AutoML many model.
 version: 0.0.1
-tags:
-  Preview: ''
 is_deterministic: false
 
 inputs:
