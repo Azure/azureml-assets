@@ -180,7 +180,7 @@ def main():
             if models_list:
                 max_version = (max(models_list, key=lambda x: int(x.version))).version
                 model_version = str(int(max_version) + 1)
-        except Exception as e:
+        except Exception:
             logger.warning(
                 f"Error in fetching registration details for {model_name}. Trying to register model with version '1'."
             )
