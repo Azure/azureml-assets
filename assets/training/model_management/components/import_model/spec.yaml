@@ -169,7 +169,7 @@ outputs:
 
 jobs:
   download_model:
-    component: azureml:download_model:0.0.9
+    component: azureml:download_model:0.0.10
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

@@ -104,7 +104,7 @@ class GenericRunCMDError(ClientError):
 
     @property
     def message_format(self) -> str:
-        "Message format."
+        """Message format."""
         return ModelImportErrorStrings.CMD_EXECUTION_ERROR
 
 
