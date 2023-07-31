@@ -105,7 +105,7 @@ def is_model_available(ml_client, model_name, model_version):
     try:
         ml_client.models.get(name=model_name, version=model_version)
     except Exception as e:
-        logger.exception(f"Model with name - {model_name} and version - {model_version} is not available. Error: {e}")
+        logger.warning(f"Model with name - {model_name} and version - {model_version} is not available. Error: {e}")
         is_available = False
     return is_available
 
@@ -176,14 +176,14 @@ def main():
     if not model_version or is_model_available(ml_client, model_name, model_version):
         model_version = "1"
         try:
-            model_version = str(int(ml_client.models.get(name=model_name, label="latest").version) + 1)
+            models_list = ml_client.models.list(name=model_name)
+            if models_list:
+                max_version = (max(models_list, key=lambda x: int(x.version))).version
+                model_version = str(int(max_version) + 1)
         except Exception as e:
-            exception_msg = (
-                f"Error in fetching registration info for {model_name}. "
-                "Trying to register model with version '1' "
-                f"Error => {e}"
+            logger.warning(
+                f"Error in fetching registration details for {model_name}. Trying to register model with version '1'."
             )
-            logger.warning(exception_msg)
 
     model = Model(
         name=model_name,

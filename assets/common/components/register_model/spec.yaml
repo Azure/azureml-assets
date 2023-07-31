@@ -29,7 +29,7 @@ inputs:
   model_name:
     type: string
     optional: true
-    description: Model name to use in the registration. If name already exists, the version will be auto incremented. Model name should satisfy pattern `^[a-zA-Z0-9-]+$`
+    description: Model name to use in the registration. If name already exists, the version will be auto incremented. Model name must be alphanumeric and can contain dashes/hyphens
 
   model_version:
     type: string
