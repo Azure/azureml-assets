@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110@sha25
 
 WORKDIR /
 
-RUN apt-get update && apt-get install -y git git-lfs
+RUN apt-get update && apt-get -y upgrade && apt-get install -y git git-lfs
 
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
