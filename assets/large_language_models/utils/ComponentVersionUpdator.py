@@ -1,11 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
+r"""
 Helper File to Update Large Langauge Model Versions.
 
 Utility File for incrementing, synchronizing, and updating all LLM versions.
 Also checks Environments are tagging latest.
+
+To update all:
+\\azureml-assets\assets>python utils\ComponentVersionUpdator.py --input_folder . --update_all
+
+To only update component pipelines with updated components:
+\\azureml-assets\assets>python utils\ComponentVersionUpdator.py --input_folder .
 """
 
 from typing import List, Dict, Any, Tuple
@@ -66,8 +72,10 @@ class Pipeline(Component):
         super(Pipeline, self).__init__(registry, name, version, version_file)
         self.components = components
 
-    def increment_component(self, comp_assets_all: Dict[str, Component]):
+    def increment_component(self, comp_assets_all: Dict[str, Component], update_all: bool):
         """Get and increment the component version, then update all the child components."""
+        needs_update = update_all
+
         old_version = self.version
         v_parts = [int(x) for x in self.version.split('.')]
         v_parts[-1] += 1
@@ -88,16 +96,37 @@ class Pipeline(Component):
 
             new_version = comp_assets_all[sub_comp.name].version
 
-            new_version_str = sub_comp_str.replace(
-                sub_comp.version,
-                new_version)
+            if sub_comp.version != new_version:
+                needs_update = True
+                new_version_str = sub_comp_str.replace(
+                    sub_comp.version,
+                    new_version)
 
-            text_data = text_data.replace(
-                sub_comp_str,
-                new_version_str
-            )
+                text_data = text_data.replace(
+                    sub_comp_str,
+                    new_version_str
+                )
 
-        self.__write_file__(text_data)
+        if needs_update:
+            self.__write_file__(text_data)
+
+
+def main_wrapper(folder_path: str, update_all: bool) -> None:
+    """Execute the code."""
+    (comp_assets_all, pipe_assets_all) = generate_assets(folder_path)
+
+    if update_all:
+        print(f'Updating component versions (Count:{len(comp_assets_all)})....')
+        for a in comp_assets_all:
+            print('  ', a)
+            comp_assets_all[a].increment_component()
+    else:
+        print(f'Skipping update component versions (Count:{len(comp_assets_all)})....')
+
+    print(f'Updating Pipeline and linked Component versions (Count:{len(pipe_assets_all)})....')
+    for a in pipe_assets_all:
+        print('  ', a)
+        pipe_assets_all[a].increment_component(comp_assets_all, update_all)
 
 
 def validate_environment(compt_name: str, env_value: str) -> None:
@@ -217,15 +246,12 @@ def parse_asset_yamls(files: List[str], root: str) -> Component:
     raise Exception('Oops')
 
 
-folder_path = '.'
-(comp_assets_all, pipe_assets_all) = generate_assets(folder_path)
+if __name__ == '__main__':
+    from argparse import ArgumentParser, BooleanOptionalAction
 
-print(f'Updating component versions (Count:{len(comp_assets_all)})....')
-for a in comp_assets_all:
-    print('  ', a)
-    comp_assets_all[a].increment_component()
+    parser = ArgumentParser()
+    parser.add_argument("--input_folder", type=str, default='.')
+    parser.add_argument('--update_all', action=BooleanOptionalAction, required=False, default=False)
+    args = parser.parse_args()
 
-print(f'Updating Pipeline and linked Component versions (Count:{len(pipe_assets_all)})....')
-for a in pipe_assets_all:
-    print('  ', a)
-    pipe_assets_all[a].increment_component(comp_assets_all)
+    main_wrapper(args.input_folder, args.update_all)
