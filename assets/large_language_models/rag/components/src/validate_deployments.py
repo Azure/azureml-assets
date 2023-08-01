@@ -325,7 +325,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                 'apiVersion',
                 connection_metadata.get('ApiVersion', "2023-03-15-preview"))
             completion_params["connection"] = connection_id_completion
-            if "ResourceId" in connection["properties"]["metadata"]:
+            if connection["properties"]["metadata"].get("ResourceId", None) is not None:
                 cog_workspace_details = split_details(
                     connection["properties"]["metadata"]["ResourceId"], start=1)
                 completion_params["default_aoai_name"] = cog_workspace_details["accounts"]
@@ -374,7 +374,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                 'apiVersion',
                 connection_metadata.get('ApiVersion', "2023-03-15-preview"))
             embedding_params["connection"] = connection_id_embedding
-            if "ResourceId" in connection["properties"]["metadata"]:
+            if connection["properties"]["metadata"].get("ResourceId", None) is not None:
                 cog_workspace_details = split_details(
                     connection["properties"]["metadata"]["ResourceId"], start=1)
                 embedding_params["default_aoai_name"] = cog_workspace_details["accounts"]
