@@ -36,7 +36,7 @@ MODEL_PATH = "mlflow_model_folder/data/model"
 
 
 def init():
-    """Setup MII Client."""
+    """Prepare MII Client."""
     model_path = mii.utils.full_model_path(configs[mii.constants.MODEL_PATH_KEY])
     deployment_name = configs[mii.constants.DEPLOYMENT_NAME_KEY]
     model_name = configs[mii.constants.MODEL_NAME_KEY]
