@@ -37,24 +37,10 @@ inputs:
     description: model id used to load model checkpoint.
 
   # Data PreProcess parameters (See [docs](https://aka.ms/azureml/components/text_classification_datapreprocess) to learn more)
-  task_name:
-    type: string
-    optional: false
-    enum:
-      - NLPMulticlass
-    default: NLPMulticlass
-    description: Text Classification task type
-
   label_column_name:
     type: string
     optional: false
     description: label key name
-
-  sentence1_key:
-    type: string
-    optional: false
-    default: sentences
-    description: Key for `sentence1_key` in each example line. Special characters like \ and ' are invalid in the parameter value.
 
   # Dataset parameters
   training_data:
@@ -231,12 +217,6 @@ inputs:
     optional: true
     description: If set to true, will save as mlflow model with pyfunc as flavour
 
-  batch_size:
-    type: integer
-    default: 32
-    optional: true
-    description: batch size for pre-process
-
   deepspeed_config:
     type: uri_file
     optional: true
@@ -260,17 +240,14 @@ jobs:
       huggingface_id: ${{parent.inputs.model_name}}
   preprocess:
     type: command
-    component: azureml:text_classification_datapreprocess:0.0.12
+    component: azureml:nlp_multiclass_datapreprocessing:0.0.1
     compute: ${{parent.inputs.compute_preprocess}}
     inputs:
-      task_name: ${{parent.inputs.task_name}}
-      batch_size: ${{parent.inputs.batch_size}}
       label_column_name: ${{parent.inputs.label_column_name}}
       train_file_path: ${{parent.inputs.training_data}}
       valid_file_path: ${{parent.inputs.validation_data}}
       model_selector_output: ${{parent.jobs.model_import.outputs.output_dir}}
       enable_long_range_text: ${{parent.inputs.enable_long_range_text}}
-      sentence1_key: ${{parent.inputs.sentence1_key}}
   finetune:
     type: command
     component: azureml:text_classification_finetune:0.0.12

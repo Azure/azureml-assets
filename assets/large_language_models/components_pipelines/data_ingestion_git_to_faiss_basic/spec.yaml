@@ -75,14 +75,6 @@ inputs:
      default: -1
      optional: true
      description: "Number of files read in during QA test data generation"
-   chunk_prepend_summary:
-     type: string
-     enum:
-      - "True"
-      - "False"
-     default: "False"
-     optional: true
-     description:  "Whether to include summary of document on top of every chunk for that document."
    data_source_url:
      type: string
      description: "The url which can be appended to file names to form citation links for documents"
@@ -173,7 +165,6 @@ jobs:
       chunk_overlap: ${{parent.inputs.chunk_overlap}}
       data_source_url: ${{parent.inputs.data_source_url}}
       document_path_replacement_regex: ${{parent.inputs.document_path_replacement_regex}}
-      include_summary: ${{parent.inputs.chunk_prepend_summary}}
       max_sample_files: ${{parent.inputs.max_sample_files}}
     outputs:
       output_chunks:

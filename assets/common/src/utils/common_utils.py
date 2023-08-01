@@ -73,7 +73,7 @@ def get_mlclient(registry_name: str = None):
 
 def get_model_name(model_id: str):
     """Return model name from model_id."""
-    pattern = r'/(models)/([^/:]+)(:|/versions/)(\d+)$|:([^/:]+):(\d+)$'
+    pattern = r"/(models)/([^/:]+)(:|/versions/)(\d+)$|:([^/:]+):(\d+)$"
     match = re.search(pattern, model_id)
     if match:
         return match.group(2) or match.group(5)

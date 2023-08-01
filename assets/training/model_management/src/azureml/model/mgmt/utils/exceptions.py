@@ -24,6 +24,8 @@ class ModelImportErrorStrings:
     ERROR_FETCHING_HUGGING_FACE_MODEL_INFO = "Error in fetching model info for {model_id}. Error [{error}]"
     BLOBSTORAGE_DOWNLOAD_ERROR = "Failed to download artifacts from {uri}. Error: [{error}]"
     GIT_CLONE_ERROR = "Failed to clone {uri}. Error: [{error}]"
+    VM_NOT_SUFFICIENT_FOR_OPERATION = "VM not sufficient for {operation} operation. Details: [{details}]"
+    CMD_EXECUTION_ERROR = "Error in executing command. Error: [{error}]"
 
 
 class ModelImportException(AzureMLException):
@@ -53,7 +55,7 @@ class ModelImportError(ClientError):
 
 
 class GITCloneError(ClientError):
-    """Internal Import Model Generic Error."""
+    """GIT clone error."""
 
     @property
     def message_format(self) -> str:
@@ -62,7 +64,7 @@ class GITCloneError(ClientError):
 
 
 class BlobStorageDownloadError(ClientError):
-    """Internal Import Model Generic Error."""
+    """Azcopy blobstorage download error."""
 
     @property
     def message_format(self) -> str:
@@ -71,7 +73,7 @@ class BlobStorageDownloadError(ClientError):
 
 
 class InvalidHuggingfaceModelIDError(ClientError):
-    """Internal Import Model Generic Error."""
+    """Invalid Huggingface model ID error."""
 
     @property
     def message_format(self) -> str:
@@ -80,12 +82,30 @@ class InvalidHuggingfaceModelIDError(ClientError):
 
 
 class HuggingFaceErrorInFetchingModelInfo(ClientError):
-    """Internal Import Model Generic Error."""
+    """Error in fetching model info."""
 
     @property
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.ERROR_FETCHING_HUGGING_FACE_MODEL_INFO
+
+
+class VMNotSufficientForOperation(ClientError):
+    """Error when VM is not sufficient for an operation."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.VM_NOT_SUFFICIENT_FOR_OPERATION
+
+
+class GenericRunCMDError(ClientError):
+    """Generic run CMD error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.CMD_EXECUTION_ERROR
 
 
 def swallow_all_exceptions(logger: logging.Logger):
