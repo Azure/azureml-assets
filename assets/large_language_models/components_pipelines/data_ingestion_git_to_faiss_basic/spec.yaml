@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.14
+version: 0.0.15
 name: llm_ingest_git_to_faiss_basic
 display_name: LLM - Git to FAISS Pipeline
 is_deterministic: false
@@ -157,7 +157,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_crack_and_chunk:0.0.9'
+    component: 'azureml:llm_rag_crack_and_chunk:0.0.10'
     inputs:
       input_data: ${{parent.jobs.git_clone_job.outputs.output_data}}
       input_glob: ${{parent.inputs.input_glob}}
