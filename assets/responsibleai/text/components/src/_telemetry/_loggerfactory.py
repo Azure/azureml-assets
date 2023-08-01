@@ -164,8 +164,7 @@ def track(
                 if force_flush and logger.handlers:
                     for handler in logger.handlers:
                         handler.flush()
-                        handler_name = type(handler).__name__
-                        if handler_name == "AppInsightsLoggingHandler":
+                        if isinstance(handler, AppInsightsLoggingHandler):
                             print(msg)
                             time.sleep(30)
 

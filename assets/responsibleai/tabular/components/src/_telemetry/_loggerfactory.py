@@ -158,7 +158,7 @@ def track(
                 if force_flush and logger.handlers:
                     for handler in logger.handlers:
                         handler.flush()
-                        if type(handler).__name__ == "AppInsightsLoggingHandler":
+                        if isinstance(handler, AppInsightsLoggingHandler):
                             print(
                                 "Wait 30s for application insights async channel to flush"
                             )
