@@ -1,11 +1,17 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
+r"""
 Helper File to Update Large Langauge Model Versions.
 
 Utility File for incrementing, synchronizing, and updating all LLM versions.
 Also checks Environments are tagging latest.
+
+To update all:
+\\azureml-assets\assets>python utils\ComponentVersionUpdator.py --input_folder . --update_all
+
+To only update component pipelines with updated components:
+\\azureml-assets\assets>python utils\ComponentVersionUpdator.py --input_folder .
 """
 
 from typing import List, Dict, Any, Tuple
