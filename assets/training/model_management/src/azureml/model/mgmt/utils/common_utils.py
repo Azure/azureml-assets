@@ -278,13 +278,14 @@ def get_git_lfs_blob_size_in_kb(git_dir: Path) -> int:
         cmd = (
             f"cd {str(git_dir)} && "
             "git lfs ls-files -s | "
-            "awk -F'[()]| ' 'BEGIN { CONVFMT = \"%.0f\" }{"
-            'size=$5; unit=$6; if(unit=="GB") size*=1024*1024; else if(unit=="MB") size*=1024; print size}\' | '
-            "awk '{sum += $1} END {print sum}'"
+            "awk -F'[()]| ' '{size=$5; unit=$6; if(unit==\"GB\") "
+            "size*=1024*1024; else if(unit==\"MB\") size*=1024; print size}' | "
+            "awk '{sum += $1} END {printf(\"%d\", sum)}'"
         )
         exit_code, stdout = run_command(cmd)
         if exit_code:
             raise Exception(f"Failed in fetching lfs blobsize: {stdout}")
+        logger.info(f"total size: {stdout} KB")
         return int(stdout)
     except Exception as e:
         raise AzureMLException._with_error(AzureMLError.create(GenericRunCMDError, error=e))
