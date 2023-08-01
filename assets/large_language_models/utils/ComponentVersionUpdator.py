@@ -160,10 +160,10 @@ def generate_assets(folder_path: List[str]) -> Tuple[Dict[str, Component], Dict[
     for root, _, files in os.walk(folder_path):
         comp = parse_asset_yamls(files, root)
         if comp is not None:
-            if isinstance(comp, Component):
-                comp_assets_all[comp.name] = comp
-            else:
+            if isinstance(comp, Pipeline):
                 pipe_assets_all[comp.name] = comp
+            else:
+                comp_assets_all[comp.name] = comp
 
     return (comp_assets_all, pipe_assets_all)
 
