@@ -15,6 +15,7 @@ from compute_token_statistics_metrics import impute_ids_for_failed_calls, \
 
 
 def run():
+    """Execute the main function."""
     # Init spark session
     spark = init_spark()
 
