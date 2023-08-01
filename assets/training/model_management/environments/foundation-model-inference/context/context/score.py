@@ -1,3 +1,9 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Run script to infer."""
+
+
 import os
 import json
 import torch
