@@ -161,7 +161,7 @@ def validate_dockerfile(environment_config: assets.EnvironmentConfig) -> int:
     dockerfile = environment_config.get_dockerfile_contents()
 
     if DOCKERFILE_IMAGE_PATTERN.match(dockerfile):
-        _log_error(environment_config.dockerfile_with_path, f"Referencing curated environment images in Docker build context is not allowed")
+        _log_error(environment_config.dockerfile_with_path, f"Referencing curated environment images in Dockerfile is not allowed")
         error_count += 1
     
     return error_count
