@@ -1,0 +1,513 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: validation_trigger_text_classification
+version: 0.0.1
+type: command
+
+is_deterministic: False
+
+display_name: Validation Trigger or Text classification component
+description: Component 
+
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/6
+
+code: ../../src/validation
+
+
+inputs:
+  # Compute parameters
+  instance_type_model_import:
+    type: string
+    optional: true
+    default: Standard_d12_v2
+    description: Instance type to be used for model_import component in case of serverless compute, eg. standard_d12_v2. 
+      The parameter compute_model_import must be set to 'serverless' for instance_type to be used
+  instance_type_preprocess:
+    type: string
+    optional: true
+    default: Standard_d12_v2
+    description: Instance type to be used for preprocess component in case of serverless compute, eg. standard_d12_v2. 
+      The parameter compute_preprocess must be set to 'serverless' for instance_type to be used
+  instance_type_finetune:
+    type: string
+    optional: true
+    default: Standard_nc24rs_v3
+    description: Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3. 
+      The parameter compute_finetune must be set to 'serverless' for instance_type to be used
+  instance_type_model_evaluation:
+    type: string
+    optional: true
+    default: Standard_nc24rs_v3
+    description: Instance type to be used for model_evaluation components in case of serverless compute, eg. standard_nc24rs_v3. 
+      The parameter compute_model_evaluation must be set to 'serverless' for instance_type to be used
+  num_nodes_finetune:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: number of nodes to be used for finetuning (used for distributed training)
+  number_of_gpu_to_use_finetuning:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: number of gpus to be used per node for finetuning, should be equal
+      to number of gpu per node in the compute SKU used for finetune
+
+
+  # huggingface id
+  # NOTE The pytorch_model_path or mlflow_model_path takes precedence over huggingface_id
+  huggingface_id:
+    type: string
+    description: The string can be any valid Hugging Face id from the [Hugging Face models webpage](https://huggingface.co/models?pipeline_tag=text-classification&sort=downloads). Models from Hugging Face are subject to third party license terms available on the Hugging Face model details page. It is your responsibility to comply with the model's license terms.
+    optional: true
+
+  # PyTorch model as input
+  # This is nothing but huggingface model folder. Here's the link to the example model folder - [bert-base-uncased](https://huggingface.co/bert-base-uncased/tree/main). Additionally, the model folder **MUST** contain the file `finetune_args.json` with *model_name_or_path* as one of the keys of the dictionary
+  pytorch_model_path:
+    type: custom_model
+    optional: true
+    description: Pytorch model asset path
+
+  # MLflow model as an input
+  # This is also a huggingface model folder expect that the folder structure is slightly different. You could invoke a model import pipeline to convert the standard huggingface model into MLflow format. Please refer to this [notebook](https://aka.ms/azureml-import-model) for steps to do the same
+  # NOTE The pytorch_model_path take priority over mlflow_model_path, in case both inputs are passed
+  mlflow_model_path:
+    type:  mlflow_model
+    optional: true
+    description: MLflow model asset path
+  # Text Claasification task type
+  task_name:
+    type: string
+    optional: false
+    enum:
+      - SingleLabelClassification
+    default: SingleLabelClassification
+    description: Text Classification task type
+
+  # task arguments
+  # sample input1
+  # {"sentence":"Our friends won't buy this analysis, let alone the next one we propose.","label":true,"idx":0}
+  # For this setting, `sentence1_key` is sentence, and `label_key` is label. The optional parameter `sentence2_key` can be ignored
+
+  # sample input2
+  # {"sentence1":"Amrozi accused his brother , whom he called \" the witness \" , of deliberately distorting his evidence .","sentence2":"Referring to him as only \" the witness \" , Amrozi accused his brother of deliberately distorting his evidence .","label":1,"idx":0}
+  # If your dataset follows above pattern, `sentence1_key` should be set as sentence1 and `sentence2_key` as sentence2 `label_key` as label.
+
+  sentence1_key:
+    type: string
+    optional: false
+    description: Key for `sentence1_key` in each example line
+
+  sentence2_key:
+    type: string
+    optional: true
+    description: Key for `sentence2_key` in each example line
+
+  label_key:
+    type: string
+    optional: false
+    description: label key in each example line
+
+  batch_size:
+    type: integer
+    min: 1
+    optional: true
+    default: 1000
+    description: Number of examples to batch before calling the tokenization function
+
+  # Data inputs
+  # Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split from train data happens if they are not passed.
+  # If both validation and test files are missing, 10% of train data will be assigned to each of them and the remaining 80% will be used for training
+  # If anyone of the file is missing, 20% of the train data will be assigned to it and the remaining 80% will be used for training
+  train_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+
+  validation_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+
+  test_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+
+  train_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered training data asset in `mltable` format.
+
+  validation_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered validation data asset in `mltable` format.
+
+  test_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered test data asset in `mltable` format.
+
+  # Lora parameters
+  # LoRA reduces the number of trainable parameters by learning pairs of rank-decompostion matrices while freezing the original weights. This vastly reduces the storage requirement for large language models adapted to specific tasks and enables efficient task-switching during deployment all without introducing inference latency. LoRA also outperforms several other adaptation methods including adapter, prefix-tuning, and fine-tuning. Currently, LoRA is supported for gpt2, bert, roberta, deberta, distilbert, t5, bart, mbart and camembert model families
+  apply_lora:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If "true" enables lora.
+
+  merge_lora_weights:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "true"
+    optional: true
+    description: If "true", the lora weights are merged with the base Hugging Face model weights before saving.
+
+  lora_alpha:
+    type: integer
+    default: 128
+    optional: true
+    description: alpha attention parameter for lora.
+
+  lora_r:
+    type: integer
+    default: 8
+    optional: true
+    description: lora dimension
+
+  lora_dropout:
+    type: number
+    default: 0.0
+    optional: true
+    description: lora dropout value
+
+  # Training parameters
+  num_train_epochs:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Number of epochs to run for finetune.
+
+  max_steps:
+    type: integer
+    default: -1
+    optional: true
+    description: If set to a positive number, the total number of training steps to perform. Overrides 'epochs'. In case of using a finite iterable dataset the training may stop before reaching the set number of steps when all data is exhausted.
+
+  per_device_train_batch_size:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Per gpu batch size used for training. The effective training batch size is _per_device_train_batch_size_ * _num_gpus_ * _num_nodes_.
+
+  per_device_eval_batch_size:
+    type: integer
+    min: 1
+    default: 1
+    optional: true
+    description: Per gpu batch size used for validation. The default value is 1. The effective validation batch size is _per_device_eval_batch_size_ * _num_gpus_ * _num_nodes_.
+
+  auto_find_batch_size:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to "true" and if the provided 'per_device_train_batch_size' goes into Out Of Memory (OOM) auto_find_batch_size will find the correct batch size by iteratively reducing batch size by a factor of 2 till the OOM is fixed
+
+  optim:
+    type: string
+    default: adamw_hf
+    optional: true
+    enum:
+      - adamw_hf
+      - adamw_torch
+      # - adamw_apex_fused
+      - adafactor
+    description: Optimizer to be used while training
+
+  learning_rate:
+    type: number
+    default: 0.00002
+    optional: true
+    description: Start learning rate used for training.
+
+  warmup_steps:
+    type: integer
+    default: 0
+    optional: true
+    description: Number of steps for the learning rate scheduler warmup phase
+
+  weight_decay:
+    type: number
+    default: 0.0
+    optional: true
+    description: Weight decay to apply (if not zero) to all layers except all bias and LayerNorm weights in AdamW optimizer
+
+  adam_beta1:
+    type: number
+    default: 0.9
+    optional: true
+    description: beta1 hyperparameter for the AdamW optimizer
+
+  adam_beta2:
+    type: number
+    default: 0.999
+    optional: true
+    description: beta2 hyperparameter for the AdamW optimizer
+
+  adam_epsilon:
+    type: number
+    default: 1e-8
+    optional: true
+    description: epsilon hyperparameter for the AdamW optimizer
+
+  gradient_accumulation_steps:
+    type: integer
+    default: 1
+    optional: true
+    description: Number of updates steps to accumulate the gradients for, before performing a backward/update pass
+
+  lr_scheduler_type:
+    type: string
+    default: linear
+    optional: true
+    enum:
+      - linear
+      - cosine
+      - cosine_with_restarts
+      - polynomial
+      - constant
+      - constant_with_warmup
+    description: learning rate scheduler to use.
+
+  precision:
+    type: string
+    enum:
+      - "32"
+      - "16"
+    default: "32"
+    optional: true
+    description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
+
+  seed:
+    type: integer
+    default: 42
+    optional: true
+    description: Random seed that will be set at the beginning of training
+
+  enable_full_determinism:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: Ensure reproducible behavior during distributed training. Check this link https://pytorch.org/docs/stable/notes/randomness.html for more details.
+
+  dataloader_num_workers:
+    type: integer
+    default: 0
+    optional: true
+    description: Number of subprocesses to use for data loading. 0 means that the data will be loaded in the main process.
+
+  ignore_mismatched_sizes:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "true"
+    optional: true
+    description: Not setting this flag will raise an error if some of the weights from the checkpoint do not have the same size as the weights of the model.
+
+  max_grad_norm:
+    type: number
+    default: 1.0
+    optional: true
+    description: Maximum gradient norm (for gradient clipping)
+
+  evaluation_strategy:
+    type: string
+    default: epoch
+    optional: true
+    enum:
+      - epoch
+      - steps
+    description: The evaluation strategy to adopt during training. If set to "steps", either the `evaluation_steps_interval` or `eval_steps` needs to be specified, which helps to determine the step at which the model evaluation needs to be computed else evaluation happens at end of each epoch.
+
+  evaluation_steps_interval:
+    type: number
+    default: 0.0
+    optional: true
+    description: The evaluation steps in fraction of an epoch steps to adopt during training. Overwrites eval_steps if not 0.
+
+  eval_steps:
+    type: integer
+    default: 500
+    optional: true
+    description: Number of update steps between two evals if evaluation_strategy='steps'
+
+  logging_strategy:
+    type: string
+    default: epoch
+    optional: true
+    enum:
+      - epoch
+      - steps
+    description: The logging strategy to adopt during training. If set to "steps", the `logging_steps` will decide the frequency of logging else logging happens at the end of epoch.
+
+  logging_steps:
+    type: integer
+    default: 500
+    optional: true
+    description: Number of update steps between two logs if logging_strategy='steps'
+
+  metric_for_best_model:
+    type: string
+    default: loss
+    optional: true
+    enum:
+      - loss
+      - f1_macro
+      - mcc
+      - accuracy
+      - precision_macro
+      - recall_macro
+    description: metric to use to compare two different model checkpoints
+
+  resume_from_checkpoint:
+    type: string
+    default: "false"
+    optional: true
+    enum:
+      - "true"
+      - "false"
+    description: If set to "true", resumes the training from last saved checkpoint. Along with loading the saved weights, saved optimizer, scheduler and random states will be loaded if exist. The default value is "false"
+
+  save_total_limit:
+    type: integer
+    default: -1
+    optional: true
+    description: If a positive value is passed, it will limit the total number of checkpoints saved. The value of -1 saves all the checkpoints, otherwise if the number of checkpoints exceed the _save_total_limit_, the older checkpoints gets deleted.
+
+  # Early Stopping Parameters
+  apply_early_stopping:
+    type: string
+    default: "false"
+    optional: true
+    enum:
+      - "true"
+      - "false"
+    description: If set to "true", early stopping is enabled.
+
+  early_stopping_patience:
+    type: integer
+    default: 1
+    optional: true
+    description: Stop training when the metric specified through _metric_for_best_model_ worsens for _early_stopping_patience_ evaluation calls.This value is only valid if _apply_early_stopping_ is set to true.
+
+  early_stopping_threshold:
+    type: number
+    default: 0.0
+    optional: true
+    description: Denotes how much the specified metric must improve to satisfy early stopping conditions. This value is only valid if _apply_early_stopping_ is set to true.
+
+  # Deepspeed Parameters
+  # Deepspeed config is a JSON file that can be used to configure optimizer, scheduler, batch size and other training related parameters. A default deepspeed config is used when _apply_deepspeed_ is set to `true`. Alternatively, you can pass your custom deepspeed config. Please follow the [deepspeed docs](https://www.deepspeed.ai/docs/config-json/) to create the custom config.
+  # Please note that to enable deepspeed, `apply_deepspeed` must be set to true, only passing the `deepspeed input` will not suffice
+  apply_deepspeed:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will enable deepspeed for training
+
+  deepspeed:
+    type: uri_file
+    optional: true
+    description: Deepspeed config to be used for finetuning
+
+  # ORT Parameters
+  # ONNX Runtime is a cross-platform machine-learning model accelerator, with a flexible interface to integrate hardware-specific libraries.
+  apply_ort:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to true, will use the ONNXRunTime training
+  
+  label_column_name:
+    type: string
+    optional: true
+    description: "Label column name in provided test dataset (Ex: label)"
+  input_column_names:
+    type: string
+    optional: true
+    description: "Input column names in provided test dataset (Ex : column1). Add comma delimited values in case of multiple input columns (Ex : column1,column2)"
+  evaluation_config:
+    type: uri_file 
+    optional: true
+    description: "Additional parameters required for evaluation."
+  evaluation_config_params:
+    type: string
+    optional: true
+    description: "JSON Serielized string of evaluation_config"
+  #ADDED TO ACCOMMODATE CURRENT DESIGNER
+  model_uri:
+    type: string
+    optional: true
+    description: "[DEPRECATED] The location, in URI format, of the MLflow model, for example:
+                      - ``runs:/<mlflow_run_id>/run-relative/path/to/model``
+                      - ``models:/<model_name>/<model_version>``
+                      - ``models:/<model_name>/<stage>``"
+  device:
+    type: string
+    optional: false
+    default: auto
+    enum: [auto, cpu, gpu]
+
+  task:
+    type: string
+    optional: false
+    default: tabular-classification
+    enum: [
+      tabular-classification,
+      tabular-classification-multilabel,
+      tabular-regression,
+      tabular-forecasting,
+      text-classification,
+      text-classification-multilabel,
+      text-named-entity-recognition,
+      text-summarization,
+      question-answering,
+      text-translation,
+      text-generation,
+      fill-mask,
+      image-classification,
+      image-classification-multilabel,
+    ]
+    description: "Task type"
+  ground_truth_column_name:
+    type: string
+    optional: true
+    description: "Column name which contains ground truths in provided uri file for ground_truth. (Optional if we have one column name.)"
+  prediction_column_name:
+    type: string
+    optional: true
+    description: "Column name which contains ground truths in provided uri file for prediction. (Optional if we have one column name.)"
+
+command: >-
+  python validate.py

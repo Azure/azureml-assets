@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_classification_pipeline
-version: 0.0.11
+version: 0.0.12
 type: pipeline
 display_name: Text Classification Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for text classification task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/text_classification_pipeline) to learn more.
@@ -423,7 +423,7 @@ inputs:
   evaluation_config_params:
     type: string
     optional: true
-    description: Additional parameters as JSON serielized string
+    description: Additional parameters as JSON serialized string
 
   # Compute parameters
   compute_model_import:
@@ -469,6 +469,87 @@ outputs:
     description: Test Data Evaluation Results
 
 jobs:
+  validation_trigger:
+    type: command
+    component: azureml:validation_trigger_text_classification:0.0.4
+    compute: '${{parent.inputs.compute_model_import}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_model_import}}'
+    inputs:
+      # Compute type inputs
+      instance_type_model_import: '${{parent.inputs.instance_type_model_import}}'
+      instance_type_preprocess: '${{parent.inputs.instance_type_preprocess}}'
+      instance_type_finetune: '${{parent.inputs.instance_type_finetune}}'
+      instance_type_model_evaluation: '${{parent.inputs.instance_type_model_evaluation}}'
+      num_nodes_finetune: '${{parent.inputs.num_nodes_finetune}}'
+      number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
+      # Import model inputs
+      huggingface_id: '${{parent.inputs.huggingface_id}}'
+      pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
+      mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
+      # Preprocess inputs
+      task_name: '${{parent.inputs.task_name}}'
+      sentence1_key: '${{parent.inputs.sentence1_key}}'
+      sentence2_key: '${{parent.inputs.sentence2_key}}'
+      label_key: '${{parent.inputs.label_key}}'
+      batch_size: '${{parent.inputs.batch_size}}'
+      train_file_path: '${{parent.inputs.train_file_path}}'
+      validation_file_path: '${{parent.inputs.validation_file_path}}'
+      test_file_path: '${{parent.inputs.test_file_path}}'
+      train_mltable_path: '${{parent.inputs.train_mltable_path}}'
+      validation_mltable_path: '${{parent.inputs.validation_mltable_path}}'
+      test_mltable_path: '${{parent.inputs.test_mltable_path}}'
+      # Finetune inputs
+      apply_lora: '${{parent.inputs.apply_lora}}'
+      merge_lora_weights: '${{parent.inputs.merge_lora_weights}}'
+      lora_alpha: '${{parent.inputs.lora_alpha}}'
+      lora_r: '${{parent.inputs.lora_r}}'
+      lora_dropout: '${{parent.inputs.lora_dropout}}'
+      num_train_epochs: '${{parent.inputs.num_train_epochs}}'
+      max_steps: '${{parent.inputs.max_steps}}'
+      per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
+      per_device_eval_batch_size: '${{parent.inputs.per_device_eval_batch_size}}'
+      auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
+      optim: '${{parent.inputs.optim}}'
+      learning_rate: '${{parent.inputs.learning_rate}}'
+      warmup_steps: '${{parent.inputs.warmup_steps}}'
+      weight_decay: '${{parent.inputs.weight_decay}}'
+      adam_beta1: '${{parent.inputs.adam_beta1}}'
+      adam_beta2: '${{parent.inputs.adam_beta2}}'
+      adam_epsilon: '${{parent.inputs.adam_epsilon}}'
+      gradient_accumulation_steps: '${{parent.inputs.gradient_accumulation_steps}}'
+      lr_scheduler_type: '${{parent.inputs.lr_scheduler_type}}'
+      precision: '${{parent.inputs.precision}}'
+      seed: '${{parent.inputs.seed}}'
+      enable_full_determinism: '${{parent.inputs.enable_full_determinism}}'
+      dataloader_num_workers: '${{parent.inputs.dataloader_num_workers}}'
+      ignore_mismatched_sizes: '${{parent.inputs.ignore_mismatched_sizes}}'
+      max_grad_norm: '${{parent.inputs.max_grad_norm}}'
+      evaluation_strategy: '${{parent.inputs.evaluation_strategy}}'
+      evaluation_steps_interval: '${{parent.inputs.evaluation_steps_interval}}'
+      eval_steps: '${{parent.inputs.eval_steps}}'
+      logging_strategy: '${{parent.inputs.logging_strategy}}'
+      logging_steps: '${{parent.inputs.logging_steps}}'
+      metric_for_best_model: '${{parent.inputs.metric_for_best_model}}'
+      resume_from_checkpoint: '${{parent.inputs.resume_from_checkpoint}}'
+      save_total_limit: '${{parent.inputs.save_total_limit}}'
+      apply_early_stopping: '${{parent.inputs.apply_early_stopping}}'
+      early_stopping_patience: '${{parent.inputs.early_stopping_patience}}'
+      early_stopping_threshold: '${{parent.inputs.early_stopping_threshold}}'
+      apply_deepspeed: '${{parent.inputs.apply_deepspeed}}'
+      deepspeed: '${{parent.inputs.deepspeed}}'
+      apply_ort: '${{parent.inputs.apply_ort}}'
+      # Evaluation inputs
+      task: text-classification
+      label_column_name: '${{parent.inputs.label_key}}'
+      input_column_names: "'${{parent.inputs.sentence1_key}}','${{parent.inputs.sentence2_key}}'"
+      device: auto
+      # Metrics inputs
+      ground_truth_column_name: '${{parent.inputs.label_key}}'
+      prediction_column_name: predictions
+      evaluation_config: '${{parent.inputs.evaluation_config}}'
+      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
+
   text_classification_model_import:
     type: command
     component: azureml://registries/azureml/components/text_classification_model_import/versions/0.0.11
