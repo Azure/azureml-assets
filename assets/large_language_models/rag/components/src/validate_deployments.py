@@ -10,7 +10,8 @@ import traceback
 import requests
 from logging import Logger
 from azure.core.exceptions import ResourceNotFoundError, ResourceExistsError
-from azureml.rag.utils.connections import get_connection_by_id_v2, workspace_connection_to_credential, get_connection_credential
+from azureml.rag.utils.connections import get_connection_by_id_v2, workspace_connection_to_credential
+from azureml.rag.utils.connections import get_connection_credential
 import time
 from typing import Tuple
 from azureml.core import Run, Workspace
@@ -463,7 +464,7 @@ def validate_openai_deployments(parser_args, check_completion, check_embeddings,
 def validate_acs(acs_config, activity_logger: Logger):
     connection_id_acs = os.environ.get(
         "AZUREML_WORKSPACE_CONNECTION_ID_ACS", None)
-    
+
     for index in range(MAX_RETRIES+1):
         try:
             connection = get_connection_by_id_v2(connection_id_acs)
@@ -471,17 +472,17 @@ def validate_acs(acs_config, activity_logger: Logger):
             if 'api_version' not in acs_config:
                 acs_config['api_version'] = "2023-07-01-preview"
             index_client = SearchIndexClient(endpoint=acs_config['endpoint'],
-                                            credential=credential,
-                                            api_version=acs_config['api_version'])
+                                             credential=credential,
+                                             api_version=acs_config['api_version'])
 
             # 1. Try list operation to validate that ACS account is able to be accessed.
-            # 2. It is ok if the account returns no indexes, because that will get created with embeddings 
+            # 2. It is ok if the account returns no indexes, because that will get created with embeddings
             # made in Update ACS component
             index_exists = acs_config["index_name"] in index_client.list_index_names()
             activity_logger.info(
                 "[Validate Deployments]: Success! ACS instance can be invoked and has been validated.")
             return index_exists
-        except Exception as ex: 
+        except Exception as ex:
             if (index < MAX_RETRIES):
                 time.sleep(SLEEP_DURATION)
                 activity_logger.info(
@@ -513,7 +514,7 @@ def main(parser_args, activity_logger: Logger):
     # Check if ACS needs to be validated
     check_acs = (parser_args.check_acs == "true" or parser_args.check_acs == "True")
     acs_config = json.loads(parser_args.acs_config)
-    
+
     # Validate aoai models, if any
     if check_aoai_embeddings or check_aoai_completion:
         completion_to_check = "Completion model" if check_aoai_completion else ""
@@ -531,11 +532,12 @@ def main(parser_args, activity_logger: Logger):
         activity_logger.info(
             f"[Validate Deployments]: Validating {completion_to_check}{use_and}{embeddings_to_check} using OpenAI")
         validate_openai_deployments(parser_args, check_openai_completion, check_openai_embeddings, activity_logger)
-    
+
     # validate acs connection is valid, if needed
     if check_acs:
         activity_logger.info(
-            f"[Validate Deployments]: Validating ACS config and connection for ACS index creation for endpoint: {acs_config['endpoint']}")
+            f"[Validate Deployments]: Validating ACS config and connection for ACS index creation" 
+            + "for endpoint: {acs_config['endpoint']}")
         validate_acs(acs_config, activity_logger)
 
 
