@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.25
+version: 0.0.26
 name: llm_ingest_dataset_to_faiss
 display_name: LLM - Dataset to FAISS Pipeline (With Test Data Generation and Auto Prompt
 is_deterministic: false

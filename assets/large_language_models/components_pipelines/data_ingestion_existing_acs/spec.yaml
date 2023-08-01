@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.23
+version: 0.0.24
 name: llm_ingest_existing_acs
 display_name: LLM - Existing ACS Pipeline (With Test Data Generation and Auto Prompt)
 is_deterministic: false
