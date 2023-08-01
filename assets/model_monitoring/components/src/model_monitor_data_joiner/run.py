@@ -7,7 +7,7 @@ import argparse
 
 
 def run():
-    """Data Joiner."""
+    """Join data assets on given columns."""
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--left_input_data", type=str, required=True)
