@@ -462,6 +462,7 @@ def validate_openai_deployments(parser_args, check_completion, check_embeddings,
 
 
 def validate_acs(acs_config, activity_logger: Logger):
+    """Call ACS Client to check for valid Azure Search instance."""
     connection_id_acs = os.environ.get(
         "AZUREML_WORKSPACE_CONNECTION_ID_ACS", None)
 
@@ -536,8 +537,8 @@ def main(parser_args, activity_logger: Logger):
     # validate acs connection is valid, if needed
     if check_acs:
         activity_logger.info(
-            f"[Validate Deployments]: Validating ACS config and connection for ACS index creation" 
-            + "for endpoint: {acs_config['endpoint']}")
+            "[Validate Deployments]: Validating ACS config and connection for ACS index creation"
+            + f"for endpoint: {acs_config['endpoint']}")
         validate_acs(acs_config, activity_logger)
 
 
