@@ -36,6 +36,7 @@ MODEL_PATH = "mlflow_model_folder/data/model"
 
 
 def init():
+    """Setup MII Client."""
     model_path = mii.utils.full_model_path(configs[mii.constants.MODEL_PATH_KEY])
     deployment_name = configs[mii.constants.DEPLOYMENT_NAME_KEY]
     model_name = configs[mii.constants.MODEL_NAME_KEY]
@@ -84,6 +85,7 @@ def init():
 
 
 def run(data):
+    """Return model predictions."""
     global model
     assert (
         model is not None
@@ -113,6 +115,7 @@ def run(data):
 
 
 def allocate_processes(hostfile_path):
+    """Allocate process."""
     from mii.deployment import _allocate_processes
 
     if hostfile_path is None:
@@ -127,6 +130,7 @@ def allocate_processes(hostfile_path):
 
 
 def generate_load_balancer_config():
+    """Generate load balancer config."""
     replica_pool = allocate_processes(hostfile_path=None)
     replica_configs = [
         ReplicaConfig(
