@@ -10,11 +10,12 @@ from shared_utilities.io_utils import (
     save_spark_df_as_mltable,
     init_spark,
 )
-from compute_token_statistics_metrics import impute_ids_for_failed_calls,\
+from compute_token_statistics_metrics import impute_ids_for_failed_calls, \
     check_data_quality, compute_GPU_utilization_metrics, compute_GPU_waste_metrics
 
 
 def run():
+    """Execute the main function."""
     # Init spark session
     spark = init_spark()
 
