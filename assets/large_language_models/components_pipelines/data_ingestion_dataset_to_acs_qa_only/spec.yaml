@@ -173,7 +173,6 @@ jobs:
       chunk_overlap: ${{parent.inputs.chunk_overlap}}
       data_source_url: ${{parent.inputs.data_source_url}}
       document_path_replacement_regex: ${{parent.inputs.document_path_replacement_regex}}
-      include_summary: ${{parent.inputs.chunk_prepend_summary}}
       max_sample_files: ${{parent.inputs.max_sample_files}}
     outputs:
       output_chunks:
