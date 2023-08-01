@@ -44,6 +44,7 @@ inputs:
      description: "JSON Configuration for the ACS configuration of Azure Search instance to upload embeddings to. Required params: endpoint, index_name"
    check_acs:
      type: string
+     optional: true
      enum: 
       - "True"
       - "False"
@@ -59,7 +60,7 @@ command: >-
   python validate_deployments.py
   --check_embeddings ${{inputs.check_embeddings}}
   --check_completion ${{inputs.check_completion}}
-  --check_acs ${{inputs.check_acs}}
+  $[[--check_acs ${{inputs.check_acs}}]]
   $[[--llm_config '${{inputs.llm_config}}']]
   $[[--acs_config '${{inputs.acs_config}}']]
   --output_data ${{outputs.output_data}}
