@@ -9,7 +9,6 @@ import json
 import torch
 import mii
 from mii.config import LoadBalancerConfig, ReplicaConfig
-import time
 import logging
 
 model = None
@@ -22,7 +21,7 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
-logger.info(f"Environment Variables:")
+logger.info("Environment Variables:")
 for name, value in os.environ.items():
     logger.info(f"{name}: {value}")
 
