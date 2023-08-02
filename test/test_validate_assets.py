@@ -13,7 +13,7 @@ RESOURCES_DIR = Path("resources/validate")
 
 
 @pytest.mark.parametrize(
-    "test_subdir,check_images,check_names,check_names_skip_pattern,check_dockerfile,expected",
+    "test_subdir,check_images,check_names,check_names_skip_pattern,expected",
     [
         ("name-mismatch", False, True, None, False),
         ("version-mismatch", False, True, None, False),
