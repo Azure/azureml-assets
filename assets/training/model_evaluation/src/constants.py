@@ -223,6 +223,7 @@ class ForecastColumns:
 
 ALLOWED_PIPELINE_PARAMS = {
     "tokenizer_config",
+    "generator_config",
     "model_kwargs",
     "pipeline_init_args",
     "trust_remote_code",
