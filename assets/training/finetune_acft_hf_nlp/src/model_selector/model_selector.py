@@ -2,13 +2,11 @@
 # Licensed under the MIT License.
 
 """File containing function for model selector component."""
-import os
 from pathlib import Path
 import argparse
 import json
 from argparse import Namespace
 import copy
-from typing import Optional
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
@@ -219,8 +217,8 @@ def model_selector(args: Namespace):
         try:
             with open(ft_config_path, "r") as rptr:
                 ft_config_data = json.load(rptr)
-        except:
-            logger.info(f"Unable to load {SaveFileConstants.ACFT_CONFIG_SAVE_PATH}")
+        except Exception as e:
+            logger.info(f"Unable to load {SaveFileConstants.ACFT_CONFIG_SAVE_PATH} - {e}")
             ft_config_data = {}
     else:
         logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
