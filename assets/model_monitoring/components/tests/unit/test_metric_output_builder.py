@@ -10,22 +10,6 @@ from pyspark.sql import Row
 from model_monitor_output_signal_metrics.builder.metric_output_builder import MetricOutputBuilder
 
 
-def _validate_metrics(payload: dict, row: Row):
-    assert row["feature_name"] in payload["metrics"]["features"]
-    assert (
-        payload["metrics"]["features"][row["feature_name"]]["dataType"]
-        == row["data_type"]
-    )
-    assert (
-        payload["metrics"]["features"][row["feature_name"]]["metrics"][0]["metricName"]
-        == row["metric_name"]
-    )
-    assert (
-        payload["metrics"]["features"][row["feature_name"]]["metrics"][0]["metricValue"]
-        == row["metric_value"]
-    )
-
-
 @pytest.mark.unit
 class TestMetricOutputBuilder:
     """Test class for data drift output metrics component."""
