@@ -34,9 +34,10 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
-logger.info(f"Environment Variables:")
+logger.info("Environment Variables:")
 for name, value in os.environ.items():
     logger.info(f"{name}: {value}")
+
 
 class SupportedTask:
     """Supported tasks by text-generation-inference"""
@@ -84,7 +85,7 @@ def init():
             endpoint, AzureKeyCredential(key), headers_policy=headers_policy
         )
     except Exception as e:
-        logger.error("AACS not configured. Bypassing content moderation. Error {e}")
+        logger.error(f"AACS not configured. Bypassing content moderation. Error {e}")
 
     model_path = mii.utils.full_model_path(configs[mii.constants.MODEL_PATH_KEY])
     deployment_name = configs[mii.constants.DEPLOYMENT_NAME_KEY]
@@ -100,7 +101,7 @@ def init():
     if abs_mlmodel_path and os.path.exists(abs_mlmodel_path):
         with open(abs_mlmodel_path) as f:
             mlmodel = yaml.safe_load(f)
-    
+
     check_model_flavors(mlmodel)
 
     try:
@@ -111,20 +112,20 @@ def init():
 
         if start_server:
             logger.info("Start server setup")
-            mii.MIIServer(deployment_name,
-                        task_name,
-                        model_name,
-                        model_path,
-                        ds_optimize=configs[mii.constants.ENABLE_DEEPSPEED_KEY],
-                        ds_zero=configs[mii.constants.ENABLE_DEEPSPEED_ZERO_KEY],
-                        ds_config=configs[mii.constants.DEEPSPEED_CONFIG_KEY],
-                        mii_configs=configs[mii.constants.MII_CONFIGS_KEY],
-                        lb_config=configs.get(mii.constants.LOAD_BALANCER_CONFIG_KEY,
-                                                None))
+            mii.MIIServer(
+                deployment_name,
+                task_name,
+                model_name,
+                model_path,
+                ds_optimize=configs[mii.constants.ENABLE_DEEPSPEED_KEY],
+                ds_zero=configs[mii.constants.ENABLE_DEEPSPEED_ZERO_KEY],
+                ds_config=configs[mii.constants.DEEPSPEED_CONFIG_KEY],
+                mii_configs=configs[mii.constants.MII_CONFIGS_KEY],
+                lb_config=configs.get(mii.constants.LOAD_BALANCER_CONFIG_KEY, None)
+            )
             logger.info("Completed server setup")
-
             time.sleep(20)
-        
+
             # run nvidia-smi
             logger.info("###### GPU INFO ######")
             logger.info(os.system("nvidia-smi"))
@@ -132,7 +133,7 @@ def init():
     except Exception as e:
         logger.error(f"MIIServer setup failed. Error {e}")
         raise e
-    
+
     logger.info("Start client setup")
 
     global model
@@ -149,9 +150,9 @@ def init():
 def run(data):
     global model
     global task_type
-    
+
     assert model is not None, "grpc client has not been setup when this model was created"
-    
+
     try:
         # Check input content safety
         data, severity = get_safe_input(data)
@@ -160,7 +161,7 @@ def run(data):
                 f"Input severity ({severity}) greater than aacs threshold ({aacs_threshold})."
             )
             return {}
-        
+
         query, params = get_request_data(data)
         params = get_generator_params(params)
         logger.info(
@@ -183,9 +184,7 @@ def run(data):
         return json.dumps({"error": str(e)})
 
 
-########## ACS START
-
-
+# ACS START
 class AsyncRateLimitedOpsUtils:
     # 1000 requests / 10 seconds. Limiting to 800 request per 10 secods
     # limiting to 1000 concurrent requests
@@ -220,7 +219,7 @@ class CsChunkingUtils:
         self.chunking_n = chunking_n
 
     def chunkstring(self, string, length):
-        return (string[0 + i : length + i] for i in range(0, len(string), length))
+        return (string[0 + i: length + i] for i in range(0, len(string), length))
 
     def split_by(self, input):
         max_n = self.chunking_n
@@ -302,7 +301,7 @@ def analyze_text_async(text):
 def analyze_text(text):
     global aacs_client
     # Chunk text
-    logger.info(f"Analyzing ...")
+    logger.info("Analyzing ...")
     if (not text) or (not text.strip()):
         return 0
     chunking_utils = CsChunkingUtils(chunking_n=1000, delimiter=".")
@@ -398,9 +397,7 @@ def get_aacs_access_key():
     return key
 
 
-########## ACS END
-
-
+# ACS END
 def check_model_flavors(mlmodel):
     global default_generator_configs
     global task_type
@@ -440,24 +437,9 @@ def get_generator_params(params: dict):
     return updated_params
 
 
-# CHECK IF PARAMS MATCH WITH PIPELINE PARAMS
-# def add_and_validate_gen_params(params: dict, new_params: dict):
-#     """Add and validate inference params."""
-#     if not new_params or not isinstance(new_params, dict):
-#         return params
-#     for k, v in new_params.items():
-#         if not k in SUPPORTED_INFERENCE_PARAMS:
-#             logger.warning(f"Ignoring unsupported inference param {k}.")
-#         elif not isinstance(v, SUPPORTED_INFERENCE_PARAMS[k]["type"]):
-#             logger.warning(
-#                 f"Ignoring inference param {k} as value passed is of type {type(v)} and not of type {SUPPORTED_INFERENCE_PARAMS[k]['type']}"
-#             )
-#         else:
-#             params[k] = v
-#     return params
-
-
-def get_request_data(request_string) -> Tuple[Union[str, List[str]], Dict[str, Any]]:
+def get_request_data(
+    request_string
+) -> Tuple[Union[str, List[str]], Dict[str, Any]]:
     """Process and validate inference request.
 
     return type for chat-completion: str, dict
@@ -494,25 +476,26 @@ def get_request_data(request_string) -> Tuple[Union[str, List[str]], Dict[str, A
         return input_data_formatted, params
     except Exception as e:
         raise Exception(
-            json.dumps(
-                {
-                    "error": (
-                        "Expected input format: \n"
-                        '{"input_data": {"input_string": "<query>", "parameters": {"k1":"v1", "k2":"v2"}}}.\n '
-                        "<query> should be in below format:\n "
-                        'For text-generation: ["str1", "str2", ...]\n'
-                        'For chat-completion : [{"role": "user", "content": "str1"}, {"role": "assistant", "content": "str2"} ....]'
-                    ),
-                    "exception": str(e),
-                }
-            )
+            json.dumps({
+                "error": (
+                    "Expected input format: \n"
+                    '{"input_data": {"input_string": "<query>", '
+                    '"parameters": {"k1":"v1", "k2":"v2"}}}.\n '
+                    "<query> should be in below format:\n "
+                    'For text-generation: ["str1", "str2", ...]\n'
+                    'For chat-completion : [{"role": "user", "content": "str1"}, '
+                    '{"role": "assistant", "content": "str2"} ....]'
+                ),
+                "exception": str(e),
+            })
         )
 
 
 def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
     """Process chat-completion input request.
 
-    Taken from: https://github.com/facebookresearch/llama/blob/6c7fe276574e78057f917549435a2554000a876d/llama/generation.py#L213
+    Taken from: 
+    https://github.com/facebookresearch/llama/blob/main/llama/generation.py
 
     example input:
     [
@@ -521,15 +504,21 @@ def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
         {"role": "user", "content": "and in Africa?"},
     ]
     example output:
-    "[INST]What is the tallest building in the world?[\INST]As of 2021, the Burj Khalifa in Dubai\n[INST]and in Africa?[/INST]"
+    "[INST]What is the tallest building in the world?[\INST]
+    As of 2021, the Burj Khalifa in Dubai\n
+    [INST]and in Africa?[/INST]"
     """
-    # TODO: user ConversationalPipeline
     B_INST, E_INST = "[INST]", "[/INST]"
     B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
     DEFAULT_SYSTEM_PROMPT = """\
-    You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.
+    You are a helpful, respectful and honest assistant. Always answer as helpfully as possible,
+    while being safe.  Your answers should not include any harmful, unethical, racist, sexist,
+    toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased
+    and positive in nature.
 
-    If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information."""
+    If a question does not make any sense, or is not factually coherent, explain why instead
+    of answering something not correct. If you don't know the answer to a question, please
+    don't share false information."""
 
     dialog = data
     history = ""
@@ -581,14 +570,15 @@ def allocate_processes(hostfile_path):
 
 
 def generate_load_balancer_config():
-    replica_pool = allocate_processes(hostfile_path=None)    
+    replica_pool = allocate_processes(hostfile_path=None)
     replica_configs = [
         ReplicaConfig(
             hostname=hostname,
-            tensor_parallel_ports=list(range(LOAD_BALANCING_PORT+i*TENSOR_PARALLEL+1, LOAD_BALANCING_PORT+i*TENSOR_PARALLEL+1+TENSOR_PARALLEL)),
+            tensor_parallel_ports=list(range(LOAD_BALANCING_PORT+i*TENSOR_PARALLEL+1,
+                                             LOAD_BALANCING_PORT+i*TENSOR_PARALLEL+1+TENSOR_PARALLEL)),
             torch_dist_port=i+TORCH_DIST_PORT,
             gpu_indices=gpu_indices
-        ) 
+        )
         for i, (hostname, gpu_indices) in enumerate(replica_pool)
     ]
     load_balancer_config = LoadBalancerConfig(port=LOAD_BALANCING_PORT, replica_configs=replica_configs)
