@@ -1,13 +1,18 @@
-# TODO: remove once MII updated changes are pushed to pypi
-# 0.0.4 is pointing to an older change
-# https://pypi.org/project/deepspeed-mii
-
 git+https://github.com/microsoft/DeepSpeed.git
 git+https://github.com/microsoft/DeepSpeed-MII.git@mrwyattii/update-AML-deployment
 
-azureml-inference-server-http=={{latest-pypi-version}}
-torch=={{latest-pypi-version}}
-psutil=={{latest-pypi-version}}
-transformers=={{latest-pypi-version}}
-sentencepiece=={{latest-pypi-version}}
-xformers=={{latest-pypi-version}}
+azureml-inference-server-http
+azureml-core==1.52.0
+azureml-mlflow==1.52.0
+torch==2.0.1
+psutil
+transformers
+sentencepiece
+xformers
+mlflow==2.3.1
+mlflow-skinny==2.3.1
+azure-ai-contentsafety==1.0.0b1
+aiolimiter==1.1.0
+azure-mgmt-cognitiveservices==13.4.0
+azure-identity==1.13.0
+azure-ai-mlmonitoring==0.1.0a3
