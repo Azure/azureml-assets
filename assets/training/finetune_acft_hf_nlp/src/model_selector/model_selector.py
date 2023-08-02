@@ -98,13 +98,18 @@ ACFT_CONFIG = {
 }
 
 
-def get_model_asset_id() -> Optional[str]:
+def get_model_asset_id() -> str:
     """Read the model asset id from the run context."""
     try:
         from azureml.core import Run
 
-        run_details = Run.get_details()
-        return run_details['runDefinition']['inputAssets']['mlflow_model_path']['asset']['assetId']
+        run_ctx = Run.get_context()
+        if isinstance(run_ctx, Run):
+            run_details = run_ctx.get_details()
+            return run_details['runDefinition']['inputAssets']['mlflow_model_path']['asset']['assetId']
+        else:
+            logger.info("Found offline run")
+            return ModelImportConstants.ASSET_ID_NOT_FOUND
     except Exception as e:
         logger.info(f"Could not fetch the model asset id: {e}")
         return ModelImportConstants.ASSET_ID_NOT_FOUND
@@ -228,6 +233,7 @@ def model_selector(args: Namespace):
 
     # Add the model asset id to model_selector_args
     model_asset_id = get_model_asset_id()
+    logger.info(f"Model asset id: {model_asset_id}")
     model_selector_args["model_asset_id"] = model_asset_id
     with open(model_selector_args_save_path, 'w') as wptr:
         json.dump(model_selector_args, wptr)
