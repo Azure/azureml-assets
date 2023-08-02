@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """File containing function for model selector component."""
-import os
 from pathlib import Path
 import argparse
 import json
