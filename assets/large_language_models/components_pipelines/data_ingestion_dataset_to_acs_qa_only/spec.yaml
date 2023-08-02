@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.16
+version: 0.0.17
 name: llm_ingest_dataset_to_acs_qa_only
 display_name: LLM - Dataset to ACS Pipeline (Only Test Data Generation)
 is_deterministic: false
@@ -134,7 +134,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.11'
+    component: 'azureml:llm_rag_validate_deployments:0.0.12'
     identity:
       type: user_identity
     inputs:
@@ -142,7 +142,7 @@ jobs:
       embeddings_model: ${{parent.inputs.embeddings_model}}
       check_embeddings: "True"
       check_completion: "True"
-      check_acs: "True"
+      check_acs: "False"
       acs_config: ${{parent.inputs.acs_config}}
     outputs:
       output_data:

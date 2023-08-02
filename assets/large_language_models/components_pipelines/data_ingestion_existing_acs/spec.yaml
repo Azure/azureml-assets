@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.26
+version: 0.0.27
 name: llm_ingest_existing_acs
 display_name: LLM - Existing ACS Pipeline (With Test Data Generation and Auto Prompt)
 is_deterministic: false
@@ -193,7 +193,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.11'
+    component: 'azureml:llm_rag_validate_deployments:0.0.12'
     identity:
       type: user_identity
     inputs:
