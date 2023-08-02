@@ -11,7 +11,10 @@ from typing import List
 import uuid
 
 from model_monitor_output_signal_metrics.builder import MetricOutputBuilder
-from shared_utilities.io_utils import ( np_encoder, read_mltable_in_spark )
+from shared_utilities.io_utils import (
+    np_encoder,
+    read_mltable_in_spark,
+)
 from shared_utilities.amlfs import amlfs_upload
 
 
@@ -33,7 +36,7 @@ def run():
     output_payload = to_output_payload(args.signal_name, args.signal_type, args.version, metrics_dict)
 
     local_path = str(uuid.uuid4())
-    write_to_file(payload=output_payload, local_output_directory=local_path, signalName=signal_name)
+    write_to_file(payload=output_payload, local_output_directory=local_path, signalName=args.signal_name)
 
     target_remote_path = os.path.join(args.signal_output, "signals")
     amlfs_upload(local_path=local_path, remote_path=target_remote_path)
