@@ -278,8 +278,7 @@ def validate_assets(input_dirs: List[Path],
                     check_names: bool = False,
                     check_names_skip_pattern: re.Pattern = None,
                     check_images: bool = False,
-                    check_categories: bool = False,
-                    check_dockerfile: bool = False) -> bool:
+                    check_categories: bool = False) -> bool:
     """Validate assets.
 
     Args:
@@ -290,7 +289,6 @@ def validate_assets(input_dirs: List[Path],
         check_names_skip_pattern (re.Pattern, optional): Regex pattern to skip name validation. Defaults to None.
         check_images (bool, optional): Whether to check image names. Defaults to False.
         check_categories (bool, optional): Whether to check asset categories. Defaults to False.
-        check_dockerfile (bool, optional): Whether to check Dockerfile contents. Defaults to False.
 
     Raises:
         ValidationException: If validation fails.
@@ -353,7 +351,7 @@ def validate_assets(input_dirs: List[Path],
                     logger.log_debug(f"Skipping name validation for {asset_config.full_name}")
 
             # Validate Dockerfile
-            if check_dockerfile and asset_config.type == assets.AssetType.ENVIRONMENT:
+            if asset_config.type == assets.AssetType.ENVIRONMENT:
                 error_count += validate_dockerfile(asset_config.extra_config_as_object())
 
             # Validate categories
@@ -408,8 +406,6 @@ if __name__ == '__main__':
                         help="Comma-separated list of changed files, used to filter assets")
     parser.add_argument("-n", "--check-names", action="store_true",
                         help="Check asset names")
-    parser.add_argument("-d", "--check-dockerfile", action="store_true",
-                        help="Check Dockerfile contents")
     parser.add_argument("-I", "--check-images", action="store_true",
                         help="Check environment images")
     parser.add_argument("-C", "--check-categories", action="store_true",
@@ -437,7 +433,6 @@ if __name__ == '__main__':
                               check_names=args.check_names,
                               check_names_skip_pattern=args.check_names_skip_pattern,
                               check_images=args.check_images,
-                              check_categories=args.check_categories,
-                              check_dockerfile=args.check_dockerfile)
+                              check_categories=args.check_categories)
     if not success:
         sys.exit(1)
