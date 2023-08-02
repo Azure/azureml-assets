@@ -42,7 +42,7 @@ logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.fine
 
 COMPONENT_NAME = "ACFT-Finetune"
 
-LLAMA_2_70B = "Llama-2-70B"
+LLAMA_2_70B = "Llama-2-70b"
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
@@ -422,9 +422,10 @@ def finetune(args: Namespace):
         args.model_name_or_path = args.model_name
 
     # Enable QLoRA finetune for Llama-70B
-    if LLAMA_2_70B in getattr(args, "model_asset_id", ""):
+    model_asset_id = getattr(args, "model_asset_id", "")
+    if LLAMA_2_70B in model_asset_id:
         logger.info(
-            f"Identified asset id: {args.model_asset_id}. Enabling QLoRA finetuning."
+            f"Identified asset id: {model_asset_id}. Enabling QLoRA finetuning."
         )
         setattr(args, "apply_lora", True)
         setattr(args, "precision", 4)

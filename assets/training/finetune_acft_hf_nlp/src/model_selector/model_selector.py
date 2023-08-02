@@ -99,7 +99,9 @@ ACFT_CONFIG = {
 
 
 def get_model_asset_id() -> str:
-    """Read the model asset id from the run context."""
+    """Read the model asset id from the run context.
+    TODO Move this function to run utils
+    """
     try:
         from azureml.core import Run
 
