@@ -45,10 +45,10 @@ class TestMetricOutputBuilder:
                 threshold_value=10.0,
             ),
         ]
-        
+
         metric_output_builder = MetricOutputBuilder(signal_metrics)
         metrics_dict = metric_output_builder.get_metrics_dict()
-        
+
         assert metrics_dict == {
             "num_calls": {
                 "groups": {
@@ -75,7 +75,7 @@ class TestMetricOutputBuilder:
                 },
             },
         }
-    
+
     def test_metrics_with_2_level_groups(self):
         """Test generate meta file content for success scenario."""
         signal_metrics: List[Row] = [
@@ -178,10 +178,10 @@ class TestMetricOutputBuilder:
                 threshold_value=None,
             ),
         ]
-        
+
         metric_output_builder = MetricOutputBuilder(signal_metrics)
         metrics_dict = metric_output_builder.get_metrics_dict()
-        
+
         assert metrics_dict == {
             "num_calls": {
                 "groups": {
