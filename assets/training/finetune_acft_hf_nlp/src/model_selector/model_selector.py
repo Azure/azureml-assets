@@ -26,6 +26,7 @@ COMPONENT_NAME = "ACFT-Model_import"
 
 # TODO Move this constants class to package
 class ModelImportConstants:
+    """Model import constants."""
 
     ASSET_ID_NOT_FOUND = "ASSET_ID_NOT_FOUND",
     MODEL_NAME_NOT_FOUND = "MODEL_NAME_NOT_FOUND"
