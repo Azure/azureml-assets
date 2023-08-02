@@ -20,7 +20,6 @@ inputs:
   right_input_data:
     type: mltable
     mode: direct
-    optional: true
   right_join_column:
     type: string
 outputs:
