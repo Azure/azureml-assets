@@ -1,12 +1,13 @@
 {
-    "pep8": {
-      "ignore": [
-        "W503",
-        "E402"
-      ],
-      "justification": [
-        "W503: W503 and W504 are mutually exclusive. W503 is more widely used, so ignoring it.",
-        "E402: All module level imports can't be before `sys.path.append(os.getcwd())`."
-      ]
-    }
+  "pep8": {
+    "ignore": [
+      "W503",
+      "E402"
+    ],
+    "justification": [
+      "W503: W503 and W504 are mutually exclusive. W503 is more widely used, so ignoring it.",
+      "E402: All module level imports can't be before `sys.path.append(os.getcwd())`."
+    ],
+    "max-line-length": 119
   }
+}
