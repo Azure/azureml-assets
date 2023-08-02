@@ -50,7 +50,7 @@ TORCH_DIST_PORT = 29501
 REPLICA_NUM = int(os.getenv("WORKER_COUNT", 1))
 DEVICE_COUNT = torch.cuda.device_count()
 TENSOR_PARALLEL = int(DEVICE_COUNT / REPLICA_NUM)
-MODEL_NAME = os.getenv("AZUREML_MODEL_DIR", "")
+MODEL_DIR = os.getenv("AZUREML_MODEL_DIR", "")
 MODEL_PATH = "mlflow_model_folder/data/model"
 MLMODEL_PATH = "mlflow_model_folder/MLmodel"
 MODEL_ID = os.environ.get("MODEL_ID", MODEL_PATH)
@@ -95,7 +95,7 @@ def init():
     assert task_name is not None, "The task name should be set before calling init"
 
     # Get task type of a model
-    abs_mlmodel_path = os.path.join(MODEL_NAME, MLMODEL_PATH)
+    abs_mlmodel_path = os.path.join(MODEL_DIR, MLMODEL_PATH)
     mlmodel = {}
     if abs_mlmodel_path and os.path.exists(abs_mlmodel_path):
         with open(abs_mlmodel_path) as f:
@@ -596,7 +596,7 @@ def generate_load_balancer_config():
 
 
 load_balancer_config = generate_load_balancer_config()
-is_70b_model = "Llama-2-70b" in MODEL_NAME or "Llama-2-70b-chat" in MODEL_NAME
+is_70b_model = "Llama-2-70b" in MODEL_DIR or "Llama-2-70b-chat" in MODEL_DIR
 replace_with_kernel_inject = not is_70b_model
 configs = {
     'deployment_name': 'llama-deployment',
@@ -623,7 +623,7 @@ configs = {
         'torch_dist_port': TORCH_DIST_PORT,
         'trust_remote_code': False
     },
-    'model_name': MODEL_NAME,
+    'model_name': MODEL_DIR,
     'model_path': MODEL_PATH,
     'task_name': 'text-generation'
 }
