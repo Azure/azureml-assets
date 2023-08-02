@@ -9,10 +9,14 @@ import random
 import sys
 import os
 
+from azureml._common._error_definition.azureml_error import AzureMLError
+
 sys.path.append(os.getcwd())
 
 from utils.io import resolve_io_path
 from utils.helper import get_logger, log_mlflow_params
+from utils.exceptions import swallow_all_exceptions, BenchmarkValidationException
+from utils.error_definitions import BenchmarkValidationError
 
 
 logger = get_logger(__name__)
@@ -164,6 +168,7 @@ def sample_from_random(
                 f_out.write(line)
 
 
+@swallow_all_exceptions(logger)
 def main(args: argparse.Namespace) -> None:
     """
     Entry function for Dataset Sampler Component.
@@ -178,27 +183,31 @@ def main(args: argparse.Namespace) -> None:
 
     if args.sampling_ratio is None and args.n_samples is None:
         mssg = "Either 'sampling_ratio' or 'n_samples' must be specified."
-        logger.error(mssg)
-        raise ValueError(mssg)
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+        )
     if args.sampling_ratio is not None and args.n_samples is not None:
         mssg = "Only one of 'sampling_ratio' or 'n_samples' can be specified."
-        logger.error(mssg)
-        raise ValueError(mssg)
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+        )
 
     line_count = count_lines(input_file_path)
     if args.sampling_ratio is not None:
         if not 0 < args.sampling_ratio <= 1:
             mssg = f"Invalid sampling_ratio: {args.sampling_ratio}. Please specify float in (0, 1]."
-            logger.error(mssg)
-            raise ValueError(mssg)
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
         logger.info(f"Sampling percentage: {args.sampling_ratio * 100}%.")
         n_samples = int(line_count * args.sampling_ratio)
     else:
         n_samples = args.n_samples
         if n_samples <= 0:
             mssg = f"Invalid n_samples: {n_samples}. Please specify positive integer."
-            logger.error(mssg)
-            raise ValueError(mssg)
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
         if n_samples > line_count:
             mssg = f"n_samples: {n_samples} > line_count: {line_count}. Setting n_samples = line_count."
             logger.warn(mssg)
@@ -242,8 +251,9 @@ def main(args: argparse.Namespace) -> None:
         )
     else:
         mssg = f"Invalid sampling_style: {args.sampling_style}. Please specify either 'head', 'tail' or 'random'."
-        logger.error(mssg)
-        raise ValueError(mssg)
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+        )
 
     log_mlflow_params(
         input_dataset_checksum=input_file_path,
