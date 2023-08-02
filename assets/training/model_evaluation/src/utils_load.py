@@ -32,8 +32,8 @@ def load_model(model_uri, device, task):
     aml_args = {
         "model_hf_load_kwargs": curr_model.get("model_hf_load_kwargs", {})
     }
-    if device == "auto":
-        aml_args["model_hf_load_kwargs"]["device_map"] = "auto"
+    if device == constants.DEVICE.AUTO:
+        aml_args["model_hf_load_kwargs"]["device_map"] = constants.DEVICE.AUTO
     else:
         aml_args["model_hf_load_kwargs"]["device_map"] = "eval_na"
     try:
@@ -41,7 +41,7 @@ def load_model(model_uri, device, task):
         model = aml_mlflow.aml.load_model(model_uri=model_uri,
                                           model_type=constants.MLFLOW_MODEL_TYPE_MAP[task], **aml_args)
     except Exception:
-        logger.info("device_map=auto didn't work. Trying without auto")
+        logger.info("device_map=auto didn't work. Trying without auto.")
         aml_args["model_hf_load_kwargs"]["device_map"] = "eval_na"
         logger.info(f"aml args: {aml_args}")
         model = aml_mlflow.aml.load_model(model_uri=model_uri,

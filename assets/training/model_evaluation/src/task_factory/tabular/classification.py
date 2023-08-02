@@ -112,15 +112,8 @@ class TabularClassifier(PredictWrapper, PredictProbaWrapper):
         if self.is_torch or self.is_hf:
             try:
                 y_pred_proba = pred_proba_fn(X_test, **kwargs)
-            except RuntimeError as re:
-                device = kwargs.get("device", -1)
-                if device != -1:
-                    logger.warning("Predict Proba failed on GPU. Falling back to CPU")
-                    self._ensure_model_on_cpu()
-                    kwargs["device"] = -1
-                    y_pred_proba = pred_proba_fn(X_test, **kwargs)
-                else:
-                    raise re
+            except RuntimeError:
+                y_pred_proba = self.handle_device_failure(X_test, **kwargs)
         else:
             y_pred_proba = pred_proba_fn(X_test)
         return y_pred_proba

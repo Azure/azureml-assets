@@ -7,11 +7,11 @@ from azureml.core.run import _OfflineRun
 import azureml.evaluate.mlflow as aml_mlflow
 import os
 
-known_modules = set([
+known_modules = {
     "model_prediction",
     "compute_metrics",
     "evaluate_model"
-])
+}
 
 
 class DummyWorkspace:
@@ -116,14 +116,28 @@ class TestRun:
         return self._workspace.subscription_id
 
     @property
-    def root_run(self):
-        """Get Roon run of the pipeline.
+    def parent_run(self):
+        """Get Root run of the pipeline.
 
         Returns:
             _type_: _description_
         """
         cur_run = self._run
-        if isinstance(cur_run, _OfflineRun) or cur_run.parent is None:
+        if isinstance(cur_run, _OfflineRun) or (cur_run.parent is None):
+            return self._run
+        if cur_run.parent is not None:
+            cur_run = cur_run.parent
+        return cur_run
+
+    @property
+    def root_run(self):
+        """Get Root run of the pipeline.
+
+        Returns:
+            _type_: _description_
+        """
+        cur_run = self._run
+        if isinstance(cur_run, _OfflineRun) or (cur_run.parent is None):
             return self._run
         while cur_run.parent is not None:
             cur_run = cur_run.parent
@@ -136,8 +150,11 @@ class TestRun:
         Returns:
             _type_: str
         """
-        cur_attribute = self._run.name
-        first_parent = self._run.parent
+        cur_run = self._run
+        if isinstance(cur_run, _OfflineRun):
+            return cur_run.id
+        cur_attribute = cur_run.name
+        first_parent = cur_run.parent
         if first_parent is not None and hasattr(first_parent, "parent"):
             second_parent = first_parent.parent
             if second_parent is not None and hasattr(second_parent, "name"):
@@ -152,6 +169,43 @@ class TestRun:
             _type_: _description_
         """
         info = {}
+        if not isinstance(self._run, _OfflineRun):
+            raw_json = self._run.get_details()
+            if raw_json["runDefinition"]["inputAssets"].get("mlflow_model", None) is not None:
+                try:
+                    model_asset_id = raw_json["runDefinition"]["inputAssets"]["mlflow_model"]["asset"]["assetId"]
+                    info["model_asset_id"] = model_asset_id
+                    if model_asset_id.startswith("azureml://registries"):
+                        import re
+                        info["model_source"] = "registry"
+                        model_info = re.search("azureml://registries/(.+?)/models/(.+?)/versions/(.+?)", model_asset_id)
+                        info["model_registry_name"] = model_info.group(1)
+                        info["model_name"] = model_info.group(2)
+                        info["model_version"] = model_info.group(3)
+                    else:
+                        info["model_source"] = "workspace"
+                except Exception:
+                    pass
+            first_parent = self._run.parent
+            if first_parent is not None and hasattr(first_parent, "parent"):
+                second_parent = first_parent.parent
+                if second_parent is not None:
+                    parent_raw_json = second_parent.get_details()
+                    try:
+                        parent_model_asset_id = parent_raw_json["inputs"]["mlflow_model_path"]["assetId"]
+                        info["parent_model_asset_id"] = parent_model_asset_id
+                        if parent_model_asset_id.startswith("azureml://registries"):
+                            import re
+                            info["parent_model_source"] = "registry"
+                            parent_model_info = re.search("azureml://registries/(.+?)/models/(.+?)/versions/(.+?)",
+                                                          parent_model_asset_id)
+                            info["parent_model_registry_name"] = parent_model_info.group(1)
+                            info["parent_model_name"] = parent_model_info.group(2)
+                            info["parent_model_version"] = parent_model_info.group(3)
+                        else:
+                            info["parent_model_source"] = "workspace"
+                    except Exception:
+                        pass
         try:
             import re
             location = os.environ.get("AZUREML_SERVICE_ENDPOINT")
@@ -165,6 +219,9 @@ class TestRun:
                 info["moduleName"] = module_name if module_name in known_modules else 'Unknown'
                 if info["moduleName"] != 'Unknown':
                     info["moduleVersion"] = self._run.properties.get('azureml.moduleVersion', 'Unknown')
+                info["pipeline_type"] = self._run.properties.get('PipelineType', None)
+                info["source"] = self._run.properties.get('Source', None)
+
         except Exception:
             pass
         return info

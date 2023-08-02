@@ -4,13 +4,17 @@
 """Evaluator."""
 
 import ast
+import pandas as pd
+import numpy as np
 from abc import abstractmethod
 
 # TODO: Import ForecastColumns from azureml.evaluate.mlflow, when it will be
 # available.
 from constants import TASK, ForecastingConfigContract, ForecastColumns
-import pandas as pd
-import numpy as np
+from image_constants import ImageDataFrameParams, ODISLiterals, SettingLiterals
+from azureml.evaluate.mlflow.models.evaluation.azureml._image_od_is_evaluator import (
+    ImageOdIsEvaluator,
+)
 from azureml.metrics import compute_metrics, constants
 from logging_utilities import get_logger
 
@@ -40,6 +44,8 @@ class EvaluatorFactory:
             TASK.FORECASTING: ForecastingEvaluator,
             TASK.IMAGE_CLASSIFICATION: ClassifierEvaluator,
             TASK.IMAGE_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
+            TASK.IMAGE_OBJECT_DETECTION: ImageObjectDetectionInstanceSegmentationEvaluator,
+            TASK.IMAGE_INSTANCE_SEGMENTATION: ImageObjectDetectionInstanceSegmentationEvaluator
         }
 
     def get_evaluator(self, task_type, metrics_config=None):
@@ -536,4 +542,68 @@ class ForecastingEvaluator(Evaluator):
         )
         X_test[ForecastColumns._ACTUAL_COLUMN_NAME] = y_test
         X_test[ForecastColumns._FORECAST_COLUMN_NAME] = y_pred
+        return metrics
+
+
+class ImageObjectDetectionInstanceSegmentationEvaluator(Evaluator):
+    """Image object detection and instance segmentation Evaluator."""
+
+    def __init__(self, task_type, metrics_config):
+        """Initialize evaluator.
+
+        Args:
+            task_type (str): evaluator task type
+            metrics_config (Dict): Dict of metrics config
+        """
+        super().__init__(task_type, metrics_config)
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """Evaluate Object Detection/Instance Segmentation.
+
+        Args:
+            y_test (pd.DataFrame): pandas DataFrame with columns ["labels"]
+            y_pred (pd.DataFrame): pandas DataFrame with columns ["predictions"]
+            X_test (pd.DataFrame): Pandas DataFrame with columns ["image", "image_meta_info"].
+        Returns:
+            Dict: Dict of metrics
+
+        """
+
+        def _recast(label_or_pred_dict):
+            if len(label_or_pred_dict[ODISLiterals.BOXES]) == 0:
+                return label_or_pred_dict
+            if isinstance(label_or_pred_dict[ODISLiterals.BOXES][0], np.ndarray):
+                # When using MLTable input, the boxes are stored as a array of numpy arrays
+                label_or_pred_dict[ODISLiterals.BOXES] = np.stack(label_or_pred_dict[ODISLiterals.BOXES], axis=0)
+            elif isinstance(label_or_pred_dict[ODISLiterals.BOXES][0], list):
+                # When using json, the boxes, classes, scores, labels are stored as a lists (of lists)
+                label_or_pred_dict[ODISLiterals.BOXES] = np.array(label_or_pred_dict[ODISLiterals.BOXES])
+                if ODISLiterals.SCORES in label_or_pred_dict:
+                    label_or_pred_dict[ODISLiterals.SCORES] = np.array(label_or_pred_dict[ODISLiterals.SCORES])
+                else:
+                    label_or_pred_dict[ODISLiterals.LABELS] = np.array(label_or_pred_dict[ODISLiterals.LABELS])
+
+            if ODISLiterals.MASKS in label_or_pred_dict and isinstance(label_or_pred_dict[ODISLiterals.MASKS], np.ndarray):
+                label_or_pred_dict[ODISLiterals.MASKS] = list(label_or_pred_dict[ODISLiterals.MASKS])
+
+            return label_or_pred_dict
+
+        image_meta_info = y_test[ImageDataFrameParams.IMAGE_META_INFO]
+
+        y_test = y_test.drop(ImageDataFrameParams.IMAGE_META_INFO, axis=1)
+
+        # Convert predictions to expected format
+        y_pred[ImageDataFrameParams.PREDICTIONS] = y_pred[ImageDataFrameParams.PREDICTIONS].apply(lambda x: _recast(x))
+        y_test[ImageDataFrameParams.LABEL_COLUMN_NAME] = y_test[ImageDataFrameParams.LABEL_COLUMN_NAME].apply(lambda x: _recast(x))
+
+        y_pred = self._convert_predictions(y_pred)
+        y_test = self._convert_predictions(y_test)
+
+        masks_required = self.metrics_config.pop(SettingLiterals.MASKS_REQUIRED, False)
+        metrics = ImageOdIsEvaluator.compute_metrics(y_test=y_test,
+                                                     y_pred=y_pred,
+                                                     image_meta_info=image_meta_info,
+                                                     masks_required=masks_required,
+                                                     **self.metrics_config)
+
         return metrics
