@@ -15,6 +15,7 @@ class TestMetricOutputBuilder:
     """Test class for data drift output metrics component."""
 
     def test_metrics_with_1_level_groups(self):
+        """Test metrics output builder for metrics with one level metric groups."""
         signal_metrics: List[Row] = [
             Row(
                 group="group_1",
@@ -77,7 +78,7 @@ class TestMetricOutputBuilder:
         }
 
     def test_metrics_with_2_level_groups(self):
-        """Test generate meta file content for success scenario."""
+        """Test metrics output builder for metrics with two level metric groups."""
         signal_metrics: List[Row] = [
             Row(
                 group="group_1",
