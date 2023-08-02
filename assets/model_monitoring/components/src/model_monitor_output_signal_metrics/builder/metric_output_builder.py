@@ -55,8 +55,8 @@ class MetricOutputBuilder:
                         new_metric[THRESHOLD] = metric_dict[THRESHOLD_VALUE]
 
                 except Exception as e:
-                    print(f"Error: Failed to get required column from metric '{metric_name}'" \
-                        + "with exception: {str(e)}")
+                    print(f"Error: Failed to get required column from metric '{metric_name}'"
+                        + f" with exception: {str(e)}")
                     continue
 
                 self._add_metric(metrics_dict, metric_name, new_metric, group_names)
@@ -65,7 +65,7 @@ class MetricOutputBuilder:
                 continue
 
         return metrics_dict
-    
+
     def _add_metric(self, metrics_dict: dict, metric_name: str, metric: dict, group_names: List[str]):
         if metric_name not in metrics_dict:
             metrics_dict[metric_name] = {}
@@ -77,7 +77,8 @@ class MetricOutputBuilder:
                 cur_dict = cur_dict[GROUPS][group_name]
             else:
                 if group_name in cur_dict:
-                    raise Exception(f"Error: A duplicate metrics is found for metric {metric_name}, group {group_names}")
+                    raise Exception(f"Error: A duplicate metrics is found for metric {metric_name},"
+                        + f" group {group_names}")
                 else:
                     self._create_metric_groups_if_not_exist(cur_dict, group_name)
                     cur_dict[GROUPS][group_name] = metric
