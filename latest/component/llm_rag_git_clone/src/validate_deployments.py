@@ -469,9 +469,10 @@ def validate_acs(acs_config, activity_logger: Logger):
     for index in range(MAX_RETRIES+1):
         try:
             connection = get_connection_by_id_v2(connection_id_acs)
+            acs_config['endpoint'] = connection['properties']['target']
+            acs_metadata = connection['properties'].get('metadata', {})
+            acs_config['api_version'] = acs_metadata.get('apiVersion', "2023-07-01-preview")
             credential = get_connection_credential(connection)
-            if 'api_version' not in acs_config:
-                acs_config['api_version'] = "2023-07-01-preview"
             index_client = SearchIndexClient(endpoint=acs_config['endpoint'],
                                              credential=credential,
                                              api_version=acs_config['api_version'])
@@ -514,7 +515,6 @@ def main(parser_args, activity_logger: Logger):
 
     # Check if ACS needs to be validated
     check_acs = (parser_args.check_acs == "true" or parser_args.check_acs == "True")
-    acs_config = json.loads(parser_args.acs_config)
 
     # Validate aoai models, if any
     if check_aoai_embeddings or check_aoai_completion:
@@ -536,9 +536,9 @@ def main(parser_args, activity_logger: Logger):
 
     # validate acs connection is valid, if needed
     if check_acs:
+        acs_config = json.loads(parser_args.acs_config)
         activity_logger.info(
-            "[Validate Deployments]: Validating ACS config and connection for ACS index creation"
-            + f"for endpoint: {acs_config['endpoint']}")
+            "[Validate Deployments]: Validating ACS config and connection for ACS index creation...")
         validate_acs(acs_config, activity_logger)
 
 
