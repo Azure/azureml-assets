@@ -1,0 +1,13 @@
+# TODO: remove once MII updated changes are pushed to pypi
+# 0.0.4 is pointing to an older change
+# https://pypi.org/project/deepspeed-mii
+
+git+https://github.com/microsoft/DeepSpeed.git
+git+https://github.com/microsoft/DeepSpeed-MII.git@mrwyattii/update-AML-deployment
+
+azureml-inference-server-http==0.8.4
+torch==2.0.1
+psutil==5.9.5
+transformers==4.31.0
+sentencepiece==0.1.99
+xformers==0.0.20
