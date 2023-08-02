@@ -28,7 +28,7 @@ RESOURCES_DIR = Path("resources/validate")
         ("image-name-mismatch", True, True, None, False),
         ("publishing-disabled", True, True, None, False),
         ("good-validation", True, True, None, True),
-        ("correct-order", True, True, None, False),
+        ("correct-order", True, True, None, True),
         ("missing-description-file", True, True, None, False),
         ("data-good", False, True, None, True),
         ("data-path-mismatch-1", False, True, None, False),
