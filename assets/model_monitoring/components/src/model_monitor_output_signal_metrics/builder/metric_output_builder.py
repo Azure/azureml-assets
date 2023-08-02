@@ -6,6 +6,18 @@
 from typing import List
 from pyspark.sql import Row
 
+from shared_utilities.constants import (
+    AGGREGATE,
+    GROUP,
+    GROUP_PIVOT,
+    GROUPS,
+    METRIC_NAME,
+    METRIC_VALUE,
+    THRESHOLD,
+    THRESHOLD_VALUE,
+    VALUE,
+)
+
 
 class MetricOutputBuilder:
     """Builder class which creates a metrics object."""
@@ -18,44 +30,57 @@ class MetricOutputBuilder:
         """Get the metrics object."""
         return self.metrics_dict
     
+    # Expected columns: group, group_pivot, metric_name, metric_value
     def _build(self, metrics: List[Row]) -> dict:
         metrics_dict = {}
         for metric in metrics:
-            metric_name = metrics["metric_name"]
+            metric_dict = metric.asDict()
+            metric_name = metric_dict[METRIC_NAME]
 
             group_names = []
-            if "group" in metric:
-                node_id = metric["group"]
-                group_names.Append(node_id)
+            if GROUP in metric_dict:
+                try:
+                    node_id = metric_dict[GROUP]
+                    group_names.append(node_id)
 
-                if metric["group_pivot"] != "Aggregate":
-                    group_pivot = metric["group_pivot"] # Null case?
-                    group_names.Append(group_pivot)
+                    if metric_dict[GROUP_PIVOT].lower() != AGGREGATE:
+                        group_pivot = metric_dict[GROUP_PIVOT]
+                        group_names.append(group_pivot)
 
-                new_metric = {
-                    "value": metric["metric_value"],
-                    "threshold": metric["metric_threshold"],
-                }
+                    new_metric = { VALUE: metric_dict[METRIC_VALUE] }
+
+                    if THRESHOLD_VALUE in metric_dict and metric_dict[THRESHOLD_VALUE] is not None:
+                        new_metric[THRESHOLD] = metric_dict[THRESHOLD_VALUE]
+
+                except Exception as e:
+                    print(f"Error: Failed to get required column from metric '{metric_name}' with exception: {str(e)}")
+                    continue
+
                 self._add_metric(metrics_dict, metric_name, new_metric, group_names)
             else:
-                print(f"Error: metric {metric_name} contains null values in node_id column.")
+                print(f"Error: The value of column '{GROUP}' in metric '{metric_name}' is null.")
                 continue
 
         return metrics_dict
     
-    def _add_metric(self, metrics_dict: dict, metric_name: str, metric: dict, group_names: list[str]):
+    def _add_metric(self, metrics_dict: dict, metric_name: str, metric: dict, group_names: List[str]):
         if metric_name not in metrics_dict:
             metrics_dict[metric_name] = {}
 
-        cur_dict = metrics_dict
-        for group_name, idx in enumerate(group_names):
-            if idx < len(groups) - 1:
-                if group_name not in cur_dict:
-                    cur_dict[group_name] = {}
-                cur_dict = cur_dict[group_name]
-            
-            if group_name in cur_dict:
-                # this should not happend
-                raise "duplicate metrics exception"
+        cur_dict = metrics_dict[metric_name]
+        for idx, group_name in enumerate(group_names):
+            if idx < len(group_names) - 1:
+                self._create_metric_groups_if_not_exist(cur_dict, group_name)
+                cur_dict = cur_dict[GROUPS][group_name]
             else:
-                cur_dict[group_name] = metric
+                if group_name in cur_dict:
+                    raise Exception(f"Error: A duplicate metrics is found for metric {metric_name}, group {group_names}")
+                else:
+                    self._create_metric_groups_if_not_exist(cur_dict, group_name)
+                    cur_dict[GROUPS][group_name] = metric
+
+    def _create_metric_groups_if_not_exist(self, cur_dict: dict, group_name: str):
+        if GROUPS not in cur_dict:
+            cur_dict[GROUPS] = {}
+        if group_name not in cur_dict[GROUPS]:
+            cur_dict[GROUPS][group_name] = {}

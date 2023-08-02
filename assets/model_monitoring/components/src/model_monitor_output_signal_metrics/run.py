@@ -21,6 +21,7 @@ def run():
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--signal_name", type=str)
     arg_parser.add_argument("--signal_type", type=str)
+    arg_parser.add_argument("--version", type=str)
     arg_parser.add_argument("--signal_metrics", type=str)
     arg_parser.add_argument("--signal_output", type=str)
 
