@@ -1,4 +1,4 @@
-# This is a comment
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/azureml/curated/acpt-pytorch-1.11-cuda11.3:{{latest-image-tag}}
 
 WORKDIR /
