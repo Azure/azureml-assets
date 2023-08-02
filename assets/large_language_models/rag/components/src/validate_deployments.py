@@ -470,10 +470,9 @@ def validate_acs(acs_config, activity_logger: Logger):
         try:
             connection = get_connection_by_id_v2(connection_id_acs)
             acs_config['endpoint'] = connection['properties']['target']
-            acs_config['api_version'] = connection['properties'].get('metadata', {}).get('apiVersion', "2023-07-01-preview")
+            acs_metadata = connection['properties'].get('metadata', {})
+            acs_config['api_version'] = acs_metadata.get('apiVersion', "2023-07-01-preview")
             credential = get_connection_credential(connection)
-            if 'api_version' not in acs_config:
-                acs_config['api_version'] = "2023-07-01-preview"
             index_client = SearchIndexClient(endpoint=acs_config['endpoint'],
                                              credential=credential,
                                              api_version=acs_config['api_version'])
