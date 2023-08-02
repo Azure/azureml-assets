@@ -56,7 +56,7 @@ class MetricOutputBuilder:
 
                 except Exception as e:
                     print(f"Error: Failed to get required column from metric '{metric_name}'"
-                        + f" with exception: {str(e)}")
+                          + f" with exception: {str(e)}")
                     continue
 
                 self._add_metric(metrics_dict, metric_name, new_metric, group_names)
@@ -78,7 +78,7 @@ class MetricOutputBuilder:
             else:
                 if group_name in cur_dict:
                     raise Exception(f"Error: A duplicate metrics is found for metric {metric_name},"
-                        + f" group {group_names}")
+                                    + f" group {group_names}")
                 else:
                     self._create_metric_groups_if_not_exist(cur_dict, group_name)
                     cur_dict[GROUPS][group_name] = metric
