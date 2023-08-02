@@ -51,7 +51,7 @@ ENVIRONMENT_NAME_FULL_PATTERN = re.compile("".join([
 ]))
 
 # Dockerfile convention
-DOCKERFILE_IMAGE_PATTERN = re.compile(r"^FROM\s+mcr\.microsoft\.com\/azureml\/curated\/")
+DOCKERFILE_IMAGE_PATTERN = re.compile(r"^FROM\s+mcr\.microsoft\.com/azureml/curated/", re.IGNORECASE | re.MULTILINE)
 
 # Image naming convention
 IMAGE_NAME_PATTERN = re.compile(r"^azureml/curated/(.+)")
@@ -160,7 +160,7 @@ def validate_dockerfile(environment_config: assets.EnvironmentConfig) -> int:
     error_count = 0
     dockerfile = environment_config.get_dockerfile_contents()
 
-    if DOCKERFILE_IMAGE_PATTERN.match(dockerfile):
+    if DOCKERFILE_IMAGE_PATTERN.search(dockerfile):
         _log_error(environment_config.dockerfile_with_path, f"Referencing curated environment images in Dockerfile is not allowed")
         error_count += 1
     

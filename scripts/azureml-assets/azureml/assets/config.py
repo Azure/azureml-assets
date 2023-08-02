@@ -4,7 +4,6 @@
 """Asset config classes."""
 
 import re
-import os
 import warnings
 from enum import Enum
 from functools import total_ordering
@@ -12,7 +11,6 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from setuptools._vendor.packaging import version
 from typing import Dict, List, Tuple, Union
-from glob import glob as search
 
 # Ignore setuptools warning about replacing distutils
 warnings.filterwarnings("ignore", message="Setuptools is replacing distutils.", category=UserWarning)
@@ -643,11 +641,8 @@ class EnvironmentConfig(Config):
     
     def get_dockerfile_contents(self) -> str:
         """Dockerfile contents"""
-        dockerfile = ""
         with open(self.dockerfile_with_path, "r") as f:
-            dockerfile = f.read()
-
-        return dockerfile
+            return f.read()
 
     @property
     def _os(self) -> str:
