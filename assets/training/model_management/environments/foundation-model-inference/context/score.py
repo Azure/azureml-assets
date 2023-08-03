@@ -40,7 +40,8 @@ for name, value in os.environ.items():
 
 
 class SupportedTask:
-    """Supported tasks by text-generation-inference"""
+    """Supported tasks by text-generation-inference."""
+
     TEXT_GENERATION = "text-generation"
     CHAT_COMPLETION = "chat-completion"
 
@@ -64,6 +65,7 @@ aacs_client = None
 
 
 def init():
+    """Initialize MII server and MII client."""
     global task_type
     global aacs_client
 
@@ -148,6 +150,7 @@ def init():
 
 
 def run(data):
+    """Call the model to get the text generation or chat completion results."""
     global model
     global task_type
 
@@ -186,8 +189,13 @@ def run(data):
 
 # ACS START
 class AsyncRateLimitedOpsUtils:
-    # 1000 requests / 10 seconds. Limiting to 800 request per 10 secods
-    # limiting to 1000 concurrent requests
+    """
+    Util function for async rate limiter.
+
+    1000 requests / 10 seconds. Limiting to 800 request per 10 secods
+    limiting to 1000 concurrent requests
+    """
+
     def __init__(
         self,
         ops_count=800,
@@ -195,18 +203,22 @@ class AsyncRateLimitedOpsUtils:
         concurrent_ops=1000,
         thread_max_workers=1000,
     ):
+        """Init function."""
         self.limiter = AsyncLimiter(ops_count, ops_seconds)
         self.semaphore = asyncio.Semaphore(value=concurrent_ops)
         # need thread pool executor for sync function
         self.executor = ThreadPoolExecutor(max_workers=thread_max_workers)
 
     def get_limiter(self):
+        """Return limiter."""
         return self.limiter
 
     def get_semaphore(self):
+        """Rreturn semaphore."""
         return self.semaphore
 
     def get_executor(self):
+        """Return executor."""
         return self.executor
 
 
@@ -214,14 +226,21 @@ async_rate_limiter = AsyncRateLimitedOpsUtils()
 
 
 class CsChunkingUtils:
+    """
+    Cs chunking utils.
+    """
+
     def __init__(self, chunking_n=1000, delimiter="."):
+        """Init function."""
         self.delimiter = delimiter
         self.chunking_n = chunking_n
 
     def chunkstring(self, string, length):
+        """Chunk strings in a given length."""
         return (string[0 + i: length + i] for i in range(0, len(string), length))
 
     def split_by(self, input):
+        """Split the input."""
         max_n = self.chunking_n
         split = [e + self.delimiter for e in input.split(self.delimiter) if e]
         ret = []
@@ -246,6 +265,7 @@ class CsChunkingUtils:
 
 
 async def async_analyze_text_task(client, request):
+    """Analyze text task."""
     loop = asyncio.get_event_loop()
     executor = async_rate_limiter.get_executor()
     sem = async_rate_limiter.get_semaphore()
@@ -258,6 +278,7 @@ async def async_analyze_text_task(client, request):
 
 
 def analyze_response(response):
+    """Analyze response."""
     severity = 0
 
     if response.hate_result is not None:
@@ -277,6 +298,7 @@ def analyze_response(response):
 
 
 def analyze_text_async(text):
+    """Analyze text async."""
     global aacs_client
     # Chunk text
     chunking_utils = CsChunkingUtils(chunking_n=1000, delimiter=".")
@@ -299,6 +321,7 @@ def analyze_text_async(text):
 
 
 def analyze_text(text):
+    """Analyze text."""
     global aacs_client
     # Chunk text
     logger.info("Analyzing ...")
@@ -318,6 +341,7 @@ def analyze_text(text):
 
 
 def iterate(obj):
+    """Iterate through obj and check content severity."""
     if isinstance(obj, dict):
         severity = 0
         for key, value in obj.items():
@@ -348,6 +372,7 @@ def iterate(obj):
 
 
 def get_safe_response(result):
+    """Check if response is safe."""
     global aacs_client
     logger.info("Analyzing response...")
     jsonable_result = _get_jsonable_obj(result, pandas_orient="records")
@@ -361,6 +386,7 @@ def get_safe_response(result):
 
 
 def get_safe_input(input_data):
+    """Check if input is safe."""
     global aacs_client
     if not aacs_client:
         return input_data, 0
@@ -371,6 +397,7 @@ def get_safe_input(input_data):
 
 
 def get_aacs_access_key():
+    """Get aacs access key."""
     key = os.environ.get("CONTENT_SAFETY_KEY")
 
     if key:
@@ -398,7 +425,10 @@ def get_aacs_access_key():
 
 
 # ACS END
+
+
 def check_model_flavors(mlmodel):
+    """Check model task type and get default config."""
     global default_generator_configs
     global task_type
     if mlmodel:
@@ -492,7 +522,7 @@ def get_request_data(
 
 
 def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
-    """Process chat-completion input request.
+    r"""Process chat completion input request.
 
     Taken from:
     https://github.com/facebookresearch/llama/blob/main/llama/generation.py
@@ -557,7 +587,7 @@ def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
     return history
 
 
-def allocate_processes(hostfile_path):
+def _allocate_processes(hostfile_path):
     from mii.deployment import _allocate_processes
     if hostfile_path is None:
         import tempfile
@@ -569,8 +599,8 @@ def allocate_processes(hostfile_path):
     return _allocate_processes(hostfile_path, TENSOR_PARALLEL, REPLICA_NUM)
 
 
-def generate_load_balancer_config():
-    replica_pool = allocate_processes(hostfile_path=None)
+def _generate_load_balancer_config():
+    replica_pool = _allocate_processes(hostfile_path=None)
     replica_configs = [
         ReplicaConfig(
             hostname=hostname,
@@ -585,7 +615,7 @@ def generate_load_balancer_config():
     return load_balancer_config
 
 
-load_balancer_config = generate_load_balancer_config()
+load_balancer_config = _generate_load_balancer_config()
 is_70b_model = "Llama-2-70b" in MODEL_DIR or "Llama-2-70b-chat" in MODEL_DIR
 replace_with_kernel_inject = not is_70b_model
 configs = {
