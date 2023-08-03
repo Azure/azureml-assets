@@ -10,7 +10,7 @@ import copy
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
-from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants
+from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, HfModelTypes
 
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
     swallow_all_exceptions,
@@ -69,6 +69,74 @@ ACFT_CONFIG = {
         },
     },
     "tiiuae/falcon-40b": {
+        "load_config_kwargs": {
+            "trust_remote_code": True,
+        },
+        "load_tokenizer_kwargs": {
+            # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
+            "pad_token": "<|endoftext|>",
+            "trust_remote_code": True,
+        },
+        "load_model_kwargs": {
+            "trust_remote_code": True,
+        },
+        "finetune_args": {},
+        "mlflow_ft_conf": {
+            "mlflow_hftransformers_misc_conf": {
+                "config_hf_load_kwargs": {
+                    "trust_remote_code": True,
+                },
+                "tokenizer_hf_load_kwargs": {
+                    "model_input_names": ["input_ids", "attention_mask"],
+                    "return_token_type_ids": False,
+                },
+                "model_hf_load_kwargs": {
+                    "trust_remote_code": True,
+                },
+                "tokenizer_config": {
+                    "return_token_type_ids": False,
+                },
+            },
+            "mlflow_save_model_kwargs": {
+                "extra_pip_requirements": ["einops"],
+            },
+        },
+    },
+    HfModelTypes.REFINEDWEBMODEL: {
+        "load_config_kwargs": {
+            "trust_remote_code": True,
+        },
+        "load_tokenizer_kwargs": {
+            # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
+            "pad_token": "<|endoftext|>",
+            "trust_remote_code": True,
+        },
+        "load_model_kwargs": {
+            "trust_remote_code": True,
+        },
+        "finetune_args": {},
+        "mlflow_ft_conf": {
+            "mlflow_hftransformers_misc_conf": {
+                "config_hf_load_kwargs": {
+                    "trust_remote_code": True,
+                },
+                "tokenizer_hf_load_kwargs": {
+                    "model_input_names": ["input_ids", "attention_mask"],
+                    "return_token_type_ids": False,
+                },
+                "model_hf_load_kwargs": {
+                    "trust_remote_code": True,
+                },
+                "tokenizer_config": {
+                    "return_token_type_ids": False,
+                },
+            },
+            "mlflow_save_model_kwargs": {
+                "extra_pip_requirements": ["einops"],
+            },
+        },
+    },
+    HfModelTypes.FALCON: {
         "load_config_kwargs": {
             "trust_remote_code": True,
         },
@@ -197,6 +265,11 @@ def model_selector(args: Namespace):
         # TODO Revist whether `model_id` is still relevant
         args.model_name = args.model_id
 
+    # Add the model asset id to model_selector_args
+    model_asset_id = get_model_asset_id()
+    logger.info(f"Model asset id: {model_asset_id}")
+    setattr(args, "model_asset_id", model_asset_id)
+
     task_runner = get_task_runner(task_name=args.task_name)()
     task_runner.run_modelselector(**vars(args))
 
@@ -235,24 +308,38 @@ def model_selector(args: Namespace):
         ft_config_data = {}
 
     # read model selector args
+    # fetch model details
     model_selector_args_save_path = Path(args.output_dir, SaveFileConstants.MODEL_SELECTOR_ARGS_SAVE_PATH)
-    with open(model_selector_args_save_path, 'r') as rptr:
+    with open(model_selector_args_save_path, "r") as rptr:
         model_selector_args = json.load(rptr)
     model_name = model_selector_args.get("model_name", ModelImportConstants.MODEL_NAME_NOT_FOUND)
     logger.info(f"Model name - {model_name}")
 
-    # Add the model asset id to model_selector_args
-    model_asset_id = get_model_asset_id()
-    logger.info(f"Model asset id: {model_asset_id}")
-    model_selector_args["model_asset_id"] = model_asset_id
-    with open(model_selector_args_save_path, 'w') as wptr:
-        json.dump(model_selector_args, wptr)
+    # fetch model_type
+    model_type = None
+    try:
+        # fetch model_type
+        model_base_path = Path(args.output_dir, model_name)
+        model_config_path = Path(model_base_path, "config.json")
+        if model_base_path.is_dir() and model_config_path.is_file():
+            with open(model_config_path, "r") as fp:
+                model_config = json.load(fp)
+                model_type = model_config.get("model_type", None)
+        else:
+            logger.info(f"Model config.json does not exist for {model_name}")
+    except Exception:
+        logger.info(f"Unable to fetch model_type for {model_name}")
 
-    if model_name is not None and model_name in ACFT_CONFIG:
+    if model_type is not None and model_type in ACFT_CONFIG:
+        model_ft_config = copy.deepcopy(ACFT_CONFIG[model_type])
+        model_ft_config.update(ft_config_data)
+        ft_config_data = copy.deepcopy(model_ft_config)
+        logger.info(f"Updated FT config from model_type data - {ft_config_data}")
+    elif model_name is not None and model_name in ACFT_CONFIG:
         model_ft_config = copy.deepcopy(ACFT_CONFIG[model_name])
         model_ft_config.update(ft_config_data)
         ft_config_data = copy.deepcopy(model_ft_config)
-        logger.info(f"Updated FT config data - {ft_config_data}")
+        logger.info(f"Updated FT config from model_name data - {ft_config_data}")
     else:
         logger.info(f"Not updating FT config data - {ft_config_data}")
 
