@@ -36,9 +36,12 @@ inputs:
 
   # Tokenization params
   pad_to_max_length:
-    type: boolean
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "true"
     optional: true
-    default: true
     description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
   
   max_seq_length:
