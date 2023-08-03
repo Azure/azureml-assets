@@ -3,7 +3,7 @@ type: spark
 
 name: model_monitor_output_signal_metrics
 display_name: Model Monitor - Output Signal Metrics
-description: Output the computed model monitor metrics to the default datastore.
+description: Output the computed model monitor metrics.
 version: 0.3.2
 is_deterministic: true
 
