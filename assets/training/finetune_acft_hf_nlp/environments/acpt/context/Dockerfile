@@ -1,8 +1,5 @@
 #PTCA image
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch200:{{latest-image-tag}}
-
-# ls root dir
-RUN ls -lh
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch200:{{latest-image-tag:biweekly\.\d{6}\.\d{1}}}
 
 USER root
 

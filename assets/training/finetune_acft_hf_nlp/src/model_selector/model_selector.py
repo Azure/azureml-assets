@@ -227,8 +227,8 @@ def model_selector(args: Namespace):
         try:
             with open(ft_config_path, "r") as rptr:
                 ft_config_data = json.load(rptr)
-        except:
-            logger.info(f"Unable to load {SaveFileConstants.ACFT_CONFIG_SAVE_PATH}")
+        except Exception as e:
+            logger.info(f"Unable to load {SaveFileConstants.ACFT_CONFIG_SAVE_PATH} - {e}")
             ft_config_data = {}
     else:
         logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
