@@ -52,7 +52,7 @@ class MetricOutputBuilder:
                     }
 
                     if (SIGNAL_METRICS_THRESHOLD_VALUE in metric_dict
-                        and metric_dict[SIGNAL_METRICS_THRESHOLD_VALUE] is not None):
+                            and metric_dict[SIGNAL_METRICS_THRESHOLD_VALUE] is not None):
                         new_metric[THRESHOLD] = metric_dict[SIGNAL_METRICS_THRESHOLD_VALUE]
 
                 except Exception as e:
