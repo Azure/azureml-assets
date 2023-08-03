@@ -87,7 +87,7 @@ IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.LLAMA,
     HfModelTypes.GPT_NEOX,   # dolly
     HfModelTypes.FALCON,
-    # HfModelTypes.REFINEDWEBMODEL,   # falcon
+    HfModelTypes.REFINEDWEBMODEL,   # falcon
 ]
 
 
