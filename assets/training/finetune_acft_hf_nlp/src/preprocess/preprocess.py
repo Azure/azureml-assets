@@ -38,6 +38,7 @@ logger = get_logger_app(__name__)
 
 COMPONENT_NAME = "ACFT-Preprocess"
 
+
 def str2bool(arg):
     """Convert string to bool."""
     arg = arg.lower()
