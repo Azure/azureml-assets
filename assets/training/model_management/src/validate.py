@@ -3,7 +3,7 @@
 import argparse
 import os
 from azure.ai.ml import MLClient
-from azureml.model.mgmt.utils.exceptions import ( 
+from azureml.model.mgmt.utils.exceptions import (
     ModelAlreadyExists,
     swallow_all_exceptions
 )
@@ -11,10 +11,8 @@ from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.model.mgmt.config import AppName
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
-from azure.ai.ml import MLClient
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.identity import ManagedIdentityCredential
-from azureml.core.run import Run
 
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.VALIDATION_TRIGGER_IMPORT
@@ -40,15 +38,15 @@ def get_mlclient(registry_name: str = None):
             msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
             credential = ManagedIdentityCredential(client_id=msi_client_id)
             credential.get_token("https://management.azure.com/.default")
-        except Exception as ex:
+        except Exception:
             logger.warning("ManagedIdentityCredential failed.")
-            
 
     logger.info(f"Creating MLClient with registry name {registry_name}")
     return MLClient(credential=credential, registry_name=registry_name)
 
+
 def validate_if_model_exists(model_id):
-    registries_list=["azureml-preview", "azureml", "azureml-meta"]
+    registries_list = ["azureml-preview", "azureml", "azureml-meta"]
 
     for registry in registries_list:
         ml_client_registry = get_mlclient(registry_name=registry)
@@ -56,8 +54,6 @@ def validate_if_model_exists(model_id):
         models = ml_client_registry.models.list(name=REG_MODEL_ID)
         print(f"models: {models}")
         if models:
-            max_version = (max(models, key=lambda x: int(x.version))).version
-            model_version = str(int(max_version))
             raise AzureMLException._with_error(
                 AzureMLError.create(ModelAlreadyExists, model_id=model_id, registry=registry)
             )
