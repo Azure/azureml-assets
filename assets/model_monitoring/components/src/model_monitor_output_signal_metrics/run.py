@@ -13,6 +13,7 @@ from typing import List
 
 from model_monitor_output_signal_metrics.builder import MetricOutputBuilder
 from shared_utilities.amlfs import amlfs_upload
+from shared_utilities.constants import METADATA_VERSION
 from shared_utilities.io_utils import (
     np_encoder,
     read_mltable_in_spark,
@@ -25,7 +26,6 @@ def run():
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--signal_name", type=str)
     arg_parser.add_argument("--signal_type", type=str)
-    arg_parser.add_argument("--version", type=str)
     arg_parser.add_argument("--signal_metrics", type=str)
     arg_parser.add_argument("--signal_output", type=str)
 
@@ -34,7 +34,7 @@ def run():
     metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
 
     metrics_dict = MetricOutputBuilder(metrics).get_metrics_dict()
-    output_payload = to_output_payload(args.signal_name, args.signal_type, args.version, metrics_dict)
+    output_payload = to_output_payload(args.signal_name, args.signal_type, metrics_dict)
 
     local_path = str(uuid.uuid4())
     write_to_file(payload=output_payload, local_output_directory=local_path, signalName=args.signal_name)
@@ -46,12 +46,12 @@ def run():
     print("Successfully executed the output signal metric component.")
 
 
-def to_output_payload(signal_name: str, signal_type: str, version: str, metrics_dict: dict) -> dict:
+def to_output_payload(signal_name: str, signal_type: str, metrics_dict: dict) -> dict:
     """Convert to a dictionary object for metric output."""
     output_payload = {
         "signalName": signal_name,
         "signalType": signal_type,
-        "version": version,
+        "version": METADATA_VERSION,
         "metrics": metrics_dict,
     }
     return output_payload
