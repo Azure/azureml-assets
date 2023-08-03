@@ -68,7 +68,6 @@ def main_entry_point(function_name: str):
                 except Exception as ex:
                     raise ex
                 finally:
-                    logging.info("finally")
                     time.sleep(5)
         return cls
 
