@@ -469,7 +469,7 @@ def get_request_data(
         if task_type == SupportedTask.CHAT_COMPLETION:
             logger.info("chat-completion task. Processing input data")
             input_data = get_processed_input_data_for_chat_completion(input_data)
-        
+
         input_data_formatted = {"query": input_data}
         logger.info(f"input_data_formatted: {input_data_formatted}")
 
@@ -494,7 +494,7 @@ def get_request_data(
 def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
     """Process chat-completion input request.
 
-    Taken from: 
+    Taken from:
     https://github.com/facebookresearch/llama/blob/main/llama/generation.py
 
     example input:
@@ -504,7 +504,7 @@ def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
         {"role": "user", "content": "and in Africa?"},
     ]
     example output:
-    "[INST]What is the tallest building in the world?[\INST]
+    "[INST]What is the tallest building in the world?[/INST]
     As of 2021, the Burj Khalifa in Dubai\n
     [INST]and in Africa?[/INST]"
     """
