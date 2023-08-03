@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Entry script for Model Monitor Output Metrics Component."""
+"""Entry script for Model Monitor Metric Outputter Component."""
 
 import argparse
 import json
@@ -43,7 +43,7 @@ def run():
     amlfs_upload(local_path=local_path, remote_path=target_remote_path)
 
     print("*************** output metrics ***************")
-    print("Successfully executed the output signal metric component.")
+    print("Successfully executed the metric outputter component.")
 
 
 def to_output_payload(signal_name: str, signal_type: str, metrics_dict: dict) -> dict:

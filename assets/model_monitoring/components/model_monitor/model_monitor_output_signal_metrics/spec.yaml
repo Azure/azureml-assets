@@ -1,15 +1,15 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: model_monitor_output_signal_metrics
-display_name: Model Monitor - Output Signal Metrics
+name: model_monitor_metric_outputter
+display_name: Model Monitor - Metric Outputter
 description: Output the computed model monitor metrics.
 version: 0.3.2
 is_deterministic: true
 
 code: ../../src/
 entry:
-  file: ./model_monitor_output_signal_metrics/run.py
+  file: ./model_monitor_metric_outputter/run.py
 
 inputs:
   signal_metrics: 
