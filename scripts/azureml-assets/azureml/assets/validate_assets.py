@@ -50,6 +50,9 @@ ENVIRONMENT_NAME_FULL_PATTERN = re.compile("".join([
     f"(?:-(?:{GPU_DRIVER_VERSION}|gpu))?",
 ]))
 
+# Dockerfile convention
+DOCKERFILE_IMAGE_PATTERN = re.compile(r"^FROM\s+mcr\.microsoft\.com/azureml/curated/", re.IGNORECASE | re.MULTILINE)
+
 # Image naming convention
 IMAGE_NAME_PATTERN = re.compile(r"^azureml/curated/(.+)")
 
@@ -140,6 +143,27 @@ def validate_environment_name(asset_config: assets.AssetConfig) -> int:
     # Check for ordering
     if frameworks_found and not ENVIRONMENT_NAME_FULL_PATTERN.search(asset_name):
         _log_error(asset_config.file_name_with_path, f"Name '{asset_name}' elements are out of order")
+        error_count += 1
+
+    return error_count
+
+
+def validate_dockerfile(environment_config: assets.EnvironmentConfig) -> int:
+    """Validate Dockerfile.
+
+    Args:
+        environment_config (EnvironmentConfig): Environment config.
+
+    Returns:
+        int: Number of errors.
+    """
+    error_count = 0
+    dockerfile = environment_config.get_dockerfile_contents()
+    dockerfile = dockerfile.replace("\r\n", "\n")
+
+    if DOCKERFILE_IMAGE_PATTERN.search(dockerfile):
+        _log_error(environment_config.dockerfile_with_path,
+                   "Referencing curated environment images in Dockerfile is not allowed")
         error_count += 1
 
     return error_count
@@ -327,6 +351,10 @@ def validate_assets(input_dirs: List[Path],
                     error_count += validate_name(asset_config)
                 else:
                     logger.log_debug(f"Skipping name validation for {asset_config.full_name}")
+
+            # Validate Dockerfile
+            if asset_config.type == assets.AssetType.ENVIRONMENT:
+                error_count += validate_dockerfile(asset_config.extra_config_as_object())
 
             # Validate categories
             if check_categories:
