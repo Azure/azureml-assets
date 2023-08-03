@@ -17,6 +17,14 @@ def join_data(
     right_join_column: str,
     joined_data: str
 ):
+    """Join data assets based on the given join columns.
+
+    Agrs:
+        left_input_data: The left data asset to join.
+        left_join_column: The join column for the left data asset.
+        right_input_data: The right data asset to join.
+        right_join_column: The join column for the right data asset.    
+    """
     # Load data
     left_input_data_df = read_mltable_in_spark(mltable_path=left_input_data)
     right_input_data_df = read_mltable_in_spark(mltable_path=right_input_data)
