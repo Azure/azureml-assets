@@ -106,7 +106,7 @@ def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) ->
     return False
 
 
-def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
+def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path, registry_name: str) -> bool:
     """Prepare model.
 
     :param model_config: Model Config object
@@ -139,14 +139,16 @@ def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_
         return update_spec(model, spec_file_path)
 
     if model_config.type == assets.ModelType.CUSTOM:
-        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
+        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir, model, registry_name)
         if success:
-            model.path = model_dir
+            if model_config.path.type != PathType.AZUREBLOB:
+                model.path = model_dir
             success = update_spec(model, spec_file_path)
     elif model_config.type == assets.ModelType.MLFLOW:
-        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
+        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir, model, registry_name)
         if success:
-            model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
+            if model_config.path.type != PathType.AZUREBLOB:
+                model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
             if not model.flavors:
                 # try fetching flavors from MLModel file
                 mlmodel_file_path = model.path / MLFlowModelUtils.MLMODEL_FILE_NAME
@@ -628,7 +630,7 @@ if __name__ == "__main__":
                     try:
                         final_version = asset.version
                         model_config = asset.extra_config_as_object()
-                        if not prepare_model(model_config, asset.spec_with_path, Path(work_dir)):
+                        if not prepare_model(model_config, asset.spec_with_path, Path(work_dir), registry_name):
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")
                     except Exception as e:
                         logger.log_error(f"Model prepare exception: {e}")
