@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Validate Import Pipeline Parameters"""
+"""Validate Import Pipeline Parameters."""
 
 import argparse
 import os
