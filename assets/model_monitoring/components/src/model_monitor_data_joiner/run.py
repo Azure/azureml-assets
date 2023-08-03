@@ -23,7 +23,7 @@ def join_data(
         left_input_data: The left data asset to join.
         left_join_column: The join column for the left data asset.
         right_input_data: The right data asset to join.
-        right_join_column: The join column for the right data asset.  
+        right_join_column: The join column for the right data asset.
     """
     # Load data
     left_input_data_df = read_mltable_in_spark(mltable_path=left_input_data)
