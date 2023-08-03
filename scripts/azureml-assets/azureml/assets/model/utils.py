@@ -15,8 +15,12 @@ from azure.identity import DefaultAzureCredential
 from azure.ai.ml.entities import Model
 
 CREDENTIAL = DefaultAzureCredential()
-HEADERS = {"Authorization": "Bearer " + CREDENTIAL.get_token('https://management.azure.com/.default').token}
+HEADERS = {
+    "Authorization": "Bearer "
+    + CREDENTIAL.get_token("https://management.azure.com/.default").token
+}
 ASSET_STORE_URL = "https://eastus.api.azureml.ms/assetstore/v1.0"
+
 
 def _onerror(func, path, exc_info):
     """Error Handler for shutil rmtree."""
@@ -47,18 +51,20 @@ class ModelDownloadUtils:
         else:
             logger.print(f"Successfully executed! Output: \n{result.stdout}")
         return result.returncode
-    
-    def _get_temporary_data_reference(registry_name: str, model_name: str, model_version: str):
+
+    def _get_temporary_data_reference(
+        registry_name: str, model_name: str, model_version: str
+    ):
         asset_id = f"azureml://registries/{registry_name}/models/{model_name}/versions/{model_version}"
         pending_upload_body = {
-            "assetId": asset_id, 
-            "temporaryDataReferenceId": "model_weights", 
-            "temporaryDataReferenceType": "TemporaryBlobReference"
+            "assetId": asset_id,
+            "temporaryDataReferenceId": "model_weights",
+            "temporaryDataReferenceType": "TemporaryBlobReference",
         }
         response = requests.post(
-            ASSET_STORE_URL + "/temporaryDataReference/createOrGet", 
-            json=pending_upload_body, 
-            headers=HEADERS
+            ASSET_STORE_URL + "/temporaryDataReference/createOrGet",
+            json=pending_upload_body,
+            headers=HEADERS,
         )
         pending_upload_response = response.json()
         return pending_upload_response
@@ -79,7 +85,9 @@ class ModelDownloadUtils:
         shutil.rmtree(git_path, onerror=_onerror)
         return True
 
-    def _download_azure_artifacts(model_uri: str, registry_name: str, model_obj: Model) -> bool:
+    def _download_azure_artifacts(
+        model_uri: str, registry_name: str, model_obj: Model
+    ) -> bool:
         """Download model files from blobstore.
 
         :param model_url: Publicly readable blobstore URI of model files
@@ -88,15 +96,23 @@ class ModelDownloadUtils:
         :type: Path
         """
         try:
-            temporary_data_reference = ModelDownloadUtils._get_temporary_data_reference(registry_name, model_obj.name, model_obj.version)
-            sas_uri = temporary_data_reference["blobReferenceForConsumption"]["credential"]["sasUri"]
-            blob_uri = temporary_data_reference["blobReferenceForConsumption"]["blobUri"]
+            temporary_data_reference = ModelDownloadUtils._get_temporary_data_reference(
+                registry_name, model_obj.name, model_obj.version
+            )
+            sas_uri = temporary_data_reference["blobReferenceForConsumption"][
+                "credential"
+            ]["sasUri"]
+            blob_uri = temporary_data_reference["blobReferenceForConsumption"][
+                "blobUri"
+            ]
             download_cmd = f"azcopy cp --recursive=true {model_uri} {sas_uri}"
             result = ModelDownloadUtils._run(download_cmd)
             # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
             # https://github.com/Azure/azureml-assets/issues/283
             if result:
-                logger.log_error(f"Failed to download model files with URL: {model_uri}")
+                logger.log_error(
+                    f"Failed to download model files with URL: {model_uri}"
+                )
                 return False
             model_obj.path = blob_uri
             return True
@@ -104,7 +120,13 @@ class ModelDownloadUtils:
             logger.log_error(e)
             return False
 
-    def download_model(model_path_type: PathType, model_uri: str, model_dir: Path, model_obj: Model, registry_name: str) -> bool:
+    def download_model(
+        model_path_type: PathType,
+        model_uri: str,
+        model_dir: Path,
+        model_obj: Model,
+        registry_name: str,
+    ) -> bool:
         """Prepare the Download Environment.
 
         :param model_path_type: Model path type
@@ -117,7 +139,9 @@ class ModelDownloadUtils:
         if model_path_type == PathType.GIT:
             return ModelDownloadUtils._download_git_model(model_uri, model_dir)
         if model_path_type == PathType.AZUREBLOB:
-            return ModelDownloadUtils._download_azure_artifacts(model_uri, registry_name, model_obj)
+            return ModelDownloadUtils._download_azure_artifacts(
+                model_uri, registry_name, model_obj
+            )
         else:
             logger.print("Unsupported Model Download Method.")
         return False
