@@ -178,16 +178,17 @@ def prepare_model(
         if success:
             if model_config.path.type != PathType.AZUREBLOB:
                 model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
-            if not model.flavors:
-                # try fetching flavors from MLModel file
-                mlmodel_file_path = model.path+"/"+MLFlowModelUtils.MLMODEL_FILE_NAME
-                try:
-                    mlmodel = util.load_yaml(mlmodel_file_path)
-                    model.flavors = mlmodel.get("flavors")
-                except Exception as e:
-                    logger.log_error(
-                        f"Error loading flavors from MLmodel file at {mlmodel_file_path}: {e}"
-                    )
+            print("Path is ", model.path)
+            # if not model.flavors:
+            #     # try fetching flavors from MLModel file
+            #     mlmodel_file_path = model.path+"/"+MLFlowModelUtils.MLMODEL_FILE_NAME
+            #     try:
+            #         mlmodel = util.load_yaml(mlmodel_file_path)
+            #         model.flavors = mlmodel.get("flavors")
+            #     except Exception as e:
+            #         logger.log_error(
+            #             f"Error loading flavors from MLmodel file at {mlmodel_file_path}: {e}"
+            #         )
             success = update_spec(model, spec_file_path)
     else:
         logger.log_error(f"Model type {model_config.type.value} not supported")
