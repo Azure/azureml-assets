@@ -6,16 +6,17 @@
 import argparse
 import json
 import os
-from pyspark.sql import Row
-from typing import List
 import uuid
 
+from pyspark.sql import Row
+from typing import List
+
 from model_monitor_output_signal_metrics.builder import MetricOutputBuilder
+from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.io_utils import (
     np_encoder,
     read_mltable_in_spark,
 )
-from shared_utilities.amlfs import amlfs_upload
 
 
 def run():
