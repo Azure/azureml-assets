@@ -583,7 +583,8 @@ class ImageObjectDetectionInstanceSegmentationEvaluator(Evaluator):
                 else:
                     label_or_pred_dict[ODISLiterals.LABELS] = np.array(label_or_pred_dict[ODISLiterals.LABELS])
 
-            if ODISLiterals.MASKS in label_or_pred_dict and isinstance(label_or_pred_dict[ODISLiterals.MASKS], np.ndarray):
+            if ODISLiterals.MASKS in label_or_pred_dict and isinstance(label_or_pred_dict[ODISLiterals.MASKS],
+                                                                       np.ndarray):
                 label_or_pred_dict[ODISLiterals.MASKS] = list(label_or_pred_dict[ODISLiterals.MASKS])
 
             return label_or_pred_dict
@@ -594,7 +595,8 @@ class ImageObjectDetectionInstanceSegmentationEvaluator(Evaluator):
 
         # Convert predictions to expected format
         y_pred[ImageDataFrameParams.PREDICTIONS] = y_pred[ImageDataFrameParams.PREDICTIONS].apply(lambda x: _recast(x))
-        y_test[ImageDataFrameParams.LABEL_COLUMN_NAME] = y_test[ImageDataFrameParams.LABEL_COLUMN_NAME].apply(lambda x: _recast(x))
+        y_test[ImageDataFrameParams.LABEL_COLUMN_NAME] = \
+            y_test[ImageDataFrameParams.LABEL_COLUMN_NAME].apply(lambda x: _recast(x))
 
         y_pred = self._convert_predictions(y_pred)
         y_test = self._convert_predictions(y_test)

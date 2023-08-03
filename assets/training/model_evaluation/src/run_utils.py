@@ -171,6 +171,7 @@ class TestRun:
         info = {}
         if not isinstance(self._run, _OfflineRun):
             raw_json = self._run.get_details()
+            registry_pattern = "azureml://registries/(.+?)/models/(.+?)/versions/(.+?)"
             if raw_json["runDefinition"]["inputAssets"].get("mlflow_model", None) is not None:
                 try:
                     model_asset_id = raw_json["runDefinition"]["inputAssets"]["mlflow_model"]["asset"]["assetId"]
@@ -178,7 +179,7 @@ class TestRun:
                     if model_asset_id.startswith("azureml://registries"):
                         import re
                         info["model_source"] = "registry"
-                        model_info = re.search("azureml://registries/(.+?)/models/(.+?)/versions/(.+?)", model_asset_id)
+                        model_info = re.search(registry_pattern, model_asset_id)
                         info["model_registry_name"] = model_info.group(1)
                         info["model_name"] = model_info.group(2)
                         info["model_version"] = model_info.group(3)
@@ -197,7 +198,7 @@ class TestRun:
                         if parent_model_asset_id.startswith("azureml://registries"):
                             import re
                             info["parent_model_source"] = "registry"
-                            parent_model_info = re.search("azureml://registries/(.+?)/models/(.+?)/versions/(.+?)",
+                            parent_model_info = re.search(registry_pattern,
                                                           parent_model_asset_id)
                             info["parent_model_registry_name"] = parent_model_info.group(1)
                             info["parent_model_name"] = parent_model_info.group(2)

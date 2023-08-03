@@ -101,12 +101,14 @@ class RuntimeDetectionDatasetAdapter(CommonObjectDetectionDatasetWrapper):
         image = image.to(torch.uint8)
 
         training_labels[ODISLiterals.CLASSES] = training_labels[ODISLiterals.LABELS].numpy()
-        training_labels[ODISLiterals.LABELS] = np.array([self._dataset.index_to_label(x) for x in training_labels[ODISLiterals.LABELS]])
+        training_labels[ODISLiterals.LABELS] = np.array([self._dataset.index_to_label(x)
+                                                         for x in training_labels[ODISLiterals.LABELS]])
 
         training_labels[ODISLiterals.BOXES] = training_labels[ODISLiterals.BOXES].numpy()
         # rle masks need for computing metrics
         if ODISLiterals.MASKS in training_labels:
-            training_labels[ODISLiterals.MASKS] = [masktools.encode_mask_as_rle(mask) for mask in training_labels[ODISLiterals.MASKS]]
+            training_labels[ODISLiterals.MASKS] = [masktools.encode_mask_as_rle(mask)
+                                                   for mask in training_labels[ODISLiterals.MASKS]]
         return image, training_labels, image_info
 
 
@@ -191,9 +193,10 @@ def get_classification_dataset(
     for index in range(len(test_dataset_wrapper)):
         image_path = test_dataset_wrapper.get_image_full_path(index)
         if is_valid_image(image_path):
-            df = df.append({ImageDataFrameParams.IMAGE_COLUMN_NAME: base64.encodebytes(read_image(image_path)).decode("utf-8"),
-                            ImageDataFrameParams.LABEL_COLUMN_NAME: test_dataset_wrapper.label_at_index(index)
-                            }, ignore_index=True)
+            df = df.append({
+                ImageDataFrameParams.IMAGE_COLUMN_NAME: base64.encodebytes(read_image(image_path)).decode("utf-8"),
+                ImageDataFrameParams.LABEL_COLUMN_NAME: test_dataset_wrapper.label_at_index(index)
+            }, ignore_index=True)
 
     return df
 
@@ -260,10 +263,11 @@ def get_object_detection_dataset(
 
         if is_valid_image(image_path):
             counter += 1
-            df = df.append({ImageDataFrameParams.IMAGE_COLUMN_NAME: base64.encodebytes(read_image(image_path)).decode("utf-8"),
-                            ImageDataFrameParams.LABEL_COLUMN_NAME: label,
-                            ImageDataFrameParams.IMAGE_META_INFO: image_meta_info
-                            }, ignore_index=True)
+            df = df.append({
+                ImageDataFrameParams.IMAGE_COLUMN_NAME: base64.encodebytes(read_image(image_path)).decode("utf-8"),
+                ImageDataFrameParams.LABEL_COLUMN_NAME: label,
+                ImageDataFrameParams.IMAGE_META_INFO: image_meta_info
+            }, ignore_index=True)
 
     logger.info(f"Total number of valid images: {counter}")
     return df
