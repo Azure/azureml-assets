@@ -1,5 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+
+"""Validate Import Pipeline Parameters"""
+
 import argparse
 import os
 from azure.ai.ml import MLClient
@@ -46,6 +49,7 @@ def get_mlclient(registry_name: str = None):
 
 
 def validate_if_model_exists(model_id):
+    """Validate if model exists in any of the registries."""
     registries_list = ["azureml-preview", "azureml", "azureml-meta"]
 
     for registry in registries_list:
@@ -64,6 +68,7 @@ def validate_if_model_exists(model_id):
 
 @swallow_all_exceptions(logger)
 def validate():
+    """Validate Import pipeline parameters."""
     parser = _get_parser()
     args, unknown_args_ = parser.parse_known_args()
     model_id = args.model_id
