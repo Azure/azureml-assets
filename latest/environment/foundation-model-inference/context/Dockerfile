@@ -28,7 +28,7 @@ RUN /var/requirements/install_system_requirements.sh && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
 ENV SVDIR=/var/runit
-ENV WORKER_TIMEOUT=400
+ENV WORKER_TIMEOUT=1200
 EXPOSE 5001 8883 8888
 
 CMD [ "runsvdir", "/var/runit" ]
