@@ -26,6 +26,7 @@ class ModelImportErrorStrings:
     GIT_CLONE_ERROR = "Failed to clone {uri}. Error: [{error}]"
     VM_NOT_SUFFICIENT_FOR_OPERATION = "VM not sufficient for {operation} operation. Details: [{details}]"
     CMD_EXECUTION_ERROR = "Error in executing command. Error: [{error}]"
+    MODEL_ALREADY_EXISTS = "Model with name {model_id} already exists in registry {registry}"
 
 
 class ModelImportException(AzureMLException):
@@ -106,6 +107,15 @@ class GenericRunCMDError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.CMD_EXECUTION_ERROR
+
+
+class ModelAlreadyExists(ClientError):
+    """Error when Model already exists in registry."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.MODEL_ALREADY_EXISTS
 
 
 def swallow_all_exceptions(logger: logging.Logger):
