@@ -4,7 +4,45 @@
 """File to create AzureML Based Exceptions for Model Evaluation."""
 
 from azureml.exceptions import AzureMLException
+from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
+from error_definitions import ModelEvaluationInternalError
 from constants import ExceptionLiterals
+from functools import wraps
+import time
+import logging
+
+
+def swallow_all_exceptions(logger: logging.Logger):
+    """Swallow all exceptions.
+
+    1. Catch all the exceptions arising in the functions wherever used
+    2. Raise the exception as an AzureML Exception so that it does not get scrubbed by PII scrubber
+
+    :param logger: The logger to be used for logging the exception raised
+    :type logger: Instance of logging.logger
+    """
+    def wrap(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                if isinstance(e, AzureMLException):
+                    azureml_exception = e
+                else:
+                    azureml_exception = AzureMLException._with_error(
+                        AzureMLError.create(ModelEvaluationInternalError, error=e))
+
+                logger.error("Exception {} when calling {}".format(azureml_exception, func.__name__))
+                for handler in logger.handlers:
+                    handler.flush()
+                raise azureml_exception
+            finally:
+                time.sleep(60)  # Let telemetry logger flush its logs before terminating.
+
+        return wrapper
+
+    return wrap
 
 
 class ModelEvaluationException(AzureMLException):
