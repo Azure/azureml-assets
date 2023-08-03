@@ -141,7 +141,7 @@ def prepare_model(
     except Exception as e:
         logger.error(f"Error in loading model spec file at {spec_file_path}: {e}")
         return False
-
+    logger.print("entering zone")
     model_description_file_path = Path(spec_file_path).parent / model_config.description
     logger.print(f"model_description_file_path {model_description_file_path}")
     if os.path.exists(model_description_file_path):
