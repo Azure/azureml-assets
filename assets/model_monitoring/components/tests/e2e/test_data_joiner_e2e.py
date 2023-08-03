@@ -26,7 +26,7 @@ def _submit_data_joiner_job(
     right_join_column
 ):
     data_joiner_component = get_component(COMPONENT_NAME_DATA_JOINER)
-    
+
     @pipeline()
     def _data_joiner_e2e():
         data_joiner_output: Spark = data_joiner_component(
