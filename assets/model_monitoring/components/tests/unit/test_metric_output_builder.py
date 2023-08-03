@@ -7,12 +7,12 @@ import pytest
 from typing import List
 from pyspark.sql import Row
 
-from model_monitor_output_signal_metrics.builder.metric_output_builder import MetricOutputBuilder
+from model_monitor_metric_outputter.builder.metric_output_builder import MetricOutputBuilder
 
 
 @pytest.mark.unit
 class TestMetricOutputBuilder:
-    """Test class for data drift output metrics component."""
+    """Test class for metric output builder."""
 
     def test_metrics_with_1_level_groups(self):
         """Test metrics output builder for metrics with one level metric groups."""
