@@ -107,6 +107,7 @@ class ModelDownloadUtils:
             ]
             download_cmd = f"azcopy cp --recursive=true {model_uri} {sas_uri}"
             result = ModelDownloadUtils._run(download_cmd)
+            logger.print("downloaded azcop result", result)
             # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
             # https://github.com/Azure/azureml-assets/issues/283
             if result:

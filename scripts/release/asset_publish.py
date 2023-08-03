@@ -156,6 +156,7 @@ def prepare_model(
         return update_spec(model, spec_file_path)
 
     if model_config.type == assets.ModelType.CUSTOM:
+        logger.print(f"model is custom")
         success = ModelDownloadUtils.download_model(
             model_config.path.type,
             model_config.path.uri,
@@ -163,11 +164,13 @@ def prepare_model(
             model,
             registry_name,
         )
+        logger.print(f"model custom downloaed succesfully or not", success)
         if success:
             if model_config.path.type != PathType.AZUREBLOB:
                 model.path = model_dir
             success = update_spec(model, spec_file_path)
     elif model_config.type == assets.ModelType.MLFLOW:
+        logger.print(f"model is custom")
         success = ModelDownloadUtils.download_model(
             model_config.path.type,
             model_config.path.uri,
@@ -175,10 +178,11 @@ def prepare_model(
             model,
             registry_name,
         )
+        logger.print(f"model mlfow downloaed succesfully or not", success)
         if success:
             if model_config.path.type != PathType.AZUREBLOB:
                 model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
-            print("Path is ", model.path)
+            logger.print("Path is mlfow", model.path)
             # if not model.flavors:
             #     # try fetching flavors from MLModel file
             #     mlmodel_file_path = model.path+"/"+MLFlowModelUtils.MLMODEL_FILE_NAME
@@ -190,6 +194,7 @@ def prepare_model(
             #             f"Error loading flavors from MLmodel file at {mlmodel_file_path}: {e}"
             #         )
             success = update_spec(model, spec_file_path)
+            logger.print("spec file updated or not", success)
     else:
         logger.log_error(f"Model type {model_config.type.value} not supported")
         success = False
@@ -744,14 +749,16 @@ if __name__ == "__main__":
                             Path(work_dir),
                             registry_name,
                         ):
+                            logger.print("prpare model failed")
                             raise Exception(
                                 f"Could not prepare model at {asset.spec_with_path}"
                             )
                     except Exception as e:
+                        logger.print("came here at exception")
                         logger.log_error(f"Model prepare exception: {e}")
                         failure_list.append(asset)
                         continue
-
+                logger.print("Creating asset ",asset.name)
                 # Create asset
                 create_asset(
                     asset=asset,
