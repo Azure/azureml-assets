@@ -5,7 +5,7 @@
 
 ## 1.9.0 (2023-08-03)
 ### 🚀 New Features
-- [#913](https://github.com/Azure/azureml-assets/pull/962) Prevent curated environment image references in Dockerfiles
+- [#962](https://github.com/Azure/azureml-assets/pull/962) Prevent curated environment image references in Dockerfiles
 
 ## 1.8.0 (2023-07-20)
 ### 🚀 New Features
