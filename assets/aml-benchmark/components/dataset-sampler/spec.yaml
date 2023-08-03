@@ -41,7 +41,7 @@ outputs:
     description: Path to the output .jsonl file.
 
 code: ../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/9
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
 command: >-
   python dataset-sampler/main.py 
   --dataset ${{inputs.dataset}} 
