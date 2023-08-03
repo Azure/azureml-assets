@@ -226,9 +226,7 @@ async_rate_limiter = AsyncRateLimitedOpsUtils()
 
 
 class CsChunkingUtils:
-    """
-    Cs chunking utils.
-    """
+    """Cs chunking utils."""
 
     def __init__(self, chunking_n=1000, delimiter="."):
         """Init function."""
