@@ -180,7 +180,7 @@ def prepare_model(
                 model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
             if not model.flavors:
                 # try fetching flavors from MLModel file
-                mlmodel_file_path = model.path / MLFlowModelUtils.MLMODEL_FILE_NAME
+                mlmodel_file_path = model.path+"/"+MLFlowModelUtils.MLMODEL_FILE_NAME
                 try:
                     mlmodel = util.load_yaml(mlmodel_file_path)
                     model.flavors = mlmodel.get("flavors")
