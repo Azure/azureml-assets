@@ -49,11 +49,11 @@ VERSION_PARAM = 'version'
 
 # Keywords in metrics schema
 AGGREGATE = 'aggregate'
-GROUP = 'group'
-GROUP_PIVOT = 'group_pivot'
-METRIC_NAME = 'metric_name'
-METRIC_VALUE = 'metric_value'
-THRESHOLD_VALUE = 'threshold_value'
+SIGNAL_METRICS_GROUP = 'group'
+SIGNAL_METRICS_GROUP_DIMENSION = 'group_dimension'
+SIGNAL_METRICS_METRIC_NAME = 'metric_name'
+SIGNAL_METRICS_METRIC_VALUE = 'metric_value'
+SIGNAL_METRICS_THRESHOLD_VALUE = 'threshold_value'
 
 # Keywords in metric output JSON schema
 GROUPS = 'groups'

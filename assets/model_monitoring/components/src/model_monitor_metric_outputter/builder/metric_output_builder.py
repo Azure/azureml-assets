@@ -8,13 +8,13 @@ from pyspark.sql import Row
 
 from shared_utilities.constants import (
     AGGREGATE,
-    GROUP,
-    GROUP_PIVOT,
+    SIGNAL_METRICS_GROUP,
+    SIGNAL_METRICS_GROUP_DIMENSION,
     GROUPS,
-    METRIC_NAME,
-    METRIC_VALUE,
+    SIGNAL_METRICS_METRIC_NAME,
+    SIGNAL_METRICS_METRIC_VALUE,
     THRESHOLD,
-    THRESHOLD_VALUE,
+    SIGNAL_METRICS_THRESHOLD_VALUE,
     VALUE,
 )
 
@@ -30,29 +30,29 @@ class MetricOutputBuilder:
         """Get the metrics object."""
         return self.metrics_dict
 
-    # Expected columns: group, group_pivot, metric_name, metric_value
+    # Expected columns: group, group_dimension, metric_name, metric_value
     def _build(self, metrics: List[Row]) -> dict:
         metrics_dict = {}
         for metric in metrics:
             metric_dict = metric.asDict()
-            metric_name = metric_dict[METRIC_NAME]
+            metric_name = metric_dict[SIGNAL_METRICS_METRIC_NAME]
 
             group_names = []
-            if GROUP in metric_dict:
+            if SIGNAL_METRICS_GROUP in metric_dict:
                 try:
-                    node_id = metric_dict[GROUP]
+                    node_id = metric_dict[SIGNAL_METRICS_GROUP]
                     group_names.append(node_id)
 
-                    if metric_dict[GROUP_PIVOT].lower() != AGGREGATE:
-                        group_pivot = metric_dict[GROUP_PIVOT]
-                        group_names.append(group_pivot)
+                    if metric_dict[SIGNAL_METRICS_GROUP_DIMENSION].lower() != AGGREGATE:
+                        group_dimension = metric_dict[SIGNAL_METRICS_GROUP_DIMENSION]
+                        group_names.append(group_dimension)
 
                     new_metric = {
-                        VALUE: metric_dict[METRIC_VALUE],
+                        VALUE: metric_dict[SIGNAL_METRICS_METRIC_VALUE],
                     }
 
-                    if THRESHOLD_VALUE in metric_dict and metric_dict[THRESHOLD_VALUE] is not None:
-                        new_metric[THRESHOLD] = metric_dict[THRESHOLD_VALUE]
+                    if SIGNAL_METRICS_THRESHOLD_VALUE in metric_dict and metric_dict[SIGNAL_METRICS_THRESHOLD_VALUE] is not None:
+                        new_metric[THRESHOLD] = metric_dict[SIGNAL_METRICS_THRESHOLD_VALUE]
 
                 except Exception as e:
                     print(f"Error: Failed to get required column from metric '{metric_name}'"
@@ -61,7 +61,7 @@ class MetricOutputBuilder:
 
                 self._add_metric(metrics_dict, metric_name, new_metric, group_names)
             else:
-                print(f"Error: The value of column '{GROUP}' in metric '{metric_name}' is null.")
+                print(f"Error: The value of column '{SIGNAL_METRICS_GROUP}' in metric '{metric_name}' is null.")
                 continue
 
         return metrics_dict
