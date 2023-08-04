@@ -124,7 +124,6 @@ def prepare_model_for_registration(
     :return: Model successfully prepared for creation in registry.
     :rtype: bool
     """
-
     model, success = prepare_model(
         spec_path=spec_file_path, model_config=model_config, registry_name=registry_name, temp_dir=temp_dir
     )

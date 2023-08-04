@@ -14,6 +14,8 @@ from pathlib import Path
 
 
 class RegistryUtils:
+    """Registry utils."""
+
     INTERNAL_REGION_ASSET_STORE_URL = "https://int.api.azureml-test.ms/assetstore/v1.0"
     PROD_REGION_ASSET_STORE_URL = "https://eastus.api.azureml.ms/assetstore/v1.0"
     TOKEN_CREDENTIAL_URL = "https://management.azure.com/.default"
@@ -22,12 +24,14 @@ class RegistryUtils:
     RETRY_COUNT = 3
 
     def get_assetstore_url(registry_name: str):
+        """Return asset URI for the registry."""
         # USE https://eastus.api.azureml.ms/registrymanagement/v1.0/registries/{registryName}/discovery
         if RegistryUtils.DEV_REGISTRY_NAME == registry_name:
             return RegistryUtils.INTERNAL_REGION_ASSET_STORE_URL
         return RegistryUtils.PROD_REGION_ASSET_STORE_URL
 
     def get_registry_data_reference(registry_name: str, model_name: str, model_version: str):
+        """Fetch data reference for asset in the registry."""
         cnt, response, error = 0, None, None
         asset_id = f"azureml://registries/{registry_name}/models/{model_name}/versions/{model_version}"
         logger.print(f"getting data reference for asset {asset_id}")
@@ -69,7 +73,10 @@ class RegistryUtils:
 
 
 class ModelAsset:
+    """Asset class for model."""
+
     def __init__(self, spec_path, model_config, registry_name, temp_dir):
+        """Initialize model asset."""
         self._spec_path = spec_path
         self._model_config = model_config
         self._registry_name = registry_name
@@ -118,12 +125,13 @@ class ModelAsset:
 
 
 class MLFlowModelAsset(ModelAsset):
-    """Prepare MLflow Model for registration."""
+    """Asset class for MLflow model."""
 
     MLMODEL_FILE_NAME = "MLmodel"
     MLFLOW_MODEL_PATH = "mlflow_model_folder"
 
     def __init__(self, spec_path, model_config, registry_name, temp_dir):
+        """Initialize Mlflow model asset."""
         super().__init__(spec_path, model_config, registry_name, temp_dir)
 
     def prepare_model(self):
@@ -134,9 +142,10 @@ class MLFlowModelAsset(ModelAsset):
 
 
 class CustomModelAsset(ModelAsset):
-    """Prepare custom model for registration."""
+    """Asset class for custom model."""
 
     def __init__(self, spec_path, model_config, registry_name, temp_dir):
+        """Initialize custom model asset."""
         super().__init__(spec_path, model_config, registry_name, temp_dir)
 
     def prepare_model(self):
