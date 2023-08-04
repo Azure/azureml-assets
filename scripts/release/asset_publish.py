@@ -164,13 +164,13 @@ def prepare_model(
             model,
             registry_name,
         )
-        logger.print(f"model custom downloaed succesfully or not", success)
+        logger.print(f"model custom downloaed succesfully or not {success}")
         if success:
             if model_config.path.type != PathType.AZUREBLOB:
                 model.path = model_dir
             success = update_spec(model, spec_file_path)
     elif model_config.type == assets.ModelType.MLFLOW:
-        logger.print(f"model is custom")
+        logger.print(f"model is mlflow")
         success = ModelDownloadUtils.download_model(
             model_config.path.type,
             model_config.path.uri,
@@ -178,11 +178,11 @@ def prepare_model(
             model,
             registry_name,
         )
-        logger.print(f"model mlfow downloaed succesfully or not", success)
+        logger.print(f"model mlfow downloaed succesfully or not {success}")
         if success:
             if model_config.path.type != PathType.AZUREBLOB:
                 model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
-            logger.print("Path is mlfow", model.path)
+            logger.print(f"Path is mlfow {model.path}")
             # if not model.flavors:
             #     # try fetching flavors from MLModel file
             #     mlmodel_file_path = model.path+"/"+MLFlowModelUtils.MLMODEL_FILE_NAME
@@ -194,7 +194,7 @@ def prepare_model(
             #             f"Error loading flavors from MLmodel file at {mlmodel_file_path}: {e}"
             #         )
             success = update_spec(model, spec_file_path)
-            logger.print("spec file updated or not", success)
+            logger.print(f"spec file updated or not {success}")
     else:
         logger.log_error(f"Model type {model_config.type.value} not supported")
         success = False
@@ -758,7 +758,7 @@ if __name__ == "__main__":
                         logger.log_error(f"Model prepare exception: {e}")
                         failure_list.append(asset)
                         continue
-                logger.print("Creating asset ",asset.name)
+                logger.print(f"Creating asset {asset.name}")
                 # Create asset
                 create_asset(
                     asset=asset,

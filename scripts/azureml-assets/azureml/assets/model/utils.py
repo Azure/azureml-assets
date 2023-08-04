@@ -105,11 +105,11 @@ class ModelDownloadUtils:
             blob_uri = temporary_data_reference["blobReferenceForConsumption"][
                 "blobUri"
             ]
-            logger.print("sas uri", sas_uri)
-            logger.print("blob_uri", blob_uri)
+            logger.print(f"sas uri - {sas_uri}")
+            logger.print(f"blob_uri - {blob_uri}")
             download_cmd = f"azcopy copy {model_uri} {sas_uri} --recursive"
             result = ModelDownloadUtils._run(download_cmd)
-            logger.print("downloaded azcop result", result)
+            logger.print(f"downloaded azcop result {result}")
             # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
             # https://github.com/Azure/azureml-assets/issues/283
             if result:
