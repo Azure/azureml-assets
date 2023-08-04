@@ -47,7 +47,7 @@ class SupportedTask:
 
 
 LOAD_BALANCING_PORT = 50050
-MAX_TOKENS = 1024
+MAX_TOKENS = int(os.environ.get("MII_MAX_TOKENS", 4096))
 TORCH_DIST_PORT = 29501
 REPLICA_NUM = int(os.getenv("WORKER_COUNT", 1))
 DEVICE_COUNT = torch.cuda.device_count()
