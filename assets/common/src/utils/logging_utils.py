@@ -234,10 +234,10 @@ def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL
 
     if LoggerConfig.MODEL_IMPORT_HANDLER_NAME not in handler_names:
         format_str = (
-            "%(asctime)s [{}] [{}] [%(module)s] %(funcName)s "
+            "%(asctime)s [%(module)s] %(funcName)s "
             "%(lineno)s: %(levelname)-8s [%(process)d] %(message)s \n"
         )
-        formatter = logging.Formatter(format_str.format(app_name, run_details.run_id))
+        formatter = logging.Formatter(format_str)
         stream_handler = ModelImportHandler()
         stream_handler.setFormatter(formatter)
         stream_handler.setLevel(numeric_log_level)
