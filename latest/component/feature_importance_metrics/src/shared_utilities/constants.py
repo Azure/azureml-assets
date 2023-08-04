@@ -49,6 +49,19 @@ TARGET_COUNT_PARAM = 'targetCount'
 UPPER_BOUND_PARAM = 'upperBound'
 VERSION_PARAM = 'version'
 
+# Keywords in metrics schema
+AGGREGATE = 'aggregate'
+SIGNAL_METRICS_GROUP = 'group'
+SIGNAL_METRICS_GROUP_DIMENSION = 'group_dimension'
+SIGNAL_METRICS_METRIC_NAME = 'metric_name'
+SIGNAL_METRICS_METRIC_VALUE = 'metric_value'
+SIGNAL_METRICS_THRESHOLD_VALUE = 'threshold_value'
+
+# Keywords in metric output JSON schema
+GROUPS = 'groups'
+THRESHOLD = 'threshold'
+VALUE = 'value'
+
 # Values for Outputs of Output Metrics Component
 METADATA_VERSION = '1.0.0'
 
