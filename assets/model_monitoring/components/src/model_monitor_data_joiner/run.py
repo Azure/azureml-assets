@@ -8,6 +8,7 @@ from shared_utilities.io_utils import (
     read_mltable_in_spark,
     save_spark_df_as_mltable,
 )
+from shared_utilities.event_utils import post_warning_event
 
 
 def join_data(
@@ -35,6 +36,11 @@ def join_data(
         left_input_data_df[left_join_column] == right_input_data_df[right_join_column],
         'inner'
     )
+
+    # Post warning if the joined data
+    if joined_data_df.count() == 0:
+        error_message = "The joined data asset is empty. Either one or both the inputs to the component are empty or joining on 'join_column' resulted in empty result."
+        post_warning_event(error_message)
 
     # Write the output
     save_spark_df_as_mltable(joined_data_df, joined_data)
