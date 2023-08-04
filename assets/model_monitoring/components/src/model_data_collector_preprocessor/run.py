@@ -108,6 +108,7 @@ def run():
     parser.add_argument("--data_window_start", type=str)
     parser.add_argument("--data_window_end", type=str)
     parser.add_argument("--input_data", type=str)
+    parser.add_argument("--extract_correlation_id", type=str)
     parser.add_argument("--preprocessed_input_data", type=str)
     args = parser.parse_args()
 
