@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.18
+version: 0.0.19
 name: llm_ingest_git_to_acs_basic
 display_name: LLM - Git to ACS Pipeline
 is_deterministic: false
@@ -121,7 +121,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.13'
+    component: 'azureml:llm_rag_validate_deployments:0.0.14'
     identity:
       type: user_identity
     inputs:
@@ -129,7 +129,7 @@ jobs:
       embeddings_model: ${{parent.inputs.embeddings_model}}
       check_embeddings: "True"
       check_completion: "False"
-      check_acs: "False"
+      check_acs: "True"
       acs_config: ${{parent.inputs.acs_config}}
     outputs:
       output_data:
