@@ -54,3 +54,4 @@ args: >-
   --left_join_column ${{inputs.left_join_column}}
   --right_input_data ${{inputs.right_input_data}}
   --right_join_column ${{inputs.right_join_column}}
+  --joined_data ${{outputs.joined_data}}
