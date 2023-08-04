@@ -199,6 +199,16 @@ inputs:
     optional: true
     description: If set to true, will use the ONNXRunTime training
 
+  # MLFlow Parameters
+  save_as_mlflow_model:
+    type: string
+    enum:
+    - 'true'
+    - 'false'
+    default: 'true'
+    optional: true
+    description: If set to true, will save as mlflow model with pyfunc as flavour
+
   deepspeed_config:
     type: uri_file
     optional: true
@@ -257,6 +267,7 @@ jobs:
       apply_deepspeed: ${{parent.inputs.apply_deepspeed}}
       deepspeed: ${{parent.inputs.deepspeed_config}}
       apply_ort: ${{parent.inputs.apply_ort}}
+      save_as_mlflow_model: ${{parent.inputs.save_as_mlflow_model}}
       model_selector_output: ${{parent.jobs.model_import.outputs.output_dir}}
       preprocess_output: ${{parent.jobs.preprocess.outputs.output_dir}}
     outputs:
