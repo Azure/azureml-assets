@@ -234,7 +234,7 @@ outputs:
 jobs:
   model_import:
     type: command
-    component: azureml:text_classification_model_import:0.0.13
+    component: azureml:text_classification_model_import:0.0.12
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       huggingface_id: ${{parent.inputs.model_name}}
@@ -250,7 +250,7 @@ jobs:
       enable_long_range_text: ${{parent.inputs.enable_long_range_text}}
   finetune:
     type: command
-    component: azureml:text_classification_finetune:0.0.13
+    component: azureml:text_classification_finetune:0.0.12
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
