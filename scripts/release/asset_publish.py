@@ -56,9 +56,9 @@ def find_test_files(dir: Path):
         with open(test / TEST_YML) as fp:
             data = YAML().load(fp)
             for test_group in data.values():
-                for test_job in test_group["jobs"].values():
+                for test_job in test_group['jobs'].values():
                     if "job" in test_job:
-                        test_jobs.append((test / test_job["job"]).as_posix())
+                        test_jobs.append((test / test_job['job']).as_posix())
     return test_jobs
 
 
@@ -71,11 +71,11 @@ def preprocess_test_files(test_jobs: List[str], asset_ids: Dict[str, str]):
             yaml.preserve_quotes = True
             yaml.default_flow_style = False
             data = yaml.load(fp)
-            for job_name, job in data["jobs"].items():
-                asset_name = job["component"]
+            for job_name, job in data['jobs'].items():
+                asset_name = job['component']
                 logger.print(f"Processing asset {asset_name}")
                 if asset_name in asset_ids:
-                    job["component"] = asset_ids.get(asset_name)
+                    job['component'] = asset_ids.get(asset_name)
                     logger.print(f"For job {job_name}, the new asset id is {job['component']}")
             with open(test_job, "w") as file:
                 yaml.dump(data, file)
@@ -157,7 +157,7 @@ def validate_and_prepare_pipeline_component(
             logger.log_error(f"Error in loading component spec at {spec_path}")
             return False
 
-    jobs = pipeline_dict["jobs"]
+    jobs = pipeline_dict['jobs']
     logger.print(f"Preparing pipeline component {pipeline_dict['name']}")
     updated_jobs = {}
 
@@ -171,7 +171,7 @@ def validate_and_prepare_pipeline_component(
 
         try:
             name, version, label, registry = get_parsed_details_from_asset_uri(
-                assets.AssetType.COMPONENT.value, job_details["component"]
+                assets.AssetType.COMPONENT.value, job_details['component']
             )
         except Exception as e:
             logger.log_error(e)
@@ -207,9 +207,9 @@ def validate_and_prepare_pipeline_component(
             return False
 
         updated_jobs[job_name] = job_details
-        updated_jobs[job_name]["component"] = asset_details["id"]
+        updated_jobs[job_name]['component'] = asset_details['id']
 
-    pipeline_dict["jobs"] = updated_jobs
+    pipeline_dict['jobs'] = updated_jobs
 
     try:
         util.dump_yaml(pipeline_dict, spec_path)
@@ -284,7 +284,7 @@ def get_environment_asset_id(environment_id: str, version_suffix: str, registry_
         if (
             env := get_asset_details(assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name)
         ) is not None:
-            return env["id"]
+            return env['id']
 
     logger.log_error(f"Environment {env_name} not found in {registry_name}; tried version(s) {versions_to_try}")
     return None
@@ -313,27 +313,27 @@ def validate_update_component(
             logger.log_error(f"Error in loading component spec at {spec_path}")
             return False
 
-    component_name = component_dict["name"]
+    component_name = component_dict['name']
     logger.print(f"Preparing component {component_name}")
 
     # Handle command and parallel components
     if "environment" in component_dict:
         # Command component
         obj_with_env = component_dict
-    elif "task" in component_dict and "environment" in component_dict["task"]:
+    elif "task" in component_dict and "environment" in component_dict['task']:
         # Parallel component
-        obj_with_env = component_dict["task"]
+        obj_with_env = component_dict['task']
     else:
         logger.log_error(f"Environment reference not found in {component_name}")
         return False
 
     # Update environment reference
-    current_env_id = obj_with_env["environment"]
+    current_env_id = obj_with_env['environment']
     new_env_id = get_environment_asset_id(current_env_id, version_suffix, registry_name)
     if new_env_id is not None:
         if current_env_id != new_env_id:
             logger.print(f"Updating environment to {new_env_id}")
-            obj_with_env["environment"] = new_env_id
+            obj_with_env['environment'] = new_env_id
         else:
             logger.print(f"Existing environment reference {current_env_id} is valid")
     else:
@@ -440,7 +440,7 @@ def get_asset_versions(
     if result.returncode != 0:
         logger.log_error(f"Failed to list assets: {result.stderr}")
         return []
-    return [a["version"] for a in json.loads(result.stdout)]
+    return [a['version'] for a in json.loads(result.stdout)]
 
 
 def get_asset_details(
