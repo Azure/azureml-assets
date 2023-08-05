@@ -1,6 +1,6 @@
-pandas
-numpy
-text-generation
+pandas==2.0.3
+numpy==1.25.0
+text-generation==0.6.0
 azureml-inference-server-http==0.8.4
 psutil==5.9.5
 mlflow==2.3.1
