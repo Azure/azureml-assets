@@ -1,9 +1,9 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch200:biweekly.202307.1
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch200@sha256:c6fe25bf006b7283d371c934ef2f2afe8824b15650a0f40518e9bdca0c82f749
 
 WORKDIR /
 
 # support Deepspeed launcher requirement of passwordless ssh login
-RUN apt-get update
+RUN apt-get update && apt-get -y upgrade
 RUN apt-get install -y openssh-server openssh-client
 
 COPY requirements.txt .
