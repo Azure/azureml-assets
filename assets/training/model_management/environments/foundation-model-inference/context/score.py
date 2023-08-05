@@ -252,6 +252,7 @@ def analyze_response(response):
 
 
 def analyze_text_async(text):
+    global aacs_client
     # Chunk text
     chunking_utils = CsChunkingUtils(chunking_n=1000, delimiter=".")
     split_text = chunking_utils.split_by(text)
@@ -274,7 +275,8 @@ def analyze_text_async(text):
 
 def analyze_text(text):
     # Chunk text
-    print(f"Analyzing ...")
+    global aacs_client
+    logger.info(f"Analyzing ...")
     if (not text) or (not text.strip()):
         return 0
     chunking_utils = CsChunkingUtils(chunking_n=1000, delimiter=".")
@@ -285,7 +287,7 @@ def analyze_text(text):
         for i in split_text
     ]
     severity = max(result)
-    print(f"Analyzed, severity {severity}")
+    logger.info(f"Analyzed, severity {severity}")
 
     return severity
 
@@ -321,18 +323,24 @@ def iterate(obj):
 
 
 def get_safe_response(result):
-    print("Analyzing response...")
+    global aacs_client
+    logger.info("Analyzing response...")
     jsonable_result = _get_jsonable_obj(result, pandas_orient="records")
+    if not aacs_client:
+        return jsonable_result, 0
 
     result, severity = iterate(jsonable_result)
-    print(f"Response analyzed, severity {severity}")
+    logger.info(f"Response analyzed, severity {severity}")
     return result
 
 
 def get_safe_input(input_data):
-    print("Analyzing input...")
+    global aacs_client
+    if not aacs_client:
+        return input_data, 0
+    logger.info("Analyzing input...")
     result, severity = iterate(input_data)
-    print(f"Input analyzed, severity {severity}")
+    logger.info(f"Input analyzed, severity {severity}")
     return result, severity
 
 
@@ -390,7 +398,7 @@ def init():
             endpoint, AzureKeyCredential(key), headers_policy=headers_policy
         )
     except Exception as e:
-        raise Exception("Error in setting up AACS client. Error  {e}")
+        logger.error("AACS not configured. Bypassing content moderation. Error {e}")
 
     try:
         model_id = os.environ.get(MODEL_ID, DEFAULT_MODEL_ID_PATH)
@@ -554,7 +562,7 @@ def get_request_data(request_string) -> Tuple[Union[str, List[str]], Dict[str, A
             raise Exception("parameters is not a dict")
 
         if task_type == SupportedTask.CHAT_COMPLETION:
-            print("chat-completion task. Processing input data")
+            logger.info("chat-completion task. Processing input data")
             input_data = get_processed_input_data_for_chat_completion(input_data)
 
         return input_data, params
