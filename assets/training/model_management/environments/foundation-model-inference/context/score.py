@@ -63,7 +63,8 @@ CLIENT_TIMEOUT = "TIMEOUT"
 MAX_REQUEST_TIMEOUT = 90  # 90s
 
 # AACS
-aacs_threshold = int(os.environ.get("CONTENT_SAFETY_THRESHOLD", 0))
+aacs_threshold = int(os.environ.get("CONTENT_SAFETY_THRESHOLD", 2))
+aacs_client = None
 
 
 class SupportedTask:
@@ -428,7 +429,7 @@ def init():
         if not key:
             raise Exception("CONTENT_SAFETY_KEY env not set for AACS.")
 
-        # Create an Content Safety client
+        # Create a Content Safety client
         headers_policy = HeadersPolicy()
         headers_policy.add_header("ms-azure-ai-sender", "llama")
         aacs_client = ContentSafetyClient(
@@ -495,19 +496,29 @@ def init():
             # num_shard based on whether flash attention can be used or not.
             # SKUs like V100 can't use sharding (num_shard = 1)
             # If A100 or newer SKUs, set sharded to true and use .
-            import torch
-            major, minor = torch.cuda.get_device_capability()
-            is_sm75 = major == 7 and minor == 5     # turing
-            is_sm8x = major == 8 and minor >= 0     # ampere
-            is_sm90 = major == 9 and minor == 0     # hopper
+            try:
+                import torch
+                major, minor = torch.cuda.get_device_capability()
+                is_sm75 = major == 7 and minor == 5     # turing
+                is_sm8x = major == 8 and minor >= 0     # ampere
+                is_sm90 = major == 9 and minor == 0     # hopper
 
-            if not (is_sm75 or is_sm8x or is_sm90):
-                # can't use flash attention & hence sharding.
-                # set number of shards to 1
+                if not (is_sm75 or is_sm8x or is_sm90):
+                    # can't use flash attention & hence sharding.
+                    # set number of shards to 1
+                    logger.info(
+                        f"Setting {NUM_SHARD} to 1 since flash attention "
+                        f"can't be used on this GPU."
+                    )
+                    os.environ[NUM_SHARD] = str(1)
+                else:
+                    # number of shards is default to the number of GPUs
+                    logger.info(f"Setting {SHARDED} to true.")
+                    os.environ[SHARDED] = "true"
+            except Exception:
+                # CUDA not available. Set number of shards to 1
+                logger.info(f"GPU unavailable. Setting {NUM_SHARD} to 1")
                 os.environ[NUM_SHARD] = str(1)
-            else:
-                # number of shards is default to the number of GPUs
-                os.environ[SHARDED] = "true"
 
         logger.info("Starting server")
         cmd = f"text-generation-launcher --model-id {model_path} &"
@@ -533,7 +544,7 @@ def init():
         )  # use deployment settings
         logger.info(f"Created Client: {client}")
     except Exception as e:
-        raise Exception(f"Error in creating client or server: {e}")
+        raise Exception(f"Error in creating client or server: {e}") from e
 
 
 def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
@@ -741,5 +752,6 @@ def run(data):
         return get_safe_response(resp)
 
     except Exception as e:
+        logger.exception(e)
         return json.dumps(
             {"error": "Error in processing request", "exception": str(e)})
