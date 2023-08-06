@@ -67,7 +67,7 @@ aacs_threshold = int(os.environ.get("CONTENT_SAFETY_THRESHOLD", 0))
 
 
 class SupportedTask:
-    """Supported tasks by text-generation-inference"""
+    """Supported tasks by text-generation-inference."""
 
     TEXT_GENERATION = "text-generation"
     CHAT_COMPLETION = "chat-completion"
@@ -173,8 +173,13 @@ def is_server_healthy():
 
 
 class AsyncRateLimitedOpsUtils:
-    # 1000 requests / 10 seconds. Limiting to 800 request per 10 secods
-    # limiting to 1000 concurrent requests
+    """
+    Util function for async rate limiter.
+
+    1000 requests / 10 seconds. Limiting to 800 request per 10 secods
+    limiting to 1000 concurrent requests
+    """
+
     def __init__(
             self,
             ops_count=800,
@@ -182,18 +187,22 @@ class AsyncRateLimitedOpsUtils:
             concurrent_ops=1000,
             thread_max_workers=1000,
     ):
+        """Init function."""
         self.limiter = AsyncLimiter(ops_count, ops_seconds)
         self.semaphore = asyncio.Semaphore(value=concurrent_ops)
         # need thread pool executor for sync function
         self.executor = ThreadPoolExecutor(max_workers=thread_max_workers)
 
     def get_limiter(self):
+        """Return limiter."""
         return self.limiter
 
     def get_semaphore(self):
+        """Rreturn semaphore."""
         return self.semaphore
 
     def get_executor(self):
+        """Return executor."""
         return self.executor
 
 
@@ -201,15 +210,19 @@ async_rate_limiter = AsyncRateLimitedOpsUtils()
 
 
 class CsChunkingUtils:
+    """Cs chunking utils."""
+
     def __init__(self, chunking_n=1000, delimiter="."):
         self.delimiter = delimiter
         self.chunking_n = chunking_n
 
     def chunkstring(self, string, length):
+        """Chunk strings in a given length."""
         return (string[0 + i: length + i] for i in
                 range(0, len(string), length))
 
     def split_by(self, input):
+        """Split the input."""
         max_n = self.chunking_n
         split = [e + self.delimiter for e in input.split(self.delimiter) if e]
         ret = []
@@ -234,6 +247,7 @@ class CsChunkingUtils:
 
 
 async def async_analyze_text_task(client, request):
+    """Analyze text task."""
     loop = asyncio.get_event_loop()
     executor = async_rate_limiter.get_executor()
     sem = async_rate_limiter.get_semaphore()
@@ -250,24 +264,23 @@ def analyze_response(response):
     severity = 0
 
     if response.hate_result is not None:
-        print("Hate severity: {}".format(response.hate_result.severity))
+        logger.info("Hate severity: {}".format(response.hate_result.severity))
         severity = max(severity, response.hate_result.severity)
     if response.self_harm_result is not None:
-        print(
-            "SelfHarm severity: {}".format(response.self_harm_result.severity))
+        logger.info("SelfHarm severity: {}".format(response.self_harm_result.severity))
         severity = max(severity, response.self_harm_result.severity)
     if response.sexual_result is not None:
-        print("Sexual severity: {}".format(response.sexual_result.severity))
+        logger.info("Sexual severity: {}".format(response.sexual_result.severity))
         severity = max(severity, response.sexual_result.severity)
     if response.violence_result is not None:
-        print(
-            "Violence severity: {}".format(response.violence_result.severity))
+        logger.info("Violence severity: {}".format(response.violence_result.severity))
         severity = max(severity, response.violence_result.severity)
 
     return severity
 
 
 def analyze_text_async(text):
+    """Analyze text async."""
     global aacs_client
     # Chunk text
     chunking_utils = CsChunkingUtils(chunking_n=1000, delimiter=".")
@@ -290,8 +303,9 @@ def analyze_text_async(text):
 
 
 def analyze_text(text):
-    # Chunk text
+    """Analyze text."""
     global aacs_client
+    # Chunk text
     logger.info("Analyzing ...")
     if (not text) or (not text.strip()):
         return 0
@@ -309,6 +323,7 @@ def analyze_text(text):
 
 
 def iterate(obj):
+    """Iterate through obj and check content severity."""
     if isinstance(obj, dict):
         severity = 0
         for key, value in obj.items():
@@ -339,6 +354,7 @@ def iterate(obj):
 
 
 def get_safe_response(result):
+    """Check if response is safe."""
     global aacs_client
     logger.info("Analyzing response...")
     jsonable_result = _get_jsonable_obj(result, pandas_orient="records")
@@ -351,6 +367,7 @@ def get_safe_response(result):
 
 
 def get_safe_input(input_data):
+    """Check if input is safe."""
     global aacs_client
     if not aacs_client:
         return input_data, 0
@@ -361,6 +378,7 @@ def get_safe_input(input_data):
 
 
 def get_aacs_access_key():
+    """Get aacs access key."""
     key = os.environ.get("CONTENT_SAFETY_KEY")
 
     if key:
