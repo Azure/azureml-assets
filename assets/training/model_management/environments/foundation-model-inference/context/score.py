@@ -213,6 +213,7 @@ class CsChunkingUtils:
     """Cs chunking utils."""
 
     def __init__(self, chunking_n=1000, delimiter="."):
+        """Init function."""
         self.delimiter = delimiter
         self.chunking_n = chunking_n
 
@@ -261,6 +262,7 @@ async def async_analyze_text_task(client, request):
 
 
 def analyze_response(response):
+    """Analyze response."""
     severity = 0
 
     if response.hate_result is not None:
