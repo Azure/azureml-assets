@@ -25,12 +25,12 @@ from azure.ai.contentsafety.models import AnalyzeTextOptions
 from aiolimiter import AsyncLimiter
 from azure.core.pipeline.policies import HeadersPolicy
 
-
 # Configure logger
 logger = logging.getLogger(__name__)
 logger.propagate = False
 logger.setLevel(logging.DEBUG)
-format_str = "%(asctime)s [%(module)s] %(funcName)s %(lineno)s: %(levelname)-8s [%(process)d] %(message)s"
+format_str = ("%(asctime)s [%(module)s] %(funcName)s "
+              "%(lineno)s: %(levelname)-8s [%(process)d] %(message)s")
 formatter = logging.Formatter(format_str)
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
@@ -78,9 +78,10 @@ SUPPORTED_INFERENCE_PARAMS = {
     "do_sample": {"type": bool, "default": True},
     # Maximum number of generated tokens
     "max_new_tokens": {"type": int, "default": 256},
-    # Generate best_of sequences and return the one if the highest token logprobs
+    # Generate best_of sequences & return the one with highest token logprobs
     "best_of": {"type": int, "optional": True},
-    # 1.0 means no penalty. See [this paper](https://arxiv.org/pdf/1909.05858.pdf) for more details.
+    # 1.0 means no penalty. See
+    # [this paper](https://arxiv.org/pdf/1909.05858.pdf) for more details.
     "repetition_penalty": {"type": int, "optional": True},
     # Whether to prepend the prompt to the generated text
     "return_full_text": {"type": bool, "default": True},
@@ -90,15 +91,21 @@ SUPPORTED_INFERENCE_PARAMS = {
     "stop_sequences": {"type": list, "default": []},
     # Random sampling seed
     "temperature": {"type": float, "optional": True},
-    # The number of highest probability vocabulary tokens to keep for top-k-filtering.
+    # The number of highest probability vocabulary tokens to keep for
+    # top-k-filtering.
     "top_k": {"type": int, "optional": True},
-    # If set to < 1, only the smallest set of most probable tokens with probabilities that add up to `top_p` or higher are kept for generation.
+    # If set to < 1, only the smallest set of most probable tokens with
+    # probabilities that add up to
+    # `top_p` or higher are kept for generation.
     "top_p": {"type": float, "optional": True},
     # Truncate inputs tokens to the given size
     "truncate": {"type": int, "optional": True},
-    # Typical Decoding mass. See [Typical Decoding for Natural Language Generation](https://arxiv.org/abs/2202.00666) for more information
+    # Typical Decoding mass. See:
+    # [Typical Decoding for Natural Language Generation]\
+    # (https://arxiv.org/abs/2202.00666) for more information
     "typical_p": {"type": float, "optional": True},
-    # Watermarking with [A Watermark for Large Language Models](https://arxiv.org/abs/2301.10226)
+    # Watermarking with [A Watermark for Large Language Models]\
+    # (https://arxiv.org/abs/2301.10226)
     "watermark": {"type": bool, "default": False},
     # Get decoder input token logprobs and ids
     "decoder_input_details": {"type": bool, "default": False},
@@ -110,7 +117,8 @@ DEFAULT_MODEL_ID_PATH = "mlflow_model_folder/data/model"
 client = None
 task_type = SupportedTask.TEXT_GENERATION
 default_generator_configs = {
-    k: v["default"] for k, v in SUPPORTED_INFERENCE_PARAMS.items() if "default" in v
+    k: v["default"] for k, v in SUPPORTED_INFERENCE_PARAMS.items() if
+    "default" in v
 }
 
 
@@ -124,22 +132,26 @@ def is_server_healthy():
         p.name() for p in psutil.process_iter()
     ]:
         logger.warning(
-            f"Process {TEXT_GEN_LAUNCHER_PROCESS_NAME} is not running. Sleeping for {WAIT_TIME}s and retrying"
+            f"Process {TEXT_GEN_LAUNCHER_PROCESS_NAME} is not running. "
+            f"Sleeping for {WAIT_TIME}s and retrying"
         )
         time.sleep(WAIT_TIME)
         count += 1
     if count >= RETRY_COUNT:
         total_dur = RETRY_COUNT * WAIT_TIME
         raise Exception(
-            f"Sever process not running after waiting for {total_dur}. Terminating"
+            f"Sever process not running after waiting for {total_dur}. "
+            f"Terminating"
         )
 
     logger.info(
-        f"Server process {TEXT_GEN_LAUNCHER_PROCESS_NAME} running. Hitting endpoint with 5s delay"
+        f"Server process {TEXT_GEN_LAUNCHER_PROCESS_NAME} running. "
+        f"Hitting endpoint with 5s delay"
     )
     time.sleep(5)
 
-    payload_dict = {"inputs": "Meaning of life is", "parameters": {"max_new_tokens": 2}}
+    payload_dict = {"inputs": "Meaning of life is",
+                    "parameters": {"max_new_tokens": 2}}
 
     json_str = json.dumps(payload_dict)
 
@@ -164,11 +176,11 @@ class AsyncRateLimitedOpsUtils:
     # 1000 requests / 10 seconds. Limiting to 800 request per 10 secods
     # limiting to 1000 concurrent requests
     def __init__(
-        self,
-        ops_count=800,
-        ops_seconds=10,
-        concurrent_ops=1000,
-        thread_max_workers=1000,
+            self,
+            ops_count=800,
+            ops_seconds=10,
+            concurrent_ops=1000,
+            thread_max_workers=1000,
     ):
         self.limiter = AsyncLimiter(ops_count, ops_seconds)
         self.semaphore = asyncio.Semaphore(value=concurrent_ops)
@@ -194,7 +206,8 @@ class CsChunkingUtils:
         self.chunking_n = chunking_n
 
     def chunkstring(self, string, length):
-        return (string[0 + i : length + i] for i in range(0, len(string), length))
+        return (string[0 + i: length + i] for i in
+                range(0, len(string), length))
 
     def split_by(self, input):
         max_n = self.chunking_n
@@ -226,7 +239,8 @@ async def async_analyze_text_task(client, request):
     sem = async_rate_limiter.get_semaphore()
     await sem.acquire()
     async with async_rate_limiter.get_limiter():
-        response = await loop.run_in_executor(executor, client.analyze_text, request)
+        response = await loop.run_in_executor(executor, client.analyze_text,
+                                              request)
         sem.release()
         severity = analyze_response(response)
         return severity
@@ -239,13 +253,15 @@ def analyze_response(response):
         print("Hate severity: {}".format(response.hate_result.severity))
         severity = max(severity, response.hate_result.severity)
     if response.self_harm_result is not None:
-        print("SelfHarm severity: {}".format(response.self_harm_result.severity))
+        print(
+            "SelfHarm severity: {}".format(response.self_harm_result.severity))
         severity = max(severity, response.self_harm_result.severity)
     if response.sexual_result is not None:
         print("Sexual severity: {}".format(response.sexual_result.severity))
         severity = max(severity, response.sexual_result.severity)
     if response.violence_result is not None:
-        print("Violence severity: {}".format(response.violence_result.severity))
+        print(
+            "Violence severity: {}".format(response.violence_result.severity))
         severity = max(severity, response.violence_result.severity)
 
     return severity
@@ -276,7 +292,7 @@ def analyze_text_async(text):
 def analyze_text(text):
     # Chunk text
     global aacs_client
-    logger.info(f"Analyzing ...")
+    logger.info("Analyzing ...")
     if (not text) or (not text.strip()):
         return 0
     chunking_utils = CsChunkingUtils(chunking_n=1000, delimiter=".")
@@ -353,7 +369,8 @@ def get_aacs_access_key():
     uai_client_id = os.environ.get("UAI_CLIENT_ID")
     if not uai_client_id:
         raise RuntimeError(
-            "Cannot get AACS access key, both UAI_CLIENT_ID and CONTENT_SAFETY_KEY are not set, exiting..."
+            "Cannot get AACS access key, both UAI_CLIENT_ID and "
+            "CONTENT_SAFETY_KEY are not set, exiting..."
         )
 
     subscription_id = os.environ.get("SUBSCRIPTION_ID")
@@ -398,7 +415,8 @@ def init():
             endpoint, AzureKeyCredential(key), headers_policy=headers_policy
         )
     except Exception as e:
-        logger.error("AACS not configured. Bypassing content moderation. Error {e}")
+        logger.error(
+            f"AACS not configured. Bypassing content moderation. Error {e}")
 
     try:
         model_id = os.environ.get(MODEL_ID, DEFAULT_MODEL_ID_PATH)
@@ -423,10 +441,11 @@ def init():
                 model_generator_configs = flavors["hftransformersv2"].get(
                     "generator_config", {}
                 )
-                logger.info(f"model_generator_configs: {model_generator_configs}")
+                logger.info(
+                    f"model_generator_configs: {model_generator_configs}")
                 if task_type not in (
-                    SupportedTask.TEXT_GENERATION,
-                    SupportedTask.CHAT_COMPLETION,
+                        SupportedTask.TEXT_GENERATION,
+                        SupportedTask.CHAT_COMPLETION,
                 ):
                     raise Exception(f"Unsupported task_type {task_type}")
 
@@ -437,10 +456,12 @@ def init():
                     model_generator_configs
                 )
                 logger.info(
-                    f"updated default_generator_configs: {default_generator_configs}"
+                    f"updated default_generator_configs: "
+                    f"{default_generator_configs}"
                 )
 
-        logger.info(f"Loading model from path {model_path} for task_type: {task_type}")
+        logger.info(
+            f"Loading model from path {model_path} for task_type: {task_type}")
         logger.info(f"List model_path = {os.listdir(model_path)}")
 
         if MAX_INPUT_LENGTH not in os.environ:
@@ -457,7 +478,8 @@ def init():
         WAIT_TIME = 60
         while not is_server_healthy():
             logger.info(
-                f"Server not up. Waiting for {WAIT_TIME}s, before querying again."
+                f"Server not up. Waiting for {WAIT_TIME}s, "
+                f"before querying again."
             )
             time.sleep(WAIT_TIME)
         logger.info("Server Started")
@@ -476,26 +498,45 @@ def init():
 
 
 def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
-    """Process chat-completion input request.
+    r"""Process chat completion input request.
 
-    Taken from: https://github.com/facebookresearch/llama/blob/6c7fe276574e78057f917549435a2554000a876d/llama/generation.py#L213
+    Taken from:
+    https://github.com/facebookresearch/llama/blob/main/llama/generation.py
 
     example input:
     [
-        {"role": "user", "content": "What is the tallest building in the world?"},
-        {"role": "assistant", "content": "As of 2021, the Burj Khalifa in Dubai"},
-        {"role": "user", "content": "and in Africa?"},
+        {
+            "role": "user",
+            "content": "What is the tallest building in the world?"
+        },
+        {
+            "role": "assistant",
+            "content": "As of 2021, the Burj Khalifa in Dubai"
+        },
+        {
+            "role": "user",
+            "content": "and in Africa?"
+        },
     ]
     example output:
-    "[INST]What is the tallest building in the world?[\INST]As of 2021, the Burj Khalifa in Dubai\n[INST]and in Africa?[/INST]"
+    "[INST]What is the tallest building in the world?[/INST]
+    As of 2021, the Burj Khalifa in Dubai\n
+    [INST]and in Africa?[/INST]"
     """
     # TODO: user ConversationalPipeline
     B_INST, E_INST = "[INST]", "[/INST]"
     B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
     DEFAULT_SYSTEM_PROMPT = """\
-    You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.
+    You are a helpful, respectful and honest assistant. Always answer as \
+    helpfully as possible, while being safe.  Your answers should not \
+    include any harmful, unethical, racist, sexist, toxic, dangerous, or \
+    illegal content. Please ensure that your responses are socially unbiased
+    and positive in nature.
 
-    If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information."""
+    If a question does not make any sense, or is not factually coherent, \
+    explain why instead of answering something not correct. If you don't \
+    know the answer to a question, please don't share false information.
+    """
 
     dialog = data
     history = ""
@@ -503,19 +544,19 @@ def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
     # add a system prompt if the first message is not a system prompt
     if dialog[0]["role"] != "system":
         dialog = [
-            {
-                "role": "system",
-                "content": DEFAULT_SYSTEM_PROMPT,
-            }
-        ] + dialog
+                     {
+                         "role": "system",
+                         "content": DEFAULT_SYSTEM_PROMPT,
+                     }
+                 ] + dialog
     # add a tag to the system prompt
     dialog = [
-        {
-            "role": dialog[0]["role"],
-            "content": B_SYS + dialog[0]["content"] + E_SYS
-            # + dialog[1]["content"],
-        }
-    ] + dialog[1:]
+                 {
+                     "role": dialog[0]["role"],
+                     "content": B_SYS + dialog[0]["content"] + E_SYS
+                     # + dialog[1]["content"],
+                 }
+             ] + dialog[1:]
     assert all([msg["role"] == "user" for msg in dialog[1::2]]) and all(
         [msg["role"] == "assistant" for msg in dialog[2::2]]
     ), (
@@ -534,7 +575,8 @@ def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
     return history
 
 
-def get_request_data(request_string) -> Tuple[Union[str, List[str]], Dict[str, Any]]:
+def get_request_data(request_string) -> (
+        Tuple)[Union[str, List[str]], Dict[str, Any]]:
     """Process and validate inference request.
 
     return type for chat-completion: str, dict
@@ -563,23 +605,24 @@ def get_request_data(request_string) -> Tuple[Union[str, List[str]], Dict[str, A
 
         if task_type == SupportedTask.CHAT_COMPLETION:
             logger.info("chat-completion task. Processing input data")
-            input_data = get_processed_input_data_for_chat_completion(input_data)
+            input_data = get_processed_input_data_for_chat_completion(
+                input_data)
 
         return input_data, params
     except Exception as e:
         raise Exception(
-            json.dumps(
-                {
-                    "error": (
-                        "Expected input format: \n"
-                        '{"input_data": {"input_string": "<query>", "parameters": {"k1":"v1", "k2":"v2"}}}.\n '
-                        "<query> should be in below format:\n "
-                        'For text-generation: ["str1", "str2", ...]\n'
-                        'For chat-completion : [{"role": "user", "content": "str1"}, {"role": "assistant", "content": "str2"} ....]'
-                    ),
-                    "exception": str(e),
-                }
-            )
+            json.dumps({
+                "error": (
+                    "Expected input format: \n"
+                    '{"input_data": {"input_string": "<query>", '
+                    '"parameters": {"k1":"v1", "k2":"v2"}}}.\n '
+                    "<query> should be in below format:\n "
+                    'For text-generation: ["str1", "str2", ...]\n'
+                    'For chat-completion: [{"role":"user", "content": "str1"},'
+                    '{"role": "assistant", "content": "str2"} ....]'
+                ),
+                "exception": str(e),
+            })
         )
 
 
@@ -588,11 +631,13 @@ def add_and_validate_gen_params(params: dict, new_params: dict):
     if not new_params or not isinstance(new_params, dict):
         return params
     for k, v in new_params.items():
-        if not k in SUPPORTED_INFERENCE_PARAMS:
+        if k not in SUPPORTED_INFERENCE_PARAMS:
             logger.warning(f"Ignoring unsupported inference param {k}.")
         elif not isinstance(v, SUPPORTED_INFERENCE_PARAMS[k]["type"]):
             logger.warning(
-                f"Ignoring inference param {k} as value passed is of type {type(v)} and not of type {SUPPORTED_INFERENCE_PARAMS[k]['type']}"
+                f"Ignoring inference param {k} as value passed is of type "
+                f"{type(v)} and not of type "
+                f"{SUPPORTED_INFERENCE_PARAMS[k]['type']}"
             )
         else:
             params[k] = v
@@ -618,7 +663,8 @@ def run(data):
         data, severity = get_safe_input(data)
         if severity > aacs_threshold:
             logger.warning(
-                f"Input severity ({severity}) greater than aacs threshold ({aacs_threshold})."
+                f"Input severity ({severity}) greater than aacs threshold "
+                f"({aacs_threshold})."
             )
             return {}
 
@@ -628,7 +674,8 @@ def run(data):
         query, params = get_request_data(data)
         params = get_generator_params(params)
         logger.info(
-            f"generating response for input_string: {query}, parameters: {params}"
+            f"generating response for input_string: {query}, "
+            f"parameters: {params}"
         )
 
         if task_type == SupportedTask.CHAT_COMPLETION:
@@ -655,4 +702,5 @@ def run(data):
         return get_safe_response(resp)
 
     except Exception as e:
-        return json.dumps({"error": "Error in processing request", "exception": str(e)})
+        return json.dumps(
+            {"error": "Error in processing request", "exception": str(e)})
