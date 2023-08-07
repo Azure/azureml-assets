@@ -23,18 +23,8 @@ RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18
 RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 
-
-# Workaround: install packages with extra index url. Will be removed after the packages are published to pypi
-RUN pip install https://azuremlsdktestpypi.blob.core.windows.net/repo/dbcopilot/dbcopilot-0.3.20230714.1-py3-none-any.whl
-RUN pip install https://azuremlsdktestpypi.blob.core.windows.net/repo/dbcopilottool/db_copilot_tool-0.1.7-py3-none-any.whl
-
-# Install promptflow
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/promptflow_sdk-0.0.99116360-py3-none-any.whl
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/prompt_flow_tools-0.0.3-py3-none-any.whl
-
-# Install embeddingstore sdk
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/embeddingstore-0.0.99061601-py3-none-any.whl
-
+COPY ./extra_requirements.txt ./
+RUN pip install -r extra_requirements.txt
 
 RUN set -eux; \
     apt-get update; \
