@@ -237,8 +237,8 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
     asset_name = asset_config.name
 
     # Check against generic naming pattern
-    if ((asset_config.type is assets.AssetType.MODEL and not MODEL_NAME_PATTERN.match(asset_name))
-            or (asset_config.type is not assets.AssetType.MODEL and not COMMON_NAME_PATTERN.match(asset_name))):
+    if not ((asset_config.type is assets.AssetType.MODEL and MODEL_NAME_PATTERN.match(asset_name))
+            or COMMON_NAME_PATTERN.match(asset_name)):
         _log_error(asset_config.file_name_with_path, f"Name '{asset_name}' contains invalid characters")
         error_count += 1
 
