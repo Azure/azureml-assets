@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110@sha256:38606942f25031371ea6fdc661ab5113227c917a5c13bd5d1bdc6f0f99248f1a
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110@sha256:47d9fd020e432a896ec0f180c0707fb87cbe2ecb94e15e89f239498676e29448
 
 WORKDIR /
 
