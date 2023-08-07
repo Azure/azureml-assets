@@ -1,30 +1,29 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: model_monitor_data_joiner
-display_name: Model Monitor - Data Joiner
-description: Joins two data assets on the given columns for model monitor.
-version: 0.3.0
+name: model_monitor_metric_outputter
+display_name: Model Monitor - Metric Outputter
+description: Output the computed model monitor metrics.
+version: 0.3.2
 is_deterministic: true
 
 code: ../../src/
 entry:
-  file: ./model_monitor_data_joiner/run.py
+  file: ./model_monitor_metric_outputter/run.py
 
 inputs:
-  left_input_data:
+  signal_metrics: 
     type: mltable
     mode: direct
-  left_join_column:
+  signal_name:
     type: string
-  right_input_data:
-    type: mltable
-    mode: direct
-  right_join_column:
+  signal_type: 
+    type: string
+  version: 
     type: string
 outputs:
-  joined_data:
-    type: mltable
+  signal_output:
+    type: uri_folder
     mode: direct
 conf:
   spark.driver.cores: 1
@@ -50,8 +49,4 @@ conf:
         - fsspec~=2023.4.0
     name: momo-base-spark
 args: >-
-  --left_input_data ${{inputs.left_input_data}}
-  --left_join_column ${{inputs.left_join_column}}
-  --right_input_data ${{inputs.right_input_data}}
-  --right_join_column ${{inputs.right_join_column}}
-  --joined_data ${{outputs.joined_data}}
+  --signal_name ${{inputs.signal_name}} --signal_type ${{inputs.signal_type}} --version ${{inputs.version}} --signal_metrics ${{inputs.signal_metrics}} --signal_output ${{outputs.signal_output}}

@@ -171,7 +171,6 @@ class TestRun:
         info = {}
         if not isinstance(self._run, _OfflineRun):
             raw_json = self._run.get_details()
-            registry_pattern = "azureml://registries/(.+?)/models/(.+?)/versions/(.+?)"
             if raw_json["runDefinition"]["inputAssets"].get("mlflow_model", None) is not None:
                 try:
                     model_asset_id = raw_json["runDefinition"]["inputAssets"]["mlflow_model"]["asset"]["assetId"]
@@ -179,7 +178,8 @@ class TestRun:
                     if model_asset_id.startswith("azureml://registries"):
                         import re
                         info["model_source"] = "registry"
-                        model_info = re.search(registry_pattern, model_asset_id)
+                        model_info = re.search("azureml://registries/(.+?)/models/(.+?)/versions/(.+?)",
+                                               model_asset_id)
                         info["model_registry_name"] = model_info.group(1)
                         info["model_name"] = model_info.group(2)
                         info["model_version"] = model_info.group(3)
@@ -187,26 +187,6 @@ class TestRun:
                         info["model_source"] = "workspace"
                 except Exception:
                     pass
-            first_parent = self._run.parent
-            if first_parent is not None and hasattr(first_parent, "parent"):
-                second_parent = first_parent.parent
-                if second_parent is not None:
-                    parent_raw_json = second_parent.get_details()
-                    try:
-                        parent_model_asset_id = parent_raw_json["inputs"]["mlflow_model_path"]["assetId"]
-                        info["parent_model_asset_id"] = parent_model_asset_id
-                        if parent_model_asset_id.startswith("azureml://registries"):
-                            import re
-                            info["parent_model_source"] = "registry"
-                            parent_model_info = re.search(registry_pattern,
-                                                          parent_model_asset_id)
-                            info["parent_model_registry_name"] = parent_model_info.group(1)
-                            info["parent_model_name"] = parent_model_info.group(2)
-                            info["parent_model_version"] = parent_model_info.group(3)
-                        else:
-                            info["parent_model_source"] = "workspace"
-                    except Exception:
-                        pass
         try:
             import re
             location = os.environ.get("AZUREML_SERVICE_ENDPOINT")
