@@ -35,3 +35,27 @@ def test_comparisons():
     envs = [env1_1, env1_2, env1_100, env1_101]
     sorted_envs = sorted(envs)
     assert sorted_envs == [env1_1, env1_100, env1_101, env1_2]
+
+
+def test_dependencies():
+    """Test Spec dependency retrieval."""
+    this_dir = Path(__file__).parent
+    resources = this_dir / RESOURCES_DIR
+
+    # Load assets
+    comp_command = assets.AssetConfig(resources / "comp-command" / assets.DEFAULT_ASSET_FILENAME)
+    comp_parallel = assets.AssetConfig(resources / "comp-parallel" / assets.DEFAULT_ASSET_FILENAME)
+    comp_pipeline = assets.AssetConfig(resources / "comp-pipeline" / assets.DEFAULT_ASSET_FILENAME)
+    comp_command_inline_env = assets.AssetConfig(resources / "comp-command-inline-env" /
+                                                 assets.DEFAULT_ASSET_FILENAME)
+
+    assert comp_command.spec_as_object().dependencies == {
+        assets.AssetType.ENVIRONMENT: {"azureml:environment:0.0.1"}
+    }
+    assert comp_parallel.spec_as_object().dependencies == {
+        assets.AssetType.ENVIRONMENT: {"azureml:environment:0.0.1"}
+    }
+    assert comp_pipeline.spec_as_object().dependencies == {
+        assets.AssetType.COMPONENT: {"azureml:component_1:0.0.1", "azureml:component_2:0.0.1"}
+    }
+    assert comp_command_inline_env.spec_as_object().dependencies == {}
