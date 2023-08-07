@@ -20,23 +20,20 @@ class RegistryUtils:
 
     def get_registry_data_reference(registry_name: str, model_name: str, model_version: str):
         """Fetch data reference for asset in the registry."""
-        cnt, blob_uri, sas_uri = 0, None, None
         asset_id = f"azureml://registries/{registry_name}/models/{model_name}/versions/{model_version}"
         logger.print(f"getting data reference for asset {asset_id}")
-        while cnt < RegistryUtils.RETRY_COUNT:
+        for cnt in range(1, RegistryUtils.RETRY_COUNT + 1):
             try:
                 response = RegistryUtils._get_temp_data_ref(registry_name, model_name, model_version)
                 blob_uri = response.blob_reference_for_consumption.blob_uri
                 sas_uri = response.blob_reference_for_consumption.credential.additional_properties["sasUri"]
                 if not blob_uri or not sas_uri:
                     raise Exception("Error in fetching BLOB or SAS URI")
-                break
+                return blob_uri, sas_uri
             except Exception as e:
-                cnt += 1
-                logger.log_error(f"Exception in fetching data reference. Retry count {cnt}. Error: {e}")
-        if not blob_uri or not sas_uri:
+                logger.log_error(f"Exception in fetching data reference. Try #{cnt}. Error: {e}")
+        else:
             raise Exception(f"Unable to fetch data reference for asset {asset_id}")
-        return blob_uri, sas_uri
 
     def _get_temp_data_ref(registry_name, model_name, model_version):
         try:
