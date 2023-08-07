@@ -7,8 +7,11 @@ import argparse
 import json
 from azureml.model.mgmt.config import AppName
 from azureml.model.mgmt.downloader import download_model, ModelSource
-from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
+from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, ModelAlreadyExists
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
+from azureml.model.mgmt.utils.common_utils import get_mlclient
+from azureml._common.exceptions import AzureMLException
+from azureml._common._error_definition.azureml_error import AzureMLError
 
 
 logger = get_logger(__name__)
@@ -21,7 +24,29 @@ def _get_parser():
     parser.add_argument("--model-id", required=True)
     parser.add_argument("--model-download-metadata", required=True, help="Model source info file path")
     parser.add_argument("--model-output-dir", required=True, help="Model download directory")
+    parser.add_argument("--update-existing-model", required=False, help="Update existing model")
     return parser
+
+
+def validate_if_model_exists(model_id):
+    """Validate if model exists in any of the registries."""
+    registries_list = ["azureml-preview", "azureml", "azureml-meta"]
+
+    for registry in registries_list:
+        try:
+            ml_client_registry = get_mlclient(registry_name=registry)
+        except Exception:
+            continue
+        REG_MODEL_ID = model_id.replace("/", "-")  # model name in registry doesn't contain '/'
+        models = ml_client_registry.models.list(name=REG_MODEL_ID)
+        print(f"models: {models}")
+        if models:
+            raise AzureMLException._with_error(
+                AzureMLError.create(ModelAlreadyExists, model_id=model_id, registry=registry)
+            )
+        else:
+            logger.info(f"Model {model_id} has not been imported into the registry. "
+                        "Please continue importing the model.")
 
 
 @swallow_all_exceptions(logger)
@@ -34,12 +59,16 @@ def run():
     model_id = args.model_id
     model_download_metadata_path = args.model_download_metadata
     model_output_dir = args.model_output_dir
+    update_existing_model = args.update_existing_model
 
     if not ModelSource.has_value(model_source):
         raise Exception(f"Unsupported model source {model_source}")
 
     logger.info(f"Model source: {model_source}")
     logger.info(f"Model id: {model_id}")
+
+    if not update_existing_model:
+        validate_if_model_exists(model_id)
 
     logger.info("Downloading model")
     model_download_details = download_model(

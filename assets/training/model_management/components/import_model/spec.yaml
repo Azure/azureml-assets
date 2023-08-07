@@ -157,6 +157,12 @@ inputs:
     optional: true
     description: A JSON or a YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
 
+  update_existing_model:
+    type: boolean
+    default: false
+    description: If set to true, will update the existing model. If set to false, will create a new model.
+    optional: true
+
 # Pipeline outputs
 outputs:
   mlflow_model_folder:
@@ -196,6 +202,7 @@ jobs:
       hf_model_class: ${{parent.inputs.hf_model_class}}
       hf_tokenizer_class: ${{parent.inputs.hf_tokenizer_class}}
       hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
+      update_existing_model: ${{parent.inputs.update_existing_model}}
     outputs:
       validation_info:
         type: uri_file
@@ -209,6 +216,7 @@ jobs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
       validation_info: ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
+      update_existing_model: ${{parent.inputs.update_existing_model}}
     outputs:
       model_download_metadata:
         type: uri_file
