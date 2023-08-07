@@ -639,6 +639,11 @@ class EnvironmentConfig(Config):
             image += f":{tag}"
         return image
 
+    def get_dockerfile_contents(self) -> str:
+        """Dockerfile contents."""
+        with open(self.dockerfile_with_path, "r") as f:
+            return f.read()
+
     @property
     def _os(self) -> str:
         """Raw 'os' value."""

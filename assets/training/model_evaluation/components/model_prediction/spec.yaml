@@ -3,7 +3,7 @@ name: model_prediction
 display_name: Model Prediction
 description: Generate predictions on a given mlflow model for supported tasks.
 
-version: 0.0.10
+version: 0.0.11
 tags:
   type: evaluation
   sub_type: inference
@@ -28,6 +28,8 @@ inputs:
       fill-mask,
       image-classification,
       image-classification-multilabel,
+      image-object-detection,
+      image-instance-segmentation,
     ]
     description: "Task type"
   test_data:
@@ -53,12 +55,12 @@ inputs:
   evaluation_config_params:
     type: string
     optional: true
-    description: "JSON Serielized string of evaluation_config"
+    description: "JSON Serialized string of evaluation_config"
   #ADDED TO ACCOMMODATE CURRENT DESIGNER
   model_uri:
     type: string
     optional: true
-    description: "[DEPRECATED] The location, in URI format, of the MLflow model, for example:
+    description: "[DEPRECATED] The location, in URI format, of the Mlflow model, for example:
                       - ``runs:/<mlflow_run_id>/run-relative/path/to/model``
                       - ``models:/<model_name>/<model_version>``
                       - ``models:/<model_name>/<stage>``"
@@ -80,7 +82,7 @@ outputs:
     type: uri_file
 
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/9
+environment: azureml://registries/azureml/environments/model-evaluation/versions/10
 
 command: >-
   python download_dependencies.py
