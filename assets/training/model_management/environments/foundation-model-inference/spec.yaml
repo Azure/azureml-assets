@@ -12,3 +12,5 @@ os_type: linux
 
 tags:
     Preview: ""
+    HF-Inference: ""
+    
