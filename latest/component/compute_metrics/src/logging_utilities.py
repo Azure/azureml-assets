@@ -105,17 +105,6 @@ class CustomDimensions:
         if run_info.get("model_version", None):
             self.model_version = run_info.get("model_version")
 
-        if run_info.get("parent_model_asset_id", None):
-            self.parent_model_asset_id = run_info.get("parent_model_asset_id")
-        if run_info.get("parent_model_source", None):
-            self.parent_model_source = run_info.get("parent_model_source")
-        if run_info.get("parent_model_registry_name", None):
-            self.parent_model_registry_name = run_info.get("parent_model_registry_name")
-        if run_info.get("parent_model_name", None):
-            self.parent_model_name = run_info.get("parent_model_name")
-        if run_info.get("parent_model_version", None):
-            self.parent_model_version = run_info.get("parent_model_version")
-
         if run_info.get("pipeline_type", None):
             self.pipeline_type = run_info.get("pipeline_type")
         if run_info.get("source", None):

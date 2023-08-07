@@ -65,7 +65,7 @@ class ModelPredictionRunner:
         self.device = device
         if device == constants.DEVICE.CPU:
             self.device = -1
-        elif device == constants.DEVICE.GPU or task == constants.TASK.NER:
+        elif device == constants.DEVICE.GPU:
             if torch.cuda.is_available():
                 self.device = torch.cuda.current_device()
             else:
