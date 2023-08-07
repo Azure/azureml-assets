@@ -1,7 +1,11 @@
-## 1.10.0 (Unreleased)
+## 1.11.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
+
+## 1.10.0 (2023-08-07)
+### 🚀 New Features
+- [970](https://github.com/Azure/azureml-assets/pull/970) Large model publishing support added
 
 ## 1.9.0 (2023-08-03)
 ### 🚀 New Features
