@@ -157,6 +157,12 @@ inputs:
     optional: true
     description: A JSON or a YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
 
+  update_existing_model:
+    type: boolean
+    default: false
+    description: If set to true, will update the existing model. If set to false, will create a new model.
+    optional: true
+
 outputs:
     validation_info:
         type: uri_file
