@@ -4,7 +4,7 @@
 
 import os
 import azureml.assets as assets
-from azure.identity import DefaultAzureCredential
+from azure.identity import AzureCliCredential
 from azure.ai.ml import load_model
 from azure.ai.ml._utils._registry_utils import get_asset_body_for_registry_storage, get_registry_client
 from azureml.assets.util import logger
@@ -37,7 +37,7 @@ class RegistryUtils:
 
     def _get_temp_data_ref(registry_name, model_name, model_version):
         try:
-            credential = DefaultAzureCredential()
+            credential = AzureCliCredential()
             body = get_asset_body_for_registry_storage(registry_name, "models", model_name, model_version)
             registry_client, resource_group, _ = get_registry_client(credential, registry_name)
             response = registry_client.temporary_data_references.create_or_get_temporary_data_reference(

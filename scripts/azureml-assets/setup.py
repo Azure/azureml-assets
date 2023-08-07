@@ -17,6 +17,7 @@ setup(
       "pip>=21",
       "marshmallow>=3.19",
       "tenacity>=8.2.2",
+      "azure-ai-ml>=1.9.0",
    ],
    python_requires=">=3.8,<4.0",
    license="MIT",
