@@ -59,15 +59,16 @@ def run():
     model_id = args.model_id
     model_download_metadata_path = args.model_download_metadata
     model_output_dir = args.model_output_dir
-    update_existing_model = args.update_existing_model
+    update_existing_model = args.update_existing_model.lower()
 
     if not ModelSource.has_value(model_source):
         raise Exception(f"Unsupported model source {model_source}")
 
     logger.info(f"Model source: {model_source}")
     logger.info(f"Model id: {model_id}")
+    logger.info(f"Update existing model: {update_existing_model}")
 
-    if not update_existing_model:
+    if update_existing_model == "false":
         validate_if_model_exists(model_id)
 
     logger.info("Downloading model")

@@ -20,7 +20,7 @@ inputs:
   instance_type:
     type: string
     optional: true
-    default: STANDARD_NC6s_v3
+    default: Standard_DS12_v2
     description: Instance type to be used for the component in case of serverless compute, eg. STANDARD_NC6s_v3. 
       The parameter compute must be set to 'serverless' for instance_type to be used
 
@@ -172,7 +172,7 @@ is_deterministic: True
 
 environment: azureml://registries/azureml/environments/python-sdk-v2/versions/6
 code: ../../src
-command: python validate.py  --model-id '${{inputs.model_id}}' 
+command: python validate.py --validation-info ${{outputs.validation_info}}
 
 tags:
     Preview: ""
