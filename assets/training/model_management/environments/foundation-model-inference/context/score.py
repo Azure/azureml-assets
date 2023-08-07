@@ -270,13 +270,16 @@ def analyze_response(response):
         logger.info("Hate severity: {}".format(response.hate_result.severity))
         severity = max(severity, response.hate_result.severity)
     if response.self_harm_result is not None:
-        logger.info("SelfHarm severity: {}".format(response.self_harm_result.severity))
+        logger.info(
+            "SelfHarm severity: {}".format(response.self_harm_result.severity))
         severity = max(severity, response.self_harm_result.severity)
     if response.sexual_result is not None:
-        logger.info("Sexual severity: {}".format(response.sexual_result.severity))
+        logger.info(
+            "Sexual severity: {}".format(response.sexual_result.severity))
         severity = max(severity, response.sexual_result.severity)
     if response.violence_result is not None:
-        logger.info("Violence severity: {}".format(response.violence_result.severity))
+        logger.info(
+            "Violence severity: {}".format(response.violence_result.severity))
         severity = max(severity, response.violence_result.severity)
 
     return severity
@@ -499,9 +502,9 @@ def init():
             try:
                 import torch
                 major, minor = torch.cuda.get_device_capability()
-                is_sm75 = major == 7 and minor == 5     # turing
-                is_sm8x = major == 8 and minor >= 0     # ampere
-                is_sm90 = major == 9 and minor == 0     # hopper
+                is_sm75 = major == 7 and minor == 5  # turing
+                is_sm8x = major == 8 and minor >= 0  # ampere
+                is_sm90 = major == 9 and minor == 0  # hopper
 
                 if not (is_sm75 or is_sm8x or is_sm90):
                     # can't use flash attention & hence sharding.
@@ -576,12 +579,15 @@ def get_processed_input_data_for_chat_completion(dialog: List[str]) -> str:
     B_INST, E_INST = "[INST]", "[/INST]"
     B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
     # fmt: off
-    DEFAULT_SYSTEM_PROMPT = """You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your \
-    answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure\
-     that your responses are socially unbiased and positive in nature.
+    DEFAULT_SYSTEM_PROMPT = """You are a helpful, respectful and honest \
+assistant. Always answer as helpfully as possible, while being safe. Your \
+answers should not include any harmful, unethical, racist, sexist, toxic, \
+dangerous, or illegal content. Please ensure that your responses are \
+socially unbiased and positive in nature.
 
-    If a question does not make any sense, or is not factually coherent, explain why instead of answering something not \
-    correct. If you don't know the answer to a question, please don't share false information."""
+If a question does not make any sense, or is not factually coherent, \
+explain why instead of answering something not correct. If you don't know \
+the answer to a question, please don't share false information."""
     # fmt: on
 
     prompt_tokens = []
@@ -592,12 +598,10 @@ def get_processed_input_data_for_chat_completion(dialog: List[str]) -> str:
                          "content": DEFAULT_SYSTEM_PROMPT,
                      }
                  ] + dialog
-    dialog = [
-                 {
-                     "role": dialog[1]["role"],
-                     "content": B_SYS + dialog[0]["content"] + E_SYS +
-                                dialog[1]["content"],
-                 }
+    dialog = [{
+        "role": dialog[1]["role"],
+        "content": B_SYS + dialog[0]["content"] + E_SYS + dialog[1]["content"],
+    }
              ] + dialog[2:]
     dialog_content = "".join(
         [
