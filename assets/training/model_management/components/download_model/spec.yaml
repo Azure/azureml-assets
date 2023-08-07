@@ -16,7 +16,7 @@ command: >
   python run_model_download.py
   --model-source ${{inputs.model_source}}
   --model-id '${{inputs.model_id}}'
-  --update-existing-model ${{inputs.update_existing_model}}
+  $[[--update-existing-model ${{inputs.update_existing_model}}]]
   --model-download-metadata ${{outputs.model_download_metadata}}
   --model-output-dir ${{outputs.model_output}}
 
