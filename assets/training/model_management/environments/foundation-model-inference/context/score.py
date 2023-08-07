@@ -603,6 +603,12 @@ the answer to a question, please don't share false information."""
         "content": B_SYS + dialog[0]["content"] + E_SYS + dialog[1]["content"],
     }
              ] + dialog[2:]
+    assert all([msg["role"] == "user" for msg in dialog[::2]]) and all(
+        [msg["role"] == "assistant" for msg in dialog[1::2]]
+    ), (
+        "model only supports 'system','user' and 'assistant' roles, "
+        "starting with user and alternating (u/a/u/a/u...)"
+    )
     dialog_content = "".join(
         [
             f" {B_INST} {msg['content']} {E_INST} "
