@@ -547,7 +547,7 @@ def init():
         raise Exception(f"Error in creating client or server: {e}") from e
 
 
-def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
+def get_processed_input_data_for_chat_completion(dialog: List[str]) -> str:
     r"""Process chat completion input request.
 
     Taken from:
@@ -573,25 +573,18 @@ def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
     As of 2021, the Burj Khalifa in Dubai\n
     [INST]and in Africa?[/INST]"
     """
-    # TODO: user ConversationalPipeline
     B_INST, E_INST = "[INST]", "[/INST]"
     B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
-    DEFAULT_SYSTEM_PROMPT = """\
-    You are a helpful, respectful and honest assistant. Always answer as \
-    helpfully as possible, while being safe.  Your answers should not \
-    include any harmful, unethical, racist, sexist, toxic, dangerous, or \
-    illegal content. Please ensure that your responses are socially unbiased
-    and positive in nature.
+    # fmt: off
+    DEFAULT_SYSTEM_PROMPT = """You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your \
+    answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure\
+     that your responses are socially unbiased and positive in nature.
 
-    If a question does not make any sense, or is not factually coherent, \
-    explain why instead of answering something not correct. If you don't \
-    know the answer to a question, please don't share false information.
-    """
+    If a question does not make any sense, or is not factually coherent, explain why instead of answering something not \
+    correct. If you don't know the answer to a question, please don't share false information."""
+    # fmt: on
 
-    dialog = data
-    history = ""
-    assert len(dialog) > 0
-    # add a system prompt if the first message is not a system prompt
+    prompt_tokens = []
     if dialog[0]["role"] != "system":
         dialog = [
                      {
@@ -599,30 +592,23 @@ def get_processed_input_data_for_chat_completion(data: List[str]) -> str:
                          "content": DEFAULT_SYSTEM_PROMPT,
                      }
                  ] + dialog
-    # add a tag to the system prompt
     dialog = [
                  {
-                     "role": dialog[0]["role"],
-                     "content": B_SYS + dialog[0]["content"] + E_SYS
-                     # + dialog[1]["content"],
+                     "role": dialog[1]["role"],
+                     "content": B_SYS + dialog[0]["content"] + E_SYS +
+                                dialog[1]["content"],
                  }
-             ] + dialog[1:]
-    assert all([msg["role"] == "user" for msg in dialog[1::2]]) and all(
-        [msg["role"] == "assistant" for msg in dialog[2::2]]
-    ), (
-        "model only supports 'system', 'user' and 'assistant' roles, "
-        "starting with 'system', then 'user' and alternating (u/a/u/a/u...)"
+             ] + dialog[2:]
+    dialog_content = "".join(
+        [
+            f" {B_INST} {msg['content']} {E_INST} "
+            if msg["role"] == "user"
+            else msg["content"]
+            for msg in dialog
+        ]
     )
-    history += dialog[0]["content"]
-    assert dialog[-1]["role"] == "user"
-    for i, conv in enumerate(dialog[1:]):
-        if i % 2 == 1:
-            assert conv["role"] == "assistant"
-            history += f"{conv['content'].strip()}"
-        else:
-            assert conv["role"] == "user"
-            history += B_INST + f"{conv['content'].strip()}" + E_INST
-    return history
+    prompt_tokens.append(dialog_content)
+    return str.join("", prompt_tokens).strip()
 
 
 def get_request_data(request_string) -> (
