@@ -26,12 +26,8 @@ from ruamel.yaml import YAML
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PROD_SYSTEM_REGISTRY = "azureml"
-CREATE_ORDER = [
-    assets.AssetType.DATA,
-    assets.AssetType.ENVIRONMENT,
-    assets.AssetType.COMPONENT,
-    assets.AssetType.MODEL,
-]
+CREATE_ORDER = [assets.AssetType.DATA, assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT,
+                assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)/(?:versions/(.+)|labels/(.+))")
 REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/$asset_type/(.+)/(?:versions/(.+)|labels/(.+))")
@@ -57,7 +53,7 @@ def find_test_files(dir: Path):
             data = YAML().load(fp)
             for test_group in data.values():
                 for test_job in test_group['jobs'].values():
-                    if "job" in test_job:
+                    if 'job' in test_job:
                         test_jobs.append((test / test_job['job']).as_posix())
     return test_jobs
 
@@ -162,7 +158,7 @@ def validate_and_prepare_pipeline_component(
 
     for job_name, job_details in jobs.items():
         logger.print(f"job {job_name}")
-        if not job_details.get("component"):
+        if not job_details.get('component'):
             # if-else or inline component
             logger.print(f"component not defined for job {job_name}")
             updated_jobs[job_name] = job_details
@@ -170,8 +166,7 @@ def validate_and_prepare_pipeline_component(
 
         try:
             name, version, label, registry = get_parsed_details_from_asset_uri(
-                assets.AssetType.COMPONENT.value, job_details['component']
-            )
+                assets.AssetType.COMPONENT.value, job_details['component'])
         except Exception as e:
             logger.log_error(e)
             return False
@@ -196,17 +191,19 @@ def validate_and_prepare_pipeline_component(
         registry_name = registry or registry_name
         asset_details = None
         for ver in [version, final_version]:
-            if (
-                asset_details := get_asset_details(assets.AssetType.COMPONENT.value, name, ver, registry_name)
-            ) is not None:
+            if (asset_details := get_asset_details(
+                assets.AssetType.COMPONENT.value, name, ver, registry_name
+            )) is not None:
                 break
 
         if not asset_details:
-            logger.log_warning(f"dependent component {name} with version {version} not found in registry {registry}")
+            logger.log_warning(
+                f"dependent component {name} with version {version} not found in registry {registry}"
+            )
             return False
 
         updated_jobs[job_name] = job_details
-        updated_jobs[job_name]['component'] = asset_details['id']
+        updated_jobs[job_name]['component'] = asset_details["id"]
 
     pipeline_dict['jobs'] = updated_jobs
 
@@ -218,7 +215,11 @@ def validate_and_prepare_pipeline_component(
     return True
 
 
-def get_environment_asset_id(environment_id: str, version_suffix: str, registry_name: str) -> Union[object, None]:
+def get_environment_asset_id(
+    environment_id: str,
+    version_suffix: str,
+    registry_name: str
+) -> Union[object, None]:
     """Convert an environment reference into a full asset ID.
 
     :param environment_id: Environment asset ID, in short or long form
@@ -231,12 +232,8 @@ def get_environment_asset_id(environment_id: str, version_suffix: str, registry_
     :rtype: Union[str, None]
     """
     try:
-        (
-            env_name,
-            env_version,
-            env_label,
-            env_registry_name,
-        ) = get_parsed_details_from_asset_uri(assets.AssetType.ENVIRONMENT.value, environment_id)
+        env_name, env_version, env_label, env_registry_name = get_parsed_details_from_asset_uri(
+            assets.AssetType.ENVIRONMENT.value, environment_id)
     except Exception as e:
         logger.log_error(e)
         return False
@@ -245,10 +242,7 @@ def get_environment_asset_id(environment_id: str, version_suffix: str, registry_
         f"Env name: {env_name}, version: {env_version}, label: {env_label}, env_registry_name: {env_registry_name}"
     )
 
-    if env_registry_name and env_registry_name not in [
-        PROD_SYSTEM_REGISTRY,
-        registry_name,
-    ]:
+    if env_registry_name and env_registry_name not in [PROD_SYSTEM_REGISTRY, registry_name]:
         logger.log_warning(
             f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
             f"The URI for environment '{env_name}' references registry '{env_registry_name}', "
@@ -280,9 +274,9 @@ def get_environment_asset_id(environment_id: str, version_suffix: str, registry_
     if version_suffix:
         versions_to_try.append(f"{env_version}-{version_suffix}")
     for version in versions_to_try:
-        if (
-            env := get_asset_details(assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name)
-        ) is not None:
+        if (env := get_asset_details(
+            assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name
+        )) is not None:
             return env['id']
 
     logger.log_error(f"Environment {env_name} not found in {registry_name}; tried version(s) {versions_to_try}")
@@ -316,10 +310,10 @@ def validate_update_component(
     logger.print(f"Preparing component {component_name}")
 
     # Handle command and parallel components
-    if "environment" in component_dict:
+    if 'environment' in component_dict:
         # Command component
         obj_with_env = component_dict
-    elif "task" in component_dict and "environment" in component_dict['task']:
+    elif 'task' in component_dict and 'environment' in component_dict['task']:
         # Parallel component
         obj_with_env = component_dict['task']
     else:
@@ -364,16 +358,10 @@ def asset_create_command(
 ) -> List[str]:
     """Assemble the az cli command."""
     cmd = [
-        shutil.which("az"),
-        "ml",
-        asset_type,
-        "create",
-        "--file",
-        asset_path,
-        "--registry-name",
-        registry_name,
-        "--version",
-        version,
+        shutil.which("az"), "ml", asset_type, "create",
+        "--file", asset_path,
+        "--registry-name", registry_name,
+        "--version", version,
     ]
     if resource_group:
         cmd.extend(["--resource-group", resource_group])
@@ -391,17 +379,12 @@ def create_asset(
     workspace_name: str,
     version: str,
     failure_list: List[str],
-    debug_mode: bool = None,
+    debug_mode: bool = None
 ):
     """Create asset in registry."""
     cmd = asset_create_command(
-        asset.type.value,
-        str(asset.spec_with_path),
-        registry_name,
-        version,
-        resource_group,
-        workspace_name,
-        debug_mode,
+        asset.type.value, str(asset.spec_with_path),
+        registry_name, version, resource_group, workspace_name, debug_mode
     )
 
     # Run command
@@ -426,14 +409,9 @@ def get_asset_versions(
 ) -> List[str]:
     """Get asset versions from registry."""
     cmd = [
-        "az",
-        "ml",
-        asset_type,
-        "list",
-        "--name",
-        asset_name,
-        "--registry-name",
-        registry_name,
+        "az", "ml", asset_type, "list",
+        "--name", asset_name,
+        "--registry-name", registry_name,
     ]
     result = run_command(cmd)
     if result.returncode != 0:
@@ -450,16 +428,10 @@ def get_asset_details(
 ) -> Dict:
     """Get asset details."""
     cmd = [
-        "az",
-        "ml",
-        asset_type,
-        "show",
-        "--name",
-        asset_name,
-        "--version",
-        asset_version,
-        "--registry-name",
-        registry_name,
+        "az", "ml", asset_type, "show",
+        "--name", asset_name,
+        "--version", asset_version,
+        "--registry-name", registry_name,
     ]
     result = run_command(cmd)
     if result.returncode != 0:
@@ -482,9 +454,8 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
         `label` and `registry_name` will be None for workspace URI.
     :rtype: Tuple
     """
-    REGISTRY_ASSET_PATTERN = re.compile(
-        REGISTRY_ASSET_TEMPLATE.substitute(asset_type=pluralize_asset_type(asset_type))
-    )
+    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(
+                                        asset_type=pluralize_asset_type(asset_type)))
     asset_registry_name = None
     if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
         asset_registry_name, asset_name, asset_version, asset_label = match.groups()
@@ -513,29 +484,27 @@ def _str2bool(v: str) -> bool:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-r", "--registry-name", required=True, type=str, help="the registry name")
-    parser.add_argument("-s", "--subscription-id", type=str, help="the subscription ID")
-    parser.add_argument("-g", "--resource-group", type=str, help="the resource group name")
-    parser.add_argument("-w", "--workspace", type=str, help="the workspace name")
+    parser.add_argument("-r", "--registry-name", required=True,
+                        type=str, help="the registry name")
+    parser.add_argument("-s", "--subscription-id",
+                        type=str, help="the subscription ID")
+    parser.add_argument("-g", "--resource-group", type=str,
+                        help="the resource group name")
+    parser.add_argument("-w", "--workspace", type=str,
+                        help="the workspace name")
+    parser.add_argument("-a", "--assets-directory",
+                        required=True, type=Path, help="the assets directory")
+    parser.add_argument("-t", "--tests-directory",
+                        type=Path, help="the tests directory")
+    parser.add_argument("-v", "--version-suffix", type=str,
+                        help="the version suffix")
+    parser.add_argument("-l", "--publish-list", type=Path,
+                        help="the path of the publish list file")
+    parser.add_argument("-f", "--failed-list", type=Path,
+                        help="the path of the failed assets list file")
     parser.add_argument(
-        "-a",
-        "--assets-directory",
-        required=True,
-        type=Path,
-        help="the assets directory",
-    )
-    parser.add_argument("-t", "--tests-directory", type=Path, help="the tests directory")
-    parser.add_argument("-v", "--version-suffix", type=str, help="the version suffix")
-    parser.add_argument("-l", "--publish-list", type=Path, help="the path of the publish list file")
-    parser.add_argument("-f", "--failed-list", type=Path, help="the path of the failed assets list file")
-    parser.add_argument(
-        "-d",
-        "--debug",
-        type=_str2bool,
-        nargs="?",
-        const=True,
-        default=False,
-        help="debug mode",
+        "-d", "--debug", type=_str2bool, nargs="?",
+        const=True, default=False, help="debug mode",
     )
     args = parser.parse_args()
 
@@ -555,7 +524,7 @@ if __name__ == "__main__":
     if publish_list_file:
         with open(publish_list_file) as fp:
             config = YAML().load(fp)
-            create_list = config.get("create", {})
+            create_list = config.get('create', {})
     else:
         create_list = {}
 
@@ -587,9 +556,11 @@ if __name__ == "__main__":
             with TemporaryDirectory() as work_dir:
                 asset_names = create_list.get(asset.type.value, [])
                 if not ("*" in asset_names or asset.name in asset_names):
-                    logger.print(f"Skipping asset {asset.name} because it is not in the create list")
+                    logger.print(
+                        f"Skipping asset {asset.name} because it is not in the create list")
                     continue
-                final_version = asset.version + "-" + passed_version if passed_version else asset.version
+                final_version = asset.version + "-" + \
+                    passed_version if passed_version else asset.version
                 logger.print(f"Creating {asset.name} {final_version}")
                 asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
                     registry_name=registry_name,
@@ -612,11 +583,11 @@ if __name__ == "__main__":
                         ):
                             failure_list.append(asset)
                             continue
-                    elif component_type is None or component_type in [
-                        assets.ComponentType.COMMAND.value,
-                        assets.ComponentType.PARALLEL.value,
-                    ]:
-                        if not validate_update_component(asset.spec_with_path, passed_version, registry_name):
+                    elif component_type is None or component_type in [assets.ComponentType.COMMAND.value,
+                                                                      assets.ComponentType.PARALLEL.value]:
+                        if not validate_update_component(
+                            asset.spec_with_path, passed_version, registry_name
+                        ):
                             failure_list.append(asset)
                             continue
                 elif asset.type == assets.AssetType.MODEL:
@@ -624,11 +595,7 @@ if __name__ == "__main__":
                         final_version = asset.version
                         model_config = asset.extra_config_as_object()
                         if not prepare_model_for_registration(
-                            model_config,
-                            asset.spec_with_path,
-                            Path(work_dir),
-                            registry_name,
-                        ):
+                                model_config, asset.spec_with_path, Path(work_dir), registry_name):
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")
                     except Exception as e:
                         logger.log_error(f"Model prepare exception: {e}")
