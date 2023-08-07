@@ -1,0 +1,11 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: command
+
+name: component
+display_name: Test component
+version: 0.0.1
+is_deterministic: false
+
+environment:
+  name: env1
+  version: 1
