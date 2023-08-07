@@ -10,6 +10,7 @@ import shutil
 from pathlib import Path
 from ruamel.yaml import YAML
 from typing import List, Tuple, Union
+import os.path
 
 import azureml.assets as assets
 from azureml.assets.util import logger
@@ -347,6 +348,26 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
 
             found_assets.append(file)
     return found_assets
+
+
+def find_files(input_dirs: Union[List[Path], Path],
+               filename: str) -> List[Path]:
+    """Search directories for files.
+
+    Args:
+        input_dirs (Union[List[Path], Path]): Directories to search in.
+        filename (str): Filename to search for.
+
+    Returns:
+        List[Path]: Files found (excludes directories).
+    """
+    found_files = []
+    for input_dir in input_dirs:
+        for file in input_dir.rglob(filename):
+            if os.path.isfile(file):
+                found_files.append(file)
+
+    return found_files
 
 
 def find_common_directory(paths: List[Path]) -> Tuple[Path, List[Path]]:
