@@ -5,6 +5,7 @@
 
 import argparse
 import json
+import re
 from azureml.model.mgmt.config import AppName
 from azureml.model.mgmt.downloader import download_model, ModelSource
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, ModelAlreadyExists
@@ -13,7 +14,8 @@ from azureml.model.mgmt.utils.common_utils import get_mlclient
 from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError
 
-
+VALID_MODEL_NAME_PATTERN = r"^[a-zA-Z0-9-]+$"
+NEGATIVE_MODEL_NAME_PATTERN = r"[^a-zA-Z0-9-]"
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.DOWNLOAD_MODEL
 
@@ -30,19 +32,27 @@ def _get_parser():
 
 def validate_if_model_exists(model_id):
     """Validate if model exists in any of the registries."""
-    registries_list = ["azureml-preview", "azureml", "azureml-meta"]
+    registries_list = ["azureml", "azureml-meta"]
 
     for registry in registries_list:
         try:
             ml_client_registry = get_mlclient(registry_name=registry)
         except Exception:
             continue
-        REG_MODEL_ID = model_id.replace("/", "-")  # model name in registry doesn't contain '/'
-        models = ml_client_registry.models.list(name=REG_MODEL_ID)
+
+        if not re.match(VALID_MODEL_NAME_PATTERN, model_id):
+        # update model name to one supported for registration
+            logger.info(f"Updating model name to match pattern `{VALID_MODEL_NAME_PATTERN}`")
+            model_id = re.sub(NEGATIVE_MODEL_NAME_PATTERN, "-", model_id)
+            logger.info(f"Updated model_name = {model_id}")
+
+        models = ml_client_registry.models.list(name=model_id)
         print(f"models: {models}")
         if models:
+            version = models[0].version
+            url = f"https://ml.azure.com/registries/{registry}/models/{model_id}/version/{version}"
             raise AzureMLException._with_error(
-                AzureMLError.create(ModelAlreadyExists, model_id=model_id, registry=registry)
+                AzureMLError.create(ModelAlreadyExists, model_id=model_id, registry=registry, url=url)
             )
         else:
             logger.info(f"Model {model_id} has not been imported into the registry. "

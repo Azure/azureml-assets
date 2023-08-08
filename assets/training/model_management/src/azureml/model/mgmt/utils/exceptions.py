@@ -26,7 +26,7 @@ class ModelImportErrorStrings:
     GIT_CLONE_ERROR = "Failed to clone {uri}. Error: [{error}]"
     VM_NOT_SUFFICIENT_FOR_OPERATION = "VM not sufficient for {operation} operation. Details: [{details}]"
     CMD_EXECUTION_ERROR = "Error in executing command. Error: [{error}]"
-    MODEL_ALREADY_EXISTS = "Model with name {model_id} already exists in registry {registry}"
+    MODEL_ALREADY_EXISTS = "Model with name {model_id} already exists in registry {registry} at {url}"
 
 
 class ModelImportException(AzureMLException):
