@@ -590,8 +590,6 @@ the answer to a question, please don't share false information."""
     # fmt: on
 
     def process_dialog(messages) -> Tuple[str, List[Tuple[str, str]], str]:
-        """Process messages to get system prompt, user-assistant messages and
-        last user message."""
         system_prompt = DEFAULT_SYSTEM_PROMPT
         user_assistant_messages = []  # list of (user, assistant) messages
         user_message = None  # current user message being processed
