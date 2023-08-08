@@ -3,13 +3,16 @@
 
 """Image classification predictor."""
 
-import ast
 import numpy as np
 import pandas as pd
 
 from typing import Dict, List, Union
 
 from task_factory.tabular.classification import TabularClassifier
+from exceptions import ScoringException
+from logging_utilities import get_logger
+
+logger = get_logger(name=__name__)
 
 
 def _convert_predictions(preds: Union[pd.DataFrame, pd.Series, list, np.ndarray]) -> np.ndarray:
@@ -30,6 +33,22 @@ def _convert_predictions(preds: Union[pd.DataFrame, pd.Series, list, np.ndarray]
     return preds
 
 
+MC_OUTPUT_SIGNATURE_ERROR_MESSAGE = (
+    "The output of the model predict function should return List of labels for each image (List[str]). "
+    "The output of the model predict_proba function (optional) should return "
+    "List of probabilities for each label (List[List[float]]). "
+    "The outermost List is for each image in a batch."
+)
+
+ML_OUTPUT_SIGNATURE_ERROR_MESSAGE = (
+    "The output of the model predict function should return List of only "
+    "predicted labels for each image (List[List[str]]). "
+    "The output of the model predict_proba function (optional) should return "
+    "List of probabilities for all labels (List[List[float]]). "
+    "The outermost List is for each image in a batch. The inner List is for each label in the label list."
+)
+
+
 class ImageMulticlassClassifier(TabularClassifier):
     """Image multiclass classifier."""
 
@@ -45,8 +64,22 @@ class ImageMulticlassClassifier(TabularClassifier):
             np.ndarray: numpy array of predicted labels.
         """
         # Image classification predict() returns both labels and probs
-        op_df = super().predict(x_test, **kwargs)
-        y_pred = _convert_predictions(op_df["labels"])
+        try:
+            op_df = super().predict(x_test, **kwargs)
+        except (TypeError, AttributeError, NameError) as ex:
+            if self.is_hf:
+                raise
+            else:
+                raise ScoringException(MC_OUTPUT_SIGNATURE_ERROR_MESSAGE) from ex
+
+        if not self.is_hf:
+            return op_df
+
+        probs, labels = _convert_predictions(op_df["probs"]), _convert_predictions(op_df["labels"])
+
+        label_indexes = [np.argmax(np.array(prob)) for prob in probs]
+        predicted_labels = [label_list[index] for index, label_list in zip(label_indexes, labels)]
+        y_pred = _convert_predictions(predicted_labels)
         return y_pred
 
     def predict_proba(self, x_test, **kwargs) -> List[Dict[str, float]]:
@@ -60,20 +93,26 @@ class ImageMulticlassClassifier(TabularClassifier):
                 [{"0": 0.1, "1": 0.2, "2": 0.7}, {}, {}, ...]
         """
         # Image classification predict() returns both labels and probs
+
+        if not self.is_hf:
+            try:
+                return super().predict_proba(x_test, **kwargs)
+            except (TypeError, AttributeError, NameError) as ex:
+                logger.warning(
+                    f"Error occured in predict_proba function: {str(ex)} {MC_OUTPUT_SIGNATURE_ERROR_MESSAGE}"
+                )
+            return None
+
         op_df = super().predict(x_test, **kwargs)
-        y_pred_proba = _convert_predictions(op_df["probs"])
+        probs = _convert_predictions(op_df["probs"])
         # return a list of dictionary
-        return [
-            {str(i): prob_instance for i, prob_instance in enumerate(prob_instance)}
-            for prob_instance in y_pred_proba
-        ]
+        return [{str(i): prob_instance for i, prob_instance in enumerate(prob_instance)} for prob_instance in probs]
 
 
 class ImageMultilabelClassifier(TabularClassifier):
     """Image multilabel classifier."""
 
     # Todo: Check if ImageClassificationPredictor is required in azureml-evaluate-mlflow in _task_based_predictors.py
-
     def predict(self, x_test, **kwargs) -> List[List[str]]:
         """Get predicted labels.
 
@@ -84,11 +123,28 @@ class ImageMultilabelClassifier(TabularClassifier):
             List[str]: List of list of predicted labels.
         """
         # Image classification predict() returns both labels and probs
-        y_pred = super().predict(x_test, **kwargs)["labels"]
-        y_pred = [str(x) for x in y_pred]
-        # Converting to list of list of strings
-        y_pred = list(map(lambda x: ast.literal_eval(x), y_pred))
-        return y_pred
+        try:
+            y_pred = super().predict(x_test, **kwargs)
+        except (TypeError, AttributeError, NameError) as ex:
+            if self.is_hf:
+                raise
+            else:
+                raise ScoringException(ML_OUTPUT_SIGNATURE_ERROR_MESSAGE) from ex
+        if not self.is_hf:
+            return y_pred
+
+        pred_probs, pred_labels = _convert_predictions(y_pred["probs"]), _convert_predictions(y_pred["labels"])
+        threshold = kwargs.get("threshold", 0.5)
+
+        predicted_labels = []
+        for probs, labels in zip(pred_probs, pred_labels):
+            # Iterate through each image's predicted probabilities.
+            image_labels = []
+            for index, prob in enumerate(probs):
+                if prob >= threshold:
+                    image_labels.append(labels[index])
+            predicted_labels.append(image_labels)
+        return predicted_labels
 
     def predict_proba(self, x_test, **kwargs) -> List[Dict[str, float]]:
         """Get predicted probabilities.
@@ -101,10 +157,20 @@ class ImageMultilabelClassifier(TabularClassifier):
                 [{"0": 0.1, "1": 0.2, "2": 0.7}, {}, {}, ...]
         """
         # Image classification predict() returns both labels and probs
+        if not self.is_hf:
+            try:
+                return super().predict_proba(x_test, **kwargs)
+            except (TypeError, AttributeError, NameError) as ex:
+                logger.warning(
+                    f"Error occured in predict_proba function: {str(ex)} {ML_OUTPUT_SIGNATURE_ERROR_MESSAGE}"
+                )
+            return None
+
         op_df = super().predict(x_test, **kwargs)
-        y_pred_proba = _convert_predictions(op_df["probs"])
+        pred_probs = _convert_predictions(op_df["probs"])
+
         # return a list of dictionary
-        return [
-            {str(i): prob_instance for i, prob_instance in enumerate(prob_instance)}
-            for prob_instance in y_pred_proba
+        pred_probs_in_dict = [
+            {str(i): prob_instance for i, prob_instance in enumerate(prob_instance)} for prob_instance in pred_probs
         ]
+        return pred_probs_in_dict

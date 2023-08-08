@@ -5,23 +5,20 @@
 
 import argparse
 import json
-import os
 import re
 import shutil
 import sys
+import azureml.assets as assets
+import azureml.assets.util as util
 from pathlib import Path
 from string import Template
 from subprocess import run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
 from typing import Dict, List, Tuple, Union
-import azureml.assets as assets
-from azureml.assets.model.mlflow_utils import MLFlowModelUtils
-import azureml.assets.util as util
-from azureml.assets.config import AssetConfig, PathType
-from azureml.assets.model import ModelDownloadUtils
+from azureml.assets.config import AssetConfig
+from azureml.assets.model.model_utils import prepare_model
 from azureml.assets.util import logger
-from azure.ai.ml import load_model
 from azure.ai.ml.entities import Component, Environment, Model
 from ruamel.yaml import YAML
 
@@ -106,60 +103,29 @@ def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) ->
     return False
 
 
-def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
+def prepare_model_for_registration(
+    model_config: assets.ModelConfig,
+    spec_file_path: Path,
+    temp_dir: Path,
+    registry_name: str,
+) -> bool:
     """Prepare model.
 
     :param model_config: Model Config object
     :type model_config: assets.ModelConfig
     :param spec_file_path: path to model spec file
     :type spec_file_path: Path
-    :param model_dir: path of directory where model is present locally or can be downloaded to.
-    :type model_dir: Path
+    :param temp_dir: temp dir for model operation
+    :type temp_dir: Path
     :return: Model successfully prepared for creation in registry.
     :rtype: bool
     """
-    try:
-        model = load_model(spec_file_path)
-        model.type = model_config.type.value
-    except Exception as e:
-        logger.error(f"Error in loading model spec file at {spec_file_path}: {e}")
-        return False
-
-    model_description_file_path = Path(spec_file_path).parent / model_config.description
-    logger.print(f"model_description_file_path {model_description_file_path}")
-    if os.path.exists(model_description_file_path):
-        with open(model_description_file_path) as f:
-            model_description = f.read()
-            model.description = model_description
-    else:
-        logger.print("description file does not exist")
-
-    if model_config.path.type == PathType.LOCAL:
-        model.path = os.path.abspath(Path(model_config.path.uri).resolve())
-        return update_spec(model, spec_file_path)
-
-    if model_config.type == assets.ModelType.CUSTOM:
-        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
-        if success:
-            model.path = model_dir
-            success = update_spec(model, spec_file_path)
-    elif model_config.type == assets.ModelType.MLFLOW:
-        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
-        if success:
-            model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
-            if not model.flavors:
-                # try fetching flavors from MLModel file
-                mlmodel_file_path = model.path / MLFlowModelUtils.MLMODEL_FILE_NAME
-                try:
-                    mlmodel = util.load_yaml(mlmodel_file_path)
-                    model.flavors = mlmodel.get("flavors")
-                except Exception as e:
-                    logger.log_error(f"Error loading flavors from MLmodel file at {mlmodel_file_path}: {e}")
-            success = update_spec(model, spec_file_path)
-    else:
-        logger.log_error(f"Model type {model_config.type.value} not supported")
-        success = False
-
+    model, success = prepare_model(
+        spec_path=spec_file_path, model_config=model_config, registry_name=registry_name, temp_dir=temp_dir
+    )
+    if success:
+        success = update_spec(model, spec_file_path)
+        logger.print(f"updated spec file? {success}")
     return success
 
 
@@ -628,7 +594,8 @@ if __name__ == "__main__":
                     try:
                         final_version = asset.version
                         model_config = asset.extra_config_as_object()
-                        if not prepare_model(model_config, asset.spec_with_path, Path(work_dir)):
+                        if not prepare_model_for_registration(
+                                model_config, asset.spec_with_path, Path(work_dir), registry_name):
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")
                     except Exception as e:
                         logger.log_error(f"Model prepare exception: {e}")
@@ -643,7 +610,7 @@ if __name__ == "__main__":
                     resource_group=resource_group,
                     workspace_name=workspace,
                     failure_list=failure_list,
-                    debug_mode=debug_mode
+                    debug_mode=debug_mode,
                 )
 
     if len(failure_list) > 0:
