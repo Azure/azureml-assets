@@ -1,4 +1,5 @@
 *     @azure/aml-assets
+/assets/aml-benchmark/ @azure/aml-benchmarking
 /assets/benchmark/ @azure/aims
 /assets/responsibleai/ @azure/aml-rai
 /assets/training/ @azure/aml-training
@@ -8,4 +9,3 @@
 /assets/common/ @azure/aml-training
 /assets/model_monitoring/ @Azure/aml-model-monitoring
 /assets/large_language_models/ @azure/aml-training
-/assets/aml-benchmark/ @azure/aml-benchmarking
