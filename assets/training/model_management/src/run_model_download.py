@@ -41,7 +41,7 @@ def validate_if_model_exists(model_id):
             continue
 
         if not re.match(VALID_MODEL_NAME_PATTERN, model_id):
-        # update model name to one supported for registration
+            # update model name to one supported for registration
             logger.info(f"Updating model name to match pattern `{VALID_MODEL_NAME_PATTERN}`")
             model_id = re.sub(NEGATIVE_MODEL_NAME_PATTERN, "-", model_id)
             logger.info(f"Updated model_name = {model_id}")
