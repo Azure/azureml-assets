@@ -26,6 +26,22 @@ class ModelImportErrorStrings:
     GIT_CLONE_ERROR = "Failed to clone {uri}. Error: [{error}]"
     VM_NOT_SUFFICIENT_FOR_OPERATION = "VM not sufficient for {operation} operation. Details: [{details}]"
     CMD_EXECUTION_ERROR = "Error in executing command. Error: [{error}]"
+    MODEL_ALREADY_EXISTS = "Model with name {model_id} already exists in registry {registry} at {url}"
+    NON_MSI_ATTACHED_COMPUTE_ERROR = (
+        "Kindly make sure that compute used by model_registration component"
+        " has MSI(Managed Service Identity) associated with it."
+        " Click here to know more -"
+        " https://learn.microsoft.com/en-us/azure/machine-learning/"
+        " how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli. Exception : {exception}"
+    )
+    USER_IDENTITY_MISSING_ERROR = (
+        "Failed to get AzureMLOnBehalfOfCredential."
+        " Kindly set UserIdentity as identity type if submitting job using sdk or cli."
+        " Please take reference from given links :\n"
+        " About - https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/ \n"
+        " sdk - https://aka.ms/azureml-import-model \n"
+        " cli - https://aka.ms/obo-cli-sample"
+    )
 
 
 class ModelImportException(AzureMLException):
@@ -90,6 +106,24 @@ class HuggingFaceErrorInFetchingModelInfo(ClientError):
         return ModelImportErrorStrings.ERROR_FETCHING_HUGGING_FACE_MODEL_INFO
 
 
+class NonMsiAttachedComputeError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.NON_MSI_ATTACHED_COMPUTE_ERROR
+
+
+class UserIdentityMissingError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.USER_IDENTITY_MISSING_ERROR
+
+
 class VMNotSufficientForOperation(ClientError):
     """Error when VM is not sufficient for an operation."""
 
@@ -106,6 +140,15 @@ class GenericRunCMDError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.CMD_EXECUTION_ERROR
+
+
+class ModelAlreadyExists(ClientError):
+    """Error when Model already exists in registry."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.MODEL_ALREADY_EXISTS
 
 
 def swallow_all_exceptions(logger: logging.Logger):
