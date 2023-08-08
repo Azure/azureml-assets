@@ -27,6 +27,7 @@ def _get_parser():
     parser.add_argument("--model-download-metadata", required=True, help="Model source info file path")
     parser.add_argument("--model-output-dir", required=True, help="Model download directory")
     parser.add_argument("--update-existing-model", required=False, default='false', help="Update existing model")
+    parser.add_argument("--validation-info", required=False, help="Validation info")
     return parser
 
 

@@ -5,7 +5,7 @@ description: >-
   for more details.
 
 name: "promptflow-runtime"
-version: "5"
+version: "6"
 
 build:
   path: "context"
