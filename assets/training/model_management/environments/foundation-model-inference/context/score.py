@@ -576,8 +576,6 @@ def get_processed_input_data_for_chat_completion(dialog: List[str]) -> str:
     As of 2021, the Burj Khalifa in Dubai\n
     [INST]and in Africa?[/INST]"
     """
-    B_INST, E_INST = "[INST]", "[/INST]"
-    B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
     # fmt: off
     DEFAULT_SYSTEM_PROMPT = """You are a helpful, respectful and honest \
 assistant. Always answer as helpfully as possible, while being safe. Your \
