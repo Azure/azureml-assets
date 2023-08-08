@@ -10,7 +10,6 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libcairo2-dev \
     pkg-config \
     python3-dev && \
     apt-get clean -y && \
