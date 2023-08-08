@@ -17,6 +17,7 @@ command: >
   --model-source ${{inputs.model_source}}
   --model-id '${{inputs.model_id}}'
   $[[--update-existing-model ${{inputs.update_existing_model}}]]
+  $[[--validation-info ${{inputs.validation_info}}]]
   --model-download-metadata ${{outputs.model_download_metadata}}
   --model-output-dir ${{outputs.model_output}}
 
