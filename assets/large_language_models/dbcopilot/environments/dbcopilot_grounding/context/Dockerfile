@@ -23,8 +23,8 @@ RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18
 RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 
-COPY ./extra_requirements.txt ./
-RUN pip install -r extra_requirements.txt
+COPY ./requirements.txt ./
+RUN pip install -r requirements.txt
 
 RUN set -eux; \
     apt-get update; \
