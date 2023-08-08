@@ -23,8 +23,12 @@ RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18
 RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 
+## Install dbcopilot
 COPY ./requirements.txt ./
 RUN pip install -r requirements.txt
+
+# Install promptflow (including embeddingstore)
+RUN pip install --upgrade promptflow-sdk-bundle[azure] --extra-index-url https://azuremlsdktestpypi.azureedge.net/promptflow/
 
 RUN set -eux; \
     apt-get update; \
