@@ -35,13 +35,14 @@ class ModelImportErrorStrings:
         " how-to-identity-based-service-authentication?view=azureml-api-2&tabs=cli. Exception : {exception}"
     )
     USER_IDENTITY_MISSING_ERROR = (
-    "Failed to get AzureMLOnBehalfOfCredential."
-    " Kindly set UserIdentity as identity type if submitting job using sdk or cli."
-    " Please take reference from given links :\n"
-    " About - https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/ \n"
-    " sdk - https://aka.ms/azureml-import-model \n"
-    " cli - https://aka.ms/obo-cli-sample"
+        "Failed to get AzureMLOnBehalfOfCredential."
+        " Kindly set UserIdentity as identity type if submitting job using sdk or cli."
+        " Please take reference from given links :\n"
+        " About - https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/ \n"
+        " sdk - https://aka.ms/azureml-import-model \n"
+        " cli - https://aka.ms/obo-cli-sample"
     )
+
 
 class ModelImportException(AzureMLException):
     """Base exception for Model Import handling."""

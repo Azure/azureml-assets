@@ -14,12 +14,12 @@ from azure.ai.ml import MLClient
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
-from azure.identity import ManagedIdentityCredential, DefaultAzureCredential
-from azureml.core.run import Run, _OfflineRun
+from azure.identity import ManagedIdentityCredential
+from azureml.core.run import Run
 from azureml.model.mgmt.utils.exceptions import (
-    GenericRunCMDError, 
-    HuggingFaceErrorInFetchingModelInfo, 
-    NonMsiAttachedComputeError, 
+    GenericRunCMDError,
+    HuggingFaceErrorInFetchingModelInfo,
+    NonMsiAttachedComputeError,
     UserIdentityMissingError
     )
 from contextlib import contextmanager
@@ -96,7 +96,7 @@ def get_mlclient(registry_name: str = None):
     """Return ML Client."""
     has_obo_succeeded = False
     try:
-        credential = DefaultAzureCredential()
+        credential = AzureMLOnBehalfOfCredential()
         # Check if given credential can get token successfully.
         credential.get_token("https://management.azure.com/.default")
         has_obo_succeeded = True
