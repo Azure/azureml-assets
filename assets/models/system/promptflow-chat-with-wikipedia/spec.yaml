@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: chat-with-wikipedia
+path: ./
+tags:
+  promptflow: ''
+version: 1
