@@ -13,9 +13,15 @@ from argparse import Namespace
 from azure.ai.ml import MLClient
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
-from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+from azure.identity import ManagedIdentityCredential, DefaultAzureCredential
 from azureml.core.run import Run, _OfflineRun
-from azureml.model.mgmt.utils.exceptions import GenericRunCMDError, HuggingFaceErrorInFetchingModelInfo
+from azureml.model.mgmt.utils.exceptions import (
+    GenericRunCMDError, 
+    HuggingFaceErrorInFetchingModelInfo, 
+    NonMsiAttachedComputeError, 
+    UserIdentityMissingError
+    )
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
@@ -86,22 +92,28 @@ def get_json_header(token: str) -> Dict:
     }
 
 
-def get_mlclient(registry_name=None, use_default=False):
-    """Return mlclient object."""
-    if use_default:
+def get_mlclient(registry_name: str = None):
+    """Return ML Client."""
+    has_obo_succeeded = False
+    try:
         credential = DefaultAzureCredential()
-    else:
-        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-        credential = ManagedIdentityCredential(client_id=msi_client_id)
+        # Check if given credential can get token successfully.
+        credential.get_token("https://management.azure.com/.default")
+        has_obo_succeeded = True
+    except Exception:
+        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
+        logger.warning(AzureMLError.create(UserIdentityMissingError))
 
-    if registry_name:
-        return MLClient(
-            credential=credential,
-            registry_name=registry_name,
-        )
+    if not has_obo_succeeded:
+        try:
+            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+            credential = ManagedIdentityCredential(client_id=msi_client_id)
+            credential.get_token("https://management.azure.com/.default")
+        except Exception as ex:
+            raise AzureMLException._with_error(AzureMLError.create(NonMsiAttachedComputeError, exception=ex))
 
-    run = Run.get_context()
-    if not isinstance(run, _OfflineRun):
+    if registry_name is None:
+        run = Run.get_context(allow_offline=False)
         ws = run.experiment.workspace
         return MLClient(
             credential=credential,
@@ -109,7 +121,8 @@ def get_mlclient(registry_name=None, use_default=False):
             resource_group_name=ws._resource_group,
             workspace_name=ws._workspace_name,
         )
-    return MLClient.from_config(credential)
+    logger.info(f"Creating MLClient with registry name {registry_name}")
+    return MLClient(credential=credential, registry_name=registry_name)
 
 
 def copy_file_paths_to_destination(src_dir: Path, destn_dir: Path, regex: str) -> None:

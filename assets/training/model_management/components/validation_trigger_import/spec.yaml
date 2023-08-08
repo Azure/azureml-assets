@@ -160,7 +160,7 @@ inputs:
   update_existing_model:
     type: boolean
     default: false
-    description: If set to true, will update the existing model. If set to false, will create a new model.
+    description: If set to true, will update the already existing model in the registry. If set to false, will create a new model in the provided registry.
     optional: true
 
 outputs:

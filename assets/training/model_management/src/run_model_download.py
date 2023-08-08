@@ -26,7 +26,7 @@ def _get_parser():
     parser.add_argument("--model-id", required=True)
     parser.add_argument("--model-download-metadata", required=True, help="Model source info file path")
     parser.add_argument("--model-output-dir", required=True, help="Model download directory")
-    parser.add_argument("--update-existing-model", required=False, help="Update existing model")
+    parser.add_argument("--update-existing-model", required=False, default='false', help="Update existing model")
     return parser
 
 
@@ -46,10 +46,10 @@ def validate_if_model_exists(model_id):
             model_id = re.sub(NEGATIVE_MODEL_NAME_PATTERN, "-", model_id)
             logger.info(f"Updated model_name = {model_id}")
 
-        models = ml_client_registry.models.list(name=model_id)
-        print(f"models: {models}")
+        models = ml_client_registry.models.get(name=model_id, label="latest")
+        logger.info(f"models: {models}")
         if models:
-            version = models[0].version
+            version = models.version
             url = f"https://ml.azure.com/registries/{registry}/models/{model_id}/version/{version}"
             raise AzureMLException._with_error(
                 AzureMLError.create(ModelAlreadyExists, model_id=model_id, registry=registry, url=url)
