@@ -12,8 +12,8 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_IRIS_MODEL_INPUTS_WITH_DRIFT
 )
 
-
 testdata = [('True'), ('False')]
+
 
 def _submit_mdc_preprocessor_job(
     ml_client: MLClient,
@@ -42,7 +42,7 @@ def _submit_mdc_preprocessor_job(
         return {
             'preprocessed_input_data': mdc_preprocessor_output.outputs.preprocessed_input_data
         }
-    
+
     pipeline_job = _mdc_preprocessor_e2e()
     pipeline_job.outputs.preprocessed_input_data = Output(
         type='mltable', mode='direct'

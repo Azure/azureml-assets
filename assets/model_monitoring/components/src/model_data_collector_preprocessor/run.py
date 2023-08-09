@@ -26,6 +26,7 @@ def _format_date_string(format: str, date_to_format: str) -> datetime:
         str(parsed_date.strftime(format)), format
     )
 
+
 def _create_mltable_definition_to_transform_mdc_data(
     start_datetime: datetime,
     end_datetime: datetime,
@@ -46,6 +47,7 @@ def _create_mltable_definition_to_transform_mdc_data(
     # Data column is a list of objects, convert it into string because spark.read_json cannot read object
     table = table.convert_column_types({"data": mltable.DataType.to_string()})
     return table
+
 
 def mdc_preprocessor(
     data_window_start: str,
@@ -101,15 +103,15 @@ def mdc_preprocessor(
 
     spark = init_spark()
     data_as_df = spark.createDataFrame(pd.read_json(first_data_row[MDC_DATA_COLUMN]))
-    
-    if extract_correlation_id == True:
+
+    if extract_correlation_id is True:
         # Add emtpy column to get the correlationId in the schema
         data_as_df = data_as_df.withColumn(MDC_CORRELATION_ID_COLUMN, lit(""))
 
     def tranform_df_function_with_correlation_id(iterator):
         for df in iterator:
             yield pd.concat(
-                extract_data_and_correlation_id(getattr(row, MDC_DATA_COLUMN),getattr(row, MDC_CORRELATION_ID_COLUMN)) for row in df.itertuples()
+                extract_data_and_correlation_id(getattr(row, MDC_DATA_COLUMN), getattr(row, MDC_CORRELATION_ID_COLUMN)) for row in df.itertuples() # noqa
             )
 
     def extract_data_and_correlation_id(entry, correlationid):
@@ -124,7 +126,7 @@ def mdc_preprocessor(
             yield pd.concat(pd.read_json(getattr(row, MDC_DATA_COLUMN)) for row in df.itertuples())
 
     transformed_df = df.select(MDC_DATA_COLUMN, MDC_CORRELATION_ID_COLUMN).mapInPandas(
-        tranform_df_function_with_correlation_id if extract_correlation_id else transform_df_function_without_correlation_id,
+        tranform_df_function_with_correlation_id if extract_correlation_id else transform_df_function_without_correlation_id, # noqa
         schema=data_as_df.schema
     )
 
