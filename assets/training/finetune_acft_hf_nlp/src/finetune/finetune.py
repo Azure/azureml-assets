@@ -35,14 +35,13 @@ from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_
 from azureml.acft.common_components.utils.error_handling.error_definitions import SKUNotSupported
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
-# Refer this logging issue
-# https://github.com/Azure/azure-sdk-for-python/issues/23563
 
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
 
-LLAMA_2_70B = "Llama-2-70b"
+# TODO - Move REFINED_WEB to :dataclass HfModelTypes
+REFINED_WEB = "RefinedWeb"
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
@@ -88,6 +87,20 @@ IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.GPT_NEOX,   # dolly
     HfModelTypes.FALCON,
     HfModelTypes.REFINEDWEBMODEL,   # falcon
+]
+
+
+FORCE_4BIT_QUANTIZATION_MODELS = [
+    "Llama-2-70b",
+    "tiiuae-falcon-40b"
+]
+
+
+QLORA_SUPPORTED_MODEL_TYPES = [
+    HfModelTypes.LLAMA,
+    HfModelTypes.REFINEDWEBMODEL,
+    HfModelTypes.FALCON,
+    REFINED_WEB
 ]
 
 
@@ -388,10 +401,39 @@ def get_parser():
     return parser
 
 
-def finetune(args: Namespace):
-    """Finetune."""
-    logger.info(f"full_determinism is set to {args.enable_full_determinism}")
-    enable_full_determinism(args.seed) if args.enable_full_determinism else set_seed(args.seed)
+def update_lora_target_modules():
+    """Update peft config with falcon target layers."""
+    import peft
+
+    models_to_lora_target_modules_map = getattr(
+        peft.utils.other,
+        "TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING",
+        {}
+    )
+    models_to_lora_target_modules_map.update(
+        {
+            HfModelTypes.REFINEDWEBMODEL: ["query_key_value"],
+            REFINED_WEB: ["query_key_value"],
+            HfModelTypes.FALCON: ["query_key_value"]
+
+        }
+    )
+    setattr(
+        peft.utils.other,
+        "TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING",
+        models_to_lora_target_modules_map
+    )
+    setattr(
+        peft.tuners.lora,
+        "TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING",
+        models_to_lora_target_modules_map
+    )
+    logger.info(
+        f"Updated lora target modules map: {peft.tuners.lora.TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING}")
+
+
+def copy_preprocess_args(args: Namespace) -> Namespace:
+    """Copy preprocess args to finetune"""
 
     # Read the preprocess component args
     # Preprocess Component + Model Selector Component ---> Finetune Component
@@ -404,15 +446,13 @@ def finetune(args: Namespace):
             if not hasattr(args, key):  # add keys that don't already exist
                 setattr(args, key, value)
 
-    set_logging_parameters(
-        task_type=args.task_name,
-        acft_custom_dimensions={
-            LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
-            LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
-            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
-        },
-        azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
-    )
+    return args
+
+
+def finetune(args: Namespace):
+    """Finetune."""
+    logger.info(f"full_determinism is set to {args.enable_full_determinism}")
+    enable_full_determinism(args.seed) if args.enable_full_determinism else set_seed(args.seed)
 
     # Update the model name or path
     model_name_or_path = Path(args.model_selector_output, args.model_name)
@@ -423,7 +463,7 @@ def finetune(args: Namespace):
 
     # Enable QLoRA finetune for Llama-70B
     model_asset_id = getattr(args, "model_asset_id", "")
-    if LLAMA_2_70B in model_asset_id:
+    if any([model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]):
         logger.info(
             f"Identified asset id: {model_asset_id}. Enabling QLoRA finetuning."
         )
@@ -535,7 +575,7 @@ def finetune(args: Namespace):
     args.finetune_in_4bit = bool(args.precision == 4)  # 4 bit finetune
 
     if args.finetune_in_8bit or args.finetune_in_4bit:
-        if hasattr(args, "model_type") and args.model_type not in HfModelTypes.LLAMA:
+        if hasattr(args, "model_type") and args.model_type not in QLORA_SUPPORTED_MODEL_TYPES:
             raise ValueError(
                 f"Looks like quantized finetune is enabled for model family: {args.model_type} which is not supported")
         logger.info("Enabling QLoRA finetuning")
@@ -616,6 +656,47 @@ def main():
 
     parser = get_parser()
     args, _ = parser.parse_known_args()
+
+    # Copy the args generated in the preprocess step
+    args = copy_preprocess_args(args)
+
+    # Set logging parameters
+    set_logging_parameters(
+        task_type=args.task_name,
+        acft_custom_dimensions={
+            LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
+            LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
+            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
+        },
+        azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+    )
+
+    # Updata lora target modules for falcon
+    update_lora_target_modules()
+    if hasattr(args, "model_type") and args.model_type in [
+        HfModelTypes.REFINEDWEBMODEL,
+        HfModelTypes.FALCON,
+        REFINED_WEB
+    ]:
+        from functools import partial
+        from transformers.models.auto import (
+            AutoModelForSequenceClassification,
+            AutoModelForTokenClassification,
+            AutoModelForQuestionAnswering
+        )
+        AutoModelForSequenceClassification.from_pretrained = partial(
+            AutoModelForSequenceClassification.from_pretrained,
+            trust_remote_code=True
+        )
+        AutoModelForTokenClassification.from_pretrained = partial(
+            AutoModelForTokenClassification.from_pretrained,
+            trust_remote_code=True
+        )
+        AutoModelForQuestionAnswering.from_pretrained = partial(
+            AutoModelForQuestionAnswering.from_pretrained,
+            trust_remote_code=True
+        )
+        logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA")
 
     finetune(args)
 

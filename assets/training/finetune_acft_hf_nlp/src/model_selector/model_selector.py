@@ -23,6 +23,9 @@ logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.mode
 
 COMPONENT_NAME = "ACFT-Model_import"
 
+# TODO - Move REFINED_WEB to :dataclass HfModelTypes
+REFINED_WEB = "RefinedWeb"
+
 
 # TODO Move this constants class to package
 class ModelImportConstants:
@@ -146,6 +149,37 @@ ACFT_CONFIG = {
             "trust_remote_code": True,
         },
         "load_model_kwargs": {
+            "trust_remote_code": True,
+        },
+        "finetune_args": {},
+        "mlflow_ft_conf": {
+            "mlflow_hftransformers_misc_conf": {
+                "config_hf_load_kwargs": {
+                    "trust_remote_code": True,
+                },
+                "tokenizer_hf_load_kwargs": {
+                    "model_input_names": ["input_ids", "attention_mask"],
+                    "return_token_type_ids": False,
+                },
+                "model_hf_load_kwargs": {
+                    "trust_remote_code": True,
+                },
+                "tokenizer_config": {
+                    "return_token_type_ids": False,
+                },
+            },
+            "mlflow_save_model_kwargs": {
+                "extra_pip_requirements": ["einops"],
+            },
+        },
+    },
+    REFINED_WEB: {
+        "load_config_kwargs": {
+            "trust_remote_code": True,
+        },
+        "load_tokenizer_kwargs": {
+            # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
+            "pad_token": "<|endoftext|>",
             "trust_remote_code": True,
         },
         "finetune_args": {},
