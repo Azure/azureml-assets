@@ -111,27 +111,6 @@ jobs:
        AZUREML_WORKSPACE_CONNECTION_ID_ACS : ${{parent.inputs.acs_import_connection}}
        AZUREML_WORKSPACE_CONNECTION_ID_AOAI: ${{parent.inputs.embedding_connection}}
   ############
-  data_chunking_job:
-    type: command
-    resources:
-      instance_count: ${{parent.inputs.serverless_instance_count}}
-      instance_type: ${{parent.inputs.serverless_instance_type}}
-      properties:
-        compute_specification:
-          automatic: true
-    component: 'azureml:llm_rag_crack_and_chunk:0.0.12'
-    inputs:
-      input_data: ${{parent.jobs.data_import_job.outputs.output_data}}
-      input_glob: ${{parent.inputs.input_glob}}
-      chunk_size: ${{parent.inputs.chunk_size}}
-      chunk_overlap: ${{parent.inputs.chunk_overlap}}
-      data_source_url: ${{parent.inputs.data_source_url}}
-      document_path_replacement_regex: ${{parent.inputs.document_path_replacement_regex}}
-      max_sample_files: ${{parent.inputs.max_sample_files}}
-    outputs:
-      output_chunks:
-        type: uri_folder
-  ############
   promptflow_creation_job:
     type: command
     resources:
