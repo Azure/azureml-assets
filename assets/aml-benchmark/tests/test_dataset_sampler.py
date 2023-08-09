@@ -499,16 +499,9 @@ class TestDatasetSamplerScript:
         :return: None
         :rtype: NoneType
         """
-        script_path = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            "components",
-            "src",
-            "dataset-sampler",
-            "main.py",
-        )
         args = [
-            "python",
-            f"{script_path}",
+            "cd assets/aml-benchmark/components/src &&",
+            "python -m dataset_sampler.main",
             "--dataset",
             dataset,
             "--sampling_style",
@@ -523,7 +516,8 @@ class TestDatasetSamplerScript:
         if n_samples is not None:
             args.extend(["--n_samples", str(n_samples)])
         _ = subprocess.check_output(
-            args,
+            " ".join(args),
             stderr=subprocess.STDOUT,
             universal_newlines=True,
+            shell=True,
         )

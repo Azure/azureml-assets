@@ -35,9 +35,8 @@ Inside the `aml-benchmark` directory, there are two subdirectories-
     "workspace_name": "<workspace-name>"
 }
 ```
-* To set up the environment, run `conda env create -f assets/aml-benchmark/dev_conda_env.yaml` from the root of this repo. This will create a conda environment with all the required dependencies.
-* Run `cd assets/aml-benchmark/components/src` to change the directory, current directory must be set to **assets/aml-benchmark/components/src**.
-* Run `pytest ../../tests -n <no_of_workers>` to run the tests.
+* From the root of this repo, run `pip install -r assets/aml-benchmark/requirements.txt` to install the dependencies.
+* Run `pytest assets/aml-benchmark/tests -n <no_of_workers>` to run the tests.
 
 ## 2. Run code health check
 In the root of the repo, run the following in **powershell**:

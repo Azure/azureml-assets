@@ -6,12 +6,8 @@
 import argparse
 from enum import Enum
 import random
-import sys
-import os
 
 from azureml._common._error_definition.azureml_error import AzureMLError
-
-sys.path.append(os.getcwd())
 
 from utils.io import resolve_io_path
 from utils.helper import get_logger, log_mlflow_params

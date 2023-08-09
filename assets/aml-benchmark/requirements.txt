@@ -1,0 +1,10 @@
+pytest
+pytest-xdist
+azureml-core~=1.52.0
+azureml-telemetry~=1.52.0
+azure-ai-ml~=1.9.0
+azure-identity~=1.13.0
+azureml-mlflow~=1.52.0
+mlflow
+mltable
+azureml-dataprep[pandas]

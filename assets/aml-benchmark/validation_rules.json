@@ -1,12 +1,8 @@
 {
   "pep8": {
     "ignore": [],
-    "ignore-file": [
-      "components/src/dataset-sampler/main.py:E402"
-    ],
-    "justification": [
-      "E402: Allow module level imports after `sys.path.append(os.getcwd())` in specific files."
-    ],
+    "ignore-file": [],
+    "justification": [],
     "max-line-length": 119
   }
 }
