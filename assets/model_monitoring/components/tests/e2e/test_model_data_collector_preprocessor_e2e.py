@@ -75,7 +75,3 @@ class TestMDCPreprocessorE2E:
         )
 
         assert pipeline_job.status == 'Completed'
-        # pipeline_job.outputs.preprocessed_input_data
-        # Validate correlationid exists in MLTable
-        if eval(extract_correlation_id) == True:
-            assert True

@@ -108,7 +108,9 @@ def mdc_preprocessor(
 
     def tranform_df_function_with_correlation_id(iterator):
         for df in iterator:
-            yield pd.concat(extract_data_and_correlation_id(entry, df.iloc[0][MDC_CORRELATION_ID_COLUMN]) for entry in df[MDC_DATA_COLUMN])
+            yield pd.concat(
+                extract_data_and_correlation_id(getattr(row, MDC_DATA_COLUMN),getattr(row, MDC_CORRELATION_ID_COLUMN)) for row in df.itertuples()
+            )
 
     def extract_data_and_correlation_id(entry, correlationid):
         result = pd.read_json(entry)
@@ -119,7 +121,7 @@ def mdc_preprocessor(
 
     def transform_df_function_without_correlation_id(iterator):
         for df in iterator:
-            yield pd.concat(pd.read_json(entry) for entry in df[MDC_DATA_COLUMN])
+            yield pd.concat(pd.read_json(getattr(row, MDC_DATA_COLUMN)) for row in df.itertuples())
 
     transformed_df = df.select(MDC_DATA_COLUMN, MDC_CORRELATION_ID_COLUMN).mapInPandas(
         tranform_df_function_with_correlation_id if extract_correlation_id else transform_df_function_without_correlation_id,
