@@ -64,7 +64,6 @@ def mdc_preprocessor(
         window_size_in_days: Number of days from current time to start time window (exclusive).
         preprocessed_data: The mltable path pointing to location where the outputted mltable will be written to.
     """
-
     # Format the dates
     format_data = "%Y-%m-%d %H:%M:%S"
     start_datetime = _format_date_string(format_data, data_window_start)
