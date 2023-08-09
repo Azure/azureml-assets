@@ -84,23 +84,20 @@ MLFLOW_MODEL_SIGNATURES = {
 
 IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.LLAMA,
-    HfModelTypes.GPT_NEOX,   # dolly
+    HfModelTypes.GPT_NEOX,  # dolly
     HfModelTypes.FALCON,
-    HfModelTypes.REFINEDWEBMODEL,   # falcon
+    HfModelTypes.REFINEDWEBMODEL,  # falcon
 ]
 
 
-FORCE_4BIT_QUANTIZATION_MODELS = [
-    "Llama-2-70b",
-    "tiiuae-falcon-40b"
-]
+FORCE_4BIT_QUANTIZATION_MODELS = ["Llama-2-70b", "tiiuae-falcon-40b"]
 
 
 QLORA_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.REFINEDWEBMODEL,
     HfModelTypes.FALCON,
-    REFINED_WEB
+    REFINED_WEB,
 ]
 
 
@@ -406,16 +403,13 @@ def update_lora_target_modules():
     import peft
 
     models_to_lora_target_modules_map = getattr(
-        peft.utils.other,
-        "TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING",
-        {}
+        peft.utils.other, "TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING", {}
     )
     models_to_lora_target_modules_map.update(
         {
             HfModelTypes.REFINEDWEBMODEL: ["query_key_value"],
             REFINED_WEB: ["query_key_value"],
-            HfModelTypes.FALCON: ["query_key_value"]
-
+            HfModelTypes.FALCON: ["query_key_value"],
         }
     )
     setattr(
@@ -434,7 +428,6 @@ def update_lora_target_modules():
 
 def copy_preprocess_args(args: Namespace) -> Namespace:
     """Copy preprocess args to finetune"""
-
     # Read the preprocess component args
     # Preprocess Component + Model Selector Component ---> Finetune Component
     # Since all Model Selector Component args are saved via Preprocess Component, loading the Preprocess args
@@ -463,7 +456,9 @@ def finetune(args: Namespace):
 
     # Enable QLoRA finetune for Llama-70B
     model_asset_id = getattr(args, "model_asset_id", "")
-    if any([model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]):
+    if any(
+        [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
+    ):
         logger.info(
             f"Identified asset id: {model_asset_id}. Enabling QLoRA finetuning."
         )
@@ -479,8 +474,13 @@ def finetune(args: Namespace):
     logger.info(f"Precision: {getattr(args, 'precision', None)}")
 
     # set `ignore_mismatched_sizes` to `false` by default
-    if hasattr(args, "model_type") and args.model_type in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
-        logger.info(f"Identified model type: {args.model_type}. Forcing `ignore_mismatched_sizes` to False.")
+    if (
+        hasattr(args, "model_type")
+        and args.model_type in IGNORE_MISMATCHED_SIZES_FALSE_MODELS
+    ):
+        logger.info(
+            f"Identified model type: {args.model_type}. Forcing `ignore_mismatched_sizes` to False."
+        )
         setattr(args, "ignore_mismatched_sizes", False)
 
     # read FT config
@@ -666,35 +666,38 @@ def main():
         acft_custom_dimensions={
             LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
             LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
-            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
+            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME,
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     )
 
-    # Updata lora target modules for falcon
-    update_lora_target_modules()
+    # XXX Hack to support model loading in accelerator package for falcon models
+    # with `trust_remote_code=True`
+    # This is needed as FT config is ONLY used in contrib package which is causing
+    # failure when loading the model in accelerator as part of peft weights merge
     if hasattr(args, "model_type") and args.model_type in [
         HfModelTypes.REFINEDWEBMODEL,
         HfModelTypes.FALCON,
-        REFINED_WEB
+        REFINED_WEB,
     ]:
         from functools import partial
         from transformers.models.auto import (
             AutoModelForSequenceClassification,
             AutoModelForTokenClassification,
-            AutoModelForQuestionAnswering
+            AutoModelForQuestionAnswering,
         )
+
+        # Updata lora target modules for falcon
+        update_lora_target_modules()
+
         AutoModelForSequenceClassification.from_pretrained = partial(
-            AutoModelForSequenceClassification.from_pretrained,
-            trust_remote_code=True
+            AutoModelForSequenceClassification.from_pretrained, trust_remote_code=True
         )
         AutoModelForTokenClassification.from_pretrained = partial(
-            AutoModelForTokenClassification.from_pretrained,
-            trust_remote_code=True
+            AutoModelForTokenClassification.from_pretrained, trust_remote_code=True
         )
         AutoModelForQuestionAnswering.from_pretrained = partial(
-            AutoModelForQuestionAnswering.from_pretrained,
-            trust_remote_code=True
+            AutoModelForQuestionAnswering.from_pretrained, trust_remote_code=True
         )
         logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA")
 
