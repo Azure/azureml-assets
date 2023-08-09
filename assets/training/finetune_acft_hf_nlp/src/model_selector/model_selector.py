@@ -35,7 +35,12 @@ class ModelImportConstants:
     MODEL_NAME_NOT_FOUND = "MODEL_NAME_NOT_FOUND"
 
 
-# user config passed along with model, will be preffered over default settings
+# user config passed along with model, will be prefered over default settings
+# NOTE Deleted `load_model_kwargs` for trust_remote_code=True as for falcon models
+# we are adding a hack and overriding :meth `from_pretrained` for Text, Token and
+# QnA auto classes in finetune.py.
+# Don't forget to add back the `load_model_kwargs` once the hack to override methods
+# is removed
 ACFT_CONFIG = {
     "tiiuae/falcon-7b": {
         "load_config_kwargs": {
@@ -44,9 +49,6 @@ ACFT_CONFIG = {
         "load_tokenizer_kwargs": {
             # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
             "pad_token": "<|endoftext|>",
-            "trust_remote_code": True,
-        },
-        "load_model_kwargs": {
             "trust_remote_code": True,
         },
         "finetune_args": {},
@@ -80,9 +82,6 @@ ACFT_CONFIG = {
             "pad_token": "<|endoftext|>",
             "trust_remote_code": True,
         },
-        "load_model_kwargs": {
-            "trust_remote_code": True,
-        },
         "finetune_args": {},
         "mlflow_ft_conf": {
             "mlflow_hftransformers_misc_conf": {
@@ -114,9 +113,6 @@ ACFT_CONFIG = {
             "pad_token": "<|endoftext|>",
             "trust_remote_code": True,
         },
-        "load_model_kwargs": {
-            "trust_remote_code": True,
-        },
         "finetune_args": {},
         "mlflow_ft_conf": {
             "mlflow_hftransformers_misc_conf": {
@@ -146,9 +142,6 @@ ACFT_CONFIG = {
         "load_tokenizer_kwargs": {
             # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
             "pad_token": "<|endoftext|>",
-            "trust_remote_code": True,
-        },
-        "load_model_kwargs": {
             "trust_remote_code": True,
         },
         "finetune_args": {},
