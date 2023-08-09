@@ -427,7 +427,7 @@ def update_lora_target_modules():
 
 
 def copy_preprocess_args(args: Namespace) -> Namespace:
-    """Copy preprocess args to finetune"""
+    """Copy preprocess args to finetune."""
     # Read the preprocess component args
     # Preprocess Component + Model Selector Component ---> Finetune Component
     # Since all Model Selector Component args are saved via Preprocess Component, loading the Preprocess args
