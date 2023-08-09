@@ -4,12 +4,12 @@
 """Utility file for tests."""
 
 import os
+from typing import Dict, Any, Optional
+
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
 from azure.identity import DefaultAzureCredential, AzureCliCredential
-from typing import Union
 import mlflow
-from typing import Dict, Any
 
 
 class Constants:
@@ -29,7 +29,7 @@ def get_current_path() -> str:
     return os.path.dirname(os.path.abspath(__file__))
 
 
-def get_mlclient(registry_name: Union[str, None] = None) -> MLClient:
+def get_mlclient(registry_name: Optional[str] = None) -> MLClient:
     """
     Get the MLClient instance for either workspace or registry.
 
@@ -62,7 +62,7 @@ def get_mlclient(registry_name: Union[str, None] = None) -> MLClient:
             credential,
             ml_client.subscription_id,
             ml_client.resource_group_name,
-            registry_name=registry_name
+            registry_name=registry_name,
         )
     return ml_client
 

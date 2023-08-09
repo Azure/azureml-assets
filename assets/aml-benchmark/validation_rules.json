@@ -1,12 +1,11 @@
 {
   "pep8": {
-    "ignore": [
-      "W503",
-      "E402"
+    "ignore": [],
+    "ignore-file": [
+      "components/src/dataset-sampler/main.py:E402"
     ],
     "justification": [
-      "W503: W503 and W504 are mutually exclusive. W503 is more widely used, so ignoring it.",
-      "E402: All module level imports can't be before `sys.path.append(os.getcwd())`."
+      "E402: Allow module level imports after `sys.path.append(os.getcwd())` in specific files."
     ],
     "max-line-length": 119
   }
