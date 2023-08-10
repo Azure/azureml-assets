@@ -81,7 +81,7 @@ def run():
 
     # Raise warning if the result is empty
     if joined_data_df.count() == 0:
-        warning_message = 'The data joiner resulted in an empty data asset. Please check the input data assets.'
+        warning_message = 'The data joiner resulted in an empty data asset. Please check the input data to see if this is expected.'  # noqa
         post_warning_event(warning_message)
 
     # Write the joined data.
