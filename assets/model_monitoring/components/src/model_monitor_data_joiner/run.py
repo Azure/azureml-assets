@@ -65,12 +65,12 @@ def run():
     try:
         left_input_data_df = read_mltable_in_spark(mltable_path=args.left_input_data)
     except IndexError:
-        raise Exception(f"The left_input_data is empty. Please add data and try again.")
+        raise Exception('The left_input_data is empty. Please add data and try again.')
 
-    try:       
+    try:  
         right_input_data_df = read_mltable_in_spark(mltable_path=args.right_input_data)
     except IndexError:
-        raise Exception(f"The right_input_data is empty. Please add data and try again.")
+        raise Exception('f"'The right_input_data is empty. Please add data and try again.'')
 
     joined_data_df = join_data(
         left_input_data_df,
@@ -81,7 +81,7 @@ def run():
 
     # Raise warning if the result is empty
     if joined_data_df.count() == 0:
-        warning_message = f"The data joiner resulted in an empty data asset. Please check the input data assets." #noqa
+        warning_message = 'The data joiner resulted in an empty data asset. Please check the input data assets.'
         post_warning_event(warning_message)
 
     # Write the joined data.

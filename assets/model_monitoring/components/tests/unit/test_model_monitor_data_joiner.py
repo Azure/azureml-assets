@@ -30,6 +30,7 @@ def _generate_left_data_df(contains_join_column):
 
     return create_pyspark_dataframe(left_data, left_columns)
 
+
 def _generate_right_data_df(contains_join_column):
     right_data = [
         ('flower1', 1),
@@ -37,7 +38,7 @@ def _generate_right_data_df(contains_join_column):
         ('flower3', 3)
     ]
     right_columns = ['target']
-    
+
     if contains_join_column is True:
         right_columns.append(RIGHT_JOIN_COLUMN)
     else:
@@ -64,9 +65,9 @@ class TestModelMonitorDataJoiner:
         )
 
         assert len(joined_data_df.columns) == 5
-        # assert joined_data_df.count() == 3
-    
-    @pytest.mark.parametrize("left_data_has_join_column, right_data_has_join_column", test_data) #noqa
+        assert joined_data_df.count() == 3
+
+    @pytest.mark.parametrize("left_data_has_join_column, right_data_has_join_column", test_data)  # noqa
     def test_join_data_missing_join_column_raises_exception(
         self,
         left_data_has_join_column,
@@ -78,7 +79,7 @@ class TestModelMonitorDataJoiner:
         right_data_df = _generate_right_data_df(right_data_has_join_column)
 
         with pytest.raises(Exception):
-            joined_data_df = join_data(
+            join_data(
                 left_data_df,
                 'left_data',
                 LEFT_JOIN_COLUMN,
@@ -86,7 +87,7 @@ class TestModelMonitorDataJoiner:
                 'right_data',
                 RIGHT_JOIN_COLUMN
             )
-    
+
     @pytest.mark.parametrize("is_left_data_empty, is_right_data_empty", test_data)
     def test_join_data_empty_input_successful(
         self,
@@ -98,7 +99,7 @@ class TestModelMonitorDataJoiner:
             left_data_df = create_pyspark_dataframe([], [LEFT_JOIN_COLUMN])
         else:
             left_data_df = _generate_left_data_df(True)
-        
+
         if is_right_data_empty is True:
             right_data_df = create_pyspark_dataframe([], [RIGHT_JOIN_COLUMN])
         else:
@@ -113,8 +114,8 @@ class TestModelMonitorDataJoiner:
             RIGHT_JOIN_COLUMN
         )
 
-        # assert joined_data_df.count() == 0
-    
+        assert joined_data_df.count() == 0
+
     @pytest.mark.parametrize("is_left_data_empty, is_right_data_empty", test_data)
     def test_join_data_empty_input_without_schema_raises_exception(
         self,
@@ -126,14 +127,14 @@ class TestModelMonitorDataJoiner:
             left_data_df = create_pyspark_dataframe([], StructType([]))
         else:
             left_data_df = _generate_left_data_df(True)
-        
+
         if is_right_data_empty:
             right_data_df = create_pyspark_dataframe([], StructType([]))
         else:
             right_data_df = _generate_right_data_df(True)
 
         with pytest.raises(Exception):
-            joined_data_df = join_data(
+            join_data(
                 left_data_df,
                 'left_data',
                 LEFT_JOIN_COLUMN,

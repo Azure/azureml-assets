@@ -79,7 +79,7 @@ class TestDataJoinerE2E:
         )
 
         assert pipeline_job.status == 'Completed'
-    
+
     def test_data_joiner_empty_result_successful(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
