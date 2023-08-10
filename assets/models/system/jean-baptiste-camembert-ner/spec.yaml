@@ -42,4 +42,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: token-classification
-version: 7
+version: 8
