@@ -4,7 +4,7 @@ type: spark
 name: model_data_collector_preprocessor
 display_name: Model Data Collector - Preprocessor
 description: Filters the data based on the window provided.
-version: 0.3.0
+version: 0.3.1
 is_deterministic: true
 
 code: ../../src
@@ -19,6 +19,9 @@ inputs:
   input_data:
     type: uri_folder
     mode: direct
+  extract_correlation_id:
+    type: string
+    default: "False"
 outputs:
   preprocessed_input_data:
     type: mltable
@@ -50,4 +53,5 @@ args: >-
   --data_window_end ${{inputs.data_window_end}}
   --data_window_start ${{inputs.data_window_start}}
   --input_data ${{inputs.input_data}}
+  --extract_correlation_id ${{inputs.extract_correlation_id}}
   --preprocessed_input_data ${{outputs.preprocessed_input_data}}
