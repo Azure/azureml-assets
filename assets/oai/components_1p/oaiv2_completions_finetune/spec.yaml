@@ -1,0 +1,171 @@
+$schema: http://azureml/sdk-2-0/PipelineComponent.json
+type: pipeline
+version: 0.0.1
+name: openai_completions_finetune
+display_name: OpenAI Completions Finetune Pipeline
+description: Finetune your own OAI model. Visit https://learn.microsoft.com/en-us/azure/cognitive-services/openai/ for more info.
+tags:
+  contact: gpt3finetuning@microsoft.com
+is_deterministic: true
+
+inputs:
+  model:
+    type: string
+    optional: False
+    default: gpt-35-turbo
+    description: GPT model engine
+    enum:
+    - gpt-4
+    - gpt-35-turbo
+  train_dataset:
+    type: uri_folder
+    optional: False
+    description: Input dataset (file or folder). If a folder dataset is passed, includes all nested files.
+  validation_dataset:
+    type: uri_folder
+    optional: True
+    description: Input dataset (file or folder). If a folder dataset is passed, includes all nested files.
+  base_snapshot:
+    type: uri_folder
+    optional: True
+    description: Dataset containing base model weights. If not specified, random weights are used. Should correspond with model_name, if set.
+  expose_snapshot:
+    type: boolean
+    optional: False
+    default: True
+  n_ctx:
+    type: integer
+    optional: True
+    default: 4096
+  task_type:
+    type: string
+    optional: False
+    description: Dataset type - chat or completion
+    enum:
+    - chat
+    - completion
+  registered_model_name:
+    type: string
+    optional: False
+    description: User-defined registered model name/
+  lora_dim:
+    type: integer
+    optional: False
+    default: 128
+    description: The size of LoRA dimensions in self attention layer. Must be greater than 0.
+  epochs:
+    type: integer
+    optional: False
+    default: 1
+    description: Number of training epochs.
+  batch_size:
+    type: integer
+    optional: False
+    default: 1
+    description: Global batch size.
+  lr_multiplier:
+    type: number
+    optional: False
+    default: 1.0
+    description: The learning rate multiplier to use for training.
+  weight_decay_multiplier:
+    type: number
+    optional: False
+    default: 1e-05
+    description: Weight decay multiplier for training.
+  n_replicas:
+    type: integer
+    optional: False
+    default: 1
+    description: The number of replicas of the model architecture for training. Note if insufficient nodes are available for the number of replicas requested, the job will fail.
+  singularity_gpu_instance_type:
+    type: string
+    optional: False
+    default: Singularity.ND96amrs_A100_v4
+    description: Singularity GPU instance type
+  singularity_vc:
+    type: string
+    optional: False
+    description: Singularity VC URI
+  singularity_tier:
+    type: string
+    optional: False
+    default: Standard
+    description: Singularity Tier
+  instance_count:
+    type: integer
+    optional: False
+    default: 2
+    description: Number of nodes to use for finetuning
+
+
+outputs:
+  output_model_checkpoints:
+    type: uri_folder
+    description: Dataset with the output model weights (LoRA weights)
+    mode: mount
+
+jobs:
+  openai_data_import_train:
+    type: command
+    component: azureml://registries/openai-devault-staging/components/openai_data_import/versions/0.0.4
+    inputs:
+      in_dataset: ${{parent.inputs.train_dataset}}
+      model: ${{parent.inputs.model}}
+    compute: ${{parent.inputs.singularity_vc}}
+    resources:
+      instance_type: ${{parent.inputs.singularity_gpu_instance_type}}
+      properties:
+        singularity:
+          imageVersion: ''
+          SLATier: ${{parent.inputs.singularity_tier}}
+          priority: Medium
+          location: [\"eastus\"]
+  openai_data_import_validation:
+    type: command
+    component: azureml://registries/openai-devault-staging/components/openai_data_import/versions/0.0.4
+    inputs:
+      in_dataset: ${{parent.inputs.validation_dataset}}
+      model: ${{parent.inputs.model}}
+    compute: ${{parent.inputs.singularity_vc}}
+    resources:
+      instance_type: ${{parent.inputs.singularity_gpu_instance_type}}
+      properties:
+        singularity:
+          imageVersion: ''
+          SLATier: ${{parent.inputs.singularity_tier}}
+          priority: Medium
+          location: [\"eastus\"]
+  openai_completions_finetune:
+    type: command
+    component: azureml://registries/openai-devault-staging/components/openai_completions_finetune/versions/0.1.0
+    inputs:
+      train_dataset: ${{parent.jobs.openai_data_import_train.outputs.out_dataset}}
+      validation_dataset: ${{parent.jobs.openai_data_import_validation.outputs.out_dataset}}
+      base_snapshot: ${{parent.inputs.base_snapshot}}
+      model: ${{parent.inputs.model}}
+      expose_snapshot: ${{parent.inputs.expose_snapshot}}
+      n_ctx: ${{parent.inputs.n_ctx}}
+      task_type: ${{parent.inputs.task_type}}
+      registered_model_name: ${{parent.inputs.registered_model_name}}
+      lora_dim: ${{parent.inputs.lora_dim}}
+      epochs: ${{parent.inputs.epochs}}
+      batch_size: ${{parent.inputs.batch_size}}
+      lr_multiplier: ${{parent.inputs.lr_multiplier}}
+      weight_decay_multiplier: ${{parent.inputs.weight_decay_multiplier}}
+      n_replicas: ${{parent.inputs.n_replicas}}
+    outputs:
+      output_model_checkpoints: ${{parent.outputs.output_model_checkpoints}}
+    compute: ${{parent.inputs.singularity_vc}}
+    resources:
+      instance_type: ${{parent.inputs.singularity_gpu_instance_type}}
+      instance_count: ${{parent.inputs.instance_count}}
+      properties:
+        singularity:
+          imageVersion: ''
+          SLATier: ${{parent.inputs.singularity_tier}}
+          priority: Medium
+          location: [\"eastus\"]
+
+
+
