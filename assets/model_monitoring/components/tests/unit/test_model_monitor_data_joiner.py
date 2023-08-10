@@ -4,7 +4,6 @@
 """This file contains unit tests for the Model Monitor Data Joiner component."""
 
 import pytest
-from pyspark.sql.functions import count
 
 from pyspark.sql.types import StructType
 from src.model_monitor_data_joiner.run import join_data

@@ -70,7 +70,7 @@ def run():
     try:  
         right_input_data_df = read_mltable_in_spark(mltable_path=args.right_input_data)
     except IndexError:
-        raise Exception('f"'The right_input_data is empty. Please add data and try again.'')
+        raise Exception('The right_input_data is empty. Please add data and try again.')
 
     joined_data_df = join_data(
         left_input_data_df,
