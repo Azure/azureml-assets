@@ -4,4 +4,5 @@ path:
   storage_name: promptflowsamples
   type: azureblob
 publish:
+  description: description.md
   type: custom_model
