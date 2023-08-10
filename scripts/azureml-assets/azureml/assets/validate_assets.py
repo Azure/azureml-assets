@@ -27,6 +27,9 @@ COMMON_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
 # Asset config convention
 ASSET_CONFIG_URL = "https://github.com/Azure/azureml-assets/wiki/Assets#assetyaml"
 
+# Model naming convention
+MODEL_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_.-]{0,254}$")
+
 # Environment naming convention
 ENVIRONMENT_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9.-]{0,254}$")
 COMMON_VERSION = r"[0-9]+(?:\.[0-9]+)?(?=-|$)"
@@ -234,7 +237,8 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
     asset_name = asset_config.name
 
     # Check against generic naming pattern
-    if not COMMON_NAME_PATTERN.match(asset_name):
+    if not ((asset_config.type is assets.AssetType.MODEL and MODEL_NAME_PATTERN.match(asset_name))
+            or COMMON_NAME_PATTERN.match(asset_name)):
         _log_error(asset_config.file_name_with_path, f"Name '{asset_name}' contains invalid characters")
         error_count += 1
 
