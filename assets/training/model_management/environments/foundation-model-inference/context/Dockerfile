@@ -3,6 +3,10 @@ FROM ghcr.io/huggingface/text-generation-inference:0.9
 
 ENV DEBIAN_FRONTEND noninteractive
 
+# Remove vulnerable packages
+RUN rm -rf /opt/conda/pkgs/requests-2.28.2*
+RUN rm -rf /opt/conda/pkgs/cryptography-40.0.1*
+
 RUN apt-get update -y && apt-get install vim openssh-server openssh-client -y
 
 COPY requirements.txt .
