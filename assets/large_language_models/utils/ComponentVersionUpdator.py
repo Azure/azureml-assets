@@ -112,10 +112,7 @@ class Pipeline(Component):
 
 
 def main_wrapper(folder_path: str, update_all: bool) -> None:
-<<<<<<< HEAD
-=======
     """Execute the code."""
->>>>>>> 1b6b76a5f1e4d99d71d2e3ac985eac2564301b3a
     (comp_assets_all, pipe_assets_all) = generate_assets(folder_path)
 
     if update_all:
