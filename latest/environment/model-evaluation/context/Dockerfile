@@ -1,5 +1,5 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20230808.v1
-
+# PTCA Image
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch200:biweekly.202308.1
 RUN apt-get update && apt-get -y upgrade
 
 WORKDIR /
