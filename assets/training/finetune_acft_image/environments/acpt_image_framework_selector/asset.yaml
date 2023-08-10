@@ -1,0 +1,5 @@
+name: automl-image-framework-selector-acpt
+version: 0.0.6
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml

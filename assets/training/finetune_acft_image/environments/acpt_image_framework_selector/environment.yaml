@@ -1,0 +1,9 @@
+image:
+  name: automl-image-framework-selector-acpt
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - requirements.txt
