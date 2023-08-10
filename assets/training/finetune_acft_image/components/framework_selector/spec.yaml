@@ -8,7 +8,7 @@ description: Framework selector control flow component for image tasks
 
 is_deterministic: true
 
-environment: azureml:automl-image-framework-selector-acpt@latest
+environment: azureml://registries/azureml/environments/automl-image-framework-selector-acpt/versions/1
 
 code: ../../src/framework_selector
 

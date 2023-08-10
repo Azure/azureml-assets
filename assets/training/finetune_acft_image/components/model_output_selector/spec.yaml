@@ -8,7 +8,7 @@ description: Model output selector control flow component for image tasks
 
 is_deterministic: true
 
-environment: azureml:automl-image-framework-selector-acpt@latest
+environment: azureml://registries/azureml/environments/automl-image-framework-selector-acpt/versions/1
 
 code: ../../src/model_output_selector
 
