@@ -14,7 +14,7 @@ dependencies:
   - langchain==0.0.149
   - scikit-learn~=0.24.2
   - faiss-cpu~=1.7.3
-  - mlflow~=2.4.1
+  - mlflow>=2.6.0
   - mlflow-skinny==2.3.2
   - azureml-contrib-services
   - azureml-inference-server-http==0.7.6
@@ -42,4 +42,4 @@ dependencies:
   - polling2~=0.5.0
   - azure-mgmt-cognitiveservices~=13.4.0
   - lxml
-  - cryptography>=41.0.1
+  - cryptography>=41.0.3

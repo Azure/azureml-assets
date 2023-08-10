@@ -18,3 +18,4 @@ dependencies:
   - python-dateutil>=2.7.3,<3.0.0
   - PyJWT<3.0.0
   - pytz
+  - cryptography~=41.0.3
