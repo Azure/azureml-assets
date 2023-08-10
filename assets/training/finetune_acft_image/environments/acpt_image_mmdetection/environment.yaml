@@ -1,5 +1,5 @@
 image:
-  name: acft-mmdetection-image-gpu
+  name: azureml/curated/acft-mmdetection-image-gpu
   os: linux
   context:
     dir: context
@@ -7,3 +7,6 @@ image:
     template_files:
     - Dockerfile
     - requirements.txt
+  publish:
+    location: mcr
+    visibility: public

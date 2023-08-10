@@ -1,5 +1,5 @@
 image:
-  name: automl-image-framework-selector-acpt
+  name: azureml/curated/automl-image-framework-selector-acpt
   os: linux
   context:
     dir: context
@@ -7,3 +7,6 @@ image:
     template_files:
     - Dockerfile
     - requirements.txt
+  publish:
+    location: mcr
+    visibility: public
