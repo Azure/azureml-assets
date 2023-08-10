@@ -4,7 +4,9 @@
 """This file contains IO utility functions."""
 
 import uuid
+import pyspark.sql as pyspark_sql
 from ruamel.yaml import YAML
+from pyspark.sql import SparkSession
 
 
 def load_from_yaml(path: str):
@@ -31,3 +33,7 @@ def print_header(msg: str):
 def generate_random_filename(extension: str):
     """Generate a GUID-based random file name with the given file extension."""
     return f"{str(uuid.uuid4())}.{extension}"
+
+def create_pyspark_dataframe(data: list, columns: list) -> pyspark_sql.DataFrame:
+    spark = SparkSession.builder.getOrCreate()
+    return spark.createDataFrame(data, columns)

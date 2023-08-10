@@ -4,30 +4,40 @@
 """Entry script for Model Monitor Data Joiner Component."""
 
 import argparse
+import pyspark.sql as pyspark_sql
+from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
     read_mltable_in_spark,
     save_spark_df_as_mltable,
 )
 
 
-def join_data(
-    left_input_data: str,
-    left_join_column: str,
-    right_input_data: str,
-    right_join_column: str,
-    joined_data: str
+def _validate_join_column_in_input_data(
+    input_data_df: pyspark_sql.DataFrame,
+    join_column: str,
+    input_data_name: str
 ):
+    if join_column not in input_data_df.columns:
+        raise Exception(f"The join column '{join_column}' is not present in {input_data_name}.")
+
+
+def join_data(
+    left_input_data_df: pyspark_sql.DataFrame,
+    left_join_column: str,
+    right_input_data_df: pyspark_sql.DataFrame,
+    right_join_column: str
+) -> pyspark_sql.DataFrame:
     """Join data assets based on the given join columns.
 
     Agrs:
-        left_input_data: The left data asset to join.
+        left_input_data_df: The dataframe for the left input data to join.
         left_join_column: The join column for the left data asset.
-        right_input_data: The right data asset to join.
+        right_input_data_df: The dataframe for the right input data to join.
         right_join_column: The join column for the right data asset.
     """
-    # Load data
-    left_input_data_df = read_mltable_in_spark(mltable_path=left_input_data)
-    right_input_data_df = read_mltable_in_spark(mltable_path=right_input_data)
+    # Validate
+    _validate_join_column_in_input_data(left_input_data_df, left_join_column, "left_input_data")
+    _validate_join_column_in_input_data(right_input_data_df, right_join_column, "right_input_data")
 
     # Join the data
     joined_data_df = left_input_data_df.join(
@@ -36,8 +46,8 @@ def join_data(
         'inner'
     )
 
-    # Write the output
-    save_spark_df_as_mltable(joined_data_df, joined_data)
+    # Remove duplicate columns
+    return joined_data_df
 
 
 def run():
@@ -51,13 +61,31 @@ def run():
     parser.add_argument("--joined_data", type=str, required=True)
     args = parser.parse_args()
 
-    join_data(
-        args.left_input_data,
+    # Load data
+    try:
+        left_input_data_df = read_mltable_in_spark(mltable_path=args.left_input_data)
+    except IndexError:
+        raise Exception(f"The left_input_data is empty. Please add data and try again.")
+
+    try:       
+        right_input_data_df = read_mltable_in_spark(mltable_path=args.right_input_data)
+    except IndexError:
+        raise Exception(f"The right_input_data is empty. Please add data and try again.")
+
+    joined_data_df = join_data(
+        left_input_data_df,
         args.left_join_column,
-        args.right_input_data,
-        args.right_join_column,
-        args.joined_data
+        right_input_data_df,
+        args.right_join_column
     )
+
+    # Raise warning if the result is empty
+    if joined_data_df.count() == 0:
+        warning_message = f"The data joiner resulted in an empty data asset. Please check the input data assets." #noqa
+        post_warning_event(warning_message)
+
+    # Write the joined data.
+    save_spark_df_as_mltable(joined_data_df, args.joined_data)
     print('Successfully executed data joiner component.')
 
 
