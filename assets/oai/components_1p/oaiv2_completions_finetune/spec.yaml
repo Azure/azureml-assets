@@ -15,7 +15,6 @@ inputs:
     default: gpt-35-turbo
     description: GPT model engine
     enum:
-    - gpt-4
     - gpt-35-turbo
   train_dataset:
     type: uri_folder
