@@ -9,16 +9,13 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    pkg-config \
-    python3-dev && \
-    apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /usr/share/man/*
-
 # Create conda environment
 COPY conda_dependencies.yaml .
 RUN conda env create -p $CONDA_PREFIX -f conda_dependencies.yaml -q && \
     rm conda_dependencies.yaml && \
     conda run -p $CONDA_PREFIX pip cache purge && \
     conda clean -a -y
+
+# support Deepspeed launcher requirement of passwordless ssh login
+RUN apt-get update
+RUN apt-get install -y openssh-server openssh-client
