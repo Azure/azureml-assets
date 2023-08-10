@@ -1,7 +1,11 @@
-## 1.12.0 (Unreleased)
+## 1.13.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
+
+## 1.12.0 (2023-08-07)
+### 🚀 New Features
+- [991](https://github.com/Azure/azureml-assets/pull/991) Allow uppercase characters in model asset naming
 
 ## 1.11.0 (2023-08-07)
 ### 🚀 New Features
