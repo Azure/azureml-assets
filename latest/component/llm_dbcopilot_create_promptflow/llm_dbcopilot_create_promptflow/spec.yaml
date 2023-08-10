@@ -6,7 +6,7 @@ tags:
 
 name: llm_dbcopilot_create_promptflow
 display_name: LLM - Create DBCopilot Prompt Flow
-version: 0.0.9
+version: 0.0.10
 
 inputs:
   index_name:
