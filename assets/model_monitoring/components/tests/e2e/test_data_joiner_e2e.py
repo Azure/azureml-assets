@@ -64,6 +64,7 @@ def _submit_data_joiner_job(
 @pytest.mark.e2e
 class TestDataJoinerE2E:
     """Test class."""
+
     def test_data_joiner_successful(
         self, ml_client: MLClient, get_component, test_suite_name
     ):

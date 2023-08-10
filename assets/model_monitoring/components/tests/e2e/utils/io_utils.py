@@ -36,5 +36,6 @@ def generate_random_filename(extension: str):
 
 
 def create_pyspark_dataframe(data: list, columns: list) -> pyspark_sql.DataFrame:
+    """Read mltable in spark."""
     spark = SparkSession.builder.getOrCreate()
     return spark.createDataFrame(data, columns)
