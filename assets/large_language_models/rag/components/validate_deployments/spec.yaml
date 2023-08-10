@@ -4,14 +4,15 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.10
+version: 0.0.14
 name: llm_rag_validate_deployments
 display_name: LLM – Validate Deployments
 is_deterministic: false
 
 description: |
-  Validates that completion model and embedding model deployments is successful and attempts to create them if not.
-  This validation is done only if customer is using Azure Open AI models.
+  Validates that completion model, embedding model, and Azure Cognitive Search resource deployments is successful and connections works. 
+  For default AOAI, it attempts to create the deployments if not valid or present.
+  This validation is done only if customer is using Azure Open AI models or creating an ACS index.
 
 inputs:
    llm_config:
@@ -37,6 +38,18 @@ inputs:
       - "False"
      default: "True"
      description: "Boolean to inform whether to check the completion model deployment or not"
+   acs_config:
+     type: string
+     optional: true
+     description: "JSON Configuration for the ACS configuration of Azure Search instance to upload embeddings to. Required params: endpoint, index_name"
+   check_acs:
+     type: string
+     optional: true
+     enum: 
+      - "True"
+      - "False"
+     default: "False"
+     description: "Boolean to inform whether to check the ACS connection associated with acs_config."
 outputs:
   output_data:
     type: uri_file
@@ -47,6 +60,8 @@ command: >-
   python validate_deployments.py
   --check_embeddings ${{inputs.check_embeddings}}
   --check_completion ${{inputs.check_completion}}
+  $[[--check_acs ${{inputs.check_acs}}]]
   $[[--llm_config '${{inputs.llm_config}}']]
+  $[[--acs_config '${{inputs.acs_config}}']]
   --output_data ${{outputs.output_data}}
   $[[--embeddings_model '${{inputs.embeddings_model}}']]

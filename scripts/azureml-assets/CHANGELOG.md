@@ -1,7 +1,19 @@
-## 1.9.0 (Unreleased)
+## 1.12.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
+
+## 1.11.0 (2023-08-07)
+### 🚀 New Features
+- [992](https://github.com/Azure/azureml-assets/pull/992) Extract asset dependencies
+
+## 1.10.0 (2023-08-07)
+### 🚀 New Features
+- [970](https://github.com/Azure/azureml-assets/pull/970) Add large model publishing support
+
+## 1.9.0 (2023-08-03)
+### 🚀 New Features
+- [#962](https://github.com/Azure/azureml-assets/pull/962) Prevent curated environment image references in Dockerfiles
 
 ## 1.8.0 (2023-07-20)
 ### 🚀 New Features

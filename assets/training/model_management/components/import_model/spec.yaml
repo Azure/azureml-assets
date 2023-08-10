@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.11
+version: 0.0.13
 
 # Pipeline inputs
 inputs:
@@ -157,6 +157,12 @@ inputs:
     optional: true
     description: A JSON or a YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
 
+  update_existing_model:
+    type: boolean
+    default: false
+    description: If set to true, will update the existing model. If set to false, will create a new model.
+    optional: true
+
 # Pipeline outputs
 outputs:
   mlflow_model_folder:
@@ -168,14 +174,49 @@ outputs:
     type: uri_folder
 
 jobs:
+  validation_trigger_import:
+    component: azureml:validation_trigger_import:0.0.1
+    compute: ${{parent.inputs.compute}}
+    resources:
+      instance_type: '${{parent.inputs.instance_type}}'
+    inputs:
+      compute: ${{parent.inputs.compute}}
+      task_name: ${{parent.inputs.task_name}}
+      license_file_path: ${{parent.inputs.license_file_path}}
+      instance_type: ${{parent.inputs.instance_type}}
+      model_source: ${{parent.inputs.model_source}}
+      model_id: ${{parent.inputs.model_id}}
+      model_version: ${{parent.inputs.model_version}}
+      model_description: ${{parent.inputs.model_description}}
+      model_metadata: ${{parent.inputs.model_metadata}}
+      registry_name: ${{parent.inputs.registry_name}}
+      custom_model_name: ${{parent.inputs.custom_model_name}}
+      local_validation_test_data: ${{parent.inputs.local_validation_test_data}}
+      local_validation_column_rename_map: ${{parent.inputs.local_validation_column_rename_map}}
+      extra_pip_requirements: ${{parent.inputs.extra_pip_requirements}}
+      hf_config_args: ${{parent.inputs.hf_config_args}}
+      hf_tokenizer_args: ${{parent.inputs.hf_tokenizer_args}}
+      hf_model_args: ${{parent.inputs.hf_model_args}}
+      hf_pipeline_args: ${{parent.inputs.hf_pipeline_args}}
+      hf_config_class: ${{parent.inputs.hf_config_class}}
+      hf_model_class: ${{parent.inputs.hf_model_class}}
+      hf_tokenizer_class: ${{parent.inputs.hf_tokenizer_class}}
+      hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
+      update_existing_model: ${{parent.inputs.update_existing_model}}
+    outputs:
+      validation_info:
+        type: uri_file
+
   download_model:
-    component: azureml:download_model:0.0.10
+    component: azureml:download_model:0.0.12
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
     inputs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
+      validation_info: ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
+      update_existing_model: ${{parent.inputs.update_existing_model}}
     outputs:
       model_download_metadata:
         type: uri_file

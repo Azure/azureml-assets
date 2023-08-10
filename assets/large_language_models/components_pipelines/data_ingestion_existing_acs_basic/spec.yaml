@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.12
+version: 0.0.14
 name: llm_ingest_existing_acs_basic
 display_name: LLM - Existing ACS Pipeline
 is_deterministic: false
@@ -97,7 +97,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: azureml:llm_rag_data_import_acs:0.0.9
+    component: azureml:llm_rag_data_import_acs:0.0.10
     inputs:
       num_docs: ${{parent.inputs.num_docs_to_import}}
       acs_config: ${{parent.inputs.acs_import_config}}
@@ -111,27 +111,6 @@ jobs:
        AZUREML_WORKSPACE_CONNECTION_ID_ACS : ${{parent.inputs.acs_import_connection}}
        AZUREML_WORKSPACE_CONNECTION_ID_AOAI: ${{parent.inputs.embedding_connection}}
   ############
-  data_chunking_job:
-    type: command
-    resources:
-      instance_count: ${{parent.inputs.serverless_instance_count}}
-      instance_type: ${{parent.inputs.serverless_instance_type}}
-      properties:
-        compute_specification:
-          automatic: true
-    component: 'azureml:llm_rag_crack_and_chunk:0.0.10'
-    inputs:
-      input_data: ${{parent.jobs.data_import_job.outputs.output_data}}
-      input_glob: ${{parent.inputs.input_glob}}
-      chunk_size: ${{parent.inputs.chunk_size}}
-      chunk_overlap: ${{parent.inputs.chunk_overlap}}
-      data_source_url: ${{parent.inputs.data_source_url}}
-      document_path_replacement_regex: ${{parent.inputs.document_path_replacement_regex}}
-      max_sample_files: ${{parent.inputs.max_sample_files}}
-    outputs:
-      output_chunks:
-        type: uri_folder
-  ############
   promptflow_creation_job:
     type: command
     resources:
@@ -140,7 +119,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_create_promptflow:0.0.21'
+    component: 'azureml:llm_rag_create_promptflow:0.0.23'
     inputs:
       mlindex_asset_id: ${{parent.jobs.register_mlindex_asset_job.outputs.asset_id}}
       mlindex_name: ${{parent.inputs.embeddings_dataset_name}}
@@ -155,7 +134,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_mlindex_asset:0.0.9'
+    component: 'azureml:llm_rag_register_mlindex_asset:0.0.11'
     inputs:
       storage_uri: ${{parent.jobs.data_import_job.outputs.ml_index}}
       asset_name: ${{parent.inputs.embeddings_dataset_name}}
