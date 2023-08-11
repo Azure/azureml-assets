@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/automl-image-framework-selector-acpt
+  name: azureml/curated/acpt-automl-image-framework-selector-gpu
   os: linux
   context:
     dir: context

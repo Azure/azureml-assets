@@ -1,4 +1,4 @@
-name: automl-image-framework-selector-acpt
+name: acpt-automl-image-framework-selector-gpu
 version: "1"
 type: environment
 spec: spec.yaml
