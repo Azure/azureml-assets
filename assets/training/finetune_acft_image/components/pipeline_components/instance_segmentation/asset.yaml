@@ -1,3 +1,3 @@
 type: component
 spec: spec.yaml
-categories: ["Foundational Models", "Finetune", "AutoML Image training"]
+categories: ["AutoML Image training"]
