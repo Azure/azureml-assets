@@ -56,10 +56,8 @@ class TestModelMonitorDataJoiner:
 
         joined_data_df = join_data(
             left_data_df,
-            'left_data',
             LEFT_JOIN_COLUMN,
             right_data_df,
-            'right_data',
             RIGHT_JOIN_COLUMN
         )
 
@@ -80,10 +78,8 @@ class TestModelMonitorDataJoiner:
         with pytest.raises(Exception):
             join_data(
                 left_data_df,
-                'left_data',
                 LEFT_JOIN_COLUMN,
                 right_data_df,
-                'right_data',
                 RIGHT_JOIN_COLUMN
             )
 
@@ -106,10 +102,8 @@ class TestModelMonitorDataJoiner:
 
         joined_data_df = join_data(
             left_data_df,
-            'left_data',
             LEFT_JOIN_COLUMN,
             right_data_df,
-            'right_data',
             RIGHT_JOIN_COLUMN
         )
 
@@ -135,9 +129,7 @@ class TestModelMonitorDataJoiner:
         with pytest.raises(Exception):
             join_data(
                 left_data_df,
-                'left_data',
                 LEFT_JOIN_COLUMN,
                 right_data_df,
-                'right_data',
                 RIGHT_JOIN_COLUMN
             )

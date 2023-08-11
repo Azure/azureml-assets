@@ -46,7 +46,6 @@ def join_data(
         'inner'
     )
 
-    # Remove duplicate columns
     return joined_data_df
 
 
