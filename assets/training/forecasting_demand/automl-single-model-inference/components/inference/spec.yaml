@@ -5,9 +5,6 @@ description: Inference component for AutoML Forecasting.
 version: 0.0.2
 type: command
 
-tags:
-  Preview: ""
-
 inputs:
   test_data:
     type: uri_folder
@@ -44,7 +41,7 @@ outputs:
     description: "The evaluation config file which can be consumed by the compute metrics component."
 
 code: ../../src
-environment: azureml:automl-gpu:1
+environment: azureml://registries/azureml/environments/automl-gpu/versions/1
 
 command: >-
   python inference.py
