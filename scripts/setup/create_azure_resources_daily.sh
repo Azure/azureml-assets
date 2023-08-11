@@ -1,5 +1,5 @@
 # There are not enough GPUs available for sponsored subscriptions, so we no longer
-# have quota for the low end GPU cluster, so we'll redirect it to the v100 one.
+# have quota for the low end GPU cluster. We'll redirect it to the v100 one.
 
 location="eastus"
 datestamp=$(date "+%Y%m%d")
