@@ -236,7 +236,6 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
     """
     error_count = 0
     asset_name = asset_config.name
-    asset_name_lowercase = asset_name.lower()
 
     # Check against generic naming pattern
     if not ((asset_config.type is assets.AssetType.MODEL and MODEL_NAME_PATTERN.match(asset_name))
@@ -248,6 +247,7 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
     invalid_strings = INVALID_STRINGS + [asset_config.type.value]
     if asset_config.type is not assets.AssetType.MODEL:
         invalid_strings += [NON_MODEL_INVALID_STRINGS]
+    asset_name_lowercase = asset_name.lower()
     for string_group in invalid_strings:
         # Coerce into a list
         string_group_list = string_group if isinstance(string_group, list) else [string_group]
