@@ -1,4 +1,5 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110:{{latest-image-tag}}
+# PTCA image
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1131:{{latest-image-tag:vision\.biweekly\.\d{6}\.\d+}}
 
 RUN apt-get -y update
 
