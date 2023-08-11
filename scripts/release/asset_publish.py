@@ -5,23 +5,20 @@
 
 import argparse
 import json
-import os
 import re
 import shutil
 import sys
+import azureml.assets as assets
+import azureml.assets.util as util
 from pathlib import Path
 from string import Template
 from subprocess import run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
 from typing import Dict, List, Tuple, Union
-import azureml.assets as assets
-from azureml.assets.model.mlflow_utils import MLFlowModelUtils
-import azureml.assets.util as util
-from azureml.assets.config import AssetConfig, PathType
-from azureml.assets.model import ModelDownloadUtils
+from azureml.assets.config import AssetConfig
+from azureml.assets.model.model_utils import prepare_model
 from azureml.assets.util import logger
-from azure.ai.ml import load_model
 from azure.ai.ml.entities import Component, Environment, Model
 from ruamel.yaml import YAML
 
@@ -29,12 +26,21 @@ from ruamel.yaml import YAML
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PROD_SYSTEM_REGISTRY = "azureml"
-CREATE_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
+CREATE_ORDER = [assets.AssetType.DATA, assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT,
+                assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)/(?:versions/(.+)|labels/(.+))")
-REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/${asset_type}s/(.+)/(?:versions/(.+)|labels/(.+))")
+REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/$asset_type/(.+)/(?:versions/(.+)|labels/(.+))")
 BEARER = r"Bearer.*"
 LATEST_LABEL = "latest"
+
+
+def pluralize_asset_type(asset_type: Union[assets.AssetType, str]) -> str:
+    """Return pluralized asset type."""
+    # Convert to string if enum
+    if isinstance(asset_type, assets.AssetType):
+        asset_type = asset_type.value
+    return f"{asset_type}s" if asset_type != "data" else asset_type
 
 
 def find_test_files(dir: Path):
@@ -52,7 +58,7 @@ def find_test_files(dir: Path):
     return test_jobs
 
 
-def preprocess_test_files(test_jobs, asset_ids: dict):
+def preprocess_test_files(test_jobs: List[str], asset_ids: Dict[str, str]):
     """Preprocess test files to generate asset ids."""
     for test_job in test_jobs:
         logger.print(f"Processing test job {test_job}")
@@ -97,60 +103,29 @@ def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) ->
     return False
 
 
-def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
+def prepare_model_for_registration(
+    model_config: assets.ModelConfig,
+    spec_file_path: Path,
+    temp_dir: Path,
+    registry_name: str,
+) -> bool:
     """Prepare model.
 
     :param model_config: Model Config object
     :type model_config: assets.ModelConfig
     :param spec_file_path: path to model spec file
     :type spec_file_path: Path
-    :param model_dir: path of directory where model is present locally or can be downloaded to.
-    :type model_dir: Path
+    :param temp_dir: temp dir for model operation
+    :type temp_dir: Path
     :return: Model successfully prepared for creation in registry.
     :rtype: bool
     """
-    try:
-        model = load_model(spec_file_path)
-        model.type = model_config.type.value
-    except Exception as e:
-        logger.error(f"Error in loading model spec file at {spec_file_path}: {e}")
-        return False
-
-    model_description_file_path = Path(spec_file_path).parent / model_config.description
-    logger.print(f"model_description_file_path {model_description_file_path}")
-    if os.path.exists(model_description_file_path):
-        with open(model_description_file_path) as f:
-            model_description = f.read()
-            model.description = model_description
-    else:
-        logger.print("description file does not exist")
-
-    if model_config.path.type == PathType.LOCAL:
-        model.path = os.path.abspath(Path(model_config.path.uri).resolve())
-        return update_spec(model, spec_file_path)
-
-    if model_config.type == assets.ModelType.CUSTOM:
-        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
-        if success:
-            model.path = model_dir
-            success = update_spec(model, spec_file_path)
-    elif model_config.type == assets.ModelType.MLFLOW:
-        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
-        if success:
-            model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
-            if not model.flavors:
-                # try fetching flavors from MLModel file
-                mlmodel_file_path = model.path / MLFlowModelUtils.MLMODEL_FILE_NAME
-                try:
-                    mlmodel = util.load_yaml(mlmodel_file_path)
-                    model.flavors = mlmodel.get("flavors")
-                except Exception as e:
-                    logger.log_error(f"Error loading flavors from MLmodel file at {mlmodel_file_path}: {e}")
-            success = update_spec(model, spec_file_path)
-    else:
-        logger.log_error(f"Model type {model_config.type.value} not supported")
-        success = False
-
+    model, success = prepare_model(
+        spec_path=spec_file_path, model_config=model_config, registry_name=registry_name, temp_dir=temp_dir
+    )
+    if success:
+        success = update_spec(model, spec_file_path)
+        logger.print(f"updated spec file? {success}")
     return success
 
 
@@ -240,36 +215,25 @@ def validate_and_prepare_pipeline_component(
     return True
 
 
-def validate_update_command_component(
-    spec_path: Path,
+def get_environment_asset_id(
+    environment_id: str,
     version_suffix: str,
-    registry_name: str,
-) -> bool:
-    """Validate and update command component spec.
+    registry_name: str
+) -> Union[object, None]:
+    """Convert an environment reference into a full asset ID.
 
-    :param spec_path: Path of loaded component
-    :type spec_path: Path
-    :param version_suffix: version suffix
+    :param environment_id: Environment asset ID, in short or long form
+    :type environment_id: str
+    :param version_suffix: Version suffix
     :type version_suffix: str
-    :param registry_name: name of the registry to create component in
+    :param registry_name: Name of the registry to create component in
     :type registry_name: str
-    :return: True for successful validation and update
-    :rtype: bool
+    :return: Environment's full asset ID if successful, else None
+    :rtype: Union[str, None]
     """
-    with open(spec_path) as f:
-        try:
-            component_dict = YAML().load(f)
-        except Exception:
-            logger.log_error(f"Error in loading component spec at {spec_path}")
-            return False
-
-    component_name = component_dict['name']
-    component_env = component_dict['environment']
-    logger.print(f"Preparing command component {component_name}")
-
     try:
         env_name, env_version, env_label, env_registry_name = get_parsed_details_from_asset_uri(
-            assets.AssetType.ENVIRONMENT.value, component_env)
+            assets.AssetType.ENVIRONMENT.value, environment_id)
     except Exception as e:
         logger.log_error(e)
         return False
@@ -305,21 +269,70 @@ def validate_update_command_component(
             return False
 
     env = None
-    # Check if component's env exists
-    final_version = env_version + "-" + version_suffix if version_suffix else env_version
-    for version in [env_version, final_version]:
+    # Get environment
+    versions_to_try = [env_version]
+    if version_suffix:
+        versions_to_try.append(f"{env_version}-{version_suffix}")
+    for version in versions_to_try:
         if (env := get_asset_details(
             assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name
         )) is not None:
-            break
+            return env['id']
 
-    if not env:
-        logger.log_error(f"Could not find the env for {component_name}")
+    logger.log_error(f"Environment {env_name} not found in {registry_name}; tried version(s) {versions_to_try}")
+    return None
+
+
+def validate_update_component(
+    spec_path: Path,
+    version_suffix: str,
+    registry_name: str,
+) -> bool:
+    """Validate and update component spec.
+
+    :param spec_path: Path of loaded component
+    :type spec_path: Path
+    :param version_suffix: version suffix
+    :type version_suffix: str
+    :param registry_name: name of the registry to create component in
+    :type registry_name: str
+    :return: True for successful validation and update
+    :rtype: bool
+    """
+    with open(spec_path) as f:
+        try:
+            component_dict = YAML().load(f)
+        except Exception:
+            logger.log_error(f"Error in loading component spec at {spec_path}")
+            return False
+
+    component_name = component_dict['name']
+    logger.print(f"Preparing component {component_name}")
+
+    # Handle command and parallel components
+    if 'environment' in component_dict:
+        # Command component
+        obj_with_env = component_dict
+    elif 'task' in component_dict and 'environment' in component_dict['task']:
+        # Parallel component
+        obj_with_env = component_dict['task']
+    else:
+        logger.log_error(f"Environment reference not found in {component_name}")
         return False
 
-    logger.print(f"Updating component env to {env['id']}")
-    component_dict['environment'] = env['id']
+    # Update environment reference
+    current_env_id = obj_with_env['environment']
+    new_env_id = get_environment_asset_id(current_env_id, version_suffix, registry_name)
+    if new_env_id is not None:
+        if current_env_id != new_env_id:
+            logger.print(f"Updating environment to {new_env_id}")
+            obj_with_env['environment'] = new_env_id
+        else:
+            logger.print(f"Existing environment reference {current_env_id} is valid")
+    else:
+        return False
 
+    # Update spec file
     try:
         util.dump_yaml(component_dict, spec_path)
     except Exception:
@@ -360,12 +373,12 @@ def asset_create_command(
 
 
 def create_asset(
-    asset,
-    registry_name,
-    resource_group,
-    workspace_name,
-    version,
-    failure_list,
+    asset: assets.AssetConfig,
+    registry_name: str,
+    resource_group: str,
+    workspace_name: str,
+    version: str,
+    failure_list: List[str],
     debug_mode: bool = None
 ):
     """Create asset in registry."""
@@ -422,7 +435,9 @@ def get_asset_details(
     ]
     result = run_command(cmd)
     if result.returncode != 0:
-        logger.log_error(f"Failed to get asset details: {result.stderr}")
+        if "Could not find asset" not in result.stderr:
+            # Don't show the error if it's expected for new assets
+            logger.log_error(f"Failed to get asset details: {result.stderr}")
         return None
     return json.loads(result.stdout)
 
@@ -439,7 +454,8 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
         `label` and `registry_name` will be None for workspace URI.
     :rtype: Tuple
     """
-    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(asset_type=asset_type))
+    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(
+                                        asset_type=pluralize_asset_type(asset_type)))
     asset_registry_name = None
     if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
         asset_registry_name, asset_name, asset_version, asset_label = match.groups()
@@ -525,7 +541,7 @@ if __name__ == "__main__":
         assets_by_type[asset.type.value].append(asset)
 
     for create_asset_type in CREATE_ORDER:
-        logger.print(f"Creating {create_asset_type.value}s.")
+        logger.print(f"Creating {create_asset_type.value} assets.")
         if create_asset_type.value not in create_list:
             continue
 
@@ -548,7 +564,7 @@ if __name__ == "__main__":
                 logger.print(f"Creating {asset.name} {final_version}")
                 asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
                     registry_name=registry_name,
-                    asset_type=f"{asset.type.value}s",
+                    asset_type=pluralize_asset_type(asset.type),
                     asset_name=asset.name,
                     version=final_version,
                 )
@@ -567,8 +583,9 @@ if __name__ == "__main__":
                         ):
                             failure_list.append(asset)
                             continue
-                    elif component_type is None or component_type == assets.ComponentType.COMMAND.value:
-                        if not validate_update_command_component(
+                    elif component_type is None or component_type in [assets.ComponentType.COMMAND.value,
+                                                                      assets.ComponentType.PARALLEL.value]:
+                        if not validate_update_component(
                             asset.spec_with_path, passed_version, registry_name
                         ):
                             failure_list.append(asset)
@@ -577,7 +594,8 @@ if __name__ == "__main__":
                     try:
                         final_version = asset.version
                         model_config = asset.extra_config_as_object()
-                        if not prepare_model(model_config, asset.spec_with_path, Path(work_dir)):
+                        if not prepare_model_for_registration(
+                                model_config, asset.spec_with_path, Path(work_dir), registry_name):
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")
                     except Exception as e:
                         logger.log_error(f"Model prepare exception: {e}")
@@ -592,7 +610,7 @@ if __name__ == "__main__":
                     resource_group=resource_group,
                     workspace_name=workspace,
                     failure_list=failure_list,
-                    debug_mode=debug_mode
+                    debug_mode=debug_mode,
                 )
 
     if len(failure_list) > 0:
@@ -603,7 +621,7 @@ if __name__ == "__main__":
         yaml = YAML()
         yaml.default_flow_style = False
         for asset_type, asset_names in failed_assets.items():
-            logger.log_warning(f"Failed to create {asset_type}s: {asset_names}")
+            logger.log_warning(f"Failed to create {asset_type} assets: {asset_names}")
         # the following dump process will generate a yaml file for the report
         # process in the end of the publishing script
         with open(failed_list_file, "w") as file:

@@ -36,6 +36,25 @@ def _urlopen_with_retries(request: Union[Request, str]) -> HTTPResponse:
     return urlopen(request)
 
 
+def get_manifest(tag: str, hostname: str, repo: str):
+    """Retrieve manifest for an image.
+
+    Args:
+        tag (str): Tag for the image.
+        hostname (str): Hostname of the container registry.
+        repo (str): Repository of the image.
+
+    Returns:
+        HTTPResponse: Response from _urlopen_with_retries.
+    """
+    encoded_tag = urllib.parse.quote(tag, safe="")
+    request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
+                      method="HEAD",
+                      headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
+
+    return _urlopen_with_retries(request)
+
+
 def _get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
     """Get latest tag or digest for an image.
 
@@ -53,13 +72,8 @@ def _get_latest_tag_or_digest(image: str, tags: List[str]) -> Tuple[str, str]:
     latest_digest = None
     for tag in tags:
         # Retrieve digest
-        encoded_tag = urllib.parse.quote(tag, safe="")
-        request = Request(f"https://{hostname}/v2/{repo}/manifests/{encoded_tag}",
-                          method="HEAD",
-                          headers={'Accept': "application/vnd.docker.distribution.manifest.v2+json"})
-
         try:
-            response = _urlopen_with_retries(request)
+            response = get_manifest(tag, hostname, repo)
         except Exception as e:
             raise Exception(f"Failed to retrieve manifest for {repo}:{tag}: {e}")
 
@@ -97,7 +111,7 @@ def _get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
 
     # Filter tags and sort in descending order because this should be faster
     tags_sorted = sorted([t for t in tags if t != LATEST_TAG and
-                         (regex is None or regex.search(t) is not None)], reverse=True)
+                         (regex is None or regex.fullmatch(t) is not None)], reverse=True)
 
     # Handle regex
     if regex is not None:
@@ -115,7 +129,7 @@ def _get_latest_image_suffix(image: str, regex: re.Pattern = None) -> str:
         tags_sorted.insert(0, LATEST_TAG)
 
         # Find another tag corresponding to latest, or default to digest
-        latest_tag, latest_digest = _get_latest_tag_or_digest(image, tags)
+        latest_tag, latest_digest = _get_latest_tag_or_digest(image, tags_sorted)
 
     # Return tag or digest
     if latest_tag is not None:
