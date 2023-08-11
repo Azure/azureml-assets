@@ -42,7 +42,7 @@ def test_tensorflow_2_12():
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
         command="python main.py",
         environment=f"{env_name}@latest",
-        compute=os.environ.get("gpu_cluster"),
+        compute=os.environ.get("gpu_v100_cluster"),
         display_name="tensorflow-mnist-example",
         description="A test run of the tensorflow 2_12 curated environment",
         experiment_name="tensorflow212Experiment"
