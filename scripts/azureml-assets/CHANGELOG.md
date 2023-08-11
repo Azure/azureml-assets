@@ -1,15 +1,19 @@
-## 1.13.0 (Unreleased)
+## 1.14.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
 
+## 1.13.0 (Unreleased)
+### 🚀 New Features
+- [#1030](https://github.com/Azure/azureml-assets/pull/1030) Allow "microsoft" to appear in model names
+
 ## 1.12.0 (2023-08-07)
 ### 🚀 New Features
-- [991](https://github.com/Azure/azureml-assets/pull/991) Allow uppercase characters in model asset naming
+- [#991](https://github.com/Azure/azureml-assets/pull/991) Allow uppercase characters in model asset naming
 
 ## 1.11.0 (2023-08-07)
 ### 🚀 New Features
-- [992](https://github.com/Azure/azureml-assets/pull/992) Extract asset dependencies
+- [#992](https://github.com/Azure/azureml-assets/pull/992) Extract asset dependencies
 
 ## 1.10.0 (2023-08-07)
 ### 🚀 New Features

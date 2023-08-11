@@ -21,8 +21,9 @@ WARNING_TEMPLATE = "Warning during validation of {file}: {warning}"
 
 # Common naming convention
 NAMING_CONVENTION_URL = "https://github.com/Azure/azureml-assets/wiki/Asset-naming-convention"
-INVALID_STRINGS = ["microsoft", ["azureml", "azure"], "aml"]
-COMMON_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
+INVALID_STRINGS = [["azureml", "azure"], "aml"]  # Disallow these in any asset name
+NON_MODEL_INVALID_STRINGS = ["microsoft"]  # Allow these in model names
+NON_MODEL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
 
 # Asset config convention
 ASSET_CONFIG_URL = "https://github.com/Azure/azureml-assets/wiki/Assets#assetyaml"
@@ -238,18 +239,21 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
 
     # Check against generic naming pattern
     if not ((asset_config.type is assets.AssetType.MODEL and MODEL_NAME_PATTERN.match(asset_name))
-            or COMMON_NAME_PATTERN.match(asset_name)):
+            or NON_MODEL_NAME_PATTERN.match(asset_name)):
         _log_error(asset_config.file_name_with_path, f"Name '{asset_name}' contains invalid characters")
         error_count += 1
 
     # Check for invalid strings
     invalid_strings = INVALID_STRINGS + [asset_config.type.value]
+    if asset_config.type is not assets.AssetType.MODEL:
+        invalid_strings += [NON_MODEL_INVALID_STRINGS]
+    asset_name_lowercase = asset_name.lower()
     for string_group in invalid_strings:
         # Coerce into a list
         string_group_list = string_group if isinstance(string_group, list) else [string_group]
 
         for invalid_string in string_group_list:
-            if invalid_string in asset_name:
+            if invalid_string in asset_name_lowercase:
                 # Complain only about the first matching string
                 _log_error(asset_config.file_name_with_path,
                            f"Name '{asset_name}' contains invalid string '{invalid_string}'")
