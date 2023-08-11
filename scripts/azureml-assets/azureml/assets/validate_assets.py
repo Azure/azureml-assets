@@ -236,6 +236,7 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
     """
     error_count = 0
     asset_name = asset_config.name
+    asset_name_lowercase = asset_name.lower()
 
     # Check against generic naming pattern
     if not ((asset_config.type is assets.AssetType.MODEL and MODEL_NAME_PATTERN.match(asset_name))
@@ -252,7 +253,7 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
         string_group_list = string_group if isinstance(string_group, list) else [string_group]
 
         for invalid_string in string_group_list:
-            if invalid_string in asset_name:
+            if invalid_string in asset_name_lowercase:
                 # Complain only about the first matching string
                 _log_error(asset_config.file_name_with_path,
                            f"Name '{asset_name}' contains invalid string '{invalid_string}'")
