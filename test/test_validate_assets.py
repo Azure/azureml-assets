@@ -36,6 +36,7 @@ RESOURCES_DIR = Path("resources/validate")
         ("dockerfile-from-ce-image", False, False, None, False),
         ("dockerfile-from-ce-image-comment", False, False, None, False),
         ("dockerfile-from-ce-image-windows", False, False, None, False),
+        ("model-with-microsoft", False, True, None, True),
     ]
 )
 def test_validate_assets(test_subdir: str, check_images: bool, check_names: bool,
