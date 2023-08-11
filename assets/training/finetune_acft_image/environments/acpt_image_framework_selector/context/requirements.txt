@@ -1,7 +1,7 @@
 azureml-acft-common-components=={{latest-pypi-version}}
 azure-ai-ml>=1.4.0
 mldesigner
-mlflow==2.6.0
+mlflow
 azureml-mlflow
 azureml-core
 requests
