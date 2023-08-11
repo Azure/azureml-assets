@@ -8,7 +8,7 @@ description: >-
   Container Registry:mcr.microsoft.com/azureml/curated/acpt-pytorch-1.12-cuda11.6
 
 name: "acpt-pytorch-1.12-cuda11.6"
-version: "13"
+version: "14"
 
 build:
   path: "context"
