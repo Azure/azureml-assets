@@ -18,8 +18,9 @@ from collections import defaultdict
 from typing import Dict, List, Tuple, Union
 from azureml.assets.config import AssetConfig
 from azureml.assets.model.model_utils import prepare_model
+from azureml.assets.data.data_utils import prepare_data
 from azureml.assets.util import logger
-from azure.ai.ml.entities import Component, Environment, Model
+from azure.ai.ml.entities import Component, Environment, Model, Data
 from ruamel.yaml import YAML
 
 
@@ -84,7 +85,7 @@ def sanitize_output(input: str) -> str:
     return sanitized_output
 
 
-def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) -> bool:
+def update_spec(asset: Union[Component, Environment, Model, Data], spec_path: Path) -> bool:
     """Update the yaml spec file with updated properties in asset.
 
     :param asset: Asset loaded using load_*(component, environemnt, model) method.
@@ -128,6 +129,31 @@ def prepare_model_for_registration(
         logger.print(f"updated spec file? {success}")
     return success
 
+
+def prepare_data_for_registration(
+    data_config: assets.DataConfig,
+    spec_file_path: Path,
+    temp_dir: Path,
+    registry_name: str,
+) -> bool:
+    """Prepare Data.
+
+    :param data_config: Data Config object
+    :type data_config: assets.DataConfig
+    :param spec_file_path: path to data spec file
+    :type spec_file_path: Path
+    :param temp_dir: temp dir for data operation
+    :type temp_dir: Path
+    :return: Data successfully prepared for creation in registry.
+    :rtype: bool
+    """
+    data, success = prepare_data(
+        spec_path=spec_file_path, data_config=data_config, registry_name=registry_name, temp_dir=temp_dir
+    )
+    if success:
+        success = update_spec(data, spec_file_path)
+        logger.print(f"updated spec file? {success}")
+    return success
 
 def validate_and_prepare_pipeline_component(
     spec_path: Path,
@@ -599,6 +625,17 @@ if __name__ == "__main__":
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")
                     except Exception as e:
                         logger.log_error(f"Model prepare exception: {e}")
+                        failure_list.append(asset)
+                        continue
+                elif asset.type == assets.AssetType.DATA:
+                    try:
+                        final_version = asset.version
+                        data_config = asset.extra_config_as_object()
+                        if not prepare_data_for_registration(
+                            data_config, asset.spec_with_path, Path(work_dir), registry_name):
+                            raise Exception(f"Could not prepare data at {asset.spec_with_path}")
+                    except Exception as e:
+                        logger.log_error(f"Data prepare exception: {e}")
                         failure_list.append(asset)
                         continue
 
