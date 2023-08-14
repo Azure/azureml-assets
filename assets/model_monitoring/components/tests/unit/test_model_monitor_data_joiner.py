@@ -11,7 +11,7 @@ from tests.e2e.utils.io_utils import create_pyspark_dataframe
 
 LEFT_JOIN_COLUMN = 'left_join_column'
 RIGHT_JOIN_COLUMN = 'right_join_column'
-test_data = [('False', 'True'), ('True', 'False')]
+test_data = [(False, True), (True, False)]
 
 
 def _generate_left_data_df(contains_join_column):
@@ -22,7 +22,7 @@ def _generate_left_data_df(contains_join_column):
     ]
     left_columns = ['sepal_length', 'petal_length']
 
-    if contains_join_column is True:
+    if contains_join_column:
         left_columns.append(LEFT_JOIN_COLUMN)
     else:
         left_columns.append('random_column')
@@ -38,7 +38,7 @@ def _generate_right_data_df(contains_join_column):
     ]
     right_columns = ['target']
 
-    if contains_join_column is True:
+    if contains_join_column:
         right_columns.append(RIGHT_JOIN_COLUMN)
     else:
         right_columns.append('random_column')
@@ -90,12 +90,12 @@ class TestModelMonitorDataJoiner:
         is_right_data_empty
     ):
         """Test join data that produces empty result."""
-        if is_left_data_empty is True:
+        if is_left_data_empty:
             left_data_df = create_pyspark_dataframe([], [LEFT_JOIN_COLUMN])
         else:
             left_data_df = _generate_left_data_df(True)
 
-        if is_right_data_empty is True:
+        if is_right_data_empty:
             right_data_df = create_pyspark_dataframe([], [RIGHT_JOIN_COLUMN])
         else:
             right_data_df = _generate_right_data_df(True)
@@ -116,7 +116,7 @@ class TestModelMonitorDataJoiner:
         is_right_data_empty
     ):
         """Test join data with empty input without schema."""
-        if is_left_data_empty is True:
+        if is_left_data_empty:
             left_data_df = create_pyspark_dataframe([], StructType([]))
         else:
             left_data_df = _generate_left_data_df(True)
