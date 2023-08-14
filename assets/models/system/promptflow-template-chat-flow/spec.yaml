@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: template-chat-flow
+path: ./
+properties:
+  SHA: ef42e312fb18d80a2ec433818ae97735c9d6946a
+  is-promptflow: 'true'
+  inference-min-sku-spec: 4|0|28|32
+  inference-recommended-sku: Standard_DS5_v2
+version: 1
