@@ -1,0 +1,8 @@
+path:
+  container_name: finetuning-image-models
+  container_path: HuggingFace-mlflow/microsoft-beit-base-patch16-224-pt22k-ft22k/9da3011/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
