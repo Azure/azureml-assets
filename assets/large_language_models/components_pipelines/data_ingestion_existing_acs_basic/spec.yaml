@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.16
+version: 0.0.17
 name: llm_ingest_existing_acs_basic
 display_name: LLM - Existing ACS Pipeline
 is_deterministic: false
@@ -97,7 +97,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: azureml:llm_rag_data_import_acs:0.0.12
+    component: azureml:llm_rag_data_import_acs:0.0.13
     inputs:
       num_docs: ${{parent.inputs.num_docs_to_import}}
       acs_config: ${{parent.inputs.acs_import_config}}
@@ -119,7 +119,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_create_promptflow:0.0.25'
+    component: 'azureml:llm_rag_create_promptflow:0.0.26'
     inputs:
       mlindex_asset_id: ${{parent.jobs.register_mlindex_asset_job.outputs.asset_id}}
       mlindex_name: ${{parent.inputs.embeddings_dataset_name}}
@@ -134,7 +134,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_mlindex_asset:0.0.13'
+    component: 'azureml:llm_rag_register_mlindex_asset:0.0.14'
     inputs:
       storage_uri: ${{parent.jobs.data_import_job.outputs.ml_index}}
       asset_name: ${{parent.inputs.embeddings_dataset_name}}

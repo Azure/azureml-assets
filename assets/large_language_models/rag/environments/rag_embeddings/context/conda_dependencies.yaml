@@ -8,6 +8,7 @@ dependencies:
 - pip:
   - azureml-rag[faiss,cognitive_search,document_parsing,data_generation]>=0.1.16
   - langchain==0.0.220
+  - azure-search-documents==11.4.0b6
   - psutil~=5.8.0
   - pandas~=1.1.5
   - GitPython>=3.1

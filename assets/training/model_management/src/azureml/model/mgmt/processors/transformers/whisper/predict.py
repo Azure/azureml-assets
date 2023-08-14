@@ -201,7 +201,7 @@ def predict(
         device = -1
         logging.warning("CUDA unavailable. Defaulting to CPU device.")
 
-    device = "cuda" if device == 0 else "cpu"
+    device = "cuda:0" if device == 0 else "cpu"
 
     logging.info(f"Using device: {device} for the inference")
 
