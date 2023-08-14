@@ -39,6 +39,7 @@ class AppName:
     IMPORT_MODEL = "import_model"
     DOWNLOAD_MODEL = "download_model"
     CONVERT_MODEL_TO_MLFLOW = "convert_model_to_mlflow"
+    VALIDATION_TRIGGER_IMPORT = "validation_trigger_import"
 
 
 class LoggerConfig:
