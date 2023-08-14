@@ -1,0 +1,19 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+
+name: mm_az_mon_proto_wrapper
+display_name: Az Mon prototype wrapper
+description: Az Mon prototype wrapper.
+version: 0.3.5
+is_deterministic: true
+
+jobs:
+  mm_az_mon_proto_spark:
+    type: spark
+    component: azureml://registries/azureml/components/mm_az_mon_proto_spark/versions/0.3.5
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: "3.3"
+    identity:
+      type: managed_identity
+      client_id: "a86944c8-8575-4b3b-b15c-5576ef82c36e"

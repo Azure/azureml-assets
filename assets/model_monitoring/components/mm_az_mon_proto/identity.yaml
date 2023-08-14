@@ -1,0 +1,6 @@
+identity:
+  type: system_assigned,user_assigned
+  tenant_id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+  user_assigned_identities:
+    '/subscriptions/ea4faa5b-5e44-4236-91f6-5483d5b17d14/resourceGroups/model-monitoring-canary-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/model-monitoring-canary-uai':
+      {}
