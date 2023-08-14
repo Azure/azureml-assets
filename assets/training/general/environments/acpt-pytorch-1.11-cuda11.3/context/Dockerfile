@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110:{{latest-image-tag:biweekly\.\d{6}\.\d{1}}}
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110:biweekly.202308.1.v
 
 
 # Install pip dependencies
@@ -17,6 +17,9 @@ ENV WORKER_TIMEOUT=400
 EXPOSE 5001 8883 8888
 
 # support Deepspeed launcher requirement of passwordless ssh login
-RUN apt-get update
-RUN apt-get install -y openssh-server openssh-client
+RUN apt-get update \
+    && apt-get install -y openssh-server openssh-client
 
+RUN bash -c "source /opt/conda/bin/activate base \
+              && pip uninstall --yes cryptography \
+              && pip install cryptography>=41.0.3"
