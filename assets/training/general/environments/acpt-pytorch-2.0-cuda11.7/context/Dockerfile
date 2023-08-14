@@ -19,3 +19,6 @@ EXPOSE 5001 8883 8888
 RUN apt-get update
 RUN apt-get install -y openssh-server openssh-client
 
+RUN source /opt/conda/bin/activate base && \
+    pip uninstall --yes cryptography && \
+    pip install cryptography>=41.0.2
