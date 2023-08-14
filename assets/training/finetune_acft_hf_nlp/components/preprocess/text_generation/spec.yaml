@@ -1,0 +1,85 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: text_generation_datapreprocess
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: Text Generation DataPreProcess
+description: Component to preprocess data for text generation task
+
+environment: azureml:acft-contrib-hf-nlp-curated-acpt-pytorch-113-py38-cuda117-gpu:0.0.1
+
+code: ../../../src/preprocess
+
+inputs:
+  # Text Generation task arguments
+  text_key:
+    type: string
+    optional: false
+    description: key for text in an example
+
+  batch_size:
+    type: integer
+    optional: true
+    default: 1000
+    description: Number of examples to batch before calling the tokenization function
+
+  # Tokenization params
+  pad_to_max_length:
+    type: boolean
+    optional: true
+    default: true
+    description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
+  
+  max_seq_length:
+    type: integer
+    optional: true
+    default: -1
+    description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
+
+  # Inputs
+  train_file_path:
+    type: uri_file
+    optional: true
+    description: Enter the train file path
+
+  validation_file_path:
+    type: uri_file
+    optional: true
+    description: Enter the validation file path
+
+  test_file_path:
+    type: uri_file
+    optional: true
+    description: Enter the test file path
+
+  train_mltable_path:
+    type: mltable
+    optional: true
+    description: Enter the train mltable path
+
+  validation_mltable_path:
+    type: mltable
+    optional: true
+    description: Enter the validation mltable path
+
+  test_mltable_path:
+    type: mltable
+    optional: true
+    description: Enter the test mltable path
+
+  # Dataset parameters
+  model_selector_output:
+    type: uri_folder
+    optional: false
+    description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: folder to store preprocessed outputs of input data
+
+command: >-
+  python preprocess.py --task_name TextGeneration --text_key ${{inputs.text_key}} $[[--batch_size ${{inputs.batch_size}}]] $[[--pad_to_max_length ${{inputs.pad_to_max_length}}]] $[[--max_seq_length ${{inputs.max_seq_length}}]] $[[--train_file_path '${{inputs.train_file_path}}']] $[[--validation_file_path '${{inputs.validation_file_path}}']] $[[--test_file_path '${{inputs.test_file_path}}']] $[[--train_mltable_path '${{inputs.train_mltable_path}}']] $[[--validation_mltable_path '${{inputs.validation_mltable_path}}']] $[[--test_mltable_path '${{inputs.test_mltable_path}}']] --model_selector_output ${{inputs.model_selector_output}} --output_dir ${{outputs.output_dir}}
+
