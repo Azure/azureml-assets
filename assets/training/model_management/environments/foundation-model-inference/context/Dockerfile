@@ -3,7 +3,7 @@ FROM ghcr.io/huggingface/text-generation-inference:0.9
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update -y && apt-get install vim openssh-server openssh-client -y
+RUN apt-get update -y && apt-get install vim openssh-server openssh-client curl graphviz -y
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
