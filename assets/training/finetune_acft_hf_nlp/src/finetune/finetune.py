@@ -690,6 +690,7 @@ def main():
             AutoModelForSequenceClassification,
             AutoModelForTokenClassification,
             AutoModelForQuestionAnswering,
+            AutoModelForCausalLM,
         )
 
         # Updata lora target modules for falcon
@@ -704,7 +705,10 @@ def main():
         AutoModelForQuestionAnswering.from_pretrained = partial(
             AutoModelForQuestionAnswering.from_pretrained, trust_remote_code=True
         )
-        logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA")
+        AutoModelForCausalLM.from_pretrained = partial(
+            AutoModelForCausalLM.from_pretrained, trust_remote_code=True
+        )
+        logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA and Text Gen")
 
     finetune(args)
 
