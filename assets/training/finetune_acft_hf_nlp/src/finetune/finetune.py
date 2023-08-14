@@ -455,7 +455,7 @@ def finetune(args: Namespace):
         args.model_name_or_path = args.model_name
 
     # Enable QLoRA finetune for Llama-70B
-    model_asset_id = getattr(args, "model_asset_id", "")
+    model_asset_id = getattr(args, "model_asset_id", None) or ""
     if any(
         [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
     ):
