@@ -170,6 +170,12 @@ ACFT_CONFIG = {
             },
         },
     },
+    HfModelTypes.LLAMA: {
+        "load_tokenizer_kwargs": {
+            "add_eos_token": True,
+            "padding_side": "right"
+	    }
+    }
 }
 
 

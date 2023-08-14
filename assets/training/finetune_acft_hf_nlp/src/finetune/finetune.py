@@ -471,6 +471,11 @@ def finetune(args: Namespace):
                     f"{MLFLOW_MODEL_SIGNATURES[args.task_name]}"
                 )
 
+    # remove mlflow_model_signature if empty 
+    if "mlflow_model_signature" in mlflow_ft_conf \
+            and len(mlflow_ft_conf["mlflow_model_signature"]) == 0:
+        del(mlflow_ft_conf["mlflow_model_signature"])
+
     model_name_or_type = None
     # pass `mlflow_hftransformers_misc_conf` to be set in mlflow model
     if hasattr(args, "model_name") and args.model_name in MLFLOW_HFTRANSFORMERS_MISC_CONF:
