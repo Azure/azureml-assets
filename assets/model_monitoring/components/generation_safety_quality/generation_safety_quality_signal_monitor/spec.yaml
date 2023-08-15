@@ -1,0 +1,144 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
+type: pipeline
+
+name: generation_safety_quality_signal_monitor_spark
+display_name: Generation Safety & Quality - Signal Monitor
+description: Computes the content generation safety metrics over LLM outputs.
+version: 0.3.6
+is_deterministic: true
+
+inputs:
+  monitor_name:
+    type: string
+  signal_name:
+    type: string
+  target_data:
+    type: mltable
+  metric_names:
+    type: string
+    description: a comma-separated list of metric names to compute
+    default: groundedness
+  model_deployment_name:
+    type: string
+    optional: false
+    description: model name, e.g., name of the deployment for Azure OpenAI
+  endpoint_type:
+    type: string
+    optional: true
+    default: azure_openai_api
+    enum:
+      - openai_api
+      - azure_endpoint
+      - azure_openai_api
+  model_type:
+    type: string
+    optional: false
+    description: type of model used for annotation
+    enum:
+      - gpt-35-turbo
+      - gpt-4
+      - gpt-4-32k
+  azure_endpoint_domain_name:
+    type: string
+    optional: false
+    description: endpoint domain name, e.g., <instance>.openai.azure.com
+  authorization_type:
+    type: string
+    optional: false
+    enum:
+      - managed_identity
+      - key_vault_secret
+  authorization_vault_url:
+    type: string
+    optional: true
+    description: only needed when using authorization_type=key_vault_secret
+  authorization_secret_name:
+    type: string
+    optional: true
+    description: only needed when using authorization_type=key_vault_secret
+  azure_openai_api_version:
+    type: string
+    optional: false
+    description: API version, e.g., 2023-03-15-preview
+  sample_rate:
+    type: number
+    optional: true
+    description: sample rate for the input dataset, should be greater than 0 and at most 1
+  request_passrate_threshold:
+    type: number
+    optional: true
+  annotation_rating_threshold:
+    type: number
+    optional: true
+  monitor_current_time:
+    type: string
+outputs:
+  signal_output:
+    type: uri_folder
+    mode: direct
+jobs:
+  compute_histogram:
+    type: spark
+    component: azureml://registries/azureml-preview/components/annotation_compute_histogram_spark/versions/0.3.4
+    inputs:
+      target_dataset:
+        type: mltable
+        path: ${{parent.inputs.target_data}}
+      metric_names: ${{parent.inputs.metric_names}}
+      model_deployment_name: ${{parent.inputs.model_deployment_name}}
+      endpoint_type: ${{parent.inputs.endpoint_type}}
+      azure_endpoint_domain_name: ${{parent.inputs.azure_endpoint_domain_name}}
+      authorization_type: ${{parent.inputs.authorization_type}}
+      authorization_vault_url: ${{parent.inputs.authorization_vault_url}}
+      authorization_secret_name: ${{parent.inputs.authorization_secret_name}}
+      azure_openai_api_version: ${{parent.inputs.azure_openai_api_version}}
+      sample_rate: ${{parent.inputs.sample_rate}}
+      model_type: ${{parent.inputs.model_type}}
+    outputs:
+      histogram:
+        type: mltable
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: "3.3"
+    identity:
+      type: managed_identity
+  compute_metrics:
+    type: spark
+    component: azureml://registries/azureml-preview/components/annotation_compute_metrics_spark/versions/0.3.2
+    inputs:
+      annotation_histogram:
+        type: mltable
+        path: ${{parent.jobs.compute_histogram.outputs.histogram}}
+      annotation_rating_threshold:
+        type: mltable
+        path: ${{parent.inputs.annotation_rating_threshold}}
+      metric_names: ${{parent.inputs.metric_names}}
+    outputs:
+      signal_metrics:
+        type: mltable
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: "3.3"
+    identity:
+      type: aml_token
+  output_signal_metrics: 
+    type: spark
+    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.3
+    inputs:
+      signal_metrics:
+        type: mltable
+        path: ${{parent.jobs.compute_metrics.outputs.signal_metrics}}
+      signal_type: "GenerationSafetyQuality"
+      signal_name: ${{parent.inputs.signal_name}}
+      monitor_name: ${{parent.inputs.monitor_name}}
+      metric_timestamp: ${{parent.inputs.monitor_current_time}}
+    outputs:
+      signal_output:
+        type: uri_folder
+        path: ${{parent.outputs.signal_output}}
+        mode: direct
+    resources:
+      instance_type: standard_e4s_v3
+      runtime_version: "3.3"
+    identity:
+      type: aml_token

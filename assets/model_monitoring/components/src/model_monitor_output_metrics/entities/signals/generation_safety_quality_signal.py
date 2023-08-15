@@ -83,14 +83,16 @@ class GenerationSafetyQualitySignal(Signal):
 
     def publish_metrics(self, step: int):
         """Publish metrics to AML Run Metrics."""
-        for metric in self.metrics:
-            print(f"Aggregated{metric['metric_name']}PassRate")
-            run_metric = self.global_metrics[f"Aggregated{metric['metric_name']}PassRate"]
-            publish_metric(
-                run_metric["runId"],
-                float(run_metric["metricValue"]),
-                float(run_metric["threshold"]),
-                step,
+        print("self.metrics")
+        print(self.metrics)
+        for metric in AGGREGATED_METRIC_NAMES:
+            if metric in self.global_metrics:
+                run_metric = self.global_metrics[metric]
+                publish_metric(
+                    run_metric["runId"],
+                    float(run_metric["metricValue"]),
+                    float(run_metric["threshold"]),
+                    step,
             )
 
     def _build_metrics(self, monitor_name: str, signal_name: str, metrics: List[dict]):
@@ -108,8 +110,9 @@ class GenerationSafetyQualitySignal(Signal):
         }
         for metric in metrics:
             metric_name = metric["metric_name"]
-            if "COUNT_" in metric_name and metric_name  in METRIC_COUNT_NAMES:
+            if "Count_" in metric_name and metric_name in METRIC_COUNT_NAMES:
                 bucket = metric_name.split("_")[1]
+                print(f"line 113 {bucket}")
                 rows.append(
                     Row(
                         feature_bucket={metric_name},
