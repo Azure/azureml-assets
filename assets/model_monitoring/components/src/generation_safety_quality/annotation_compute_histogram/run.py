@@ -120,7 +120,11 @@ MAX_RATING = 5
 GROUNDING_ANNOTATION_TEMPLATE = "\n\n".join(
     [
         "System:",
-        f"Given the {CONTEXT} and {PROMPT}, score the {COMPLETION} between {MIN_RATING} to {MAX_RATING} {RATING}, where {MIN_RATING} star means \"inconsistency\" and {MAX_RATING} {RATING} means \"perfect consistency\". Note that consistency measures whether the facts in the answer are consistent with the facts in the context. Consider whether the answer does reproduce facts accurately and does not make up untrue information. Answer only as an integer only, between 1 and 5.",  # noqa: E501
+        f"Given the {CONTEXT} and {PROMPT}, score the {COMPLETION} between {MIN_RATING} to {MAX_RATING} {RATING}, \
+            where {MIN_RATING} star means \"inconsistency\" and {MAX_RATING} {RATING} means \"perfect consistency\". \
+                Note that consistency measures whether the facts in the answer are consistent with the facts in the \
+                    context. Consider whether the answer does reproduce facts accurately and does not make up \
+                        untrue information. Answer only as an integer only, between 1 and 5.",
         "## Example Task #0",
         json.dumps({
             CONTEXT: "The Oscars are a popular award ceremony.",
@@ -134,15 +138,21 @@ GROUNDING_ANNOTATION_TEMPLATE = "\n\n".join(
         }),
         "User:",
         "{input_samples}",
-        "Reminder: The return values for each task should be dictionaries with the key 'rating'. The value of 'rating' should be an integer between 1 and 5."
+        "Reminder: The return values for each task should be dictionaries with the key 'rating'. The value of \
+            'rating' should be an integer between 1 and 5."
     ]
 )
 
 RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
     [
         "System:",
-        f"You are an AI assistant. You will be given the definition of an evaluation metric for assessing the quality of an {COMPLETION} in a question-answering task. Your job is to compute an accurate evaluation score using the provided evaluation metric.",
-        f"Relevance measures how well the {COMPLETION} addresses the main aspects of the {PROMPT}, based on the {CONTEXT}. Consider whether all and only the important aspects are contained in the {COMPLETION} when evaluating relevance. Given the {CONTEXT} and {PROMPT}, score the relevance of the {COMPLETION} between {MIN_RATING} to {MAX_RATING} using the following {RATING} scale:",  # noqa: E501
+        f"You are an AI assistant. You will be given the definition of an evaluation metric for assessing the \
+            quality of an {COMPLETION} in a question-answering task. Your job is to compute an accurate evaluation \
+                score using the provided evaluation metric.",
+        f"Relevance measures how well the {COMPLETION} addresses the main aspects of the {PROMPT}, based on the \
+            {CONTEXT}. Consider whether all and only the important aspects are contained in the {COMPLETION} when \
+                evaluating relevance. Given the {CONTEXT} and {PROMPT}, score the relevance of the {COMPLETION} \
+                    between {MIN_RATING} to {MAX_RATING} using the following {RATING} scale:",
         f"{RATING} 1: the answer completely lacks relevance",
         f"{RATING} 2: the answer mostly lacks relevance",
         f"{RATING} 3: the answer is partially relevant",
@@ -151,9 +161,11 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
         f"The score should be integer only, between {MIN_RATING} and {MAX_RATING}.",
         "## Example Task #0",
         json.dumps({
-            CONTEXT: "Marie Curie was a Polish-born physicist and chemist who pioneered research on radioactivity and was the first woman to win a Nobel Prize.",
+            CONTEXT: "Marie Curie was a Polish-born physicist and chemist who pioneered research on radioactivity \
+                and was the first woman to win a Nobel Prize.",
             PROMPT: "What field did Marie Curie excel in?",
-            COMPLETION: "Marie Curie was a renowned painter who focused mainly on impressionist styles and techniques.",
+            COMPLETION: "Marie Curie was a renowned painter who focused mainly on impressionist styles and \
+                techniques.",
         }),
         "A good example response would be:",
         "## Example Task #0:",
@@ -162,9 +174,11 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
         }),
         "## Example Task #1",
         json.dumps({
-            CONTEXT: "The Beatles were an English rock band formed in Liverpool in 1960, and they are widely regarded as the most influential music band in history.",
+            CONTEXT: "The Beatles were an English rock band formed in Liverpool in 1960, and they are widely \
+                regarded as the most influential music band in history.",
             PROMPT: "Where were The Beatles formed?",
-            COMPLETION: "The band The Beatles began their journey in London, England, and they changed the history of music.",
+            COMPLETION: "The band The Beatles began their journey in London, England, and they changed the \
+                history of music.",
         }),
         "A good example response would be:",
         "## Example Task #1:",
@@ -173,7 +187,9 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
         }),
         "## Example Task #2",
         json.dumps({
-            CONTEXT: "The recent Mars rover, Perseverance, was launched in 2020 with the main goal of searching for signs of ancient life on Mars. The rover also carries an experiment called MOXIE, which aims to generate oxygen from the Martian atmosphere.",
+            CONTEXT: "The recent Mars rover, Perseverance, was launched in 2020 with the main goal of searching \
+                for signs of ancient life on Mars. The rover also carries an experiment called MOXIE, which aims \
+                    to generate oxygen from the Martian atmosphere.",
             PROMPT: "What are the main goals of Perseverance Mars rover mission?",
             COMPLETION: "The Perseverance Mars rover mission focuses on searching for signs of ancient life on Mars.",
         }),
@@ -184,7 +200,10 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
         }),
         "## Example Task #3",
         json.dumps({
-            CONTEXT: "The Mediterranean diet is a commonly recommended dietary plan that emphasizes fruits, vegetables, whole grains, legumes, lean proteins, and healthy fats. Studies have shown that it offers numerous health benefits, including a reduced risk of heart disease and improved cognitive health.",
+            CONTEXT: "The Mediterranean diet is a commonly recommended dietary plan that emphasizes fruits, \
+                vegetables, whole grains, legumes, lean proteins, and healthy fats. Studies have shown that it \
+                    offers numerous health benefits, including a reduced risk of heart disease and improved \
+                        cognitive health.",
             PROMPT: "What are the main components of the Mediterranean diet?",
             COMPLETION: "The Mediterranean diet primarily consists of fruits, vegetables, whole grains, and legumes.",
         }),
@@ -195,9 +214,13 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
         }),
         "## Example Task #4",
         json.dumps({
-            CONTEXT: "The Queen's Royal Castle is a well-known tourist attraction in the United Kingdom. It spans over 500 acres and contains extensive gardens and parks. The castle was built in the 15th century and has been home to generations of royalty.",
+            CONTEXT: "The Queen's Royal Castle is a well-known tourist attraction in the United Kingdom. It spans \
+                over 500 acres and contains extensive gardens and parks. The castle was built in the 15th century \
+                    and has been home to generations of royalty.",
             PROMPT: "What are the main attractions of the Queen's Royal Castle?",
-            COMPLETION: "The main attractions of the Queen's Royal Castle are its expansive 500-acre grounds, extensive gardens, parks, and the historical castle itself, which dates back to the 15th century and has housed generations of royalty.",
+            COMPLETION: "The main attractions of the Queen's Royal Castle are its expansive 500-acre grounds, \
+                extensive gardens, parks, and the historical castle itself, which dates back to the 15th century \
+                    and has housed generations of royalty.",
         }),
         "A good example response would be:",
         "## Example Task #4:",
@@ -212,8 +235,13 @@ RELEVANCE_ANNOTATION_TEMPLATE = "\n\n".join(
 FLUENCY_ANNOTATION_TEMPLATE = "\n\n".join(
     [
         "System:",
-        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the quality of an answer in a question-answering task. Your job is to compute an accurate evaluation score using the provided evaluation metric.",
-        f"Fluency measures the quality of individual sentences in the answer, and whether they are well-written and grammatically correct. Consider the quality of individual sentences when evaluating fluency. Given the question and answer, score the fluency of the answer between {MIN_RATING} to {MAX_RATING} using the following {RATING} scale:",
+        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the quality \
+            of an answer in a question-answering task. Your job is to compute an accurate evaluation score using the \
+                provided evaluation metric.",
+        f"Fluency measures the quality of individual sentences in the answer, and whether they are well-written and \
+            grammatically correct. Consider the quality of individual sentences when evaluating fluency. Given the \
+                question and answer, score the fluency of the answer between {MIN_RATING} to {MAX_RATING} using the \
+                    following {RATING} scale:",
         f"{RATING} 1: the answer completely lacks fluency",
         f"{RATING} 2: the answer mostly lacks fluency",
         f"{RATING} 3: the answer is partially fluent",
@@ -243,7 +271,8 @@ FLUENCY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #2",
         json.dumps({
             PROMPT: "When was the last time you went on a family vacation?",
-            COMPLETION: "Last family vacation, it took place in last summer. We traveled to a beach destination, very fun.",
+            COMPLETION: "Last family vacation, it took place in last summer. We traveled to a beach destination, \
+                very fun.",
         }),
         "A good example response would be:",
         "## Example Task #2:",
@@ -253,7 +282,8 @@ FLUENCY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #3",
         json.dumps({
             PROMPT: "What is your favorite thing about your job?",
-            COMPLETION: "My favorite aspect of my job is the chance to interact with diverse people. I am constantly learning from their experiences and stories.",
+            COMPLETION: "My favorite aspect of my job is the chance to interact with diverse people. I am constantly \
+                learning from their experiences and stories.",
         }),
         "A good example response would be:",
         "## Example Task #3:",
@@ -263,7 +293,9 @@ FLUENCY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #4",
         json.dumps({
             PROMPT: "Can you describe your morning routine?",
-            COMPLETION: "Every morning, I wake up at 6 am, drink a glass of water, and do some light stretching. After that, I take a shower and get dressed for work. Then, I have a healthy breakfast, usually consisting of oatmeal and fruits, before leaving the house around 7:30 am.",
+            COMPLETION: "Every morning, I wake up at 6 am, drink a glass of water, and do some light stretching. \
+                After that, I take a shower and get dressed for work. Then, I have a healthy breakfast, usually \
+                    consisting of oatmeal and fruits, before leaving the house around 7:30 am.",
         }),
         "A good example response would be:",
         "## Example Task #4:",
@@ -277,8 +309,13 @@ FLUENCY_ANNOTATION_TEMPLATE = "\n\n".join(
 COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
     [
         "System:",
-        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the quality of an answer in a question-answering task. Your job is to compute an accurate evaluation score using the provided evaluation metric.",
-        f"Coherence of an answer is measured by how well all the sentences fit together and sound naturally as a whole. Consider the overall quality of the answer when evaluating coherence. Given the question and answer, score the fluency of the answer between {MIN_RATING} to {MAX_RATING} using the following {RATING} scale:",
+        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the quality \
+            of an answer in a question-answering task. Your job is to compute an accurate evaluation score using \
+                the provided evaluation metric.",
+        f"Coherence of an answer is measured by how well all the sentences fit together and sound naturally as a \
+            whole. Consider the overall quality of the answer when evaluating coherence. Given the question and \
+                answer, score the fluency of the answer between {MIN_RATING} to {MAX_RATING} using the following \
+                    {RATING} scale:",
         f"{RATING} 1: the answer completely lacks coherence",
         f"{RATING} 2: the answer mostly lacks coherence",
         f"{RATING} 3: the answer is partially coherent",
@@ -298,7 +335,8 @@ COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #1",
         json.dumps({
             PROMPT: "Can you describe your favorite movie without giving away any spoilers?",
-            COMPLETION: "It is a science fiction movie. There are dinosaurs. The actors eat cake. People must stop the villain."
+            COMPLETION: "It is a science fiction movie. There are dinosaurs. The actors eat cake. People must \
+                stop the villain."
         }),
         "A good example response would be:",
         "## Example Task #1:",
@@ -308,7 +346,8 @@ COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #2",
         json.dumps({
             PROMPT: "What are some benefits of regular exercise?",
-            COMPLETION: "Regular exercise improves your mood. A good workout also helps you sleep better. Trees are green",
+            COMPLETION: "Regular exercise improves your mood. A good workout also helps you sleep better. \
+                Trees are green",
         }),
         "A good example response would be:",
         "## Example Task #2:",
@@ -318,7 +357,8 @@ COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #3",
         json.dumps({
             PROMPT: "How do you cope with stress in your daily life?",
-            COMPLETION: "I usually go for a walk to clear my head. Listening to music helps me relax as well. Stress is a part of life, but we can manage it through some activities.",
+            COMPLETION: "I usually go for a walk to clear my head. Listening to music helps me relax as well. \
+                Stress is a part of life, but we can manage it through some activities.",
         }),
         "A good example response would be:",
         "## Example Task #3:",
@@ -328,7 +368,10 @@ COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #4",
         json.dumps({
             PROMPT: "What can you tell me about climate change and its effects on the environment?",
-            COMPLETION: "Climate change has far-reaching effects on the environment. Rising temperatures result in the melting of polar ice caps, contributing to sea-level rise. Additionally, more frequent and severe weather events, such as hurricanes and heatwaves, can cause disruption to ecosystems and human societies alike.",
+            COMPLETION: "Climate change has far-reaching effects on the environment. Rising temperatures result \
+                in the melting of polar ice caps, contributing to sea-level rise. Additionally, more frequent and \
+                    severe weather events, such as hurricanes and heatwaves, can cause disruption to ecosystems \
+                        and human societies alike.",
         }),
         "A good example response would be:",
         "## Example Task #4:",
@@ -341,8 +384,15 @@ COHERENCE_ANNOTATION_TEMPLATE = "\n\n".join(
 SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
     [
         "System:",
-        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the quality of an answer in a question-answering task. Your job is to compute an accurate evaluation score using the provided evaluation metric.",
-        f"Equivalence, as a metric, measures the similarity between the predicted answer and the correct answer. If the information and content in the predicted answer is similar or equivalent to the correct answer, then the value of the Equivalence metric should be high, else it should be low. Given the question, correct answer, and predicted answer, determine the value of Equivalence metric using the following rating scale between {MIN_RATING} to {MAX_RATING} using the following {RATING} scale:",
+        "You are an AI assistant. You will be given the definition of an evaluation metric for assessing the \
+            quality of an answer in a question-answering task. Your job is to compute an accurate evaluation \
+                score using the provided evaluation metric.",
+        f"Equivalence, as a metric, measures the similarity between the predicted answer and the correct answer. \
+            If the information and content in the predicted answer is similar or equivalent to the correct answer, \
+                then the value of the Equivalence metric should be high, else it should be low. Given the question, \
+                    correct answer, and predicted answer, determine the value of Equivalence metric using the \
+                        following rating scale between {MIN_RATING} to {MAX_RATING} using the following {RATING} \
+                            scale:",
         f"{RATING} 1: the predicted answer is not at all similar to the correct answer",
         f"{RATING} 2: the predicted answer is mostly not similar to the correct answer",
         f"{RATING} 3: the predicted answer is somewhat similar to the correct answer",
@@ -352,8 +402,10 @@ SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #0",
         json.dumps({
             PROMPT: "What is the role of ribosomes?",
-            COMPLETION: "Ribosomes participate in carbohydrate breakdown by removing nutrients from complex sugar molecules.",
-            GROUND_TRUTH: "Ribosomes are cellular structures responsible for protein synthesis. They interpret the genetic information carried by messenger RNA (mRNA) and use it to assemble amino acids into proteins."
+            COMPLETION: "Ribosomes participate in carbohydrate breakdown by removing nutrients from complex sugar \
+                molecules.",
+            GROUND_TRUTH: "Ribosomes are cellular structures responsible for protein synthesis. They interpret the \
+                genetic information carried by messenger RNA (mRNA) and use it to assemble amino acids into proteins."
         }),
         "A good example response would be:",
         "## Example Task #0:",
@@ -363,8 +415,12 @@ SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #1",
         json.dumps({
             PROMPT: "Why did the Titanic sink?",
-            COMPLETION: "The sinking of the Titanic was a result of a large iceberg collision. This caused the ship to take on water and eventually sink, leading to the death of many passengers due to a shortage of lifeboats and insufficient rescue attempts.",
-            GROUND_TRUTH: "The Titanic sank after it struck an iceberg during its maiden voyage in 1912. The impact caused the ship\'s hull to breach, allowing water to flood into the vessel. The ship\'s design, lifeboat shortage, and lack of timely rescue efforts contributed to the tragic loss of life."
+            COMPLETION: "The sinking of the Titanic was a result of a large iceberg collision. This caused the ship \
+                to take on water and eventually sink, leading to the death of many passengers due to a shortage of \
+                    lifeboats and insufficient rescue attempts.",
+            GROUND_TRUTH: "The Titanic sank after it struck an iceberg during its maiden voyage in 1912. The impact \
+                caused the ship\'s hull to breach, allowing water to flood into the vessel. The ship\'s design, \
+                    lifeboat shortage, and lack of timely rescue efforts contributed to the tragic loss of life."
         }),
         "A good example response would be:",
         "## Example Task #1:",
@@ -374,8 +430,12 @@ SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #2",
         json.dumps({
             PROMPT: "What causes seasons on Earth?",
-            COMPLETION: "Seasons occur because of the Earth\'s rotation and its elliptical orbit around the Sun. The tilt of the Earth\'s axis causes regions to be subjected to different sunlight intensities, which leads to temperature fluctuations and alternating weather conditions.",
-            GROUND_TRUTH: "Seasons on Earth are caused by the tilt of the Earth\'s axis and its revolution around the Sun. As the Earth orbits the Sun, the tilt causes different parts of the planet to receive varying amounts of sunlight, resulting in changes in temperature and weather patterns."
+            COMPLETION: "Seasons occur because of the Earth\'s rotation and its elliptical orbit around the Sun. \
+                The tilt of the Earth\'s axis causes regions to be subjected to different sunlight intensities, \
+                    which leads to temperature fluctuations and alternating weather conditions.",
+            GROUND_TRUTH: "Seasons on Earth are caused by the tilt of the Earth\'s axis and its revolution around \
+                the Sun. As the Earth orbits the Sun, the tilt causes different parts of the planet to receive \
+                    varying amounts of sunlight, resulting in changes in temperature and weather patterns."
         }),
         "A good example response would be:",
         "## Example Task #2:",
@@ -385,8 +445,12 @@ SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #3",
         json.dumps({
             PROMPT: "How does photosynthesis work?",
-            COMPLETION: "In photosynthesis, sunlight is transformed into nutrients by plants and certain microorganisms. Light is captured by chlorophyll molecules, followed by the conversion of carbon dioxide and water into sugar and oxygen through multiple reactions.",
-            GROUND_TRUTH: "Photosynthesis is a process by which green plants and some other organisms convert light energy into chemical energy. This occurs as light is absorbed by chlorophyll molecules, and then carbon dioxide and water are converted into glucose and oxygen through a series of reactions."
+            COMPLETION: "In photosynthesis, sunlight is transformed into nutrients by plants and certain \
+                microorganisms. Light is captured by chlorophyll molecules, followed by the conversion of \
+                    carbon dioxide and water into sugar and oxygen through multiple reactions.",
+            GROUND_TRUTH: "Photosynthesis is a process by which green plants and some other organisms convert \
+                light energy into chemical energy. This occurs as light is absorbed by chlorophyll molecules, and \
+                    then carbon dioxide and water are converted into glucose and oxygen through a series of reactions."
         }),
         "A good example response would be:",
         "## Example Task #3:",
@@ -396,8 +460,12 @@ SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
         "## Example Task #4",
         json.dumps({
             PROMPT: "What are the health benefits of regular exercise?",
-            COMPLETION: "Routine physical activity can contribute to maintaining ideal body weight, enhancing muscle and bone strength, and preventing chronic illnesses. In addition, it supports mental health by alleviating stress and augmenting general mood.",
-            GROUND_TRUTH: "Regular exercise can help maintain a healthy weight, increase muscle and bone strength, and reduce the risk of chronic diseases. It also promotes mental well-being by reducing stress and improving overall mood."
+            COMPLETION: "Routine physical activity can contribute to maintaining ideal body weight, enhancing \
+                muscle and bone strength, and preventing chronic illnesses. In addition, it supports mental \
+                    health by alleviating stress and augmenting general mood.",
+            GROUND_TRUTH: "Regular exercise can help maintain a healthy weight, increase muscle and bone strength, \
+                and reduce the risk of chronic diseases. It also promotes mental well-being by reducing stress and \
+                    improving overall mood."
         }),
         "A good example response would be:",
         "## Example Task #4:",
@@ -548,8 +616,8 @@ class _AzureMLHoboSparkOnBehalfOfCredential(object):
 
             spark_conf = spark.sparkContext.getConf()
             spark_conf_vars = {
-                "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",  # noqa: E501
-                "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT": "spark.tokenServiceEndpoint",  # noqa: E501
+                "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",
+                "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT": "spark.tokenServiceEndpoint",
             }
             for env_key, conf_key in spark_conf_vars.items():
                 value = spark_conf.get(conf_key)

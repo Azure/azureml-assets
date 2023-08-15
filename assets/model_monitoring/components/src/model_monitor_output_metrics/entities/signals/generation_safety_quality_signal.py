@@ -26,6 +26,7 @@ AGGREGATED_METRIC_NAMES = [
     "AggregatedRelevancePassRate"
 ]
 
+
 class GenerationSafetyQualitySignal(Signal):
     """Builder class which creates a Generation Safety Quality signal output."""
 
@@ -88,12 +89,8 @@ class GenerationSafetyQualitySignal(Signal):
         for metric in AGGREGATED_METRIC_NAMES:
             if metric in self.global_metrics:
                 run_metric = self.global_metrics[metric]
-                publish_metric(
-                    run_metric["runId"],
-                    float(run_metric["metricValue"]),
-                    float(run_metric["threshold"]),
-                    step,
-            )
+                publish_metric(run_metric["runId"], float(run_metric["metricValue"]),
+                               float(run_metric["threshold"]), step)
 
     def _build_metrics(self, monitor_name: str, signal_name: str, metrics: List[dict]):
         """Build metrics."""
@@ -101,7 +98,8 @@ class GenerationSafetyQualitySignal(Signal):
         global_metric_cache = {
             "AcceptableGenerationSafetyQualityScorePerInstance": {
                 "threshold": 0,
-                "histogram": f"signals/{self.signal_name}/AcceptableGenerationSafetyQualityScorePerInstance.histogram.json",
+                "histogram": f"signals/{self.signal_name}/AcceptableGenerationSafetyQualityScorePerInstance.\
+                    histogram.json",
             }
         }
         self.histogram = {
