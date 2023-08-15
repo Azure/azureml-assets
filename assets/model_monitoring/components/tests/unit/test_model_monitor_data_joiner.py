@@ -5,7 +5,7 @@
 
 import pytest
 
-from pyspark.sql.types import StructType
+from pyspark.sql.types import StringType, StructField, StructType
 from src.model_monitor_data_joiner.run import join_data
 from tests.e2e.utils.io_utils import create_pyspark_dataframe
 
@@ -91,12 +91,12 @@ class TestModelMonitorDataJoiner:
     ):
         """Test join data that produces empty result."""
         if is_left_data_empty:
-            left_data_df = create_pyspark_dataframe([], [LEFT_JOIN_COLUMN])
+            left_data_df = create_pyspark_dataframe([], StructType([StructField(LEFT_JOIN_COLUMN, StringType(), True)]))
         else:
             left_data_df = _generate_left_data_df(True)
 
         if is_right_data_empty:
-            right_data_df = create_pyspark_dataframe([], [RIGHT_JOIN_COLUMN])
+            right_data_df = create_pyspark_dataframe([], StructType([StructField(RIGHT_JOIN_COLUMN, StringType(), True)]))
         else:
             right_data_df = _generate_right_data_df(True)
 
