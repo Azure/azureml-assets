@@ -34,6 +34,13 @@ inputs:
     type:  mlflow_model
     optional: true
     description: MLflow model asset path
+
+  # Output of validation component
+  validation_output:
+    type: uri_file
+    optional: true
+    description: Validation status.
+
 outputs:
   output_dir:
     type: uri_folder
