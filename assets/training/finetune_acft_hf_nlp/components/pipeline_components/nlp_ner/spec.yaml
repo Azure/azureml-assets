@@ -41,15 +41,6 @@ inputs:
     default: bert-base-uncased
     description: model id used to load model checkpoint.
 
-  # Data PreProcess parameters (See [docs](https://aka.ms/azureml/components/text_classification_datapreprocess) to learn more)
-  task_name:
-    type: string
-    optional: false
-    enum:
-      - NLPNER
-    default: NLPNER
-    description: Text Classification task type
-
   # Dataset parameters
   training_data:
     type: uri_file
@@ -218,12 +209,6 @@ inputs:
     optional: true
     description: If set to true, will save as mlflow model with pyfunc as flavour
 
-  batch_size:
-    type: integer
-    default: 32
-    optional: true
-    description: batch size for pre-process
-
   deepspeed_config:
     type: uri_file
     optional: true
@@ -241,25 +226,21 @@ outputs:
 jobs:
   model_import:
     type: command
-    component: azureml:token_classification_model_import:0.0.10
+    component: azureml:token_classification_model_import:0.0.12
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       huggingface_id: ${{parent.inputs.model_name}}
   preprocess:
     type: command
-    component: azureml:token_classification_datapreprocess:0.0.10
+    component: azureml:nlp_ner_datapreprocessing:0.0.1
     compute: ${{parent.inputs.compute_preprocess}}
     inputs:
-      task_name: ${{parent.inputs.task_name}}
-      token_key: ${{parent.inputs.token_key}}
-      tag_key: ${{parent.inputs.tag_key}}
-      batch_size: ${{parent.inputs.batch_size}}
       train_file_path: ${{parent.inputs.training_data}}
       valid_file_path: ${{parent.inputs.validation_data}}
       model_selector_output: ${{parent.jobs.model_import.outputs.output_dir}}
   finetune:
     type: command
-    component: azureml:token_classification_finetune:0.0.10
+    component: azureml:token_classification_finetune:0.0.12
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch

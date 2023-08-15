@@ -3,11 +3,11 @@
 
 """File containing function for finetune component."""
 
-import os
 import json
 import argparse
 from pathlib import Path
 from argparse import Namespace
+from copy import deepcopy
 
 import torch
 
@@ -18,21 +18,30 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     Tasks,
     HfModelTypes,
     MLFlowHFFlavourConstants,
+    LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
+from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
-from azureml.acft.accelerator.utils.decorators import swallow_all_exceptions
-from azureml.acft.accelerator.utils.logging_utils import get_logger_app
+from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
+from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
+from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
+from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 
-from azureml.acft.accelerator.utils.error_handling.exceptions import ValidationException
-from azureml.acft.accelerator.utils.error_handling.error_definitions import SKUNotSupported, ValidationError
+from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
+    swallow_all_exceptions,
+)
+from azureml.acft.common_components.utils.error_handling.error_definitions import SKUNotSupported
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
-# Refer this logging issue
-# https://github.com/Azure/azure-sdk-for-python/issues/23563
 
-logger = get_logger_app()
+logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.finetune.finetune")
+
+COMPONENT_NAME = "ACFT-Finetune"
+
+# TODO - Move REFINED_WEB to :dataclass HfModelTypes
+REFINED_WEB = "RefinedWeb"
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
@@ -75,7 +84,20 @@ MLFLOW_MODEL_SIGNATURES = {
 
 IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
     HfModelTypes.LLAMA,
-    HfModelTypes.GPT_NEOX   # dolly
+    HfModelTypes.GPT_NEOX,  # dolly
+    HfModelTypes.FALCON,
+    HfModelTypes.REFINEDWEBMODEL,  # falcon
+]
+
+
+FORCE_4BIT_QUANTIZATION_MODELS = ["Llama-2-70b", "tiiuae-falcon-40b"]
+
+
+QLORA_SUPPORTED_MODEL_TYPES = [
+    HfModelTypes.LLAMA,
+    HfModelTypes.REFINEDWEBMODEL,
+    HfModelTypes.FALCON,
+    REFINED_WEB,
 ]
 
 
@@ -255,6 +277,17 @@ def get_parser():
         ),
     )
     parser.add_argument(
+        "--ddp_timeout",
+        type=int,
+        default=3600,
+        help=(
+            "The timeout for `torch.distributed.init_process_group` calls, used to avoid GPU socket timeouts when "
+            "performing slow operations in distributed runnings. Please refer the [PyTorch documentation] "
+            "(https://pytorch.org/docs/stable/distributed.html#torch.distributed.init_process_group) for more "
+            "information."
+        ),
+    )
+    parser.add_argument(
         "--max_grad_norm",
         type=float,
         default=1.0,
@@ -365,11 +398,36 @@ def get_parser():
     return parser
 
 
-def finetune(args: Namespace):
-    """Finetune."""
-    logger.info(f"full_determinism is set to {args.enable_full_determinism}")
-    enable_full_determinism(args.seed) if args.enable_full_determinism else set_seed(args.seed)
+def update_lora_target_modules():
+    """Update peft config with falcon target layers."""
+    import peft
 
+    models_to_lora_target_modules_map = getattr(
+        peft.utils.other, "TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING", {}
+    )
+    models_to_lora_target_modules_map.update(
+        {
+            HfModelTypes.REFINEDWEBMODEL: ["query_key_value"],
+            REFINED_WEB: ["query_key_value"],
+            HfModelTypes.FALCON: ["query_key_value"],
+        }
+    )
+    setattr(
+        peft.utils.other,
+        "TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING",
+        models_to_lora_target_modules_map
+    )
+    setattr(
+        peft.tuners.lora,
+        "TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING",
+        models_to_lora_target_modules_map
+    )
+    logger.info(
+        f"Updated lora target modules map: {peft.tuners.lora.TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING}")
+
+
+def copy_preprocess_args(args: Namespace) -> Namespace:
+    """Copy preprocess args to finetune."""
     # Read the preprocess component args
     # Preprocess Component + Model Selector Component ---> Finetune Component
     # Since all Model Selector Component args are saved via Preprocess Component, loading the Preprocess args
@@ -381,12 +439,31 @@ def finetune(args: Namespace):
             if not hasattr(args, key):  # add keys that don't already exist
                 setattr(args, key, value)
 
+    return args
+
+
+def finetune(args: Namespace):
+    """Finetune."""
+    logger.info(f"full_determinism is set to {args.enable_full_determinism}")
+    enable_full_determinism(args.seed) if args.enable_full_determinism else set_seed(args.seed)
+
     # Update the model name or path
     model_name_or_path = Path(args.model_selector_output, args.model_name)
     if model_name_or_path.is_dir():
         args.model_name_or_path = model_name_or_path
     else:
         args.model_name_or_path = args.model_name
+
+    # Enable QLoRA finetune for Llama-70B
+    model_asset_id = getattr(args, "model_asset_id", "")
+    if any(
+        [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
+    ):
+        logger.info(
+            f"Identified asset id: {model_asset_id}. Enabling QLoRA finetuning."
+        )
+        setattr(args, "apply_lora", True)
+        setattr(args, "precision", 4)
 
     # additional logging
     logger.info(f"Model name: {getattr(args, 'model_name', None)}")
@@ -395,21 +472,40 @@ def finetune(args: Namespace):
     logger.info(f"enable DeepSpeed: {getattr(args, 'apply_deepspeed', None)}")
     logger.info(f"enable ORT: {getattr(args, 'apply_ort', None)}")
     logger.info(f"Precision: {getattr(args, 'precision', None)}")
-    process_name = os.environ.get('AZUREML_PROCESS_NAME', 'main')
-    rank0_process = bool(process_name in {'main', 'rank_0'})
-    logger.info(f"Process - {process_name} | rank0_process: {rank0_process}")
 
     # set `ignore_mismatched_sizes` to `false` by default
-    if hasattr(args, "model_type") and args.model_type in IGNORE_MISMATCHED_SIZES_FALSE_MODELS:
-        logger.info(f"Identified model type: {args.model_type}. Forcing `ignore_mismatched_sizes` to False.")
+    if (
+        hasattr(args, "model_type")
+        and args.model_type in IGNORE_MISMATCHED_SIZES_FALSE_MODELS
+    ):
+        logger.info(
+            f"Identified model type: {args.model_type}. Forcing `ignore_mismatched_sizes` to False."
+        )
         setattr(args, "ignore_mismatched_sizes", False)
 
-    # set `mlflow_ft_conf` - contains all mlflow related properties
-    setattr(args, "mlflow_ft_conf", {})
+    # read FT config
+    ft_config_path = Path(args.model_selector_output, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)
+    if ft_config_path.is_file():
+        with open(ft_config_path, "r") as rptr:
+            ft_config = json.load(rptr)
+            setattr(args, "finetune_config", ft_config)
+            logger.info("Added finetune config to `component_args`")
+    else:
+        logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
+        setattr(args, "finetune_config", {})
+
+    # `mlflow_ft_conf` - contains all mlflow related properties
+    mlflow_ft_conf = {
+        "mlflow_model_signature": {},
+        "mlflow_hftransformers_misc_conf": {},
+    }
 
     # set task based mlflow_model_signature
     if getattr(args, "task_name", None) is not None and args.task_name in MLFLOW_MODEL_SIGNATURES:
-        args.mlflow_ft_conf["mlflow_model_signature"] = MLFLOW_MODEL_SIGNATURES[args.task_name]
+        mlflow_ft_conf["mlflow_model_signature"] = deep_update(
+            mlflow_ft_conf["mlflow_model_signature"],
+            MLFLOW_MODEL_SIGNATURES[args.task_name],
+        )
         logger.info(
                     f"Adding mlflow model signature for task {args.task_name} - "
                     f"{MLFLOW_MODEL_SIGNATURES[args.task_name]}"
@@ -427,7 +523,10 @@ def finetune(args: Namespace):
             f"Forcing `mlflow_hftransformers_misc_conf` to set to {mlflow_hftransformers_misc_conf} "
             f"for {model_name_or_type}"
         )
-        args.mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = mlflow_hftransformers_misc_conf
+        mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = deep_update(
+            mlflow_ft_conf["mlflow_hftransformers_misc_conf"],
+            mlflow_hftransformers_misc_conf,
+        )
 
     # if MLmodel file exists pass to finetuned model as `base_model_mlmodel`
     mlflow_config_file = Path(args.model_selector_output, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
@@ -441,21 +540,60 @@ def finetune(args: Namespace):
             logger.info(f"Unable to load MLmodel file - {e}")
         if mlflow_data is not None:
             # pass base model MLmodel file data if available
-            mlflow_hftransformers_misc_conf = args.mlflow_ft_conf.get("mlflow_hftransformers_misc_conf", {})
+            mlflow_hftransformers_misc_conf = mlflow_ft_conf.get("mlflow_hftransformers_misc_conf", {})
             mlflow_hftransformers_misc_conf.update({"base_model_mlmodel": mlflow_data})
-            args.mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = mlflow_hftransformers_misc_conf
+            mlflow_ft_conf["mlflow_hftransformers_misc_conf"] = deep_update(
+                mlflow_ft_conf["mlflow_hftransformers_misc_conf"],
+                mlflow_hftransformers_misc_conf,
+            )
             logger.info(f"Setting `base_model_mlmodel` in finetuned mlflow model - {mlflow_hftransformers_misc_conf}")
         else:
             logger.info("MLmodel file is empty")
     else:
         logger.info("MLmodel file does not exist")
 
-    logger.info(f"FT MLFlow config - {args.mlflow_ft_conf}")
+    logger.info(f"FT MLFlow config - {mlflow_ft_conf}")
+
+    mlflow_ft_conf = deep_update(mlflow_ft_conf, args.finetune_config.get("mlflow_ft_conf", {}))
+    args.finetune_config["mlflow_ft_conf"] = deepcopy(mlflow_ft_conf)
+    logger.info(f"Updated FT MLFlow config - {args.finetune_config['mlflow_ft_conf']}")
 
     # Below arguments are needed for HF training args
     args.output_dir = args.pytorch_model_folder
     Path(args.output_dir).mkdir(exist_ok=True, parents=True)
-    args.fp16 = bool(args.precision == 16)
+    if args.precision == 16:
+        if torch.cuda.is_bf16_supported():
+            args.bf16 = True
+            logger.info(
+                "Setting bfloat16 to True to avoid loss overflow issues. "
+                "If deepspeed is enabled, bf16 should be set to true in the deepspeed config."
+            )
+        else:
+            args.fp16 = True
+            logger.info("Setting float16 to True")
+    args.finetune_in_8bit = bool(args.precision == 8)  # 8 bit finetune
+    args.finetune_in_4bit = bool(args.precision == 4)  # 4 bit finetune
+
+    if args.finetune_in_8bit or args.finetune_in_4bit:
+        if hasattr(args, "model_type") and args.model_type not in QLORA_SUPPORTED_MODEL_TYPES:
+            raise ValueError(
+                f"Looks like quantized finetune is enabled for model family: {args.model_type} which is not supported")
+        logger.info("Enabling QLoRA finetuning")
+        if not args.apply_lora:
+            logger.info("Lora is not enabled. Setting it to true.")
+            setattr(args, "apply_lora", True)
+        if args.apply_deepspeed:
+            logger.info(
+                "Deepspeed is enabled which is not compatible with QLoRA. "
+                "Resetting Deepspeed to false"
+            )
+            setattr(args, "apply_deepspeed", False)
+
+    # disable ORT as optimum package is not compatible with transformers 4.31.0
+    if args.apply_ort:
+        logger.info("Optimum has a breaking change with transformers 4.31.0.")
+        logger.info("Resetting ORT to false")
+        setattr(args, "apply_ort", False)
 
     # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
     if args.apply_deepspeed and args.deepspeed is None:
@@ -465,22 +603,28 @@ def finetune(args: Namespace):
         args.deepspeed = None
 
     if args.deepspeed:
+        if getattr(args, "auto_find_batch_size", False):
+            logger.info(
+                "Auto find batch size with deepspeed has breaking change with transformers 4.31.0. "
+                "Resetting auto_find_batch_size to false."
+            )
+            setattr(args, "auto_find_batch_size", False)
         with open(args.deepspeed, "r") as fp:
             ds_data = json.load(fp)
         zero_optimization_config = ds_data.get("zero_optimization", {})
         ds_stage = zero_optimization_config.get("stage", None)
         # `apply_lora=true` is not supported with stage3 deepspeed config
         if ds_stage == 3 and args.apply_lora:
-            raise ValidationException._with_error(
-                AzureMLError.create(ValidationError, error=(
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(ACFTUserError, error=(
                     "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
                     )
                 )
             )
         # `stage3_gather_16bit_weights_on_model_save=false` is not supported for stage3 deepspeed config
         if ds_stage == 3 and not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
-            raise ValidationException._with_error(
-                AzureMLError.create(ValidationError, error=(
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(ACFTUserError, error=(
                     "stage3_gather_16bit_weights_on_model_save should be "
                     "`true` in deepspeed stage 3 config"
                     )
@@ -499,39 +643,63 @@ def finetune(args: Namespace):
     args.save_strategy = args.evaluation_strategy
     args.save_steps = args.eval_steps
 
-    logger.info(args)
-
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
 
-    conda_yaml_file_path = Path(args.mlflow_model_folder, "conda.yaml")
-    if rank0_process and conda_yaml_file_path.is_file():
-        import yaml
-        with open(conda_yaml_file_path, "r") as rptr:
-            conda_data = yaml.safe_load(rptr)
 
-        if conda_data is not None:
-            dependencies = conda_data.get("dependencies", [])
-            if isinstance(dependencies, list) and not any(['pycocotools' in dep for dep in dependencies]):
-                dependencies.append("pycocotools=2.0.4")
-
-            conda_data["dependencies"] = dependencies
-            with open(conda_yaml_file_path, "w") as wptr:
-                yaml.dump(conda_data, wptr)
-            logger.info(f"Updated conda dependencies - {dependencies}")
-        else:
-            logger.info("conda.yaml file is empty")
-
-
-@swallow_all_exceptions(logger)
+@swallow_all_exceptions(time_delay=60)
 def main():
     """Parse args and finetune."""
     if not torch.cuda.is_available():
-        raise ValidationException._with_error(AzureMLError.create(SKUNotSupported))
+        raise ACFTValidationException._with_error(AzureMLError.create(SKUNotSupported))
 
     parser = get_parser()
     args, _ = parser.parse_known_args()
+
+    # Copy the args generated in the preprocess step
+    args = copy_preprocess_args(args)
+
+    # Set logging parameters
+    set_logging_parameters(
+        task_type=args.task_name,
+        acft_custom_dimensions={
+            LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
+            LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
+            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME,
+        },
+        azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+    )
+
+    # XXX Hack to support model loading in accelerator package for falcon models
+    # with `trust_remote_code=True`
+    # This is needed as FT config is ONLY used in contrib package which is causing
+    # failure when loading the model in accelerator as part of peft weights merge
+    if hasattr(args, "model_type") and args.model_type in [
+        HfModelTypes.REFINEDWEBMODEL,
+        HfModelTypes.FALCON,
+        REFINED_WEB,
+    ]:
+        from functools import partial
+        from transformers.models.auto import (
+            AutoModelForSequenceClassification,
+            AutoModelForTokenClassification,
+            AutoModelForQuestionAnswering,
+        )
+
+        # Updata lora target modules for falcon
+        update_lora_target_modules()
+
+        AutoModelForSequenceClassification.from_pretrained = partial(
+            AutoModelForSequenceClassification.from_pretrained, trust_remote_code=True
+        )
+        AutoModelForTokenClassification.from_pretrained = partial(
+            AutoModelForTokenClassification.from_pretrained, trust_remote_code=True
+        )
+        AutoModelForQuestionAnswering.from_pretrained = partial(
+            AutoModelForQuestionAnswering.from_pretrained, trust_remote_code=True
+        )
+        logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA")
 
     finetune(args)
 

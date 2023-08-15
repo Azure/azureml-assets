@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
+RUN apt-get update && apt-get -y upgrade
+
 WORKDIR /
 
 ENV CONDA_PREFIX=/azureml-envs/python-sdk-v2
