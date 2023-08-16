@@ -27,8 +27,8 @@ RUN pip install --no-deps 'charset-normalizer==2.0.12' \
                           'domonic==0.9.10'
 
 # Install azureml packages
-RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
-                'azureml-core=={{latest-pypi-version}}' \
+RUN pip install 'azureml-core=={{latest-pypi-version}}' \
+                'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
                 'azureml-telemetry=={{latest-pypi-version}}'
 
