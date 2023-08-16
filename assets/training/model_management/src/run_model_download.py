@@ -39,6 +39,7 @@ def validate_if_model_exists(model_id):
         try:
             ml_client_registry = get_mlclient(registry_name=registry)
         except Exception:
+            logger.warning(f"Could not connect to registry {registry}")
             continue
 
         if not re.match(VALID_MODEL_NAME_PATTERN, model_id):
@@ -47,7 +48,12 @@ def validate_if_model_exists(model_id):
             model_id = re.sub(NEGATIVE_MODEL_NAME_PATTERN, "-", model_id)
             logger.info(f"Updated model_name = {model_id}")
 
-        models = ml_client_registry.models.get(name=model_id, label="latest")
+        try:
+            models = ml_client_registry.models.get(name=model_id, label="latest")
+        except Exception as e:
+            logger.warning(f"Model with name - {model_id} is not available. Error: {e}")
+            continue
+
         logger.info(f"models: {models}")
         if models:
             version = models.version
