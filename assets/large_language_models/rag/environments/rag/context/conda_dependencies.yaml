@@ -12,10 +12,10 @@ dependencies:
   - psutil~=5.8.0
   - pandas~=1.1.5
   - openai~=0.27.4
-  - langchain==0.0.220
+  - langchain==0.0.236
   - scikit-learn~=0.24.2
   - faiss-cpu~=1.7.3
-  - mlflow>=2.5.0
+  - mlflow>=2.6.0
   - mlflow-skinny==2.3.2
   - azureml-contrib-services
   - azureml-inference-server-http==0.7.6
