@@ -22,7 +22,7 @@ def _submit_generation_safety_signal_monitor_job(ml_client, get_component, targe
             signal_name="my_test_generation_safety_signal",
             monitor_name="my_test_model_monitor",
             monitor_current_time="2023-02-02T00:00:00Z",
-            metric_names="groundedness, fluency,relevance, coherence",
+            metric_names="groundedness, fluency,relevance, coherence, similarity",
             model_deployment_name="gpt-35-turbo",
             model_type="gpt-35-turbo",
             endpoint_type="azure_openai_api",
