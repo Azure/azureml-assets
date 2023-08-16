@@ -4,13 +4,13 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.14
+version: 0.0.17
 name: llm_rag_validate_deployments
 display_name: LLM – Validate Deployments
 is_deterministic: false
 
 description: |
-  Validates that completion model, embedding model, and Azure Cognitive Search resource deployments is successful and connections works. 
+  Validates that completion model, embedding model, and Azure Cognitive Search resource deployments is successful and connections works.
   For default AOAI, it attempts to create the deployments if not valid or present.
   This validation is done only if customer is using Azure Open AI models or creating an ACS index.
 
@@ -45,11 +45,11 @@ inputs:
    check_acs:
      type: string
      optional: true
-     enum: 
+     enum:
       - "True"
       - "False"
      default: "False"
-     description: "Boolean to inform whether to check the ACS connection associated with acs_config."
+     description: "Boolean to inform whether to check the ACS connqection associated with acs_config."
 outputs:
   output_data:
     type: uri_file

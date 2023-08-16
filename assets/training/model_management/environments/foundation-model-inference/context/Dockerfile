@@ -3,7 +3,11 @@ FROM ghcr.io/huggingface/text-generation-inference:0.9
 
 ENV DEBIAN_FRONTEND noninteractive
 
+# Remove cached conda packages (which contains some vulnerable packages as well)
+RUN rm -rf /opt/conda/pkgs
 RUN apt-get update -y && apt-get install vim openssh-server openssh-client curl graphviz -y
+
+
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
