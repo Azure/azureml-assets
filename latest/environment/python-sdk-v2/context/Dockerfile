@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20230808.v1
 
-RUN apt-get update && apt-get -y upgrade
+RUN apt-get update -y && apt-get install openssh-server openssh-client curl -y
 
 WORKDIR /
 
