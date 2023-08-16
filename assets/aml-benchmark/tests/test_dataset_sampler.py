@@ -500,8 +500,12 @@ class TestDatasetSamplerScript:
         :rtype: NoneType
         """
         cwd = os.getcwd()
-        print(cwd)  # TODO: remove this in the next component
-        src_dir = os.path.join(cwd, 'assets/aml-benchmark/components/src')
+        if os.path.basename(cwd) == "azureml-assets":
+            # when running tests locally
+            src_dir = "assets/aml-benchmark/components/src"
+        else:
+            # when running tests from workflow
+            src_dir = os.path.join(os.path.dirname(cwd), "src")
 
         args = [
             f"cd {src_dir} &&",
