@@ -11,7 +11,7 @@ import uuid
 from pyspark.sql import Row
 from typing import List
 
-from model_monitor_metric_outputter.builder import MetricOutputBuilder
+from model_monitor_metric_outputter import MetricOutputBuilder
 from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.constants import METADATA_VERSION
 from shared_utilities.io_utils import (
