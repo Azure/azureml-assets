@@ -13,5 +13,6 @@ def main():
     with open(args.validation_info, "w") as f:
         f.write("Validation Completed")
 
+
 if __name__ == "__main__":
     main()
