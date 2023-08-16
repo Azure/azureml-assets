@@ -1,7 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""script to update validation info"""
+
 def main():
+    """
+    Script which runs as part of validation component to update output
+    """
     import argparse
 
     parser = argparse.ArgumentParser()
