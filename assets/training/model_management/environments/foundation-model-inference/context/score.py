@@ -692,11 +692,11 @@ def get_generator_params(params: dict):
 
     updated_params = {}
     updated_params.update(default_generator_configs)
-    # map 'max_gen_length' to 'max_new_tokens' if present
+    # map 'max_gen_len' to 'max_new_tokens' if present
     if "max_gen_len" in params:
-        logger.warning("max_gen_length is deprecated. Use max_new_tokens")
-        params["max_new_tokens"] = params["max_gen_length"]
-        del params["max_gen_length"]
+        logger.warning("max_gen_len is deprecated. Use max_new_tokens")
+        params["max_new_tokens"] = params["max_gen_len"]
+        del params["max_gen_len"]
 
     updated_params.update(params)
     return updated_params
