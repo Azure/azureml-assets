@@ -1,5 +1,7 @@
 This is a companion flow to "Ask Wikipedia". It demonstrates how to create a chatbot that can remember previous interactions and use the conversation history to generate next message.
 
+Brief description: ChatGPT-based chatbot that leverages Wikipedia data to ground the responses.
+
 ### What you will learn
 
 In this flow, you will learn

@@ -3,6 +3,8 @@ name: template-chat-flow
 path: ./
 properties:
   is-promptflow: 'true'
+  promptflow.type: chat
+  promptflow.section: template
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
 version: 2

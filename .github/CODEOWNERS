@@ -8,3 +8,4 @@
 /assets/common/ @azure/aml-training
 /assets/model_monitoring/ @Azure/aml-model-monitoring
 /assets/large_language_models/ @azure/aml-training
+/assets/promptflow/ @azure/promptflow-builtin
