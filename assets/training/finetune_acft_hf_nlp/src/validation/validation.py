@@ -3,6 +3,7 @@
 
 """script to update validation info"""
 
+
 def main():
     """
     Script which runs as part of validation component to update output
