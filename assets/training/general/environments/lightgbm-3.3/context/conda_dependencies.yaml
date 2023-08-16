@@ -6,7 +6,7 @@ dependencies:
 - python=3.8
 - pip=21.3.1
 - pandas>=1.1,<1.2
-- scipy~=1.5.0
+- scipy~=1.10.0
 - numpy~=1.22.0
 - pip:
   - wheel~=0.38.1
@@ -20,3 +20,5 @@ dependencies:
   - lightgbm~=3.3.5
   - distributed~=2021.10.0
   - adlfs~=0.7.0
+  - cryptography>=41.0.2
+  - aiohttp>=3.8.5

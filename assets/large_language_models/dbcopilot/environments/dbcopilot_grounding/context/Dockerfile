@@ -23,7 +23,32 @@ RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18
 RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 
+## Install dbcopilot
+COPY ./requirements.txt ./
+RUN pip install -r requirements.txt
 
-# Workaround: install packages with extra index url. Will be removed after the packages are published to pypi
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/dbcopilot-0.3.20230613.dev4-py3-none-any.whl
-RUN pip install https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/db_copilot_tool-0.1.3-py3-none-any.whl
+# Install promptflow (including embeddingstore)
+RUN pip install --upgrade promptflow-sdk-bundle[azure] --extra-index-url https://azuremlsdktestpypi.azureedge.net/promptflow/
+
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+    # utilities for keeping Debian and OpenJDK CA certificates in sync
+    ca-certificates p11-kit wget \
+    ; \
+    rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME /usr/local/openjdk-21
+ENV PATH $JAVA_HOME/bin:$PATH
+
+# Default to UTF-8 file.encoding
+ENV LANG C.UTF-8
+
+# https://jdk.java.net/
+# >
+# > Java Development Kit builds, from Oracle
+# >
+ENV JAVA_VERSION 21-ea+22
+
+COPY setup.sh .
+RUN bash setup.sh
