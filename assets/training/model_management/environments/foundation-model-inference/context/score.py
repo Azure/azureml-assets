@@ -686,31 +686,19 @@ def get_request_data(request_string) -> (
         )
 
 
-def add_and_validate_gen_params(params: dict, new_params: dict):
-    """Add and validate inference params."""
-    if not new_params or not isinstance(new_params, dict):
-        return params
-    for k, v in new_params.items():
-        if k not in SUPPORTED_INFERENCE_PARAMS:
-            logger.warning(f"Ignoring unsupported inference param {k}.")
-        elif not isinstance(v, SUPPORTED_INFERENCE_PARAMS[k]["type"]):
-            logger.warning(
-                f"Ignoring inference param {k} as value passed is of type "
-                f"{type(v)} and not of type "
-                f"{SUPPORTED_INFERENCE_PARAMS[k]['type']}"
-            )
-        else:
-            params[k] = v
-    return params
-
-
 def get_generator_params(params: dict):
     """Return accumulated generator params."""
     global default_generator_configs
 
     updated_params = {}
     updated_params.update(default_generator_configs)
-    updated_params = add_and_validate_gen_params(updated_params, params)
+    # map 'max_gen_length' to 'max_new_tokens' if present
+    if "max_gen_len" in params:
+        logger.warning(f"max_gen_length is deprecated. Use max_new_tokens")
+        params["max_new_tokens"] = params["max_gen_length"]
+        del params["max_gen_length"]
+
+    updated_params.update(params)
     return updated_params
 
 
