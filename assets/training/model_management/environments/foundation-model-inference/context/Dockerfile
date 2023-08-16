@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 # Remove cached conda packages (which contains some vulnerable packages as well)
 RUN rm -rf /opt/conda/pkgs
-RUN apt-get update -y && apt-get install vim -y
+RUN apt-get update -y && apt-get install vim openssh-server openssh-client curl graphviz -y
 
 
 
