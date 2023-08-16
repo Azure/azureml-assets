@@ -1,0 +1,10 @@
+azureml-acft-common-components==0.0.24
+azure-ai-ml>=1.4.0
+mldesigner
+mlflow
+azureml-mlflow
+azureml-core
+requests
+certifi==2023.07.22
+cryptography==41.0.3
+setuptools==67.6.0
