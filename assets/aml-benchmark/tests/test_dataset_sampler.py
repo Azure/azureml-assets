@@ -499,8 +499,12 @@ class TestDatasetSamplerScript:
         :return: None
         :rtype: NoneType
         """
+        cwd = os.getcwd()
+        print(cwd)  # TODO: remove this in the next component
+        src_dir = os.path.join(cwd, 'assets/aml-benchmark/components/src')
+
         args = [
-            "cd assets/aml-benchmark/components/src &&",
+            f"cd {src_dir} &&",
             "python -m dataset_sampler.main",
             "--dataset",
             dataset,

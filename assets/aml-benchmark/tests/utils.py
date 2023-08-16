@@ -40,16 +40,14 @@ def get_mlclient(registry_name: Optional[str] = None) -> MLClient:
     :return: MLClient instance.
     """
     try:
-        credential = DefaultAzureCredential()
-        # Check if given credential can get token successfully.
-        credential.get_token("https://management.azure.com/.default")
-    except Exception as exception:
-        print(exception)
         credential = AzureCliCredential(tenant_id=os.environ.get("TENANT_ID", ""))
+    except Exception as ex:
+        print(ex)
+        credential = DefaultAzureCredential()
+        credential.get_token("https://management.azure.com/.default")
     try:
         ml_client = MLClient.from_config(credential=credential)
-    except Exception as exception:
-        print(exception)
+    except Exception:
         ml_client = MLClient(
             credential=credential,
             subscription_id=os.environ.get("SUBSCRIPTION_ID", ""),
