@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: chat-with-wikipedia
+path: ./
+properties:
+  SHA: 1937544adcceef984626626e2d7e679a156b9c0d
+  is-promptflow: 'true'
+  inference-min-sku-spec: 4|0|28|32
+  inference-recommended-sku: Standard_DS5_v2
+version: 1

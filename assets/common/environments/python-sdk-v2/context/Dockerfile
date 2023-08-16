@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
-RUN apt-get update -y && apt-get install openssh-server openssh-client curl graphviz -y
+RUN apt-get update -y && apt-get install openssh-server openssh-client curl -y
 
 WORKDIR /
 

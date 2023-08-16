@@ -13,6 +13,3 @@ dependencies:
     - azureml-telemetry=={{latest-pypi-version}}
     - cryptography=={{latest-pypi-version}}
     - certifi=={{latest-pypi-version}}
-    - requests=={{latest-pypi-version}}
-    - scipy=={{latest-pypi-version}}
-    - aiohttp=={{latest-pypi-version}}
