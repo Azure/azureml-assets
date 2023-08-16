@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: chat-with-wikipedia
+name: classification_accuracy_eval
 path: ./
 properties:
   is-promptflow: 'true'

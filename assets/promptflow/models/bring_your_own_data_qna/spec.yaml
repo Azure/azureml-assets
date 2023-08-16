@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: chat-with-wikipedia
+name: bring_your_own_data_qna
 path: ./
 properties:
   is-promptflow: 'true'
