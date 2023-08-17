@@ -49,14 +49,14 @@ def validate_if_model_exists(model_id):
             logger.info(f"Updated model_name = {model_id}")
 
         try:
-            models = ml_client_registry.models.get(name=model_id, label="latest")
+            model = ml_client_registry.models.get(name=model_id, label="latest")
         except Exception as e:
             logger.warning(f"Model with name - {model_id} is not available. Error: {e}")
             continue
 
-        logger.info(f"models: {models}")
-        if models:
-            version = models.version
+        logger.info(f"model: {model}")
+        if model:
+            version = model.version
             url = f"https://ml.azure.com/registries/{registry}/models/{model_id}/version/{version}"
             raise AzureMLException._with_error(
                 AzureMLError.create(ModelAlreadyExists, model_id=model_id, registry=registry, url=url)
