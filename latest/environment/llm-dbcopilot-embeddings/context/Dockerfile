@@ -24,11 +24,8 @@ RUN echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 
 ## Install dbcopilot
-COPY ./requirements.txt ./
-RUN pip install -r requirements.txt
-
-# Install promptflow (including embeddingstore)
-RUN pip install --upgrade promptflow-sdk-bundle[azure] --extra-index-url https://azuremlsdktestpypi.azureedge.net/promptflow/
+COPY ./extra_requirements.txt ./
+RUN pip install -r extra_requirements.txt
 
 RUN set -eux; \
     apt-get update; \
