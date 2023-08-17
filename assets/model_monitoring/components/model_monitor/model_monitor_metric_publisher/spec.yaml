@@ -60,3 +60,4 @@ resources:
 identity:
   type: managed
   client_id: ${{inputs.user_assigned_managed_identity_client_id}
+  
