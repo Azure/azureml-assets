@@ -63,10 +63,7 @@ ACFT_CONFIG = {
                 },
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
-                },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
+                }
             },
             "mlflow_save_model_kwargs": {
                 "extra_pip_requirements": ["einops"],
@@ -94,9 +91,6 @@ ACFT_CONFIG = {
                 },
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
-                },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
                 },
             },
             "mlflow_save_model_kwargs": {
@@ -126,9 +120,6 @@ ACFT_CONFIG = {
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
                 },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
             },
             "mlflow_save_model_kwargs": {
                 "extra_pip_requirements": ["einops"],
@@ -156,9 +147,6 @@ ACFT_CONFIG = {
                 },
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
-                },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
                 },
             },
             "mlflow_save_model_kwargs": {
@@ -188,15 +176,18 @@ ACFT_CONFIG = {
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
                 },
-                "tokenizer_config": {
-                    "return_token_type_ids": False,
-                },
             },
             "mlflow_save_model_kwargs": {
                 "extra_pip_requirements": ["einops"],
             },
         },
     },
+    HfModelTypes.LLAMA: {
+        "load_tokenizer_kwargs": {
+            "add_eos_token": True,
+            "padding_side": "right"
+        }
+    }
 }
 
 

@@ -1,7 +1,7 @@
-azureml-acft-accelerator=={{latest-pypi-version}}
-azureml_acft_common_components=={{latest-pypi-version}}
-azureml-acft-contrib-hf-nlp=={{latest-pypi-version}}
-mltable=={{latest-pypi-version}}
+https://automlcesdkdataresources.blob.core.windows.net/dev-wheels/text_gen_quant/azureml_acft_accelerator-0.1.0.0-py3-none-any.whl
+azureml_acft_common_components
+https://automlcesdkdataresources.blob.core.windows.net/dev-wheels/text_gen_quant/azureml_acft_contrib_hf_nlp-0.1.0.0-py3-none-any.whl
+mltable
 datasets==2.12.0
 mpi4py==3.1.4
 sentencepiece==0.1.99

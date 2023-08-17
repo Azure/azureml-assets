@@ -455,15 +455,15 @@ def finetune(args: Namespace):
         args.model_name_or_path = args.model_name
 
     # Enable QLoRA finetune for Llama-70B
-    model_asset_id = getattr(args, "model_asset_id", "")
-    if any(
-        [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
-    ):
-        logger.info(
-            f"Identified asset id: {model_asset_id}. Enabling QLoRA finetuning."
-        )
-        setattr(args, "apply_lora", True)
-        setattr(args, "precision", 4)
+    # model_asset_id = getattr(args, "model_asset_id", None) or ""
+    # if any(
+    #     [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
+    # ):
+    #     logger.info(
+    #         f"Identified asset id: {model_asset_id}. Enabling QLoRA finetuning."
+    #     )
+    #     setattr(args, "apply_lora", True)
+    #     setattr(args, "precision", 4)
 
     # additional logging
     logger.info(f"Model name: {getattr(args, 'model_name', None)}")
@@ -613,14 +613,14 @@ def finetune(args: Namespace):
             ds_data = json.load(fp)
         zero_optimization_config = ds_data.get("zero_optimization", {})
         ds_stage = zero_optimization_config.get("stage", None)
-        # `apply_lora=true` is not supported with stage3 deepspeed config
-        if ds_stage == 3 and args.apply_lora:
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(ACFTUserError, error=(
-                    "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
-                    )
-                )
-            )
+        # # `apply_lora=true` is not supported with stage3 deepspeed config
+        # if ds_stage == 3 and args.apply_lora:
+        #     raise ACFTValidationException._with_error(
+        #         AzureMLError.create(ACFTUserError, error=(
+        #             "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
+        #             )
+        #         )
+        #     )
         # `stage3_gather_16bit_weights_on_model_save=false` is not supported for stage3 deepspeed config
         if ds_stage == 3 and not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
             raise ACFTValidationException._with_error(
