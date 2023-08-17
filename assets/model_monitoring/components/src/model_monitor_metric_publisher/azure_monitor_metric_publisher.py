@@ -11,8 +11,8 @@ def publish_metric(
         signal_metrics: List[Row],
         monitor_name: str,
         signal_name: str,
-        window_start: datetime,
-        window_end: datetime,
+        data_window_start: datetime,
+        data_window_end: datetime,
         location: str,
         ws_resource_uri: str):
     """Publish the signal metrics."""
@@ -26,7 +26,7 @@ def publish_metric(
     succeeded_count = 0
     failed_count = 0
     for metric in signal_metrics:
-        payload = to_metric_payload(metric, monitor_name, signal_name, window_start, window_end)
+        payload = to_metric_payload(metric, monitor_name, signal_name, data_window_start, data_window_end)
 
         try:
             response = __post_metric(payload, metrics_url)
@@ -44,8 +44,8 @@ def to_metric_payload(
         metric: Row,
         monitor_name: str,
         signal_name: str,
-        window_start: datetime,
-        window_end: datetime) -> dict:
+        data_window_start: datetime,
+        data_window_end: datetime) -> dict:
     """Convert to a dictionary object for metric output."""
     metric_name = metric["metric_name"]
     metric_value = metric["metric_value"]
@@ -63,8 +63,8 @@ def to_metric_payload(
                     "GroupDimension",
                     "MonitorName",
                     "SignalName",
-                    "WindowStart",
-                    "WindowEnd",
+                    "DataWindowStart",
+                    "DataWindowEnd",
                 ],
                 "series": [
                     {
@@ -73,8 +73,8 @@ def to_metric_payload(
                             group_dimension,
                             monitor_name,
                             signal_name,
-                            window_start.isoformat(" "),
-                            window_end.isoformat(" "),
+                            data_window_start.isoformat(" "),
+                            data_window_end.isoformat(" "),
                         ],
                         "min": metric_value,
                         "max": metric_value,
