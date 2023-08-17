@@ -160,6 +160,7 @@ class ModelPredictionRunner:
                             pipeline_params.update({"batch_size": self.batch_size})
                     predictions_chunk = self.predictor.predict(X_test, y_transformer=y_transformer,
                                                                multilabel=self.multilabel,
+                                                               masks_required=self.masks_required,
                                                                **pipeline_params)
                 if self.task in constants.CLASSIFICATION_SET:
                     pred_probas_chunk = self.predictor.predict_proba(X_test, y_transformer=y_transformer,
