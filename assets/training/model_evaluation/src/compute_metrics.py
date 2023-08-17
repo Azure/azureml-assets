@@ -207,7 +207,7 @@ def filter_ground_truths(data, task_type, column_name=None):
     Returns:
         _type_: _description_
     """
-   if task_type in [constants.TASK.IMAGE_INSTANCE_SEGMENTATION, constants.TASK.IMAGE_OBJECT_DETECTION]:
+    if task_type in [constants.TASK.IMAGE_INSTANCE_SEGMENTATION, constants.TASK.IMAGE_OBJECT_DETECTION]:
         # do not filter as these contains multiple required columns
         return data
 
