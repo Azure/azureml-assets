@@ -39,7 +39,8 @@ def run():
     if location_search:
         location = location_search.group(1)
     else:
-        message = f"Failed to extract location string. Value of AZUREML_SERVICE_ENDPOINT environment variable: {azureml_service_endpoint}"
+        message = f"Failed to extract location string. "\
+                  + f"Value of environment variable 'AZUREML_SERVICE_ENDPOINT': {azureml_service_endpoint}"
         log_error(message)
         raise ValueError(message)
 
@@ -47,10 +48,18 @@ def run():
     data_window_start = parse_datetime_from_string(format_data, args.data_window_start)
     data_window_end = parse_datetime_from_string(format_data, args.data_window_end)
 
-    publish_metric(metrics, args.monitor_name, args.signal_name, data_window_start, data_window_end, location, workspace_resource_id)
+    publish_metric(
+        metrics,
+        args.monitor_name,
+        args.signal_name,
+        data_window_start,
+        data_window_end,
+        location,
+        workspace_resource_id)
 
     print("*************** Publish metrics ***************")
     print("Successfully executed the metric publisher component.")
+
 
 if __name__ == "__main__":
     run()

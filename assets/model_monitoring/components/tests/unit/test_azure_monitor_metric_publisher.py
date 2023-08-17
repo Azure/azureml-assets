@@ -15,7 +15,7 @@ test_signal_name = "test_signal"
 test_window_start = datetime(year=2023, month=1, day=1, hour=8)
 test_window_end = datetime(year=2023, month=1, day=8, hour=8)
 test_location = "eastus"
-test_ws_resource_uri= "/subscriptions/ea4faa5b-5e44-4236-91f6-5483d5b17d14/resourceGroups/model-monitoring-canary-rg"\
+test_ws_resource_uri = "/subscriptions/ea4faa5b-5e44-4236-91f6-5483d5b17d14/resourceGroups/model-monitoring-canary-rg"\
                         + "/providers/Microsoft.MachineLearningServices/workspaces/model-monitoring-canary-ws/"
 
 successful_test_cases = [
@@ -60,6 +60,7 @@ successful_test_cases = [
     ),
 ]
 
+
 @pytest.mark.unit
 class TestAzureMonitorMetricPublisher:
     """Test class for Azure monitor metric publisher."""
@@ -72,7 +73,7 @@ class TestAzureMonitorMetricPublisher:
             test_signal_name,
             test_window_start,
             test_window_end)
-        
+
         assert payload is not None
         assert payload["time"] is not None
 

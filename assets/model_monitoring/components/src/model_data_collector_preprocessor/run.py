@@ -9,7 +9,6 @@ import mltable
 import tempfile
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
-from dateutil import parser
 from pyspark.sql.functions import lit
 from shared_utilities.datetime_utils import parse_datetime_from_string
 from shared_utilities.io_utils import (

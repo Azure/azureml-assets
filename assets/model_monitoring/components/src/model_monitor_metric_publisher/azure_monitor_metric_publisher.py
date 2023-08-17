@@ -13,6 +13,7 @@ from typing import List
 
 from shared_utilities.log_utils import log_info, log_warning, log_error
 
+
 def publish_metric(
         metrics: List[Row],
         monitor_name: str,
@@ -25,7 +26,7 @@ def publish_metric(
     log_info(f"Attempting to publish metrics of monitor {monitor_name}, signal {signal_name}.")
 
     ws_resource_uri = ws_resource_uri.strip("/")
-    metrics_url = f"https://{location}.monitoring.azure.com/{ws_resource_uri}/metrics" # TODO: use schedule subresource instead?
+    metrics_url = f"https://{location}.monitoring.azure.com/{ws_resource_uri}/metrics"
 
     log_info(f"Publishing metrics to Azure resource with url {metrics_url}.")
 
@@ -43,8 +44,9 @@ def publish_metric(
             failed_count += 1
 
     total_count = succeeded_count + failed_count
-    log_info(f"Published Azure monitor metrics for monitor {monitor_name}, signal {signal_name}:"\
+    log_info(f"Published Azure monitor metrics for monitor {monitor_name}, signal {signal_name}. "
              + f"Total requested: {total_count}, success: {succeeded_count}, failure: {failed_count}")
+
 
 def to_metric_payload(
         metric: Row,
@@ -58,7 +60,8 @@ def to_metric_payload(
         metric_value = metric["metric_value"]
         group = metric["group"]
     except KeyError as err:
-        log_error(f"A required column is missing from the metric. Error: {str(err)}, metric: {json.dumps(metric.asDict)}.")
+        log_error(f"A required column is missing from the metric. Error: {str(err)}, "
+                  + f"metric: {json.dumps(metric.asDict)}.")
         raise
 
     group_dimension = metric["group_dimension"] if "group_dimension" in metric else None
@@ -112,6 +115,6 @@ def __post_metric(payload: dict, url: str) -> requests.Response:
     headers = {
         "Authorization": f"Bearer {auth_token}"
     }
-    response = requests.post(url, json = payload, headers=headers)
+    response = requests.post(url, json=payload, headers=headers)
 
     return response
