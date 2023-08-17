@@ -1,4 +1,5 @@
 import datetime
+import json
 import requests
 
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
@@ -33,7 +34,7 @@ def publish_metric(
             response.raise_for_status()
             succeeded_count += 1
         except requests.exceptions.RequestException as err:
-            log_utils.warning(f"Failed to publish a metric. Error: {str(err)}")
+            log_utils.warning(f"Failed to publish a metric. Error: {str(err)}.")
             failed_count += 1
 
     total_count = succeeded_count + failed_count
@@ -47,9 +48,14 @@ def to_metric_payload(
         data_window_start: datetime,
         data_window_end: datetime) -> dict:
     """Convert to a dictionary object for metric output."""
-    metric_name = metric["metric_name"]
-    metric_value = metric["metric_value"]
-    group = metric["group"]
+    try:
+        metric_name = metric["metric_name"]
+        metric_value = metric["metric_value"]
+        group = metric["group"]
+    except KeyError as err:
+        log_utils.error(f"A required column is missing from the metric. Error: {str(err)}, metric: {json.dumps(metric.asDict)}.")
+        raise
+
     group_dimension = metric["group_dimension"] if "group_dimension" in metric else None
 
     payload = {
