@@ -39,7 +39,7 @@ def publish_metric(
 
     total_count = succeeded_count + failed_count
     log_info(f"Published Azure monitor metrics for monitor {monitor_name}, signal {signal_name}:"\
-                   + f"Total requested: {total_count}, success: {succeeded_count}, failure: {failed_count}")
+             + f"Total requested: {total_count}, success: {succeeded_count}, failure: {failed_count}")
 
 def to_metric_payload(
         metric: Row,
