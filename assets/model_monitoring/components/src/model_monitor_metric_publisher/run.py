@@ -39,7 +39,7 @@ def run():
     if location_search:
         location = location_search.group(1)
     else:
-        message = f"Failed to extract location string. "\
+        message = "Failed to extract location string. "\
                   + f"Value of environment variable 'AZUREML_SERVICE_ENDPOINT': {azureml_service_endpoint}"
         log_error(message)
         raise ValueError(message)
