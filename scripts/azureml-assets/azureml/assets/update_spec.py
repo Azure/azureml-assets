@@ -4,8 +4,11 @@
 """Update spec files."""
 
 import argparse
+import sys
 from git import Repo
 from pathlib import Path
+from ruamel.yaml import YAML
+from ruamel.yaml.scalarstring import LiteralScalarString
 from typing import Dict
 
 import azureml.assets as assets
@@ -93,18 +96,34 @@ def update(asset_config: assets.AssetConfig, release_directory_root: Path = None
     data = data or create_template_data(asset_config=asset_config, release_directory_root=release_directory_root,
                                         version=version, include_commit_hash=include_commit_hash)
 
+    # Initialize YAML
+    yaml = YAML()
+    yaml.preserve_quotes = True
+
     # Load spec template and render
     with open(asset_config.spec_with_path) as f:
         contents = util.render(f.read(), data)
+        contents_yaml = yaml.load(contents)
+
+    # Handle description file, if specified or present
+    description_file = asset_config.description_file_with_path
+    if description_file is not None:
+        # Load description
+        with open(description_file) as f:
+            description = f.read()
+
+        # Replace description in spec
+        contents_yaml['description'] = LiteralScalarString(description)
 
     # Write spec
     if output_file == "-":
         logger.print(contents)
+        yaml.dump(contents_yaml, sys.stdout)
     else:
         if output_file is None:
             output_file = asset_config.spec_with_path
         with open(output_file, "w") as f:
-            f.write(contents)
+            yaml.dump(contents_yaml, f)
 
 
 if __name__ == "__main__":

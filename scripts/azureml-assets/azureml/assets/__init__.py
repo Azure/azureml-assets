@@ -4,6 +4,7 @@
 from .config import (
     AssetConfig,
     AssetType,
+    ComponentType,
     Config,
     DEFAULT_ASSET_FILENAME,
     ModelConfig,
@@ -17,11 +18,16 @@ from .config import (
     PublishVisibility,
     Spec,
 )
+from .deployment_config import (
+    DeploymentConfig,
+)
 from .update_assets import (
     pin_env_files,
     release_tag_exists,
+    get_latest_release_tag_version,
     update_asset,
     update_assets,
 )
+from .environment.pin_image_versions import get_manifest
 from .update_spec import create_template_data, update as update_spec
 from .validate_assets import validate_assets

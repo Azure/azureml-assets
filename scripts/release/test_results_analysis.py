@@ -2,24 +2,26 @@
 # Licensed under the MIT License.
 """Python scripts for comparing test results with next stage config."""
 from pathlib import Path
-import yaml
 from azureml.assets.util import logger
 import argparse
 import azureml.assets as assets
 import azureml.assets.util as util
+from ruamel.yaml import YAML
+
 SUPPORTED_ASSET_TYPES = [assets.AssetType.COMPONENT.value]
 
 
 def test_results_analysis(config_file: Path, results_file: Path, asset_dir: Path):
     """Compare test results with create list."""
+    yaml = YAML()
     valid_assets = []
     with open(results_file) as fp:
-        valid_assets = yaml.load(fp, Loader=yaml.FullLoader)
+        valid_assets = yaml.load(fp)
 
     covered_assets = []
     uncovered_assets = []
     with open(config_file) as fp:
-        config = yaml.load(fp, Loader=yaml.FullLoader)
+        config = yaml.load(fp)
         create_list = config.get('create', {})
         for assets_type in create_list:
             if assets_type not in SUPPORTED_ASSET_TYPES:

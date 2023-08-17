@@ -5,34 +5,42 @@
 
 import argparse
 import json
-import os
 import re
 import shutil
 import sys
+import azureml.assets as assets
+import azureml.assets.util as util
 from pathlib import Path
 from string import Template
 from subprocess import run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
-from typing import Dict, List, Union
-import azureml.assets as assets
-from azureml.assets.model.mlflow_utils import MLFlowModelUtils
-import azureml.assets.util as util
-import yaml
-from azureml.assets.config import AssetConfig, PathType
-from azureml.assets.model import ModelDownloadUtils
+from typing import Dict, List, Tuple, Union
+from azureml.assets.config import AssetConfig
+from azureml.assets.model.model_utils import prepare_model
 from azureml.assets.util import logger
-from azure.ai.ml import load_component, load_model
 from azure.ai.ml.entities import Component, Environment, Model
+from ruamel.yaml import YAML
 
 
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PROD_SYSTEM_REGISTRY = "azureml"
-CREATE_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
+CREATE_ORDER = [assets.AssetType.DATA, assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT,
+                assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)/(?:versions/(.+)|labels/(.+))")
+REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/$asset_type/(.+)/(?:versions/(.+)|labels/(.+))")
 BEARER = r"Bearer.*"
+LATEST_LABEL = "latest"
+
+
+def pluralize_asset_type(asset_type: Union[assets.AssetType, str]) -> str:
+    """Return pluralized asset type."""
+    # Convert to string if enum
+    if isinstance(asset_type, assets.AssetType):
+        asset_type = asset_type.value
+    return f"{asset_type}s" if asset_type != "data" else asset_type
 
 
 def find_test_files(dir: Path):
@@ -42,7 +50,7 @@ def find_test_files(dir: Path):
     for test in dir.iterdir():
         logger.print(f"Processing test folder {test.name}")
         with open(test / TEST_YML) as fp:
-            data = yaml.load(fp, Loader=yaml.FullLoader)
+            data = YAML().load(fp)
             for test_group in data.values():
                 for test_job in test_group['jobs'].values():
                     if 'job' in test_job:
@@ -50,12 +58,15 @@ def find_test_files(dir: Path):
     return test_jobs
 
 
-def preprocess_test_files(test_jobs, asset_ids: dict):
+def preprocess_test_files(test_jobs: List[str], asset_ids: Dict[str, str]):
     """Preprocess test files to generate asset ids."""
     for test_job in test_jobs:
         logger.print(f"Processing test job {test_job}")
         with open(test_job) as fp:
-            data = yaml.load(fp, Loader=yaml.FullLoader)
+            yaml = YAML()
+            yaml.preserve_quotes = True
+            yaml.default_flow_style = False
+            data = yaml.load(fp)
             for job_name, job in data['jobs'].items():
                 asset_name = job['component']
                 logger.print(f"Processing asset {asset_name}")
@@ -63,8 +74,7 @@ def preprocess_test_files(test_jobs, asset_ids: dict):
                     job['component'] = asset_ids.get(asset_name)
                     logger.print(f"For job {job_name}, the new asset id is {job['component']}")
             with open(test_job, "w") as file:
-                yaml.dump(data, file, default_flow_style=False,
-                          sort_keys=False)
+                yaml.dump(data, file)
 
 
 def sanitize_output(input: str) -> str:
@@ -93,92 +103,139 @@ def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) ->
     return False
 
 
-def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
+def prepare_model_for_registration(
+    model_config: assets.ModelConfig,
+    spec_file_path: Path,
+    temp_dir: Path,
+    registry_name: str,
+) -> bool:
     """Prepare model.
 
     :param model_config: Model Config object
     :type model_config: assets.ModelConfig
     :param spec_file_path: path to model spec file
     :type spec_file_path: Path
-    :param model_dir: path of directory where model is present locally or can be downloaded to.
-    :type model_dir: Path
+    :param temp_dir: temp dir for model operation
+    :type temp_dir: Path
     :return: Model successfully prepared for creation in registry.
     :rtype: bool
     """
-    try:
-        model = load_model(spec_file_path)
-        model.type = model_config.type.value
-    except Exception as e:
-        logger.error(f"Error in loading model spec file at {spec_file_path}: {e}")
-        return False
-
-    model_description_file_path = Path(spec_file_path).parent / model_config.description
-    logger.print(f"model_description_file_path {model_description_file_path}")
-    if os.path.exists(model_description_file_path):
-        with open(model_description_file_path) as f:
-            model_description = f.read()
-            model.description = model_description
-    else:
-        logger.print("description file does not exist")
-
-    if model_config.path.type == PathType.LOCAL:
-        model.path = os.path.abspath(Path(model_config.path.uri).resolve())
-        return update_spec(model, spec_file_path)
-
-    if model_config.type == assets.ModelType.CUSTOM:
-        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
-        if success:
-            model.path = model_dir
-            success = update_spec(model, spec_file_path)
-    elif model_config.type == assets.ModelType.MLFLOW:
-        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
-        if success:
-            model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
-            if not model.flavors:
-                # try fetching flavors from MLModel file
-                mlmodel_file_path = model.path / MLFlowModelUtils.MLMODEL_FILE_NAME
-                try:
-                    mlmodel = util.load_yaml(file_path=mlmodel_file_path)
-                    model.flavors = mlmodel.get("flavors")
-                except Exception as e:
-                    logger.log_error(f"Error loading flavors from MLmodel file at {mlmodel_file_path}: {e}")
-            success = update_spec(model, spec_file_path)
-    else:
-        logger.log_error(f"Model type {model_config.type.value} not supported")
-        success = False
-
+    model, success = prepare_model(
+        spec_path=spec_file_path, model_config=model_config, registry_name=registry_name, temp_dir=temp_dir
+    )
+    if success:
+        success = update_spec(model, spec_file_path)
+        logger.print(f"updated spec file? {success}")
     return success
 
 
-def validate_update_command_component(
-    component: Component,
+def validate_and_prepare_pipeline_component(
     spec_path: Path,
-    final_version: str,
+    version_suffix: str,
     registry_name: str,
 ) -> bool:
-    """Validate and update command component spec.
+    """Validate and update pipeline component spec.
 
-    :param component: A command component
-    :type component: Component
     :param spec_path: Path of loaded component
     :type spec_path: Path
-    :param final_version: Final version string used to create component
-    :type final_version: str
+    :param version_suffix: version suffix
+    :type version_suffix: str
     :param registry_name: name of the registry to create component in
     :type registry_name: str
     :return: True for successful validation and update
     :rtype: bool
     """
-    env = component.environment
-    match = None
-    env_registry_name = None
-    if (match := REGISTRY_ENV_PATTERN.match(env)) is not None:
-        env_registry_name, env_name, env_version, env_label = (
-            match.group(1), match.group(2), match.group(3), match.group(4))
-    elif (match := WORKSPACE_ASSET_PATTERN.match(env)) is not None:
-        env_name, env_version, env_label = match.group(1), match.group(2), match.group(3)
-    else:
-        logger.log_error(f"Env ID doesn't match workspace or registry pattern in {asset.spec_with_path}")
+    with open(spec_path) as f:
+        try:
+            pipeline_dict = YAML().load(f)
+        except Exception:
+            logger.log_error(f"Error in loading component spec at {spec_path}")
+            return False
+
+    jobs = pipeline_dict['jobs']
+    logger.print(f"Preparing pipeline component {pipeline_dict['name']}")
+    updated_jobs = {}
+
+    for job_name, job_details in jobs.items():
+        logger.print(f"job {job_name}")
+        if not job_details.get('component'):
+            # if-else or inline component
+            logger.print(f"component not defined for job {job_name}")
+            updated_jobs[job_name] = job_details
+            continue
+
+        try:
+            name, version, label, registry = get_parsed_details_from_asset_uri(
+                assets.AssetType.COMPONENT.value, job_details['component'])
+        except Exception as e:
+            logger.log_error(e)
+            return False
+
+        logger.print(
+            "component details:\n"
+            + f"name: {name}\n"
+            + f"version: {version}\n"
+            + f"label: {label}\n"
+            + f"registry: {registry}"
+        )
+
+        if registry and registry not in [PROD_SYSTEM_REGISTRY, registry_name]:
+            logger.log_warning(
+                f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
+                f"The URI for component '{name}' references registry '{registry}', "
+                "and publishing will fail if the release process does not have read access to it."
+            )
+
+        # Check if component's env exists
+        final_version = version + "-" + version_suffix if version_suffix else version
+        registry_name = registry or registry_name
+        asset_details = None
+        for ver in [version, final_version]:
+            if (asset_details := get_asset_details(
+                assets.AssetType.COMPONENT.value, name, ver, registry_name
+            )) is not None:
+                break
+
+        if not asset_details:
+            logger.log_warning(
+                f"dependent component {name} with version {version} not found in registry {registry}"
+            )
+            return False
+
+        updated_jobs[job_name] = job_details
+        updated_jobs[job_name]['component'] = asset_details["id"]
+
+    pipeline_dict['jobs'] = updated_jobs
+
+    try:
+        util.dump_yaml(pipeline_dict, spec_path)
+    except Exception:
+        logger.log_error(f"Component update failed for asset spec path: {asset.spec_path}")
+        return False
+    return True
+
+
+def get_environment_asset_id(
+    environment_id: str,
+    version_suffix: str,
+    registry_name: str
+) -> Union[object, None]:
+    """Convert an environment reference into a full asset ID.
+
+    :param environment_id: Environment asset ID, in short or long form
+    :type environment_id: str
+    :param version_suffix: Version suffix
+    :type version_suffix: str
+    :param registry_name: Name of the registry to create component in
+    :type registry_name: str
+    :return: Environment's full asset ID if successful, else None
+    :rtype: Union[str, None]
+    """
+    try:
+        env_name, env_version, env_label, env_registry_name = get_parsed_details_from_asset_uri(
+            assets.AssetType.ENVIRONMENT.value, environment_id)
+    except Exception as e:
+        logger.log_error(e)
         return False
 
     logger.print(
@@ -186,36 +243,99 @@ def validate_update_command_component(
     )
 
     if env_registry_name and env_registry_name not in [PROD_SYSTEM_REGISTRY, registry_name]:
-        logger.log_error(
-            "Registry name for component's env URI must be either "
-            + f"'{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. Got '{env_registry_name}'"
+        logger.log_warning(
+            f"Dependencies should exist in '{registry_name}' or '{PROD_SYSTEM_REGISTRY}'. "
+            f"The URI for environment '{env_name}' references registry '{env_registry_name}', "
+            "and publishing will fail if the release process does not have read access to it."
         )
-        return False
 
     registry_name = env_registry_name or registry_name
 
     if env_label:
-        # TODO: Add fetching env from label
-        # https://github.com/Azure/azureml-assets/issues/415
-        logger.log_error("Creating a component with env label is not supported")
-        return False
+        if env_label == LATEST_LABEL:
+            # TODO: Use a more direct approach like this, when supported by Azure CLI:
+            # az ml environment show --name sklearn-1.1-ubuntu20.04-py38-cpu --registry-name azureml --label latest
+            versions = get_asset_versions(assets.AssetType.ENVIRONMENT.value, env_name, registry_name)
+            if versions:
+                # List is returned with the latest version at the beginning
+                env_version = versions[0]
+            else:
+                logger.log_error(f"Unable to retrieve versions for env {env_name}")
+                return False
+        else:
+            # TODO: Add fetching env from other labels
+            # https://github.com/Azure/azureml-assets/issues/415
+            logger.log_error(f"Creating a component with env label {env_label} is not supported")
+            return False
 
     env = None
-    # Check if component's env exists
-    for version in [env_version, final_version]:
+    # Get environment
+    versions_to_try = [env_version]
+    if version_suffix:
+        versions_to_try.append(f"{env_version}-{version_suffix}")
+    for version in versions_to_try:
         if (env := get_asset_details(
             assets.AssetType.ENVIRONMENT.value, env_name, version, registry_name
         )) is not None:
-            break
+            return env['id']
 
-    if not env:
-        logger.log_error(f"Could not find the env for {component.name}")
+    logger.log_error(f"Environment {env_name} not found in {registry_name}; tried version(s) {versions_to_try}")
+    return None
+
+
+def validate_update_component(
+    spec_path: Path,
+    version_suffix: str,
+    registry_name: str,
+) -> bool:
+    """Validate and update component spec.
+
+    :param spec_path: Path of loaded component
+    :type spec_path: Path
+    :param version_suffix: version suffix
+    :type version_suffix: str
+    :param registry_name: name of the registry to create component in
+    :type registry_name: str
+    :return: True for successful validation and update
+    :rtype: bool
+    """
+    with open(spec_path) as f:
+        try:
+            component_dict = YAML().load(f)
+        except Exception:
+            logger.log_error(f"Error in loading component spec at {spec_path}")
+            return False
+
+    component_name = component_dict['name']
+    logger.print(f"Preparing component {component_name}")
+
+    # Handle command and parallel components
+    if 'environment' in component_dict:
+        # Command component
+        obj_with_env = component_dict
+    elif 'task' in component_dict and 'environment' in component_dict['task']:
+        # Parallel component
+        obj_with_env = component_dict['task']
+    else:
+        logger.log_error(f"Environment reference not found in {component_name}")
         return False
 
-    env_id = env["id"]
-    logger.print(f"Updating component env to {env_id}")
-    component.environment = env_id
-    if not update_spec(component, spec_path):
+    # Update environment reference
+    current_env_id = obj_with_env['environment']
+    new_env_id = get_environment_asset_id(current_env_id, version_suffix, registry_name)
+    if new_env_id is not None:
+        if current_env_id != new_env_id:
+            logger.print(f"Updating environment to {new_env_id}")
+            obj_with_env['environment'] = new_env_id
+        else:
+            logger.print(f"Existing environment reference {current_env_id} is valid")
+    else:
+        return False
+
+    # Update spec file
+    try:
+        util.dump_yaml(component_dict, spec_path)
+    except Exception:
         logger.log_error(f"Component update failed for asset spec path: {asset.spec_path}")
         return False
     return True
@@ -253,12 +373,12 @@ def asset_create_command(
 
 
 def create_asset(
-    asset,
-    registry_name,
-    resource_group,
-    workspace_name,
-    version,
-    failure_list,
+    asset: assets.AssetConfig,
+    registry_name: str,
+    resource_group: str,
+    workspace_name: str,
+    version: str,
+    failure_list: List[str],
     debug_mode: bool = None
 ):
     """Create asset in registry."""
@@ -273,15 +393,31 @@ def create_asset(
         # Capture and redact output
         logger.print(f"Executed: {cmd}")
         redacted_output = sanitize_output(result.stdout)
-        redacted_err = sanitize_output(result.stderr)
         if redacted_output:
             logger.print(f"STDOUT: {redacted_output}")
-        if redacted_err:
-            logger.print(f"STDERR: {redacted_err}")
 
     if result.returncode != 0:
+        redacted_err = sanitize_output(result.stderr)
         logger.log_error(f"Error creating {asset.type.value} {asset.name}: {redacted_err}")
         failure_list.append(asset)
+
+
+def get_asset_versions(
+    asset_type: str,
+    asset_name: str,
+    registry_name: str,
+) -> List[str]:
+    """Get asset versions from registry."""
+    cmd = [
+        "az", "ml", asset_type, "list",
+        "--name", asset_name,
+        "--registry-name", registry_name,
+    ]
+    result = run_command(cmd)
+    if result.returncode != 0:
+        logger.log_error(f"Failed to list assets: {result.stderr}")
+        return []
+    return [a['version'] for a in json.loads(result.stdout)]
 
 
 def get_asset_details(
@@ -299,9 +435,35 @@ def get_asset_details(
     ]
     result = run_command(cmd)
     if result.returncode != 0:
-        logger.log_error(f"Failed to get asset details: {result.stderr}")
+        if "Could not find asset" not in result.stderr:
+            # Don't show the error if it's expected for new assets
+            logger.log_error(f"Failed to get asset details: {result.stderr}")
         return None
     return json.loads(result.stdout)
+
+
+def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[str, str, str, str]:
+    """Validate asset URI and return parsed details. Exception is raised for an invalid URI.
+
+    :param asset_type: Valid values are component, environment and model
+    :type asset_type: str
+    :param asset_uri: A workspace or registry asset URI to parse
+    :type asset_uri: str
+    :return:
+        A tuple with asset `name`, `version`, `label`, and `registry_name` in order.
+        `label` and `registry_name` will be None for workspace URI.
+    :rtype: Tuple
+    """
+    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(
+                                        asset_type=pluralize_asset_type(asset_type)))
+    asset_registry_name = None
+    if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
+        asset_registry_name, asset_name, asset_version, asset_label = match.groups()
+    elif (match := WORKSPACE_ASSET_PATTERN.match(asset_uri)) is not None:
+        asset_name, asset_version, asset_label = match.groups()
+    else:
+        raise Exception(f"{asset_uri} doesn't match workspace or registry pattern.")
+    return asset_name, asset_version, asset_label, asset_registry_name
 
 
 def _str2bool(v: str) -> bool:
@@ -361,7 +523,7 @@ if __name__ == "__main__":
     # Load publishing list from deploy config
     if publish_list_file:
         with open(publish_list_file) as fp:
-            config = yaml.load(fp, Loader=yaml.FullLoader)
+            config = YAML().load(fp)
             create_list = config.get('create', {})
     else:
         create_list = {}
@@ -379,10 +541,18 @@ if __name__ == "__main__":
         assets_by_type[asset.type.value].append(asset)
 
     for create_asset_type in CREATE_ORDER:
-        logger.print(f"Creating {create_asset_type.value}s.")
+        logger.print(f"Creating {create_asset_type.value} assets.")
         if create_asset_type.value not in create_list:
             continue
-        for asset in assets_by_type.get(create_asset_type.value, []):
+
+        assets_to_publish = assets_by_type.get(create_asset_type.value, [])
+        if create_asset_type == assets.AssetType.COMPONENT:
+            # sort component list to keep pipline components at the end in publishing list
+            # this is a temporary solution as a pipeline component can have another pipeline component as dependency
+            logger.print("updating components publishing order")
+            assets_to_publish.sort(key=lambda x: x.spec_as_object().type == assets.ComponentType.PIPELINE.value)
+
+        for asset in assets_to_publish:
             with TemporaryDirectory() as work_dir:
                 asset_names = create_list.get(asset.type.value, [])
                 if not ("*" in asset_names or asset.name in asset_names):
@@ -394,30 +564,38 @@ if __name__ == "__main__":
                 logger.print(f"Creating {asset.name} {final_version}")
                 asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
                     registry_name=registry_name,
-                    asset_type=f"{asset.type.value}s",
+                    asset_type=pluralize_asset_type(asset.type),
                     asset_name=asset.name,
                     version=final_version,
                 )
 
+                if get_asset_details(asset.type.value, asset.name, asset.version, registry_name):
+                    logger.print(f"{asset.name} {asset.version} already exists, skipping")
+                    continue
+
                 # Handle specific asset types
                 if asset.type == assets.AssetType.COMPONENT:
                     # load component and check if environment exists
-                    component = load_component(asset.spec_with_path)
-                    if component.type == "command":
-                        if not validate_update_command_component(
-                            component, asset.spec_with_path, final_version, registry_name
+                    component_type = asset.spec_as_object().type
+                    if component_type == assets.ComponentType.PIPELINE.value:
+                        if not validate_and_prepare_pipeline_component(
+                            asset.spec_with_path, passed_version, registry_name
+                        ):
+                            failure_list.append(asset)
+                            continue
+                    elif component_type is None or component_type in [assets.ComponentType.COMMAND.value,
+                                                                      assets.ComponentType.PARALLEL.value]:
+                        if not validate_update_component(
+                            asset.spec_with_path, passed_version, registry_name
                         ):
                             failure_list.append(asset)
                             continue
                 elif asset.type == assets.AssetType.MODEL:
-                    # Check if model already exists
-                    final_version = asset.version
-                    if get_asset_details(asset.type.value, asset.name, final_version, registry_name):
-                        logger.print(f"{asset.name} {final_version} already exists, skipping")
-                        continue
                     try:
+                        final_version = asset.version
                         model_config = asset.extra_config_as_object()
-                        if not prepare_model(model_config, asset.spec_with_path, Path(work_dir)):
+                        if not prepare_model_for_registration(
+                                model_config, asset.spec_with_path, Path(work_dir), registry_name):
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")
                     except Exception as e:
                         logger.log_error(f"Model prepare exception: {e}")
@@ -432,7 +610,7 @@ if __name__ == "__main__":
                     resource_group=resource_group,
                     workspace_name=workspace,
                     failure_list=failure_list,
-                    debug_mode=debug_mode
+                    debug_mode=debug_mode,
                 )
 
     if len(failure_list) > 0:
@@ -440,12 +618,14 @@ if __name__ == "__main__":
         for asset in failure_list:
             failed_assets[asset.type.value].append(asset.name)
 
+        yaml = YAML()
+        yaml.default_flow_style = False
         for asset_type, asset_names in failed_assets.items():
-            logger.log_warning(f"Failed to create {asset_type}s: {asset_names}")
+            logger.log_warning(f"Failed to create {asset_type} assets: {asset_names}")
         # the following dump process will generate a yaml file for the report
         # process in the end of the publishing script
         with open(failed_list_file, "w") as file:
-            yaml.dump(failed_assets, file, default_flow_style=False, sort_keys=False)
+            yaml.dump(dict(failed_assets), file)
 
     if tests_dir:
         logger.print("Locating test files")

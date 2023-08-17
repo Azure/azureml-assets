@@ -5,12 +5,13 @@
 
 import re
 import warnings
+from collections import defaultdict
 from enum import Enum
 from functools import total_ordering
 from pathlib import Path
+from ruamel.yaml import YAML
 from setuptools._vendor.packaging import version
-from typing import Dict, List, Tuple
-from yaml import safe_load
+from typing import Dict, List, Set, Tuple, Union
 
 # Ignore setuptools warning about replacing distutils
 warnings.filterwarnings("ignore", message="Setuptools is replacing distutils.", category=UserWarning)
@@ -20,8 +21,103 @@ class ValidationException(Exception):
     """Validation errors."""
 
 
-TEMPLATE_CHECK = re.compile(r"\{\{.*\}\}")
+class AssetType(Enum):
+    """Asset type."""
+
+    COMPONENT = 'component'
+    DATA = 'data'
+    ENVIRONMENT = 'environment'
+    MODEL = 'model'
+
+
+class ComponentType(Enum):
+    """Enum for component types."""
+
+    PIPELINE = 'pipeline'  # A pipeline component which allows multi-stage jobs.
+    PARALLEL = 'parallel'  # A parallel component, aka PRSv2.
+    COMMAND = 'command'  # A command component.
+    AUTOML = 'automl'  # An AutoML component.
+    SWEEP = 'sweep'  # A sweep component.
+
+
+class DataAssetType(Enum):
+    """Enum for data asset types."""
+
+    URI_FILE = 'uri_file'  # A single file.
+    URI_FOLDER = 'uri_folder'  # A folder containing files.
+
+
+class ModelFlavor(Enum):
+    """Enum for the Flavors accepted in ModelConfig."""
+
+    HFTRANSFORMERS = 'hftransformers'
+    PYTORCH = 'pytorch'
+
+
+class ModelTaskName(Enum):
+    """Enum for the Task names accepted in ModelConfig."""
+
+    FILL_MASK = 'fill_mask'
+    MULTICLASS = 'multiclass'
+    MULTILABEL = 'multilabel'
+    NER = 'ner'
+    QUESTION_ANSWERING = 'question-answering'
+    SUMMARIZATION = 'summarization'
+    TEXT_GENERATION = 'text-generation'
+    TEXT_CLASSIFICATION = 'text-classification'
+
+
+class ModelType(Enum):
+    """Enum for the Model Types accepted in ModelConfig."""
+
+    MLFLOW = 'mlflow_model'
+    CUSTOM = 'custom_model'
+    TRITON = 'triton_model'
+
+
+class Os(Enum):
+    """Operating system types."""
+
+    LINUX = 'linux'
+    WINDOWS = 'windows'
+
+
+class PathType(Enum):
+    """Enum for path types supported for model publishing."""
+
+    LOCAL = "local"  # Path to model files present locally.
+    GIT = "git"      # Model hosted on a public GIT repo and can be cloned by GIT LFS.
+    FTP = "ftp"      # <UNSUPPORTED> Model files hosted on a FTP endpoint.
+    HTTP = "http"    # <UNSUPPORTED> Model files hosted on a HTTP endpoint.
+    AZUREBLOB = "azureblob"  # Model files hosted on an AZUREBLOB blobstore with public read access.
+
+
+class PublishLocation(Enum):
+    """Image publishing locations."""
+
+    MCR = 'mcr'
+
+
+class PublishVisibility(Enum):
+    """Image publishing visibility types."""
+
+    PUBLIC = 'public'
+    INTERNAL = 'internal'
+    STAGING = 'staging'
+    UNLISTED = 'unlisted'
+
+
+DEFAULT_ASSET_FILENAME = "asset.yaml"
+DEFAULT_DESCRIPTION_FILE = "description.md"
+DEFAULT_DOCKERFILE = "Dockerfile"
+DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
 EXCLUDE_PREFIX = "!"
+FULL_ASSET_NAME_DELIMITER = "/"
+FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
+PARTIAL_ASSET_NAME_TEMPLATE = "{type}/{name}"
+PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: 'mcr.microsoft.com'}
+TEMPLATE_CHECK = re.compile(r"\{\{.*\}\}")
+VERSION_AUTO = "auto"
 
 
 class Config:
@@ -34,7 +130,7 @@ class Config:
             file_name (Path): Location of config file.
         """
         with open(file_name) as f:
-            self._yaml = safe_load(f)
+            self._yaml = YAML().load(f)
         self._file_name_with_path = file_name
         self._file_name = file_name.name
         self._file_path = file_name.parent
@@ -156,14 +252,6 @@ class Config:
         return [path]
 
 
-class ComponentType(Enum):
-    """Enum for component types."""
-
-    PIPELINE = "pipeline"  # A pipeline component which allows multi-stage jobs.
-    PARALLEL = "parallel"  # A parallel component, aka PRSv2.
-    COMMAND = "command"  # A command component.
-
-
 class Spec(Config):
     """Load and access spec file properties.
 
@@ -198,6 +286,15 @@ class Spec(Config):
 
         if self.code_dir and not self.code_dir_with_path.exists():
             raise ValidationException(f"code directory {self.code_dir} not found")
+        if self._data_path:
+            path = self.data_path_with_path
+            if path.exists():
+                if self.type == DataAssetType.URI_FILE.value and path.is_dir():
+                    raise ValidationException(f"type is {self.type} but {self._data_path} is a directory")
+                elif self.type == DataAssetType.URI_FOLDER.value and not path.is_dir():
+                    raise ValidationException(f"type is {self.type} but {self._data_path} is a file")
+            else:
+                raise ValidationException(f"data path {self._data_path} not found")
 
     @property
     def name(self) -> str:
@@ -226,9 +323,20 @@ class Spec(Config):
         return self._yaml.get('image')
 
     @property
+    def type(self) -> str:
+        """Type of a particular asset.
+
+        For eg:
+            `custom_model` or `mlflow_model` for a model asset.
+            `command`, `pipeline` etc. for a component asset.
+            `uri_file`, `uri_folder` for a data asset.
+        """
+        return self._yaml.get('type')
+
+    @property
     def code_dir(self) -> str:
         """Component code directory."""
-        if self._yaml.get('type') == ComponentType.PARALLEL.value:
+        if self.type == ComponentType.PARALLEL.value:
             task = self._yaml.get('task')
             return None if task is None else task.get('code')
         return self._yaml.get('code')
@@ -240,51 +348,66 @@ class Spec(Config):
         return self._append_to_file_path(dir) if dir else None
 
     @property
+    def _data_path(self) -> str:
+        """Data asset path."""
+        return self._yaml.get('path')
+
+    @property
+    def data_path_with_path(self) -> Path:
+        """Data asset path, relative to spec file's parent directory."""
+        data_path = self._data_path
+        return self._append_to_file_path(data_path) if data_path else None
+
+    @property
     def release_paths(self) -> List[Path]:
         """Files that are required to create this asset."""
         release_paths = super().release_paths
+
+        # Add files from components
         code_dir = self.code_dir_with_path
         if code_dir:
             release_paths.extend(Config._expand_path(code_dir))
+
+        # Add files from data assets
+        data_path = self.data_path_with_path
+        if data_path:
+            release_paths.extend(Config._expand_path(data_path))
         return release_paths
 
+    @property
+    def inference_config(self) -> Dict[str, Dict[str, Union[str, int]]]:
+        """Inference config."""
+        return self._yaml.get('inference_config')
 
-class ModelType(Enum):
-    """Enum for the Model Types accepted in ModelConfig."""
+    @property
+    def os_type(self) -> str:
+        """OS type."""
+        return self._yaml.get('os_type')
 
-    MLFLOW = 'mlflow_model'
-    CUSTOM = 'custom_model'
-    TRITON = 'triton_model'
+    @property
+    def dependencies(self) -> Dict[AssetType, Set]:
+        """List of asset dependencies."""
+        deps = defaultdict(set)
+        if self.type in [ComponentType.COMMAND.value, ComponentType.PARALLEL.value]:
+            # Find environment dependencies
+            environment = None
+            if self.type == ComponentType.COMMAND.value:
+                environment = self._yaml.get('environment')
+            else:
+                environment = self._yaml.get('task', {}).get('environment')
+            if isinstance(environment, str):
+                # Skip inline environments
+                deps[AssetType.ENVIRONMENT].add(environment)
+        elif self.type == ComponentType.PIPELINE.value:
+            # Find component dependencies
+            for _, job in self._yaml.get('jobs', {}).items():
+                if job.get('type') == ComponentType.COMMAND.value:
+                    component = job.get('component')
+                    if isinstance(component, str):
+                        # Skip inline environments
+                        deps[AssetType.COMPONENT].add(component)
 
-
-class ModelFlavor(Enum):
-    """Enum for the Flavors accepted in ModelConfig."""
-
-    HFTRANSFORMERS = 'hftransformers'
-    PYTORCH = 'pytorch'
-
-
-class ModelTaskName(Enum):
-    """Enum for the Task names accepted in ModelConfig."""
-
-    FILL_MASK = 'fill_mask'
-    MULTICLASS = 'multiclass'
-    MULTILABEL = 'multilabel'
-    NER = 'ner'
-    QUESTION_ANSWERING = 'question-answering'
-    SUMMARIZATION = 'summarization'
-    TEXT_GENERATION = 'text-generation'
-    TEXT_CLASSIFICATION = 'text-classification'
-
-
-class PathType(Enum):
-    """Enum for path types supported for model publishing."""
-
-    LOCAL = "local"  # Path to model files present locally.
-    GIT = "git"      # Model hosted on a public GIT repo and can be cloned by GIT LFS.
-    FTP = "ftp"      # <UNSUPPORTED> Model files hosted on a FTP endpoint.
-    HTTP = "http"    # <UNSUPPORTED> Model files hosted on a HTTP endpoint.
-    AZUREBLOB = "azureblob"  # Model files hosted on an AZUREBLOB blobstore with public read access.
+        return deps
 
 
 class AssetPath:
@@ -447,38 +570,6 @@ class ModelConfig(Config):
         return ModelType(type) if type else None
 
 
-DEFAULT_DOCKERFILE = "Dockerfile"
-DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
-
-
-class Os(Enum):
-    """Operating system types."""
-
-    LINUX = 'linux'
-    WINDOWS = 'windows'
-
-
-class PublishLocation(Enum):
-    """Image publishing locations."""
-
-    MCR = 'mcr'
-
-
-class PublishVisibility(Enum):
-    """Image publishing visibility types."""
-
-    PUBLIC = 'public'
-    INTERNAL = 'internal'
-    STAGING = 'staging'
-    UNLISTED = 'unlisted'
-
-
-# Associates publish locations with their hostnames
-PUBLISH_LOCATION_HOSTNAMES = {
-    PublishLocation.MCR: 'mcr.microsoft.com'
-}
-
-
 class EnvironmentConfig(Config):
     """Environment config.
 
@@ -581,6 +672,11 @@ class EnvironmentConfig(Config):
         if tag:
             image += f":{tag}"
         return image
+
+    def get_dockerfile_contents(self) -> str:
+        """Dockerfile contents."""
+        with open(self.dockerfile_with_path, "r") as f:
+            return f.read()
 
     @property
     def _os(self) -> str:
@@ -692,24 +788,9 @@ class EnvironmentConfig(Config):
 
     @property
     def publish_visibility(self) -> PublishVisibility:
-        """Image's publishing visiblity type."""
-        visiblity = self._publish_visibility
-        return PublishVisibility(visiblity) if visiblity else None
-
-
-class AssetType(Enum):
-    """Asset type."""
-
-    COMPONENT = 'component'
-    DATA = 'data'
-    ENVIRONMENT = 'environment'
-    MODEL = 'model'
-
-
-DEFAULT_ASSET_FILENAME = "asset.yaml"
-VERSION_AUTO = "auto"
-FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
-FULL_ASSET_NAME_DELIMITER = "/"
+        """Image's publishing visibility type."""
+        visibility = self._publish_visibility
+        return PublishVisibility(visibility) if visibility else None
 
 
 @total_ordering
@@ -721,6 +802,7 @@ class AssetConfig(Config):
         version: 1 # Can also be set to auto to auto-increment version
         type: environment
         spec: spec.yaml
+        description_file: description.md # Path to optional description file
         extra_config: environment.yaml
         release_paths: # Additional dirs/files to include in release
         - ../src
@@ -730,6 +812,7 @@ class AssetConfig(Config):
             enabled: true
             pip_requirements: tests/requirements.txt
             tests_dir: tests
+        categories: ["PyTorch", "Training"] # List of categories
     """
 
     def __init__(self, file_name: Path):
@@ -772,6 +855,10 @@ class AssetConfig(Config):
         # Compare versions using packaging's version object
         return version.parse(self.version) < version.parse(other.version)
 
+    def __hash__(self) -> int:
+        """Hash an AssetConfig object."""
+        return hash((self.type.value, self.name, self.version))
+
     def _validate(self):
         """Validate asset config.
 
@@ -788,6 +875,9 @@ class AssetConfig(Config):
 
         if not self.spec_with_path.exists():
             raise ValidationException(f"spec file {self.spec} not found")
+
+        if self.description_file and not self.description_file_with_path.exists():
+            raise ValidationException(f"description_file {self.description_file} not found")
 
         if self.extra_config and not self.extra_config_with_path.exists():
             raise ValidationException(f"extra_config file {self.extra_config} not found")
@@ -831,6 +921,11 @@ class AssetConfig(Config):
                 raise ValidationException(f"Tried to read asset name from spec, "
                                           f"but it includes a template tag: {name}")
         return name
+
+    @property
+    def partial_name(self) -> str:
+        """Asset name, including type."""
+        return PARTIAL_ASSET_NAME_TEMPLATE.format(type=self.type.value, name=self.name)
 
     @property
     def full_name(self) -> str:
@@ -895,6 +990,11 @@ class AssetConfig(Config):
         """Asset's spec file."""
         return self._append_to_file_path(self.spec)
 
+    @property
+    def categories(self) -> List[str]:
+        """List of categories."""
+        return self._yaml.get('categories', [])
+
     def spec_as_object(self, force_reload: bool = False) -> Spec:
         """Retrieve asset's spec file as an object.
 
@@ -907,6 +1007,25 @@ class AssetConfig(Config):
         if force_reload or self._spec is None:
             self._spec = Spec(self.spec_with_path)
         return self._spec
+
+    @property
+    def description_file(self) -> str:
+        """Raw 'description_file' value."""
+        return self._yaml.get('description_file')
+
+    @property
+    def description_file_with_path(self) -> Path:
+        """Asset's description file."""
+        description_file = self.description_file
+        if description_file is None:
+            # Check for default file
+            description_file_path = self._append_to_file_path(DEFAULT_DESCRIPTION_FILE)
+            if not description_file_path.exists():
+                description_file_path = None
+        else:
+            # Use specified file
+            description_file_path = self._append_to_file_path(description_file)
+        return description_file_path
 
     @property
     def extra_config(self) -> str:
@@ -965,6 +1084,11 @@ class AssetConfig(Config):
 
         # Collect files from spec
         release_paths.extend(self.spec_as_object().release_paths)
+
+        # Collect description file if set or found
+        description_file = self.description_file_with_path
+        if description_file is not None:
+            release_paths.append(description_file)
 
         # Collect files from extra_config if set
         extra_config = self.extra_config_as_object()

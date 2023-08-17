@@ -1,0 +1,30 @@
+name: responsibleai-text
+channels:
+  - conda-forge
+  - defaults
+  - huggingface
+  - anaconda
+  - pytorch
+dependencies:
+  - python=3.8
+  - pip
+  - pytorch
+  - captum
+  - cpuonly
+  - pycocotools==2.0.4
+  - pip:
+    - numpy==1.22.0
+    - responsibleai~=0.29.0
+    - raiwidgets~=0.29.0
+    - pyarrow
+    - azure-core==1.25.1
+    - mlflow
+    - markupsafe<2.1.0
+    - itsdangerous==2.0.1
+    - responsibleai-text==0.1.4
+    - click<8.0.0
+    - mltable==1.4.1
+    - transformers>=4.17.0
+    - ml-wrappers~=0.4.2
+    - nlp-feature-extractors==0.1.0
+    - datasets

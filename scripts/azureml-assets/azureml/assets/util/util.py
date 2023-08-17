@@ -8,8 +8,8 @@ import filecmp
 import re
 import shutil
 from pathlib import Path
+from ruamel.yaml import YAML
 from typing import List, Tuple, Union
-import yaml
 
 import azureml.assets as assets
 from azureml.assets.util import logger
@@ -184,7 +184,7 @@ def get_asset_release_dir_from_parts(type: assets.AssetType, name: str, release_
 
 
 def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory: Path, add_subdir: bool = False,
-                             use_version_dir: bool = False):
+                             use_version_dir: bool = False) -> Path:
     """Copy asset directory to output directory.
 
     Args:
@@ -192,6 +192,9 @@ def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory:
         output_directory_root (Path): Output directory root
         add_subdir (bool, optional): Add asset-specific subdirectories to output_directory
         use_version_dir (bool, optional): Store asset in version-specific directory
+
+    Returns:
+        Path: The asset's output directory
     """
     if add_subdir:
         output_directory = get_asset_output_dir(asset_config, output_directory, use_version_dir)
@@ -200,6 +203,7 @@ def copy_asset_to_output_dir(asset_config: assets.AssetConfig, output_directory:
 
     common_dir, relative_release_paths = find_common_directory(asset_config.release_paths)
     copy_replace_dir(source=common_dir, dest=output_directory, paths=relative_release_paths)
+    return output_directory
 
 
 def apply_tag_template(full_image_name: str, template: str = None) -> str:
@@ -396,7 +400,7 @@ def load_yaml(file_path: str) -> dict:
         dict: loaded yaml as dict
     """
     with open(file_path, "r") as f:
-        yaml_dict = yaml.safe_load(f)
+        yaml_dict = YAML().load(f)
     return yaml_dict
 
 
@@ -408,4 +412,4 @@ def dump_yaml(yaml_dict: dict, file_path: str):
         file_path (str): File path to store dump result to.
     """
     with open(file_path, "w") as f:
-        yaml_dict = yaml.safe_dump(yaml_dict, f)
+        yaml_dict = YAML().dump(yaml_dict, f)

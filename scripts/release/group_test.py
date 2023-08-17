@@ -6,15 +6,31 @@ import concurrent.futures
 import os
 import sys
 import logging
-import yaml
 from contextlib import contextmanager
 from subprocess import check_call, run
 from pathlib import Path
 from azure.ai.ml import load_job, MLClient
 from azure.identity import DefaultAzureCredential
+from azure.core.credentials import AccessToken, TokenCredential
+from datetime import datetime, timedelta
+from ruamel.yaml import YAML
 
 logger = logging.getLogger(__name__)
 TEST_YML = "tests.yml"
+
+
+class CustomTokenCredential(TokenCredential):
+    """Custom token credential class for runner."""
+
+    def __init__(self, token):
+        """Initialize custom token credential class."""
+        self.token = token
+
+    def get_token(self, *scopes):
+        """Get token."""
+        two_hours_from_now = datetime.now() + timedelta(hours=2)
+        utc_timestamp = int(two_hours_from_now.timestamp())
+        return AccessToken(self.token, utc_timestamp)
 
 
 def run_pytest_job(job: Path, my_env: dict):
@@ -55,10 +71,11 @@ def group_test(
         resource_group: str,
         workspace: str,
         coverage_report: Path = None,
-        version_suffix: str = None):
+        version_suffix: str = None,
+        runner: bool = False):
     """Run group tests."""
     with open(tests_dir / TEST_YML) as fp:
-        data = yaml.load(fp, Loader=yaml.FullLoader)
+        data = YAML().load(fp)
         group_pre = None
         if "pre" in data[test_group]:
             group_pre = tests_dir / data[test_group]['pre']
@@ -77,7 +94,11 @@ def group_test(
         logger.info("token is set")
     if version_suffix:
         my_env['version_suffix'] = version_suffix
-    ml_client = MLClient(DefaultAzureCredential(), subscription_id, resource_group, workspace)
+    if runner:
+        credential = CustomTokenCredential(my_env['token'])
+    else:
+        credential = DefaultAzureCredential()
+    ml_client = MLClient(credential, subscription_id, resource_group, workspace)
     submitted_job_list = []
     succeeded_jobs = []
     failed_jobs = []
@@ -90,7 +111,7 @@ def group_test(
 
         pytest_jobs = {}  # pytest job path -> assets coverage dict
         with open(tests_dir / TEST_YML) as fp:
-            data = yaml.load(fp, Loader=yaml.FullLoader)
+            data = YAML().load(fp)
             for job, job_data in data[test_group]['jobs'].items():
                 if "pytest_job" in job_data:
                     pytest_jobs[tests_dir / job_data['pytest_job']] = job_data['assets']
@@ -142,11 +163,13 @@ def group_test(
 
         logger.info(f"covered_assets {covered_assets}")
         if coverage_report:
+            yaml = YAML()
+            yaml.preserve_quotes = True
             with open(coverage_report, "r") as yf:
-                cover_yaml = yaml.safe_load(yf) or []
+                cover_yaml = yaml.load(yf) or []
                 cover_yaml.extend(covered_assets)
             with open(coverage_report, "w") as yf:
-                yaml.safe_dump(cover_yaml, yf)
+                yaml.dump(cover_yaml, yf)
 
     if failed_jobs:
         logger.warning(f"{len(failed_jobs)} jobs failed. {failed_jobs}.")
@@ -164,6 +187,8 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--coverage-report", required=False, type=Path, help="Path of coverage report yaml")
     parser.add_argument("-v", "--version-suffix", required=False, type=str,
                         help="version suffix which will be used to identify the asset id in tests")
+    parser.add_argument("--runner", required=False, type=bool, default=False,
+                        help="if the runner is running the tests")
     args = parser.parse_args()
     group_test(args.input_dir, args.test_group, args.subscription, args.resource_group, args.workspace_name,
-               args.coverage_report, args.version_suffix)
+               args.coverage_report, args.version_suffix, args.runner)

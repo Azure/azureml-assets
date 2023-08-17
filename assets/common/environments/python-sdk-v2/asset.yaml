@@ -1,0 +1,6 @@
+name: python-sdk-v2
+version: auto
+type: environment
+spec: spec.yaml
+extra_config: environment.yaml
+categories: ["Common"]
