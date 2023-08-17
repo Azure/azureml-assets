@@ -16,7 +16,7 @@ from shared_utilities.log_utils import log_error
 
 
 def run():
-    """Publisher Azure monitor metrics."""
+    """Publish Azure monitor metrics."""
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--signal_metrics", type=str)
     arg_parser.add_argument("--monitor_name", type=str)

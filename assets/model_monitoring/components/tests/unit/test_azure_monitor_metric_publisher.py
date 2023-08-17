@@ -67,6 +67,7 @@ successful_test_cases = [
 @pytest.mark.unit
 class TestAzureMonitorMetricPublisher:
     """Test class for Azure monitor metric publisher."""
+
     @pytest.mark.parametrize("input_metric", successful_test_cases)
     def test_to_metric_payload_success(self, input_metric):
         """Test to_metric_payload method for happy paths."""
