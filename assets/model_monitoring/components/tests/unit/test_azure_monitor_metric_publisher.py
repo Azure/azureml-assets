@@ -90,7 +90,6 @@ class TestAzureMonitorMetricPublisher:
         assert input_metric["metric_value"] == baseData["series"][0]["max"]
         assert input_metric["metric_value"] == baseData["series"][0]["sum"]
 
-
     @pytest.mark.parametrize("aml_service_endpoint, expected_location", [
         ("https://eastus.api.azureml.ms", "eastus"),
         ("https://eastus2.api.azureml.ms", "eastus2"),
