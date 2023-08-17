@@ -9,6 +9,7 @@ from azure.ai.ml.entities import Spark, AmlTokenConfiguration
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_JOINER,
+    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_OVERLAPPING_JOIN_VALUE,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_WITH_JOIN_COLUMN,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_JOIN_COLUMN,
     DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME,
@@ -61,7 +62,7 @@ def _submit_data_joiner_job(
 
 
 @pytest.mark.e2e
-class TestCreateManifestE2E:
+class TestDataJoinerE2E:
     """Test class."""
 
     def test_data_joiner_successful(
@@ -73,6 +74,22 @@ class TestCreateManifestE2E:
             get_component,
             test_suite_name,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_WITH_JOIN_COLUMN,
+            DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME,
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_JOIN_COLUMN,
+            DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME
+        )
+
+        assert pipeline_job.status == 'Completed'
+
+    def test_data_joiner_empty_result_successful(
+        self, ml_client: MLClient, get_component, test_suite_name
+    ):
+        """Test data joiner that produces empty result."""
+        pipeline_job = _submit_data_joiner_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_OVERLAPPING_JOIN_VALUE,
             DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_JOIN_COLUMN,
             DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME
