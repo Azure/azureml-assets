@@ -5,6 +5,7 @@
 
 from datetime import datetime, timezone
 import json
+import re
 import requests
 
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
@@ -12,6 +13,19 @@ from pyspark.sql import Row
 from typing import List
 
 from shared_utilities.log_utils import log_info, log_warning, log_error
+
+
+def extract_location_from_aml_endpoint_str(aml_service_endpoint: str):
+    location_search = re.search('https://([A-Za-z0-9]+).api.azureml.ms', aml_service_endpoint, re.IGNORECASE)
+    if location_search:
+        location = location_search.group(1)
+    else:
+        message = "Failed to extract location string. "\
+                  + f"Value of environment variable 'AZUREML_SERVICE_ENDPOINT': {aml_service_endpoint}"
+        log_error(message)
+        raise ValueError(message)
+
+    return location
 
 
 def publish_metric(

@@ -8,7 +8,10 @@ from datetime import datetime
 from pyspark.sql import Row
 import pytest
 
-from model_monitor_metric_publisher.azure_monitor_metric_publisher import to_metric_payload
+from model_monitor_metric_publisher.azure_monitor_metric_publisher import (
+    to_metric_payload,
+    extract_location_from_aml_endpoint_str,
+)
 
 test_monitor_name = "test_monitor"
 test_signal_name = "test_signal"
@@ -65,8 +68,8 @@ successful_test_cases = [
 class TestAzureMonitorMetricPublisher:
     """Test class for Azure monitor metric publisher."""
     @pytest.mark.parametrize("input_metric", successful_test_cases)
-    def test_to_metric_payload_without_group_dimension(self, input_metric):
-        """Test to_metric_payload method for a metric without group dimension."""
+    def test_to_metric_payload_success(self, input_metric):
+        """Test to_metric_payload method for happy paths."""
         payload = to_metric_payload(
             input_metric,
             test_monitor_name,
@@ -85,3 +88,14 @@ class TestAzureMonitorMetricPublisher:
         assert input_metric["metric_value"] == baseData["series"][0]["min"]
         assert input_metric["metric_value"] == baseData["series"][0]["max"]
         assert input_metric["metric_value"] == baseData["series"][0]["sum"]
+
+
+    @pytest.mark.parametrize("aml_service_endpoint, expected_location", [
+        ("https://eastus.api.azureml.ms", "eastus"),
+        ("https://eastus2.api.azureml.ms", "eastus2"),
+        ("https://eastus2euap.api.azureml.ms", "eastus2euap"),
+    ])
+    def test_extract_location_success(self, aml_service_endpoint, expected_location):
+        """Test extract_location_from_aml_endpoint_str method for happy paths."""
+        location = extract_location_from_aml_endpoint_str(aml_service_endpoint)
+        assert expected_location == location

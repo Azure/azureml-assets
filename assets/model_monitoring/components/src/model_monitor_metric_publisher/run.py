@@ -5,12 +5,11 @@
 
 import argparse
 import os
-import re
 
 from pyspark.sql import Row
 from typing import List
 
-from azure_monitor_metric_publisher import publish_metric
+from azure_monitor_metric_publisher import extract_location_from_aml_endpoint_str, publish_metric
 from shared_utilities.datetime_utils import parse_datetime_from_string
 from shared_utilities.io_utils import read_mltable_in_spark
 from shared_utilities.log_utils import log_error
@@ -35,14 +34,7 @@ def run():
         log_error(f"Failed to find a required environment variable, error: {str(err)}.")
         raise
 
-    location_search = re.search('https://([A-Za-z0-9]+).api.azureml.ms', azureml_service_endpoint, re.IGNORECASE)
-    if location_search:
-        location = location_search.group(1)
-    else:
-        message = "Failed to extract location string. "\
-                  + f"Value of environment variable 'AZUREML_SERVICE_ENDPOINT': {azureml_service_endpoint}"
-        log_error(message)
-        raise ValueError(message)
+    location = extract_location_from_aml_endpoint_str(azureml_service_endpoint)
 
     format_data = "%Y-%m-%d %H:%M:%S"
     data_window_start = parse_datetime_from_string(format_data, args.data_window_start)
