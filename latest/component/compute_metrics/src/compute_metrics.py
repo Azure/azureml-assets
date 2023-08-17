@@ -207,6 +207,10 @@ def filter_ground_truths(data, task_type, column_name=None):
     Returns:
         _type_: _description_
     """
+    if task_type in [constants.TASK.IMAGE_INSTANCE_SEGMENTATION, constants.TASK.IMAGE_OBJECT_DETECTION]:
+        # do not filter as these contains multiple required columns
+        return data
+
     #  for Question-Answering checking for multiple columns in ground truth
     if task_type == constants.TASK.QnA and column_name:
         if isinstance(data[data.columns[0]][0], dict) and len(data[data.columns[0]][0].keys()) > 1:
