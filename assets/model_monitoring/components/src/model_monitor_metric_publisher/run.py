@@ -11,8 +11,9 @@ from pyspark.sql import Row
 from typing import List
 
 from azure_monitor_metric_publisher import publish_metric
-from shared_utilities.log_utils import log_utils
+from shared_utilities.datetime_utils import format_date_string
 from shared_utilities.io_utils import read_mltable_in_spark
+from shared_utilities.log_utils import log_error
 
 
 def run():
@@ -21,8 +22,8 @@ def run():
     arg_parser.add_argument("--signal_metrics", type=str)
     arg_parser.add_argument("--monitor_name", type=str)
     arg_parser.add_argument("--signal_name", type=str)
-    arg_parser.add_argument("--window_start", type=str)
-    arg_parser.add_argument("--window_end", type=str)
+    arg_parser.add_argument("--data_window_start", type=str)
+    arg_parser.add_argument("--data_window_end", type=str)
     args = arg_parser.parse_args()
 
     metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
@@ -31,7 +32,7 @@ def run():
         azureml_service_endpoint = os.environ['AZUREML_SERVICE_ENDPOINT']
         workspace_resource_id = os.environ['AZUREML_WORKSPACE_SCOPE']
     except KeyError as err:
-        log_utils.error(f"Failed to find a required environment variable, error: {str(err)}.")
+        log_error(f"Failed to find a required environment variable, error: {str(err)}.")
         raise
 
     location_search = re.search('https://([A-Za-z0-9]+).api.azureml.ms', azureml_service_endpoint, re.IGNORECASE)
@@ -39,10 +40,14 @@ def run():
         location = location_search.group(1)
     else:
         message = f"Failed to extract location string. Value of AZUREML_SERVICE_ENDPOINT environment variable: {azureml_service_endpoint}"
-        log_utils.error(message)
+        log_error(message)
         raise ValueError(message)
 
-    publish_metric(metrics, args.monitor_name, args.signal_name, args.window_start, args.window_end, location, workspace_resource_id)
+    format_data = "%Y-%m-%d %H:%M:%S"
+    data_window_start = format_date_string(format_data, args.data_window_start)
+    data_window_end = format_date_string(format_data, args.data_window_end)
+
+    publish_metric(metrics, args.monitor_name, args.signal_name, data_window_start, data_window_end, location, workspace_resource_id)
 
     print("*************** Publish metrics ***************")
     print("Successfully executed the metric publisher component.")

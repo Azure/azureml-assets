@@ -3,14 +3,14 @@ import logging
 FORMAT = '%(asctime)s %(message)s'
 logging.basicConfig(format=FORMAT)
 
-def log(level: logging._Level, message: str):
+def log(level: int, message: str):
     logging.log(level=level, msg=message)
 
-def info(message: str):
+def log_info(message: str):
     log(logging.INFO, message)
 
-def warning(message: str):
+def log_warning(message: str):
     log(logging.WARNING, message)
 
-def error(message: str):
+def log_error(message: str):
     log(logging.ERROR, message)
