@@ -19,7 +19,3 @@ EXPOSE 5001 8883 8888
 # support Deepspeed launcher requirement of passwordless ssh login
 RUN apt-get update \
     && apt-get install -y openssh-server openssh-client
-
-RUN bash -c "source /opt/conda/bin/activate base \
-              && pip uninstall --yes cryptography \
-              && pip install cryptography>=41.0.3"
