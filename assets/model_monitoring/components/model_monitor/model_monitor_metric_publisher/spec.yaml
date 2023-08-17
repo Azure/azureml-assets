@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: model_monitor_metric_outputter
+name: model_monitor_metric_publisher
 display_name: Model Monitor - Metric Publisher
 description: Azure Monitor Publisher for the computed model monitor metrics.
 version: 0.3.6

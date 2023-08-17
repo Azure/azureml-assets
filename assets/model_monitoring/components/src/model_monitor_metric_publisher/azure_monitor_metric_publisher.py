@@ -1,7 +1,7 @@
 import datetime
-import json
 import requests
 
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential, CredentialUnavailableError
 from pyspark.sql import Row
 from typing import List
 
@@ -11,20 +11,22 @@ def publish_metric(
         signal_metrics: List[Row],
         monitor_name: str,
         signal_name: str,
+        window_start: datetime,
+        window_end: datetime,
         location: str,
         ws_resource_uri: str):
     """Publish the signal metrics."""
     log_utils.info(f"Attempting to publish metrics of monitor {monitor_name}, signal {signal_name}.")
 
     ws_resource_uri = ws_resource_uri.strip("/")
-    metrics_url = f"https://{location}.monitoring.azure.com/{ws_resource_uri}/metrics"
+    metrics_url = f"https://{location}.monitoring.azure.com/{ws_resource_uri}/metrics" # TODO: use schedule subresource instead?
 
     log_utils.info(f"Publishing metrics to Azure resource with url {metrics_url}.")
 
     succeeded_count = 0
     failed_count = 0
     for metric in signal_metrics:
-        payload = __to_metric_payload(metric, monitor_name, signal_name)
+        payload = to_metric_payload(metric, monitor_name, signal_name, window_start, window_end)
 
         try:
             response = __post_metric(payload, metrics_url)
@@ -38,45 +40,41 @@ def publish_metric(
     log_utils.info(f"Published Azure monitor metrics for monitor {monitor_name}, signal {signal_name}:"\
                    + f"Total requested: {total_count}, success: {succeeded_count}, failure: {failed_count}")
 
-def __to_metric_payload(metric: Row, monitor_name: str, signal_name: str) -> dict:
+def to_metric_payload(
+        metric: Row,
+        monitor_name: str,
+        signal_name: str,
+        window_start: datetime,
+        window_end: datetime) -> dict:
     """Convert to a dictionary object for metric output."""
-    group = metric["group"]
     metric_name = metric["metric_name"]
     metric_value = metric["metric_value"]
-    threshold_value = metric["threshold_value"]
-
-    if "custom_dimensions" in metric:
-        custom_dims_str = json.dumps(metric["custom_dimensions"])
-    else:
-        custom_dims_str = ""
-
-    if "group_dimension" in metric:
-        group_dimension = metric["group_dimension"]
-        group_dim_str = f"{group}.{group_dimension}"
-    else:
-        group_dim_str = group
+    group = metric["group"]
+    group_dimension = metric["group_dimension"] if "group_dimension" in metric else None
 
     payload = {
         "time": datetime.utcnow().isoformat(" "),
         "data": {
             "baseData": {
                 "metric": metric_name,
-                "namespace": f"ModelMonitor.{monitor_name}",
+                "namespace": "ModelMonitor",
                 "dimNames": [
-                    "CustomDimensions",
+                    "Group"
                     "GroupDimension",
                     "MonitorName",
                     "SignalName",
-                    "ThresholdValue",
+                    "WindowStart",
+                    "WindowEnd",
                 ],
                 "series": [
                     {
                         "dimValues": [
-                            custom_dims_str,
-                            group_dim_str,
+                            group,
+                            group_dimension,
                             monitor_name,
                             signal_name,
-                            threshold_value,
+                            window_start.isoformat(" "),
+                            window_end.isoformat(" "),
                         ],
                         "min": metric_value,
                         "max": metric_value,
@@ -84,7 +82,7 @@ def __to_metric_payload(metric: Row, monitor_name: str, signal_name: str) -> dic
                         "count": 1,
                     }
                 ]
-            },
+            }
         }
     }
     return payload
@@ -92,9 +90,13 @@ def __to_metric_payload(metric: Row, monitor_name: str, signal_name: str) -> dic
 
 def __post_metric(payload: dict, url: str) -> requests.Response:
     """Make a request to Azure monitor to publish a metric. Return the reponse object."""
-    # todo
-    # credential = AzureMLOnBehalfOfCredential()
-    auth_token = "dummy" # auth_token = credential.get_token('https://monitor.azure.com') # todo: try - catch
+    credential = AzureMLOnBehalfOfCredential()
+
+    try:
+        auth_token = credential.get_token('https://monitor.azure.com')
+    except CredentialUnavailableError as err:
+        log_utils.error(f"Unable to get an AML OBO token, error: {str(err)}.")
+        raise
 
     headers = {
         "Authorization": f"Bearer {auth_token}"

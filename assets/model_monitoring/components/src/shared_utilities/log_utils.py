@@ -11,3 +11,6 @@ def info(message: str):
 
 def warning(message: str):
     log(logging.WARNING, message)
+
+def error(message: str):
+    log(logging.ERROR, message)
