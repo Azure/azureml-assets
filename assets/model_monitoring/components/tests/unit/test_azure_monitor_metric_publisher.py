@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""This file contains unit tests for the Data Drift Output Metrics component."""
+"""This file contains unit tests for the Azure Monitor Metric Publisher component."""
 
 from datetime import datetime
 

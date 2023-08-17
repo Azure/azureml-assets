@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""This file contains utilities to log a message with timestamp."""
+
 import logging
 
 FORMAT = '%(asctime)s %(message)s'

@@ -11,7 +11,7 @@ from pyspark.sql import Row
 from typing import List
 
 from azure_monitor_metric_publisher import publish_metric
-from shared_utilities.datetime_utils import format_date_string
+from shared_utilities.datetime_utils import parse_datetime_from_string
 from shared_utilities.io_utils import read_mltable_in_spark
 from shared_utilities.log_utils import log_error
 
@@ -44,8 +44,8 @@ def run():
         raise ValueError(message)
 
     format_data = "%Y-%m-%d %H:%M:%S"
-    data_window_start = format_date_string(format_data, args.data_window_start)
-    data_window_end = format_date_string(format_data, args.data_window_end)
+    data_window_start = parse_datetime_from_string(format_data, args.data_window_start)
+    data_window_end = parse_datetime_from_string(format_data, args.data_window_end)
 
     publish_metric(metrics, args.monitor_name, args.signal_name, data_window_start, data_window_end, location, workspace_resource_id)
 

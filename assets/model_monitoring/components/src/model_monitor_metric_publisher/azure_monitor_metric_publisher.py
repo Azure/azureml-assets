@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Helper methods to publish signal metrics to Azure Monitor of users."""
+
 from datetime import datetime, timezone
 import json
 import requests
@@ -9,14 +14,14 @@ from typing import List
 from shared_utilities.log_utils import log_info, log_warning, log_error
 
 def publish_metric(
-        signal_metrics: List[Row],
+        metrics: List[Row],
         monitor_name: str,
         signal_name: str,
         window_start: datetime,
         window_end: datetime,
         location: str,
         ws_resource_uri: str):
-    """Publish the signal metrics."""
+    """Publish the computed metrics to the specified Azure resource."""
     log_info(f"Attempting to publish metrics of monitor {monitor_name}, signal {signal_name}.")
 
     ws_resource_uri = ws_resource_uri.strip("/")
@@ -26,7 +31,7 @@ def publish_metric(
 
     succeeded_count = 0
     failed_count = 0
-    for metric in signal_metrics:
+    for metric in metrics:
         payload = to_metric_payload(metric, monitor_name, signal_name, window_start, window_end)
 
         try:
@@ -47,7 +52,7 @@ def to_metric_payload(
         signal_name: str,
         window_start: datetime,
         window_end: datetime) -> dict:
-    """Convert to a dictionary object for metric output."""
+    """Convert a computed metric row to a dictionary object."""
     try:
         metric_name = metric["metric_name"]
         metric_value = metric["metric_value"]

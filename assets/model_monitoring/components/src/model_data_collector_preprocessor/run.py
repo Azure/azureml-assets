@@ -11,7 +11,7 @@ from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
 from dateutil import parser
 from pyspark.sql.functions import lit
-from shared_utilities.datetime_utils import format_date_string
+from shared_utilities.datetime_utils import parse_datetime_from_string
 from shared_utilities.io_utils import (
     init_spark,
     read_mltable_in_spark,
@@ -61,8 +61,8 @@ def mdc_preprocessor(
     """
     # Format the dates
     format_data = "%Y-%m-%d %H:%M:%S"
-    start_datetime = format_date_string(format_data, data_window_start)
-    end_datetime = format_date_string(format_data, data_window_end)
+    start_datetime = parse_datetime_from_string(format_data, data_window_start)
+    end_datetime = parse_datetime_from_string(format_data, data_window_end)
 
     # Create mltable definition - extract, filter and convert columns.
     table = _convert_uri_folder_to_mltable(start_datetime, end_datetime, input_data)
