@@ -90,7 +90,7 @@ outputs:
 jobs:
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.12
+    component: azureml:model_prediction:0.0.13
     compute: ${{parent.inputs.compute_name}}
     resources:
       instance_type: ${{parent.inputs.instance_type}}
@@ -108,7 +108,7 @@ jobs:
   
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.12
+    component: azureml:compute_metrics:0.0.13
     compute: ${{parent.inputs.compute_name}}
     resources:
       instance_type: ${{parent.inputs.instance_type}}
