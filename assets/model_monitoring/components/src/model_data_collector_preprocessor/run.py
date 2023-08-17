@@ -21,7 +21,7 @@ from shared_utilities.io_utils import (
 from shared_utilities.constants import MDC_CORRELATION_ID_COLUMN, MDC_DATA_COLUMN
 
 
-def _create_mltable_definition_to_transform_mdc_data(
+def _convert_uri_folder_to_mltable(
     start_datetime: datetime,
     end_datetime: datetime,
     input_data: str
@@ -57,6 +57,7 @@ def mdc_preprocessor(
         monitor_current_time: The current time of the window (inclusive).
         window_size_in_days: Number of days from current time to start time window (exclusive).
         preprocessed_data: The mltable path pointing to location where the outputted mltable will be written to.
+        extract_correlation_id: The boolean to extract correlation Id from the MDC logs.
     """
     # Format the dates
     format_data = "%Y-%m-%d %H:%M:%S"
@@ -64,7 +65,7 @@ def mdc_preprocessor(
     end_datetime = format_date_string(format_data, data_window_end)
 
     # Create mltable definition - extract, filter and convert columns.
-    table = _create_mltable_definition_to_transform_mdc_data(start_datetime, end_datetime, input_data)
+    table = _convert_uri_folder_to_mltable(start_datetime, end_datetime, input_data)
 
     # Create MLTable in different location
     save_path = tempfile.mktemp()
