@@ -7,7 +7,7 @@ import pytest
 from typing import List
 from pyspark.sql import Row
 
-from model_monitor_metric_outputter.metric_output_builder import MetricOutputBuilder
+from model_monitor_metric_outputter.builder.metric_output_builder import MetricOutputBuilder
 
 
 @pytest.mark.unit
