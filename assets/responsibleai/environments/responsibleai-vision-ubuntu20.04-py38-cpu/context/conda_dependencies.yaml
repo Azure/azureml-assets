@@ -32,4 +32,4 @@ dependencies:
     - mltable==1.4.1
     - fastai
     - ipython<8.13
-    - typing-extensions < 4.7.0
+    - typing-extensions < 4.6.2
