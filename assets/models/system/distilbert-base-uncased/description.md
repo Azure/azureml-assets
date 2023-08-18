@@ -30,7 +30,7 @@ When fine-tuned on downstream tasks, this model achieves the following results:
 
 Glue test results:
 
-Task	MNLI	QQP	    QNLI	SST-2	CoLA	STS-B	MRPC	RTE
+Task	MNLI	QQP	    QNLI	SST-2	CoLA	STS-B	MRPC	RTE <br>
         82.2	88.5	89.2	91.3	51.3	85.8	87.5	59.9
 
 
