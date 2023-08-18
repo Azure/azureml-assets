@@ -29,3 +29,11 @@ class BenchmarkUserError(UserError):
 
 class BenchmarkValidationError(BenchmarkUserError):
     """Benchmark Validation User Error."""
+
+
+class DatasetDownloadError(BenchmarkUserError):
+    """Dataset Download User Error."""
+
+
+class DataFormatError(BenchmarkUserError):
+    """Data Format User Error."""

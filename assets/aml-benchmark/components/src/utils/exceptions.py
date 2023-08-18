@@ -41,6 +41,18 @@ class BenchmarkValidationException(BenchmarkUserException):
     _error_code = ErrorCodes.VALIDATION_ERROR
 
 
+class DatasetDownloadException(BenchmarkUserException):
+    """Exception for any errors caught when downloading datasets."""
+
+    _error_code = "DatasetDownloadError"
+
+
+class DataFormatException(BenchmarkUserException):
+    """Exception for any errors related to data format."""
+
+    _error_code = ErrorCodes.DATAFORMAT_ERROR
+
+
 def swallow_all_exceptions(logger: logging.Logger) -> Callable[..., Any]:
     """
     Swallow all exceptions.

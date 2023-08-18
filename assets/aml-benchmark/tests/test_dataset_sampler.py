@@ -23,6 +23,9 @@ from utils import (
     Constants,
     download_outputs,
     get_mlflow_logged_params,
+    get_src_dir,
+    assert_exception_mssg,
+    run_command,
 )
 
 
@@ -335,7 +338,7 @@ class TestDatasetSamplerScript:
             self._run_sampler_script(input_file_path)
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
-            assert expected_exception_mssg in exception_message
+            assert_exception_mssg(exception_message, expected_exception_mssg)
 
     @pytest.mark.skip(
         "Dataset Sampler does not care if the jsonl file is valid or not."
@@ -362,7 +365,7 @@ class TestDatasetSamplerScript:
             self._run_sampler_script(input_file_path)
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
-            assert expected_exception_mssg in exception_message
+            assert_exception_mssg(exception_message, expected_exception_mssg)
 
     @pytest.mark.parametrize("dataset_type", ["uri_folder"])
     def test_valid_dataset(self, temp_dir, dataset_type: str):
@@ -414,7 +417,7 @@ class TestDatasetSamplerScript:
             self._run_sampler_script(input_file_path, sampling_ratio=sampling_ratio)
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
-            assert expected_exception_mssg in exception_message
+            assert_exception_mssg(exception_message, expected_exception_mssg)
 
     @pytest.mark.parametrize("n_samples", [0, -1, None])
     def test_invalid_n_samples(self, temp_dir: str, n_samples: Union[int, None]):
@@ -435,7 +438,7 @@ class TestDatasetSamplerScript:
             self._run_sampler_script(input_file_path, n_samples=n_samples)
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
-            assert expected_exception_mssg in exception_message
+            assert_exception_mssg(exception_message, expected_exception_mssg)
 
     def test_sampling_ratio_n_samples_together(self, temp_dir: str):
         """Test for sampling ratio and n_samples together."""
@@ -450,7 +453,7 @@ class TestDatasetSamplerScript:
             self._run_sampler_script(input_file_path, sampling_ratio=0.2, n_samples=10)
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
-            assert expected_exception_mssg in exception_message
+            assert_exception_mssg(exception_message, expected_exception_mssg)
 
     @pytest.mark.parametrize("sampling_style", ["haphazard"])
     def test_invalid_sampling_style(self, temp_dir: str, sampling_style: str):
@@ -478,7 +481,7 @@ class TestDatasetSamplerScript:
         """Test random seed for non random sampling."""
         # Create input file and expected exception message
         input_file_path = self._create_input_file(temp_dir, file_name="temp_test.jsonl")
-        expected_exception_mssg = (
+        expected_warning_mssg = (
             f"Received random_seed: {0}, but it won't be used. It is used only when 'sampling_style' is 'random'."
         )
 
@@ -489,7 +492,7 @@ class TestDatasetSamplerScript:
             )
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
-            assert expected_exception_mssg in exception_message
+            assert expected_warning_mssg in exception_message
 
     def _create_input_file(self, directory: str, file_name: str) -> str:
         """Get the input file path.
@@ -534,14 +537,7 @@ class TestDatasetSamplerScript:
         :return: None
         :rtype: NoneType
         """
-        cwd = os.getcwd()
-        if os.path.basename(cwd) == "azureml-assets":
-            # when running tests locally
-            src_dir = "assets/aml-benchmark/components/src"
-        else:
-            # when running tests from workflow
-            src_dir = os.path.join(os.path.dirname(cwd), "src")
-
+        src_dir = get_src_dir()
         args = [
             f"cd {src_dir} &&",
             "python -m dataset_sampler.main",
@@ -558,9 +554,5 @@ class TestDatasetSamplerScript:
             args.extend(["--sampling_ratio", str(sampling_ratio)])
         if n_samples is not None:
             args.extend(["--n_samples", str(n_samples)])
-        _ = subprocess.check_output(
-            " ".join(args),
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            shell=True,
-        )
+
+        run_command(" ".join(args))

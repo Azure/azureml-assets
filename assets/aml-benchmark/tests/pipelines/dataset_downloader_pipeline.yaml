@@ -1,0 +1,32 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+display_name: test_dataset_downloader
+description: Pipeline to test Dataset Downloader component.
+settings:
+  default_compute: azureml:serverless
+
+inputs:
+  dataset_name: test_dataset
+  configuration: None
+  split: validation
+  url: None
+
+outputs:
+  output_dataset:
+    type: uri_folder
+
+jobs:
+  run_dataset_downloader:
+    type: command
+    component: ../../components/dataset-downloader/spec.yaml
+    limits: 
+      timeout: 900
+    inputs:
+      dataset_name: ${{parent.inputs.dataset_name}}
+      configuration: ${{parent.inputs.configuration}}
+      split: ${{parent.inputs.split}}
+      url: ${{parent.inputs.url}}
+    outputs:
+      output_dataset: ${{parent.outputs.output_dataset}}
+    

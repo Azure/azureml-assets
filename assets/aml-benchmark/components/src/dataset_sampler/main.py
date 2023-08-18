@@ -92,7 +92,7 @@ def sample_from_head(
     :param n_samples: List of absolute number of lines to sample
     :return: None
     """
-    for i, (input_file_path), n_sample in enumerate(zip(input_file_paths, n_samples)):
+    for i, (input_file_path, n_sample) in enumerate(zip(input_file_paths, n_samples)):
         output_file_path = get_output_file_path(input_file_path, output_path, i + 1)
         with open(input_file_path, "r") as f, open(output_file_path, "w") as f_out:
             for i, line in enumerate(f):

@@ -4,11 +4,13 @@
 """Utility file for tests."""
 
 import os
+import subprocess
 from typing import Dict, Any, Optional
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
 from azure.identity import DefaultAzureCredential, AzureCliCredential
+from azureml._common._error_response._error_response_constants import ErrorCodes
 import mlflow
 
 
@@ -136,3 +138,42 @@ def get_mlflow_logged_params(job_name: str, exp_name: str) -> Dict[str, Any]:
     logged_params = runs[0].data.params
 
     return logged_params
+
+
+def get_src_dir() -> str:
+    """Get the source directory for component code."""
+    cwd = os.getcwd()
+    if os.path.basename(cwd) == "azureml-assets":
+        # when running tests locally
+        src_dir = "assets/aml-benchmark/components/src"
+    else:
+        # when running tests from workflow
+        src_dir = os.path.join(os.path.dirname(cwd), "src")
+    return src_dir
+
+
+def run_command(command: str) -> None:
+    """
+    Run the command in the shell.
+
+    :param command: The command to run.
+    :return: None
+    """
+    _ = subprocess.check_output(
+        command,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
+        shell=True,
+    )
+
+
+def assert_exception_mssg(exception_message: str, expected_exception_mssg: str) -> None:
+    """
+    Assert that the exception message contains the expected exception message and the expected error code.
+
+    :param exception_message: The exception message.
+    :param expected_exception_mssg: The expected exception message.
+    """
+    assert expected_exception_mssg in exception_message
+    assert ErrorCodes.USER_ERROR in exception_message
+    assert ErrorCodes.SYSTEM_ERROR not in exception_message
