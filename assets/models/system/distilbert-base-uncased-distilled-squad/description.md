@@ -2,11 +2,11 @@ The DistilBERT model is a distilled version of the BERT language model with 40% 
 
 ## Key Details:
 
-Model Type: Transformer-based language model
-Developed by: Hugging Face
-License: Apache 2.0
-Related Models: DistilBERT-base-uncased
-Fine-tuned using knowledge distillation on SQuAD v1.1 dataset
+Model Type: Transformer-based language model <br>
+Developed by: Hugging Face <br>
+License: Apache 2.0 <br>
+Related Models: DistilBERT-base-uncased <br>
+Fine-tuned using knowledge distillation on SQuAD v1.1 dataset <br>
 Achieves competitive performance with BERT on question-answering tasks
 
 ## Use Cases:
