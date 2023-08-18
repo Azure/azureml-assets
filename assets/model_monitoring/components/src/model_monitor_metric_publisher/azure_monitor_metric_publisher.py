@@ -16,6 +16,7 @@ from shared_utilities.log_utils import log_info, log_warning, log_error
 
 
 def extract_location_from_aml_endpoint_str(aml_service_endpoint: str):
+    """Extract location string from Azure ML service endpoint string."""
     location_search = re.search('https://([A-Za-z0-9]+).api.azureml.ms', aml_service_endpoint, re.IGNORECASE)
     if location_search:
         location = location_search.group(1)
