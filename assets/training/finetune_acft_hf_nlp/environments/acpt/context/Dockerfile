@@ -3,7 +3,6 @@ FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch200:biweek
 
 USER root
 
-RUN apt-get update && apt-get -y upgrade
 RUN pip install --upgrade pip
 
 COPY requirements.txt .
