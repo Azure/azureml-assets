@@ -1,4 +1,5 @@
-The DistilBERT base model (uncased) is a distilled version of the BERT base model that is smaller and faster than BERT. It was introduced in a specific paper and the code for creating the model can be found on a specific webpage. The model is uncased so it doesn't differentiate between lower and upper case letters in the English language. DistilBERT is considered a transformers model that was pretrained on the same corpus in a self-supervised fashion using the BERT base model as a teacher.  The training process involved three objectives:
+The DistilBERT base model (uncased) is a distilled version of the BERT base model that is smaller and faster than BERT. It was introduced in a specific paper and the code for creating the model can be found on a specific webpage. The model is uncased so it doesn't differentiate between lower and upper case letters in the English language. DistilBERT is considered a transformers model that was pretrained on the same corpus in a self-supervised fashion using the BERT base model as a teacher.
+The training process involved three objectives:
 
 1. Distillation loss: The model was trained to produce similar probability distributions as the BERT base model.
 2. Masked Language Modeling (MLM): The model masked 15% of the words in a sentence, then predicted those masked words after processing the entire sentence. This bidirectional approach allows the model to learn contextual information.
@@ -9,7 +10,8 @@ DistilBERT's design results in it learning similar language representations as t
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/distilbert-base-uncased" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Training procedure
-Preprocessing
+
+## Preprocessing
 The texts are lowercased and tokenized using WordPiece and a vocabulary size of 30,000. The inputs of the model are then of the form:
 
 [CLS] Sentence A [SEP] Sentence B [SEP]
@@ -18,11 +20,12 @@ With probability 0.5, sentence A and sentence B correspond to two consecutive se
 
 The details of the masking procedure for each sentence are the following:
 
-15% of the tokens are masked.
-In 80% of the cases, the masked tokens are replaced by [MASK].
-In 10% of the cases, the masked tokens are replaced by a random token (different) from the one they replace.
-In the 10% remaining cases, the masked tokens are left as is.
-Pretraining
+15% of the tokens are masked.<br>
+In 80% of the cases, the masked tokens are replaced by [MASK].<br>
+In 10% of the cases, the masked tokens are replaced by a random token (different) from the one they replace.<br>
+In the 10% remaining cases, the masked tokens are left as is.<br>
+
+## Pretraining
 The model was trained on 8 16 GB V100 for 90 hours. See the training code for all hyperparameters details.
 
 ### Evaluation results
@@ -30,7 +33,7 @@ When fine-tuned on downstream tasks, this model achieves the following results:
 
 Glue test results:
 
-Task	MNLI	QQP	    QNLI	SST-2	CoLA	STS-B	MRPC	RTE <br>
+MNLI	QQP	    QNLI	SST-2	CoLA	STS-B	MRPC	RTE <br>
         82.2	88.5	89.2	91.3	51.3	85.8	87.5	59.9
 
 
