@@ -23,8 +23,8 @@ RUN pip install 'azureml-core=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
                 'azureml-rai-utils==0.0.3'
 
-RUN pip install 'azureml-automl-dnn-vision=={{latest-pypi-version}}' \
-                'azureml-dataset-runtime=={{latest-pypi-version}}' 
+RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
+                'azureml-automl-dnn-vision=={{latest-pypi-version}}'
                 
 
 RUN pip install 'shap==0.40.0' \
