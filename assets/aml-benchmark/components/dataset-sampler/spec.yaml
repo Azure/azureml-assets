@@ -3,13 +3,13 @@ type: command
 
 name: dataset_sampler
 display_name: Dataset Sampler
-description: Sample a URI_FILE dataset containing a JSONL file.
+description: Samples a dataset containing JSONL file(s).
 version: 0.0.1
 
 inputs:
   dataset: 
-    type: uri_file
-    description: Path to the input .jsonl file from which the data will be sampled.
+    type: uri_folder
+    description: Path to the input directory or .jsonl file from which the data will be sampled.
     optional: False
   sampling_style:
     type: string
@@ -37,8 +37,8 @@ inputs:
 
 outputs:
   output_dataset:
-    type: uri_file
-    description: Path to the output .jsonl file.
+    type: uri_folder
+    description: Path to the output directory.
 
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest

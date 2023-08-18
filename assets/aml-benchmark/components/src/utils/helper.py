@@ -14,8 +14,8 @@ def log_mlflow_params(**kwargs: Any) -> None:
     """
     Log the provided key-value pairs as parameters in MLflow.
 
-    If a file path is provided in the value, the checksum of the file is
-    calculated and logged as the parameter value. If `None` is provided as
+    If a file path or a list of file paths is provided in the value, the checksum of the
+    file(s) is calculated and logged as the parameter value. If `None` is provided as
     the value, the parameter is not logged.
 
     :param **kwargs: Key-value pairs of parameters to be logged in MLflow.
@@ -26,6 +26,10 @@ def log_mlflow_params(**kwargs: Any) -> None:
         if isinstance(value, str) and os.path.isfile(value):
             # calculate checksum of input dataset
             checksum = hashlib.md5(open(value, "rb").read()).hexdigest()
+            params[key] = checksum
+        elif isinstance(value, list) and all(isinstance(item, str) and os.path.isfile(item) for item in value):
+            # calculate checksum of input dataset
+            checksum = hashlib.md5(b"".join(open(item, "rb").read() for item in value)).hexdigest()
             params[key] = checksum
         else:
             if value is not None:

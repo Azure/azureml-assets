@@ -15,10 +15,14 @@ import mlflow
 class Constants:
     """Class to hold all constants."""
 
-    INPUT_FILE_PATH = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "data/demo_data.jsonl"
+    SAMPLER_INPUT_FILE_1 = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/sampler_data_1.jsonl"
     )
-    OUTPUT_FILE_PATH = "{output_dir}/named-outputs/{output_name}/{output_file_name}"
+    SAMPLER_INPUT_FILE_2 = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/sampler_data_2.jsonl"
+    )
+    OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"
+    OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"
     TEST_REGISTRY_NAME = "Benchmark-Test"
     REMOTE_FILE_URL = "https://raw.githubusercontent.com/Azure/azureml-examples/main/\
 v1/python-sdk/tutorials/automl-with-azureml/forecasting-bike-share/bike-no.csv"
