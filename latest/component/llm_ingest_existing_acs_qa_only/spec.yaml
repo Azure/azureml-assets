@@ -102,9 +102,9 @@ inputs:
     type: string
     optional: true
     description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern'\
-      \ to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)\"\
-      , \"replacement_pattern\": \"\\\\1/\\\\2\"}' would remove '/articles' from the\
-      \ middle of the url."
+      \ to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)(\\\
+      \\.[^.]+)$\", \"replacement_pattern\": \"\\\\1/\\\\2\"}' would remove '/articles'\
+      \ from the middle of the url."
    # data generation component
   dataset_size:
     type: integer
