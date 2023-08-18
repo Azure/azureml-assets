@@ -25,7 +25,7 @@ RUN pip install 'azureml-core=={{latest-pypi-version}}' \
 
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-automl-dnn-vision=={{latest-pypi-version}}'
-                
+
 RUN pip install 'shap==0.40.0' \
                 'interpret-community==0.29.0' \
                 'Pillow>=9.1.0' \
