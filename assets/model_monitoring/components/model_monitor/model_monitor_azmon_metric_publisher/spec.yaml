@@ -1,15 +1,15 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: model_monitor_metric_publisher
-display_name: Model Monitor - Metric Publisher
+name: model_monitor_azmon_metric_publisher
+display_name: Model Monitor - Azure Monitor Metric Publisher
 description: Azure Monitor Publisher for the computed model monitor metrics.
 version: 0.3.6
 is_deterministic: true
 
 code: ../../src/
 entry:
-  file: ./model_monitor_metric_publisher/run.py
+  file: ./model_monitor_azmon_metric_publisher/run.py
 
 inputs:
   signal_metrics:
@@ -60,4 +60,3 @@ resources:
 identity:
   type: managed
   client_id: ${{inputs.user_assigned_managed_identity_client_id}
-  

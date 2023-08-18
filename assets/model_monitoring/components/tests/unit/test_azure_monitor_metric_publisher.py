@@ -8,7 +8,7 @@ from datetime import datetime
 from pyspark.sql import Row
 import pytest
 
-from model_monitor_metric_publisher.azure_monitor_metric_publisher import (
+from model_monitor_azmon_metric_publisher.azure_monitor_metric_publisher import (
     to_metric_payload,
     extract_location_from_aml_endpoint_str,
 )
