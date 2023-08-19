@@ -259,7 +259,7 @@ def publish_data_drift_model_monitor_component(
             "component"
         ] = f"azureml:model_monitor_compute_histogram:{asset_version}"
         component["version"] = asset_version
-        
+
         spec_path = os.path.join(
             out_directory, f"{component['name']}-{generate_random_filename('yaml')}"
         )

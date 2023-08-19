@@ -17,13 +17,15 @@ METRIC_COUNT_NAMES = [
     "COHERENCECOUNT_",
     "GROUNDEDNESSCOUNT_",
     "FLUENCYCOUNT_",
-    "RELEVANCECOUNT_"
+    "RELEVANCECOUNT_",
+    "SIMILARITYCOUNT_"
 ]
 AGGREGATED_METRIC_NAMES = [
     "AggregatedGroundednessPassRate",
     "AggregatedCoherencePassRate",
     "AggregatedFluencyPassRate",
     "AggregatedRelevancePassRate"
+    "AggregatedSimilarityPassRate"
 ]
 
 
