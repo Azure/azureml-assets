@@ -259,7 +259,7 @@ def publish_data_drift_model_monitor_component(
             "component"
         ] = f"azureml:model_monitor_compute_histogram:{asset_version}"
         component["version"] = asset_version
-
+        
         spec_path = os.path.join(
             out_directory, f"{component['name']}-{generate_random_filename('yaml')}"
         )
@@ -290,12 +290,15 @@ def publish_generation_safety_signal_monitor_component(
         if component["name"] != "generation_safety_quality_signal_monitor_spark":
             continue
         print(f"Publishing {component['name']}..")
-        component["jobs"]["compute_metrics"]["component"] = f"azureml:annotation_compute_metrics_spark:\
-            {asset_version}"
-        component["jobs"]["compute_histogram"]["component"] = f"azureml:annotation_compute_histogram_spark:\
-            {asset_version}"
-        component["jobs"]["output_signal_metrics"]["component"] = f"azureml:model_monitor_output_metrics:\
-            {asset_version}"
+        component["jobs"]["compute_metrics"][
+            "component"
+        ] = f"azureml:annotation_compute_metrics_spark:{asset_version}"
+        component["jobs"]["compute_histogram"][
+            "component"
+        ] = f"azureml:annotation_compute_histogram_spark:{asset_version}"
+        component["jobs"]["output_signal_metrics"][
+            "component"
+        ] = f"azureml:model_monitor_output_metrics:{asset_version}"
         component["version"] = asset_version
 
         spec_path = os.path.join(
@@ -463,6 +466,7 @@ def release_lock(
     publish_prediction_drift_model_monitor_component,
     publish_data_drift_model_monitor_component,
     publish_feature_attr_drift_signal_monitor_component,
+    publish_generation_safety_signal_monitor_component,
     publish_command_components,
     main_worker_lock,
 ):

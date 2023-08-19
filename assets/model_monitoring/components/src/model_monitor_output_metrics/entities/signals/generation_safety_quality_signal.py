@@ -84,8 +84,6 @@ class GenerationSafetyQualitySignal(Signal):
 
     def publish_metrics(self, step: int):
         """Publish metrics to AML Run Metrics."""
-        print("self.metrics")
-        print(self.metrics)
         for metric in AGGREGATED_METRIC_NAMES:
             if metric in self.global_metrics:
                 run_metric = self.global_metrics[metric]
@@ -110,7 +108,6 @@ class GenerationSafetyQualitySignal(Signal):
             metric_name = metric["metric_name"]
             if "Count_" in metric_name and metric_name in METRIC_COUNT_NAMES:
                 bucket = metric_name.split("_")[1]
-                print(f"line 113 {bucket}")
                 rows.append(
                     Row(
                         feature_bucket={metric_name},
