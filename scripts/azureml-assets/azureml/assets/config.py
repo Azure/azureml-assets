@@ -45,6 +45,7 @@ class DataAssetType(Enum):
 
     URI_FILE = 'uri_file'  # A single file.
     URI_FOLDER = 'uri_folder'  # A folder containing files.
+    ML_TABLE = "mltable" # Tabulardataset.
 
 
 class ModelFlavor(Enum):
@@ -793,6 +794,84 @@ class EnvironmentConfig(Config):
         return PublishVisibility(visibility) if visibility else None
 
 
+class DataConfig(Config):
+    """Data Config class."""
+
+    """
+    Example:
+
+    path: # should contain local_path or should contain package object
+        ##Local path example
+        type: local
+        uri: "../data/coco" # the local path to the data 
+
+        ## Azure Blobstore example
+        type: azureblob
+        storage_name: my_storage
+        container_name: my_container
+        container_path: foo/bar
+
+    publish:
+        description: data_card.md
+        type: mltable
+    """
+
+    def __init__(self, file_name: Path):
+        """Initialize object for the Model Properties extracted from extra_config model.yaml."""
+        super().__init__(file_name)
+        self._path = None
+        self._validate()
+
+    def _validate(self):
+        """Validate the yaml file."""
+        Config._validate_exists('data.path', self.path)
+        Config._validate_enum('data.path.type', self.path.type.value, PathType, True)
+        Config._validate_exists('data.publish', self._publish)
+        Config._validate_exists('data.description', self.description)
+        Config._validate_enum('data.type', self._type, DataAssetType, True)
+
+    @property
+    def path(self) -> AssetPath:
+        """Data Path."""
+        if self._path:
+            return self._path
+        path = self._yaml.get('path', {})
+        if path and path.get('type'):
+            path_type = path.get('type')
+            if path_type == PathType.AZUREBLOB.value:
+                self._path = AzureBlobstoreAssetPath(
+                    storage_name=path['storage_name'],
+                    container_name=path['container_name'],
+                    container_path=path['container_path'],
+                )
+            elif path_type == PathType.LOCAL.value:
+                self._path = LocalAssetPath(local_path=path['uri'])
+        else:
+            raise Exception("path parameters are invalid")
+        return self._path
+
+    @property
+    def _publish(self) -> Dict[str, object]:
+        """Data publish properties."""
+        return self._yaml.get('publish')
+
+    @property
+    def description(self) -> Dict[str, object]:
+        """Data description."""
+        return self._publish.get('description')
+
+    @property
+    def _type(self) -> str:
+        """Data Type."""
+        return self._publish.get('type')
+
+    @property
+    def type(self) -> DataAssetType:
+        """Data Type Enum."""
+        type = self._type
+        return DataAssetType(type) if type else None
+
+
 @total_ordering
 class AssetConfig(Config):
     """Asset config file.
@@ -1057,6 +1136,8 @@ class AssetConfig(Config):
                     self._extra_config = EnvironmentConfig(extra_config_with_path)
                 elif self.type == AssetType.MODEL:
                     self._extra_config = ModelConfig(extra_config_with_path)
+                elif self.type == AssetType.DATA:
+                    self._extra_config = DataConfig(extra_config_with_path)
                 else:
                     raise Exception(f"extra_config loading for asset type {self.type.value} is unimplemented")
         return self._extra_config
