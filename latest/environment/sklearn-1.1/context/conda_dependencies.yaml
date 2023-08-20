@@ -18,4 +18,7 @@ dependencies:
   - azureml-automl-common-tools==1.52.0
   - scikit-learn~=1.1.0
   - joblib~=1.2.0
-  - cryptography>=41.0.2
+  # vulnerabilities
+  - cryptography>=41.0.3
+  - certifi >= 2023.07.22
+  - requests >= 2.31.0
