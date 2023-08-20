@@ -9,8 +9,8 @@ import mltable
 import tempfile
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
+from dateutil import parser
 from pyspark.sql.functions import lit
-from shared_utilities.datetime_utils import parse_datetime_from_string
 from shared_utilities.io_utils import (
     init_spark,
     read_mltable_in_spark,
@@ -18,6 +18,13 @@ from shared_utilities.io_utils import (
 )
 
 from shared_utilities.constants import MDC_CORRELATION_ID_COLUMN, MDC_DATA_COLUMN
+
+
+def _format_date_string(format: str, date_to_format: str) -> datetime:
+    parsed_date = parser.parse(date_to_format)
+    return datetime.strptime(
+        str(parsed_date.strftime(format)), format
+    )
 
 
 def _convert_uri_folder_to_mltable(
@@ -60,8 +67,8 @@ def mdc_preprocessor(
     """
     # Format the dates
     format_data = "%Y-%m-%d %H:%M:%S"
-    start_datetime = parse_datetime_from_string(format_data, data_window_start)
-    end_datetime = parse_datetime_from_string(format_data, data_window_end)
+    start_datetime = _format_date_string(format_data, data_window_start)
+    end_datetime = _format_date_string(format_data, data_window_end)
 
     # Create mltable definition - extract, filter and convert columns.
     table = _convert_uri_folder_to_mltable(start_datetime, end_datetime, input_data)
