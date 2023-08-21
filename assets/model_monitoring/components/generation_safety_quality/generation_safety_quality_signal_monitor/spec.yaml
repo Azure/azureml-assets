@@ -51,7 +51,7 @@ inputs:
   monitor_current_time:
     type: string
   user_assigned_managed_identity_client_id:
-    type: string
+    type: string\d
 outputs:
   signal_output:
     type: uri_folder
@@ -79,6 +79,7 @@ jobs:
       runtime_version: "3.3"
     identity:
       type: managed
+      client_id: "b6f59c9f-a0a8-4c39-9a04-ab608e1da80c"
   compute_metrics:
     type: spark
     component: azureml://registries/azureml-preview/components/annotation_compute_metrics_spark/versions/0.3.2
@@ -90,7 +91,6 @@ jobs:
         type: mltable
         path: ${{parent.inputs.annotation_rating_threshold}}
       metric_names: ${{parent.inputs.metric_names}}
-      user_assigned_managed_identity_client_id:  ${{parent.inputs.user_assigned_managed_identity_client_id}}
     outputs:
       signal_metrics:
         type: mltable
@@ -98,7 +98,7 @@ jobs:
       instance_type: standard_e4s_v3
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token
   output_signal_metrics: 
     type: spark
     component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.2
@@ -119,4 +119,4 @@ jobs:
       instance_type: standard_e4s_v3
       runtime_version: "3.3"
     identity:
-      type: managed
+      type: aml_token

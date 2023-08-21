@@ -4,10 +4,10 @@ type: spark
 name: annotation_compute_metrics_spark
 display_name: Annotation - Compute Metrics
 description: Compute annotation metrics given a deployment's model data input.
-version: 0.3.2
-is_deterministic: True
+version: '08_21_2023_13_13_33'
+is_deterministic: true
 inputs:
-  annotation_histogram: 
+  annotation_histogram:
     type: mltable
     mode: direct
   annotation_rating_threshold:
@@ -24,7 +24,7 @@ outputs:
     type: mltable
     mode: direct
 
-code: ../../src
+code: C:\Users\hawestra\azureml-assets\assets\model_monitoring\components\src
 
 entry:
   file: ./generation_safety_quality/annotation_compute_metrics/run.py
@@ -41,7 +41,7 @@ conf:
   spark.executor.cores: 2
   spark.executor.memory: 2g
   spark.executor.instances: 1
-  spark.dynamicAllocation.enabled: True
+  spark.dynamicAllocation.enabled: true
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 1 # avoid AOAI API limits by running only one executor at a time
   spark.jars.packages: com.microsoft.azure:synapseml_2.12:0.11.0-26-52919ce4-SNAPSHOT,org.apache.spark:spark-avro_2.12:3.3.1

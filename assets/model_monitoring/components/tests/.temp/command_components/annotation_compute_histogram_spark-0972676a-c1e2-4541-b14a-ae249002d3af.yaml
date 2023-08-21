@@ -1,39 +1,67 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: annotation_compute_metrics_spark
-display_name: Annotation - Compute Metrics
-description: Compute annotation metrics given a deployment's model data input.
-version: 0.3.2
-is_deterministic: True
+name: annotation_compute_histogram_spark
+display_name: Annotation - Compute Histogram
+description: Compute annotation histogram given a deployment's model data input.
+version: '08_21_2023_13_13_33'
+is_deterministic: false
 inputs:
-  annotation_histogram: 
+  production_dataset:
     type: mltable
     mode: direct
-  annotation_rating_threshold:
-    type: number
-    optional: true
-    default: 3
   metric_names:
     type: string
     description: a comma-separated list of metric names to compute
     default: groundedness
+  model_type:
+    type: string
+    optional: false
+    description: type of model used for annotation
+    enum:
+    - gpt-35-turbo
+    - gpt-4
+    - gpt-4-32k
+  model_deployment_name:
+    type: string
+    optional: false
+    description: model name, e.g., name of the deployment for Azure OpenAI
+  azure_endpoint_domain_name:
+    type: string
+    optional: false
+    description: endpoint domain name, e.g., <instance>.openai.azure.com
+  azure_openai_api_version:
+    type: string
+    optional: false
+    description: API version, e.g., 2023-03-15-preview
+  sample_rate:
+    type: number
+    optional: true
+    description: sample rate for the input dataset, should be greater than 0 and at
+      most 1
+  user_assigned_managed_identity_client_id:
+    type: string
 
 outputs:
-  signal_metrics:
+  histogram:
     type: mltable
     mode: direct
 
-code: ../../src
+code: C:\Users\hawestra\azureml-assets\assets\model_monitoring\components\src
 
 entry:
-  file: ./generation_safety_quality/annotation_compute_metrics/run.py
+  file: ./generation_safety_quality/annotation_compute_histogram/run.py
 
 args: >-
-  --annotation_histogram ${{inputs.annotation_histogram}}
-  $[[--annotation_rating_threshold ${{inputs.annotation_rating_threshold}}]]
+  --production_dataset ${{inputs.production_dataset}}
   --metric_names ${{inputs.metric_names}}
-  --signal_metrics ${{outputs.signal_metrics}}
+  --model_type ${{inputs.model_type}}
+  --model_deployment_name ${{inputs.model_deployment_name}}
+  --azure_endpoint_domain_name ${{inputs.azure_endpoint_domain_name}}
+  --azure_openai_api_version ${{inputs.azure_openai_api_version}}
+  $[[--sample_rate ${{inputs.sample_rate}}]]
+  --histogram ${{outputs.histogram}}
+
 
 conf:
   spark.driver.cores: 1
@@ -41,7 +69,7 @@ conf:
   spark.executor.cores: 2
   spark.executor.memory: 2g
   spark.executor.instances: 1
-  spark.dynamicAllocation.enabled: True
+  spark.dynamicAllocation.enabled: true
   spark.dynamicAllocation.minExecutors: 1
   spark.dynamicAllocation.maxExecutors: 1 # avoid AOAI API limits by running only one executor at a time
   spark.jars.packages: com.microsoft.azure:synapseml_2.12:0.11.0-26-52919ce4-SNAPSHOT,org.apache.spark:spark-avro_2.12:3.3.1
@@ -70,3 +98,7 @@ conf:
           - pandas~=1.4.3
           - azureml-mlflow~=1.49.0
           - mltable~=1.3.0
+
+identity:
+  type: managed
+  client_id: ${{inputs.user_assigned_managed_identity_client_id}
