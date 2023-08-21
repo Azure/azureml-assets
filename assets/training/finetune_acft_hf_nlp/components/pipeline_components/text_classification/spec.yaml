@@ -281,6 +281,7 @@ inputs:
     enum:
       - "32"
       - "16"
+      - "4"
     default: "32"
     optional: true
     description: Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.
@@ -572,7 +573,7 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.10
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.12
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
@@ -586,7 +587,7 @@ jobs:
       mlflow_model: '${{parent.jobs.text_classification_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.10
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.12
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
