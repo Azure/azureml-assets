@@ -250,7 +250,7 @@ jobs:
       enable_long_range_text: ${{parent.inputs.enable_long_range_text}}
   finetune:
     type: command
-    component: azureml:text_classification_finetune:0.0.13_nlp
+    component: azureml:text_classification_finetune:0.0.14_nlp
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch

@@ -240,7 +240,7 @@ jobs:
       model_selector_output: ${{parent.jobs.model_import.outputs.output_dir}}
   finetune:
     type: command
-    component: azureml:token_classification_finetune:0.0.13_nlp
+    component: azureml:token_classification_finetune:0.0.14_nlp
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
