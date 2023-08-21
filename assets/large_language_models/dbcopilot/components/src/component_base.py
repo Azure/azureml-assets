@@ -57,7 +57,7 @@ def main_entry_point(function_name: str):
                         )
                     else:
                         parser.add_argument(
-                            f"--{param.name}", type=type_value, required=True
+                            f"--{param.name}", type=type_value, required=param.default
                         )
 
                 # Parse the command-line arguments
