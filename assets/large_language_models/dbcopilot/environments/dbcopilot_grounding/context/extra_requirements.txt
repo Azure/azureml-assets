@@ -6,4 +6,5 @@ db_copilot_tool==0.1.7
 ## Install promptflow (including embeddingstore)
 --extra-index-url https://azuremlsdktestpypi.azureedge.net/promptflow/
 promptflow-sdk-bundle
-embeddingstore==0.0.101742157
+--extra-index-url https://azuremlsdktestpypi.azureedge.net/embeddingstore/
+embeddingstore==0.0.100123274
