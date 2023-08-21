@@ -7,7 +7,7 @@ description: Compute annotation histogram given a deployment's model data input.
 version: 0.3.4
 is_deterministic: false
 inputs:
-  target_dataset: 
+  production_dataset: 
     type: mltable
     mode: direct
   metric_names:
@@ -26,33 +26,10 @@ inputs:
     type: string
     optional: false
     description: model name, e.g., name of the deployment for Azure OpenAI
-  endpoint_type:
-    type: string
-    optional: true
-    enum:
-      - openai_api
-      - azure_endpoint
-      - azure_openai_api
-    default: azure_openai_api
   azure_endpoint_domain_name:
     type: string
     optional: false
     description: endpoint domain name, e.g., <instance>.openai.azure.com
-  authorization_type:
-    type: string
-    optional: false
-    enum:
-      - managed_identity
-      - key_vault_secret
-    description: Auth type to use. If key_vault_secret is used, authorization_vault_url and authorization_secret_name must be provided.
-  authorization_vault_url:
-    type: string
-    optional: true
-    description: only needed when using authorization_type=key_vault_secret
-  authorization_secret_name:
-    type: string
-    optional: true
-    description: only needed when using authorization_type=key_vault_secret
   azure_openai_api_version:
     type: string
     optional: false
@@ -61,6 +38,8 @@ inputs:
     type: number
     optional: true
     description: sample rate for the input dataset, should be greater than 0 and at most 1
+  user_assigned_managed_identity_client_id:
+    type: string
 
 outputs:
   histogram:
@@ -73,15 +52,11 @@ entry:
   file: ./generation_safety_quality/annotation_compute_histogram/run.py
 
 args: >-
-  --target_dataset ${{inputs.target_dataset}}
+  --production_dataset ${{inputs.production_dataset}}
   --metric_names ${{inputs.metric_names}}
   --model_type ${{inputs.model_type}}
   --model_deployment_name ${{inputs.model_deployment_name}}
-  $[[--endpoint_type ${{inputs.endpoint_type}}]]
   --azure_endpoint_domain_name ${{inputs.azure_endpoint_domain_name}}
-  --authorization_type ${{inputs.authorization_type}}
-  $[[--authorization_vault_url ${{inputs.authorization_vault_url}}]]
-  $[[--authorization_secret_name ${{inputs.authorization_secret_name}}]]
   --azure_openai_api_version ${{inputs.azure_openai_api_version}}
   $[[--sample_rate ${{inputs.sample_rate}}]]
   --histogram ${{outputs.histogram}}
@@ -122,3 +97,7 @@ conf:
           - pandas~=1.4.3
           - azureml-mlflow~=1.49.0
           - mltable~=1.3.0
+
+identity:
+  type: managed
+  client_id: ${{inputs.user_assigned_managed_identity_client_id}

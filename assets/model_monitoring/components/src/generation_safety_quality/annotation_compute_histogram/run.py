@@ -26,7 +26,7 @@ import json5
 import pandas as pd
 import requests
 import tiktoken
-from azure.ai.ml.identity import CredentialUnavailableError
+from azure.ai.ml.identity import CredentialUnavailableError, AzureMLOnBehalfOfCredential
 from azure.ai.ml.identity._internal import _scopes_to_resource
 from azure.core.credentials import AccessToken, TokenCredential
 from azure.keyvault.secrets import SecretClient
@@ -62,7 +62,6 @@ MIN_REQUEST_COUNT = 3
 # ================= Endpoint Constants =================
 AZURE_TOKEN_REFRESH_INTERVAL = 600  # seconds
 AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE = r"^(?=.{1,255}$)(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(\.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))*\.(inference\.ml|openai)\.azure\.com(/openai)?$"  # noqa: E501
-AZURE_ENDPOINT_URL_PATTERN = "https://{}/v1/engines/davinci/chat/completions"
 AZURE_OPENAI_API_URL_PATTERN = "https://{}/openai/deployments/{}/chat/completions"
 
 # OpenAI API
@@ -87,14 +86,10 @@ ENDPOINT_PARAMS = [
     "authorization_header",
     "azure_endpoint_domain_name",
     "azure_openai_api_version",
-    "endpoint_type",
     "request_error_rate_threshold",
     "api_call_retry_backoff_factor",
     "api_call_retry_max_count",
     "model",
-    "authorization_vault_url",
-    "authorization_secret_name",
-    "authorization_type",
 ]
 
 # ---
@@ -509,8 +504,6 @@ OUTPUT_SPLITTING_REGEX = r"[# ]*Task #*\d+:?"
 
 AUTHORIZATION = "Authorization"
 BEARER = "Bearer"
-API_KEY = "api-key"
-AUTH_HEADERS = [AUTHORIZATION, API_KEY]
 
 NUMERICAL = "numerical"
 COUNT = "count"
@@ -518,7 +511,7 @@ METRIC_NAME = "metric_name"
 METRIC_VALUE = "metric_value"
 DATA_TYPE = "data_type"
 FEATURE_NAME = "feature_name"
-TARGET_ROW_COUNT = "TargetRowCount"
+PRODUCTION_ROW_COUNT = "ProductionRowCount"
 BASELINE_ROW_COUNT = "BaselineRowCount"
 
 
@@ -544,7 +537,6 @@ class _JobStatus(Enum):
 
 
 class _TokenScope(Enum):
-    AZURE_ENDPOINT = "https://ml.azure.com"
     AZURE_OPENAI_API = "https://cognitiveservices.azure.com"
 
 
@@ -713,11 +705,9 @@ class _APITokenManager(ABC):
     def __init__(
         self,
         *,
-        endpoint_type,
         auth_header,
         **kwargs,
     ):
-        self.endpoint_type = endpoint_type
         self.credential = self.get_aad_credential()
         self.token = None
         self.auth_header = auth_header
@@ -744,13 +734,35 @@ class _ManagedIdentityAPITokenManager(_APITokenManager):
     def __init__(
         self,
         *,
-        endpoint_type,
+        connection,
         auth_header,
         token_scope,
         **kwargs,
     ):
-        super().__init__(endpoint_type=endpoint_type, auth_header=auth_header)
-        self.token_scope = token_scope
+        super().__init__(auth_header=auth_header)
+        
+        # using UAI, call /listsecrets on the workspace connection to get the credentials for the aoai endpoint
+        credential = AzureMLOnBehalfOfCredential()
+        try:
+            access_token = credential.get_token('https://management.azure.com')
+        except CredentialUnavailableError as err:
+            print(f"Unable to get an AML OBO token, error: {str(err)}.")
+            raise
+
+        headers = {"Content-Type": "application/json", "Authorization":f"{BEARER} {access_token.token}"}
+        response = requests.post(url=connection, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
+        print(response)
+
+        if response.status_code == 200:
+            response_data = response.json()
+            self.token = response_data.credential
+            self.token_scope = token_scope
+        else:
+            raise Exception(
+                "Received unexpected HTTP status: "
+                f"{response.status_code} {response.text}"
+            )
+
 
     def get_token(self):
         if (
@@ -761,27 +773,6 @@ class _ManagedIdentityAPITokenManager(_APITokenManager):
             self.last_refresh_time = time.time()
             self.token = self.credential.get_token(self.token_scope.value).token
 
-        return self.token
-
-
-class _KeyVaultAPITokenManager(_APITokenManager):
-    def __init__(
-        self,
-        *,
-        endpoint_type,
-        auth_header,
-        vault_url,
-        secret_name,
-        **kwargs,
-    ):
-        super().__init__(endpoint_type=endpoint_type, auth_header=auth_header)
-
-        # Get Open AI API key from Key Vault and set it
-        secret_client = SecretClient(vault_url=vault_url, credential=self.credential)
-        openai_api_secret = secret_client.get_secret(secret_name)
-        self.token = openai_api_secret.value
-
-    def get_token(self):
         return self.token
 
 
@@ -976,7 +967,6 @@ class _HTTPClientWithRetry:
 
 
 def _request_api(
-    endpoint_type,
     session,
     endpoint_url: str,
     token_manager: _APITokenManager,
@@ -997,13 +987,10 @@ def _request_api(
 
     time_start = time.time()
 
-    # Update timeout for proxy endpoint
-    if endpoint_type == "azure_endpoint":
-        headers["timeout_ms"] = "90000"
 
     # print headers without disclosing token
     headers_output = {
-        h: (headers[h] if h not in AUTH_HEADERS else "*" * len(headers[h]))
+        h: (headers[h] if h not in [AUTHORIZATION] else "*" * len(headers[h]))
         for h in headers
     }
     print(
@@ -1079,7 +1066,6 @@ def _query_inference_for_line(
     endpoint_url: str,
     token_manager: _APITokenManager,
     request_error_rate_threshold: float,
-    endpoint_type: str,
 ):
     # if we count too many errors, we stop and raise an exception
     error_count = 0
@@ -1107,7 +1093,6 @@ def _query_inference_for_line(
         response = {}
         try:
             response, time_taken = _request_api(
-                endpoint_type=endpoint_type,
                 session=session,
                 endpoint_url=endpoint_url,
                 token_manager=token_manager,
@@ -1139,21 +1124,15 @@ def _request_prompt_batch(
     token_manager: _APITokenManager,
     model: str,
     azure_endpoint_domain_name: str,
-    endpoint_type: str,
     azure_openai_api_version: str,
     request_error_rate_threshold: float = 0.5,
     api_call_retry_backoff_factor: int = 3,
     api_call_retry_max_count: int = 3,
     **kwargs,
 ) -> List[_Job]:
-    # Set endpoint URL
-    if endpoint_type == "azure_endpoint":
-        url_pattern = AZURE_ENDPOINT_URL_PATTERN
-    elif endpoint_type == "azure_openai_api":
-        url_pattern = AZURE_OPENAI_API_URL_PATTERN
 
     azure_endpoint_url = _check_and_format_azure_endpoint_url(
-        url_pattern,
+        AZURE_OPENAI_API_URL_PATTERN,
         AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
         azure_endpoint_domain_name,
         azure_openai_api_version,
@@ -1177,8 +1156,7 @@ def _request_prompt_batch(
             session,
             endpoint_url,
             token_manager,
-            request_error_rate_threshold,
-            endpoint_type,
+            request_error_rate_threshold
         )
 
 
@@ -1304,32 +1282,19 @@ class _JobManager:
         """
         print(f"starting submit_inputs with endpoint_args={endpoint_args}")
         # Define authorization token manager
-        authorization_type = endpoint_args["authorization_type"]
-        endpoint_type = endpoint_args["endpoint_type"]
-        auth_header = endpoint_args["authorization_header"]
-        if authorization_type == "key_vault_secret":
-            token_manager_class = _KeyVaultAPITokenManager
-            token_scope = None
-
-        elif authorization_type == "managed_identity":
-            token_manager_class = _ManagedIdentityAPITokenManager
-
-            if endpoint_type == "azure_endpoint":
-                token_scope = _TokenScope.AZURE_ENDPOINT
-            elif endpoint_type == "azure_openai_api":
-                token_scope = _TokenScope.AZURE_OPENAI_API
+        #TODO: remove hard-code
+        connection = "https://management.azure.com/subscriptions/ea4faa5b-5e44-4236-91f6-5483d5b17d14/resourceGroups/hawestra-rg/providers/Microsoft.MachineLearningServices/workspaces/hawestra-ws/connections/hawestra_copilot_connection/listsecrets?api-version=2023-06-01-preview"
+        token_manager_class = _ManagedIdentityAPITokenManager
 
         token_manager = token_manager_class(
-            endpoint_type=endpoint_type,
-            vault_url=endpoint_args.get("authorization_vault_url"),
-            secret_name=endpoint_args.get("authorization_secret_name"),
-            token_scope=token_scope,
-            auth_header=auth_header,
+            connection=connection,
+            token_scope=_TokenScope.AZURE_OPENAI_API,
+            auth_header=BEARER
         )
 
         print(
             "Created token manager for auth type "
-            f"{authorization_type} using auth header {auth_header}."
+            f"managed identity using auth header {BEARER}."
         )
 
         # Build batched prompts using inputs
@@ -1381,7 +1346,7 @@ class _JobManager:
 def run():
     """Compute metrics."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--target_dataset", type=str, required=True)
+    parser.add_argument("--production_dataset", type=str, required=True)
     parser.add_argument("--metric_names", type=str, required=True)
     parser.add_argument("--model_type", type=str, required=True)
     parser.add_argument("--model_deployment_name", type=str, required=True)
@@ -1391,22 +1356,8 @@ def run():
     parser.add_argument("--frequency_penalty", type=float, default=0.0)
     parser.add_argument("--presence_penalty", type=float, default=0.0)
     parser.add_argument("--stop", type=str, default=None)
-    parser.add_argument(
-        "--endpoint_type",
-        type=str,
-        required=False,
-        choices=["openai_api", "azure_endpoint", "azure_openai_api"],
-        default="azure_openai_api",
-    )
+    
     parser.add_argument("--azure_endpoint_domain_name", type=str, required=True)
-    parser.add_argument(
-        "--authorization_type",
-        type=str,
-        required=True,
-        choices=["managed_identity", "key_vault_secret"],
-    )
-    parser.add_argument("--authorization_vault_url", type=str, required=False)
-    parser.add_argument("--authorization_secret_name", type=str, required=False)
     parser.add_argument("--azure_openai_api_version", type=str, default="")
     parser.add_argument("--sample_rate", type=float, required=False, default=1.0)
     parser.add_argument(
@@ -1447,10 +1398,8 @@ def run():
             f"and a subset of {ALL_METRIC_NAMES}, got {args.metric_names}."
         )
 
-    if args.authorization_type == "managed_identity":
-        endpoint_args["authorization_header"] = BEARER
-    else:  # args.authorization_type == "key_vault_secret"
-        endpoint_args["authorization_header"] = API_KEY
+    # if args.authorization_type == "managed_identity":
+    #     endpoint_args["authorization_header"] = BEARER
 
     # Validate inputs
     if args.temperature < 0.0 or args.temperature > 2.0:
@@ -1471,19 +1420,7 @@ def run():
             f"presence_penalty must be between -2.0 and 2.0, inclusive; "
             f"got {args.presence_penalty}."
         )
-    if args.endpoint_type != "azure_openai_api":
-        # TODO: support other endpoint types
-        raise ValueError("endpoint_type must be azure_openai_api.")
-    if args.authorization_type == "key_vault_secret" and (
-        args.authorization_vault_url is None or args.authorization_secret_name is None
-    ):
-        raise ValueError(
-            "authorization_vault_url and authorization_secret_name must be "
-            "provided for key_vault_secret authorization_type."
-        )
-    elif args.authorization_type == "managed_identity":
-        # TODO support managed_identity authorization_type
-        raise ValueError("managed_identity authorization_type is not supported yet.")
+
     if args.sample_rate <= 0.0 or args.sample_rate > 1.0:
         raise ValueError(f"sample_rate must be larger than 0.0 and at most 1.0, "
                          f"got {args.sample_rate}.")
@@ -1492,7 +1429,7 @@ def run():
 
     apply_annotation(
         metric_names=metric_names,
-        target_dataset=args.target_dataset,
+        production_dataset=args.production_dataset,
         histogram=args.histogram,
         max_inputs=max_inputs,
         max_prompt_tokens=max_prompt_tokens,
@@ -1506,7 +1443,7 @@ def run():
 def apply_annotation(
     *,
     metric_names,
-    target_dataset,
+    production_dataset,
     histogram,
     max_inputs,
     max_prompt_tokens,
@@ -1515,27 +1452,27 @@ def apply_annotation(
     request_args,
     endpoint_args,
 ):
-    """Apply annotation to all samples in the target_dataset."""
-    target_df = io_utils.read_mltable_in_spark(target_dataset)
-    row_count = target_df.count()
+    """Apply annotation to all samples in the production_dataset."""
+    production_df = io_utils.read_mltable_in_spark(production_dataset)
+    row_count = production_df.count()
     # Ensure input data has the correct columns given the metrics
     # Question, answer required for coherence and fluency
     qa_required = len(list(set(QA_METRIC_NAMES).intersection(
         set(metric_names))))
     for col_name in [PROMPT, COMPLETION]:
-        if col_name not in target_df.columns and qa_required:
-            raise ValueError(f"target_dataset must have column: {col_name}")
+        if col_name not in production_df.columns and qa_required:
+            raise ValueError(f"production_dataset must have column: {col_name}")
     # Question, answer, context required for relevance and groundedness
     qac_required = len(list(set(QAC_METRIC_NAMES).intersection(
         set(metric_names))))
-    if qac_required and CONTEXT not in target_df.columns:
-        raise ValueError(f"target_dataset must have column: {CONTEXT}")
+    if qac_required and CONTEXT not in production_df.columns:
+        raise ValueError(f"production_dataset must have column: {CONTEXT}")
     # Question, answer, ground-truth required for similarity
-    if SIMILARITY in metric_names and GROUND_TRUTH not in target_df.columns:
-        raise ValueError(f"target_dataset must have column: {GROUND_TRUTH}")
+    if SIMILARITY in metric_names and GROUND_TRUTH not in production_df.columns:
+        raise ValueError(f"production_dataset must have column: {GROUND_TRUTH}")
 
     # Sampling
-    target_df = target_df.sample(withReplacement=False, fraction=sample_rate)
+    production_df = production_df.sample(withReplacement=False, fraction=sample_rate)
 
     spark = io_utils.init_spark()
     spark_conf = spark.sparkContext.getConf()
@@ -1601,7 +1538,7 @@ def apply_annotation(
                     **endpoint_args,
                 )
 
-        annotations_df = target_df.mapInPandas(
+        annotations_df = production_df.mapInPandas(
             annotate_batch,
             schema=StructType(
                 [
@@ -1637,8 +1574,8 @@ def apply_annotation(
         else:
             all_metrics_pdf = pd.concat([all_metrics_pdf, metrics_pdf])
 
-    print(f"Adding {TARGET_ROW_COUNT} and {BASELINE_ROW_COUNT}.")
-    for row_count_name in [TARGET_ROW_COUNT, BASELINE_ROW_COUNT]:
+    print(f"Adding {PRODUCTION_ROW_COUNT} and {BASELINE_ROW_COUNT}.")
+    for row_count_name in [PRODUCTION_ROW_COUNT, BASELINE_ROW_COUNT]:
         all_metrics_pdf = all_metrics_pdf.append(
             {
                 METRIC_NAME: row_count_name,
