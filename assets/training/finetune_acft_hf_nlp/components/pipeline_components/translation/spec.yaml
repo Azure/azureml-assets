@@ -466,6 +466,13 @@ outputs:
     description: Test Data Evaluation Results
 
 jobs:
+  ft_nlp_common_validation:
+    type: command
+    component: azureml://registries/azureml/components/ft_nlp_common_validation/versions/0.0.11
+    compute: '${{parent.inputs.compute_model_import}}'
+    inputs:
+      mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
+      compute_finetune: '${{parent.inputs.compute_finetune}}'
   translation_model_import:
     type: command
     component: azureml:translation_model_import:0.0.15
@@ -476,6 +483,7 @@ jobs:
       huggingface_id: '${{parent.inputs.huggingface_id}}'
       pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
+      validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   translation_datapreprocess:
     type: command
     component: azureml:translation_datapreprocess:0.0.15
