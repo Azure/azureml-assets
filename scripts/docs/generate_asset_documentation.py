@@ -251,7 +251,7 @@ class AssetInfo:
             headers = ['Name', 'Description', 'Type']
             rows = []
             if self._asset.ca.items.get('outputs') is not None:
-                doc = self._add_doc_insert_comments_under_input(doc, self._asset.ca.items.get('outputs'))
+                self._add_doc_insert_comments_under_input(doc, self._asset.ca.items.get('outputs'))
 
             for k, v in self._asset['outputs'].items():
                 row = []
