@@ -13,7 +13,6 @@ import torch
 
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
-from azureml.core.run import Run
 from azureml.acft.contrib.hf.nlp.constants.constants import (
     SaveFileConstants,
     Tasks,
@@ -24,7 +23,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 
-from azureml.acft.accelerator.utils.run_utils import add_run_properties, is_main_process
+from azureml.acft.accelerator.utils.run_utils import add_run_properties
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
@@ -644,26 +643,9 @@ def finetune(args: Namespace):
     args.save_strategy = args.evaluation_strategy
     args.save_steps = args.eval_steps
 
-    if args.task_name in [Tasks.NLP_MULTICLASS, Tasks.NLP_MULTILABEL, Tasks.NLP_NER]:
-        # Disable adding prefixes to logger for NLP Tasks.
-        args.set_log_prefix = False
-        logger.info(f"Using log prefix - {args.set_log_prefix}")
-
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
-
-    # Save the model artifacts to output folder for Automl NLP runs
-    if is_main_process():
-        if args.task_name in [Tasks.NLP_MULTICLASS, Tasks.NLP_MULTILABEL, Tasks.NLP_NER]:
-            # Copy the model to parent output folder as well
-            # in same format as command job run
-            azureml_run = Run.get_context()
-            parent_run = azureml_run.parent
-            if parent_run:
-                print(f"Saving model to outputs of {parent_run}")
-                parent_run.upload_folder(name='outputs', path=args.pytorch_model_folder)
-                parent_run.upload_folder(name='outputs/mlflow-model', path=args.mlflow_model_folder)
 
 
 @swallow_all_exceptions(time_delay=60)
