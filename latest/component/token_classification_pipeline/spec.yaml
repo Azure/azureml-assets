@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: token_classification_pipeline
-version: 0.0.14
+version: 0.0.15
 type: pipeline
 display_name: Token Classification Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for token
@@ -94,24 +94,22 @@ inputs:
     default: 1000
     description: Number of examples to batch before calling the tokenization function
 
-  pad_to_max_length:
-    type: string
-    enum:
-    - "true"
-    - "false"
-    default: "false"
-    optional: true
-    description: If set to True, the returned sequences will be padded according to
-      the model's padding side and padding index, up to their `max_seq_length`. If
-      no `max_seq_length` is specified, the padding is done up to the model's max
-      length.
+  # pad_to_max_length:
+  #   type: string
+  #   enum:
+  #     - "true"
+  #     - "false"
+  #   default: "false"
+  #   optional: true
+  #   description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
 
   max_seq_length:
     type: integer
     optional: true
     default: -1
-    description: Default is -1 which means the padding is done up to the model's max
-      length. Else will be padded to `max_seq_length`.
+    description: Controls the maximum length to use when pad_to_max_length parameter
+      is set to `true`. Default is -1 which means the padding is done up to the model's
+      max length. Else will be padded to `max_seq_length`.
 
   train_file_path:
     type: uri_file
@@ -539,7 +537,7 @@ outputs:
 jobs:
   token_classification_model_import:
     type: command
-    component: azureml:token_classification_model_import:0.0.14
+    component: azureml:token_classification_model_import:0.0.15
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -549,7 +547,7 @@ jobs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
   token_classification_datapreprocess:
     type: command
-    component: azureml:token_classification_datapreprocess:0.0.14
+    component: azureml:token_classification_datapreprocess:0.0.15
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -557,7 +555,7 @@ jobs:
       token_key: '${{parent.inputs.token_key}}'
       tag_key: '${{parent.inputs.tag_key}}'
       batch_size: '${{parent.inputs.batch_size}}'
-      pad_to_max_length: '${{parent.inputs.pad_to_max_length}}'
+      # pad_to_max_length: '${{parent.inputs.pad_to_max_length}}'
       max_seq_length: '${{parent.inputs.max_seq_length}}'
       train_file_path: '${{parent.inputs.train_file_path}}'
       validation_file_path: '${{parent.inputs.validation_file_path}}'
@@ -568,7 +566,7 @@ jobs:
       model_selector_output: '${{parent.jobs.token_classification_model_import.outputs.output_dir}}'
   token_classification_finetune:
     type: command
-    component: azureml:token_classification_finetune:0.0.14
+    component: azureml:token_classification_finetune:0.0.15
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
