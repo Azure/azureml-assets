@@ -40,7 +40,7 @@ inputs:
     description: sample rate for the input dataset, should be greater than 0 and at most 1
   user_assigned_managed_identity_client_id:
     type: string
-
+    optional: false
 outputs:
   histogram:
     type: mltable
@@ -88,7 +88,7 @@ conf:
       - pip:
           - azure-cli-core~=2.45.0
           - azure-identity~=1.12.0
-          - azure-ai-ml~=1.4.0
+          - azure-ai-ml~=1.8.0
           - azure-keyvault-secrets==4.7.0
           - tiktoken==0.3.3
           - json5==0.9.11

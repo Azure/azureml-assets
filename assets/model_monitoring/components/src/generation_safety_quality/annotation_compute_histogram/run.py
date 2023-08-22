@@ -504,6 +504,7 @@ OUTPUT_SPLITTING_REGEX = r"[# ]*Task #*\d+:?"
 
 AUTHORIZATION = "Authorization"
 BEARER = "Bearer"
+API_KEY = "api-key"
 
 NUMERICAL = "numerical"
 COUNT = "count"
@@ -734,34 +735,25 @@ class _ManagedIdentityAPITokenManager(_APITokenManager):
     def __init__(
         self,
         *,
-        connection,
+        endpoint_type,
         auth_header,
         token_scope,
         **kwargs,
     ):
-        super().__init__(auth_header=auth_header)
-        
-        # using UAI, call /listsecrets on the workspace connection to get the credentials for the aoai endpoint
-        credential = AzureMLOnBehalfOfCredential()
-        try:
-            access_token = credential.get_token('https://management.azure.com')
-        except CredentialUnavailableError as err:
-            print(f"Unable to get an AML OBO token, error: {str(err)}.")
-            raise
+        super().__init__(endpoint_type=endpoint_type, auth_header=auth_header)
+        self.token_scope = token_scope
 
-        headers = {"Content-Type": "application/json", "Authorization":f"{BEARER} {access_token.token}"}
-        response = requests.post(url=connection, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
-        print(response)
+    def get_token(self):
+        if (
+            self.token is None
+            or self.last_refresh_time is None
+            or time.time() - self.last_refresh_time > AZURE_TOKEN_REFRESH_INTERVAL
+        ):
+            self.last_refresh_time = time.time()
+            self.token = self.credential.get_token(self.token_scope.value).token
 
-        if response.status_code == 200:
-            response_data = response.json()
-            self.token = response_data.credential
-            self.token_scope = token_scope
-        else:
-            raise Exception(
-                "Received unexpected HTTP status: "
-                f"{response.status_code} {response.text}"
-            )
+        return self.token
+
 
 
     def get_token(self):
@@ -775,6 +767,37 @@ class _ManagedIdentityAPITokenManager(_APITokenManager):
 
         return self.token
 
+
+class _UAIAPITokenManager(_APITokenManager):
+    def __init__(
+         self,
+        *,
+        connection_name,
+        auth_header,
+        **kwargs,
+    ):
+        super().__init__(auth_header=auth_header)
+        # using UAI, call /listsecrets on the workspace connection to get the credentials for the aoai endpoint
+        credential = AzureMLOnBehalfOfCredential()
+        try:
+            access_token = credential.get_token('https://management.azure.com')
+        except CredentialUnavailableError as err:
+            print(f"Unable to get an AML OBO token, error: {str(err)}.")
+            raise
+
+        headers = {"Content-Type": "application/json", "Authorization":f"{BEARER} {access_token.token}"}
+        response = requests.post(url=connection_name, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
+        if response.status_code == 200:
+            response_data = response.json()
+            self.token = response_data['properties']['credentials']['key']
+        else:
+            raise Exception(
+                "Received unexpected HTTP status: "
+                f"{response.status_code} {response.text}"
+            )
+
+    def get_token(self):
+        return self.token
 
 class _PromptData:
     """Class for storing prompt information."""
@@ -1266,6 +1289,7 @@ class _JobManager:
     def submit_inputs(
         self,
         input_data_df: DataFrame,
+        token_manager: _APITokenManager,
         request_args: dict,
         max_inputs: int,
         num_samples: int,
@@ -1280,22 +1304,6 @@ class _JobManager:
             num_samples (int): Number of samples to generate per prompt.
             ``**endpoint_args``: Arguments passed to _request_prompt_batch
         """
-        print(f"starting submit_inputs with endpoint_args={endpoint_args}")
-        # Define authorization token manager
-        #TODO: remove hard-code
-        connection = "https://management.azure.com/subscriptions/ea4faa5b-5e44-4236-91f6-5483d5b17d14/resourceGroups/hawestra-rg/providers/Microsoft.MachineLearningServices/workspaces/hawestra-ws/connections/hawestra_copilot_connection/listsecrets?api-version=2023-06-01-preview"
-        token_manager_class = _ManagedIdentityAPITokenManager
-
-        token_manager = token_manager_class(
-            connection=connection,
-            token_scope=_TokenScope.AZURE_OPENAI_API,
-            auth_header=BEARER
-        )
-
-        print(
-            "Created token manager for auth type "
-            f"managed identity using auth header {BEARER}."
-        )
 
         # Build batched prompts using inputs
         prompts = self.prompt_builder.generate_prompts(
@@ -1504,6 +1512,21 @@ def apply_annotation(
             "TID",
         ]
     }
+    print(f"starting submit_inputs with endpoint_args={endpoint_args}")
+    # Define authorization token manager
+    #TODO: remove hard-code
+    connection = "https://management.azure.com/subscriptions/e0fd569c-e34a-4249-8c24-e8d723c7f054/resourceGroups/hawestra-rg/providers/Microsoft.MachineLearningServices/workspaces/hawestra-ws/connections/hawestra_copilot_connection/listsecrets?api-version=2023-06-01-preview"
+    token_manager_class = _UAIAPITokenManager
+
+    token_manager = token_manager_class(
+        connection_name=connection,
+        auth_header=API_KEY
+    )
+
+    print(
+        "Created token manager for auth type "
+        f"managed identity using auth header {API_KEY}."
+    )
 
     all_metrics_pdf = None
     for metric_name in metric_names:
@@ -1523,6 +1546,7 @@ def apply_annotation(
             job_manager = _JobManager(
                 prompt_builder=prompt_builder,
             )
+            
             for batch in iterator:
                 # add environment variables on executors
                 for env_var_key, env_var_value in driver_env_vars.items():
@@ -1531,6 +1555,7 @@ def apply_annotation(
                 print("Copied environment variables from driver to executor.")
 
                 yield job_manager.submit_inputs(
+                    token_manager=token_manager,
                     input_data_df=batch,
                     request_args=request_args,
                     max_inputs=max_inputs,

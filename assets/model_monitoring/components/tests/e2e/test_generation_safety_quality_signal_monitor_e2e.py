@@ -18,21 +18,18 @@ def _submit_generation_safety_signal_monitor_job(ml_client, get_component, targe
     @pipeline()
     def _gen_safety_model_monitor_e2e():
         dd_model_monitor_output = generation_safety_model_monitor(
-            target_data=target_data,
+            production_data=target_data,
             signal_name="my_test_generation_safety_signal",
-            monitor_name="my_test_model_monitor",
             monitor_current_time="2023-02-02T00:00:00Z",
             metric_names="groundedness, fluency,relevance, coherence, similarity",
-            model_deployment_name="gpt-35-turbo",
+            model_deployment_name="gpt-35-turbo-v0301",
             model_type="gpt-35-turbo",
-            endpoint_type="azure_openai_api",
-            azure_endpoint_domain_name="aoai-raidev.openai.azure.com",
-            authorization_type="key_vault_secret",
-            authorization_vault_url="https://modelmonitorin1689166493.vault.azure.net/",
-            authorization_secret_name="aoai-raidev-api-key",
+            azure_endpoint_domain_name="copilot-demo-eastus-aoai.openai.azure.com",
             azure_openai_api_version="2023-03-15-preview",
             sample_rate=1.0,
-            annotation_rating_threshold=3
+            annotation_rating_threshold=3,
+            user_assigned_managed_identity_client_id="b6f59c9f-a0a8-4c39-9a04-ab608e1da80c"
+
         )
         return {"signal_output": dd_model_monitor_output.outputs.signal_output}
 
@@ -49,7 +46,7 @@ def _submit_generation_safety_signal_monitor_job(ml_client, get_component, targe
     return ml_client.jobs.get(pipeline_job.name)
 
 
-@pytest.mark.e2e
+@pytest.mark.e2e2
 class TestGenerationSafetyModelMonitor:
     """Test class."""
 

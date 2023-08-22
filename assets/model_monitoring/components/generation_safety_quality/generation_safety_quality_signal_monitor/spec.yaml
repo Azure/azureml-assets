@@ -8,8 +8,6 @@ version: 0.3.6
 is_deterministic: true
 
 inputs:
-  monitor_name:
-    type: string
   signal_name:
     type: string
   production_data:
@@ -51,7 +49,8 @@ inputs:
   monitor_current_time:
     type: string
   user_assigned_managed_identity_client_id:
-    type: string\d
+    type: string
+    optional: false
 outputs:
   signal_output:
     type: uri_folder
@@ -79,7 +78,6 @@ jobs:
       runtime_version: "3.3"
     identity:
       type: managed
-      client_id: "b6f59c9f-a0a8-4c39-9a04-ab608e1da80c"
   compute_metrics:
     type: spark
     component: azureml://registries/azureml-preview/components/annotation_compute_metrics_spark/versions/0.3.2
@@ -101,15 +99,14 @@ jobs:
       type: aml_token
   output_signal_metrics: 
     type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics/versions/0.3.2
+    component: azureml://registries/azureml/components/model_monitor_metric_outputter/versions/0.3.2
     inputs:
       signal_metrics:
         type: mltable
         path: ${{parent.jobs.compute_metrics.outputs.signal_metrics}}
       signal_type: "GenerationSafetyQuality"
       signal_name: ${{parent.inputs.signal_name}}
-      monitor_name: ${{parent.inputs.monitor_name}}
-      metric_timestamp: ${{parent.inputs.monitor_current_time}}
+      version: "1.0.0"
     outputs:
       signal_output:
         type: uri_folder

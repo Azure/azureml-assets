@@ -57,6 +57,7 @@ def run():
     aggregated_metrics_df = histogram_df
     for metric_name in metric_names:
         compact_metric_name = metric_name.replace(" ", "").title()
+        print(compact_metric_name)
         metric_df = spark.createDataFrame(
                 [
                     (
