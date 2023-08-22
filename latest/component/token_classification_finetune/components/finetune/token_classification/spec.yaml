@@ -1,9 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: token_classification_finetune
-version: 0.0.14
+version: 0.0.14_nlp
 type: command
 
-is_deterministic: true
+is_deterministic: false
 
 display_name: Token Classification Finetune
 description: Component to finetune Hugging Face pretrained models for token classification
@@ -11,7 +11,7 @@ description: Component to finetune Hugging Face pretrained models for token clas
   for performance enhancement. See [docs](https://aka.ms/azureml/components/token_classification_finetune)
   to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/18
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/19
 
 code: ../../../src/finetune
 
