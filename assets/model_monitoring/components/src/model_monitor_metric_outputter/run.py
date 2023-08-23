@@ -37,7 +37,7 @@ def run():
     output_payload = to_output_payload(args.signal_name, args.signal_type, metrics_dict)
 
     local_path = str(uuid.uuid4())
-    write_to_file(payload=output_payload, local_output_directory=local_path, signalName=args.signal_name)
+    write_to_file(payload=output_payload, local_output_directory=local_path, signal_name=args.signal_name)
 
     target_remote_path = os.path.join(args.signal_output, "signals")
     amlfs_upload(local_path=local_path, remote_path=target_remote_path)
