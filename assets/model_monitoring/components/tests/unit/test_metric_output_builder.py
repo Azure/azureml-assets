@@ -132,7 +132,7 @@ class TestMetricOutputBuilder:
         }
 
     def test_group_without_group_dimension_success(self):
-        """Test metrics output builder for metrics that contains group but not group dimension. """
+        """Test metrics output builder for metrics that contains group but not group dimension."""
         signal_metrics: List[Row] = [
             Row(
                 group="group_1",
