@@ -135,7 +135,7 @@ def run():
 
     if task_name is None or not SupportedTasks.has_value(task_name):
         task_name = preprocess_args.get("task")
-    
+
     if task_name is None:
         raise AzureMLException._with_error(
                 AzureMLError.create(UnsupportedTaskType, task_type=args.task_name,

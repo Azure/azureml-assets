@@ -54,6 +54,7 @@ class LoggerConfig:
     OFFLINE_RUN_MESSAGE = "OFFLINE_RUN"
     ASSET_NOT_FOUND = "AssetID missing in run details"
 
+
 class LlamaHFModels(_CustomEnum):
     """Llama HF Models."""
 
@@ -64,6 +65,7 @@ class LlamaHFModels(_CustomEnum):
     LLAMA_2_13B_HF = "meta-llama/Llama-2-13b-hf"
     LLAMA_2_70B_HF = "meta-llama/Llama-2-70b-hf"
 
+
 class LlamaModels(_CustomEnum):
     """Llama Models."""
 
@@ -73,6 +75,7 @@ class LlamaModels(_CustomEnum):
     LLAMA_2_7B = "meta-llama/Llama-2-7b"
     LLAMA_2_13B = "meta-llama/Llama-2-13b"
     LLAMA_2_70B = "meta-llama/Llama-2-70b"
+
 
 class LlamaModelsInRegistry(_CustomEnum):
     """Llama Models in Registry."""

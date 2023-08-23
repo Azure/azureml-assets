@@ -150,7 +150,7 @@ class ModelAlreadyExists(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.MODEL_ALREADY_EXISTS
-    
+
 
 class UnsupportedTaskType(ClientError):
     """Error when Unsupported task type is provided."""
