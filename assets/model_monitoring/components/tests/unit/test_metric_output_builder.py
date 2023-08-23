@@ -4,6 +4,7 @@
 """This file contains unit tests for the Data Drift Output Metrics component."""
 
 import pytest
+import json
 from typing import List
 from pyspark.sql import Row
 
@@ -50,6 +51,118 @@ class TestMetricOutputBuilder:
         metric_output_builder = MetricOutputBuilder(signal_metrics)
         metrics_dict = metric_output_builder.get_metrics_dict()
 
+        assert metrics_dict == {
+            "num_calls": {
+                "groups": {
+                    "group_1": {
+                        "value": 71.0,
+                        "threshold": 100.0,
+                    },
+                    "group_2": {
+                        "value": 129.0,
+                        "threshold": 100.0,
+                    },
+                },
+            },
+            "num_calls_with_status_code_429": {
+                "groups": {
+                    "group_1": {
+                        "value": 35.0,
+                        "threshold": 10.0,
+                    },
+                    "group_2": {
+                        "value": 63.0,
+                        "threshold": 10.0,
+                    },
+                },
+            },
+        }
+
+    def test_empty_groups_and_group_dimensions_success(self):
+        """Test metrics output builder for metrics that does not contain groups and group dimensions."""
+        signal_metrics: List[Row] = [
+            Row(
+                group="group_1",
+                group_dimension="Aggregate",
+                metric_name="num_calls",
+                metric_value=71.0,
+                threshold_value=100.0,
+            ),
+            Row(
+                group="group_2",
+                group_dimension="Aggregate",
+                metric_name="num_calls",
+                metric_value=129.0,
+                threshold_value=100.0,
+            ),
+            Row(
+                metric_name="num_calls_with_status_code_429",
+                metric_value=35.0,
+                threshold_value=10.0,
+            ),
+            Row(
+                metric_name="num_calls_with_status_code_500",
+                metric_value=63.0,
+                threshold_value=10.0,
+            ),
+        ]
+        
+        metric_output_builder = MetricOutputBuilder(signal_metrics)
+        metrics_dict = metric_output_builder.get_metrics_dict()
+        assert metrics_dict == {
+            "num_calls": {
+                "groups": {
+                    "group_1": {
+                        "value": 71.0,
+                        "threshold": 100.0,
+                    },
+                    "group_2": {
+                        "value": 129.0,
+                        "threshold": 100.0,
+                    },
+                },
+            },
+            "num_calls_with_status_code_429": {
+                "value": 35.0,
+                "threshold": 10.0,
+            },
+            "num_calls_with_status_code_500":{
+                "value": 63.0,
+                "threshold": 10.0,
+            }
+        }
+        
+    def test_group_without_group_dimension_success(self):
+        """Test metrics output builder for metrics that contains group but not group dimension. """
+        signal_metrics: List[Row] = [
+            Row(
+                group="group_1",
+                metric_name="num_calls",
+                metric_value=71.0,
+                threshold_value=100.0,
+            ),
+            Row(
+                group="group_2",
+                metric_name="num_calls",
+                metric_value=129.0,
+                threshold_value=100.0,
+            ),
+            Row(
+                group="group_1",
+                metric_name="num_calls_with_status_code_429",
+                metric_value=35.0,
+                threshold_value=10.0,
+            ),
+            Row(
+                group="group_2",
+                metric_name="num_calls_with_status_code_429",
+                metric_value=63.0,
+                threshold_value=10.0,
+            ),
+        ]
+        
+        metric_output_builder = MetricOutputBuilder(signal_metrics)
+        metrics_dict = metric_output_builder.get_metrics_dict()
         assert metrics_dict == {
             "num_calls": {
                 "groups": {
