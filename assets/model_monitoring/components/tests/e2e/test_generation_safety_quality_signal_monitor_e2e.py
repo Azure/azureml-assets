@@ -23,7 +23,7 @@ def _submit_generation_safety_signal_monitor_job(ml_client, get_component, targe
             metric_names="groundedness, fluency,relevance, coherence, similarity",
             model_deployment_name="gpt-35-turbo-v0301",
             sample_rate=1.0,
-            workspace_connection_arm_id="subscriptions/e0fd569c-e34a-4249-8c24-e8d723c7f054/resourceGroups/hawestra-rg/providers/Microsoft.MachineLearningServices/workspaces/hawestra-ws/connections/hawestra_copilot_connection" # noqa: E501
+            workspace_connection_arm_id="subscriptions/e0fd569c-e34a-4249-8c24-e8d723c7f054/resourceGroups/hawestra-rg/providers/Microsoft.MachineLearningServices/workspaces/hawestra-ws/connections/hawestra_copilot_connection"  # noqa: E501
         )
         return {"signal_output": dd_model_monitor_output.outputs.signal_output}
 
