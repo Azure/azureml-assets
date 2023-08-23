@@ -40,7 +40,7 @@ class MetricOutputBuilder:
                 metric_name = metric_dict[SIGNAL_METRICS_METRIC_NAME]
 
                 group_names = []
-                if SIGNAL_METRICS_GROUP in metric_dict and metric_dict[SIGNAL_METRICS_GROUP] is not None and metric_dict[SIGNAL_METRICS_GROUP] != "": #noqa
+                if SIGNAL_METRICS_GROUP in metric_dict and metric_dict[SIGNAL_METRICS_GROUP] is not None and metric_dict[SIGNAL_METRICS_GROUP] != "":  # noqa
 
                     root_group = metric_dict[SIGNAL_METRICS_GROUP]
                     group_names.append(root_group)
