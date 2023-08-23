@@ -62,7 +62,7 @@ MIN_REQUEST_COUNT = 3
 AZURE_TOKEN_REFRESH_INTERVAL = 600  # seconds
 AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE = r"^(?=.{1,255}$)(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(\.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))*\.(inference\.ml|openai)\.azure\.com(/openai)?$"  # noqa: E501
 AZURE_OPENAI_API_COMPLETION_URL_PATTERN = "https://{}/openai/deployments/{}/chat/completions"
-LISTSECRETS_API_PATTERN = "https://management.azure.com/{}/listsecrets?api-version=2023-06-01-preview"
+LISTSECRETS_API_PATTERN = "https://management.azure.com{}/listsecrets?api-version=2023-06-01-preview"
 AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN = "https://{}/openai/deployments/{}"
 
 # OpenAI API
