@@ -43,9 +43,9 @@ def join_data(
     if left_join_column == right_join_column:
         joined_data_df = left_input_data_df.join(
             right_input_data_df,
-            left_input_data_df[left_join_column] == right_input_data_df[right_join_column].drop(right_input_data_df[right_join_column]),
+            left_input_data_df[left_join_column] == right_input_data_df[right_join_column],
             'inner'
-        )
+        ).drop(right_input_data_df[right_join_column])
     else:
         joined_data_df = left_input_data_df.join(
             right_input_data_df,
