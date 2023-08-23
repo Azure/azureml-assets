@@ -10,7 +10,6 @@ import shutil
 from pathlib import Path
 from ruamel.yaml import YAML
 from typing import List, Tuple, Union
-import os.path
 
 import azureml.assets as assets
 from azureml.assets.util import logger
@@ -364,7 +363,7 @@ def find_files(input_dirs: Union[List[Path], Path],
     found_files = []
     for input_dir in input_dirs:
         for file in input_dir.rglob(filename):
-            if os.path.isfile(file):
+            if file.is_file():
                 found_files.append(file)
 
     return found_files
