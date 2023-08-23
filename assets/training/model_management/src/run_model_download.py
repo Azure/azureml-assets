@@ -97,7 +97,7 @@ def run():
         model_id = model_id.replace("-hf", "")
         logger.warning(f"Lllama Model {model_id} with safe tensors is already present in registry. "
                        "Please use the same.")
-        
+
     if update_existing_model == "false":
         validate_if_model_exists(model_id)
 
