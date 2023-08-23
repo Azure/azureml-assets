@@ -37,11 +37,6 @@ def validate_tree(input_dirs: List[Path]):
         logger.log_error(f"{asset_yml_file} should be named asset.yaml")
         error_count += 1
 
-    # Fail if any spec.yml in the tree
-    for spec_yml_file in util.find_files(input_dirs, "spec.yml"):
-        logger.log_error(f"{spec_yml_file} should be named spec.yaml")
-        error_count += 1
-
     # Scan every file in the source tree to be 1 MB or less
     for file in util.find_files(input_dirs, "*"):
         if file.stat().st_size > BYTES_IN_A_MEGABYTE:
