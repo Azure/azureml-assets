@@ -45,7 +45,8 @@ def validate_if_model_exists(model_id):
                        ]
     if model_id in llama_hf_models:
         model_id = model_id.replace("-hf", "")
-        logger.warning(f"Lllama Model {model_id} with safe tensors is already present in registry. Please use the same.")
+        logger.warning(f"Lllama Model {model_id} with safe tensors is already present in registry. "
+                       "Please use the same.")
 
     for registry in registries_list:
         try:
