@@ -95,6 +95,7 @@ class TestMetricOutputBuilder:
                 threshold_value=100.0,
             ),
             Row(
+                group="",
                 metric_name="num_calls_with_status_code_429",
                 metric_value=35.0,
                 threshold_value=10.0,
@@ -102,6 +103,12 @@ class TestMetricOutputBuilder:
             Row(
                 metric_name="num_calls_with_status_code_500",
                 metric_value=63.0,
+                threshold_value=10.0,
+            ),
+            Row(
+                group=None,
+                metric_name="num_calls_with_status_code_504",
+                metric_value=22.0,
                 threshold_value=10.0,
             ),
         ]
@@ -128,6 +135,10 @@ class TestMetricOutputBuilder:
             "num_calls_with_status_code_500": {
                 "value": 63.0,
                 "threshold": 10.0,
+            },
+            "num_calls_with_status_code_504": {
+                "value": 22.0,
+                "threshold": 10.0
             }
         }
 
@@ -136,12 +147,14 @@ class TestMetricOutputBuilder:
         signal_metrics: List[Row] = [
             Row(
                 group="group_1",
+                group_dimension="",
                 metric_name="num_calls",
                 metric_value=71.0,
                 threshold_value=100.0,
             ),
             Row(
                 group="group_2",
+                group_dimension=None,
                 metric_name="num_calls",
                 metric_value=129.0,
                 threshold_value=100.0,

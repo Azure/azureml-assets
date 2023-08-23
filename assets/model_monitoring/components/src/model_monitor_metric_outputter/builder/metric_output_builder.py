@@ -40,12 +40,15 @@ class MetricOutputBuilder:
                 metric_name = metric_dict[SIGNAL_METRICS_METRIC_NAME]
 
                 group_names = []
-                if SIGNAL_METRICS_GROUP in metric_dict:
+                if SIGNAL_METRICS_GROUP in metric_dict and metric_dict[SIGNAL_METRICS_GROUP] is not None and metric_dict[SIGNAL_METRICS_GROUP] != "": #noqa
+
                     root_group = metric_dict[SIGNAL_METRICS_GROUP]
                     group_names.append(root_group)
 
                     # If group dimension is not specified, default is Aggregate.
                     if (SIGNAL_METRICS_GROUP_DIMENSION in metric_dict
+                            and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION] is not None
+                            and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION] != ""
                             and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION].lower() != AGGREGATE):
                         group_dimension = metric_dict[SIGNAL_METRICS_GROUP_DIMENSION]
                         group_names.append(group_dimension)
