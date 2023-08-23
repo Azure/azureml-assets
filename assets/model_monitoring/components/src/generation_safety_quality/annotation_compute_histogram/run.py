@@ -1316,7 +1316,6 @@ class _JobManager:
             num_samples (int): Number of samples to generate per prompt.
             ``**endpoint_args``: Arguments passed to _request_prompt_batch
         """
-
         # Build batched prompts using inputs
         prompts = self.prompt_builder.generate_prompts(
             input_data_df,
