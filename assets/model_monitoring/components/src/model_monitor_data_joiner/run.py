@@ -40,11 +40,18 @@ def join_data(
     _validate_join_column_in_input_data(right_input_data_df, right_join_column, "right_input_data")
 
     # Join the data
-    joined_data_df = left_input_data_df.join(
-        right_input_data_df,
-        left_input_data_df[left_join_column] == right_input_data_df[right_join_column],
-        'inner'
-    )
+    if left_join_column == right_join_column:
+        joined_data_df = left_input_data_df.join(
+            right_input_data_df,
+            left_input_data_df[left_join_column] == right_input_data_df[right_join_column].drop(right_input_data_df[right_join_column]),
+            'inner'
+        )
+    else:
+        joined_data_df = left_input_data_df.join(
+            right_input_data_df,
+            left_input_data_df[left_join_column] == right_input_data_df[right_join_column],
+            'inner'
+        )
 
     return joined_data_df
 
