@@ -20,9 +20,9 @@ THRESHOLD_PARAMS = [
     "coherence_passrate_threshold",
 ]
 
-def _calculate_passrate(df, threshold, metric_name):
-    output = df.filter(col("metric_name").contains(metric_name)).select("group")
-    print(output)
+def _calculate_passrate(df, metric_name):
+    threshold = df.filter(col("metric_name").contains(metric_name)).select("threshold_value").collect()[0]["threshold_value"]
+
     df_with_buckets = df.filter(
         col("metric_name").contains(metric_name)
     ).withColumn(
@@ -31,9 +31,8 @@ def _calculate_passrate(df, threshold, metric_name):
             col("group")
         ),
     )
-    print(df_with_buckets)
     passing = (
-        df_with_buckets.filter(col("bucket") >= threshold)
+        df_with_buckets.filter(col("bucket") >= int(threshold))
         .select(sum("metric_value"))
         .head()[0]
     )
@@ -73,13 +72,12 @@ def run():
     aggregated_metrics_df = histogram_df
     for metric_name in metric_names:
         compact_metric_name = metric_name.replace(" ", "").title()
-        threshold = histogram_df
         passrate_threshold = threshold_args[f"{metric_name.lower()}_passrate_threshold"]
         metric_df = spark.createDataFrame(
                 [
                     (
                          "",
-                        _calculate_passrate(histogram_df, threshold, compact_metric_name),
+                        _calculate_passrate(histogram_df, compact_metric_name),
                         f"Aggregated{compact_metric_name}PassRate",
                         passrate_threshold,
                     )
