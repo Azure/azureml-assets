@@ -43,7 +43,8 @@ class MetricOutputBuilder:
                     node_id = metric_dict[SIGNAL_METRICS_GROUP]
                     group_names.append(node_id)
 
-                    if metric_dict[SIGNAL_METRICS_GROUP_DIMENSION].lower() != AGGREGATE:
+                    if (SIGNAL_METRICS_GROUP_DIMENSION in metric_dict
+                            and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION].lower() != AGGREGATE):
                         group_dimension = metric_dict[SIGNAL_METRICS_GROUP_DIMENSION]
                         group_names.append(group_dimension)
 

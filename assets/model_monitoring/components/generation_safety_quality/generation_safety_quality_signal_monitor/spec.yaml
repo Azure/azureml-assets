@@ -20,22 +20,6 @@ inputs:
     type: string
     optional: false
     description: model name, e.g., name of the deployment for Azure OpenAI
-  model_type:
-    type: string
-    optional: false
-    description: TODO REMOVE type of model used for annotation
-    enum:
-      - gpt-35-turbo
-      - gpt-4
-      - gpt-4-32k
-  azure_endpoint_domain_name:
-    type: string
-    optional: false
-    description: TODO REMOVE endpoint domain name, e.g., <instance>.openai.azure.com
-  azure_openai_api_version:
-    type: string
-    optional: false
-    description: TODO REMOVE API version, e.g., 2023-03-15-preview
   sample_rate:
     type: number
     optional: true
@@ -80,6 +64,9 @@ inputs:
     type: number
     optional: true
     default: 0.7
+  workspace_connection_arm_id:
+    type: string
+    optional: false
   user_assigned_managed_identity_client_id:
     type: string
     optional: false
@@ -97,10 +84,8 @@ jobs:
         path: ${{parent.inputs.production_data}}
       metric_names: ${{parent.inputs.metric_names}}
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
-      azure_endpoint_domain_name: ${{parent.inputs.azure_endpoint_domain_name}}
-      azure_openai_api_version: ${{parent.inputs.azure_openai_api_version}}
       sample_rate: ${{parent.inputs.sample_rate}}
-      model_type: ${{parent.inputs.model_type}}
+      workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
       user_assigned_managed_identity_client_id:  ${{parent.inputs.user_assigned_managed_identity_client_id}}
       groundedness_rating_threshold: ${{parent.inputs.groundedness_rating_threshold}}}
       similarity_rating_threshold: ${{parent.inputs.similarity_rating_threshold}}}

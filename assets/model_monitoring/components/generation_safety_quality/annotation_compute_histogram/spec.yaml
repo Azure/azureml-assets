@@ -14,18 +14,14 @@ inputs:
     type: string
     description: a comma-separated list of metric names to compute
     default: groundedness
-  model_type:
-    type: string
-    optional: false
-    description: type of model used for annotation
-    enum:
-      - gpt-35-turbo
-      - gpt-4
-      - gpt-4-32k
   model_deployment_name:
     type: string
     optional: false
     description: model name, e.g., name of the deployment for Azure OpenAI
+  workspace_connection_arm_id:
+    type: string
+    optional: false
+    description: path to the workspace connection
   groundedness_rating_threshold:
     type: integer
     optional: true
@@ -46,14 +42,6 @@ inputs:
     type: integer
     optional: true
     default: 3
-  azure_endpoint_domain_name:
-    type: string
-    optional: false
-    description: endpoint domain name, e.g., <instance>.openai.azure.com
-  azure_openai_api_version:
-    type: string
-    optional: false
-    description: API version, e.g., 2023-03-15-preview
   sample_rate:
     type: number
     optional: true
@@ -74,10 +62,8 @@ entry:
 args: >-
   --production_dataset ${{inputs.production_dataset}}
   --metric_names ${{inputs.metric_names}}
-  --model_type ${{inputs.model_type}}
   --model_deployment_name ${{inputs.model_deployment_name}}
-  --azure_endpoint_domain_name ${{inputs.azure_endpoint_domain_name}}
-  --azure_openai_api_version ${{inputs.azure_openai_api_version}}
+  --workspace_connection_arm_id ${{inputs.workspace_connection_arm_id}}
   $[[--sample_rate ${{inputs.sample_rate}}]]
   --histogram ${{outputs.histogram}}
 

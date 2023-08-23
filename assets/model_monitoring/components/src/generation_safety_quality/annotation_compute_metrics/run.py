@@ -20,8 +20,10 @@ THRESHOLD_PARAMS = [
     "coherence_passrate_threshold",
 ]
 
+
 def _calculate_passrate(df, metric_name):
-    threshold = df.filter(col("metric_name").contains(metric_name)).select("threshold_value").collect()[0]["threshold_value"]
+    threshold = df.filter(col("metric_name").contains(metric_name)).select("threshold_value"
+                                                                           ).collect()[0]["threshold_value"]
 
     df_with_buckets = df.filter(
         col("metric_name").contains(metric_name)
@@ -49,13 +51,13 @@ def run():
     parser.add_argument("--metric_names", type=str)
     parser.add_argument("--annotation_histogram", type=str)
     parser.add_argument("--signal_metrics", type=str)
-    
+
     parser.add_argument("--groundedness_passrate_threshold", type=float, default=0.7)
     parser.add_argument("--similarity_passrate_threshold", type=float, default=0.7)
     parser.add_argument("--relevance_passrate_threshold", type=float, default=0.7)
     parser.add_argument("--fluency_passrate_threshold", type=float, default=0.7)
     parser.add_argument("--coherence_passrate_threshold", type=float, default=0.7)
-    
+
     args = parser.parse_args()
 
     metric_names = [m.strip() for m in args.metric_names.split(",")]
@@ -76,7 +78,7 @@ def run():
         metric_df = spark.createDataFrame(
                 [
                     (
-                         "",
+                        "",
                         _calculate_passrate(histogram_df, compact_metric_name),
                         f"Aggregated{compact_metric_name}PassRate",
                         passrate_threshold,

@@ -29,7 +29,6 @@ import tiktoken
 from azure.ai.ml.identity import CredentialUnavailableError, AzureMLOnBehalfOfCredential
 from azure.ai.ml.identity._internal import _scopes_to_resource
 from azure.core.credentials import AccessToken, TokenCredential
-from azure.keyvault.secrets import SecretClient
 from pyspark.sql import DataFrame
 from pyspark.sql.types import IntegerType, StructField, StructType
 from requests.adapters import HTTPAdapter
@@ -62,7 +61,9 @@ MIN_REQUEST_COUNT = 3
 # ================= Endpoint Constants =================
 AZURE_TOKEN_REFRESH_INTERVAL = 600  # seconds
 AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE = r"^(?=.{1,255}$)(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(\.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))*\.(inference\.ml|openai)\.azure\.com(/openai)?$"  # noqa: E501
-AZURE_OPENAI_API_URL_PATTERN = "https://{}/openai/deployments/{}/chat/completions"
+AZURE_OPENAI_API_COMPLETION_URL_PATTERN = "https://{}/openai/deployments/{}/chat/completions"
+LISTSECRETS_API_PATTERN = "https://management.azure.com/{}/listsecrets?api-version=2023-06-01-preview"
+AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN = "https://{}/openai/deployments/{}"
 
 # OpenAI API
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
@@ -528,6 +529,9 @@ def _check_and_format_azure_endpoint_url(
     url_pattern, domain_pattern_re, domain, api_version, model
 ):
     domain = domain.strip()
+    if domain.endswith('/'):
+        domain = domain[:-1]
+
     if not re.match(domain_pattern_re, domain):
         raise RuntimeError(f"Invalid Azure endpoint domain URL: {domain}.")
 
@@ -763,22 +767,9 @@ class _ManagedIdentityAPITokenManager(_APITokenManager):
         return self.token
 
 
-
-    def get_token(self):
-        if (
-            self.token is None
-            or self.last_refresh_time is None
-            or time.time() - self.last_refresh_time > AZURE_TOKEN_REFRESH_INTERVAL
-        ):
-            self.last_refresh_time = time.time()
-            self.token = self.credential.get_token(self.token_scope.value).token
-
-        return self.token
-
-
 class _UAIAPITokenManager(_APITokenManager):
     def __init__(
-         self,
+        self,
         *,
         connection_name,
         auth_header,
@@ -793,19 +784,33 @@ class _UAIAPITokenManager(_APITokenManager):
             print(f"Unable to get an AML OBO token, error: {str(err)}.")
             raise
 
-        headers = {"Content-Type": "application/json", "Authorization":f"{BEARER} {access_token.token}"}
+        headers = {"Content-Type": "application/json", "Authorization": f"{BEARER} {access_token.token}"}
         response = requests.post(url=connection_name, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
         if response.status_code == 200:
             response_data = response.json()
-            self.token = response_data['properties']['credentials']['key']
+            response_props = response_data['properties']
+            if response_props['category'] != "AzureOpenAI":
+                raise Exception(f"Received unexpected endpoint type {response_props['category']}"
+                                "only Azure Open AI endpoints are supported at this time")
+            print(response_props["metadata"]["ApiVersion"])
+            self.api_version = response_props["metadata"]["ApiVersion"]
+            self.domain_name = response_props["target"]
+            self.token = response_props['credentials']['key']
         else:
             raise Exception(
                 "Received unexpected HTTP status: "
                 f"{response.status_code} {response.text}"
             )
 
+    def get_api_version(self):
+        return self.api_version
+
+    def get_endpoint_domain(self):
+        return self.domain_name
+
     def get_token(self):
         return self.token
+
 
 class _PromptData:
     """Class for storing prompt information."""
@@ -1018,7 +1023,6 @@ def _request_api(
 
     time_start = time.time()
 
-
     # print headers without disclosing token
     headers_output = {
         h: (headers[h] if h not in [AUTHORIZATION] else "*" * len(headers[h]))
@@ -1163,7 +1167,7 @@ def _request_prompt_batch(
 ) -> List[_Job]:
 
     azure_endpoint_url = _check_and_format_azure_endpoint_url(
-        AZURE_OPENAI_API_URL_PATTERN,
+        AZURE_OPENAI_API_COMPLETION_URL_PATTERN,
         AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
         azure_endpoint_domain_name,
         azure_openai_api_version,
@@ -1364,7 +1368,6 @@ def run():
     parser = argparse.ArgumentParser()
     parser.add_argument("--production_dataset", type=str, required=True)
     parser.add_argument("--metric_names", type=str, required=True)
-    parser.add_argument("--model_type", type=str, required=True)
     parser.add_argument("--model_deployment_name", type=str, required=True)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--top_p", type=float, default=1.0)
@@ -1379,8 +1382,6 @@ def run():
     parser.add_argument("--fluency_rating_threshold", type=int, default=3)
     parser.add_argument("--coherence_rating_threshold", type=int, default=3)
 
-    parser.add_argument("--azure_endpoint_domain_name", type=str, required=True)
-    parser.add_argument("--azure_openai_api_version", type=str, default="")
     parser.add_argument("--sample_rate", type=float, required=False, default=1.0)
     parser.add_argument(
         "--request_error_rate_threshold",
@@ -1392,6 +1393,7 @@ def run():
     parser.add_argument("--api_call_retry_backoff_factor", type=int, default=3)
     parser.add_argument("--api_call_retry_max_count", type=int, default=10)
     parser.add_argument("--histogram", type=str, required=True)
+    parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
     args = parser.parse_args()
 
     request_args = {
@@ -1407,14 +1409,6 @@ def run():
     # The arg name is longer to be as explicit as possible.
     request_args["model"] = args.model_deployment_name
     endpoint_args["model"] = args.model_deployment_name
-
-    # base definition: args.model_type == "gpt-35-turbo":
-    request_args["max_tokens"] = BASE_MAX_TOKENS * MODEL_TYPE_FACTOR[args.model_type]
-    max_inputs = BASE_MAX_INPUTS * MODEL_TYPE_FACTOR[args.model_type]
-    max_prompt_tokens = BASE_MAX_PROMPT_TOKENS * MODEL_TYPE_FACTOR[args.model_type]
-
-    print(f"Using max_inputs = {max_inputs}")
-    print(f"Using max_prompt_tokens = {max_prompt_tokens}")
 
     metric_names = [m.strip() for m in args.metric_names.split(",")]
     if not (set(metric_names) <= set(ALL_METRIC_NAMES)):
@@ -1457,8 +1451,8 @@ def run():
         metric_names=metric_names,
         production_dataset=args.production_dataset,
         histogram=args.histogram,
-        max_inputs=max_inputs,
-        max_prompt_tokens=max_prompt_tokens,
+        model_deployment_name=args.model_deployment_name,
+        workspace_connection_arm_id=args.workspace_connection_arm_id,
         num_samples=args.num_samples,
         sample_rate=args.sample_rate,
         request_args=request_args,
@@ -1472,8 +1466,8 @@ def apply_annotation(
     metric_names,
     production_dataset,
     histogram,
-    max_inputs,
-    max_prompt_tokens,
+    model_deployment_name,
+    workspace_connection_arm_id,
     num_samples,
     sample_rate,
     request_args,
@@ -1532,22 +1526,54 @@ def apply_annotation(
             "TID",
         ]
     }
-    print(f"starting submit_inputs with endpoint_args={endpoint_args}")
     # Define authorization token manager
-    #TODO: remove hard-code
-    connection = "https://management.azure.com/subscriptions/e0fd569c-e34a-4249-8c24-e8d723c7f054/resourceGroups/hawestra-rg/providers/Microsoft.MachineLearningServices/workspaces/hawestra-ws/connections/hawestra_copilot_connection/listsecrets?api-version=2023-06-01-preview"
+    connection = LISTSECRETS_API_PATTERN.format(workspace_connection_arm_id)
     token_manager_class = _UAIAPITokenManager
 
     token_manager = token_manager_class(
         connection_name=connection,
         auth_header=API_KEY
     )
+    endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
+    api_version = token_manager.get_api_version()
 
     print(
         "Created token manager for auth type "
         f"managed identity using auth header {API_KEY}."
     )
+    endpoint_args["azure_endpoint_domain_name"] = endpoint_domain_name
+    endpoint_args["azure_openai_api_version"] = api_version
 
+    get_model_endpoint = _check_and_format_azure_endpoint_url(AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN,
+                                                              AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
+                                                              endpoint_domain_name, api_version,
+                                                              model_deployment_name)
+    print(f"using endpoing: {get_model_endpoint}")
+    try:
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": token_manager.get_token()
+        }
+        response = requests.get(url=get_model_endpoint, headers=headers, timeout=HTTP_REQUEST_TIMEOUT)
+        if response.status_code == 200:
+            response_data = response.json()
+            model_type = response_data["model"]
+        else:
+            raise Exception(
+                "Received unexpected HTTP status: "
+                f"{response.status_code} {response.text}"
+            )
+    except Exception:
+        raise Exception("Error encountered while attempting to get model type")
+
+    request_args["max_tokens"] = BASE_MAX_TOKENS * MODEL_TYPE_FACTOR[model_type]
+    max_inputs = BASE_MAX_INPUTS * MODEL_TYPE_FACTOR[model_type]
+    max_prompt_tokens = BASE_MAX_PROMPT_TOKENS * MODEL_TYPE_FACTOR[model_type]
+
+    print(f"Using max_inputs = {max_inputs}")
+    print(f"Using max_prompt_tokens = {max_prompt_tokens}")
+
+    print(f"starting submit_inputs with endpoint_args={endpoint_args}")
     all_metrics_pdf = None
     for metric_name in metric_names:
         # Run inference over input dataset
@@ -1566,7 +1592,7 @@ def apply_annotation(
             job_manager = _JobManager(
                 prompt_builder=prompt_builder,
             )
-            
+
             for batch in iterator:
                 # add environment variables on executors
                 for env_var_key, env_var_value in driver_env_vars.items():
@@ -1612,7 +1638,7 @@ def apply_annotation(
         metric_threshold_value = str(threshold_args[f"{metric_name_compact.lower()}_rating_threshold"])
         metrics_pdf[THRESHOLD] = metric_threshold_value
         print(metrics_pdf)
-        
+
         if all_metrics_pdf is None:
             all_metrics_pdf = metrics_pdf
         else:
