@@ -36,17 +36,16 @@ def validate_if_model_exists(model_id):
     registries_list = ["azureml", "azureml-meta"]
 
     # Hardcoding llama-hf model for now, to use llama models
-    llama_hf_models = ["meta-llama/Llama-2-7b-chat-hf", 
-                       "meta-llama/Llama-2-13b-chat-hf", 
-                       "meta-llama/Llama-2-70b-chat-hf", 
+    llama_hf_models = ["meta-llama/Llama-2-7b-chat-hf",
+                       "meta-llama/Llama-2-13b-chat-hf",
+                       "meta-llama/Llama-2-70b-chat-hf",
                        "meta-llama/Llama-2-7b-hf",
                        "meta-llama/Llama-2-13b-hf",
                        "meta-llama/Llama-2-70b-hf"
                        ]
     if model_id in llama_hf_models:
-        logger.warning(f"Lllama Model with safe tensors are already present in registry. Please use the same.")
         model_id = model_id.replace("-hf", "")
-
+        logger.warning(f"Lllama Model {model_id} with safe tensors is already present in registry. Please use the same.")
 
     for registry in registries_list:
         try:

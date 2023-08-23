@@ -21,17 +21,17 @@ from tempfile import TemporaryDirectory
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.CONVERT_MODEL_TO_MLFLOW
 allowed_task_list = [
-    "text-classification", 
-    "fill-mask", 
-    "token-classification", 
-    "question-answering", 
-    "summarization", 
-    "text-generation", 
-    "text-classification", 
-    "translation", 
-    "image-classification", 
-    "image-object-detection", 
-    "image-instance-segmentation", 
+    "text-classification",
+    "fill-mask",
+    "token-classification",
+    "question-answering",
+    "summarization",
+    "text-generation",
+    "text-classification",
+    "translation",
+    "image-classification",
+    "image-object-detection",
+    "image-instance-segmentation",
     "text-to-image"
     ]
 
@@ -146,7 +146,7 @@ def run():
             preprocess_args["misc"] = download_details.get("misc", [])
 
     if task_name is None or task_name not in allowed_task_list:
-            task_name = preprocess_args.get("task")
+        task_name = preprocess_args.get("task")
 
     preprocess_args["task"] = task_name
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
