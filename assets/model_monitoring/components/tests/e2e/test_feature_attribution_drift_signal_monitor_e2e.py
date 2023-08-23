@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import Input, MLClient, Output
-from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.entities import AmlTokenConfiguration
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_JOINER,
@@ -15,10 +15,6 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_OUTPUTS_NO_DRIFT,
     DATA_ASSET_IRIS_MODEL_INPUTS_NO_DRIFT,
     DATA_ASSET_IRIS_MODEL_OUTPUTS_NO_DRIFT,
-    DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_WITH_JOIN_COLUMN,
-    DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_JOIN_COLUMN,
-    DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME,
-    DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME,
 )
 
 
@@ -127,7 +123,7 @@ def _submit_feature_attribution_drift_with_preprocessor_and_datajoiner(
         return {
             "signal_output": feature_attr_drift_signal_monitor_output.outputs.signal_output
         }
-    
+
     pipeline_job = _feature_attr_drift_with_preprocessor_and_data_joiner_e2e()
     pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
@@ -158,7 +154,7 @@ class TestFeatureAttributionDriftModelMonitor:
         )
 
         assert pipeline_job.status == "Completed"
-    
+
     def test_featureattributiondrift_with_preprocessor_and_datajoiner_successful(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
