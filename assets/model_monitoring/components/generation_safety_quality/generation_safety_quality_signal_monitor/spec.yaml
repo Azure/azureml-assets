@@ -23,7 +23,7 @@ inputs:
   model_type:
     type: string
     optional: false
-    description: type of model used for annotation
+    description: TODO REMOVE type of model used for annotation
     enum:
       - gpt-35-turbo
       - gpt-4
@@ -31,23 +31,55 @@ inputs:
   azure_endpoint_domain_name:
     type: string
     optional: false
-    description: endpoint domain name, e.g., <instance>.openai.azure.com
+    description: TODO REMOVE endpoint domain name, e.g., <instance>.openai.azure.com
   azure_openai_api_version:
     type: string
     optional: false
-    description: API version, e.g., 2023-03-15-preview
+    description: TODO REMOVE API version, e.g., 2023-03-15-preview
   sample_rate:
     type: number
     optional: true
     description: sample rate for the input dataset, should be greater than 0 and at most 1
-  request_passrate_threshold:
+  groundedness_rating_threshold:
+    type: integer
+    optional: true
+    default: 3
+  similarity_rating_threshold:
+    type: integer
+    optional: true
+    default: 3
+  relevance_rating_threshold:
+    type: integer
+    optional: true
+    default: 3
+  fluency_rating_threshold:
+    type: integer
+    optional: true
+    default: 3
+  coherence_rating_threshold:
+    type: integer
+    optional: true
+    default: 3
+  groundedness_passrate_threshold:
     type: number
     optional: true
-  annotation_rating_threshold:
+    default: 0.7
+  similarity_passrate_threshold:
     type: number
     optional: true
-  monitor_current_time:
-    type: string
+    default: 0.7
+  relevance_passrate_threshold:
+    type: number
+    optional: true
+    default: 0.7
+  fluency_passrate_threshold:
+    type: number
+    optional: true
+    default: 0.7
+  coherence_passrate_threshold:
+    type: number
+    optional: true
+    default: 0.7
   user_assigned_managed_identity_client_id:
     type: string
     optional: false
@@ -70,6 +102,11 @@ jobs:
       sample_rate: ${{parent.inputs.sample_rate}}
       model_type: ${{parent.inputs.model_type}}
       user_assigned_managed_identity_client_id:  ${{parent.inputs.user_assigned_managed_identity_client_id}}
+      groundedness_rating_threshold: ${{parent.inputs.groundedness_rating_threshold}}}
+      similarity_rating_threshold: ${{parent.inputs.similarity_rating_threshold}}}
+      relevance_rating_threshold: ${{parent.inputs.relevance_rating_threshold}}}
+      fluency_rating_threshold: ${{parent.inputs.fluency_rating_threshold}}}
+      coherence_rating_threshold: ${{parent.inputs.coherence_rating_threshold}}}
     outputs:
       histogram:
         type: mltable
@@ -85,10 +122,12 @@ jobs:
       annotation_histogram:
         type: mltable
         path: ${{parent.jobs.compute_histogram.outputs.histogram}}
-      annotation_rating_threshold:
-        type: mltable
-        path: ${{parent.inputs.annotation_rating_threshold}}
       metric_names: ${{parent.inputs.metric_names}}
+      groundedness_passrate_threshold: ${{parent.inputs.groundedness_passrate_threshold}}}
+      similarity_passrate_threshold: ${{parent.inputs.similarity_passrate_threshold}}}
+      relevance_passrate_threshold: ${{parent.inputs.relevance_passrate_threshold}}}
+      fluency_passrate_threshold: ${{parent.inputs.fluency_passrate_threshold}}}
+      coherence_passrate_threshold: ${{parent.inputs.coherence_passrate_threshold}}}
     outputs:
       signal_metrics:
         type: mltable
@@ -106,7 +145,6 @@ jobs:
         path: ${{parent.jobs.compute_metrics.outputs.signal_metrics}}
       signal_type: "GenerationSafetyQuality"
       signal_name: ${{parent.inputs.signal_name}}
-      version: "1.0.0"
     outputs:
       signal_output:
         type: uri_folder

@@ -12,17 +12,26 @@ from shared_utilities.io_utils import (
     init_spark,
 )
 
+THRESHOLD_PARAMS = [
+    "groundedness_passrate_threshold",
+    "similarity_passrate_threshold",
+    "relevance_passrate_threshold",
+    "fluency_passrate_threshold",
+    "coherence_passrate_threshold",
+]
 
 def _calculate_passrate(df, threshold, metric_name):
-    metric_prefix = f"{metric_name}Count_"
+    output = df.filter(col("metric_name").contains(metric_name)).select("group")
+    print(output)
     df_with_buckets = df.filter(
-        col("metric_name").contains(metric_prefix)
+        col("metric_name").contains(metric_name)
     ).withColumn(
         "bucket",
-        udf(lambda metric_name: int(metric_name.split("_")[1]), IntegerType())(
-            col("metric_name")
+        udf(lambda group: int(group), IntegerType())(
+            col("group")
         ),
     )
+    print(df_with_buckets)
     passing = (
         df_with_buckets.filter(col("bucket") >= threshold)
         .select(sum("metric_value"))
@@ -40,11 +49,16 @@ def run():
     parser = argparse.ArgumentParser()
     parser.add_argument("--metric_names", type=str)
     parser.add_argument("--annotation_histogram", type=str)
-    parser.add_argument("--annotation_rating_threshold", type=int, required=True)
     parser.add_argument("--signal_metrics", type=str)
+    
+    parser.add_argument("--groundedness_passrate_threshold", type=float, default=0.7)
+    parser.add_argument("--similarity_passrate_threshold", type=float, default=0.7)
+    parser.add_argument("--relevance_passrate_threshold", type=float, default=0.7)
+    parser.add_argument("--fluency_passrate_threshold", type=float, default=0.7)
+    parser.add_argument("--coherence_passrate_threshold", type=float, default=0.7)
+    
     args = parser.parse_args()
 
-    threshold = args.annotation_rating_threshold
     metric_names = [m.strip() for m in args.metric_names.split(",")]
     histogram_df = read_mltable_in_spark(args.annotation_histogram)
     spark = init_spark()
@@ -53,18 +67,21 @@ def run():
     histogram_df = histogram_df.withColumn(
         "metric_value", histogram_df["metric_value"].cast("float")
     )
-
+    threshold_args = {
+        arg: getattr(args, arg) for arg in THRESHOLD_PARAMS if hasattr(args, arg)
+    }
     aggregated_metrics_df = histogram_df
     for metric_name in metric_names:
         compact_metric_name = metric_name.replace(" ", "").title()
-        print(compact_metric_name)
+        threshold = histogram_df
+        passrate_threshold = threshold_args[f"{metric_name.lower()}_passrate_threshold"]
         metric_df = spark.createDataFrame(
                 [
                     (
-                        f"Aggregated{compact_metric_name}PassRate",
+                         "",
                         _calculate_passrate(histogram_df, threshold, compact_metric_name),
-                        "numerical",
-                        "",
+                        f"Aggregated{compact_metric_name}PassRate",
+                        passrate_threshold,
                     )
                 ],
                 histogram_df.schema,

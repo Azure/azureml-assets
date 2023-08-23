@@ -10,14 +10,30 @@ inputs:
   annotation_histogram: 
     type: mltable
     mode: direct
-  annotation_rating_threshold:
-    type: number
-    optional: true
-    default: 3
   metric_names:
     type: string
     description: a comma-separated list of metric names to compute
     default: groundedness
+  groundedness_passrate_threshold:
+    type: number
+    optional: true
+    default: 0.7
+  similarity_passrate_threshold:
+    type: number
+    optional: true
+    default: 0.7
+  relevance_passrate_threshold:
+    type: number
+    optional: true
+    default: 0.7
+  fluency_passrate_threshold:
+    type: number
+    optional: true
+    default: 0.7
+  coherence_passrate_threshold:
+    type: number
+    optional: true
+    default: 0.7
 
 outputs:
   signal_metrics:
@@ -31,7 +47,6 @@ entry:
 
 args: >-
   --annotation_histogram ${{inputs.annotation_histogram}}
-  $[[--annotation_rating_threshold ${{inputs.annotation_rating_threshold}}]]
   --metric_names ${{inputs.metric_names}}
   --signal_metrics ${{outputs.signal_metrics}}
 

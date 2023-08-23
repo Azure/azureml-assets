@@ -92,6 +92,14 @@ ENDPOINT_PARAMS = [
     "model",
 ]
 
+THRESHOLD_PARAMS = [
+    "groundedness_rating_threshold",
+    "similarity_rating_threshold",
+    "relevance_rating_threshold",
+    "fluency_rating_threshold",
+    "coherence_rating_threshold",
+]
+
 # ---
 
 CL_100K_BASE = "cl100k_base"
@@ -510,10 +518,10 @@ NUMERICAL = "numerical"
 COUNT = "count"
 METRIC_NAME = "metric_name"
 METRIC_VALUE = "metric_value"
-DATA_TYPE = "data_type"
-FEATURE_NAME = "feature_name"
-PRODUCTION_ROW_COUNT = "ProductionRowCount"
-BASELINE_ROW_COUNT = "BaselineRowCount"
+GROUP = "group"
+THRESHOLD = "threshold_value"
+PRODUCTION_ROW_COUNT = "Production"
+REFERENCE_ROW_COUNT = "Reference"
 
 
 def _check_and_format_azure_endpoint_url(
@@ -1364,7 +1372,13 @@ def run():
     parser.add_argument("--frequency_penalty", type=float, default=0.0)
     parser.add_argument("--presence_penalty", type=float, default=0.0)
     parser.add_argument("--stop", type=str, default=None)
-    
+
+    parser.add_argument("--groundedness_rating_threshold", type=int, default=3)
+    parser.add_argument("--similarity_rating_threshold", type=int, default=3)
+    parser.add_argument("--relevance_rating_threshold", type=int, default=3)
+    parser.add_argument("--fluency_rating_threshold", type=int, default=3)
+    parser.add_argument("--coherence_rating_threshold", type=int, default=3)
+
     parser.add_argument("--azure_endpoint_domain_name", type=str, required=True)
     parser.add_argument("--azure_openai_api_version", type=str, default="")
     parser.add_argument("--sample_rate", type=float, required=False, default=1.0)
@@ -1385,6 +1399,9 @@ def run():
     }
     endpoint_args = {
         arg: getattr(args, arg) for arg in ENDPOINT_PARAMS if hasattr(args, arg)
+    }
+    threshold_args = {
+        arg: getattr(args, arg) for arg in THRESHOLD_PARAMS if hasattr(args, arg)
     }
     # add model to both request and endpoint args
     # The arg name is longer to be as explicit as possible.
@@ -1433,6 +1450,7 @@ def run():
         raise ValueError(f"sample_rate must be larger than 0.0 and at most 1.0, "
                          f"got {args.sample_rate}.")
 
+    # TODO add validation for threshold args!!
     print(f"Running with args: {args}")
 
     apply_annotation(
@@ -1445,6 +1463,7 @@ def run():
         sample_rate=args.sample_rate,
         request_args=request_args,
         endpoint_args=endpoint_args,
+        threshold_args=threshold_args,
     )
 
 
@@ -1459,6 +1478,7 @@ def apply_annotation(
     sample_rate,
     request_args,
     endpoint_args,
+    threshold_args,
 ):
     """Apply annotation to all samples in the production_dataset."""
     production_df = io_utils.read_mltable_in_spark(production_dataset)
@@ -1585,28 +1605,27 @@ def apply_annotation(
         missing_ratings = set(range(MIN_RATING, MAX_RATING + 1)) - set(ratings)
         for r in missing_ratings:
             metrics_pdf = metrics_pdf.append({RATING: r, COUNT: 0}, ignore_index=True)
-        metrics_pdf[RATING] = metrics_pdf[RATING].map(lambda r: f"{metric_name_compact}Count_{r}")
-
-        # add metric_name, metric_value, data_type, and feature_name columns
-        metrics_pdf.rename(columns={RATING: METRIC_NAME, COUNT: METRIC_VALUE}, inplace=True)
-        metrics_pdf[DATA_TYPE] = NUMERICAL
-        metrics_pdf[FEATURE_NAME] = ""
-
+        metrics_pdf[RATING] = metrics_pdf[RATING].map(lambda r: str(r))
+        # add metric_name, metric_value, group, and threshold values
+        metrics_pdf.rename(columns={RATING: GROUP, COUNT: METRIC_VALUE, }, inplace=True)
+        metrics_pdf[METRIC_NAME] = f"Acceptable{metric_name_compact}ScorePerInstance"
+        metric_threshold_value = str(threshold_args[f"{metric_name_compact.lower()}_rating_threshold"])
+        metrics_pdf[THRESHOLD] = metric_threshold_value
         print(metrics_pdf)
-
+        
         if all_metrics_pdf is None:
             all_metrics_pdf = metrics_pdf
         else:
             all_metrics_pdf = pd.concat([all_metrics_pdf, metrics_pdf])
 
-    print(f"Adding {PRODUCTION_ROW_COUNT} and {BASELINE_ROW_COUNT}.")
-    for row_count_name in [PRODUCTION_ROW_COUNT, BASELINE_ROW_COUNT]:
+    print(f"Adding {PRODUCTION_ROW_COUNT} and {REFERENCE_ROW_COUNT}.")
+    for row_count_name in [PRODUCTION_ROW_COUNT, REFERENCE_ROW_COUNT]:
         all_metrics_pdf = all_metrics_pdf.append(
             {
-                METRIC_NAME: row_count_name,
+                METRIC_NAME: "RowCount",
                 METRIC_VALUE: row_count,
-                DATA_TYPE: NUMERICAL,
-                FEATURE_NAME: "",
+                GROUP: row_count_name,
+                THRESHOLD: ""
             },
             ignore_index=True)
     print("Finished calculating metrics based on annotations.")

@@ -26,6 +26,26 @@ inputs:
     type: string
     optional: false
     description: model name, e.g., name of the deployment for Azure OpenAI
+  groundedness_rating_threshold:
+    type: integer
+    optional: true
+    default: 3
+  similarity_rating_threshold:
+    type: integer
+    optional: true
+    default: 3
+  relevance_rating_threshold:
+    type: integer
+    optional: true
+    default: 3
+  fluency_rating_threshold:
+    type: integer
+    optional: true
+    default: 3
+  coherence_rating_threshold:
+    type: integer
+    optional: true
+    default: 3
   azure_endpoint_domain_name:
     type: string
     optional: false
