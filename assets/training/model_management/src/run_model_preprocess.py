@@ -12,7 +12,9 @@ from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
-from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
+from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, UnsupportedTaskType
+from azureml._common.exceptions import AzureMLException
+from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -20,20 +22,6 @@ from tempfile import TemporaryDirectory
 
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.CONVERT_MODEL_TO_MLFLOW
-allowed_task_list = [
-    "text-classification",
-    "fill-mask",
-    "token-classification",
-    "question-answering",
-    "summarization",
-    "text-generation",
-    "text-classification",
-    "translation",
-    "image-classification",
-    "image-object-detection",
-    "image-instance-segmentation",
-    "text-to-image"
-    ]
 
 
 def _get_parser():
@@ -145,8 +133,14 @@ def run():
             preprocess_args.update(download_details.get("properties", {}))
             preprocess_args["misc"] = download_details.get("misc", [])
 
-    if task_name is None or task_name not in allowed_task_list:
+    if task_name is None or not SupportedTasks.has_value(task_name):
         task_name = preprocess_args.get("task")
+    
+    if task_name is None:
+        raise AzureMLException._with_error(
+                AzureMLError.create(UnsupportedTaskType, task_type=args.task_name,
+                                    supported_tasks=SupportedTasks.list_values())
+            )
 
     preprocess_args["task"] = task_name
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")

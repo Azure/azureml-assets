@@ -53,3 +53,33 @@ class LoggerConfig:
     VERBOSITY_LEVEL = "DEBUG"
     OFFLINE_RUN_MESSAGE = "OFFLINE_RUN"
     ASSET_NOT_FOUND = "AssetID missing in run details"
+
+class LlamaHFModels(_CustomEnum):
+    """Llama HF Models."""
+
+    LLAMA_2_7B_CHAT_HF = "meta-llama/Llama-2-7b-chat-hf"
+    LLAMA_2_13B_CHAT_HF = "meta-llama/Llama-2-13b-chat-hf"
+    LLAMA_2_70B_CHAT_HF = "meta-llama/Llama-2-70b-chat-hf"
+    LLAMA_2_7B_HF = "meta-llama/Llama-2-7b-hf"
+    LLAMA_2_13B_HF = "meta-llama/Llama-2-13b-hf"
+    LLAMA_2_70B_HF = "meta-llama/Llama-2-70b-hf"
+
+class LlamaModels(_CustomEnum):
+    """Llama Models."""
+
+    LLAMA_2_7B_CHAT = "meta-llama/Llama-2-7b-chat"
+    LLAMA_2_13B_CHAT = "meta-llama/Llama-2-13b-chat"
+    LLAMA_2_70B_CHAT = "meta-llama/Llama-2-70b-chat"
+    LLAMA_2_7B = "meta-llama/Llama-2-7b"
+    LLAMA_2_13B = "meta-llama/Llama-2-13b"
+    LLAMA_2_70B = "meta-llama/Llama-2-70b"
+
+class LlamaModelsInRegistry(_CustomEnum):
+    """Llama Models in Registry."""
+
+    LLAMA_2_7B_CHAT = "Llama-2-7b-chat"
+    LLAMA_2_13B_CHAT = "Llama-2-13b-chat"
+    LLAMA_2_70B_CHAT = "Llama-2-70b-chat"
+    LLAMA_2_7B = "Llama-2-7b"
+    LLAMA_2_13B = "Llama-2-13b"
+    LLAMA_2_70B = "Llama-2-70b"

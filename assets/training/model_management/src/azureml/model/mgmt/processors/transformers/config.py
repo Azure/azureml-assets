@@ -18,6 +18,8 @@ class _CustomEnum(Enum):
     @classmethod
     def has_value(cls, value):
         return value in cls._value2member_map_
+    def list_values(cls):
+        return list(cls._value2member_map_.values())
 
 
 class HF_CONF(_CustomEnum):
