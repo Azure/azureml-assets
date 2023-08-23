@@ -13,10 +13,10 @@ dependencies:
   - scipy>=1.10.0
   - numpy>=1.22
   - ipykernel~=6.0
-  - azureml-core==1.52.0
-  - azureml-telemetry==1.52.0
-  - azureml-train-core==1.52.0
-  - azureml-mlflow==1.52.0
+  - azureml-core==1.53.0
+  - azureml-telemetry==1.53.0
+  - azureml-train-core==1.53.0
+  - azureml-mlflow==1.53.0
   - scikit-learn==0.24.1
   - mltable
   - transformers==4.30.0
