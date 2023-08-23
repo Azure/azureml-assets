@@ -98,8 +98,7 @@ RUN apt-get update && \
 
 # Install OpenCV native dependencies
 RUN apt-get update
-RUN apt-get install -y ffmpeg libsm6 libxext6 && \
-    apt-get install -y python3-opencv
+RUN apt-get install -y python3-opencv
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/responsibleai-vision
 
@@ -128,7 +127,9 @@ RUN pip install 'shap==0.40.0' \
                 'Pillow>=9.1.0' \
                 'Werkzeug==2.2.3' \
                 'setuptools>=65.5.1' \
-                'numpy==1.22.0'
+                'numpy==1.22.0' \
+                'scipy==1.10.0' \
+                'statsmodels==0.14.0'
 
 RUN pip freeze
 

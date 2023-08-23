@@ -3,7 +3,7 @@ name: evaluate_model
 display_name: Evaluate Model
 description: Evaluate MLFlow models for supported task types.
 
-version: 0.0.10
+version: 0.0.13
 
 tags:
   type: evaluation
@@ -28,7 +28,9 @@ inputs:
       fill-mask,
       text-generation,
       image-classification,
-      image-classification-multilabel
+      image-classification-multilabel,
+      image-object-detection,
+      image-instance-segmentation,
     ]
     description: "Task type"
   test_data:
@@ -54,7 +56,7 @@ inputs:
   model_uri:
     type: string
     optional: true
-    description: "[DEPRECATED] The location, in URI format, of the MLflow model, for example:
+    description: "[DEPRECATED] The location, in URI format, of the Mlflow model, for example:
                       - ``runs:/<mlflow_run_id>/run-relative/path/to/model``
                       - ``models:/<model_name>/<model_version>``
                       - ``models:/<model_name>/<stage>``"
@@ -69,14 +71,14 @@ inputs:
   evaluation_config_params:
     type: string
     optional: true
-    description: "JSON Serielized string of evaluation_config"
+    description: "JSON Serialized string of evaluation_config"
 
 outputs:
   evaluation_result:
     type: uri_folder
 
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/9
+environment: azureml://registries/azureml/environments/model-evaluation/versions/11
 
 command: >-
   python download_dependencies.py

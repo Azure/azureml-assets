@@ -39,6 +39,7 @@ class AppName:
     IMPORT_MODEL = "import_model"
     DOWNLOAD_MODEL = "download_model"
     CONVERT_MODEL_TO_MLFLOW = "convert_model_to_mlflow"
+    VALIDATION_TRIGGER_IMPORT = "validation_trigger_import"
 
 
 class LoggerConfig:
@@ -51,4 +52,4 @@ class LoggerConfig:
     LOGGER_NAME = "FM_IMPORT_MODEL"
     VERBOSITY_LEVEL = "DEBUG"
     OFFLINE_RUN_MESSAGE = "OFFLINE_RUN"
-    IMPORT_MODEL_VERSION = "0.0.8"  # Update when changing version in spec file.
+    ASSET_NOT_FOUND = "AssetID missing in run details"

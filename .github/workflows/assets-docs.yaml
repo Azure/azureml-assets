@@ -57,7 +57,6 @@ jobs:
           token: ${{ secrets.AZUREML_BOT_PAT }}
           path: ${{ env.wiki_dir }}
 
-      # TODO: Not needed unless calling update_assets.py
       - name: Use Python 3.8 or newer
         uses: actions/setup-python@v4
         with:

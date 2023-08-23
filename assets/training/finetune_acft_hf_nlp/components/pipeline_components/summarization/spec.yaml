@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: summarization_pipeline
-version: 0.0.10
+version: 0.0.15
 type: pipeline
 display_name: Summarization Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for summarization task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/summarization_pipeline) to learn more.
@@ -82,6 +82,21 @@ inputs:
     optional: true
     default: 1000
     description: Number of examples to batch before calling the tokenization function
+
+  pad_to_max_length:
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
+    optional: true
+    description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
+  
+  max_seq_length:
+    type: integer
+    optional: true
+    default: -1
+    description: Controls the maximum length to use when pad_to_max_length parameter is set to `true`. Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`.
 
   train_file_path:
     type: uri_file
@@ -461,7 +476,7 @@ outputs:
 jobs:
   summarization_model_import:
     type: command
-    component: azureml://registries/azureml/components/summarization_model_import/versions/0.0.10
+    component: azureml:summarization_model_import:0.0.15
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -471,7 +486,7 @@ jobs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
   summarization_datapreprocess:
     type: command
-    component: azureml://registries/azureml/components/summarization_datapreprocess/versions/0.0.10
+    component: azureml:summarization_datapreprocess:0.0.15
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -480,6 +495,8 @@ jobs:
       summary_key: '${{parent.inputs.summary_key}}'
       summarization_lang: '${{parent.inputs.summarization_lang}}'
       batch_size: '${{parent.inputs.batch_size}}'
+      pad_to_max_length: '${{parent.inputs.pad_to_max_length}}'
+      max_seq_length: '${{parent.inputs.max_seq_length}}'
       train_file_path: '${{parent.inputs.train_file_path}}'
       validation_file_path: '${{parent.inputs.validation_file_path}}'
       test_file_path: '${{parent.inputs.test_file_path}}'
@@ -489,7 +506,7 @@ jobs:
       model_selector_output: '${{parent.jobs.summarization_model_import.outputs.output_dir}}'
   summarization_finetune:
     type: command
-    component: azureml://registries/azureml/components/summarization_finetune/versions/0.0.10
+    component: azureml:summarization_finetune:0.0.15
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -544,7 +561,7 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml://registries/azureml/components/model_prediction/versions/0.0.10
+    component: azureml:model_prediction:0.0.10
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
@@ -558,7 +575,7 @@ jobs:
       mlflow_model: '${{parent.jobs.summarization_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
-    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.10
+    component: azureml:compute_metrics:0.0.10
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
