@@ -792,7 +792,6 @@ class _UAIAPITokenManager(_APITokenManager):
             if response_props['category'] != "AzureOpenAI":
                 raise Exception(f"Received unexpected endpoint type {response_props['category']}"
                                 "only Azure Open AI endpoints are supported at this time")
-            print(response_props["metadata"]["ApiVersion"])
             self.api_version = response_props["metadata"]["ApiVersion"]
             self.domain_name = response_props["target"]
             self.token = response_props['credentials']['key']
@@ -1547,7 +1546,6 @@ def apply_annotation(
                                                               AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
                                                               endpoint_domain_name, api_version,
                                                               model_deployment_name)
-    print(f"using endpoing: {get_model_endpoint}")
     try:
         headers = {
             "Content-Type": "application/json",
