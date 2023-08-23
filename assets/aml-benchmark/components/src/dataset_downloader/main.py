@@ -13,7 +13,11 @@ import pandas as pd
 from azureml._common._error_definition.azureml_error import AzureMLError
 
 from utils.helper import get_logger, log_mlflow_params
-from utils.exceptions import swallow_all_exceptions, BenchmarkValidationException, DatasetDownloadException
+from utils.exceptions import (
+    swallow_all_exceptions,
+    BenchmarkValidationException,
+    DatasetDownloadException,
+)
 from utils.error_definitions import BenchmarkValidationError, DatasetDownloadError
 
 
@@ -54,7 +58,9 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def resolve_configuration(dataset_name: Optional[str], configuration: Optional[str]) -> List[Optional[str]]:
+def resolve_configuration(
+    dataset_name: Optional[str], configuration: Optional[str]
+) -> List[Optional[str]]:
     """
     Get the list of configurations to download.
 
@@ -62,10 +68,20 @@ def resolve_configuration(dataset_name: Optional[str], configuration: Optional[s
     :param configuration: Configuration of the dataset to download.
     :return: list of configurations to download.
     """
-    if configuration is None:
-        return [configuration]
-
     available_configs = get_dataset_config_names(dataset_name)
+
+    if configuration is None:
+        if len(available_configs) > 1:
+            mssg = (
+                f"Multiple configurations available for dataset '{dataset_name}'. Please specify either one of "
+                f"the following: {available_configs} or 'all'."
+            )
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
+        else:
+            return [configuration]
+
     if configuration == ALL:
         return available_configs
 
@@ -94,7 +110,9 @@ def resolve_split(
             AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
-    available_splits = get_dataset_split_names(path=dataset_name, config_name=configuration)
+    available_splits = get_dataset_split_names(
+        path=dataset_name, config_name=configuration
+    )
     if split == ALL:
         return available_splits
 
@@ -125,8 +143,8 @@ def download_dataset_from_hf(
         except Exception as e:
             mssg = f"Error downloading dataset: {e}"
             raise DatasetDownloadException._with_error(
-                    AzureMLError.create(DatasetDownloadError, error_details=mssg)
-                )
+                AzureMLError.create(DatasetDownloadError, error_details=mssg)
+            )
         out_dir = os.path.join(output_dir, configuration, split)
         os.makedirs(out_dir, exist_ok=True)
         output_file_path = os.path.join(out_dir, "data.jsonl")
@@ -173,8 +191,8 @@ def download_file_from_url(url: str, output_dir: str) -> None:
     except Exception as e:
         mssg = f"Error downloading file: {e}"
         raise DatasetDownloadException._with_error(
-                AzureMLError.create(DatasetDownloadError, error_details=mssg)
-            )
+            AzureMLError.create(DatasetDownloadError, error_details=mssg)
+        )
 
     output_file_path = os.path.join(output_dir, "data.jsonl")
     df.to_json(output_file_path, lines=True, orient="records")
@@ -217,7 +235,9 @@ def main(args: argparse.Namespace) -> None:
         configurations = resolve_configuration(dataset_name, configuration)
         config_len = len(configurations)
         if configurations:
-            logger.info(f"Following configurations will be downloaded: {configurations}.")
+            logger.info(
+                f"Following configurations will be downloaded: {configurations}."
+            )
             with ProcessPoolExecutor(min(os.cpu_count(), config_len)) as executor:
                 executor.map(
                     download_dataset_from_hf,

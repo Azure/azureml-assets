@@ -3,7 +3,7 @@
 
 """Tests for Dataset Downloader Component."""
 
-from typing import Union
+from typing import Union, Optional
 import os
 import subprocess
 
@@ -100,12 +100,7 @@ class TestDatasetDownloaderComponent:
 
         return pipeline_job
 
-    def _verify_output(
-        self,
-        job: Job,
-        output_dir: str,
-        file_count: int
-    ) -> None:
+    def _verify_output(self, job: Job, output_dir: str, file_count: int) -> None:
         """Verify the output.
 
         :param job: The job object.
@@ -195,12 +190,20 @@ class TestDatasetDownloaderScript:
             exception_message = e.output.strip()
             assert_exception_mssg(exception_message, expected_exception_mssg)
 
-    @pytest.mark.parametrize("dataset_name, split", [("squad_v2", "test")])
-    def test_invalid_hf_dataset(self, dataset_name: str, split: str):
+    @pytest.mark.parametrize(
+        "dataset_name, configuration, split",
+        [("squad_v2", None, "test"), ("ai2_arc", None, "validation")],
+    )
+    def test_invalid_hf_dataset(
+        self, dataset_name: str, configuration: Optional[str], split: str
+    ):
         """Test for unsupported url file."""
         expected_exception_mssg = f"Split '{split}' not available for dataset '{dataset_name}' and config '{None}'."
-        if split is None:
-            expected_exception_mssg = "Split can't be None."
+        if dataset_name == "ai2_arc" and configuration is None:
+            expected_exception_mssg = (
+                f"Multiple configurations available for dataset '{dataset_name}'. Please specify either one of "
+                f"the following: {get_dataset_config_names(dataset_name)} or 'all'."
+            )
 
         # Run the script and verify the exception
         try:
