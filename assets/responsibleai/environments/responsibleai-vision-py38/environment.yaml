@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/responsibleai-vision-ubuntu22.10-py38-cpu
+  name: azureml/curated/responsibleai-vision-py38
   os: linux
   context:
     dir: context
