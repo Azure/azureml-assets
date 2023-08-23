@@ -35,6 +35,31 @@ def validate_if_model_exists(model_id):
     """Validate if model exists in any of the registries."""
     registries_list = ["azureml", "azureml-meta"]
 
+    # Hardcoding llama-hf model for now, to use llama models
+    llama_hf_models = ["meta-llama/Llama-2-7b-chat-hf",
+                       "meta-llama/Llama-2-13b-chat-hf",
+                       "meta-llama/Llama-2-70b-chat-hf",
+                       "meta-llama/Llama-2-7b-hf",
+                       "meta-llama/Llama-2-13b-hf",
+                       "meta-llama/Llama-2-70b-hf"
+                       ]
+    if model_id in llama_hf_models:
+        model_id = model_id.replace("-hf", "")
+        logger.warning(f"Lllama Model {model_id} with safe tensors is already present in registry. "
+                       "Please use the same.")
+    
+    # Hardcoding check for llama models as names in registry do not contain meta-llama
+    llama_models = ["meta-llama/Llama-2-7b-chat",
+                    "meta-llama/Llama-2-13b-chat",
+                    "meta-llama/Llama-2-70b-chat",
+                    "meta-llama/Llama-2-7b",
+                    "meta-llama/Llama-2-13b",
+                    "meta-llama/Llama-2-70b"
+                    ]
+    if model_id in llama_models:
+        model_id = model_id.replace("meta-llama/", "")
+
+
     for registry in registries_list:
         try:
             ml_client_registry = get_mlclient(registry_name=registry)
@@ -84,20 +109,6 @@ def run():
     logger.info(f"Model source: {model_source}")
     logger.info(f"Model id: {model_id}")
     logger.info(f"Update existing model: {update_existing_model}")
-
-    # Hardcoding llama-hf model for now, to use llama models
-    llama_hf_models = ["meta-llama/Llama-2-7b-chat-hf",
-                       "meta-llama/Llama-2-13b-chat-hf",
-                       "meta-llama/Llama-2-70b-chat-hf",
-                       "meta-llama/Llama-2-7b-hf",
-                       "meta-llama/Llama-2-13b-hf",
-                       "meta-llama/Llama-2-70b-hf"
-                       ]
-    if model_id in llama_hf_models:
-        model_id = model_id.replace("-hf", "")
-        model_id = model_id.replace("meta-llama/", "")
-        logger.warning(f"Lllama Model {model_id} with safe tensors is already present in registry. "
-                       "Please use the same.")
 
     if update_existing_model == "false":
         validate_if_model_exists(model_id)
