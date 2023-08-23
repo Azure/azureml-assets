@@ -44,7 +44,8 @@ class MetricOutputBuilder:
                     root_group = metric_dict[SIGNAL_METRICS_GROUP]
                     group_names.append(root_group)
 
-                    if metric_dict[SIGNAL_METRICS_GROUP_DIMENSION].lower() != AGGREGATE:
+                    # If group dimension is not specified, default is Aggregate.
+                    if SIGNAL_METRICS_GROUP_DIMENSION in metric_dict and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION].lower() != AGGREGATE:
                         group_dimension = metric_dict[SIGNAL_METRICS_GROUP_DIMENSION]
                         group_names.append(group_dimension)
 
@@ -69,8 +70,8 @@ class MetricOutputBuilder:
             metrics_dict[metric_name] = {}
 
         cur_dict = metrics_dict[metric_name]
-
-        if group_names.count() > 0:
+        
+        if len(group_names) > 0:
             for idx, group_name in enumerate(group_names):
                 if idx < len(group_names) - 1:
                     self._create_metric_groups_if_not_exist(cur_dict, group_name)
