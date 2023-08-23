@@ -115,12 +115,12 @@ RUN conda run -p $AZUREML_CONDA_ENVIRONMENT_PATH pip cache purge && \
 RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0'
 
 # Install azureml packages
-RUN pip install 'azureml-core' \
-                'azureml-mlflow' \
+RUN pip install 'azureml-core=={{latest-pypi-version}}' \
+                'azureml-mlflow=={{latest-pypi-version}}' \
                 'azureml-rai-utils==0.0.3'
 
-RUN pip install 'azureml-dataset-runtime' \
-                'azureml-automl-dnn-vision'
+RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
+                'azureml-automl-dnn-vision=={{latest-pypi-version}}'
 
 RUN pip install 'shap==0.40.0' \
                 'interpret-community==0.29.0' \
