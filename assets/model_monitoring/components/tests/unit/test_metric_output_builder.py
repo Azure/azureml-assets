@@ -4,7 +4,6 @@
 """This file contains unit tests for the Data Drift Output Metrics component."""
 
 import pytest
-import json
 from typing import List
 from pyspark.sql import Row
 
@@ -106,7 +105,7 @@ class TestMetricOutputBuilder:
                 threshold_value=10.0,
             ),
         ]
-        
+    
         metric_output_builder = MetricOutputBuilder(signal_metrics)
         metrics_dict = metric_output_builder.get_metrics_dict()
         assert metrics_dict == {
@@ -131,7 +130,7 @@ class TestMetricOutputBuilder:
                 "threshold": 10.0,
             }
         }
-        
+
     def test_group_without_group_dimension_success(self):
         """Test metrics output builder for metrics that contains group but not group dimension. """
         signal_metrics: List[Row] = [
@@ -160,7 +159,7 @@ class TestMetricOutputBuilder:
                 threshold_value=10.0,
             ),
         ]
-        
+
         metric_output_builder = MetricOutputBuilder(signal_metrics)
         metrics_dict = metric_output_builder.get_metrics_dict()
         assert metrics_dict == {

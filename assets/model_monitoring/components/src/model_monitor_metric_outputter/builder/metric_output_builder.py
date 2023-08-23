@@ -45,7 +45,8 @@ class MetricOutputBuilder:
                     group_names.append(root_group)
 
                     # If group dimension is not specified, default is Aggregate.
-                    if SIGNAL_METRICS_GROUP_DIMENSION in metric_dict and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION].lower() != AGGREGATE:
+                    if (SIGNAL_METRICS_GROUP_DIMENSION in metric_dict
+                            and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION].lower() != AGGREGATE):
                         group_dimension = metric_dict[SIGNAL_METRICS_GROUP_DIMENSION]
                         group_names.append(group_dimension)
 
@@ -60,7 +61,7 @@ class MetricOutputBuilder:
                 self._add_metric(metrics_dict, metric_name, new_metric, group_names)
             except Exception as e:
                 print(f"Error: Failed to get required column from metric '{metric_name}'"
-                    + f" with exception: {str(e)}")
+                      + f" with exception: {str(e)}")
                 continue
 
         return metrics_dict
@@ -70,7 +71,7 @@ class MetricOutputBuilder:
             metrics_dict[metric_name] = {}
 
         cur_dict = metrics_dict[metric_name]
-        
+
         if len(group_names) > 0:
             for idx, group_name in enumerate(group_names):
                 if idx < len(group_names) - 1:
