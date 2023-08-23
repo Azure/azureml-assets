@@ -105,7 +105,7 @@ class TestMetricOutputBuilder:
                 threshold_value=10.0,
             ),
         ]
-    
+
         metric_output_builder = MetricOutputBuilder(signal_metrics)
         metrics_dict = metric_output_builder.get_metrics_dict()
         assert metrics_dict == {
@@ -125,7 +125,7 @@ class TestMetricOutputBuilder:
                 "value": 35.0,
                 "threshold": 10.0,
             },
-            "num_calls_with_status_code_500":{
+            "num_calls_with_status_code_500": {
                 "value": 63.0,
                 "threshold": 10.0,
             }
