@@ -95,6 +95,7 @@ def run():
                        ]
     if model_id in llama_hf_models:
         model_id = model_id.replace("-hf", "")
+        model_id = model_id.replace("meta-llama/", "")
         logger.warning(f"Lllama Model {model_id} with safe tensors is already present in registry. "
                        "Please use the same.")
 
