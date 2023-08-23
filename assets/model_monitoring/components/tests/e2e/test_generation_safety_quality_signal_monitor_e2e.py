@@ -20,16 +20,10 @@ def _submit_generation_safety_signal_monitor_job(ml_client, get_component, targe
         dd_model_monitor_output = generation_safety_model_monitor(
             production_data=target_data,
             signal_name="my_test_generation_safety_signal",
-            monitor_current_time="2023-02-02T00:00:00Z",
             metric_names="groundedness, fluency,relevance, coherence, similarity",
             model_deployment_name="gpt-35-turbo-v0301",
-            model_type="gpt-35-turbo",
-            azure_endpoint_domain_name="copilot-demo-eastus-aoai.openai.azure.com",
-            azure_openai_api_version="2023-03-15-preview",
             sample_rate=1.0,
-            annotation_rating_threshold=3,
-            user_assigned_managed_identity_client_id="b6f59c9f-a0a8-4c39-9a04-ab608e1da80c"
-
+            workspace_connection_arm_id="subscriptions/e0fd569c-e34a-4249-8c24-e8d723c7f054/resourceGroups/hawestra-rg/providers/Microsoft.MachineLearningServices/workspaces/hawestra-ws/connections/hawestra_copilot_connection" # noqa: E501
         )
         return {"signal_output": dd_model_monitor_output.outputs.signal_output}
 

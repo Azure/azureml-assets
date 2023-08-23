@@ -67,9 +67,6 @@ inputs:
   workspace_connection_arm_id:
     type: string
     optional: false
-  user_assigned_managed_identity_client_id:
-    type: string
-    optional: false
 outputs:
   signal_output:
     type: uri_folder
@@ -86,7 +83,6 @@ jobs:
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
       sample_rate: ${{parent.inputs.sample_rate}}
       workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
-      user_assigned_managed_identity_client_id:  ${{parent.inputs.user_assigned_managed_identity_client_id}}
       groundedness_rating_threshold: ${{parent.inputs.groundedness_rating_threshold}}}
       similarity_rating_threshold: ${{parent.inputs.similarity_rating_threshold}}}
       relevance_rating_threshold: ${{parent.inputs.relevance_rating_threshold}}}

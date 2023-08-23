@@ -46,9 +46,6 @@ inputs:
     type: number
     optional: true
     description: sample rate for the input dataset, should be greater than 0 and at most 1
-  user_assigned_managed_identity_client_id:
-    type: string
-    optional: false
 outputs:
   histogram:
     type: mltable
@@ -106,4 +103,3 @@ conf:
 
 identity:
   type: managed
-  client_id: ${{inputs.user_assigned_managed_identity_client_id}
