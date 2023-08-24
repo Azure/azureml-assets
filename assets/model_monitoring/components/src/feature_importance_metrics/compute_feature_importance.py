@@ -194,7 +194,7 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
 
 
 def create_signal_metrics_df(global_explanations, dataset, categorical_features):
-    """Create signal metrics data frame
+    """Create signal metrics data frame.
 
     :param global_explanations: list of global feature importances in the order of the baseline columns
     :type global_explanations: list[float]
