@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 # Install OpenCV native dependencies
 RUN apt-get update
 RUN apt-get install -y python3-opencv
-RUN apt-get remove libavutil56 libswresample3 libavformat58 libavcodec58 libswscale5
+RUN apt-get remove -y libavutil56 libswresample3 libavformat58 libavcodec58 libswscale5
 
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/responsibleai-vision
 
