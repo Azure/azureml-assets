@@ -124,20 +124,47 @@ def compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanat
     save_spark_df_as_mltable(spark_data, feature_attribution_data)
 
 
-def configure_data(data):
-    """Convert pySpark.Dataframe to pandas.Dataframe and sort the data.
+def configure_signal_metrics_data(data):
+    """Convert pySpark.Dataframe to pandas.Dataframe and sort the data for signal metrics table.
 
     :param data: feature importances with their corresponding feature names
     :type data: pySpark.Dataframe
-    :return: the sorted pandas feature importances data with the row count dropped and the number of rows
+    :return: the sorted pandas global feature importances data with the row count dropped and the number of rows
     :rtype: tuple of pandas dataframe and number
     """
     df = read_mltable_in_spark(data).toPandas()
+    # Remove local feature importance sample
+    df.dropna(subset=[constants.METRIC_NAME_COLUMN], inplace=True)
+    df = df[[constants.FEATURE_COLUMN,
+             constants.METRIC_VALUE_COLUMN,
+             constants.METRIC_NAME_COLUMN,
+             constants.FEATURE_CATEGORY_COLUMN,
+             constants.THRESHOLD_VALUE]]
+    # Sort global feature importances data and get row count
     for i in range(len(df.index)):
         if df.iloc[i][constants.METRIC_NAME_COLUMN] == constants.ROW_COUNT_COLUMN_NAME:
             num_rows = df.iloc[i][constants.METRIC_VALUE_COLUMN]
             df = df.drop(df.index[i])
     return [df.sort_values(by=[constants.FEATURE_COLUMN]), num_rows]
+
+
+def configure_local_importance_sample_data(data):
+    """Convert pySpark.Dataframe to pandas.Dataframe and sort the data for local feature importance sample table.
+
+    :param data: feature importances for each row
+    :type data: pySpark.Dataframe
+    :return: the pandas local feature importances data
+    :rtype: pandas dataframe
+    """
+    df = read_mltable_in_spark(data).toPandas()
+    # Remove signal metrics
+    df.dropna(subset=[constants.ROW_INDEX], inplace=True)
+    df.drop(columns=[constants.FEATURE_COLUMN,
+                     constants.METRIC_VALUE_COLUMN,
+                     constants.METRIC_NAME_COLUMN,
+                     constants.FEATURE_CATEGORY_COLUMN,
+                     constants.THRESHOLD_VALUE], inplace=True)
+    return df
 
 
 def drop_metadata_columns(baseline_data, production_data):
@@ -167,9 +194,11 @@ def run(args):
     """Calculate feature attribution drift."""
     try:
         log_time_and_message("Reading in baseline data")
-        [baseline_explanations, baseline_row_count] = configure_data(args.baseline_data)
+        [baseline_explanations, baseline_row_count] = configure_signal_metrics_data(args.baseline_data)
         log_time_and_message("Reading in target data")
-        [production_explanations, production_row_count] = configure_data(args.production_data)
+        [production_explanations, production_row_count] = configure_signal_metrics_data(args.production_data)
+        log_time_and_message("Reading local feature importance sample")
+        local_feature_importance_sample = configure_local_importance_sample_data(args.production_data)
         production_explanations = drop_metadata_columns(baseline_explanations, production_explanations)
         compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations,
                                           args.signal_metrics, baseline_row_count, production_row_count)

@@ -132,7 +132,7 @@ def get_model_wrapper(task_type, target_column, baseline_data):
 
 
 def compute_explanations(model_wrapper, data, categorical_features, target_column, task_type):
-    """Compute explanations (feature importances) for a given dataset.
+    """Compute global and local explanations (feature importances) for a given dataset.
 
     :param model_wrapper: wrapper around a model that can be used to calculate explanations
     :type model_wrapper: PredictionsModelWrapperRegression or PredictionsModelWrapperClassification
@@ -144,8 +144,8 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     :type target_column: string
     :param task_type: the task type (regression or classification) of the resulting model
     :type task_type: string
-    :return: explanation scores for the input data
-    :rtype: list[float]
+    :return: global explanation scores for the input data and local explanation scores for the input data
+    :rtype: list[float], list[float]
     """
     # Create the RAI Insights object, use baseline as train and test data
     feature_metadata = FeatureMetadata(categorical_features=categorical_features, dropped_features=[])
@@ -153,16 +153,23 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
         model_wrapper, data, data, target_column, task_type, feature_metadata=feature_metadata
     )
     log_time_and_message("Created RAIInsights")
-    # Add the global explanations using batching to allow for larger input data sizes
     rai_i.explainer.add()
     evaluation_data = data.drop([target_column], axis=1)
-    log_time_and_message("Requesting explanations")
-    explanationData = rai_i.explainer.request_explanations(local=False, data=evaluation_data)
-    return explanationData.precomputedExplanations.globalFeatureImportance['scores']
+    # Add the global explanations using batching to allow for larger input data sizes
+    log_time_and_message("Requesting global explanations")
+    globalExplanationData = rai_i.explainer.request_explanations(local=False, data=evaluation_data)
+    globalExplanation = globalExplanationData.precomputedExplanations.globalFeatureImportance['scores']
+    # Add local explanations
+    log_time_and_message("Requesting local explanations")
+    localExplanations = []
+    for index, data in evaluation_data.iterrows():
+        localExplanation = rai_i.explainer.request_explanations(local=True, data=pd.DataFrame(data).T)
+        localExplanations.append(localExplanation.precomputedExplanations.localFeatureImportance.scores)
+    return globalExplanation, localExplanations
 
 
 def compute_feature_importance(task_type, target_column, baseline_data, categorical_features):
-    """Compute feature importance of baseline data.
+    """Compute global and local feature importance of baseline data.
 
     :param task_type: The task type (regression or classification) of the resulting model
     :type task_type: string
@@ -173,36 +180,38 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
     :type baseline_data: pandas.DataFrame
     :param categorical_features: The column names which are categorical in type
     :type categorical_features: list[string]
-    :return: list of feature importances in the order of the columns in the baseline data
-    :rtype: list[float]
+    :return: list of global feature importances in the order of the columns in the baseline data,
+    list of local feature importances in order of input rows and the columns in the baseline data
+    :rtype: list[float], list[float]
     """
     model_wrapper = get_model_wrapper(task_type, target_column, baseline_data)
 
-    baseline_explanations = compute_explanations(
+    global_baseline_explanations, local_baseline_explanations = compute_explanations(
         model_wrapper, baseline_data, categorical_features, target_column, task_type)
     log_time_and_message("Successfully computed explanations for dataset")
 
-    return baseline_explanations
+    return global_baseline_explanations, local_baseline_explanations
 
 
-def write_to_mltable(explanations, dataset, file_path, categorical_features):
-    """Write feature importance values to mltable.
+def create_signal_metrics_df(global_explanations, dataset, categorical_features):
+    """Create signal metrics data frame
 
-    :param explanations: list of feature importances in the order of the baseline columns
-    :type explanations: list[float]
+    :param global_explanations: list of global feature importances in the order of the baseline columns
+    :type global_explanations: list[float]
     :param dataset: dataset to derive feature names
     :type dataset: pandas.Dataframe
-    :param file_path: path to folder to save mltable
-    :type file_path: string
+    :param categorical_features: categorical features not including the target column
+    :type categorical_features: list[str]
+    :return: signal metrics table
+    :rtype: pandas.Dataframe
     """
-    log_time_and_message("Begin writing explanations to mltable")
     explanation_data = []
-    for index in range(len(explanations)):
+    for index in range(len(global_explanations)):
         dtype = constants.CATEGORICAL_FEATURE_CATEGORY if dataset.iloc[:, index].name in \
                         categorical_features else constants.NUMERICAL_FEATURE_CATEGORY
         new_row = pd.DataFrame(
                 {constants.FEATURE_COLUMN: dataset.columns[index],
-                 constants.METRIC_VALUE_COLUMN: explanations[index],
+                 constants.METRIC_VALUE_COLUMN: global_explanations[index],
                  constants.METRIC_NAME_COLUMN: "FeatureImportance",
                  constants.FEATURE_CATEGORY_COLUMN: dtype,
                  constants.THRESHOLD_VALUE: float("nan")}, index=[0])
@@ -220,9 +229,70 @@ def write_to_mltable(explanations, dataset, file_path, categorical_features):
                                          constants.METRIC_NAME_COLUMN,
                                          constants.FEATURE_CATEGORY_COLUMN,
                                          constants.THRESHOLD_VALUE], index=[0])
-    print(explanation_data)
     metrics_data = pd.concat(explanation_data)
-    spark_data = convert_pandas_to_spark(metrics_data)
+    return metrics_data
+
+
+def create_local_feature_importance_df(explanations, dataset, task_type):
+    """Write local feature importance values to mltable.
+
+    :param explanations: list of local feature importances in the order of the baseline columns
+    :type explanations: list[float]
+    :param dataset: dataset to derive feature names
+    :type dataset: pandas.Dataframe
+    :param task_type: the task type (regression or classification) of the resulting model
+    :type task_type: string
+    :return: local feature importance sample table
+    :rtype: pandas.Dataframe
+    """
+    # Create column names
+    columns = [constants.ROW_INDEX]
+    if task_type == constants.CLASSIFICATION:
+        columns.append(constants.CLASS)
+    feature_names = list(dataset.columns)
+    columns += feature_names
+
+    sample_data = pd.DataFrame(columns=columns)
+
+    # Populate importances
+    for index in range(len(explanations)):
+        new_row = {}
+        # TODO: Does this need to be set to some correlation ID beyond the index of the row?
+        new_row[constants.ROW_INDEX] = index
+
+        if task_type == constants.CLASSIFICATION:
+            for potential_class in range(len(explanations[index])):
+                # TODO: Class is currently the index of the class in the local explanations matrix,
+                # should be updated to be mapped to class name
+                new_row[constants.CLASS] = potential_class
+                local_explanation = explanations[index][potential_class][0]
+                for feature_index in range(len(local_explanation)):
+                    new_row[feature_names[feature_index]] = local_explanation[feature_index]
+                sample_data = sample_data.append(new_row, ignore_index=True)
+
+        if task_type == constants.REGRESSION:
+            for feature_index in range(len(explanations[index])):
+                new_row[feature_names[feature_index]] = explanations[index][feature_index]
+            sample_data = sample_data.append(new_row)
+
+    return sample_data
+
+def write_to_mltable(global_explanations, local_explanations, dataset, file_path, task_type, categorical_features):
+    """Write global feature importance values to mltable.
+
+    :param explanations: list of feature importances in the order of the baseline columns
+    :type explanations: list[float]
+    :param dataset: dataset to derive feature names
+    :type dataset: pandas.Dataframe
+    :param file_path: path to folder to save mltable
+    :type file_path: string
+    """
+    log_time_and_message("Begin writing explanations to mltable")
+    signal_metrics = create_signal_metrics_df(global_explanations, dataset, categorical_features)
+    local_feature_importance_sample = create_local_feature_importance_df(local_explanations, dataset, task_type)
+    combined_table = pd.concat([signal_metrics, local_feature_importance_sample], axis=0, ignore_index=True)
+
+    spark_data = convert_pandas_to_spark(combined_table)
     save_spark_df_as_mltable(spark_data, file_path)
 
 
@@ -258,11 +328,16 @@ def run(args):
         task_type = task_type.lower()
         log_time_and_message(f"Computed task type is {task_type}")
 
+        log_time_and_message(f"Computing feature importances")
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
-        feature_importances = compute_feature_importance(
+        global_feature_importances, local_feature_importances = compute_feature_importance(
             task_type, args.target_column, baseline_df, categorical_features)
+
+        log_time_and_message(f"Writing feature importances to outputs")
         feature_columns = baseline_df.drop([args.target_column], axis=1)
-        write_to_mltable(feature_importances, feature_columns, args.signal_metrics, categorical_features)
+        write_to_mltable(global_feature_importances, local_feature_importances, feature_columns,
+                         args.signal_metrics, task_type, categorical_features)
+
         log_time_and_message("Successfully executed the feature importance component.")
     except Exception as e:
         log_time_and_message(f"Error encountered when executing feature importance component: {e}")
