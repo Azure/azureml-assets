@@ -163,6 +163,7 @@ def update_model_metadata(
         registry_name: str, 
         update: AssetVersionUpdate = None,
     ):
+    """Update the mutable metadata of already registered Model asset."""
     try:
         ml_client = MLClient(credential= AzureCliCredential(), registry_name=registry_name)
         model = ml_client.models.get(name= model_name, version= model_version)
