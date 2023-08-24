@@ -135,6 +135,8 @@ def run():
 
     if task_name is None or not SupportedTasks.has_value(task_name):
         task_name = preprocess_args.get("task")
+        logger.warning("task_name is not provided or not supported. "
+                       f"Using task_name={task_name} from model download metadata.")
 
     if task_name is None:
         raise AzureMLException._with_error(
