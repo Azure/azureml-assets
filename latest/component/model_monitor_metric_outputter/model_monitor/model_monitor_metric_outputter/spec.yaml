@@ -4,7 +4,7 @@ type: spark
 name: model_monitor_metric_outputter
 display_name: Model Monitor - Metric Outputter
 description: Output the computed model monitor metrics.
-version: 0.3.2
+version: 0.3.3
 is_deterministic: true
 
 code: ../../src/
@@ -18,8 +18,6 @@ inputs:
   signal_name:
     type: string
   signal_type:
-    type: string
-  version:
     type: string
 outputs:
   signal_output:
@@ -49,6 +47,5 @@ conf:
         - fsspec~=2023.4.0
     name: momo-base-spark
 args: >-
-  --signal_name ${{inputs.signal_name}} --signal_type ${{inputs.signal_type}} --version
-  ${{inputs.version}} --signal_metrics ${{inputs.signal_metrics}} --signal_output
-  ${{outputs.signal_output}}
+  --signal_name ${{inputs.signal_name}} --signal_type ${{inputs.signal_type}} --signal_metrics
+  ${{inputs.signal_metrics}} --signal_output ${{outputs.signal_output}}
