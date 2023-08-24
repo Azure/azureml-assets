@@ -25,20 +25,21 @@ def validate_tree(input_dirs: List[Path]):
     """
     error_count = 0
 
-    # Check that every spec.yaml has asset.yaml next to it
-    for spec_config_file in util.find_files(input_dirs, "spec.yaml"):
-        asset_config_file = spec_config_file.parent / "asset.yaml"
-        if not asset_config_file.exists():
-            logger.log_error(f"{spec_config_file} does not have a corresponding asset.yaml")
+    for file in util.find_files(input_dirs, "*"):
+
+        # Check that every spec.yaml has asset.yaml next to it
+        if file.name == "spec.yaml":
+            asset_config_file = file.parent / "asset.yaml"
+            if not asset_config_file.exists():
+                logger.log_error(f"{file} does not have a corresponding asset.yaml")
+                error_count += 1
+
+        # Fail if any asset.yml in the tree
+        if file.name == "asset.yml":
+            logger.log_error(f"{file} should be named asset.yaml")
             error_count += 1
 
-    # Fail if any asset.yml in the tree
-    for asset_yml_file in util.find_files(input_dirs, "asset.yml"):
-        logger.log_error(f"{asset_yml_file} should be named asset.yaml")
-        error_count += 1
-
-    # Scan every file in the source tree to be 1 MB or less
-    for file in util.find_files(input_dirs, "*"):
+        # Scan every file in the source tree to be 1 MB or less
         if file.stat().st_size > BYTES_IN_A_MEGABYTE:
             logger.log_error(f"{file} is too large (over 1MB)")
             error_count += 1
