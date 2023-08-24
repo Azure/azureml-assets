@@ -198,7 +198,7 @@ def run(args):
         log_time_and_message("Reading in target data")
         [production_explanations, production_row_count] = configure_signal_metrics_data(args.production_data)
         log_time_and_message("Reading local feature importance sample")
-        local_feature_importance_sample = configure_local_importance_sample_data(args.production_data)
+        # local_feature_importance_sample = configure_local_importance_sample_data(args.production_data)
         production_explanations = drop_metadata_columns(baseline_explanations, production_explanations)
         compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations,
                                           args.signal_metrics, baseline_row_count, production_row_count)

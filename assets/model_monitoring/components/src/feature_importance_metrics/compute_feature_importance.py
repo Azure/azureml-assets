@@ -277,6 +277,7 @@ def create_local_feature_importance_df(explanations, dataset, task_type):
 
     return sample_data
 
+
 def write_to_mltable(global_explanations, local_explanations, dataset, file_path, task_type, categorical_features):
     """Write global feature importance values to mltable.
 
@@ -328,12 +329,12 @@ def run(args):
         task_type = task_type.lower()
         log_time_and_message(f"Computed task type is {task_type}")
 
-        log_time_and_message(f"Computing feature importances")
+        log_time_and_message("Computing feature importances")
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
         global_feature_importances, local_feature_importances = compute_feature_importance(
             task_type, args.target_column, baseline_df, categorical_features)
 
-        log_time_and_message(f"Writing feature importances to outputs")
+        log_time_and_message("Writing feature importances to outputs")
         feature_columns = baseline_df.drop([args.target_column], axis=1)
         write_to_mltable(global_feature_importances, local_feature_importances, feature_columns,
                          args.signal_metrics, task_type, categorical_features)
