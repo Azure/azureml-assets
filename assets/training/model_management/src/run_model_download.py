@@ -20,7 +20,6 @@ logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.DOWNLOAD_MODEL
 
 
-
 def _get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-source", required=True, help="Model source ")

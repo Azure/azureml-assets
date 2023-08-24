@@ -87,6 +87,7 @@ class LlamaModelsInRegistry(_CustomEnum):
     LLAMA_2_13B = "Llama-2-13b"
     LLAMA_2_70B = "Llama-2-70b"
 
+
 llama_dict = {
     LlamaHFModels.LLAMA_2_13B_CHAT_HF.value: LlamaModelsInRegistry.LLAMA_2_13B_CHAT.value,
     LlamaHFModels.LLAMA_2_7B_CHAT_HF.value: LlamaModelsInRegistry.LLAMA_2_7B_CHAT.value,
