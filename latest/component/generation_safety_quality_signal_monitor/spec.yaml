@@ -4,7 +4,7 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.3.6
+version: 0.3.7
 is_deterministic: true
 
 inputs:
@@ -84,11 +84,11 @@ jobs:
       model_deployment_name: ${{parent.inputs.model_deployment_name}}
       sample_rate: ${{parent.inputs.sample_rate}}
       workspace_connection_arm_id: ${{parent.inputs.workspace_connection_arm_id}}
-      groundedness_rating_threshold: ${{parent.inputs.groundedness_rating_threshold}}}
-      similarity_rating_threshold: ${{parent.inputs.similarity_rating_threshold}}}
-      relevance_rating_threshold: ${{parent.inputs.relevance_rating_threshold}}}
-      fluency_rating_threshold: ${{parent.inputs.fluency_rating_threshold}}}
-      coherence_rating_threshold: ${{parent.inputs.coherence_rating_threshold}}}
+      groundedness_rating_threshold: ${{parent.inputs.groundedness_rating_threshold}}
+      similarity_rating_threshold: ${{parent.inputs.similarity_rating_threshold}}
+      relevance_rating_threshold: ${{parent.inputs.relevance_rating_threshold}}
+      fluency_rating_threshold: ${{parent.inputs.fluency_rating_threshold}}
+      coherence_rating_threshold: ${{parent.inputs.coherence_rating_threshold}}
     outputs:
       histogram:
         type: mltable
@@ -105,11 +105,11 @@ jobs:
         type: mltable
         path: ${{parent.jobs.compute_histogram.outputs.histogram}}
       metric_names: ${{parent.inputs.metric_names}}
-      groundedness_passrate_threshold: ${{parent.inputs.groundedness_passrate_threshold}}}
-      similarity_passrate_threshold: ${{parent.inputs.similarity_passrate_threshold}}}
-      relevance_passrate_threshold: ${{parent.inputs.relevance_passrate_threshold}}}
-      fluency_passrate_threshold: ${{parent.inputs.fluency_passrate_threshold}}}
-      coherence_passrate_threshold: ${{parent.inputs.coherence_passrate_threshold}}}
+      groundedness_passrate_threshold: ${{parent.inputs.groundedness_passrate_threshold}}
+      similarity_passrate_threshold: ${{parent.inputs.similarity_passrate_threshold}}
+      relevance_passrate_threshold: ${{parent.inputs.relevance_passrate_threshold}}
+      fluency_passrate_threshold: ${{parent.inputs.fluency_passrate_threshold}}
+      coherence_passrate_threshold: ${{parent.inputs.coherence_passrate_threshold}}
     outputs:
       signal_metrics:
         type: mltable
