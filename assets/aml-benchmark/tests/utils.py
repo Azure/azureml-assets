@@ -157,7 +157,7 @@ def get_mlflow_logged_params(job_name: str, exp_name: str) -> Dict[str, Any]:
 def get_mlflow_logged_metrics(job_name: str, exp_name: str) -> Dict[str, Any]:
     """
     Get the logged metrics from the mlflow run for an azureml job.
-    
+
     :param job_name: Name of the azureml job.
     :param exp_name: Name of the azureml experiment.
     :return: Logged metrics.
