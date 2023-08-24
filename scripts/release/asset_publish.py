@@ -594,7 +594,7 @@ if __name__ == "__main__":
                     try:
                         update_asset_metadata(asset, registry_name)
                     except Exception as e:
-                        logger.log_error(f"Failed to update metadata for {asset.type} - {asset.name}:{asset.version} - {e}")
+                        logger.log_error(f"Failed to update metadata for {asset.name}:{asset.version} - {e}")
                     continue
 
                 # Handle specific asset types

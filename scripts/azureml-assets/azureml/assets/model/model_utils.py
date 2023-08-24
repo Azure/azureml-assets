@@ -161,9 +161,8 @@ def update_model_metadata(
         spec_path: Path,
         model_config: assets.ModelConfig,
         registry_name: str,
-        update: AssetVersionUpdate = None,
-    ):
-    """Update the mutable metadata of already registered Model asset."""
+        update: AssetVersionUpdate = None):
+    """Update the mutable metadata of already registered Model."""
     try:
         ml_client = MLClient(credential=AzureCliCredential(), registry_name=registry_name)
         model = ml_client.models.get(name=model_name, version=model_version)
@@ -184,7 +183,7 @@ def update_model_metadata(
                     # Delete tags
                     if update.tags.delete:
                         for k in update.tags.delete:
-                            model.tags.pop(k, None)        
+                            model.tags.pop(k, None) 
 
         else:  # update the model using spec files for latest version
             with open(spec_path) as f:
@@ -199,6 +198,6 @@ def update_model_metadata(
             else:
                 logger.print(f"description file does not exist for model {model_name}")
 
-        ml_client.models.create_or_update(model)      
+        ml_client.models.create_or_update(model)
     except Exception as e:
         logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")
