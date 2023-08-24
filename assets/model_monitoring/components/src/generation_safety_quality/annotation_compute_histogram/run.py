@@ -479,11 +479,11 @@ SIMILARITY_ANNOTATION_TEMPLATE = "\n\n".join(
         "User:",
         "{input_samples}"
     ])
-GROUNDEDNESS = "groundedness"
-RELEVANCE = "relevance"
-FLUENCY = "fluency"
-COHERENCE = "coherence"
-SIMILARITY = "similarity"
+GROUNDEDNESS = "Groundedness"
+RELEVANCE = "Relevance"
+FLUENCY = "Fluency"
+COHERENCE = "Coherence"
+SIMILARITY = "Similarity"
 
 QAC_METRIC_NAMES = [
     GROUNDEDNESS,
@@ -493,7 +493,19 @@ QA_METRIC_NAMES = [
     FLUENCY,
     COHERENCE
 ]
-ALL_METRIC_NAMES = QAC_METRIC_NAMES + QA_METRIC_NAMES + [SIMILARITY]
+ALL_METRIC_NAMES = [
+    "AcceptableGroundednessScorePerInstance",
+    "AggregatedGroundednessPassRate",
+    "AcceptableCoherenceScorePerInstance",
+    "AggregatedCoherencePassRate",
+    "AcceptableFluencyScorePerInstance",
+    "AggregatedFluencyPassRate",
+    "AcceptableSimilarityScorePerInstance",
+    "AggregatedSimilarityPassRate",
+    "AcceptableRelevanceScorePerInstance",
+    "AggregatedRelevancePassRate",
+]
+
 ANNOTATION_TEMPLATES = {
     GROUNDEDNESS: GROUNDING_ANNOTATION_TEMPLATE,
     RELEVANCE: RELEVANCE_ANNOTATION_TEMPLATE,
@@ -1408,15 +1420,19 @@ def run():
     request_args["model"] = args.model_deployment_name
     endpoint_args["model"] = args.model_deployment_name
 
-    metric_names = [m.strip() for m in args.metric_names.split(",")]
-    if not (set(metric_names) <= set(ALL_METRIC_NAMES)):
+    input_metric_names = [m.strip() for m in args.metric_names.split(",")]
+
+    if not (set(input_metric_names) <= set(ALL_METRIC_NAMES)):
         raise ValueError(
             f"metric_names must be a comma-separated list of metric names "
             f"and a subset of {ALL_METRIC_NAMES}, got {args.metric_names}."
         )
 
-    # if args.authorization_type == "managed_identity":
-    #     endpoint_args["authorization_header"] = BEARER
+    # remove all but groundedness/fluency/coherence/relevance/similarity from metric names and
+    # remove duplicates
+    pruned_metric_names = [re.sub(r'^(.*?)(Groundedness|Fluency|Coherence|Relevance|Similarity)(.*?)$', r'\2', m) for
+                           m in input_metric_names]
+    metric_names = list(set(pruned_metric_names))
 
     # Validate inputs
     if args.temperature < 0.0 or args.temperature > 2.0:
@@ -1447,6 +1463,7 @@ def run():
 
     apply_annotation(
         metric_names=metric_names,
+        raw_metric_names=input_metric_names,
         production_dataset=args.production_dataset,
         histogram=args.histogram,
         model_deployment_name=args.model_deployment_name,
@@ -1462,6 +1479,7 @@ def run():
 def apply_annotation(
     *,
     metric_names,
+    raw_metric_names,
     production_dataset,
     histogram,
     model_deployment_name,

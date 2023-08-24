@@ -15,7 +15,7 @@ inputs:
   metric_names:
     type: string
     description: a comma-separated list of metric names to compute
-    default: groundedness
+    optional: false
   model_deployment_name:
     type: string
     optional: false
