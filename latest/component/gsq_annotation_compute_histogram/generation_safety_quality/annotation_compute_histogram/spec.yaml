@@ -4,7 +4,7 @@ type: spark
 name: gsq_annotation_compute_histogram
 display_name: Annotation - Compute Histogram
 description: Compute annotation histogram given a deployment's model data input.
-version: 0.3.4
+version: 0.3.5
 is_deterministic: false
 inputs:
   production_dataset:
@@ -13,7 +13,7 @@ inputs:
   metric_names:
     type: string
     description: a comma-separated list of metric names to compute
-    default: groundedness
+    optional: false
   model_deployment_name:
     type: string
     optional: false

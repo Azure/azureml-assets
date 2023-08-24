@@ -4,7 +4,7 @@ type: spark
 name: gsq_annotation_compute_metrics
 display_name: Annotation - Compute Metrics
 description: Compute annotation metrics given a deployment's model data input.
-version: 0.3.2
+version: 0.3.3
 is_deterministic: true
 inputs:
   annotation_histogram:
@@ -13,7 +13,7 @@ inputs:
   metric_names:
     type: string
     description: a comma-separated list of metric names to compute
-    default: groundedness
+    optional: false
   groundedness_passrate_threshold:
     type: number
     optional: true

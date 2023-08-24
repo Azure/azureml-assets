@@ -4,6 +4,7 @@
 """Entry script for Annotation Metrics Computing Spark Component."""
 
 import argparse
+import re
 from pyspark.sql.functions import col, udf, sum
 from pyspark.sql.types import IntegerType
 from shared_utilities.io_utils import (
@@ -18,6 +19,19 @@ THRESHOLD_PARAMS = [
     "relevance_passrate_threshold",
     "fluency_passrate_threshold",
     "coherence_passrate_threshold",
+]
+
+ALL_METRIC_NAMES = [
+    "AcceptableGroundednessScorePerInstance",
+    "AggregatedGroundednessPassRate",
+    "AcceptableCoherenceScorePerInstance",
+    "AggregatedCoherencePassRate",
+    "AcceptableFluencyScorePerInstance",
+    "AggregatedFluencyPassRate",
+    "AcceptableSimilarityScorePerInstance",
+    "AggregatedSimilarityPassRate",
+    "AcceptableRelevanceScorePerInstance",
+    "AggregatedRelevancePassRate",
 ]
 
 
@@ -60,7 +74,6 @@ def run():
 
     args = parser.parse_args()
 
-    metric_names = [m.strip() for m in args.metric_names.split(",")]
     histogram_df = read_mltable_in_spark(args.annotation_histogram)
     spark = init_spark()
     # Cast to float because metric_value was integer so far
@@ -71,22 +84,34 @@ def run():
     threshold_args = {
         arg: getattr(args, arg) for arg in THRESHOLD_PARAMS if hasattr(args, arg)
     }
+    # remove all but groundedness/fluency/coherence/relevance/similarity from metric names and
+    # remove duplicates
+    input_metric_names = [m.strip() for m in args.metric_names.split(",")]
+    pruned_metric_names = [re.sub(r'^(.*?)(Groundedness|Fluency|Coherence|Relevance|Similarity)(.*?)$', r'\2', m) for
+                           m in input_metric_names]
+    compact_metric_names = list(set(pruned_metric_names))
+
     aggregated_metrics_df = histogram_df
-    for metric_name in metric_names:
-        compact_metric_name = metric_name.replace(" ", "").title()
+    for metric_name in compact_metric_names:
         passrate_threshold = threshold_args[f"{metric_name.lower()}_passrate_threshold"]
-        metric_df = spark.createDataFrame(
-                [
-                    (
-                        "",
-                        _calculate_passrate(histogram_df, compact_metric_name),
-                        f"Aggregated{compact_metric_name}PassRate",
-                        passrate_threshold,
-                    )
-                ],
-                histogram_df.schema,
-            )
-        aggregated_metrics_df = aggregated_metrics_df.union(metric_df)
+        full_pass_rate_metric_name = f"Aggregated{metric_name}PassRate"
+        full_per_instance_score_metric_name = f"Acceptable{metric_name}ScorePerInstance"
+        if full_pass_rate_metric_name in input_metric_names:
+            metric_df = spark.createDataFrame(
+                    [
+                        (
+                            "",
+                            _calculate_passrate(histogram_df, metric_name),
+                            full_pass_rate_metric_name,
+                            passrate_threshold,
+                        )
+                    ],
+                    histogram_df.schema,
+                )
+            aggregated_metrics_df = aggregated_metrics_df.union(metric_df)
+        if full_per_instance_score_metric_name not in input_metric_names:
+            aggregated_metrics_df = aggregated_metrics_df.filter(col("metric_name")
+                                                                 != full_per_instance_score_metric_name)
     save_spark_df_as_mltable(aggregated_metrics_df, args.signal_metrics)
 
 
