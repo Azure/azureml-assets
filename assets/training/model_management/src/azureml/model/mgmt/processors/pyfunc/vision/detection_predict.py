@@ -121,6 +121,16 @@ def _normalize_polygon(polygon: List[np.ndarray], image_size: Tuple[int, int]) -
     return normalized_polygon
 
 
+def _remove_invalid_patches(polygon: List[List[float]]) -> List[List[float]]:
+        """Remove invalid patches. Patch is valid if it contains more than or equal to 6 co-ordinates.
+
+        :param polygon: List of polygon.
+        :return: List of polygon.
+        """
+        
+        return [pathches for pathches in polygon if len(pathches) >= 6]
+
+
 class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
     """MLflow model wrapper for Images Detection models."""
 
@@ -205,19 +215,21 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
             cur_image_preds = {ISLiterals.BOXES: []}
             for bbox, label, mask in zip(bboxes, labels, masks):
                 polygon, _ = bitmap_to_polygon(mask)
-                cur_image_preds[ISLiterals.BOXES].append(
-                    {
-                        ISLiterals.BOX: {
-                            ISLiterals.TOP_X: float(bbox[0]) / image_size[0],
-                            ISLiterals.TOP_Y: float(bbox[1]) / image_size[1],
-                            ISLiterals.BOTTOM_X: float(bbox[2]) / image_size[0],
-                            ISLiterals.BOTTOM_Y: float(bbox[3]) / image_size[1],
-                        },
-                        ISLiterals.LABEL: self._model.CLASSES[label],
-                        ISLiterals.SCORE: float(bbox[4]),
-                        ISLiterals.POLYGON: _normalize_polygon(polygon, image_size),
-                    }
-                )
+                polygon = _remove_invalid_patches(polygon)
+                if len(polygon) > 0:
+                    cur_image_preds[ISLiterals.BOXES].append(
+                        {
+                            ISLiterals.BOX: {
+                                ISLiterals.TOP_X: float(bbox[0]) / image_size[0],
+                                ISLiterals.TOP_Y: float(bbox[1]) / image_size[1],
+                                ISLiterals.BOTTOM_X: float(bbox[2]) / image_size[0],
+                                ISLiterals.BOTTOM_Y: float(bbox[3]) / image_size[1],
+                            },
+                            ISLiterals.LABEL: self._model.CLASSES[label],
+                            ISLiterals.SCORE: float(bbox[4]),
+                            ISLiterals.POLYGON: _normalize_polygon(polygon, image_size),
+                        }
+                    )
             predictions.append(cur_image_preds)
         return predictions
 
