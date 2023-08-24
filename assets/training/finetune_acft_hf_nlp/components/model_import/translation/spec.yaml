@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: translation_model_import
-version: 0.0.14
+version: 0.0.16
 type: command
 
 is_deterministic: True
@@ -34,6 +34,12 @@ inputs:
     type:  mlflow_model
     optional: true
     description: MLflow model asset path
+
+  # Output of validation component
+  validation_output:
+    type: uri_file
+    optional: true
+    description: Validation status.
 
 outputs:
   output_dir:

@@ -46,6 +46,10 @@ DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_WITH_JOIN_COLUMN = (
     "azureml:mltable_iris_preprocessed_model_inputs_with_join_column:1"
 )
 
+DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_OVERLAPPING_JOIN_VALUE = (
+    "azureml:mltable_iris_preprocessed_model_inputs_no_overlapping_join_value:1"
+)
+
 DATA_ASSET_IRIS_PREPROCESSED_MODEL_OUTPUTS_WITH_JOIN_COLUMN = (
     "azureml:mltable_iris_preprocessed_model_outputs_with_join_column:1"
 )
@@ -56,10 +60,8 @@ DATA_ASSET_IRIS_MODEL_INPUTS_OUTPUTS_WITH_NO_DRIFT = (
     "azureml:uri_folder_iris_model_inputs_outputs_no_drift:1"
 )
 
-# Groundedness target dataset as a MLTable.
-DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA = (
-    "azureml:mltable_groundedness_preprocessed_target_small:1"
-)
-
 DATA_ASSET_MODEL_INPUTS_JOIN_COLUMN_NAME = 'model_inputs_join_column'
 DATA_ASSET_MODEL_OUTPUTS_JOIN_COLUMN_NAME = 'model_outputs_join_column'
+
+# Groundedness target dataset as a MLTable.
+DATA_ASSET_GROUNDEDNESS_PREPROCESSED_TARGET_DATA = 'azureml:groundedness_preprocess_target_small:1'

@@ -2,7 +2,6 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-cuda11.6-cudnn8-ubuntu20.04:{{latest
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ACCEPT_EULA=Y
-RUN pip install --upgrade pip && pip install --upgrade cryptography
 
 # Build python3.9 as the default python
 RUN apt-get -y update && \
