@@ -6,7 +6,7 @@
 import argparse
 import json
 import re
-from azureml.model.mgmt.config import AppName, LlamaHFModels, LlamaModels, LlamaModelsInRegistry
+from azureml.model.mgmt.config import AppName, LlamaHFModels, LlamaModels, llama_dict
 from azureml.model.mgmt.downloader import download_model, ModelSource
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, ModelAlreadyExists
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
@@ -18,20 +18,7 @@ VALID_MODEL_NAME_PATTERN = r"^[a-zA-Z0-9-]+$"
 NEGATIVE_MODEL_NAME_PATTERN = r"[^a-zA-Z0-9-]"
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.DOWNLOAD_MODEL
-llama_dict = {
-    LlamaHFModels.LLAMA_2_13B_CHAT_HF.value: LlamaModelsInRegistry.LLAMA_2_13B_CHAT.value,
-    LlamaHFModels.LLAMA_2_7B_CHAT_HF.value: LlamaModelsInRegistry.LLAMA_2_7B_CHAT.value,
-    LlamaHFModels.LLAMA_2_70B_CHAT_HF.value: LlamaModelsInRegistry.LLAMA_2_70B_CHAT.value,
-    LlamaHFModels.LLAMA_2_7B_HF.value: LlamaModelsInRegistry.LLAMA_2_7B.value,
-    LlamaHFModels.LLAMA_2_70B_HF.value: LlamaModelsInRegistry.LLAMA_2_70B.value,
-    LlamaHFModels.LLAMA_2_13B_HF.value: LlamaModelsInRegistry.LLAMA_2_13B.value,
-    LlamaModels.LLAMA_2_7B_CHAT.value: LlamaModelsInRegistry.LLAMA_2_7B_CHAT.value,
-    LlamaModels.LLAMA_2_70B_CHAT.value: LlamaModelsInRegistry.LLAMA_2_70B_CHAT.value,
-    LlamaModels.LLAMA_2_7B.value: LlamaModelsInRegistry.LLAMA_2_7B.value,
-    LlamaModels.LLAMA_2_70B.value: LlamaModelsInRegistry.LLAMA_2_70B.value,
-    LlamaModels.LLAMA_2_13B.value: LlamaModelsInRegistry.LLAMA_2_13B.value,
-    LlamaModels.LLAMA_2_13B_CHAT.value: LlamaModelsInRegistry.LLAMA_2_13B_CHAT.value,
-}
+
 
 
 def _get_parser():

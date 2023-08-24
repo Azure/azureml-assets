@@ -18,7 +18,7 @@ class _CustomEnum(Enum):
     @classmethod
     def has_value(cls, value):
         return value in cls._value2member_map_
-    
+
     @classmethod
     def list_values(cls):
         return list(cls._value2member_map_.values())

@@ -86,3 +86,18 @@ class LlamaModelsInRegistry(_CustomEnum):
     LLAMA_2_7B = "Llama-2-7b"
     LLAMA_2_13B = "Llama-2-13b"
     LLAMA_2_70B = "Llama-2-70b"
+
+llama_dict = {
+    LlamaHFModels.LLAMA_2_13B_CHAT_HF.value: LlamaModelsInRegistry.LLAMA_2_13B_CHAT.value,
+    LlamaHFModels.LLAMA_2_7B_CHAT_HF.value: LlamaModelsInRegistry.LLAMA_2_7B_CHAT.value,
+    LlamaHFModels.LLAMA_2_70B_CHAT_HF.value: LlamaModelsInRegistry.LLAMA_2_70B_CHAT.value,
+    LlamaHFModels.LLAMA_2_7B_HF.value: LlamaModelsInRegistry.LLAMA_2_7B.value,
+    LlamaHFModels.LLAMA_2_70B_HF.value: LlamaModelsInRegistry.LLAMA_2_70B.value,
+    LlamaHFModels.LLAMA_2_13B_HF.value: LlamaModelsInRegistry.LLAMA_2_13B.value,
+    LlamaModels.LLAMA_2_7B_CHAT.value: LlamaModelsInRegistry.LLAMA_2_7B_CHAT.value,
+    LlamaModels.LLAMA_2_70B_CHAT.value: LlamaModelsInRegistry.LLAMA_2_70B_CHAT.value,
+    LlamaModels.LLAMA_2_7B.value: LlamaModelsInRegistry.LLAMA_2_7B.value,
+    LlamaModels.LLAMA_2_70B.value: LlamaModelsInRegistry.LLAMA_2_70B.value,
+    LlamaModels.LLAMA_2_13B.value: LlamaModelsInRegistry.LLAMA_2_13B.value,
+    LlamaModels.LLAMA_2_13B_CHAT.value: LlamaModelsInRegistry.LLAMA_2_13B_CHAT.value,
+}
