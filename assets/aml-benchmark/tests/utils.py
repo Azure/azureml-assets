@@ -5,7 +5,7 @@
 
 import os
 import subprocess
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
@@ -23,11 +23,38 @@ class Constants:
     SAMPLER_INPUT_FILE_2 = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data/sampler_data_2.jsonl"
     )
+    PERF_INPUT_FILE_PATH = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/perf_metrics_data.jsonl"
+    )
     OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"
     OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"
     TEST_REGISTRY_NAME = "Benchmark-Test"
     REMOTE_FILE_URL = "https://raw.githubusercontent.com/Azure/azureml-examples/main/\
 v1/python-sdk/tutorials/automl-with-azureml/forecasting-bike-share/bike-no.csv"
+
+
+def _get_runs(job_name: str, exp_name: str) -> List[mlflow.entities.Run]:
+    """
+    Get the runs from the mlflow for an azureml job.
+
+    :param job_name: Name of the azureml job.
+    :param exp_name: Name of the azureml experiment.
+    :return: List of runs.
+    """
+    ml_client = get_mlclient()
+
+    # get and set the mlflow tracking uri
+    mlflow_tracking_uri = ml_client.workspaces.get(
+        ml_client.workspace_name
+    ).mlflow_tracking_uri
+    mlflow.set_tracking_uri(mlflow_tracking_uri)
+
+    # get the runs
+    filter = f"tags.mlflow.parentRunId='{job_name}'"
+    runs = mlflow.search_runs(
+        experiment_names=[exp_name], filter_string=filter, output_format="list"
+    )
+    return runs
 
 
 def get_current_path() -> str:
@@ -122,22 +149,22 @@ def get_mlflow_logged_params(job_name: str, exp_name: str) -> Dict[str, Any]:
     :param exp_name: Name of the azureml experiment.
     :return: Logged parameters.
     """
-    ml_client = get_mlclient()
-
-    # get and set the mlflow tracking uri
-    mlflow_tracking_uri = ml_client.workspaces.get(
-        ml_client.workspace_name
-    ).mlflow_tracking_uri
-    mlflow.set_tracking_uri(mlflow_tracking_uri)
-
-    # get the logged parameters
-    filter = f"tags.mlflow.parentRunId='{job_name}'"
-    runs = mlflow.search_runs(
-        experiment_names=[exp_name], filter_string=filter, output_format="list"
-    )
+    runs = _get_runs(job_name, exp_name)
     logged_params = runs[0].data.params
-
     return logged_params
+
+
+def get_mlflow_logged_metrics(job_name: str, exp_name: str) -> Dict[str, Any]:
+    """
+    Get the logged metrics from the mlflow run for an azureml job.
+    
+    :param job_name: Name of the azureml job.
+    :param exp_name: Name of the azureml experiment.
+    :return: Logged metrics.
+    """
+    runs = _get_runs(job_name, exp_name)
+    logged_metrics = runs[0].data.metrics
+    return logged_metrics
 
 
 def get_src_dir() -> str:
