@@ -5,12 +5,14 @@
 import os
 import azureml.assets as assets
 from azure.identity import AzureCliCredential
-from azure.ai.ml import load_model
+from azure.ai.ml import load_model, MLClient
 from azure.ai.ml._utils._registry_utils import get_asset_body_for_registry_storage, get_registry_client
 from azureml.assets.util import logger
 from azureml.assets.config import PathType
 from azureml.assets.model.download_utils import copy_azure_artifacts, download_git_model
+from azureml.assets.deployment_config import AssetVersionUpdate
 from pathlib import Path
+from ruamel.yaml import YAML
 
 
 class RegistryUtils:
@@ -151,3 +153,51 @@ def prepare_model(spec_path, model_config, registry_name, temp_dir):
     except Exception as e:
         logger.log_error(f"prepare model failed for {spec_path}. Error {e}")
         return None, False
+
+
+def update_model_metadata(
+        model_name: str, 
+        model_version: str, 
+        spec_path: Path, 
+        model_config: assets.ModelConfig,
+        registry_name: str, 
+        update: AssetVersionUpdate = None,
+    ):
+    try:
+        ml_client = MLClient(credential= AzureCliCredential(), registry_name=registry_name)
+        model = ml_client.models.get(name= model_name, version= model_version)
+
+        if update is not None: ## to update older version of models
+            if update.description is not None:
+                model.description = update.description
+            if update.tags:
+                # Replace tags
+                if update.tags.replace is not None:
+                    model.tags = update.tags.replace
+                elif update.tags.add or update.tags.delete:
+                    # Add tags
+                    if update.tags.add:
+                        for k, v in update.tags.add.items():
+                            model.tags[k] = v
+
+                    # Delete tags
+                    if update.tags.delete:
+                        for k in update.tags.delete:
+                            model.tags.pop(k, None)            
+
+        else: # update the model using spec files for latest version
+            with open(spec_path) as f:
+                model_spec = YAML().load(f)
+                model.tags = model_spec["tags"]
+
+            model_description_file_path = Path(spec_path).parent / model_config.description
+            logger.print(f"model_description_file_path {model_description_file_path}")
+            if os.path.exists(model_description_file_path):
+                with open(model_description_file_path) as f:
+                    model.description = f.read()
+            else:
+                logger.print(f"description file does not exist for model {model_name}")
+
+        ml_client.models.create_or_update(model)               
+    except Exception as e:
+        logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")
