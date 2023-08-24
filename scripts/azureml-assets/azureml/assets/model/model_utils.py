@@ -183,7 +183,7 @@ def update_model_metadata(
                     # Delete tags
                     if update.tags.delete:
                         for k in update.tags.delete:
-                            model.tags.pop(k, None) 
+                            model.tags.pop(k, None)
 
         else:  # update the model using spec files for latest version
             with open(spec_path) as f:
