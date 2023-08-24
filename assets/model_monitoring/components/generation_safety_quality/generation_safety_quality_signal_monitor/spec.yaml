@@ -6,7 +6,6 @@ display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
 version: 0.3.9
 is_deterministic: true
-
 inputs:
   signal_name:
     type: string
