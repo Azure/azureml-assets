@@ -7,7 +7,6 @@ channels:
 dependencies:
   - python=3.8
   - pip
-  # lower bound on pytorch due to CVE https://github.com/advisories/GHSA-47fc-vmwq-366v
   - pytorch>=1.13.1
   - torchvision
   - captum
