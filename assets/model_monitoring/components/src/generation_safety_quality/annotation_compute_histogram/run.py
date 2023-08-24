@@ -1463,7 +1463,6 @@ def run():
 
     apply_annotation(
         metric_names=metric_names,
-        raw_metric_names=input_metric_names,
         production_dataset=args.production_dataset,
         histogram=args.histogram,
         model_deployment_name=args.model_deployment_name,
@@ -1479,7 +1478,6 @@ def run():
 def apply_annotation(
     *,
     metric_names,
-    raw_metric_names,
     production_dataset,
     histogram,
     model_deployment_name,
