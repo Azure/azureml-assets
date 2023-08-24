@@ -3,7 +3,7 @@
 
 """Python script to publish assets."""
 
-import os
+
 import argparse
 import json
 import re
@@ -410,13 +410,13 @@ def update_asset_metadata(asset: AssetConfig, registry_name: str):
         model_version = asset.version
         spec_path = asset.spec_with_path
         model_config = asset.extra_config_as_object
-        
+
         update_model_metadata(
-            model_name= model_name,
-            model_version= model_version,
-            spec_path= spec_path,
-            model_config= model_config,
-            registry_name= registry_name
+            model_name=model_name,
+            model_version=model_version,
+            spec_path=spec_path,
+            model_config=model_config,
+            registry_name=registry_name
         )
     else:
         logger.print(f"Skipping metadata update of {asset.name}. Not supported for type {asset.type}")
@@ -594,7 +594,7 @@ if __name__ == "__main__":
                     try:
                         update_asset_metadata(asset, registry_name)
                     except Exception as e:
-                        logger.log_error(f"Failed to update metadata for {asset.type} - {asset.name}:{asset.version}")
+                        logger.log_error(f"Failed to update metadata for {asset.type} - {asset.name}:{asset.version} - {e}")
                     continue
 
                 # Handle specific asset types

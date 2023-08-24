@@ -156,19 +156,19 @@ def prepare_model(spec_path, model_config, registry_name, temp_dir):
 
 
 def update_model_metadata(
-        model_name: str, 
-        model_version: str, 
-        spec_path: Path, 
+        model_name: str,
+        model_version: str,
+        spec_path: Path,
         model_config: assets.ModelConfig,
-        registry_name: str, 
+        registry_name: str,
         update: AssetVersionUpdate = None,
     ):
     """Update the mutable metadata of already registered Model asset."""
     try:
-        ml_client = MLClient(credential= AzureCliCredential(), registry_name=registry_name)
-        model = ml_client.models.get(name= model_name, version= model_version)
+        ml_client = MLClient(credential=AzureCliCredential(), registry_name=registry_name)
+        model = ml_client.models.get(name=model_name, version=model_version)
 
-        if update is not None: ## to update older version of models
+        if update is not None:  # to update older version of models
             if update.description is not None:
                 model.description = update.description
             if update.tags:
@@ -184,9 +184,9 @@ def update_model_metadata(
                     # Delete tags
                     if update.tags.delete:
                         for k in update.tags.delete:
-                            model.tags.pop(k, None)            
+                            model.tags.pop(k, None)        
 
-        else: # update the model using spec files for latest version
+        else:  # update the model using spec files for latest version
             with open(spec_path) as f:
                 model_spec = YAML().load(f)
                 model.tags = model_spec["tags"]
@@ -199,6 +199,6 @@ def update_model_metadata(
             else:
                 logger.print(f"description file does not exist for model {model_name}")
 
-        ml_client.models.create_or_update(model)               
+        ml_client.models.create_or_update(model)      
     except Exception as e:
         logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")
