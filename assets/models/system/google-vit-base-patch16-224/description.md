@@ -33,7 +33,7 @@ Image Multi-label classification|Image Multi-label classification|[multilabel fr
     "columns": [
       "image"
     ],
-    "index": [0, 1]
+    "index": [0, 1],
     "data": ["image1", "image2"]
   }
 }
