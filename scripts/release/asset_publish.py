@@ -3,6 +3,7 @@
 
 """Python script to publish assets."""
 
+
 import argparse
 import json
 import re
@@ -17,7 +18,7 @@ from tempfile import TemporaryDirectory
 from collections import defaultdict
 from typing import Dict, List, Tuple, Union
 from azureml.assets.config import AssetConfig
-from azureml.assets.model.model_utils import prepare_model
+from azureml.assets.model.model_utils import prepare_model, update_model_metadata
 from azureml.assets.util import logger
 from azure.ai.ml.entities import Component, Environment, Model
 from ruamel.yaml import YAML
@@ -402,6 +403,25 @@ def create_asset(
         failure_list.append(asset)
 
 
+def update_asset_metadata(asset: AssetConfig, registry_name: str):
+    """Update the mutable metadata of asset."""
+    if asset.type == assets.AssetType.MODEL:
+        model_name = asset.name
+        model_version = asset.version
+        spec_path = asset.spec_with_path
+        model_config = asset.extra_config_as_object
+
+        update_model_metadata(
+            model_name=model_name,
+            model_version=model_version,
+            spec_path=spec_path,
+            model_config=model_config,
+            registry_name=registry_name
+        )
+    else:
+        logger.print(f"Skipping metadata update of {asset.name}. Not supported for type {asset.type}")
+
+
 def get_asset_versions(
     asset_type: str,
     asset_name: str,
@@ -570,7 +590,11 @@ if __name__ == "__main__":
                 )
 
                 if get_asset_details(asset.type.value, asset.name, asset.version, registry_name):
-                    logger.print(f"{asset.name} {asset.version} already exists, skipping")
+                    logger.print(f"{asset.name} {asset.version} already exists, updating the metadata")
+                    try:
+                        update_asset_metadata(asset, registry_name)
+                    except Exception as e:
+                        logger.log_error(f"Failed to update metadata for {asset.name}:{asset.version} - {e}")
                     continue
 
                 # Handle specific asset types
