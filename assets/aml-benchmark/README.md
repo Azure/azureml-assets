@@ -25,6 +25,7 @@ Inside the `aml-benchmark` directory, there are two subdirectories-
 - All custom error strings which can be shared among components must be defined in `components/src/utils/error_strings.py`.
 
 # Before creating a PR, please make sure to go through the following points:
+> These are not mandatory to run manually but recommended. Allows to detect issues early, which otherwise would be detected by failing workflows after PR creation.
 
 ## 1. Run tests
 * create a `config.json` with your workspace details at the root of this repository. The contents of this file has the following template-

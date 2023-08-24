@@ -38,13 +38,13 @@ def parse_args() -> argparse.Namespace:
         "--configuration",
         type=str,
         default=None,
-        help="Configuration of the dataset to download.",
+        help="Sub-part of the dataset to download; specify 'all' to download all sub-parts."
     )
     parser.add_argument(
         "--split",
         type=str,
         default=None,
-        help="Split of the dataset to download.",
+        help="Split of the dataset to download; specify 'all' to download all splits.",
     )
     parser.add_argument(
         "--url", type=str, default=None, help="URL of the dataset to download."
@@ -94,7 +94,7 @@ def resolve_configuration(
 
 
 def resolve_split(
-    dataset_name: str, configuration: Optional[str], split: Optional[str]
+    dataset_name: str, configuration: Optional[str], split: str
 ) -> List[str]:
     """
     Get the list of splits to download.
@@ -104,12 +104,6 @@ def resolve_split(
     :param split: Split of the dataset to download.
     :return: list of splits to download.
     """
-    if split is None:
-        mssg = "Split can't be None."
-        raise BenchmarkValidationException._with_error(
-            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
-        )
-
     available_splits = get_dataset_split_names(
         path=dataset_name, config_name=configuration
     )
@@ -125,7 +119,7 @@ def resolve_split(
 
 
 def download_dataset_from_hf(
-    dataset_name: str, configuration: str, split: str, output_dir: str
+    dataset_name: str, configuration: Optional[str], split: str, output_dir: str
 ) -> None:
     """
     Download a dataset from HuggingFace and save it in the supplied directory.
@@ -234,18 +228,17 @@ def main(args: argparse.Namespace) -> None:
         # Get the configurations to download
         configurations = resolve_configuration(dataset_name, configuration)
         config_len = len(configurations)
-        if configurations:
-            logger.info(
-                f"Following configurations will be downloaded: {configurations}."
+        logger.info(
+            f"Following configurations will be downloaded: {configurations}."
+        )
+        with ProcessPoolExecutor(min(os.cpu_count(), config_len)) as executor:
+            executor.map(
+                download_dataset_from_hf,
+                [dataset_name] * config_len,
+                configurations,
+                [split] * config_len,
+                [output_dataset] * config_len,
             )
-            with ProcessPoolExecutor(min(os.cpu_count(), config_len)) as executor:
-                executor.map(
-                    download_dataset_from_hf,
-                    [dataset_name] * config_len,
-                    configurations,
-                    [split] * config_len,
-                    [output_dataset] * config_len,
-                )
 
     log_mlflow_params(
         dataset_name=dataset_name,
