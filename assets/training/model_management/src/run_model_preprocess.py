@@ -133,7 +133,7 @@ def run():
             preprocess_args.update(download_details.get("properties", {}))
             preprocess_args["misc"] = download_details.get("misc", [])
 
-    if task_name is None or not SupportedTasks.has_value(task_name):
+    if task_name is None or not SupportedTasks.has_value(task_name.lower()):
         task_name = preprocess_args.get("task")
         logger.warning("task_name is not provided or not supported. "
                        f"Using task_name={task_name} from model download metadata.")
@@ -144,7 +144,7 @@ def run():
                                     supported_tasks=SupportedTasks.list_values())
             )
 
-    preprocess_args["task"] = task_name
+    preprocess_args["task"] = task_name.lower()
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
     preprocess_args[HF_CONF.EXTRA_PIP_REQUIREMENTS.value] = extra_pip_requirements
     preprocess_args[HF_CONF.HF_CONFIG_ARGS.value] = hf_config_args
