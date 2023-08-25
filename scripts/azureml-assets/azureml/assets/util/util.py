@@ -349,6 +349,26 @@ def find_asset_config_files(input_dirs: Union[List[Path], Path],
     return found_assets
 
 
+def find_files(input_dirs: Union[List[Path], Path],
+               filename: str) -> List[Path]:
+    """Search directories for files.
+
+    Args:
+        input_dirs (Union[List[Path], Path]): Directories to search in.
+        filename (str): Filename to search for.
+
+    Returns:
+        List[Path]: Files found (excludes directories).
+    """
+    found_files = []
+    for input_dir in input_dirs:
+        for file in input_dir.rglob(filename):
+            if file.is_file():
+                found_files.append(file)
+
+    return found_files
+
+
 def find_common_directory(paths: List[Path]) -> Tuple[Path, List[Path]]:
     """Find lowest common directory for a list of Paths.
 
