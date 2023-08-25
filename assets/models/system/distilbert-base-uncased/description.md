@@ -31,7 +31,7 @@ Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "input_string": ["Paris is the [MASK] of France.", "Today is a [MASK] day!"]
     }
 }
@@ -41,10 +41,16 @@ Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-
 ```json
 [
     {
-        "0": "capital"
+        "score": 0.9861817359924316,
+        "token": 2364,
+        "token_str": "capital",
+        "sequence": "Paris is the capital of France."
     },
     {
-        "0": "beautiful"
+        "score": 0.0037214113399386406,
+        "token": 2057,
+        "token_str": "center",
+        "sequence": "Paris is the center of France."
     }
 ]
 ```
