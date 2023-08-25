@@ -121,14 +121,13 @@ def _normalize_polygon(polygon: List[np.ndarray], image_size: Tuple[int, int]) -
     return normalized_polygon
 
 
-def _remove_invalid_patches(polygon: List[List[float]]) -> List[List[float]]:
-        """Remove invalid patches. Patch is valid if it contains more than or equal to 6 co-ordinates.
+def _remove_invalid_segments(polygon: List[List[float]]) -> List[List[float]]:
+    """Remove invalid segments. Segment is valid if it contains more than or equal to 6 co-ordinates (triangle).
 
-        :param polygon: List of polygon.
-        :return: List of polygon.
-        """
-        
-        return [pathches for pathches in polygon if len(pathches) >= 6]
+    :param polygon: List of polygon.
+    :return: List of polygon.
+    """
+    return [segment for segment in polygon if len(segment) >= 6]
 
 
 class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
@@ -215,7 +214,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
             cur_image_preds = {ISLiterals.BOXES: []}
             for bbox, label, mask in zip(bboxes, labels, masks):
                 polygon, _ = bitmap_to_polygon(mask)
-                polygon = _remove_invalid_patches(polygon)
+                polygon = _remove_invalid_segments(polygon)
                 if len(polygon) > 0:
                     cur_image_preds[ISLiterals.BOXES].append(
                         {
