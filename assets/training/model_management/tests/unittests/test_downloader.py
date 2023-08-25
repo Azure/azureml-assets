@@ -158,7 +158,7 @@ class TestDownloadModel(unittest.TestCase):
             mock_downloader.download_model.assert_called_once()
 
     def test_fixed_llama_models_list(self):
-        '''Test llama model list.'''
+        """Test llama model list."""
         list_of_models = LlamaModels.list_values()
 
         allowed_llama_models = ["meta-llama/Llama-2-7b-chat",
@@ -172,7 +172,7 @@ class TestDownloadModel(unittest.TestCase):
             self.assertIn(model, allowed_llama_models)
 
     def test_fixed_llama_hf_models_list(self):
-        '''Test llama hf model list.'''
+        """Test llama hf model list."""
         list_of_models = LlamaHFModels.list_values()
 
         allowed_llama_hf_models = ["meta-llama/Llama-2-7b-chat-hf",
