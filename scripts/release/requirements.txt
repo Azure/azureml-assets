@@ -1,4 +1,3 @@
-azureml-assets -e azureml-assets/scripts/azureml-assets
 scikit-image==0.19.3
 simplification==0.6.2
 pillow==9.3.0
