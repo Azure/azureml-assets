@@ -411,7 +411,7 @@ def update_asset_metadata(asset: AssetConfig, registry_name: str):
         model_name = asset.name
         model_version = asset.version
         spec_path = asset.spec_with_path
-        model_config = asset.extra_config_as_object
+        model_config = asset.extra_config_as_object()
 
         tags, description = None, None
 
