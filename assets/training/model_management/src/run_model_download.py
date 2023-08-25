@@ -6,7 +6,7 @@
 import argparse
 import json
 import re
-from azureml.model.mgmt.config import AppName
+from azureml.model.mgmt.config import AppName, LlamaHFModels, LlamaModels, llama_dict
 from azureml.model.mgmt.downloader import download_model, ModelSource
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, ModelAlreadyExists
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
@@ -35,10 +35,24 @@ def validate_if_model_exists(model_id):
     """Validate if model exists in any of the registries."""
     registries_list = ["azureml", "azureml-meta"]
 
+    # Hardcoding llama-hf model for now, to use llama models
+
+    if LlamaHFModels.has_value(model_id):
+        logger.warning(f"Lllama Model {model_id} with safe tensors is already present in registry. "
+                       "Please use the same.")
+        model_id = llama_dict[model_id]
+
+    # Hardcoding check for llama models as names in registry do not contain meta-llama
+
+    if LlamaModels.has_value(model_id):
+        model_id = llama_dict[model_id]
+        logger.info(f"Updated model_name = {model_id}")
+
     for registry in registries_list:
         try:
             ml_client_registry = get_mlclient(registry_name=registry)
         except Exception:
+            logger.warning(f"Could not connect to registry {registry}")
             continue
 
         if not re.match(VALID_MODEL_NAME_PATTERN, model_id):
@@ -47,10 +61,15 @@ def validate_if_model_exists(model_id):
             model_id = re.sub(NEGATIVE_MODEL_NAME_PATTERN, "-", model_id)
             logger.info(f"Updated model_name = {model_id}")
 
-        models = ml_client_registry.models.get(name=model_id, label="latest")
-        logger.info(f"models: {models}")
-        if models:
-            version = models.version
+        try:
+            model = ml_client_registry.models.get(name=model_id, label="latest")
+        except Exception as e:
+            logger.warning(f"Model with name - {model_id} is not available. Error: {e}")
+            continue
+
+        logger.info(f"model: {model}")
+        if model:
+            version = model.version
             url = f"https://ml.azure.com/registries/{registry}/models/{model_id}/version/{version}"
             raise AzureMLException._with_error(
                 AzureMLError.create(ModelAlreadyExists, model_id=model_id, registry=registry, url=url)
