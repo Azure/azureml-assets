@@ -328,12 +328,15 @@ def analyze_response(response):
     if response.hate_result is not None:
         logger.info("Hate severity: {}".format(response.hate_result.severity))
         severity = max(severity, response.hate_result.severity)
+
     if response.self_harm_result is not None:
         logger.info("SelfHarm severity: {}".format(response.self_harm_result.severity))
         severity = max(severity, response.self_harm_result.severity)
+
     if response.sexual_result is not None:
         logger.info("Sexual severity: {}".format(response.sexual_result.severity))
         severity = max(severity, response.sexual_result.severity)
+        
     if response.violence_result is not None:
         logger.info("Violence severity: {}".format(response.violence_result.severity))
         severity = max(severity, response.violence_result.severity)
