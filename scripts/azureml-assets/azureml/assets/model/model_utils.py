@@ -12,7 +12,6 @@ from azureml.assets.config import PathType
 from azureml.assets.model.download_utils import copy_azure_artifacts, download_git_model
 from azureml.assets.deployment_config import AssetVersionUpdate
 from pathlib import Path
-from ruamel.yaml import YAML
 
 
 class RegistryUtils:
