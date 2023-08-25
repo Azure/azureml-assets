@@ -4,7 +4,7 @@
 """Deployment config classes."""
 
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Union
 import azureml.assets as assets
 from marshmallow import Schema, fields, post_load, validates, validates_schema
 from ruamel.yaml import YAML
@@ -58,7 +58,7 @@ class AssetTags:
     """
 
     add: Dict[str, str] = None
-    replace: Dict[str, str] = None
+    replace: Dict[str, Union[list, str]] = None
     delete: List[str] = None
 
 
@@ -201,8 +201,8 @@ class DeploymentConfig:
 class TagsSchema(Schema):
     """Tags schema."""
 
-    add = fields.Dict(fields.Str(), fields.Str())
-    replace = fields.Dict(fields.Str(), fields.Str())
+    add = fields.Dict(fields.Str())
+    replace = fields.Dict(fields.Str())
     delete = fields.List(fields.Str())
 
     @validates('add')
@@ -275,3 +275,4 @@ class DeploymentConfigSchema(Schema):
     def _convert_to_object(self, data, **kwargs):
         # Convert to objects
         return DeploymentConfig(**data)
+    

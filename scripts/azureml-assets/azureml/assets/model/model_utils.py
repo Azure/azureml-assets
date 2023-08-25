@@ -12,7 +12,6 @@ from azureml.assets.config import PathType
 from azureml.assets.model.download_utils import copy_azure_artifacts, download_git_model
 from azureml.assets.deployment_config import AssetVersionUpdate
 from pathlib import Path
-from ruamel.yaml import YAML
 
 
 class RegistryUtils:
@@ -158,10 +157,8 @@ def prepare_model(spec_path, model_config, registry_name, temp_dir):
 def update_model_metadata(
         model_name: str,
         model_version: str,
-        spec_path: Path,
-        model_config: assets.ModelConfig,
         registry_name: str,
-        update: AssetVersionUpdate = None):
+        update: AssetVersionUpdate):
     """Update the mutable metadata of already registered Model."""
     try:
         ml_client = MLClient(credential=AzureCliCredential(), registry_name=registry_name)
@@ -185,19 +182,7 @@ def update_model_metadata(
                         for k in update.tags.delete:
                             model.tags.pop(k, None)
 
-        else:  # update the model using spec files for latest version
-            with open(spec_path) as f:
-                model_spec = YAML().load(f)
-                model.tags = model_spec["tags"]
-
-            model_description_file_path = Path(spec_path).parent / model_config.description
-            logger.print(f"model_description_file_path {model_description_file_path}")
-            if os.path.exists(model_description_file_path):
-                with open(model_description_file_path) as f:
-                    model.description = f.read()
-            else:
-                logger.print(f"description file does not exist for model {model_name}")
-
         ml_client.models.create_or_update(model)
+        logger.print(f"Model metadata updated successfully for {model_name}")
     except Exception as e:
         logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")
