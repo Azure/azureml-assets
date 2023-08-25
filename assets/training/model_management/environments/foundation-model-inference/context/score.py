@@ -380,7 +380,7 @@ def get_safe_response(result):
     jsonable_result = _get_jsonable_obj(result, pandas_orient="records")
 
     if not aacs_client:
-        return jsonable_result, 0
+        return jsonable_result
 
     result, severity = iterate(jsonable_result)
     logger.info(f"Response analyzed, severity {severity}")
@@ -557,7 +557,7 @@ def build_chat_completion_prompt(data: List[str]) -> dict:
     return result
 
 def _allocate_processes(hostfile_path):
-    from mii.deployment import _allocate_processes
+    from mii.server import _allocate_processes
     if hostfile_path is None:
         import tempfile
         hostfile_path = tempfile.NamedTemporaryFile(delete=False).name

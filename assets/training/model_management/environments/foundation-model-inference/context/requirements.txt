@@ -1,6 +1,5 @@
-git+https://github.com/microsoft/DeepSpeed.git
-git+https://github.com/srsaggam/DeepSpeed-MII.git@srsaggam/hf_conversational3
-
+deepspeed==0.10.1
+git+https://github.com/microsoft/DeepSpeed-MII.git@mrwyattii/fix-missing-hostfile
 aiolimiter==1.1.0
 torch==2.0.1
 protobuf==4.23.4
