@@ -413,7 +413,7 @@ def update_asset_metadata(asset: AssetConfig, registry_name: str):
         spec_path = asset.spec_with_path
         model_config = asset.extra_config_as_object
 
-        tags,description = None, None
+        tags, description = None, None
 
         # get tags to update from model spec file
         try:
