@@ -31,11 +31,11 @@ def validate_tree(input_dirs: List[Path]):
             # Check that every spec.yaml has asset.yaml next to it
             asset_config_file = file.parent / assets.DEFAULT_ASSET_FILENAME
             if not asset_config_file.exists():
-                logger.log_error(f"{file} does not have a corresponding asset.yaml")
+                logger.log_error(f"{file} does not have a corresponding {assets.DEFAULT_ASSET_FILENAME}")
                 error_count += 1
         elif file.name == "asset.yml":
             # Fail if any asset.yml in the tree
-            logger.log_error(f"{file} should be named asset.yaml")
+            logger.log_error(f"{file} should be named {assets.DEFAULT_ASSET_FILENAME}")
             error_count += 1
 
         # Scan every file in the source tree to be 1 MB or less
