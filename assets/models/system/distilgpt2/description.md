@@ -30,7 +30,7 @@ Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "input_string": ["My name is John and I am", "Once upon a time,"]
     }
 }
