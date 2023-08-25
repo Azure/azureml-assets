@@ -16,6 +16,7 @@ from azureml.model.mgmt.utils import common_utils
 from azureml.model.mgmt.utils.common_utils import create_namespace_from_dict
 from azureml.model.mgmt.config import LlamaHFModels, LlamaModels
 
+
 class TestDownloaders(unittest.TestCase):
     """Test downloaders."""
 
@@ -175,11 +176,11 @@ class TestDownloadModel(unittest.TestCase):
         list_of_models = LlamaHFModels.list_values()
 
         allowed_llama_hf_models = ["meta-llama/Llama-2-7b-chat-hf",
-                                "meta-llama/Llama-2-13b-chat-hf",
-                                "meta-llama/Llama-2-70b-chat-hf",
-                                "meta-llama/Llama-2-7b-hf",
-                                "meta-llama/Llama-2-13b-hf",
-                                "meta-llama/Llama-2-70b-hf"
-                                ]
+                                   "meta-llama/Llama-2-13b-chat-hf",
+                                   "meta-llama/Llama-2-70b-chat-hf",
+                                   "meta-llama/Llama-2-7b-hf",
+                                   "meta-llama/Llama-2-13b-hf",
+                                   "meta-llama/Llama-2-70b-hf"
+                                   ]
         for model in list_of_models:
             self.assertIn(model, allowed_llama_hf_models)
