@@ -513,13 +513,6 @@ ANNOTATION_TEMPLATES = {
     COHERENCE: COHERENCE_ANNOTATION_TEMPLATE,
     SIMILARITY: SIMILARITY_ANNOTATION_TEMPLATE
 }
-ANNOTATION_REQUIREMENTS = {
-    GROUNDEDNESS: [PROMPT, COMPLETION, CONTEXT],
-    RELEVANCE: [PROMPT, COMPLETION, CONTEXT],
-    FLUENCY: [PROMPT, COMPLETION],
-    COHERENCE: [PROMPT, COMPLETION],
-    SIMILARITY: [PROMPT, COMPLETION, GROUND_TRUTH]
-}
 
 OUTPUT_SPLITTING_REGEX = r"[# ]*Task #*\d+:?"
 
@@ -1392,6 +1385,11 @@ def run():
     parser.add_argument("--fluency_rating_threshold", type=int, default=3)
     parser.add_argument("--coherence_rating_threshold", type=int, default=3)
 
+    parser.add_argument("--prompt_column_name", type=str, default=PROMPT)
+    parser.add_argument("--completion_column_name", type=str, default=COMPLETION)
+    parser.add_argument("--context_column_name", type=str, default=CONTEXT)
+    parser.add_argument("--ground_truth_column_name", type=str, default=GROUND_TRUTH)
+
     parser.add_argument("--sample_rate", type=float, required=False, default=1.0)
     parser.add_argument(
         "--request_error_rate_threshold",
@@ -1472,6 +1470,10 @@ def run():
         request_args=request_args,
         endpoint_args=endpoint_args,
         threshold_args=threshold_args,
+        prompt_column_name=args.prompt_column_name,
+        completion_column_name=args.completion_column_name,
+        context_column_name=args.context_column_name,
+        ground_truth_column_name=args.ground_truth_column_name,
     )
 
 
@@ -1487,6 +1489,10 @@ def apply_annotation(
     request_args,
     endpoint_args,
     threshold_args,
+    prompt_column_name,
+    completion_column_name,
+    context_column_name,
+    ground_truth_column_name,
 ):
     """Apply annotation to all samples in the production_dataset."""
     production_df = io_utils.read_mltable_in_spark(production_dataset)
@@ -1495,18 +1501,25 @@ def apply_annotation(
     # Question, answer required for coherence and fluency
     qa_required = len(list(set(QA_METRIC_NAMES).intersection(
         set(metric_names))))
-    for col_name in [PROMPT, COMPLETION]:
+    for col_name in [prompt_column_name, completion_column_name]:
         if col_name not in production_df.columns and qa_required:
             raise ValueError(f"production_dataset must have column: {col_name}")
     # Question, answer, context required for relevance and groundedness
     qac_required = len(list(set(QAC_METRIC_NAMES).intersection(
         set(metric_names))))
-    if qac_required and CONTEXT not in production_df.columns:
-        raise ValueError(f"production_dataset must have column: {CONTEXT}")
+    if qac_required and context_column_name not in production_df.columns:
+        raise ValueError(f"production_dataset must have column: {context_column_name}")
     # Question, answer, ground-truth required for similarity
-    if SIMILARITY in metric_names and GROUND_TRUTH not in production_df.columns:
-        raise ValueError(f"production_dataset must have column: {GROUND_TRUTH}")
+    if SIMILARITY in metric_names and ground_truth_column_name not in production_df.columns:
+        raise ValueError(f"production_dataset must have column: {ground_truth_column_name}")
 
+    annotation_requirements = {
+        GROUNDEDNESS: [prompt_column_name, completion_column_name, context_column_name],
+        RELEVANCE: [prompt_column_name, completion_column_name, context_column_name],
+        FLUENCY: [prompt_column_name, completion_column_name],
+        COHERENCE: [prompt_column_name, completion_column_name],
+        SIMILARITY: [prompt_column_name, completion_column_name, ground_truth_column_name]
+    }
     # Sampling
     production_df = production_df.sample(withReplacement=False, fraction=sample_rate)
 
@@ -1596,7 +1609,7 @@ def apply_annotation(
             # _PromptBuilder can iteratively batch unlabeled examples
             prompt_builder = _PromptBuilder(
                 template=ANNOTATION_TEMPLATES[metric_name],
-                template_requirements=ANNOTATION_REQUIREMENTS[metric_name],
+                template_requirements=annotation_requirements[metric_name],
                 max_tokens=max_prompt_tokens,
                 min_input_examples=1,
             )

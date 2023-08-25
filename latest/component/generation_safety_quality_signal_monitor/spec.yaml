@@ -4,9 +4,8 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.3.8
+version: 0.3.9
 is_deterministic: true
-
 inputs:
   signal_name:
     type: string
@@ -25,6 +24,22 @@ inputs:
     optional: true
     description: sample rate for the input dataset, should be greater than 0 and at
       most 1
+  prompt_column_name:
+    type: string
+    optional: true
+    default: "prompt"
+  completion_column_name:
+    type: string
+    optional: true
+    default: "completion"
+  ground_truth_column_name:
+    type: string
+    optional: true
+    default: "ground_truth"
+  context_column_name:
+    type: string
+    optional: true
+    default: "context"
   groundedness_rating_threshold:
     type: integer
     optional: true
@@ -75,7 +90,7 @@ outputs:
 jobs:
   compute_histogram:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.3.5
+    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.3.6
     inputs:
       production_dataset:
         type: mltable
@@ -89,6 +104,10 @@ jobs:
       relevance_rating_threshold: ${{parent.inputs.relevance_rating_threshold}}
       fluency_rating_threshold: ${{parent.inputs.fluency_rating_threshold}}
       coherence_rating_threshold: ${{parent.inputs.coherence_rating_threshold}}
+      ground_truth_column_name: ${{parent.inputs.ground_truth_column_name}}
+      prompt_column_name: ${{parent.inputs.prompt_column_name}}
+      completion_column_name: ${{parent.inputs.completion_column_name}}
+      context_column_name: ${{parent.inputs.context_column_name}}
     outputs:
       histogram:
         type: mltable

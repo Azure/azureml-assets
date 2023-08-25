@@ -3,7 +3,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: >-
   AzureML Responsible AI Vision environment.
 
-name: "responsibleai-vision-py38"
+name: "responsibleai-vision-ubuntu20.04-py38-cpu"
 version: "1"
 
 build:
@@ -13,6 +13,6 @@ build:
 os_type: linux
 
 tags:
-  OS: Ubuntu22.10
+  OS: Ubuntu20.04
   Training: ""
   Preview: ""
