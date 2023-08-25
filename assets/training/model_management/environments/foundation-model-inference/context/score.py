@@ -47,6 +47,45 @@ class SupportedTask:
     CHAT_COMPLETION = "chat-completion"
 
 
+SUPPORTED_INFERENCE_PARAMS = {
+    # Activate logits sampling
+    "do_sample": {"type": bool, "default": True},
+    # Maximum number of generated tokens
+    "max_new_tokens": {"type": int, "default": 256},
+    # Generate best_of sequences & return the one with highest token logprobs
+    "best_of": {"type": int, "optional": True},
+    # 1.0 means no penalty. See
+    # [this paper](https://arxiv.org/pdf/1909.05858.pdf) for more details.
+    "repetition_penalty": {"type": int, "optional": True},
+    # Whether to prepend the prompt to the generated text
+    "return_full_text": {"type": bool, "default": True},
+    # The value used to module the logits distribution.
+    "seed": {"type": int, "optional": True},
+    # Stop generating tokens if a member of `stop_sequences` is generated
+    "stop_sequences": {"type": list, "default": []},
+    # Random sampling seed
+    "temperature": {"type": float, "optional": True},
+    # The number of highest probability vocabulary tokens to keep for
+    # top-k-filtering.
+    "top_k": {"type": int, "optional": True},
+    # If set to < 1, only the smallest set of most probable tokens with
+    # probabilities that add up to
+    # `top_p` or higher are kept for generation.
+    "top_p": {"type": float, "optional": True},
+    # Truncate inputs tokens to the given size
+    "truncate": {"type": int, "optional": True},
+    # Typical Decoding mass. See:
+    # [Typical Decoding for Natural Language Generation]\
+    # (https://arxiv.org/abs/2202.00666) for more information
+    "typical_p": {"type": float, "optional": True},
+    # Watermarking with [A Watermark for Large Language Models]\
+    # (https://arxiv.org/abs/2301.10226)
+    "watermark": {"type": bool, "default": False},
+    # Get decoder input token logprobs and ids
+    "decoder_input_details": {"type": bool, "default": False},
+}
+
+
 LOAD_BALANCING_PORT = 50050
 MAX_TOKENS = int(os.environ.get("MAX_TOTAL_TOKENS", 4096))
 TORCH_DIST_PORT = 29501
@@ -58,7 +97,10 @@ MODEL_PATH = "mlflow_model_folder/data/model"
 MLMODEL_PATH = "mlflow_model_folder/MLmodel"
 MODEL_ID = os.environ.get("MODEL_ID", MODEL_PATH)
 task_type = SupportedTask.TEXT_GENERATION
-default_generator_configs = {}
+default_generator_configs = {
+    k: v["default"] for k, v in SUPPORTED_INFERENCE_PARAMS.items() if
+    "default" in v
+}
 
 # AACS
 aacs_threshold = int(os.environ.get("CONTENT_SAFETY_THRESHOLD", 2))
@@ -81,7 +123,7 @@ def init():
         if not key:
             raise Exception("CONTENT_SAFETY_KEY env not set for AACS.")
 
-        # Create an Content Safety client
+        # Create a Content Safety client
         headers_policy = HeadersPolicy()
         headers_policy.add_header("ms-azure-ai-sender", "llama")
         aacs_client = ContentSafetyClient(
@@ -106,7 +148,7 @@ def init():
             mlmodel = yaml.safe_load(f)
 
     check_model_flavors(mlmodel)
-    if task_type==SupportedTask.CHAT_COMPLETION:
+    if task_type == SupportedTask.CHAT_COMPLETION:
         configs[mii.constants.TASK_NAME_KEY] = mii.constants.CONVERSATIONAL_NAME
         task_name = mii.constants.CONVERSATIONAL_NAME
     
@@ -458,10 +500,15 @@ def get_generator_params(params: dict):
     """Return accumulated generator params."""
     global default_generator_configs
 
-    updated_params = {}
+    updated_params = dict()
     updated_params.update(default_generator_configs)
+    # map 'max_gen_len' to 'max_new_tokens' if present
+    if "max_gen_len" in params:
+        logger.warning("max_gen_len is deprecated. Use max_new_tokens")
+        params["max_new_tokens"] = params["max_gen_len"]
+        del params["max_gen_len"]
+
     updated_params.update(params)
-    # updated_params = add_and_validate_gen_params(updated_params, params)
     return updated_params
 
 
@@ -563,12 +610,13 @@ def build_chat_completion_prompt(data: List[str]) -> dict:
             if i != len(conv_arr[0:]) - 1:
                 conversation.mark_processed()
     conv_dict = conversation.__dict__
-    result={}
+    result = dict()
     result['text'] = conv_dict["new_user_input"]
     result['conversation_id'] = conv_dict['uuid']
     result['past_user_inputs'] = conv_dict['past_user_inputs']
     result['generated_responses'] = conv_dict['generated_responses']
     return result
+
 
 def _allocate_processes(hostfile_path):
     from mii.server import _allocate_processes
