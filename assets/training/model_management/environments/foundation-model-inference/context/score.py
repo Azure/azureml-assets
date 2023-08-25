@@ -574,7 +574,7 @@ def get_request_data(
 
 def build_chat_completion_prompt(data: List[str]) -> dict:
     """
-    Builds a chat completion prompt based on a list of conversation data.
+    Build a chat completion prompt based on a list of conversation data.
 
     Args:
         data (List[str]): A list of conversation data, where each element
