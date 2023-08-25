@@ -20,8 +20,10 @@ from typing import Dict, List, Tuple, Union
 from azureml.assets.config import AssetConfig
 from azureml.assets.model.model_utils import prepare_model, update_model_metadata
 from azureml.assets.util import logger
+from azureml.assets.deployment_config import AssetVersionUpdate
 from azure.ai.ml.entities import Component, Environment, Model
 from ruamel.yaml import YAML
+import os
 
 
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -411,12 +413,36 @@ def update_asset_metadata(asset: AssetConfig, registry_name: str):
         spec_path = asset.spec_with_path
         model_config = asset.extra_config_as_object
 
+        tags,description = None, None
+
+        # get tags to update from model spec file
+        try:
+            with open(spec_path) as f:
+                model_spec = YAML().load(f)
+                if "tags" in model_spec:
+                    tags = {"replace": model_spec["tags"]}
+        except Exception as e:
+            logger.log_error(f"Failed to get tags for model {model_name}: {e}")
+
+        # get updated description for model
+        try:
+            model_description_file_path = Path(spec_path).parent / model_config.description
+            logger.print(f"model_description_file_path {model_description_file_path}")
+            if os.path.exists(model_description_file_path):
+                with open(model_description_file_path) as f:
+                    description = f.read()
+        except Exception as e:
+            logger.log_error(f"Failed to get description for model {model_name}: {e}")
+
+        update = AssetVersionUpdate(versions=[model_version],
+                                    tags=tags,
+                                    description=description,
+                                    )
         update_model_metadata(
             model_name=model_name,
             model_version=model_version,
-            spec_path=spec_path,
-            model_config=model_config,
-            registry_name=registry_name
+            registry_name=registry_name,
+            update=update
         )
     else:
         logger.print(f"Skipping metadata update of {asset.name}. Not supported for type {asset.type}")
