@@ -14,7 +14,7 @@ from azureml.model.mgmt.downloader.downloader import (
 )
 from azureml.model.mgmt.utils import common_utils
 from azureml.model.mgmt.utils.common_utils import create_namespace_from_dict
-
+from azureml.model.mgmt.config import LlamaHFModels, LlamaModels
 
 class TestDownloaders(unittest.TestCase):
     """Test downloaders."""
@@ -155,3 +155,31 @@ class TestDownloadModel(unittest.TestCase):
                 },
             )
             mock_downloader.download_model.assert_called_once()
+
+    def test_fixed_llama_models_list(self):
+        '''Test llama model list.'''
+        list_of_models = LlamaModels.list_values()
+
+        allowed_llama_models = ["meta-llama/Llama-2-7b-chat",
+                                "meta-llama/Llama-2-13b-chat",
+                                "meta-llama/Llama-2-70b-chat",
+                                "meta-llama/Llama-2-7b",
+                                "meta-llama/Llama-2-13b",
+                                "meta-llama/Llama-2-70b"
+                                ]
+        for model in list_of_models:
+            self.assertIn(model, allowed_llama_models)
+
+    def test_fixed_llama_hf_models_list(self):
+        '''Test llama hf model list.'''
+        list_of_models = LlamaHFModels.list_values()
+
+        allowed_llama_hf_models = ["meta-llama/Llama-2-7b-chat-hf",
+                                "meta-llama/Llama-2-13b-chat-hf",
+                                "meta-llama/Llama-2-70b-chat-hf",
+                                "meta-llama/Llama-2-7b-hf",
+                                "meta-llama/Llama-2-13b-hf",
+                                "meta-llama/Llama-2-70b-hf"
+                                ]
+        for model in list_of_models:
+            self.assertIn(model, allowed_llama_hf_models)

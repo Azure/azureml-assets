@@ -21,7 +21,8 @@ class _CustomEnum(Enum):
 
     @classmethod
     def list_values(cls):
-        return list(cls._value2member_map_.values())
+        _dict = list(cls._value2member_map_.values())
+        return [_enum.value for _enum in _dict]
 
 
 class HF_CONF(_CustomEnum):
