@@ -27,6 +27,7 @@ class ModelImportErrorStrings:
     VM_NOT_SUFFICIENT_FOR_OPERATION = "VM not sufficient for {operation} operation. Details: [{details}]"
     CMD_EXECUTION_ERROR = "Error in executing command. Error: [{error}]"
     MODEL_ALREADY_EXISTS = "Model with name {model_id} already exists in registry {registry} at {url}"
+    UNSUPPORTED_TASK_TYPE = "Unsupported task type {task_type} provided. Supported task types are {supported_tasks}."
     NON_MSI_ATTACHED_COMPUTE_ERROR = (
         "Kindly make sure that compute used by model_registration component"
         " has MSI(Managed Service Identity) associated with it."
@@ -149,6 +150,15 @@ class ModelAlreadyExists(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.MODEL_ALREADY_EXISTS
+
+
+class UnsupportedTaskType(ClientError):
+    """Error when Unsupported task type is provided."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.UNSUPPORTED_TASK_TYPE
 
 
 def swallow_all_exceptions(logger: logging.Logger):
