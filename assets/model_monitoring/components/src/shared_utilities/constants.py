@@ -73,6 +73,8 @@ REGRESSION = 'regression'
 FEATURE_COLUMN = 'feature'
 ROW_COUNT_COLUMN_NAME = 'RowCount'
 THRESHOLD_VALUE = 'threshold_value'
+ROW_INDEX = "row_index"
+CLASS = "class_index"
 
 # Column names in MDC Preprocessor
 MDC_CORRELATION_ID_COLUMN = 'correlationid'
