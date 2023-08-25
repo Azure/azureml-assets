@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from typing import List
 
+import azureml.assets as assets
 import azureml.assets.util as util
 from azureml.assets.util import logger
 
@@ -26,16 +27,14 @@ def validate_tree(input_dirs: List[Path]):
     error_count = 0
 
     for file in util.find_files(input_dirs, "*"):
-
-        # Check that every spec.yaml has asset.yaml next to it
         if file.name == "spec.yaml":
-            asset_config_file = file.parent / "asset.yaml"
+            # Check that every spec.yaml has asset.yaml next to it
+            asset_config_file = file.parent / assets.DEFAULT_ASSET_FILENAME
             if not asset_config_file.exists():
                 logger.log_error(f"{file} does not have a corresponding asset.yaml")
                 error_count += 1
-
-        # Fail if any asset.yml in the tree
-        if file.name == "asset.yml":
+        elif file.name == "asset.yml":
+            # Fail if any asset.yml in the tree
             logger.log_error(f"{file} should be named asset.yaml")
             error_count += 1
 
