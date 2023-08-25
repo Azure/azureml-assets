@@ -30,7 +30,7 @@ Question Answering | Extractive Q&A | <a href="https://huggingface.co/datasets/s
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "question": ["What is my name?", "Where do I live?"],
         "context": ["My name is John and I live in Seattle.", "My name is Ravi and I live in Hyderabad."]
     }
@@ -41,10 +41,16 @@ Question Answering | Extractive Q&A | <a href="https://huggingface.co/datasets/s
 ```json
 [
     {
-        "0": "John"
+        "score": 0.9982209801673889,
+        "start": 11,
+        "end": 15,
+        "answer": "John"
     },
     {
-        "0": "Hyderabad"
+        "score": 0.9689329266548157,
+        "start": 30,
+        "end": 39,
+        "answer": "Hyderabad"
     }
 ]
 ```
