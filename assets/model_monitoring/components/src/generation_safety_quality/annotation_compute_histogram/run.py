@@ -1575,6 +1575,8 @@ def apply_annotation(
                                                               AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
                                                               endpoint_domain_name, api_version,
                                                               model_deployment_name)
+    print(f"Getting model information with endpoint = {get_model_endpoint}")
+    
     try:
         headers = {
             "Content-Type": "application/json",
@@ -1599,7 +1601,7 @@ def apply_annotation(
     print(f"Using max_inputs = {max_inputs}")
     print(f"Using max_prompt_tokens = {max_prompt_tokens}")
 
-    print(f"starting submit_inputs with endpoint_args={endpoint_args}")
+    print(f"Starting submit_inputs with endpoint_args={endpoint_args}")
     all_metrics_pdf = None
     for metric_name in metric_names:
         # Run inference over input dataset
