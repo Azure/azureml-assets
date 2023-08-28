@@ -25,7 +25,6 @@ from azureml.assets.util import logger
 from azureml.assets.deployment_config import AssetVersionUpdate
 from azure.ai.ml.entities import Component, Environment, Model
 from ruamel.yaml import YAML
-import os
 
 
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
@@ -420,11 +419,18 @@ def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
         try:
             with open(spec_path) as f:
                 model_spec = YAML().load(f)
-                if "tags" in model_spec:
-                    tags = model_spec["tags"]
-                    # convert tag value to string
-                    tags = {name:str(value) for name, value in tags.items()}
-                    tags_to_update = {"replace": tags}
+                tags = model_spec.get("tags", {})
+                # convert tag value to string
+                for name, value in tags.items():
+                    if isinstance(value, list):
+                        value = str(value)
+                    elif isinstance(value, dict):
+                        value = json.dumps(value)
+                    elif not isinstance(value, str):
+                        raise Exception(f"Invalid value type: {type(value)} for tag name {name}")
+                    tags[name] = value
+                tags = {name:str(value) for name, value in tags.items()}
+                tags_to_update = {"replace": tags}
         except Exception as e:
             logger.log_error(f"Failed to get tags for model {model_name}: {e}")
 

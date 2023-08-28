@@ -3,7 +3,6 @@
 
 """Asset config classes."""
 
-import os
 import re
 import warnings
 from collections import defaultdict

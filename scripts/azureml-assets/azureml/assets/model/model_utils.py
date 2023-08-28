@@ -3,7 +3,6 @@
 """Model utils Operations Class."""
 
 import copy
-import os
 import azureml.assets as assets
 from azure.identity import AzureCliCredential
 from azure.ai.ml import load_model, MLClient
@@ -12,7 +11,6 @@ from azureml.assets.util import logger
 from azureml.assets.config import PathType
 from azureml.assets.model.download_utils import copy_azure_artifacts, download_git_model
 from azureml.assets.deployment_config import AssetVersionUpdate
-from pathlib import Path
 
 
 class RegistryUtils:
