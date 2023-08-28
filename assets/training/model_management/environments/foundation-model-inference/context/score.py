@@ -493,9 +493,6 @@ def check_model_flavors(mlmodel):
                 SupportedTask.CHAT_COMPLETION,
             ):
                 raise Exception(f"Unsupported task_type {task_type}")
-            
-            if task_type == SupportedTask.CHAT_COMPLETION:
-                default_generator_configs["return_full_text"] = False
 
             # update default gen configs with model configs
             default_generator_configs = get_generator_params(
