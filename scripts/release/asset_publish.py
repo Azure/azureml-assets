@@ -9,6 +9,8 @@ import json
 import re
 import shutil
 import sys
+from azure.ai.ml import MLClient
+from azure.identity import AzureCliCredential
 import azureml.assets as assets
 import azureml.assets.util as util
 from pathlib import Path
@@ -405,7 +407,7 @@ def create_asset(
         failure_list.append(asset)
 
 
-def update_asset_metadata(asset: AssetConfig, registry_name: str):
+def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
     """Update the mutable metadata of asset."""
     if asset.type == assets.AssetType.MODEL:
         model_name = asset.name
@@ -434,14 +436,11 @@ def update_asset_metadata(asset: AssetConfig, registry_name: str):
         except Exception as e:
             logger.log_error(f"Failed to get description for model {model_name}: {e}")
 
-        update = AssetVersionUpdate(versions=[model_version],
-                                    tags=tags,
-                                    description=description,
-                                    )
+        update = AssetVersionUpdate(versions=[model_version], tags=tags, description=description)
         update_model_metadata(
+            mlclient=mlclient,
             model_name=model_name,
             model_version=model_version,
-            registry_name=registry_name,
             update=update
         )
     else:
@@ -586,6 +585,9 @@ if __name__ == "__main__":
     for asset in all_assets:
         assets_by_type[asset.type.value].append(asset)
 
+    logger.print(f"Creating mlclient for registry {registry_name}")
+    mlclient: MLClient = MLClient(credential=AzureCliCredential(), registry_name=registry_name)
+
     for create_asset_type in CREATE_ORDER:
         logger.print(f"Creating {create_asset_type.value} assets.")
         if create_asset_type.value not in create_list:
@@ -618,7 +620,7 @@ if __name__ == "__main__":
                 if get_asset_details(asset.type.value, asset.name, asset.version, registry_name):
                     logger.print(f"{asset.name} {asset.version} already exists, updating the metadata")
                     try:
-                        update_asset_metadata(asset, registry_name)
+                        update_asset_metadata(mlclient, asset)
                     except Exception as e:
                         logger.log_error(f"Failed to update metadata for {asset.name}:{asset.version} - {e}")
                     continue

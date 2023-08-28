@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 """Model utils Operations Class."""
 
+import copy
 import os
 import azureml.assets as assets
 from azure.identity import AzureCliCredential
@@ -155,34 +156,41 @@ def prepare_model(spec_path, model_config, registry_name, temp_dir):
 
 
 def update_model_metadata(
-        model_name: str,
-        model_version: str,
-        registry_name: str,
-        update: AssetVersionUpdate):
+    mlclient: MLClient,
+    model_name: str,
+    model_version: str,
+    update: AssetVersionUpdate,
+):
     """Update the mutable metadata of already registered Model."""
     try:
-        ml_client = MLClient(credential=AzureCliCredential(), registry_name=registry_name)
-        model = ml_client.models.get(name=model_name, version=model_version)
+        model = mlclient.models.get(name=model_name, version=model_version)
 
+        need_update = False
         if update is not None:  # to update older version of models
-            if update.description is not None:
-                model.description = update.description
+            updated_tags = copy.deepcopy(model.tags)
             if update.tags:
                 # Replace tags
                 if update.tags.replace is not None:
-                    model.tags = update.tags.replace
-                elif update.tags.add or update.tags.delete:
-                    # Add tags
-                    if update.tags.add:
-                        for k, v in update.tags.add.items():
-                            model.tags[k] = v
+                    updated_tags = update.tags.replace
+                elif update.tags.add is not None:
+                    for k, v in update.tags.add.items():
+                        updated_tags[k] = v
+                elif update.tags.delete is not None:
+                    for k in update.tags.delete:
+                        updated_tags.pop(k, None)
 
-                    # Delete tags
-                    if update.tags.delete:
-                        for k in update.tags.delete:
-                            model.tags.pop(k, None)
+            if updated_tags != model.tags:
+                model.tags = updated_tags
+                need_update = True
 
-        ml_client.models.create_or_update(model)
-        logger.print(f"Model metadata updated successfully for {model_name}")
+            if update.description is not None and model.description != update.description:
+                model.description = update.description
+                need_update = True
+
+        if not need_update:
+            logger.print(f"No update found for model {model_name}. Skipping")
+        else:
+            mlclient.models.create_or_update(model)
+            logger.print(f"Model metadata updated successfully for {model_name}")
     except Exception as e:
         logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")
