@@ -47,22 +47,36 @@ class SupportedTask:
     CHAT_COMPLETION = "chat-completion"
 
 
+LOAD_BALANCING_PORT = 50050
+MAX_TOKENS = int(os.environ.get("MAX_TOTAL_TOKENS", 4096))
+TORCH_DIST_PORT = 29501
+REPLICA_NUM = int(os.getenv("WORKER_COUNT", 1))
+DEVICE_COUNT = torch.cuda.device_count()
+TENSOR_PARALLEL = int(DEVICE_COUNT / REPLICA_NUM)
+MODEL_DIR = os.getenv("AZUREML_MODEL_DIR", "")
+MODEL_PATH = "mlflow_model_folder/data/model"
+MLMODEL_PATH = "mlflow_model_folder/MLmodel"
+MODEL_ID = os.environ.get("MODEL_ID", MODEL_PATH)
+task_type = SupportedTask.TEXT_GENERATION
+
 SUPPORTED_INFERENCE_PARAMS = {
     # Activate logits sampling
     "do_sample": {"type": bool, "default": True},
     # Maximum number of generated tokens
     "max_new_tokens": {"type": int, "default": 256},
+    # Maximum length of input prompt + response
+    "max_length": {"type": int, "default": MAX_TOKENS},
     # Generate best_of sequences & return the one with highest token logprobs
     "best_of": {"type": int, "optional": True},
     # 1.0 means no penalty. See
     # [this paper](https://arxiv.org/pdf/1909.05858.pdf) for more details.
     "repetition_penalty": {"type": int, "optional": True},
     # Whether to prepend the prompt to the generated text
-    "return_full_text": {"type": bool, "default": True},
+    "return_full_text": {"type": bool, "optional": True},
     # The value used to module the logits distribution.
     "seed": {"type": int, "optional": True},
     # Stop generating tokens if a member of `stop_sequences` is generated
-    "stop_sequences": {"type": list, "default": []},
+    "stop_sequences": {"type": list, "optional": True},
     # Random sampling seed
     "temperature": {"type": float, "optional": True},
     # The number of highest probability vocabulary tokens to keep for
@@ -80,23 +94,12 @@ SUPPORTED_INFERENCE_PARAMS = {
     "typical_p": {"type": float, "optional": True},
     # Watermarking with [A Watermark for Large Language Models]\
     # (https://arxiv.org/abs/2301.10226)
-    "watermark": {"type": bool, "default": False},
+    "watermark": {"type": bool, "optional": True},
     # Get decoder input token logprobs and ids
-    "decoder_input_details": {"type": bool, "default": False},
+    "decoder_input_details": {"type": bool, "optional": True},
 }
 
 
-LOAD_BALANCING_PORT = 50050
-MAX_TOKENS = int(os.environ.get("MAX_TOTAL_TOKENS", 4096))
-TORCH_DIST_PORT = 29501
-REPLICA_NUM = int(os.getenv("WORKER_COUNT", 1))
-DEVICE_COUNT = torch.cuda.device_count()
-TENSOR_PARALLEL = int(DEVICE_COUNT / REPLICA_NUM)
-MODEL_DIR = os.getenv("AZUREML_MODEL_DIR", "")
-MODEL_PATH = "mlflow_model_folder/data/model"
-MLMODEL_PATH = "mlflow_model_folder/MLmodel"
-MODEL_ID = os.environ.get("MODEL_ID", MODEL_PATH)
-task_type = SupportedTask.TEXT_GENERATION
 default_generator_configs = {
     k: v["default"] for k, v in SUPPORTED_INFERENCE_PARAMS.items() if
     "default" in v
