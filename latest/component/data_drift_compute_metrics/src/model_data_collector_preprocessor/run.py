@@ -97,10 +97,6 @@ def mdc_preprocessor(
     spark = init_spark()
     data_as_df = spark.createDataFrame(pd.read_json(first_data_row[MDC_DATA_COLUMN]))
 
-    if extract_correlation_id is True:
-        # Add emtpy column to get the correlationId in the schema
-        data_as_df = data_as_df.withColumn(MDC_CORRELATION_ID_COLUMN, lit(""))
-
     def tranform_df_function_with_correlation_id(iterator):
         for df in iterator:
             yield pd.concat(
@@ -118,10 +114,18 @@ def mdc_preprocessor(
         for df in iterator:
             yield pd.concat(pd.read_json(getattr(row, MDC_DATA_COLUMN)) for row in df.itertuples())
 
-    transformed_df = df.select(MDC_DATA_COLUMN, MDC_CORRELATION_ID_COLUMN).mapInPandas(
-        tranform_df_function_with_correlation_id if extract_correlation_id else transform_df_function_without_correlation_id, # noqa
-        schema=data_as_df.schema
-    )
+    if extract_correlation_id:
+        # Add emtpy column to get the correlationId in the schema
+        data_as_df = data_as_df.withColumn(MDC_CORRELATION_ID_COLUMN, lit(""))
+        transformed_df = df.select(MDC_DATA_COLUMN, MDC_CORRELATION_ID_COLUMN).mapInPandas(
+            tranform_df_function_with_correlation_id,
+            schema=data_as_df.schema
+        )
+    else:
+        transformed_df = df.select(MDC_DATA_COLUMN).mapInPandas(
+            transform_df_function_without_correlation_id,
+            schema=data_as_df.schema
+        )
 
     save_spark_df_as_mltable(transformed_df, preprocessed_input_data)
 
