@@ -172,10 +172,12 @@ def update_model_metadata(
                         updated_tags.pop(k, None)
 
             if updated_tags != model.tags:
+                logger.print("tags has been updated.")
                 model.tags = updated_tags
                 need_update = True
 
             if update.description is not None and model.description != update.description:
+                logger.print("description has been updated")
                 model.description = update.description
                 need_update = True
 

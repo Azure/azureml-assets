@@ -6,7 +6,6 @@
 import os
 import re
 import warnings
-from azureml.assets.util import logger
 from collections import defaultdict
 from enum import Enum
 from functools import total_ordering
@@ -516,7 +515,7 @@ class ModelConfig(Config):
         """Initialize object for the Model Properties extracted from extra_config model.yaml."""
         super().__init__(file_name)
         self._path = None
-        self._description = None
+        self._description = ""
         self._validate()
 
     def _validate(self):
@@ -564,13 +563,13 @@ class ModelConfig(Config):
     @property
     def description(self) -> Dict[str, object]:
         """Model description."""
-        if self._description_path and not self._description:
+        if self._description_file_path and not self._description:
             model_description_file_path = self._file_path / self._description_file_path
             try:
                 with open(model_description_file_path) as f:
                     self._description = f.read()
             except Exception as e:
-                logger.log_warning(f"Error in reading description from {model_description_file_path}. Error: {e}")
+                print(f"Error in reading description from {model_description_file_path}. Error: {e}")
         return self._description
 
     @property

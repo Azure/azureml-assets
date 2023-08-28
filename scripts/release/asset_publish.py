@@ -416,21 +416,27 @@ def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
         model_config = asset.extra_config_as_object()
 
         # get tags to update from model spec file
-        tags = None
+        tags_to_update = None
         try:
             with open(spec_path) as f:
                 model_spec = YAML().load(f)
                 if "tags" in model_spec:
-                    tags = {"replace": model_spec["tags"]}
+                    tags = model_spec["tags"]
+                    # convert tag value to string
+                    tags = {name:str(value) for name, value in tags.items()}
+                    tags_to_update = {"replace": tags}
         except Exception as e:
             logger.log_error(f"Failed to get tags for model {model_name}: {e}")
 
-        update = AssetVersionUpdate(versions=[model_version], tags=tags, description=model_config.description)
         update_model_metadata(
             mlclient=mlclient,
             model_name=model_name,
             model_version=model_version,
-            update=update
+            update=AssetVersionUpdate(
+                versions=[model_version],
+                tags=tags_to_update,
+                description=model_config.description
+            )
         )
     else:
         logger.print(f"Skipping metadata update of {asset.name}. Not supported for type {asset.type}")
