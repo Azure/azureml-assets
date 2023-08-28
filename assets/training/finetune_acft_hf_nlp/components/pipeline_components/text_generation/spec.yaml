@@ -346,7 +346,6 @@ inputs:
     optional: true
     enum:
       - loss
-      - bleu
     description: Specify the metric to use to compare two different models
 
   resume_from_checkpoint:
