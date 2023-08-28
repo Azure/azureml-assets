@@ -9,13 +9,13 @@ In this flow, you will learn
 - the way to log metrics.
 
 #### Evaluate a classification flow
-There are two ways to evaluate an classification flow.
+There are two ways to evaluate a classification flow.
 * Run a classification flow and evaluation flow all together
-    * step 1: create or clone an classification flow
+    * step 1: create or clone a classification flow
     * step 2: select bulk test and fill in variants, then click on next
     * step 3: fill in test data, then click on next
-    * step 3: when you are in evaluation setting page, use quotas for 'Sample evaluation flows'. Select 'Classification Accuracy Evaluation' from Sample evaluation flows, select the evaluation flow's inputs mapping from normal flow's inputs or outputs and click on next  
-    * step 4: review run settings and submit
+    * step 4: when you are in evaluation setting page, use quotas for 'Sample evaluation flows'. Select 'Classification Accuracy Evaluation' from Sample evaluation flows, select the evaluation flow's inputs mapping from normal flow's inputs or outputs and click on next  
+    * step 5: review run settings and submit
         
 * Run 'Classification Accuracy Evaluation' from an existing classification flow run
     * step 1: create a bulk test classification flow run and submit

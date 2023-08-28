@@ -1,7 +1,5 @@
 This is a flow demonstrating Q&A with GPT3.5 using data from your own indexed files to make the answer more grounded. It involves embedding the raw query, using "Vector Search" to find most relevant context in user data, and then using GPT3.5 to generate an answer to the question with the documents. This example also contains multiple prompt variants that you can tune.
 
-Brief description: Create flows for Q&A with GPT3.5 using data from your own indexed files to make the answer more grounded for entreprise chat scenarios.
-
 ### What you will learn
 
 In this flow, you will learn

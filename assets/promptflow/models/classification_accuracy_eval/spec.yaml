@@ -1,9 +1,0 @@
-$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: classification_accuracy_eval
-path: ./
-properties:
-  is-promptflow: 'true'
-  promptflow.type: evaluate
-  inference-min-sku-spec: 2|0|14|28
-  inference-recommended-sku: Standard_DS3_v2
-version: 1

@@ -2,8 +2,11 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: chat-with-wikipedia
 path: ./
 properties:
-  is-promptflow: 'true'
+  is-promptflow: true
+  promptflow.section: gallery
   promptflow.type: chat
+  promptflow.name: Chat With Wikipedia
+  promptflow.description: ChatGPT-based chatbot that leverages Wikipedia data to ground the responses.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
 version: 2

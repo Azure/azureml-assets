@@ -1,9 +1,0 @@
-$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: bring_your_own_data_qna
-path: ./
-properties:
-  is-promptflow: 'true'
-  promptflow.type: rag
-  inference-min-sku-spec: 2|0|14|28
-  inference-recommended-sku: Standard_DS3_v2
-version: 1
