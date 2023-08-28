@@ -429,7 +429,6 @@ def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
                     elif not isinstance(value, str):
                         raise Exception(f"Invalid value type: {type(value)} for tag name {name}")
                     tags[name] = value
-                tags = {name:str(value) for name, value in tags.items()}
                 tags_to_update = {"replace": tags}
         except Exception as e:
             logger.log_error(f"Failed to get tags for model {model_name}: {e}")
