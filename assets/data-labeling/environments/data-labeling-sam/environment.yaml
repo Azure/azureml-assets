@@ -1,12 +1,12 @@
 image:
-  name: azureml/curated/acpt-pytorch-1.11-cuda11.3
+  name: azureml/curated/data-labeling-sam
   os: linux
   context:
     dir: context
     dockerfile: Dockerfile
     template_files:
     - Dockerfile
-    - requirements.txt
+    - conda_dependencies.yaml
   publish:
     location: mcr
     visibility: public
