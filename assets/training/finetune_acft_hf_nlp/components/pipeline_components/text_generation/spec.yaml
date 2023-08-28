@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_generation_pipeline
-version: 0.0.1
+version: 0.0.16
 type: pipeline
 display_name: Text Generation Pipeline
 description: Pipeline component for text generation
@@ -245,12 +245,6 @@ inputs:
     default: 1
     optional: true
     description: Number of updates steps to accumulate the gradients for, before performing a backward/update pass
-
-  eval_accumulation_steps:
-    type: integer
-    default: 1
-    optional: true
-    description: Number of predictions steps to accumulate before moving the tensors to the CPU
 
   lr_scheduler_type:
     type: string

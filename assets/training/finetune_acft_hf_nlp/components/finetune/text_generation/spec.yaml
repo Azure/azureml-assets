@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: text_generation_finetune
-version: 0.0.1
+version: 0.0.16
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Text Generation Finetune
 description: Component to finetune model for Text Generation task
 
-environment: azureml:acft-contrib-hf-nlp-curated-acpt-pytorch-113-py38-cuda117-gpu:0.0.1
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/18
 
 code: ../../../src/finetune
 
@@ -140,12 +140,6 @@ inputs:
     optional: true
     description: Number of updates steps to accumulate the gradients for, before performing a backward/update pass
 
-  eval_accumulation_steps:
-    type: integer
-    default: 1
-    optional: true
-    description: Number of predictions steps to accumulate before moving the tensors to the CPU
-
   lr_scheduler_type:
     type: string
     default: linear
@@ -246,7 +240,6 @@ inputs:
     optional: true
     enum:
       - loss
-      - bleu
     description: Specify the metric to use to compare two different models
 
   resume_from_checkpoint:
