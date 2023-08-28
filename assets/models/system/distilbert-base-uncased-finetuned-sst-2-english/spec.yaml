@@ -41,5 +41,7 @@ tags:
     apply_deepspeed: 'true'
     apply_lora: 'true'
     apply_ort: 'true'
+    
   task: text-classification
-version: 8
+  disable-batch: 'true'
+version: 9
