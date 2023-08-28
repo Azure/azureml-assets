@@ -61,6 +61,7 @@ class ModelAsset:
         """Initialize model asset."""
         self._spec_path = spec_path
         self._model_config = model_config
+        self._model.description = model_config.description
         self._registry_name = registry_name
         self._temp_dir = temp_dir
 
@@ -70,15 +71,6 @@ class ModelAsset:
         except Exception as e:
             logger.error(f"Error in loading model spec file at {spec_path}: {e}")
             return False
-
-        model_description_file_path = Path(spec_path).parent / model_config.description
-        logger.print(f"model_description_file_path {model_description_file_path}")
-        if os.path.exists(model_description_file_path):
-            with open(model_description_file_path) as f:
-                model_description = f.read()
-                self._model.description = model_description
-        else:
-            logger.print("description file does not exist")
 
     def _publish_to_registry(self):
         src_uri = self._model_config.path.uri

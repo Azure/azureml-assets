@@ -415,9 +415,8 @@ def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
         spec_path = asset.spec_with_path
         model_config = asset.extra_config_as_object()
 
-        tags, description = None, None
-
         # get tags to update from model spec file
+        tags = None
         try:
             with open(spec_path) as f:
                 model_spec = YAML().load(f)
@@ -426,17 +425,7 @@ def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
         except Exception as e:
             logger.log_error(f"Failed to get tags for model {model_name}: {e}")
 
-        # get updated description for model
-        try:
-            model_description_file_path = Path(spec_path).parent / model_config.description
-            logger.print(f"model_description_file_path {model_description_file_path}")
-            if os.path.exists(model_description_file_path):
-                with open(model_description_file_path) as f:
-                    description = f.read()
-        except Exception as e:
-            logger.log_error(f"Failed to get description for model {model_name}: {e}")
-
-        update = AssetVersionUpdate(versions=[model_version], tags=tags, description=description)
+        update = AssetVersionUpdate(versions=[model_version], tags=tags, description=model_config.description)
         update_model_metadata(
             mlclient=mlclient,
             model_name=model_name,
