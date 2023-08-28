@@ -31,7 +31,7 @@ class MetricOutputBuilder:
         return self.metrics_dict
 
     # Expected columns: group, group_dimension, metric_name, metric_value
-    def _build(self, metrics: List[Row]) -> dict:
+    def _build(self, monitor_name: str, signal_name: str, metrics: List[Row]) -> dict:
         metrics_dict = {}
         for metric in metrics:
             metric_dict = metric.asDict()
@@ -61,7 +61,7 @@ class MetricOutputBuilder:
                         and metric_dict[SIGNAL_METRICS_THRESHOLD_VALUE] is not None):
                     new_metric[THRESHOLD] = metric_dict[SIGNAL_METRICS_THRESHOLD_VALUE]
 
-                self._add_metric(metrics_dict, metric_name, new_metric, group_names)
+                self._add_metric(metrics_dict, monitor_name, signal_name, metric_name, new_metric, group_names)
             except Exception as e:
                 print(f"Error: Failed to get required column from metric '{metric_name}'"
                       + f" with exception: {str(e)}")
@@ -69,7 +69,7 @@ class MetricOutputBuilder:
 
         return metrics_dict
 
-    def _add_metric(self, metrics_dict: dict, metric_name: str, metric: dict, group_names: List[str]):
+    def _add_metric(self, metrics_dict: dict, monitor_name: str, signal_name: str, metric_name: str, metric: dict, group_names: List[str]):
         if metric_name not in metrics_dict:
             metrics_dict[metric_name] = {}
 
@@ -88,9 +88,12 @@ class MetricOutputBuilder:
                         self._create_metric_groups_if_not_exist(cur_dict, group_name)
                         cur_dict[GROUPS][group_name] = metric
         else:
+            # Create the metric entry.
             cur_dict[VALUE] = metric[VALUE]
             if THRESHOLD in metric:
                 cur_dict[THRESHOLD] = metric[THRESHOLD]
+            
+            # Add run metrics
 
     def _create_metric_groups_if_not_exist(self, cur_dict: dict, group_name: str):
         if GROUPS not in cur_dict:

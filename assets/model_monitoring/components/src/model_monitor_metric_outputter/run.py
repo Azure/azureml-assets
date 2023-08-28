@@ -24,6 +24,7 @@ def run():
     """Output metrics."""
     # Parse arguments
     arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--monitor_name", type=str)
     arg_parser.add_argument("--signal_name", type=str)
     arg_parser.add_argument("--signal_type", type=str)
     arg_parser.add_argument("--signal_metrics", type=str)
@@ -33,7 +34,7 @@ def run():
 
     metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
 
-    metrics_dict = MetricOutputBuilder(metrics).get_metrics_dict()
+    metrics_dict = MetricOutputBuilder(args.monitor_name, args.signal_name, metrics).get_metrics_dict()
     output_payload = to_output_payload(args.signal_name, args.signal_type, metrics_dict)
 
     local_path = str(uuid.uuid4())
