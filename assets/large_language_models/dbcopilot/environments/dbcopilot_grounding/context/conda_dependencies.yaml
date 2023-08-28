@@ -6,7 +6,7 @@ dependencies:
   - python=3.8
   - pip=21.3.1
   - pip:
-      - azureml-rag[cognitive_search,data_generation]>=0.1.20
+      - azureml-rag[cognitive_search,data_generation]>=0.1.23
       - langchain==0.0.220
       - azureml-contrib-services
       - azure-identity==1.12.0
