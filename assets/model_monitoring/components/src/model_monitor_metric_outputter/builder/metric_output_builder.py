@@ -6,6 +6,7 @@
 from typing import List
 from pyspark.sql import Row
 
+from runmetric_client import RunMetricClient
 from shared_utilities.constants import (
     AGGREGATE,
     SIGNAL_METRICS_GROUP,
@@ -22,9 +23,10 @@ from shared_utilities.constants import (
 class MetricOutputBuilder:
     """Builder class which creates a metrics object."""
 
-    def __init__(self, metrics: List[Row]):
+    def __init__(self, runmetric_client: RunMetricClient, metrics: List[Row]):
         """Construct a MetricOutputBuilder instance."""
         self.metrics_dict = self._build(metrics)
+        self.runmetric_client = runmetric_client
 
     def get_metrics_dict(self) -> dict:
         """Get the metrics object."""
@@ -94,6 +96,18 @@ class MetricOutputBuilder:
                 cur_dict[THRESHOLD] = metric[THRESHOLD]
             
             # Add run metrics
+            self.runmetric_client.publish()
+
+    def create_timeseries_entry(monitor_name: str, signal_name: str, metric_name: str, groups: List[str], value: float, threshold):
+        timeseries = {
+            "runid": self.runmetric_client.get(),
+            "metricNames": {
+                "value": value
+            }
+        }
+
+        if threshold is not None:
+            timeseries["metricNames"]["threshold"] = float(threshold)
 
     def _create_metric_groups_if_not_exist(self, cur_dict: dict, group_name: str):
         if GROUPS not in cur_dict:

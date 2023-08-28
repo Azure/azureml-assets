@@ -3,17 +3,15 @@
 
 """Builder class which creates a metrics object."""
 
-from typing import List
-from pyspark.sql import Row
 import datetime
-from shared_utilities.run_metrics_utils import publish_metrics
-
+from runmetric_client import RunMetricClient
 
 class RunMetricPublisher:
     """Builder class which creates a metrics object."""
 
-    def __init__(self):
+    def __init__(self, runmetric_client : RunMetricClient):
         """Construct a MetricOutputBuilder instance."""
+        self.runmetric_client = runmetric_client
 
     def publish_metrics(self, metrics: dict, metric_step: datetime):
         """Publish metrics to AML Run Metrics."""
@@ -39,6 +37,6 @@ class RunMetricPublisher:
 
         run_id = timeseries["run_id"]
 
-        publish_metrics(
+        self.runmetric_client.publish_metrics(
             run_id, metrics_to_publish, metric_step
         )
