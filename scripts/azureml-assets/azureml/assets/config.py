@@ -555,7 +555,7 @@ class ModelConfig(Config):
         return self._yaml.get('publish')
 
     @property
-    def _description_file_path(self) -> Dict[str, object]:
+    def _description_file_path(self) -> str:
         """Model description."""
         return self._publish.get('description')
 
