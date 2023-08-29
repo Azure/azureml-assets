@@ -88,8 +88,9 @@ class MetricOutputBuilder:
                         self._create_metric_groups_if_not_exist(cur_dict, group_name)
                         cur_dict[GROUPS][group_name] = metric
         else:
-            cur_dict[VALUE] = metric[VALUE]
-            if THRESHOLD in metric:
+            if VALUE in metric and metric[VALUE]:
+                cur_dict[VALUE] = metric[VALUE]
+            if THRESHOLD in metric and metric[THRESHOLD]:
                 cur_dict[THRESHOLD] = metric[THRESHOLD]
 
     def _create_metric_groups_if_not_exist(self, cur_dict: dict, group_name: str):
