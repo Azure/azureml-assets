@@ -434,28 +434,28 @@ inputs:
   compute_model_import:
     type: string
     optional: true
-    default: serverless
+    default: 'virtual cluster'
     description: compute to be used for model_import eg. provide 'FT-Cluster' if
       your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_preprocess:
     type: string
     optional: true
-    default: serverless
+    default: 'virtual cluster'
     description: compute to be used for preprocess eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_finetune:
     type: string
     optional: true
-    default: serverless
+    default: 'virtual cluster'
     description: compute to be used for finetune eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_model_evaluation:
     type: string
     optional: true
-    default: serverless
+    default: 'virtual cluster'
     description: compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
