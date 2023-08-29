@@ -558,10 +558,8 @@ class ModelConfig(Config):
 
     @property
     def _description_file_path(self) -> Path:
-        """Model description."""
-        if self._publish.get('description'):
-            return self._file_path / self._publish.get('description')
-        return None
+        """Model description file path."""
+        return self._file_path / self._publish.get('description')
 
     @property
     def description(self) -> str:
