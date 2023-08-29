@@ -2,15 +2,15 @@
 # Licensed under the MIT License.
 """Model utils Operations Class."""
 
-import os
+import copy
 import azureml.assets as assets
 from azure.identity import AzureCliCredential
-from azure.ai.ml import load_model
+from azure.ai.ml import load_model, MLClient
 from azure.ai.ml._utils._registry_utils import get_asset_body_for_registry_storage, get_registry_client
 from azureml.assets.util import logger
 from azureml.assets.config import PathType
 from azureml.assets.model.download_utils import copy_azure_artifacts, download_git_model
-from pathlib import Path
+from azureml.assets.deployment_config import AssetVersionUpdate
 
 
 class RegistryUtils:
@@ -59,6 +59,7 @@ class ModelAsset:
         """Initialize model asset."""
         self._spec_path = spec_path
         self._model_config = model_config
+        self._model.description = model_config.description
         self._registry_name = registry_name
         self._temp_dir = temp_dir
 
@@ -68,15 +69,6 @@ class ModelAsset:
         except Exception as e:
             logger.error(f"Error in loading model spec file at {spec_path}: {e}")
             return False
-
-        model_description_file_path = Path(spec_path).parent / model_config.description
-        logger.print(f"model_description_file_path {model_description_file_path}")
-        if os.path.exists(model_description_file_path):
-            with open(model_description_file_path) as f:
-                model_description = f.read()
-                self._model.description = model_description
-        else:
-            logger.print("description file does not exist")
 
     def _publish_to_registry(self):
         src_uri = self._model_config.path.uri
@@ -151,3 +143,45 @@ def prepare_model(spec_path, model_config, registry_name, temp_dir):
     except Exception as e:
         logger.log_error(f"prepare model failed for {spec_path}. Error {e}")
         return None, False
+
+
+def update_model_metadata(
+    mlclient: MLClient,
+    model_name: str,
+    model_version: str,
+    update: AssetVersionUpdate,
+):
+    """Update the mutable metadata of already registered Model."""
+    try:
+        model = mlclient.models.get(name=model_name, version=model_version)
+
+        need_update = False
+        updated_tags = copy.deepcopy(model.tags)
+        if update.tags:
+            # Replace tags
+            if update.tags.replace is not None:
+                updated_tags = update.tags.replace
+            elif update.tags.add is not None:
+                for k, v in update.tags.add.items():
+                    updated_tags[k] = v
+            elif update.tags.delete is not None:
+                for k in update.tags.delete:
+                    updated_tags.pop(k, None)
+
+        if updated_tags != model.tags:
+            logger.print("tags has been updated.")
+            model.tags = updated_tags
+            need_update = True
+
+        if model.description != update.description:
+            logger.print("description has been updated")
+            model.description = update.description
+            need_update = True
+
+        if not need_update:
+            logger.print(f"No update found for model {model_name}. Skipping")
+        else:
+            mlclient.models.create_or_update(model)
+            logger.print(f"Model metadata updated successfully for {model_name}")
+    except Exception as e:
+        logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")

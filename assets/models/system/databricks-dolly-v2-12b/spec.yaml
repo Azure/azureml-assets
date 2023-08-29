@@ -4,8 +4,8 @@ path: ./
 properties:
   SHA: 7dde7ac26ddcb679e0429fed1b6f751c1ffab1fb
   datasets: databricks/databricks-dolly-15k
-  evaluation-min-sku-spec: 8|0|28|56
-  evaluation-recommended-sku: Standard_DS4_v2
+  evaluation-min-sku-spec: 16|0|64|128
+  evaluation-recommended-sku: Standard_NC24s_v3
   inference-min-sku-spec: 16|0|64|128
   inference-recommended-sku: Standard_NC24s_v3
   languages: en
