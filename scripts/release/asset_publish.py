@@ -3,11 +3,14 @@
 
 """Python script to publish assets."""
 
+
 import argparse
 import json
 import re
 import shutil
 import sys
+from azure.ai.ml import MLClient
+from azure.identity import AzureCliCredential
 import azureml.assets as assets
 import azureml.assets.util as util
 from pathlib import Path
@@ -17,8 +20,9 @@ from tempfile import TemporaryDirectory
 from collections import defaultdict
 from typing import Dict, List, Tuple, Union
 from azureml.assets.config import AssetConfig
-from azureml.assets.model.model_utils import prepare_model
+from azureml.assets.model.model_utils import prepare_model, update_model_metadata
 from azureml.assets.util import logger
+from azureml.assets.deployment_config import AssetVersionUpdate
 from azure.ai.ml.entities import Component, Environment, Model
 from ruamel.yaml import YAML
 
@@ -402,6 +406,47 @@ def create_asset(
         failure_list.append(asset)
 
 
+def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
+    """Update the mutable metadata of asset."""
+    if asset.type == assets.AssetType.MODEL:
+        model_name = asset.name
+        model_version = asset.version
+        spec_path = asset.spec_with_path
+        model_config = asset.extra_config_as_object()
+
+        # get tags to update from model spec file
+        tags_to_update = None
+        try:
+            with open(spec_path) as f:
+                model_spec = YAML().load(f)
+                tags = model_spec.get("tags", {})
+                # convert tag value to string
+                for name, value in tags.items():
+                    if isinstance(value, list):
+                        value = str(value)
+                    elif isinstance(value, dict):
+                        value = json.dumps(value)
+                    elif not isinstance(value, str):
+                        raise Exception(f"Invalid value type: {type(value)} for tag name {name}")
+                    tags[name] = value
+                tags_to_update = {"replace": tags}
+        except Exception as e:
+            logger.log_error(f"Failed to get tags for model {model_name}: {e}")
+
+        update_model_metadata(
+            mlclient=mlclient,
+            model_name=model_name,
+            model_version=model_version,
+            update=AssetVersionUpdate(
+                versions=[model_version],
+                tags=tags_to_update,
+                description=model_config.description
+            )
+        )
+    else:
+        logger.print(f"Skipping metadata update of {asset.name}. Not supported for type {asset.type}")
+
+
 def get_asset_versions(
     asset_type: str,
     asset_name: str,
@@ -540,6 +585,9 @@ if __name__ == "__main__":
     for asset in all_assets:
         assets_by_type[asset.type.value].append(asset)
 
+    logger.print(f"Creating mlclient for registry {registry_name}")
+    mlclient: MLClient = MLClient(credential=AzureCliCredential(), registry_name=registry_name)
+
     for create_asset_type in CREATE_ORDER:
         logger.print(f"Creating {create_asset_type.value} assets.")
         if create_asset_type.value not in create_list:
@@ -570,7 +618,11 @@ if __name__ == "__main__":
                 )
 
                 if get_asset_details(asset.type.value, asset.name, asset.version, registry_name):
-                    logger.print(f"{asset.name} {asset.version} already exists, skipping")
+                    logger.print(f"{asset.name} {asset.version} already exists, updating the metadata")
+                    try:
+                        update_asset_metadata(mlclient, asset)
+                    except Exception as e:
+                        logger.log_error(f"Failed to update metadata for {asset.name}:{asset.version} - {e}")
                     continue
 
                 # Handle specific asset types

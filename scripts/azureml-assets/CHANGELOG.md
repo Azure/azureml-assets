@@ -1,9 +1,13 @@
-## 1.14.0 (Unreleased)
+## 1.15.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
 
-## 1.13.0 (Unreleased)
+## 1.14.0 (2023-08-25)
+### 🚀 New Features
+- [#1098](https://github.com/Azure/azureml-assets/pull/1098) Allow to update Model metadata without increasing the version.
+
+## 1.13.0 (2023-08-11)
 ### 🚀 New Features
 - [#1030](https://github.com/Azure/azureml-assets/pull/1030) Allow "microsoft" to appear in model names
 
