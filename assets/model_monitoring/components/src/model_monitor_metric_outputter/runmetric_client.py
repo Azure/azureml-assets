@@ -19,7 +19,7 @@ class RunMetricClient:
         return os.environ.get("MLFLOW_EXPERIMENT_ID")
 
     def _create_filter_query(
-        self, monitor_name: str, signal_name: str, feature_name: str, metric_name: str
+        self, monitor_name: str, signal_name: str, metric_name: str, groups : List[str]
     ):
         def _generate_filter(tag: str, value: str):
             return f"tags.azureml.{tag} = '{value}'"
@@ -29,15 +29,16 @@ class RunMetricClient:
             filters.append(_generate_filter("monitor_name", monitor_name))
         if signal_name is not None:
             filters.append(_generate_filter("signal_name", signal_name))
-        if feature_name is not None:
-            filters.append(_generate_filter("feature_name", feature_name))
         if metric_name is not None:
             filters.append(_generate_filter("metric_name", metric_name))
+        if groups is not None:
+            for idx, group in enumerate(groups):
+                filters.append(_generate_filter(f"azureml.group_{idx}", group))
         return " and ".join(filters)
 
 
     def _create_run_tags(
-        self, monitor_name: str, signal_name: str, feature_name: str, metric_name: str
+        self, monitor_name: str, signal_name: str, feature_name: str, metric_name: str, groups : List[str]
     ):
         tags = {}
         if monitor_name is not None:
@@ -48,6 +49,11 @@ class RunMetricClient:
             tags["azureml.feature_name"] = feature_name
         if metric_name is not None:
             tags["azureml.metric_name"] = metric_name
+        
+        if groups is not None:
+            for idx, group in enumerate(groups):
+                tags[f"azureml.group_{idx}"] = group
+
         return tags
 
 
@@ -86,7 +92,7 @@ class RunMetricClient:
 
 
     def get_or_create_run_id(
-        self, monitor_name: str, signal_name: str, feature_name: str, metric_name: str
+        self, monitor_name: str, signal_name: str, metric_name: str, groups : List[str]
     ) -> str:
         """Get or create a run id for a given monitor, signal, feature, and metric."""
         experiment_id = self._get_experiment_id()
@@ -94,7 +100,7 @@ class RunMetricClient:
             print("No experiment id found. Skipping publishing run metrics.")
             return None
         filter_query = self._create_filter_query(
-            monitor_name, signal_name, feature_name, metric_name
+            monitor_name, signal_name, metric_name, groups
         )
         print(f"Fetching run with filter: {filter_query}")
         runs = mlflow.search_runs(

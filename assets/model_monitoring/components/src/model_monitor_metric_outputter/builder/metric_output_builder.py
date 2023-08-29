@@ -17,6 +17,11 @@ from shared_utilities.constants import (
     THRESHOLD,
     SIGNAL_METRICS_THRESHOLD_VALUE,
     VALUE,
+    TIMESERIES,
+    TIMESERIES_RUN_ID,
+    TIMESERIES_METRIC_NAMES,
+    TIMESERIES_METRIC_NAMES_VALUE,
+    TIMESERIES_METRIC_NAMES_THRESHOLD,
 )
 
 
@@ -26,7 +31,7 @@ class MetricOutputBuilder:
     def __init__(self, runmetric_client: RunMetricClient, metrics: List[Row]):
         """Construct a MetricOutputBuilder instance."""
         self.metrics_dict = self._build(metrics)
-        self.runmetric_client = runmetric_client
+        self.runmetric_client : RunMetricClient = runmetric_client
 
     def get_metrics_dict(self) -> dict:
         """Get the metrics object."""
@@ -96,18 +101,30 @@ class MetricOutputBuilder:
                 cur_dict[THRESHOLD] = metric[THRESHOLD]
             
             # Add run metrics
-            self.runmetric_client.publish()
+            cur_dict[TIMESERIES] = self._create_timeseries(
+                monitor_name=monitor_name,
+                signal_name=signal_name,
+                metric_name=metric_name,
+                groups=group_names)
 
-    def create_timeseries_entry(monitor_name: str, signal_name: str, metric_name: str, groups: List[str], value: float, threshold):
+    def _create_timeseries(self, monitor_name: str, signal_name: str, metric_name: str, groups: List[str]):
+        
+        run_id = self.runmetric_client.get_or_create_run_id(
+            monitor_name=monitor_name,
+            signal_name=signal_name,
+            metric_name=metric_name,
+            groups=groups
+        )
+
         timeseries = {
-            "runid": self.runmetric_client.get(),
-            "metricNames": {
-                "value": value
+            TIMESERIES_RUN_ID: run_id,
+            TIMESERIES_METRIC_NAMES: {
+                TIMESERIES_METRIC_NAMES_VALUE: "value",
+                TIMESERIES_METRIC_NAMES_THRESHOLD: "threshold"
             }
         }
 
-        if threshold is not None:
-            timeseries["metricNames"]["threshold"] = float(threshold)
+        return timeseries
 
     def _create_metric_groups_if_not_exist(self, cur_dict: dict, group_name: str):
         if GROUPS not in cur_dict:

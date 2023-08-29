@@ -61,7 +61,11 @@ SIGNAL_METRICS_THRESHOLD_VALUE = 'threshold_value'
 GROUPS = 'groups'
 THRESHOLD = 'threshold'
 VALUE = 'value'
-
+TIMESERIES = "timeseries",
+TIMESERIES_RUN_ID = "runId"
+TIMESERIES_METRIC_NAMES = "metricNames"
+TIMESERIES_METRIC_NAMES_VALUE = "value"
+TIMESERIES_METRIC_NAMES_THRESHOLD = "value"
 # Values for Outputs of Output Metrics Component
 METADATA_VERSION = '1.0.0'
 
