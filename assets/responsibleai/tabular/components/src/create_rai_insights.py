@@ -177,6 +177,10 @@ def main(args):
             model_path=args.model_input,
         )
 
+    # unwrap the model if it's an sklearn wrapper
+    if model_estimator.__class__.__name__ == "_SklearnModelWrapper":
+        model_estimator = model_estimator.sklearn_model
+
     constructor_args = create_constructor_arg_dict(args)
 
     # Make sure that it actually loads

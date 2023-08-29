@@ -37,3 +37,7 @@ class DatasetDownloadError(BenchmarkUserError):
 
 class DataFormatError(BenchmarkUserError):
     """Data Format User Error."""
+
+
+class MissingColumnError(BenchmarkUserError):
+    """Missing Column User Error."""
