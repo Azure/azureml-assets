@@ -3,22 +3,29 @@
 
 """Script for argument validation."""
 import os
-import traceback
-from exceptions import ModelValidationException, DataValidationException, ArgumentValidationException
+from exceptions import (
+    ModelValidationException,
+    DataValidationException,
+    ArgumentValidationException,
+    AzureMLException,
+)
 from constants import ALL_TASKS, TASK
 from logging_utilities import get_logger, log_traceback
-from utils import assert_and_raise
+from utils import assert_and_raise, read_config, read_config_str
 from typing import Union
 from error_definitions import (
     InvalidTaskType,
     InvalidGroundTruthData,
     InvalidPredictionsData,
     InvalidModel,
+    BadInputData,
     BadLabelColumnData,
     BadFeatureColumnData,
-    InvalidTestData
+    InvalidTestData,
+    BadEvaluationConfig,
 )
 from azureml._common._error_definition.azureml_error import AzureMLError
+from azureml.evaluate.mlflow.models import Model
 
 logger = get_logger(name=__name__)
 
@@ -47,14 +54,16 @@ def _validate_model(args):
     Args:
         args (_type_): _description_
     """
+    logger.info("Validating Model is passed")
     assert_and_raise(condition=(len(args.model_uri) > 0) or (args.mlflow_model is not None),
                      exception_cls=ModelValidationException,
                      error_cls=InvalidModel)
 
-    mlflow_model, model_uri = False, False
-
     if args.mlflow_model:
-        mlflow_model = "MLmodel" in os.listdir(args.mlflow_model)
+        try:
+            mlflow_model = Model.load(args.mlflow_model)
+        except Exception:
+            mlflow_model = None
         if not mlflow_model:
             logger.warn("Invalid mlflow model passed. Trying model_uri.")
             args.mlflow_model = None
@@ -78,8 +87,6 @@ def _validate_task(args):
     Args:
         args (_type_): _description_
     """
-    # if args.task is None:
-    #     return
     logger.info("Validating Task Type: " + args.task)
     assert_and_raise(
         condition=args.task in ALL_TASKS,
@@ -89,22 +96,8 @@ def _validate_task(args):
     )
 
 
-# Deprecated
-def _validate_mode(args):
-    """Validate Mode.
-
-    Args:
-        args (_type_): _description_
-    """
-    assert_and_raise(
-        condition=args.mode in ["predict", "compute_metrics", "score"],
-        exception_cls=ArgumentValidationException,
-        message="Invalid mode type. It should be either predict, compute_metrics or score"
-    )
-
-
 def _validate_test_data(args):
-    # _, _data = check_and_return_if_mltable(args.data)
+    logger.info("Validating Test Data is passed")
     _data = args.data
     assert_and_raise(
         condition=(_data is not None and _data != ""),
@@ -131,6 +124,28 @@ def _validate_compute_metrics_data(args):
         )
 
 
+def _validate_config(args):
+    config = dict()
+    if args.config_file_name:
+        if args.config_str:
+            logger.warning("Both evaluation_config and evaluation_config_params are passed. \
+                           Using evaluation_config as additional params.")
+        config = read_config(args.config_file_name)
+    elif args.config_str:
+        config = read_config_str(args.config_str)
+
+    try:
+        config = dict(config)
+        args.config = config
+    except Exception as e:
+        message = "Unable to load Evaluation Config. Config passed is not JSON serialized."
+        exception = DataValidationException._with_error(
+            AzureMLError.create(BadEvaluationConfig, error=repr(e))
+        )
+        log_traceback(exception=exception, logger=logger, message=message)
+        raise exception
+
+
 def validate_args(args):
     """Validate All args.
 
@@ -140,6 +155,7 @@ def validate_args(args):
     _validate_model(args)
     _validate_task(args)
     _validate_test_data(args)
+    _validate_config(args)
 
 
 def validate_compute_metrics_args(args):
@@ -150,6 +166,7 @@ def validate_compute_metrics_args(args):
     """
     _validate_task(args)
     _validate_compute_metrics_data(args)
+    _validate_config(args)
 
 
 # Deprecated
@@ -188,8 +205,6 @@ def validate_Xy(X_test, y_test):
     Args:
         X_test (_type_): _description_
         y_test (_type_): _description_
-        y_pred (_type_): _description_
-        mode (_type_): _description_
     """
     # message = "Invalid data. No feature matrix found."
     assert_and_raise(
@@ -232,10 +247,16 @@ def _validate(data, input_column_names=None, label_column_name=None):
         else:
             data = _clean_and_validate_dataset(data, input_column_names)
     except Exception as e:
-        traceback.print_exc()
-        error_message = f"Failed to open test data with following error {repr(e)}"
-        log_traceback(e, logger, error_message, is_critical=True)
-        raise DataValidationException(error_message)
+        if isinstance(e, AzureMLException):
+            exception = e
+        else:
+            error_message = f"Failed to open test data with following error {repr(e)}"
+            exception = DataValidationException._with_error(
+                AzureMLError.create(BadInputData, error=repr(e)),
+                inner_exception=e
+            )
+            log_traceback(exception, logger, error_message, is_critical=True)
+        raise exception
     return data
 
 

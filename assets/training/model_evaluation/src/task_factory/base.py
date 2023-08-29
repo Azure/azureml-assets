@@ -10,6 +10,7 @@ from logging_utilities import get_logger
 import azureml.evaluate.mlflow as aml_mlflow
 import numpy as np
 import pandas as pd
+import constants
 
 from utils_load import load_model
 
@@ -102,7 +103,7 @@ class BasePredictor(ABC):
 
     def handle_device_failure(self, X_test, **kwargs):
         """Handle device failure."""
-        if self.device == "auto" and torch.cuda.is_available():
+        if self.device == constants.DEVICE.AUTO and torch.cuda.is_available():
             try:
                 cuda_current_device = torch.cuda.current_device()
                 logger.info("Loading model and prediction with cuda current device ")

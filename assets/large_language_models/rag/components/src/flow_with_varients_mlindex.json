@@ -7,16 +7,12 @@
       "nodes": [
         {
           "name": "embed_the_question",
-          "tool": "embed_the_question",
+          "tool": "Embedding",
           "inputs": {
+            "connection": "@@Embedding_Connection",
             "deployment_name": "@@Embedding_Deployment_Name",
             "input": "${flow.question}"
-          },
-          "provider": "AzureOpenAI",
-          "connection": "@@Embedding_Connection",
-          "api": "embedding",
-          "module": "promptflow.tools.aoai",
-          "reduce": false
+          }
         },
         {
           "name": "search_question_from_indexed_docs",
@@ -86,10 +82,62 @@
       },
       "tools": [
         {
-          "name": "embed_the_question",
-          "type": "llm",
-          "description": "This is a llm tool",
-          "is_builtin": false
+          "name": "Embedding",
+          "type": "python",
+          "inputs": {
+            "connection": {
+              "type": [
+                "AzureOpenAIConnection",
+                "OpenAIConnection"
+              ],
+              "name": "connection"
+            },
+            "deployment_name": {
+              "type": [
+                "string"
+              ],
+              "enabled_by": "connection",
+              "enabled_by_type": [
+                "AzureOpenAIConnection"
+              ],
+              "model_list": [
+                "text-embedding-ada-002",
+                "text-search-ada-doc-001",
+                "text-search-ada-query-001"
+              ],
+              "capabilities": {
+                "completion": false,
+                "chat_completion": false,
+                "embeddings": true
+              },
+              "name": "deployment_name"
+            },
+            "model": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "text-embedding-ada-002",
+                "text-search-ada-doc-001",
+                "text-search-ada-query-001"
+              ],
+              "enabled_by": "connection",
+              "enabled_by_type": [
+                "OpenAIConnection"
+              ],
+              "name": "model"
+            },
+            "input": {
+              "type": [
+                "string"
+              ],
+              "name": "input"
+            }
+          },
+          "description": "Use Open AI's embedding model to create an embedding vector representing the input text.",
+          "module": "promptflow.tools.embedding",
+          "function": "embedding",
+          "is_builtin": true
         },
         {
           "name": "Vector Search",
@@ -116,7 +164,7 @@
               "default": "5"
             }
           },
-          "module": "embeddingstore.tool.vector_index_lookup",
+          "module": "promptflow_vectordb.tool.vector_index_lookup",
           "class_name": "VectorIndexLookup",
           "function": "search",
           "is_builtin": true
@@ -133,7 +181,7 @@
             }
           },
           "source": "generate_prompt_context.py",
-          "code": "from typing import List\nfrom promptflow import tool\nfrom embeddingstore.core.contracts import SearchResultEntity\n\n@tool\ndef generate_prompt_context(search_result: List[dict]) -> str:\n    def format_doc(doc: dict):\n        return f\"Content: {doc['Content']}\\nSource: {doc['Source']}\"\n    \n    SOURCE_KEY = \"source\"\n    URL_KEY = \"url\"\n    \n    retrieved_docs = []\n    for item in search_result:\n\n        entity = SearchResultEntity.from_dict(item)\n        content  = entity.text or \"\"\n        \n        source = \"\"\n        if entity.metadata is not None:\n            if SOURCE_KEY in entity.metadata:\n                if URL_KEY in entity.metadata[SOURCE_KEY]:\n                    source = entity.metadata[SOURCE_KEY][URL_KEY] or \"\"\n        \n        retrieved_docs.append({\n            \"Content\": content,\n            \"Source\": source\n        })\n    doc_string = \"\\n\\n\".join([format_doc(doc) for doc in retrieved_docs])\n    return doc_string\n",
+          "code": "from typing import List\nfrom promptflow import tool\nfrom promptflow_vectordb.core.contracts import SearchResultEntity\n\n@tool\ndef generate_prompt_context(search_result: List[dict]) -> str:\n    def format_doc(doc: dict):\n        return f\"Content: {doc['Content']}\\nSource: {doc['Source']}\"\n    \n    SOURCE_KEY = \"source\"\n    URL_KEY = \"url\"\n    \n    retrieved_docs = []\n    for item in search_result:\n\n        entity = SearchResultEntity.from_dict(item)\n        content  = entity.text or \"\"\n        \n        source = \"\"\n        if entity.metadata is not None:\n            if SOURCE_KEY in entity.metadata:\n                if URL_KEY in entity.metadata[SOURCE_KEY]:\n                    source = entity.metadata[SOURCE_KEY][URL_KEY] or \"\"\n        \n        retrieved_docs.append({\n            \"Content\": content,\n            \"Source\": source\n        })\n    doc_string = \"\\n\\n\".join([format_doc(doc) for doc in retrieved_docs])\n    return doc_string\n",
           "function": "generate_prompt_context",
           "is_builtin": false
         },
@@ -220,15 +268,12 @@
           "variant_0": {
             "node": {
               "name": "embed_the_question",
-              "tool": "embed_the_question",
+              "tool": "Embedding",
               "inputs": {
+                "connection": "@@Embedding_Connection",
                 "deployment_name": "@@Embedding_Deployment_Name",
                 "input": "${flow.question}"
               },
-              "provider": "AzureOpenAI",
-              "connection": "@@Embedding_Connection",
-              "api": "embedding",
-              "module": "promptflow.tools.aoai",
               "reduce": false
             }
           }

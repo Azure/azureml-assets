@@ -3,25 +3,26 @@
 
 """Python script to publish assets."""
 
+
 import argparse
 import json
-import os
 import re
 import shutil
 import sys
+from azure.ai.ml import MLClient
+from azure.identity import AzureCliCredential
+import azureml.assets as assets
+import azureml.assets.util as util
 from pathlib import Path
 from string import Template
 from subprocess import run
 from tempfile import TemporaryDirectory
 from collections import defaultdict
 from typing import Dict, List, Tuple, Union
-import azureml.assets as assets
-from azureml.assets.model.mlflow_utils import MLFlowModelUtils
-import azureml.assets.util as util
-from azureml.assets.config import AssetConfig, PathType
-from azureml.assets.model import ModelDownloadUtils
+from azureml.assets.config import AssetConfig
+from azureml.assets.model.model_utils import prepare_model, update_model_metadata
 from azureml.assets.util import logger
-from azure.ai.ml import load_model
+from azureml.assets.deployment_config import AssetVersionUpdate
 from azure.ai.ml.entities import Component, Environment, Model
 from ruamel.yaml import YAML
 
@@ -29,12 +30,21 @@ from ruamel.yaml import YAML
 ASSET_ID_TEMPLATE = Template("azureml://registries/$registry_name/$asset_type/$asset_name/versions/$version")
 TEST_YML = "tests.yml"
 PROD_SYSTEM_REGISTRY = "azureml"
-CREATE_ORDER = [assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT, assets.AssetType.MODEL]
+CREATE_ORDER = [assets.AssetType.DATA, assets.AssetType.ENVIRONMENT, assets.AssetType.COMPONENT,
+                assets.AssetType.MODEL]
 WORKSPACE_ASSET_PATTERN = re.compile(r"^(?:azureml:)?(.+)(?::(.+)|@(.+))$")
 REGISTRY_ENV_PATTERN = re.compile(r"^azureml://registries/(.+)/environments/(.+)/(?:versions/(.+)|labels/(.+))")
-REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/${asset_type}s/(.+)/(?:versions/(.+)|labels/(.+))")
+REGISTRY_ASSET_TEMPLATE = Template("^azureml://registries/(.+)/$asset_type/(.+)/(?:versions/(.+)|labels/(.+))")
 BEARER = r"Bearer.*"
 LATEST_LABEL = "latest"
+
+
+def pluralize_asset_type(asset_type: Union[assets.AssetType, str]) -> str:
+    """Return pluralized asset type."""
+    # Convert to string if enum
+    if isinstance(asset_type, assets.AssetType):
+        asset_type = asset_type.value
+    return f"{asset_type}s" if asset_type != "data" else asset_type
 
 
 def find_test_files(dir: Path):
@@ -52,7 +62,7 @@ def find_test_files(dir: Path):
     return test_jobs
 
 
-def preprocess_test_files(test_jobs, asset_ids: dict):
+def preprocess_test_files(test_jobs: List[str], asset_ids: Dict[str, str]):
     """Preprocess test files to generate asset ids."""
     for test_job in test_jobs:
         logger.print(f"Processing test job {test_job}")
@@ -97,60 +107,29 @@ def update_spec(asset: Union[Component, Environment, Model], spec_path: Path) ->
     return False
 
 
-def prepare_model(model_config: assets.ModelConfig, spec_file_path: Path, model_dir: Path) -> bool:
+def prepare_model_for_registration(
+    model_config: assets.ModelConfig,
+    spec_file_path: Path,
+    temp_dir: Path,
+    registry_name: str,
+) -> bool:
     """Prepare model.
 
     :param model_config: Model Config object
     :type model_config: assets.ModelConfig
     :param spec_file_path: path to model spec file
     :type spec_file_path: Path
-    :param model_dir: path of directory where model is present locally or can be downloaded to.
-    :type model_dir: Path
+    :param temp_dir: temp dir for model operation
+    :type temp_dir: Path
     :return: Model successfully prepared for creation in registry.
     :rtype: bool
     """
-    try:
-        model = load_model(spec_file_path)
-        model.type = model_config.type.value
-    except Exception as e:
-        logger.error(f"Error in loading model spec file at {spec_file_path}: {e}")
-        return False
-
-    model_description_file_path = Path(spec_file_path).parent / model_config.description
-    logger.print(f"model_description_file_path {model_description_file_path}")
-    if os.path.exists(model_description_file_path):
-        with open(model_description_file_path) as f:
-            model_description = f.read()
-            model.description = model_description
-    else:
-        logger.print("description file does not exist")
-
-    if model_config.path.type == PathType.LOCAL:
-        model.path = os.path.abspath(Path(model_config.path.uri).resolve())
-        return update_spec(model, spec_file_path)
-
-    if model_config.type == assets.ModelType.CUSTOM:
-        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
-        if success:
-            model.path = model_dir
-            success = update_spec(model, spec_file_path)
-    elif model_config.type == assets.ModelType.MLFLOW:
-        success = ModelDownloadUtils.download_model(model_config.path.type, model_config.path.uri, model_dir)
-        if success:
-            model.path = model_dir / MLFlowModelUtils.MLFLOW_MODEL_PATH
-            if not model.flavors:
-                # try fetching flavors from MLModel file
-                mlmodel_file_path = model.path / MLFlowModelUtils.MLMODEL_FILE_NAME
-                try:
-                    mlmodel = util.load_yaml(mlmodel_file_path)
-                    model.flavors = mlmodel.get("flavors")
-                except Exception as e:
-                    logger.log_error(f"Error loading flavors from MLmodel file at {mlmodel_file_path}: {e}")
-            success = update_spec(model, spec_file_path)
-    else:
-        logger.log_error(f"Model type {model_config.type.value} not supported")
-        success = False
-
+    model, success = prepare_model(
+        spec_path=spec_file_path, model_config=model_config, registry_name=registry_name, temp_dir=temp_dir
+    )
+    if success:
+        success = update_spec(model, spec_file_path)
+        logger.print(f"updated spec file? {success}")
     return success
 
 
@@ -398,12 +377,12 @@ def asset_create_command(
 
 
 def create_asset(
-    asset,
-    registry_name,
-    resource_group,
-    workspace_name,
-    version,
-    failure_list,
+    asset: assets.AssetConfig,
+    registry_name: str,
+    resource_group: str,
+    workspace_name: str,
+    version: str,
+    failure_list: List[str],
     debug_mode: bool = None
 ):
     """Create asset in registry."""
@@ -425,6 +404,47 @@ def create_asset(
         redacted_err = sanitize_output(result.stderr)
         logger.log_error(f"Error creating {asset.type.value} {asset.name}: {redacted_err}")
         failure_list.append(asset)
+
+
+def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
+    """Update the mutable metadata of asset."""
+    if asset.type == assets.AssetType.MODEL:
+        model_name = asset.name
+        model_version = asset.version
+        spec_path = asset.spec_with_path
+        model_config = asset.extra_config_as_object()
+
+        # get tags to update from model spec file
+        tags_to_update = None
+        try:
+            with open(spec_path) as f:
+                model_spec = YAML().load(f)
+                tags = model_spec.get("tags", {})
+                # convert tag value to string
+                for name, value in tags.items():
+                    if isinstance(value, list):
+                        value = str(value)
+                    elif isinstance(value, dict):
+                        value = json.dumps(value)
+                    elif not isinstance(value, str):
+                        raise Exception(f"Invalid value type: {type(value)} for tag name {name}")
+                    tags[name] = value
+                tags_to_update = {"replace": tags}
+        except Exception as e:
+            logger.log_error(f"Failed to get tags for model {model_name}: {e}")
+
+        update_model_metadata(
+            mlclient=mlclient,
+            model_name=model_name,
+            model_version=model_version,
+            update=AssetVersionUpdate(
+                versions=[model_version],
+                tags=tags_to_update,
+                description=model_config.description
+            )
+        )
+    else:
+        logger.print(f"Skipping metadata update of {asset.name}. Not supported for type {asset.type}")
 
 
 def get_asset_versions(
@@ -479,7 +499,8 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
         `label` and `registry_name` will be None for workspace URI.
     :rtype: Tuple
     """
-    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(asset_type=asset_type))
+    REGISTRY_ASSET_PATTERN = re.compile(REGISTRY_ASSET_TEMPLATE.substitute(
+                                        asset_type=pluralize_asset_type(asset_type)))
     asset_registry_name = None
     if (match := REGISTRY_ASSET_PATTERN.match(asset_uri)) is not None:
         asset_registry_name, asset_name, asset_version, asset_label = match.groups()
@@ -564,8 +585,11 @@ if __name__ == "__main__":
     for asset in all_assets:
         assets_by_type[asset.type.value].append(asset)
 
+    logger.print(f"Creating mlclient for registry {registry_name}")
+    mlclient: MLClient = MLClient(credential=AzureCliCredential(), registry_name=registry_name)
+
     for create_asset_type in CREATE_ORDER:
-        logger.print(f"Creating {create_asset_type.value}s.")
+        logger.print(f"Creating {create_asset_type.value} assets.")
         if create_asset_type.value not in create_list:
             continue
 
@@ -588,13 +612,17 @@ if __name__ == "__main__":
                 logger.print(f"Creating {asset.name} {final_version}")
                 asset_ids[asset.name] = ASSET_ID_TEMPLATE.substitute(
                     registry_name=registry_name,
-                    asset_type=f"{asset.type.value}s",
+                    asset_type=pluralize_asset_type(asset.type),
                     asset_name=asset.name,
                     version=final_version,
                 )
 
                 if get_asset_details(asset.type.value, asset.name, asset.version, registry_name):
-                    logger.print(f"{asset.name} {asset.version} already exists, skipping")
+                    logger.print(f"{asset.name} {asset.version} already exists, updating the metadata")
+                    try:
+                        update_asset_metadata(mlclient, asset)
+                    except Exception as e:
+                        logger.log_error(f"Failed to update metadata for {asset.name}:{asset.version} - {e}")
                     continue
 
                 # Handle specific asset types
@@ -618,7 +646,8 @@ if __name__ == "__main__":
                     try:
                         final_version = asset.version
                         model_config = asset.extra_config_as_object()
-                        if not prepare_model(model_config, asset.spec_with_path, Path(work_dir)):
+                        if not prepare_model_for_registration(
+                                model_config, asset.spec_with_path, Path(work_dir), registry_name):
                             raise Exception(f"Could not prepare model at {asset.spec_with_path}")
                     except Exception as e:
                         logger.log_error(f"Model prepare exception: {e}")
@@ -633,7 +662,7 @@ if __name__ == "__main__":
                     resource_group=resource_group,
                     workspace_name=workspace,
                     failure_list=failure_list,
-                    debug_mode=debug_mode
+                    debug_mode=debug_mode,
                 )
 
     if len(failure_list) > 0:
@@ -644,7 +673,7 @@ if __name__ == "__main__":
         yaml = YAML()
         yaml.default_flow_style = False
         for asset_type, asset_names in failed_assets.items():
-            logger.log_warning(f"Failed to create {asset_type}s: {asset_names}")
+            logger.log_warning(f"Failed to create {asset_type} assets: {asset_names}")
         # the following dump process will generate a yaml file for the report
         # process in the end of the publishing script
         with open(failed_list_file, "w") as file:

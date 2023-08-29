@@ -12,7 +12,9 @@ from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
-from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
+from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, UnsupportedTaskType
+from azureml._common.exceptions import AzureMLException
+from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -38,7 +40,7 @@ def _get_parser():
         type=bool,
         required=False,
         default=False,
-        help="Enable experimental features for hugging face MLflow model conversion"
+        help="Enable experimental features for hugging face MLflow model conversion",
     )
 
     parser.add_argument(
@@ -131,7 +133,18 @@ def run():
             preprocess_args.update(download_details.get("properties", {}))
             preprocess_args["misc"] = download_details.get("misc", [])
 
-    preprocess_args["task"] = task_name if task_name else preprocess_args.get("task")
+    if task_name is None or not SupportedTasks.has_value(task_name.lower()):
+        task_name = preprocess_args.get("task")
+        logger.warning("task_name is not provided or not supported. "
+                       f"Using task_name={task_name} from model download metadata.")
+
+    if task_name is None:
+        raise AzureMLException._with_error(
+                AzureMLError.create(UnsupportedTaskType, task_type=args.task_name,
+                                    supported_tasks=SupportedTasks.list_values())
+            )
+
+    preprocess_args["task"] = task_name.lower()
     preprocess_args["model_id"] = model_id if model_id else preprocess_args.get("model_id")
     preprocess_args[HF_CONF.EXTRA_PIP_REQUIREMENTS.value] = extra_pip_requirements
     preprocess_args[HF_CONF.HF_CONFIG_ARGS.value] = hf_config_args

@@ -143,7 +143,7 @@ def track(
                         return func(*args, **kwargs)
                     except Exception as e:
                         # local logger
-                        if type(al) == type(logger):
+                        if isinstance(al, logger):
                             raise
                         al.activity_info["exception_type"] = str(type(e))
                         al.activity_info["stacktrace"] = "\n".join(
@@ -158,7 +158,7 @@ def track(
                 if force_flush and logger.handlers:
                     for handler in logger.handlers:
                         handler.flush()
-                        if type(handler).__name__ == "AppInsightsLoggingHandler":
+                        if isinstance(handler, AppInsightsLoggingHandler):
                             print(
                                 "Wait 30s for application insights async channel to flush"
                             )

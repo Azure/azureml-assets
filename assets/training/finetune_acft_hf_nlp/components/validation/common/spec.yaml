@@ -1,0 +1,35 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: ft_nlp_common_validation
+version: 0.0.16
+type: command
+
+is_deterministic: True
+
+display_name: Common Validation Component
+description: Component to validate the finetune job against Validation Service
+
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/18
+
+code: ../../../src/validation
+
+inputs:
+  mlflow_model_path:
+    type: mlflow_model
+    optional: true
+    description: MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.
+
+  compute_finetune:
+    type: string
+    optional: true
+    default: serverless
+    description: compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
+      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+
+outputs:
+  validation_info:
+    type: uri_file
+    description: Validation status.
+
+command: >-
+  python validation.py --validation-info '${{outputs.validation_info}}'

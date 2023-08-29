@@ -5,8 +5,6 @@ name: automl_hts_training
 display_name: AutoML Hierarchical Timeseries Forecasting - Training
 description: Enables AutoML Training for hts components.
 version: 0.0.2
-tags:
-  Preview: ''
 is_deterministic: false
 
 inputs:

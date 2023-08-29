@@ -3,8 +3,6 @@ $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 name: automl_many_models_inference_step
 display_name: AutoML Many Models - Inference Step
 version: 0.0.2
-tags:
-  Preview: ''
 is_deterministic: false
 
 type: parallel

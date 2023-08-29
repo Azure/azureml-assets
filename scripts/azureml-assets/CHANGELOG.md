@@ -1,7 +1,51 @@
-## 1.6.0 (Unreleased)
+## 1.15.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
+
+## 1.14.0 (2023-08-25)
+### 🚀 New Features
+- [#1098](https://github.com/Azure/azureml-assets/pull/1098) Allow to update Model metadata without increasing the version.
+
+## 1.13.0 (2023-08-11)
+### 🚀 New Features
+- [#1030](https://github.com/Azure/azureml-assets/pull/1030) Allow "microsoft" to appear in model names
+
+## 1.12.0 (2023-08-07)
+### 🚀 New Features
+- [#991](https://github.com/Azure/azureml-assets/pull/991) Allow uppercase characters in model asset naming
+
+## 1.11.0 (2023-08-07)
+### 🚀 New Features
+- [#992](https://github.com/Azure/azureml-assets/pull/992) Extract asset dependencies
+
+## 1.10.0 (2023-08-07)
+### 🚀 New Features
+- [970](https://github.com/Azure/azureml-assets/pull/970) Add large model publishing support
+
+## 1.9.0 (2023-08-03)
+### 🚀 New Features
+- [#962](https://github.com/Azure/azureml-assets/pull/962) Prevent curated environment image references in Dockerfiles
+
+## 1.8.0 (2023-07-20)
+### 🚀 New Features
+- [#913](https://github.com/Azure/azureml-assets/pull/913) Output variable with list of built images
+
+## 1.7.2 (2023-07-20)
+### 🐛 Bugs Fixed
+- [#912](https://github.com/Azure/azureml-assets/pull/912) Fix indentation in update_assets.py
+
+## 1.7.1 (2023-07-19)
+### 🐛 Bugs Fixed
+- [#907](https://github.com/Azure/azureml-assets/pull/907) Handle path parameter for data assets
+
+## 1.7.0 (2023-07-18)
+### 🚀 New Features
+- [#902](https://github.com/Azure/azureml-assets/pull/902) Make output directory optional for update_assets.py
+
+## 1.6.0 (2023-07-17)
+### 🚀 New Features
+- [#821](https://github.com/Azure/azureml-assets/pull/821) Make release directory optional for update_assets.py
 
 ## 1.5.2 (2023-07-13)
 ### 🐛 Bugs Fixed
