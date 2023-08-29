@@ -89,7 +89,7 @@ class MetricOutputBuilder:
                         cur_dict[GROUPS][group_name] = metric
         else:
             cur_dict[VALUE] = metric[VALUE]
-            if THRESHOLD in metric:
+            if THRESHOLD in metric and metric[THRESHOLD] is not None and metric[THRESHOLD].isnumeric():
                 cur_dict[THRESHOLD] = metric[THRESHOLD]
 
     def _create_metric_groups_if_not_exist(self, cur_dict: dict, group_name: str):
