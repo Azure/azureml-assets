@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: template-chat-flow
+path: ./
+properties:
+  is-promptflow: true
+  promptflow.section: template
+  promptflow.type: chat
+  promptflow.name: Template Chat Flow
+  promptflow.description: Template Chat Flow
+  inference-min-sku-spec: 2|0|14|28
+  inference-recommended-sku: Standard_DS3_v2
+version: 2

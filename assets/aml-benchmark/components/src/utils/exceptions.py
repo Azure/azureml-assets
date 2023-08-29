@@ -53,6 +53,12 @@ class DataFormatException(BenchmarkUserException):
     _error_code = ErrorCodes.DATAFORMAT_ERROR
 
 
+class MissingColumnException(BenchmarkUserException):
+    """Exception for any errors related to missing columns."""
+
+    _error_code = ErrorCodes.MISSINGCOLUMN_ERROR
+
+
 def swallow_all_exceptions(logger: logging.Logger) -> Callable[..., Any]:
     """
     Swallow all exceptions.

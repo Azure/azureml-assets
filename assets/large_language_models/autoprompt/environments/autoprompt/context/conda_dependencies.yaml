@@ -5,7 +5,7 @@ dependencies:
 - python=3.8
 - pip=21.2.4
 - pip:
-  - azureml-rag[cognitive_search,data_generation]>=0.1.16
+  - azureml-rag[cognitive_search,data_generation]>=0.1.23
   - matplotlib>=3.3,<3.4
   - psutil>=5.8,<5.9
   - tqdm>=4.59,<4.60
@@ -28,3 +28,4 @@ dependencies:
   - sentence-transformers
   - tenacity==8.2.2
   - cryptography>=41.0.3
+  - tornado>=6.3.3
