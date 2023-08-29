@@ -156,28 +156,27 @@ def update_model_metadata(
         model = mlclient.models.get(name=model_name, version=model_version)
 
         need_update = False
-        if update is not None:  # to update older version of models
-            updated_tags = copy.deepcopy(model.tags)
-            if update.tags:
-                # Replace tags
-                if update.tags.replace is not None:
-                    updated_tags = update.tags.replace
-                elif update.tags.add is not None:
-                    for k, v in update.tags.add.items():
-                        updated_tags[k] = v
-                elif update.tags.delete is not None:
-                    for k in update.tags.delete:
-                        updated_tags.pop(k, None)
+        updated_tags = copy.deepcopy(model.tags)
+        if update.tags:
+            # Replace tags
+            if update.tags.replace is not None:
+                updated_tags = update.tags.replace
+            elif update.tags.add is not None:
+                for k, v in update.tags.add.items():
+                    updated_tags[k] = v
+            elif update.tags.delete is not None:
+                for k in update.tags.delete:
+                    updated_tags.pop(k, None)
 
-            if updated_tags != model.tags:
-                logger.print("tags has been updated.")
-                model.tags = updated_tags
-                need_update = True
+        if updated_tags != model.tags:
+            logger.print("tags has been updated.")
+            model.tags = updated_tags
+            need_update = True
 
-            if update.description is not None and model.description != update.description:
-                logger.print("description has been updated")
-                model.description = update.description
-                need_update = True
+        if model.description != update.description:
+            logger.print("description has been updated")
+            model.description = update.description
+            need_update = True
 
         if not need_update:
             logger.print(f"No update found for model {model_name}. Skipping")
