@@ -527,14 +527,14 @@ jobs:
     distribution:
       type: pytorch
       process_count_per_instance: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
+    resources:
+      instance_count: '${{parent.inputs.num_nodes_finetune}}'
+      instance_type: '${{parent.inputs.instance_type_finetune}}'
       properties:
         singularity:
           imageVersion: ''
           SLATier: 'Premium'
           priority: 'Medium'
-    resources:
-      instance_count: '${{parent.inputs.num_nodes_finetune}}'
-      instance_type: '${{parent.inputs.instance_type_finetune}}'
     inputs:
       apply_lora: '${{parent.inputs.apply_lora}}'
       merge_lora_weights: '${{parent.inputs.merge_lora_weights}}'
