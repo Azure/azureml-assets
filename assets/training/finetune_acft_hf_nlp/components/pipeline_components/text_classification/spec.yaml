@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_classification_pipeline
-version: 0.0.16
+version: 0.0.17
 type: pipeline
 display_name: Text Classification Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for text classification task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/text_classification_pipeline) to learn more.
@@ -578,9 +578,27 @@ jobs:
     outputs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
+  validation_trigger_model_evaluation:
+    type: command
+    component: azureml:validation_trigger_model_evaluation:0.0.1.0
+    compute: '${{parent.inputs.compute_model_evaluation}}'
+    resources:
+      instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+    inputs:
+      compute_name: '${{parent.inputs.compute_model_evaluation}}'
+      compute_instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+      task: text-classification
+      test_data: '${{parent.jobs.text_classification_datapreprocess.outputs.output_dir}}'
+      mlflow_model_path: '${{parent.jobs.text_classification_finetune.outputs.mlflow_model_folder}}'
+      label_column_name: '${{parent.inputs.label_key}}'
+      input_column_names: "'${{parent.inputs.sentence1_key}}','${{parent.inputs.sentence2_key}}'"
+      device: auto
+      batch_size: '${{parent.inputs.batch_size}}'
+      evaluation_config: '${{parent.inputs.evaluation_config}}'
+      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.13
+    component: azureml:model_prediction:0.0.14
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
@@ -592,9 +610,10 @@ jobs:
       batch_size: '${{parent.inputs.batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.text_classification_finetune.outputs.mlflow_model_folder}}'
+      validation_info: '${{parent.jobs.validation_trigger_model_evaluation.outputs.validation_info}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.13
+    component: azureml:compute_metrics:0.0.14
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
