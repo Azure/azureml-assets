@@ -560,7 +560,7 @@ class ModelConfig(Config):
         return self._publish.get('description')
 
     @property
-    def description(self) -> Dict[str, object]:
+    def description(self) -> str:
         """Model description."""
         if self._description_file_path and not self._description:
             model_description_file_path = self._file_path / self._description_file_path
