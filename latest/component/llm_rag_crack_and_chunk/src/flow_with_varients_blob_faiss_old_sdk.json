@@ -146,7 +146,7 @@
               "default": "5"
             }
           },
-          "module": "embeddingstore.tool.vector_search",
+          "module": "promptflow_vectordb.tool.vector_search",
           "class_name": "VectorSearch",
           "function": "search",
           "is_builtin": true
@@ -163,7 +163,7 @@
             }
           },
           "source": "generate_prompt_context.py",
-          "code": "from typing import List\nfrom promptflow import tool\nfrom embeddingstore.core.contracts import SearchResultEntity\n\n@tool\ndef generate_prompt_context(search_result: List[dict]) -> str:\n    def format_doc(doc: dict):\n        return f\"Content: {doc['Content']}\\nSource: {doc['Source']}\"\n    \n    SOURCE_KEY = \"source\"\n    URL_KEY = \"url\"\n    \n    retrieved_docs = []\n    for item in search_result:\n\n        entity = SearchResultEntity.from_dict(item)\n        content  = entity.text or \"\"\n        \n        source = \"\"\n        if entity.metadata is not None:\n            if SOURCE_KEY in entity.metadata:\n                if URL_KEY in entity.metadata[SOURCE_KEY]:\n                    source = entity.metadata[SOURCE_KEY][URL_KEY] or \"\"\n        \n        retrieved_docs.append({\n            \"Content\": content,\n            \"Source\": source\n        })\n    doc_string = \"\\n\\n\".join([format_doc(doc) for doc in retrieved_docs])\n    return doc_string\n",
+          "code": "from typing import List\nfrom promptflow import tool\nfrom promptflow_vectordb.core.contracts import SearchResultEntity\n\n@tool\ndef generate_prompt_context(search_result: List[dict]) -> str:\n    def format_doc(doc: dict):\n        return f\"Content: {doc['Content']}\\nSource: {doc['Source']}\"\n    \n    SOURCE_KEY = \"source\"\n    URL_KEY = \"url\"\n    \n    retrieved_docs = []\n    for item in search_result:\n\n        entity = SearchResultEntity.from_dict(item)\n        content  = entity.text or \"\"\n        \n        source = \"\"\n        if entity.metadata is not None:\n            if SOURCE_KEY in entity.metadata:\n                if URL_KEY in entity.metadata[SOURCE_KEY]:\n                    source = entity.metadata[SOURCE_KEY][URL_KEY] or \"\"\n        \n        retrieved_docs.append({\n            \"Content\": content,\n            \"Source\": source\n        })\n    doc_string = \"\\n\\n\".join([format_doc(doc) for doc in retrieved_docs])\n    return doc_string\n",
           "function": "generate_prompt_context",
           "is_builtin": false
         },
