@@ -382,6 +382,10 @@ def create_rai_insights_from_port_path(my_run: Run, port_path: str) -> RAIInsigh
         model_id=model_id,
     )
 
+    # unwrap the model if it's an sklearn wrapper
+    if model_estimator.__class__.__name__ == "_SklearnModelWrapper":
+        model_estimator = model_estimator.sklearn_model
+
     _logger.info("Creating RAIInsights object")
     rai_i = RAIInsights(
         model=model_estimator, train=df_train, test=df_test, **constructor_args
