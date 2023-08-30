@@ -12,9 +12,6 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_MLTABLE_DATA_DRIFT_SIGNAL_OUTPUT,
 )
 
-testdata = [("True"), ("False")]
-
-
 def _submit_metric_outputter_job(
     ml_client: MLClient, get_component, experiment_name, input_data
 ):
@@ -51,7 +48,7 @@ def _submit_metric_outputter_job(
     return ml_client.jobs.get(pipeline_job.name)
 
 
-@pytest.mark.e2e2
+@pytest.mark.e2e
 class TestModelMonitorMetricOutputterE2E:
     """Test class."""
 

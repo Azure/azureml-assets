@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Builder class which creates a metrics object."""
+"""Client leveraged to publish signal metrics to runs."""
 
 from runmetric_client import RunMetricClient
 from shared_utilities.constants import (
@@ -17,7 +17,7 @@ from shared_utilities.constants import (
 
 
 class RunMetricPublisher:
-    """Builder class which creates a metrics object."""
+    """Client leveraged to publish signal metrics to runs."""
 
     def __init__(self, runmetric_client: RunMetricClient):
         """Construct a MetricOutputBuilder instance."""
@@ -30,7 +30,7 @@ class RunMetricPublisher:
             self._publish_metrics(metrics[metric_name], metric_step)
 
     def _publish_metrics(self, metrics: dict, metric_step: int):
-        """Publish metrics to AML Run Metrics."""
+        """Publish signal metrics to run."""
         # check if run metrics is present at this level
         if TIMESERIES in metrics:
             self._publish_metric_to_run(metrics, metric_step)

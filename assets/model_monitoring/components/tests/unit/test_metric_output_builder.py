@@ -10,7 +10,7 @@ from pyspark.sql import Row
 from model_monitor_metric_outputter.builder.metric_output_builder import MetricOutputBuilder
 
 
-@pytest.mark.unit1
+@pytest.mark.unit
 class TestMetricOutputBuilder:
     """Test class for metric output builder."""
 

@@ -8,7 +8,7 @@ import uuid
 
 
 class MockRunMetricClient:
-    """Builder class which creates a metrics object."""
+    """Mock client leveraged to retrieve and publish run metrics."""
 
     def __init__(self):
         """Construct a MetricOutputBuilder instance."""
