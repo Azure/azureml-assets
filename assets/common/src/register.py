@@ -19,6 +19,7 @@ from azureml._common.exceptions import AzureMLException
 from utils.common_utils import get_mlclient
 from utils.config import AppName, ComponentVariables
 from utils.logging_utils import custom_dimensions, get_logger
+from utils.run_utils import RunDetails
 from utils.exceptions import (
     swallow_all_exceptions,
     UnSupportedModelTypeError,
@@ -88,12 +89,6 @@ def parse_args():
         help="Model version in workspace/registry. If model with same version exists,version will be auto incremented",
         default=None,
     )
-    parser.add_argument(
-        "--model_import_job_path",
-        type=str,
-        help="JSON file that contains the job path of model to have lineage.",
-        default=None,
-    )
     args = parser.parse_args()
     logger.info(f"Args received {args}")
     return args
@@ -108,6 +103,18 @@ def is_model_available(ml_client, model_name, model_version):
         logger.warning(f"Model with name - {model_name} and version - {model_version} is not available. Error: {e}")
         is_available = False
     return is_available
+
+
+def get_input_asset_id(input_name: str):
+    run_details: RunDetails = RunDetails.get_run_details()
+    input_assets = run_details.input_assets.get(input_name, None)
+    if (input_assets
+        and input_name in input_assets
+        and "asset" in input_assets[input_name]
+        and "assetId" in input_assets[input_name]["asset"]
+    ):
+       return input_assets[input_name]["asset"]["assetId"]
+    return None
 
 
 @swallow_all_exceptions(logger)
@@ -157,11 +164,9 @@ def main():
         logger.info(f"Updated model_name = {model_name}")
 
     # check if we can have lineage and update the model path for ws import
-    if not registry_name and args.model_import_job_path:
+    if not registry_name and get_input_asset_id("model_path"):
         logger.info("Using model output of previous job as run lineage to register the model")
-        with open(args.model_import_job_path) as f:
-            model_import_job_path = json.load(f)
-        model_path = model_import_job_path.get("path", model_path)
+        model_path = get_input_asset_id("model_path")
     elif model_type == AssetTypes.MLFLOW_MODEL:
         if not os.path.exists(os.path.join(model_path, MLFLOW_MODEL_FOLDER)):
             logger.info(f"Making sure, model parent directory is `{MLFLOW_MODEL_FOLDER}`")
