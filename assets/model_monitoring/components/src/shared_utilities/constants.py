@@ -60,6 +60,7 @@ SIGNAL_METRICS_THRESHOLD_VALUE = 'threshold_value'
 # Keywords in metric output JSON schema
 GROUPS = 'groups'
 THRESHOLD = 'threshold'
+METRICS = "metrics"
 VALUE = 'value'
 TIMESERIES = "timeseries"
 TIMESERIES_RUN_ID = "runId"

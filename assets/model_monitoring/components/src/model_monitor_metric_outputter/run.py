@@ -39,7 +39,8 @@ def run():
     metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
 
     runmetric_client = RunMetricClient()
-    metrics_dict = MetricOutputBuilder(runmetric_client, args.monitor_name, args.signal_name, metrics).get_metrics_dict()
+    metrics_dict = MetricOutputBuilder(runmetric_client, args.monitor_name, args.signal_name, metrics) \
+        .get_metrics_dict()
     output_payload = to_output_payload(args.signal_name, args.signal_type, metrics_dict)
 
     local_path = str(uuid.uuid4())
@@ -48,9 +49,11 @@ def run():
     target_remote_path = os.path.join(args.signal_output, "signals")
     amlfs_upload(local_path=local_path, remote_path=target_remote_path)
 
-    print("Uploading run metrics to AML run history...")
+    print("Uploading run metrics to AML run history.")
     metric_timestamp = parser.parse(args.metric_timestamp)
     metric_step = int(metric_timestamp.timestamp())
+    print(f"Publishing metrics with step '{metric_step}'.")
+
     RunMetricPublisher(runmetric_client).publish_metrics(metrics_dict, metric_step)
 
     print("*************** output metrics ***************")

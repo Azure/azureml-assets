@@ -30,7 +30,7 @@ class MetricOutputBuilder:
 
     def __init__(self, runmetric_client: RunMetricClient, monitor_name: str, signal_name: str, metrics: List[Row]):
         """Construct a MetricOutputBuilder instance."""
-        self.runmetric_client : RunMetricClient = runmetric_client
+        self.runmetric_client: RunMetricClient = runmetric_client
         self.metrics_dict = self._build(monitor_name, signal_name, metrics)
 
     def get_metrics_dict(self) -> dict:
@@ -76,7 +76,14 @@ class MetricOutputBuilder:
 
         return metrics_dict
 
-    def _add_metric(self, metrics_dict: dict, monitor_name: str, signal_name: str, metric_name: str, metric: dict, group_names: List[str]):
+    def _add_metric(
+            self,
+            metrics_dict: dict,
+            monitor_name: str,
+            signal_name: str,
+            metric_name: str,
+            metric: dict,
+            group_names: List[str]):
         if metric_name not in metrics_dict:
             metrics_dict[metric_name] = {}
 
@@ -104,7 +111,7 @@ class MetricOutputBuilder:
                 cur_dict[VALUE] = metric[VALUE]
             if THRESHOLD in metric and metric[THRESHOLD]:
                 cur_dict[THRESHOLD] = metric[THRESHOLD]
-            
+
             # Add run metrics
             cur_dict[TIMESERIES] = self._create_timeseries(
                 monitor_name=monitor_name,
@@ -113,7 +120,7 @@ class MetricOutputBuilder:
                 groups=groups)
 
     def _create_timeseries(self, monitor_name: str, signal_name: str, metric_name: str, groups: List[str]):
-        
+
         if groups is None:
             groups = []
 
@@ -124,7 +131,8 @@ class MetricOutputBuilder:
             groups=groups
         )
 
-        print(f"Got run id {run_id} for metric {metric_name}, groups [{', '.join(groups)}], signal {signal_name}, monitor {monitor_name}.")
+        print(f"Got run id {run_id} for metric {metric_name}, groups [{', '.join(groups)}],"
+              + "signal {signal_name}, monitor {monitor_name}.")
 
         return {
             TIMESERIES_RUN_ID: run_id,
