@@ -3,7 +3,8 @@ name: model_prediction
 display_name: Model Prediction
 description: Generate predictions on a given mlflow model for supported tasks.
 
-version: 0.0.13
+version: 0.0.14
+type: command
 tags:
   type: evaluation
   sub_type: inference
@@ -72,6 +73,10 @@ inputs:
   batch_size:
     type: integer
     optional: true
+  validation_info:
+    type: uri_file
+    description: Path to the validation info file
+    optional: true
 
 outputs:
   predictions:
@@ -80,7 +85,10 @@ outputs:
     type: uri_file
   ground_truth:
     type: uri_file
+  performance_metadata:
+    type: uri_file
 
+is_deterministic: True
 code: ../../src
 environment: azureml://registries/azureml/environments/model-evaluation/versions/11
 
@@ -94,6 +102,7 @@ command: >-
   --predictions '${{outputs.predictions}}'
   --prediction-probabilities '${{outputs.prediction_probabilities}}'
   --ground-truth '${{outputs.ground_truth}}'
+  --performance-metadata '${{outputs.performance_metadata}}'
   --mlflow-model '${{inputs.mlflow_model}}'
   --device ${{inputs.device}}
   $[[--input-column-names '${{inputs.input_column_names}}']]
@@ -102,4 +111,5 @@ command: >-
   $[[--config-file-name '${{inputs.evaluation_config}}']]
   $[[--batch-size ${{inputs.batch_size}}]]
   $[[--config_str '${{inputs.evaluation_config_params}}']]
+  $[[--validation-info ${{inputs.validation_info}}]]
   
