@@ -9,6 +9,7 @@ import uuid
 import pytest
 from tests.mocks.mock_runmetric_client import MockRunMetricClient
 
+
 @pytest.fixture(scope="session")
 def root_temporary_directory():
     """Return the path to the root temporary directory."""
@@ -30,13 +31,16 @@ def unique_temporary_directory(root_temporary_directory):
     yield directory
     shutil.rmtree(directory, ignore_errors=True)
 
+
 @pytest.fixture(scope="function")
 def mock_runmetric_client():
     return MockRunMetricClient()
 
+
 @pytest.fixture(scope="function")
 def signal_name():
     return "signal_name"
+
 
 @pytest.fixture(scope="function")
 def monitor_name():

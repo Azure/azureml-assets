@@ -9,17 +9,14 @@ from azure.ai.ml.entities import Spark, AmlTokenConfiguration
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_METRIC_OUTPUTTER,
-    DATA_ASSET_MLTABLE_DATA_DRIFT_SIGNAL_OUTPUT
+    DATA_ASSET_MLTABLE_DATA_DRIFT_SIGNAL_OUTPUT,
 )
 
-testdata = [('True'), ('False')]
+testdata = [("True"), ("False")]
 
 
 def _submit_mdc_preprocessor_job(
-    ml_client: MLClient,
-    get_component,
-    experiment_name,
-    input_data
+    ml_client: MLClient, get_component, experiment_name, input_data
 ):
     metric_outputter_component = get_component(COMPONENT_NAME_METRIC_OUTPUTTER)
 
@@ -31,23 +28,19 @@ def _submit_mdc_preprocessor_job(
             monitor_name="model_outputter2_monitor_name",
             signal_name="model_outputter_signal_name",
             signal_type="my_signal_type",
-            metric_timestamp="2023-02-02T00:00:00Z"
+            metric_timestamp="2023-02-02T00:00:00Z",
         )
 
         metric_outputter_output.identity = AmlTokenConfiguration()
         metric_outputter_output.resources = {
-            'instance_type': 'Standard_E8S_V3',
-            'runtime_version': '3.3',
+            "instance_type": "Standard_E8S_V3",
+            "runtime_version": "3.3",
         }
 
-        return {
-            'signal_output': metric_outputter_output.outputs.signal_output
-        }
+        return {"signal_output": metric_outputter_output.outputs.signal_output}
 
     pipeline_job = _metric_outputter_e2e()
-    pipeline_job.outputs.signal_output = Output(
-        type='uri_folder', mode='direct'
-    )
+    pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
 
     pipeline_job = ml_client.jobs.create_or_update(
         pipeline_job, experiment_name=experiment_name
@@ -70,7 +63,7 @@ class TestModelMonitorMetricOutputterE2E:
             ml_client,
             get_component,
             test_suite_name,
-            DATA_ASSET_MLTABLE_DATA_DRIFT_SIGNAL_OUTPUT
+            DATA_ASSET_MLTABLE_DATA_DRIFT_SIGNAL_OUTPUT,
         )
 
-        assert pipeline_job.status == 'Completed'
+        assert pipeline_job.status == "Completed"
