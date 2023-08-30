@@ -7,11 +7,14 @@ import argparse
 import json
 import os
 import uuid
+from dateutil import parser
 
 from pyspark.sql import Row
 from typing import List
 
 from model_monitor_metric_outputter.builder.metric_output_builder import MetricOutputBuilder
+from model_monitor_metric_outputter.runmetric_client import RunMetricClient
+from model_monitor_metric_outputter.runmetrics_publisher import RunMetricPublisher
 from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.constants import METADATA_VERSION
 from shared_utilities.io_utils import (
@@ -28,13 +31,15 @@ def run():
     arg_parser.add_argument("--signal_name", type=str)
     arg_parser.add_argument("--signal_type", type=str)
     arg_parser.add_argument("--signal_metrics", type=str)
+    arg_parser.add_argument("--metric_timestamp", type=str)
     arg_parser.add_argument("--signal_output", type=str)
 
     args = arg_parser.parse_args()
 
     metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
 
-    metrics_dict = MetricOutputBuilder(args.monitor_name, args.signal_name, metrics).get_metrics_dict()
+    runmetric_client = RunMetricClient()
+    metrics_dict = MetricOutputBuilder(runmetric_client, args.monitor_name, args.signal_name, metrics).get_metrics_dict()
     output_payload = to_output_payload(args.signal_name, args.signal_type, metrics_dict)
 
     local_path = str(uuid.uuid4())
@@ -42,6 +47,11 @@ def run():
 
     target_remote_path = os.path.join(args.signal_output, "signals")
     amlfs_upload(local_path=local_path, remote_path=target_remote_path)
+
+    print("Uploading run metrics to AML run history...")
+    metric_timestamp = parser.parse(args.metric_timestamp)
+    metric_step = int(metric_timestamp.timestamp())
+    RunMetricPublisher(runmetric_client).publish_metrics(metrics_dict, metric_step)
 
     print("*************** output metrics ***************")
     print("Successfully executed the metric outputter component.")

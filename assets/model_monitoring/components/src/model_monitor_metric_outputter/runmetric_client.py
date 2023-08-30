@@ -14,6 +14,7 @@ class RunMetricClient:
 
     def __init__(self):
         """Construct a MetricOutputBuilder instance."""
+        self.parent_run_id = None
 
     def _get_experiment_id(self):
         return os.environ.get("MLFLOW_EXPERIMENT_ID")
@@ -33,20 +34,18 @@ class RunMetricClient:
             filters.append(_generate_filter("metric_name", metric_name))
         if groups is not None:
             for idx, group in enumerate(groups):
-                filters.append(_generate_filter(f"azureml.group_{idx}", group))
+                filters.append(_generate_filter(f"group_{idx}", group))
         return " and ".join(filters)
 
 
     def _create_run_tags(
-        self, monitor_name: str, signal_name: str, feature_name: str, metric_name: str, groups : List[str]
+        self, monitor_name: str, signal_name: str, metric_name: str, groups : List[str]
     ):
         tags = {}
         if monitor_name is not None:
             tags["azureml.monitor_name"] = monitor_name
         if signal_name is not None:
             tags["azureml.signal_name"] = signal_name
-        if feature_name is not None:
-            tags["azureml.feature_name"] = feature_name
         if metric_name is not None:
             tags["azureml.metric_name"] = metric_name
         
@@ -59,12 +58,17 @@ class RunMetricClient:
 
     def _get_or_create_parent_run_id(self, monitor_name: str):
         """Get or create a parent run id which will hold all of the underlying metric runs."""
+        
+        if self.parent_run_id is not None:
+            print(f"Parent run id '{self.parent_run_id}' already exists.")
+            return self.parent_run_id
+
         experiment_id = self._get_experiment_id()
         if experiment_id is None:
             print("No experiment id found. Skipping publishing run metrics.")
             return None
         filter_query = self._create_filter_query(
-            monitor_name=monitor_name, signal_name=None, feature_name=None, metric_name="azureml.metrics"
+            monitor_name=monitor_name, signal_name=None, metric_name="azureml.metrics", groups=[]
         )
         runs = mlflow.search_runs(
             experiment_ids=[experiment_id],
@@ -79,7 +83,7 @@ class RunMetricClient:
                 .create_run(
                     experiment_id=self._get_experiment_id(),
                     run_name=run_name,
-                    tags=self._create_run_tags(monitor_name, None, None, "azureml.metrics"),
+                    tags=self._create_run_tags(monitor_name, None, "azureml.metrics", []),
                 )
                 .info.run_id
             )
@@ -88,13 +92,16 @@ class RunMetricClient:
         else:
             metric_run_id = runs.iloc[0].run_id
             print(f"Found run with id '{metric_run_id}' matching filter.")
+        
+        self.parent_run_id = metric_run_id
+        
         return metric_run_id
 
 
     def get_or_create_run_id(
         self, monitor_name: str, signal_name: str, metric_name: str, groups : List[str]
     ) -> str:
-        """Get or create a run id for a given monitor, signal, feature, and metric."""
+        """Get or create a run id for a given monitor, signal, metric and groups."""
         experiment_id = self._get_experiment_id()
         if experiment_id is None:
             print("No experiment id found. Skipping publishing run metrics.")
@@ -113,7 +120,7 @@ class RunMetricClient:
             print("No run with matching filter found. Creating a new run.")
             with mlflow.start_run(run_id=self._get_or_create_parent_run_id(monitor_name)) as current_run:
                 print(f"Current parent run id: {current_run.info.run_id}")
-                with mlflow.start_run(nested=True) as nested_run:
+                with mlflow.start_run(nested=True, tags=self._create_run_tags(monitor_name, signal_name, metric_name, groups)) as nested_run:
                     run_id = nested_run.info.run_id
 
             print(f"Created child run with id '{run_id}'.")

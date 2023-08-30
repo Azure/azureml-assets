@@ -10,11 +10,11 @@ from pyspark.sql import Row
 from model_monitor_metric_outputter.builder.metric_output_builder import MetricOutputBuilder
 
 
-@pytest.mark.unit
+@pytest.mark.unit1
 class TestMetricOutputBuilder:
     """Test class for metric output builder."""
 
-    def test_metrics_with_1_level_groups(self):
+    def test_metrics_with_1_level_groups(self, mock_runmetric_client, monitor_name, signal_name):
         """Test metrics output builder for metrics with one level metric groups."""
         signal_metrics: List[Row] = [
             Row(
@@ -47,7 +47,7 @@ class TestMetricOutputBuilder:
             ),
         ]
 
-        metric_output_builder = MetricOutputBuilder(signal_metrics)
+        metric_output_builder = MetricOutputBuilder(mock_runmetric_client, monitor_name, signal_name, signal_metrics)
         metrics_dict = metric_output_builder.get_metrics_dict()
 
         assert metrics_dict == {
@@ -77,7 +77,7 @@ class TestMetricOutputBuilder:
             },
         }
 
-    def test_empty_groups_and_group_dimensions_success(self):
+    def test_empty_groups_and_group_dimensions_success(self,mock_runmetric_client, monitor_name, signal_name):
         """Test metrics output builder for metrics that does not contain groups and group dimensions."""
         signal_metrics: List[Row] = [
             Row(
@@ -113,7 +113,7 @@ class TestMetricOutputBuilder:
             ),
         ]
 
-        metric_output_builder = MetricOutputBuilder(signal_metrics)
+        metric_output_builder = MetricOutputBuilder(mock_runmetric_client, monitor_name, signal_name, signal_metrics)
         metrics_dict = metric_output_builder.get_metrics_dict()
         assert metrics_dict == {
             "num_calls": {
@@ -142,7 +142,7 @@ class TestMetricOutputBuilder:
             }
         }
 
-    def test_group_without_group_dimension_success(self):
+    def test_group_without_group_dimension_success(self, mock_runmetric_client, monitor_name, signal_name):
         """Test metrics output builder for metrics that contains group but not group dimension."""
         signal_metrics: List[Row] = [
             Row(
@@ -173,7 +173,7 @@ class TestMetricOutputBuilder:
             ),
         ]
 
-        metric_output_builder = MetricOutputBuilder(signal_metrics)
+        metric_output_builder = MetricOutputBuilder(mock_runmetric_client, monitor_name, signal_name, signal_metrics)
         metrics_dict = metric_output_builder.get_metrics_dict()
         assert metrics_dict == {
             "num_calls": {
@@ -202,7 +202,7 @@ class TestMetricOutputBuilder:
             },
         }
 
-    def test_metrics_with_2_level_groups(self):
+    def test_metrics_with_2_level_groups(self, mock_runmetric_client, monitor_name, signal_name):
         """Test metrics output builder for metrics with two level metric groups."""
         signal_metrics: List[Row] = [
             Row(
@@ -305,7 +305,7 @@ class TestMetricOutputBuilder:
             ),
         ]
 
-        metric_output_builder = MetricOutputBuilder(signal_metrics)
+        metric_output_builder = MetricOutputBuilder(mock_runmetric_client, monitor_name, signal_name, signal_metrics)
         metrics_dict = metric_output_builder.get_metrics_dict()
 
         assert metrics_dict == {
@@ -316,18 +316,46 @@ class TestMetricOutputBuilder:
                             "user_A": {
                                 "value": 18.0,
                                 "threshold": 50.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                             "user_B": {
                                 "value": 18.0,
                                 "threshold": 50.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                             "user_C": {
                                 "value": 18.0,
                                 "threshold": 50.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                             "user_D": {
                                 "value": 17.0,
                                 "threshold": 50.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                         },
                     },
@@ -336,18 +364,46 @@ class TestMetricOutputBuilder:
                             "user_A": {
                                 "value": 32.0,
                                 "threshold": 50.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                             "user_B": {
                                 "value": 32.0,
                                 "threshold": 50.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                             "user_C": {
                                 "value": 32.0,
                                 "threshold": 50.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                             "user_D": {
                                 "value": 33.0,
                                 "threshold": 50.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                         },
                     },
@@ -359,9 +415,23 @@ class TestMetricOutputBuilder:
                         "groups": {
                             "user_B": {
                                 "value": 18.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                             "user_D": {
                                 "value": 17.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                         },
                     },
@@ -369,15 +439,43 @@ class TestMetricOutputBuilder:
                         "groups": {
                             "user_A": {
                                 "value": 20.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                             "user_B": {
                                 "value": 11.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                             "user_C": {
                                 "value": 21.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                             "user_D": {
                                 "value": 11.0,
+                                "timeseries": {
+                                    "runId": mock_runmetric_client.run_id,
+                                    "metricNames": {
+                                        "value": "value",
+                                        "threshold": "threshold"
+                                    }
+                                }
                             },
                         },
                     },

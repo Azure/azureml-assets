@@ -82,6 +82,8 @@ inputs:
   workspace_connection_arm_id:
     type: string
     optional: false
+  monitor_current_time:
+    type: string
 outputs:
   signal_output:
     type: uri_folder
@@ -145,6 +147,7 @@ jobs:
         path: ${{parent.jobs.compute_metrics.outputs.signal_metrics}}
       signal_type: "GenerationSafetyQuality"
       signal_name: ${{parent.inputs.signal_name}}
+      metric_timestamp: ${{parent.inputs.monitor_current_time}}
     outputs:
       signal_output:
         type: uri_folder

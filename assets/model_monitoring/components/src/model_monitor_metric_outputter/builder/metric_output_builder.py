@@ -28,10 +28,10 @@ from shared_utilities.constants import (
 class MetricOutputBuilder:
     """Builder class which creates a metrics object."""
 
-    def __init__(self, runmetric_client: RunMetricClient, metrics: List[Row]):
+    def __init__(self, runmetric_client: RunMetricClient, monitor_name: str, signal_name: str, metrics: List[Row]):
         """Construct a MetricOutputBuilder instance."""
-        self.metrics_dict = self._build(metrics)
         self.runmetric_client : RunMetricClient = runmetric_client
+        self.metrics_dict = self._build(monitor_name, signal_name, metrics)
 
     def get_metrics_dict(self) -> dict:
         """Get the metrics object."""
@@ -81,6 +81,7 @@ class MetricOutputBuilder:
             metrics_dict[metric_name] = {}
 
         cur_dict = metrics_dict[metric_name]
+        groups = group_names.copy()
 
         if len(group_names) > 0:
             for idx, group_name in enumerate(group_names):
@@ -105,10 +106,13 @@ class MetricOutputBuilder:
                 monitor_name=monitor_name,
                 signal_name=signal_name,
                 metric_name=metric_name,
-                groups=group_names)
+                groups=groups)
 
     def _create_timeseries(self, monitor_name: str, signal_name: str, metric_name: str, groups: List[str]):
         
+        if groups is None:
+            groups = []
+
         run_id = self.runmetric_client.get_or_create_run_id(
             monitor_name=monitor_name,
             signal_name=signal_name,
@@ -116,15 +120,15 @@ class MetricOutputBuilder:
             groups=groups
         )
 
-        timeseries = {
+        print(f"Got run id {run_id} for metric {metric_name}, groups [{', '.join(groups)}], signal {signal_name}, monitor {monitor_name}.")
+
+        return {
             TIMESERIES_RUN_ID: run_id,
             TIMESERIES_METRIC_NAMES: {
                 TIMESERIES_METRIC_NAMES_VALUE: "value",
                 TIMESERIES_METRIC_NAMES_THRESHOLD: "threshold"
             }
         }
-
-        return timeseries
 
     def _create_metric_groups_if_not_exist(self, cur_dict: dict, group_name: str):
         if GROUPS not in cur_dict:
