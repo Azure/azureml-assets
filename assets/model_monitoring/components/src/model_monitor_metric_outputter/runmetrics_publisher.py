@@ -38,7 +38,7 @@ class RunMetricPublisher:
         # Iterate through nested groups and call publish metrics recursively
         if GROUPS in metrics:
             for group in metrics[GROUPS]:
-                self._publish_metrics(metrics[group], metric_step)
+                self._publish_metrics(metrics[GROUPS][group], metric_step)
 
     def _publish_metric_to_run(self, metrics: dict, metric_step: int):
 

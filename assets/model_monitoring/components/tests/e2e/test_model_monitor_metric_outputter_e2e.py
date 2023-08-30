@@ -15,7 +15,7 @@ from tests.e2e.utils.constants import (
 testdata = [("True"), ("False")]
 
 
-def _submit_mdc_preprocessor_job(
+def _submit_metric_outputter_job(
     ml_client: MLClient, get_component, experiment_name, input_data
 ):
     metric_outputter_component = get_component(COMPONENT_NAME_METRIC_OUTPUTTER)
@@ -25,8 +25,8 @@ def _submit_mdc_preprocessor_job(
 
         metric_outputter_output: Spark = metric_outputter_component(
             signal_metrics=Input(path=input_data, mode="direct", type="uri_folder"),
-            monitor_name="model_outputter2_monitor_name",
-            signal_name="model_outputter_signal_name",
+            monitor_name="metric_outputter_monitor_name",
+            signal_name="metric_outputter_signal_name",
             signal_type="my_signal_type",
             metric_timestamp="2023-02-02T00:00:00Z",
         )
@@ -59,7 +59,7 @@ class TestModelMonitorMetricOutputterE2E:
         self, ml_client: MLClient, get_component, test_suite_name
     ):
         """Test the happy path scenario for MDC preprocessor."""
-        pipeline_job = _submit_mdc_preprocessor_job(
+        pipeline_job = _submit_metric_outputter_job(
             ml_client,
             get_component,
             test_suite_name,
