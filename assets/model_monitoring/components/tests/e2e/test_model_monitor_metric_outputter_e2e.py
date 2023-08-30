@@ -12,6 +12,7 @@ from tests.e2e.utils.constants import (
     DATA_ASSET_MLTABLE_DATA_DRIFT_SIGNAL_OUTPUT,
 )
 
+
 def _submit_metric_outputter_job(
     ml_client: MLClient, get_component, experiment_name, input_data
 ):
