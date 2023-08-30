@@ -4,21 +4,18 @@
 """Builder class which creates a metrics object."""
 
 from typing import List
-import mlflow
 import uuid
-
-# Generate a random UUID
 
 
 class MockRunMetricClient:
     """Builder class which creates a metrics object."""
-    
+
     def __init__(self):
         """Construct a MetricOutputBuilder instance."""
         self.run_id = str(uuid.uuid4())
 
     def get_or_create_run_id(
-        self, monitor_name: str, signal_name: str, metric_name: str, groups : List[str]
+        self, monitor_name: str, signal_name: str, metric_name: str, groups: List[str]
     ) -> str:
         """Get or create a run id for a given monitor, signal, metric and groups."""
         return self.run_id
