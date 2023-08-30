@@ -27,13 +27,6 @@ class RunMetricPublisher:
     def publish_metrics(self, metrics: dict, metric_step: int):
         """Publish metrics to AML Run Metrics."""
 
-        if METRICS not in metrics:
-            print(
-                "No metrics present in signal output. Skipping metric publishing step."
-            )
-            return
-
-        metrics = metrics[METRICS]
         for metric_name in metrics:
             print(f"Publishing metrics for '{metric_name}'.")
             self._publish_metrics(metrics[metric_name], metric_step)
