@@ -33,13 +33,12 @@ class RunMetricPublisher:
         """Publish metrics to AML Run Metrics."""
         # check if run metrics is present at this level
         if TIMESERIES in metrics:
-            print("Publishing metrics.")
             self._publish_metric_to_run(metrics, metric_step)
 
         # Iterate through nested groups and call publish metrics recursively
         if GROUPS in metrics:
             for group in metrics[GROUPS]:
-                self.publish_metrics(metrics[group], metric_step)
+                self._publish_metrics(metrics[group], metric_step)
 
     def _publish_metric_to_run(self, metrics: dict, metric_step: int):
 
@@ -59,7 +58,4 @@ class RunMetricPublisher:
 
         run_id = timeseries[TIMESERIES_RUN_ID]
 
-        print(
-            f"Publishing metric {metrics_to_publish} to run {run_id} at step {metric_step}."
-        )
         self.runmetric_client.publish_metrics(run_id, metrics_to_publish, metric_step)

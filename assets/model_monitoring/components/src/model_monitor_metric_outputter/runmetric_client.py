@@ -150,6 +150,8 @@ class RunMetricClient:
 
     def publish_metrics(self, run_id: str, metrics: dict, step: int):
         """Publish metrics to the run metrics store."""
-        print(f"Publishing metrics to run id '{run_id}'.")
+        print(
+            f"Publishing metric {metrics} to run {run_id} at step {step}."
+        )
         with mlflow.start_run(run_id=run_id, nested=True):
             mlflow.log_metrics(metrics=metrics, step=step)
