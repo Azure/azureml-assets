@@ -41,4 +41,5 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: text-classification
+  disable-batch: 'true'
 version: 9
