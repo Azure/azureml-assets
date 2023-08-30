@@ -36,7 +36,7 @@ class RunMetricPublisher:
         # check if run metrics is present at this level
         if TIMESERIES in metrics:
             print("Publishing metrics.")
-            self._publish_metric_to_run(metrics)
+            self._publish_metric_to_run(metrics, metric_step)
 
         # Iterate through nested groups and call publish metrics recursively
         if GROUPS in metrics:
