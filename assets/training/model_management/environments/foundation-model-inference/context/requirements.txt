@@ -1,5 +1,5 @@
 deepspeed~=0.10.1
-git+https://github.com/microsoft/DeepSpeed-MII.git
+deepspeed-mii~=0.0.6
 aiolimiter~=1.1.0
 torch~=2.0.1
 protobuf~=4.23.4
