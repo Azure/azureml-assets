@@ -131,12 +131,14 @@ def get_model_wrapper(task_type, target_column, baseline_data):
     return model_wrapper
 
 
-def compute_explanations(model_wrapper, data, categorical_features, target_column, task_type):
-    """Compute global and local explanations (feature importances) for a given dataset.
+def compute_explanations(local, model_wrapper, data, categorical_features, target_column, task_type):
+    """Compute global or local explanations (feature importances) for a given dataset.
 
+    :param local: Whether the calculated explanations should be local or, if false, global
+    :type boolean
     :param model_wrapper: wrapper around a model that can be used to calculate explanations
     :type model_wrapper: PredictionsModelWrapperRegression or PredictionsModelWrapperClassification
-    :param  data: The data used to calculate the explanations
+    :param data: The data used to calculate the explanations
     :type data: pandas.Dataframe
     :param categorical_features: categorical features not including the target column
     :type categorical_features: list[str]
@@ -144,8 +146,8 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     :type target_column: string
     :param task_type: the task type (regression or classification) of the resulting model
     :type task_type: string
-    :return: global explanation scores for the input data and local explanation scores for the input data
-    :rtype: list[float], list[float]
+    :return: explanation scores for the input data
+    :rtype: list[float]
     """
     # Create the RAI Insights object, use baseline as train and test data
     feature_metadata = FeatureMetadata(categorical_features=categorical_features, dropped_features=[])
@@ -155,22 +157,25 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     log_time_and_message("Created RAIInsights")
     rai_i.explainer.add()
     evaluation_data = data.drop([target_column], axis=1)
-    # Add the global explanations using batching to allow for larger input data sizes
-    log_time_and_message("Requesting global explanations")
-    globalExplanationData = rai_i.explainer.request_explanations(local=False, data=evaluation_data)
-    globalExplanation = globalExplanationData.precomputedExplanations.globalFeatureImportance['scores']
-    # Add local explanations
-    log_time_and_message("Requesting local explanations")
-    localExplanations = []
-    for index, data in evaluation_data.iterrows():
-        localExplanation = rai_i.explainer.request_explanations(local=True, data=pd.DataFrame(data).T)
-        localExplanations.append(localExplanation.precomputedExplanations.localFeatureImportance.scores)
-    return globalExplanation, localExplanations
+    if local:
+        log_time_and_message("Requesting local explanations")
+        localExplanations = []
+        for index, data in evaluation_data.iterrows():
+            localExplanation = rai_i.explainer.request_explanations(local=True, data=pd.DataFrame(data).T)
+            localExplanations.append(localExplanation.precomputedExplanations.localFeatureImportance.scores)
+        return localExplanations
+    else:
+        # Add the global explanations using batching to allow for larger input data sizes
+        log_time_and_message("Requesting global explanations")
+        globalExplanationData = rai_i.explainer.request_explanations(local=False, data=evaluation_data)
+        return globalExplanationData.precomputedExplanations.globalFeatureImportance['scores']
 
 
-def compute_feature_importance(task_type, target_column, baseline_data, categorical_features):
-    """Compute global and local feature importance of baseline data.
+def compute_feature_importance(local, task_type, target_column, baseline_data, categorical_features):
+    """Compute global or local feature importance of baseline data.
 
+    :param local: Whether the calculated feature importance should be local or, if false, global
+    :type local: boolean
     :param task_type: The task type (regression or classification) of the resulting model
     :type task_type: string
     :param target_column: the column to predict
@@ -180,17 +185,16 @@ def compute_feature_importance(task_type, target_column, baseline_data, categori
     :type baseline_data: pandas.DataFrame
     :param categorical_features: The column names which are categorical in type
     :type categorical_features: list[string]
-    :return: list of global feature importances in the order of the columns in the baseline data,
-    list of local feature importances in order of input rows and the columns in the baseline data
-    :rtype: list[float], list[float]
+    :return: list of feature importances in the order of the columns in the baseline data
+    :rtype: list[float]
     """
     model_wrapper = get_model_wrapper(task_type, target_column, baseline_data)
 
-    global_baseline_explanations, local_baseline_explanations = compute_explanations(
-        model_wrapper, baseline_data, categorical_features, target_column, task_type)
+    baseline_explanations = compute_explanations(
+        local, model_wrapper, baseline_data, categorical_features, target_column, task_type)
     log_time_and_message("Successfully computed explanations for dataset")
 
-    return global_baseline_explanations, local_baseline_explanations
+    return baseline_explanations
 
 
 def create_signal_metrics_df(global_explanations, dataset, categorical_features):
@@ -325,6 +329,7 @@ def run(args):
         log_time_and_message("Reading data in spark and converting to pandas")
         baseline_df = read_mltable_in_spark(args.baseline_data).toPandas()
         # Drop correlation id from baseline_data if present
+        # TODO instead of removing a hardcoded column, detect for and remove categorical columns with unique values
         if constants.MDC_CORRELATION_ID_COLUMN in baseline_df.columns:
             baseline_df = baseline_df.drop(columns=[constants.MDC_CORRELATION_ID_COLUMN])
         task_type = args.task_type if args.task_type else determine_task_type(args.target_column, baseline_df)
@@ -333,8 +338,18 @@ def run(args):
 
         log_time_and_message("Computing feature importances")
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
-        global_feature_importances, local_feature_importances = compute_feature_importance(
-            task_type, args.target_column, baseline_df, categorical_features)
+        global_feature_importances = compute_feature_importance(
+            local=False,
+            task_type= task_type,
+            target_column=args.target_column,
+            baseline_data= baseline_df,
+            categorical_features=categorical_features)
+        local_feature_importances = compute_feature_importance(
+            local=True,
+            task_type= task_type,
+            target_column=args.target_column,
+            baseline_data= baseline_df,
+            categorical_features=categorical_features)
 
         log_time_and_message("Writing feature importances to outputs")
         feature_columns = baseline_df.drop([args.target_column], axis=1)
