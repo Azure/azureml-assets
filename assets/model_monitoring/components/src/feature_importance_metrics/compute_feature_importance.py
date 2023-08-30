@@ -340,15 +340,15 @@ def run(args):
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
         global_feature_importances = compute_feature_importance(
             local=False,
-            task_type= task_type,
+            task_type=task_type,
             target_column=args.target_column,
-            baseline_data= baseline_df,
+            baseline_data=baseline_df,
             categorical_features=categorical_features)
         local_feature_importances = compute_feature_importance(
             local=True,
-            task_type= task_type,
+            task_type=task_type,
             target_column=args.target_column,
-            baseline_data= baseline_df,
+            baseline_data=baseline_df,
             categorical_features=categorical_features)
 
         log_time_and_message("Writing feature importances to outputs")
