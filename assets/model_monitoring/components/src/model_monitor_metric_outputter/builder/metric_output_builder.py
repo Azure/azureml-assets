@@ -82,7 +82,6 @@ class MetricOutputBuilder:
 
         cur_dict = metrics_dict[metric_name]
         groups = group_names.copy()
-
         if len(group_names) > 0:
             for idx, group_name in enumerate(group_names):
                 if idx < len(group_names) - 1:
@@ -95,6 +94,11 @@ class MetricOutputBuilder:
                     else:
                         self._create_metric_groups_if_not_exist(cur_dict, group_name)
                         cur_dict[GROUPS][group_name] = metric
+                        cur_dict[GROUPS][group_name][TIMESERIES] = self._create_timeseries(
+                            monitor_name=monitor_name,
+                            signal_name=signal_name,
+                            metric_name=metric_name,
+                            groups=groups)
         else:
             if VALUE in metric and metric[VALUE]:
                 cur_dict[VALUE] = metric[VALUE]

@@ -56,10 +56,24 @@ class TestMetricOutputBuilder:
                     "group_1": {
                         "value": 71.0,
                         "threshold": 100.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        }
                     },
                     "group_2": {
                         "value": 129.0,
                         "threshold": 100.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        }
                     },
                 },
             },
@@ -68,10 +82,24 @@ class TestMetricOutputBuilder:
                     "group_1": {
                         "value": 35.0,
                         "threshold": 10.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        }
                     },
                     "group_2": {
                         "value": 63.0,
                         "threshold": 10.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        }
                     },
                 },
             },
@@ -121,24 +149,59 @@ class TestMetricOutputBuilder:
                     "group_1": {
                         "value": 71.0,
                         "threshold": 100.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        }
                     },
                     "group_2": {
                         "value": 129.0,
                         "threshold": 100.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        }
                     },
                 },
             },
             "num_calls_with_status_code_429": {
                 "value": 35.0,
                 "threshold": 10.0,
+                "timeseries": {
+                    "runId": mock_runmetric_client.run_id,
+                    "metricNames": {
+                        "value": "value",
+                        "threshold": "threshold"
+                    }
+                }
             },
             "num_calls_with_status_code_500": {
                 "value": 63.0,
                 "threshold": 10.0,
+                "timeseries": {
+                    "runId": mock_runmetric_client.run_id,
+                    "metricNames": {
+                        "value": "value",
+                        "threshold": "threshold"
+                    }
+                }
             },
             "num_calls_with_status_code_504": {
                 "value": 22.0,
-                "threshold": 10.0
+                "threshold": 10.0,
+                "timeseries": {
+                    "runId": mock_runmetric_client.run_id,
+                    "metricNames": {
+                        "value": "value",
+                        "threshold": "threshold"
+                    }
+                }
             }
         }
 
@@ -181,10 +244,24 @@ class TestMetricOutputBuilder:
                     "group_1": {
                         "value": 71.0,
                         "threshold": 100.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        }
                     },
                     "group_2": {
                         "value": 129.0,
                         "threshold": 100.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        }
                     },
                 },
             },
@@ -193,10 +270,24 @@ class TestMetricOutputBuilder:
                     "group_1": {
                         "value": 35.0,
                         "threshold": 10.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        }
                     },
                     "group_2": {
                         "value": 63.0,
                         "threshold": 10.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        }
                     },
                 },
             },
