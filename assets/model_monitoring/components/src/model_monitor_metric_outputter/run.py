@@ -4,10 +4,10 @@
 """Entry script for Model Monitor Metric Outputter Component."""
 
 import argparse
+from dateutil import parser
 import json
 import os
 import uuid
-from dateutil import parser
 
 from pyspark.sql import Row
 from typing import List

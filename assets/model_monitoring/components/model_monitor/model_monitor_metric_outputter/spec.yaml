@@ -12,13 +12,13 @@ entry:
   file: ./model_monitor_metric_outputter/run.py
 
 inputs:
+  monitor_name:
+    type: string
+  signal_name:
+    type: string
   signal_metrics: 
     type: mltable
     mode: direct
-  signal_name:
-    type: string
-  monitor_name:
-    type: string
   signal_type: 
     type: string
   metric_timestamp:

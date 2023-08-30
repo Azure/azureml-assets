@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Builder class which creates a metrics object."""
+"""Client leveraged to retrieve and publish run metrics."""
 
 import os
 from typing import List
@@ -9,10 +9,10 @@ import mlflow
 
 
 class RunMetricClient:
-    """Builder class which creates a metrics object."""
+    """Client leveraged to retrieve and publish run metrics."""
 
     def __init__(self):
-        """Construct a MetricOutputBuilder instance."""
+        """Construct a RunMetricClient instance."""
         self.parent_run_id = None
 
     def _get_experiment_id(self):
