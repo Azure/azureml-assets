@@ -6,6 +6,7 @@
 import azureml.model.mgmt.processors.transformers as transformers
 from azureml.model.mgmt.config import ModelFlavor
 from azureml.model.mgmt.processors import pyfunc
+import azureml.model.mgmt.processors.pyfunc.stable_diffusion as stable_diff_pyfunc
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from pathlib import Path
 from typing import Dict
@@ -33,6 +34,8 @@ def run_preprocess(mlflow_flavor: str, model_path: Path, output_dir: Path, temp_
         transformers.to_mlflow(model_path, output_dir, temp_dir, preprocess_args)
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         pyfunc.to_mlflow(model_path, output_dir, preprocess_args)
+    elif mlflow_flavor == ModelFlavor.STABLE_DIFFUSION_PYFUNC.value:
+        stable_diff_pyfunc.to_mlflow(model_path, output_dir, preprocess_args)
     else:
         raise Exception(f"Unsupported model flavor: {mlflow_flavor}.")
     logger.info("Model prepocessing completed.")

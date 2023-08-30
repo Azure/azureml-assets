@@ -96,6 +96,14 @@ def _validate_pyfunc_args(pyfunc_args):
     if not Tasks.has_value(task):
         raise Exception(f"Unsupported task {task} for pyfunc flavor.")
 
+def _validate_stable_diff_pyfunc_args(pyfunc_args):
+    if not args.get("model_id"):
+        raise Exception("model_id is a required parameter for pyfunc MLflow flavor for stable diffusion.")
+    if not pyfunc_args.get("task"):
+        raise Exception("task is a required parameter for pyfunc MLflow flavor for stable diffusion.")
+    task = pyfunc_args["task"]
+    if not Tasks.has_value(task):
+        raise Exception(f"Unsupported task {task} for pyfunc flavor.")
 
 @swallow_all_exceptions(logger)
 def run():
@@ -166,6 +174,8 @@ def run():
         _validate_transformers_args(preprocess_args)
     elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
         _validate_pyfunc_args(preprocess_args)
+    elif mlflow_flavor == ModelFlavor.STABLE_DIFFUSION_PYFUNC.value:
+        _validate_stable_diff_pyfunc_args(preprocess_args)
 
     with TemporaryDirectory(dir=mlflow_model_output_dir) as working_dir, TemporaryDirectory(
         dir=mlflow_model_output_dir
