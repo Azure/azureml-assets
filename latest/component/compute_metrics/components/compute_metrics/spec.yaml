@@ -4,9 +4,8 @@ display_name: Compute Metrics
 description: Calculate model performance metrics, given ground truth and prediction
   data.
 
-version: 0.0.13
+version: 0.0.14
 type: command
-
 tags:
   type: evaluation
   sub_type: compute_metrics
@@ -58,6 +57,7 @@ outputs:
   evaluation_result:
     type: uri_folder
 
+is_deterministic: true
 code: ../../src
 environment: azureml://registries/azureml/environments/model-evaluation/versions/11
 

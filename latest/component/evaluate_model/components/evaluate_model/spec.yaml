@@ -3,8 +3,8 @@ name: evaluate_model
 display_name: Evaluate Model
 description: Evaluate MLFlow models for supported task types.
 
-version: 0.0.13
-
+version: 0.0.14
+type: command
 tags:
   type: evaluation
   sub_type: evaluate_model
@@ -65,6 +65,7 @@ outputs:
   evaluation_result:
     type: uri_folder
 
+is_deterministic: true
 code: ../../src
 environment: azureml://registries/azureml/environments/model-evaluation/versions/11
 

@@ -530,7 +530,9 @@ class ArgumentsSet:
         args_map = {
             ForecastingConfigContract.TIME_COLUMN_NAME: "str(val)",
             ForecastingConfigContract.TIME_SERIES_ID_COLUMN_NAMES: "val",
-            ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)"
+            ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)",
+            "predictions_column_name": "val",
+            "ground_truths_column_name": "val"
         }
         return args_map
 
@@ -635,7 +637,7 @@ def read_data(file_path, is_mltable=True, batch_size=None):
         if is_mltable:
             data = iter([load(file_path).to_pandas_dataframe()])
         else:
-            data = pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
+            data = read_dataframe(file_path, batch_size=batch_size)
             if not batch_size:
                 data = iter([data])
     except Exception as e:
@@ -646,6 +648,32 @@ def read_data(file_path, is_mltable=True, batch_size=None):
         log_traceback(exception, logger)
         raise exception
     return data
+
+
+def read_dataframe(file_path, batch_size=None):
+    """Util function for reading a DataFrame based on the file extension.
+
+    Args:
+        file_path (_type_): _description_
+        batch_size: (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
+    file_extension = os.path.splitext(file_path)[1]
+
+    if file_extension == '.csv':
+        # Reading a CSV file with the specified batch_size
+        return pd.read_csv(file_path, chunksize=batch_size)
+    elif file_extension == '.tsv':
+        # Reading a TSV file with the specified batch_size and skipping initial spaces
+        return pd.read_csv(file_path, sep='\t', chunksize=batch_size, skipinitialspace=True)
+    elif file_extension == '.jsonl':
+        # Reading a JSONL file with the specified batch_size
+        return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
+    else:
+        # Default to reading JSONL files without raising an exception
+        return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
 
 
 def prepare_data(data, task, label_column_name=None, _has_multiple_output=False):

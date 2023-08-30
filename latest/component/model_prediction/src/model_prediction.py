@@ -8,6 +8,8 @@ import pandas as pd
 import constants
 import torch
 import ast
+import time
+from datetime import datetime, timezone
 from itertools import repeat
 
 from exceptions import (
@@ -119,6 +121,32 @@ class ModelPredictionRunner:
         data = map(prepare_data, data, repeat(self.task), repeat(label_column_name))
         return data  # X_test, y_test
 
+    def load_tokenizer(self, token_counts_enabled):
+        """Load Tokenizer.
+
+        Args:
+            token_counts_enabled (boolean): Whether or not token counts are enabled.
+
+        Returns:
+            _type_: _description_
+        """
+        tokenizer_load_start = time.time()
+        logger.info("Loading Tokenizer")
+        tokenizer = None
+
+        if self.task in constants.TEXT_TOKEN_TASKS and token_counts_enabled:
+            try:
+                tokenizer = self.predictor.model._model_impl.tokenizer
+                logger.info(f"Loaded Tokenizer: {tokenizer}")
+            except Exception as e:
+                logger.info(f"Error encountered in loading the tokenizer: {e}")
+                logger.warning("Tokenizer loading failed with the error above; no token counts will be returned.")
+        elif self.task not in constants.TEXT_TOKEN_TASKS and token_counts_enabled:
+            logger.warning("Token counts not supported for this task type; no token counts will be returned.")
+
+        logger.info(f"Tokenizer load time ms: {(time.time() - tokenizer_load_start) * 1000}")
+        return tokenizer
+
     def predict(self, data, label_column_name):
         """Predict.
 
@@ -129,7 +157,11 @@ class ModelPredictionRunner:
         Returns:
             _type_: _description_
         """
-        predictions, pred_probas, y_test = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+        predictions, pred_probas, y_test, performance = pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+
+        enable_token_counts = self.config.get("token_count_per_sample", False)
+        enable_character_counts = self.config.get("char_count_per_sample", False)
+        tokenizer = self.load_tokenizer(enable_token_counts)
 
         for idx, (X_test, y_test_chunk) in enumerate(data):
             logger.info("batch: " + str(idx))
@@ -149,19 +181,25 @@ class ModelPredictionRunner:
                 if self.task == constants.TASK.TRANSLATION:
                     source_lang = self.config.get("source_lang", None)
                     target_lang = self.config.get("target_lang", None)
+                    start_ms = time.time() * 1000
                     predictions_chunk = self.predictor.predict(X_test, y_transformer=y_transformer,
                                                                multilabel=self.multilabel,
                                                                source_lang=source_lang, target_lang=target_lang)
+                    end_ms = time.time() * 1000
+                    latency_ms = end_ms - start_ms
                 else:
                     # batching is handled in mlflow predict for image tasks.
                     if self.task in constants.IMAGE_TASKS:
                         pipeline_params.update(self.config)
                         if self.batch_size:
                             pipeline_params.update({"batch_size": self.batch_size})
+                    start_ms = time.time() * 1000
                     predictions_chunk = self.predictor.predict(X_test, y_transformer=y_transformer,
                                                                multilabel=self.multilabel,
                                                                masks_required=self.masks_required,
                                                                **pipeline_params)
+                    end_ms = time.time() * 1000
+                    latency_ms = end_ms - start_ms
                 if self.task in constants.CLASSIFICATION_SET:
                     pred_probas_chunk = self.predictor.predict_proba(X_test, y_transformer=y_transformer,
                                                                      multilabel=self.multilabel,
@@ -188,11 +226,63 @@ class ModelPredictionRunner:
                     pred_probas_chunk.index = X_test.index
                 else:
                     pred_probas_chunk = pd.DataFrame({})
+
+                performance_chunk = pd.DataFrame({})
+                performance_chunk[constants.PerformanceColumns.BATCH_SIZE_COLUMN_NAME] = \
+                    [len(predictions_chunk) for _ in range(len(predictions_chunk))]
+
+                start_time_iso_string = datetime.fromtimestamp(start_ms / 1000, timezone.utc).isoformat()
+                end_time_iso_string = datetime.fromtimestamp(end_ms / 1000, timezone.utc).isoformat()
+                performance_chunk[constants.PerformanceColumns.START_TIME_COLUMN_NAME] = \
+                    [start_time_iso_string for _ in range(len(predictions_chunk))]
+                performance_chunk[constants.PerformanceColumns.END_TIME_COLUMN_NAME] = \
+                    [end_time_iso_string for _ in range(len(predictions_chunk))]
+                performance_chunk[constants.PerformanceColumns.LATENCY_COLUMN_NAME] = \
+                    [latency_ms for _ in range(len(predictions_chunk))]
+
+                if self.task in constants.TEXT_TOKEN_TASKS and enable_character_counts:
+                    char_time_start = time.time()
+                    if self.task in constants.TEXT_OUTPUT_TOKEN_TASKS:
+                        performance_chunk[constants.PerformanceColumns.OUTPUT_CHARACTERS_COLUMN_NAME] = \
+                            [len(pred) for pred in predictions_chunk[predictions_chunk.columns.values[0]]]
+
+                    if self.task == constants.TASK.QnA:
+                        performance_chunk[constants.PerformanceColumns.INPUT_CHARACTERS_COLUMN_NAME] = \
+                            [len(q) + len(a) for q, a in zip(X_test[X_test.columns.values[0]],
+                                                             X_test[X_test.columns.values[1]])]
+                    else:
+                        performance_chunk[constants.PerformanceColumns.INPUT_CHARACTERS_COLUMN_NAME] = \
+                            [len(inp) for inp in X_test[X_test.columns.values[0]]]
+                    logger.info(f"Character count time ms: {(time.time() - char_time_start) * 1000}")
+                elif self.task not in constants.TEXT_TOKEN_TASKS and enable_character_counts:
+                    logger.warning("Character counts not supported for this task type; "
+                                   "no character counts will be returned.")
+
+                if tokenizer is not None:
+                    token_time_start = time.time()
+                    if self.task in constants.TEXT_OUTPUT_TOKEN_TASKS:
+                        curr_predictions = list(predictions_chunk[predictions_chunk.columns.values[0]])
+                        tokenized_predictions = tokenizer(curr_predictions)["input_ids"]
+                        pred_num_tokens = [len(tokenized_input) for tokenized_input in tokenized_predictions]
+                        performance_chunk[constants.PerformanceColumns.OUTPUT_TOKENS_COLUMN_NAME] = pred_num_tokens
+
+                    if self.task == constants.TASK.QnA:
+                        tokenized_inputs = tokenizer(
+                            list(X_test[X_test.columns.values[0]]), list(X_test[X_test.columns.values[1]])
+                        )["input_ids"]
+                    else:
+                        tokenized_inputs = tokenizer(list(X_test[X_test.columns.values[0]]))["input_ids"]
+                    input_num_tokens = [len(tokenized_input) for tokenized_input in tokenized_inputs]
+                    performance_chunk[constants.PerformanceColumns.INPUT_TOKENS_COLUMN_NAME] = input_num_tokens
+                    logger.info(f"Token count time ms: {(time.time() - token_time_start) * 1000}")
+
                 predictions = pd.concat([predictions, predictions_chunk], axis=0)
                 pred_probas = pd.concat([pred_probas, pred_probas_chunk], axis=0)
                 y_test = pd.concat([y_test, y_test_chunk], axis=0)
+                performance = pd.concat([performance, performance_chunk], axis=0)
                 if self.task in [constants.TASK.IMAGE_OBJECT_DETECTION, constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
                     y_test["image_meta_info"] = X_test["image_meta_info"]
+                logger.info(f"Latency (ms) for this batch: {latency_ms}")
 
             except Exception as e:
                 if isinstance(e, ModelEvaluationException):
@@ -208,12 +298,12 @@ class ModelPredictionRunner:
                     log_traceback(exception, logger)
                 raise exception
 
-        return predictions, pred_probas, y_test
+        return predictions, pred_probas, y_test, performance
 
 
 @swallow_all_exceptions(logger)
 def run():
-    """Entry function of model_test script."""
+    """Entry function of model prediction script."""
     parser = ArgumentParser()
     # Inputs
     parser.add_argument("--task", type=str, dest="task", required=True, choices=constants.ALL_TASKS)
@@ -236,6 +326,8 @@ def run():
     parser.add_argument("--prediction-probabilities", type=str, dest="prediction_probabilities",
                         required=False, default=None)
     parser.add_argument("--ground-truth", type=str, dest="ground_truth", required=False, default=None)
+    parser.add_argument("--performance-metadata", type=str, dest="performance_metadata", required=False,
+                        default=None)
 
     args, unknown_args_ = parser.parse_known_args()
 
@@ -274,7 +366,7 @@ def run():
     with log_activity(logger, constants.TelemetryConstants.PREDICT_NAME,
                       custom_dimensions=custom_dims_dict):
         logger.info("Model Prediction.")
-        preds, pred_probas, ground_truth = runner.predict(data, args.label_column_name)
+        preds, pred_probas, ground_truth, perf_data = runner.predict(data, args.label_column_name)
 
     logger.info("Saving outputs.")
     preds.to_json(args.predictions, orient="records", lines=True)
@@ -282,6 +374,9 @@ def run():
         pred_probas.to_json(args.prediction_probabilities, orient="records", lines=True)
     if ground_truth is not None:
         ground_truth.to_json(args.ground_truth, orient="records", lines=True)
+    if perf_data is not None:
+        perf_data.to_json(args.performance_metadata, orient="records", lines=True)
+
     try:
         root_run.add_properties(properties=constants.ROOT_RUN_PROPERTIES)
     except Exception:
