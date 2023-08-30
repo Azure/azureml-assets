@@ -105,7 +105,7 @@ class TestMetricOutputBuilder:
             },
         }
 
-    def test_empty_groups_and_group_dimensions_success(self,mock_runmetric_client, monitor_name, signal_name):
+    def test_empty_groups_and_group_dimensions_success(self, mock_runmetric_client, monitor_name, signal_name):
         """Test metrics output builder for metrics that does not contain groups and group dimensions."""
         signal_metrics: List[Row] = [
             Row(
