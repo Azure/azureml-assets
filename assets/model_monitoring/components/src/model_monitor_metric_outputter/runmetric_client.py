@@ -55,7 +55,6 @@ class RunMetricClient:
 
     def _get_or_create_parent_run_id(self, monitor_name: str):
         """Get or create a parent run id which will hold all of the underlying metric runs."""
-
         if self.parent_run_id is not None:
             print(f"Parent run id '{self.parent_run_id}' already exists.")
             return self.parent_run_id

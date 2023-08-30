@@ -25,14 +25,12 @@ class RunMetricPublisher:
 
     def publish_metrics(self, metrics: dict, metric_step: int):
         """Publish metrics to AML Run Metrics."""
-
         for metric_name in metrics:
             print(f"Publishing metrics for '{metric_name}'.")
             self._publish_metrics(metrics[metric_name], metric_step)
 
     def _publish_metrics(self, metrics: dict, metric_step: int):
         """Publish metrics to AML Run Metrics."""
-
         # check if run metrics is present at this level
         if TIMESERIES in metrics:
             print("Publishing metrics.")

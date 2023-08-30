@@ -34,14 +34,17 @@ def unique_temporary_directory(root_temporary_directory):
 
 @pytest.fixture(scope="function")
 def mock_runmetric_client():
+    """Mock run metrics client which returns a static GUID as run ID and no-ops on  publishing."""
     return MockRunMetricClient()
 
 
 @pytest.fixture(scope="function")
 def signal_name():
+    """Mock signal name."""
     return "signal_name"
 
 
 @pytest.fixture(scope="function")
 def monitor_name():
+    """Mock monitor name."""
     return "monitor_name"
