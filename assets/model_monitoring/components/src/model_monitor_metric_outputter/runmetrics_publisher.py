@@ -7,7 +7,6 @@ from runmetric_client import RunMetricClient
 from shared_utilities.constants import (
     GROUPS,
     THRESHOLD,
-    METRICS,
     VALUE,
     TIMESERIES,
     TIMESERIES_RUN_ID,
