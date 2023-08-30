@@ -257,13 +257,12 @@ def create_local_feature_importance_df(explanations, dataset, task_type):
     # Populate importances
     for index in range(len(explanations)):
         new_row = {}
-        # TODO: Does this need to be set to some correlation ID beyond the index of the row?
         new_row[constants.ROW_INDEX] = index
 
         if task_type == constants.CLASSIFICATION:
             for potential_class in range(len(explanations[index])):
                 # TODO: Class is currently the index of the class in the local explanations matrix,
-                # should be updated to be mapped to class name
+                # update to be mapped to class name
                 new_row[constants.CLASS] = potential_class
                 local_explanation = explanations[index][potential_class][0]
                 for feature_index in range(len(local_explanation)):
@@ -325,6 +324,9 @@ def run(args):
             return
         log_time_and_message("Reading data in spark and converting to pandas")
         baseline_df = read_mltable_in_spark(args.baseline_data).toPandas()
+        # Drop correlation id from baseline_data if present
+        if constants.MDC_CORRELATION_ID_COLUMN in baseline_df.columns:
+            baseline_df = baseline_df.drop(columns=[constants.MDC_CORRELATION_ID_COLUMN])
         task_type = args.task_type if args.task_type else determine_task_type(args.target_column, baseline_df)
         task_type = task_type.lower()
         log_time_and_message(f"Computed task type is {task_type}")
