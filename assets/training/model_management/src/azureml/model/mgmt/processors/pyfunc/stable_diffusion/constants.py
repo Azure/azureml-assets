@@ -1,4 +1,12 @@
-class TaskType:
+from enum import Enum
+
+class _CustomEnum(Enum):
+    @classmethod
+    def has_value(cls, value):
+        return value in cls._value2member_map_
+
+
+class Tasks(_CustomEnum):
     """
     Task types supported by stable diffusion
     """

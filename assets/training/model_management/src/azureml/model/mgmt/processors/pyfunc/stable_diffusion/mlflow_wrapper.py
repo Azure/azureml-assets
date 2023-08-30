@@ -13,7 +13,7 @@ from io import BytesIO
 import mlflow
 import torch
 
-from constants import COLUMN_NAMES, DATATYPE_LITERALS, TaskType
+from constants import COLUMN_NAMES, DATATYPE_LITERALS, Tasks
 
 
 class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -43,7 +43,7 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        if self._task_type in [TaskType.TEXT_TO_IMAGE, TaskType.INPAINTING]:
+        if self._task_type in [Tasks.TEXT_TO_IMAGE, Tasks.INPAINTING]:
             try:
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
 
