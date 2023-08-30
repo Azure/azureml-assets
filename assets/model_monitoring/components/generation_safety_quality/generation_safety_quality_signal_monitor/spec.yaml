@@ -7,6 +7,8 @@ description: Computes the content generation safety metrics over LLM outputs.
 version: 0.3.12
 is_deterministic: true
 inputs:
+  monitor_name:
+    type: string
   signal_name:
     type: string
   production_data:
@@ -148,6 +150,7 @@ jobs:
       signal_type: "GenerationSafetyQuality"
       signal_name: ${{parent.inputs.signal_name}}
       metric_timestamp: ${{parent.inputs.monitor_current_time}}
+      monitor_name: ${{parent.inputs.monitor_name}}
     outputs:
       signal_output:
         type: uri_folder
