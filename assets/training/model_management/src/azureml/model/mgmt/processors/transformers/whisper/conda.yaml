@@ -19,6 +19,5 @@ dependencies:
   - more-itertools==9.1.0
   - ffmpeg-python==0.2.0
   - decord==0.6.0
-  - azureml-inference-server-http
   - wget==3.2
 name: mlflow-env
