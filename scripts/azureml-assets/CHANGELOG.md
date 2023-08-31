@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.14.2 (2023-08-31)
+### 🐛 Bugs Fixed
+- [#1150](https://github.com/Azure/azureml-assets/pull/1147) Fix model registration issue
+
 ## 1.14.1 (2023-08-31)
 ### 🐛 Bugs Fixed
 - [#1147](https://github.com/Azure/azureml-assets/pull/1147) Use packaging directly
