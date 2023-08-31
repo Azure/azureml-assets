@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.14.1 (2023-08-31)
+### 🐛 Bugs Fixed
+- []() Use packaging directly
+
 ## 1.14.0 (2023-08-25)
 ### 🚀 New Features
 - [#1098](https://github.com/Azure/azureml-assets/pull/1098) Allow to update Model metadata without increasing the version.
