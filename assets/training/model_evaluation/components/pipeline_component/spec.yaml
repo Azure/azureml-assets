@@ -90,55 +90,55 @@ jobs:
   validation_trigger_model_evaluation:
     type: command
     component: azureml:validation_trigger_model_evaluation:0.0.1.0
-    compute: ${{parent.inputs.compute_name}}
+    compute: '${{parent.inputs.compute_name}}'
     resources:
-      instance_type: ${{parent.inputs.instance_type}}
+      instance_type: '${{parent.inputs.instance_type}}'
     inputs:
-      compute_name: ${{parent.inputs.compute_name}}
-      compute_instance_type: ${{parent.inputs.instance_type}}
-      task: ${{parent.inputs.task}}
-      test_data: ${{parent.inputs.test_data}}
-      mlflow_model_path: ${{parent.inputs.mlflow_model}}
-      label_column_name: ${{parent.inputs.label_column_name}}
-      input_column_names: ${{parent.inputs.input_column_names}}
-      device: ${{parent.inputs.device}}
-      batch_size: ${{parent.inputs.batch_size}}
-      evaluation_config: ${{parent.inputs.evaluation_config}}
-      evaluation_config_params: ${{parent.inputs.evaluation_config_params}}
+      compute_name: '${{parent.inputs.compute_name}}'
+      compute_instance_type: '${{parent.inputs.instance_type}}'
+      task: '${{parent.inputs.task}}'
+      test_data: '${{parent.inputs.test_data}}'
+      mlflow_model_path: '${{parent.inputs.mlflow_model}}'
+      label_column_name: '${{parent.inputs.label_column_name}}'
+      input_column_names: '${{parent.inputs.input_column_names}}'
+      device: '${{parent.inputs.device}}'
+      batch_size: '${{parent.inputs.batch_size}}'
+      evaluation_config: '${{parent.inputs.evaluation_config}}'
+      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
 
   model_prediction:
     type: command
     component: azureml:model_prediction:0.0.14
-    compute: ${{parent.inputs.compute_name}}
+    compute: '${{parent.inputs.compute_name}}'
     resources:
-      instance_type: ${{parent.inputs.instance_type}}
+      instance_type: '${{parent.inputs.instance_type}}'
     inputs:
-      task: ${{parent.inputs.task}}
-      test_data: ${{parent.inputs.test_data}}
-      mlflow_model: ${{parent.inputs.mlflow_model}}
-      label_column_name: ${{parent.inputs.label_column_name}}
-      input_column_names: ${{parent.inputs.input_column_names}}
-      model_uri: ${{parent.inputs.model_uri}}
-      device: ${{parent.inputs.device}} 
-      batch_size: ${{parent.inputs.batch_size}}
-      evaluation_config: ${{parent.inputs.evaluation_config}}
-      evaluation_config_params: ${{parent.inputs.evaluation_config_params}}
-      validation_info: ${{parent.jobs.validation_trigger_model_evaluation.outputs.validation_info}}
+      task: '${{parent.inputs.task}}'
+      test_data: '${{parent.inputs.test_data}}'
+      mlflow_model: '${{parent.inputs.mlflow_model}}'
+      label_column_name: '${{parent.inputs.label_column_name}}'
+      input_column_names: '${{parent.inputs.input_column_names}}'
+      model_uri: '${{parent.inputs.model_uri}}'
+      device: '${{parent.inputs.device}}' 
+      batch_size: '${{parent.inputs.batch_size}}'
+      evaluation_config: '${{parent.inputs.evaluation_config}}'
+      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
+      validation_info: '${{parent.jobs.validation_trigger_model_evaluation.outputs.validation_info}}'
   
   compute_metrics:
     type: command
     component: azureml:compute_metrics:0.0.14
-    compute: ${{parent.inputs.compute_name}}
+    compute: '${{parent.inputs.compute_name}}'
     resources:
-      instance_type: ${{parent.inputs.instance_type}}
+      instance_type: '${{parent.inputs.instance_type}}'
     inputs:
-      task: ${{parent.inputs.task}}
-      ground_truth: ${{parent.jobs.model_prediction.outputs.ground_truth}}
-      ground_truth_column_name: ${{parent.inputs.label_column_name}}
-      prediction: ${{parent.jobs.model_prediction.outputs.predictions}}
+      task: '${{parent.inputs.task}}'
+      ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'
+      ground_truth_column_name: '${{parent.inputs.label_column_name}}'
+      prediction: '${{parent.jobs.model_prediction.outputs.predictions}}'
       prediction_column_name: predictions
-      prediction_probabilities: ${{parent.jobs.model_prediction.outputs.prediction_probabilities}}
-      evaluation_config: ${{parent.inputs.evaluation_config}}
-      evaluation_config_params: ${{parent.inputs.evaluation_config_params}}
+      prediction_probabilities: '${{parent.jobs.model_prediction.outputs.prediction_probabilities}}'
+      evaluation_config: '${{parent.inputs.evaluation_config}}'
+      evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
     outputs:
       evaluation_result: '${{parent.outputs.evaluation_result}}'
