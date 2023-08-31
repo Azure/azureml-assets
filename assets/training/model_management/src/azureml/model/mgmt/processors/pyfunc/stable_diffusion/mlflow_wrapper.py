@@ -43,7 +43,7 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        if self._task_type in [Tasks.TEXT_TO_IMAGE, Tasks.INPAINTING]:
+        if self._task_type in [Tasks.TEXT_TO_IMAGE, Tasks.IMAGE_INPAINTING]:
             try:
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
 

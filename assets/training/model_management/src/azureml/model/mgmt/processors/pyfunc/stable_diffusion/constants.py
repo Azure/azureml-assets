@@ -11,7 +11,7 @@ class Tasks(_CustomEnum):
     Task types supported by stable diffusion
     """
     TEXT_TO_IMAGE = "text-to-image"
-    INPAINTING = "inpainting"
+    IMAGE_INPAINTING = "image-inpainting"
 
 
 class COLUMN_NAMES:
