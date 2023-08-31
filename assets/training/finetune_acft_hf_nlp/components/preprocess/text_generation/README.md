@@ -6,7 +6,7 @@ text_generation_datapreprocess
 
 ### Version 
 
-0.0.2
+0.0.17
 
 ### Type 
 
@@ -14,48 +14,39 @@ command
 
 ### Description 
 
-Component to preprocess data for single label generation task. See [docs](https://aka.ms/azureml/components/text_generation_datapreprocess) to learn more.
+Component to preprocess data for text generation task
 
 ## Inputs 
 
-Text Claasification task type
+Text Generation task arguments
 
-| Name      | Description                   | Type   | Default                   | Optional | Enum                          |
-| --------- | ----------------------------- | ------ | ------------------------- | -------- | ----------------------------- |
-| task_name | Text Generation task type | string | TextGeneration | False    | ['TextGeneration'] |
-
-
-
-task arguments
-
-sample input
-
-{"text":"The meaning of life is", "ground_truth":"being content and living it to the fullest"}
-
-| Name                 | Description                                                          | Type    | Default | Optional | Enum |
-| -------------        | -------------------------------------------------------------------- | ------- | ------- | -------- | ---- |
-| text_key             | Key for `text_key` in each example line                              | string  | -       | False    | NA   |
-| ground_truth_key     | ground_truth key in each example line                                | string  | -       | False    | NA   |
-| batch_size           | Number of examples to batch before calling the tokenization function | integer | 1000    | True     | NA   |
+| Name             | Description                                                                                                                                                                                                                                                                                                                                                                                                                     | Type    | Default | Optional | Enum |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- | -------- | ---- |
+| text_key         | key for text in an example. format your data keeping in mind that text is concatenated with ground_truth while finetuning in the form - text + groundtruth. for eg. "text"="knock knock\n", "ground_truth"="who's there"; will be treated as "knock knock\nwho's there"                                                                                                                                                         | string  | -       | False    | NA   |
+| ground_truth_key | key for ground_truth in an example. we take separate column for ground_truth to enable use cases like summarization, translation, question_answering, etc. which can be repurposed in form of text-generation where both text and ground_truth are needed. This separation is useful for calculating metrics. for eg. "text"="Summarize this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of the dialogue}" | string  | -       | False    | NA   |
+| batch_size       | Number of examples to batch before calling the tokenization function                                                                                                                                                                                                                                                                                                                                                            | integer | 1000    | True     | NA   |
 
 
 
-Data inputs
+Tokenization params
 
-Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split from train data happens if they are not passed.
+| Name              | Description                                                                                                                                                                                                                         | Type    | Default | Optional | Enum              |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- | -------- | ----------------- |
+| pad_to_max_length | If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length. | string  | false   | True     | ['true', 'false'] |
+| max_seq_length    | Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`.                                                                                                                | integer | -1      | True     | NA                |
 
-If both validation and test files are missing, 10% of train data will be assigned to each of them and the remaining 80% will be used for training
 
-If anyone of the file is missing, 20% of the train data will be assigned to it and the remaining 80% will be used for training
 
-| Name                    | Description                                                                                                               | Type     | Default | Optional | Enum |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- | ------- | -------- | ---- |
-| train_file_path         | Path to the registered training data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.   | uri_file | -       | True     | NA   |
-| validation_file_path    | Path to the registered validation data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. | uri_file | -       | True     | NA   |
-| test_file_path          | Path to the registered test data asset. The supported data formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.       | uri_file | -       | True     | NA   |
-| train_mltable_path      | Path to the registered training data asset in `mltable` format.                                                           | mltable  | -       | True     | NA   |
-| validation_mltable_path | Path to the registered validation data asset in `mltable` format.                                                         | mltable  | -       | True     | NA   |
-| test_mltable_path       | Path to the registered test data asset in `mltable` format.                                                               | mltable  | -       | True     | NA   |
+Inputs
+
+| Name                    | Description                       | Type     | Default | Optional | Enum |
+| ----------------------- | --------------------------------- | -------- | ------- | -------- | ---- |
+| train_file_path         | Enter the train file path         | uri_file | -       | True     | NA   |
+| validation_file_path    | Enter the validation file path    | uri_file | -       | True     | NA   |
+| test_file_path          | Enter the test file path          | uri_file | -       | True     | NA   |
+| train_mltable_path      | Enter the train mltable path      | mltable  | -       | True     | NA   |
+| validation_mltable_path | Enter the validation mltable path | mltable  | -       | True     | NA   |
+| test_mltable_path       | Enter the test mltable path       | mltable  | -       | True     | NA   |
 
 
 
@@ -67,6 +58,6 @@ Dataset parameters
 
 ## Outputs 
 
-| Name       | Description                                                                                                                              | Type       |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| output_dir | The folder contains the tokenized output of the train, validation and test data along with the tokenizer files used to tokenize the data | uri_folder |
+| Name       | Description                                        | Type       |
+| ---------- | -------------------------------------------------- | ---------- |
+| output_dir | folder to store preprocessed outputs of input data | uri_folder |

@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_generation_pipeline
-version: 0.0.16
+version: 0.0.17
 type: pipeline
 display_name: Text Generation Pipeline
 description: Pipeline component for text generation
@@ -256,6 +256,12 @@ inputs:
     optional: true
     description: Number of updates steps to accumulate the gradients for, before performing a backward/update pass
 
+  eval_accumulation_steps:
+    type: integer
+    default: 1
+    optional: true
+    description: Number of predictions steps to accumulate before moving the tensors to the CPU
+
   lr_scheduler_type:
     type: string
     default: linear
@@ -267,7 +273,7 @@ inputs:
       - polynomial
       - constant
       - constant_with_warmup
-    description: The scheduler type to use
+    description: learning rate scheduler to use.
 
   precision:
     type: string
@@ -477,23 +483,23 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.16
+    component: azureml:ft_nlp_common_validation:0.0.17
     compute: '${{parent.inputs.compute_model_import}}'
     inputs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
       compute_finetune: '${{parent.inputs.compute_finetune}}'
   text_generation_model_import:
     type: command
-    component: azureml:text_generation_model_import:0.0.16
-    compute: ${{parent.inputs.compute_model_import}}
+    component: azureml:text_generation_model_import:0.0.17
+    compute: '${{parent.inputs.compute_model_import}}'
     inputs:
       huggingface_id: ${{parent.inputs.huggingface_id}}
       pytorch_model_path: ${{parent.inputs.pytorch_model_path}}
       mlflow_model_path: ${{parent.inputs.mlflow_model_path}}
   text_generation_datapreprocess:
     type: command
-    component: azureml:text_generation_datapreprocess:0.0.16
-    compute: ${{parent.inputs.compute_preprocess}}
+    component: azureml:text_generation_datapreprocess:0.0.17
+    compute: '${{parent.inputs.compute_preprocess}}'
     inputs:
       text_key: ${{parent.inputs.text_key}}
       ground_truth_key: ${{parent.inputs.ground_truth_key}}
@@ -509,8 +515,8 @@ jobs:
       model_selector_output: ${{parent.jobs.text_generation_model_import.outputs.output_dir}}
   text_generation_finetune:
     type: command
-    component: azureml:text_generation_finetune:0.0.16
-    compute: ${{parent.inputs.compute_finetune}}
+    component: azureml:text_generation_finetune:0.0.17
+    compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
       process_count_per_instance: ${{parent.inputs.number_of_gpu_to_use_finetuning}}
