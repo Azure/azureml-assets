@@ -5,7 +5,7 @@
 
 ## 1.14.1 (2023-08-31)
 ### 🐛 Bugs Fixed
-- []() Use packaging directly
+- [#1147](https://github.com/Azure/azureml-assets/pull/1147) Use packaging directly
 
 ## 1.14.0 (2023-08-25)
 ### 🚀 New Features
