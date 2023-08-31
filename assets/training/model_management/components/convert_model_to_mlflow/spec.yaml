@@ -43,7 +43,7 @@ inputs:
     enum:
       - transformers
       - mmlab_pyfunc
-      - stable_diffusion_pyfun
+      - stable_diffusion_pyfunc
     default: transformers
     optional: false
     description: MLflow flavor to convert model into. Please note that, mmlab_pyfunc flavor is only supported for image object detection models.
