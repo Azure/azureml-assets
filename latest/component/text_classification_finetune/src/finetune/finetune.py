@@ -455,7 +455,7 @@ def finetune(args: Namespace):
         args.model_name_or_path = args.model_name
 
     # Enable QLoRA finetune for Llama-70B
-    model_asset_id = getattr(args, "model_asset_id", "")
+    model_asset_id = getattr(args, "model_asset_id", None) or ""
     if any(
         [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
     ):
@@ -510,6 +510,11 @@ def finetune(args: Namespace):
                     f"Adding mlflow model signature for task {args.task_name} - "
                     f"{MLFLOW_MODEL_SIGNATURES[args.task_name]}"
                 )
+
+    # remove mlflow_model_signature if empty
+    if "mlflow_model_signature" in mlflow_ft_conf \
+            and len(mlflow_ft_conf["mlflow_model_signature"]) == 0:
+        del mlflow_ft_conf["mlflow_model_signature"]
 
     model_name_or_type = None
     # pass `mlflow_hftransformers_misc_conf` to be set in mlflow model
@@ -685,6 +690,7 @@ def main():
             AutoModelForSequenceClassification,
             AutoModelForTokenClassification,
             AutoModelForQuestionAnswering,
+            AutoModelForCausalLM,
         )
 
         # Updata lora target modules for falcon
@@ -699,7 +705,10 @@ def main():
         AutoModelForQuestionAnswering.from_pretrained = partial(
             AutoModelForQuestionAnswering.from_pretrained, trust_remote_code=True
         )
-        logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA")
+        AutoModelForCausalLM.from_pretrained = partial(
+            AutoModelForCausalLM.from_pretrained, trust_remote_code=True
+        )
+        logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA and Text Gen")
 
     finetune(args)
 

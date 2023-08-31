@@ -7,8 +7,10 @@ import argparse
 import json
 from argparse import Namespace
 import copy
+import yaml
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
+from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
 from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, HfModelTypes
 
@@ -197,6 +199,12 @@ ACFT_CONFIG = {
             },
         },
     },
+    HfModelTypes.LLAMA: {
+        "load_tokenizer_kwargs": {
+            "add_eos_token": True,
+            "padding_side": "right"
+        }
+    }
 }
 
 
@@ -300,19 +308,6 @@ def model_selector(args: Namespace):
     task_runner = get_task_runner(task_name=args.task_name)()
     task_runner.run_modelselector(**vars(args))
 
-    # for base curated models forward MLmodel info
-    if getattr(args, "mlflow_model_path", None) is not None:
-        import shutil
-        from azureml.acft.contrib.hf.nlp.constants.constants import MLFlowHFFlavourConstants
-        mlflow_config_file = Path(args.mlflow_model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
-        if mlflow_config_file.is_file():
-            shutil.copy(str(mlflow_config_file), args.output_dir)
-            logger.info("Copied MLmodel file to output dir")
-        else:
-            logger.info("MLmodel file does not exist")
-    else:
-        logger.info("mlflow_model_path is empty")
-
     # load user provided finetune_config.json
     ft_config_path = getattr(args, "finetune_config_path", None)
     # if ft_config_path is not provided check inside pytorch/mlflow model folder
@@ -369,6 +364,46 @@ def model_selector(args: Namespace):
         logger.info(f"Updated FT config from model_name data - {ft_config_data}")
     else:
         logger.info(f"Not updating FT config data - {ft_config_data}")
+
+    # for base curated models forward MLmodel info
+    if getattr(args, "mlflow_model_path", None) is not None:
+        import shutil
+        from azureml.acft.contrib.hf.nlp.constants.constants import MLFlowHFFlavourConstants
+        mlflow_config_file = Path(args.mlflow_model_path, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
+        if mlflow_config_file.is_file():
+            shutil.copy(str(mlflow_config_file), args.output_dir)
+            logger.info("Copied MLmodel file to output dir")
+
+            # pass mlflow data to ft config if available
+            mlflow_ftconf_data = {}
+            mlflow_data = None
+            try:
+                with open(str(mlflow_config_file), "r") as fp:
+                    mlflow_data = yaml.safe_load(fp)
+                if mlflow_data and "flavors" in mlflow_data:
+                    for key in mlflow_data["flavors"]:
+                        if key in ["hftransformers", "hftransformersv2"]:
+                            for key2 in mlflow_data["flavors"][key]:
+                                if key2 == "generator_config":
+                                    generator_config = mlflow_data["flavors"][key]["generator_config"]
+                                    mlflow_ftconf_data.update(
+                                        {
+                                            "load_config_kwargs": copy.deepcopy(generator_config),
+                                            "mlflow_ft_conf": {
+                                                "mlflow_hftransformers_misc_conf": {
+                                                    "generator_config": copy.deepcopy(generator_config),
+                                                },
+                                            },
+                                        }
+                                    )
+                ft_config_data = deep_update(mlflow_ftconf_data, ft_config_data)
+                logger.info(f"Updated FT config data - {ft_config_data}")
+            except Exception:
+                logger.info("Unable to read MLModel file")
+        else:
+            logger.info("MLmodel file does not exist")
+    else:
+        logger.info("mlflow_model_path is empty")
 
     # saving FT config
     with open(str(Path(args.output_dir, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)), "w") as rptr:
