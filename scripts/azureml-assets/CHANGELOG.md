@@ -1,11 +1,9 @@
-## 1.16.0 (Unreleased)
+## 1.15.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
 
-## 1.15.0 (Unreleased)
-### 🚀 New Features
-
+## 1.14.2 (2023-08-31)
 ### 🐛 Bugs Fixed
 [#1150](https://github.com/Azure/azureml-assets/pull/1147) Fix model registration issue
 
