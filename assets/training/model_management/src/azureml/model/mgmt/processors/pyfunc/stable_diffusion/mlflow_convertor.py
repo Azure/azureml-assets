@@ -1,8 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import os
+from pathlib import Path
+from typing import Dict
+
 from .mlflow_wrapper import StableDiffusionMLflowWrapper
 from azureml.model.mgmt.config import ComponentConstants
+from azureml.model.mgmt.utils.common_utils import log_execution_time
+
 
 @log_execution_time
 def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None:
