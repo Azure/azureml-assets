@@ -65,12 +65,18 @@ inputs:
   text_key:
     type: string
     optional: false
-    description: key for text in an example
+    description: key for text in an example. format your data keeping in mind that
+      text is concatenated with ground_truth while finetuning in the form - text + groundtruth.
+      for eg. "text"="knock knock\n", "ground_truth"="who's there"; will be treated as "knock knock\nwho's there"
 
   ground_truth_key:
     type: string
     optional: false
-    description: key for ground_truth in an example
+    description: key for ground_truth in an example. 
+      we take separate column for ground_truth to enable use cases like summarization, translation, 
+      question_answering, etc. which can be repurposed in form of text-generation where both text and ground_truth are needed.
+      This separation is useful for calculating metrics.
+      for eg. "text"="Summarize this dialog:\n{input_dialogue}\nSummary:\n", "ground_truth"="{summary of the dialogue}"
 
   batch_size:
     type: integer
