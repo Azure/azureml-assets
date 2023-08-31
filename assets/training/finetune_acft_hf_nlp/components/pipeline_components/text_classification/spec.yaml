@@ -558,6 +558,7 @@ jobs:
       adam_beta2: '${{parent.inputs.adam_beta2}}'
       adam_epsilon: '${{parent.inputs.adam_epsilon}}'
       gradient_accumulation_steps: '${{parent.inputs.gradient_accumulation_steps}}'
+      eval_accumulation_steps: '${{parent.inputs.eval_accumulation_steps}}'
       lr_scheduler_type: '${{parent.inputs.lr_scheduler_type}}'
       precision: '${{parent.inputs.precision}}'
       seed: '${{parent.inputs.seed}}'
