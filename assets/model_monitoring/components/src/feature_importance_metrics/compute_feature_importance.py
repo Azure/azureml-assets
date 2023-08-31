@@ -197,8 +197,8 @@ def compute_feature_importance(local, task_type, target_column, baseline_data, c
     return baseline_explanations
 
 
-def create_signal_metrics_df(global_explanations, dataset, categorical_features):
-    """Create signal metrics data frame.
+def create_global_feature_importance_metrics_df(global_explanations, dataset, categorical_features):
+    """Create signal metrics data frame for global feature importance.
 
     :param global_explanations: list of global feature importances in the order of the baseline columns
     :type global_explanations: list[float]
@@ -262,19 +262,25 @@ def create_local_feature_importance_df(explanations, dataset, task_type):
     for index in range(len(explanations)):
         new_row = {}
         new_row[constants.ROW_INDEX] = index
+        # Get the local explanations for the row of input data
+        row_explanations = explanations[index]
 
         if task_type == constants.CLASSIFICATION:
-            for potential_class in range(len(explanations[index])):
+            for _class in range(len(row_explanations)):
                 # TODO: Class is currently the index of the class in the local explanations matrix,
                 # update to be mapped to class name
-                new_row[constants.CLASS] = potential_class
-                local_explanation = explanations[index][potential_class][0]
-                for feature_index in range(len(local_explanation)):
-                    new_row[feature_names[feature_index]] = local_explanation[feature_index]
+                new_row[constants.CLASS] = _class
+                # Get the local explanation for the row, given the predicted class is _class
+                # This explanation is a list of the feature importance value for each feature
+                class_explanation = row_explanations[_class][0]
+                # Get and record the feature importance value for each feature
+                for feature_index in range(len(class_explanation)):
+                    new_row[feature_names[feature_index]] = class_explanation[feature_index]
                 sample_data = sample_data.append(new_row, ignore_index=True)
 
         if task_type == constants.REGRESSION:
-            for feature_index in range(len(explanations[index])):
+            # Get and record the feature importance value for each feature
+            for feature_index in range(len(row_explanations)):
                 new_row[feature_names[feature_index]] = explanations[index][feature_index]
             sample_data = sample_data.append(new_row)
 
@@ -292,7 +298,7 @@ def write_to_mltable(global_explanations, local_explanations, dataset, file_path
     :type file_path: string
     """
     log_time_and_message("Begin writing explanations to mltable")
-    signal_metrics = create_signal_metrics_df(global_explanations, dataset, categorical_features)
+    signal_metrics = create_global_feature_importance_metrics_df(global_explanations, dataset, categorical_features)
     local_feature_importance_sample = create_local_feature_importance_df(local_explanations, dataset, task_type)
     combined_table = pd.concat([signal_metrics, local_feature_importance_sample], axis=0, ignore_index=True)
 
