@@ -10,3 +10,4 @@ dependencies:
   # vulnerabilities
   - cryptography>=41.0.3
   - requests >= 2.31.0
+  - certifi >= 2023.07.22
