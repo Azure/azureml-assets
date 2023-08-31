@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 from .mlflow_wrapper import StableDiffusionMLflowWrapper
-
+from azureml.model.mgmt.config import ComponentConstants
 
 @log_execution_time
 def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None:
@@ -16,8 +16,8 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None
     :type translate_params: Dict
     :return: None
     """
-    model_id = translate_params.get("model_id")
-    task = translate_params["task"]
+    model_id = translate_params.get(ComponentConstants.MODEL_ID)
+    task = translate_params[ComponentConstants.TASK]
 
     mlflow_model_wrapper = StableDiffusionMLflowWrapper(task_type=task, model_id=model_id)
     artifacts_dict = _prepare_artifacts_dict(input_dir)

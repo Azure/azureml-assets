@@ -7,7 +7,7 @@ import argparse
 import os
 import json
 import shutil
-from azureml.model.mgmt.config import AppName, ModelFlavor
+from azureml.model.mgmt.config import AppName, ComponentConstants, ModelFlavor
 from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
@@ -98,11 +98,11 @@ def _validate_pyfunc_args(pyfunc_args):
         raise Exception(f"Unsupported task {task} for pyfunc flavor.")
 
 def _validate_stable_diff_pyfunc_args(pyfunc_args):
-    if not pyfunc_args.get("model_id"):
+    if not pyfunc_args.get(ComponentConstants.MODEL_ID):
         raise Exception("model_id is a required parameter for pyfunc MLflow flavor for stable diffusion.")
-    if not pyfunc_args.get("task"):
+    if not pyfunc_args.get(ComponentConstants.TASK):
         raise Exception("task is a required parameter for pyfunc MLflow flavor for stable diffusion.")
-    task = pyfunc_args["task"]
+    task = pyfunc_args[ComponentConstants.TASK]
     if not StableDiffusionTasks.has_value(task):
         raise Exception(f"Unsupported task {task} for pyfunc MLflow flavor for stable diffusion.")
 

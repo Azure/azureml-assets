@@ -13,7 +13,7 @@ from io import BytesIO
 import mlflow
 import torch
 
-from constants import COLUMN_NAMES, DATATYPE_LITERALS, Tasks
+from .constants import COLUMN_NAMES, DATATYPE_LITERALS, Tasks
 
 
 class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
