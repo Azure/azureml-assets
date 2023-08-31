@@ -287,9 +287,9 @@ inputs:
 
   eval_accumulation_steps:
     type: integer
-    default: 1
+    default: -1
     optional: true
-    description: Number of predictions steps to accumulate before moving the tensors to the CPU
+    description: Number of predictions steps to accumulate before moving the tensors to the CPU, will be passed as None if set to -1
 
   lr_scheduler_type:
     type: string
