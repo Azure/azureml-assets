@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+import mlflow
 import os
 from pathlib import Path
 from typing import Dict
@@ -26,7 +27,6 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None
     task = translate_params[ComponentConstants.TASK]
 
     mlflow_model_wrapper = StableDiffusionMLflowWrapper(task_type=task, model_id=model_id)
-    artifacts_dict = _prepare_artifacts_dict(input_dir)
     pip_requirements = os.path.join(os.path.dirname(__file__), "requirements.txt")
     code_path = [
         os.path.join(os.path.dirname(__file__), "mlflow_wrapper.py"),
@@ -36,7 +36,6 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None
     mlflow.pyfunc.save_model(
         path=output_dir,
         python_model=mlflow_model_wrapper,
-        artifacts=artifacts_dict,
         pip_requirements=pip_requirements,
         code_path=code_path,
         metadata={"model_name": model_id},

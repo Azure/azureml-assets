@@ -18,8 +18,8 @@ class COLUMN_NAMES:
     """
     Column names in pandas dataframe used to receive request and send response.
     """
-    TEXT_PROMPTS = "text_prompts"
-    GENERATED_IMAGES = "generated_images"
+    TEXT_PROMPT = "text_prompt"
+    GENERATED_IMAGE = "generated_image"
 
 class DATATYPE_LITERALS:
     """

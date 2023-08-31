@@ -70,7 +70,7 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         :rtype: pd.DataFrame
         """
         print("input_data received: " + str(input_data))
-        text_prompts = input_data[COLUMN_NAMES.TEXT_PROMPTS].tolist()
+        text_prompts = input_data[COLUMN_NAMES.TEXT_PROMPT].tolist()
         images = self._pipe(text_prompts).images
         generated_images = []
         for img in images:
@@ -80,6 +80,6 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             generated_images.append(img_str)
 
         print("Image generation successful")
-        df = pd.DataFrame({COLUMN_NAMES.TEXT_PROMPTS: text_prompts, COLUMN_NAMES.GENERATED_IMAGES: generated_images})
+        df = pd.DataFrame({COLUMN_NAMES.TEXT_PROMPT: text_prompts, COLUMN_NAMES.GENERATED_IMAGE: generated_images})
 
         return df
