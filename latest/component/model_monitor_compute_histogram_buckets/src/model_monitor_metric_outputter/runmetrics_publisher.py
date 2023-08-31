@@ -46,12 +46,12 @@ class RunMetricPublisher:
         timeseries = metrics[TIMESERIES]
         metric_names = timeseries[TIMESERIES_METRIC_NAMES]
 
-        if VALUE in metrics:
+        if VALUE in metrics and metrics[VALUE] is not None and metrics[VALUE] != "":
             metrics_to_publish[metric_names[TIMESERIES_METRIC_NAMES_VALUE]] = float(
                 metrics[VALUE]
             )
 
-        if THRESHOLD in metrics:
+        if THRESHOLD in metrics and metrics[THRESHOLD] is not None and metrics[THRESHOLD] != "":
             metrics_to_publish[metric_names[TIMESERIES_METRIC_NAMES_THRESHOLD]] = float(
                 metrics[THRESHOLD]
             )
