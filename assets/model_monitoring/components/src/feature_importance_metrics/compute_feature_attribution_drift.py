@@ -198,6 +198,8 @@ def run(args):
         [baseline_explanations, baseline_row_count] = configure_signal_metrics_data(args.baseline_data)
         log_time_and_message("Reading in target data")
         [production_explanations, production_row_count] = configure_signal_metrics_data(args.production_data)
+        # TODO: Once samples outputter is ready, uncomment line below and connect to the outputter
+        # TODO: Generate and output samples index table
         # local_feature_importance_sample = configure_local_importance_sample_data(args.production_data)
         production_explanations = drop_metadata_columns(baseline_explanations, production_explanations)
         compute_ndcg_and_write_to_mltable(baseline_explanations, production_explanations,
