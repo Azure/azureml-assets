@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from mlflow_wrapper import StableDiffusionMLflowWrapper
+from .mlflow_wrapper import StableDiffusionMLflowWrapper
 
 
 @log_execution_time
