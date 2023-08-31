@@ -85,16 +85,20 @@ inputs:
     description: Number of examples to batch before calling the tokenization function
 
   pad_to_max_length:
-    type: boolean
+    type: string
+    enum:
+      - "true"
+      - "false"
+    default: "false"
     optional: true
-    default: true
-    description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
+    description: If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length.
   
   max_seq_length:
     type: integer
     optional: true
     default: -1
-    description: output folder of model selector containing model metadata like config, checkpoints, tokenizer config
+    description: Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`.
+
 
   # Dataset path Parameters
   train_file_path:
