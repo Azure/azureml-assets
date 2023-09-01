@@ -10,7 +10,7 @@ properties:
   finetune-recommended-sku: Standard_NC24rs_v3
   finetuning-tasks: text-classification, token-classification, question-answering
   inference-min-sku-spec: 4|0|28|56
-  inference-recommended-sku: Standard_DS4_v2
+  inference-recommended-sku: Standard_DS3_v2
   languages: en
 tags:
   Preview: ''
@@ -39,4 +39,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: fill-mask
-version: 9
+version: 10
