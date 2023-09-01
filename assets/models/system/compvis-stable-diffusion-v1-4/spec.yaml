@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: compVis/stable-diffusion-v1-4
+name: compvis-stable-diffusion-v1-4
 path: ./
 properties:
   SHA: 133a221b8aa7292a167afc5127cb63fb5005638b
