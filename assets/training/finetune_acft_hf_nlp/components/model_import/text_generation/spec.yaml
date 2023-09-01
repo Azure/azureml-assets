@@ -30,6 +30,12 @@ inputs:
     optional: true
     description: Input folder path containing mlflow model for further finetuning. Proper model/huggingface id must be passed.
 
+  # Output of validation component
+  validation_output:
+    type: uri_file
+    optional: true
+    description: Validation status.
+
 outputs:
   output_dir:
     type: uri_folder

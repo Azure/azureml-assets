@@ -59,12 +59,12 @@ class ModelAsset:
         """Initialize model asset."""
         self._spec_path = spec_path
         self._model_config = model_config
-        self._model.description = model_config.description
         self._registry_name = registry_name
         self._temp_dir = temp_dir
 
         try:
             self._model = load_model(spec_path)
+            self._model.description = model_config.description
             self._model.type = model_config.type.value
         except Exception as e:
             logger.error(f"Error in loading model spec file at {spec_path}: {e}")
