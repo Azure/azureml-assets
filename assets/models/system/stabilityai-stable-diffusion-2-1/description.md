@@ -1,4 +1,5 @@
-Stable Diffusion 2 is a latent diffusion model conditioned on the penultimate text embeddings of a CLIP ViT-H/14 text encoder.
+The Stable Diffusion v2-1 model is a fine-tuned version of the Stable Diffusion v2 model, with additional training steps on the same dataset. It's designed for generating and modifying images based on text prompts, utilizing a Latent Diffusion Model with a fixed, pretrained text encoder (OpenCLIP-ViT/H). The model was trained on the LAION-5B dataset and its subsets, with further filtering using LAION's NSFW detector with a conservative "p_unsafe" score of 0.1. The model has various applications in research, art, education, and creative tools. However, there are strict guidelines for the model's use to prevent misuse and malicious activities. It should not be used to create harmful, offensive, or discriminatory content. Additionally, the model has limitations, such as difficulties with photorealism, rendering legible text, and generating complex compositions. The model was primarily trained on English descriptions, potentially leading to biases and limited effectiveness with non-English prompts. The model's training data includes NSFW content, filtered using a conservative NSFW detector. To enhance safety, a Safety Checker is recommended for use with this model.
+
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/stabilityai/stable-diffusion-2-1" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
@@ -14,13 +15,11 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-to-image" target="_b
 
 ```json
 {
-  "input_data": {
-    "columns": [
-      "text_prompts"
-    ],
-    "index": [0, 1],
-    "data": ["a photograph of a dog in a bus", "a photograph of an astromer in a bus"]
-  }
+   "input_data": {
+        "columns": ["text_prompt"],
+        "data": ["a photograph of an astronaut riding a horse", "a photograph of a cat riding a horse"],
+        "index": [0]
+    }
 }
 ```
 

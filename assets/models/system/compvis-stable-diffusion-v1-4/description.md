@@ -1,4 +1,5 @@
-This is a model that can be used to generate and modify images based on text prompts. It is a Latent Diffusion Model that uses a fixed, pretrained text encoder (CLIP ViT-L/14) as suggested in the Imagen paper.
+`CompVis/stable-diffusion-v1-4` is a latent text-to-image diffusion model known for generating highly realistic images from textual input. This model incorporates a fixed, pretrained text encoder (CLIP ViT-L/14) as suggested in the <a href="https://arxiv.org/abs/2205.11487" target="_blank">Imagen paper</a>. Stable-Diffusion-v1-4 model was fine-tuned from an  earlier version, stable-diffusion-v1-2, on laion-aesthetics v2.5+ dataset. The model has various applications in research, art, education, and creative tools. However, there are strict guidelines for the model's use to prevent misuse and malicious activities. It should not be used to create harmful, offensive, or discriminatory content. Additionally, the model has limitations, such as difficulties with photorealism, rendering legible text, and generating complex compositions. The model's training data includes the LAION-2B dataset, primarily containing English descriptions, which can lead to biases and limitations in generating non-English content. To enhance safety, a Safety Checker is recommended for use with this model.
+
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/CompVis/stable-diffusion-v1-4" target="_blank">original-model-card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ### Inference samples
@@ -14,13 +15,11 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-to-image" target="_b
 
 ```json
 {
-  "input_data": {
-    "columns": [
-      "text_prompts"
-    ],
-    "index": [0, 1],
-    "data": ["a photograph of a dog in a bus", "a photograph of an astromer in a bus"]
-  }
+   "input_data": {
+        "columns": ["text_prompt"],
+        "data": ["a photograph of an astronaut riding a horse", "a photograph of a cat riding a horse"],
+        "index": [0]
+    }
 }
 ```
 
