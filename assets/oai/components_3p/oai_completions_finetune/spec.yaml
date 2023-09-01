@@ -88,7 +88,6 @@ jobs:
   fine_tune:
     type: command
     resources:
-      instance_count: ${{parent.inputs.serverless_instance_count}}
       properties:
         quota_enforcement_resource_id: ${{parent.inputs.quota_enforcement_resource_id}}
     component: azureml://registries/azure-openai-preview/components/openai_completions_finetune/versions/0.3.0
