@@ -483,6 +483,12 @@ def finetune(args: Namespace):
         )
         setattr(args, "ignore_mismatched_sizes", False)
 
+    # set eval_accumulation_steps to None if passed a non-positive value
+    if getattr(args, "eval_accumulation_steps", -1) <= 0:
+        setattr(args, "eval_accumulation_steps", None)
+
+    logger.info(f"eval_accumulation_steps: {getattr(args, 'eval_accumulation_steps', None)}")
+
     # read FT config
     ft_config_path = Path(args.model_selector_output, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)
     if ft_config_path.is_file():
