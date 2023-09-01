@@ -478,7 +478,6 @@ def init():
                 logger.info(f"updated default_generator_configs: {default_generator_configs}")
                 if task_type == SupportedTask.CHAT_COMPLETION.value:
                     default_generator_configs["return_full_text"] = False
-                
 
         logger.info(f"Loading model from path {model_path} for task_type: {task_type}")
         logger.info(f"List model_path = {os.listdir(model_path)}")
@@ -608,10 +607,7 @@ the answer to a question, please don't share false information."""
 
     # ref: https://huggingface.co/spaces/huggingface-projects/\
     # llama-2-7b-chat/blob/main/model.py
-    def format_chat_conv(
-            message: str,
-            chat_history: list[tuple[str, str]],
-            system_prompt: str) -> str:
+    def format_chat_conv(message: str, chat_history: List[Tuple[str, str]], system_prompt: str) -> str:
         texts = [f'<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n']
         # The first user input is _not_ stripped
         do_strip = False
