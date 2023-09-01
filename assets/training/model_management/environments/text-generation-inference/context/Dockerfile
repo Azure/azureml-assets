@@ -1,5 +1,5 @@
 # Use the base image that includes the necessary dependencies
-FROM ghcr.io/huggingface/text-generation-inference:{{latest-image-tag}}
+FROM ghcr.io/huggingface/text-generation-inference:0.9
 
 ENV DEBIAN_FRONTEND noninteractive
 
