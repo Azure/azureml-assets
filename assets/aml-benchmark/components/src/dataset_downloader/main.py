@@ -23,6 +23,7 @@ from utils.error_definitions import BenchmarkValidationError, DatasetDownloadErr
 
 logger = get_logger(__name__)
 ALL = "all"
+LOADERS = "loaders"
 
 
 def parse_args() -> argparse.Namespace:
@@ -47,7 +48,10 @@ def parse_args() -> argparse.Namespace:
         help="Split of the dataset to download; specify 'all' to download all splits.",
     )
     parser.add_argument(
-        "--url", type=str, default=None, help="URL of the dataset to download."
+        "--script",
+        default=None,
+        type=str,
+        help="Path to the dataset loading script. Must follow the HuggingFace dataset loading script template."
     )
     parser.add_argument(
         "--output_dataset", type=str, required=True, help="Path to the dataset output."
@@ -205,46 +209,70 @@ def main(args: argparse.Namespace) -> None:
     configuration = args.configuration
     split = args.split
     output_dataset = args.output_dataset
-    url = args.url
+    script = args.script
 
-    # Check if dataset_name and split or url is supplied
-    if (not dataset_name or not split) and not url:
-        mssg = "Either 'dataset_name' with 'split', or 'url' must be supplied."
+    # Check if dataset_name and script are supplied
+    if dataset_name and script:
+        mssg = "Either 'dataset_name' or 'script' must be supplied; but not both."
         raise BenchmarkValidationException._with_error(
             AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
-    # Check if dataset_name and split and url are supplied
-    if dataset_name and split and url:
-        mssg = "Either 'dataset_name' with 'split', or 'url' must be supplied; but not both."
+    # Check if dataset_name or script is supplied
+    if not (dataset_name or script):
+        mssg = "Either 'dataset_name' or 'script' must be supplied."
         raise BenchmarkValidationException._with_error(
             AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
-    if url:
-        # Download file from URL
-        download_file_from_url(url, output_dataset)
+    # Check if split is supplied
+    if not split:
+        mssg = "Argument 'split' must be supplied."
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+        )
+
+    if dataset_name:
+        # Check if loader script exists for the dataset_name
+        loader_script = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            LOADERS,
+            f"{dataset_name}.py"
+        )
+        if os.path.isfile(loader_script):
+            dataset_name = loader_script
     else:
-        # Get the configurations to download
+        dataset_name = script
+
+    # Get the configurations to download
+    try:
         configurations = resolve_configuration(dataset_name, configuration)
-        config_len = len(configurations)
-        logger.info(
-            f"Following configurations will be downloaded: {configurations}."
+    except FileNotFoundError as e:
+        mssg = f"FileNotFoundError: {e}"
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
-        with ProcessPoolExecutor(min(os.cpu_count(), config_len)) as executor:
-            executor.map(
-                download_dataset_from_hf,
-                [dataset_name] * config_len,
-                configurations,
-                [split] * config_len,
-                [output_dataset] * config_len,
-            )
+
+    config_len = len(configurations)
+    logger.info(f"Following configurations will be downloaded: {configurations}.")
+    with ProcessPoolExecutor(min(os.cpu_count(), config_len)) as executor:
+        my_iter = executor.map(
+            download_dataset_from_hf,
+            [dataset_name] * config_len,
+            configurations,
+            [split] * config_len,
+            [output_dataset] * config_len,
+        )
+
+    # log any exceptions raised inside calls
+    for _ in my_iter:
+        pass
 
     log_mlflow_params(
-        dataset_name=dataset_name,
-        configuration=configuration,
-        split=split,
-        url=url,
+        dataset_name=args.dataset_name,
+        configuration=args.configuration,
+        split=args.split,
+        script=args.script,
     )
 
 

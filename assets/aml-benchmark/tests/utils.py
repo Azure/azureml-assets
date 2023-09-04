@@ -29,8 +29,10 @@ class Constants:
     OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"
     OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"
     TEST_REGISTRY_NAME = "Benchmark-Test"
-    REMOTE_FILE_URL = "https://raw.githubusercontent.com/Azure/azureml-examples/main/\
-v1/python-sdk/tutorials/automl-with-azureml/forecasting-bike-share/bike-no.csv"
+    MATH_DATASET_LOADER_SCRIPT = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "components", "src", "dataset_downloader", "loaders", "math.py"
+    )
 
 
 def _get_runs(job_name: str, exp_name: str) -> List[mlflow.entities.Run]:
