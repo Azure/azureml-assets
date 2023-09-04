@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive AZUREML_ENTRY_SCRIPT="mlflow_score_script.py"
 
 # Remove cached conda packages (which contains some vulnerable packages as well)
 RUN rm -rf /opt/conda/pkgs
-RUN apt-get upgrade && apt-get update -y && apt-get install dash git git-lfs vim openssh-server openssh-client curl graphviz -y
+RUN apt-get upgrade && apt-get update -y && apt-get install git git-lfs vim openssh-server openssh-client curl graphviz -y
 
 # support Deepspeed launcher requirement of passwordless ssh login
 RUN apt-get update && apt-get -y upgrade
@@ -26,5 +26,8 @@ RUN /var/requirements/install_system_requirements.sh && \
     ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app && \
     rm -f /etc/nginx/sites-enabled/default
 EXPOSE 5001 8883 8888
+
+# clear entrypoint
+ENTRYPOINT []
 
 CMD [ "runsvdir", "/var/runit" ]
