@@ -1,0 +1,46 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: databricks-dolly-v2-7b
+path: ./
+properties:
+  SHA: d632f0c8b75b1ae5b26b250d25bfba4e99cb7c6f
+  datasets: databricks/databricks-dolly-15k
+  evaluation-min-sku-spec: 16|0|64|128
+  evaluation-recommended-sku: Standard_NC6s_v3  
+  finetune-min-sku-spec: 12|1|64|176
+  finetune-recommended-sku: Standard_NC24s_v3 
+  finetuning-tasks: text-classification, token-classification
+  inference-min-sku-spec: 6|0|64|128
+  inference-recommended-sku: Standard_NC6s_v3
+  languages: en
+tags:
+  Featured: ''
+  Preview: ''
+  computes_allow_list:
+  - Standard_NV12s_v3
+  - Standard_NV24s_v3
+  - Standard_NV48s_v3
+  - Standard_NC6s_v3
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_NC6s_v2
+  - Standard_NC12s_v2
+  - Standard_NC24s_v2
+  - Standard_NC24rs_v2
+  - Standard_NC4as_T4_v3
+  - Standard_NC8as_T4_v3
+  - Standard_NC16as_T4_v3
+  - Standard_NC64as_T4_v3
+  - Standard_ND6s
+  - Standard_ND12s
+  - Standard_ND24s
+  - Standard_ND24rs
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  license: mit
+  model_specific_defaults:
+      apply_deepspeed: 'true'
+      apply_lora: 'true'
+      precission: 16
+  task: text-generation
+version: 1
