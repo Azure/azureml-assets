@@ -1,6 +1,11 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch200:{{latest-image-tag}}
+# Use the base image that includes the necessary dependencies
+FROM ghcr.io/huggingface/text-generation-inference:0.9
 
-WORKDIR /
+ENV DEBIAN_FRONTEND noninteractive
+
+# Remove cached conda packages (which contains some vulnerable packages as well)
+RUN rm -rf /opt/conda/pkgs
+RUN apt-get upgrade && apt-get update -y && apt-get install git git-lfs vim openssh-server openssh-client curl graphviz -y
 
 # support Deepspeed launcher requirement of passwordless ssh login
 RUN apt-get update && apt-get -y upgrade
