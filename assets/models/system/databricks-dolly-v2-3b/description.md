@@ -23,6 +23,7 @@ Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
 
+
 ### Model Evaluation
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
