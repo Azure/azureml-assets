@@ -83,7 +83,6 @@ Please see the Responsible Use Guide available available at [https://ai.meta.com
         "parameters": {
             "top_p": 0.9,
             "temperature": 0.2,
-            "num_return_sequences": 1,
             "do_sample": true,
             "max_new_tokens": 100
         }

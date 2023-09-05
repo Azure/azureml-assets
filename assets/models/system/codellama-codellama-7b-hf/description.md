@@ -89,7 +89,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
         "parameters": {
             "top_p": 0.9,
             "temperature": 0.2,
-            "num_return_sequences": 1,
             "do_sample": true,
             "max_new_tokens": 100
         }
