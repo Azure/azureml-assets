@@ -2,16 +2,16 @@
 # Licensed under the MIT License.
 
 import mlflow
-import os
-import shutil
 from mlflow.models import ModelSignature
 from mlflow.types.schema import ColSpec
 from mlflow.types.schema import DataType, Schema
+import os
 from pathlib import Path
+import shutil
+import sys
 from typing import Dict
 
 from .constants import ColumnNames, MLflowLiterals, MLflowSchemaLiterals, Tasks
-from .mlflow_wrapper import StableDiffusionMLflowWrapper
 from azureml.model.mgmt.config import ComponentConstants
 from azureml.model.mgmt.utils.common_utils import log_execution_time
 
@@ -58,6 +58,10 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None
     """
     model_id = translate_params.get(ComponentConstants.MODEL_ID)
     task = translate_params[ComponentConstants.TASK]
+
+    # This to get Wrapper class independently and not as part of parent package.
+    sys.path.append(os.path.dirname(__file__))
+    from mlflow_wrapper import StableDiffusionMLflowWrapper
 
     mlflow_model_wrapper = StableDiffusionMLflowWrapper(task_type=task, model_id=model_id)
     pip_requirements = os.path.join(os.path.dirname(__file__), "requirements.txt")

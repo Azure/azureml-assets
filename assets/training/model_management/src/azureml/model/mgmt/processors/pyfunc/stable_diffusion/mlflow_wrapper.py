@@ -13,7 +13,7 @@ import mlflow
 import pandas as pd
 import torch
 
-from .constants import ColumnNames, DatatypeLiterals, MLflowLiterals, Tasks
+from constants import ColumnNames, DatatypeLiterals, MLflowLiterals, Tasks
 
 
 class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -43,7 +43,7 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        if self._task_type == Tasks.TEXT_TO_IMAGE:
+        if self._task_type == Tasks.TEXT_TO_IMAGE.value:
             try:
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
                 model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
@@ -66,7 +66,7 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         :param input_data: Pandas DataFrame with a column name ["text_prompt"] having text
                            input for which image has to be generated.
         :type input_data: pd.DataFrame
-        :return: Pandas dataframe with input text_prompts and its corresponding generated images.
+        :return: Pandas dataframe with input text_prompts and their corresponding generated images.
                  Images in form of base64 string.
         :rtype: pd.DataFrame
         """
