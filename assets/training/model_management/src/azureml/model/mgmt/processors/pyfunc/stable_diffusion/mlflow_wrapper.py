@@ -8,12 +8,12 @@ Has methods to load the model and predict.
 
 import base64
 from diffusers import StableDiffusionPipeline
-import pandas as pd
 from io import BytesIO
 import mlflow
+import pandas as pd
 import torch
 
-from .constants import COLUMN_NAMES, DATATYPE_LITERALS, Tasks
+from .constants import ColumnNames, DatatypeLiterals, MLflowLiterals, Tasks
 
 
 class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -28,7 +28,7 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
 
         :param task_type: Task type used in training.
         :type task_type: str
-        :param model_id: Hugging face model id of stable diffusion models.
+        :param model_id: Hugging face model id corresponding to stable diffusion models supported by AML.
         :type model_id: str
         """
         super().__init__()
@@ -43,15 +43,16 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        if self._task_type in [Tasks.TEXT_TO_IMAGE, Tasks.IMAGE_INPAINTING]:
+        if self._task_type == Tasks.TEXT_TO_IMAGE:
             try:
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
-
-                self._pipe = StableDiffusionPipeline.from_pretrained(self._model_id)
+                model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
+                self._pipe = StableDiffusionPipeline.from_pretrained(model_dir)
                 self._pipe.to(_map_location)
                 print("Model loaded successfully")
-            except Exception:
+            except Exception as e:
                 print("Failed to load the the model.")
+                print(e)
                 raise
         else:
             raise ValueError(f"invalid task type {self._task_type}")
@@ -62,24 +63,30 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
 
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
-        :param input_data: Pandas DataFrame with a column name ["test_prompts"] having text
+        :param input_data: Pandas DataFrame with a column name ["text_prompt"] having text
                            input for which image has to be generated.
         :type input_data: pd.DataFrame
-        :return: Pandas dataframe with input test_prompts and its corresponding generated images.
+        :return: Pandas dataframe with input text_prompts and its corresponding generated images.
                  Images in form of base64 string.
         :rtype: pd.DataFrame
         """
-        print("input_data received: " + str(input_data))
-        text_prompts = input_data[COLUMN_NAMES.TEXT_PROMPT].tolist()
-        images = self._pipe(text_prompts).images
+        text_prompts = input_data[ColumnNames.TEXT_PROMPT].tolist()
+        output = self._pipe(text_prompts)
+
         generated_images = []
-        for img in images:
+        for img in output.images:
             buffered = BytesIO()
-            img.save(buffered, format=DATATYPE_LITERALS.IMAGE_FORMAT)
-            img_str = base64.b64encode(buffered.getvalue()).decode(DATATYPE_LITERALS.STR_ENCODING)
+            img.save(buffered, format=DatatypeLiterals.IMAGE_FORMAT)
+            img_str = base64.b64encode(buffered.getvalue()).decode(DatatypeLiterals.STR_ENCODING)
             generated_images.append(img_str)
 
         print("Image generation successful")
-        df = pd.DataFrame({COLUMN_NAMES.TEXT_PROMPT: text_prompts, COLUMN_NAMES.GENERATED_IMAGE: generated_images})
+        print(f"At least one NSFW image detected: {any(output.nsfw_content_detected)}")
+
+        df = pd.DataFrame({ColumnNames.TEXT_PROMPT: text_prompts,
+                           ColumnNames.GENERATED_IMAGE: generated_images,
+                           ColumnNames.NSFW_FLAG: output.nsfw_content_detected
+                           }
+                          )
 
         return df
