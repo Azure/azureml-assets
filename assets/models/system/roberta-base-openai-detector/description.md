@@ -33,7 +33,7 @@ Text Classification|Detecting GPT2 Output|<a href="https://huggingface.co/datase
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
     }
 }
