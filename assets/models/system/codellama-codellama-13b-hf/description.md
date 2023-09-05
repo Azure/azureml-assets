@@ -76,16 +76,18 @@ Please see the Responsible Use Guide available available at [https://ai.meta.com
 
 ```json
 {
-  "input_data": {
-    "input_string": ["def fibonacci("],
-    "parameters": {
-        "top_p": 0.9,
-        "temperature": 0.2, 
-        "num_return_sequences": 1,
-        "do_sample": true,
-        "max_new_tokens": 100
+    "input_data": {
+        "input_string": [
+            "def fibonacci("
+        ],
+        "parameters": {
+            "top_p": 0.9,
+            "temperature": 0.2,
+            "num_return_sequences": 1,
+            "do_sample": true,
+            "max_new_tokens": 100
+        }
     }
-  }
 }
 
 ```

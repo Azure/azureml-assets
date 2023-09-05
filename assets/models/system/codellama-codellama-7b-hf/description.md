@@ -82,16 +82,18 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 
 ```json
 {
-  "input_data": {
-    "input_string": ["def is_prime("],
-    "parameters": {
-        "top_p": 0.9,
-        "temperature": 0.2, 
-        "num_return_sequences": 1,
-        "do_sample": true,
-        "max_new_tokens": 512
+    "input_data": {
+        "input_string": [
+            "def fibonacci("
+        ],
+        "parameters": {
+            "top_p": 0.9,
+            "temperature": 0.2,
+            "num_return_sequences": 1,
+            "do_sample": true,
+            "max_new_tokens": 100
+        }
     }
-  }
 }
 ```
 
@@ -99,7 +101,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 [
   {
-    "0": "def is_prime(n):\n    if n < 2:\n        return False\n    if n == 2:\n        return True\n    if n % 2 == 0:\n        return False\n    for i in range(3, int(n ** 0.5) + 1, 2):\n        if n % i == 0:\n            return False\n    return True\n\n\ndef get_primes(n):\n    primes = []\n    for i in range(2, n + 1):\n        if is_prime(i):\n            primes.append(i)\n    return primes\n\n\ndef get_primes_sieve(n):\n    primes = [True] * n\n    primes[0] = primes[1] = False\n    for i in range(2, int(n ** 0.5) + 1):\n        if primes[i]:\n            for j in range(i * i, n + 1, i):\n                primes[j] = False\n    return [i for i in range(n) if primes[i]]\n\n\ndef get_primes_sieve_2(n):\n    primes = [True] * n\n    primes[0] = primes[1] = False\n    for i in range(2, int(n ** 0.5) + 1):\n        if primes[i]:\n            for j in range(i * i, n + 1, i):\n                primes[j] = False\n    return [i for i in range(n) if primes[i]]\n\n\ndef get_primes_sieve_3(n):\n    primes = [True] * n\n    primes[0] = primes[1] = False\n    for i in range(2, int(n ** 0.5) + 1):\n        if primes[i]:\n            for j in range(i * i, n + 1, i):\n                primes[j] = False\n    return [i for i in range(n) if primes[i]]\n\n\ndef get_primes_sieve_4(n):\n    primes = [True] * n\n   "
+    "0": "def fibonacci(n):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)\n\n\ndef fibonacci_memo(n, memo={}):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    elif n"
   }
 ]
 ```
