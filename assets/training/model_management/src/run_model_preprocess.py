@@ -38,7 +38,7 @@ def _get_parser():
     # argparse issue: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     parser.add_argument(
         "--hf-use-experimental-features",
-        type=str, # get translated to True not matter what is sent.
+        type=str,
         default="false",
         help="Enable experimental features for hugging face MLflow model conversion",
         required=False,
