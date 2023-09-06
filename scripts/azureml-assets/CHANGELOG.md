@@ -5,7 +5,7 @@
 
 ## 1.15.0 (2023-08-31)
 ### 🐛 New Features
-- [#1150](https://github.com/Azure/azureml-assets/pull/1147) To add property in model asset without increasing the version
+- [#1174](https://github.com/Azure/azureml-assets/pull/1174) To add property in model asset without increasing the version
 
 ## 1.14.2 (2023-08-31)
 ### 🐛 Bugs Fixed
