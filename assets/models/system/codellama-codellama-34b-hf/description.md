@@ -1,5 +1,5 @@
 # **Code Llama**
-Code Llama is a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 34 billion parameters. This is the repository for the base 7B version in the Hugging Face Transformers format. This model is designed for general code synthesis and understanding. Links to other models can be found in the index at the bottom.
+Code Llama is a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 34 billion parameters. This is the repository for the base 34B version in the Hugging Face Transformers format. This model is designed for general code synthesis and understanding. Links to other models can be found in the index at the bottom.
 
 |     | Base Model                                                                    | Python                                                                                      | Instruct                                                                                        |
 | --- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -10,9 +10,10 @@ Code Llama is a collection of pretrained and fine-tuned generative text models r
 ## Model capabilities:
 
 - [x] Code completion.
-- [x] Infilling.
+- [ ] Infilling.
 - [ ] Instructions / chat.
 - [ ] Python specialist.
+
 
 ## Model Details
 *Note: Use of this model is governed by the Meta license. Meta developed and publicly released the Code Llama family of large language models (LLMs).
@@ -27,7 +28,7 @@ Code Llama is a collection of pretrained and fine-tuned generative text models r
 
 All variants are available in sizes of 7B, 13B and 34B parameters.
 
-**This repository contains the base model of 7B parameters.**
+**This repository contains the base version of the 34B parameters model.**
 
 **Input** Models input text only.
 
@@ -41,7 +42,7 @@ All variants are available in sizes of 7B, 13B and 34B parameters.
 
 **License** A custom commercial license is available at: [https://ai.meta.com/resources/models-and-libraries/llama-downloads/](https://ai.meta.com/resources/models-and-libraries/llama-downloads/)
 
-**Research Paper** More information can be found in the paper "[Code Llama: Open Foundation Models for Code](https://ai.meta.com/research/publications/code-llama-open-foundation-models-for-code/)" or it's [arXiv page](https://arxiv.org/abs/2308.12950).
+**Research Paper** More information can be found in the paper "[Code Llama: Open Foundation Models for Code](https://ai.meta.com/research/publications/code-llama-open-foundation-models-for-code/)" or its [arXiv page](https://arxiv.org/abs/2308.12950).
 
 ## Intended Use
 **Intended Use Cases** Code Llama and its variants is intended for commercial and research use in English and relevant programming languages. The base model Code Llama can be adapted for a variety of code synthesis and understanding tasks, Code Llama - Python is designed specifically to handle the Python programming language, and Code Llama - Instruct is intended to be safer to use for code assistant and generation applications.
@@ -68,14 +69,6 @@ Code Llama and its variants are a new technology that carries risks with use. Te
 
 Please see the Responsible Use Guide available available at [https://ai.meta.com/llama/responsible-user-guide](https://ai.meta.com/llama/responsible-user-guide).
 
-# Inference samples
-
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint-dolly.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint-dolly.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
-
-
 ## Sample inputs and outputs (for real-time inference)
 
 ### Sample input
@@ -94,13 +87,14 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
         }
     }
 }
+
 ```
 
 ### Sample output
 ```json
 [
   {
-    "0": "def fibonacci(n):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)\n\n\ndef fibonacci_memo(n, memo={}):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    elif n"
+    "0": "def fibonacci(n):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)\n\n\nif __name__ == '__main__':\n    print(fibonacci(10))\n"
   }
 ]
 ```
