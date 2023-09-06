@@ -67,10 +67,11 @@ class TestDatasetDownloaderComponent:
         print(pipeline_job)
 
         file_count = 1
+        path = dataset_name if dataset_name else script
         if configuration == "all":
-            file_count = len(get_dataset_config_names(dataset_name))
+            file_count = len(get_dataset_config_names(path))
         elif split == "all":
-            file_count = len(get_dataset_split_names(dataset_name, configuration))
+            file_count = len(get_dataset_split_names(path, configuration))
         self._verify_output(pipeline_job, temp_dir, file_count)
         self._verify_logged_params(
             pipeline_job.name, dataset_name, configuration, split, script
