@@ -17,7 +17,7 @@ RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0' 'numpy<1.24.0'
 # Install main azureml packages
 RUN pip install 'azureml-core==1.53.0' \
                 'azureml-mlflow==1.53.0' \
-                'azureml-rai-utils==0.0.3'
+                'azureml-rai-utils==0.0.5'
 
 RUN pip install 'azureml-dataset-runtime==1.53.0' \
                 'azureml-telemetry==1.53.0' \
