@@ -203,7 +203,7 @@ ACFT_CONFIG = {
         "load_tokenizer_kwargs": {
             "add_eos_token": True,
             "padding_side": "right"
-	    }
+        }
     }
 }
 
@@ -398,8 +398,8 @@ def model_selector(args: Namespace):
                                     )
                 ft_config_data = deep_update(mlflow_ftconf_data, ft_config_data)
                 logger.info(f"Updated FT config data - {ft_config_data}")
-            except:
-                logger.info(f"Unable to read MLModel file")
+            except Exception:
+                logger.info("Unable to read MLModel file")
         else:
             logger.info("MLmodel file does not exist")
     else:

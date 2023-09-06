@@ -422,12 +422,10 @@ def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
                 tags = model_spec.get("tags", {})
                 # convert tag value to string
                 for name, value in tags.items():
-                    if isinstance(value, list):
-                        value = str(value)
-                    elif isinstance(value, dict):
+                    if isinstance(value, dict):
                         value = json.dumps(value)
-                    elif not isinstance(value, str):
-                        raise Exception(f"Invalid value type: {type(value)} for tag name {name}")
+                    else:
+                        value = str(value)
                     tags[name] = value
                 tags_to_update = {"replace": tags}
         except Exception as e:

@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_generation_pipeline
-version: 0.0.16
+version: 0.0.17
 type: pipeline
 display_name: Text Generation Pipeline
 description: Pipeline component for text generation
@@ -10,25 +10,29 @@ inputs:
     type: string
     optional: true
     default: Standard_d12_v2
-    description: Instance type to be used for model_import component in case of serverless compute, eg. standard_d12_v2. 
+    description: >-
+      Instance type to be used for model_import component in case of serverless compute, eg. standard_d12_v2. 
       The parameter compute_model_import must be set to 'serverless' for instance_type to be used
   instance_type_preprocess:
     type: string
     optional: true
     default: Standard_d12_v2
-    description: Instance type to be used for preprocess component in case of serverless compute, eg. standard_d12_v2. 
+    description: >-
+      Instance type to be used for preprocess component in case of serverless compute, eg. standard_d12_v2. 
       The parameter compute_preprocess must be set to 'serverless' for instance_type to be used
   instance_type_finetune:
     type: string
     optional: true
     default: Standard_nc24rs_v3
-    description: Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3. 
+    description: >-
+      Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3. 
       The parameter compute_finetune must be set to 'serverless' for instance_type to be used
   instance_type_model_evaluation:
     type: string
     optional: true
     default: Standard_nc24rs_v3
-    description: Instance type to be used for model_evaluation components in case of serverless compute, eg. standard_nc24rs_v3. 
+    description: >-
+      Instance type to be used for model_evaluation components in case of serverless compute, eg. standard_nc24rs_v3. 
       The parameter compute_model_evaluation must be set to 'serverless' for instance_type to be used
   num_nodes_finetune:
     type: integer
@@ -39,7 +43,8 @@ inputs:
     type: integer
     default: 1
     optional: true
-    description: number of gpus to be used per node for finetuning, should be equal
+    description: >-
+      number of gpus to be used per node for finetuning, should be equal
       to number of gpu per node in the compute SKU used for finetune
 
   # ModelSelector parameters
@@ -52,27 +57,31 @@ inputs:
   pytorch_model_path:
     type: custom_model
     optional: true
-    description: Input folder path containing pytorch model for further finetuning.
+    description: >-
+      Input folder path containing pytorch model for further finetuning.
       Proper model/huggingface id must be passed.
 
   mlflow_model_path:
     type: mlflow_model
     optional: true
-    description: Input folder path containing mlflow model for further finetuning.
+    description: >-
+      Input folder path containing mlflow model for further finetuning.
       Proper model/huggingface id must be passed.
 
   # Preprocessing parameters
   text_key:
     type: string
     optional: false
-    description: key for text in an example. format your data keeping in mind that
+    description: >-
+      key for text in an example. format your data keeping in mind that
       text is concatenated with ground_truth while finetuning in the form - text + groundtruth.
       for eg. "text"="knock knock\n", "ground_truth"="who's there"; will be treated as "knock knock\nwho's there"
 
   ground_truth_key:
     type: string
     optional: false
-    description: key for ground_truth in an example. 
+    description: >-
+      key for ground_truth in an example. 
       we take separate column for ground_truth to enable use cases like summarization, translation, 
       question_answering, etc. which can be repurposed in form of text-generation where both text and ground_truth are needed.
       This separation is useful for calculating metrics.
@@ -256,6 +265,12 @@ inputs:
     optional: true
     description: Number of updates steps to accumulate the gradients for, before performing a backward/update pass
 
+  eval_accumulation_steps:
+    type: integer
+    default: -1
+    optional: true
+    description: Number of predictions steps to accumulate before moving the tensors to the CPU, will be passed as None if set to -1
+
   lr_scheduler_type:
     type: string
     default: linear
@@ -267,7 +282,7 @@ inputs:
       - polynomial
       - constant
       - constant_with_warmup
-    description: The scheduler type to use
+    description: learning rate scheduler to use.
 
   precision:
     type: string
@@ -312,7 +327,7 @@ inputs:
     type: number
     default: 1.0
     optional: true
-    description: "Maximum gradient norm (for gradient clipping)"
+    description: Maximum gradient norm (for gradient clipping)
 
   evaluation_strategy:
     type: string
@@ -371,7 +386,7 @@ inputs:
     type: integer
     default: -1
     optional: true
-    description: If a value is passed, will limit the total amount of checkpoints. Deletes the older checkpoints in output_dir. If the value is -1 saves all checkpoints"
+    description: If a value is passed, will limit the total amount of checkpoints. Deletes the older checkpoints in output_dir. If the value is -1 saves all checkpoints
 
   # Early Stopping Parameters
   apply_early_stopping:
@@ -436,28 +451,32 @@ inputs:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for model_import eg. provide 'FT-Cluster' if
+    description: >-
+      compute to be used for model_import eg. provide 'FT-Cluster' if
       your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_preprocess:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for preprocess eg. provide 'FT-Cluster' if your
+    description: >-
+      compute to be used for preprocess eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_finetune:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for finetune eg. provide 'FT-Cluster' if your
+    description: >-
+      compute to be used for finetune eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
   compute_model_evaluation:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your
+    description: >-
+      compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
@@ -477,90 +496,92 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.16
+    component: azureml:ft_nlp_common_validation:0.0.17
     compute: '${{parent.inputs.compute_model_import}}'
     inputs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
       compute_finetune: '${{parent.inputs.compute_finetune}}'
   text_generation_model_import:
     type: command
-    component: azureml:text_generation_model_import:0.0.16
-    compute: ${{parent.inputs.compute_model_import}}
+    component: azureml:text_generation_model_import:0.0.17
+    compute: '${{parent.inputs.compute_model_import}}'
     inputs:
-      huggingface_id: ${{parent.inputs.huggingface_id}}
-      pytorch_model_path: ${{parent.inputs.pytorch_model_path}}
-      mlflow_model_path: ${{parent.inputs.mlflow_model_path}}
+      huggingface_id: '${{parent.inputs.huggingface_id}}'
+      pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
+      mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
+      validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   text_generation_datapreprocess:
     type: command
-    component: azureml:text_generation_datapreprocess:0.0.16
-    compute: ${{parent.inputs.compute_preprocess}}
+    component: azureml:text_generation_datapreprocess:0.0.17
+    compute: '${{parent.inputs.compute_preprocess}}'
     inputs:
-      text_key: ${{parent.inputs.text_key}}
-      ground_truth_key: ${{parent.inputs.ground_truth_key}}
-      batch_size: ${{parent.inputs.batch_size}}
-      pad_to_max_length: ${{parent.inputs.pad_to_max_length}}
-      max_seq_length: ${{parent.inputs.max_seq_length}}
-      train_file_path: ${{parent.inputs.train_file_path}}
-      validation_file_path: ${{parent.inputs.validation_file_path}}
-      test_file_path: ${{parent.inputs.test_file_path}}
-      train_mltable_path: ${{parent.inputs.train_mltable_path}}
-      validation_mltable_path: ${{parent.inputs.validation_mltable_path}}
-      test_mltable_path: ${{parent.inputs.test_mltable_path}}
-      model_selector_output: ${{parent.jobs.text_generation_model_import.outputs.output_dir}}
+      text_key: '${{parent.inputs.text_key}}'
+      ground_truth_key: '${{parent.inputs.ground_truth_key}}'
+      batch_size: '${{parent.inputs.batch_size}}'
+      pad_to_max_length: '${{parent.inputs.pad_to_max_length}}'
+      max_seq_length: '${{parent.inputs.max_seq_length}}'
+      train_file_path: '${{parent.inputs.train_file_path}}'
+      validation_file_path: '${{parent.inputs.validation_file_path}}'
+      test_file_path: '${{parent.inputs.test_file_path}}'
+      train_mltable_path: '${{parent.inputs.train_mltable_path}}'
+      validation_mltable_path: '${{parent.inputs.validation_mltable_path}}'
+      test_mltable_path: '${{parent.inputs.test_mltable_path}}'
+      model_selector_output: '${{parent.jobs.text_generation_model_import.outputs.output_dir}}'
   text_generation_finetune:
     type: command
-    component: azureml:text_generation_finetune:0.0.16
-    compute: ${{parent.inputs.compute_finetune}}
+    component: azureml:text_generation_finetune:0.0.17
+    compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
-      process_count_per_instance: ${{parent.inputs.number_of_gpu_to_use_finetuning}}
+      process_count_per_instance: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
     resources:
-      instance_count: ${{parent.inputs.num_nodes_finetune}}
+      instance_count: '${{parent.inputs.num_nodes_finetune}}'
     inputs:
-      apply_lora: ${{parent.inputs.apply_lora}}
-      merge_lora_weights: ${{parent.inputs.merge_lora_weights}}
-      lora_alpha: ${{parent.inputs.lora_alpha}}
-      lora_r: ${{parent.inputs.lora_r}}
-      lora_dropout: ${{parent.inputs.lora_dropout}}
-      num_train_epochs: ${{parent.inputs.num_train_epochs}}
-      max_steps: ${{parent.inputs.max_steps}}
-      per_device_train_batch_size: ${{parent.inputs.per_device_train_batch_size}}
-      per_device_eval_batch_size: ${{parent.inputs.per_device_eval_batch_size}}
-      auto_find_batch_size: ${{parent.inputs.auto_find_batch_size}}
-      optim: ${{parent.inputs.optim}}
-      learning_rate: ${{parent.inputs.learning_rate}}
-      warmup_steps: ${{parent.inputs.warmup_steps}}
-      weight_decay: ${{parent.inputs.weight_decay}}
-      adam_beta1: ${{parent.inputs.adam_beta1}}
-      adam_beta2: ${{parent.inputs.adam_beta2}}
-      adam_epsilon: ${{parent.inputs.adam_epsilon}}
-      gradient_accumulation_steps: ${{parent.inputs.gradient_accumulation_steps}}
-      lr_scheduler_type: ${{parent.inputs.lr_scheduler_type}}
-      precision: ${{parent.inputs.precision}}
-      seed: ${{parent.inputs.seed}}
-      enable_full_determinism: ${{parent.inputs.enable_full_determinism}}
-      dataloader_num_workers: ${{parent.inputs.dataloader_num_workers}}
-      ignore_mismatched_sizes: ${{parent.inputs.ignore_mismatched_sizes}}
-      max_grad_norm: ${{parent.inputs.max_grad_norm}}
-      evaluation_strategy: ${{parent.inputs.evaluation_strategy}}
-      evaluation_steps_interval: ${{parent.inputs.evaluation_steps_interval}}
-      eval_steps: ${{parent.inputs.eval_steps}}
-      logging_strategy: ${{parent.inputs.logging_strategy}}
-      logging_steps: ${{parent.inputs.logging_steps}}
-      metric_for_best_model: ${{parent.inputs.metric_for_best_model}}
-      resume_from_checkpoint: ${{parent.inputs.resume_from_checkpoint}}
-      save_total_limit: ${{parent.inputs.save_total_limit}}
-      apply_early_stopping: ${{parent.inputs.apply_early_stopping}}
-      early_stopping_patience: ${{parent.inputs.early_stopping_patience}}
-      early_stopping_threshold: ${{parent.inputs.early_stopping_threshold}}
-      apply_deepspeed: ${{parent.inputs.apply_deepspeed}}
-      deepspeed: ${{parent.inputs.deepspeed}}
-      apply_ort: ${{parent.inputs.apply_ort}}
-      preprocess_output: ${{parent.jobs.text_generation_datapreprocess.outputs.output_dir}}
-      model_selector_output: ${{parent.jobs.text_generation_model_import.outputs.output_dir}}
+      apply_lora: '${{parent.inputs.apply_lora}}'
+      merge_lora_weights: '${{parent.inputs.merge_lora_weights}}'
+      lora_alpha: '${{parent.inputs.lora_alpha}}'
+      lora_r: '${{parent.inputs.lora_r}}'
+      lora_dropout: '${{parent.inputs.lora_dropout}}'
+      num_train_epochs: '${{parent.inputs.num_train_epochs}}'
+      max_steps: '${{parent.inputs.max_steps}}'
+      per_device_train_batch_size: '${{parent.inputs.per_device_train_batch_size}}'
+      per_device_eval_batch_size: '${{parent.inputs.per_device_eval_batch_size}}'
+      auto_find_batch_size: '${{parent.inputs.auto_find_batch_size}}'
+      optim: '${{parent.inputs.optim}}'
+      learning_rate: '${{parent.inputs.learning_rate}}'
+      warmup_steps: '${{parent.inputs.warmup_steps}}'
+      weight_decay: '${{parent.inputs.weight_decay}}'
+      adam_beta1: '${{parent.inputs.adam_beta1}}'
+      adam_beta2: '${{parent.inputs.adam_beta2}}'
+      adam_epsilon: '${{parent.inputs.adam_epsilon}}'
+      gradient_accumulation_steps: '${{parent.inputs.gradient_accumulation_steps}}'
+      eval_accumulation_steps: '${{parent.inputs.eval_accumulation_steps}}'
+      lr_scheduler_type: '${{parent.inputs.lr_scheduler_type}}'
+      precision: '${{parent.inputs.precision}}'
+      seed: '${{parent.inputs.seed}}'
+      enable_full_determinism: '${{parent.inputs.enable_full_determinism}}'
+      dataloader_num_workers: '${{parent.inputs.dataloader_num_workers}}'
+      ignore_mismatched_sizes: '${{parent.inputs.ignore_mismatched_sizes}}'
+      max_grad_norm: '${{parent.inputs.max_grad_norm}}'
+      evaluation_strategy: '${{parent.inputs.evaluation_strategy}}'
+      evaluation_steps_interval: '${{parent.inputs.evaluation_steps_interval}}'
+      eval_steps: '${{parent.inputs.eval_steps}}'
+      logging_strategy: '${{parent.inputs.logging_strategy}}'
+      logging_steps: '${{parent.inputs.logging_steps}}'
+      metric_for_best_model: '${{parent.inputs.metric_for_best_model}}'
+      resume_from_checkpoint: '${{parent.inputs.resume_from_checkpoint}}'
+      save_total_limit: '${{parent.inputs.save_total_limit}}'
+      apply_early_stopping: '${{parent.inputs.apply_early_stopping}}'
+      early_stopping_patience: '${{parent.inputs.early_stopping_patience}}'
+      early_stopping_threshold: '${{parent.inputs.early_stopping_threshold}}'
+      apply_deepspeed: '${{parent.inputs.apply_deepspeed}}'
+      deepspeed: '${{parent.inputs.deepspeed}}'
+      apply_ort: '${{parent.inputs.apply_ort}}'
+      preprocess_output: '${{parent.jobs.text_generation_datapreprocess.outputs.output_dir}}'
+      model_selector_output: '${{parent.jobs.text_generation_model_import.outputs.output_dir}}'
     outputs:
-      pytorch_model_folder: ${{parent.outputs.pytorch_model_folder}}
-      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
+      pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
+      mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
     component: azureml:model_prediction:0.0.13
@@ -571,7 +592,7 @@ jobs:
       task: text-generation
       test_data: '${{parent.jobs.text_generation_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.ground_truth_key}}'
-      input_column_names: "'${{parent.inputs.text_key}}'"
+      input_column_names: '${{parent.inputs.text_key}}'
       batch_size: '${{parent.inputs.batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.text_generation_finetune.outputs.mlflow_model_folder}}'

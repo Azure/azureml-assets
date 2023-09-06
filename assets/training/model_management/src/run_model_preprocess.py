@@ -35,12 +35,13 @@ def _get_parser():
     parser.add_argument("--hf-config-class", type=str, required=False, help="Hugging Face config class")
     parser.add_argument("--hf-model-class", type=str, required=False, help="Hugging Face model class ")
     parser.add_argument("--hf-tokenizer-class", type=str, required=False, help="Hugging tokenizer class")
+    # argparse issue: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     parser.add_argument(
         "--hf-use-experimental-features",
-        type=bool,
-        required=False,
-        default=False,
+        type=str,
+        default="false",
         help="Enable experimental features for hugging face MLflow model conversion",
+        required=False,
     )
 
     parser.add_argument(
@@ -113,7 +114,7 @@ def run():
     hf_config_class = args.hf_config_class
     hf_model_class = args.hf_model_class
     hf_tokenizer_class = args.hf_tokenizer_class
-    hf_use_experimental_features = args.hf_use_experimental_features
+    hf_use_experimental_features = False if args.hf_use_experimental_features.lower() == "false" else True
     extra_pip_requirements = args.extra_pip_requirements
 
     model_download_metadata_path = args.model_download_metadata
