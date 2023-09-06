@@ -1,5 +1,5 @@
-git+https://github.com/huggingface/transformers.git@main
 text-generation==0.6.0
+transformers>=4.33.0
 accelerate==0.22.0
 azureml-inference-server-http==0.8.4
 aiohttp~=3.8.5
