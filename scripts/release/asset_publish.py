@@ -406,6 +406,17 @@ def create_asset(
         failure_list.append(asset)
 
 
+def stringify_dictionary(dictionary):
+    """Convert the type of values to string."""
+    for name, value in dictionary.items():
+        if isinstance(value, dict):
+            value = json.dumps(value)
+        else:
+            value = str(value)
+        dictionary[name] = value
+    return dictionary
+
+
 def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
     """Update the mutable metadata of asset."""
     if asset.type == assets.AssetType.MODEL:
@@ -420,14 +431,14 @@ def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
             with open(spec_path) as f:
                 model_spec = YAML().load(f)
                 tags = model_spec.get("tags", {})
-                # convert tag value to string
-                for name, value in tags.items():
-                    if isinstance(value, dict):
-                        value = json.dumps(value)
-                    else:
-                        value = str(value)
-                    tags[name] = value
+                properties = model_spec.get("properties", {})
+
+                # convert tags, properties value to string
+                tags = stringify_dictionary(tags)
+                properties = stringify_dictionary(properties)
+
                 tags_to_update = {"replace": tags}
+                properties_to_update = {"add": properties}
         except Exception as e:
             logger.log_error(f"Failed to get tags for model {model_name}: {e}")
 
@@ -438,6 +449,7 @@ def update_asset_metadata(mlclient: MLClient, asset: AssetConfig):
             update=AssetVersionUpdate(
                 versions=[model_version],
                 tags=tags_to_update,
+                properties=properties_to_update,
                 description=model_config.description
             )
         )

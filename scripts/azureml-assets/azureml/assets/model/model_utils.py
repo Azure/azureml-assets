@@ -157,20 +157,35 @@ def update_model_metadata(
 
         need_update = False
         updated_tags = copy.deepcopy(model.tags)
+        updated_properties = copy.deepcopy(model.properties)
         if update.tags:
             # Replace tags
             if update.tags.replace is not None:
                 updated_tags = update.tags.replace
-            elif update.tags.add is not None:
-                for k, v in update.tags.add.items():
-                    updated_tags[k] = v
-            elif update.tags.delete is not None:
-                for k in update.tags.delete:
-                    updated_tags.pop(k, None)
+            else:
+                if update.tags.add is not None:
+                    for k, v in update.tags.add.items():
+                        updated_tags[k] = v
+                if update.tags.delete is not None:
+                    for k in update.tags.delete:
+                        updated_tags.pop(k, None)
 
         if updated_tags != model.tags:
             logger.print("tags has been updated.")
             model.tags = updated_tags
+            need_update = True
+
+        if update.properties:
+            if update.properties.add is not None:
+                for k, v in update.properties.add.items():
+                    if k in model.properties and model.properties[k] != v:
+                        raise Exception(f"Value of property {k} for model {model_name} cannot "
+                                        f"be replaced to {v} without increasing the version.")
+                    updated_properties[k] = v
+
+        if updated_properties != model.properties:
+            logger.print("properties has been updated.")
+            model.properties = updated_properties
             need_update = True
 
         if model.description != update.description:
