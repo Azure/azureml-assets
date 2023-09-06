@@ -1,4 +1,4 @@
-The "Classification Accuracy Evaluation" is a model designed to assess the effectiveness of a data classification system. It involves matching each prediction against the ground truth, subsequently assigning a "Correct" or "Incorrect" score. The cumulative results are then leveraged to generate performance metrics, such as accuracy, providing an overall measure of the system's proficiency in data classification.
+The "QnA F1 Score Evaluation" is a model to evaluate the Q&A Retrieval Augmented Generation systems using f1 score based on the word counts in predicted answer and ground truth.
 
 
 ### Inference samples
@@ -14,8 +14,8 @@ Batch | N/A | N/A
 ```json
 {
     "inputs": {
-        "groundtruth": "App",
-        "prediction": "App"
+        "ground_truth": "Master transformer.",
+        "answer": "The main transformer is the object that feeds all the fixtures in low voltage tracks."
     }
 }
 ```
@@ -24,7 +24,7 @@ Batch | N/A | N/A
 ```json
 {
     "outputs": {
-        "grade": "Correct"
+        "f1_score": "0.14285714285714285"
     }
 }
 ```
