@@ -180,7 +180,7 @@ def update_model_metadata(
                 for k, v in update.properties.add.items():
                     if k in model.properties and model.properties[k] != v:
                         raise Exception(f"Value of property {k} for model {model_name} cannot" ,
-                                        "be replaced to {v} without increasing the version.")
+                                        f"be replaced to {v} without increasing the version.")
                     updated_properties[k] = v
 
         if updated_properties != model.properties:
