@@ -105,7 +105,7 @@ class AssetVersionUpdate(Versions):
         """Convert field values to objects."""
         if self.tags:
             self.tags = AssetTags(**self.tags)
-        
+
         if self.properties:
             self.properties = AssetProperties(**self.properties)
 
@@ -234,7 +234,7 @@ class TagsSchema(Schema):
     def _validate_schema(self, data: Dict[str, object], **kwargs):
         if data.get('replace') and (data.get('add') or data.get('delete')):
             raise ValueError("replace can't be used with add or delete")
-        
+
 
 class PropertiesSchema(Schema):
     """Properties schema."""
