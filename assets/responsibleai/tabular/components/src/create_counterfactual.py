@@ -83,6 +83,7 @@ def main(args):
     copy_dashboard_info_file(args.rai_insights_dashboard, args.counterfactual_path)
 
     _logger.info("Completing")
+    _logger.info("Completing")
 
 
 # run script
