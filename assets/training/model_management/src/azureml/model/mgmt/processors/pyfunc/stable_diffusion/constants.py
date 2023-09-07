@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Constants for StableDiffusion."""
+
 from enum import Enum
 from mlflow.types import DataType
 
@@ -12,33 +14,29 @@ class _CustomEnum(Enum):
 
 
 class Tasks(_CustomEnum):
-    """
-    Task types supported by stable diffusion
-    """
+    """Task types supported by stable diffusion"""
+
     TEXT_TO_IMAGE = "text-to-image"
 
 
 class ColumnNames:
-    """
-    Column names in pandas dataframe used to receive request and send response.
-    """
+    """Column names in pandas dataframe used to receive request and send response."""
+
     TEXT_PROMPT = "prompt"
     GENERATED_IMAGE = "generated_image"
     NSFW_FLAG = "nsfw_content_detected"
 
 
 class DatatypeLiterals:
-    """
-    Literals related to data type.
-    """
+    """Literals related to data type."""
+
     IMAGE_FORMAT = "JPEG"
     STR_ENCODING = "utf-8"
 
 
 class MLflowLiterals:
-    """
-    MLflow export related literals
-    """
+    """MLflow export related literals"""
+
     MODEL_DIR = "model_dir"
     MODEL_NAME = "model_name"
 

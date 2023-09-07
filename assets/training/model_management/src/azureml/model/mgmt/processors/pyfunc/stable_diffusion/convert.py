@@ -1,6 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""
+Convert StableDiffusion model from HuggingFace to MLflow format.
+"""
+
 import mlflow
 from mlflow.models import ModelSignature
 from mlflow.types.schema import ColSpec

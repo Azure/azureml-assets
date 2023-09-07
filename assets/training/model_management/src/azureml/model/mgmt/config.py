@@ -18,7 +18,7 @@ class _CustomEnum(Enum):
 
 
 class ComponentConstants:
-    """ Constant literals related to components parameters."""
+    """Constant literals related to components parameters."""
 
     MODEL_ID = "model_id"
     TASK = "task"
