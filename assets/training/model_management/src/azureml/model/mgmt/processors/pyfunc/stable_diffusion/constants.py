@@ -4,6 +4,7 @@
 from enum import Enum
 from mlflow.types import DataType
 
+
 class _CustomEnum(Enum):
     @classmethod
     def has_value(cls, value):

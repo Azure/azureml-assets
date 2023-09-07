@@ -4,7 +4,7 @@
 import mlflow
 from mlflow.models import ModelSignature
 from mlflow.types.schema import ColSpec
-from mlflow.types.schema import DataType, Schema
+from mlflow.types.schema import Schema
 import os
 from pathlib import Path
 import shutil
@@ -14,7 +14,6 @@ from typing import Dict
 from .constants import ColumnNames, MLflowLiterals, MLflowSchemaLiterals, Tasks
 from azureml.model.mgmt.config import ComponentConstants
 from azureml.model.mgmt.utils.common_utils import log_execution_time
-
 
 
 def _get_mlflow_signature(task_type: str) -> ModelSignature:
@@ -37,11 +36,10 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
         [ColSpec(MLflowSchemaLiterals.STRING_DATA_TYPE, ColumnNames.TEXT_PROMPT),
          ColSpec(MLflowSchemaLiterals.IMAGE_DATA_TYPE, ColumnNames.GENERATED_IMAGE),
          ColSpec(MLflowSchemaLiterals.STRING_DATA_TYPE, ColumnNames.NSFW_FLAG),
-        ]
+         ]
     )
 
     return ModelSignature(inputs=input_schema, outputs=output_schema)
-
 
 
 @log_execution_time

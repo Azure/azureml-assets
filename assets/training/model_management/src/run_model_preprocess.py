@@ -97,6 +97,7 @@ def _validate_pyfunc_args(pyfunc_args):
     if not Tasks.has_value(task):
         raise Exception(f"Unsupported task {task} for pyfunc flavor.")
 
+
 def _validate_stable_diff_pyfunc_args(pyfunc_args):
     if not pyfunc_args.get(ComponentConstants.MODEL_ID):
         raise Exception("model_id is a required parameter for pyfunc MLflow flavor for stable diffusion.")
@@ -105,6 +106,7 @@ def _validate_stable_diff_pyfunc_args(pyfunc_args):
     task = pyfunc_args[ComponentConstants.TASK]
     if not StableDiffusionTasks.has_value(task):
         raise Exception(f"Unsupported task {task} for pyfunc MLflow flavor for stable diffusion.")
+
 
 @swallow_all_exceptions(logger)
 def run():
