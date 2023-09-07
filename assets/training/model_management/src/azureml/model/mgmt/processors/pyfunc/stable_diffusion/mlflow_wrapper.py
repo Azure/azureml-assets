@@ -3,6 +3,7 @@
 
 """
 Contains MLFlow pyfunc wrapper for stable diffusion models.
+
 Has methods to load the model and predict.
 """
 
@@ -10,10 +11,13 @@ import base64
 from diffusers import StableDiffusionPipeline
 from io import BytesIO
 import mlflow
+import os
 import pandas as pd
+import PIL
 import torch
+import uuid
 
-from constants import ColumnNames, DatatypeLiterals, MLflowLiterals, Tasks
+from constants import BatchConstants, ColumnNames, DatatypeLiterals, MLflowLiterals, Tasks
 
 
 class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -24,7 +28,7 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             task_type: str,
             model_id: str,
     ) -> None:
-        """Constructor for MLflow wrapper class
+        """Initialize model parameters for converting Huggingface StableDifusion model to mlflow.
 
         :param task_type: Task type used in training.
         :type task_type: str
@@ -35,6 +39,36 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         self._pipe = None
         self._task_type = task_type
         self._model_id = model_id
+        self.batch_output_folder = os.getenv(BatchConstants.BATCH_OUTPUT_PATH, default=False)
+
+    def image_to_str(self, img: PIL.Image.Image) -> str:
+        """
+        Convert image into Base64 encoded string.
+
+        :param img: image object
+        :type img: PIL.Image.Image
+        :return: base64 encoded string
+        :rtype: str
+        """
+        buffered = BytesIO()
+        img.save(buffered, format=DatatypeLiterals.IMAGE_FORMAT)
+        img_str = base64.b64encode(buffered.getvalue()).decode(DatatypeLiterals.STR_ENCODING)
+        return img_str
+
+    def save_image(self, img: PIL.Image.Image) -> str:
+        """
+        Save image in a folder designated for batch output and return image file path.
+
+        :param img: image object
+        :type img: PIL.Image.Image
+        :return: Path where image is saved/persisted.
+        :rtype: str
+        """
+        filename = f'image_{uuid.uuid4()}.jpeg'
+        filename = os.path.join(self.batch_output_folder, filename)
+        img.save(filename, format=DatatypeLiterals.IMAGE_FORMAT)
+
+        return filename
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """
@@ -75,10 +109,12 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
 
         generated_images = []
         for img in output.images:
-            buffered = BytesIO()
-            img.save(buffered, format=DatatypeLiterals.IMAGE_FORMAT)
-            img_str = base64.b64encode(buffered.getvalue()).decode(DatatypeLiterals.STR_ENCODING)
-            generated_images.append(img_str)
+            if self.batch_output_folder:
+                # Batch endpoint
+                generated_images.append(self.save_image(img))
+            else:
+                # Online endpoint
+                generated_images.append(self.image_to_str(img))
 
         print("Image generation successful")
         print(f"At least one NSFW image detected: {any(output.nsfw_content_detected)}")
@@ -88,5 +124,9 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
                            ColumnNames.NSFW_FLAG: output.nsfw_content_detected
                            }
                           )
+
+        if self.batch_output_folder:
+            # Batch endpoint
+            df = df.drop(columns=[ColumnNames.TEXT_PROMPT])
 
         return df
