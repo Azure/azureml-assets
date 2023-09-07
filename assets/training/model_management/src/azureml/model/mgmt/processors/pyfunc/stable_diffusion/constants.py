@@ -14,7 +14,7 @@ class _CustomEnum(Enum):
 
 
 class Tasks(_CustomEnum):
-    """Task types supported by stable diffusion"""
+    """Task types supported by stable diffusion."""
 
     TEXT_TO_IMAGE = "text-to-image"
 
@@ -35,7 +35,7 @@ class DatatypeLiterals:
 
 
 class MLflowLiterals:
-    """MLflow export related literals"""
+    """MLflow export related literals."""
 
     MODEL_DIR = "model_dir"
     MODEL_NAME = "model_name"

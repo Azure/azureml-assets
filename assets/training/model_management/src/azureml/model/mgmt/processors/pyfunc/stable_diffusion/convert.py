@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-Convert StableDiffusion model from HuggingFace to MLflow format.
-"""
+"""Convert StableDiffusion model from HuggingFace to MLflow format."""
 
 import mlflow
 from mlflow.models import ModelSignature
@@ -28,7 +26,6 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
     :return: MLflow model signature.
     :rtype: mlflow.models.signature.ModelSignature
     """
-
     if task_type in [Tasks.TEXT_TO_IMAGE.value]:
         input_schema = Schema(
             [ColSpec(MLflowSchemaLiterals.STRING_DATA_TYPE, ColumnNames.TEXT_PROMPT)]
