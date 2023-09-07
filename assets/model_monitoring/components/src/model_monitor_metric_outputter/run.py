@@ -31,6 +31,7 @@ def run():
     arg_parser.add_argument("--signal_name", type=str)
     arg_parser.add_argument("--signal_type", type=str)
     arg_parser.add_argument("--signal_metrics", type=str)
+    arg_parser.add_argument("--samples_index", type=str, required=False)
     arg_parser.add_argument("--metric_timestamp", type=str)
     arg_parser.add_argument("--signal_output", type=str)
 
@@ -38,8 +39,12 @@ def run():
 
     metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
 
+    samples_index: List[Row] = None
+    if args["samples_index"]:
+        samples_index: List[Row] = read_mltable_in_spark(args.samples_index).collect()
+
     runmetric_client = RunMetricClient()
-    metrics_dict = MetricOutputBuilder(runmetric_client, args.monitor_name, args.signal_name, metrics) \
+    metrics_dict = MetricOutputBuilder(runmetric_client, args.monitor_name, args.signal_name, metrics, samples_index) \
         .get_metrics_dict()
     output_payload = to_output_payload(args.signal_name, args.signal_type, metrics_dict)
 

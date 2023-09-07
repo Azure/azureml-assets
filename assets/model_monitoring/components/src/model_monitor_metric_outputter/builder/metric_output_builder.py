@@ -47,18 +47,14 @@ class MetricOutputBuilder:
                 metric_name = metric_dict[SIGNAL_METRICS_METRIC_NAME]
 
                 group_names = []
-                if SIGNAL_METRICS_GROUP in metric_dict and metric_dict[SIGNAL_METRICS_GROUP] is not None and metric_dict[SIGNAL_METRICS_GROUP] != "":  # noqa
 
-                    root_group = metric_dict[SIGNAL_METRICS_GROUP]
-                    group_names.append(root_group)
+                group = self._get_group_from_dict(SIGNAL_METRICS_GROUP, s)
+                if group:
+                    group_names.append(group)
 
-                    # If group dimension is not specified, default is Aggregate.
-                    if (SIGNAL_METRICS_GROUP_DIMENSION in metric_dict
-                            and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION] is not None
-                            and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION] != ""
-                            and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION].lower() != AGGREGATE):
-                        group_dimension = metric_dict[SIGNAL_METRICS_GROUP_DIMENSION]
-                        group_names.append(group_dimension)
+                group_dimension = self._get_group_from_dict(SIGNAL_METRICS_GROUP_DIMENSION, s)
+                if group_dimension:
+                    group_names.append(group_dimension)
 
                 new_metric = {
                     VALUE: metric_dict[SIGNAL_METRICS_METRIC_VALUE],
@@ -147,3 +143,53 @@ class MetricOutputBuilder:
             cur_dict[GROUPS] = {}
         if group_name not in cur_dict[GROUPS]:
             cur_dict[GROUPS][group_name] = {}
+
+    # Expected columns: metric_name, group, group_dimension, samples_name, asset
+    def _build_samples(self, samples: List[Row]) -> dict:
+        results = {}
+        for sample in samples:
+            s = sample.asDict()
+
+            group_names = []
+            group = self._get_group_from_dict(SIGNAL_METRICS_GROUP, s)
+            
+            if group:
+                group_names.append(group)
+            group_dimension = self._get_group_from_dict(SIGNAL_METRICS_GROUP_DIMENSION, s)
+            
+            if group_dimension:
+                group_names.append(group_dimension)
+            
+            payload = {
+                "samples": {
+                    s["samples_name"]:
+                    {
+                        "uri": s["asset"]
+                    }
+                }
+            }
+            
+            results["metric_name"] = self._create_entry(group_names, payload) 
+
+        return {
+            "metrics": results
+        }
+    
+    def _create_entry(self, group_names: List[str], payload: dict):
+        
+        if len(group_names) > 0:
+            return {
+                "groups":
+                {
+                    group_names : self._create_entry(group_names[1:], payload)
+                }
+            }
+
+        return payload
+
+    def _get_group_from_dict(group_key, dictionary: dict):
+        if (group_key in dictionary
+            and dictionary[group_key] is not None
+            and dictionary[group_key] != ""):
+            return dictionary[group_key]
+        return None
