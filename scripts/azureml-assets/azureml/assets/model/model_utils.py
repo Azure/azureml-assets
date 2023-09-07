@@ -4,9 +4,9 @@
 
 import copy
 import azureml.assets as assets
-from azure.identity import AzureCliCredential
+from typing import Tuple
 from azure.ai.ml import load_model, MLClient
-from azure.ai.ml._utils._registry_utils import get_asset_body_for_registry_storage, get_registry_client
+from azure.ai.ml._utils._registry_utils import get_asset_body_for_registry_storage
 from azureml.assets.util import logger
 from azureml.assets.config import PathType
 from azureml.assets.model.download_utils import copy_azure_artifacts, download_git_model
@@ -18,38 +18,36 @@ class RegistryUtils:
 
     RETRY_COUNT = 3
 
-    def get_registry_data_reference(registry_name: str, model_name: str, model_version: str):
+    def get_registry_data_reference(model_name: str, model_version: str, ml_client: MLClient) -> Tuple[str, str]:
         """Fetch data reference for asset in the registry."""
+        registry_name = ml_client.models._registry_name
         asset_id = f"azureml://registries/{registry_name}/models/{model_name}/versions/{model_version}"
         logger.print(f"getting data reference for asset {asset_id}")
         for cnt in range(1, RegistryUtils.RETRY_COUNT + 1):
             try:
-                response = RegistryUtils._get_temp_data_ref(registry_name, model_name, model_version)
+                response = RegistryUtils._get_temp_data_ref(model_name, model_version, ml_client)
                 blob_uri = response.blob_reference_for_consumption.blob_uri
                 sas_uri = response.blob_reference_for_consumption.credential.additional_properties["sasUri"]
                 if not blob_uri or not sas_uri:
-                    raise Exception("Error in fetching BLOB or SAS URI")
+                    raise Exception("Error fetching blob or SAS URI")
                 return blob_uri, sas_uri
             except Exception as e:
                 logger.log_error(f"Exception in fetching data reference. Try #{cnt}. Error: {e}")
         else:
             raise Exception(f"Unable to fetch data reference for asset {asset_id}")
 
-    def _get_temp_data_ref(registry_name, model_name, model_version):
-        try:
-            credential = AzureCliCredential()
-            body = get_asset_body_for_registry_storage(registry_name, "models", model_name, model_version)
-            registry_client, resource_group, _ = get_registry_client(credential, registry_name)
-            response = registry_client.temporary_data_references.create_or_get_temporary_data_reference(
-                name=model_name,
-                version=model_version,
-                resource_group_name=resource_group,
-                registry_name=registry_name,
-                body=body,
-            )
-            return response
-        except Exception as e:
-            logger.log_error(f"exception in fetching data reference: {e}")
+    def _get_temp_data_ref(model_name: str, model_version: str, ml_client: MLClient):
+        service_client = ml_client.models._service_client
+        registry_name = ml_client.models._registry_name
+        body = get_asset_body_for_registry_storage(registry_name, "models", model_name, model_version)
+        response = service_client.temporary_data_references.create_or_get_temporary_data_reference(
+            name=model_name,
+            version=model_version,
+            resource_group_name=ml_client.models._resource_group_name,
+            registry_name=registry_name,
+            body=body,
+        )
+        return response
 
 
 class ModelAsset:
@@ -70,7 +68,7 @@ class ModelAsset:
             logger.error(f"Error in loading model spec file at {spec_path}: {e}")
             return False
 
-    def _publish_to_registry(self):
+    def _publish_to_registry(self, ml_client: MLClient):
         src_uri = self._model_config.path.uri
         if self._model_config.path.type == PathType.GIT:
             # download model locally
@@ -85,7 +83,7 @@ class ModelAsset:
             # copy to registry blobstorage
             logger.print("get data ref for registry storage upload")
             blob_uri, sas_uri = RegistryUtils.get_registry_data_reference(
-                self._registry_name, self._model.name, self._model.version
+                self._model.name, self._model.version, ml_client
             )
             success = copy_azure_artifacts(src_uri, sas_uri)
             if not success:
@@ -106,9 +104,9 @@ class MLFlowModelAsset(ModelAsset):
         """Initialize Mlflow model asset."""
         super().__init__(spec_path, model_config, registry_name, temp_dir)
 
-    def prepare_model(self):
+    def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
-        model_registry_path = self._publish_to_registry()
+        model_registry_path = self._publish_to_registry(ml_client)
         self._model.path = model_registry_path + "/" + MLFlowModelAsset.MLFLOW_MODEL_PATH
         return self._model
 
@@ -120,17 +118,18 @@ class CustomModelAsset(ModelAsset):
         """Initialize custom model asset."""
         super().__init__(spec_path, model_config, registry_name, temp_dir)
 
-    def prepare_model(self):
+    def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
-        model_registry_path = self._publish_to_registry()
+        model_registry_path = self._publish_to_registry(ml_client)
         self._model.path = model_registry_path
         return self._model
 
 
-def prepare_model(spec_path, model_config, registry_name, temp_dir):
+def prepare_model(spec_path, model_config, temp_dir, ml_client: MLClient):
     """Prepare model for publish."""
     try:
         logger.print(f"Model type: {model_config.type}")
+        registry_name = ml_client.models._registry_name
         if model_config.type == assets.ModelType.CUSTOM:
             model_asset = CustomModelAsset(spec_path, model_config, registry_name, temp_dir)
         elif model_config.type == assets.ModelType.MLFLOW:
@@ -138,7 +137,7 @@ def prepare_model(spec_path, model_config, registry_name, temp_dir):
         else:
             logger.log_error(f"Model type {model_config.type.value} not supported")
             return False
-        model = model_asset.prepare_model()
+        model = model_asset.prepare_model(ml_client)
         return model, True
     except Exception as e:
         logger.log_error(f"prepare model failed for {spec_path}. Error {e}")
@@ -146,14 +145,14 @@ def prepare_model(spec_path, model_config, registry_name, temp_dir):
 
 
 def update_model_metadata(
-    mlclient: MLClient,
     model_name: str,
     model_version: str,
     update: AssetVersionUpdate,
+    ml_client: MLClient,
 ):
     """Update the mutable metadata of already registered Model."""
     try:
-        model = mlclient.models.get(name=model_name, version=model_version)
+        model = ml_client.models.get(name=model_name, version=model_version)
 
         need_update = False
         updated_tags = copy.deepcopy(model.tags)
@@ -196,7 +195,7 @@ def update_model_metadata(
         if not need_update:
             logger.print(f"No update found for model {model_name}. Skipping")
         else:
-            mlclient.models.create_or_update(model)
+            ml_client.models.create_or_update(model)
             logger.print(f"Model metadata updated successfully for {model_name}")
     except Exception as e:
         logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")
