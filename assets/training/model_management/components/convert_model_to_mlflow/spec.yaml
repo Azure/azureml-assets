@@ -42,10 +42,10 @@ inputs:
     type: string
     enum:
       - transformers
-      - mmlab_pyfunc
+      - pyfunc
     default: transformers
     optional: false
-    description: MLflow flavor to convert model into. Please note that, mmlab_pyfunc flavor is only supported for image object detection models.
+    description: MLflow flavor to convert model into. Please note that, pyfunc flavor is only supported for image object detection models and clip model.
 
   task_name:
     type: string
@@ -62,6 +62,7 @@ inputs:
       - image-object-detection
       - image-instance-segmentation
       - text-to-image
+      - zero-shot-image-classification
     description: A Hugging face task on which model was trained on. A required parameter for transformers MLflow flavor. Can be provided as input here or in model_download_metadata JSON file.
     optional: true
 

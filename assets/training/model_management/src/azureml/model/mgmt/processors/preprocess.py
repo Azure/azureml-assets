@@ -31,7 +31,7 @@ def run_preprocess(mlflow_flavor: str, model_path: Path, output_dir: Path, temp_
     logger.info(f"Run preprocess for model with flavor: {mlflow_flavor} at path: {model_path}")
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
         transformers.to_mlflow(model_path, output_dir, temp_dir, preprocess_args)
-    elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
+    elif mlflow_flavor == ModelFlavor.PYFUNC.value:
         pyfunc.to_mlflow(model_path, output_dir, preprocess_args)
     else:
         raise Exception(f"Unsupported model flavor: {mlflow_flavor}.")
