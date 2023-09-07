@@ -1,4 +1,4 @@
-The "Classification Accuracy Evaluation" is a model designed to assess the effectiveness of a data classification system. It involves matching each prediction against the ground truth, subsequently assigning a "Correct" or "Incorrect" score. The cumulative results are then leveraged to generate performance metrics, such as accuracy, providing an overall measure of the system's proficiency in data classification.
+The "Web Classification" is a model demonstrating multi-class classification with LLM. Given an url, it will classify the url into one web category with just a few shots, simple summarization and classification prompts.
 
 
 ### Inference samples
@@ -14,8 +14,7 @@ Batch | N/A | N/A
 ```json
 {
     "inputs": {
-        "groundtruth": "App",
-        "prediction": "App"
+        "url": "https://www.microsoft.com/en-us/store/collections/xboxseriessconsoles?icid=CNav_Xbox_Series_S"
     }
 }
 ```
@@ -24,7 +23,8 @@ Batch | N/A | N/A
 ```json
 {
     "outputs": {
-        "grade": "Correct"
+        "category": "App",
+        "evidence": "Both"
     }
 }
 ```

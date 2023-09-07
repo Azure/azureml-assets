@@ -1,4 +1,4 @@
-The "Classification Accuracy Evaluation" is a model designed to assess the effectiveness of a data classification system. It involves matching each prediction against the ground truth, subsequently assigning a "Correct" or "Incorrect" score. The cumulative results are then leveraged to generate performance metrics, such as accuracy, providing an overall measure of the system's proficiency in data classification.
+The "Ask Wikipedia" is a Q&A model that employs GPT3.5 to answer questions using information sourced from Wikipedia, ensuring more grounded responses. This process involves identifying the relevant Wikipedia link and extracting its contents. These contents are then used as an augmented prompt, enabling GPT3.5 to generate an accurate response to the question.
 
 
 ### Inference samples
@@ -14,8 +14,7 @@ Batch | N/A | N/A
 ```json
 {
     "inputs": {
-        "groundtruth": "App",
-        "prediction": "App"
+        "question": "When did OpenAI announce GPT-4?"
     }
 }
 ```
@@ -24,7 +23,7 @@ Batch | N/A | N/A
 ```json
 {
     "outputs": {
-        "grade": "Correct"
+        "answer": "OpenAI announced GPT-4 on March 14, 2023. [1] SOURCES: [1] https://en.wikipedia.org/w/index.php?search=GPT-4"
     }
 }
 ```

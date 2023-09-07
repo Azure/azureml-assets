@@ -1,4 +1,4 @@
-The "Classification Accuracy Evaluation" is a model designed to assess the effectiveness of a data classification system. It involves matching each prediction against the ground truth, subsequently assigning a "Correct" or "Incorrect" score. The cumulative results are then leveraged to generate performance metrics, such as accuracy, providing an overall measure of the system's proficiency in data classification.
+The "Template Evaluation Flow" is a evaluate model to measure how well the output matches the expected criteria and goals.
 
 
 ### Inference samples
@@ -14,8 +14,8 @@ Batch | N/A | N/A
 ```json
 {
     "inputs": {
-        "groundtruth": "App",
-        "prediction": "App"
+        "groundtruth": "Tomorrow's weather will be sunny.",
+        "prediction": "The weather will be sunny tomorrow."
     }
 }
 ```
@@ -24,7 +24,7 @@ Batch | N/A | N/A
 ```json
 {
     "outputs": {
-        "grade": "Correct"
+        "results": {}
     }
 }
 ```

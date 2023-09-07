@@ -1,4 +1,4 @@
-The "Classification Accuracy Evaluation" is a model designed to assess the effectiveness of a data classification system. It involves matching each prediction against the ground truth, subsequently assigning a "Correct" or "Incorrect" score. The cumulative results are then leveraged to generate performance metrics, such as accuracy, providing an overall measure of the system's proficiency in data classification.
+The "Template Standard Flow" is a model using GPT3.5 to generate a joke based on user input.
 
 
 ### Inference samples
@@ -14,8 +14,7 @@ Batch | N/A | N/A
 ```json
 {
     "inputs": {
-        "groundtruth": "App",
-        "prediction": "App"
+        "topic": "atom"
     }
 }
 ```
@@ -24,7 +23,7 @@ Batch | N/A | N/A
 ```json
 {
     "outputs": {
-        "grade": "Correct"
+        "joke": "Sure, here you go: Why can't you trust an atom? Because they make up everything!"
     }
 }
 ```
