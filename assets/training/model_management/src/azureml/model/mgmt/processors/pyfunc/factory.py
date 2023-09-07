@@ -5,11 +5,11 @@
 
 from abc import ABC, abstractmethod
 from azureml.model.mgmt.processors.pyfunc.config import (
-    SupportedVisionTasks,
+    SupportedVisionTasks, SupportedTasks
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from .convertors import (
-    VisionMLFlowConvertor,
+    VisionMLFlowConvertor, CLIPMLFlowConvertor
 )
 
 
@@ -21,6 +21,8 @@ def get_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
     task = translate_params["task"]
     if SupportedVisionTasks.has_value(task):
         return VisionMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
+    elif task == SupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value:
+        return CLIPMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
     else:
         raise Exception(f"{task} not supported for MLflow conversion using pyfunc flavor.")
 
@@ -40,6 +42,19 @@ class VisionMLflowConvertorFactory(PyFuncMLflowConvertorFactoryInterface):
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for vision tasks."""
         return VisionMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class CLIPMLflowConvertorFactory(PyFuncMLflowConvertorFactoryInterface):
+    """Factory class for clip model family."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for CLIP model."""
+        return CLIPMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,

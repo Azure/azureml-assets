@@ -16,8 +16,13 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from azureml.model.mgmt.processors.pyfunc.config import SupportedVisionTasks
-from azureml.model.mgmt.processors.pyfunc.vision.config import MLflowSchemaLiterals, MMDetLiterals
+from azureml.model.mgmt.processors.pyfunc.config import SupportedVisionTasks, SupportedTasks
+
+from azureml.model.mgmt.processors.pyfunc.clip.config import \
+    MLflowSchemaLiterals as CLIPMLFlowSchemaLiterals, MLflowLiterals as CLIPMLflowLiterals
+from azureml.model.mgmt.processors.pyfunc.vision.config import \
+    MLflowSchemaLiterals as VisionMLFlowSchemaLiterals, MMDetLiterals
+
 
 
 logger = get_logger(__name__)
@@ -95,7 +100,7 @@ class PyFuncMLFLowConvertor(ABC):
 class VisionMLFlowConvertor(PyFuncMLFLowConvertor):
     """PyFunc MLfLow convertor for vision models."""
 
-    VISION_DIR = Path(__file__).parent / "vision"
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "vision")
 
     def __init__(self, **kwargs):
         """Initialize MLflow convertor for vision models."""
@@ -110,13 +115,13 @@ class VisionMLFlowConvertor(PyFuncMLFLowConvertor):
         :rtype: mlflow.models.signature.ModelSignature
         """
         input_schema = Schema(
-            [ColSpec(MLflowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, MLflowSchemaLiterals.INPUT_COLUMN_IMAGE)]
+            [ColSpec(VisionMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, VisionMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE)]
         )
 
         if self._task in [SupportedVisionTasks.MM_OBJECT_DETECTION.value, SupportedVisionTasks.MM_INSTANCE_SEGMENTATION.value]:
             output_schema = Schema(
                 [
-                    ColSpec(MLflowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, MLflowSchemaLiterals.OUTPUT_COLUMN_BOXES),
+                    ColSpec(VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_BOXES),
                 ]
             )
         else:
@@ -125,15 +130,15 @@ class VisionMLFlowConvertor(PyFuncMLFLowConvertor):
 
     def save_as_mlflow(self):
         """Prepare model for save to MLflow."""
-        sys.path.append(os.path.join(os.path.dirname(__file__), "vision"))
+        sys.path.append(self.MODEL_DIR)
         from detection_predict import ImagesDetectionMLflowModelWrapper
 
         mlflow_model_wrapper = ImagesDetectionMLflowModelWrapper(task_type=self._task)
         artifacts_dict = self._prepare_artifacts_dict()
-        pip_requirements = os.path.join(os.path.dirname(__file__), "vision", "requirements.txt")
+        pip_requirements = os.path.join(self.MODEL_DIR, "requirements.txt")
         code_path = [
-            os.path.join(os.path.dirname(__file__), "vision", "detection_predict.py"),
-            os.path.join(os.path.dirname(__file__), "vision", "config.py"),
+            os.path.join(self.MODEL_DIR, "detection_predict.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
         ]
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
@@ -156,5 +161,69 @@ class VisionMLFlowConvertor(PyFuncMLFLowConvertor):
             MMDetLiterals.CONFIG_PATH: os.path.join(self._model_dir, metadata.get("pytorch_model_path")),
             MMDetLiterals.WEIGHTS_PATH: os.path.join(self._model_dir, metadata.get("model_weights_path_or_url")),
             MMDetLiterals.METAFILE_PATH: os.path.join(self._model_dir, metadata.get("model_metafile_path")),
+        }
+        return artifacts_dict
+
+
+class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for CLIP models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "clip")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for CLIP models."""
+        super().__init__(**kwargs)
+        if self._task != SupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value:
+            raise Exception("Unsupported task")
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the given input task.
+
+        :return: MLflow model signature.
+        :rtype: mlflow.models.signature.ModelSignature
+        """
+        input_schema = Schema(
+            [
+                ColSpec(CLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, CLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
+                ColSpec(CLIPMLFlowSchemaLiterals.INPUT_COLUMN_TEXT_DATA_TYPE, CLIPMLFlowSchemaLiterals.INPUT_COLUMN_TEXT),
+            ]
+        )
+        output_schema = Schema(
+            [
+                ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_PROBS),
+                ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_LABELS),
+            ]
+        )
+
+        return ModelSignature(inputs=input_schema, outputs=output_schema)
+
+    def save_as_mlflow(self):
+        """Prepare model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+        from mlflow_wrapper import CLIPMLFlowModelWrapper
+
+        mlflow_model_wrapper = CLIPMLFlowModelWrapper(task_type=self._task)
+        artifacts_dict = self._prepare_artifacts_dict()
+        pip_requirements = os.path.join(self.MODEL_DIR, "requirements.txt")
+        code_path = [
+            os.path.join(self.MODEL_DIR, "mlflow_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.MODEL_DIR, "utils.py")
+        ]
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            pip_requirements=pip_requirements,
+            code_path=code_path,
+        )
+
+    def _prepare_artifacts_dict(self) -> Dict:
+        """Prepare artifacts dict for MLflow model.
+
+        :return: artifacts dict
+        :rtype: Dict
+        """
+        artifacts_dict = {
+            CLIPMLflowLiterals.MODEL_DIR: self._model_dir
         }
         return artifacts_dict
