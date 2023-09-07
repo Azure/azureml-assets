@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: codellama-codellama-34b-instruct-hf
+name: codellama-7b-instruct-hf
 path: ./
 properties:
   datasets: Publicly available sources
@@ -9,20 +9,30 @@ properties:
 tags:
   Featured: ''
   Preview: ''
-  inference_supported_envs:
-  - hf_tgi
+  computes_allow_list:
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  - Standard_ND96amsr_v4
+  finetune_compute_allow_list:
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  - Standard_ND96amsr_v4
   evaluation_compute_allow_list:
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_v4
   inference_compute_allow_list:
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
+  - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_v4
-  finetune_compute_allow_list:
-  - Standard_ND96amsr_A100_v4
   license: custom
   author: meta
   model_specific_defaults:
+    apply_deepspeed: 'false'
     apply_lora: 'true'
     precision: '4'
   task: text-generation
