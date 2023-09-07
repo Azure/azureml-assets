@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/PipelineComponent.json
 display_name: OpenAI Completions Finetune Pipeline
 name: openai_completions_finetune
-version: 0.1.0
+version: 0.2.0
 type: pipeline
 description: Finetune your own OAI model. Visit https://learn.microsoft.com/en-us/azure/cognitive-services/openai/
   for more info.
@@ -90,6 +90,10 @@ inputs:
       recall and less on precision. A smaller beta score puts more weight on precision
       and less on recall. The value specified should be a comma separated list of
       doubles.
+  quota_enforcement_resource_id:
+    type: string
+    optional: true
+    description: Owner subscription id.
 
 outputs:
   output_model:
@@ -100,6 +104,9 @@ outputs:
 jobs:
   fine_tune:
     type: command
+    resources:
+      properties:
+        quota_enforcement_resource_id: ${{parent.inputs.quota_enforcement_resource_id}}
     component: azureml://registries/azure-openai-preview/components/openai_completions_finetune/versions/0.3.0
     inputs:
       model: ${{parent.inputs.model}}
