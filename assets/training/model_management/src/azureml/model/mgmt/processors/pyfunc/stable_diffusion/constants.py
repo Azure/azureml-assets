@@ -48,7 +48,3 @@ class MLflowSchemaLiterals:
 
     IMAGE_DATA_TYPE = DataType.binary
     STRING_DATA_TYPE = DataType.string
-
-
-class BatchConstants:
-    BATCH_OUTPUT_PATH = "AZUREML_BI_OUTPUT_PATH"

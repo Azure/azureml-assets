@@ -38,6 +38,7 @@ class ModelFlavor(_CustomEnum):
     MMLAB_PYFUNC = "mmlab_pyfunc"
     STABLE_DIFFUSION_PYFUNC = "stable_diffusion_pyfunc"
 
+
 class PathType(_CustomEnum):
     """Enum for path types supported for model download."""
 
