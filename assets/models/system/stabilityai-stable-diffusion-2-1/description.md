@@ -16,7 +16,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-to-image" target="_b
 ```json
 {
    "input_data": {
-        "columns": ["text_prompt"],
+        "columns": ["prompt"],
         "data": ["a photograph of an astronaut riding a horse", "a photograph of a cat riding a horse"],
         "index": [0]
     }
@@ -28,7 +28,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-to-image" target="_b
 ```json
 [
     {
-        "generated_images": ["image1", "image2"],
+        "generated_image": ["image1", "image2"],
         "nsfw_content_detected": ["True", "False"]
     }
 ]
@@ -36,6 +36,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-to-image" target="_b
 Note: "image1" and "image2" string are base64 format.
 ```
 
-#### Model inference - visualization for a sample image
+#### Model inference - visualization for a sample prompt
 
 <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_microsoft-swinv2-base-patch4-window12-192-22k_MC.png" alt="mc visualization">
