@@ -3,6 +3,7 @@
 
 """
 Contains MLFlow pyfunc wrapper for stable diffusion models.
+
 Has methods to load the model and predict.
 """
 
@@ -24,7 +25,7 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             task_type: str,
             model_id: str,
     ) -> None:
-        """Constructor for MLflow wrapper class
+        """Initialize model parameters for converting Huggingface StableDifusion model to mlflow.
 
         :param task_type: Task type used in training.
         :type task_type: str
