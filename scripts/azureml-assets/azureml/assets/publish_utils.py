@@ -421,6 +421,14 @@ def get_parsed_details_from_asset_uri(asset_type: str, asset_uri: str) -> Tuple[
     return asset_name, asset_version, asset_label, asset_registry_name
 
 
+def stringify_dictionary(dictionary: Dict):
+    """Convert the type of values to string."""
+    new_dict = {}
+    for name, value in dictionary.items():
+        new_dict[name] = json.dumps(value) if isinstance(value, dict) else str(value)
+    return new_dict
+
+
 def update_asset_metadata(asset: AssetConfig, ml_client: MLClient):
     """Update the mutable metadata of asset."""
     if asset.type == AssetType.MODEL:
@@ -435,16 +443,13 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient):
             with open(spec_path) as f:
                 model_spec = YAML().load(f)
                 tags = model_spec.get("tags", {})
-                # convert tag value to string
-                for name, value in tags.items():
-                    if isinstance(value, list):
-                        value = str(value)
-                    elif isinstance(value, dict):
-                        value = json.dumps(value)
-                    elif not isinstance(value, str):
-                        raise Exception(f"Invalid value type: {type(value)} for tag name {name}")
-                    tags[name] = value
+                properties = model_spec.get("properties", {})
+
+                # convert tags, properties value to string
+                tags = stringify_dictionary(tags)
+                properties = stringify_dictionary(properties)
                 tags_to_update = {"replace": tags}
+                properties_to_update = {"add": properties}
         except Exception as e:
             logger.log_error(f"Failed to get tags for model {model_name}: {e}")
 
@@ -454,6 +459,7 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient):
             update=AssetVersionUpdate(
                 versions=[model_version],
                 tags=tags_to_update,
+                properties=properties_to_update,
                 description=model_config.description
             ),
             ml_client=ml_client,
