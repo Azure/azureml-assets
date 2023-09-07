@@ -5,7 +5,7 @@
 
 ## 1.15.1 (2023-09-07)
 ### 🐛 Bugs Fixed
-- [#]() Fix authentication when retrieving temporary data references during model upload
+- [#1182](https://github.com/Azure/azureml-assets/pull/1182) Fix authentication when retrieving temporary data references during model upload
 
 ## 1.15.0 (2023-09-06)
 ### 🐛 New Features
