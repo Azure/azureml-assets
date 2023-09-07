@@ -23,7 +23,7 @@ class ColumnNames:
     Column names in pandas dataframe used to receive request and send response.
     """
     TEXT_PROMPT = "prompt"
-    GENERATED_IMAGE = "image"
+    GENERATED_IMAGE = "generated_image"
     NSFW_FLAG = "nsfw_content_detected"
 
 
@@ -48,3 +48,7 @@ class MLflowSchemaLiterals:
 
     IMAGE_DATA_TYPE = DataType.binary
     STRING_DATA_TYPE = DataType.string
+
+
+class BatchConstants:
+    BATCH_OUTPUT_PATH = "AZUREML_BI_OUTPUT_PATH"
