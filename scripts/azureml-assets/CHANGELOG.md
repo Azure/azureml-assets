@@ -1,11 +1,15 @@
-## 1.15.0 (Unreleased)
+## 1.16.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
 
-## 1.15.0 (2023-08-31)
+## 1.15.1 (2023-09-07)
+### 🐛 Bugs Fixed
+- [#]() Fix authentication when retrieving temporary data references during model upload
+
+## 1.15.0 (2023-09-06)
 ### 🐛 New Features
-- [#1174](https://github.com/Azure/azureml-assets/pull/1174) To add property in model asset without increasing the version
+- [#1174](https://github.com/Azure/azureml-assets/pull/1174) Support updating model properties
 
 ## 1.14.2 (2023-08-31)
 ### 🐛 Bugs Fixed
