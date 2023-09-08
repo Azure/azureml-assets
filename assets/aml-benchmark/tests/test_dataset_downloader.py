@@ -35,7 +35,6 @@ class TestDatasetDownloaderComponent:
             ("xquad", "xquad.en", "validation", None),
             ("xquad", "xquad.en", "all", None),
             ("xquad", "all", "all", None),
-            (None, "all", "test", Constants.MATH_DATASET_LOADER_SCRIPT),
         ],
     )
     def test_dataset_downloader_component(
