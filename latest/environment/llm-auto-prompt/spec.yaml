@@ -7,7 +7,7 @@ description: >-
   An environment for auto prompt components.
 
 name: "llm-auto-prompt"
-version: "8"
+version: "9"
 
 build:
   path: "context"
