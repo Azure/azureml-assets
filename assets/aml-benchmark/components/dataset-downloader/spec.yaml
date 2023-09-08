@@ -21,7 +21,9 @@ inputs:
     optional: False
   script_path:
     type: uri_file
-    description: Path to the dataset loading script. Must follow the HuggingFace dataset loading script template.
+    description: >-
+      Path to the dataset loading script. Must follow the HuggingFace dataset loading script template.
+      For example, please refer https://github.com/Azure/azureml-assets/tree/main/assets/aml-benchmark/scripts/data_loaders.
     optional: True
 
 outputs:

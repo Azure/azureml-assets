@@ -12,7 +12,7 @@ from datasets import load_dataset, get_dataset_split_names, get_dataset_config_n
 import pandas as pd
 from azureml._common._error_definition.azureml_error import AzureMLError
 
-from utils.helper import get_logger, log_mlflow_params
+from utils.logging import get_logger, log_mlflow_params
 from utils.exceptions import (
     swallow_all_exceptions,
     BenchmarkValidationException,
@@ -23,7 +23,6 @@ from utils.error_definitions import BenchmarkValidationError, DatasetDownloadErr
 
 logger = get_logger(__name__)
 ALL = "all"
-LOADERS = "loaders"
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,17 +43,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--split",
         type=str,
-        default=None,
+        required=True,
         help="Split of the dataset to download; specify 'all' to download all splits.",
     )
     parser.add_argument(
         "--script",
         default=None,
         type=str,
-        help="Path to the dataset loading script. Must follow the HuggingFace dataset loading script template."
+        help=(
+            "Path to the dataset loading script. Must follow the HuggingFace dataset loading script template. "
+            "For example, please refer "
+            "https://github.com/Azure/azureml-assets/tree/main/assets/aml-benchmark/scripts/data_loaders."
+        )
     )
     parser.add_argument(
-        "--output_dataset", type=str, required=True, help="Path to the dataset output."
+        "--output_dataset", type=str, required=True, help="Path to the directory where the dataset will be downloaded."
     )
 
     args, _ = parser.parse_known_args()
@@ -198,19 +201,25 @@ def download_file_from_url(url: str, output_dir: str) -> None:
 
 
 @swallow_all_exceptions(logger)
-def main(args: argparse.Namespace) -> None:
+def main(
+    output_dataset: str,
+    split: str,
+    dataset_name: Optional[str] = None,
+    configuration: Optional[str] = None,
+    script: Optional[str] = None,
+) -> None:
     """
-    Entry function for Dataset Downloader Component.
+    Entry function for Dataset Downloader.
 
-    :param args: Command-line arguments
+    Either `dataset_name` or `script` must be supplied; but not both.
+
+    :param output_dataset: Path to the directory where the dataset will be downloaded.
+    :param split: Split of the dataset to download.
+    :param dataset_name: Name of the dataset to download.
+    :param configuration: Sub-dataset of the dataset to download.
+    :param script: Path to the dataset loading script. Must follow the HuggingFace dataset loading script template.
     :return: None
     """
-    dataset_name = args.dataset_name
-    configuration = args.configuration
-    split = args.split
-    output_dataset = args.output_dataset
-    script = args.script
-
     # Check if dataset_name and script are supplied
     if dataset_name and script:
         mssg = "Either 'dataset_name' or 'script' must be supplied; but not both."
@@ -225,23 +234,7 @@ def main(args: argparse.Namespace) -> None:
             AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
-    # Check if split is supplied
-    if not split:
-        mssg = "Argument 'split' must be supplied."
-        raise BenchmarkValidationException._with_error(
-            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
-        )
-
-    if dataset_name:
-        # Check if loader script exists for the dataset_name
-        loader_script = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            LOADERS,
-            f"{dataset_name}.py"
-        )
-        if os.path.isfile(loader_script):
-            dataset_name = loader_script
-    else:
+    if not dataset_name:
         dataset_name = script
 
     # Get the configurations to download
@@ -278,4 +271,10 @@ def main(args: argparse.Namespace) -> None:
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args)
+    main(
+        dataset_name=args.dataset_name,
+        configuration=args.configuration,
+        split=args.split,
+        script=args.script,
+        output_dataset=args.output_dataset,
+    )

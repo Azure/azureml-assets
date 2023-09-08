@@ -6,7 +6,6 @@
 from typing import Union, Optional
 import os
 import subprocess
-import hashlib
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
@@ -18,10 +17,10 @@ from utils import (
     get_mlclient,
     Constants,
     download_outputs,
-    get_mlflow_logged_params,
     get_src_dir,
     assert_exception_mssg,
     run_command,
+    assert_logged_params,
 )
 
 
@@ -37,7 +36,6 @@ class TestDatasetDownloaderComponent:
             ("xquad", "xquad.en", "all", None),
             ("xquad", "all", "all", None),
             (None, "all", "test", Constants.MATH_DATASET_LOADER_SCRIPT),
-            ("mmlu", "astronomy", "val", None),
         ],
     )
     def test_dataset_downloader_component(
@@ -73,8 +71,13 @@ class TestDatasetDownloaderComponent:
         elif split == "all":
             file_count = len(get_dataset_split_names(path, configuration))
         self._verify_output(pipeline_job, temp_dir, file_count)
-        self._verify_logged_params(
-            pipeline_job.name, dataset_name, configuration, split, script
+        assert_logged_params(
+            pipeline_job.name,
+            self.EXP_NAME,
+            dataset_name=dataset_name,
+            configuration=configuration,
+            split=split,
+            script=script,
         )
 
     def _get_pipeline_job(
@@ -123,46 +126,13 @@ class TestDatasetDownloaderComponent:
         assert os.path.exists(output_dir)
         assert sum(len(files) for _, _, files in os.walk(output_dir)) == file_count
 
-    def _verify_logged_params(
-        self,
-        job_name: str,
-        dataset_name: Union[str, None],
-        configuration: Union[str, None],
-        split: Union[str, None],
-        script: Union[str, None],
-    ) -> None:
-        """Verify the logged parameters.
-
-        :param job_name: The job name.
-        :param dataset_name: Name of the dataset.
-        :param configuration: Specific sub-dataset of the HuggingFace.
-        :param split: Specific split of the HuggingFace dataset.
-        :param script: Path to the data loader script.
-        :return: None.
-        """
-        logged_params = get_mlflow_logged_params(job_name, self.EXP_NAME)
-
-        # compute script checksum
-        if script is not None:
-            script_checksum = hashlib.md5(open(script, "rb").read()).hexdigest()
-
-        # verify the logged parameters
-        if dataset_name is not None:
-            assert logged_params["dataset_name"] == dataset_name
-        if configuration is not None:
-            assert logged_params["configuration"] == configuration
-        if split is not None:
-            assert logged_params["split"] == split
-        if script is not None:
-            assert logged_params["script"] == script_checksum
-
 
 class TestDatasetDownloaderScript:
     """Tests for dataset downloader script."""
 
     @pytest.mark.parametrize(
         "dataset_name, split, script",
-        [("dataset", None, None), (None, "train", None), ("dataset", "test", "script")],
+        [(None, "train", None), ("dataset", "test", "script")],
     )
     def test_invalid_input_combination(
         self,
@@ -175,8 +145,6 @@ class TestDatasetDownloaderScript:
             expected_exception_mssg = "Either 'dataset_name' or 'script' must be supplied; but not both."
         elif not (dataset_name or script):
             expected_exception_mssg = "Either 'dataset_name' or 'script' must be supplied."
-        elif not split:
-            expected_exception_mssg = "Argument 'split' must be supplied."
 
         # Run the script and verify the exception
         try:
@@ -237,13 +205,13 @@ class TestDatasetDownloaderScript:
             "python -m dataset_downloader.main",
             "--output_dataset",
             f"{output_dataset}",
+            "--split",
+            f"{split}",
         ]
         if dataset_name is not None:
             args.extend(["--dataset_name", f"{dataset_name}"])
         if configuration is not None:
             args.extend(["--configuration", f"{configuration}"])
-        if split is not None:
-            args.extend(["--split", f"{split}"])
         if script is not None:
             args.extend(["--script", f"{script}"])
 

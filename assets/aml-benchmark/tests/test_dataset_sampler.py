@@ -7,7 +7,6 @@ from typing import Union, List, Dict, Any
 import json
 import os
 import subprocess
-import hashlib
 import shutil
 import uuid
 import random
@@ -22,10 +21,10 @@ from utils import (
     get_mlclient,
     Constants,
     download_outputs,
-    get_mlflow_logged_params,
     get_src_dir,
     assert_exception_mssg,
     run_command,
+    assert_logged_params,
 )
 
 
@@ -122,12 +121,14 @@ class TestDatasetSamplerComponent:
             [input_file_path],
             temp_dir,
         )
-        self._verify_logged_params(
+        assert_logged_params(
             pipeline_job.name,
-            [input_file_path],
-            sampling_style,
-            sampling_ratio,
-            n_samples,
+            self.EXP_NAME,
+            dataset=[input_file_path],
+            sampling_style=sampling_style,
+            sampling_ratio=sampling_ratio,
+            n_samples=n_samples,
+            random_seed=0 if sampling_style == "random" else None,
         )
 
     @pytest.mark.parametrize(
@@ -176,12 +177,14 @@ class TestDatasetSamplerComponent:
                     temp_dir,
                 )
             )
-            self._verify_logged_params(
+            assert_logged_params(
                 pipeline_job.name,
-                [input_file_path],
-                sampling_style,
-                sampling_ratio,
-                n_samples,
+                self.EXP_NAME,
+                dataset=[input_file_path],
+                sampling_style=sampling_style,
+                sampling_ratio=sampling_ratio,
+                n_samples=n_samples,
+                random_seed=0 if sampling_style == "random" else None,
             )
 
         # verify the output of two runs are the same
@@ -268,42 +271,6 @@ class TestDatasetSamplerComponent:
             input_file_paths, output_dir, sampling_style, sampling_ratio, n_samples
         )
 
-    def _verify_logged_params(
-        self,
-        job_name: str,
-        input_file_paths: List[str],
-        sampling_style: str = "head",
-        sampling_ratio: Union[float, None] = None,
-        n_samples: Union[int, None] = None,
-        random_seed: int = 0,
-    ) -> None:
-        """Verify the logged parameters.
-
-        :param job_name: The job name.
-        :param input_file_paths: The list of input file paths.
-        :param sampling_style: The sampling style, defaults to "head"
-        :param sampling_ratio: The sampling ratio, defaults to None
-        :param n_samples: The number of samples, defaults to None
-        :param random_seed: The random seed, defaults to 0
-        :return: None.
-        """
-        logged_params = get_mlflow_logged_params(job_name, self.EXP_NAME)
-
-        # compute input dataset checksum
-        input_dataset_checksum = hashlib.md5(
-            b"".join(open(item, "rb").read() for item in input_file_paths)
-        ).hexdigest()
-
-        # verify the logged parameters
-        assert logged_params["input_dataset_checksum"] == input_dataset_checksum
-        assert logged_params["sampling_style"] == sampling_style
-        if sampling_ratio is not None:
-            assert logged_params["sampling_ratio"] == str(sampling_ratio)
-        if n_samples is not None:
-            assert logged_params["n_samples"] == str(n_samples)
-        if sampling_style == "random":
-            assert logged_params["random_seed"] == str(random_seed)
-
 
 class TestDatasetSamplerScript:
     """Tests for dataset sampler script."""
@@ -317,20 +284,16 @@ class TestDatasetSamplerScript:
             input_file_path = self._create_input_file(
                 temp_dir, file_name="temp_test.json"
             )
-            expected_exception_mssg = (
-                f"Input file '{input_file_path}' is not a .jsonl file."
-            )
+            expected_exception_mssg = f"No .jsonl files found in {input_file_path}."
         else:
-            # Create two `.jsonl` files in the folder, folder as input is now invalid
+            # Create two `.json` files in the folder, folder as input is now invalid
             input_file_path = self._create_input_file(
-                temp_dir, file_name="temp_test_1.jsonl"
+                temp_dir, file_name="temp_test_1.json"
             )
             input_file_path = self._create_input_file(
                 temp_dir, file_name="temp_test_2.json"
             )
-            expected_exception_mssg = (
-                "Input file 'temp_test_2.json' is not a .jsonl file."
-            )
+            expected_exception_mssg = f"No .jsonl files found in {temp_dir}."
             input_file_path = temp_dir
 
         # Run the script and verify the exception
