@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.15.2 (2023-09-08)
+### 🐛 Bugs Fixed
+- [#1188](https://github.com/Azure/azureml-assets/pull/1188) Decrease azcopy verbosity
+
 ## 1.15.1 (2023-09-07)
 ### 🐛 Bugs Fixed
 - [#1182](https://github.com/Azure/azureml-assets/pull/1182) Fix authentication when retrieving temporary data references during model upload
