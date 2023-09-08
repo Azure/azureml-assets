@@ -6,7 +6,7 @@ translation_model_import
 
 ### Version 
 
-0.0.2
+0.0.17
 
 ### Type 
 
@@ -47,6 +47,14 @@ NOTE The pytorch_model_path take priority over mlflow_model_path, in case both i
 | Name              | Description             | Type         | Default | Optional | Enum |
 | ----------------- | ----------------------- | ------------ | ------- | -------- | ---- |
 | mlflow_model_path | MLflow model asset path | mlflow_model | -       | True     | NA   |
+
+
+
+Output of validation component
+
+| Name              | Description        | Type     | Default | Optional | Enum |
+| ----------------- | ------------------ | -------- | ------- | -------- | ---- |
+| validation_output | Validation status. | uri_file | -       | True     | NA   |
 
 ## Outputs 
 

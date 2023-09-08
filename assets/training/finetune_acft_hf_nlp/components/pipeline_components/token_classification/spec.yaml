@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: token_classification_pipeline
-version: 0.0.16
+version: 0.0.17
 type: pipeline
 display_name: Token Classification Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for token classification task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/token_classification_pipeline) to learn more.
@@ -249,6 +249,12 @@ inputs:
     optional: true
     description: Number of updates steps to accumulate the gradients for, before performing a backward/update pass
 
+  eval_accumulation_steps:
+    type: integer
+    default: -1
+    optional: true
+    description: Number of predictions steps to accumulate before moving the tensors to the CPU, will be passed as None if set to -1
+
   lr_scheduler_type:
     type: string
     default: linear
@@ -471,14 +477,14 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.16
+    component: azureml:ft_nlp_common_validation:0.0.17
     compute: '${{parent.inputs.compute_model_import}}'
     inputs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
       compute_finetune: '${{parent.inputs.compute_finetune}}'
   token_classification_model_import:
     type: command
-    component: azureml:token_classification_model_import:0.0.16
+    component: azureml:token_classification_model_import:0.0.17
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
@@ -489,7 +495,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   token_classification_datapreprocess:
     type: command
-    component: azureml:token_classification_datapreprocess:0.0.16
+    component: azureml:token_classification_datapreprocess:0.0.17
     compute: '${{parent.inputs.compute_preprocess}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
@@ -508,7 +514,7 @@ jobs:
       model_selector_output: '${{parent.jobs.token_classification_model_import.outputs.output_dir}}'
   token_classification_finetune:
     type: command
-    component: azureml:token_classification_finetune:0.0.16
+    component: azureml:token_classification_finetune:0.0.17
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -535,6 +541,7 @@ jobs:
       adam_beta2: '${{parent.inputs.adam_beta2}}'
       adam_epsilon: '${{parent.inputs.adam_epsilon}}'
       gradient_accumulation_steps: '${{parent.inputs.gradient_accumulation_steps}}'
+      eval_accumulation_steps: '${{parent.inputs.eval_accumulation_steps}}'
       lr_scheduler_type: '${{parent.inputs.lr_scheduler_type}}'
       precision: '${{parent.inputs.precision}}'
       seed: '${{parent.inputs.seed}}'
@@ -563,7 +570,7 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.10
+    component: azureml:model_prediction:0.0.13
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
@@ -577,7 +584,7 @@ jobs:
       mlflow_model: '${{parent.jobs.token_classification_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.10
+    component: azureml:compute_metrics:0.0.13
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
