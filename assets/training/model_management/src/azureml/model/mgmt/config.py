@@ -18,7 +18,7 @@ class _CustomEnum(Enum):
 
 
 class ComponentConstants:
-    """ Constant literals related to components parameters."""
+    """Constant literals related to components parameters."""
 
     MODEL_ID = "model_id"
     TASK = "task"
@@ -36,7 +36,8 @@ class ModelFlavor(_CustomEnum):
 
     TRANSFORMERS = "transformers"
     MMLAB_PYFUNC = "mmlab_pyfunc"
-    STABLE_DIFFUSION_PYFUNC = "stable_diffusion_pyfunc"
+    PYFUNC = "pyfunc"
+
 
 class PathType(_CustomEnum):
     """Enum for path types supported for model download."""

@@ -1,20 +1,22 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Convert StableDiffusion model from HuggingFace to MLflow format."""
+
 import mlflow
 from mlflow.models import ModelSignature
 from mlflow.types.schema import ColSpec
-from mlflow.types.schema import DataType, Schema
+from mlflow.types.schema import Schema
 import os
 from pathlib import Path
 import shutil
 import sys
 from typing import Dict
+import yaml
 
 from .constants import ColumnNames, MLflowLiterals, MLflowSchemaLiterals, Tasks
 from azureml.model.mgmt.config import ComponentConstants
 from azureml.model.mgmt.utils.common_utils import log_execution_time
-
 
 
 def _get_mlflow_signature(task_type: str) -> ModelSignature:
@@ -25,7 +27,6 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
     :return: MLflow model signature.
     :rtype: mlflow.models.signature.ModelSignature
     """
-
     if task_type in [Tasks.TEXT_TO_IMAGE.value]:
         input_schema = Schema(
             [ColSpec(MLflowSchemaLiterals.STRING_DATA_TYPE, ColumnNames.TEXT_PROMPT)]
@@ -37,11 +38,10 @@ def _get_mlflow_signature(task_type: str) -> ModelSignature:
         [ColSpec(MLflowSchemaLiterals.STRING_DATA_TYPE, ColumnNames.TEXT_PROMPT),
          ColSpec(MLflowSchemaLiterals.IMAGE_DATA_TYPE, ColumnNames.GENERATED_IMAGE),
          ColSpec(MLflowSchemaLiterals.STRING_DATA_TYPE, ColumnNames.NSFW_FLAG),
-        ]
+         ]
     )
 
     return ModelSignature(inputs=input_schema, outputs=output_schema)
-
 
 
 @log_execution_time
@@ -63,8 +63,12 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None
     sys.path.append(os.path.dirname(__file__))
     from mlflow_wrapper import StableDiffusionMLflowWrapper
 
-    mlflow_model_wrapper = StableDiffusionMLflowWrapper(task_type=task, model_id=model_id)
-    pip_requirements = os.path.join(os.path.dirname(__file__), "requirements.txt")
+    mlflow_model_wrapper = StableDiffusionMLflowWrapper(task_type=task)
+    conda_yaml_path = os.path.join(os.path.dirname(__file__), "conda.yaml")
+    conda_env = {}
+    with open(conda_yaml_path) as f:
+        conda_env = yaml.safe_load(f)
+
     code_path = [
         os.path.join(os.path.dirname(__file__), "mlflow_wrapper.py"),
         os.path.join(os.path.dirname(__file__), "constants.py"),
@@ -77,7 +81,7 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None
         python_model=mlflow_model_wrapper,
         artifacts={MLflowLiterals.MODEL_DIR: model_dir},
         signature=_get_mlflow_signature(task),
-        pip_requirements=pip_requirements,
+        conda_env=conda_env,
         code_path=code_path,
         metadata={MLflowLiterals.MODEL_NAME: model_id},
     )
