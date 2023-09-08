@@ -23,19 +23,15 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
     def __init__(
             self,
             task_type: str,
-            model_id: str,
     ) -> None:
         """Initialize model parameters for converting Huggingface StableDifusion model to mlflow.
 
         :param task_type: Task type used in training.
         :type task_type: str
-        :param model_id: Hugging face model id corresponding to stable diffusion models supported by AML.
-        :type model_id: str
         """
         super().__init__()
         self._pipe = None
         self._task_type = task_type
-        self._model_id = model_id
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """

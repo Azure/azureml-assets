@@ -36,7 +36,7 @@ class ModelFlavor(_CustomEnum):
 
     TRANSFORMERS = "transformers"
     MMLAB_PYFUNC = "mmlab_pyfunc"
-    STABLE_DIFFUSION_PYFUNC = "stable_diffusion_pyfunc"
+    PYFUNC = "pyfunc"
 
 
 class PathType(_CustomEnum):
