@@ -12,7 +12,7 @@ import glob
 import mltable
 from azureml._common._error_definition.azureml_error import AzureMLError
 
-from utils.helper import get_logger
+from utils.logging import get_logger
 from utils.exceptions import DataFormatException
 from utils.error_definitions import DataFormatError
 
@@ -24,9 +24,7 @@ def _raise_if_not_jsonl_file(input_file_path: str) -> None:
     """Raise exception if file is not a .jsonl file.
 
     :param input_file_path: Path to file
-    :type input_file_path: str
     :return: None
-    :rtype: NoneType
     """
     if not input_file_path.endswith(".jsonl"):
         mssg = f"Input file '{input_file_path}' is not a .jsonl file."
@@ -40,9 +38,7 @@ def _is_mltable(dataset: str) -> bool:
     Check if dataset is MLTable.
 
     :param dataset: Path to dataset
-    :type dataset: str
     :return: True if dataset is an MLTable, False otherwise
-    :rtype: bool
     """
     is_mltable = False
     if os.path.isdir(dataset):
@@ -63,7 +59,6 @@ def _get_file_paths_from_folder(dataset: str) -> List[str]:
 
     for root, dirs, files in os.walk(dataset):
         for file in files:
-            _raise_if_not_jsonl_file(file)
             file_paths.append(os.path.join(root, file))
 
     file_paths.sort()
@@ -97,9 +92,7 @@ def resolve_io_path(dataset: str) -> List[str]:
     - `mltable`: `dataset` is a directory containing an MLTable file.
 
     :param dataset: Either file or directory path
-    :type dataset: str
     :return: List of sorted file paths
-    :rtype: str
     """
     if _is_mltable(dataset):
         logger.warn(
@@ -116,22 +109,23 @@ def resolve_io_path(dataset: str) -> List[str]:
         )
         return _get_file_paths_from_folder(dataset)
 
-    _raise_if_not_jsonl_file(dataset)
     return [dataset]
 
 
 def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
     """
-    Read .jsonl files and return a list of dictionaries.
+    Read `.jsonl` files and return a list of dictionaries.
 
-    Raises exception if file is not a .jsonl file or if the file contains invalid JSON.
+    Ignores files that do not have `.jsonl` extension. Raises exception if no `.jsonl` files
+    found or if any `.jsonl` file contains invalid JSON.
 
     :param file_paths: List of paths to .jsonl files.
     :return: List of dictionaries.
     """
     data_dicts = []
     for file_path in file_paths:
-        _raise_if_not_jsonl_file(file_path)
+        if not file_path.endswith(".jsonl"):
+            continue
         with open(file_path, 'r') as file:
             for i, line in enumerate(file):
                 try:
@@ -141,6 +135,11 @@ def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
                     raise DataFormatException._with_error(
                         AzureMLError.create(DataFormatError, error_details=mssg)
                     )
+    if not data_dicts:
+        mssg = "No .jsonl file found."
+        raise DataFormatException._with_error(
+            AzureMLError.create(DataFormatError, error_details=mssg)
+        )
     return data_dicts
 
 

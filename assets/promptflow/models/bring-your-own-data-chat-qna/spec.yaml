@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: bring-your-own-data-chat-qna
+path: ./
+properties:
+  is-promptflow: true
+  azureml.promptflow.section: gallery
+  azureml.promptflow.type: chat
+  azureml.promptflow.name: Bring Your Own Data Chat QnA
+  azureml.promptflow.description: Create flow for multi-round Q&A with GPT3.5 using data from your own indexed files to make the answer more grounded for enterprise chat scenarios.
+  inference-min-sku-spec: 2|0|14|28
+  inference-recommended-sku: Standard_DS3_v2
+version: 1

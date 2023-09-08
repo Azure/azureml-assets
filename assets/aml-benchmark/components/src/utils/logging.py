@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Contains helper functions for the benchmarking components."""
+"""Contains helper functions for logging."""
 
 from typing import Any
 import logging
