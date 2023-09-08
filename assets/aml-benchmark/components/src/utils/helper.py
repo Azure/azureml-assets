@@ -21,6 +21,8 @@ def log_mlflow_params(**kwargs: Any) -> None:
     :param **kwargs: Key-value pairs of parameters to be logged in MLflow.
     :return: None
     """
+    MLFLOW_PARAM_VALUE_MAX_LEN = 500
+    OVERFLOW_STR = '...'
     params = {}
     for key, value in kwargs.items():
         if isinstance(value, str) and os.path.isfile(value):
@@ -33,7 +35,11 @@ def log_mlflow_params(**kwargs: Any) -> None:
             params[key] = checksum
         else:
             if value is not None:
-                params[key] = value
+                if isinstance(value, str) and len(value) > MLFLOW_PARAM_VALUE_MAX_LEN:
+                    value_len = MLFLOW_PARAM_VALUE_MAX_LEN - len(OVERFLOW_STR) 
+                    params[key] = value[: value_len] + OVERFLOW_STR
+                else:
+                    params[key] = value
 
     mlflow.log_params(params)
 

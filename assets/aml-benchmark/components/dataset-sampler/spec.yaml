@@ -25,6 +25,7 @@ inputs:
     min: 0
     max: 1
     optional: True
+    default: 1
     description: Portion of the dataset to be sampled; must be a float in (0,1]; must be null if `n_samples` is specified.
   n_samples:
     type: integer
@@ -33,6 +34,7 @@ inputs:
   random_seed:
     type: integer
     optional: True
+    default: 0
     description: Random seed for sampling mode; if not specified, 0 is used. Used only when `sampling_style` is `random`.
 
 outputs:
