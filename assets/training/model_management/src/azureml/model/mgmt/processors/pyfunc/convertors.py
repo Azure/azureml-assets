@@ -107,7 +107,7 @@ class VisionMLFlowConvertor(PyFuncMLFLowConvertor):
         super().__init__(**kwargs)
         if not SupportedVisionTasks.has_value(self._task):
             raise Exception("Unsupported vision task")
-        
+
     def get_model_signature(self) -> ModelSignature:
         """Return MLflow model signature with input and output schema for the given input task.
 
@@ -224,6 +224,6 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
         :rtype: Dict
         """
         artifacts_dict = {
-            CLIPMLflowLiterals.MODEL_DIR: self._model_dir
+            CLIPMLflowLiterals.MODEL_DIR: os.fspath(self._model_dir)
         }
         return artifacts_dict

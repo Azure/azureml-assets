@@ -10,8 +10,8 @@ import shutil
 from azureml.model.mgmt.config import AppName, ModelFlavor
 from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess
-from azureml.model.mgmt.processors.transformers.config import SupportedTasks
-from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
+from azureml.model.mgmt.processors.transformers.config import SupportedTasks as TransformersSupportedTasks
+from azureml.model.mgmt.processors.pyfunc.config import SupportedTasks as PyfuncSupportedTasks
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, UnsupportedTaskType
 from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError
@@ -86,7 +86,7 @@ def _validate_transformers_args(args):
     if not args.get("task"):
         raise Exception("task is a required parameter for hftransformers MLflow flavor.")
     task = args["task"]
-    if not SupportedTasks.has_value(task):
+    if not TransformersSupportedTasks.has_value(task):
         raise Exception(f"Unsupported task {task} for hftransformers MLflow flavor.")
 
 
@@ -94,7 +94,7 @@ def _validate_pyfunc_args(pyfunc_args):
     if not pyfunc_args.get("task"):
         raise Exception("task is a required parameter for pyfunc flavor.")
     task = pyfunc_args["task"]
-    if not Tasks.has_value(task):
+    if not PyfuncSupportedTasks.has_value(task):
         raise Exception(f"Unsupported task {task} for pyfunc flavor.")
 
 
@@ -134,7 +134,7 @@ def run():
             preprocess_args.update(download_details.get("properties", {}))
             preprocess_args["misc"] = download_details.get("misc", [])
 
-    if task_name is None or not SupportedTasks.has_value(task_name.lower()):
+    if task_name is None or not TransformersSupportedTasks.has_value(task_name.lower()):
         task_name = preprocess_args.get("task")
         logger.warning("task_name is not provided or not supported. "
                        f"Using task_name={task_name} from model download metadata.")
@@ -142,7 +142,7 @@ def run():
     if task_name is None:
         raise AzureMLException._with_error(
                 AzureMLError.create(UnsupportedTaskType, task_type=args.task_name,
-                                    supported_tasks=SupportedTasks.list_values())
+                                    supported_tasks=TransformersSupportedTasks.list_values())
             )
 
     preprocess_args["task"] = task_name.lower()
