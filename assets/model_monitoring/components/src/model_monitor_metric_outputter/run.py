@@ -41,6 +41,7 @@ def run():
 
     samples_index: List[Row] = None
     if args["samples_index"]:
+        print("Samples index input detected.")
         samples_index: List[Row] = read_mltable_in_spark(args.samples_index).collect()
 
     runmetric_client = RunMetricClient()

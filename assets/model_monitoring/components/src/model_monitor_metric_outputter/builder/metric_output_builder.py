@@ -23,22 +23,27 @@ from shared_utilities.constants import (
     TIMESERIES_METRIC_NAMES_VALUE,
     TIMESERIES_METRIC_NAMES_THRESHOLD,
 )
+from shared_utilities.dict_utils import merge_dict
 
 
 class MetricOutputBuilder:
     """Builder class which creates a metrics object."""
 
-    def __init__(self, runmetric_client: RunMetricClient, monitor_name: str, signal_name: str, metrics: List[Row]):
+    def __init__(self, runmetric_client: RunMetricClient, monitor_name: str, signal_name: str, metrics: List[Row], samples_index: List[Row] = None):
         """Construct a MetricOutputBuilder instance."""
         self.runmetric_client: RunMetricClient = runmetric_client
-        self.metrics_dict = self._build(monitor_name, signal_name, metrics)
+
+        print(self._build_metrics(monitor_name, signal_name, metrics))
+        print(self._build_samples(samples_index))
+
+        self.metrics_dict = merge_dict(self._build_metrics(monitor_name, signal_name, metrics), self._build_samples(samples_index))
 
     def get_metrics_dict(self) -> dict:
         """Get the metrics object."""
         return self.metrics_dict
 
     # Expected columns: group, group_dimension, metric_name, metric_value
-    def _build(self, monitor_name: str, signal_name: str, metrics: List[Row]) -> dict:
+    def _build_metrics(self, monitor_name: str, signal_name: str, metrics: List[Row]) -> dict:
         metrics_dict = {}
         for metric in metrics:
             metric_dict = metric.asDict()
@@ -48,11 +53,11 @@ class MetricOutputBuilder:
 
                 group_names = []
 
-                group = self._get_group_from_dict(SIGNAL_METRICS_GROUP, s)
+                group = self._get_group_from_dict(SIGNAL_METRICS_GROUP, metric)
                 if group:
                     group_names.append(group)
 
-                group_dimension = self._get_group_from_dict(SIGNAL_METRICS_GROUP_DIMENSION, s)
+                group_dimension = self._get_group_from_dict(SIGNAL_METRICS_GROUP_DIMENSION, metric)
                 if group_dimension:
                     group_names.append(group_dimension)
 
@@ -145,49 +150,62 @@ class MetricOutputBuilder:
             cur_dict[GROUPS][group_name] = {}
 
     # Expected columns: metric_name, group, group_dimension, samples_name, asset
-    def _build_samples(self, samples: List[Row]) -> dict:
+    def _build_samples(self, samples_index: List[Row]) -> dict:
+
+        if not samples_index:
+            return {}
+        
         results = {}
-        for sample in samples:
-            s = sample.asDict()
+
+        for sample in samples_index:
+            sample_dict = sample.asDict()
 
             group_names = []
-            group = self._get_group_from_dict(SIGNAL_METRICS_GROUP, s)
-            
+
+            group = self._get_group_from_dict(SIGNAL_METRICS_GROUP, sample_dict)
             if group:
                 group_names.append(group)
-            group_dimension = self._get_group_from_dict(SIGNAL_METRICS_GROUP_DIMENSION, s)
-            
+
+            group_dimension = self._get_group_from_dict(SIGNAL_METRICS_GROUP_DIMENSION, sample_dict)            
             if group_dimension:
                 group_names.append(group_dimension)
             
-            payload = {
+            results = merge_dict(results, self._create_samples_entry(sample_dict, group_names))
+
+        return results
+
+
+    def _create_samples_entry(self, sample_row_dict : dict, group_names: List[str]):
+            entry = {
                 "samples": {
-                    s["samples_name"]:
+                    sample_row_dict["samples_name"]:
                     {
-                        "uri": s["asset"]
+                        "uri": sample_row_dict["asset"]
                     }
                 }
             }
-            
-            results["metric_name"] = self._create_entry(group_names, payload) 
 
-        return {
-            "metrics": results
-        }
-    
-    def _create_entry(self, group_names: List[str], payload: dict):
+            return {
+                "metrics":{
+                    sample_row_dict["metric_name"]: self._create_recursive_entry(group_names, entry)
+                }
+            }
+
+
+    def _create_recursive_entry(self, group_names: List[str], payload: dict):
         
         if len(group_names) > 0:
             return {
                 "groups":
                 {
-                    group_names : self._create_entry(group_names[1:], payload)
+                    group_names : self._create_recursive_entry(group_names[1:], payload)
                 }
             }
 
         return payload
 
-    def _get_group_from_dict(group_key, dictionary: dict):
+
+    def _get_group_from_dict(self, group_key, dictionary: dict):
         if (group_key in dictionary
             and dictionary[group_key] is not None
             and dictionary[group_key] != ""):

@@ -10,7 +10,7 @@ from pyspark.sql import Row
 from model_monitor_metric_outputter.builder.metric_output_builder import MetricOutputBuilder
 
 
-@pytest.mark.unit
+@pytest.mark.unit2
 class TestMetricOutputBuilder:
     """Test class for metric output builder."""
 
@@ -19,28 +19,28 @@ class TestMetricOutputBuilder:
         signal_metrics: List[Row] = [
             Row(
                 group="group_1",
-                group_dimension="Aggregate",
+                group_dimension="",
                 metric_name="num_calls",
                 metric_value=71.0,
                 threshold_value=100.0,
             ),
             Row(
                 group="group_2",
-                group_dimension="Aggregate",
+                group_dimension="",
                 metric_name="num_calls",
                 metric_value=129.0,
                 threshold_value=100.0,
             ),
             Row(
                 group="group_1",
-                group_dimension="Aggregate",
+                group_dimension="",
                 metric_name="num_calls_with_status_code_429",
                 metric_value=35.0,
                 threshold_value=10.0,
             ),
             Row(
                 group="group_2",
-                group_dimension="Aggregate",
+                group_dimension="",
                 metric_name="num_calls_with_status_code_429",
                 metric_value=63.0,
                 threshold_value=10.0,
@@ -49,7 +49,6 @@ class TestMetricOutputBuilder:
 
         metric_output_builder = MetricOutputBuilder(mock_runmetric_client, monitor_name, signal_name, signal_metrics)
         metrics_dict = metric_output_builder.get_metrics_dict()
-
         assert metrics_dict == {
             "num_calls": {
                 "groups": {
@@ -110,14 +109,14 @@ class TestMetricOutputBuilder:
         signal_metrics: List[Row] = [
             Row(
                 group="group_1",
-                group_dimension="Aggregate",
+                group_dimension="",
                 metric_name="num_calls",
                 metric_value=71.0,
                 threshold_value=100.0,
             ),
             Row(
                 group="group_2",
-                group_dimension="Aggregate",
+                group_dimension="",
                 metric_name="num_calls",
                 metric_value=129.0,
                 threshold_value=100.0,
@@ -569,6 +568,89 @@ class TestMetricOutputBuilder:
                                 }
                             },
                         },
+                    },
+                },
+            },
+        }
+
+    def test_metrics_with_samples_2_level_groups(self, mock_runmetric_client, monitor_name, signal_name):
+        """Test metrics output builder for metrics with one level metric groups."""
+        signal_metrics: List[Row] = [
+            Row(
+                group="group_1",
+                group_dimension="",
+                metric_name="num_calls",
+                metric_value=71.0,
+                threshold_value=100.0,
+            ),
+            Row(
+                group="group_2",
+                group_dimension="",
+                metric_name="num_calls",
+                metric_value=35.0,
+                threshold_value=10.0,
+            ),
+        ]
+
+        samples_index: List[Row] = [
+            Row(
+                group="group_1",
+                group_dimension="",
+                metric_name="num_calls",
+                samples_name="Example Long Calls",
+                asset="azureml:example_long_calls:1",
+            ),
+            Row(
+                group="group_1",
+                group_dimension="user_A",
+                metric_name="num_calls",
+                samples_name="Example Long Calls",
+                asset="azureml:example_user_A_long_calls:1",
+            ),
+        ]
+
+        metric_output_builder = MetricOutputBuilder(mock_runmetric_client, monitor_name, signal_name, signal_metrics, samples_index)
+        metrics_dict = metric_output_builder.get_metrics_dict()
+
+        print(metrics_dict)
+        assert metrics_dict == {
+            "num_calls": {
+                "groups": {
+                    "group_1": {
+                        "value": 71.0,
+                        "threshold": 100.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        },
+                        "samples":{
+                            "Example Long Calls":{
+                                "uri" : "azureml:example_long_calls:1"
+                            }
+                        },
+                        "groups":{
+                            "user_A":{
+                                "samples":{
+                                    "Example Long Calls":{
+                                        "uri" : "azureml:example_user_A_long_calls:1"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "group_2": {
+                        "value": 32.0,
+                        "threshold": 10.0,
+                        "timeseries": {
+                            "runId": mock_runmetric_client.run_id,
+                            "metricNames": {
+                                "value": "value",
+                                "threshold": "threshold"
+                            }
+                        }
                     },
                 },
             },
