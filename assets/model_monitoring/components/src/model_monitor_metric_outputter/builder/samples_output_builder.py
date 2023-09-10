@@ -6,7 +6,6 @@
 from typing import List
 from pyspark.sql import Row
 
-from runmetric_client import RunMetricClient
 from shared_utilities.constants import (
     ASSET_COLUMN,
     GROUPS,
