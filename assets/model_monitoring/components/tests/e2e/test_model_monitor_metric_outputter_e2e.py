@@ -51,7 +51,7 @@ def _submit_metric_outputter_job(
     return ml_client.jobs.get(pipeline_job.name)
 
 
-@pytest.mark.e2e2
+@pytest.mark.e2e
 class TestModelMonitorMetricOutputterE2E:
     """Test class."""
 
