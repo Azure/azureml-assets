@@ -526,8 +526,8 @@ METRIC_NAME = "metric_name"
 METRIC_VALUE = "metric_value"
 GROUP = "group"
 THRESHOLD = "threshold_value"
-PRODUCTION_ROW_COUNT = "Production"
-REFERENCE_ROW_COUNT = "Reference"
+PRODUCTION_ROW_COUNT = "production_data"
+REFERENCE_ROW_COUNT = "reference_data"
 
 
 def _check_and_format_azure_endpoint_url(

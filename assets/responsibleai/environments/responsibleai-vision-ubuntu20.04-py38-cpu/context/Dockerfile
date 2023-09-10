@@ -21,7 +21,7 @@ RUN pip install --pre 'azure-ai-ml' 'azure-storage-blob<=12.13.0'
 # Install azureml packages
 RUN pip install 'azureml-core=={{latest-pypi-version}}' \
                 'azureml-mlflow=={{latest-pypi-version}}' \
-                'azureml-rai-utils==0.0.3'
+                'azureml-rai-utils==0.0.5'
 
 RUN pip install 'azureml-dataset-runtime=={{latest-pypi-version}}' \
                 'azureml-automl-dnn-vision=={{latest-pypi-version}}'

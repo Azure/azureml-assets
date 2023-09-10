@@ -4,17 +4,13 @@
 """Asset config classes."""
 
 import re
-import warnings
 from collections import defaultdict
 from enum import Enum
 from functools import total_ordering
 from pathlib import Path
 from ruamel.yaml import YAML
-from setuptools._vendor.packaging import version
+from packaging import version
 from typing import Dict, List, Set, Tuple, Union
-
-# Ignore setuptools warning about replacing distutils
-warnings.filterwarnings("ignore", message="Setuptools is replacing distutils.", category=UserWarning)
 
 
 class ValidationException(Exception):
@@ -514,6 +510,7 @@ class ModelConfig(Config):
         """Initialize object for the Model Properties extracted from extra_config model.yaml."""
         super().__init__(file_name)
         self._path = None
+        self._description = ""
         self._validate()
 
     def _validate(self):
@@ -521,7 +518,9 @@ class ModelConfig(Config):
         Config._validate_exists('model.path', self.path)
         Config._validate_enum('model.path.type', self.path.type.value, PathType, True)
         Config._validate_exists('model.publish', self._publish)
-        Config._validate_exists('model.description', self.description)
+        Config._validate_exists('model.description', self._description_file_path)
+        if self._description_file_path and not self._description_file_path.exists():
+            raise ValidationException(f"description_file {self._description_file_path} not found")
         Config._validate_enum('model.type', self._type, ModelType, True)
 
     @property
@@ -554,9 +553,17 @@ class ModelConfig(Config):
         return self._yaml.get('publish')
 
     @property
-    def description(self) -> Dict[str, object]:
+    def _description_file_path(self) -> Path:
+        """Model description file path."""
+        return self._file_path / self._publish.get('description')
+
+    @property
+    def description(self) -> str:
         """Model description."""
-        return self._publish.get('description')
+        if self._description_file_path and not self._description:
+            with open(self._description_file_path) as f:
+                self._description = f.read()
+        return self._description
 
     @property
     def _type(self) -> str:

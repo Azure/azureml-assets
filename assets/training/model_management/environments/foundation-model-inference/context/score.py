@@ -14,6 +14,7 @@ import logging
 import pandas as pd
 import numpy as np
 
+from enum import Enum
 from concurrent.futures import ThreadPoolExecutor
 from mlflow.pyfunc.scoring_server import _get_jsonable_obj
 from typing import List, Dict, Any, Tuple, Union
@@ -29,8 +30,7 @@ from azure.core.pipeline.policies import HeadersPolicy
 logger = logging.getLogger(__name__)
 logger.propagate = False
 logger.setLevel(logging.DEBUG)
-format_str = ("%(asctime)s [%(module)s] %(funcName)s "
-              "%(lineno)s: %(levelname)-8s [%(process)d] %(message)s")
+format_str = ("%(asctime)s [%(module)s] %(funcName)s %(lineno)s: %(levelname)-8s [%(process)d] %(message)s")
 formatter = logging.Formatter(format_str)
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
@@ -67,11 +67,16 @@ aacs_threshold = int(os.environ.get("CONTENT_SAFETY_THRESHOLD", 2))
 aacs_client = None
 
 
-class SupportedTask:
+class SupportedTask(Enum):
     """Supported tasks by text-generation-inference."""
 
     TEXT_GENERATION = "text-generation"
     CHAT_COMPLETION = "chat-completion"
+
+    @classmethod
+    def has_value(cls, value):
+        """Return true if enum exists."""
+        return value in cls._value2member_map_
 
 
 SUPPORTED_INFERENCE_PARAMS = {
@@ -116,7 +121,7 @@ SUPPORTED_INFERENCE_PARAMS = {
 MLMODEL_PATH = "mlflow_model_folder/MLmodel"
 DEFAULT_MODEL_ID_PATH = "mlflow_model_folder/data/model"
 client = None
-task_type = SupportedTask.TEXT_GENERATION
+task_type = SupportedTask.TEXT_GENERATION.value
 default_generator_configs = {
     k: v["default"] for k, v in SUPPORTED_INFERENCE_PARAMS.items() if
     "default" in v
@@ -444,7 +449,7 @@ def init():
 
     try:
         model_id = os.environ.get(MODEL_ID, DEFAULT_MODEL_ID_PATH)
-        client_timeout = os.environ.get(CLIENT_TIMEOUT, MAX_REQUEST_TIMEOUT)
+        client_timeout = float(os.environ.get(CLIENT_TIMEOUT, MAX_REQUEST_TIMEOUT))
 
         for k, v in os.environ.items():
             logger.info(f"env: {k} = {v}")
@@ -462,30 +467,19 @@ def init():
             flavors = mlmodel.get("flavors", {})
             if "hftransformersv2" in flavors:
                 task_type = flavors["hftransformersv2"]["task_type"]
-                model_generator_configs = flavors["hftransformersv2"].get(
-                    "generator_config", {}
-                )
-                logger.info(
-                    f"model_generator_configs: {model_generator_configs}")
-                if task_type not in (
-                        SupportedTask.TEXT_GENERATION,
-                        SupportedTask.CHAT_COMPLETION,
-                ):
+                model_generator_configs = flavors["hftransformersv2"].get("generator_config", {})
+                logger.info(f"model_generator_configs: {model_generator_configs}")
+
+                if not SupportedTask.has_value(task_type):
                     raise Exception(f"Unsupported task_type {task_type}")
 
-                if task_type == SupportedTask.CHAT_COMPLETION:
-                    default_generator_configs["return_full_text"] = False
                 # update default gen configs with model configs
-                default_generator_configs = get_generator_params(
-                    model_generator_configs
-                )
-                logger.info(
-                    f"updated default_generator_configs: "
-                    f"{default_generator_configs}"
-                )
+                default_generator_configs = get_generator_params(model_generator_configs)
+                logger.info(f"updated default_generator_configs: {default_generator_configs}")
+                if task_type == SupportedTask.CHAT_COMPLETION.value:
+                    default_generator_configs["return_full_text"] = False
 
-        logger.info(
-            f"Loading model from path {model_path} for task_type: {task_type}")
+        logger.info(f"Loading model from path {model_path} for task_type: {task_type}")
         logger.info(f"List model_path = {os.listdir(model_path)}")
 
         if MAX_INPUT_LENGTH not in os.environ:
@@ -542,9 +536,8 @@ def init():
         logger.info(os.system("nvidia-smi"))
         logger.info("###### GPU INFO ######")
 
-        client = Client(
-            LOCAL_HOST_URI, timeout=client_timeout
-        )  # use deployment settings
+        logger.info(f"Creating client with timeout: {client_timeout}")
+        client = Client(LOCAL_HOST_URI, timeout=client_timeout)
         logger.info(f"Created Client: {client}")
     except Exception as e:
         raise Exception(f"Error in creating client or server: {e}") from e
@@ -614,10 +607,7 @@ the answer to a question, please don't share false information."""
 
     # ref: https://huggingface.co/spaces/huggingface-projects/\
     # llama-2-7b-chat/blob/main/model.py
-    def format_chat_conv(
-            message: str,
-            chat_history: list[tuple[str, str]],
-            system_prompt: str) -> str:
+    def format_chat_conv(message: str, chat_history: List[Tuple[str, str]], system_prompt: str) -> str:
         texts = [f'<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n']
         # The first user input is _not_ stripped
         do_strip = False
@@ -663,7 +653,7 @@ def get_request_data(request_string) -> (
         if not isinstance(params, dict):
             raise Exception("parameters is not a dict")
 
-        if task_type == SupportedTask.CHAT_COMPLETION:
+        if task_type == SupportedTask.CHAT_COMPLETION.value:
             logger.info("chat-completion task. Processing input data")
             input_data = get_processed_input_data_for_chat_completion(
                 input_data)
@@ -726,7 +716,7 @@ def run(data):
             f"parameters: {params}"
         )
 
-        if task_type == SupportedTask.CHAT_COMPLETION:
+        if task_type == SupportedTask.CHAT_COMPLETION.value:
             time_start = time.time()
             response_str = client.generate(query, **params).generated_text
             time_taken = time.time() - time_start
@@ -734,7 +724,7 @@ def run(data):
             result_dict = {"output": f"{response_str}"}
             return get_safe_response(result_dict)
 
-        assert task_type == SupportedTask.TEXT_GENERATION and isinstance(
+        assert task_type == SupportedTask.TEXT_GENERATION.value and isinstance(
             query, list
         ), "query should be a list for text-generation"
 

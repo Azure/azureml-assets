@@ -60,8 +60,13 @@ SIGNAL_METRICS_THRESHOLD_VALUE = 'threshold_value'
 # Keywords in metric output JSON schema
 GROUPS = 'groups'
 THRESHOLD = 'threshold'
+METRICS = "metrics"
 VALUE = 'value'
-
+TIMESERIES = "timeseries"
+TIMESERIES_RUN_ID = "runId"
+TIMESERIES_METRIC_NAMES = "metricNames"
+TIMESERIES_METRIC_NAMES_VALUE = "value"
+TIMESERIES_METRIC_NAMES_THRESHOLD = "threshold"
 # Values for Outputs of Output Metrics Component
 METADATA_VERSION = '1.0.0'
 
@@ -75,5 +80,6 @@ ROW_COUNT_COLUMN_NAME = 'RowCount'
 THRESHOLD_VALUE = 'threshold_value'
 
 # Column names in MDC Preprocessor
+MDC_CHAT_HISTORY_COLUMN = 'chat_history'
 MDC_CORRELATION_ID_COLUMN = 'correlationid'
 MDC_DATA_COLUMN = 'data'
