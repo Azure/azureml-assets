@@ -68,7 +68,7 @@ class TestDictUtils:
             merge_dicts(left, right)
 
     def test_merge_with_two_empty_dictionary(self):
-        """Test merging dictionaries with two empty dictionaries"""
+        """Test merging dictionaries with two empty dictionaries."""
         left = {}
         right = {}
 
