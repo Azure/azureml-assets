@@ -13,7 +13,7 @@ class TestDictUtils:
     """Test class for dictionary utilities."""
 
     def test_merge_with_empty_dictionary(self):
-        """Test merging dictionaries with an empty dictionary"""
+        """Test merging dictionaries with an empty dictionary."""
         left = {
             "num_calls": {
                 "groups": {
@@ -32,7 +32,7 @@ class TestDictUtils:
         assert result == left
 
     def test_merge_with_none_dictionary(self):
-        """Test merging dictionaries with a None dictionary"""
+        """Test merging dictionaries with a None dictionary."""
         left = {
             "num_calls": {
                 "groups": {
@@ -50,7 +50,7 @@ class TestDictUtils:
             merge_dicts(left, right)
 
     def test_merge_with_int_values(self):
-        """Test merging dictionaries with a None dictionary"""
+        """Test merging dictionaries with a None dictionary."""
         left = {
             "num_calls": {
                 "groups": {
@@ -77,7 +77,7 @@ class TestDictUtils:
         assert result == {}
 
     def test_merge_with_conflicting_keys(self):
-        """Test merging dictionaries with an empty dictionary"""
+        """Test merging dictionaries with an empty dictionary."""
         left = {
             "num_calls": {
                 "groups": {
@@ -106,7 +106,7 @@ class TestDictUtils:
         assert "num_calls.groups.group_1.value" in e.value.args[0]
 
     def test_merge_with_different_tree_keys(self):
-        """Test merging dictionaries with an empty dictionary"""
+        """Test merging dictionaries with an empty dictionary."""
         left = {
             "num_calls1": {
                 "groups": {
@@ -147,7 +147,7 @@ class TestDictUtils:
         }
 
     def test_merge_with_different_leaf_values(self):
-        """Test merging dictionaries with an empty dictionary"""
+        """Test merging dictionaries with an empty dictionary."""
         left = {
             "num_calls1": {
                 "groups": {
@@ -182,7 +182,7 @@ class TestDictUtils:
         }
 
     def test_merge_with_different_branch_values(self):
-        """Test merging dictionaries with an empty dictionary"""
+        """Test merging dictionaries with an empty dictionary."""
         left = {
             "num_calls1": {
                 "groups": {
