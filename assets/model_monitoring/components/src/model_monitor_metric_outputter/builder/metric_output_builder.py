@@ -23,7 +23,7 @@ from shared_utilities.constants import (
     TIMESERIES_METRIC_NAMES_VALUE,
     TIMESERIES_METRIC_NAMES_THRESHOLD,
 )
-from shared_utilities.dict_utils import merge_dict
+from shared_utilities.dict_utils import merge_dicts
 
 
 class MetricOutputBuilder:
@@ -36,7 +36,7 @@ class MetricOutputBuilder:
         print(self._build_metrics(monitor_name, signal_name, metrics))
         print(self._build_samples(samples_index))
 
-        self.metrics_dict = merge_dict(self._build_metrics(monitor_name, signal_name, metrics), self._build_samples(samples_index))
+        self.metrics_dict = merge_dicts(self._build_metrics(monitor_name, signal_name, metrics), self._build_samples(samples_index))
 
     def get_metrics_dict(self) -> dict:
         """Get the metrics object."""
@@ -170,7 +170,7 @@ class MetricOutputBuilder:
             if group_dimension:
                 group_names.append(group_dimension)
             
-            results = merge_dict(results, self._create_samples_entry(sample_dict, group_names))
+            results = merge_dicts(results, self._create_samples_entry(sample_dict, group_names))
 
         return results
 
@@ -186,9 +186,7 @@ class MetricOutputBuilder:
             }
 
             return {
-                "metrics":{
                     sample_row_dict["metric_name"]: self._create_recursive_entry(group_names, entry)
-                }
             }
 
 
@@ -198,7 +196,7 @@ class MetricOutputBuilder:
             return {
                 "groups":
                 {
-                    group_names : self._create_recursive_entry(group_names[1:], payload)
+                    group_names[0] : self._create_recursive_entry(group_names[1:], payload)
                 }
             }
 

@@ -31,16 +31,16 @@ def run():
     arg_parser.add_argument("--signal_name", type=str)
     arg_parser.add_argument("--signal_type", type=str)
     arg_parser.add_argument("--signal_metrics", type=str)
-    arg_parser.add_argument("--samples_index", type=str, required=False)
+    arg_parser.add_argument("--samples_index", type=str, required=False, nargs="?")
     arg_parser.add_argument("--metric_timestamp", type=str)
     arg_parser.add_argument("--signal_output", type=str)
 
     args = arg_parser.parse_args()
+    args_dict = vars(args)
 
     metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
-
     samples_index: List[Row] = None
-    if args["samples_index"]:
+    if args_dict["samples_index"]:
         print("Samples index input detected.")
         samples_index: List[Row] = read_mltable_in_spark(args.samples_index).collect()
 

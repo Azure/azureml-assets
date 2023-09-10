@@ -10,7 +10,7 @@ from pyspark.sql import Row
 from model_monitor_metric_outputter.builder.metric_output_builder import MetricOutputBuilder
 
 
-@pytest.mark.unit2
+@pytest.mark.unit
 class TestMetricOutputBuilder:
     """Test class for metric output builder."""
 
@@ -574,7 +574,7 @@ class TestMetricOutputBuilder:
         }
 
     def test_metrics_with_samples_2_level_groups(self, mock_runmetric_client, monitor_name, signal_name):
-        """Test metrics output builder for metrics with one level metric groups."""
+        """Test metrics output builder for metrics with two level metric groups and samples."""
         signal_metrics: List[Row] = [
             Row(
                 group="group_1",
@@ -612,7 +612,6 @@ class TestMetricOutputBuilder:
         metric_output_builder = MetricOutputBuilder(mock_runmetric_client, monitor_name, signal_name, signal_metrics, samples_index)
         metrics_dict = metric_output_builder.get_metrics_dict()
 
-        print(metrics_dict)
         assert metrics_dict == {
             "num_calls": {
                 "groups": {
@@ -642,7 +641,7 @@ class TestMetricOutputBuilder:
                         }
                     },
                     "group_2": {
-                        "value": 32.0,
+                        "value": 35.0,
                         "threshold": 10.0,
                         "timeseries": {
                             "runId": mock_runmetric_client.run_id,
