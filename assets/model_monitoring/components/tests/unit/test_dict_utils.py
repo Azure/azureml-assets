@@ -31,7 +31,6 @@ class TestDictUtils:
 
         assert result == left
 
-
     def test_merge_with_none_dictionary(self):
         """Test merging dictionaries with a None dictionary"""
         left = {

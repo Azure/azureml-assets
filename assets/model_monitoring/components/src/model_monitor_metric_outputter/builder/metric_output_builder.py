@@ -23,27 +23,22 @@ from shared_utilities.constants import (
     TIMESERIES_METRIC_NAMES_VALUE,
     TIMESERIES_METRIC_NAMES_THRESHOLD,
 )
-from shared_utilities.dict_utils import merge_dicts
 
 
 class MetricOutputBuilder:
     """Builder class which creates a metrics object."""
 
-    def __init__(self, runmetric_client: RunMetricClient, monitor_name: str, signal_name: str, metrics: List[Row], samples_index: List[Row] = None):
+    def __init__(self, runmetric_client: RunMetricClient, monitor_name: str, signal_name: str, metrics: List[Row]):
         """Construct a MetricOutputBuilder instance."""
         self.runmetric_client: RunMetricClient = runmetric_client
-
-        print(self._build_metrics(monitor_name, signal_name, metrics))
-        print(self._build_samples(samples_index))
-
-        self.metrics_dict = merge_dicts(self._build_metrics(monitor_name, signal_name, metrics), self._build_samples(samples_index))
+        self.metrics_dict = self._build(monitor_name, signal_name, metrics)
 
     def get_metrics_dict(self) -> dict:
         """Get the metrics object."""
         return self.metrics_dict
 
     # Expected columns: group, group_dimension, metric_name, metric_value
-    def _build_metrics(self, monitor_name: str, signal_name: str, metrics: List[Row]) -> dict:
+    def _build(self, monitor_name: str, signal_name: str, metrics: List[Row]) -> dict:
         metrics_dict = {}
         for metric in metrics:
             metric_dict = metric.asDict()
@@ -52,14 +47,18 @@ class MetricOutputBuilder:
                 metric_name = metric_dict[SIGNAL_METRICS_METRIC_NAME]
 
                 group_names = []
+                if SIGNAL_METRICS_GROUP in metric_dict and metric_dict[SIGNAL_METRICS_GROUP] is not None and metric_dict[SIGNAL_METRICS_GROUP] != "":  # noqa
 
-                group = self._get_group_from_dict(SIGNAL_METRICS_GROUP, metric)
-                if group:
-                    group_names.append(group)
+                    root_group = metric_dict[SIGNAL_METRICS_GROUP]
+                    group_names.append(root_group)
 
-                group_dimension = self._get_group_from_dict(SIGNAL_METRICS_GROUP_DIMENSION, metric)
-                if group_dimension:
-                    group_names.append(group_dimension)
+                    # If group dimension is not specified, default is Aggregate.
+                    if (SIGNAL_METRICS_GROUP_DIMENSION in metric_dict
+                            and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION] is not None
+                            and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION] != ""
+                            and metric_dict[SIGNAL_METRICS_GROUP_DIMENSION].lower() != AGGREGATE):
+                        group_dimension = metric_dict[SIGNAL_METRICS_GROUP_DIMENSION]
+                        group_names.append(group_dimension)
 
                 new_metric = {
                     VALUE: metric_dict[SIGNAL_METRICS_METRIC_VALUE],
@@ -148,64 +147,3 @@ class MetricOutputBuilder:
             cur_dict[GROUPS] = {}
         if group_name not in cur_dict[GROUPS]:
             cur_dict[GROUPS][group_name] = {}
-
-    # Expected columns: metric_name, group, group_dimension, samples_name, asset
-    def _build_samples(self, samples_index: List[Row]) -> dict:
-
-        if not samples_index:
-            return {}
-        
-        results = {}
-
-        for sample in samples_index:
-            sample_dict = sample.asDict()
-
-            group_names = []
-
-            group = self._get_group_from_dict(SIGNAL_METRICS_GROUP, sample_dict)
-            if group:
-                group_names.append(group)
-
-            group_dimension = self._get_group_from_dict(SIGNAL_METRICS_GROUP_DIMENSION, sample_dict)            
-            if group_dimension:
-                group_names.append(group_dimension)
-            
-            results = merge_dicts(results, self._create_samples_entry(sample_dict, group_names))
-
-        return results
-
-
-    def _create_samples_entry(self, sample_row_dict : dict, group_names: List[str]):
-            entry = {
-                "samples": {
-                    sample_row_dict["samples_name"]:
-                    {
-                        "uri": sample_row_dict["asset"]
-                    }
-                }
-            }
-
-            return {
-                    sample_row_dict["metric_name"]: self._create_recursive_entry(group_names, entry)
-            }
-
-
-    def _create_recursive_entry(self, group_names: List[str], payload: dict):
-        
-        if len(group_names) > 0:
-            return {
-                "groups":
-                {
-                    group_names[0] : self._create_recursive_entry(group_names[1:], payload)
-                }
-            }
-
-        return payload
-
-
-    def _get_group_from_dict(self, group_key, dictionary: dict):
-        if (group_key in dictionary
-            and dictionary[group_key] is not None
-            and dictionary[group_key] != ""):
-            return dictionary[group_key]
-        return None
