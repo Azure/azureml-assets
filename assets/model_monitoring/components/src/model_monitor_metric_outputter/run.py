@@ -43,16 +43,15 @@ def run():
     metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
     samples_index: List[Row] = None
 
-
     runmetric_client = RunMetricClient()
     result = MetricOutputBuilder(runmetric_client, args.monitor_name, args.signal_name, metrics) \
         .get_metrics_dict()
-    
+
     if args_dict["samples_index"]:
         print("Processing samples index.")
         samples_index: List[Row] = read_mltable_in_spark(args.samples_index).collect()
         result = merge_dicts(result, SamplesOutputBuilder(samples_index).get_samples_dict())
-    
+
     output_payload = to_output_payload(args.signal_name, args.signal_type, result)
 
     local_path = str(uuid.uuid4())
