@@ -37,7 +37,7 @@ inputs:
     type: string
     optional: true
     default: Singularity.D8_v3
-    description: Instance type to be used for preprocess component in case of virtual cluster compute, eg. standard_d12_v2. 
+    description: Instance type to be used for preprocess component in case of virtual cluster compute, eg. Singularity.D8_v3. 
       The parameter compute_preprocess must be set to 'virtual cluster' for instance_type to be used
   instance_type_finetune:
     type: string
