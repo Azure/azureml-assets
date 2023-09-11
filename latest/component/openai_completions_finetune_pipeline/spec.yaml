@@ -1,6 +1,6 @@
 $schema: http://azureml/sdk-2-0/PipelineComponent.json
 type: pipeline
-version: 0.0.5
+version: 0.0.6
 name: openai_completions_finetune_pipeline
 display_name: OpenAI Completions Finetune Pipeline
 description: Finetune your own OAI model. Visit https://learn.microsoft.com/en-us/azure/cognitive-services/openai/
@@ -54,24 +54,18 @@ outputs:
     mode: mount
 
 jobs:
-  openai_data_import_train:
+  openai_data_import:
     type: command
-    component: azureml://registries/azure-openai-v2/components/openai_data_import/versions/0.1.0.1
+    component: azureml://registries/azure-openai-v2/components/openai_data_import/versions/0.3.0
     inputs:
-      in_dataset: ${{parent.inputs.train_dataset}}
-      model: ${{parent.inputs.model}}
-  openai_data_import_validation:
-    type: command
-    component: azureml://registries/azure-openai-v2/components/openai_data_import/versions/0.1.0.1
-    inputs:
-      in_dataset: ${{parent.inputs.validation_dataset}}
+      train_dataset: ${{parent.inputs.train_dataset}}
+      validation_dataset: ${{parent.inputs.validation_dataset}}
       model: ${{parent.inputs.model}}
   openai_completions_finetune:
     type: command
-    component: azureml://registries/azure-openai-v2/components/openai_completions_finetune/versions/0.2.1
+    component: azureml://registries/azure-openai-v2/components/openai_completions_finetune/versions/0.3.0
     inputs:
-      train_dataset: ${{parent.jobs.openai_data_import_train.outputs.out_dataset}}
-      validation_dataset: ${{parent.jobs.openai_data_import_validation.outputs.out_dataset}}
+      input_dataset: ${{parent.jobs.openai_data_import.outputs.out_dataset}}
       model: ${{parent.inputs.model}}
       task_type: ${{parent.inputs.task_type}}
       registered_model_name: ${{parent.inputs.registered_model_name}}
