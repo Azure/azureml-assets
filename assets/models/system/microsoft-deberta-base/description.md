@@ -32,7 +32,7 @@ Fill Mask | Fill Mask | <a href="https://huggingface.co/datasets/rcds/wikipedia-
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "input_string": ["Paris is the [MASK] of France.", "Today is a [MASK] day!"]
     }
 }
