@@ -19,4 +19,4 @@ tags:
     apply_deepspeed: 'false'
     apply_ort: 'false'
   task: object-detection
-version: 5
+version: 4
