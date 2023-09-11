@@ -13,10 +13,12 @@ from pyspark.sql import Row
 from typing import List
 
 from model_monitor_metric_outputter.builder.metric_output_builder import MetricOutputBuilder
+from model_monitor_metric_outputter.builder.samples_output_builder import SamplesOutputBuilder
 from model_monitor_metric_outputter.runmetric_client import RunMetricClient
 from model_monitor_metric_outputter.runmetrics_publisher import RunMetricPublisher
 from shared_utilities.amlfs import amlfs_upload
 from shared_utilities.constants import METADATA_VERSION
+from shared_utilities.dict_utils import merge_dicts
 from shared_utilities.io_utils import (
     np_encoder,
     read_mltable_in_spark,
@@ -31,17 +33,26 @@ def run():
     arg_parser.add_argument("--signal_name", type=str)
     arg_parser.add_argument("--signal_type", type=str)
     arg_parser.add_argument("--signal_metrics", type=str)
+    arg_parser.add_argument("--samples_index", type=str, required=False, nargs="?")
     arg_parser.add_argument("--metric_timestamp", type=str)
     arg_parser.add_argument("--signal_output", type=str)
 
     args = arg_parser.parse_args()
+    args_dict = vars(args)
 
     metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
+    samples_index: List[Row] = None
 
     runmetric_client = RunMetricClient()
-    metrics_dict = MetricOutputBuilder(runmetric_client, args.monitor_name, args.signal_name, metrics) \
+    result = MetricOutputBuilder(runmetric_client, args.monitor_name, args.signal_name, metrics) \
         .get_metrics_dict()
-    output_payload = to_output_payload(args.signal_name, args.signal_type, metrics_dict)
+
+    if args_dict["samples_index"]:
+        print("Processing samples index.")
+        samples_index: List[Row] = read_mltable_in_spark(args.samples_index).collect()
+        result = merge_dicts(result, SamplesOutputBuilder(samples_index).get_samples_dict())
+
+    output_payload = to_output_payload(args.signal_name, args.signal_type, result)
 
     local_path = str(uuid.uuid4())
     write_to_file(payload=output_payload, local_output_directory=local_path, signal_name=args.signal_name)
@@ -54,7 +65,7 @@ def run():
     metric_step = int(metric_timestamp.timestamp())
     print(f"Publishing metrics with step '{metric_step}'.")
 
-    RunMetricPublisher(runmetric_client).publish_metrics(metrics_dict, metric_step)
+    RunMetricPublisher(runmetric_client).publish_metrics(result, metric_step)
 
     print("*************** output metrics ***************")
     print("Successfully executed the metric outputter component.")
