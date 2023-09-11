@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: samples/qna_f1_score_eval/v1/model_folder
+  storage_name: promptflowsamples
+  type: azureblob
+publish:
+  description: description.md
+  type: custom_model

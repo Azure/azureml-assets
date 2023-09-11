@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
-description: Environment used for deploying model to use deepspeed-mii for inference
+description: Environment used for deploying model to use Huggingface text-generation for inference
 
 name: "{{asset.name}}"
 version: "{{asset.version}}"

@@ -6,6 +6,7 @@
 import os
 import subprocess
 from typing import Dict, Any, Optional, List
+import hashlib
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
@@ -29,8 +30,10 @@ class Constants:
     OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"
     OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"
     TEST_REGISTRY_NAME = "Benchmark-Test"
-    REMOTE_FILE_URL = "https://raw.githubusercontent.com/Azure/azureml-examples/main/\
-v1/python-sdk/tutorials/automl-with-azureml/forecasting-bike-share/bike-no.csv"
+    MATH_DATASET_LOADER_SCRIPT = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "scripts", "data_loaders", "math.py"
+    )
 
 
 def _get_runs(job_name: str, exp_name: str) -> List[mlflow.entities.Run]:
@@ -204,3 +207,38 @@ def assert_exception_mssg(exception_message: str, expected_exception_mssg: str) 
     assert expected_exception_mssg in exception_message
     assert ErrorCodes.USER_ERROR in exception_message
     assert ErrorCodes.SYSTEM_ERROR not in exception_message
+
+
+def assert_logged_params(job_name: str, exp_name: str, **expected_params: Any) -> None:
+    """
+    Assert that the logged parameters are as expected.
+
+    If a file path or a list of file paths is provided in the `expected_params` value, the checksum of the
+    file(s) is calculated and then asserted. If `None` is provided in the `expected_params`
+    value, the parameter is asserted to haven't been logged.
+
+    :param job_name: Name of the azureml job.
+    :param exp_name: Name of the azureml experiment.
+    :param **expected_params: The expected key-value pairs of parameters.
+    :return: None
+    """
+    logged_params = get_mlflow_logged_params(job_name, exp_name)
+
+    params = {}
+    for key, value in expected_params.items():
+        if isinstance(value, str) and os.path.isfile(value):
+            # calculate checksum of input dataset
+            checksum = hashlib.md5(open(value, "rb").read()).hexdigest()
+            params[key] = checksum
+        elif isinstance(value, list) and all(isinstance(item, str) and os.path.isfile(item) for item in value):
+            # calculate checksum of input dataset
+            checksum = hashlib.md5(b"".join(open(item, "rb").read() for item in value)).hexdigest()
+            params[key] = checksum
+        else:
+            params[key] = value
+
+    for key, value in params.items():
+        if value is None:
+            assert key not in logged_params
+        else:
+            assert logged_params[key] == str(value)
