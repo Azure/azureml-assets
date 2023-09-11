@@ -39,7 +39,6 @@ Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/d
 
 
 ### Sample inputs and outputs (for real-time inference)
-
 ```json
 {
     "input_data": {

@@ -12,7 +12,6 @@ properties:
   inference-min-sku-spec:  4|1|28|176
   inference-recommended-sku: Standard_NC6s_v3
   languages: en
- 
 tags:
   Featured: ''
   Preview: ''
