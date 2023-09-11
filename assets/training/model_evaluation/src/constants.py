@@ -119,6 +119,25 @@ IMAGE_TASKS = [
     TASK.IMAGE_INSTANCE_SEGMENTATION
 ]
 
+TEXT_TOKEN_TASKS = [
+    TASK.TEXT_CLASSIFICATION,
+    TASK.TEXT_CLASSIFICATION_MULTILABEL,
+    TASK.NER,
+    TASK.TRANSLATION,
+    TASK.QnA,
+    TASK.SUMMARIZATION,
+    TASK.TEXT_GENERATION,
+    TASK.FILL_MASK
+]
+
+TEXT_OUTPUT_TOKEN_TASKS = [
+    TASK.TRANSLATION,
+    TASK.QnA,
+    TASK.SUMMARIZATION,
+    TASK.TEXT_GENERATION,
+    TASK.FILL_MASK
+]
+
 
 class TelemetryConstants:
     """Telemetry Constants."""
@@ -219,6 +238,19 @@ class ForecastColumns:
     _ACTUAL_COLUMN_NAME = '_automl_actual'
     _FORECAST_COLUMN_NAME = '_automl_forecast'
     _FORECAST_ORIGIN_COLUMN_DEFAULT = '_automl_forecast_origin'
+
+
+class PerformanceColumns:
+    """The column names for the performance metadata output."""
+
+    BATCH_SIZE_COLUMN_NAME = 'batch_size'
+    START_TIME_COLUMN_NAME = 'start_time_iso'
+    END_TIME_COLUMN_NAME = 'end_time_iso'
+    LATENCY_COLUMN_NAME = 'time_taken_ms'
+    INPUT_CHARACTERS_COLUMN_NAME = 'input_character_count'
+    OUTPUT_CHARACTERS_COLUMN_NAME = 'output_character_count'
+    INPUT_TOKENS_COLUMN_NAME = 'input_token_count'
+    OUTPUT_TOKENS_COLUMN_NAME = 'output_token_count'
 
 
 ALLOWED_PIPELINE_PARAMS = {

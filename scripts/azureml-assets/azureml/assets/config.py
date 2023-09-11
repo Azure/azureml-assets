@@ -4,17 +4,13 @@
 """Asset config classes."""
 
 import re
-import warnings
 from collections import defaultdict
 from enum import Enum
 from functools import total_ordering
 from pathlib import Path
 from ruamel.yaml import YAML
-from setuptools._vendor.packaging import version
+from packaging import version
 from typing import Dict, List, Set, Tuple, Union
-
-# Ignore setuptools warning about replacing distutils
-warnings.filterwarnings("ignore", message="Setuptools is replacing distutils.", category=UserWarning)
 
 
 class ValidationException(Exception):

@@ -6,7 +6,7 @@ text_classification_datapreprocess
 
 ### Version 
 
-0.0.2
+0.0.17
 
 ### Type 
 
@@ -46,6 +46,15 @@ If your dataset follows above pattern, `sentence1_key` should be set as sentence
 | sentence2_key | Key for `sentence2_key` in each example line                         | string  | -       | True     | NA   |
 | label_key     | label key in each example line                                       | string  | -       | False    | NA   |
 | batch_size    | Number of examples to batch before calling the tokenization function | integer | 1000    | True     | NA   |
+
+
+
+Tokenization params
+
+| Name              | Description                                                                                                                                                                                                                         | Type    | Default | Optional | Enum              |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- | -------- | ----------------- |
+| pad_to_max_length | If set to True, the returned sequences will be padded according to the model's padding side and padding index, up to their `max_seq_length`. If no `max_seq_length` is specified, the padding is done up to the model's max length. | string  | false   | True     | ['true', 'false'] |
+| max_seq_length    | Controls the maximum length to use when pad_to_max_length parameter is set to `true`. Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`.                          | integer | -1      | True     | NA                |
 
 
 
