@@ -91,7 +91,8 @@ def copy_assets(input_dirs: List[Path],
     asset_count = 0
     copied_count = 0
     copied_type_counter = Counter()
-    for asset_config in util.find_assets(input_dirs, asset_config_filename, changed_files=changed_files, pattern=pattern):
+    for asset_config in util.find_assets(
+            input_dirs, asset_config_filename, changed_files=changed_files, pattern=pattern):
         asset_count += 1
 
         # Copy asset if tag doesn't exist or release_directory_root isn't specified
