@@ -1,14 +1,14 @@
-Databricks-dolly-v2-3b is a large language model that can perform various tasks based on instructions. It is trained on the Databricks machine learning platform, which allows you to use it for commercial purposes. It is based on the Pythia-2.8b model from EleutherAI and fine-tuned on a dataset of instructions and responses created by Databricks employees. The dataset covers different domains such as brainstorming, classification, closed QA, generation, information extraction, open QA and summarization¹².
+Databricks-dolly-v2-3b is a large language model that can perform various tasks based on instructions. It is trained on the Databricks machine learning platform, which allows you to use it for commercial purposes. It is based on the Pythia-2.8b model from EleutherAI and fine-tuned on a dataset of instructions and responses created by Databricks employees. The dataset covers different domains such as brainstorming, classification, closed QA, generation, information extraction, open QA and summarization.
 
-Databricks-dolly-v2-3b is the smallest model in the Dolly v2 family, with 2.8 billion parameters. It is not the most advanced model, but it still shows impressive performance in following instructions that are not typical of the base model. It can generate text, answer questions, summarize articles, extract information, classify sentences, and more¹  .
+Databricks-dolly-v2-3b is the smallest model in the Dolly v2 family, with 2.8 billion parameters. It is not the most advanced model, but it still shows impressive performance in following instructions that are not typical of the base model. It can generate text, answer questions, summarize articles, extract information, classify sentences, and more.
 
 Dolly v2 also has two larger and more powerful models:
 
-- Databricks-dolly-v2-12b, with 12 billion parameters and based on Pythia-12b¹²
-- Databricks-dolly-v2-7b, with 6.9 billion parameters and based on Pythia-6.9b³
+- Databricks-dolly-v2-12b, with 12 billion parameters and based on Pythia-12b
+- Databricks-dolly-v2-7b, with 6.9 billion parameters and based on Pythia-6.9b
 
 Source: Conversation with Bing, 1/9/2023
-(1) databricks/dolly-v2-3b · Hugging Face. https://huggingface.co/databricks/dolly-v2-3b.
+(1) databricks/dolly-v2-3b· Hugging Face. https://huggingface.co/databricks/dolly-v2-3b.
 (2) GitHub - databrickslabs/dolly: Databricks’ Dolly, a large language .... https://github.com/databrickslabs/dolly.
 
 
