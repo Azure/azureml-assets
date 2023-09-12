@@ -1290,7 +1290,7 @@ def _parse_responses(
             output_examples.append(None)
             print(f"Failed decoding examples: {sample_examples}")
             num_failed += 1
-    
+
     # if the number of expected samples does not match the output samples
     # there was an issue getting the response and we cannot accurately map
     # the indices with the input data
@@ -1375,12 +1375,11 @@ class _JobManager:
                 for job in jobs
                 if job.status == _JobStatus.SUCCESS
                 for result in job.response_data["index_mapping"]
-            ]            
+        ]
         return pd.DataFrame({
             RATING: [res[RATING] for res in job_results],
             INDEX: job_indices,
         })
-
 
     def make_job(self, **job_params) -> _Job:
         """Make job, tracking job_idx internally."""
@@ -1430,7 +1429,7 @@ def run():
     parser.add_argument("--relevance_violations", type=str, required=True)
     parser.add_argument("--coherence_violations", type=str, required=True)
     parser.add_argument("--similarity_violations", type=str, required=True)
-    
+
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
     args = parser.parse_args()
 
@@ -1488,7 +1487,7 @@ def run():
 
     # TODO add validation for threshold args!!
     print(f"Running with args: {args}")
-    
+
     violations = {
         "groundedness": args.groundedness_violations,
         "relevance": args.relevance_violations,
@@ -1711,12 +1710,12 @@ def apply_annotation(
         metric_threshold_value = str(threshold_args[f"{metric_name_compact.lower()}_rating_threshold"])
         metrics_pdf[THRESHOLD] = metric_threshold_value
         print(metrics_pdf)
-        
+
         # create violations table if there are violations
         violations_df = annotations_df.filter((col(RATING) < metric_threshold_value) & (col(INDEX) != -1))
         if violations_df.count() > 0:
             violations_df_full = production_df_with_index.join(violations_df,
-                                                               production_df_with_index.id==violations_df.index,
+                                                               production_df_with_index.id == violations_df.index,
                                                                "inner").drop(violations_df.index).drop(
                                                                    production_df_with_index.id).withColumnRenamed(
                                                                        'rating', metric_name_compact)
@@ -1726,8 +1725,8 @@ def apply_annotation(
                                        GROUP: "",
                                        GROUP_DIMENSION: "",
                                        SAMPLES_NAME: f"{metric_name_compact} Violations",
-                                       ASSET: f"azureml_{run_id}_output_data_{metric_name_compact.lower()}_violations:1"})
-        
+                                       ASSET:f"azureml_{run_id}_output_data_{metric_name_compact.lower()}_violations:1"}) # noqa: E501
+
         if all_metrics_pdf is None:
             all_metrics_pdf = metrics_pdf
         else:
@@ -1744,7 +1743,7 @@ def apply_annotation(
             },
             ignore_index=True)
     print("Finished calculating metrics based on annotations.")
-    
+
     metadata_schema = StructType(
         [
             StructField(METRIC_NAME, StringType(), True),
@@ -1757,7 +1756,7 @@ def apply_annotation(
     # Create a new DataFrame for the samples index data
     samples_df = spark.createDataFrame(samples_index_rows, metadata_schema)
     io_utils.save_spark_df_as_mltable(samples_df, samples_index)
-    
+
     io_utils.save_spark_df_as_mltable(
         spark.createDataFrame(all_metrics_pdf),
         histogram)
