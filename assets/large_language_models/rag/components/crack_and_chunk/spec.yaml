@@ -87,3 +87,4 @@ command: >-
   $[[--document_path_replacement_regex '${{inputs.document_path_replacement_regex}}']]
   --max_sample_files ${{inputs.max_sample_files}}
   --use_rcts '${{inputs.use_rcts}}'
+  --output_format ${{inputs.output_format}}
