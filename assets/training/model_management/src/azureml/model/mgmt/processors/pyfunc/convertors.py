@@ -16,7 +16,8 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from azureml.model.mgmt.processors.pyfunc.config import SupportedVisionTasks, SupportedTasks
+from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
+from azureml.model.mgmt.processors.pyfunc.config import MMLabDetectionTasks, SupportedTasks
 
 from azureml.model.mgmt.processors.pyfunc.clip.config import \
     MLflowSchemaLiterals as CLIPMLFlowSchemaLiterals, MLflowLiterals as CLIPMLflowLiterals
@@ -24,11 +25,10 @@ from azureml.model.mgmt.processors.pyfunc.vision.config import \
     MLflowSchemaLiterals as VisionMLFlowSchemaLiterals, MMDetLiterals
 
 
-
 logger = get_logger(__name__)
 
 
-class PyFuncMLFLowConvertor(ABC):
+class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
     """PyFunc MLflow convertor base class"""
 
     CONDA_FILE_NAME = "conda.yaml"
@@ -56,6 +56,7 @@ class PyFuncMLFLowConvertor(ABC):
         translate_params: Dict,
     ):
         """Initialize MLflow convertor for PyFunc models."""
+        self._validate(translate_params)
         self._model_dir = model_dir
         self._output_dir = output_dir
         self._temp_dir = temp_dir
@@ -96,16 +97,24 @@ class PyFuncMLFLowConvertor(ABC):
 
         logger.info("Model saved successfully.")
 
+    def _validate(self, translate_params):
+        """Validate translate parameters"""
+        if not translate_params.get("task"):
+            raise Exception("task is a required parameter for pyfunc flavor.")
+        task = translate_params["task"]
+        if not SupportedTasks.has_value(task):
+            raise Exception(f"Unsupported task {task} for pyfunc flavor.")
 
-class VisionMLFlowConvertor(PyFuncMLFLowConvertor):
-    """PyFunc MLfLow convertor for vision models."""
+
+class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for detection models from MMLab."""
 
     MODEL_DIR = os.path.join(os.path.dirname(__file__), "vision")
 
     def __init__(self, **kwargs):
         """Initialize MLflow convertor for vision models."""
         super().__init__(**kwargs)
-        if not SupportedVisionTasks.has_value(self._task):
+        if not MMLabDetectionTasks.has_value(self._task):
             raise Exception("Unsupported vision task")
 
     def get_model_signature(self) -> ModelSignature:
@@ -118,7 +127,7 @@ class VisionMLFlowConvertor(PyFuncMLFLowConvertor):
             [ColSpec(VisionMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, VisionMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE)]
         )
 
-        if self._task in [SupportedVisionTasks.MM_OBJECT_DETECTION.value, SupportedVisionTasks.MM_INSTANCE_SEGMENTATION.value]:
+        if self._task in [MMLabDetectionTasks.MM_OBJECT_DETECTION.value, MMLabDetectionTasks.MM_INSTANCE_SEGMENTATION.value]:
             output_schema = Schema(
                 [
                     ColSpec(VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_BOXES),

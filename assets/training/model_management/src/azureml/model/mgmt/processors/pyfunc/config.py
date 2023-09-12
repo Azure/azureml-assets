@@ -8,8 +8,8 @@ from enum import Enum
 from azureml.model.mgmt.config import _CustomEnum
 
 
-class SupportedVisionTasks(_CustomEnum):
-    """Supported Vision tasks."""
+class MMLabDetectionTasks(_CustomEnum):
+    """Supported tasks from MMLab model framework for detection."""
 
     MM_OBJECT_DETECTION = "image-object-detection"
     MM_INSTANCE_SEGMENTATION = "image-instance-segmentation"
@@ -18,7 +18,7 @@ class SupportedVisionTasks(_CustomEnum):
 class SupportedTasks(_CustomEnum):
     """Supported tasks for conversion to PyFunc MLflow."""
 
-    # Vision tasks
+    # MMLab detection tasks
     MM_OBJECT_DETECTION = "image-object-detection"
     MM_INSTANCE_SEGMENTATION = "image-instance-segmentation"
 

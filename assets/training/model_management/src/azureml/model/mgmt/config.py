@@ -31,6 +31,13 @@ class ModelFlavor(_CustomEnum):
     PYFUNC = "pyfunc"
 
 
+class ModelFramework(_CustomEnum):
+    """Enum for the model framework accepted by model preprocess."""
+
+    HUGGINGFACE = "Huggingface"
+    MMLAB = "mmlab"
+
+
 class PathType(_CustomEnum):
     """Enum for path types supported for model download."""
 

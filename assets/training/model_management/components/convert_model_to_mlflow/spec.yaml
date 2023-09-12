@@ -6,8 +6,8 @@ type: command
 
 is_deterministic: True
 
-display_name: Convert Hugging face models to MLflow
-description: Component converts Huggingface models to MLflow model packaging format
+display_name: Convert models to MLflow
+description: Component converts models from supported frameworks to MLflow model packaging format
 
 environment: azureml://registries/azureml/environments/model-management/versions/13
 
@@ -27,7 +27,7 @@ command: >
   $[[--hf-tokenizer-class ${{inputs.hf_tokenizer_class}}]]
   $[[--hf-use-experimental-features ${{inputs.hf_use_experimental_features}}]]
   $[[--extra-pip-requirements "${{inputs.extra_pip_requirements}}"]]
-  --mlflow-flavor ${{inputs.mlflow_flavor}}
+  --model-framework ${{inputs.model_framework}}
   --model-path ${{inputs.model_path}}
   --mlflow-model-output-dir ${{outputs.mlflow_model_folder}}
   --model-import-job-path ${{outputs.model_import_job_path}}
@@ -35,17 +35,17 @@ command: >
 inputs:
   model_id:
     type: string
-    description: Huggingface model id (https://huggingface.co/<model_id>). A required parameter for transformers flavor. Can be provided as input here or in model_download_metadata JSON file.
+    description: Huggingface model id (https://huggingface.co/<model_id>). A required parameter for Huggingface model framework. Can be provided as input here or in model_download_metadata JSON file.
     optional: true
 
-  mlflow_flavor:
+  model_framework:
     type: string
     enum:
-      - transformers
-      - pyfunc
-    default: transformers
+      - Huggingface
+      - mmlab
+    default: Huggingface
     optional: false
-    description: MLflow flavor to convert model into. Please note that, pyfunc flavor is only supported for image object detection models and clip model.
+    description: Framework from which model is imported from.
 
   task_name:
     type: string
