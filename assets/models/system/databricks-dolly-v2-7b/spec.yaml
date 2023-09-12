@@ -5,10 +5,10 @@ properties:
   SHA: d632f0c8b75b1ae5b26b250d25bfba4e99cb7c6f
   datasets: databricks/databricks-dolly-15k
   evaluation-min-sku-spec: 16|0|64|128
-  evaluation-recommended-sku: Standard_NC6s_v3  
+  evaluation-recommended-sku: Standard_NC24s_v3  
   finetune-min-sku-spec: 12|1|64|176
   finetune-recommended-sku: Standard_NC24s_v3 
-  finetuning-tasks: text-classification, token-classification
+  finetuning-tasks: text-classification
   inference-min-sku-spec: 6|0|64|128
   inference-recommended-sku: Standard_NC6s_v3
   languages: en
