@@ -335,11 +335,13 @@ def impute_numericals_with_median(df: pyspark.sql.DataFrame) -> pyspark.sql.Data
     df (pyspark.sql.DataFrame): The input DataFrame with missing values in numerical columns imputed with median
     """
     dbl_cols = [f.name for f in df.schema.fields if isinstance(f.dataType, (ByteType, ShortType, IntegerType, LongType, FloatType, DoubleType, DecimalType))] # noqa
-    imputer = Imputer(inputCols=dbl_cols, outputCols=[c for c in dbl_cols]).setStrategy(
-        "median"
-    )
-    # Fit imputer on Data Frame and Transform it
-    df = imputer.fit(df).transform(df)
+    
+    if len(dbl_cols) > 0:
+        imputer = Imputer(inputCols=dbl_cols, outputCols=[c for c in dbl_cols]).setStrategy(
+            "median"
+        )
+        # Fit imputer on Data Frame and Transform it
+        df = imputer.fit(df).transform(df)
     return df
 
 
