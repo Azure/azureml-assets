@@ -100,7 +100,7 @@ THRESHOLD_PARAMS = [
     "similarity_rating_threshold",
     "relevance_rating_threshold",
     "fluency_rating_threshold",
-    "coherence_rating_threshold",RATING
+    "coherence_rating_threshold",
 ]
 
 # ---
@@ -1686,7 +1686,7 @@ def apply_annotation(
             schema=StructType(
                 [
                     StructField(RATING, IntegerType(), True),
-                    StructField(INDEX,IntegerType(), True),
+                    StructField(INDEX, IntegerType(), True),
                 ]
             ),
         ).cache()
