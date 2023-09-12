@@ -1295,9 +1295,9 @@ def _parse_responses(
     # there was an issue getting the response and we cannot accurately map
     # the indices with the input data
     index_mapping = job.prompt_data.input_idx
-    if len(output_examples[0]) != len(index_mapping):
+    if output_examples[0] is None:
         print("Not all responses could be parsed correctly. Ignoring indices for violations")
-        index_mapping = [-1] * len(output_examples[0])
+        index_mapping = [-1] * len(index_mapping)
 
     if num_failed == num_samples:
         job.status = _JobStatus.PARSING_FAILED
