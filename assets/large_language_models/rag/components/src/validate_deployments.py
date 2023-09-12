@@ -466,7 +466,7 @@ def validate_acs(acs_config, activity_logger: Logger):
     connection_id_acs = os.environ.get(
         "AZUREML_WORKSPACE_CONNECTION_ID_ACS", None)
 
-    index_name = acs_config["index_name"]
+    index_name = acs_config.get("index_name")
     import re
     if (index_name is None or index_name == "" or index_name.startswith("-")
             or index_name.endswith("-") or (not re.search("^[a-z0-9-]+$", index_name))

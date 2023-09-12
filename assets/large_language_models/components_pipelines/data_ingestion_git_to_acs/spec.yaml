@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.40
+version: 0.0.39
 name: llm_ingest_git_to_acs
 display_name: LLM - Git to ACS Pipeline (With Test Data Generation and Auto Prompt)
 is_deterministic: false
