@@ -7,8 +7,8 @@ Dolly v2 also has two larger and more powerful models:
 - Databricks-dolly-v2-12b, with 12 billion parameters and based on Pythia-12b
 - Databricks-dolly-v2-7b, with 6.9 billion parameters and based on Pythia-6.9b
 
-(1) databricks/dolly-v2-3b · Hugging Face. https://huggingface.co/databricks/dolly-v2-3b.
-(2) GitHub - databrickslabs/dolly: Databricks’ Dolly, a large language .... https://github.com/databrickslabs/dolly.
+(1) databricks/dolly-v2-3b · Hugging Face. https://huggingface.co/databricks/dolly-v2-3b
+(2) GitHub - databrickslabs/dolly: Databricks’ Dolly, a large language https://github.com/databrickslabs/dolly
 
 
 
