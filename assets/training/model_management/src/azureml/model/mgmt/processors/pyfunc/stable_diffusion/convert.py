@@ -72,6 +72,7 @@ def to_mlflow(input_dir: Path, output_dir: Path, translate_params: Dict) -> None
     code_path = [
         os.path.join(os.path.dirname(__file__), "mlflow_wrapper.py"),
         os.path.join(os.path.dirname(__file__), "constants.py"),
+        os.path.join(os.path.dirname(__file__), "utils.py"),
     ]
 
     model_dir = os.path.join(os.path.dirname(input_dir), "model_dir")
