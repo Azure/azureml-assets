@@ -466,6 +466,18 @@ def validate_acs(acs_config, activity_logger: Logger):
     connection_id_acs = os.environ.get(
         "AZUREML_WORKSPACE_CONNECTION_ID_ACS", None)
 
+    index_name = acs_config["index_name"]
+    import re
+    if (index_name == None or index_name == "" or index_name.startswith("-")
+        or index_name.endswith("-") or (not re.search("^[a-z0-9-]+$", index_name)) 
+        or len(index_name) > 128):
+
+        error_msg = ("Invalid acs index name provided. Index name must only contain"
+                     "lowercase letters, digits or dashes cannot start or end with"
+                     "dashes and is limited to 128 characters.")
+        activity_logger.info( "ValidationFailed:"+ error_msg)
+        raise Exception(error_msg)
+        
     for index in range(MAX_RETRIES+1):
         try:
             connection = get_connection_by_id_v2(connection_id_acs)
