@@ -26,7 +26,5 @@ tags:
   model_specific_defaults:
       apply_deepspeed: 'true'
       apply_lora: 'true'
-      
-
   task: text-generation
 version: 1
