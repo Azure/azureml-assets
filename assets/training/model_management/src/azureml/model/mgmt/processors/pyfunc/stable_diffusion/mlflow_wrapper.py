@@ -16,6 +16,7 @@ import torch
 from constants import BatchConstants, ColumnNames, MLflowLiterals, Tasks
 from utils import image_to_str, save_image
 
+
 class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
     """MLflow model wrapper for stable diffusion models."""
 
@@ -35,7 +36,9 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
 
     def predict_batch(self, text_prompts):
         """
-        For batch we are trying to do prediction in a loop instead of sending complete list at once.
+        Predict method text-to-image task for batch endpoint.
+
+        For batch we are try to do prediction in a loop instead of sending complete list at once.
         Sending a big list of text prompts at once might lead to out of memory related errors.
 
         :param text_prompts: A list of text prompts for which we need to generate images.
