@@ -41,5 +41,6 @@ tags:
     apply_deepspeed: 'true'
     apply_lora: 'true'
     apply_ort: 'true'
+    
   task: text-classification
-version: 8
+version: 9

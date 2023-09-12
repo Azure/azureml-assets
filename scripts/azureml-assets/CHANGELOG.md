@@ -6,7 +6,10 @@
 ## 1.16.0 (2023-09-12)
 ### 🚀 New Features
 - [#1207](https://github.com/Azure/azureml-assets/pull/1207) Support copy of changed files
+
+## 1.15.2 (2023-09-08)
 ### 🐛 Bugs Fixed
+- [#1188](https://github.com/Azure/azureml-assets/pull/1188) Decrease azcopy verbosity
 
 ## 1.15.1 (2023-09-07)
 ### 🐛 Bugs Fixed

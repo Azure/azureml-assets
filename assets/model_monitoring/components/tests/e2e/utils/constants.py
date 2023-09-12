@@ -59,6 +59,10 @@ DATA_ASSET_MLTABLE_DATA_DRIFT_SIGNAL_OUTPUT = (
     "azureml:mltable_data_drift_signal_output:1"
 )
 
+DATA_ASSET_MLTABLE_SAMPLES_INDEX_OUTPUT = (
+    "azureml:mltable_samples_index_output:1"
+)
+
 
 # MDC-generated target dataset of an iris model which contains both the input features as well as the inferred results.
 # The data contains no drift. Output logs have been generated for 2023/01/01/00 and 2023/02/01/00.
