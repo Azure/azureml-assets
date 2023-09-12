@@ -182,7 +182,7 @@ validate_fields = {
 }
 
 skip_dirs = [
-    "oai_v2_1p"
+    "oai_v2_1p",  # owned by oai team
 ]
 
 
