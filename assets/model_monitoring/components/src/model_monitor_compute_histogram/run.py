@@ -36,7 +36,7 @@ def run():
     args = parser.parse_args()
 
     df = read_mltable_in_spark(args.input_data)
-    
+
     histogram_buckets = None
     try:
         histogram_buckets = read_mltable_in_spark(args.histogram_buckets)
