@@ -49,8 +49,11 @@ def run():
 
     if args_dict["samples_index"]:
         print("Processing samples index.")
-        samples_index: List[Row] = read_mltable_in_spark(args.samples_index).collect()
-        result = merge_dicts(result, SamplesOutputBuilder(samples_index).get_samples_dict())
+        try:
+            samples_index: List[Row] = read_mltable_in_spark(args.samples_index).collect()
+            result = merge_dicts(result, SamplesOutputBuilder(samples_index).get_samples_dict())
+        except Exception:
+            print("Samples index is empty. Skipping processing of the samples index.")
 
     output_payload = to_output_payload(args.signal_name, args.signal_type, result)
 
