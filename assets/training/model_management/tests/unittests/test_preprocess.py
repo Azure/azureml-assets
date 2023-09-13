@@ -226,7 +226,7 @@ class TestFactoryModule(unittest.TestCase):
     @patch("azureml.model.mgmt.processors.factory.MMLabDetectionMLflowConvertorFactory")
     def test_get_mmlab_detection_mlflow_convertor(self, mock_mmlab_detection_factory):
         """Test MMLab detection model MLflow convertor."""
-        model_framework = "mmlab"
+        model_framework = "MMLab"
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
@@ -276,7 +276,7 @@ class TestFactoryModule(unittest.TestCase):
 
     def test_get_mlflow_convertor_unsupported_task_mmlab(self):
         """Test unsupported task case."""
-        model_framework = "mmlab"
+        model_framework = "MMLab"
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
