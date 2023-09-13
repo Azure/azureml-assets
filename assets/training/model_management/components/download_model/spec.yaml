@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: download_model
-version: 0.0.14.test10
+version: 0.0.15
 type: command
 
 is_deterministic: True
@@ -9,7 +9,7 @@ is_deterministic: True
 display_name: Download model
 description: Downloads a publicly available model
 
-environment: azureml://registries/azureml-preview-test1/environments/model-management-conditional/versions/1
+environment: azureml://registries/azureml-preview-test1/environments/model-management-conditional/versions/2
 
 code: ../../src/
 command: >
