@@ -27,6 +27,9 @@ RUN /bin/bash -c "source ~/.bashrc"
 COPY ./extra_requirements.txt ./
 RUN pip install -r extra_requirements.txt
 
+# fix for https://portal.microsofticm.com/imp/v3/incidents/incident/418102604/summary
+RUN pip install cryptography==41.0.2
+
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
