@@ -33,6 +33,12 @@ Standard_NC24s_v3 | 1.08 | 34.9
     "input_data": {
         "input_string": ["Explain to me the difference between nuclear fission and fusion."]
     }
+   "parameters": {
+            "top_p": 0.9,
+            "temperature": 0.2,
+            "do_sample": true,
+            "max_new_tokens": 200
+        }
 }
 ```
 
