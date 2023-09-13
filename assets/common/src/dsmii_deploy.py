@@ -93,9 +93,7 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
         endpoint = ml_client.online_endpoints.get(endpoint.name)
         logger.info(f"Endpoint created {endpoint.id}")
     except Exception as e:
-        raise AzureMLException._with_error(
-            AzureMLError.create(EndpointCreationError, exception=e)
-        )
+        raise AzureMLException._with_error(AzureMLError.create(EndpointCreationError, exception=e))
 
     try:
         logger.info(f"Creating deployment {deployment}")
@@ -104,17 +102,13 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
         try:
             logger.error("Deployment failed. Printing deployment logs")
             logs = ml_client.online_deployments.get_logs(
-                name=deployment_name,
-                endpoint_name=endpoint_name,
-                lines=DeployConstants.MAX_DEPLOYMENT_LOG_TAIL_LINES
+                name=deployment_name, endpoint_name=endpoint_name, lines=DeployConstants.MAX_DEPLOYMENT_LOG_TAIL_LINES
             )
             logger.error(logs)
         except Exception as ex:
             logger.error(f"Error in fetching deployment logs: {ex}")
 
-        raise AzureMLException._with_error(
-            AzureMLError.create(DeploymentCreationError, exception=e)
-        )
+        raise AzureMLException._with_error(AzureMLError.create(DeploymentCreationError, exception=e))
 
     print(f"Deployment successful. Updating endpoint to take 100% traffic for deployment {deployment_name}")
 
@@ -134,7 +128,9 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
 def parse_args():
     """Return arguments."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mii_max_new_tokens", type=str, required=False, default=4096, help="MAX TOKENS to set during model init")
+    parser.add_argument(
+        "--mii_max_new_tokens", type=str, required=False, default=4096, help="MAX TOKENS to set during model init"
+    )
     parser.add_argument("--mii_replica_num", type=str, required=False, default=1, help="Replica num")
     parser.add_argument("--mii_trust_remote_code", type=bool, required=False, default=True, help="Trust remote code")
 
@@ -284,7 +280,9 @@ def main():
     if args.model_id:
         model_id = str(args.model_id)
     elif args.registration_details_folder:
-        registration_details_file = args.registration_details_folder / ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
+        registration_details_file = (
+            args.registration_details_folder / ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
+        )
         if registration_details_file.exists():
             try:
                 with open(registration_details_file) as f:
@@ -297,7 +295,6 @@ def main():
     else:
         raise Exception("Arguments model_id and registration_details both are missing.")
 
-
     # Endpoint has following restrictions:
     # 1. Name must begin with lowercase letter
     # 2. Followed by lowercase letters, hyphen or numbers
@@ -306,7 +303,7 @@ def main():
     # 1. Replace underscores and slashes by hyphens and convert them to lower case.
     # 2. Take 21 chars from model name and append '-' & timstamp(10chars) to it
     model_name = get_model_name(model_id)
-    endpoint_name = re.sub('[^A-Za-z0-9]', '-', model_name).lower()[:17]
+    endpoint_name = re.sub("[^A-Za-z0-9]", "-", model_name).lower()[:17]
     endpoint_name = f"mii-{endpoint_name}-{int(time.time())}"
     endpoint_name = endpoint_name
 
@@ -342,9 +339,7 @@ def main():
             )
             print(f"Response:\n{response}")
         except Exception as e:
-            raise AzureMLException._with_error(
-                AzureMLError.create(OnlineEndpointInvocationError, exception=e)
-            )
+            raise AzureMLException._with_error(AzureMLError.create(OnlineEndpointInvocationError, exception=e))
 
     print("Saving deployment details")
     # write deployment details to file

@@ -29,7 +29,7 @@ model = None
 logger = logging.getLogger(__name__)
 logger.propagate = False
 logger.setLevel(logging.DEBUG)
-format_str = "%(asctime)s [%(module)s] %(funcName)s %(lineno)s: %(levelname)-8s [%(process)d] %(message)s"
+format_str = "%(asctime)s [%(module)s] %(funcName)s %(lineno)s: %(levelname)-8s %(message)s"
 formatter = logging.Formatter(format_str)
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
@@ -104,10 +104,7 @@ SUPPORTED_INFERENCE_PARAMS = {
 }
 
 
-default_generator_configs = {
-    k: v["default"] for k, v in SUPPORTED_INFERENCE_PARAMS.items() if
-    "default" in v
-}
+default_generator_configs = {k: v["default"] for k, v in SUPPORTED_INFERENCE_PARAMS.items() if "default" in v}
 
 # AACS
 aacs_threshold = int(os.environ.get("CONTENT_SAFETY_THRESHOLD", 2))
@@ -133,9 +130,7 @@ def init():
         # Create a Content Safety client
         headers_policy = HeadersPolicy()
         headers_policy.add_header("ms-azure-ai-sender", "llama")
-        aacs_client = ContentSafetyClient(
-            endpoint, AzureKeyCredential(key), headers_policy=headers_policy
-        )
+        aacs_client = ContentSafetyClient(endpoint, AzureKeyCredential(key), headers_policy=headers_policy)
     except Exception as e:
         logger.error(f"AACS not configured. Bypassing content moderation. Error {e}")
 
@@ -176,7 +171,7 @@ def init():
                 ds_zero=configs[mii.constants.ENABLE_DEEPSPEED_ZERO_KEY],
                 ds_config=configs[mii.constants.DEEPSPEED_CONFIG_KEY],
                 mii_configs=configs[mii.constants.MII_CONFIGS_KEY],
-                lb_config=configs.get(mii.constants.LOAD_BALANCER_CONFIG_KEY, None)
+                lb_config=configs.get(mii.constants.LOAD_BALANCER_CONFIG_KEY, None),
             )
             logger.info("Completed server setup")
             time.sleep(20)
@@ -213,16 +208,12 @@ def run(data):
         # Check input content safety
         data, severity = get_safe_input(data)
         if severity > aacs_threshold:
-            logger.warning(
-                f"Input severity ({severity}) greater than aacs threshold ({aacs_threshold})."
-            )
+            logger.warning(f"Input severity ({severity}) greater than aacs threshold ({aacs_threshold}).")
             return {}
 
         query, params = get_request_data(data)
         params = get_generator_params(params)
-        logger.info(
-            f"generating response for input_string: {query}, parameters: {params}"
-        )
+        logger.info(f"generating response for input_string: {query}, parameters: {params}")
 
         response = model.query(query, **params)
         result_dict = {}
@@ -288,7 +279,7 @@ class CsChunkingUtils:
 
     def chunkstring(self, string, length):
         """Chunk strings in a given length."""
-        return (string[0 + i: length + i] for i in range(0, len(string), length))
+        return (string[0 + i : length + i] for i in range(0, len(string), length))
 
     def split_by(self, input):
         """Split the input."""
@@ -363,9 +354,7 @@ def analyze_text_async(text):
         request = AnalyzeTextOptions(text=i)
         tasks.append(async_analyze_text_task(aacs_client, request))
 
-    done, pending = asyncio.get_event_loop().run_until_complete(
-        asyncio.wait(tasks, timeout=60)
-    )
+    done, pending = asyncio.get_event_loop().run_until_complete(asyncio.wait(tasks, timeout=60))
 
     if len(pending) > 0:
         # not all task finished, assume failed
@@ -384,10 +373,7 @@ def analyze_text(text):
     chunking_utils = CsChunkingUtils(chunking_n=1000, delimiter=".")
     split_text = chunking_utils.split_by(text)
 
-    result = [
-        analyze_response(aacs_client.analyze_text(AnalyzeTextOptions(text=i)))
-        for i in split_text
-    ]
+    result = [analyze_response(aacs_client.analyze_text(AnalyzeTextOptions(text=i))) for i in split_text]
     severity = max(result)
     logger.info(f"Analyzed, severity {severity}")
 
@@ -471,11 +457,10 @@ def get_aacs_access_key():
 
     credential = ManagedIdentityCredential(client_id=uai_client_id)
     cs_client = CognitiveServicesManagementClient(credential, subscription_id)
-    key = cs_client.accounts.list_keys(
-        resource_group_name=resource_group_name, account_name=aacs_account_name
-    ).key1
+    key = cs_client.accounts.list_keys(resource_group_name=resource_group_name, account_name=aacs_account_name).key1
 
     return key
+
 
 # ACS END
 
@@ -512,9 +497,7 @@ def get_generator_params(params: dict):
     return updated_params
 
 
-def get_request_data(
-    request_string
-) -> Tuple[Union[str, List[str]], Dict[str, Any]]:
+def get_request_data(request_string) -> Tuple[Union[str, List[str]], Dict[str, Any]]:
     """Process and validate inference request.
 
     return type for chat-completion: str, dict
@@ -553,18 +536,20 @@ def get_request_data(
         return input_data_formatted, params
     except Exception as e:
         raise Exception(
-            json.dumps({
-                "error": (
-                    "Expected input format: \n"
-                    '{"input_data": {"input_string": "<query>", '
-                    '"parameters": {"k1":"v1", "k2":"v2"}}}.\n '
-                    "<query> should be in below format:\n "
-                    'For text-generation: ["str1", "str2", ...]\n'
-                    'For chat-completion : [{"role": "user", "content": "str1"}, '
-                    '{"role": "assistant", "content": "str2"} ....]'
-                ),
-                "exception": str(e),
-            })
+            json.dumps(
+                {
+                    "error": (
+                        "Expected input format: \n"
+                        '{"input_data": {"input_string": "<query>", '
+                        '"parameters": {"k1":"v1", "k2":"v2"}}}.\n '
+                        "<query> should be in below format:\n "
+                        'For text-generation: ["str1", "str2", ...]\n'
+                        'For chat-completion : [{"role": "user", "content": "str1"}, '
+                        '{"role": "assistant", "content": "str2"} ....]'
+                    ),
+                    "exception": str(e),
+                }
+            )
         )
 
 
@@ -611,17 +596,19 @@ def build_chat_completion_prompt(data: List[str]) -> dict:
                 conversation.mark_processed()
     conv_dict = conversation.__dict__
     result = dict()
-    result['text'] = conv_dict["new_user_input"]
-    result['conversation_id'] = conv_dict['uuid']
-    result['past_user_inputs'] = conv_dict['past_user_inputs']
-    result['generated_responses'] = conv_dict['generated_responses']
+    result["text"] = conv_dict["new_user_input"]
+    result["conversation_id"] = conv_dict["uuid"]
+    result["past_user_inputs"] = conv_dict["past_user_inputs"]
+    result["generated_responses"] = conv_dict["generated_responses"]
     return result
 
 
 def _allocate_processes(hostfile_path):
     from mii.server import _allocate_processes
+
     if hostfile_path is None:
         import tempfile
+
         hostfile_path = tempfile.NamedTemporaryFile(delete=False).name
         logger.info(f"hostfile_path: {hostfile_path}")
         num_gpu = DEVICE_COUNT
@@ -635,10 +622,14 @@ def _generate_load_balancer_config():
     replica_configs = [
         ReplicaConfig(
             hostname=hostname,
-            tensor_parallel_ports=list(range(LOAD_BALANCING_PORT+i*TENSOR_PARALLEL+1,
-                                             LOAD_BALANCING_PORT+i*TENSOR_PARALLEL+1+TENSOR_PARALLEL)),
-            torch_dist_port=i+TORCH_DIST_PORT,
-            gpu_indices=gpu_indices
+            tensor_parallel_ports=list(
+                range(
+                    LOAD_BALANCING_PORT + i * TENSOR_PARALLEL + 1,
+                    LOAD_BALANCING_PORT + i * TENSOR_PARALLEL + 1 + TENSOR_PARALLEL,
+                )
+            ),
+            torch_dist_port=i + TORCH_DIST_PORT,
+            gpu_indices=gpu_indices,
         )
         for i, (hostname, gpu_indices) in enumerate(replica_pool)
     ]
@@ -651,33 +642,33 @@ is_70b_model = "Llama-2-70b" in MODEL_DIR or "Llama-2-70b-chat" in MODEL_DIR
 replace_with_kernel_inject = not is_70b_model
 
 configs = {
-    'deployment_name': 'test-deployment',
-    'ds_config': None,
-    'ds_optimize': True,
-    'ds_zero': False,
-    'load_balancer_config': load_balancer_config,
-    'mii_configs': {
-        'checkpoint_dict': None,
-        'deploy_rank': load_balancer_config.replica_configs[0].gpu_indices,
-        'dtype': torch.float16,
-        'enable_cuda_graph': False,
-        'enable_restful_api': False,
-        'hf_auth_token': None,
-        'load_with_sys_mem': True,
-        'max_tokens': MAX_TOKENS,
-        'meta_tensor': False,
-        'port_number': LOAD_BALANCING_PORT,
-        'profile_model_time': False,
-        'replace_with_kernel_inject': replace_with_kernel_inject,
-        'replica_num': REPLICA_NUM,
-        'skip_model_check': True,
-        'tensor_parallel': TENSOR_PARALLEL,
-        'torch_dist_port': TORCH_DIST_PORT,
-        'trust_remote_code': False
+    "deployment_name": "test-deployment",
+    "ds_config": None,
+    "ds_optimize": True,
+    "ds_zero": False,
+    "load_balancer_config": load_balancer_config,
+    "mii_configs": {
+        "checkpoint_dict": None,
+        "deploy_rank": load_balancer_config.replica_configs[0].gpu_indices,
+        "dtype": torch.float16,
+        "enable_cuda_graph": False,
+        "enable_restful_api": False,
+        "hf_auth_token": None,
+        "load_with_sys_mem": True,
+        "max_tokens": MAX_TOKENS,
+        "meta_tensor": False,
+        "port_number": LOAD_BALANCING_PORT,
+        "profile_model_time": False,
+        "replace_with_kernel_inject": replace_with_kernel_inject,
+        "replica_num": REPLICA_NUM,
+        "skip_model_check": True,
+        "tensor_parallel": TENSOR_PARALLEL,
+        "torch_dist_port": TORCH_DIST_PORT,
+        "trust_remote_code": False,
     },
-    'model_name': MODEL_DIR,
-    'model_path': MODEL_PATH,
-    'task_name': task_type,
+    "model_name": MODEL_DIR,
+    "model_path": MODEL_PATH,
+    "task_name": task_type,
 }
 
 logger.info(f"MII configs: {configs}")
