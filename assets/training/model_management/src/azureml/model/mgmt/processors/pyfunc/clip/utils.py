@@ -43,7 +43,9 @@ def create_temp_file(request_body: bytes, parent_dir: str) -> str:
 
 
 def process_image(img: pd.Series) -> pd.Series:
-    """If input image is in base64 string format, decode it to bytes.
+    """Process input image and return bytes.
+
+    If input image is in base64 string format, decode it to bytes.
     If input image is in url format, download it and return bytes.
     https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
 
