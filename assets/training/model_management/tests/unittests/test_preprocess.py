@@ -361,7 +361,7 @@ class TestHFMLFLowConvertor:
         # task missing in translate params
         translate_params = {"model_id": "bert-base-cased"}
         with pytest.raises(Exception) as ex:
-            nlp_mlflow_convertor = NLPMLflowConvertor(
+            NLPMLflowConvertor(
                 model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
             )
         assert "task" in str(ex)
@@ -369,14 +369,14 @@ class TestHFMLFLowConvertor:
         # Unsupported task
         translate_params = {"task": "unsupported_task", "model_id": "bert-base-cased"}
         with pytest.raises(Exception) as ex:
-            nlp_mlflow_convertor = NLPMLflowConvertor(
+            NLPMLflowConvertor(
                 model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
             )
         assert "unsupported_task" in str(ex)
 
         # Succesful case
         translate_params = {"task": SupportedNLPTasks.FILL_MASK.value, "model_id": "bert-base-cased"}
-        nlp_mlflow_convertor = NLPMLflowConvertor(
+        NLPMLflowConvertor(
             model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
         )
 
@@ -393,7 +393,7 @@ class TestPyFunMLFLowConvertor:
         # task missing in translate params
         translate_params = {}
         with pytest.raises(Exception) as ex:
-            mlflow_convertor = MMLabDetectionMLflowConvertor(
+            MMLabDetectionMLflowConvertor(
                 model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
             )
         assert "task" in str(ex)
@@ -401,13 +401,13 @@ class TestPyFunMLFLowConvertor:
         # Unsupported task
         translate_params = {"task": "unsupported_task"}
         with pytest.raises(Exception) as ex:
-            mlflow_convertor = MMLabDetectionMLflowConvertor(
+            MMLabDetectionMLflowConvertor(
                 model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
             )
         assert "unsupported_task" in str(ex)
 
         # Succesful case
         translate_params = {"task": MMLabDetectionTasks.MM_OBJECT_DETECTION.value}
-        mlflow_convertor = MMLabDetectionMLflowConvertor(
+        MMLabDetectionMLflowConvertor(
             model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
         )
