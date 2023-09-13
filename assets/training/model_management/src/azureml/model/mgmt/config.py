@@ -17,6 +17,13 @@ class _CustomEnum(Enum):
         return [_enum.value for _enum in _dict]
 
 
+class ComponentConstants:
+    """Constant literals related to components parameters."""
+
+    MODEL_ID = "model_id"
+    TASK = "task"
+
+
 class ModelType(_CustomEnum):
     """Enum for the Model Types accepted in ModelConfig."""
 
@@ -29,6 +36,7 @@ class ModelFlavor(_CustomEnum):
 
     TRANSFORMERS = "transformers"
     MMLAB_PYFUNC = "mmlab_pyfunc"
+    PYFUNC = "pyfunc"
 
 
 class PathType(_CustomEnum):
