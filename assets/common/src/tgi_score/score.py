@@ -75,6 +75,7 @@ class SupportedTask(Enum):
 
     @classmethod
     def has_value(cls, value):
+        """Return True if enum contains value."""
         return value in cls._value2member_map_
 
 

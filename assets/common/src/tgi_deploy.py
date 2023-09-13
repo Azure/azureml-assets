@@ -291,6 +291,7 @@ def parse_args():
 
 @swallow_all_exceptions(logger)
 def main():
+    """Run main function."""
     args = parse_args()
 
     # tgl params

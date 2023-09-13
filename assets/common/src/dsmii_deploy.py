@@ -268,6 +268,7 @@ def parse_args():
 
 @swallow_all_exceptions(logger)
 def main():
+    """Run main function."""
     args = parse_args()
 
     mii_max_new_tokens = args.mii_max_new_tokens
