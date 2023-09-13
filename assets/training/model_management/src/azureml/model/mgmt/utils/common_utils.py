@@ -94,23 +94,23 @@ def get_json_header(token: str) -> Dict:
 
 def get_mlclient(registry_name: str = None):
     """Return ML Client."""
-    has_obo_succeeded = False
+    has_msi_succeeded = False
     try:
-        credential = AzureMLOnBehalfOfCredential()
-        # Check if given credential can get token successfully.
+        msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
+        credential = ManagedIdentityCredential(client_id=msi_client_id)
         credential.get_token("https://management.azure.com/.default")
-        has_obo_succeeded = True
+        has_msi_succeeded = True
     except Exception:
-        # Fall back to ManagedIdentityCredential in case AzureMLOnBehalfOfCredential does not work
-        logger.warning(AzureMLError.create(UserIdentityMissingError))
+        # Fall back to AzureMLOnBehalfOfCredential in case ManagedIdentityCredential does not work
+        logger.warning(AzureMLError.create(NonMsiAttachedComputeError))
 
-    if not has_obo_succeeded:
+    if not has_msi_succeeded:
         try:
-            msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
-            credential = ManagedIdentityCredential(client_id=msi_client_id)
+            credential = AzureMLOnBehalfOfCredential()
+            # Check if given credential can get token successfully.
             credential.get_token("https://management.azure.com/.default")
         except Exception as ex:
-            raise AzureMLException._with_error(AzureMLError.create(NonMsiAttachedComputeError, exception=ex))
+            raise AzureMLException._with_error(AzureMLError.create(UserIdentityMissingError, exception=ex))
 
     if registry_name is None:
         run = Run.get_context(allow_offline=False)
