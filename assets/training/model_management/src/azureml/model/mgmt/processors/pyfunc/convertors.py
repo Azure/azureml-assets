@@ -60,7 +60,7 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         self._model_dir = model_dir
         self._output_dir = output_dir
         self._temp_dir = temp_dir
-        self._model_id = translate_params["model_id"]
+        self._model_id = translate_params.get("model_id")
         self._task = translate_params["task"]
         self._signatures = translate_params.get("signatures", None)
 

@@ -14,8 +14,12 @@ from azureml.model.mgmt.processors.factory import (
     SupportedVisionTasks,
     SupportedDiffusersTask,
     SupportedTasks,
+    MMLabDetectionTasks,
+    PyFuncSupportedTasks
 )
+from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.convertors import HFMLFLowConvertor, NLPMLflowConvertor
+from azureml.model.mgmt.processors.pyfunc.convertors import MMLabDetectionMLflowConvertor
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -219,7 +223,45 @@ class TestFactoryModule(unittest.TestCase):
             translate_params,
         )
 
-    def test_get_mlflow_convertor_unsupported_task(self):
+    @patch("azureml.model.mgmt.processors.factory.MMLabDetectionMLflowConvertorFactory")
+    def test_get_mmlab_detection_mlflow_convertor(self, mock_mmlab_detection_factory):
+        """Test MMLab detection model MLflow convertor."""
+        model_framework = "mmlab"
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+
+        translate_params = {"task": MMLabDetectionTasks.MM_OBJECT_DETECTION.value}
+        mock_convertor = mock_mmlab_detection_factory.create_mlflow_convertor.return_value
+        result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
+        self.assertEqual(result, mock_convertor)
+        mock_mmlab_detection_factory.create_mlflow_convertor.assert_called_once_with(
+            model_dir,
+            output_dir,
+            temp_dir,
+            translate_params,
+        )
+
+    @patch("azureml.model.mgmt.processors.factory.CLIPMLflowConvertorFactory")
+    def test_get_clip_mlflow_convertor(self, mock_clip_factory):
+        """Test clip model MLflow convertor."""
+        model_framework = "Huggingface"
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+
+        translate_params = {"task": PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value}
+        mock_convertor = mock_clip_factory.create_mlflow_convertor.return_value
+        result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
+        self.assertEqual(result, mock_convertor)
+        mock_clip_factory.create_mlflow_convertor.assert_called_once_with(
+            model_dir,
+            output_dir,
+            temp_dir,
+            translate_params,
+        )
+
+    def test_get_mlflow_convertor_unsupported_task_hf(self):
         """Test unsupported task case."""
         model_framework = "Huggingface"
         model_dir = "/path/to/model_dir"
@@ -231,6 +273,56 @@ class TestFactoryModule(unittest.TestCase):
             get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
 
         self.assertTrue("unsupported_task" in str(context.exception))
+
+    def test_get_mlflow_convertor_unsupported_task_mmlab(self):
+        """Test unsupported task case."""
+        model_framework = "mmlab"
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+        translate_params = {"task": "unsupported_task"}
+
+        with self.assertRaises(Exception) as context:
+            get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
+
+        self.assertTrue("unsupported_task" in str(context.exception))
+
+    def test_get_mlflow_convertor_unsupported_model_framework(self):
+        """Test unsupported model framework case."""
+        model_framework = "unsupported_model_framework"
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+        translate_params = {"task": SupportedNLPTasks.FILL_MASK.value}
+
+        with self.assertRaises(Exception) as context:
+            get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
+
+        self.assertTrue("unsupported_model_framework" in str(context.exception))
+
+
+class TestPreprocessModule(unittest.TestCase):
+    """Test preprocess module."""
+
+    @patch("azureml.model.mgmt.processors.preprocess.get_mlflow_convertor")
+    def test_run_preprocess(self, mock_get_mlflow_convertor):
+        """Test run preprocess."""
+        model_framework = "Huggingface"
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+
+        translate_params = {"task": SupportedNLPTasks.FILL_MASK.value}
+        mock_convertor = mock_get_mlflow_convertor.return_value
+        run_preprocess(model_framework, model_dir, output_dir, temp_dir, **translate_params)
+        mock_get_mlflow_convertor.assert_called_once_with(
+            model_framework=model_framework,
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params
+        )
+        mock_convertor.save_as_mlflow.assert_called_once()
 
 
 class TestHFMLFLowConvertor:
@@ -251,3 +343,71 @@ class TestHFMLFLowConvertor:
                 conda_dict = yaml.safe_load(f)
             conda_deps = conda_dict["dependencies"]
             assert "pycocotools=2.0.4" in conda_deps
+
+    def test_validate(self):
+        """Test validate."""
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+
+        # Model_id missing in translate params
+        translate_params = {"task": SupportedNLPTasks.FILL_MASK.value}
+        with pytest.raises(Exception) as ex:
+            nlp_mlflow_convertor = NLPMLflowConvertor(
+                model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
+            )
+        assert "model_id" in str(ex)
+
+        # task missing in translate params
+        translate_params = {"model_id": "bert-base-cased"}
+        with pytest.raises(Exception) as ex:
+            nlp_mlflow_convertor = NLPMLflowConvertor(
+                model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
+            )
+        assert "task" in str(ex)
+
+        # Unsupported task
+        translate_params = {"task": "unsupported_task", "model_id": "bert-base-cased"}
+        with pytest.raises(Exception) as ex:
+            nlp_mlflow_convertor = NLPMLflowConvertor(
+                model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
+            )
+        assert "unsupported_task" in str(ex)
+
+        # Succesful case
+        translate_params = {"task": SupportedNLPTasks.FILL_MASK.value, "model_id": "bert-base-cased"}
+        nlp_mlflow_convertor = NLPMLflowConvertor(
+            model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
+        )
+
+
+class TestPyFunMLFLowConvertor:
+    """Test PyFunc Model Convertor."""
+
+    def test_validate(self):
+        """Test validate."""
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+
+        # task missing in translate params
+        translate_params = {}
+        with pytest.raises(Exception) as ex:
+            mlflow_convertor = MMLabDetectionMLflowConvertor(
+                model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
+            )
+        assert "task" in str(ex)
+
+        # Unsupported task
+        translate_params = {"task": "unsupported_task"}
+        with pytest.raises(Exception) as ex:
+            mlflow_convertor = MMLabDetectionMLflowConvertor(
+                model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
+            )
+        assert "unsupported_task" in str(ex)
+
+        # Succesful case
+        translate_params = {"task": MMLabDetectionTasks.MM_OBJECT_DETECTION.value}
+        mlflow_convertor = MMLabDetectionMLflowConvertor(
+            model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
+        )
