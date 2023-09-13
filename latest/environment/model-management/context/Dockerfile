@@ -1,8 +1,8 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110@sha256:5810657bea323c5b9f5d2216649c9d5b137069b4235c674708f61b147c11f521
+FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110:biweekly.202308.2
 
 WORKDIR /
 
-RUN apt-get update && apt-get -y upgrade && apt-get install openssh-server openssh-client curl graphviz -y git git-lfs
+RUN apt-get update && apt-get upgrade -y && apt-get install openssh-server openssh-client curl graphviz git git-lfs -y
 
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
