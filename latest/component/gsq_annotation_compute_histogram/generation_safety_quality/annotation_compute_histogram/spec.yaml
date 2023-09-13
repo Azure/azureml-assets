@@ -4,7 +4,7 @@ type: spark
 name: gsq_annotation_compute_histogram
 display_name: Annotation - Compute Histogram
 description: Compute annotation histogram given a deployment's model data input.
-version: 0.3.7
+version: 0.3.8
 is_deterministic: false
 inputs:
   production_dataset:
@@ -67,6 +67,24 @@ outputs:
   histogram:
     type: mltable
     mode: direct
+  samples_index:
+    type: mltable
+    mode: direct
+  groundedness_violations:
+    type: mltable
+    mode: direct
+  fluency_violations:
+    type: mltable
+    mode: direct
+  coherence_violations:
+    type: mltable
+    mode: direct
+  similarity_violations:
+    type: mltable
+    mode: direct
+  relevance_violations:
+    type: mltable
+    mode: direct
 
 conf:
   spark.driver.cores: 1
@@ -120,6 +138,12 @@ args: >-
   $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
   $[[--sample_rate ${{inputs.sample_rate}}]]
   --histogram ${{outputs.histogram}}
+  --samples_index ${{outputs.samples_index}}
+  --groundedness_violations ${{outputs.groundedness_violations}}
+  --fluency_violations ${{outputs.fluency_violations}}
+  --similarity_violations ${{outputs.similarity_violations}}
+  --coherence_violations ${{outputs.coherence_violations}}
+  --relevance_violations ${{outputs.relevance_violations}}
 
 identity:
   type: managed
