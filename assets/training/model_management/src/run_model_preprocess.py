@@ -165,7 +165,7 @@ def run():
     # TODO: move validations to respective convertors
     if mlflow_flavor == ModelFlavor.TRANSFORMERS.value:
         _validate_transformers_args(preprocess_args)
-    elif mlflow_flavor == ModelFlavor.MMLAB_PYFUNC.value:
+    elif mlflow_flavor in [ModelFlavor.PYFUNC.value, ModelFlavor.MMLAB_PYFUNC.value]:
         _validate_pyfunc_args(preprocess_args)
 
     with TemporaryDirectory(dir=mlflow_model_output_dir) as working_dir, TemporaryDirectory(
