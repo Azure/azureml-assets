@@ -8,6 +8,7 @@ import os
 import yaml
 from abc import ABC, abstractmethod
 from azureml.evaluate import mlflow as hf_mlflow
+from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
 from azureml.model.mgmt.processors.transformers.config import (
     HF_CONF,
     MODEL_FILE_PATTERN,
@@ -52,7 +53,7 @@ from typing import Any, Dict
 logger = get_logger(__name__)
 
 
-class HFMLFLowConvertor(ABC):
+class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
     """HF MlfLow convertor base class."""
 
     CONDA_FILE_NAME = "conda.yaml"
@@ -78,6 +79,7 @@ class HFMLFLowConvertor(ABC):
         translate_params: Dict,
     ):
         """Initialize MLflow convertor for HF models."""
+        self._validate(translate_params)
         self._model_dir = model_dir
         self._output_dir = output_dir
         self._temp_dir = temp_dir
@@ -229,6 +231,15 @@ class HFMLFLowConvertor(ABC):
         with open(conda_file_path, "w") as f:
             yaml.safe_dump(conda_dict, f)
             logger.info("updated conda.yaml")
+
+    def _validate(self, translate_params):
+        if not translate_params.get("model_id"):
+            raise Exception("model_id is a required parameter for hftransformers MLflow flavor.")
+        if not translate_params.get("task"):
+            raise Exception("task is a required parameter for hftransformers MLflow flavor.")
+        task = translate_params["task"]
+        if not SupportedTasks.has_value(task):
+            raise Exception(f"Unsupported task {task} for hftransformers MLflow flavor.")
 
 
 class VisionMLflowConvertor(HFMLFLowConvertor):
