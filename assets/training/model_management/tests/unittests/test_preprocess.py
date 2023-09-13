@@ -353,7 +353,7 @@ class TestHFMLFLowConvertor:
         # Model_id missing in translate params
         translate_params = {"task": SupportedNLPTasks.FILL_MASK.value}
         with pytest.raises(Exception) as ex:
-            nlp_mlflow_convertor = NLPMLflowConvertor(
+            NLPMLflowConvertor(
                 model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
             )
         assert "model_id" in str(ex)
