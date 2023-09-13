@@ -7,12 +7,11 @@ import argparse
 import os
 import json
 import shutil
-from azureml.model.mgmt.config import AppName, ComponentConstants, ModelFlavor
+from azureml.model.mgmt.config import AppName, ModelFlavor
 from azureml.model.mgmt.processors.transformers.config import HF_CONF
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.config import SupportedTasks
 from azureml.model.mgmt.processors.pyfunc.vision.config import Tasks
-from azureml.model.mgmt.processors.pyfunc.stable_diffusion.constants import Tasks as StableDiffusionTasks
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, UnsupportedTaskType
 from azureml._common.exceptions import AzureMLException
 from azureml._common._error_definition.azureml_error import AzureMLError
