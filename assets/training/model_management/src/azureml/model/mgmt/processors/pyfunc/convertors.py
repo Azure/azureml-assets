@@ -57,7 +57,7 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
     ):
         """Initialize MLflow convertor for PyFunc models."""
         self._validate(translate_params)
-        self._model_dir = model_dir
+        self._model_dir = os.fspath(model_dir)
         self._output_dir = output_dir
         self._temp_dir = temp_dir
         self._model_id = translate_params.get("model_id")
@@ -246,6 +246,6 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
         :rtype: Dict
         """
         artifacts_dict = {
-            CLIPMLflowLiterals.MODEL_DIR: os.fspath(self._model_dir)
+            CLIPMLflowLiterals.MODEL_DIR: self._model_dir
         }
         return artifacts_dict
