@@ -19,7 +19,6 @@ from azureml.core.run import Run
 from azureml.model.mgmt.utils.exceptions import (
     GenericRunCMDError,
     HuggingFaceErrorInFetchingModelInfo,
-    NonMsiAttachedComputeError,
     UserIdentityMissingError
     )
 from contextlib import contextmanager
@@ -103,7 +102,8 @@ def get_mlclient(registry_name: str = None):
     except Exception:
         # Fall back to AzureMLOnBehalfOfCredential in case ManagedIdentityCredential does not work
         has_msi_succeeded = False
-        logger.warning("ManagedIdentityCredential was not found in the compute. Falling back to AzureMLOnBehalfOfCredential")
+        logger.warning("ManagedIdentityCredential was not found in the compute. "
+                       "Falling back to AzureMLOnBehalfOfCredential")
 
     if not has_msi_succeeded:
         try:

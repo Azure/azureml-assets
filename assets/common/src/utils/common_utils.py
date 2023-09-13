@@ -17,7 +17,7 @@ from typing import Tuple
 import re
 
 from utils.logging_utils import get_logger
-from utils.exceptions import NonMsiAttachedComputeError, UserIdentityMissingError, InvalidModelIDError
+from utils.exceptions import UserIdentityMissingError, InvalidModelIDError
 
 
 logger = get_logger(__name__)
@@ -49,7 +49,8 @@ def get_mlclient(registry_name: str = None):
     except Exception:
         # Fall back to AzureMLOnBehalfOfCredential in case ManagedIdentityCredential does not work
         has_msi_succeeded = False
-        logger.warning("ManagedIdentityCredential was not found in the compute. Falling back to AzureMLOnBehalfOfCredential")
+        logger.warning("ManagedIdentityCredential was not found in the compute. "
+                       "Falling back to AzureMLOnBehalfOfCredential")
 
     if not has_msi_succeeded:
         try:
