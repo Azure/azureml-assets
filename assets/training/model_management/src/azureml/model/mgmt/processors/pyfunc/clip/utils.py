@@ -31,7 +31,6 @@ def create_temp_file(request_body: bytes, parent_dir: str) -> str:
     :rtype: str
     """
     with tempfile.NamedTemporaryFile(dir=parent_dir, mode="wb", delete=False) as image_file_fp:
-        # image_file_fp.write(request_body)
         img_path = image_file_fp.name + ".png"
         try:
             img = Image.open(io.BytesIO(request_body))
