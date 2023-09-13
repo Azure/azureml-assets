@@ -29,7 +29,7 @@ logger = get_logger(__name__)
 
 
 class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
-    """PyFunc MLflow convertor base class"""
+    """PyFunc MLflow convertor base class."""
 
     CONDA_FILE_NAME = "conda.yaml"
     REQUIREMENTS_FILE_NAME = "requirements.txt"
@@ -98,7 +98,7 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         logger.info("Model saved successfully.")
 
     def _validate(self, translate_params):
-        """Validate translate parameters"""
+        """Validate translate parameters."""
         if not translate_params.get("task"):
             raise Exception("task is a required parameter for pyfunc flavor.")
         task = translate_params["task"]

@@ -33,6 +33,6 @@ class MLflowSchemaLiterals:
 
 
 class MLflowLiterals:
-    """MLflow export related literals"""
+    """MLflow export related literals."""
 
     MODEL_DIR = "model_dir"

@@ -22,7 +22,8 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         self,
         task_type: str,
     ) -> None:
-        """Constructor for MLflow wrapper class
+        """Initialize MLflow wrapper class.
+
         :param task_type: Task type used in training.
         :type task_type: str
         """
@@ -34,6 +35,7 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """
         Load a MLflow model with pyfunc.load_model().
+
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
@@ -55,6 +57,7 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
         """Perform inference on the input data.
+
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         :param input_data: Input images for prediction and candidate labels.
@@ -115,6 +118,7 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         task_type: Tasks,
     ) -> Tuple[torch.tensor]:
         """Perform inference on batch of input images.
+
         :param test_args: Training arguments path.
         :type test_args: transformers.TrainingArguments
         :param image_processor: Preprocessing configuration loader.
@@ -128,7 +132,6 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :return: Predicted probabilities
         :rtype: Tuple of torch.tensor
         """
-
         image_list = [Image.open(img_path) for img_path in image_path_list]
         inputs = processor(text=text_list, images=image_list, return_tensors="pt", padding=True)
         inputs = inputs.to(self._device)

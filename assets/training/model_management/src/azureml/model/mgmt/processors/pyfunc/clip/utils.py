@@ -43,8 +43,8 @@ def create_temp_file(request_body: bytes, parent_dir: str) -> str:
 
 
 def process_image(img: pd.Series) -> pd.Series:
-    """If input image is in base64 string format, decode it to bytes. If input image is in url format,
-    download it and return bytes.
+    """If input image is in base64 string format, decode it to bytes.
+    If input image is in url format, download it and return bytes.
     https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
 
     :param img: pandas series with image in base64 string format or url.
@@ -71,7 +71,8 @@ def process_image(img: pd.Series) -> pd.Series:
 
 
 def _is_valid_url(text: str) -> bool:
-    """check if text is url or base64 string
+    """Check if text is url or base64 string.
+
     :param text: text to validate
     :type text: str
     :return: True if url else false
@@ -100,11 +101,11 @@ def _is_valid_url(text: str) -> bool:
 
 
 def get_current_device() -> torch.device:
-    """Get current cuda device
+    """Get current cuda device.
+
     :return: current device
     :rtype: torch.device
     """
-
     # check if GPU is available
     if torch.cuda.is_available():
         try:
