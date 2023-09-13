@@ -17,7 +17,7 @@ from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 from pathlib import Path
 
-from utils.config import AppName, ComponentVariables
+from utils.config import AppName, ComponentVariables, DeployConstants
 from utils.common_utils import get_mlclient, get_model_name
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.exceptions import (
@@ -27,10 +27,6 @@ from utils.exceptions import (
     DeploymentCreationError,
 )
 
-
-MAX_REQUEST_TIMEOUT = 90000
-MAX_INSTANCE_COUNT = 20
-MAX_DEPLOYMENT_LOG_TAIL_LINES = 10000
 
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.DEPLOY_MODEL
@@ -77,7 +73,7 @@ def parse_args():
         type=int,
         help="Number of compute instances to deploy model",
         default=1,
-        choices=range(1, MAX_INSTANCE_COUNT),
+        choices=range(1, DeployConstants.MAX_INSTANCE_COUNT),
     )
     parser.add_argument(
         "--max_concurrent_requests_per_instance",
@@ -88,19 +84,19 @@ def parse_args():
     parser.add_argument(
         "--request_timeout_ms",
         type=int,
-        default=60000,  # 1min
+        default=DeployConstants.MAX_REQUEST_TIMEOUT,
         help="Request timeout in ms.",
     )
     parser.add_argument(
         "--max_queue_wait_ms",
         type=int,
-        default=60000,  # 1min
+        default=DeployConstants.DEFAULT_REQUEST_QUEUE_WAIT,
         help="Maximum queue wait time of a request in ms",
     )
     parser.add_argument(
         "--failure_threshold_readiness_probe",
         type=int,
-        default=10,
+        default=DeployConstants.PROBE_FAILURE_THRESHOLD,
         help="No of times system will try after failing the readiness probe",
     )
     parser.add_argument(
@@ -112,43 +108,43 @@ def parse_args():
     parser.add_argument(
         "--timeout_readiness_probe",
         type=int,
-        default=10,
+        default=DeployConstants.PROBE_TIMEOUT,
         help="The number of seconds after which the readiness probe times out",
     )
     parser.add_argument(
         "--period_readiness_probe",
         type=int,
-        default=10,
+        default=DeployConstants.PROBE_PERIOD,
         help="How often (in seconds) to perform the readiness probe",
     )
     parser.add_argument(
         "--initial_delay_readiness_probe",
         type=int,
-        default=10,
+        default=DeployConstants.PROBE_INITIAL_DELAY,
         help="The number of seconds after the container has started before the readiness probe is initiated",
     )
     parser.add_argument(
         "--failure_threshold_liveness_probe",
         type=int,
-        default=30,
+        default=DeployConstants.PROBE_FAILURE_THRESHOLD,
         help="No of times system will try after failing the liveness probe",
     )
     parser.add_argument(
         "--timeout_liveness_probe",
         type=int,
-        default=10,
+        default=DeployConstants.PROBE_TIMEOUT,
         help="The number of seconds after which the liveness probe times out",
     )
     parser.add_argument(
         "--period_liveness_probe",
         type=int,
-        default=10,
+        default=DeployConstants.PROBE_PERIOD,
         help="How often (in seconds) to perform the liveness probe",
     )
     parser.add_argument(
         "--initial_delay_liveness_probe",
         type=int,
-        default=10,
+        default=DeployConstants.PROBE_INITIAL_DELAY,
         help="The number of seconds after the container has started before the liveness probe is initiated",
     )
     parser.add_argument(
@@ -165,15 +161,14 @@ def parse_args():
     # parse args
     args = parser.parse_args()
     logger.info(f"Args received {args}")
-    print("args received ", args)
 
     # Validating passed input values
     if args.max_concurrent_requests_per_instance < 1:
         raise Exception("Arg max_concurrent_requests_per_instance cannot be less than 1")
-    if args.request_timeout_ms < 1 or args.request_timeout_ms > MAX_REQUEST_TIMEOUT:
-        raise Exception(f"Arg request_timeout_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
-    if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > MAX_REQUEST_TIMEOUT:
-        raise Exception(f"Arg max_queue_wait_ms should lie between 1 and {MAX_REQUEST_TIMEOUT}")
+    if args.request_timeout_ms < 1 or args.request_timeout_ms > DeployConstants.MAX_REQUEST_TIMEOUT:
+        raise Exception(f"Arg request_timeout_ms should lie between 1 and {DeployConstants.MAX_REQUEST_TIMEOUT}")
+    if args.max_queue_wait_ms < 1 or args.max_queue_wait_ms > DeployConstants.MAX_REQUEST_TIMEOUT:
+        raise Exception(f"Arg max_queue_wait_ms should lie between 1 and {DeployConstants.MAX_REQUEST_TIMEOUT}")
 
     return args
 
@@ -229,7 +224,7 @@ def create_endpoint_and_deployment(ml_client, model_id, endpoint_name, deploymen
             logs = ml_client.online_deployments.get_logs(
                 name=deployment_name,
                 endpoint_name=endpoint_name,
-                lines=MAX_DEPLOYMENT_LOG_TAIL_LINES
+                lines=DeployConstants.MAX_DEPLOYMENT_LOG_TAIL_LINES
             )
             logger.error(logs)
         except Exception as ex:
@@ -259,12 +254,12 @@ def main():
     """Run main function."""
     args = parse_args()
     ml_client = get_mlclient()
-    # get registered model id
 
+    # get registered model id
     if args.model_id:
         model_id = str(args.model_id)
     elif args.registration_details_folder:
-        registration_details_file = args.registration_details_folder/ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
+        registration_details_file = args.registration_details_folder / ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
         if registration_details_file.exists():
             try:
                 with open(registration_details_file) as f:
@@ -329,6 +324,7 @@ def main():
         "instance_count": args.instance_count,
         "max_concurrent_requests_per_instance": args.max_concurrent_requests_per_instance,
     }
+
     json_object = json.dumps(deployment_details, indent=4)
     with open(args.model_deployment_details, "w") as outfile:
         outfile.write(json_object)

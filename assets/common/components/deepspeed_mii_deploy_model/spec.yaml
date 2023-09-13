@@ -1,25 +1,31 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
-name: deploy_model
-version: 0.0.8
+name: ds_mii_deploy_model
+version: 0.0.1
 type: command
 
 is_deterministic: True
 
-display_name: Deploy model
-description:
-  Deploy a model to a workspace. The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
+display_name: DeepSpeed MII deploy Hugging Face model
+description: |
+  Deploy a Huggingface model using DeepSpeed MII (https://github.com/microsoft/DeepSpeed-MII).
+  The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
+  You can also use Azure OBO (On Behalf Of) identity while submitting jobs. Read more at: [AzureML OBO](https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/)
 
 environment: azureml://registries/azureml/environments/python-sdk-v2/versions/6
 
-code: ../../src
+code: ../../src/
 command: >-
-  python -u deploy.py
-  $[[--registration_details_folder ${{inputs.registration_details_folder}}]]
+  python -u dsmii_deploy.py
   $[[--model_id ${{inputs.model_id}}]]
+  $[[--registration_details_folder ${{inputs.registration_details_folder}}]]
+  --model_deployment_details ${{outputs.deployment_details}}
+  --mii_max_new_tokens ${{inputs.mii_max_new_tokens}}
+  --mii_replica_num ${{inputs.mii_replica_num}}
+  --mii_trust_remote_code ${{inputs.mii_trust_remote_code}}
+  --deployment_name ${{inputs.deployment_name}}
+  --instance_type ${{inputs.instance_type}}
   $[[--inference_payload ${{inputs.inference_payload}}]]
   $[[--endpoint_name ${{inputs.endpoint_name}}]]
-  $[[--deployment_name ${{inputs.deployment_name}}]]
-  $[[--instance_type ${{inputs.instance_type}}]]
   $[[--instance_count ${{inputs.instance_count}}]]
   $[[--max_concurrent_requests_per_instance ${{inputs.max_concurrent_requests_per_instance}}]] 
   $[[--request_timeout_ms ${{inputs.request_timeout_ms}}]]
@@ -34,15 +40,9 @@ command: >-
   $[[--period_liveness_probe ${{inputs.period_liveness_probe}}]]
   $[[--initial_delay_liveness_probe ${{inputs.initial_delay_liveness_probe}}]]
   $[[--egress_public_network_access ${{inputs.egress_public_network_access}}]]
-  --model_deployment_details ${{outputs.model_deployment_details}}
 
 inputs:
-  # Output of registering component
-  registration_details_folder:
-    type: uri_folder
-    optional: true
-    description: Folder containing model registration details in a JSON file named model_registration_details.json
-
+  # Model details
   model_id:
     type: string
     optional: true 
@@ -51,49 +51,47 @@ inputs:
       Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version>
       Workspace - azureml:<model-name>:<version>
 
+  # Output of registering component
+  registration_details_folder:
+    type: uri_folder
+    optional: true
+    description: Folder containing model registration details in a JSON file named model_registration_details.json
+
+  mii_max_new_tokens:
+    type: integer
+    default: 4096
+    description: max new tokens to set during model initialization
+
+  mii_replica_num:
+    type: integer
+    default: 1
+    description: replica num
+
+  mii_trust_remote_code:
+    type: boolean
+    default: true
+    description: Trust remote code for executing model code
+
   inference_payload:
     type: uri_file
     optional: true
     description: JSON payload which would be used to validate deployment
 
+  # Endpoint params
   endpoint_name:
     type: string
     optional: true
     description: Name of the endpoint
 
+  # Deployment params
   deployment_name:
     type: string
-    optional: true
     default: default
     description: Name of the deployment
-  
+
   instance_type:
     type: string
-    optional: true
     enum:
-      - Standard_DS1_v2
-      - Standard_DS2_v2
-      - Standard_DS3_v2
-      - Standard_DS4_v2
-      - Standard_DS5_v2
-      - Standard_F2s_v2
-      - Standard_F4s_v2
-      - Standard_F8s_v2
-      - Standard_F16s_v2
-      - Standard_F32s_v2
-      - Standard_F48s_v2
-      - Standard_F64s_v2
-      - Standard_F72s_v2
-      - Standard_FX24mds
-      - Standard_FX36mds
-      - Standard_FX48mds
-      - Standard_E2s_v3
-      - Standard_E4s_v3
-      - Standard_E8s_v3
-      - Standard_E16s_v3
-      - Standard_E32s_v3
-      - Standard_E48s_v3
-      - Standard_E64s_v3
       - Standard_NC4as_T4_v3
       - Standard_NC6s_v2
       - Standard_NC6s_v3
@@ -109,13 +107,13 @@ inputs:
       - Standard_ND96asr_v4
       - Standard_ND96amsr_A100_v4
     default: Standard_NC24s_v3
-    description: Compute instance type to deploy model. Make sure that instance type is available and have enough quota available.
+    description: Compute instance type to deploy model. Make sure that instance type and sufficient quota are available.
 
   instance_count:
     type: integer
     optional: true
     default: 1
-    description: Number of instances you want to use for deployment. Make sure instance type have enough quota available.
+    description: Number of instances you want to use for deployment. Make sure the instance type has enough quota available.
 
   max_concurrent_requests_per_instance:
     type: integer
@@ -125,13 +123,13 @@ inputs:
 
   request_timeout_ms:
     type: integer
-    default: 60000
+    default: 90000
     optional: true
-    description: Request timeout in ms. Max limit is 90000.
+    description: Request timeout in ms. Max is 90000.
 
   max_queue_wait_ms:
     type: integer
-    default: 60000
+    default: 90000
     optional: true
     description: Maximum queue wait time of a request in ms
   
@@ -149,43 +147,43 @@ inputs:
   
   timeout_readiness_probe:
     type: integer
-    default: 10
+    default: 300
     optional: true
     description: The number of seconds after which the readiness probe times out
 
   period_readiness_probe:
     type: integer
-    default: 10
+    default: 300
     optional: true
     description: How often (in seconds) to perform the readiness probe
 
   initial_delay_readiness_probe:
     type: integer
-    default: 10
+    default: 500
     optional: true
     description: The number of seconds after the container has started before the readiness probe is initiated
 
   failure_threshold_liveness_probe:
     type: integer
-    default: 30
+    default: 10
     optional: true 
     description: The number of times system will try after failing the liveness probe
   
   timeout_liveness_probe:
     type: integer
-    default: 10
+    default: 300
     optional: true
     description: The number of seconds after which the liveness probe times out
 
   period_liveness_probe:
     type: integer
-    default: 10
+    default: 300
     optional: true 
     description:  How often (in seconds) to perform the liveness probe
 
   initial_delay_liveness_probe:
     type: integer
-    default: 10
+    default: 500
     optional: true
     description: The number of seconds after the container has started before the liveness probe is initiated
   
@@ -196,13 +194,9 @@ inputs:
     enum:
       - enabled
       - disabled
-    description: Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources used by it
+    description: Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources it uses
 
 outputs:
-  model_deployment_details:
+  deployment_details:
     type: uri_file
-    description: Json file to which deployment details will be written
-
-tags:
-    Preview: ""
-    Internal: ""
+    description: JSON file with Model deployment details

@@ -1,0 +1,277 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+name: text_gen_llama_deployment
+version: 0.0.1
+type: command
+
+is_deterministic: True
+
+display_name: text gen llama deployment
+description: |
+  Deploy a text gen llama deployment
+  The component works on compute with [MSI](https://learn.microsoft.com/en-us/azure/machine-learning/how-to-create-manage-compute-instance?tabs=python) attached.
+  You can also use Azure OBO (On Behalf Of) identity while submitting jobs. Read more at: [AzureML OBO](https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/)
+
+environment: azureml://registries/azureml/environments/python-sdk-v2/versions/6
+
+code: ../../src/
+command: >-
+  python -u tgi_deploy.py
+  $[[--model_id ${{inputs.model_id}}]]
+  $[[--registration_details_folder ${{inputs.registration_details_folder}}]]
+  $[[--tgl_num_shard ${{inputs.tgl_num_shard}}]]
+  $[[--tgl_sharded ${{inputs.tgl_sharded}}]]
+  $[[--tgl_quantize ${{inputs.tgl_quantize}}]]
+  $[[--tgl_dtype ${{inputs.tgl_dtype}}]]
+  $[[--tgl_trust_remote_code ${{inputs.tgl_trust_remote_code}}]]
+  $[[--tgl_max_concurrent_requests ${{inputs.tgl_max_concurrent_requests}}]]
+  $[[--tgl_max_best_of ${{inputs.tgl_max_best_of}}]]
+  $[[--tgl_max_stop_sequences ${{inputs.tgl_max_stop_sequences}}]]
+  $[[--tgl_max_input_length ${{inputs.tgl_max_input_length}}]]
+  $[[--tgl_max_total_tokens ${{inputs.tgl_max_total_tokens}}]]
+  --model_deployment_details ${{outputs.deployment_details}}
+  --deployment_name ${{inputs.deployment_name}}
+  --instance_type ${{inputs.instance_type}}
+  $[[--inference_payload ${{inputs.inference_payload}}]]
+  $[[--endpoint_name ${{inputs.endpoint_name}}]]
+  $[[--instance_count ${{inputs.instance_count}}]]
+  $[[--max_concurrent_requests_per_instance ${{inputs.max_concurrent_requests_per_instance}}]] 
+  $[[--request_timeout_ms ${{inputs.request_timeout_ms}}]]
+  $[[--max_queue_wait_ms ${{inputs.max_queue_wait_ms}}]]
+  $[[--failure_threshold_readiness_probe ${{inputs.failure_threshold_readiness_probe}}]]
+  $[[--success_threshold_readiness_probe ${{inputs.success_threshold_readiness_probe}}]]
+  $[[--timeout_readiness_probe ${{inputs.timeout_readiness_probe}}]]
+  $[[--period_readiness_probe ${{inputs.period_readiness_probe}}]]
+  $[[--initial_delay_readiness_probe ${{inputs.initial_delay_readiness_probe}}]]
+  $[[--failure_threshold_liveness_probe ${{inputs.failure_threshold_liveness_probe}}]]
+  $[[--timeout_liveness_probe ${{inputs.timeout_liveness_probe}}]]
+  $[[--period_liveness_probe ${{inputs.period_liveness_probe}}]]
+  $[[--initial_delay_liveness_probe ${{inputs.initial_delay_liveness_probe}}]]
+  $[[--egress_public_network_access ${{inputs.egress_public_network_access}}]]
+
+inputs:
+  # Model details
+  model_id:
+    type: string
+    optional: true
+    description: |
+      Asset ID of the model registered in workspace/registry. 
+      Registry - azureml://registries/<registry-name>/models/<model-name>/versions/<version> 
+      Workspace - azureml:<model-name>:<version>
+
+  # Output of registering component
+  registration_details_folder:
+    type: uri_folder
+    optional: true
+    description: Folder containing model registration details in a JSON file named model_registration_details.json
+
+  tgl_num_shard:
+    type: integer
+    optional: True
+    description: |
+      (tgl=text-generation-launcher. Property is used for model init) 
+      The number of shards to use if you don't want to use all GPUs on a given machine. You can use `CUDA_VISIBLE_DEVICES=0,1 text-generation-launcher... --num_shard 2` and `CUDA_VISIBLE_DEVICES=2,3 text-generation-launcher... --num_shard 2` to launch 2 copies with 2 shard each on a given machine with 4 GPUs for instance
+
+  tgl_sharded:
+    type: boolean
+    optional: True
+    description: |
+      (tgl=text-generation-launcher. Property is used for model init) 
+      Whether to shard the model across multiple GPUs. By default text-generation-inference will use all available GPUs to run the model. Setting it to `false` deactivates `num_shard`
+
+  tgl_quantize:
+    type: string
+    enum:
+      - gptq
+      - bitsandbytes
+    optional: true
+    description: |
+      (tgl=text-generation-launcher. Property is used for model init) |
+      Whether you want the model to be quantized. This will use `bitsandbytes` for quantization on the fly, or `gptq`
+
+  tgl_dtype:
+    type: string
+    enum:
+      - bfloat16
+      - float16
+      - float32
+    optional: true
+    description: |
+      (tgl=text-generation-launcher. Property is used for model init) 
+      The dtype to be forced upon the model. This option cannot be used with `--quantize`
+
+  tgl_trust_remote_code:
+    type: boolean
+    optional: true
+    default: true
+    description: |
+      (tgl=text-generation-launcher. Property is used for model init) 
+      Whether you want to execute custom modelling code.
+
+  tgl_max_concurrent_requests:
+    type: integer
+    optional: true
+    default: 128
+    description: |
+      (tgl=text-generation-launcher. Property is used for model init) 
+      The maximum amount of concurrent requests for this particular deployment. Having a low limit will refuse clients requests instead of having them wait for too long and is usually good to handle backpressure correctly
+
+  tgl_max_best_of:
+    type: integer
+    optional: true
+    default: 2
+    description: |
+      (tgl=text-generation-launcher. Property is used for model init) 
+      This is the maximum allowed value for clients to set `best_of`. Best of makes `n` generations at the same time, and return the best in terms of overall log probability over the entire generated sequence
+
+  tgl_max_stop_sequences:
+    type: integer
+    optional: true
+    default: 4
+    description: |
+      (tgl=text-generation-launcher. Property is used for model init) 
+      This is the maximum allowed value for clients to set `stop_sequences`. Stop sequences are used to allow the model to stop on more than just the EOS token, and enable more complex "prompting" where users can preprompt the model in a specific way and define their "own" stop token aligned with their prompt
+
+  tgl_max_input_length:
+    type: integer
+    description: |
+      (tgl=text-generation-launcher. Property is used for model init) 
+      This is the maximum allowed input length (expressed in number of tokens) for users. The larger this value, the longer prompt users can send which can impact the overall memory required to handle the load. Please note that some models have a finite range of sequence they can handle
+    optional: true
+    default: 1024
+
+  tgl_max_total_tokens:
+    type: integer
+    description: |
+      (tgl=text-generation-launcher. Property is used for model init) 
+      This is the most important value to set as it defines the "memory budget" of running clients requests. Clients will send input sequences and ask to generate `max_new_tokens` on top. with a value of `1512` users can send either a prompt of `1000` and ask for `512` new tokens, or send a prompt of `1` and ask for `1511` max_new_tokens. The larger this value, the larger amount each request will be in your RAM and the less effective batching can be
+    default: 2048
+    optional: true
+
+  inference_payload:
+    type: uri_file
+    optional: true
+    description: JSON payload which would be used to validate deployment
+
+  # Endpoint params
+  endpoint_name:
+    type: string
+    optional: true
+    description: Name of the endpoint
+
+  # Deployment params
+  deployment_name:
+    type: string
+    default: default
+    description: Name of the deployment
+
+  instance_type:
+    type: string
+    enum:
+      - Standard_NC4as_T4_v3
+      - Standard_NC6s_v2
+      - Standard_NC6s_v3
+      - Standard_NC8as_T4_v3
+      - Standard_NC12s_v2
+      - Standard_NC12s_v3
+      - Standard_NC16as_T4_v3
+      - Standard_NC24s_v2
+      - Standard_NC24s_v3
+      - Standard_NC24rs_v3
+      - Standard_NC64as_T4_v3
+      - Standard_ND40rs_v2
+      - Standard_ND96asr_v4
+      - Standard_ND96amsr_A100_v4
+    default: Standard_NC24s_v3
+    description: Compute instance type to deploy model. Make sure that instance type and sufficient quota are available.
+
+  instance_count:
+    type: integer
+    optional: true
+    default: 1
+    description: Number of instances you want to use for deployment. Make sure the instance type has enough quota available.
+
+  max_concurrent_requests_per_instance:
+    type: integer
+    default: 1
+    optional: true
+    description: Maximum concurrent requests to be handled per instance
+
+  request_timeout_ms:
+    type: integer
+    default: 90000
+    optional: true
+    description: Request timeout in ms. Max is 90000.
+
+  max_queue_wait_ms:
+    type: integer
+    default: 90000
+    optional: true
+    description: Maximum queue wait time of a request in ms
+  
+  failure_threshold_readiness_probe:
+    type: integer
+    default: 10
+    optional: true 
+    description: The number of times system will try after failing the readiness probe
+
+  success_threshold_readiness_probe:
+    type: integer
+    default: 1
+    optional: true 
+    description: The minimum consecutive successes for the readiness probe to be considered successful after having failed
+  
+  timeout_readiness_probe:
+    type: integer
+    default: 300
+    optional: true
+    description: The number of seconds after which the readiness probe times out
+
+  period_readiness_probe:
+    type: integer
+    default: 300
+    optional: true
+    description: How often (in seconds) to perform the readiness probe
+
+  initial_delay_readiness_probe:
+    type: integer
+    default: 500
+    optional: true
+    description: The number of seconds after the container has started before the readiness probe is initiated
+
+  failure_threshold_liveness_probe:
+    type: integer
+    default: 10
+    optional: true 
+    description: The number of times system will try after failing the liveness probe
+  
+  timeout_liveness_probe:
+    type: integer
+    default: 300
+    optional: true
+    description: The number of seconds after which the liveness probe times out
+
+  period_liveness_probe:
+    type: integer
+    default: 300
+    optional: true 
+    description:  How often (in seconds) to perform the liveness probe
+
+  initial_delay_liveness_probe:
+    type: integer
+    default: 500
+    optional: true
+    description: The number of seconds after the container has started before the liveness probe is initiated
+  
+  egress_public_network_access:
+    type: string
+    default: enabled
+    optional: true 
+    enum:
+      - enabled
+      - disabled
+    description: Setting it to disabled secures the deployment by restricting communication between the deployment and the Azure resources it uses
+
+outputs:
+  deployment_details:
+    type: uri_file
+    description: JSON file with Model deployment details

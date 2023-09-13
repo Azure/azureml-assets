@@ -10,6 +10,8 @@ class AppName:
     IMPORT_MODEL = "import_model"
     REGISTER_MODEL = "register_model"
     DEPLOY_MODEL = "deploy_model"
+    MII_DEPLOY_MODEL = "mii_deploy_model"
+    TGI_DEPLOY_MODEL = "tgi_deploy_model"
     BATCH_DEPLOY_MODEL = "batch_deploy_model"
     MLFLOW_MODEL_LOCAL_VALIDATION = "mlflow_model_local_validation"
 
@@ -32,3 +34,20 @@ class ComponentVariables:
     """Component Variables."""
 
     REGISTRATION_DETAILS_JSON_FILE = "model_registration_details.json"
+
+
+class DeployConstants:
+    """Common Deploy settings."""
+
+    LOG_IO = 1
+    LOG_LEVEL = "DEBUG"
+    MAX_DEPLOYMENT_LOG_TAIL_LINES = 10000
+    MAX_REQUEST_TIMEOUT = 90000
+    DEFAULT_REQUEST_QUEUE_WAIT = 90000
+    MAX_INSTANCE_COUNT = 20
+    PROBE_FAILURE_THRESHOLD = 10
+    PROBE_SUCCESS_THRESHOLD = 1
+    PROBE_TIMEOUT = 300
+    PROBE_PERIOD = 300
+    PROBE_INITIAL_DELAY = 500
+    WORKER_TIMEOUT = 3600
