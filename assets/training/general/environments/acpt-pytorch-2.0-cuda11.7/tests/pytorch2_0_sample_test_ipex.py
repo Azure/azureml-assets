@@ -60,7 +60,6 @@ def test_pytorch_2_0():
     job = command(
         code=this_dir / JOB_SOURCE_CODE,  # local path where the code is stored
         command="pip install -r requirements.txt" \
-                " && pip uninstall accelerate -y" \
                 " && python ipex_bert_train.py --intel-extension",
         outputs={
             "output": Output(
