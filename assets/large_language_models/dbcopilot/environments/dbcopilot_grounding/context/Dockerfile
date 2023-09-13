@@ -28,7 +28,7 @@ COPY ./extra_requirements.txt ./
 RUN pip install -r extra_requirements.txt
 
 # fix for https://portal.microsofticm.com/imp/v3/incidents/incident/418102604/summary
-RUN pip install cryptography==41.0.2
+RUN pip install cryptography==41.0.3
 
 RUN set -eux; \
     apt-get update; \
