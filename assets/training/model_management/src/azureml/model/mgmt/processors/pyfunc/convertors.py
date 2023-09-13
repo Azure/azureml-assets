@@ -13,7 +13,7 @@ from mlflow.models.signature import ModelSignature
 from mlflow.pyfunc import PyFuncModel
 from mlflow.types.schema import ColSpec, Schema
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
@@ -68,8 +68,9 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         self,
         mlflow_model_wrapper: PyFuncModel,
         artifacts_dict: Dict[str, str],
-        pip_requirements: str,
         code_path: List[str],
+        pip_requirements: Optional[str] = None,
+        conda_env: Optional[str] = None,
     ):
         """Save Mlflow model to output directory.
 
@@ -78,7 +79,9 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
         :param artifacts_dict: Dictionary of name to artifact path
         :type artifacts_dict: Dict[str, str]
         :param pip_requirements: Path to pip requirements file
-        :type pip_requirements: str
+        :type pip_requirements: Optional[str]
+        :param conda_env: Path to conda environment yaml file
+        :type conda_env: Optional[str]
         :param code_path: A list of local filesystem paths to Python file dependencies
         :type code_path: List[str]
 
@@ -90,6 +93,7 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
             python_model=mlflow_model_wrapper,
             artifacts=artifacts_dict,
             pip_requirements=pip_requirements,
+            conda_env=conda_env,
             signature=signatures,
             code_path=code_path,
             metadata={"model_name": self._model_id},
@@ -222,7 +226,7 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
 
         mlflow_model_wrapper = CLIPMLFlowModelWrapper(task_type=self._task)
         artifacts_dict = self._prepare_artifacts_dict()
-        pip_requirements = os.path.join(self.MODEL_DIR, "requirements.txt")
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
         code_path = [
             os.path.join(self.MODEL_DIR, "mlflow_wrapper.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
@@ -231,7 +235,7 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
             artifacts_dict=artifacts_dict,
-            pip_requirements=pip_requirements,
+            conda_env=conda_env_file,
             code_path=code_path,
         )
 
