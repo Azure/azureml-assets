@@ -3,7 +3,7 @@
 
 """Entry script for Dataset Sampler Component."""
 
-from typing import List
+from typing import List, Literal, Optional
 import argparse
 from enum import Enum
 import random
@@ -11,7 +11,7 @@ import random
 from azureml._common._error_definition.azureml_error import AzureMLError
 
 from utils.io import resolve_io_path, get_output_file_path
-from utils.helper import get_logger, log_mlflow_params
+from utils.logging import get_logger, log_mlflow_params
 from utils.exceptions import swallow_all_exceptions, BenchmarkValidationException
 from utils.error_definitions import BenchmarkValidationError
 
@@ -156,40 +156,59 @@ def sample_from_random(
 
 
 @swallow_all_exceptions(logger)
-def main(args: argparse.Namespace) -> None:
+def main(
+    output_dataset: str,
+    dataset: str,
+    sampling_style: Literal[SamplingStyle.head, SamplingStyle.tail, SamplingStyle.random],
+    sampling_ratio: Optional[float] = None,
+    n_samples: Optional[int] = None,
+    random_seed: int = 0,
+) -> None:
     """
     Entry function for Dataset Sampler Component.
 
-    :param args: Command-line arguments
+    Either `sampling_ratio` or `n_samples` must be supplied; but not both.
+
+    :param output_dataset: Path to the directory where the sampled dataset will be saved.
+    :param dataset: Path to the input directory or .jsonl file from which the data will be sampled.
+    :param sampling_style: Strategy used to sample. Either 'head', 'tail' or 'random'.
+    :param sampling_ratio: Ratio of samples to be taken specified as a float in (0, 1] (alternative to `n_samples`).
+    :param n_samples: Absolute number of samples to be taken (alternative to `sampling_ratio`).
+    :param random_seed: Random seed for sampling mode; if not specified, 0 is used. Used only when
+    `sampling_style` is `random`.
     :return: None
     """
-    input_file_paths = resolve_io_path(args.dataset)
+    input_file_paths = [file for file in resolve_io_path(dataset) if file.endswith(".jsonl")]
+    if not input_file_paths:
+        mssg = f"No .jsonl files found in {dataset}."
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+        )
     logger.info(f"Input file: {input_file_paths}")
-    output_path = args.output_dataset
-    logger.info(f"Output path: {output_path}")
+    logger.info(f"Output path: {output_dataset}")
 
-    if args.sampling_ratio is None and args.n_samples is None:
+    if sampling_ratio is None and n_samples is None:
         mssg = "Either 'sampling_ratio' or 'n_samples' must be specified."
         raise BenchmarkValidationException._with_error(
             AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
-    if args.sampling_ratio is not None and args.n_samples is not None:
+    if sampling_ratio is not None and n_samples is not None:
         mssg = "Only one of 'sampling_ratio' or 'n_samples' can be specified."
         raise BenchmarkValidationException._with_error(
             AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
     line_counts = count_lines(input_file_paths)
-    if args.sampling_ratio is not None:
-        if not 0 < args.sampling_ratio <= 1:
-            mssg = f"Invalid sampling_ratio: {args.sampling_ratio}. Please specify float in (0, 1]."
+    if sampling_ratio is not None:
+        if not 0 < sampling_ratio <= 1:
+            mssg = f"Invalid sampling_ratio: {sampling_ratio}. Please specify float in (0, 1]."
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
-        logger.info(f"Sampling percentage: {args.sampling_ratio * 100}%.")
-        n_samples = [int(line_count * args.sampling_ratio) for line_count in line_counts]
+        logger.info(f"Sampling percentage: {sampling_ratio * 100}%.")
+        n_samples = [int(line_count * sampling_ratio) for line_count in line_counts]
     else:
-        n_samples = [args.n_samples] * len(line_counts)
+        n_samples = [n_samples] * len(line_counts)
         if any(n_sample <= 0 for n_sample in n_samples):
             mssg = f"Invalid n_samples: {n_samples}. Please specify positive integer."
             raise BenchmarkValidationException._with_error(
@@ -203,13 +222,13 @@ def main(args: argparse.Namespace) -> None:
             logger.warn(mssg)
             n_samples = [min(line_counts)] * len(line_counts)
     logger.info(
-        f"Sampling {n_samples}/{line_counts} lines using sampling_style {args.sampling_style}."
+        f"Sampling {n_samples}/{line_counts} lines using sampling_style {sampling_style}."
     )
 
     random_seed = args.random_seed
     if (
-        args.sampling_style == SamplingStyle.head.value
-        or args.sampling_style == SamplingStyle.tail.value
+        sampling_style == SamplingStyle.head.value
+        or sampling_style == SamplingStyle.tail.value
     ):
         mssg = (
             f"Received random_seed: {random_seed}, but it won't be used. It is used only when 'sampling_style' is"
@@ -218,42 +237,49 @@ def main(args: argparse.Namespace) -> None:
         logger.warn(mssg)
         random_seed = None
 
-    if args.sampling_style == SamplingStyle.head.value:
+    if sampling_style == SamplingStyle.head.value:
         sample_from_head(
             input_file_paths,
-            output_path,
+            output_dataset,
             n_samples=n_samples,
         )
-    elif args.sampling_style == SamplingStyle.tail.value:
+    elif sampling_style == SamplingStyle.tail.value:
         sample_from_tail(
             input_file_paths,
-            output_path,
+            output_dataset,
             line_counts=line_counts,
             n_samples=n_samples,
         )
-    elif args.sampling_style == SamplingStyle.random.value:
+    elif sampling_style == SamplingStyle.random.value:
         sample_from_random(
             input_file_paths,
-            output_path,
+            output_dataset,
             line_counts=line_counts,
             n_samples=n_samples,
             random_seed=random_seed,
         )
     else:
-        mssg = f"Invalid sampling_style: {args.sampling_style}. Please specify either 'head', 'tail' or 'random'."
+        mssg = f"Invalid sampling_style: {sampling_style}. Please specify either 'head', 'tail' or 'random'."
         raise BenchmarkValidationException._with_error(
             AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
     log_mlflow_params(
-        input_dataset_checksum=input_file_paths,
-        sampling_style=args.sampling_style,
-        sampling_ratio=args.sampling_ratio,
-        n_samples=n_samples[0] if args.sampling_ratio is None else None,
-        random_seed=random_seed,
+        dataset=input_file_paths,
+        sampling_style=sampling_style,
+        sampling_ratio=sampling_ratio,
+        n_samples=n_samples[0] if sampling_ratio is None else None,
+        random_seed=random_seed if sampling_style == SamplingStyle.random.value else None,
     )
 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args)
+    main(
+        dataset=args.dataset,
+        sampling_style=args.sampling_style,
+        sampling_ratio=args.sampling_ratio,
+        n_samples=args.n_samples,
+        random_seed=args.random_seed,
+        output_dataset=args.output_dataset,
+    )

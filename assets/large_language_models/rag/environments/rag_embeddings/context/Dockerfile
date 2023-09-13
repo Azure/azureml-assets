@@ -95,3 +95,13 @@ RUN set -eux; \
     fileEncoding="$(echo 'System.out.println(System.getProperty("file.encoding"))' | jshell -s -)"; [ "$fileEncoding" = 'UTF-8' ]; rm -rf ~/.java; \
     javac --version; \
     java --version
+
+ENV TIKA_SERVER_JAR file:///tika-server.jar
+
+RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.6.0/tika-server-standard-2.6.0.jar'; \
+	downloadMd5='45241a0fa165cb0ac4848bbc0999c1bc'; \
+    wget --progress=dot:giga -O tika-server.jar "$downloadUrl"; \
+    # tika-python looks for tika-server.jar.md5 file along with TIKA_SERVER_JAR
+    echo -n "$downloadMd5" > tika-server.jar.md5; \
+    # basic smoke test
+    python -c 'from tika import parser; parser.from_file("/root/.bashrc")'

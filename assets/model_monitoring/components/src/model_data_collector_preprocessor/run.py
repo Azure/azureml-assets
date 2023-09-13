@@ -9,7 +9,7 @@ import mltable
 import tempfile
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import col, lit
 from shared_utilities.datetime_utils import parse_datetime_from_string
 from shared_utilities.io_utils import (
     init_spark,
@@ -17,7 +17,11 @@ from shared_utilities.io_utils import (
     save_spark_df_as_mltable,
 )
 
-from shared_utilities.constants import MDC_CORRELATION_ID_COLUMN, MDC_DATA_COLUMN
+from shared_utilities.constants import (
+    MDC_CHAT_HISTORY_COLUMN,
+    MDC_CORRELATION_ID_COLUMN,
+    MDC_DATA_COLUMN
+)
 
 
 def _convert_uri_folder_to_mltable(
@@ -96,6 +100,13 @@ def mdc_preprocessor(
 
     spark = init_spark()
     data_as_df = spark.createDataFrame(pd.read_json(first_data_row[MDC_DATA_COLUMN]))
+
+    ''' The temporary workaround to remove the chat_history column if it exists.
+    We are removing the column because the pyspark DF is unable to parse it.
+    This version of the MDC is applied only to GSQ.
+    '''
+    if MDC_CHAT_HISTORY_COLUMN in data_as_df.columns:
+        data_as_df = data_as_df.drop(col(MDC_CHAT_HISTORY_COLUMN))
 
     def tranform_df_function_with_correlation_id(iterator):
         for df in iterator:

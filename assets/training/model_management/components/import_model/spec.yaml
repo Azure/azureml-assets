@@ -212,6 +212,8 @@ jobs:
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
+    identity:
+      type: user_identity
     inputs:
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
@@ -266,7 +268,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml:register_model:0.0.8
+    component: azureml:register_model:0.0.9
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

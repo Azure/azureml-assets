@@ -29,7 +29,7 @@ Text Classification|Sentiment Classification|<a href="https://huggingface.co/dat
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
     }
 }

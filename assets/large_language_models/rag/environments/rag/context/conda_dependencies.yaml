@@ -7,9 +7,9 @@ dependencies:
 - pip=21.3.1
 - scikit-learn==0.24.2
 - pip:
-  - azureml-rag[cognitive_search,data_generation]>=0.1.24.1
-  - azure-search-documents==11.4.0b6
-  - langchain==0.0.220
+  - azureml-rag[cognitive_search,data_generation]>=0.2.2
+  - azure-search-documents==11.4.0b8
+  - langchain==0.0.236
   - tiktoken~=0.3.0
   - azure-ai-ml~=1.4.0
   - azure-identity==1.12.0
