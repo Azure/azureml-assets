@@ -102,7 +102,8 @@ def get_mlclient(registry_name: str = None):
         has_msi_succeeded = True
     except Exception:
         # Fall back to AzureMLOnBehalfOfCredential in case ManagedIdentityCredential does not work
-        logger.warning(AzureMLError.create(NonMsiAttachedComputeError))
+        has_msi_succeeded = False
+        logger.warning("ManagedIdentityCredential was not found in the compute. Falling back to AzureMLOnBehalfOfCredential")
 
     if not has_msi_succeeded:
         try:
