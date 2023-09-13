@@ -6,7 +6,7 @@ translation_finetune
 
 ### Version 
 
-0.0.2
+0.0.17
 
 ### Type 
 
@@ -49,6 +49,7 @@ Training parameters
 | adam_beta2                  | beta2 hyperparameter for the AdamW optimizer                                                                                                                                                                                                                                          | number  | 0.999    | True     | NA                                                                                             |
 | adam_epsilon                | epsilon hyperparameter for the AdamW optimizer                                                                                                                                                                                                                                        | number  | 1e-08    | True     | NA                                                                                             |
 | gradient_accumulation_steps | Number of updates steps to accumulate the gradients for, before performing a backward/update pass                                                                                                                                                                                     | integer | 1        | True     | NA                                                                                             |
+| eval_accumulation_steps     | Number of predictions steps to accumulate before moving the tensors to the CPU                                                                                                                                                                                                        | integer | 1        | True     | NA                                                                                             |
 | lr_scheduler_type           | learning rate scheduler to use.                                                                                                                                                                                                                                                       | string  | linear   | True     | ['linear', 'cosine', 'cosine_with_restarts', 'polynomial', 'constant', 'constant_with_warmup'] |
 | precision                   | Apply mixed precision training. This can reduce memory footprint by performing operations in half-precision.                                                                                                                                                                          | string  | 32       | True     | ['32', '16']                                                                                   |
 | seed                        | Random seed that will be set at the beginning of training                                                                                                                                                                                                                             | integer | 42       | True     | NA                                                                                             |

@@ -1,0 +1,3 @@
+group,metric_name,samples_name,asset
+5,AcceptableFluencyScorePerInstance,Example Rows,azureml:myexamplerows:1
+,AcceptableFluencyScorePerInstance,Violation Rows,azureml:myviolationrows:1

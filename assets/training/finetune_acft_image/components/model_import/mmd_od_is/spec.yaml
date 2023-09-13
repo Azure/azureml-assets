@@ -1,0 +1,55 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+version: 0.0.7
+name: mmdetection_image_objectdetection_instancesegmentation_model_import
+display_name: Image Object Detection and Instance Segmentation MMDetection Model Import
+description: Import PyTorch / MLflow model
+
+is_deterministic: True
+
+environment: azureml://registries/azureml/environments/acft-mmdetection-image-gpu/versions/2
+
+code: ../../../src/model_selector
+
+inputs:
+
+  # Model family
+  model_family:
+    type: string
+    optional: true
+    default: MmDetectionImage
+    enum:
+      - MmDetectionImage
+    description: Which framework the model belongs to.
+
+  # Model name
+  model_name:
+    type: string
+    optional: true
+    description: Please select models from AzureML Model Assets for all supported models. For MMDetection, provide the model's config name here, same as its specified in MMDetection Model Zoo. It is the user responsibility to comply with the model's license terms.
+
+  # Continual-Finetuning model path
+  pytorch_model:
+    type: custom_model
+    optional: true
+    description: Pytorch Model registered in AzureML Asset.
+
+  mlflow_model:
+    type:  mlflow_model
+    optional: true
+    description: Mlflow Model registered in AzureML Asset.
+
+outputs:
+  output_dir:
+    type: uri_folder
+    description: Folder to store model metadata.
+
+command: >-
+  python model_selector.py 
+  $[[--model_family ${{inputs.model_family}}]]
+  $[[--model_name ${{inputs.model_name}}]]
+  $[[--pytorch_model ${{inputs.pytorch_model}}]]
+  $[[--mlflow_model ${{inputs.mlflow_model}}]]
+  --output_dir ${{outputs.output_dir}}
+

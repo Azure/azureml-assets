@@ -14,6 +14,7 @@ from azureml.model.mgmt.downloader.downloader import (
 )
 from azureml.model.mgmt.utils import common_utils
 from azureml.model.mgmt.utils.common_utils import create_namespace_from_dict
+from azureml.model.mgmt.config import LlamaHFModels, LlamaModels
 
 
 class TestDownloaders(unittest.TestCase):
@@ -25,7 +26,7 @@ class TestDownloaders(unittest.TestCase):
         download_dir = Path("path/to/download/dir")
 
         with patch("huggingface_hub.hf_api.HfApi") as MockHfApi, patch(
-            "azureml.model.mgmt.downloader.download_utils._download_git_model"
+            "azureml.model.mgmt.downloader.downloader.HuggingfaceDownloader._download"
         ) as MockGITDownloader:
             mock_api = MockHfApi.return_value
             mock_api.list_models.return_value = [
@@ -40,8 +41,8 @@ class TestDownloaders(unittest.TestCase):
             ]
 
             common_utils.hf_api = mock_api
-            downloader = HuggingfaceDownloader(model_id)
-            downloader.download_model(download_dir)
+            downloader = HuggingfaceDownloader(model_id, download_dir)
+            downloader.download_model()
 
             self.assertEqual(downloader.model_info.modelId, model_id)
             self.assertEqual(downloader.model_info.pipeline_tag, "task_name")
@@ -54,9 +55,9 @@ class TestDownloaders(unittest.TestCase):
         model_uri = "https://github.com/some_model"
         download_dir = Path("path/to/download/dir")
 
-        with patch("azureml.model.mgmt.downloader.download_utils._download_git_model"):
-            downloader = GITDownloader(model_uri)
-            download_details = downloader.download_model(download_dir)
+        with patch("azureml.model.mgmt.downloader.downloader.GITDownloader._download"):
+            downloader = GITDownloader(model_uri, download_dir)
+            download_details = downloader.download_model()
 
             self.assertEqual(download_details["name"], "some_model")
             self.assertEqual(download_details["tags"], {})
@@ -67,9 +68,9 @@ class TestDownloaders(unittest.TestCase):
         model_uri = "https://blobstorageaccount.blob.core.windows.net/models/model_folder"
         download_dir = Path("path/to/download/dir")
 
-        with patch("azureml.model.mgmt.downloader.download_utils._download_azure_artifacts"):
-            downloader = AzureBlobstoreDownloader(model_uri)
-            download_details = downloader.download_model(download_dir)
+        with patch("azureml.model.mgmt.downloader.downloader.AzureBlobstoreDownloader._download"):
+            downloader = AzureBlobstoreDownloader(model_uri, download_dir)
+            download_details = downloader.download_model()
             self.assertEqual(download_details["name"], "model_folder")
             self.assertEqual(download_details["tags"], {})
             self.assertEqual(download_details["properties"], {})
@@ -102,7 +103,7 @@ class TestDownloadModel(unittest.TestCase):
                     "properties": {"prop1": "value1"},
                 },
             )
-            mock_downloader.download_model.assert_called_once_with(download_dir)
+            mock_downloader.download_model.assert_called_once()
 
     def test_download_model_with_git_source(self):
         """Test GIT model download."""
@@ -128,7 +129,7 @@ class TestDownloadModel(unittest.TestCase):
                     "properties": {"prop2": "value2"},
                 },
             )
-            mock_downloader.download_model.assert_called_once_with(download_dir)
+            mock_downloader.download_model.assert_called_once()
 
     def test_download_model_with_azureblob_source(self):
         """Test blobstorage model download."""
@@ -154,4 +155,32 @@ class TestDownloadModel(unittest.TestCase):
                     "properties": {"prop3": "value3"},
                 },
             )
-            mock_downloader.download_model.assert_called_once_with(download_dir)
+            mock_downloader.download_model.assert_called_once()
+
+    def test_fixed_llama_models_list(self):
+        """Test llama model list."""
+        list_of_models = LlamaModels.list_values()
+
+        allowed_llama_models = ["meta-llama/Llama-2-7b-chat",
+                                "meta-llama/Llama-2-13b-chat",
+                                "meta-llama/Llama-2-70b-chat",
+                                "meta-llama/Llama-2-7b",
+                                "meta-llama/Llama-2-13b",
+                                "meta-llama/Llama-2-70b"
+                                ]
+        for model in list_of_models:
+            self.assertIn(model, allowed_llama_models)
+
+    def test_fixed_llama_hf_models_list(self):
+        """Test llama hf model list."""
+        list_of_models = LlamaHFModels.list_values()
+
+        allowed_llama_hf_models = ["meta-llama/Llama-2-7b-chat-hf",
+                                   "meta-llama/Llama-2-13b-chat-hf",
+                                   "meta-llama/Llama-2-70b-chat-hf",
+                                   "meta-llama/Llama-2-7b-hf",
+                                   "meta-llama/Llama-2-13b-hf",
+                                   "meta-llama/Llama-2-70b-hf"
+                                   ]
+        for model in list_of_models:
+            self.assertIn(model, allowed_llama_hf_models)

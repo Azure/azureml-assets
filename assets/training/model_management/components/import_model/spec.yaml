@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.10
+version: 0.0.17
 
 # Pipeline inputs
 inputs:
@@ -21,16 +21,8 @@ inputs:
     type: string
     optional: true
     default: STANDARD_NC6s_v3
-    description: Instance type to be used for the component in case of serverless compute, eg. STANDARD_NC6s_v3. 
+    description: Instance type to be used for the component in case of serverless compute, eg. STANDARD_NC6s_v3.
       The parameter compute must be set to 'serverless' for instance_type to be used
-
-  local_validation_compute:
-    type: string
-    optional: true
-    default: serverless
-    description: Compute for Model local validation. Please make sure to provide a compute that is large enough to load the model and perform local inferencing. 
-      eg. provide 'FT-Cluster' if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
-      If compute name is provided, instance_type field will be ignored and the respective cluster will be used.
 
   ## Inputs for download model
   model_source:
@@ -65,6 +57,7 @@ inputs:
     - translation
     - image-classification
     - text-to-image
+    - zero-shot-image-classification
     optional: true
     type: string
 
@@ -79,7 +72,7 @@ inputs:
     type: string
     description: |
       Provide args that should be used to load Huggingface model tokenizer.
-      eg: trust_remote_code=True, device_map=auto, 
+      eg: trust_remote_code=True, device_map=auto,
     optional: true
 
   hf_model_args:
@@ -165,6 +158,12 @@ inputs:
     optional: true
     description: A JSON or a YAML file that contains model metadata confirming to Model V2 [contract](https://azuremlschemas.azureedge.net/latest/model.schema.json)
 
+  update_existing_model:
+    type: boolean
+    default: false
+    description: If set to true, will update the existing model. If set to false, will create a new model.
+    optional: true
+
 # Pipeline outputs
 outputs:
   mlflow_model_folder:
@@ -176,14 +175,51 @@ outputs:
     type: uri_folder
 
 jobs:
-  download_model:
-    component: azureml:download_model:0.0.9
+  validation_trigger_import:
+    component: azureml:validation_trigger_import:0.0.2
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
     inputs:
+      compute: ${{parent.inputs.compute}}
+      task_name: ${{parent.inputs.task_name}}
+      license_file_path: ${{parent.inputs.license_file_path}}
+      instance_type: ${{parent.inputs.instance_type}}
       model_source: ${{parent.inputs.model_source}}
       model_id: ${{parent.inputs.model_id}}
+      model_version: ${{parent.inputs.model_version}}
+      model_description: ${{parent.inputs.model_description}}
+      model_metadata: ${{parent.inputs.model_metadata}}
+      registry_name: ${{parent.inputs.registry_name}}
+      custom_model_name: ${{parent.inputs.custom_model_name}}
+      local_validation_test_data: ${{parent.inputs.local_validation_test_data}}
+      local_validation_column_rename_map: ${{parent.inputs.local_validation_column_rename_map}}
+      extra_pip_requirements: ${{parent.inputs.extra_pip_requirements}}
+      hf_config_args: ${{parent.inputs.hf_config_args}}
+      hf_tokenizer_args: ${{parent.inputs.hf_tokenizer_args}}
+      hf_model_args: ${{parent.inputs.hf_model_args}}
+      hf_pipeline_args: ${{parent.inputs.hf_pipeline_args}}
+      hf_config_class: ${{parent.inputs.hf_config_class}}
+      hf_model_class: ${{parent.inputs.hf_model_class}}
+      hf_tokenizer_class: ${{parent.inputs.hf_tokenizer_class}}
+      hf_use_experimental_features: ${{parent.inputs.hf_use_experimental_features}}
+      update_existing_model: ${{parent.inputs.update_existing_model}}
+    outputs:
+      validation_info:
+        type: uri_file
+
+  download_model:
+    component: azureml:download_model:0.0.15
+    compute: ${{parent.inputs.compute}}
+    resources:
+      instance_type: '${{parent.inputs.instance_type}}'
+    identity:
+      type: user_identity
+    inputs:
+      model_source: ${{parent.inputs.model_source}}
+      model_id: ${{parent.inputs.model_id}}
+      validation_info: ${{parent.jobs.validation_trigger_import.outputs.validation_info}}
+      update_existing_model: ${{parent.inputs.update_existing_model}}
     outputs:
       model_download_metadata:
         type: uri_file
@@ -191,7 +227,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml:convert_model_to_mlflow:0.0.11
+    component: azureml:convert_model_to_mlflow:0.0.14
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -216,8 +252,8 @@ jobs:
         type: uri_file
 
   mlflow_model_local_validation:
-    component: azureml:mlflow_model_local_validation:0.0.3
-    compute: ${{parent.inputs.local_validation_compute}}
+    component: azureml:mlflow_model_local_validation:0.0.4
+    compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
     inputs:
@@ -228,7 +264,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml:register_model:0.0.6
+    component: azureml:register_model:0.0.9
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

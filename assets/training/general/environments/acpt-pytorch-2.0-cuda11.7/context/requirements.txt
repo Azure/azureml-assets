@@ -14,3 +14,5 @@ MarkupSafe==2.1.2
 regex
 pybind11
 intel_extension_for_pytorch~=2.0
+cryptography>=41.0.3
+aiohttp>=3.8.5

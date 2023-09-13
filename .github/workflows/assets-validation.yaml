@@ -54,6 +54,9 @@ jobs:
       - name: Validate assets
         run: python -u $scripts_assets_dir/validate_assets.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}" -a $asset_config_filename -c "${{ steps.changed-files.outputs.all_modified_files }}" -n -I -C
 
+      - name: Validate source tree
+        run: python -u $scripts_assets_dir/validate_tree.py -i "${{ github.event.inputs.asset_dirs || env.default_asset_dirs }}"
+      
       - name: Check test coverage
         run: |
           mkdir -p ${{ runner.temp }}/test_coverage

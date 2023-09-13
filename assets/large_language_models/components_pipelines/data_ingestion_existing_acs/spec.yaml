@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.22
+version: 0.0.39
 name: llm_ingest_existing_acs
 display_name: LLM - Existing ACS Pipeline (With Test Data Generation and Auto Prompt)
 is_deterministic: false
@@ -87,14 +87,6 @@ inputs:
      default: -1
      optional: true
      description: "Number of files read in during QA test data generation"
-   chunk_prepend_summary:
-     type: string
-     enum:
-      - "True"
-      - "False"
-     default: "False"
-     optional: true
-     description:  "Whether to include summary of document on top of every chunk for that document."
    data_source_url:
      type: string
      optional: true
@@ -102,7 +94,7 @@ inputs:
    document_path_replacement_regex:
      type: string
      optional: true
-     description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern' to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)\", \"replacement_pattern\": \"\\1/\\2\"}' would remove '/articles' from the middle of the url."
+     description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern' to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)(\\\\.[^.]+)$\", \"replacement_pattern\": \"\\\\1/\\\\2\"}' would remove '/articles' from the middle of the url."
    # data generation component
    dataset_size:
      type: integer
@@ -201,7 +193,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.9'
+    component: 'azureml:llm_rag_validate_deployments:0.0.23'
     identity:
       type: user_identity
     inputs:
@@ -223,7 +215,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: azureml:llm_rag_data_import_acs:0.0.8
+    component: azureml:llm_rag_data_import_acs:0.0.19
     inputs:
       num_docs: ${{parent.inputs.num_docs_to_import}}
       acs_config: ${{parent.inputs.acs_import_config}}
@@ -245,7 +237,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_crack_and_chunk:0.0.8'
+    component: 'azureml:llm_rag_crack_and_chunk:0.0.21'
     inputs:
       input_data: ${{parent.jobs.data_import_job.outputs.output_data}}
       input_glob: ${{parent.inputs.input_glob}}
@@ -253,7 +245,6 @@ jobs:
       chunk_overlap: ${{parent.inputs.chunk_overlap}}
       data_source_url: ${{parent.inputs.data_source_url}}
       document_path_replacement_regex: ${{parent.inputs.document_path_replacement_regex}}
-      include_summary: ${{parent.inputs.chunk_prepend_summary}}
       max_sample_files: ${{parent.inputs.max_sample_files}}
     outputs:
       output_chunks:
@@ -267,7 +258,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_qa_data_generation:0.0.11'
+    component: 'azureml:llm_rag_qa_data_generation:0.0.22'
     inputs:
       openai_api_version: ${{parent.inputs.openai_api_version}}
       openai_api_type: ${{parent.inputs.openai_api_type}}
@@ -288,7 +279,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_qa_data_asset:0.0.2'
+    component: 'azureml:llm_rag_register_qa_data_asset:0.0.13'
     inputs:
       storage_uri: ${{parent.jobs.data_generation_job.outputs.output_data}}
       register_output: ${{parent.inputs.register_outputs}}
@@ -302,7 +293,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: azureml:llm_autoprompt_qna:0.0.7
+    component: azureml:llm_autoprompt_qna:0.0.18
     inputs:
       openai_api_version: ${{parent.inputs.openai_api_version}}
       openai_api_type: ${{parent.inputs.openai_api_type}}
@@ -333,7 +324,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_autoprompt_data_asset:0.0.2'
+    component: 'azureml:llm_rag_register_autoprompt_data_asset:0.0.13'
     inputs:
       storage_uri: ${{parent.jobs.hard_prompt_sweep_job.outputs.best_prompt}}
       register_output: ${{parent.inputs.register_outputs}}
@@ -347,7 +338,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_create_promptflow:0.0.20'
+    component: 'azureml:llm_rag_create_promptflow:0.0.32'
     inputs:
       best_prompts: ${{parent.jobs.hard_prompt_sweep_job.outputs.best_prompt}}
       mlindex_asset_id: ${{parent.jobs.register_mlindex_asset_job.outputs.asset_id}}
@@ -363,7 +354,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_mlindex_asset:0.0.8'
+    component: 'azureml:llm_rag_register_mlindex_asset:0.0.20'
     inputs:
       storage_uri: ${{parent.jobs.data_import_job.outputs.ml_index}}
       asset_name: ${{parent.inputs.embeddings_dataset_name}}

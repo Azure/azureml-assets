@@ -21,11 +21,15 @@ WARNING_TEMPLATE = "Warning during validation of {file}: {warning}"
 
 # Common naming convention
 NAMING_CONVENTION_URL = "https://github.com/Azure/azureml-assets/wiki/Asset-naming-convention"
-INVALID_STRINGS = ["microsoft", ["azureml", "azure"], "aml"]
-COMMON_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
+INVALID_STRINGS = [["azureml", "azure"], "aml"]  # Disallow these in any asset name
+NON_MODEL_INVALID_STRINGS = ["microsoft"]  # Allow these in model names
+NON_MODEL_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,254}$")
 
 # Asset config convention
 ASSET_CONFIG_URL = "https://github.com/Azure/azureml-assets/wiki/Assets#assetyaml"
+
+# Model naming convention
+MODEL_NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_.-]{0,254}$")
 
 # Environment naming convention
 ENVIRONMENT_NAME_PATTERN = re.compile(r"^[a-z][a-z0-9.-]{0,254}$")
@@ -49,6 +53,9 @@ ENVIRONMENT_NAME_FULL_PATTERN = re.compile("".join([
     f"(?:-{PYTHON_VERSION})?",
     f"(?:-(?:{GPU_DRIVER_VERSION}|gpu))?",
 ]))
+
+# Dockerfile convention
+DOCKERFILE_IMAGE_PATTERN = re.compile(r"^FROM\s+mcr\.microsoft\.com/azureml/curated/", re.IGNORECASE | re.MULTILINE)
 
 # Image naming convention
 IMAGE_NAME_PATTERN = re.compile(r"^azureml/curated/(.+)")
@@ -145,6 +152,27 @@ def validate_environment_name(asset_config: assets.AssetConfig) -> int:
     return error_count
 
 
+def validate_dockerfile(environment_config: assets.EnvironmentConfig) -> int:
+    """Validate Dockerfile.
+
+    Args:
+        environment_config (EnvironmentConfig): Environment config.
+
+    Returns:
+        int: Number of errors.
+    """
+    error_count = 0
+    dockerfile = environment_config.get_dockerfile_contents()
+    dockerfile = dockerfile.replace("\r\n", "\n")
+
+    if DOCKERFILE_IMAGE_PATTERN.search(dockerfile):
+        _log_error(environment_config.dockerfile_with_path,
+                   "Referencing curated environment images in Dockerfile is not allowed")
+        error_count += 1
+
+    return error_count
+
+
 def validate_image_publishing(asset_config: assets.AssetConfig,
                               environment_config: assets.EnvironmentConfig = None) -> int:
     """Validate environment image publishing info.
@@ -210,18 +238,22 @@ def validate_name(asset_config: assets.AssetConfig) -> int:
     asset_name = asset_config.name
 
     # Check against generic naming pattern
-    if not COMMON_NAME_PATTERN.match(asset_name):
+    if not ((asset_config.type is assets.AssetType.MODEL and MODEL_NAME_PATTERN.match(asset_name))
+            or NON_MODEL_NAME_PATTERN.match(asset_name)):
         _log_error(asset_config.file_name_with_path, f"Name '{asset_name}' contains invalid characters")
         error_count += 1
 
     # Check for invalid strings
     invalid_strings = INVALID_STRINGS + [asset_config.type.value]
+    if asset_config.type is not assets.AssetType.MODEL:
+        invalid_strings += [NON_MODEL_INVALID_STRINGS]
+    asset_name_lowercase = asset_name.lower()
     for string_group in invalid_strings:
         # Coerce into a list
         string_group_list = string_group if isinstance(string_group, list) else [string_group]
 
         for invalid_string in string_group_list:
-            if invalid_string in asset_name:
+            if invalid_string in asset_name_lowercase:
                 # Complain only about the first matching string
                 _log_error(asset_config.file_name_with_path,
                            f"Name '{asset_name}' contains invalid string '{invalid_string}'")
@@ -327,6 +359,10 @@ def validate_assets(input_dirs: List[Path],
                     error_count += validate_name(asset_config)
                 else:
                     logger.log_debug(f"Skipping name validation for {asset_config.full_name}")
+
+            # Validate Dockerfile
+            if asset_config.type == assets.AssetType.ENVIRONMENT:
+                error_count += validate_dockerfile(asset_config.extra_config_as_object())
 
             # Validate categories
             if check_categories:
