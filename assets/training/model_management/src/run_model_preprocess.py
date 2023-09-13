@@ -117,10 +117,10 @@ def run():
             preprocess_args["misc"] = download_details.get("misc", [])
 
     if task_name is None or \
-        (
-            not TransformersSupportedTasks.has_value(task_name.lower()) and
-            not PyFuncSupportedTasks.has_value(task_name.lower())
-        ):
+            (
+                not TransformersSupportedTasks.has_value(task_name.lower()) and
+                not PyFuncSupportedTasks.has_value(task_name.lower())
+            ):
         task_name = preprocess_args.get("task")
         logger.warning("task_name is not provided or not supported. "
                        f"Using task_name={task_name} from model download metadata.")

@@ -3,8 +3,6 @@
 
 """PyFunc Config."""
 
-from enum import Enum
-
 from azureml.model.mgmt.config import _CustomEnum
 
 

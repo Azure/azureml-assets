@@ -3,9 +3,6 @@
 
 """Preprocess model."""
 
-import azureml.model.mgmt.processors.transformers as transformers
-from azureml.model.mgmt.config import ModelFlavor
-from azureml.model.mgmt.processors import pyfunc
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
 from azureml.model.mgmt.processors.factory import get_mlflow_convertor
 from azureml.model.mgmt.utils.logging_utils import get_logger
@@ -32,7 +29,8 @@ def run_preprocess(model_framework: str, model_path: Path, output_dir: Path, tem
     """
     logger.info(f"Run preprocess for model from framework: {model_framework} at path: {model_path}")
     mlflow_convertor: MLFLowConvertorInterface = get_mlflow_convertor(
-        model_dir=model_path, output_dir=output_dir, temp_dir=temp_dir, translate_params=preprocess_args
+        model_framework=model_framework, model_dir=model_path, output_dir=output_dir, temp_dir=temp_dir,
+        translate_params=preprocess_args
     )
     mlflow_convertor.save_as_mlflow()
     logger.info("Model preprocessing completed.")

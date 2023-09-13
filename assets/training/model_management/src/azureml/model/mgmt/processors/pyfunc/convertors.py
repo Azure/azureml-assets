@@ -13,7 +13,7 @@ from mlflow.models.signature import ModelSignature
 from mlflow.pyfunc import PyFuncModel
 from mlflow.types.schema import ColSpec, Schema
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
@@ -124,13 +124,18 @@ class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
         :rtype: mlflow.models.signature.ModelSignature
         """
         input_schema = Schema(
-            [ColSpec(VisionMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, VisionMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE)]
+            [
+                ColSpec(VisionMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE,
+                        VisionMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE)
+            ]
         )
 
-        if self._task in [MMLabDetectionTasks.MM_OBJECT_DETECTION.value, MMLabDetectionTasks.MM_INSTANCE_SEGMENTATION.value]:
+        if self._task in [MMLabDetectionTasks.MM_OBJECT_DETECTION.value,
+                          MMLabDetectionTasks.MM_INSTANCE_SEGMENTATION.value]:
             output_schema = Schema(
                 [
-                    ColSpec(VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_BOXES),
+                    ColSpec(VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                            VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_BOXES),
                 ]
             )
         else:
@@ -193,14 +198,18 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         input_schema = Schema(
             [
-                ColSpec(CLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, CLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
-                ColSpec(CLIPMLFlowSchemaLiterals.INPUT_COLUMN_TEXT_DATA_TYPE, CLIPMLFlowSchemaLiterals.INPUT_COLUMN_TEXT),
+                ColSpec(CLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE,
+                        CLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
+                ColSpec(CLIPMLFlowSchemaLiterals.INPUT_COLUMN_TEXT_DATA_TYPE,
+                        CLIPMLFlowSchemaLiterals.INPUT_COLUMN_TEXT),
             ]
         )
         output_schema = Schema(
             [
-                ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_PROBS),
-                ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_LABELS),
+                ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                        CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_PROBS),
+                ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                        CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_LABELS),
             ]
         )
 

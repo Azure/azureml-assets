@@ -71,12 +71,13 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
 
         try:
             captions = input_data[MLflowSchemaLiterals.INPUT_COLUMN_TEXT].iloc[0].split(',')
-            captions = list(filter(None, captions)) # remove any empty strings
+            captions = list(filter(None, captions))  # remove any empty strings
             if len(captions) == 0:
                 raise ValueError("No labels were provided")
         except Exception:
             raise ValueError(
-                    "The provided labels cannot be parsed. The first row of the \"text\" column is expected to contain a string with the comma-separated labels"
+                    "The provided labels cannot be parsed. The first row of the \"text\" column is expected "
+                    "to contain a string with the comma-separated labels"
             )
 
         with tempfile.TemporaryDirectory() as tmp_output_dir:
@@ -105,7 +106,6 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             = (conf_scores.tolist(), labels)
         return df_result
 
-
     def run_inference_batch(
         self,
         processor,
@@ -133,6 +133,6 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         inputs = processor(text=text_list, images=image_list, return_tensors="pt", padding=True)
         inputs = inputs.to(self._device)
         outputs = model(**inputs)
-        logits_per_image = outputs.logits_per_image # this is the image-text similarity score
-        probs = logits_per_image.softmax(dim=1) # we can take the softmax to get the label probabilities
+        logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
+        probs = logits_per_image.softmax(dim=1)  # we can take the softmax to get the label probabilities
         return probs

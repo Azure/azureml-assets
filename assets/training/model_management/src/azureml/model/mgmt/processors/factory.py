@@ -42,7 +42,9 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
         if SupportedNLPTasks.has_value(task):
             return NLPMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
         elif SupportedVisionTasks.has_value(task):
-            return VisionMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
+            return VisionMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
         elif SupportedDiffusersTask.has_value(task):
             return DiffusersMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
@@ -51,7 +53,9 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             return ASRMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
         # Models from Hugging face framework exported in PyFunc mlflow flavor
         elif task == PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value:
-            return CLIPMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
+            return CLIPMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
         else:
             raise Exception(f"Models from {model_framework} for {task} not supported for MLflow conversion")
     elif model_framework == ModelFramework.MMLAB.value:
@@ -131,7 +135,7 @@ class DiffusersMLflowConvertorFactory(MLflowConvertorFactoryInterface):
                 translate_params=translate_params,
             )
         raise Exception("Unsupported diffuser model family")
-    
+
 
 class MMLabDetectionMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     """Factory class for MMLab detection model family."""
