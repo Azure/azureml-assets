@@ -3,16 +3,13 @@
 
 """Run Model downloader module."""
 
-import argparse
 import json
 import re
 from azureml.model.mgmt.config import AppName, LlamaHFModels, LlamaModels, llama_dict
 from azureml.model.mgmt.downloader import download_model, ModelSource
-from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, ModelAlreadyExists
+from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
 from azureml.model.mgmt.utils.common_utils import get_mlclient
-from azureml._common.exceptions import AzureMLException
-from azureml._common._error_definition.azureml_error import AzureMLError
 from mldesigner import Output, command_component
 from azure.ai.ml import Input
 
@@ -69,16 +66,17 @@ def validate_if_model_exists(model_id):
                         "Please continue importing the model.")
     return False
 
+
 @command_component()
 @swallow_all_exceptions(logger)
 def run_download_model(
-    model_source: Input(type="string", required=True),
-    model_id: Input(type="string", required=True),
-    validation_info: Input(type="string", required=False), # Dummy input to create dependency on validation
-    update_existing_model: Input(type="string", required=False, default='false'),
-    model_download_metadata: Output(type="string"),
-    model_output_dir: Output(type="string"),
-) -> Output(type="boolean", is_control=True):
+    model_source: Input(type="str", required=True),
+    model_id: Input(type="str", required=True),
+    validation_info: Input(type="str", required=False),  # Dummy input to create dependency on validation
+    update_existing_model: Input(type="str", required=False, default='false'),
+    model_download_metadata: Output(type="str"),
+    model_output_dir: Output(type="str"),
+) -> Output(type="bool", is_control=True):
     """Run model download."""
     update_existing_model = update_existing_model.lower()
 
