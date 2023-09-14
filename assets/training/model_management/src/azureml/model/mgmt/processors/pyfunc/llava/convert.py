@@ -18,7 +18,7 @@ from mlflow.types import DataType
 from mlflow.types.schema import ColSpec
 from mlflow.types.schema import Schema
 
-from constants import MLflowLiterals, MLflowSchemaLiterals, Tasks
+from .constants import MLflowLiterals, MLflowSchemaLiterals, Tasks
 from azureml.model.mgmt.utils.common_utils import log_execution_time
 
 
