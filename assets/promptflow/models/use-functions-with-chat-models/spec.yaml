@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: use-functions-with-GPT-chat-API
+name: how-to-use-functions-with-GPT-chat-API
 path: ./
 properties:
   is-promptflow: true
@@ -9,4 +9,4 @@ properties:
   azureml.promptflow.description: Combining external functions to extend the capabilities of GPT chat models.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 1
+version: 2
