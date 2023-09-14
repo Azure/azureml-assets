@@ -2,9 +2,10 @@
 `aml-benchmark` is the directory for benchmarking LLM models.
 
 # Getting Started
-Inside the `aml-benchmark` directory, there are two subdirectories-
+Inside the `aml-benchmark` directory, there are two subdirectories:
 1. `components`: Contains all of the components code required by pipelines.
-2. `test`: Contains all the tests for testing components - unit tests as well as e2e tests.
+2. `scripts`: Contains all of the scripts that extend component's functionality.
+3. `test`: Contains all the tests for testing components - unit tests as well as e2e tests.
 
 # Contributing
 * `components/`
@@ -14,6 +15,8 @@ Inside the `aml-benchmark` directory, there are two subdirectories-
     * `<component_name>/`
         * `asset.yaml`: contains the asset definition.
         * `spec.yaml`: contains the component definition.
+* `scripts/`
+    * `data_loaders/`: contains the scripts for loading data.
 * `tests/`
     * `data/`: contains the data required for the tests.
     * `pipelines/`: contains the pipelines to test the components, each component has its corresponding pipeline file.
@@ -23,6 +26,11 @@ Inside the `aml-benchmark` directory, there are two subdirectories-
 - All custom exceptions must be defined in `components/src/utils/exceptions.py`.
 - All custom errors must be defined in `components/src/utils/error_definitions.py`.
 - All custom error strings which can be shared among components must be defined in `components/src/utils/error_strings.py`.
+- Entry function for every component must satisfy the following criteria:
+    - Must be defined in a script named `main.py`.
+    - Must be named `main`.
+    - Must be decorated with `swallow_all_exceptions`.
+    - Must state all the arguments that the function accepts instead of accepting a single argument `argparse.Namespace`.
 
 # Before creating a PR, please make sure to go through the following points:
 > These are not mandatory to run manually but recommended. Allows to detect issues early, which otherwise would be detected by failing workflows after PR creation.
