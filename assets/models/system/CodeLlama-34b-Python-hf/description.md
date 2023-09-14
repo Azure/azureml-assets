@@ -94,7 +94,7 @@ Please see the Responsible Use Guide available available at [https://ai.meta.com
 ```json
 [
   {
-    "0": "def fibonacci(n):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)\n\n\ndef main():\n    n = int(input(\"Enter a number: \"))\n    print(fibonacci(n))\n\n\nif __name__ == \"__main__\":\n    main()"
+    "0": "def fibonacci(n):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n - 1) + fibonacci(n - 2)\n\n\ndef fibonacci_iterative(n):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        a"
   }
 ]
 ```
