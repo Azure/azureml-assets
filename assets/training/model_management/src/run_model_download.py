@@ -73,7 +73,7 @@ def run_download_model(
     model_source: Input(type="str", required=True),
     model_id: Input(type="str", required=True),
     validation_info: Input(type="str", required=False),  # Dummy input to create dependency on validation
-    update_existing_model: Input(type="str", required=False, default='false'),
+    update_existing_model: Input(type="str", required=False, default="False"),
     model_download_metadata: Output(type="str"),
     model_output_dir: Output(type="str"),
 ) -> Output(type="bool", is_control=True):
