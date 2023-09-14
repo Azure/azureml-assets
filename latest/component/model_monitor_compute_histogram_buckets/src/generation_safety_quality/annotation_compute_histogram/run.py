@@ -1724,7 +1724,7 @@ def apply_annotation(
             samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
                                        GROUP: "",
                                        GROUP_DIMENSION: "",
-                                       SAMPLES_NAME: f"{metric_name_compact} Violations",
+                                       SAMPLES_NAME: "Violations",
                                        ASSET: f"azureml_{run_id}_output_data_{metric_name_compact.lower()}_violations:1"})  # noqa: E501
 
         if all_metrics_pdf is None:
