@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: codellama-codellama-13b-hf
+name: Codellama-13b-hf
 path: ./
 properties:
   SHA: 9e3ca34b26ace9f0c4e098f61f6fa8e9d89dc2c2
