@@ -1,4 +1,4 @@
-The "How to Use Functions with Chat Models" is a chat model illustrates how to employ the LLM tool's Chat API with external functions, thereby expanding the capabilities of GPT models. The Chat Completion API includes an optional 'functions' parameter, which can be used to stipulate function specifications. This allows models to generate arguments that comply with the given specifications. However, it's important to note that the API will not directly execute any function calls. The responsibility of executing function calls using the model outputs lies with the developers.
+The "Use Functions with Chat Models" is a chat model illustrates how to employ the LLM tool's Chat API with external functions, thereby expanding the capabilities of GPT models. The Chat Completion API includes an optional 'functions' parameter, which can be used to stipulate function specifications. This allows models to generate arguments that comply with the given specifications. However, it's important to note that the API will not directly execute any function calls. The responsibility of executing function calls using the model outputs lies with the developers.
 
 
 ### Inference samples
