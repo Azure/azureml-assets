@@ -25,7 +25,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
 
@@ -126,13 +126,18 @@ def get_mlclient(registry_name: str = None):
     return MLClient(credential=credential, registry_name=registry_name)
 
 
-def copy_file_paths_to_destination(src_dir: Path, destn_dir: Path, regex: str) -> None:
+def copy_file_paths_to_destination(src_dir: Path, destn_dir: Path, regex: Optional[str] = None) -> None:
     """Copy files to destination directory [Non-recursively] based on regex pattern provided."""
     if not Path(src_dir).is_dir():
         raise Exception("src path provided should be a dir")
     if Path(destn_dir).exists():
         raise Exception("destination dir should be empty")
     os.makedirs(destn_dir)
+
+    if not regex:
+        shutil.copytree(src_dir, destn_dir, dirs_exist_ok=True)
+        return
+
     pattern = re.compile(regex)
     for file_name in os.listdir(src_dir):
         if pattern.match(file_name):

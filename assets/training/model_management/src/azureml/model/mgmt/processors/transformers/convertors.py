@@ -24,6 +24,7 @@ from azureml.model.mgmt.utils.common_utils import (
     copy_file_paths_to_destination,
     get_dict_from_comma_separated_str,
     get_list_from_comma_separated_str,
+    run_command,
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from diffusers import StableDiffusionPipeline
@@ -83,7 +84,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         self._model_dir = model_dir
         self._output_dir = output_dir
         self._temp_dir = temp_dir
-        self._model_id = translate_params["model_id"]
+        self._model_id = translate_params.get("model_id", None)
         self._task = translate_params["task"]
         self._experimental = translate_params.get(HF_CONF.HF_USE_EXPERIMENTAL_FEATURES.value, False)
         self._misc = translate_params.get("misc", [])
@@ -114,11 +115,9 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         if pipeline_init_args and (model_hf_load_args or config_hf_load_kwargs or tokenizer_hf_load_kwargs):
             raise Exception("set(model, config, tokenizer) init args and pipeline init args are exclusive.")
 
-        self._hf_conf = {
-            HF_CONF.TASK_TYPE.value: self._task,
-            HF_CONF.HUGGINGFACE_ID.value: self._model_id,
-        }
-
+        self._hf_conf = {HF_CONF.TASK_TYPE.value: self._task}
+        if self._model_id:
+            self._hf_conf[HF_CONF.HUGGINGFACE_ID.value] = self._model_id
         if pipeline_init_args:
             self._hf_conf[HF_CONF.HF_PIPELINE_ARGS.value] = pipeline_init_args
         if config_hf_load_kwargs:
@@ -164,17 +163,25 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
     ):
         config = tokenizer = None
         model = str(self._model_dir)
+
+        # try installing extra pip requirements
+        if self._extra_pip_requirements or pip_requirements:
+            pkgs = " ".join(self._extra_pip_requirements) if not pip_requirements else " ".join(pip_requirements)
+            cmd = f"pip install {pkgs}"
+
+            exit_code, stdout = run_command(cmd)
+            if exit_code != 0:
+                logger.warning(f"{pkgs} failed to install. Error:\n{stdout}\n")
+            else:
+                logger.info(f"Successully installed {pkgs}. pip logs =>\n{stdout}\n")
+
         if segregate:
-            print("Segregate input model dir and present into separate folders for model, config and tokenizer")
+            logger.info("Segregate input model dir and present into separate folders for model, config and tokenizer")
+            config = self._hf_config_cls.from_pretrained(self._model_dir, **self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {}))
+            tokenizer = self._hf_tokenizer_cls.from_pretrained(self._model_dir, **self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {}))
             tmp_model_dir = Path(self._temp_dir) / HF_CONF.HF_MODEL_PATH.value
-            tmp_config_dir = Path(self._temp_dir) / HF_CONF.HF_CONFIG_PATH.value
-            tmp_tokenizer_dir = Path(self._temp_dir) / HF_CONF.HF_TOKENIZER_PATH.value
-            copy_file_paths_to_destination(self._model_dir, tmp_model_dir, MODEL_FILE_PATTERN)
-            copy_file_paths_to_destination(self._model_dir, tmp_config_dir, MODEL_CONFIG_FILE_PATTERN)
-            copy_file_paths_to_destination(self._model_dir, tmp_tokenizer_dir, TOKENIZER_FILE_PATTERN)
+            copy_file_paths_to_destination(self._model_dir, tmp_model_dir)
             model = str(tmp_model_dir)
-            config = str(tmp_config_dir)
-            tokenizer = str(tmp_tokenizer_dir)
 
         # Set experimental flag
         if self._experimental:
