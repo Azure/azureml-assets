@@ -1,19 +1,16 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: codellama-codellama-13b-python-hf
+name: CodeLlama-34b-Python-hf
 path: ./
 properties:
-  SHA: 488587ade99c84ea4325e6d620d307372728cc97
+  SHA: a998a81ca5b57a10404d4615e85ff3b6d62ae649
   languages: EN
 tags:
   Featured: ''
   Preview: ''
   inference_compute_allow_list:
-  - Standard_NC24s_v3
-  - Standard_NC24rs_v3
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_v4
   license: llama2
   author: meta
-  task: text-generation
 version: 1

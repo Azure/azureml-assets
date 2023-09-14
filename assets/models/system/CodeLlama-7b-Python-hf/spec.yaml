@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: codellama-codellama-7b-python-hf
+name: CodeLlama-7b-Python-hf
 path: ./
 properties:
   SHA: b1d96d612f1dcaf97ee3cc98c4975f6169909d6a

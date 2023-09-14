@@ -83,7 +83,7 @@ Please see the Responsible Use Guide available available at [https://ai.meta.com
             "top_p": 0.9,
             "temperature": 0.2,
             "do_sample": true,
-            "max_new_tokens": 100
+            "max_new_tokens": 200
         }
     }
 }
@@ -94,7 +94,7 @@ Please see the Responsible Use Guide available available at [https://ai.meta.com
 ```json
 [
   {
-    "0": "def fibonacci(n):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n - 1) + fibonacci(n - 2)\n\n\ndef fibonacci_iterative(n):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        a"
+    "0": "def fibonacci(n):\n    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)\n\n\ndef main():\n    print(fibonacci(5))\n\n\nif __name__ == \"__main__\":\n    main()\n"
   }
 ]
 ```

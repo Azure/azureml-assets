@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: meta/codellama-13b-python-hf/1694017794/mlflow_model_folder
+  container_path: meta/codellama-34b-python-hf/1694017940/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:
