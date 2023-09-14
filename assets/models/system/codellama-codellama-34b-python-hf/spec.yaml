@@ -13,4 +13,5 @@ tags:
   - Standard_ND96amsr_v4
   license: llama2
   author: meta
+  disable-batch: 'true'
 version: 1
