@@ -72,3 +72,4 @@ jobs:
       epochs: ${{parent.inputs.epochs}}
     outputs:
       output_model: ${{parent.outputs.output_model}}
+      output_merged_model: ${{parent.outputs.output_merged_model}}
