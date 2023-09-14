@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: codellama-7b-instruct-hf
+name: CodeLlama-7b-Instruct-hf
 path: ./
 properties:
   datasets: Publicly available sources
