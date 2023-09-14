@@ -340,40 +340,6 @@ class WhisperMLflowConvertor(ASRMLflowConvertor):
         )
 
 
-class TextToImageDiffuserMLflowConvertor(HFMLFLowConvertor):
-    """HF MlfLow convertor base class for text to image diffuser models."""
-
-    def __init__(self, **kwargs):
-        """Initialize MLflow convertor for text to image models."""
-        super().__init__(**kwargs)
-
-    def get_model_signature(self):
-        """Return model signature for text to image models."""
-        return ModelSignature(
-            inputs=Schema(inputs=[ColSpec(name="input_string", type=DataType.string)]),
-            outputs=Schema(inputs=[ColSpec(name="image", type=DataType.string)]),
-        )
-
-
-class StableDiffusionMlflowConvertor(TextToImageDiffuserMLflowConvertor):
-    """HF MlfLow convertor class for stable diffusion models."""
-
-    def __init__(self, **kwargs):
-        """Initialize MLflow convertor for SD models."""
-        super().__init__(**kwargs)
-
-    def save_as_mlflow(self):
-        """Prepare SD model for save to MLflow."""
-        hf_conf = self._hf_conf
-        hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = StableDiffusionPipeline.__name__
-        hf_conf[HF_CONF.CUSTOM_CONFIG_MODULE.value] = "diffusers"
-        hf_conf[HF_CONF.CUSTOM_MODLE_MODULE.value] = "diffusers"
-        hf_conf[HF_CONF.CUSTOM_TOKENIZER_MODULE.value] = "diffusers"
-        hf_conf[HF_CONF.FORCE_LOAD_CONFIG.value] = False
-        hf_conf[HF_CONF.FORCE_LOAD_TOKENIZER.value] = False
-        return super()._save()
-
-
 class NLPMLflowConvertor(HFMLFLowConvertor):
     """HF MLflow convertor for NLP models."""
 
