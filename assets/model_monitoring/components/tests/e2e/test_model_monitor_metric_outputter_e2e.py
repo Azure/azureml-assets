@@ -10,11 +10,12 @@ from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_METRIC_OUTPUTTER,
     DATA_ASSET_MLTABLE_DATA_DRIFT_SIGNAL_OUTPUT,
+    DATA_ASSET_MLTABLE_SAMPLES_INDEX_OUTPUT
 )
 
 
 def _submit_metric_outputter_job(
-    ml_client: MLClient, get_component, experiment_name, input_data
+    ml_client: MLClient, get_component, experiment_name, signal_metrics_input, samples_index_input
 ):
     metric_outputter_component = get_component(COMPONENT_NAME_METRIC_OUTPUTTER)
 
@@ -22,7 +23,8 @@ def _submit_metric_outputter_job(
     def _metric_outputter_e2e():
 
         metric_outputter_output: Spark = metric_outputter_component(
-            signal_metrics=Input(path=input_data, mode="direct", type="uri_folder"),
+            signal_metrics=Input(path=signal_metrics_input, mode="direct", type="uri_folder"),
+            samples_index=Input(path=samples_index_input, mode="direct", type="uri_folder"),
             monitor_name="metric_outputter_monitor_name",
             signal_name="metric_outputter_signal_name",
             signal_type="my_signal_type",
@@ -62,6 +64,7 @@ class TestModelMonitorMetricOutputterE2E:
             get_component,
             test_suite_name,
             DATA_ASSET_MLTABLE_DATA_DRIFT_SIGNAL_OUTPUT,
+            DATA_ASSET_MLTABLE_SAMPLES_INDEX_OUTPUT,
         )
 
         assert pipeline_job.status == "Completed"

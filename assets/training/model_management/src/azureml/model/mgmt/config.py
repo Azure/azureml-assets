@@ -24,12 +24,12 @@ class ModelType(_CustomEnum):
     CUSTOM = "custom_model"
 
 
-class ModelFlavor(_CustomEnum):
-    """Enum for the Flavors accepted in ModelConfig."""
+class ModelFramework(_CustomEnum):
+    """Enum for the model framework accepted by model preprocess."""
 
-    TRANSFORMERS = "transformers"
-    MMLAB_PYFUNC = "mmlab_pyfunc"
-    PYFUNC = "pyfunc"
+    HUGGINGFACE = "Huggingface"
+    MMLAB = "MMLab"
+    PYFUNC_LLAVA = "pyfunc_llava"
 
 
 class PathType(_CustomEnum):

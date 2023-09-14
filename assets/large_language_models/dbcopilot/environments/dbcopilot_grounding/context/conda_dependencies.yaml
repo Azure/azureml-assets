@@ -6,10 +6,14 @@ dependencies:
   - python=3.8
   - pip=21.3.1
   - pip:
-      - azureml-rag[cognitive_search,data_generation]>=0.1.24.1
-      - langchain==0.0.220
+      - azureml-rag[cognitive_search,data_generation]>=0.2.2
+      - langchain==0.0.236
       - azureml-contrib-services
-      - azure-identity==1.12.0
+      - azure-identity==1.14.0
       - azureml-core=={{latest-pypi-version}}
       - azure-ai-ml~=1.4.0
-      - cryptography>=41.0.3
+      - azure-kusto-data==4.2.0
+      - plotly~=5.13.1
+      - recognizers-text-suite~=1.0.2a2
+      - applicationinsights~=0.11.10
+      - azure-cosmos~=4.4.0
