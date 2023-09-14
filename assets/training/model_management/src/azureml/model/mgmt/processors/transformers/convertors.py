@@ -26,7 +26,6 @@ from azureml.model.mgmt.utils.common_utils import (
     get_list_from_comma_separated_str,
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from diffusers import StableDiffusionPipeline
 from mlflow.models import ModelSignature
 from mlflow.types.schema import ColSpec
 from mlflow.types.schema import DataType, Schema
