@@ -74,9 +74,10 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
 
         try:
             # parse comma separated labels and remove trailing whitespace
-            captions = map(str.strip,
-                           input_data[MLflowSchemaLiterals.INPUT_COLUMN_TEXT].iloc[0].split(',')
-                          )
+            captions = map(
+                str.strip,
+                input_data[MLflowSchemaLiterals.INPUT_COLUMN_TEXT].iloc[0].split(',')
+            )
             captions = list(filter(None, captions))  # remove any empty strings
             if len(captions) == 0:
                 raise ValueError("No labels were provided")
