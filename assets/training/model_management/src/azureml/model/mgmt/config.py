@@ -29,6 +29,7 @@ class ModelFlavor(_CustomEnum):
 
     TRANSFORMERS = "transformers"
     MMLAB_PYFUNC = "mmlab_pyfunc"
+    PYFUNC = "pyfunc"
 
 
 class PathType(_CustomEnum):
