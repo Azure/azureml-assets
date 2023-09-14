@@ -4,7 +4,7 @@ type: pipeline
 tags:
   Preview: ""
 
-version: 0.0.31
+version: 0.0.32
 name: llm_ingest_git_to_acs_qa_only
 display_name: LLM - Git to ACS Pipeline (Only Test Data Generation)
 is_deterministic: false
@@ -165,7 +165,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.25'
+    component: 'azureml:llm_rag_validate_deployments:0.0.26'
     identity:
       type: user_identity
     inputs:

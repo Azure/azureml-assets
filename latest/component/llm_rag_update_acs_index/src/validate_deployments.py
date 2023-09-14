@@ -240,7 +240,8 @@ def check_deployment_status(model_params, model_type, activity_logger=None):
             embeddings = OpenAIEmbeddings(
                 deployment=model_params["deployment_id"],
                 model=model_params["model_name"],
-                openai_api_key=model_params["openai_api_key"])
+                openai_api_key=model_params["openai_api_key"],
+                openai_api_type="azure")
             try:
                 embeddings.embed_query(
                     "Embed this query to test if deployment exists")
