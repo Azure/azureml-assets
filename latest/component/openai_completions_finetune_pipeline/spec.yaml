@@ -1,6 +1,6 @@
 $schema: http://azureml/sdk-2-0/PipelineComponent.json
 type: pipeline
-version: 0.0.6
+version: 0.0.7
 name: openai_completions_finetune_pipeline
 display_name: OpenAI Completions Finetune Pipeline
 description: Finetune your own OAI model. Visit https://learn.microsoft.com/en-us/azure/cognitive-services/openai/
@@ -52,6 +52,10 @@ outputs:
     type: uri_folder
     description: Dataset with the output model weights (LoRA weights)
     mode: mount
+  output_merged_model:
+    type: uri_folder
+    description: Dataset with the output (merged) model weights
+    mode: mount
 
 jobs:
   openai_data_import:
@@ -63,7 +67,7 @@ jobs:
       model: ${{parent.inputs.model}}
   openai_completions_finetune:
     type: command
-    component: azureml://registries/azure-openai-v2/components/openai_completions_finetune/versions/0.3.0
+    component: azureml://registries/azure-openai-v2/components/openai_completions_finetune/versions/0.3.1
     inputs:
       input_dataset: ${{parent.jobs.openai_data_import.outputs.out_dataset}}
       model: ${{parent.inputs.model}}
@@ -72,3 +76,4 @@ jobs:
       epochs: ${{parent.inputs.epochs}}
     outputs:
       output_model: ${{parent.outputs.output_model}}
+      output_merged_model: ${{parent.outputs.output_merged_model}}
