@@ -7,7 +7,7 @@ psutil~=5.9.5
 transformers~=4.33.0
 sentencepiece~=0.1.99
 xformers~=0.0.21
-pandas=={{latest-pypi-version}}
+pandas~=2.0.3
 azure-ai-contentsafety~=1.0.0b1
 azure-identity=={{latest-pypi-version}}
 azure-mgmt-cognitiveservices=={{latest-pypi-version}}
