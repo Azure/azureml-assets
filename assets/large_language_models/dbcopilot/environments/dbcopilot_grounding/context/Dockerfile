@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
+# Set the shared environment path
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/dbcopilot
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
