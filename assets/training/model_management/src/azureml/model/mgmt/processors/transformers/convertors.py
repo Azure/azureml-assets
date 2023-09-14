@@ -11,9 +11,6 @@ from azureml.evaluate import mlflow as hf_mlflow
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
 from azureml.model.mgmt.processors.transformers.config import (
     HF_CONF,
-    MODEL_FILE_PATTERN,
-    MODEL_CONFIG_FILE_PATTERN,
-    TOKENIZER_FILE_PATTERN,
     SupportedNLPTasks,
     SupportedTasks,
     SupportedVisionTasks,
@@ -177,8 +174,12 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         if segregate:
             logger.info("Segregate input model dir and present into separate folders for model, config and tokenizer")
-            config = self._hf_config_cls.from_pretrained(self._model_dir, **self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {}))
-            tokenizer = self._hf_tokenizer_cls.from_pretrained(self._model_dir, **self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {}))
+            config = self._hf_config_cls.from_pretrained(
+                self._model_dir, **self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
+            )
+            tokenizer = self._hf_tokenizer_cls.from_pretrained(
+                self._model_dir, **self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
+            )
             tmp_model_dir = Path(self._temp_dir) / HF_CONF.HF_MODEL_PATH.value
             copy_file_paths_to_destination(self._model_dir, tmp_model_dir)
             model = str(tmp_model_dir)
@@ -240,8 +241,6 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
             logger.info("updated conda.yaml")
 
     def _validate(self, translate_params):
-        if not translate_params.get("model_id"):
-            raise Exception("model_id is a required parameter for hftransformers MLflow flavor.")
         if not translate_params.get("task"):
             raise Exception("task is a required parameter for hftransformers MLflow flavor.")
         task = translate_params["task"]
