@@ -21,4 +21,5 @@ tags:
     precision: '4'
   task: text-generation
   SharedComputeCapacityEnabled: ''
+  disable-batch: 'true'
 version: 1
