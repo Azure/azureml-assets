@@ -146,7 +146,7 @@ def download_dataset_from_hf(
             raise DatasetDownloadException._with_error(
                 AzureMLError.create(DatasetDownloadError, error_details=mssg)
             )
-        out_dir = os.path.join(output_dir, configuration, split)
+        out_dir = os.path.join(output_dir, str(configuration), split)
         os.makedirs(out_dir, exist_ok=True)
         output_file_path = os.path.join(out_dir, "data.jsonl")
         dataset.to_json(output_file_path)
