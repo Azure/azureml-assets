@@ -343,7 +343,7 @@ inputs:
   # component input: test mltable
   test_data:
     type: mltable
-    optional: true
+    optional: false
     description: Path to the mltable of the test dataset.
 
   test_batch_size:
