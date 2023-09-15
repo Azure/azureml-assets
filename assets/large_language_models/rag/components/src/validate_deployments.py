@@ -289,7 +289,8 @@ def get_workspace_and_run() -> Tuple[Workspace, Run]:
     return workspace, run
 
 
-def is_default_connection(connection: str) -> bool:
+def is_default_connection(connection) -> bool:
+    """Check if connection retrieved is a default AOAI connection."""
     return connection.get("name", None) == "Default_AzureOpenAI"
 
 
