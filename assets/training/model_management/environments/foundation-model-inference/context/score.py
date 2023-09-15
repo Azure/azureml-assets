@@ -569,21 +569,8 @@ def get_processed_input_data_for_chat_completion(dialog: List[str]) -> str:
     As of 2021, the Burj Khalifa in Dubai\n
     [INST]and in Africa?[/INST]"
     """
-    # fmt: off
-    DEFAULT_SYSTEM_PROMPT = """You are a helpful, respectful and honest \
-assistant. Always answer as helpfully as possible, while being safe. Your \
-answers should not include any harmful, unethical, racist, sexist, toxic, \
-dangerous, or illegal content. Please ensure that your responses are \
-socially unbiased and positive in nature.
-
-If a question does not make any sense, or is not factually coherent, \
-explain why instead of answering something not correct. If you don't know \
-the answer to a question, please don't share false information."""
-
-    # fmt: on
-
     def process_dialog(messages) -> Tuple[str, List[Tuple[str, str]], str]:
-        system_prompt = DEFAULT_SYSTEM_PROMPT
+        system_prompt = ""
         user_assistant_messages = []  # list of (user, assistant) messages
         user_message = None  # current user message being processed
         last_user_message = None  # user prompt for which response is needed
@@ -608,7 +595,9 @@ the answer to a question, please don't share false information."""
     # ref: https://huggingface.co/spaces/huggingface-projects/\
     # llama-2-7b-chat/blob/main/model.py
     def format_chat_conv(message: str, chat_history: List[Tuple[str, str]], system_prompt: str) -> str:
-        texts = [f'<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n']
+        texts = [f'<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n'] \
+            if system_prompt != "" \
+            else ['<s>[INST] ']
         # The first user input is _not_ stripped
         do_strip = False
         for user_input, response in chat_history:
