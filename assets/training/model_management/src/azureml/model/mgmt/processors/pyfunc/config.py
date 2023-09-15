@@ -22,3 +22,6 @@ class SupportedTasks(_CustomEnum):
 
     # CLIP task
     ZERO_SHOT_IMAGE_CLASSIFICATION = "zero-shot-image-classification"
+
+    # LLaVA task
+    IMAGE_TEXT_TO_TEXT = "image-text-to-text"

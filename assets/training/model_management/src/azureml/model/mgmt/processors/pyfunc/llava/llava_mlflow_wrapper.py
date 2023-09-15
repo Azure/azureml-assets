@@ -11,24 +11,20 @@ import os
 import mlflow
 import pandas as pd
 
-from llava.constants import IMAGE_TOKEN_INDEX
-from llava.conversation import conv_templates
-from llava.model.builder import load_pretrained_model
-from llava.mm_utils import tokenizer_image_token, KeywordsStoppingCriteria
 from PIL import Image
 from transformers import TextStreamer
 
-from constants import MLflowLiterals, MLflowSchemaLiterals
+from config import MLflowLiterals, MLflowSchemaLiterals
 from utils import process_image
 
 
 class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
     """MLflow model wrapper for LLaVA models."""
 
-    LLAVA_MPT = "LLaVA-Lightning-MPT-7B-preview"
-    LLAVA_7B = "llava-llama-2-7b-chat-lightning-lora-preview"
-    LLAVA_13B = "llava-v1-0719-336px-lora-merge-vicuna-13b-v1.3"
-    MODEL_NAMES = [LLAVA_MPT, LLAVA_7B, LLAVA_13B]
+    LLAVA_MPT = "mpt"
+    LLAVA_7B = "7b"
+    LLAVA_13B = "13b"
+    MODEL_VERSIONS = [LLAVA_MPT, LLAVA_7B, LLAVA_13B]
 
     def __init__(self, task_type: str) -> None:
         """Constructor for MLflow wrapper class
@@ -46,31 +42,43 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
         :type context: mlflow.pyfunc.PythonModelContext
         """
 
+        from llava.constants import IMAGE_TOKEN_INDEX
+        from llava.conversation import conv_templates
+        from llava.model.builder import load_pretrained_model
+        from llava.mm_utils import tokenizer_image_token, KeywordsStoppingCriteria
+
         try:
-            # Get the model directory.
+            # Get the top level model directory (contains model directory itself and potentially auxiliary directory).
             model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
 
-            # Infer the model name from the model directory.
-            self._model_name = next((n for n in self.MODEL_NAMES if n in model_dir), None)
+            # Infer the model version from the model directory.
+            self._model_version = next(
+                (n for n in self.MODEL_VERSIONS if model_dir.endswith(n)), None
+            )
 
-            # Set the model base and stop string from the model name.
-            if self._model_name == self.LLAVA_MPT:
+            # Set the model name, model base and stop string from the model version.
+            if self._model_version == self.LLAVA_MPT:
+                model_name = "LLaVA-Lightning-MPT-7B-preview"
                 model_base = None
                 stop_str = conv_templates["mpt"].sep
 
-            elif self._model_name == self.LLAVA_7B:
+            elif self._model_version == self.LLAVA_7B:
+                model_name = "llava-llama-2-7b-chat-lightning-lora-preview"
                 model_base = os.path.join(model_dir, "Llama-2-7b-chat")
                 stop_str = conv_templates["llava_llama_2"].sep
 
-            elif self._model_name == self.LLAVA_13B:
+            elif self._model_version == self.LLAVA_13B:
+                model_name = "llava-v1-0719-336px-lora-merge-vicuna-13b-v1.3"
                 model_base = None
                 stop_str = conv_templates["llava_v1"].sep2
 
             else:
-                raise NotImplementedError(f"Model name {self._model_name} not supported.")
+                raise NotImplementedError(f"Model name {self._model_version} not supported.")
 
             # Make the model and preprocessing objects.
-            self._tokenizer, self._model, self._image_processor, _ = load_pretrained_model(model_dir + "/", model_base, self._model_name, False, False)
+            self._tokenizer, self._model, self._image_processor, _ = load_pretrained_model(
+                os.path.join(model_dir, model_name), model_base, model_name, False, False
+            )
             self._streamer = TextStreamer(self._tokenizer, skip_prompt=True, skip_special_tokens=True)
             self._stop_str = stop_str
 
@@ -93,6 +101,11 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
         :return: Pandas dataframe with column ["response"] containing the model's response to the dialog so far.
         """
 
+        from llava.constants import IMAGE_TOKEN_INDEX
+        from llava.conversation import conv_templates
+        from llava.model.builder import load_pretrained_model
+        from llava.mm_utils import tokenizer_image_token, KeywordsStoppingCriteria
+
         # Do inference one input at a time.
         responses = []
         for image, prompt, direct_question in zip(
@@ -105,11 +118,11 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
 
             # If prompt not specified, make prompt from direct question column.
             if not prompt:
-                if self._model_name == self.LLAVA_MPT:
+                if self._model_version == self.LLAVA_MPT:
                     prompt = f"A conversation between a user and an LLM-based AI assistant. The assistant gives helpful and honest answers.<|im_end|><|im_start|>user\n<im_start><image><im_end>\n{direct_question}<|im_end|><|im_start|>assistant"
-                elif self._model_name == self.LLAVA_7B:
+                elif self._model_version == self.LLAVA_7B:
                     prompt = f"[INST] <<SYS>>\nYou are a helpful language and vision assistant. You are able to understand the visual content that the user provides, and assist the user with a variety of tasks using natural language.\n<</SYS>>\n\n<im_start><image><im_end>\n{direct_question} [/INST]"
-                elif self._model_name == self.LLAVA_13B:
+                elif self._model_version == self.LLAVA_13B:
                     prompt = f"input to llava: A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <im_start><image><im_end>\n{direct_question} ASSISTANT:"
 
             # Make image input.
@@ -137,6 +150,8 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
                 response = response[2:]
             if response.endswith(self._stop_str):
                 response = response[:-len(self._stop_str)]
+            if response.endswith("</s>"):
+                response = response[:-len("</s>")]
 
             # Accumulate into response list.
             responses.append(response)

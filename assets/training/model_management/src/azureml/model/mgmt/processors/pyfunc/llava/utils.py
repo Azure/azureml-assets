@@ -2,10 +2,10 @@ import base64
 import re
 import requests
 
-import pandas as pd
+from typing import Union
 
 
-def process_image(img: pd.Series) -> pd.Series:
+def process_image(image: Union[str, bytes]) -> bytes:
     """Process input image.
 
     If input image is in bytes format, return it as it is.
@@ -13,22 +13,19 @@ def process_image(img: pd.Series) -> pd.Series:
     If input image is in url format, download it and return bytes.
     https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
 
-    :param img: pandas series with image in base64 string format or url or bytes.
-    :type img: pd.Series
-    :return: decoded image in pandas series format.
-    :rtype: Pandas Series
+    :param image: image in base64 string format or url or bytes.
+    :type image: string or bytes
+    :return: decoded image.
+    :rtype: bytes
     """
-    image = img[0]
     if isinstance(image, bytes):
-        return img
+        return image
     elif isinstance(image, str):
         if _is_valid_url(image):
-        # if True:
-            image = requests.get(image).content
-            return pd.Series(image)
+            return requests.get(image).content
         else:
             try:
-                return pd.Series(base64.b64decode(image))
+                return base64.b64decode(image)
             except ValueError:
                 raise ValueError(
                     "The provided image string cannot be decoded. Expected format is Base64 or URL string."
