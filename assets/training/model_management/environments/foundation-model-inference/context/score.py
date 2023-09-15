@@ -569,11 +569,18 @@ def get_processed_input_data_for_chat_completion(dialog: List[str]) -> str:
     As of 2021, the Burj Khalifa in Dubai\n
     [INST]and in Africa?[/INST]"
     """
+    SPECIAL_TAGS = ["[INST]", "[/INST]", "<<SYS>>", "<</SYS>>"]
+    UNSAFE_ERROR = "Error: special tags are not allowed as part of the prompt."
+
     def process_dialog(messages) -> Tuple[str, List[Tuple[str, str]], str]:
         system_prompt = ""
         user_assistant_messages = []  # list of (user, assistant) messages
         user_message = None  # current user message being processed
         last_user_message = None  # user prompt for which response is needed
+
+        unsafe_request = any([tag in msg["content"] for tag in SPECIAL_TAGS for msg in messages])
+        if unsafe_request:
+            raise Exception(UNSAFE_ERROR)
 
         for i, message in enumerate(messages):
             role = message["role"]
@@ -649,6 +656,20 @@ def get_request_data(request_string) -> (
 
         return input_data, params
     except Exception as e:
+
+        if task_type == SupportedTask.TEXT_GENERATION.value:
+            raise Exception(
+                json.dumps({
+                    "error": (
+                        "Expected input format: \n"
+                        '{"input_data": {"input_string": "<query>", '
+                        '"parameters": {"k1":"v1", "k2":"v2"}}}.\n '
+                        "<query> should be in below format:\n "
+                        '["str1", "str2", ...]\n'
+                    ),
+                    "exception": str(e),
+                })
+            )
         raise Exception(
             json.dumps({
                 "error": (
@@ -656,7 +677,6 @@ def get_request_data(request_string) -> (
                     '{"input_data": {"input_string": "<query>", '
                     '"parameters": {"k1":"v1", "k2":"v2"}}}.\n '
                     "<query> should be in below format:\n "
-                    'For text-generation: ["str1", "str2", ...]\n'
                     'For chat-completion: [{"role":"user", "content": "str1"},'
                     '{"role": "assistant", "content": "str2"} ....]'
                 ),
