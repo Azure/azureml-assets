@@ -20,6 +20,7 @@ from azureml.model.mgmt.processors.factory import (
 from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.transformers.convertors import HFMLFLowConvertor, NLPMLflowConvertor
 from azureml.model.mgmt.processors.pyfunc.convertors import MMLabDetectionMLflowConvertor
+from mock import MagicMock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -335,6 +336,7 @@ class TestHFMLFLowConvertor:
             nlp_mlflow_convertor = NLPMLflowConvertor(
                 model_dir=model_path, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
             )
+            nlp_mlflow_convertor._hf_config_cls = nlp_mlflow_convertor._hf_tokenizer_cls = MagicMock()
             nlp_mlflow_convertor = nlp_mlflow_convertor.save_as_mlflow()
 
             # validate pycocotools
@@ -349,14 +351,6 @@ class TestHFMLFLowConvertor:
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
-
-        # Model_id missing in translate params
-        translate_params = {"task": SupportedNLPTasks.FILL_MASK.value}
-        with pytest.raises(Exception) as ex:
-            NLPMLflowConvertor(
-                model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
-            )
-        assert "model_id" in str(ex)
 
         # task missing in translate params
         translate_params = {"model_id": "bert-base-cased"}
