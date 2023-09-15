@@ -1,8 +1,8 @@
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu113-py38-torch1110:biweekly.202308.2
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch1131:biweekly.202309.1
 
 WORKDIR /
 
-RUN apt-get update && apt-get upgrade -y && apt-get install openssh-server openssh-client curl graphviz git git-lfs -y
+RUN apt-get update && apt-get upgrade -y && apt-get install curl git git-lfs -y
 
 # azcopy install starts
 RUN echo "Downloading azcopy to file azcopy.tar ....";\
