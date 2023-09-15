@@ -5,12 +5,12 @@ properties:
   is-promptflow: true
   azureml.promptflow.section: gallery
   azureml.promptflow.type: evaluate
-  azureml.promptflow.name: Classification Accuracy Eval
+  azureml.promptflow.name: Classification Accuracy Evaluation
   azureml.promptflow.description: Measuring the performance of a classification system
     by comparing its outputs to groundtruth.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 2
+version: 3
 description: |-
   The "Classification Accuracy Evaluation" is a model designed to assess the effectiveness of a data classification system. It involves matching each prediction against the ground truth, subsequently assigning a "Correct" or "Incorrect" score. The cumulative results are then leveraged to generate performance metrics, such as accuracy, providing an overall measure of the system's proficiency in data classification.
 
