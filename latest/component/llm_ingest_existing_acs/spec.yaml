@@ -4,7 +4,7 @@ type: pipeline
 tags:
   Preview: ""
 
-version: 0.0.42
+version: 0.0.43
 name: llm_ingest_existing_acs
 display_name: LLM - Existing ACS Pipeline (With Test Data Generation and Auto Prompt)
 is_deterministic: false
@@ -211,7 +211,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.26'
+    component: 'azureml:llm_rag_validate_deployments:0.0.27'
     identity:
       type: user_identity
     inputs:
@@ -255,7 +255,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_crack_and_chunk:0.0.23'
+    component: 'azureml:llm_rag_crack_and_chunk:0.0.24'
     inputs:
       input_data: ${{parent.jobs.data_import_job.outputs.output_data}}
       input_glob: ${{parent.inputs.input_glob}}
@@ -297,7 +297,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_qa_data_asset:0.0.15'
+    component: 'azureml:llm_rag_register_qa_data_asset:0.0.16'
     inputs:
       storage_uri: ${{parent.jobs.data_generation_job.outputs.output_data}}
       register_output: ${{parent.inputs.register_outputs}}
@@ -342,7 +342,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_autoprompt_data_asset:0.0.15'
+    component: 'azureml:llm_rag_register_autoprompt_data_asset:0.0.16'
     inputs:
       storage_uri: ${{parent.jobs.hard_prompt_sweep_job.outputs.best_prompt}}
       register_output: ${{parent.inputs.register_outputs}}
@@ -372,7 +372,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_register_mlindex_asset:0.0.22'
+    component: 'azureml:llm_rag_register_mlindex_asset:0.0.23'
     inputs:
       storage_uri: ${{parent.jobs.data_import_job.outputs.ml_index}}
       asset_name: ${{parent.inputs.embeddings_dataset_name}}
