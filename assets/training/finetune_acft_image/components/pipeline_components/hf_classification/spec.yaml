@@ -61,6 +61,12 @@ inputs:
     optional: true
     description: Mlflow Model registered in AzureML Asset.
 
+  download_from_source:
+    type: boolean
+    optional: true
+    default: false
+    description: Download model directly from HuggingFace instead of system registry
+
   # ########################### Finetuning Component ########################### #
 
   # component input: training mltable
@@ -126,9 +132,8 @@ inputs:
   # Deepspeed Parameters
   apply_deepspeed:
     type: boolean
-    default: false
     optional: true
-    description: If set to true, will enable deepspeed for training.
+    description: If set to true, will enable deepspeed for training. If left empty, will be chosen automatically based on the task type and model selected.
 
   # optional component input: deepspeed config
   deepspeed_config:
@@ -138,9 +143,8 @@ inputs:
 
   apply_ort:
     type: boolean
-    default: false
     optional: true
-    description: If set to true, will use the ONNXRunTime training.
+    description: If set to true, will use the ONNXRunTime training. If left empty, will be chosen automatically based on the task type and model selected.
 
   # Training parameters
   number_of_epochs:
@@ -389,7 +393,7 @@ outputs:
 jobs:
   image_classification_model_import:
     type: command
-    component: azureml:transformers_image_classification_model_import:0.0.7
+    component: azureml:transformers_image_classification_model_import:0.0.8
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: ${{parent.inputs.model_family}}
@@ -398,7 +402,7 @@ jobs:
       mlflow_model: ${{parent.inputs.mlflow_model}}
   image_classification_finetune:
     type: command
-    component: azureml:transformers_image_classification_finetune:0.0.7
+    component: azureml:transformers_image_classification_finetune:0.0.8
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
