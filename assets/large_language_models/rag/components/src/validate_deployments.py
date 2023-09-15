@@ -326,6 +326,9 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                 'apiVersion',
                 connection_metadata.get('ApiVersion', "2023-03-15-preview"))
             completion_params["connection"] = connection_id_completion
+            # Name is currently the only distinguishing factor between default and non-default
+            # Default connection is the only one which can perform control plane operations,
+            # as AI Studio does not allow selecting of ResourceID in their UI yet.
             if connection.get("name", None) == "Default_AzureOpenAI":
                 activity_logger.info(
                     "[Validate Deployments]: Completion model using Default AOAI connection, parsing ResourceId")
