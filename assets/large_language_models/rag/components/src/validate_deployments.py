@@ -326,7 +326,9 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                 'apiVersion',
                 connection_metadata.get('ApiVersion', "2023-03-15-preview"))
             completion_params["connection"] = connection_id_completion
-            if connection["properties"]["metadata"].get("ResourceId", None) is not None:
+            if connection.get("name", None) == "Default_AzureOpenAI":
+                activity_logger.info(
+                    "[Validate Deployments]: Completion model using Default AOAI connection, parsing ResourceId")
                 cog_workspace_details = split_details(
                     connection["properties"]["metadata"]["ResourceId"], start=1)
                 completion_params["default_aoai_name"] = cog_workspace_details["accounts"]
@@ -375,7 +377,9 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                 'apiVersion',
                 connection_metadata.get('ApiVersion', "2023-03-15-preview"))
             embedding_params["connection"] = connection_id_embedding
-            if connection["properties"]["metadata"].get("ResourceId", None) is not None:
+            if connection.get("name", None) == "Default_AzureOpenAI":
+                activity_logger.info(
+                    "[Validate Deployments]: Completion model using Default AOAI connection, parsing ResourceId")
                 cog_workspace_details = split_details(
                     connection["properties"]["metadata"]["ResourceId"], start=1)
                 embedding_params["default_aoai_name"] = cog_workspace_details["accounts"]
