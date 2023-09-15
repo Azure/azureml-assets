@@ -337,6 +337,8 @@ class TestHFMLFLowConvertor:
                 model_dir=model_path, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
             )
             nlp_mlflow_convertor._hf_config_cls = nlp_mlflow_convertor._hf_tokenizer_cls = MagicMock()
+            nlp_mlflow_convertor._hf_config_cls.__name__ = "mock_config_cls"
+            nlp_mlflow_convertor._hf_tokenizer_cls.__name__ = "mock_tokenizer_cls"
             nlp_mlflow_convertor = nlp_mlflow_convertor.save_as_mlflow()
 
             # validate pycocotools
