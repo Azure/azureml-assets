@@ -73,7 +73,7 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         ].apply(axis=1, func=process_image)
 
         try:
-            # parse comma separated labels and remove trailing whitespace
+            # parse comma separated labels and remove leading and trailing whitespace
             captions = map(
                 str.strip,
                 input_data[MLflowSchemaLiterals.INPUT_COLUMN_TEXT].iloc[0].split(',')
