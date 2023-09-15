@@ -13,6 +13,7 @@ from azure.identity import AzureCliCredential
 BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 60)
+STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 
 def test_responsibleai_vision():
@@ -57,5 +58,15 @@ def test_responsibleai_vision():
         if current_status in ["Completed", "Failed"]:
             break
         time.sleep(30)  # sleep 30 seconds
+
+    if current_status == "Failed":
+        ml_client.jobs.download(returned_job.name)
+        if STD_LOG.exists():
+            print(f"*** BEGIN {STD_LOG} ***")
+            with open(STD_LOG, "r") as f:
+                print(f.read(), end="")
+            print(f"*** END {STD_LOG} ***")
+        else:
+            ml_client.jobs.stream(returned_job.name)
 
     assert current_status == "Completed"

@@ -6,16 +6,18 @@
 import argparse
 import json
 import os
+import re
 import shutil
 import yaml
 
+from pathlib import Path
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.entities import Model
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 
 from utils.common_utils import get_mlclient
-from utils.config import AppName
+from utils.config import AppName, ComponentVariables
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.exceptions import (
     swallow_all_exceptions,
@@ -26,6 +28,9 @@ from utils.exceptions import (
 
 SUPPORTED_MODEL_ASSET_TYPES = [AssetTypes.CUSTOM_MODEL, AssetTypes.MLFLOW_MODEL]
 MLFLOW_MODEL_FOLDER = "mlflow_model_folder"
+# omitting underscores which is supported in model name for consistency
+VALID_MODEL_NAME_PATTERN = r"^[a-zA-Z0-9-]+$"
+NEGATIVE_MODEL_NAME_PATTERN = r"[^a-zA-Z0-9-]"
 
 logger = get_logger(__name__)
 custom_dimensions.app_name = AppName.REGISTER_MODEL
@@ -61,9 +66,9 @@ def parse_args():
         default=None,
     )
     parser.add_argument(
-        "--registration_details",
-        type=str,
-        help="JSON file into which model registration details will be written",
+        "--registration_details_folder",
+        type=Path,
+        help="A folder which contains a JSON file into which model registration details will be written",
     )
     parser.add_argument(
         "--model_download_metadata",
@@ -100,7 +105,7 @@ def is_model_available(ml_client, model_name, model_version):
     try:
         ml_client.models.get(name=model_name, version=model_version)
     except Exception as e:
-        logger.exception(f"Model with name - {model_name} and version - {model_version} is not available. Error: {e}")
+        logger.warning(f"Model with name - {model_name} and version - {model_version} is not available. Error: {e}")
         is_available = False
     return is_available
 
@@ -114,7 +119,7 @@ def main():
     model_description = args.model_description
     registry_name = args.registry_name
     model_path = args.model_path
-    registration_details = args.registration_details
+    registration_details_folder = args.registration_details_folder
     model_version = args.model_version
     tags, properties, flavors = {}, {}, {}
 
@@ -140,14 +145,16 @@ def main():
 
     # validations
     if model_type not in SUPPORTED_MODEL_ASSET_TYPES:
-        raise AzureMLException._with_error(
-                AzureMLError.create(UnSupportedModelTypeError, model_type=model_type)
-            )
+        raise AzureMLException._with_error(AzureMLError.create(UnSupportedModelTypeError, model_type=model_type))
 
     if not model_name:
-        raise AzureMLException._with_error(
-            AzureMLError.create(MissingModelNameError)
-        )
+        raise AzureMLException._with_error(AzureMLError.create(MissingModelNameError))
+
+    if not re.match(VALID_MODEL_NAME_PATTERN, model_name):
+        # update model name to one supported for registration
+        logger.info(f"Updating model name to match pattern `{VALID_MODEL_NAME_PATTERN}`")
+        model_name = re.sub(NEGATIVE_MODEL_NAME_PATTERN, "-", model_name)
+        logger.info(f"Updated model_name = {model_name}")
 
     # check if we can have lineage and update the model path for ws import
     if not registry_name and args.model_import_job_path:
@@ -164,23 +171,19 @@ def main():
         logger.info(f"MLModel path: {mlmodel_path}")
         with open(mlmodel_path, "r") as stream:
             metadata = yaml.safe_load(stream)
-            flavors = metadata.get('flavors', flavors)
+            flavors = metadata.get("flavors", flavors)
 
     if not model_version or is_model_available(ml_client, model_name, model_version):
-        # hack to get current model versions in registry
         model_version = "1"
-        models_list = []
         try:
             models_list = ml_client.models.list(name=model_name)
             if models_list:
                 max_version = (max(models_list, key=lambda x: int(x.version))).version
                 model_version = str(int(max_version) + 1)
         except Exception:
-            exception_msg = (
-                f"Error in listing versions for model {model_name}."
-                "Trying to register model with version '1'"
+            logger.warning(
+                f"Error in fetching registration details for {model_name}. Trying to register model with version '1'."
             )
-            logger.exception(exception_msg)
 
     model = Model(
         name=model_name,
@@ -211,7 +214,9 @@ def main():
     }
     json_object = json.dumps(model_info, indent=4)
 
-    with open(registration_details, "w") as outfile:
+    registration_file = registration_details_folder / ComponentVariables.REGISTRATION_DETAILS_JSON_FILE
+
+    with open(registration_file, "w+") as outfile:
         outfile.write(json_object)
     logger.info("Saved model registration details in output json file.")
 

@@ -26,9 +26,11 @@ class ModelImportErrorStrings:
     )
     UNSUPPORTED_MODEL_TYPE_ERROR = "Unsupported model type : {model_type}"
     MISSING_MODEL_NAME_ERROR = "Missing Model Name. Provide model_name as input or in the model_download_metadata JSON"
+    COMPUTE_CREATION_ERROR = "Error occured while creating compute cluster - {exception}"
     ENDPOINT_CREATION_ERROR = "Error occured while creating endpoint - {exception}"
     DEPLOYMENT_CREATION_ERROR = "Error occured while creating deployment - {exception}"
     ONLINE_ENDPOINT_INVOCATION_ERROR = "Invocation failed with error: {exception}"
+    BATCH_ENDPOINT_INVOCATION_ERROR = "Invocation failed with error: {exception}"
     USER_IDENTITY_MISSING_ERROR = (
         "Failed to get AzureMLOnBehalfOfCredential."
         " Kindly set UserIdentity as identity type if submitting job using sdk or cli."
@@ -36,6 +38,26 @@ class ModelImportErrorStrings:
         " About - https://learn.microsoft.com/en-us/samples/azure/azureml-examples/azureml---on-behalf-of-feature/ \n"
         " sdk - https://aka.ms/azureml-import-model \n"
         " cli - https://aka.ms/obo-cli-sample"
+    )
+
+    # local validation error strings
+    CONDA_ENV_CREATION_ERROR = "Caught error while creating conda env using MLflow model conda.yaml"
+    CONDA_FILE_MISSING_ERROR = (
+        "Invalid MLflow model structure. Please make sure conda.yaml exists in MLflow model parent dir."
+    )
+    MLFLOW_LOCAL_VALIDATION_ERROR = (
+        "Error in validating MLflow model. For more details please take a look at the previous logs."
+    )
+    INVALID_MODEL_ID_ERROR = (
+        "Given Model ID : {model_id} is invalid. \n"
+        "Model ID should follow one of this format :\n"
+        "Workspace Model: \n"
+        "    1) azureml:<model-name>:<version> \n"
+        "    2) azureml://locations/<location>/workspaces/<workspace-name>/models/<model-name>/versions/<version> \n"
+        "    3) /subscriptions/<subscription_id>/resourceGroups/<resource_group>/providers/"
+        "Microsoft.MachineLearningServices/workspaces/<workspace-name>/models/<model-name>/versions/<version> \n"
+        "Registry Model: \n"
+        "    1) azureml://registries/<registry-name>/models/<model-name>/versions/<version> \n"
     )
 
 
@@ -92,6 +114,15 @@ class MissingModelNameError(ClientError):
         return ModelImportErrorStrings.MISSING_MODEL_NAME_ERROR
 
 
+class ComputeCreationError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.COMPUTE_CREATION_ERROR
+
+
 class EndpointCreationError(ClientError):
     """Internal Import Model Generic Error."""
 
@@ -119,6 +150,15 @@ class OnlineEndpointInvocationError(ClientError):
         return ModelImportErrorStrings.ONLINE_ENDPOINT_INVOCATION_ERROR
 
 
+class BatchEndpointInvocationError(ClientError):
+    """Internal Import Model Generic Error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.BATCH_ENDPOINT_INVOCATION_ERROR
+
+
 class UserIdentityMissingError(ClientError):
     """Internal Import Model Generic Error."""
 
@@ -126,6 +166,42 @@ class UserIdentityMissingError(ClientError):
     def message_format(self) -> str:
         """Message format."""
         return ModelImportErrorStrings.USER_IDENTITY_MISSING_ERROR
+
+
+class CondaEnvCreationError(ClientError):
+    """Conda env creation error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.CONDA_ENV_CREATION_ERROR
+
+
+class CondaFileMissingError(ClientError):
+    """Conda file missing error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.CONDA_FILE_MISSING_ERROR
+
+
+class MlflowModelValidationError(ClientError):
+    """MLflow local validation error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.MLFLOW_LOCAL_VALIDATION_ERROR
+
+
+class InvalidModelIDError(ClientError):
+    """MLflow local validation error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message format."""
+        return ModelImportErrorStrings.INVALID_MODEL_ID_ERROR
 
 
 def swallow_all_exceptions(logger: logging.Logger):

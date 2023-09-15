@@ -20,6 +20,17 @@ ROOT_RUN_PROPERTIES = {
 }
 
 
+class DEVICE:
+    """Device list."""
+
+    AUTO = "auto"
+    CPU = "cpu"
+    GPU = "gpu"
+
+
+ALL_DEVICES = [DEVICE.AUTO, DEVICE.CPU, DEVICE.GPU]
+
+
 class TASK:
     """TASK list."""
 
@@ -36,6 +47,8 @@ class TASK:
     FILL_MASK = "fill-mask"
     IMAGE_CLASSIFICATION = "image-classification"
     IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
+    IMAGE_OBJECT_DETECTION = "image-object-detection"
+    IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
     FORECASTING = "tabular-forecasting"
 
 
@@ -54,6 +67,14 @@ ALL_TASKS = [
     TASK.TEXT_GENERATION,
     TASK.IMAGE_CLASSIFICATION,
     TASK.IMAGE_CLASSIFICATION_MULTILABEL,
+    TASK.IMAGE_OBJECT_DETECTION,
+    TASK.IMAGE_INSTANCE_SEGMENTATION
+]
+
+MULTILABEL_SET = [
+    TASK.CLASSIFICATION_MULTILABEL,
+    TASK.TEXT_CLASSIFICATION_MULTILABEL,
+    TASK.IMAGE_CLASSIFICATION_MULTILABEL
 ]
 
 CLASSIFICATION_SET = [
@@ -64,11 +85,13 @@ CLASSIFICATION_SET = [
     TASK.IMAGE_CLASSIFICATION,
     TASK.IMAGE_CLASSIFICATION_MULTILABEL
 ]
+
 MULTIPLE_OUTPUTS_SET = [
     TASK.CLASSIFICATION_MULTILABEL,
     TASK.NER,
     TASK.TEXT_CLASSIFICATION_MULTILABEL,
-    TASK.IMAGE_CLASSIFICATION_MULTILABEL]
+    TASK.IMAGE_CLASSIFICATION_MULTILABEL
+]
 
 MLFLOW_MODEL_TYPE_MAP = {
     TASK.CLASSIFICATION: "classifier",
@@ -84,12 +107,35 @@ MLFLOW_MODEL_TYPE_MAP = {
     TASK.TEXT_GENERATION: "text-generation",
     TASK.FILL_MASK: "fill-mask",
     TASK.IMAGE_CLASSIFICATION: "image-classifier",
-    TASK.IMAGE_CLASSIFICATION_MULTILABEL: "image-classifier-multilabel"
+    TASK.IMAGE_CLASSIFICATION_MULTILABEL: "image-classifier-multilabel",
+    TASK.IMAGE_OBJECT_DETECTION: "image-object-detection",
+    TASK.IMAGE_INSTANCE_SEGMENTATION: "image-instance-segmentation"
 }
 
 IMAGE_TASKS = [
     TASK.IMAGE_CLASSIFICATION,
-    TASK.IMAGE_CLASSIFICATION_MULTILABEL
+    TASK.IMAGE_CLASSIFICATION_MULTILABEL,
+    TASK.IMAGE_OBJECT_DETECTION,
+    TASK.IMAGE_INSTANCE_SEGMENTATION
+]
+
+TEXT_TOKEN_TASKS = [
+    TASK.TEXT_CLASSIFICATION,
+    TASK.TEXT_CLASSIFICATION_MULTILABEL,
+    TASK.NER,
+    TASK.TRANSLATION,
+    TASK.QnA,
+    TASK.SUMMARIZATION,
+    TASK.TEXT_GENERATION,
+    TASK.FILL_MASK
+]
+
+TEXT_OUTPUT_TOKEN_TASKS = [
+    TASK.TRANSLATION,
+    TASK.QnA,
+    TASK.SUMMARIZATION,
+    TASK.TEXT_GENERATION,
+    TASK.FILL_MASK
 ]
 
 
@@ -100,8 +146,7 @@ class TelemetryConstants:
 
     VALIDATION_NAME = "argument_validation"
     DATA_LOADING = "loading_data"
-
-    ENVIRONMENT_SETUP = "environment_setup"
+    LOG_AND_SAVE_OUTPUT = "log_and_save_output"
 
     LOAD_MODEL = "load_model"
 
@@ -146,15 +191,17 @@ class ErrorStrings:
     GenericComputeMetricsError = "Compute metrics failed due to [{error}]"
 
     # Arguments related
+    ArgumentParsingError = "Failed to parse input arguments."
     InvalidTaskType = "Given Task Type [{TaskName}] is not supported. " + \
                       "Please see the list of supported task types:\n" + \
                       "\n".join(ALL_TASKS)
     InvalidModel = "Either correct Model URI or Mlflow Model should be passed.\n" \
                    "If you have passed Model URI, your Model URI is incorrect."
     BadModelData = "Model load failed due to error: [{error}]"
-    InvalidTestData = "Either test_data or test_data_mltable should be passed."
-    InvalidPredictionsData = "Either predictions or predictions_mltable should be passed."
-    InvalidGroundTruthData = "Either ground_truth or ground_truth_mltable should be passed."
+    InvalidTestData = "Test data should be passed."
+    InvalidPredictionsData = "Predictions should be passed."
+    InvalidGroundTruthData = "Ground truth should be passed."
+    InvalidGroundTruthColumnName = "Ground truth column name should be passed since columns in data are > 0."
     InvalidGroundTruthColumnNameData = "Ground truth column name not found in input data."
     InvalidPredictionColumnNameData = "Prediction Column name not found in input data."
 
@@ -165,12 +212,12 @@ class ErrorStrings:
     BadInputData = "Failed to load data with error: [{error}]"
     BadEvaluationConfigFile = "Evaluation Config file failed to load due to [{error}]"
     BadEvaluationConfigParam = "Evaluation Config Params failed to load due to [{error}]"
+    BadEvaluationConfig = "Evaluation Config failed to load due to [{error}]"
 
     BadForecastGroundTruthData = "For forecasting tasks, the table needs to be provided " \
-                                 "in jsonl format as the ground_truths parameter  " \
-                                 "or as mltable through ground_truths_mltable parameter." \
+                                 "in the ground_truths parameter." \
                                  "The table must contain time, prediction " \
-                                 "groud truth and time series IDs columns."
+                                 "ground truth and time series IDs columns."
     BadRegressionColumnType = "Expected target columns of type float found [{y_test_dtype}] instead"
 
     # Logging Related
@@ -193,11 +240,25 @@ class ForecastColumns:
     _FORECAST_ORIGIN_COLUMN_DEFAULT = '_automl_forecast_origin'
 
 
-ALLOWED_PIPELINE_PARAMS = set([
+class PerformanceColumns:
+    """The column names for the performance metadata output."""
+
+    BATCH_SIZE_COLUMN_NAME = 'batch_size'
+    START_TIME_COLUMN_NAME = 'start_time_iso'
+    END_TIME_COLUMN_NAME = 'end_time_iso'
+    LATENCY_COLUMN_NAME = 'time_taken_ms'
+    INPUT_CHARACTERS_COLUMN_NAME = 'input_character_count'
+    OUTPUT_CHARACTERS_COLUMN_NAME = 'output_character_count'
+    INPUT_TOKENS_COLUMN_NAME = 'input_token_count'
+    OUTPUT_TOKENS_COLUMN_NAME = 'output_token_count'
+
+
+ALLOWED_PIPELINE_PARAMS = {
     "tokenizer_config",
+    "generator_config",
     "model_kwargs",
     "pipeline_init_args",
     "trust_remote_code",
     "source_lang",
     "target_lang"
-])
+}

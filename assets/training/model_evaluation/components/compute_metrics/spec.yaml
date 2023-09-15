@@ -1,11 +1,10 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: compute_metrics
 display_name: Compute Metrics
-description: Calculate model performance metics, given ground truth and prediction data.
+description: Calculate model performance metrics, given ground truth and prediction data.
 
-version: 0.0.10
+version: 0.0.14
 type: command
-
 tags:
   type: evaluation
   sub_type: compute_metrics
@@ -31,6 +30,8 @@ inputs:
       fill-mask,
       image-classification,
       image-classification-multilabel,
+      image-object-detection,
+      image-instance-segmentation,
     ]
     description: "Task type"
   ground_truth:
@@ -60,14 +61,15 @@ inputs:
   evaluation_config_params:
     type: string
     optional: true
-    description: "JSON Serielized string of evaluation_config"
+    description: "JSON Serialized string of evaluation_config"
 
 outputs:
   evaluation_result:
     type: uri_folder
 
+is_deterministic: True
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/9
+environment: azureml://registries/azureml/environments/model-evaluation/versions/11
 
 command: >-
   python compute_metrics.py

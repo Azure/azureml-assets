@@ -30,6 +30,14 @@ RESOURCES_DIR = Path("resources/validate")
         ("good-validation", True, True, None, True),
         ("correct-order", True, True, None, True),
         ("missing-description-file", True, True, None, False),
+        ("data-good", False, True, None, True),
+        ("data-path-mismatch-1", False, True, None, False),
+        ("data-path-mismatch-2", False, True, None, False),
+        ("dockerfile-from-ce-image", False, False, None, False),
+        ("dockerfile-from-ce-image-comment", False, False, None, False),
+        ("dockerfile-from-ce-image-windows", False, False, None, False),
+        ("model-with-microsoft", False, True, None, True),
+        ("model-with-azure", False, True, None, False),
     ]
 )
 def test_validate_assets(test_subdir: str, check_images: bool, check_names: bool,
