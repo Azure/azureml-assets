@@ -97,6 +97,10 @@ RUN set -eux; \
     javac --version; \
     java --version
 
+# Download nltk punkt and averaged_perceptron_trigger files to image for managed vnet support
+RUN python3 -m nltk.downloader punkt && \
+    python3 -m nltk.downloader averaged_perceptron_tagger
+
 ENV TIKA_SERVER_JAR file:///tika-server.jar
 
 RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.6.0/tika-server-standard-2.6.0.jar'; \
