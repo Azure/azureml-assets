@@ -1,0 +1,44 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+display_name: test_endpoint_preparer
+description: Pipeline to test endpoint preparer.
+settings:
+  default_compute: azureml:serverless
+
+inputs:
+  input_dataset:
+    type: uri_file
+    path: ../data/sample_batch_data.jsonl
+  model_type: llama
+  batch_input_pattern: >-
+    '{"input_data": 
+      {
+        "input_string": ["###<prompt>"],
+        "parameters":
+        {
+          "temperature": 0.6,
+          "max_new_tokens": 100,
+          "do_sample": true
+        }
+      },
+    "_batch_request_metadata": ###<_batch_request_metadata>
+    }'
+
+outputs:
+  formatted_data:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/
+
+jobs:
+  run_compute_perf_metrics:
+    type: command
+    component: ../../components/batch-inference-preparer/spec.yaml
+    limits: 
+      timeout: 900
+    inputs:
+      input_dataset: ${{parent.inputs.input_dataset}}
+      model_type: ${{parent.inputs.model_type}}
+      batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
+    outputs:
+      formatted_data: ${{parent.outputs.formatted_data}}

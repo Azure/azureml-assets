@@ -27,6 +27,9 @@ class Constants:
     PERF_INPUT_FILE_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data/perf_metrics_data.jsonl"
     )
+    BATCH_INFERENCE_PREPARER_FILE_PATH = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/sample_batch_input.jsonl"
+    )
     OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"
     OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"
     TEST_REGISTRY_NAME = "Benchmark-Test"

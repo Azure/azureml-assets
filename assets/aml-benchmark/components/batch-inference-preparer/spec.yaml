@@ -1,0 +1,37 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: batch_endpoint_preparer
+display_name: Prepare Batch Inference
+description: Prepare the jsonl file and endpoint for batch inference component.
+version: 0.0.1
+
+inputs:
+  input_dataset: 
+    type: uri_folder
+    description: Input jsonl dataset that contains prompt.
+    optional: False
+  model_type:
+    type: string
+    description: The model type.
+    optional: False
+    enum:
+      - llama
+      - aoai
+  batch_input_pattern:
+    type: string
+    description: The string for the batch input pattern.
+    optional: False
+outputs:
+  formatted_data:
+    type: mltable
+    description: Path to the folder where the payload will be stored.
+
+code: ../src
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+command: >-
+  python -m batch_inference_preparer.main
+  --input_dataset ${{inputs.input_dataset}}
+  --model_type ${{inputs.model_type}}
+  --batch_input_pattern '${{inputs.batch_input_pattern}}'
+  --formatted_data ${{outputs.formatted_data}}
