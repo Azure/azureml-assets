@@ -11,6 +11,7 @@ from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
 from pyspark.sql.functions import col, lit
 from shared_utilities.datetime_utils import parse_datetime_from_string
+from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
     init_spark,
     read_mltable_in_spark,
@@ -87,13 +88,14 @@ def mdc_preprocessor(
     )
 
     # Read mltable from preprocessed_data
-    df = read_mltable_in_spark(mltable_path=des_path)
-
-    if df.count() == 0:
-        raise Exception(
-            "The window for this current run contains no data. "
+    try:
+        df = read_mltable_in_spark(mltable_path=des_path)
+    except Exception:
+        print("No data was found for input 'input_data'. Skipping preprocessing.")
+        post_warning_event("The window for this current run contains no data. "
             + "Please visit aka.ms/mlmonitoringhelp for more information."
         )
+        return
 
     # Output MLTable
     first_data_row = df.select(MDC_DATA_COLUMN).rdd.map(lambda x: x).first()
