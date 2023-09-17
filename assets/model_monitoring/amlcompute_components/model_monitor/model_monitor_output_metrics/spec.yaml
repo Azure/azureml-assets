@@ -1,10 +1,10 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: model_monitor_output_metrics
+name: model_monitor_output_metrics_aml
 display_name: Model Monitor - Output Metrics
 description: Output the computed model monitor metrics to the default datastore.
-version: 0.3.3
+version: 0.0.1
 is_deterministic: true
 
 code: ../../src/

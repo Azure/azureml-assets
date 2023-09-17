@@ -1,10 +1,10 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: gsq_annotation_compute_metrics
+name: gsq_annotation_compute_metrics_aml
 display_name: Annotation - Compute Metrics
 description: Compute annotation metrics given a deployment's model data input.
-version: 0.3.3
+version: 0.0.1
 is_deterministic: True
 inputs:
   annotation_histogram: 

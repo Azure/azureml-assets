@@ -1,10 +1,10 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: model_monitor_feature_selector
+name: model_monitor_feature_selector_aml
 display_name: Model Monitor - Feature Selector
 description: Selects features to compute signal metrics on.
-version: 0.3.0
+version: 0.0.1
 is_deterministic: true
 
 code: ../../src

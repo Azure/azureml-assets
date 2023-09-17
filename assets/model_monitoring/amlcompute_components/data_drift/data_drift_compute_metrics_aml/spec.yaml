@@ -1,10 +1,10 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: data_drift_compute_metrics
+name: data_drift_compute_metrics_aml
 display_name: Data Drift - Compute Metrics
 description: Compute data drift metrics given a baseline and a deployment's model data input.
-version: 0.3.4
+version: 0.0.1
 is_deterministic: true
 
 code: ../../src

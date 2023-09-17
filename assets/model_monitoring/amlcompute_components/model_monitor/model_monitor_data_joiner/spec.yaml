@@ -1,10 +1,10 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: model_monitor_data_joiner
+name: model_monitor_data_joiner_aml
 display_name: Model Monitor - Data Joiner
 description: Joins two data assets on the given columns for model monitor.
-version: 0.3.2
+version: 0.0.1
 is_deterministic: true
 
 code: ../../src/

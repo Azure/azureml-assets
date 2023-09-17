@@ -1,10 +1,10 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: model_monitor_compute_histogram_buckets
+name: model_monitor_compute_histogram_buckets_aml
 display_name: Model Monitor - Compute Histogram Buckets
 description: Compute histogram buckets given up to two datasets.
-version: 0.3.0
+version: 0.0.1
 is_deterministic: true
 
 code: ../../src

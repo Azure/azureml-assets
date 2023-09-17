@@ -1,10 +1,10 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: gsq_annotation_compute_histogram
+name: gsq_annotation_compute_histogram_aml
 display_name: Annotation - Compute Histogram
 description: Compute annotation histogram given a deployment's model data input.
-version: 0.4.0
+version: 0.0.1
 is_deterministic: false
 inputs:
   production_dataset: 

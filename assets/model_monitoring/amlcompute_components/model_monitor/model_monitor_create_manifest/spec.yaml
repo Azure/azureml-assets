@@ -1,10 +1,10 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: model_monitor_create_manifest
+name: model_monitor_create_manifest_aml
 display_name: Model Monitor - Create Manifest
 description: Creates the model monitor metric manifest.
-version: 0.3.0
+version: 0.0.1
 is_deterministic: true
 
 code: ../../src/
