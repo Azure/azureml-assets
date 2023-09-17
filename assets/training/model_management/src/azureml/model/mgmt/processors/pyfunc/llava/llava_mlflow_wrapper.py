@@ -118,12 +118,15 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
 
             # If prompt not specified, make prompt from direct question column.
             if not prompt:
+                prompt_from_direct_question = True
                 if self._model_version == self.LLAVA_MPT:
                     prompt = f"A conversation between a user and an LLM-based AI assistant. The assistant gives helpful and honest answers.<|im_end|><|im_start|>user\n<im_start><image><im_end>\n{direct_question}<|im_end|><|im_start|>assistant"
                 elif self._model_version == self.LLAVA_7B:
                     prompt = f"[INST] <<SYS>>\nYou are a helpful language and vision assistant. You are able to understand the visual content that the user provides, and assist the user with a variety of tasks using natural language.\n<</SYS>>\n\n<im_start><image><im_end>\n{direct_question} [/INST]"
                 elif self._model_version == self.LLAVA_13B:
                     prompt = f"input to llava: A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <im_start><image><im_end>\n{direct_question} ASSISTANT:"
+            else:
+                prompt_from_direct_question = False
 
             # Make image input.
             image_tensor = self._image_processor.preprocess(pil_image, return_tensors="pt")["pixel_values"].half().cuda()
@@ -146,12 +149,13 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
 
             # Convert response to text and trim.
             response = self._tokenizer.decode(output_ids[0, input_ids.shape[1]:]).strip()
-            if response.startswith(": "):
-                response = response[2:]
-            if response.endswith(self._stop_str):
-                response = response[:-len(self._stop_str)]
-            if response.endswith("</s>"):
-                response = response[:-len("</s>")]
+            if prompt_from_direct_question:
+                if response.startswith(": "):
+                    response = response[2:]
+                if response.endswith(self._stop_str):
+                    response = response[:-len(self._stop_str)]
+                if response.endswith("</s>"):
+                    response = response[:-len("</s>")]
 
             # Accumulate into response list.
             responses.append(response)
