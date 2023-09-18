@@ -142,7 +142,7 @@ def model_monitoring_root_directory() -> str:
 @pytest.fixture(scope="session")
 def components_directory(model_monitoring_root_directory) -> str:
     """Return the path to the directory holding model monitoring's components."""
-    return os.path.abspath(os.path.join(model_monitoring_root_directory, "components"))
+    return os.path.abspath(os.path.join(model_monitoring_root_directory, "amlcompute_components"))
 
 
 @pytest.fixture(scope="session")
@@ -231,33 +231,33 @@ def publish_data_drift_model_monitor_component(
     os.makedirs(out_directory, exist_ok=True)
 
     for component in model_monitoring_components:
-        if component["name"] != "data_drift_signal_monitor":
+        if component["name"] != "data_drift_signal_monitor_command":
             continue
         print(f"Publishing {component['name']}..")
         component["jobs"]["compute_feature_importances"][
             "component"
-        ] = f"azureml:feature_importance_metrics:{asset_version}"
+        ] = f"azureml:feature_importance_metrics_command:{asset_version}"
         component["jobs"]["feature_selection"][
             "component"
-        ] = f"azureml:model_monitor_feature_selector:{asset_version}"
+        ] = f"azureml:model_monitor_feature_selector_command:{asset_version}"
         component["jobs"]["compute_drift_metrics"][
             "component"
-        ] = f"azureml:data_drift_compute_metrics:{asset_version}"
+        ] = f"azureml:data_drift_compute_metrics_command:{asset_version}"
         component["jobs"]["output_signal_metrics"][
             "component"
-        ] = f"azureml:model_monitor_output_metrics:{asset_version}"
+        ] = f"azureml:model_monitor_output_metrics_command:{asset_version}"
         component["jobs"]["evaluate_metric_thresholds"][
             "component"
-        ] = f"azureml:model_monitor_evaluate_metrics_threshold:{asset_version}"
+        ] = f"azureml:model_monitor_evaluate_metrics_threshold_command:{asset_version}"
         component["jobs"]["compute_histogram_buckets"][
             "component"
-        ] = f"azureml:model_monitor_compute_histogram_buckets:{asset_version}"
+        ] = f"azureml:model_monitor_compute_histogram_buckets_command:{asset_version}"
         component["jobs"]["compute_baseline_histogram"][
             "component"
-        ] = f"azureml:model_monitor_compute_histogram:{asset_version}"
+        ] = f"azureml:model_monitor_compute_histogram_command:{asset_version}"
         component["jobs"]["compute_target_histogram"][
             "component"
-        ] = f"azureml:model_monitor_compute_histogram:{asset_version}"
+        ] = f"azureml:model_monitor_compute_histogram_command:{asset_version}"
         component["version"] = asset_version
 
         spec_path = os.path.join(
@@ -288,24 +288,24 @@ def publish_feature_attr_drift_signal_monitor_component(
     os.makedirs(out_directory, exist_ok=True)
 
     for component in model_monitoring_components:
-        if component["name"] != "feature_attribution_drift_signal_monitor":
+        if component["name"] != "feature_attribution_drift_signal_monitor_command":
             continue
         print(f"Publishing {component['name']}..")
         component["jobs"]["compute_baseline_explanations"][
             "component"
-        ] = f"azureml:feature_importance_metrics:{asset_version}"
+        ] = f"azureml:feature_importance_metrics_command:{asset_version}"
         component["jobs"]["compute_production_explanations"][
             "component"
-        ] = f"azureml:feature_importance_metrics:{asset_version}"
+        ] = f"azureml:feature_importance_metrics_command:{asset_version}"
         component["jobs"]["compute_feature_attribution"][
             "component"
-        ] = f"azureml:feature_attribution_drift_compute_metrics:{asset_version}"
+        ] = f"azureml:feature_attribution_drift_compute_metrics_command:{asset_version}"
         component["jobs"]["output_signal_metrics"][
             "component"
-        ] = f"azureml:model_monitor_output_metrics:{asset_version}"
+        ] = f"azureml:model_monitor_output_metrics_command:{asset_version}"
         component["jobs"]["evaluate_metric_thresholds"][
             "component"
-        ] = f"azureml:model_monitor_evaluate_metrics_threshold:{asset_version}"
+        ] = f"azureml:model_monitor_evaluate_metrics_threshold_command:{asset_version}"
         component["version"] = asset_version
 
         spec_path = os.path.join(
@@ -336,21 +336,21 @@ def publish_prediction_drift_model_monitor_component(
     os.makedirs(out_directory, exist_ok=True)
 
     for component in model_monitoring_components:
-        if component["name"] != "prediction_drift_signal_monitor":
+        if component["name"] != "prediction_drift_signal_monitor_command":
             continue
         print(f"Publishing {component['name']}..")
         component["jobs"]["feature_selection"][
             "component"
-        ] = f"azureml:model_monitor_feature_selector:{asset_version}"
+        ] = f"azureml:model_monitor_feature_selector_command:{asset_version}"
         component["jobs"]["compute_drift_metrics"][
             "component"
-        ] = f"azureml:data_drift_compute_metrics:{asset_version}"
+        ] = f"azureml:data_drift_compute_metrics_command:{asset_version}"
         component["jobs"]["output_signal_metrics"][
             "component"
-        ] = f"azureml:model_monitor_output_metrics:{asset_version}"
+        ] = f"azureml:model_monitor_output_metrics_command:{asset_version}"
         component["jobs"]["evaluate_metric_thresholds"][
             "component"
-        ] = f"azureml:model_monitor_evaluate_metrics_threshold:{asset_version}"
+        ] = f"azureml:model_monitor_evaluate_metrics_threshold_command:{asset_version}"
         component["version"] = asset_version
 
         spec_path = os.path.join(
@@ -381,33 +381,33 @@ def publish_data_quality_model_monitor_component(
     os.makedirs(out_directory, exist_ok=True)
 
     for component in model_monitoring_components:
-        if component["name"] != "data_quality_signal_monitor":
+        if component["name"] != "data_quality_signal_monitor_command":
             continue
         print(f"Publishing {component['name']}..")
         component["jobs"]["compute_feature_importances"][
             "component"
-        ] = f"azureml:feature_importance_metrics:{asset_version}"
+        ] = f"azureml:feature_importance_metrics_command:{asset_version}"
         component["jobs"]["feature_selection"][
             "component"
-        ] = f"azureml:model_monitor_feature_selector:{asset_version}"
+        ] = f"azureml:model_monitor_feature_selector_command:{asset_version}"
         component["jobs"]["compute_baseline_data_statistics"][
             "component"
-        ] = f"azureml:data_quality_data_statistics:{asset_version}"
+        ] = f"azureml:data_quality_data_statistics_command:{asset_version}"
         component["jobs"]["compute_baseline_data_quality"][
             "component"
-        ] = f"azureml:data_quality_compute_metrics:{asset_version}"
+        ] = f"azureml:data_quality_compute_metrics_command:{asset_version}"
         component["jobs"]["compute_target_data_quality"][
             "component"
-        ] = f"azureml:data_quality_compute_metrics:{asset_version}"
+        ] = f"azureml:data_quality_compute_metrics_command:{asset_version}"
         component["jobs"]["join_data_quality_metrics"][
             "component"
-        ] = f"azureml:data_quality_metrics_joiner:{asset_version}"
+        ] = f"azureml:data_quality_metrics_joiner_command:{asset_version}"
         component["jobs"]["output_signal_metrics"][
             "component"
-        ] = f"azureml:model_monitor_output_metrics:{asset_version}"
+        ] = f"azureml:model_monitor_output_metrics_command:{asset_version}"
         component["jobs"]["evaluate_metric_thresholds"][
             "component"
-        ] = f"azureml:model_monitor_evaluate_metrics_threshold:{asset_version}"
+        ] = f"azureml:model_monitor_evaluate_metrics_threshold_command:{asset_version}"
         component["version"] = asset_version
 
         spec_path = os.path.join(
