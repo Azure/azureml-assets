@@ -20,9 +20,11 @@ from utils import (
 
 
 class TestBatchInferencePreparerComponent:
+    """Component test for batch inference preparer."""
     EXP_NAME = "batch-inference-preparer-test"
 
     def test_batch_inference_preparer(self, temp_dir: str):
+        """Test batch inference preparer."""
         ml_client = get_mlclient()
         pipeline_job = self._get_pipeline_job(
             self.test_batch_inference_preparer.__name__,

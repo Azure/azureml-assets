@@ -20,9 +20,11 @@ from utils import (
 
 
 class TestBatchOutputFormatterComponent:
+    """Component test for batch output formatter."""
     EXP_NAME = "batch-inference-preparer-test"
 
     def test_batch_output_formatter(self, temp_dir: str):
+        """Test method for batch inference preparer."""
         ml_client = get_mlclient()
         pipeline_job = self._get_pipeline_job(
             self.test_batch_output_formatter.__name__,

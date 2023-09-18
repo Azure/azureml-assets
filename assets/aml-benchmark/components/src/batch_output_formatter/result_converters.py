@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Class for convert the results to dict."""
+
 import copy
 from typing import Any, Dict
 import pandas as pd
@@ -13,7 +15,9 @@ class ResultConverters:
 
     def __init__(
             self, model_type: str, metadata_key: str, data_id_key: str,
-            label_key: str, ground_truth_df: pd.DataFrame) -> None:
+            label_key: str, ground_truth_df: pd.DataFrame
+    ) -> None:
+        """Init for the result converter."""
         self._model_type = model_type
         self._metadata_key = metadata_key
         self._label_key = label_key

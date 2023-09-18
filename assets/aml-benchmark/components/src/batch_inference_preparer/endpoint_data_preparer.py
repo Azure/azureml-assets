@@ -1,19 +1,22 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Class for endpoint data preparer."""
+
 from typing import Any, Dict
 import json
 import re
 
 
 class EndpointDataPreparer:
-    """Endpoint data preparer class"""
+    """Endpoint data preparer class."""
     def __init__(self, model_type: str, batch_input_pattern: str):
+        """Init for endpoint data preparer."""
         self._model_type = model_type
         self._batch_input_pattern = batch_input_pattern
 
     def convert_input_dict(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
-        """Convert input dict to the corresponding payload"""
+        """Convert input dict to the corresponding payload."""
         return self._convert_python_pattern(origin_json_dict)
 
     def validate_output(self, output_payload_dict: Dict[str, Any]):

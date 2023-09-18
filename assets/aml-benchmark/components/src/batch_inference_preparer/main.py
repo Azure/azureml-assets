@@ -1,5 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+
+"""The entry script for endpoint input preparer."""
+
 import os
 import argparse
 import pandas as pd
@@ -46,7 +49,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
-    """Main function of the script."""
+    """Entry function of the script."""
     args = parse_args()
 
     input_dataset = args.input_dataset

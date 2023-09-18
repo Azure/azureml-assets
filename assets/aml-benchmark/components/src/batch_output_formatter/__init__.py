@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Compute Performance Metrics init file."""
+"""Batch output formatter init file."""
 
 import sys
 import os

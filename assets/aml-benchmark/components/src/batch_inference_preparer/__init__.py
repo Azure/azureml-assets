@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Compute Performance Metrics init file."""
+"""Batch inference preparer init file."""
 
 import sys
 import os

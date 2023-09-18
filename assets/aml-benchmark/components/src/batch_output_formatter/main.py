@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Entry script for batch output formatter component."""
+
 import argparse
 import os
 import pandas as pd
@@ -34,7 +36,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
-    """Main function of the script."""
+    """Entry script for the script."""
     args = parse_args()
 
     logger.info("Read batch output data now.")
