@@ -1,5 +1,5 @@
 # PTCA Image (enabling Singularity Support)
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch200:biweekly.202309.1
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch200:biweekly.202309.1
 #FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20230907.v1
 
 RUN apt-get update && apt-get -y upgrade
