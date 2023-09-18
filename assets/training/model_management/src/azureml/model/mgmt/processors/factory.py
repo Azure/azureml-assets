@@ -22,11 +22,11 @@ from azureml.model.mgmt.processors.transformers.convertors import (
     NLPMLflowConvertor,
     VisionMLflowConvertor,
     WhisperMLflowConvertor,
-    StableDiffusionMlflowConvertor,
 )
 from azureml.model.mgmt.processors.pyfunc.convertors import (
     MMLabDetectionMLflowConvertor,
     CLIPMLFlowConvertor,
+    StableDiffusionMlflowConvertor,
 )
 
 
