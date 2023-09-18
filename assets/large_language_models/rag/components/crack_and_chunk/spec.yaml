@@ -4,7 +4,7 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.19
+version: 0.0.24
 name: llm_rag_crack_and_chunk
 display_name: LLM - Crack and Chunk Data
 is_deterministic: true
@@ -60,6 +60,13 @@ inputs:
     - "True"
     - "False"
     description:  "Whether to use RecursiveCharacterTextSplitter to split documents into chunks"
+  output_format:
+    type: string
+    default: "csv"
+    enum:
+    - "csv"
+    - "jsonl"
+    description: "Format of the output chunk file"
 
 outputs:
    output_chunks:
@@ -80,3 +87,4 @@ command: >-
   $[[--document_path_replacement_regex '${{inputs.document_path_replacement_regex}}']]
   --max_sample_files ${{inputs.max_sample_files}}
   --use_rcts '${{inputs.use_rcts}}'
+  --output_format ${{inputs.output_format}}

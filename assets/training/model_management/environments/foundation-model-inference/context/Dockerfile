@@ -1,8 +1,11 @@
 # Use the base image that includes the necessary dependencies
 FROM ghcr.io/huggingface/text-generation-inference:0.9
 
-ENV DEBIAN_FRONTEND=noninteractive AZUREML_ENTRY_SCRIPT="mlflow_score_script.py" AML_APP_ROOT="/var/mlflow_resources" \ 
-    SVDIR=/var/runit WORKER_TIMEOUT=3600
+ENV DEBIAN_FRONTEND=noninteractive \
+    AZUREML_ENTRY_SCRIPT="mlflow_score_script.py" \
+    AML_APP_ROOT="/var/mlflow_resources" \ 
+    SVDIR=/var/runit \
+    WORKER_TIMEOUT=3600
 
 # Remove cached conda packages (which contains some vulnerable packages as well)
 RUN rm -rf /opt/conda/pkgs

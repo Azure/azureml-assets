@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
+# Set the shared environment path
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/dbcopilot
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
@@ -26,6 +27,9 @@ RUN /bin/bash -c "source ~/.bashrc"
 ## Install dbcopilot
 COPY ./extra_requirements.txt ./
 RUN pip install -r extra_requirements.txt
+
+# fix for https://portal.microsofticm.com/imp/v3/incidents/incident/418102604/summary
+RUN pip install cryptography==41.0.3
 
 RUN set -eux; \
     apt-get update; \

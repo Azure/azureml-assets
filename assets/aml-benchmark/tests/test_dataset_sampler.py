@@ -54,6 +54,7 @@ def _verify_and_get_output_records(
         # Read the input file
         with open(input_path, "r") as f:
             input_records = [json.loads(line) for line in f]
+        input_row_count = len(input_records)
 
         # Read the output file
         with open(output_path, "r") as f:
@@ -64,12 +65,15 @@ def _verify_and_get_output_records(
         if n_samples:
             assert output_row_count == n_samples
         else:
-            assert output_row_count == int(len(input_records) * sampling_ratio)
+            assert output_row_count == int(input_row_count * sampling_ratio)
 
             if sampling_style == "head":
                 assert output_records == input_records[:output_row_count]
             elif sampling_style == "tail":
                 assert output_records == input_records[-output_row_count:]
+            elif sampling_style == "duplicate":
+                assert output_records[:input_row_count] == input_records
+                assert output_records[input_row_count:] == input_records[:output_row_count - input_row_count]
         out_record_list.append(output_records)
     return out_record_list
 
@@ -85,6 +89,7 @@ class TestDatasetSamplerComponent:
             ("head", 0.1, None),
             ("tail", None, 6),
             ("random", None, 5),
+            ("duplicate", 1.2, None),
         ],
     )
     def test_dataset_sampler_component(
@@ -370,9 +375,14 @@ class TestDatasetSamplerScript:
             expected_exception_mssg = (
                 "Either 'sampling_ratio' or 'n_samples' must be specified."
             )
+        elif sampling_ratio > 1:
+            expected_exception_mssg = (
+                "Invalid sampling_ratio: sampling_ratio > 1 only allowed for sampling style `duplicate`. "
+                "Received: sampling_style=head."
+            )
         else:
             expected_exception_mssg = (
-                f"Invalid sampling_ratio: {float(sampling_ratio)}. Please specify float in (0, 1]."
+                f"Invalid sampling_ratio: {float(sampling_ratio)}. Please specify a positive float number."
             )
 
         # Run the script and verify the exception
@@ -393,7 +403,7 @@ class TestDatasetSamplerScript:
             )
         else:
             expected_exception_mssg = (
-                f"Invalid n_samples: [{n_samples}]. Please specify positive integer."
+                f"Invalid n_samples: {n_samples}. Please specify positive integer."
             )
 
         # Run the script and verify the exception
@@ -425,7 +435,8 @@ class TestDatasetSamplerScript:
         input_file_path = self._create_input_file(temp_dir, file_name="temp_test.jsonl")
         # the message below is the default message for invalid choice directly from argparse
         expected_exception_mssg = (
-            f"argument --sampling_style: invalid choice: '{sampling_style}' (choose from 'head', 'tail', 'random')"
+            f"argument --sampling_style: invalid choice: '{sampling_style}' "
+            "(choose from 'head', 'tail', 'random', 'duplicate')"
         )
 
         # Run the script and verify the exception
@@ -437,7 +448,7 @@ class TestDatasetSamplerScript:
             exception_message = e.output.strip()
             assert expected_exception_mssg in exception_message
 
-    @pytest.mark.parametrize("sampling_style", ["head", "tail"])
+    @pytest.mark.parametrize("sampling_style", ["head", "tail", "duplicate"])
     def test_random_seed_for_non_random_sampling(
         self, temp_dir: str, sampling_style: str
     ):
@@ -451,7 +462,10 @@ class TestDatasetSamplerScript:
         # Run the script and verify the exception
         try:
             self._run_sampler_script(
-                input_file_path, sampling_style=sampling_style, sampling_ratio=0.2
+                input_file_path,
+                sampling_style=sampling_style,
+                sampling_ratio=0.2,
+                output_dataset=temp_dir,
             )
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()

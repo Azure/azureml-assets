@@ -1,7 +1,11 @@
-## 1.16.0 (Unreleased)
+## 1.17.0 (Unreleased)
 ### 🚀 New Features
 
 ### 🐛 Bugs Fixed
+
+## 1.16.0 (2023-09-12)
+### 🚀 New Features
+- [#1207](https://github.com/Azure/azureml-assets/pull/1207) Support copy of changed files
 
 ## 1.15.2 (2023-09-08)
 ### 🐛 Bugs Fixed

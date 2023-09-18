@@ -29,8 +29,9 @@ import tiktoken
 from azure.ai.ml.identity import CredentialUnavailableError, AzureMLOnBehalfOfCredential
 from azure.ai.ml.identity._internal import _scopes_to_resource
 from azure.core.credentials import AccessToken, TokenCredential
-from pyspark.sql import DataFrame
-from pyspark.sql.types import IntegerType, StructField, StructType
+from pyspark.sql import DataFrame, Window
+from pyspark.sql.types import IntegerType, StructField, StructType, StringType
+from pyspark.sql.functions import col, row_number, monotonically_increasing_id
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 from shared_utilities import io_utils
@@ -41,6 +42,7 @@ logging.basicConfig(level=logging.INFO)
 DEFAULT_INDENT = 2
 
 RATING = "rating"
+INDEX = "index"
 LABEL_KEYS = [RATING]
 PROMPT = "prompt"
 COMPLETION = "completion"
@@ -525,6 +527,9 @@ COUNT = "count"
 METRIC_NAME = "metric_name"
 METRIC_VALUE = "metric_value"
 GROUP = "group"
+GROUP_DIMENSION = "group_dimension"
+SAMPLES_NAME = "samples_name"
+ASSET = "asset"
 THRESHOLD = "threshold_value"
 PRODUCTION_ROW_COUNT = "production_data"
 REFERENCE_ROW_COUNT = "reference_data"
@@ -1055,6 +1060,7 @@ def _request_api(
                     r["message"]["content"]
                     for r in response_data["choices"]
                 ],
+                "index": request_params,
                 "finish_reason": [
                     r["finish_reason"] for r in response_data["choices"]
                 ],
@@ -1285,11 +1291,20 @@ def _parse_responses(
             print(f"Failed decoding examples: {sample_examples}")
             num_failed += 1
 
+    # if the number of expected samples does not match the output samples
+    # there was an issue getting the response and we cannot accurately map
+    # the indices with the input data
+    index_mapping = job.prompt_data.input_idx
+    if output_examples[0] is None:
+        print("Not all responses could be parsed correctly. Ignoring indices for violations")
+        index_mapping = [-1] * len(index_mapping)
+
     if num_failed == num_samples:
         job.status = _JobStatus.PARSING_FAILED
     else:
         job.status = _JobStatus.SUCCESS
         job.response_data["output_examples"] = output_examples
+        job.response_data["index_mapping"] = index_mapping
 
 
 class _JobManager:
@@ -1355,9 +1370,16 @@ class _JobManager:
             if job.status == _JobStatus.SUCCESS
             for result in job.response_data["output_examples"][0]
         ]
-        return pd.DataFrame(
-            {key: [res[key] for res in job_results] for key in LABEL_KEYS}
-        )
+        job_indices = [
+                result
+                for job in jobs
+                if job.status == _JobStatus.SUCCESS
+                for result in job.response_data["index_mapping"]
+        ]
+        return pd.DataFrame({
+            RATING: [res[RATING] for res in job_results],
+            INDEX: job_indices,
+        })
 
     def make_job(self, **job_params) -> _Job:
         """Make job, tracking job_idx internally."""
@@ -1401,6 +1423,13 @@ def run():
     parser.add_argument("--api_call_retry_backoff_factor", type=int, default=3)
     parser.add_argument("--api_call_retry_max_count", type=int, default=10)
     parser.add_argument("--histogram", type=str, required=True)
+    parser.add_argument("--samples_index", type=str, required=True)
+    parser.add_argument("--groundedness_violations", type=str, required=True)
+    parser.add_argument("--fluency_violations", type=str, required=True)
+    parser.add_argument("--relevance_violations", type=str, required=True)
+    parser.add_argument("--coherence_violations", type=str, required=True)
+    parser.add_argument("--similarity_violations", type=str, required=True)
+
     parser.add_argument("--workspace_connection_arm_id", type=str, required=True)
     args = parser.parse_args()
 
@@ -1459,10 +1488,19 @@ def run():
     # TODO add validation for threshold args!!
     print(f"Running with args: {args}")
 
+    violations = {
+        "groundedness": args.groundedness_violations,
+        "relevance": args.relevance_violations,
+        "fluency": args.fluency_violations,
+        "similarity": args.similarity_violations,
+        "coherence": args.coherence_violations,
+    }
+
     apply_annotation(
         metric_names=metric_names,
         production_dataset=args.production_dataset,
         histogram=args.histogram,
+        samples_index=args.samples_index,
         model_deployment_name=args.model_deployment_name,
         workspace_connection_arm_id=args.workspace_connection_arm_id,
         num_samples=args.num_samples,
@@ -1474,6 +1512,7 @@ def run():
         completion_column_name=args.completion_column_name,
         context_column_name=args.context_column_name,
         ground_truth_column_name=args.ground_truth_column_name,
+        violations=violations,
     )
 
 
@@ -1493,6 +1532,8 @@ def apply_annotation(
     completion_column_name,
     context_column_name,
     ground_truth_column_name,
+    samples_index,
+    violations,
 ):
     """Apply annotation to all samples in the production_dataset."""
     production_df = io_utils.read_mltable_in_spark(production_dataset)
@@ -1522,6 +1563,9 @@ def apply_annotation(
     }
     # Sampling
     production_df = production_df.sample(withReplacement=False, fraction=sample_rate)
+    production_df_with_index = production_df.withColumn("id",
+                                                        row_number()
+                                                        .over(Window.orderBy(monotonically_increasing_id()))-1)
 
     spark = io_utils.init_spark()
     spark_conf = spark.sparkContext.getConf()
@@ -1601,6 +1645,7 @@ def apply_annotation(
 
     print(f"starting submit_inputs with endpoint_args={endpoint_args}")
     all_metrics_pdf = None
+    samples_index_rows = []
     for metric_name in metric_names:
         # Run inference over input dataset
         print(f"Begin {metric_name} request.")
@@ -1639,7 +1684,8 @@ def apply_annotation(
             annotate_batch,
             schema=StructType(
                 [
-                    StructField(name=RATING, dataType=IntegerType(), nullable=True),
+                    StructField(RATING, IntegerType(), True),
+                    StructField(INDEX, IntegerType(), True),
                 ]
             ),
         ).cache()
@@ -1665,6 +1711,22 @@ def apply_annotation(
         metrics_pdf[THRESHOLD] = metric_threshold_value
         print(metrics_pdf)
 
+        # create violations table if there are violations
+        violations_df = annotations_df.filter((col(RATING) < metric_threshold_value) & (col(INDEX) != -1))
+        if violations_df.count() > 0:
+            violations_df_full = production_df_with_index.join(violations_df,
+                                                               production_df_with_index.id == violations_df.index,
+                                                               "inner").drop(violations_df.index).drop(
+                                                                   production_df_with_index.id).withColumnRenamed(
+                                                                       'rating', metric_name_compact)
+            run_id = os.environ.get("AZUREML_RUN_ID")
+            io_utils.save_spark_df_as_mltable(violations_df_full, violations[metric_name_compact.lower()])
+            samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
+                                       GROUP: "",
+                                       GROUP_DIMENSION: "",
+                                       SAMPLES_NAME: "Violations",
+                                       ASSET: f"azureml_{run_id}_output_data_{metric_name_compact.lower()}_violations:1"})  # noqa: E501
+
         if all_metrics_pdf is None:
             all_metrics_pdf = metrics_pdf
         else:
@@ -1681,6 +1743,19 @@ def apply_annotation(
             },
             ignore_index=True)
     print("Finished calculating metrics based on annotations.")
+
+    metadata_schema = StructType(
+        [
+            StructField(METRIC_NAME, StringType(), True),
+            StructField(GROUP, StringType(), True),
+            StructField(GROUP_DIMENSION, StringType(), True),
+            StructField(SAMPLES_NAME, StringType(), True),
+            StructField(ASSET, StringType(), True),
+        ]
+    )
+    # Create a new DataFrame for the samples index data
+    samples_df = spark.createDataFrame(samples_index_rows, metadata_schema)
+    io_utils.save_spark_df_as_mltable(samples_df, samples_index)
 
     io_utils.save_spark_df_as_mltable(
         spark.createDataFrame(all_metrics_pdf),
