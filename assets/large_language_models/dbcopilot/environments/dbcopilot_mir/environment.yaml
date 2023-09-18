@@ -1,0 +1,5 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+name: azureml/curated/llm-dbcopilot-mir
+build:
+  path: context
+  dockerfile_path: Dockerfile
