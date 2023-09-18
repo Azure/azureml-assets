@@ -25,6 +25,7 @@ class SamplingStyle(Enum):
     head: str = "head"
     tail: str = "tail"
     random: str = "random"
+    duplicate: str = "duplicate"
 
 
 def parse_args() -> argparse.Namespace:
@@ -47,7 +48,10 @@ def parse_args() -> argparse.Namespace:
         "--sampling_ratio",
         type=float,
         default=None,
-        help="Ratio of samples to be taken specified as a float in (0, 1] (alternative to --n_samples).",
+        help=(
+            "Ratio of samples to be taken specified as a float > 0 (alternative to --n_samples). "
+            "NOTE: sampling_ratio > 1 is only OK for `duplicate` sampling style.",
+        )
     )
     parser.add_argument(
         "--n_samples",
@@ -98,7 +102,7 @@ def sample_from_head(
             for i, line in enumerate(f):
                 f_out.write(line)
 
-                # stop sampling when we reach n_samples lines
+                # stop sampling when we reach n_sample lines
                 if i >= n_sample - 1:
                     break
 
@@ -155,6 +159,32 @@ def sample_from_random(
                     f_out.write(line)
 
 
+def sample_from_duplicate(
+    input_file_paths: List[str], output_path: str, n_samples: List[int]
+) -> None:
+    """
+    Sample by duplicating the rows of the file.
+
+    :param input_file_paths: List of file paths
+    :param output_path: Path to output directory
+    :param n_samples: List of absolute number of lines to sample
+    :return: None
+    """
+    for i, (input_file_path, n_sample) in enumerate(zip(input_file_paths, n_samples)):
+        output_file_path = get_output_file_path(input_file_path, output_path, i + 1)
+        counter = 0
+        with open(input_file_path, "r") as f, open(output_file_path, "w") as f_out:
+            while counter < n_sample:
+                f.seek(0)
+                for line in f:
+                    counter += 1
+                    f_out.write(line)
+
+                    # stop sampling when we reach n_sample lines
+                    if counter >= n_sample:
+                        break
+
+
 @swallow_all_exceptions(logger)
 def main(
     output_dataset: str,
@@ -200,24 +230,32 @@ def main(
 
     line_counts = count_lines(input_file_paths)
     if sampling_ratio is not None:
-        if not 0 < sampling_ratio <= 1:
-            mssg = f"Invalid sampling_ratio: {sampling_ratio}. Please specify float in (0, 1]."
+        if not 0 < sampling_ratio:
+            mssg = f"Invalid sampling_ratio: {sampling_ratio}. Please specify a positive float number."
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
+        if sampling_ratio > 1 and sampling_style != SamplingStyle.duplicate.value:
+            mssg = (
+                f"Invalid sampling_ratio: sampling_ratio > 1 only allowed for sampling style `duplicate`. "
+                f"Received: sampling_style={sampling_style}."
+            )
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
         logger.info(f"Sampling percentage: {sampling_ratio * 100}%.")
         n_samples = [int(line_count * sampling_ratio) for line_count in line_counts]
     else:
-        n_samples = [n_samples] * len(line_counts)
-        if any(n_sample <= 0 for n_sample in n_samples):
+        if n_samples <= 0:
             mssg = f"Invalid n_samples: {n_samples}. Please specify positive integer."
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
+        n_samples = [n_samples] * len(line_counts)
         if any(n_sample > line_count for n_sample, line_count in zip(n_samples, line_counts)):
             mssg = (
                 f"At least one member in n_samples: {n_samples} > line_counts: {line_counts}. "
-                "Setting n_samples = min(line_counts)."
+                f"Setting n_samples = {min(line_counts)}."
             )
             logger.warn(mssg)
             n_samples = [min(line_counts)] * len(line_counts)
@@ -257,6 +295,12 @@ def main(
             line_counts=line_counts,
             n_samples=n_samples,
             random_seed=random_seed,
+        )
+    elif sampling_style == SamplingStyle.duplicate.value:
+        sample_from_duplicate(
+            input_file_paths,
+            output_dataset,
+            n_samples=n_samples,
         )
     else:
         mssg = f"Invalid sampling_style: {sampling_style}. Please specify either 'head', 'tail' or 'random'."
