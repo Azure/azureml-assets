@@ -7,8 +7,8 @@ dependencies:
 - pip<=23.0.1
 - pip:
   - mlflow==2.6.0
-  - torch==1.13.0
-  - transformers==4.29.1
+  - torch==1.13.1
+  - transformers==4.33.2
   - diffusers==0.20.0
   - accelerate==0.22.0
   - azure-ai-mlmonitoring
