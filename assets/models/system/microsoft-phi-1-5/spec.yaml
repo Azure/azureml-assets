@@ -4,12 +4,11 @@ path: ./
 properties:
   SHA: 7d482ddf932f34a1b9901b8b6cadd38dfc08bcc9
   datasets: StackOverflow, Stackv1.2, CodeContests, gpt-3.5-turbo-0301
-  inference-recommended-sku: Standard_NC6s_v3
+  inference-recommended-sku: Standard_DS4_v2
   languages: en
 tags:
   Preview: ''
   inference_compute_allow_list:
-  - Standard_DS2_v2
   - Standard_D32_v2
   - Standard_DS4_v2
   - Standard_NC6s_v3
