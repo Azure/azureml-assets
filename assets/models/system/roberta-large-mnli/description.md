@@ -32,7 +32,7 @@ Token Classification|Named Entity Recognition|<a href="https://huggingface.co/da
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
     }
 }

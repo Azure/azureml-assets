@@ -3,8 +3,7 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ACCEPT_EULA=Y
 
-RUN apt-get -y update && apt-get -y upgrade && apt-get install -y ffmpeg libsm6 libxext6
-RUN pip install --upgrade pip && pip install --upgrade cryptography
+RUN apt-get -y update && apt-get -y upgrade && apt-get install -y libsm6 libxext6
 
 # Build python3.9 as the default python
 RUN apt-get install -y --no-install-recommends \

@@ -9,22 +9,19 @@ import mltable
 import tempfile
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
-from dateutil import parser
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import col, lit
+from shared_utilities.datetime_utils import parse_datetime_from_string
 from shared_utilities.io_utils import (
     init_spark,
     read_mltable_in_spark,
     save_spark_df_as_mltable,
 )
 
-from shared_utilities.constants import MDC_CORRELATION_ID_COLUMN, MDC_DATA_COLUMN
-
-
-def _format_date_string(format: str, date_to_format: str) -> datetime:
-    parsed_date = parser.parse(date_to_format)
-    return datetime.strptime(
-        str(parsed_date.strftime(format)), format
-    )
+from shared_utilities.constants import (
+    MDC_CHAT_HISTORY_COLUMN,
+    MDC_CORRELATION_ID_COLUMN,
+    MDC_DATA_COLUMN
+)
 
 
 def _convert_uri_folder_to_mltable(
@@ -67,8 +64,8 @@ def mdc_preprocessor(
     """
     # Format the dates
     format_data = "%Y-%m-%d %H:%M:%S"
-    start_datetime = _format_date_string(format_data, data_window_start)
-    end_datetime = _format_date_string(format_data, data_window_end)
+    start_datetime = parse_datetime_from_string(format_data, data_window_start)
+    end_datetime = parse_datetime_from_string(format_data, data_window_end)
 
     # Create mltable definition - extract, filter and convert columns.
     table = _convert_uri_folder_to_mltable(start_datetime, end_datetime, input_data)
@@ -104,9 +101,12 @@ def mdc_preprocessor(
     spark = init_spark()
     data_as_df = spark.createDataFrame(pd.read_json(first_data_row[MDC_DATA_COLUMN]))
 
-    if extract_correlation_id is True:
-        # Add emtpy column to get the correlationId in the schema
-        data_as_df = data_as_df.withColumn(MDC_CORRELATION_ID_COLUMN, lit(""))
+    ''' The temporary workaround to remove the chat_history column if it exists.
+    We are removing the column because the pyspark DF is unable to parse it.
+    This version of the MDC is applied only to GSQ.
+    '''
+    if MDC_CHAT_HISTORY_COLUMN in data_as_df.columns:
+        data_as_df = data_as_df.drop(col(MDC_CHAT_HISTORY_COLUMN))
 
     def tranform_df_function_with_correlation_id(iterator):
         for df in iterator:
@@ -125,10 +125,18 @@ def mdc_preprocessor(
         for df in iterator:
             yield pd.concat(pd.read_json(getattr(row, MDC_DATA_COLUMN)) for row in df.itertuples())
 
-    transformed_df = df.select(MDC_DATA_COLUMN, MDC_CORRELATION_ID_COLUMN).mapInPandas(
-        tranform_df_function_with_correlation_id if extract_correlation_id else transform_df_function_without_correlation_id, # noqa
-        schema=data_as_df.schema
-    )
+    if extract_correlation_id:
+        # Add emtpy column to get the correlationId in the schema
+        data_as_df = data_as_df.withColumn(MDC_CORRELATION_ID_COLUMN, lit(""))
+        transformed_df = df.select(MDC_DATA_COLUMN, MDC_CORRELATION_ID_COLUMN).mapInPandas(
+            tranform_df_function_with_correlation_id,
+            schema=data_as_df.schema
+        )
+    else:
+        transformed_df = df.select(MDC_DATA_COLUMN).mapInPandas(
+            transform_df_function_without_correlation_id,
+            schema=data_as_df.schema
+        )
 
     save_spark_df_as_mltable(transformed_df, preprocessed_input_data)
 

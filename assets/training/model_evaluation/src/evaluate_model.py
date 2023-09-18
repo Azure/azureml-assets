@@ -272,7 +272,7 @@ class EvaluateModel:
 
 @swallow_all_exceptions(logger)
 def run():
-    """Entry function of model_test script."""
+    """Entry function of evaluate model script."""
     parser = ArgumentParser()
     # Inputs
     parser.add_argument("--task", type=str, dest="task", required=True, choices=constants.ALL_TASKS)

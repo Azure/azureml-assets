@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: translation_datapreprocess
-version: 0.0.14
+version: 0.0.18
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Translation DataPreProcess
 description: Component to preprocess data for translation task. See [docs](https://aka.ms/azureml/components/translation_datapreprocess) to learn more.
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/18
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/21
 
 code: ../../../src/preprocess
 
@@ -56,7 +56,7 @@ inputs:
     type: integer
     optional: true
     default: -1
-    description: Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`.
+    description: Controls the maximum length to use when pad_to_max_length parameter is set to `true`. Default is -1 which means the padding is done up to the model's max length. Else will be padded to `max_seq_length`.
 
   # Data inputs
   # Please note that either `train_file_path` or `train_mltable_path` needs to be passed. In case both are passed, `mltable path` will take precedence. The validation and test paths are optional and an automatic split from train data happens if they are not passed.

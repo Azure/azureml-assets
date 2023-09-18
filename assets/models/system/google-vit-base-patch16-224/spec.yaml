@@ -16,7 +16,7 @@ tags:
   Preview: ''
   license: apache-2.0
   model_specific_defaults:
-    apply_deepspeed: 'false'
-    apply_ort: 'false'
+    apply_deepspeed: 'true'
+    apply_ort: 'true'
   task: image-classification
-version: 5
+version: 6

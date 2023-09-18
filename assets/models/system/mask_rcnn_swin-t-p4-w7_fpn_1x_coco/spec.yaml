@@ -19,4 +19,4 @@ tags:
     apply_deepspeed: 'false'
     apply_ort: 'false'
   task: image-segmentation
-version: 3
+version: 4

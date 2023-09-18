@@ -1,5 +1,5 @@
-#PTCA image
-FROM mcr.microsoft.com/azureml/aifx/stable-ubuntu2004-cu117-py38-torch1131:{{latest-image-tag:biweekly\.\d{6}\.\d+}}
+# PTCA image
+FROM mcr.microsoft.com/aifx/acpt/vision/stable-ubuntu2004-cu117-py38-torch1131:{{latest-image-tag:biweekly\.\d{6}\.\d+\.v\d+}}
 
 USER root
 RUN apt-get -y update

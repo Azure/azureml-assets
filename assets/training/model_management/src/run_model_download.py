@@ -6,7 +6,7 @@
 import argparse
 import json
 import re
-from azureml.model.mgmt.config import AppName
+from azureml.model.mgmt.config import AppName, LlamaHFModels, LlamaModels, llama_dict
 from azureml.model.mgmt.downloader import download_model, ModelSource
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions, ModelAlreadyExists
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
@@ -34,6 +34,19 @@ def _get_parser():
 def validate_if_model_exists(model_id):
     """Validate if model exists in any of the registries."""
     registries_list = ["azureml", "azureml-meta"]
+
+    # Hardcoding llama-hf model for now, to use llama models
+
+    if LlamaHFModels.has_value(model_id):
+        logger.warning(f"Lllama Model {model_id} with safe tensors is already present in registry. "
+                       "Please use the same.")
+        model_id = llama_dict[model_id]
+
+    # Hardcoding check for llama models as names in registry do not contain meta-llama
+
+    if LlamaModels.has_value(model_id):
+        model_id = llama_dict[model_id]
+        logger.info(f"Updated model_name = {model_id}")
 
     for registry in registries_list:
         try:
