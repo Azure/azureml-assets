@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
-name: token_statistics_compute_metrics
+name: token_statistics_compute_metrics_command
 display_name:  Token Statistics - Compute Metrics
 description: Compute token statistics metrics.
 version: 0.0.1

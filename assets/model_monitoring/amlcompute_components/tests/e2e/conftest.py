@@ -197,7 +197,7 @@ def publish_command_components(
     os.makedirs(out_directory, exist_ok=True)
 
     for component in model_monitoring_components:
-        if component["type"] != "command":
+        if component["type"] != "spark":
             continue
         print(f"Publishing {component['name']}:{component['version']}")
         component["code"] = source_directory
