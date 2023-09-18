@@ -27,9 +27,14 @@ def parse_args() -> argparse.Namespace:
     # Input and output arguments
     parser = argparse.ArgumentParser(description=f"{__file__}")
     parser.add_argument("--input_dataset", type=str, help="Input raw dataset.")
-    parser.add_argument("--batch_input_pattern", nargs='?', const=None, type=str, help="The input patterns for the batch endpoint.", default="{}")
-    parser.add_argument("--model_type", type=str, help="The end point model type, possible values are `llama`, `aoai`.", default='llama')
-    parser.add_argument("--n_samples", type=int, help="Top samples sending to the endpoint.", default=-1)
+    parser.add_argument(
+        "--batch_input_pattern", nargs='?', const=None, type=str,
+        help="The input patterns for the batch endpoint.", default="{}")
+    parser.add_argument(
+        "--model_type", type=str,
+        help="The end point model type, possible values are `llama`, `aoai`.", default='llama')
+    parser.add_argument(
+        "--n_samples", type=int, help="Top samples sending to the endpoint.", default=-1)
     parser.add_argument("--formatted_data", type=str, help="path to output location")
     parser.add_argument("--model_asset_path", type=str, help="model_asset_path", default=None)
     parser.add_argument("--deployment_name", type=str, help="deployment_name", default=None)

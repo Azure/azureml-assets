@@ -11,7 +11,6 @@ class ResultConverters:
     TOKEN_KEYS = ["completion_tokens", "prompt_tokens", "total_tokens"]
     LATENCY_KEYS = ["start", "end", "latency"]
 
-
     def __init__(
             self, model_type: str, metadata_key: str, data_id_key: str,
             label_key: str, ground_truth_df: pd.DataFrame) -> None:

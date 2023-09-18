@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+
 from typing import Any, Dict
 import json
 import re
@@ -14,7 +15,7 @@ class EndpointDataPreparer:
     def convert_input_dict(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Convert input dict to the corresponding payload"""
         return self._convert_python_pattern(origin_json_dict)
-    
+
     def validate_output(self, output_payload_dict: Dict[str, Any]):
         """Validate the output payload."""
         errors = []
@@ -22,7 +23,7 @@ class EndpointDataPreparer:
             if "parameters" not in output_payload_dict["input_data"]:
                 errors.append("`parameters` should be presented in the payload json.")
         return errors
-    
+
     def _convert_python_pattern(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
         placeholders = re.findall('###<[\w ]+>', self._batch_input_pattern)
         all_old_keys = set(["###<%s>" % k for k in origin_json_dict.keys()])
@@ -34,7 +35,8 @@ class EndpointDataPreparer:
             if placeholder in placeholders:
                 if isinstance(v, str):
                     # replace special characters to avoid error when doing json deserialization
-                    new_json_string = new_json_string.replace(placeholder, v.replace('\\', '\\\\').replace("\n", "\\n").replace('"', '\\"'))
+                    new_json_string = new_json_string.replace(
+                        placeholder, v.replace('\\', '\\\\').replace("\n", "\\n").replace('"', '\\"'))
                 elif isinstance(v, dict) or isinstance(v, list):
                     new_json_string = new_json_string.replace(placeholder, json.dumps(v))
                 else:

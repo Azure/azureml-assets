@@ -19,27 +19,15 @@ from utils import (
 )
 
 
-class TestBatchInferencePreparerComponent:
+class TestBatchOutputFormatterComponent:
     EXP_NAME = "batch-inference-preparer-test"
 
-    def test_batch_inference_preparer(self, temp_dir: str):
+    def test_batch_output_formatter(self, temp_dir: str):
         ml_client = get_mlclient()
         pipeline_job = self._get_pipeline_job(
-            self.test_batch_inference_preparer.__name__,
+            self.test_batch_output_formatter.__name__,
             "llama",
-            '{'
-            '   "input_data":'
-            '   {'
-            '       "input_string": ["###<prompt>"],'
-            '       "parameters":'
-            '       {'
-            '           "temperature": 0.6,'
-            '           "max_new_tokens": 100,'
-            '           "do_sample": true'
-            '       }'
-            '   }'
-            '   "_batch_request_metadata": ###<_batch_request_metadata>'
-            '}',
+            'label',
             temp_dir,
         )
         # submit the pipeline job
@@ -52,16 +40,14 @@ class TestBatchInferencePreparerComponent:
         out_dir = os.path.join(temp_dir, "output")
         os.makedirs(out_dir, exist_ok=True)
         self._verify_output(
-            pipeline_job, output_dir=out_dir, check_key=["input_data", "_batch_request_metadata"],
-            model_type='llama',
-            check_param_dict={"temperature": 0.6, "max_new_tokens": 100, "do_sample": True}
+            pipeline_job, output_dir=out_dir
         )
 
     def _get_pipeline_job(
                 self,
                 display_name: str,
                 model_type: str,
-                batch_input_pattern: str,
+                label_key: str,
                 temp_dir: Optional[str] = None,
             ) -> Job:
         pipeline_job = load_yaml_pipeline("batch_inference_preparer.yaml")
@@ -78,25 +64,37 @@ class TestBatchInferencePreparerComponent:
             type="uri_file", path=file_path
         )
         pipeline_job.inputs.model_type = model_type
-        pipeline_job.inputs.batch_input_pattern = batch_input_pattern
+        pipeline_job.inputs.label_key = label_key
 
         pipeline_job.display_name = display_name
 
         return pipeline_job
 
-    def _verify_output(self, job, output_dir, check_key, model_type, check_param_dict):
-        output_name = job.outputs.formatted_data.port_name
-        download_outputs(
-            job_name=job.name, output_name=output_name, download_path=output_dir
-        )
-        output_file_path = os.path.join(output_dir, "formatted_data", "formatted_data.json")
-        assert os.path.isfile(os.path.join(output_dir, "formatted_data", 'MLTable'))
-        # Read the output file
-        with open(output_file_path, "r") as f:
+    def _read_data(self, file_path):
+        with open(file_path) as f:
             output_records = [json.loads(line) for line in f]
-        for r in output_records:
-            for k in check_key:
-                assert k in r
-            if model_type == "llama":
-                for k, v in check_param_dict.items():
-                    assert r['input_data']['parameters'][k] == v
+        return output_records
+
+    def _check_columns_in_dfs(self, column_list, dfs):
+        for df in dfs:
+            for col in column_list:
+                assert col in df
+
+    def _check_output_data(self, output_dir, file_name, expected_col_list):
+        output_file = os.path.join(output_dir, file_name)
+        assert os.path.isfile(output_file)
+        # Read the output file
+        dfs = self._read_data(output_file)
+        self._check_columns_in_dfs(expected_col_list, dfs)
+
+    def _verify_output(self, job, output_dir):
+        prediction_data = job.outputs.prediction_data.port_name
+        perf_data = job.outputs.perf_data.port_name
+        predict_ground_truth_data = job.outputs.predict_ground_truth_data.port_name
+        for output_name in [prediction_data, perf_data, predict_ground_truth_data]:
+            download_outputs(
+                job_name=job.name, output_name=output_name, download_path=output_dir
+            )
+        self._check_output_data(output_dir, "prediction.jsonl", ["prediction"])
+        self._check_output_data(output_dir, "predict_ground_truth_data.jsonl", ["ground_truth"])
+        self._check_output_data(output_dir, "perf_data.jsonl", ["start", "end", "latency"])

@@ -30,6 +30,9 @@ class Constants:
     BATCH_INFERENCE_PREPARER_FILE_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data/sample_batch_input.jsonl"
     )
+    BATCH_OUTPUT_FORMATTER_FILE_PATH = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/sample_inference_ouptut.jsonl"
+    )
     OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"
     OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"
     TEST_REGISTRY_NAME = "Benchmark-Test"

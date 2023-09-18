@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 import argparse
-import pandas as pd
 import os
+import pandas as pd
 
 from utils.io import read_pandas_data
 from utils.logging import get_logger
@@ -34,16 +34,19 @@ def parse_args() -> argparse.Namespace:
 def main():
     """Main function of the script."""
     args = parse_args()
-    
+
     logger.info("Read batch output data now.")
-    data_files = [f for f in os.listdir(args.batch_inference_output) if f.endswith("json") or f.endswith("jsonl")]
+    data_files = [
+        f for f in os.listdir(args.batch_inference_output) if f.endswith("json") or f.endswith("jsonl")
+    ]
     print("Receiving " + data_files)
 
     new_df = []
     perf_df = []
     ground_truth = []
     ground_truth_input = read_pandas_data(args.ground_truth_input) if args.ground_truth_input else None
-    rc = ResultConverters(args.model_type, args.metadata_key, args.data_id_key, args.label_key, ground_truth_input)
+    rc = ResultConverters(
+        args.model_type, args.metadata_key, args.data_id_key, args.label_key, ground_truth_input)
     logger.info("Convert the data now.")
     for f in data_files:
         print(f"Processing file {f}")

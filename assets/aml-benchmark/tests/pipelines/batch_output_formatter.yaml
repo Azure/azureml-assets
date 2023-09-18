@@ -1,0 +1,40 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+display_name: test_batch_output_formatter
+description: Pipeline to test batch output formatter.
+settings:
+  default_compute: azureml:serverless
+
+inputs:
+  batch_inference_output:
+    type: uri_file
+    path: ../data/sample_batch_data.jsonl
+  model_type: llama
+  label_key: label
+
+outputs:
+  prediction_data:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/prediction.jsonl
+  perf_data:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/perf_data.jsonl
+  predict_ground_truth_data:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/predict_ground_truth_data.jsonl
+
+jobs:
+  run_compute_perf_metrics:
+    type: command
+    component: ../../components/batch-output-formatter/spec.yaml
+    limits: 
+      timeout: 900
+    inputs:
+      batch_inference_output: ${{parent.inputs.batch_inference_output}}
+      model_type: ${{parent.inputs.model_type}}
+      label_key: ${{parent.inputs.label_key}}
+    outputs:
+      prediction_data: ${{parent.outputs.prediction_data}}
+      perf_data: ${{parent.outputs.perf_data}}
+      predict_ground_truth_data: ${{parent.outputs.predict_ground_truth_data}}
