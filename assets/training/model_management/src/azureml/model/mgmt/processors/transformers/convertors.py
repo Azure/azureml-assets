@@ -4,10 +4,12 @@
 """HFTransformers MLflow model convertors."""
 
 import transformers
+import mlflow
 import os
 import yaml
 from abc import ABC, abstractmethod
 from azureml.evaluate import mlflow as hf_mlflow
+from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
 from azureml.model.mgmt.processors.transformers.config import (
     HF_CONF,
     MODEL_FILE_PATTERN,
@@ -52,7 +54,7 @@ from typing import Any, Dict
 logger = get_logger(__name__)
 
 
-class HFMLFLowConvertor(ABC):
+class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
     """HF MlfLow convertor base class."""
 
     CONDA_FILE_NAME = "conda.yaml"
@@ -78,6 +80,7 @@ class HFMLFLowConvertor(ABC):
         translate_params: Dict,
     ):
         """Initialize MLflow convertor for HF models."""
+        self._validate(translate_params)
         self._model_dir = model_dir
         self._output_dir = output_dir
         self._temp_dir = temp_dir
@@ -179,21 +182,53 @@ class HFMLFLowConvertor(ABC):
             logger.info("Experimental features enabled for MLflow conversion")
             self._hf_conf["exp"] = True
 
-        hf_mlflow.hftransformers.save_model(
-            config=config,
-            tokenizer=tokenizer,
-            hf_model=model,
-            hf_conf=self._hf_conf,
-            conda_env=conda_env,
-            code_paths=code_paths,
-            signature=self._signatures,
-            input_example=input_example,
-            requirements_file=requirements_file,
-            pip_requirements=pip_requirements,
-            extra_pip_requirements=self._extra_pip_requirements,
-            path=self._output_dir,
-        )
+        logger.info(f"TEMP LOG - Self: {self.__dict__}, model_id: {self._model_id}")
 
+        try:
+
+            logger.info(f"TEMP LOG - BEFORE task: {self._task}, model: {model}, tokenizer: {tokenizer}, config: {config}")
+
+            model_pipeline = transformers.pipeline(task=self._task, model=model)
+            logger.info("TEMP LOG - PIPELINE PASSED")
+
+            logger.info(f"Conda env: {conda_env}, "
+                        f"extra_pip_requirements: {self._extra_pip_requirements}, "
+                        f"pip_requirements: {pip_requirements}, code_paths: {code_paths},"
+                        f"signatures: {self._signatures}, input_example: {input_example},"
+                        f"path: {self._output_dir}")
+
+            with mlflow.start_run():
+                mlflow.transformers.save_model(
+                    transformers_model=model_pipeline,
+                    conda_env=conda_env,
+                    code_paths=code_paths,
+                    signature=self._signatures,
+                    input_example=input_example,
+                    pip_requirements=pip_requirements,
+                    extra_pip_requirements=self._extra_pip_requirements,
+                    path=self._output_dir,
+                )
+
+            logger.info("Model saved with mlflow OSS flow for task: {}".format(self._task))
+        except Exception as e:
+            logger.error("Model save failed with mlflow OSS flow for task: {} with exception: {}".format(self._task, e))
+
+            hf_mlflow.hftransformers.save_model(
+                config=config,
+                tokenizer=tokenizer,
+                hf_model=model,
+                hf_conf=self._hf_conf,
+                conda_env=conda_env,
+                code_paths=code_paths,
+                signature=self._signatures,
+                input_example=input_example,
+                requirements_file=requirements_file,
+                pip_requirements=pip_requirements,
+                extra_pip_requirements=self._extra_pip_requirements,
+                path=self._output_dir,
+            )
+
+            logger.info("Model saved with transformers evaluate flow for task: {}".format(self._task))
         # pin pycocotools==2.0.4
         self._update_conda_dependencies({"pycocotools": "2.0.4"})
 
@@ -229,6 +264,15 @@ class HFMLFLowConvertor(ABC):
         with open(conda_file_path, "w") as f:
             yaml.safe_dump(conda_dict, f)
             logger.info("updated conda.yaml")
+
+    def _validate(self, translate_params):
+        if not translate_params.get("model_id"):
+            raise Exception("model_id is a required parameter for hftransformers MLflow flavor.")
+        if not translate_params.get("task"):
+            raise Exception("task is a required parameter for hftransformers MLflow flavor.")
+        task = translate_params["task"]
+        if not SupportedTasks.has_value(task):
+            raise Exception(f"Unsupported task {task} for hftransformers MLflow flavor.")
 
 
 class VisionMLflowConvertor(HFMLFLowConvertor):
@@ -411,8 +455,15 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         self._hf_config_cls = self._hf_config_cls if self._hf_config_cls else AutoConfig
         self._hf_tokenizer_cls = self._hf_tokenizer_cls if self._hf_tokenizer_cls else AutoTokenizer
 
+        logger.info(f"TEMP LOG - hf_conf: {hf_conf}, _hf_model_cls: {self._hf_model_cls}, _hf_config_cls: {self._hf_config_cls}, _hf_tokenizer_cls: {self._hf_tokenizer_cls}")
+
         hf_conf[HF_CONF.HF_CONFIG_CLASS.value] = self._hf_config_cls.__name__
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = self._hf_model_cls.__name__
         hf_conf[HF_CONF.HF_TOKENIZER_CLASS.value] = self._hf_tokenizer_cls.__name__
 
-        return super()._save(segregate=True)
+        conda_dir = Path(__file__).parent / "conda.yaml"
+        conda_env = {}
+        with open(conda_dir) as f:
+            conda_env = yaml.safe_load(f)
+
+        return super()._save(segregate=False, conda_env=conda_env)
