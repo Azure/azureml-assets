@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: microsoft-deberta-base
+name: microsoft-phi-1-5
 path: ./
 properties:
   SHA: 7d482ddf932f34a1b9901b8b6cadd38dfc08bcc9
