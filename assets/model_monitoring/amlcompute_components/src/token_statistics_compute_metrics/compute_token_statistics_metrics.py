@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This file contains the core logic for token statistics compute metrics component."""
+
+
 import uuid
 from pyspark.context import SparkContext
 from pyspark.sql.functions import avg, col, count, lit, sum, udf
@@ -14,7 +17,8 @@ spark = SparkSession(sc)
 
 
 def impute_ids_for_failed_calls(token_df):
-    """Impute ids for failed calls
+
+    """Impute ids for failed calls.
     if the id string is null or empty, then generate a new id using the following logic:
     - if the status_code is not 200, then generate a new guid string as id
     """
@@ -34,7 +38,8 @@ def impute_ids_for_failed_calls(token_df):
 
 
 def check_data_quality(token_df):
-    """check for any violation of assumptions about the data
+
+    """Check for any violation of assumptions about the data.
     - check that the token_df columns contains:
         ['node_id': id the of the node in prompt flow that is calling the LLM.
          'id': request id for the call.
@@ -98,10 +103,11 @@ def check_data_quality(token_df):
 
 
 def compute_conditional_counts_df(token_df, dimensions, condition_column, condition_value, metric_name):
-    '''
-    Needs the token_df with columns dimensions, condition_column
+
+    """
+    Needs the token_df with columns dimensions, condition_column.
     Returns a metric df with columns group, group_pivot, metric_name, metric_value
-    '''
+    """
     # check if the token_df has the expected columns
     if set(dimensions + [condition_column]).issubset(token_df.columns) is False:
         return
@@ -113,11 +119,12 @@ def compute_conditional_counts_df(token_df, dimensions, condition_column, condit
 
 
 def compute_avg_df(token_df, columns, dimensions, metric_prefix=""):
-    '''
-    Needs the token_df with columns dimensions, columns
+
+    """
+    Needs the token_df with columns dimensions, columns.
     Returns a metric df with columns group, group_pivot, metric_name, metric_value
     where metric_name is the column name and metric_value is the average of the column
-    '''
+    """
     # check if the token_df has the expected columns
     if set(dimensions + columns + ['status_code']).issubset(token_df.columns) is False:
         return
@@ -137,11 +144,12 @@ def compute_avg_df(token_df, columns, dimensions, metric_prefix=""):
 
 
 def compute_sum_df(token_df, columns, dimensions, metric_prefix=""):
-    '''
-    Needs the token_df with columns dimensions, columns
+
+    """
+    Needs the token_df with columns dimensions, columns.
     Returns a metric df with columns group, group_pivot, metric_name, metric_value
     where metric_name is the column name and metric_value is the sum of the column
-    '''
+    """
     # check if the token_df has the expected columns
     if set(dimensions + columns + ['status_code']).issubset(token_df.columns) is False:
         return
@@ -159,7 +167,8 @@ def compute_sum_df(token_df, columns, dimensions, metric_prefix=""):
 
 
 def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, ratio_metric_name, dimensions):
-    '''
+
+    """
     Needs the metric df with columns group, group_pivot, metric_name, metric_value.
     The numerator_metric_df and denominator_metric_df should have the same number of rows.
     Returns a metric df with columns group, group_pivot, metric_name, metric_value,
@@ -167,8 +176,7 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
     metric_value is the ratio of the metric_value of the numerator_metric_df
     to the metric_value of the denominator_metric_df
     null metric_values in the numerator_metric_df are replaced with 0
-    '''
-
+    """
     # Check if the numerator_metric_df has more number of rows as the denominator_metric_df
     # this is the error case as we expect a denominator row for each numerator row.
     # It is expected that at times there are fewer numerator rows than denominator rows.
@@ -217,7 +225,8 @@ def compute_percentage_metric_df(numerator_metric_df, denominator_metric_df, rat
 
 
 def compute_GPU_utilization_metrics(token_df):
-    """Compute GPU utilization metrics for each group and group_pivot:
+
+    """Compute GPU utilization metrics for each group and group_pivot.
     - Expect the token_df to have the following columns:group, group_pivot
     - Calls failed due to overload:
         -- total number of calls with 429 status code
@@ -302,7 +311,8 @@ def compute_GPU_utilization_metrics(token_df):
 
 
 def compute_GPU_waste_metrics(token_df):
-    """Compute GPU waste metrics:
+
+    """Compute GPU waste metrics.
     - Calls wasted due to truncation
         -- total number of calls with finish_reason as "length"
         -- %age of calls with finish_reason as "length"
