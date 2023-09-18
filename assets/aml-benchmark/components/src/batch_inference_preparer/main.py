@@ -46,7 +46,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
-    """Main function of the script."""   
+    """Main function of the script."""
     args = parse_args()
 
     input_dataset = args.input_dataset
@@ -55,7 +55,7 @@ def main():
     # online_endpoint = OnlineEndpoint.from_args(args)
     # if online_endpoint.should_deploy():
     #     online_endpoint.deploy_model()
-    
+
     endpoint_data_preparer = EndpointDataPreparer.from_args(args)
 
     # Read the data file into a pandas dataframe
@@ -79,7 +79,7 @@ def main():
 
     # Save MLTable file
     logger.info("Writing the data now.")
-    with open(os.path.join(formatted_dataset, "MLTable"),"w+") as f:
+    with open(os.path.join(formatted_dataset, "MLTable"), "w+") as f:
         f.writelines(MLTABLE_CONTENTS)
 
     new_df = pd.DataFrame(new_df)

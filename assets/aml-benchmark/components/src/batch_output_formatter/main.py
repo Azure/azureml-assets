@@ -20,7 +20,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch_inference_output", type=str, help="path to prompt crafter output")
     parser.add_argument("--prediction_data", type=str, help="path to output location")
     parser.add_argument("--ground_truth_input", type=str, help="path to output location", default=None)
-    parser.add_argument("--predict_ground_truth_data", type=str, help="The ground truth data mapping 1-1 to the prediction data.")
+    parser.add_argument(
+        "--predict_ground_truth_data", type=str,
+        help="The ground truth data mapping 1-1 to the prediction data.")
     parser.add_argument("--perf_data", type=str, help="path to output location")
     parser.add_argument("--model_type", type=str, help="model type", default='llama')
     parser.add_argument("--metadata_key", type=str, help="metadata key", default=None)

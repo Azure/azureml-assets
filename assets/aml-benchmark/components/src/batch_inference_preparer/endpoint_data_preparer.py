@@ -25,7 +25,7 @@ class EndpointDataPreparer:
         return errors
 
     def _convert_python_pattern(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
-        placeholders = re.findall('###<[\w ]+>', self._batch_input_pattern)
+        placeholders = re.findall('###<[_a-zA-Z0-9 ]+>', self._batch_input_pattern)
         all_old_keys = set(["###<%s>" % k for k in origin_json_dict.keys()])
         new_json_string = self._batch_input_pattern
         for k in placeholders:
