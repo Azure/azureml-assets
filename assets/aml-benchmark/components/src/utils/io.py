@@ -168,6 +168,7 @@ def read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
 def read_pandas_data(data_path: str) -> pd.DataFrame:
     """
     Read data that is formatted in a JSON line format and return a pandas dataframe.
+
     This supports URI_FOLDERs, if those folders only contain JSON line-formatted data.
     This does not require the files to have the .jsonl extension, however.
 

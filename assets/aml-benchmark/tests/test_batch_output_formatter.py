@@ -53,7 +53,7 @@ class TestBatchOutputFormatterComponent:
                 label_key: str,
                 temp_dir: Optional[str] = None,
             ) -> Job:
-        pipeline_job = load_yaml_pipeline("batch_inference_preparer.yaml")
+        pipeline_job = load_yaml_pipeline("batch_output_formatter.yaml")
 
         # avoid blob exists error when running pytest with multiple workers
         if temp_dir is not None:

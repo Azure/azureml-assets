@@ -24,8 +24,13 @@ class EndpointDataPreparer:
         """Validate the output payload."""
         errors = []
         if self._model_type.lower == "llama":
-            if "parameters" not in output_payload_dict["input_data"]:
-                errors.append("`parameters` should be presented in the payload json.")
+            if "input_data" not in output_payload_dict:
+                errors.append("`input_data` should be presented in the payload json.")
+            elif "input_string" not in output_payload_dict["input_data"]:
+                errors.append(
+                    "`input_string` should be presented in the `input_data` fields of payload json.")
+            elif isinstance(output_payload_dict["input_data"]["input_string"], list):
+                errors.append("`input_string` field should be a list")   
         return errors
 
     def _convert_python_pattern(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
