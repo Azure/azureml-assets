@@ -1,0 +1,31 @@
+$schema: http://azureml/sdk-2-0/SparkComponent.json
+type: command
+
+name: feature_importance_metrics
+version: 0.3.2
+display_name: Feature importance
+is_deterministic: true
+description: Feature importance for model monitoring.
+
+code: ../../src
+environment: azureml:model_monitor_spark_feature_attribution:7
+
+inputs:
+  baseline_data:
+    type: mltable
+  target_column:
+    type: string
+    optional: true
+  task_type:
+    type: string
+    optional: true
+outputs:
+  signal_metrics:
+    type: mltable
+
+command: >-
+  python -m feature_importance_metrics.compute_feature_importance
+  --baseline_data ${{inputs.baseline_data}}
+  $[[--target_column ${{inputs.target_column}}]]
+  $[[--task_type ${{inputs.task_type}}]]
+  --signal_metrics ${{outputs.signal_metrics}}

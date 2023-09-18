@@ -142,7 +142,7 @@ def model_monitoring_root_directory() -> str:
 @pytest.fixture(scope="session")
 def components_directory(model_monitoring_root_directory) -> str:
     """Return the path to the directory holding model monitoring's components."""
-    return os.path.abspath(os.path.join(model_monitoring_root_directory, "components"))
+    return os.path.abspath(os.path.join(model_monitoring_root_directory, "amlcompute_components"))
 
 
 @pytest.fixture(scope="session")
@@ -197,7 +197,7 @@ def publish_command_components(
     os.makedirs(out_directory, exist_ok=True)
 
     for component in model_monitoring_components:
-        if component["type"] != "spark":
+        if component["type"] != "command":
             continue
         print(f"Publishing {component['name']}:{component['version']}")
         component["code"] = source_directory
@@ -270,161 +270,11 @@ def publish_data_drift_model_monitor_component(
 
 
 @pytest.fixture(scope="session", autouse=True)
-def publish_feature_attr_drift_signal_monitor_component(
-    main_worker_lock,
-    publish_command_components,
-    model_monitoring_components,
-    components_directory,
-    root_temporary_directory,
-    asset_version,
-    ml_client,
-):
-    """Publish the data drift model monitor pipeline component to the test workspace."""
-    if not _is_main_worker(main_worker_lock):
-        return
-
-    print_header("Publishing Feature Attribution Drift Model Monitor")
-    out_directory = os.path.join(root_temporary_directory, "command_components")
-    os.makedirs(out_directory, exist_ok=True)
-
-    for component in model_monitoring_components:
-        if component["name"] != "feature_attribution_drift_signal_monitor":
-            continue
-        print(f"Publishing {component['name']}..")
-        component["jobs"]["compute_baseline_explanations"][
-            "component"
-        ] = f"azureml:feature_importance_metrics:{asset_version}"
-        component["jobs"]["compute_production_explanations"][
-            "component"
-        ] = f"azureml:feature_importance_metrics:{asset_version}"
-        component["jobs"]["compute_feature_attribution"][
-            "component"
-        ] = f"azureml:feature_attribution_drift_compute_metrics:{asset_version}"
-        component["jobs"]["output_signal_metrics"][
-            "component"
-        ] = f"azureml:model_monitor_output_metrics:{asset_version}"
-        component["jobs"]["evaluate_metric_thresholds"][
-            "component"
-        ] = f"azureml:model_monitor_evaluate_metrics_threshold:{asset_version}"
-        component["version"] = asset_version
-
-        spec_path = os.path.join(
-            out_directory, f"{component['name']}-{generate_random_filename('yaml')}"
-        )
-
-        write_to_yaml(spec_path, component)
-        ml_client.components.create_or_update(load_component(spec_path))
-        print(f"Successfully published {component['name']}.")
-
-
-@pytest.fixture(scope="session", autouse=True)
-def publish_prediction_drift_model_monitor_component(
-    main_worker_lock,
-    publish_command_components,
-    model_monitoring_components,
-    components_directory,
-    root_temporary_directory,
-    asset_version,
-    ml_client,
-):
-    """Publish the prediction drift model monitor pipeline component to the test workspace."""
-    if not _is_main_worker(main_worker_lock):
-        return
-
-    print_header("Publishing Prediction Drift Model Monitor")
-    out_directory = os.path.join(root_temporary_directory, "command_components")
-    os.makedirs(out_directory, exist_ok=True)
-
-    for component in model_monitoring_components:
-        if component["name"] != "prediction_drift_signal_monitor":
-            continue
-        print(f"Publishing {component['name']}..")
-        component["jobs"]["feature_selection"][
-            "component"
-        ] = f"azureml:model_monitor_feature_selector:{asset_version}"
-        component["jobs"]["compute_drift_metrics"][
-            "component"
-        ] = f"azureml:data_drift_compute_metrics:{asset_version}"
-        component["jobs"]["output_signal_metrics"][
-            "component"
-        ] = f"azureml:model_monitor_output_metrics:{asset_version}"
-        component["jobs"]["evaluate_metric_thresholds"][
-            "component"
-        ] = f"azureml:model_monitor_evaluate_metrics_threshold:{asset_version}"
-        component["version"] = asset_version
-
-        spec_path = os.path.join(
-            out_directory, f"{component['name']}-{generate_random_filename('yaml')}"
-        )
-
-        write_to_yaml(spec_path, component)
-        ml_client.components.create_or_update(load_component(spec_path))
-        print(f"Successfully published {component['name']}.")
-
-
-@pytest.fixture(scope="session", autouse=True)
-def publish_data_quality_model_monitor_component(
-    main_worker_lock,
-    publish_command_components,
-    model_monitoring_components,
-    components_directory,
-    root_temporary_directory,
-    asset_version,
-    ml_client,
-):
-    """Publish the data drift model monitor pipeline component to the test workspace."""
-    if not _is_main_worker(main_worker_lock):
-        return
-
-    print_header("Publishing Data Drift Model Monitor")
-    out_directory = os.path.join(root_temporary_directory, "command_components")
-    os.makedirs(out_directory, exist_ok=True)
-
-    for component in model_monitoring_components:
-        if component["name"] != "data_quality_signal_monitor":
-            continue
-        print(f"Publishing {component['name']}..")
-        component["jobs"]["compute_feature_importances"][
-            "component"
-        ] = f"azureml:feature_importance_metrics:{asset_version}"
-        component["jobs"]["feature_selection"][
-            "component"
-        ] = f"azureml:model_monitor_feature_selector:{asset_version}"
-        component["jobs"]["compute_baseline_data_statistics"][
-            "component"
-        ] = f"azureml:data_quality_data_statistics:{asset_version}"
-        component["jobs"]["compute_baseline_data_quality"][
-            "component"
-        ] = f"azureml:data_quality_compute_metrics:{asset_version}"
-        component["jobs"]["compute_target_data_quality"][
-            "component"
-        ] = f"azureml:data_quality_compute_metrics:{asset_version}"
-        component["jobs"]["join_data_quality_metrics"][
-            "component"
-        ] = f"azureml:data_quality_metrics_joiner:{asset_version}"
-        component["jobs"]["output_signal_metrics"][
-            "component"
-        ] = f"azureml:model_monitor_output_metrics:{asset_version}"
-        component["jobs"]["evaluate_metric_thresholds"][
-            "component"
-        ] = f"azureml:model_monitor_evaluate_metrics_threshold:{asset_version}"
-        component["version"] = asset_version
-
-        spec_path = os.path.join(
-            out_directory, f"{component['name']}-{generate_random_filename('yaml')}"
-        )
-
-        write_to_yaml(spec_path, component)
-        ml_client.components.create_or_update(load_component(spec_path))
-        print(f"Successfully published {component['name']}.")
-
-
-@pytest.fixture(scope="session", autouse=True)
 def release_lock(
-    publish_data_quality_model_monitor_component,
-    publish_prediction_drift_model_monitor_component,
+    # publish_data_quality_model_monitor_component,
+    # publish_prediction_drift_model_monitor_component,
     publish_data_drift_model_monitor_component,
-    publish_feature_attr_drift_signal_monitor_component,
+    # publish_feature_attr_drift_signal_monitor_component,
     publish_command_components,
     main_worker_lock,
 ):

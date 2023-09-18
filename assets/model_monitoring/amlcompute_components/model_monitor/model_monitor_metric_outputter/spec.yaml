@@ -1,0 +1,27 @@
+$schema: http://azureml/sdk-2-0/SparkComponent.json
+type: command
+
+name: model_monitor_metric_outputter
+display_name: Model Monitor - Metric Outputter
+description: Output the computed model monitor metrics.
+version: 0.3.3
+is_deterministic: true
+
+code: ../../src/
+environment: azureml:model_monitor_spark:1
+
+inputs:
+  signal_metrics: 
+    type: mltable
+    mode: direct
+  signal_name:
+    type: string
+  signal_type: 
+    type: string
+outputs:
+  signal_output:
+    type: uri_folder
+    mode: direct
+command: >-
+  python -m model_monitor_metric_outputter.run
+  --signal_name ${{inputs.signal_name}} --signal_type ${{inputs.signal_type}} --signal_metrics ${{inputs.signal_metrics}} --signal_output ${{outputs.signal_output}}

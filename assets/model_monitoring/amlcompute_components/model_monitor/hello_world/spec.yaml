@@ -1,0 +1,21 @@
+$schema: http://azureml/sdk-2-0/SparkComponent.json
+type: command
+
+name: model_monitor_hello_world
+display_name: Model Monitor - Hello World
+description: Hello world job to test spark environment.
+version: 0.3.3
+is_deterministic: true
+
+code: ../../src/
+environment: azureml:model_monitor_spark:5
+
+inputs:
+  input_data_path:
+    type: string
+outputs:
+  output_data_path:
+    type: string
+command: >-
+  python -m hello_world.run
+  --input_data_path ${{inputs.input_data_path}} --output_data {{outputs.output_data_path}}
