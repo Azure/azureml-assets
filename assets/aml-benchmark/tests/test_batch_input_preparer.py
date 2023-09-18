@@ -21,6 +21,7 @@ from utils import (
 
 class TestBatchInferencePreparerComponent:
     """Component test for batch inference preparer."""
+
     EXP_NAME = "batch-inference-preparer-test"
 
     def test_batch_inference_preparer(self, temp_dir: str):

@@ -10,6 +10,7 @@ import pandas as pd
 
 class ResultConverters:
     """Convert the batch inference output to different results."""
+
     TOKEN_KEYS = ["completion_tokens", "prompt_tokens", "total_tokens"]
     LATENCY_KEYS = ["start", "end", "latency"]
 

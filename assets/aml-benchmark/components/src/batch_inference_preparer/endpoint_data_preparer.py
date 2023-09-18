@@ -10,6 +10,7 @@ import re
 
 class EndpointDataPreparer:
     """Endpoint data preparer class."""
+
     def __init__(self, model_type: str, batch_input_pattern: str):
         """Init for endpoint data preparer."""
         self._model_type = model_type
