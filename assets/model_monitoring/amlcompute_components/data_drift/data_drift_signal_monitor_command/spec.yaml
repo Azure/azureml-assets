@@ -49,7 +49,7 @@ outputs:
     mode: direct
 jobs:
   compute_feature_importances:
-    type: spark
+    type: command
     component: azureml://registries/azureml/components/feature_importance_metrics_command/versions/0.0.2
     inputs:
       baseline_data:
@@ -65,7 +65,7 @@ jobs:
     identity:
       type: aml_token
   feature_selection:
-    type: spark
+    type: command
     component: azureml://registries/azureml/components/model_monitor_feature_selector_command/versions/0.0.2
     inputs:
       input_data_1:
@@ -86,7 +86,7 @@ jobs:
     identity:
       type: aml_token
   compute_drift_metrics:
-    type: spark
+    type: command
     component: azureml://registries/azureml/components/data_drift_compute_metrics_command/versions/0.0.2
     inputs:
       production_dataset:
@@ -111,7 +111,7 @@ jobs:
     identity:
       type: aml_token
   compute_histogram_buckets:
-    type: spark
+    type: command
     component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets_command/versions/0.0.2
     inputs:
       input_data_1:
@@ -129,7 +129,7 @@ jobs:
     identity:
       type: aml_token
   compute_baseline_histogram:
-    type: spark
+    type: command
     component: azureml://registries/azureml/components/model_monitor_compute_histogram_command/versions/0.0.2
     inputs:
       input_data:
@@ -147,7 +147,7 @@ jobs:
     identity:
       type: aml_token
   compute_target_histogram:
-    type: spark
+    type: command
     component: azureml://registries/azureml/components/model_monitor_compute_histogram_command/versions/0.0.2
     inputs:
       input_data:
@@ -165,7 +165,7 @@ jobs:
     identity:
       type: aml_token
   output_signal_metrics:
-    type: spark
+    type: command
     component: azureml://registries/azureml/components/model_monitor_output_metrics_command/versions/0.0.2
     inputs:
       signal_metrics:
@@ -192,7 +192,7 @@ jobs:
     identity:
       type: aml_token
   evaluate_metric_thresholds:
-    type: spark
+    type: command
     component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold_command/versions/0.0.2
     inputs:
       signal_metrics:
