@@ -24,7 +24,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 {
    "input_data": {
         "columns": ["prompt"],
-        "data": ["a photograph of an astronaut riding a horse", "a photograph of a cat riding a horse"],
+        "data": ["a photograph of an astronaut riding a horse"],
         "index": [0]
     }
 }
@@ -35,13 +35,17 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 ```json
 [
     {
-        "generated_image": ["image1", "image2"],
-        "nsfw_content_detected": ["True", "False"]
+        "prompt": "a photograph of an astronaut riding a horse",
+        "generated_image": "image1",
+        "nsfw_content_detected": None
     }
 ]
-
-Note: "image1" and "image2" string are base64 format.
 ```
+
+Note:
+
+- "image1" and "image2" string are base64 format.
+- The `stabilityai-stable-diffusion-2-1` model doesn't check for the NSFW content in generated image. We highly recommend to use the model with __Azure AI Content Safety (AACS)__ check.
 
 #### Model inference - visualization for a sample prompt
 
