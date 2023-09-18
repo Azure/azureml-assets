@@ -24,7 +24,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 {
    "input_data": {
         "columns": ["prompt"],
-        "data": ["a photograph of an astronaut riding a horse", "Lion Holding Hunted Deer In Grass Fields"],
+        "data": ["a photograph of an astronaut riding a horse", "lion holding hunted deer in grass fields"],
         "index": [0, 1]
     }
 }
@@ -40,7 +40,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
         "nsfw_content_detected": False
     },
     {
-        "prompt": "Lion Holding Hunted Deer In Grass Fields",
+        "prompt": "lion holding hunted deer in grass fields",
         "generated_image": "image2",
         "nsfw_content_detected": True
     }
