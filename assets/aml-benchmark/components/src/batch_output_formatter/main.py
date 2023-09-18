@@ -1,6 +1,6 @@
-# ---------------------------------------------------------
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# ---------------------------------------------------------
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import argparse
 import pandas as pd
 import os
