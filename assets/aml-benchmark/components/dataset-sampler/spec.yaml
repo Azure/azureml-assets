@@ -43,8 +43,8 @@ inputs:
 
 outputs:
   output_dataset:
-    type: uri_folder
-    description: Path to the output directory.
+    type: uri_file
+    description: Path to the output file.
 
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
