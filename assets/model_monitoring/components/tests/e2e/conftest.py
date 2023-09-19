@@ -26,19 +26,19 @@ lock_file = ".lock"
 
 
 def _get_subscription_id():
-    return os.environ.get("SUBSCRIPTION_ID", "")
+    return os.environ.get("SUBSCRIPTION_ID", "ea4faa5b-5e44-4236-91f6-5483d5b17d14")
 
 
 def _get_tenant_id():
-    return os.environ.get("TENANT_ID", "")
+    return os.environ.get("TENANT_ID", "72f988bf-86f1-41af-91ab-2d7cd011db47")
 
 
 def _get_resource_group():
-    return os.environ.get("RESOURCE_GROUP", "")
+    return os.environ.get("RESOURCE_GROUP", "model-monitoring-canary-int-rg")
 
 
 def _get_workspace_name():
-    return os.environ.get("WORKSPACE_NAME", "")
+    return os.environ.get("WORKSPACE_NAME", "model-monitoring-canary-int-ws")
 
 
 def _is_main_worker(worker_id):

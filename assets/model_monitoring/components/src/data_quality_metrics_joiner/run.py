@@ -5,7 +5,7 @@
 
 import argparse
 from pyspark.sql.functions import col, when, lit
-from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.io_utils import try_read_mltable_in_spark, save_spark_df_as_mltable
 
 
 def run():
@@ -22,13 +22,13 @@ def run():
     print("args.numerical_threshold: ", args.numerical_threshold)
     print("args.categorical_threshold: ", args.categorical_threshold)
     baseline_df = (
-        read_mltable_in_spark(args.baseline_metrics)
+        try_read_mltable_in_spark(args.baseline_metrics)
         .withColumn("baseline_metric_value", col("metricValue"))
         .drop("violationCount")
         .drop("metricValue")
     )
     target_df = (
-        read_mltable_in_spark(args.target_metrics)
+        try_read_mltable_in_spark(args.target_metrics)
         .withColumn("target_metric_value", col("metricValue"))
         .drop("dataType")
         .drop("violationCount")

@@ -4,13 +4,34 @@
 """This file contains utilities to read write data."""
 
 import numpy as np
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, DataFrame
+from shared_utilities.event_utils import post_warning_event
 
 
 def init_spark():
     """Get or create spark session."""
     spark = SparkSession.builder.appName("AccessParquetFiles").getOrCreate()
     return spark
+
+
+def try_read_mltable_in_spark_with_warning(mltable_path: str, error_message: str) -> DataFrame:
+    """Read mltable in spark."""
+    try:
+        return read_mltable_in_spark(mltable_path)
+    except:
+        print(error_message)
+        post_warning_event(error_message
+            + " Please visit aka.ms/mlmonitoringhelp for more information."
+        )
+        return None
+    
+def try_read_mltable_in_spark(mltable_path: str, error_message: str) -> DataFrame:
+    """Read mltable in spark."""
+    try:
+        return read_mltable_in_spark(mltable_path)
+    except:
+        print(error_message)
+        return None
 
 
 def read_mltable_in_spark(mltable_path: str):

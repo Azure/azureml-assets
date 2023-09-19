@@ -5,7 +5,7 @@
 
 import argparse
 from pyspark.sql.functions import split, trim, col
-from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.io_utils import try_read_mltable_in_spark, save_spark_df_as_mltable
 from shared_utilities.df_utils import select_columns_from_spark_df
 from compute_data_quality_metrics import compute_data_quality_metrics
 
@@ -30,12 +30,12 @@ def run():
     args = parser.parse_args()
 
     # READ INPUT TABLES
-    df = read_mltable_in_spark(args.input_data)
-    data_stats_table = read_mltable_in_spark(args.data_statistics)
+    df = try_read_mltable_in_spark(args.input_data)
+    data_stats_table = try_read_mltable_in_spark(args.data_statistics)
 
     # Select columns
     if not (args.feature_names is None):
-        features = read_mltable_in_spark(args.feature_names)
+        features = try_read_mltable_in_spark(args.feature_names)
         select_columns = [row["featureName"] for row in features.collect()]
         df = select_columns_from_spark_df(df, select_columns)
 

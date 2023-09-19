@@ -4,8 +4,8 @@
 """Entry script for Data Drift Compute Metrics Spark Component."""
 
 import argparse
-from io_utils import select_columns_from_spark_df, output_computed_measures_tests
-from shared_utilities.io_utils import read_mltable_in_spark
+from io_utils import select_columns_from_spark_df, output_computed_measures_tests, get_output_spark_df
+from shared_utilities.io_utils import try_read_mltable_in_spark, try_read_mltable_in_spark_with_warning
 from compute_data_drift import compute_data_drift_measures_tests
 
 from shared_utilities.patch_mltable import patch_all
@@ -29,20 +29,28 @@ def run():
 
     # Select columns
     select_columns = None
-    if not (args.feature_names is not None):
-        features = read_mltable_in_spark(args.feature_names)
+
+    baseline_df = try_read_mltable_in_spark_with_warning(args.baseline_dataset, "No data was found for input 'baseline_dataset'.")
+    production_df = try_read_mltable_in_spark_with_warning(args.baseline_dataset, "No data was found for input 'production_dataset'.")
+
+    if baseline_df is None or production_df is None:
+        print("Skipping metric computation.")
+        output_computed_measures_tests(get_output_spark_df([]), args.signal_metrics)
+        return
+
+    if args.feature_names:
+        features = try_read_mltable_in_spark_with_warning(args.feature_names, "feature_names contained no data. Skipping metric computation.")
+
+        if not features:
+            return
+
         select_columns = [row["featureName"] for row in features.collect()]
         baseline_df = select_columns_from_spark_df(
-            args.baseline_dataset, select_columns
+            baseline_df, select_columns
         )
         production_df = select_columns_from_spark_df(
-            args.production_dataset, select_columns
+            production_df, select_columns
         )
-
-    else:
-        baseline_df = read_mltable_in_spark(args.baseline_dataset)
-        production_df = read_mltable_in_spark(args.production_dataset)
-        select_columns = baseline_df.columns
 
     metrics_df = compute_data_drift_measures_tests(
         baseline_df,

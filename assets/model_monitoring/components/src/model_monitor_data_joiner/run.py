@@ -7,7 +7,7 @@ import argparse
 import pyspark.sql as pyspark_sql
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
-    read_mltable_in_spark,
+    try_read_mltable_in_spark,
     save_spark_df_as_mltable,
 )
 
@@ -69,12 +69,12 @@ def run():
 
     # Load data
     try:
-        left_input_data_df = read_mltable_in_spark(mltable_path=args.left_input_data)
+        left_input_data_df = try_read_mltable_in_spark(mltable_path=args.left_input_data)
     except IndexError:
         raise Exception('The left_input_data is empty. Please add data and try again.')
 
     try:
-        right_input_data_df = read_mltable_in_spark(mltable_path=args.right_input_data)
+        right_input_data_df = try_read_mltable_in_spark(mltable_path=args.right_input_data)
     except IndexError:
         raise Exception('The right_input_data is empty. Please add data and try again.')
 

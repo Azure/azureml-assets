@@ -11,7 +11,7 @@ from typing import List
 
 from azure_monitor_metric_publisher import extract_location_from_aml_endpoint_str, publish_metric
 from shared_utilities.datetime_utils import parse_datetime_from_string
-from shared_utilities.io_utils import read_mltable_in_spark
+from shared_utilities.io_utils import try_read_mltable_in_spark
 from shared_utilities.log_utils import log_error
 
 
@@ -25,7 +25,7 @@ def run():
     arg_parser.add_argument("--data_window_end", type=str)
     args = arg_parser.parse_args()
 
-    metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
+    metrics: List[Row] = try_read_mltable_in_spark(args.signal_metrics).collect()
 
     try:
         azureml_service_endpoint = os.environ['AZUREML_SERVICE_ENDPOINT']

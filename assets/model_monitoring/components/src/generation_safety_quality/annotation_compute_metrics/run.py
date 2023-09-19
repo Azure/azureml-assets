@@ -8,7 +8,7 @@ import re
 from pyspark.sql.functions import col, udf, sum
 from pyspark.sql.types import IntegerType
 from shared_utilities.io_utils import (
-    read_mltable_in_spark,
+    try_read_mltable_in_spark,
     save_spark_df_as_mltable,
     init_spark,
 )
@@ -74,7 +74,7 @@ def run():
 
     args = parser.parse_args()
 
-    histogram_df = read_mltable_in_spark(args.annotation_histogram)
+    histogram_df = try_read_mltable_in_spark(args.annotation_histogram)
     spark = init_spark()
     # Cast to float because metric_value was integer so far
     # but we're adding percentages now.

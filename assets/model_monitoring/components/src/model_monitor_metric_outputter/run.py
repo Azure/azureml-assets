@@ -21,7 +21,7 @@ from shared_utilities.constants import METADATA_VERSION
 from shared_utilities.dict_utils import merge_dicts
 from shared_utilities.io_utils import (
     np_encoder,
-    read_mltable_in_spark,
+    try_read_mltable_in_spark,
 )
 
 
@@ -40,7 +40,7 @@ def run():
     args = arg_parser.parse_args()
     args_dict = vars(args)
 
-    metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
+    metrics: List[Row] = try_read_mltable_in_spark(args.signal_metrics).collect()
     samples_index: List[Row] = None
 
     runmetric_client = RunMetricClient()
@@ -50,7 +50,7 @@ def run():
     if args_dict["samples_index"]:
         print("Processing samples index.")
         try:
-            samples_index: List[Row] = read_mltable_in_spark(args.samples_index).collect()
+            samples_index: List[Row] = try_read_mltable_in_spark(args.samples_index).collect()
             result = merge_dicts(result, SamplesOutputBuilder(samples_index).get_samples_dict())
         except Exception:
             print("Samples index is empty. Skipping processing of the samples index.")

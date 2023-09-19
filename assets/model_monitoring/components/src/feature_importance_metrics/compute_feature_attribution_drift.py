@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import ndcg_score
 
-from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.io_utils import try_read_mltable_in_spark, save_spark_df_as_mltable
 from shared_utilities import constants
 
 from feature_importance_metrics.feature_importance_utilities import convert_pandas_to_spark, log_time_and_message
@@ -132,7 +132,7 @@ def configure_data(data):
     :return: the sorted pandas feature importances data with the row count dropped and the number of rows
     :rtype: tuple of pandas dataframe and number
     """
-    df = read_mltable_in_spark(data).toPandas()
+    df = try_read_mltable_in_spark(data).toPandas()
     for i in range(len(df.index)):
         if df.iloc[i][constants.METRIC_NAME_COLUMN] == constants.ROW_COUNT_COLUMN_NAME:
             num_rows = df.iloc[i][constants.METRIC_VALUE_COLUMN]

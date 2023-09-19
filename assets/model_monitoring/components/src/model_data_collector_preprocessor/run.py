@@ -14,7 +14,7 @@ from shared_utilities.datetime_utils import parse_datetime_from_string
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
     init_spark,
-    read_mltable_in_spark,
+    try_read_mltable_in_spark,
     save_spark_df_as_mltable,
 )
 
@@ -89,7 +89,7 @@ def mdc_preprocessor(
 
     # Read mltable from preprocessed_data
     try:
-        df = read_mltable_in_spark(mltable_path=des_path)
+        df = try_read_mltable_in_spark(mltable_path=des_path)
     except Exception:
         print("No data was found for input 'input_data'. Skipping preprocessing.")
         post_warning_event("The window for this current run contains no data. "
