@@ -11,13 +11,6 @@ from evaluate_metrics_threshold import (
 from shared_utilities.io_utils import try_read_mltable_in_spark
 
 
-def evaluate_metrics(
-    signal_name: str, metrics_to_evaluate_df: DataFrame, notification_emails: str
-):
-    """Evaluate the computed metrics against the threshold."""
-    metrics_to_evaluate_df = read_mltable_in_spark(metrics_to_evaluate)
-
-    evaluate_metrics_threshold(signal_name, metrics_to_evaluate_df, notification_emails)
 
 
 def run():
@@ -35,9 +28,6 @@ def run():
         return
 
     is_valid = evaluate_metrics_threshold(args.signal_name, metrics_df, args.notification_emails)
-    evaluate_metrics(
-        args.signal_name, args.metrics_to_evaluate, args.notification_emails
-    )
 
     if is_valid:
         print(
