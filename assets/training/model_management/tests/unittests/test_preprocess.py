@@ -264,7 +264,7 @@ class TestFactoryModule(unittest.TestCase):
     @patch("azureml.model.mgmt.processors.factory.LLaVAMLflowConvertorFactory")
     def test_get_llava_mlflow_convertor(self, mock_llava_factory):
         """Test LLaVA model MLflow convertor."""
-        model_framework = "Huggingface"
+        model_framework = "pyfunc_llava"
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
