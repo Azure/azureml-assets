@@ -1,0 +1,6 @@
+image:
+  name: model_monitor_spark_standalone
+  os: linux
+  context:
+    dir: docker-context
+    dockerfile: Dockerfile
