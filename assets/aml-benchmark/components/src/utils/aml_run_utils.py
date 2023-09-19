@@ -30,6 +30,8 @@ def get_all_runs_in_current_experiment() -> List[MLFlowRun]:
     """
     Get a list of all of the runs in the current experiment \
     that are a direct child of the root run except the current run.
+
+    :returns: The list of runs in the current experiment.
     """
     experiment_name = get_experiment_name()
     parent_run_id = get_parent_run_id()
