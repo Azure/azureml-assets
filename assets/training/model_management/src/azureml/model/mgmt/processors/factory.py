@@ -171,6 +171,7 @@ class CLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
             translate_params=translate_params,
         )
 
+
 class LLaVAMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     """Factory class for LLaVA model family."""
 
