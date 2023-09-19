@@ -69,12 +69,12 @@ class TestBenchmarkResultAggregatorComponent:
         return pipeline_job
 
     def _verify_output(
-            self,
-            job: Job,
-            output_dir: str,
-            has_quality_step: bool,
-            has_perf_step: bool,
-        ) -> None:
+        self,
+        job: Job,
+        output_dir: str,
+        has_quality_step: bool,
+        has_perf_step: bool,
+    ) -> None:
         """Verify the output.
 
         :param job: The job object.
