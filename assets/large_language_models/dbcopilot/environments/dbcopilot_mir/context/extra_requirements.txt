@@ -1,0 +1,6 @@
+## Install promptflow
+--extra-index-url https://azuremlsdktestpypi.azureedge.net/promptflow/
+promptflow-sdk-bundle==0.0.100832450
+## Install embeddingstore
+--extra-index-url https://azuremlsdktestpypi.azureedge.net/promptflow/
+promptflow_vectordb[azure]==0.1.1
