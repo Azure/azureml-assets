@@ -64,8 +64,7 @@ def get_compute_information(log_files: Optional[List[str]], run_v1: Run) -> Opti
                 if compute_match:
                     return compute_match.group(1)
             except Exception as ex:
-                logger.warn(f"Failed to get system_logs/lifecycler/execution-wrapper.log \
-                             due to {ex}")
+                logger.warn(f"Failed to get system_logs/lifecycler/execution-wrapper.log due to {ex}")
                 return None
 
 

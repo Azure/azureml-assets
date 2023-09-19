@@ -174,13 +174,17 @@ def main(
     quality_metrics_path: Optional[str],
     performance_metrics_path: Optional[str],
     output_dataset_path: str,
-):
-    """Entry function for the benchmark result aggregator."""
-    quality_metrics = read_json_data(quality_metrics_path)
-    for key in quality_metrics.keys():
-        value = quality_metrics[key]
+) -> None:
+    """
+    Entry function for the benchmark result aggregator.
 
+    :param quality_metrics_path: The path to quality metrics
+    :param performance_metrics_path: The path to the performance metrics.
+    :param output_dataset_path: The path where the result has to be stored.
+    """
+    quality_metrics = read_json_data(quality_metrics_path)
     performance_metrics = read_json_data(performance_metrics_path)
+
     parameters: Dict[str, Any] = {}
     metrics: Dict[str, Any] = {}
     runs = get_all_runs_in_current_experiment()
