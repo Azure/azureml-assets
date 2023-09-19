@@ -107,3 +107,9 @@ llama_dict = {
     LlamaModels.LLAMA_2_13B.value: LlamaModelsInRegistry.LLAMA_2_13B.value,
     LlamaModels.LLAMA_2_13B_CHAT.value: LlamaModelsInRegistry.LLAMA_2_13B_CHAT.value,
 }
+
+
+class ComponentVariables:
+    """Component Variables."""
+
+    REGISTRATION_DETAILS_JSON_FILE = "model_registration_details.json"

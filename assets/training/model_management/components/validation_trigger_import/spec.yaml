@@ -4,7 +4,7 @@ type: command
 name: validation_trigger_import
 display_name: Validation Trigger Import model
 description: Component for enabling validation of import pipeline.
-version: 0.0.2
+version: 0.0.2.cond2
 
 # Pipeline inputs
 inputs:
@@ -164,15 +164,24 @@ inputs:
     optional: true
 
 outputs:
-    validation_info:
-        type: uri_file
+    registration_details_folder:
+        type: uri_folder
         description: Validation status of the import pipeline inputs.
+    output:
+      type: boolean
+      is_control: true
 
 is_deterministic: True
 
-environment: azureml://registries/azureml/environments/python-sdk-v2/versions/7
+environment: azureml://registries/azureml-preview-test1/environments/model-management-conditional/versions/2
 code: ../../src
-command: python run_model_validate.py --validation-info ${{outputs.validation_info}}
+command: >  
+  mldesigner execute --source run_model_validate.py --name validate
+  --inputs model-source='${{inputs.model_source}}'
+  model-id='${{inputs.model_id}}'
+  $[[update-existing-model='${{inputs.update_existing_model}}']]
+  --outputs output='${{outputs.output}}'
+  registration_details_folder='${{outputs.registration_details_folder}}'
 
 tags:
     Preview: ""

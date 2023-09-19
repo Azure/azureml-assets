@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: download_model
-version: 0.0.15
+version: 0.0.15.cond1
 type: command
 
 is_deterministic: True
@@ -9,18 +9,16 @@ is_deterministic: True
 display_name: Download model
 description: Downloads a publicly available model
 
-environment: azureml://registries/azureml/environments/model-management/versions/14
+environment: azureml://registries/azureml/environments/model-management/versions/15
 
 code: ../../src/
 command: >
-  mldesigner execute --source run_model_download.py --name run_download_model
-  --inputs model-source='${{inputs.model_source}}'
-  model-id='${{inputs.model_id}}'
-  $[[update-existing-model='${{inputs.update_existing_model}}']]
-  $[[validation-info='${{inputs.validation_info}}']]
-  --outputs output='${{outputs.output}}'
-  model-download-metadata='${{outputs.model_download_metadata}}'
-  model-output-dir='${{outputs.model_output}}'
+  python run_model_download.py
+  --model-source ${{inputs.model_source}}
+  --model-id '${{inputs.model_id}}'
+  $[[--update-existing-model ${{inputs.update_existing_model}}]]
+  --model-download-metadata ${{outputs.model_download_metadata}}
+  --model-output-dir ${{outputs.model_output}}
 
 inputs:
   model_source:
@@ -36,11 +34,6 @@ inputs:
     type: string
     description: A valid model id for the model source selected. For example you can specify `bert-base-uncased` for importing HuggingFace bert base uncased model. Please specify the complete URL if **GIT** or **AzureBlob** is selected in `model_source`
 
-  validation_info:
-    type: uri_file
-    description: Path to the validation info file
-    optional: true
-
   update_existing_model:
     type: boolean
     default: false
@@ -48,10 +41,6 @@ inputs:
     optional: true
 
 outputs:
-  output:
-    type: boolean
-    is_control: true
-
   model_download_metadata:
     type: uri_file
     description: File name to which model download details will be written. File would contain details that could be useful for model registration in forms of model tags and properties
@@ -63,5 +52,3 @@ outputs:
 
 tags:
   Preview: ""
-  codegenBy: mldesigner
-
