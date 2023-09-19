@@ -18,7 +18,7 @@ class HistogramBuilder:
             self.histograms = {}
             return
 
-        if not baseline_histograms:
+        if baseline_histograms:
             for row in baseline_histograms:
                 feature_name = row["feature_bucket"]
                 if feature_name not in histograms:
@@ -42,7 +42,7 @@ class HistogramBuilder:
 
                 histograms[feature_name]["histogram"][bucket_key] = bucket
 
-        if target_histograms is not None:
+        if target_histograms:
             for row in target_histograms:
                 feature_name = row["feature_bucket"]
                 if feature_name not in histograms:

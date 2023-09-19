@@ -9,7 +9,7 @@ from typing import List
 import uuid
 from pyspark.sql import Row
 from dateutil import parser
-from shared_utilities.io_utils import try_read_mltable_in_spark_with_warning, try_read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.io_utils import try_read_mltable_in_spark, save_spark_df_as_mltable
 from model_monitor_output_metrics.factories.signal_factory import SignalFactory
 from model_monitor_output_metrics.entities.signals.signal import Signal
 from shared_utilities.amlfs import amlfs_upload
@@ -30,7 +30,7 @@ def run():
 
     args = arg_parser.parse_args()
 
-    signal_metrics = try_read_mltable_in_spark_with_warning(args.signal_metrics, "signal_metrics does not contain data.")
+    signal_metrics = try_read_mltable_in_spark(args.signal_metrics, "signal_metrics does not contain data.")
     
     metrics: List[Row] = []
     if signal_metrics:

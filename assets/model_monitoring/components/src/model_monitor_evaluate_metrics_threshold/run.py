@@ -22,9 +22,10 @@ def run():
     parser.add_argument("--notification_emails", type=str, required=False, nargs="?")
     args = parser.parse_args()
 
-    metrics_df = try_read_mltable_in_spark(args.metrics_to_evaluate, "No metrics to evaluate. Skipping metric evaluation.")
+    metrics_df = try_read_mltable_in_spark(args.metrics_to_evaluate, "metrics_to_evaluate")
 
     if not metrics_df:
+        print("No metrics to evaluate. Skipping metric evaluation.")
         return
 
     is_valid = evaluate_metrics_threshold(args.signal_name, metrics_df, args.notification_emails)

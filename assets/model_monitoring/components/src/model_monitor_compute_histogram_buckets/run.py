@@ -17,10 +17,10 @@ def run():
     parser.add_argument("--histogram_buckets", type=str)
     args = parser.parse_args()
 
-    df1 = try_read_mltable_in_spark(args.input_data_1, "No data in input_data_1.")
+    df1 = try_read_mltable_in_spark(args.input_data_1, "input_data_1")
     df2 = df1
     if args.input_data_2 is not None:
-        df2 = try_read_mltable_in_spark(args.input_data_2,  "No data in input_data_2.")
+        df2 = try_read_mltable_in_spark(args.input_data_2,  "input_data_2")
 
     if not df1 and not df2:
         error_message = "Both input data is empty. Skipping histogram bucket generation."

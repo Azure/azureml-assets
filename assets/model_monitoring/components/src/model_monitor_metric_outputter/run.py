@@ -40,20 +40,28 @@ def run():
     args = arg_parser.parse_args()
     args_dict = vars(args)
 
-    metrics: List[Row] = try_read_mltable_in_spark(args.signal_metrics).collect()
-    samples_index: List[Row] = None
+    signal_metrics = try_read_mltable_in_spark(args.signal_metrics, "signal_metrics")
 
+    metrics : List[Row] = []
+    if not signal_metrics:
+        print("No metrics detected, creating an empty signal metrics.")
+        return
+    else:
+        metrics: List[Row] = signal_metrics.collect()
+    
     runmetric_client = RunMetricClient()
     result = MetricOutputBuilder(runmetric_client, args.monitor_name, args.signal_name, metrics) \
         .get_metrics_dict()
 
+    samples_index: List[Row] = None
     if args_dict["samples_index"]:
         print("Processing samples index.")
-        try:
-            samples_index: List[Row] = try_read_mltable_in_spark(args.samples_index).collect()
-            result = merge_dicts(result, SamplesOutputBuilder(samples_index).get_samples_dict())
-        except Exception:
+        samples_index_df = try_read_mltable_in_spark(args.samples_index, "samples_index")
+        if not samples_index_df:
             print("Samples index is empty. Skipping processing of the samples index.")
+        else:
+            samples_index: List[Row] = samples_index_df.collect()
+            result = merge_dicts(result, SamplesOutputBuilder(samples_index).get_samples_dict())
 
     output_payload = to_output_payload(args.signal_name, args.signal_type, result)
 

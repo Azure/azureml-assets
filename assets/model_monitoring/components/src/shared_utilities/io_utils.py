@@ -14,23 +14,25 @@ def init_spark():
     return spark
 
 
-def try_read_mltable_in_spark_with_warning(mltable_path: str, error_message: str) -> DataFrame:
+def try_read_mltable_in_spark_with_warning(mltable_path: str, input_name: str) -> DataFrame:
     """Read mltable in spark."""
     try:
         return read_mltable_in_spark(mltable_path)
     except:
+        error_message = f"No data was found for input '{input_name}'."
         print(error_message)
         post_warning_event(error_message
             + " Please visit aka.ms/mlmonitoringhelp for more information."
         )
         return None
     
-def try_read_mltable_in_spark(mltable_path: str, error_message: str) -> DataFrame:
+def try_read_mltable_in_spark(mltable_path: str, input_name: str) -> DataFrame:
     """Read mltable in spark."""
     try:
         return read_mltable_in_spark(mltable_path)
     except:
-        print(error_message)
+
+        print(f"No data was found for input '{input_name}'.")
         return None
 
 

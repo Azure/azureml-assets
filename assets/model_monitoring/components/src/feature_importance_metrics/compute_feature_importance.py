@@ -253,8 +253,9 @@ def run(args):
             write_empty_signal_metrics_dataframe()
             return
         log_time_and_message("Reading data in spark and converting to pandas")
-        baseline_df = try_read_mltable_in_spark_with_warning(args.baseline_data, "Input baseline_data contains no data. Skipping feature importance calculation.")
+        baseline_df = try_read_mltable_in_spark_with_warning(args.baseline_data, "baseline_data")
         if not baseline_df:
+            print("Skipping feature importance calculation.")
             return
 
         baseline_df = baseline_df.toPandas()

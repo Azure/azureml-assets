@@ -35,12 +35,13 @@ def run():
     parser.add_argument("--histogram", type=str)
     args = parser.parse_args()
 
-    df = try_read_mltable_in_spark_with_warning(args.input_data, "input_data contains no data. Skipping histogram generation.")
+    df = try_read_mltable_in_spark_with_warning(args.input_data, "input_data")
 
     if not df:
+        print("Skipping histogram generation.")
         return
 
-    histogram_buckets = try_read_mltable_in_spark(args.histogram_buckets, "No histogram buckets detected.")
+    histogram_buckets = try_read_mltable_in_spark(args.histogram_buckets, "histogram_buckets")
     if not histogram_buckets:
         histogram_buckets = _create_empty_histogram_buckets_df()
 
