@@ -30,6 +30,7 @@ RUN pip install -r extra_requirements.txt
 
 # fix for https://portal.microsofticm.com/imp/v3/incidents/incident/418102604/summary
 RUN pip install cryptography==41.0.3
+RUN pip install langchain==0.0.236
 
 RUN set -eux; \
     apt-get update; \
