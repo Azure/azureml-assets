@@ -4,7 +4,7 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.3.16
+version: 0.4.0
 is_deterministic: true
 inputs:
   monitor_name:
@@ -97,7 +97,7 @@ outputs:
 jobs:
   compute_histogram:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.3.7
+    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.0
     inputs:
       production_dataset:
         type: mltable
@@ -117,6 +117,18 @@ jobs:
       context_column_name: ${{parent.inputs.context_column_name}}
     outputs:
       histogram:
+        type: mltable
+      samples_index:
+        type: mltable
+      groundedness_violations:
+        type: mltable
+      coherence_violations:
+        type: mltable
+      relevance_violations:
+        type: mltable
+      fluency_violations:
+        type: mltable
+      similarity_violations:
         type: mltable
     resources:
       instance_type: standard_e4s_v3
@@ -153,6 +165,7 @@ jobs:
         path: ${{parent.jobs.compute_metrics.outputs.signal_metrics}}
       signal_type: "GenerationSafetyQuality"
       signal_name: ${{parent.inputs.signal_name}}
+      samples_index: ${{parent.jobs.compute_histogram.outputs.samples_index}}
       metric_timestamp: ${{parent.inputs.monitor_current_time}}
       monitor_name: ${{parent.inputs.monitor_name}}
     outputs:

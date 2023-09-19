@@ -17,7 +17,8 @@ inputs:
 
 outputs:
   output_dataset:
-    type: uri_folder
+    type: uri_file
+    path: "azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl"
 
 jobs:
   run_dataset_sampler:

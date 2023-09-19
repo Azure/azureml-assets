@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
 
+# Set the shared environment path
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/rag-embeddings
 
 # Prepend path to AzureML conda environment
@@ -96,10 +97,14 @@ RUN set -eux; \
     javac --version; \
     java --version
 
+# Download nltk punkt and averaged_perceptron_trigger files to image for managed vnet support
+RUN python3 -m nltk.downloader punkt && \
+    python3 -m nltk.downloader averaged_perceptron_tagger
+
 ENV TIKA_SERVER_JAR file:///tika-server.jar
 
-RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.6.0/tika-server-standard-2.6.0.jar'; \
-	downloadMd5='45241a0fa165cb0ac4848bbc0999c1bc'; \
+RUN downloadUrl='http://search.maven.org/remotecontent?filepath=org/apache/tika/tika-server-standard/2.9.0/tika-server-standard-2.9.0.jar'; \
+    downloadMd5='ef0f13490f3b832a46567a16e82e6b23'; \
     wget --progress=dot:giga -O tika-server.jar "$downloadUrl"; \
     # tika-python looks for tika-server.jar.md5 file along with TIKA_SERVER_JAR
     echo -n "$downloadMd5" > tika-server.jar.md5; \

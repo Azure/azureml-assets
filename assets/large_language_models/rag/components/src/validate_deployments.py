@@ -240,7 +240,8 @@ def check_deployment_status(model_params, model_type, activity_logger=None):
             embeddings = OpenAIEmbeddings(
                 deployment=model_params["deployment_id"],
                 model=model_params["model_name"],
-                openai_api_key=model_params["openai_api_key"])
+                openai_api_key=model_params["openai_api_key"],
+                openai_api_type="azure")
             try:
                 embeddings.embed_query(
                     "Embed this query to test if deployment exists")
@@ -288,6 +289,11 @@ def get_workspace_and_run() -> Tuple[Workspace, Run]:
     return workspace, run
 
 
+def is_default_connection(connection) -> bool:
+    """Check if connection retrieved is a default AOAI connection."""
+    return connection.get("name", None) == "Default_AzureOpenAI"
+
+
 def validate_aoai_deployments(parser_args, check_completion, check_embeddings, activity_logger: Logger):
     """Poll or create deployments in AOAI."""
     completion_params = {}
@@ -325,7 +331,12 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                 'apiVersion',
                 connection_metadata.get('ApiVersion', "2023-03-15-preview"))
             completion_params["connection"] = connection_id_completion
-            if connection["properties"]["metadata"].get("ResourceId", None) is not None:
+            # Name is currently the only distinguishing factor between default and non-default
+            # Default connection is the only one which can perform control plane operations,
+            # as AI Studio does not allow selecting of ResourceID in their UI yet.
+            if is_default_connection(connection):
+                activity_logger.info(
+                    "[Validate Deployments]: Completion model using Default AOAI connection, parsing ResourceId")
                 cog_workspace_details = split_details(
                     connection["properties"]["metadata"]["ResourceId"], start=1)
                 completion_params["default_aoai_name"] = cog_workspace_details["accounts"]
@@ -374,7 +385,9 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                 'apiVersion',
                 connection_metadata.get('ApiVersion', "2023-03-15-preview"))
             embedding_params["connection"] = connection_id_embedding
-            if connection["properties"]["metadata"].get("ResourceId", None) is not None:
+            if is_default_connection(connection):
+                activity_logger.info(
+                    "[Validate Deployments]: Completion model using Default AOAI connection, parsing ResourceId")
                 cog_workspace_details = split_details(
                     connection["properties"]["metadata"]["ResourceId"], start=1)
                 embedding_params["default_aoai_name"] = cog_workspace_details["accounts"]
