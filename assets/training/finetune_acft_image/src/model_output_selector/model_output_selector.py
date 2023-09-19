@@ -4,7 +4,7 @@
 """
 File containing function for model output selector component for images.
 
-Returns output for runtime image command component if condition is true and output for FT component otherwise.
+Return output for runtime image command component if condition is true and output for FT component otherwise.
 
 TODO: Replace with control flow https://msdata.visualstudio.com/Vienna/_workitems/edit/2306663.
 """

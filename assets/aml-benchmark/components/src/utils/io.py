@@ -67,7 +67,7 @@ def _get_file_paths_from_folder(dataset: str) -> List[str]:
 def get_output_file_path(input_file_path: str, output_path: str, counter: Optional[int] = None) -> str:
     """Get output file path.
 
-    Uses the file name and extension from input_file_path along with counter to create the output file name.
+    Uses the file name and extension from `input_file_path` along with counter to create the output file name.
 
     :param input_file_path: Path to input file
     :param output_path: Path to output directory

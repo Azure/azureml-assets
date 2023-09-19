@@ -1,8 +1,0 @@
-path:
-  container_name: models
-  container_path: samples/how_to_use_functions_with_chat_models/v1/model_folder
-  storage_name: promptflowsamples
-  type: azureblob
-publish:
-  description: description.md
-  type: custom_model
