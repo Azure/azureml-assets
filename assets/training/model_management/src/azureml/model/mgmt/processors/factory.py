@@ -7,15 +7,15 @@ from abc import ABC, abstractmethod
 from azureml.model.mgmt.config import ModelFramework
 from azureml.model.mgmt.processors.transformers.config import (
     SupportedASRModelFamily,
-    SupportedDiffusersTask,
     SupportedNLPTasks,
     SupportedTasks,
-    SupportedTextToImageModelFamily,
     SupportedVisionTasks,
 )
 from azureml.model.mgmt.processors.pyfunc.config import (
     MMLabDetectionTasks,
-    SupportedTasks as PyFuncSupportedTasks
+    SupportedTasks as PyFuncSupportedTasks,
+    SupportedTextToImageModelFamily,
+    SupportedTextToImageInpaintingModelFamily,
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from azureml.model.mgmt.processors.transformers.convertors import (
@@ -27,6 +27,7 @@ from azureml.model.mgmt.processors.pyfunc.convertors import (
     MMLabDetectionMLflowConvertor,
     CLIPMLFlowConvertor,
     StableDiffusionMlflowConvertor,
+    StableDiffusionInpaintingMlflowConvertor,
 )
 
 
@@ -45,8 +46,12 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             return VisionMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
-        elif SupportedDiffusersTask.has_value(task):
+        elif task == PyFuncSupportedTasks.TEXT_TO_IMAGE.value:
             return DiffusersMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif task == PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value:
+            return DiffusersMLflowInpaintingConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         elif task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
@@ -161,3 +166,19 @@ class CLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
             temp_dir=temp_dir,
             translate_params=translate_params,
         )
+
+
+class DiffusersMLflowInpaintingConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for diffusor inpainting model family."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for diffusers inpainting."""
+        misc = translate_params["misc"]
+        if misc and SupportedTextToImageInpaintingModelFamily.STABLE_DIFFUSION.value in misc:
+            return StableDiffusionInpaintingMlflowConvertor(
+                model_dir=model_dir,
+                output_dir=output_dir,
+                temp_dir=temp_dir,
+                translate_params=translate_params,
+            )
+        raise Exception("Unsupported diffuser model family")

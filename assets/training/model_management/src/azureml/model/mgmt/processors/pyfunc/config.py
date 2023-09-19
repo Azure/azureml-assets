@@ -25,3 +25,16 @@ class SupportedTasks(_CustomEnum):
 
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
+    TEXT_TO_IMAGE_INPAINTING = "text-to-image-inpainting"
+
+
+class SupportedTextToImageModelFamily(_CustomEnum):
+    """Supported text to image models."""
+
+    STABLE_DIFFUSION = "stable-diffusion"
+
+
+class SupportedTextToImageInpaintingModelFamily(_CustomEnum):
+    """Supported text to image inpainting models."""
+
+    STABLE_DIFFUSION = "stable-diffusion"
