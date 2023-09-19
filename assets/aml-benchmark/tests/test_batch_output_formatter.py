@@ -22,7 +22,7 @@ from utils import (
 class TestBatchOutputFormatterComponent:
     """Component test for batch output formatter."""
 
-    EXP_NAME = "batch-inference-preparer-test"
+    EXP_NAME = "batch-output-formatter-test"
 
     def test_batch_output_formatter(self, temp_dir: str):
         """Test method for batch inference preparer."""
@@ -58,13 +58,13 @@ class TestBatchOutputFormatterComponent:
         # avoid blob exists error when running pytest with multiple workers
         if temp_dir is not None:
             file_path = os.path.join(temp_dir, uuid.uuid4().hex + ".jsonl")
-            with open(Constants.BATCH_INFERENCE_PREPARER_FILE_PATH, "r") as f:
+            with open(Constants.BATCH_OUTPUT_FORMATTER_FILE_PATH, "r") as f:
                 with open(file_path, "w") as f2:
                     f2.write(f.read())
 
         # set the pipeline inputs
-        pipeline_job.inputs.input_dataset = Input(
-            type="uri_file", path=file_path
+        pipeline_job.inputs.batch_inference_output = Input(
+            type="uri_folder", path=temp_dir
         )
         pipeline_job.inputs.model_type = model_type
         pipeline_job.inputs.label_key = label_key
@@ -81,11 +81,11 @@ class TestBatchOutputFormatterComponent:
     def _check_columns_in_dfs(self, column_list, dfs):
         for df in dfs:
             for col in column_list:
-                assert col in df
+                assert col in df, f"{col} not found in df."
 
     def _check_output_data(self, output_dir, file_name, expected_col_list):
         output_file = os.path.join(output_dir, file_name)
-        assert os.path.isfile(output_file)
+        assert os.path.isfile(output_file), f"{output_file} is not a file"
         # Read the output file
         dfs = self._read_data(output_file)
         self._check_columns_in_dfs(expected_col_list, dfs)
@@ -98,6 +98,11 @@ class TestBatchOutputFormatterComponent:
             download_outputs(
                 job_name=job.name, output_name=output_name, download_path=output_dir
             )
-        self._check_output_data(output_dir, "prediction.jsonl", ["prediction"])
-        self._check_output_data(output_dir, "predict_ground_truth_data.jsonl", ["ground_truth"])
-        self._check_output_data(output_dir, "perf_data.jsonl", ["start", "end", "latency"])
+        output_dir = os.path.join(output_dir, "named-outputs")
+        self._check_output_data(
+            os.path.join(output_dir, "prediction_data"), "prediction.jsonl", ["prediction"])
+        self._check_output_data(
+            os.path.join(output_dir, "perf_data"), "perf_data.jsonl", ["start", "end", "latency"])
+        self._check_output_data(
+            os.path.join(
+                output_dir, "predict_ground_truth_data"), "predict_ground_truth_data.jsonl", ["ground_truth"])

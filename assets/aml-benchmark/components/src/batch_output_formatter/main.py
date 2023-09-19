@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
         help="The ground truth data mapping 1-1 to the prediction data.")
     parser.add_argument("--perf_data", type=str, help="path to output location")
     parser.add_argument("--model_type", type=str, help="model type", default='llama')
-    parser.add_argument("--metadata_key", type=str, help="metadata key", default=None)
+    parser.add_argument("--metadata_key", type=str, help="metadata key", default='request_metadata')
     parser.add_argument("--data_id_key", type=str, help="metadata key", default=None)
     parser.add_argument("--label_key", type=str, help="label key")
     args, _ = parser.parse_known_args()
@@ -43,7 +43,7 @@ def main():
     data_files = [
         f for f in os.listdir(args.batch_inference_output) if f.endswith("json") or f.endswith("jsonl")
     ]
-    print("Receiving " + data_files)
+    print(f"Receiving {data_files}")
 
     new_df = []
     perf_df = []

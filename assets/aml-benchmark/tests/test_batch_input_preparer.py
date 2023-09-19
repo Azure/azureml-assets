@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests for Compute Performance Metrics Component."""
+"""Tests for Batch inference preparer Component."""
 
 from typing import Optional
 import json
@@ -40,7 +40,7 @@ class TestBatchInferencePreparerComponent:
             '           "max_new_tokens": 100,'
             '           "do_sample": true'
             '       }'
-            '   }'
+            '   },'
             '   "_batch_request_metadata": ###<_batch_request_metadata>'
             '}',
             temp_dir,
@@ -78,7 +78,7 @@ class TestBatchInferencePreparerComponent:
 
         # set the pipeline inputs
         pipeline_job.inputs.input_dataset = Input(
-            type="uri_file", path=file_path
+            type="uri_folder", path=temp_dir
         )
         pipeline_job.inputs.model_type = model_type
         pipeline_job.inputs.batch_input_pattern = batch_input_pattern
@@ -92,14 +92,15 @@ class TestBatchInferencePreparerComponent:
         download_outputs(
             job_name=job.name, output_name=output_name, download_path=output_dir
         )
+        output_dir = os.path.join(output_dir, "named-outputs")
+        print(output_dir)
         output_file_path = os.path.join(output_dir, "formatted_data", "formatted_data.json")
-        assert os.path.isfile(os.path.join(output_dir, "formatted_data", 'MLTable'))
         # Read the output file
         with open(output_file_path, "r") as f:
             output_records = [json.loads(line) for line in f]
         for r in output_records:
             for k in check_key:
-                assert k in r
+                assert k in r, f"{k} not in records {r}"
             if model_type == "llama":
                 for k, v in check_param_dict.items():
-                    assert r['input_data']['parameters'][k] == v
+                    assert r['input_data']['parameters'][k] == v, f"{k} not equal to {v}"

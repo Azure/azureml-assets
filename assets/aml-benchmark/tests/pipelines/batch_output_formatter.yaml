@@ -8,8 +8,8 @@ settings:
 
 inputs:
   batch_inference_output:
-    type: uri_file
-    path: ../data/sample_batch_data.jsonl
+    type: uri_folder
+    path: ../data/
   model_type: llama
   label_key: label
 
@@ -25,7 +25,7 @@ outputs:
     path: azureml://datastores/${{default_datastore}}/paths/${{name}}/predict_ground_truth_data.jsonl
 
 jobs:
-  run_compute_perf_metrics:
+  run_batch_output_formatter:
     type: command
     component: ../../components/batch-output-formatter/spec.yaml
     limits: 

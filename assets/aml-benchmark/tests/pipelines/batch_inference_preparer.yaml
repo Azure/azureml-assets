@@ -8,8 +8,8 @@ settings:
 
 inputs:
   input_dataset:
-    type: uri_file
-    path: ../data/sample_batch_data.jsonl
+    type: uri_folder
+    path: ../data/
   model_type: llama
   batch_input_pattern: >-
     '{"input_data": 
@@ -27,11 +27,11 @@ inputs:
 
 outputs:
   formatted_data:
-    type: uri_file
+    type: uri_folder
     path: azureml://datastores/${{default_datastore}}/paths/${{name}}/
 
 jobs:
-  run_compute_perf_metrics:
+  run_batch_inference_preparer:
     type: command
     component: ../../components/batch-inference-preparer/spec.yaml
     limits: 
