@@ -226,7 +226,7 @@ def run(data):
             result_dict = {"output": f"{response.generated_responses[-1]}"}
         else:
             for i in range(len(response.response)):
-                result_dict[str(i)] = response.response[i]
+                result_dict[str(i)] = [f"{response.response[i]}"]
         logger.info(result_dict)
         time_taken = response.time_taken
         logger.info(f"time_taken: {time_taken}")
