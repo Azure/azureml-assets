@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.17.cond2
+version: 0.0.18
 
 # Pipeline inputs
 inputs:
@@ -176,7 +176,7 @@ outputs:
 
 jobs:
   validation_trigger_import:
-    component: azureml://registries/azureml-preview-test1/components/validation_trigger_import/versions/0.0.2.cond2
+    component: azureml:validation_trigger_import:0.0.3
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -212,9 +212,10 @@ jobs:
     type: if_else
     condition: ${{parent.jobs.validation_trigger_import.outputs.output}}
     true_block: ${{parent.jobs.download_model}}
+    false_block: ${{parent.jobs.output_selector}}
 
   download_model:
-    component: azureml://registries/azureml-preview-test1/components/download_model/versions/0.0.15.cond1
+    component: azureml:download_model:0.0.16
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -231,7 +232,7 @@ jobs:
         type: uri_folder
 
   convert_model_to_mlflow:
-    component: azureml://registries/azureml/components/convert_model_to_mlflow/versions/0.0.14
+    component: azureml:convert_model_to_mlflow:0.0.14
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -256,7 +257,7 @@ jobs:
         type: uri_file
 
   mlflow_model_local_validation:
-    component: azureml://registries/azureml/components/mlflow_model_local_validation/versions/0.0.4
+    component: azureml:mlflow_model_local_validation:0.0.4
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -268,7 +269,7 @@ jobs:
       mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
   register_model:
-    component: azureml://registries/azureml/components/register_model/versions/0.0.8
+    component: azureml:register_model:0.0.8
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
@@ -289,7 +290,7 @@ jobs:
         type: uri_folder
 
   output_selector:
-    component: azureml://registries/azureml-preview-test1/components/output_selector/versions/0.0.1.cond2
+    component: azureml:output_selector:0.0.1
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'

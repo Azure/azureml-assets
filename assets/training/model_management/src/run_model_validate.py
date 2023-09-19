@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 """Validate Import Pipeline Parameters."""
-import json, re
+import json, re, os
 from azureml.model.mgmt.utils.logging_utils import custom_dimensions, get_logger
 from azureml.model.mgmt.utils.exceptions import swallow_all_exceptions
 from azureml.model.mgmt.config import AppName, LlamaHFModels, LlamaModels, llama_dict, ComponentVariables
@@ -95,7 +95,8 @@ def validate(
     if update_existing_model.lower() == "false":
         if_model_exists, model_download_details = validate_if_model_exists(model_id)
         if if_model_exists:
-            with open(registration_details_folder / ComponentVariables.REGISTRATION_DETAILS_JSON_FILE, "w") as f:
+            registrtaion_file  = os.path.join(registration_details_folder, ComponentVariables.REGISTRATION_DETAILS_JSON_FILE)
+            with open(registrtaion_file, "w") as f:
                 json.dump(model_download_details, f)
             return False
     return True
