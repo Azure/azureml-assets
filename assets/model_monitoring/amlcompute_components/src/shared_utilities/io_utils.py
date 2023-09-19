@@ -24,7 +24,7 @@ def save_spark_df_as_mltable(metrics_df, folder_path: str):
     """Save spark dataframe as mltable."""
     metrics_df.write.option("output_format", "parquet").option(
         "overwrite", True
-    ).mltable(folder_path)
+    ).mltable(f"file://{folder_path}")
 
 
 def np_encoder(object):
