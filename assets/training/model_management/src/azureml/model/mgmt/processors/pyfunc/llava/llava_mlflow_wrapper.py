@@ -42,10 +42,8 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
         :type context: mlflow.pyfunc.PythonModelContext
         """
 
-        from llava.constants import IMAGE_TOKEN_INDEX
         from llava.conversation import conv_templates
         from llava.model.builder import load_pretrained_model
-        from llava.mm_utils import tokenizer_image_token, KeywordsStoppingCriteria
 
         try:
             # Get the top level model directory (contains model directory itself and potentially auxiliary directory).
@@ -102,8 +100,6 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
         """
 
         from llava.constants import IMAGE_TOKEN_INDEX
-        from llava.conversation import conv_templates
-        from llava.model.builder import load_pretrained_model
         from llava.mm_utils import tokenizer_image_token, KeywordsStoppingCriteria
 
         # Do inference one input at a time.
@@ -120,19 +116,35 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
             if not prompt:
                 prompt_from_direct_question = True
                 if self._model_version == self.LLAVA_MPT:
-                    prompt = f"A conversation between a user and an LLM-based AI assistant. The assistant gives helpful and honest answers.<|im_end|><|im_start|>user\n<im_start><image><im_end>\n{direct_question}<|im_end|><|im_start|>assistant"
+                    prompt = (
+                        f"A conversation between a user and an LLM-based AI assistant. The assistant gives helpful "
+                        f"and honest answers.<|im_end|><|im_start|>user\n<im_start><image><im_end>\n"
+                        f"{direct_question}<|im_end|><|im_start|>assistant"
+                    )
                 elif self._model_version == self.LLAVA_7B:
-                    prompt = f"[INST] <<SYS>>\nYou are a helpful language and vision assistant. You are able to understand the visual content that the user provides, and assist the user with a variety of tasks using natural language.\n<</SYS>>\n\n<im_start><image><im_end>\n{direct_question} [/INST]"
+                    prompt = (
+                        f"[INST] <<SYS>>\nYou are a helpful language and vision assistant. You are able to understand "
+                        f"the visual content that the user provides, and assist the user with a variety of tasks "
+                        f"using natural language.\n<</SYS>>\n\n<im_start><image><im_end>\n{direct_question} [/INST]"
+                    )
                 elif self._model_version == self.LLAVA_13B:
-                    prompt = f"input to llava: A chat between a curious human and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the human's questions. USER: <im_start><image><im_end>\n{direct_question} ASSISTANT:"
+                    prompt = (
+                        f"input to llava: A chat between a curious human and an artificial intelligence assistant. "
+                        f"The assistant gives helpful, detailed, and polite answers to the human's questions. USER: "
+                        f"<im_start><image><im_end>\n{direct_question} ASSISTANT:"
+                    )
             else:
                 prompt_from_direct_question = False
 
             # Make image input.
-            image_tensor = self._image_processor.preprocess(pil_image, return_tensors="pt")["pixel_values"].half().cuda()
+            image_tensor = self._image_processor.preprocess(
+                pil_image, return_tensors="pt"
+            )["pixel_values"].half().cuda()
 
             # Make text input.
-            input_ids = tokenizer_image_token(prompt, self._tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt").unsqueeze(0).cuda()
+            input_ids = tokenizer_image_token(
+                prompt, self._tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt"
+            ).unsqueeze(0).cuda()
             stopping_criteria = KeywordsStoppingCriteria([self._stop_str], self._tokenizer, input_ids)
 
             # Call model.
