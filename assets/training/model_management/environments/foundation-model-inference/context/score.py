@@ -227,7 +227,7 @@ def run(data):
         else:
             for i in range(len(response.response)):
                 result_dict[str(i)] = [f"{response.response[i]}"]
-            result_dict = pd.DataFrame(result_dict)    
+            result_dict = pd.DataFrame(result_dict)
         logger.info(result_dict)
         time_taken = response.time_taken
         logger.info(f"time_taken: {time_taken}")
