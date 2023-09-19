@@ -21,11 +21,11 @@ dependencies:
     - mlflow
     - markupsafe<2.1.0
     - itsdangerous==2.0.1
-    - responsibleai-text==0.2.0
+    - responsibleai-text[qa]==0.2.1
     - click<8.0.0
     - mltable==1.4.1
     - transformers>=4.17.0
-    - ml-wrappers~=0.5.1
+    - ml-wrappers~=0.5.2
     - nlp-feature-extractors==0.1.0
     - datasets
     - typing-extensions<4.6.1
