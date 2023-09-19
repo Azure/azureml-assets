@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Mlflow LLaVA wrapper helper functions."""
+
 import base64
 import re
 import requests

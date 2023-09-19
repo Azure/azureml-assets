@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""
-MLFlow pyfunc wrapper for LLaVA models.
-"""
+"""MLFlow pyfunc wrapper for LLaVA models."""
 
 import io
 import os
@@ -27,7 +25,8 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
     MODEL_VERSIONS = [LLAVA_MPT, LLAVA_7B, LLAVA_13B]
 
     def __init__(self, task_type: str) -> None:
-        """Constructor for MLflow wrapper class
+        """Construct LLaVA MLflow wrapper object.
+
         :param task_type: Task type for training or inference.
         :type task_type: str
         """
@@ -36,12 +35,11 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
         self._task_type = task_type
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
-        """
-        Load a MLflow model with pyfunc.load_model().
+        """Load a MLflow model with pyfunc.load_model().
+
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-
         from llava.conversation import conv_templates
         from llava.model.builder import load_pretrained_model
 
@@ -88,8 +86,8 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
             raise
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
-        """
-        Perform inference on the input data.
+        """Perform inference on the input data.
+
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         :param input_data: Pandas DataFrame with columns ["image"], ["prompt"] and ["direct_question"], where
@@ -98,7 +96,6 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
         :type input_data: pd.DataFrame
         :return: Pandas dataframe with column ["response"] containing the model's response to the dialog so far.
         """
-
         from llava.constants import IMAGE_TOKEN_INDEX
         from llava.mm_utils import tokenizer_image_token, KeywordsStoppingCriteria
 

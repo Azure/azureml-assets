@@ -383,7 +383,6 @@ class LLaVAMLFlowConvertor(PyFuncMLFLowConvertor):
         :return: artifacts dict
         :rtype: Dict
         """
-
         # Get the name of the only subdirectory of the model directory.
         sd = next(
             (
