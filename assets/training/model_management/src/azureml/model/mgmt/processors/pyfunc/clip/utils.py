@@ -58,8 +58,13 @@ def process_image(img: pd.Series) -> pd.Series:
         return img
     elif isinstance(image, str):
         if _is_valid_url(image):
-            image = requests.get(image).content
-            return pd.Series(image)
+            try:
+                response = requests.get(image)
+                response.raise_for_status()  # Raise exception in case of unsuccessful response code.
+                image = response.content
+                return pd.Series(image)
+            except requests.exceptions.RequestException as ex:
+                raise ValueError(f"Unable to retrieve image from url string due to exception: {ex}")
         else:
             try:
                 return pd.Series(base64.b64decode(image))
