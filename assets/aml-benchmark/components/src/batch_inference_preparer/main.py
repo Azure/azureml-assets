@@ -82,7 +82,7 @@ def main():
 
     # Save MLTable file
     logger.info("Writing the data now.")
-    with open(os.path.join(formatted_dataset, "MLTable"), "w+") as f:
+    with open(os.path.join(formatted_dataset, "MLTable"), "w") as f:
         f.writelines(MLTABLE_CONTENTS)
 
     new_df = pd.DataFrame(new_df)

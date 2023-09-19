@@ -1,0 +1,42 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+display_name: test_endpoint_score
+description: Pipeline to test endpoint score.
+settings:
+  default_compute: azureml:serverless
+
+inputs:
+  data_input_table:
+    type: uri_folder
+    path: ../data/
+  online_endpoint_url: 'https://yuzhua-ws-eastus-mxawd.eastus.inference.ml.azure.com/score'
+  additional_headers: '"azureml-model-deployment": "test-model-1"'
+  initial_worker_count: 1
+  max_worker_count: 10
+
+outputs:
+  job_out_path:
+    type: uri_folder
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/
+  mini_batch_results_out_directory:
+    type: uri_folder
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/
+  metrics_out_directory:
+    type: uri_folder
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/
+
+jobs:
+  run_batch_benchmark_score:
+    type: parallel
+    component: ../../components/batch-benchmark-score/spec.yaml
+    inputs:
+      data_input_table: ${{parent.inputs.data_input_table}}
+      online_endpoint_url: ${{parent.inputs.online_endpoint_url}}
+      additional_headers: ${{parent.inputs.additional_headers}}
+      initial_worker_count: ${{parent.inputs.initial_worker_count}}
+      max_worker_count: ${{parent.inputs.max_worker_count}}
+    outputs:
+      job_out_path: ${{parent.outputs.job_out_path}}
+      mini_batch_results_out_directory: ${{parent.outputs.mini_batch_results_out_directory}}
+      metrics_out_directory: ${{parent.outputs.metrics_out_directory}}

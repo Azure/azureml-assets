@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""The class for congestion."""
+
 import os
 import pandas as pd
 from abc import ABC, abstractmethod
@@ -7,18 +12,24 @@ from ..utils.common.common import str2bool
 from ..utils.scoring_utils import is_retriable
 from ..utils import logging_utils as lu
 
+
 class CongestionState(Enum):
+    """Enum for congestion state."""
     CONGESTED = 1
     SATURATED = 2
     FREE = 3
     UNKNOWN = 4
 
+
 class CongestionDetector(ABC):
+    """Base class for congestion detector."""
     @abstractmethod
     def detect(self, request_metrics: RequestMetrics, start_time: pd.Timestamp, end_time: pd.Timestamp = None) -> CongestionState:
         pass
 
+
 class WaitTimeCongestionDetector(CongestionDetector):
+    """Wait time congestion detector."""
     DEFAULT_CONGESTION_P90_THRESHOLD = 10
     DEFAULT_SATURATION_P90_THRESHOLD = 5
     DEFAULT_USE_TOTAL_WAIT_TIME = True
@@ -33,10 +44,17 @@ class WaitTimeCongestionDetector(CongestionDetector):
         total_wait_time_override = os.environ.get("BATCH_SCORE_CONGESTION_USE_TOTAL_WAIT_TIME")
         self.__use_request_total_wait_time = (str2bool(total_wait_time_override) if total_wait_time_override else self.DEFAULT_USE_TOTAL_WAIT_TIME)
 
-        lu.get_logger().info(f"WaitTimeCongestionDetector using congestion threshold: {self.__congestion_threshold}, saturation threshold: {self.__saturation_threshold}, "
+        lu.get_logger().info(
+            f"WaitTimeCongestionDetector using congestion threshold: {self.__congestion_threshold}, saturation threshold: {self.__saturation_threshold}, "
             "use total wait time: {self.__use_request_total_wait_time}")
 
-    def detect(self, request_metrics: RequestMetrics, start_time: pd.Timestamp, end_time: pd.Timestamp = None) -> CongestionState:
+    def detect(
+            self,
+            request_metrics: RequestMetrics,
+            start_time: pd.Timestamp,
+            end_time: pd.Timestamp = None
+        ) -> CongestionState:
+        """Detect method."""
         requests = request_metrics.get_metrics(start_time, end_time)
         response_count = len(requests.index)
 
@@ -48,11 +66,13 @@ class WaitTimeCongestionDetector(CongestionDetector):
             result = CongestionState.UNKNOWN
         else:
             if self.__use_request_total_wait_time:
-                df = requests.groupby(by=RequestMetrics.COLUMN_REQUEST_ID, sort=False).max(RequestMetrics.COLUMN_REQUEST_TOTAL_WAIT_TIME)
+                df = requests.groupby(
+                    by=RequestMetrics.COLUMN_REQUEST_ID, sort=False).max(RequestMetrics.COLUMN_REQUEST_TOTAL_WAIT_TIME)
                 p90_wait_time = df[RequestMetrics.COLUMN_REQUEST_TOTAL_WAIT_TIME].quantile(0.9, interpolation="linear")
                 request_count = len(df.index)
             else:
-                df = requests.groupby(by=RequestMetrics.COLUMN_REQUEST_ID, sort=False).sum(RequestMetrics.COLUMN_ADDITIONAL_WAIT_TIME)
+                df = requests.groupby(
+                    by=RequestMetrics.COLUMN_REQUEST_ID, sort=False).sum(RequestMetrics.COLUMN_ADDITIONAL_WAIT_TIME)
                 p90_wait_time = df[RequestMetrics.COLUMN_ADDITIONAL_WAIT_TIME].quantile(0.9, interpolation="linear")
                 request_count = len(df.index)
 
@@ -67,22 +87,29 @@ class WaitTimeCongestionDetector(CongestionDetector):
 
         return result
 
+
 class ThrottleCountCongestionDetector(CongestionDetector):
+    """Throttle count congestion detector."""
     DEFAULT_CONGESTION_THRESHOLD = 0.15
     DEFAULT_SATURATION_THRESHOLD = 0.05
 
     def __init__(self):
         congestion_override = os.environ.get("BATCH_SCORE_CONGESTION_THRESHOLD_THROTTLE_PERCENTAGE")
-        self.__congestion_threshold = (float(congestion_override) if congestion_override else self.DEFAULT_CONGESTION_THRESHOLD)
+        self.__congestion_threshold = (
+            float(congestion_override) if congestion_override else self.DEFAULT_CONGESTION_THRESHOLD)
 
         saturation_override = os.environ.get("BATCH_SCORE_SATURATION_THRESHOLD_THROTTLE_PERCENTAGE")
-        self.__saturation_threshold = (float(saturation_override) if saturation_override else self.DEFAULT_SATURATION_THRESHOLD)
+        self.__saturation_threshold = (
+            float(saturation_override) if saturation_override else self.DEFAULT_SATURATION_THRESHOLD)
 
-        lu.get_logger().info(f"ThrottleCountCongestionDetector using congestion threshold: {self.__congestion_threshold}, saturation threshold: {self.__saturation_threshold}")
+        lu.get_logger().info(
+            f"ThrottleCountCongestionDetector using congestion threshold: {self.__congestion_threshold}, saturation threshold: {self.__saturation_threshold}")
 
     def detect(self, request_metrics: RequestMetrics, start_time: pd.Timestamp, end_time: pd.Timestamp = None) -> CongestionState:
+        """Detect method."""
         requests = request_metrics.get_metrics(start_time, end_time)
         response_count = len(requests.index)
+        df = requests
 
         df = df[df.apply(
             lambda row: is_retriable(
@@ -108,6 +135,7 @@ class ThrottleCountCongestionDetector(CongestionDetector):
             else:
                 result = CongestionState.SATURATED
 
-        lu.get_logger().info(f"ThrottleCountCongestionDetector response_count: {response_count} retry_count: {retry_count} result: {result}")
+        lu.get_logger().info(
+            f"ThrottleCountCongestionDetector response_count: {response_count} retry_count: {retry_count} result: {result}")
 
         return result

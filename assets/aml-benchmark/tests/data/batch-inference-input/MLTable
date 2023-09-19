@@ -1,8 +1,0 @@
-
-type: mltable
-paths:
-  - pattern: ./*.json
-transformations:
-  - read_json_lines:
-      encoding: utf8
-      include_path_column: false
