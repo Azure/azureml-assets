@@ -59,11 +59,6 @@ jobs:
     outputs:
       signal_metrics:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   feature_selection:
     type: command
     component: azureml://registries/azureml/components/model_monitor_feature_selector_command/versions/0.0.2
@@ -80,11 +75,6 @@ jobs:
     outputs:
       feature_names:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   compute_drift_metrics:
     type: command
     component: azureml://registries/azureml/components/data_drift_compute_metrics_command/versions/0.0.2
@@ -105,11 +95,6 @@ jobs:
     outputs:
       signal_metrics:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   compute_histogram_buckets:
     type: command
     component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets_command/versions/0.0.2
@@ -123,11 +108,6 @@ jobs:
     outputs:
       histogram_buckets:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   compute_baseline_histogram:
     type: command
     component: azureml://registries/azureml/components/model_monitor_compute_histogram_command/versions/0.0.2
@@ -141,11 +121,6 @@ jobs:
     outputs:
       histogram:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   compute_target_histogram:
     type: command
     component: azureml://registries/azureml/components/model_monitor_compute_histogram_command/versions/0.0.2
@@ -159,11 +134,6 @@ jobs:
     outputs:
       histogram:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   output_signal_metrics:
     type: command
     component: azureml://registries/azureml/components/model_monitor_output_metrics_command/versions/0.0.2
@@ -186,11 +156,6 @@ jobs:
         type: uri_folder
         path: ${{parent.outputs.signal_output}}
         mode: direct
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   evaluate_metric_thresholds:
     type: command
     component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold_command/versions/0.0.2
@@ -200,8 +165,3 @@ jobs:
         path: ${{parent.jobs.compute_drift_metrics.outputs.signal_metrics}}
       notification_emails: ${{parent.inputs.notification_emails}}
       signal_name: ${{parent.inputs.signal_name}}
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
