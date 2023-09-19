@@ -23,6 +23,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt && rm requirements.txt
 
 # Set the entrypoint script
-COPY entrypoint.sh /home
+RUN mkdir /home
+COPY entrypoint.sh /home/
 RUN chmod +x /home/entrypoint.sh
 ENTRYPOINT ["./home/entrypoint.sh"]
