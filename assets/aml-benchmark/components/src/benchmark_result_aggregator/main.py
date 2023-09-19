@@ -175,7 +175,7 @@ def main(
     performance_metrics_path: Optional[str],
     output_dataset_path: str,
 ):
-    """Main function for the benchmark result aggregator."""
+    """Entry function for the benchmark result aggregator."""
     quality_metrics = read_json_data(quality_metrics_path)
     for key in quality_metrics.keys():
         value = quality_metrics[key]
