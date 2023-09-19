@@ -8,6 +8,7 @@ from azure.ai.ml import MLClient, Output
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_QUALITY_SIGNAL_MONITOR,
+    DATA_ASSET_EMPTY,
     DATA_ASSET_IRIS_BASELINE_DATA,
     DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT,
 )
@@ -61,6 +62,21 @@ class TestDataQualityModelMonitor:
             test_suite_name,
             DATA_ASSET_IRIS_BASELINE_DATA,
             DATA_ASSET_IRIS_PREPROCESSED_MODEL_INPUTS_NO_DRIFT,
+        )
+
+        assert pipeline_job.status == "Completed"
+
+    @pytest.mark.e2e2
+    def test_monitoring_run_use_defaults_empty_data_successful(
+        self, ml_client: MLClient, get_component, test_suite_name
+    ):
+        """Test the happy path scenario where the data has drift and default settings are used."""
+        pipeline_job = _submit_data_quality_signal_monitor_job(
+            ml_client,
+            get_component,
+            test_suite_name,
+            DATA_ASSET_IRIS_BASELINE_DATA,
+            DATA_ASSET_EMPTY,
         )
 
         assert pipeline_job.status == "Completed"
