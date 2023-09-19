@@ -83,7 +83,7 @@ jobs:
         type: uri_folder
         path: ${{parent.jobs.performance.outputs.performance_result}}
     outputs:
-      output_dataset: ${{parent.outputs.benchmark_result}}
+      benchmark_result: ${{parent.outputs.benchmark_result}}
 settings:
   continue_on_step_failure: true
-  default_compute: azureml:serverless
+  default_compute: azureml:v100-compute
