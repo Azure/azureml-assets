@@ -9,10 +9,13 @@ from typing import List
 import uuid
 from pyspark.sql import Row
 from dateutil import parser
-from shared_utilities.io_utils import read_mltable_in_spark
-from model_monitor_output_metrics.factories.signal_factory import SignalFactory
+
 from model_monitor_output_metrics.entities.signals.signal import Signal
+from model_monitor_output_metrics.factories.signal_factory import SignalFactory
 from shared_utilities.amlfs import amlfs_upload
+from shared_utilities.io_utils import read_mltable_in_spark
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 
 def run():

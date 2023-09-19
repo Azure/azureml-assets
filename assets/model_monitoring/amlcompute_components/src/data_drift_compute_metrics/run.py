@@ -9,7 +9,6 @@ from shared_utilities.io_utils import read_mltable_in_spark
 from compute_data_drift import compute_data_drift_measures_tests
 
 from shared_utilities.patch_mltable import patch_all
-
 patch_all()
 
 

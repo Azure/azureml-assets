@@ -12,6 +12,8 @@ from pyspark.sql.types import (
     DoubleType,
 )
 from shared_utilities.io_utils import init_spark, read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 
 def _create_empty_histogram_buckets_df():
