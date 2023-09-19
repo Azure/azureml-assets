@@ -21,5 +21,5 @@ outputs:
   output_chunk_file:
     type: uri_folder
 code: ../src
-environment: azureml:llm-dbcopilot-e2e@latest
+environment: azureml:llm-dbcopilot-embeddings@latest
 command: python example_grounding.py --output_chunk_file '${{outputs.output_chunk_file}}' --grounding_context '${{inputs.grounding_context}}' $[[--include_builtin '${{inputs.include_builtin}}']] $[[--tools '${{inputs.tools}}']] $[[--sample_folder '${{inputs.sample_folder}}']]
