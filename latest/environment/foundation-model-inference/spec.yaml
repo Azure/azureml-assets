@@ -1,9 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
-description: Environment used for deploying model to use Huggingface text-generation
-  for inference
+description: Environment used for deploying model to use DS-MII for inference
 
 name: "foundation-model-inference"
-version: "14"
+version: "15"
 
 build:
   path: "context"
@@ -13,4 +12,4 @@ os_type: linux
 
 tags:
   Preview: ""
-  HF-Inference: ""
+  DS-MII: ""
