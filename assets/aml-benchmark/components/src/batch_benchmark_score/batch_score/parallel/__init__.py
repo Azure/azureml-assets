@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Batch benchmark score init file."""
+"""Parallel init file."""
 
 from .conductor import Conductor

@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Class for Worker."""
+
 import asyncio
 import aiohttp
 import traceback
@@ -13,12 +18,22 @@ from ..utils.scoring_request import ScoringRequest
 from ..utils.segmented_score_context import SegmentedScoreContext
 from .request_metrics import RequestMetrics
 
+
 class QueueItem:
-    def __init__(self, scoring_request: ScoringRequest, segmented_score_context: SegmentedScoreContext = None):
+    """Class for queue item."""
+
+    def __init__(
+            self,
+            scoring_request: ScoringRequest, segmented_score_context: SegmentedScoreContext = None
+    ):
+        """Init for queue item."""
         self.scoring_request = scoring_request
         self.segmented_score_context=segmented_score_context
 
+
 class Worker:
+    """Class for worker."""
+
     def __init__(
             self, 
             scoring_client: ScoringClient, 
@@ -30,6 +45,7 @@ class Worker:
             segment_max_token_size: int, 
             id: str,
             max_retry_time_interval: int = None):
+        """Init for worker."""
 
         self.__scoring_client: ScoringClient = scoring_client
         self.__client_session = client_session
@@ -50,13 +66,16 @@ class Worker:
         lu.get_logger().debug("{}: Created".format(self.id))
     
     def is_running(self) -> bool:
+        """Is worker running."""
         return self.__is_running
 
     def stop(self):
+        """Stop worker."""
         lu.get_logger().debug("{}: Stopped".format(self.id))
         self.__is_running = False
 
     async def start(self):
+        """Start worker."""
         self.__is_running = True
         lu.set_worker_id(self.id)
         lu.get_logger().debug("{}: Started".format(self.id))
@@ -85,13 +104,16 @@ class Worker:
 
                     self.__add_result(queue_item.scoring_request, result)
 
-                    lu.get_logger().debug("{}: Score failed: Payload scored for {} seconds, which exceeded the maximum time interval of {} seconds. internal_id: {}, total_wait_time: {}, retry_count: {}".format(
-                        self.id,
-                        round(queue_item.scoring_request.scoring_duration, 2),
-                        self.__max_retry_time_interval,
-                        queue_item.scoring_request.internal_id,
-                        queue_item.scoring_request.total_wait_time,
-                        queue_item.scoring_request.retry_count))
+                    lu.get_logger().debug(
+                        "{}: Score failed: Payload scored for {} seconds, "
+                        "which exceeded the maximum time interval of {} seconds. internal_id: {}, "
+                        "total_wait_time: {}, retry_count: {}".format(
+                            self.id,
+                            round(queue_item.scoring_request.scoring_duration, 2),
+                            self.__max_retry_time_interval,
+                            queue_item.scoring_request.internal_id,
+                            queue_item.scoring_request.total_wait_time,
+                            queue_item.scoring_request.retry_count))
             else:
                 try:
                     start = time.time()
@@ -100,7 +122,8 @@ class Worker:
 
                     if self.__enable_delay_after_success:
                         # On successful request, add a 1 second delay before processing the next one
-                        # This is to lower the chance of other requests getting starved because a worker that releases
+                        # This is to lower the chance of other requests getting starved because
+                        # a worker that releases
                         # quota always immediately re-reserve it with no delay.
                         await asyncio.sleep(1)
 
@@ -128,13 +151,15 @@ class Worker:
                         additional_wait_time = wait_time,
                         request_total_wait_time = queue_item.scoring_request.total_wait_time)
 
-                    lu.get_logger().debug("{}: Encountered retriable exception. internal_id: {}, back_off: {}, wait_time: {}, total_wait_time: {}, retry_count: {}".format(
-                        self.id,
-                        queue_item.scoring_request.internal_id,
-                        back_off,
-                        wait_time,
-                        queue_item.scoring_request.total_wait_time,
-                        queue_item.scoring_request.retry_count))
+                    lu.get_logger().debug(
+                        "{}: Encountered retriable exception. internal_id: {}, "
+                        "back_off: {}, wait_time: {}, total_wait_time: {}, retry_count: {}".format(
+                            self.id,
+                            queue_item.scoring_request.internal_id,
+                            back_off,
+                            wait_time,
+                            queue_item.scoring_request.total_wait_time,
+                            queue_item.scoring_request.retry_count))
 
                     await asyncio.sleep(back_off)
 
@@ -156,16 +181,19 @@ class Worker:
     async def __process_queue_item(self, queue_item: QueueItem):
         if self.__segment_large_requests == "enabled":
             if queue_item.segmented_score_context is None:
-                queue_item.segmented_score_context = SegmentedScoreContext(queue_item.scoring_request, self.__segment_max_token_size)
+                queue_item.segmented_score_context = SegmentedScoreContext(
+                    queue_item.scoring_request, self.__segment_max_token_size)
 
             if queue_item.segmented_score_context.has_more():
-                scoring_result = await queue_item.segmented_score_context.score_next_once(self.__scoring_client, self.__client_session, worker_id=self.id)
+                scoring_result = await queue_item.segmented_score_context.score_next_once(
+                    self.__scoring_client, self.__client_session, worker_id=self.id)
 
                 if scoring_result.status == ScoringResultStatus.SUCCESS:
                     if queue_item.segmented_score_context.has_more():  
                         self.__scoring_request_queue.append(queue_item)
                     else:
-                        scoring_result = queue_item.segmented_score_context.build_scoring_result(scoring_result)
+                        scoring_result = queue_item.segmented_score_context.build_scoring_result(
+                            scoring_result)
                         self.__add_result(queue_item.scoring_request, scoring_result)
                 else:
                     self.__add_result(queue_item.scoring_request, scoring_result)
@@ -185,8 +213,10 @@ class Worker:
             scoring_request.internal_id,
             scoring_result.status,
             "<OMITTED>" if scoring_result.status == ScoringResultStatus.SUCCESS else scoring_result.response_body,
-            "" if not scoring_result.response_headers else scoring_result.response_headers.get("ms-azureml-model-error-statuscode", ""),
-            "" if not scoring_result.response_headers else scoring_result.response_headers.get("ms-azureml-model-error-reason", ""),
+            "" if not scoring_result.response_headers else scoring_result.response_headers.get(
+                "ms-azureml-model-error-statuscode", ""),
+            "" if not scoring_result.response_headers else scoring_result.response_headers.get(
+                "ms-azureml-model-error-reason", ""),
             0,
             scoring_request.total_wait_time)
         

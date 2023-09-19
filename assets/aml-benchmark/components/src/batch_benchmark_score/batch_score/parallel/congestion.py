@@ -30,6 +30,7 @@ class CongestionDetector(ABC):
 
 class WaitTimeCongestionDetector(CongestionDetector):
     """Wait time congestion detector."""
+
     DEFAULT_CONGESTION_P90_THRESHOLD = 10
     DEFAULT_SATURATION_P90_THRESHOLD = 5
     DEFAULT_USE_TOTAL_WAIT_TIME = True
@@ -90,6 +91,7 @@ class WaitTimeCongestionDetector(CongestionDetector):
 
 class ThrottleCountCongestionDetector(CongestionDetector):
     """Throttle count congestion detector."""
+
     DEFAULT_CONGESTION_THRESHOLD = 0.15
     DEFAULT_SATURATION_THRESHOLD = 0.05
 

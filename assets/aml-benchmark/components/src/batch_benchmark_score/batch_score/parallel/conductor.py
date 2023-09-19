@@ -18,7 +18,10 @@ from .adjustment import AIMD
 from .request_metrics import RequestMetrics
 from .worker import Worker, QueueItem
 
+
 class Conductor:
+    """The conductor class."""
+
     def __init__(
             self, 
             loop: asyncio.AbstractEventLoop,
@@ -29,6 +32,7 @@ class Conductor:
             max_worker_count: int,
             max_retry_time_interval: int = None,
             trace_configs: "list[TraceConfig]" = None):
+        """The init method."""
         self.__loop: asyncio.AbstractEventLoop = loop
         self.__scoring_client: ScoringClient = scoring_client
         self.__segment_large_requests: str = segment_large_requests
@@ -52,6 +56,7 @@ class Conductor:
         self.__cas = AIMD(request_metrics=self.__request_metrics)
 
     def close_session(self):
+        """Close session."""
         if self.__client_session is not None and not self.__client_session.closed:
             lu.get_logger().info("Conductor: Closing ClientSession")
 
@@ -66,6 +71,7 @@ class Conductor:
             lu.get_logger().info("Conductor: No open ClientSession exists")
 
     async def run(self, requests: "list[ScoringRequest]") -> "list[ScoringResult]":
+        "Run method."
         self.__add_requests(requests)
 
         lu.get_logger().info("Conductor: Starting with {} running workers and {} target worker count. There are {} workers in the worker pool.".format(len(list(filter(lambda worker: worker.is_running, self.__workers))), self.__target_worker_count, len(self.__workers)))

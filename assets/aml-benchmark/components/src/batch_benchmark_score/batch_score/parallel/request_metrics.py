@@ -1,6 +1,13 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Class for request metrics."""
+
 import pandas as pd
 
 class RequestMetrics:
+    """Class for request metrics."""
+
     COLUMN_TIMESTAMP = "timestamp"
     COLUMN_REQUEST_ID = "request_id"
     COLUMN_RESPONSE_CODE = "response_code"
@@ -11,6 +18,7 @@ class RequestMetrics:
     COLUMN_REQUEST_TOTAL_WAIT_TIME = "request_total_wait_time"
 
     def __init__(self):
+        """Init method."""
         self.__df = pd.DataFrame(columns=[
             RequestMetrics.COLUMN_TIMESTAMP,
             RequestMetrics.COLUMN_REQUEST_ID,
@@ -23,10 +31,24 @@ class RequestMetrics:
         ])
         self.__df.set_index(RequestMetrics.COLUMN_TIMESTAMP, inplace=True)
     
-    def add_result(self, request_id: str, response_code: int, response_payload: any, model_response_code: str, model_response_reason: str, additional_wait_time: int, request_total_wait_time: int):
-        self.__df.loc[pd.Timestamp.utcnow()] = [request_id, response_code, response_payload, model_response_code, model_response_reason, additional_wait_time, request_total_wait_time]
+    def add_result(
+            self,
+            request_id: str,
+            response_code: int,
+            response_payload: any,
+            model_response_code: str,
+            model_response_reason: str,
+            additional_wait_time: int,
+            request_total_wait_time: int
+    ) -> None:
+        """Add result."""
+        self.__df.loc[pd.Timestamp.utcnow()] = [
+            request_id, response_code, response_payload, model_response_code,
+            model_response_reason, additional_wait_time, request_total_wait_time]
 
     def get_metrics(self, start_time: pd.Timestamp, end_time: pd.Timestamp = None) -> pd.DataFrame:
+        """Get metrics."""
         if end_time is None:
             end_time = pd.Timestamp.utcnow()
-        return self.__df.loc[start_time:end_time] # NOTE: This only works on desc sorted data. self.__df is sorted in desc by nature 
+        # NOTE: This only works on desc sorted data. self.__df is sorted in desc by nature 
+        return self.__df.loc[start_time:end_time]

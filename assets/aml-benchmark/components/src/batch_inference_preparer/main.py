@@ -10,6 +10,7 @@ import pandas as pd
 from utils.io import read_pandas_data
 from utils.logging import get_logger
 from .endpoint_data_preparer import EndpointDataPreparer
+from utils.exceptions import swallow_all_exceptions
 
 
 logger = get_logger(__name__)
@@ -48,18 +49,19 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def main():
+@swallow_all_exceptions(logger)
+def main(
+    input_dataset: str,
+    formatted_dataset:str,
+    model_type: str,
+    batch_input_pattern: str
+) -> None:
     """Entry function of the script."""
-    args = parse_args()
-
-    input_dataset = args.input_dataset
-    formatted_dataset = args.formatted_data
-
     # online_endpoint = OnlineEndpoint.from_args(args)
     # if online_endpoint.should_deploy():
     #     online_endpoint.deploy_model()
 
-    endpoint_data_preparer = EndpointDataPreparer.from_args(args)
+    endpoint_data_preparer = EndpointDataPreparer(model_type, batch_input_pattern)
 
     # Read the data file into a pandas dataframe
     logger.info("Read data now.")
@@ -90,4 +92,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(
+        input_dataset=args.input_dataset,
+        formatted_dataset=args.formatted_data,
+        model_type=args.model_type,
+        batch_input_pattern=args.batch_input_pattern
+    )

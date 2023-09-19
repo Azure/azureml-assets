@@ -1,4 +1,4 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Batch benchmark score init file."""
+"""OSS header handler init file."""

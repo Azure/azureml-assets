@@ -23,8 +23,8 @@ inputs:
       },
     "_batch_request_metadata": ###<_batch_request_metadata>
     }'
-  online_endpoint_url: 'https://yuzhua-ws-eastus-mxawd.eastus.inference.ml.azure.com/score'
-  additional_headers: '"azureml-model-deployment": "test-model-1"'
+  online_endpoint_url: 'https://aml-benchmark-test-wzvd.eastus.inference.ml.azure.com/score'
+  additional_headers: '"azureml-model-deployment": "test-fake-model"'
   initial_worker_count: 1
   max_worker_count: 10
   label_key: label

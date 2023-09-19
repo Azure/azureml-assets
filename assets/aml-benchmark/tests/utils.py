@@ -7,10 +7,18 @@ import os
 import subprocess
 from typing import Dict, Any, Optional, List
 import hashlib
+from time import sleep
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
 from azure.identity import DefaultAzureCredential, AzureCliCredential
+from azure.ai.ml.entities import (
+    ManagedOnlineEndpoint,
+    ManagedOnlineDeployment,
+    Model,
+    Environment,
+    CodeConfiguration,
+)
 from azureml._common._error_response._error_response_constants import ErrorCodes
 import mlflow
 
@@ -36,6 +44,7 @@ class Constants:
     BATCH_INFERENCE_FILE_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data", "batch_inference_input.json"
     )
+    REFERENCES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "references")
     OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"
     OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"
     TEST_REGISTRY_NAME = "Benchmark-Test"
@@ -251,3 +260,63 @@ def assert_logged_params(job_name: str, exp_name: str, **expected_params: Any) -
             assert key not in logged_params
         else:
             assert logged_params[key] == str(value)
+
+
+def _deploy_endpoint(ml_client, endpoint_name):
+    endpoint = ManagedOnlineEndpoint(
+            name = endpoint_name,
+            description="this is a sample endpoint",
+            auth_mode="key"
+        )
+    ml_client.online_endpoints.begin_create_or_update(endpoint).wait()
+    return endpoint
+
+
+def _deploy_fake_model(ml_client, endpoint_name, deployment_name):
+    model = Model(path=os.path.join(Constants.REFERENCES_DIR, "fake_model"))
+    
+    deployment = ManagedOnlineDeployment(
+        name=deployment_name,
+        endpoint_name=endpoint_name,
+        model=model,
+        environment="azureml://registries/azureml/environments/sklearn-1.0/versions/14",
+        code_configuration=CodeConfiguration(
+            code=Constants.REFERENCES_DIR, scoring_script="score.py"
+        ),
+        instance_type="Standard_DS3_v2",
+        instance_count=1,
+    )
+    ml_client.online_deployments.begin_create_or_update(deployment=deployment).wait()
+    return deployment
+
+
+def deploy_fake_test_endpoint_maybe(
+        ml_client, endpoint_name="aml-benchmark-test-wzvqd", deployment_name="test-model"
+):
+    """Deploy a fake test endpoint"""
+    should_deploy = False
+    should_wait = True
+    try:
+        while should_wait:
+            endpoint = ml_client.online_endpoints.get(name=endpoint_name)
+            if endpoint.provisioning_state.lower() in ["creating", "updating", 'deleting']:
+                continue
+            deployment = ml_client.online_deployments.get(
+                endpoint_name=endpoint_name, name=deployment_name)
+            if deployment.provisioning_state.lower() != 'succeeded':
+                endpoint.begin_delete(name=endpoint_name)
+                should_deploy = True
+                break
+            elif deployment.provisioning_state.lower() == 'succeeded':
+                break
+            else:
+                continue
+    except Exception as e:
+        print(f"Get endpont met {e}")
+        should_deploy = True
+
+    if should_deploy:
+        # endpoint = _deploy_endpoint(ml_client, endpoint_name)
+        deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
+
+    return endpoint.scoring_uri, deployment.name

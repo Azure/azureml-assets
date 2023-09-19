@@ -16,7 +16,8 @@ from utils import (
     get_mlclient,
     Constants,
     download_outputs,
-    load_yaml_pipeline
+    load_yaml_pipeline,
+    deploy_fake_test_endpoint_maybe
 )
 
 
@@ -28,10 +29,11 @@ class TestBatchBenchmarkInferenceComponent:
     def test_batch_benchmark_inference(self, temp_dir: str):
         """Test batch inference preparer."""
         ml_client = get_mlclient()
+        score_url, deployment_name = deploy_fake_test_endpoint_maybe(ml_client)
         pipeline_job = self._get_pipeline_job(
             self.test_batch_benchmark_inference.__name__,
-            "https://yuzhua-ws-eastus-mxawd.eastus.inference.ml.azure.com/score",
-            '{"azureml-model-deployment": "test-model-1"}',
+            score_url,
+            '{"azureml-model-deployment": "'+ deployment_name + '"}',
             '{'
             '   "input_data":'
             '   {'
