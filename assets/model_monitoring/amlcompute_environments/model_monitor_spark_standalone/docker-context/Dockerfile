@@ -26,4 +26,4 @@ RUN pip install -r requirements.txt && rm requirements.txt
 RUN mkdir /scripts
 COPY entrypoint.sh /scripts/
 RUN chmod 755 /scripts/entrypoint.sh
-ENTRYPOINT ["/scripts/entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "/scripts/entrypoint.sh"]
