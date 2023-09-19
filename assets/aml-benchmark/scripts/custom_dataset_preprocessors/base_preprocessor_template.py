@@ -3,21 +3,27 @@
 # Licensed under the MIT License.
 # ---------------------------------------------------------
 
+"""Base template for custopm preprocessor script."""
+
 from typing import Any, Dict, List, Union
 import argparse
 import json
 import logging as logger
+import pandas as pd
+
 
 def _parse_args():
+    """Parse the arguments."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_path', type=str, required=True)
-    parser.add_argument('--output_path', type=str, required=True)
-    args = parser.parse_args()
-    return args
+    parser.add_argument("--input_path", type=str, required=True)
+    parser.add_argument("--output_path", type=str, required=True)
+    argss = parser.parse_args()
+    return argss
+
 
 def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
-    """
-    Read `.jsonl` file and return a list of dictionaries.
+    """Read `.jsonl` file and return a list of dictionaries.
+
     :param file_paths: Path to .jsonl file.
     :return: List of dictionaries.
     """
@@ -26,36 +32,52 @@ def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
         logger.ERROR(mssg)
         raise ValueError(mssg)
     data_dicts = []
-    with open(file_path, 'r') as file:
+    with open(file_path, "r", encoding="utf8") as file:
         for i, line in enumerate(file):
             data_dicts.append(json.loads(line))
     return data_dicts
 
-def _write_to_jsonl_file(data, file_path:str) -> None:
+
+def _write_to_jsonl_file(
+    data: Union[pd.DataFrame, List[Dict[str, Any]]], file_path: str
+) -> None:
+    """Write the processed output to jsonl file.
+
+    :param data: Data to write to the output file provided in `file_path`.
+    :param file_path: Path of the output file to dump the data.
+    :return: None
+    """
     if isinstance(data, pd.DataFrame):
-        data.to_json(file_path, lines=True, orient='records')
+        data.to_json(file_path, lines=True, orient="records")
         return
     if isinstance(data, List):
-        with open(file_path, 'w') as writer:
-            for example in data: 
+        with open(file_path, "w") as writer:
+            for example in data:
                 writer.write(json.dumps(example) + "\n")
     return
 
+
 def _run(input_path: str, output_path: str) -> None:
+    """Entry function to read, run and write the processed the data."""
     data = _read_jsonl_file(input_path)
     processed_data = run_processor(data)
-    _write_to_jsonl_file(data, output_path)
+    _write_to_jsonl_file(processed_data, output_path)
 
-def run_processor(data:List[Dict[str, Any]]) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
+
+def run_processor(
+    data: List[Dict[str, Any]]
+) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
     This is the function where user needs to write their preprocessor logic.
-    :param input_path: path to the jsonl input file
-    :param output_path: path to the jsonl output file
+
+    :param data: Data loaded from _read_jsonl_file function.
+    :type: List[Dict[str, Any]]
+    :return: pd.DataFrame or List[Dict[str, Any]]]
     """
-    # write your pre-processing logic
-    
+    # write the preprocessing logic here
+    pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = _parse_args()
     _run(args.input_path, args.output_path)

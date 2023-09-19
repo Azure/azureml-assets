@@ -44,7 +44,8 @@ def parse_arguments() -> argparse.Namespace:
         "--encoder_config",
         type=str,
         default=None,
-        help="Dictionary in json format that contains idtolabel or labeltoid to encode. This is not aplicable to custom scripts."
+        help=("Dictionary in json format that contains idtolabel or labeltoid to encode."
+              "This is not aplicable to custom scripts.")
     )
     parser.add_argument(
         "--output_dataset",
@@ -71,7 +72,8 @@ def main(
         dict value is presented using jinja template logic which will be used to extract the \
         respective value from the dataset.
     :param script_path: Path to the custom preprocessor python script provided by user.
-    :param encoder_config: Dictionary in json format that contains idtolabel or labeltoid to encode. This is not aplicable to custom scripts.
+    :param encoder_config: Dictionary in json format that contains idtolabel or labeltoid to encode. This is not \
+        aplicable to custom scripts.
     :param output_dataset: Path to the dump the processed .jsonl file.
     :return: None
     """
