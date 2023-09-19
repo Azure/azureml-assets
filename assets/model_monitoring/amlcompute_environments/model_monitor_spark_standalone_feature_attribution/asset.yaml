@@ -1,4 +1,4 @@
-name: model_monitor_spark_standalone_feature_attribution
+name: model-monitor-spark-standalone-feature-attribution
 version: auto
 type: environment
 spec: spec.yaml

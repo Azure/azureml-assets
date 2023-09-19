@@ -1,4 +1,4 @@
-name: model_monitor_spark_standalone
+name: model-monitor-spark-standalone
 version: auto
 type: environment
 spec: spec.yaml
