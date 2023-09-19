@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+"""Entry script for Benchmark Result Aggregator Component."""
 
 from typing import Any, Dict, Optional, Tuple, cast
 import argparse
@@ -174,7 +175,7 @@ def main(
     performance_metrics_path: Optional[str],
     output_dataset_path: str,
 ):
-    """The main function for the benchmark result aggregator."""
+    """Main function for the benchmark result aggregator."""
     quality_metrics = read_json_data(quality_metrics_path)
     for key in quality_metrics.keys():
         value = quality_metrics[key]

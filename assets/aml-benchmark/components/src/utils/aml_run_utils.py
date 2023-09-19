@@ -28,8 +28,8 @@ def get_parent_run_id() -> str:
 
 def get_all_runs_in_current_experiment() -> List[MLFlowRun]:
     """
-    Get a list of all of the runs in the current experiment
-    which are a direct child of the root run except
+    Get a list of all of the runs in the current experiment \
+    which are a direct child of the root run except \
     the current run.
     """
     experiment_name = get_experiment_name()
@@ -79,6 +79,7 @@ def get_step_name(run: MLFlowRun) -> str:
 def get_mlflow_model_name_version(model_uri: str) -> Tuple[str, Optional[str], Optional[str]]:
     """
     Get the mlflow model name and version from a URI.
+
     :param model_uri: the URI from which the model name and version has to be parsed.
 
     :returns: The model name and version.

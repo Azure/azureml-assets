@@ -145,7 +145,7 @@ def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
 
 def read_json_data(data_path: Optional[str]) -> Dict[str, Any]:
     """
-    Read json file(s) from a given file or directory path.
+    Read json file(s) from a given file or directory path. \
     If multiple json files are found, they are merged in one dictionary.
 
     :param data_path: Path to the data.
