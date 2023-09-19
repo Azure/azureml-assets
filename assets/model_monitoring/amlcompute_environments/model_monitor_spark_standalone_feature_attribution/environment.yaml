@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/model_monitor_spark_standalone_feature_attribution
+  name: azureml/curated/model-monitor-spark-standalone-feature-attribution
   os: linux
   context:
     dir: docker-context

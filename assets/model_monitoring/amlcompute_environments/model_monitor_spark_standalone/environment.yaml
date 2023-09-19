@@ -1,5 +1,5 @@
 image:
-  name: azureml/curated/model_monitor_spark_standalone
+  name: azureml/curated/model-monitor-spark-standalone
   os: linux
   context:
     dir: docker-context

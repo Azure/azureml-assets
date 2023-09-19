@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
-name: model_monitor_spark_standalone
+name: model-monitor-spark-standalone
 version: 0.0.1
 build:
   path: docker-context
