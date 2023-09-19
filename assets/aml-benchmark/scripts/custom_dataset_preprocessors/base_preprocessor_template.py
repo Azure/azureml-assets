@@ -68,7 +68,7 @@ def run_processor(
     data: List[Dict[str, Any]]
 ) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """
-    This is the function where user needs to write their preprocessor logic.
+    Run the custom processor function. The user needs to modify this function with their custom processing logic.
 
     :param data: Data loaded from _read_jsonl_file function.
     :type: List[Dict[str, Any]]
