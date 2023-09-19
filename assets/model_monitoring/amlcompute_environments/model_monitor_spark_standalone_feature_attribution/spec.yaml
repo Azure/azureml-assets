@@ -1,6 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
-name: model-monitor-spark-standalone-feature-attribution
-version: 0.0.1
+
+name: "{{asset.name}}"
+version: "{{asset.version}}"
+
 build:
   path: docker-context
 description: Spark environment for running model monitor feature attribution jobs on AzureML compute clusters.
