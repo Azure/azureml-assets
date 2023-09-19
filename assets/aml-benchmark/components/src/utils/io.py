@@ -158,7 +158,7 @@ def read_json_data(data_path: Optional[str]) -> Dict[str, Any]:
         file_paths = [data_path]
     elif os.path.isdir(data_path):
         file_paths = glob.glob(
-            pathname=os.path.join(data_path,"**/*.json"),
+            pathname=os.path.join(data_path, "**/*.json"),
             recursive=True
         )
     json_output: Dict[str, Any] = {}

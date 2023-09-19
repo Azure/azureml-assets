@@ -87,9 +87,7 @@ def _get_pipeline_params() -> Tuple[
             step_params['reused_pipeline_runid'] = \
                 run_v1_properties.get('azureml.reusedpipelinerunid', None)
 
-
         if run_definition is not None:
-
             # Log input assets
             input_assets = run_definition.get('inputAssets', None)
             if input_assets is not None:
@@ -138,7 +136,6 @@ def _get_pipeline_params() -> Tuple[
             step_params['node_count'] = run_definition['nodeCount']
             loggable_params[f"{step_name}.node_count"] = run_definition['nodeCount']
 
-
         # Get compute information
         log_files = run_details.get('logFiles', None)
         vm_size = get_compute_information(log_files, run_v1)
@@ -169,6 +166,7 @@ def _log_params_and_metrics(parameters: Dict[str, Any], metrics: Dict[str, Any])
         ml_client.log_param(parent_run_id, param_name, param_value_to_log)
     for metric_name, metric_value in filtered_metrics.items():
         ml_client.log_metric(parent_run_id, metric_name, metric_value)
+
 
 @swallow_all_exceptions(logger)
 def main(
@@ -202,11 +200,10 @@ def main(
                 logger.warning(msg=f"Replacing metric {metric_name}.")
             metrics[f"{step_name}.{key}"] = value
     (pipeline_params,
-    loggable_pipeline_params,
-    model_name,
-    model_version,
-    model_registry)= \
-        _get_pipeline_params()
+        loggable_pipeline_params,
+        model_name,
+        model_version,
+        model_registry) = _get_pipeline_params()
     result: Dict[str, Any] = {
         'run_id': get_parent_run_id(),
         'quality_metrics': quality_metrics,

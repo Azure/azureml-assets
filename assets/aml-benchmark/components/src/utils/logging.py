@@ -36,7 +36,7 @@ def log_mlflow_params(**kwargs: Any) -> None:
         else:
             if value is not None:
                 if isinstance(value, str) and len(value) > MLFLOW_PARAM_VALUE_MAX_LEN:
-                    value_len = MLFLOW_PARAM_VALUE_MAX_LEN - len(OVERFLOW_STR) 
+                    value_len = MLFLOW_PARAM_VALUE_MAX_LEN - len(OVERFLOW_STR)
                     params[key] = value[: value_len] + OVERFLOW_STR
                 else:
                     params[key] = value

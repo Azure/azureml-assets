@@ -64,7 +64,7 @@ def get_compute_information(log_files: Optional[List[str]], run_v1: Run) -> Opti
                     return compute_match.group(1)
             except Exception as ex:
                 logger.warn(f"Failed to get system_logs/lifecycler/execution-wrapper.log \
-                            for run {run_id}")
+                             due to {ex}")
                 return None
 
 
@@ -75,6 +75,7 @@ def get_step_name(run: MLFlowRun) -> str:
         return run.data.tags[stepName]
     return run.info.run_name
 
+
 def get_mlflow_model_name_version(model_uri: str) -> Tuple[str, Optional[str], Optional[str]]:
     """
     Get the mlflow model name and version from a URI.
@@ -82,7 +83,7 @@ def get_mlflow_model_name_version(model_uri: str) -> Tuple[str, Optional[str], O
 
     :returns: The model name and version.
     """
-    # If the model is from azureml registry, 
+    # If the model is from a registry, parse the information from URI
     if model_uri.startswith("azureml://registries/"):
         model_name = model_uri.split('/')[-3]
         model_version = model_uri.split('/')[-1]
