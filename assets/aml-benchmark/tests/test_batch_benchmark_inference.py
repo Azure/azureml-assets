@@ -7,15 +7,16 @@ from typing import Optional
 import json
 import os
 import uuid
+import shutil
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
 from utils import (
-    load_yaml_pipeline,
     get_mlclient,
     Constants,
-    download_outputs
+    download_outputs,
+    load_yaml_pipeline
 )
 
 
@@ -69,8 +70,9 @@ class TestBatchBenchmarkInferenceComponent:
                 label_key: str,
                 temp_dir: Optional[str] = None,
             ) -> Job:
-        pipeline_job = load_yaml_pipeline(self._create_inference_yaml())
-
+        temp_yaml = self._create_inference_yaml()
+        pipeline_job = load_yaml_pipeline('batch_benchmark_inference.yaml')
+        # shutil.rmtree(temp_yaml)
         # avoid blob exists error when running pytest with multiple workers
         if temp_dir is not None:
             file_path = os.path.join(temp_dir, uuid.uuid4().hex + ".jsonl")
@@ -104,7 +106,7 @@ class TestBatchBenchmarkInferenceComponent:
             for line1 in f1.readlines():
                 for component in ["batch_endpoint_preparer", "batch_benchmark_score", "batch_output_formatter"]:
                     if f"azureml:{component}" in line1:
-                        line1 = f"    component: ../{component.replace('_', '-')}/spec.yaml"
+                        line1 = f"    component: ../{component.replace('_', '-')}/spec.yaml\n"
                 new_lines.append(line1)
         with open(new_yaml_path, "w") as f2:
             f2.writelines(new_lines)
@@ -143,4 +145,3 @@ class TestBatchBenchmarkInferenceComponent:
         self._check_output_data(
             os.path.join(
                 output_dir, "predict_ground_truth_data"), "predict_ground_truth_data.jsonl", ["ground_truth"])
-

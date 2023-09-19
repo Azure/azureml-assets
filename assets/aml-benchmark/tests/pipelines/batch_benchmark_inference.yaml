@@ -1,0 +1,58 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+display_name: test_batch_benchmark_inference
+description: Pipeline to test batch benchmark inference.
+settings:
+  default_compute: azureml:serverless
+
+inputs:
+  input_dataset:
+    type: uri_folder
+    path: ../data/
+  batch_input_pattern: >-
+    '{"input_data": 
+      {
+        "input_string": ["###<prompt>"],
+        "parameters":
+        {
+          "temperature": 0.6,
+          "max_new_tokens": 100,
+          "do_sample": true
+        }
+      },
+    "_batch_request_metadata": ###<_batch_request_metadata>
+    }'
+  online_endpoint_url: 'https://yuzhua-ws-eastus-mxawd.eastus.inference.ml.azure.com/score'
+  additional_headers: '"azureml-model-deployment": "test-model-1"'
+  initial_worker_count: 1
+  max_worker_count: 10
+  label_key: label
+
+outputs:
+  prediction_data:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/prediction.jsonl
+  perf_data:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/perf_data.jsonl
+  predict_ground_truth_data:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/predict_ground_truth_data.jsonl
+
+jobs:
+  run_batch_benchmark_inference:
+    type: pipeline
+    component: ../../components/batch-benchmark-inference/new_spec.yaml
+    inputs:
+      batch_inference_output: ${{parent.inputs.batch_inference_output}}
+      batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
+      label_key: ${{parent.inputs.label_key}}
+      online_endpoint_url: ${{parent.inputs.online_endpoint_url}}
+      additional_headers: ${{parent.inputs.additional_headers}}
+      initial_worker_count: ${{parent.inputs.initial_worker_count}}
+      max_worker_count: ${{parent.inputs.max_worker_count}}
+    outputs:
+      prediction_data: ${{parent.outputs.prediction_data}}
+      perf_data: ${{parent.outputs.perf_data}}
+      predict_ground_truth_data: ${{parent.outputs.predict_ground_truth_data}}

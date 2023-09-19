@@ -18,13 +18,13 @@ inputs:
 outputs:
   job_out_path:
     type: uri_folder
-    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/job_out_path/
   mini_batch_results_out_directory:
     type: uri_folder
-    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/mini_batch_results_out_directory/
   metrics_out_directory:
     type: uri_folder
-    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/metrics_out_directory/
 
 jobs:
   run_batch_benchmark_score:
