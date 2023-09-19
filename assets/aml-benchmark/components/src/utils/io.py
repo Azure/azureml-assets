@@ -95,7 +95,7 @@ def resolve_io_path(dataset: str) -> List[str]:
     :return: List of sorted file paths
     """
     if _is_mltable(dataset):
-        logger.warn(
+        logger.warning(
             "Received 'dataset' as MLTable. Trying to process."
         )
         df = mltable.load(dataset).to_pandas_dataframe()
@@ -104,7 +104,7 @@ def resolve_io_path(dataset: str) -> List[str]:
         return [file_path]
 
     if not os.path.isfile(dataset):
-        logger.warn(
+        logger.warning(
             "Received 'dataset' as URI_FOLDER. Trying to resolve paths."
         )
         return _get_file_paths_from_folder(dataset)
@@ -180,7 +180,7 @@ def read_json_data(data_path: Optional[str]) -> Dict[str, Any]:
             key = os.path.basename(file_path)
             json_output[key] = data
         except Exception as exception:
-            logger.warn(f"Failed to read metrics from {file_path} due to {exception}")
+            logger.warning(f"Failed to read metrics from {file_path} due to {exception}")
     return json_output
 
 

@@ -40,7 +40,6 @@ inputs:
   random_seed:
     type: integer
     optional: True
-    default: 0
     description: Random seed for sampling mode; if not specified, 0 is used. Used only when `sampling_style` is `random`.
 
 outputs:
