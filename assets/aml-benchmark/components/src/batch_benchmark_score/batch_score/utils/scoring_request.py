@@ -1,12 +1,25 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""The class for scoring request."""
+
 import json
 import uuid
 from .common.json_encoder_extensions import BatchComponentJSONEncoder
 from ..request_modification.input_transformer import InputTransformer
 
+
 class ScoringRequest:
+    """Class for scoring request."""
+
     __BATCH_REQUEST_METADATA = "_batch_request_metadata"
 
-    def __init__(self, original_payload: str, request_input_transformer: InputTransformer = None, logging_input_transformer: InputTransformer = None):
+    def __init__(
+            self,
+            original_payload: str,
+            request_input_transformer: InputTransformer = None,
+            logging_input_transformer: InputTransformer = None):
+        """Init method."""
         self.__internal_id: str = str(uuid.uuid4())
         self.__original_payload = original_payload
         self.__original_payload_obj = json.loads(original_payload)
@@ -40,34 +53,41 @@ class ScoringRequest:
     # read-only
     @property
     def internal_id(self):
+        """Internal id."""
         return self.__internal_id
 
     # read-only
     @property
     def original_payload(self):
+        """Original payload."""
         return self.__original_payload
 
     # read-only
     @property
     def original_payload_obj(self):
+        """Original payload object."""
         return self.__original_payload_obj
     
     # read-only
     @property
     def cleaned_payload_obj(self):
+        """Cleaned payload object."""
         return self.__cleaned_payload_obj
 
     # read-only
     @property
     def cleaned_payload(self):
+        """Cleaned payload."""
         return self.__cleaned_payload
 
     # read-only
     @property
     def loggable_payload(self):
+        """"Loggable payload."""
         return self.__loggable_payload
 
     # read-only
     @property
     def request_metadata(self):
+        """Request metadata."""
         return self.__request_metadata

@@ -7,7 +7,6 @@ from typing import Optional
 import json
 import os
 import uuid
-import shutil
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
@@ -73,8 +72,8 @@ class TestBatchBenchmarkInferenceComponent:
                 temp_dir: Optional[str] = None,
             ) -> Job:
         temp_yaml = self._create_inference_yaml()
-        pipeline_job = load_yaml_pipeline('batch_benchmark_inference.yaml')
-        # shutil.rmtree(temp_yaml)
+        pipeline_job = load_yaml_pipeline('batch-benchmark-inference.yaml')
+        os.remove(temp_yaml)
         # avoid blob exists error when running pytest with multiple workers
         if temp_dir is not None:
             file_path = os.path.join(temp_dir, uuid.uuid4().hex + ".jsonl")
@@ -92,6 +91,7 @@ class TestBatchBenchmarkInferenceComponent:
         pipeline_job.inputs.max_worker_count = 10
         pipeline_job.inputs.batch_input_pattern = batch_input_pattern
         pipeline_job.inputs.label_key = label_key
+        pipeline_job.name = str(uuid.uuid4())
         pipeline_job.display_name = display_name
 
         return pipeline_job
@@ -102,17 +102,78 @@ class TestBatchBenchmarkInferenceComponent:
             "..", "components", "batch-benchmark-inference", "spec.yaml")
         new_yaml_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "..", "components", "batch-benchmark-inference", "new_spec.yaml")
+            "pipelines", "batch-benchmark-inference.yaml")
         new_lines = []
+        current_section = "main"
         with open(original_yml_path) as f1:
             for line1 in f1.readlines():
-                for component in ["batch_endpoint_preparer", "batch_benchmark_score", "batch_output_formatter"]:
-                    if f"azureml:{component}" in line1:
-                        line1 = f"    component: ../{component.replace('_', '-')}/spec.yaml\n"
-                new_lines.append(line1)
+                current_section = self._update_currect_section(current_section, line1)
+                if not self._should_keep_line(current_section, line1):
+                    continue
+                new_lines.extend(self._get_updated_lines(current_section, line1))
+        # add compute
+        new_lines.append('settings:\n')
+        new_lines.append('  default_compute: azureml:serverless\n')
         with open(new_yaml_path, "w") as f2:
             f2.writelines(new_lines)
         return new_yaml_path
+    
+    def _get_updated_lines(self, current_section, line):
+        param_mapping_dict = {
+            "input_dataset:": ['  input_dataset:\n', '    type: uri_folder\n', '    path: ../data/\n'],
+            "batch_input_pattern:": ["  batch_input_pattern: wrong_pattern\n"],
+            "online_endpoint_url:": ["  online_endpoint_url: a_bad_url\n"],
+            "debug_mode:": ["  debug_mode: false\n"],
+            "additional_headers:": ["  additional_headers: 'some_header'\n"],
+            "ensure_ascii:": ["  ensure_ascii: false\n"],
+            "max_retry_time_interval:": ["  max_retry_time_interval: 600\n"],
+            "initial_worker_count:": ["  initial_worker_count: 1\n"],
+            "max_worker_count:": ["  max_worker_count: 10\n"],
+            "instance_count:": ["  instance_count: 1\n"],
+            "max_concurrency_per_instance:": ["  max_concurrency_per_instance: 1\n"],
+            "ground_truth_input:": ['  ground_truth_input:\n', '    type: uri_folder\n', '    path: ../data/\n'],
+            "metadata_key:": ["  metadata_key: request_metadata\n"],
+            "label_key:": ["  label_key: label\n"],
+            "n_samples:": ["  n_samples: 10\n"],
+            "prediction_data:": [
+                '  prediction_data:\n', '    type: uri_file\n',
+                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/prediction.jsonl\n'],
+            "perf_data:": [
+                '  perf_data:\n', '    type: uri_file\n',
+                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/perf_data.jsonl\n'],
+            "predict_ground_truth_data:": [
+                '  predict_ground_truth_data:\n', '    type: uri_file\n',
+                '    path: azureml://datastores/${{default_datastore}}'
+                '/paths/${{name}}/predict_ground_truth_data.jsonl\n']
+        }
+        if current_section == "inputs" or current_section == "output":
+            line_key = self._get_yml_key(line)
+            if line_key in param_mapping_dict:
+                return param_mapping_dict[line_key]
+        if current_section == "jobs":
+            for component in ["batch_inference_preparer", "batch_benchmark_score", "batch_output_formatter"]:
+                if f"azureml:{component}" in line:
+                    return [f"    component: ../../components/{component.replace('_', '-')}/spec.yaml\n"]
+        return [line]
+    
+    def _get_yml_key(self, line):
+        return line.strip().split()[0]
+    
+    def _update_currect_section(self, current_section, line):
+        if line.startswith("inputs:"):
+            return "inputs"
+        if line.startswith("outputs:"):
+            return "outputs"
+        if line.startswith("jobs:"):
+            return "jobs"
+        return current_section
+    
+    def _should_keep_line(self, current_section, line):
+        if current_section == "main":
+            return self._get_yml_key(line) not in {"version:", "name:"}
+        if current_section == "inputs" or current_section == "output":
+            return self._get_yml_key(line) not in {'optional:', 'type:', 'default:', 'description:'}
+        return True
     
     def _read_data(self, file_path):
         with open(file_path) as f:
@@ -141,9 +202,9 @@ class TestBatchBenchmarkInferenceComponent:
             )
         output_dir = os.path.join(output_dir, "named-outputs")
         self._check_output_data(
-            os.path.join(output_dir, "prediction_data"), "prediction.jsonl", ["prediction"])
+            os.path.join(output_dir, "prediction_data"), "prediction_data", ["prediction"])
         self._check_output_data(
-            os.path.join(output_dir, "perf_data"), "perf_data.jsonl", ["start", "end", "latency"])
+            os.path.join(output_dir, "perf_data"), "perf_data", ["start", "end", "latency"])
         self._check_output_data(
             os.path.join(
-                output_dir, "predict_ground_truth_data"), "predict_ground_truth_data.jsonl", ["ground_truth"])
+                output_dir, "predict_ground_truth_data"), "predict_ground_truth_data", ["ground_truth"])

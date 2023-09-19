@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""The class for Segmented score context."""
+
 import aiohttp
 import json
 
@@ -8,8 +13,12 @@ from .scoring_request import ScoringRequest
 from .scoring_client import ScoringClient
 from .common.json_encoder_extensions import BatchComponentJSONEncoder
 
+
 class SegmentedScoreContext:
+    """The class for Segmented score context."""
+
     def __init__(self, original_scoring_request: ScoringRequest, segment_max_token_size: int):
+        """Init method."""
         self.__original_scoring_request = original_scoring_request
         self.__supports_segmentation = True
         self.__next_scoring_request: ScoringRequest = None
@@ -36,17 +45,19 @@ class SegmentedScoreContext:
         self,
         scoring_client: ScoringClient,
         session: aiohttp.ClientSession, 
-        worker_id: str = "1") -> ScoringResult:
-
+        worker_id: str = "1"
+    ) -> ScoringResult:
+        """Score until completion."""
         next_result: ScoringResult = None
 
         while self.has_more():
             next_scoring_request = self.__create_next_scoring_request()
-            next_result = await scoring_client.score_until_completion(session, next_scoring_request, worker_id=worker_id)
+            next_result = await scoring_client.score_until_completion(
+                session, next_scoring_request, worker_id=worker_id)
 
             if next_result.status == ScoringResultStatus.SUCCESS:
                 self.__add_successful_result(next_result)
-        
+
         return next_result
 
     async def score_next_once(
@@ -55,13 +66,14 @@ class SegmentedScoreContext:
         session: aiohttp.ClientSession, 
         worker_id: str = "1"
     ) -> ScoringResult:
-        if self.__next_scoring_request == None:
+        """Score next once."""
+        if self.__next_scoring_request is None:
             self.__next_scoring_request = self.__create_next_scoring_request()
 
         next_scoring_request = self.__next_scoring_request
 
         next_result = await scoring_client.score_once(session, next_scoring_request, worker_id=worker_id)
-        
+
         # Scoring terminated with non-retriable response, reset self.__next_scoring_request
         self.__next_scoring_request = None
 
@@ -71,14 +83,16 @@ class SegmentedScoreContext:
         return next_result
 
     def has_more(self) -> bool:
+        """Has more data."""
         if len(self.__segmented_results) > 0:
-            if self.__original_max_tokens == None:
+            if self.__original_max_tokens is None:
                 # No provided max_tokens scenario
                 return self.__last_stop_reason is None or self.__last_stop_reason != "stop"
             elif self.__supports_segmentation:
-                # Incase of max_tokens having a very small value (e.g. 1), it is possible that model cannot return
-                # additional tokens. It will return an empty text with finish_reason = "length". We need to treat
-                # it as a stop condition.
+                # Incase of max_tokens having a very small value (e.g. 1),
+                # it is possible that model cannot return
+                # additional tokens. It will return an empty text with finish_reason = "length".
+                # We need to treat it as a stop condition.
                 if self.__segmented_results[-1].response_body["choices"][0]["text"] == "":
                     lu.get_logger().debug("segmented response generated no additional text. stopping.")
                     return False
@@ -91,6 +105,7 @@ class SegmentedScoreContext:
         return True
 
     def build_scoring_result(self, final_result: ScoringResult):
+        """Build scoring result."""
         if not self.__supports_segmentation or len(self.__segmented_results) <= 1:
             return final_result
         else:
@@ -145,7 +160,7 @@ class SegmentedScoreContext:
 
     def __add_successful_result(self, result: ScoringResult):
         self.__segmented_results.append(result)
-        
+
         response_choice = result.response_body["choices"][0]
 
         self.__last_stop_reason = response_choice.get("finish_reason", None)
@@ -154,7 +169,9 @@ class SegmentedScoreContext:
         if result.completion_tokens is not None:
             self.__total_tokens_generated += result.completion_tokens
 
-        lu.get_logger().debug("Completed segmented request with stop reason {}, generated {} tokens, has more: {}".format(self.__last_stop_reason, self.__total_tokens_generated, self.has_more()))
+        lu.get_logger().debug(
+            "Completed segmented request with stop reason {}, generated {} tokens, has more: {}".format(
+                self.__last_stop_reason, self.__total_tokens_generated, self.has_more()))
 
     def __create_next_scoring_request(self) -> ScoringRequest:
         if not self.__supports_segmentation:
@@ -167,7 +184,8 @@ class SegmentedScoreContext:
 
         max_tokens = self.__segment_max_token_size
         if self.__original_max_tokens is not None:
-            max_tokens = min(self.__segment_max_token_size, self.__original_max_tokens - self.__total_tokens_generated)
+            max_tokens = min(
+                self.__segment_max_token_size, self.__original_max_tokens - self.__total_tokens_generated)
 
         payload_object["max_tokens"] = max_tokens
 

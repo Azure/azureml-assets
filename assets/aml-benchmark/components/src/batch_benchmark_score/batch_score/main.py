@@ -7,27 +7,38 @@ import traceback
 import os
 import asyncio
 import sys
+import pandas as pd
+from argparse import ArgumentParser, Namespace
 from .utils.token_provider import TokenProvider
 from .utils.tally_failed_request_handler import TallyFailedRequestHandler
 from . import sequential
 from . import parallel_driver as parallel
 from .utils.common import constants
-from .utils.trace_configs import ExceptionTrace, ResponseChunkReceivedTrace, RequestEndTrace, RequestRedirectTrace, ConnectionReuseconnTrace, ConnectionCreateStartTrace, ConnectionCreateEndTrace
-from argparse import ArgumentParser, Namespace
+from .utils.trace_configs import (
+    ExceptionTrace,
+    ResponseChunkReceivedTrace,
+    RequestEndTrace,
+    RequestRedirectTrace,
+    ConnectionReuseconnTrace,
+    ConnectionCreateStartTrace,
+    ConnectionCreateEndTrace
+)
 from .utils.scoring_client import ScoringClient
 from .utils.common.common import str2bool, convert_to_list
 from .utils import logging_utils as lu
 from .utils.logging_utils import setup_logger, get_logger, get_events_client, set_mini_batch_id
 from .utils.common.json_encoder_extensions import setup_encoder
 from .header_handlers.oss import OSSHeaderHandler
-import pandas as pd
+
+
 
 par: parallel.Parallel = None
 seq: sequential.Sequential = None
 args: Namespace = None
 
+
 def init():
-    """The init class."""
+    """The init method for PRS."""
     global par
     global seq
     global args
@@ -87,7 +98,9 @@ def init():
 
     get_events_client().emit_batch_driver_init(job_params=vars(args))
 
+
 def run(input_data: pd.DataFrame, mini_batch_context):
+    """The PRS run method."""
     global par
     global seq
     global args
@@ -134,7 +147,9 @@ def run(input_data: pd.DataFrame, mini_batch_context):
 
     return get_return_value(ret, args.output_behavior)
 
+
 def shutdown():
+    """Shutdown method."""
     global par
     global seq
     global args
@@ -145,7 +160,9 @@ def shutdown():
     if args.run_type == "parallel":
         par.close_session()
 
+
 def setup_arguments(parser: ArgumentParser):
+    """Setup run arguments."""
     # Local runs only
     parser.add_argument("--token_file_path", default=None, type=str)
 
@@ -186,6 +203,7 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--endpoint_resource_group", default=None, type=str)
     parser.add_argument("--endpoint_workspace", default=None, type=str)
 
+
 def print_arguments(args: Namespace):
     lu.get_logger().debug("token_file_path path: %s" % args.token_file_path)
 
@@ -223,7 +241,9 @@ def print_arguments(args: Namespace):
     lu.get_logger().debug("endpoint_resource_group: %s" % args.endpoint_resource_group)
     lu.get_logger().debug("endpoint_workspace: %s" % args.endpoint_workspace)
 
+
 def save_mini_batch_results(mini_batch_results: list, mini_batch_context):
+    """Save mini batch results."""
     mini_batch_results_out_directory = args.mini_batch_results_out_directory
     lu.get_logger().info("mini_batch_results_out_directory: {}".format(mini_batch_results_out_directory))
 
@@ -236,7 +256,9 @@ def save_mini_batch_results(mini_batch_results: list, mini_batch_context):
             writer.write(item + "\n")
     lu.get_logger().info(f"Completed saving {len(mini_batch_results)} results to file {file_path}")
 
+
 def setup_trace_configs():
+    """Setup trace configs."""
     is_enabled = os.environ.get(constants.BATCH_SCORE_TRACE_LOGGING, None)
     trace_configs = None
 
@@ -248,7 +270,9 @@ def setup_trace_configs():
 
     return trace_configs
 
+
 def get_return_value(ret: 'list[str]', output_behavior: str):
+    """Get return value."""
     if (output_behavior == "summary_only"):
         lu.get_logger().info("Returning results in summary_only mode")
         # PRS confirmed there is no way to allow users to toggle the output_action behavior in the v2 component.
@@ -260,14 +284,18 @@ def get_return_value(ret: 'list[str]', output_behavior: str):
     lu.get_logger().info("Returning results in append_row mode")
     return ret
 
+
 def setup_loop() -> asyncio.AbstractEventLoop:
+    """Setup event loop."""
     if sys.platform == 'win32':
         # For windows environment
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     
     return asyncio.new_event_loop()
 
+
 def setup_scoring_client() -> ScoringClient:
+    """Setup scoring client."""
     token_provider = TokenProvider(
         token_file_path=args.token_file_path
     )
@@ -289,7 +317,9 @@ def setup_scoring_client() -> ScoringClient:
 
     return scoring_client
 
+
 def setup_header_handler(token_provider: TokenProvider) -> OSSHeaderHandler:
+    """Setup header handler."""
     return OSSHeaderHandler(
         token_provider=token_provider, user_agent_segment=args.user_agent_segment,
         batch_pool=args.batch_pool,

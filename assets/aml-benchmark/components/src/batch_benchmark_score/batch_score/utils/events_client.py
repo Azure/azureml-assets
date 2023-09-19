@@ -1,9 +1,17 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""The class for events client."""
+
 import logging
 import json
 from contextvars import ContextVar
 from opencensus.ext.azure.log_exporter import AzureEventHandler
 
+
 class EventsClient:
+    """Events client base class."""
+
     def emit_request_completed(
         self,
         latency: int,
@@ -15,6 +23,7 @@ class EventsClient:
         client_exception: str = "",
         is_retriable: bool = False
     ):
+        """Interface for emit request."""
         pass
 
     def emit_tokens_generated(
@@ -23,6 +32,7 @@ class EventsClient:
         context_tokens = int,
         endpoint_uri: str = "",
     ):
+        """Interface for emit tokens generated."""
         pass
 
     def emit_request_concurrency(
@@ -31,12 +41,14 @@ class EventsClient:
         active_requests: int,
         estimated_cost: int
     ):
+        """Interface for emit request concurrency."""
         pass
 
     def emit_worker_concurrency(
         self,
         worker_concurrency: int
     ):
+        """Interface for emit worker concurrency."""
         pass
 
     def emit_row_completed(
@@ -44,6 +56,7 @@ class EventsClient:
         row_count: int,
         result: str = "SUCCESS"
     ):
+        """Interface for emit row completed."""
         pass
 
     def emit_quota_operation(
@@ -53,12 +66,14 @@ class EventsClient:
         lease_id: str,
         amount: int
     ):
+        """Interface for emit quota operation."""
         pass
 
     def emit_mini_batch_started(
         self,
         input_row_count: int
     ):
+        """Interface for emit mini batch started."""
         pass
 
     def emit_mini_batch_completed(
@@ -68,21 +83,27 @@ class EventsClient:
         exception: str = None,
         stacktrace: str = None
     ):
+        """Interface for emit mini batch completed."""
         pass
 
     def emit_batch_driver_init(
         self,
         job_params: dict,
     ):
+        """Interface for emit batch driver init."""
         pass
 
     def emit_batch_driver_shutdown(
         self,
         job_params: dict,
     ):
+        """Interface for emit batch driver shutdown."""
         pass
 
+
 class AppInsightsEventsClient(EventsClient):
+    """Application insight events client class."""
+
     def __init__(self,
                  custom_dimensions: dict,
                  app_insights_connection_string: str,
@@ -90,6 +111,7 @@ class AppInsightsEventsClient(EventsClient):
                  mini_batch_id: ContextVar,
                  quota_audience: ContextVar,
                  batch_pool: ContextVar):
+        """Init method."""
         self.__custom_dimensions = custom_dimensions
         self.__worker_id = worker_id
         self.__mini_batch_id = mini_batch_id
@@ -119,6 +141,7 @@ class AppInsightsEventsClient(EventsClient):
         client_exception: str = "",
         is_retriable: bool = False
     ):
+        """Emit request completed for AppInsightsEventsClient."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -142,6 +165,7 @@ class AppInsightsEventsClient(EventsClient):
         context_tokens: int,
         endpoint_uri: str = "",
     ):
+        """Emit tokens generated for AppInsightsEventsClient."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -160,6 +184,7 @@ class AppInsightsEventsClient(EventsClient):
         active_requests: int,
         quota_reserved: int
     ):
+        """Emit request concurrency for AppInsightsEventsClient."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -176,6 +201,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         worker_concurrency: int
     ):
+        """Emit worker concurrency for AppInsightsEventsClient."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -191,6 +217,7 @@ class AppInsightsEventsClient(EventsClient):
         row_count: int,
         result: str = "SUCCESS"
     ):
+        """Emit row completed for AppInsightsEventsClient."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -204,6 +231,7 @@ class AppInsightsEventsClient(EventsClient):
         self.__logger.info("rows_completed", extra=extra)
 
     def emit_quota_operation(self, operation: str, status_code: int, lease_id: str, amount: int):
+        """Emit quota operation for AppInsightsEventsClient."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -222,6 +250,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         input_row_count: int
     ):
+        """Emit mini batch started for AppInsightsEventsClient."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -240,6 +269,7 @@ class AppInsightsEventsClient(EventsClient):
         exception: str = None,
         stacktrace: str = None
     ):
+        """Emit mini batch completed for AppInsightsEventsClient."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -258,6 +288,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         job_params: dict,
     ):
+        """Emit batch driver init for AppInsightsEventsClient."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 
@@ -274,6 +305,7 @@ class AppInsightsEventsClient(EventsClient):
         self,
         job_params: dict,
     ):
+        """Emit batch driver shutdown for AppInsightsEventsClient."""
         custom_dimensions = self.__custom_dimensions.copy()
         self._common_custom_dimensions(custom_dimensions=custom_dimensions)
 

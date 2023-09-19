@@ -9,7 +9,7 @@ import random
 import os
 
 from aiohttp import TraceConfig
-from .utils.common.common import convert_result_list, str2bool
+from .utils.common.common import convert_result_list
 from .utils import logging_utils as lu
 from .utils.logging_utils import get_events_client
 from .utils.scoring_result import ScoringResult, ScoringResultStatus
@@ -18,6 +18,7 @@ from .utils.scoring_client import ScoringClient
 from .utils.segmented_score_context import SegmentedScoreContext
 from .request_modification.input_transformer import InputTransformer
 from .request_modification.modifiers.request_modifier import RequestModificationException
+
 
 class Sequential:
     """Sequential endpoint class."""
@@ -62,19 +63,22 @@ class Sequential:
                 scoring_result: ScoringResult = None
 
                 if self.__segment_large_requests == "enabled":
-                    segmented_score_context = SegmentedScoreContext(scoring_request, self.__segment_max_token_size)
+                    segmented_score_context = SegmentedScoreContext(
+                        scoring_request, self.__segment_max_token_size)
                     scoring_result = await segmented_score_context.score_until_completion(
                         scoring_client=self.__scoring_client,
                         session=session
                     )
-                    scoring_result = segmented_score_context.build_scoring_result(final_result=scoring_result)
+                    scoring_result = segmented_score_context.build_scoring_result(
+                        final_result=scoring_result)
                 else:
                     scoring_result = await self.__scoring_client.score_until_completion(
                         session=session,
                         scoring_request=scoring_request
                     )
 
-                lu.get_logger().debug("{}: Finished scoring of scoring_request #{}".format(self.id, indx))
+                lu.get_logger().debug(
+                    "{}: Finished scoring of scoring_request #{}".format(self.id, indx))
 
                 get_events_client().emit_row_completed(1, str(scoring_result.status))
 
@@ -91,18 +95,26 @@ class Sequential:
 
         for payload in payloads:
             try:
-                scoring_request = ScoringRequest(original_payload=payload, request_input_transformer=self.__request_input_transformer, logging_input_transformer=self.__logging_input_transformer)
+                scoring_request = ScoringRequest(
+                    original_payload=payload,
+                    request_input_transformer=self.__request_input_transformer,
+                    logging_input_transformer=self.__logging_input_transformer)
                 scoring_requests.append(scoring_request)
             except RequestModificationException as e:
-                lu.get_logger().info(f"RequestModificationException raised. Faking failed ScoringResult, omit=False")
-                scoring_results.append(ScoringResult(status=ScoringResultStatus.FAILURE, omit=False,
-                                                     start=0, end=0, request_obj=None, request_metadata=None, response_body=None, response_headers=None, num_retries=0))
+                lu.get_logger().info(
+                    "RequestModificationException raised. Faking failed ScoringResult, omit=False")
+                scoring_results.append(
+                    ScoringResult(
+                        status=ScoringResultStatus.FAILURE, omit=False,
+                        start=0, end=0, request_obj=None, request_metadata=None,
+                        response_body=None, response_headers=None, num_retries=0))
 
         scoring_results.extend(asyncio.run(self.main(scoring_requests)))
 
         if self.__logging_input_transformer:
             for scoring_result in scoring_results:
-                scoring_result.request_obj= self.__logging_input_transformer.apply_modifications(request_obj=scoring_result.request_obj)
+                scoring_result.request_obj= self.__logging_input_transformer.apply_modifications(
+                    request_obj=scoring_result.request_obj)
 
         results = convert_result_list(results=scoring_results)
 

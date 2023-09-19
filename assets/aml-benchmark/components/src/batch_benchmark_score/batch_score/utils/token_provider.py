@@ -1,16 +1,24 @@
-import asyncio
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""The class for token provider."""
+
+from typing import Dict
 import os
 from datetime import datetime, timezone
 from azure.identity import ManagedIdentityCredential, CredentialUnavailableError, DefaultAzureCredential
 from azure.core.credentials import AccessToken
-from typing import Dict
 from . import logging_utils as lu
 
+
 class TokenProvider:
+    """Class for token provider."""
+
     SCOPE_AML = "https://ml.azure.com/.default"
     SCOPE_ARM = "https://management.azure.com/.default"
 
     def __init__(self, client_id = None, token_file_path: str = None) -> None:
+        """Init method."""
         if client_id == None:    
             client_id = os.environ.get('DEFAULT_IDENTITY_CLIENT_ID')
 
@@ -25,6 +33,7 @@ class TokenProvider:
         self.__file_token: str = None
 
     def get_token(self, scope: str) -> str:
+        """Get token."""
         if self.__credential is not None:
             return self.__get_msi_access_token(scope).token
         
@@ -34,7 +43,7 @@ class TokenProvider:
         return not self.__msi_access_tokens.get(scope) or self.__msi_access_tokens[scope].expires_on <= datetime.now(timezone.utc).timestamp() + (5 * 60)
 
     def __get_msi_access_token(self, scope: str) -> AccessToken:
-        # If there's a token that isn't expired, return that 
+        # If there's a token that isn't expired, return that.
         if not self.__is_msi_access_token_expired(scope):
             return self.__msi_access_tokens[scope]
 

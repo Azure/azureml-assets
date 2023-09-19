@@ -1,21 +1,34 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""The class for Tally failed request handler."""
+
 from . import logging_utils as lu
 
+
 class TallyFailedRequestHandler(object):
+    """Class for tally failed request handler."""
+
     def __init__(self, enabled: bool, tally_exclusions: str = None):
+        """Init method."""
         self.__enabled = enabled
         self.__exclusions: list[str] = []
 
         if self.__enabled and tally_exclusions:
-            self.__exclusions = [exclusion.strip().lower() for exclusion in tally_exclusions.split('|')]
+            self.__exclusions = [
+                exclusion.strip().lower() for exclusion in tally_exclusions.split('|')]
 
             if "none" in self.__exclusions and len(self.__exclusions) > 1:
-                raise Exception(f"Conflicting tally_exclusions: \"none\" specified alongside other exclusions.")
+                raise Exception(
+                    "Conflicting tally_exclusions: \"none\" specified alongside other exclusions.")
 
     def should_tally(self, response_status: int, model_response_status: int) -> bool:
+        """Check if response should tally."""
         if not self.__enabled:
             return False
 
-        failure_category = TallyFailedRequestHandler._categorize(response_status=response_status, model_response_status=model_response_status)        
+        failure_category = TallyFailedRequestHandler._categorize(
+            response_status=response_status, model_response_status=model_response_status)
         should_tally = failure_category not in self.__exclusions
 
         lu.get_logger().debug(f"should_tally: {should_tally}")

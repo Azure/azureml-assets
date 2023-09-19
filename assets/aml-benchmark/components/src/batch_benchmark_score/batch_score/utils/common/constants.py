@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Constants for batch score."""
+
 BATCH_SCORE_COMPONENT_VERSION = "1.8.0"
 OS_ENVIRON_HOST_NAME = "HostName"
 OS_ENVIRON_WORKSPACE = "AZUREML_ARM_WORKSPACE_NAME"

@@ -9,10 +9,6 @@ inputs:
     type: uri_folder
     description: The raw batch inference output.
     optional: False
-  ground_truth_input:
-    type: uri_folder
-    optional: True
-    description: The ground truth dataset which should contains `data_id_key` as the dataset identifier and `label_key` as the ground truth value.
   model_type:
     type: string
     description: The model type.
@@ -24,10 +20,6 @@ inputs:
     type: string
     optional: True
     description: The metadata key that stores ground truth `label_key` in the response. If using azureml llama model and pass `_batch_request_metadata`, then this one can left empty or using `request_metadata`.
-  data_id_key:
-    type: string
-    optional: True
-    description: The key that stores data identifier in the `ground_truth_input`.
   label_key:
     type: string
     optional: False
@@ -53,6 +45,4 @@ command: >-
   --predict_ground_truth_data ${{outputs.predict_ground_truth_data}}
   --label_key ${{inputs.label_key}}
   --model_type ${{inputs.model_type}}
-  $[[--data_id_key ${{inputs.data_id_key}}]]
   $[[--metadata_key ${{inputs.metadata_key}}]]
-  $[[--ground_truth_input ${{inputs.ground_truth_input}}]]

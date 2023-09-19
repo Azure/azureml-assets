@@ -61,10 +61,10 @@ class AIMD(_ConcurrencyAdjustmentStrategy):
         lu.get_logger().info(
             "AIMD: using configurations CongestionDetector: {}, adjustment_interval: {}, "
             "additive_increase: {}, multiplicative_decrease: {}".format(
-            congestion_detector_override,
-            self.__adjustment_interval,
-            self.__additive_increase,
-            self.__multiplicative_decrease))
+                congestion_detector_override,
+                self.__adjustment_interval,
+                self.__additive_increase,
+                self.__multiplicative_decrease))
 
     def calculate_next_concurrency(self, current_concurrency: int) -> _ConcurrencyAdjustment:
         """Calculate the next concurrency."""
@@ -88,9 +88,9 @@ class AIMD(_ConcurrencyAdjustmentStrategy):
 
         lu.get_logger().info(
             "AIMD: current_concurrency: {} -- new_concurrency: {} -- __confidence: {}".format(
-            current_concurrency,
-            new_concurrency,
-            self.__confidence))
+                current_concurrency,
+                new_concurrency,
+                self.__confidence))
 
         self._last_adjustment_time = now
 

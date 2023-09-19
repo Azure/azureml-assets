@@ -7,7 +7,7 @@ description: Components for batch endpoint inference
 version: 0.0.1
 
 inputs:
-  input_dataset: 
+  input_dataset:
     type: uri_folder
     description: Input jsonl dataset that contains prompt.
     optional: False
@@ -51,10 +51,7 @@ inputs:
   max_concurrency_per_instance:
     type: integer
     default: 1
-    description: 'Number of processes that will be run concurrently on any given node. This number should not be larger than 1/2 of the number of cores in an individual node in the specified cluster'
-  ground_truth_input:
-    type: uri_folder
-    optional: True
+    description: 'Number of processes that will be run concurrently on any given node. This number should not be larger than 1/2 of the number of cores in an individual node in the specified cluster.'
   metadata_key:
     type: string
     optional: True
@@ -77,9 +74,9 @@ outputs:
 
 jobs:
   # Preparer
-  batch_endpoint_preparer: 
+  batch_inference_preparer: 
     type: command
-    component: azureml:batch_endpoint_preparer:0.0.1
+    component: azureml:batch_inference_preparer:0.0.1
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       model_type: 'llama'
@@ -89,7 +86,7 @@ jobs:
       formatted_data:
         type: mltable
   # Inference
-  real_point_batch_inference: 
+  real_point_batch_score: 
     type: parallel
     component: azureml:batch_benchmark_score:0.0.1
     inputs:
@@ -100,7 +97,7 @@ jobs:
       max_retry_time_interval: ${{parent.inputs.max_retry_time_interval}}
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
-      data_input_table: ${{parent.jobs.batch_endpoint_preparer.outputs.formatted_data}}
+      data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
     outputs:
       job_out_path:
         type: uri_file
@@ -120,8 +117,7 @@ jobs:
     type: command
     component: azureml:batch_output_formatter:0.0.1
     inputs:
-      batch_inference_output: ${{parent.jobs.real_point_batch_inference.outputs.mini_batch_results_out_directory}}
-      ground_truth_input: ${{parent.inputs.ground_truth_input}}
+      batch_inference_output: ${{parent.jobs.real_point_batch_score.outputs.mini_batch_results_out_directory}}
       model_type: 'llama'
       metadata_key: ${{parent.inputs.metadata_key}}
       label_key: ${{parent.inputs.label_key}}

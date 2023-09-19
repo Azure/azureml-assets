@@ -1,10 +1,17 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""The class for trace config."""
+
 import aiohttp
-import json
 from aiohttp import TraceConfig
 from . import logging_utils as lu
 
 class ExceptionTrace(TraceConfig):
+    """Exception trace class."""
+
     def __init__(self):
+        """Init method."""
         super().__init__()
         self.on_request_exception.append(self.__on_request_exception)
 
@@ -14,8 +21,12 @@ class ExceptionTrace(TraceConfig):
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}ExceptionTrace exceptiom: {params.exception}")
 
+
 class RequestEndTrace(TraceConfig):
+    """Request end trace class."""
+
     def __init__(self):
+        """Init method."""
         super().__init__()
         self.on_request_end.append(self.__on_request_end)
     
@@ -25,19 +36,28 @@ class RequestEndTrace(TraceConfig):
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}RequestEndTrace response: {params.response}")
 
+
 class RequestRedirectTrace(TraceConfig):
+    """Request redirect trace."""
+
     def __init__(self):
+        """Init method."""
         super().__init__()
         self.on_request_redirect.append(self.__on_request_redirect)
 
-    async def __on_request_redirect(self, session, trace_config_ctx, params: aiohttp.TraceRequestRedirectParams):
+    async def __on_request_redirect(
+            self, session, trace_config_ctx, params: aiohttp.TraceRequestRedirectParams):
         prefix = ""
         if trace_config_ctx.trace_request_ctx and "worker_id" in trace_config_ctx.trace_request_ctx:
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}RequestRedirectTrace response: {params.response}")
 
+
 class ResponseChunkReceivedTrace(TraceConfig):
+    """Responce chunk received trace."""
+
     def __init__(self):
+        """Init method."""
         super().__init__()
         self.on_response_chunk_received.append(self.__on_response_chunk_received)
 
@@ -47,8 +67,12 @@ class ResponseChunkReceivedTrace(TraceConfig):
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}ResponseChunkReceivedTrace chunk: {params.chunk}")
 
+
 class ConnectionCreateStartTrace(TraceConfig):
+    """Connection create start trace."""
+
     def __init__(self):
+        """Init method."""
         super().__init__()
         self.on_connection_create_start.append(self.__on_connection_create_start)
 
@@ -58,8 +82,12 @@ class ConnectionCreateStartTrace(TraceConfig):
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}ConnectionCreateStartTrace: Connection creation started")
 
+
 class ConnectionCreateEndTrace(TraceConfig):
+    """Connection create end trace."""
+
     def __init__(self):
+        """Init method."""
         super().__init__()
         self.on_connection_create_end.append(self.__on_connection_create_end)
 
@@ -69,8 +97,12 @@ class ConnectionCreateEndTrace(TraceConfig):
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}ConnectionCreateEndTrace: Connection creation ended")
 
+
 class ConnectionReuseconnTrace(TraceConfig):
+    """Connection reuseconn trace."""
+
     def __init__(self):
+        """Init method."""
         super().__init__()
         self.on_connection_reuseconn.append(self.__on_connection_reuseconn)
 
@@ -79,6 +111,3 @@ class ConnectionReuseconnTrace(TraceConfig):
         if trace_config_ctx.trace_request_ctx and "worker_id" in trace_config_ctx.trace_request_ctx:
             prefix = "{}: ".format(trace_config_ctx.trace_request_ctx["worker_id"])
         lu.get_logger().debug(f"{prefix}ConnectionReuseconnTrace: Connection reused")
-
-
-

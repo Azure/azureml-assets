@@ -1,7 +1,11 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""The logging utitlities for batch score."""
+
 import argparse
 import json
 import os
-import sys
 import logging
 import time
 from .common import constants
@@ -9,6 +13,7 @@ from azureml.core import Run
 from contextvars import ContextVar
 from .events_client import EventsClient, AppInsightsEventsClient
 from opencensus.ext.azure.log_exporter import AzureLogHandler
+
 
 _default_logger_name = "BatchScoreComponent"
 _custom_dimensions = {}
@@ -20,10 +25,15 @@ _ctx_mini_batch_id = ContextVar("Async mini-batch ID", default=None)
 _ctx_quota_audience = ContextVar("Async quota audience", default=None)
 _ctx_batch_pool = ContextVar("Async batch pool", default=None)
 
+
 class UTCFormatter(logging.Formatter):
+    """Class for UTC formatter."""
+
     converter = time.gmtime
 
+
 def setup_logger(log_level: str, app_insights_connection_string: str = None):
+    """Setup logger."""
     global _custom_dimensions
     global _default_logger
     global _events_client
@@ -50,11 +60,15 @@ def setup_logger(log_level: str, app_insights_connection_string: str = None):
     _default_logger = logger
 
     if app_insights_connection_string is not None:
-        _events_client = AppInsightsEventsClient(_custom_dimensions, app_insights_connection_string, _ctx_worker_id, _ctx_mini_batch_id, _ctx_quota_audience, _ctx_batch_pool)
+        _events_client = AppInsightsEventsClient(
+            _custom_dimensions, app_insights_connection_string,
+            _ctx_worker_id, _ctx_mini_batch_id, _ctx_quota_audience, _ctx_batch_pool)
     else:
         _events_client = EventsClient()
 
+
 def get_logger():
+    """Get logger."""
     custom_dimensions = _custom_dimensions.copy()
     custom_dimensions["WorkerId"] = _ctx_worker_id.get()
     custom_dimensions["MiniBatchId"] = _ctx_mini_batch_id.get()
@@ -67,20 +81,31 @@ def get_logger():
 
     return logging.LoggerAdapter(_default_logger, extra)
 
+
 def get_events_client():
+    """Get events client."""
     return _events_client
 
+
 def set_worker_id(worker_id: int):
+    """Set worker id."""
     _ctx_worker_id.set(worker_id)
 
+
 def set_mini_batch_id(mini_batch_id: int):
+    """Set mini batch id."""
     _ctx_mini_batch_id.set(mini_batch_id)
 
+
 def set_quota_audience(quota_audience: str):
+    """Set quota audience."""
     _ctx_quota_audience.set(quota_audience)
 
+
 def set_batch_pool(batch_pool: str):
+    """Set batch pool."""
     _ctx_batch_pool.set(batch_pool)
+
 
 def __calculate_custom_dimensions():
     custom_dimensions = {}

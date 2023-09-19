@@ -5,7 +5,7 @@
 
 import asyncio
 
-from .utils.common.common import convert_result_list, str2bool
+from .utils.common.common import convert_result_list
 from .utils import logging_utils as lu
 from .utils.scoring_request import ScoringRequest
 from .utils.scoring_result import ScoringResult, ScoringResultStatus
@@ -13,8 +13,10 @@ from .parallel import Conductor
 from .request_modification.input_transformer import InputTransformer
 from .request_modification.modifiers.request_modifier import RequestModificationException
 
+
 class Parallel:
     """Parallel driver class."""
+
     def __init__(self,
                  loop: asyncio.AbstractEventLoop,
                  conductor: Conductor,
@@ -37,21 +39,29 @@ class Parallel:
 
         for payload in payloads:
             try:
-                scoring_request = ScoringRequest(original_payload=payload, request_input_transformer=self.__request_input_transformer, logging_input_transformer=self.__logging_input_transformer)
+                scoring_request = ScoringRequest(
+                    original_payload=payload,
+                    request_input_transformer=self.__request_input_transformer,
+                    logging_input_transformer=self.__logging_input_transformer)
                 scoring_requests.append(scoring_request)
             except RequestModificationException as e:
                 lu.get_logger().info(f"RequestModificationException raised: {e}")
                 lu.get_logger().info(f"Faking failed ScoringResult, omit=False")
-                scoring_results.append(ScoringResult(status=ScoringResultStatus.FAILURE, omit=False,
-                                                     start=0, end=0, request_obj=None, request_metadata=None, response_body=None, response_headers=None, num_retries=0))
+                scoring_results.append(
+                    ScoringResult(
+                        status=ScoringResultStatus.FAILURE, omit=False,
+                        start=0, end=0, request_obj=None, request_metadata=None,
+                        response_body=None, response_headers=None, num_retries=0))
 
         scoring_results.extend(self.__loop.run_until_complete(self.__conductor.run(scoring_requests)))
 
         if self.__logging_input_transformer:
             for scoring_result in scoring_results:
-                # None request_obj values may be present, if a RequestModificationException was thrown during ScoringRequest creation
+                # None request_obj values may be present,
+                # if a RequestModificationException was thrown during ScoringRequest creation
                 if not scoring_result.omit and scoring_result.request_obj:
-                    scoring_result.request_obj = self.__logging_input_transformer.apply_modifications(request_obj=scoring_result.request_obj)
+                    scoring_result.request_obj = self.__logging_input_transformer.apply_modifications(
+                        request_obj=scoring_result.request_obj)
 
         results = convert_result_list(results=scoring_results)
 

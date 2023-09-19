@@ -1,26 +1,34 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Common utitility methods."""
+
 from argparse import ArgumentParser
-from datetime import datetime
 from urllib.parse import urlparse
 from ..scoring_result import ScoringResult, ScoringResultStatus
 from .json_encoder_extensions import BatchComponentJSONEncoder, NumpyArrayEncoder
-from . import constants
-import os
 import json
 import pandas as pd
 import numpy
 import collections.abc
 
+
 def get_base_url(url: str) -> str:
+    """Get base url."""
     if not url:
         return url
     
     parse_result = urlparse(url)
     return f"{parse_result.scheme}://{parse_result.netloc}"
 
+
 def backoff(attempt: int, base_delay: float = 1, exponent: float = 2, max_delay: float = 20):
+    """Get backoff time."""
     return min(max_delay, base_delay * attempt**exponent)
 
+
 def str2bool(v):
+    """Convert str to bool."""
     if isinstance(v, bool):
         return v
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -30,7 +38,9 @@ def str2bool(v):
     else:
         raise ArgumentParser.ArgumentTypeError('Boolean value expected.')
 
+
 def convert_result_list(results: "list[ScoringResult]") -> "list[str]":
+    """Convert result list."""
     output_list: list[dict[str, str]] = []
     for scoringResult in results:
         output: dict[str, str] = {}
@@ -51,7 +61,9 @@ def convert_result_list(results: "list[ScoringResult]") -> "list[str]":
 
     return output_list
 
+
 def convert_to_list(data: pd.DataFrame, additional_properties:str = None) -> "list[str]":
+    """Convert data to list."""
     columns = data.keys()
     payloads: list[str] = []
     additional_properties_list = None
