@@ -16,6 +16,7 @@ RUN wget -q https://archive.apache.org/dist/spark/spark-3.1.2/spark-3.1.2-bin-ha
 ENV SPARK_HOME=/opt/spark
 ENV PYSPARK_PYTHON=python
 ENV PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python
+ENV PATH=$PATH:$SPARK_HOME/sbin
 
 # Install additional packages
 WORKDIR /
@@ -23,5 +24,8 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt && rm requirements.txt
 
 # Set the entrypoint script
-COPY entrypoint.sh .
-ENTRYPOINT ["./entrypoint.sh"]
+RUN mkdir /scripts
+WORKDIR /scripts
+COPY entrypoint.sh /scripts/
+RUN chmod +x /scripts/entrypoint.sh
+ENTRYPOINT ["/bin/sh", "/scripts/entrypoint.sh"]

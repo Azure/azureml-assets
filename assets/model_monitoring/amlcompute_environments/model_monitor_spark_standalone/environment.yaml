@@ -1,0 +1,9 @@
+image:
+  name: azureml/curated/model-monitor-spark-standalone
+  os: linux
+  context:
+    dir: docker-context
+    dockerfile: Dockerfile
+  publish:
+    location: mcr
+    visibility: unlisted
