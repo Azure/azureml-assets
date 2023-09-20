@@ -22,7 +22,7 @@ from utils.aml_run_utils import (
 logger = get_logger(__name__)
 
 
-def parse_args() -> argparse.Namespace:
+def _parse_args() -> argparse.Namespace:
     """Parse the arguments for the component."""
     parser = argparse.ArgumentParser(description=f"{__file__}")
     parser.add_argument(
@@ -48,6 +48,98 @@ def parse_args() -> argparse.Namespace:
     return arguments
 
 
+def _get_run_reused_properties(run_v1_properties: Any) -> Dict[str, Any]:
+    """
+    Return properties relate to run reused from previous pipeline runs status.
+
+    :param run_v1_properties: Run properties using SDK v1.
+
+    :returns: The properties related to run reused status.
+    """
+    if run_v1_properties.get('azureml.isreused', None) == 'true':
+        return {
+            'is_reused': True,
+            'reused_run_id': run_v1_properties.get('azureml.reusedrunid', None),
+            'reused_pipeline_runid': run_v1_properties.get('azureml.reusedpipelinerunid', None)
+        }
+    return {
+        'is_reused': False,
+    }
+
+
+def _get_run_environment_properties(run_definition: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Get the environment details for a run.
+
+    :param run_definition: The run definition for which environment details have to be fetched.
+
+    :returns: The environment details.
+    """
+    if run_definition is None:
+        return {}
+    env_definition = run_definition.get('environment', None)
+    if env_definition is not None:
+        return {
+            'environment_asset_id': env_definition['assetId'],
+            'environment_version': env_definition['version'],
+            'environment_name': env_definition['name'],
+        }
+    return {}
+
+
+def _get_run_params(run_definition: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Get the input parameters for the run.
+
+    :param run_definition: The run definition for which input params have to be fetched.
+
+    :returns: The run's input parameters.
+    """
+    if run_definition is None:
+        return {}
+    node_params = run_definition.get('environmentVariables', None)
+    params: dict[str, Any] = {}
+    if node_params is not None:
+        for param_name, param_value in node_params.items():
+            AZUREML_PARAM_PREFIX = 'AZUREML_PARAMETER_'
+            if param_name.startswith(AZUREML_PARAM_PREFIX):
+                param_name = param_name[len(AZUREML_PARAM_PREFIX):]
+            params[param_name] = param_value
+    return params
+
+
+def _get_input_assets(run_definition: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Get input assets for a run.
+
+    :param run_definition: The run definition for which input assets have to be fetched.
+
+    :returns: The run's input assets.
+    """
+    input_assets = run_definition.get('inputAssets', None)
+    input_assets_dict: Dict[str, Any] = {}
+    if input_assets is not None:
+        for input_name, asset_details in input_assets.items():
+            try:
+                asset_info = asset_details.get('asset', None)
+                if asset_info is None:
+                    asset_id = None
+                    asset_type = None
+                else:
+                    asset_id = asset_info.get('assetId', None)
+                    asset_type = asset_info.get('type', None)
+                input_assets_dict[input_name] = {
+                    'assetId': asset_id,
+                    'type': asset_type,
+                    'mechanism': asset_details.get('mechanism', None),
+                }
+            except Exception as ex:
+                logger.warning(
+                f"Falied to get asset information for {input_name}: {asset_details} due to {ex}"
+                )
+    return input_assets_dict
+
+
 def _get_pipeline_params() -> Tuple[
     Dict[str, Dict[str, Any]], Dict[str, Any], Optional[str], Optional[str], Optional[str]
 ]:
@@ -60,91 +152,58 @@ def _get_pipeline_params() -> Tuple[
     model_version = None
     model_registry = None
     for run in runs:
-        run_info = run.info
-        run_id = run_info.run_id
+        run_id = run.info.run_id
         run_v1 = Run(experiment=current_run.experiment, run_id=run_id)
         step_name = get_step_name(run)
         run_details = cast(Dict[str, Any], run_v1.get_details())
         logger.info(f"Run details for {run_id}: {run_details}")
-        run_definition = run_details.get('runDefinition', None)
-        run_v1_properties = run_details.get('properties', None)
+        run_definition = run_details.get('runDefinition', {})
+        run_v1_properties = run_details.get('properties', {})
         logger.info(f"Run definition for {run_id}: {run_definition}")
 
-        step_params: Dict[str, Any] = {
-            'inputs': {},
-            'param': {},
-            'run_id': run_id,
-            'start_time': run_info.start_time,
-            'end_time': run_info.end_time,
-            'status': run_info.status,
-            'maxRunDurationSeconds': run_details.get('maxRunDurationSeconds', None),
-            'is_reused': False,
-        }
-
-        if run_v1_properties.get('azureml.isreused', None) == 'true':
-            step_params['is_reused'] = True
-            step_params['reused_run_id'] = \
-                run_v1_properties.get('azureml.reusedrunid', None)
-            step_params['reused_pipeline_runid'] = \
-                run_v1_properties.get('azureml.reusedpipelinerunid', None)
-
-        if run_definition is not None:
-            # Log input assets
-            input_assets = run_definition.get('inputAssets', None)
-            if input_assets is not None:
-                for key, value in input_assets.items():
-                    step_params['inputs'][key] = {
-                        'assetId': value['asset']['assetId'],
-                        'type': value['asset']['type'],
-                        'mechanism': value['mechanism'],
-                    }
-                    if step_params['inputs'][key]['type'] == 'MLFlowModel':
-                        if model_name is None:
-                            # We found a mlflow model in the pipeline
-                            model_uri: str = step_params['inputs'][key]['assetId']
-                            model_name, model_version, model_registry = \
-                                get_mlflow_model_name_version(model_uri)
-                        else:
-                            # If an mlflow model is found multiple times,
-                            # we don't know which one was benchmarked.
-                            # Hence, handle ambiguous case by not logging model.
-                            model_name = None
-                            model_version = None
-                            model_registry = None
-
-            # Log node params
-            node_params = run_definition.get('environmentVariables', None)
-            if node_params is not None:
-                for key, value in node_params.items():
-                    AZUREML_PARAM_PREFIX = 'AZUREML_PARAMETER_'
-                    if key.startswith(AZUREML_PARAM_PREFIX):
-                        key = key[len(AZUREML_PARAM_PREFIX):]
-                    step_params['param'][key] = value
-                    loggable_params[f"{step_name}.param.{key}"] = value
-
-            # Log environment definition
-            env_definition = run_definition.get('environment', None)
-            if env_definition is not None:
-                step_params['environment_asset_id'] = env_definition['assetId']
-                step_params['environment_version'] = env_definition['version']
-                step_params['environment_name'] = env_definition['name']
-
-            # Log component id
-            step_params['component_id'] = \
-                run_definition['componentConfiguration'].get('componentIdentifier', None)
-
-            # Log node count
-            step_params['node_count'] = run_definition['nodeCount']
-            loggable_params[f"{step_name}.node_count"] = run_definition['nodeCount']
-
-        # Get compute information
+        # Get run parameters, input assets and compute_information.
+        run_params = _get_run_params(run_definition)
+        input_assets = _get_input_assets(run_definition)
         log_files = run_details.get('logFiles', None)
         vm_size = get_compute_information(log_files, run_v1)
-        step_params['vm_size'] = vm_size
-        loggable_params[f"{step_name}.vm_size"] = vm_size
 
-        logger.info(step_params)
-        pipeline_params[step_name] = step_params
+        pipeline_params[step_name] = {
+            'inputs': input_assets,
+            'param': run_params,
+            'run_id': run_id,
+            'start_time': run.info.start_time,
+            'end_time': run.info.end_time,
+            'status': run.info.status,
+            'node_count': run_definition.get('nodeCount', None),
+            'vm_size': vm_size,
+            'maxRunDurationSeconds': run_details.get('maxRunDurationSeconds', None),
+            'component_id': \
+                run_definition['componentConfiguration'].get('componentIdentifier', None),
+            **_get_run_reused_properties(run_v1_properties),
+            **_get_run_environment_properties(run_definition),
+        }
+        logger.info(f"Pipeline params for {step_name}: {pipeline_params[step_name]}")
+
+        # Update loggable parameters.
+        loggable_params[f"{step_name}.node_count"] = run_definition.get('nodeCount', None)
+        loggable_params[f"{step_name}.vm_size"] = vm_size
+        for run_param_key, run_param_value in run_params.items():
+            loggable_params[f"{step_name}.param.{run_param_key}"] = run_param_value
+
+        # Get the model details in the pipeline.
+        for asset in input_assets.values():
+            if asset['type'] != 'MLFlowModel':
+                continue
+            model_uri = asset['assetId']
+            name, version, registry = \
+            get_mlflow_model_name_version(model_uri)
+            if model_name is None:
+                model_name = name
+                model_version = version
+                model_registry = registry
+            elif model_name != name or model_version != version or model_registry != registry:
+                model_name = model_version = model_registry = None
+
     return pipeline_params, loggable_params, model_name, model_version, model_registry
 
 
@@ -193,17 +252,17 @@ def main(
         params: Dict[str, Any] = run.data.params
         metrics_for_run: Dict[str, Any] = run.data.metrics
         # Aggregate mlflow params
-        for key, value in params.items():
-            param_name = f"{step_name}.{key}"
+        for param_key, param_value in params.items():
+            param_name = f"{step_name}.{param_key}"
             if param_name in parameters:
                 logger.warning(msg=f"Replacing param {param_name}.")
-            parameters[f"{step_name}.{key}"] = value
+            parameters[f"{step_name}.{param_key}"] = param_value
         # Aggregate mlflow metrics
-        for key, value in metrics_for_run.items():
-            metric_name = f"{step_name}.{key}"
+        for param_key, metric_value in metrics_for_run.items():
+            metric_name = f"{step_name}.{param_key}"
             if metric_name in metrics:
                 logger.warning(msg=f"Replacing metric {metric_name}.")
-            metrics[f"{step_name}.{key}"] = value
+            metrics[f"{step_name}.{param_key}"] = metric_value
     (pipeline_params,
         loggable_pipeline_params,
         model_name,
@@ -235,7 +294,7 @@ def main(
 
 
 if __name__ == "__main__":
-    args = parse_args()
+    args = _parse_args()
     main(
         quality_metrics_path=args.quality_metrics_path,
         performance_metrics_path=args.performance_metrics_path,
