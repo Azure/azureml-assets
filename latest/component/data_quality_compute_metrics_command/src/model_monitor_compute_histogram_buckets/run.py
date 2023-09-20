@@ -4,8 +4,11 @@
 """Entry script for the Compute Histogram Buckets component."""
 
 import argparse
+
 from histogram_buckets import compute_histogram_buckets
 from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 
 def run():

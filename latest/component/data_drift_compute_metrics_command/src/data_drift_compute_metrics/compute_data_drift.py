@@ -6,8 +6,9 @@
 
 import pyspark.sql as pyspark_sql
 import pyspark.sql.functions as F
-from numerical_data_drift_metrics import compute_numerical_data_drift_measures_tests
+
 from categorical_data_drift_metrics import compute_categorical_data_drift_measures_tests
+from numerical_data_drift_metrics import compute_numerical_data_drift_measures_tests
 from io_utils import get_output_spark_df
 from shared_utilities.df_utils import (
     get_common_columns,

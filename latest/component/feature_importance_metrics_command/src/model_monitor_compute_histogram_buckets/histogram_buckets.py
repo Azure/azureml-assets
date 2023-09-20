@@ -5,16 +5,16 @@
 
 
 import pyspark.sql as pyspark_sql
-from shared_utilities.df_utils import get_numerical_columns
-from shared_utilities.histogram_utils import get_dual_histogram_bin_edges
-from shared_utilities.df_utils import get_common_columns
 from pyspark.sql.types import (
     StructType,
     StructField,
     StringType,
     DoubleType,
 )
+
 from shared_utilities.io_utils import init_spark
+from shared_utilities.df_utils import get_common_columns, get_numerical_columns
+from shared_utilities.histogram_utils import get_dual_histogram_bin_edges
 
 
 def compute_numerical_bins(

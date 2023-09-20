@@ -4,10 +4,11 @@
 """Entry script for Data Drift Evaluate Metrics Threshold Component."""
 
 import argparse
-from evaluate_metrics_threshold import (
-    evaluate_metrics_threshold,
-)
+
+from evaluate_metrics_threshold import evaluate_metrics_threshold
 from shared_utilities.io_utils import read_mltable_in_spark
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 
 def evaluate_metrics(

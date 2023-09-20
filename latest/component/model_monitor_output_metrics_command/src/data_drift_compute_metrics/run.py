@@ -4,12 +4,11 @@
 """Entry script for Data Drift Compute Metrics Spark Component."""
 
 import argparse
+
+from compute_data_drift import compute_data_drift_measures_tests
 from io_utils import select_columns_from_spark_df, output_computed_measures_tests
 from shared_utilities.io_utils import read_mltable_in_spark
-from compute_data_drift import compute_data_drift_measures_tests
-
 from shared_utilities.patch_mltable import patch_all
-
 patch_all()
 
 

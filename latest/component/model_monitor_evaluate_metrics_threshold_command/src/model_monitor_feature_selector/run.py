@@ -11,6 +11,8 @@ from model_monitor_feature_selector.selectors.feature_selector_type import (
     FeatureSelectorType,
 )
 from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 
 def run():

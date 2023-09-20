@@ -9,10 +9,13 @@ from typing import List
 import uuid
 from pyspark.sql import Row
 from dateutil import parser
-from shared_utilities.io_utils import read_mltable_in_spark
-from model_monitor_output_metrics.factories.signal_factory import SignalFactory
+
 from model_monitor_output_metrics.entities.signals.signal import Signal
+from model_monitor_output_metrics.factories.signal_factory import SignalFactory
 from shared_utilities.amlfs import amlfs_upload
+from shared_utilities.io_utils import convert_to_azureml_uri, read_mltable_in_spark
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 
 def run():
@@ -61,7 +64,7 @@ def run():
     signal.to_file(local_output_directory=local_path)
 
     target_remote_path = os.path.join(args.signal_output, "signals")
-    amlfs_upload(local_path=local_path, remote_path=target_remote_path)
+    amlfs_upload(local_path=local_path, remote_path=convert_to_azureml_uri(target_remote_path))
 
     print("*************** output metrics ***************")
     print("Successfully executed the output metric component.")

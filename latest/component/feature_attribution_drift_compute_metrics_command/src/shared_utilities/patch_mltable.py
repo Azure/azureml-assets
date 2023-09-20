@@ -1,6 +1,67 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-"""Contains functionality to patch pyspark classes for MLTable write support."""
+"""Contains functionality to patch pyspark classes for MLTable read and write support."""
+
+
+def _patch_spark_dataframereader_format():
+    from functools import update_wrapper
+    from logging import warning
+    from pyspark.sql import DataFrameReader, SparkSession, SQLContext
+    from azureml.dataprep.api._spark_helper import read_spark_dataframe
+
+    class MLTableReader(object):
+        def __init__(self, dataframe_reader):
+            self._dataframe_reader = dataframe_reader
+            self.__copy_members()
+
+        def __copy_members(self):
+            for member_name in dir(self._dataframe_reader):
+                member = getattr(self._dataframe_reader, member_name)
+                if not hasattr(self, member_name):
+                    setattr(self, member_name, member)
+
+        def load(self, uri, storage_options: dict = None):
+            import mltable
+            import os
+            warning('spark.read.mltable ignores any options set on the DataFrameReader'
+                    ' and only uses parsing options specified in the MLTable file.')
+
+            if isinstance(self._dataframe_reader._spark, SparkSession):
+                spark_session = self._dataframe_reader._spark
+            elif isinstance(self._dataframe_reader._spark, SQLContext):
+                spark_session = self._dataframe_reader._spark.sparkSession
+            else:
+                raise Exception(f'Unsupported type for spark context: {type(self._dataframe_reader._spark)}')
+
+            aux_envvars = {
+                'AZUREML_RUN_TOKEN': os.environ['AZUREML_RUN_TOKEN'],
+            }
+
+            table = mltable.load(uri, storage_options)
+            # TODO: remove the fallback invocation once dataprep and mltable have released
+            try:
+                return read_spark_dataframe(table._dataflow.to_yaml_string(), spark_session, aux_envvars)
+            except TypeError:
+                return read_spark_dataframe(table._dataflow.to_yaml_string(), spark_session)
+
+    original_method = DataFrameReader.format
+
+    def format(dataframe_reader, source):
+        if source == 'mltable':
+            return MLTableReader(dataframe_reader)
+        else:
+            return original_method(dataframe_reader, source)
+
+    DataFrameReader.format = update_wrapper(format, original_method)
+
+
+def _patch_spark_dataframereader_mltable():
+    from pyspark.sql import DataFrameReader
+
+    def mltable(dataframe_reader, uri, storage_options: dict = None):
+        return dataframe_reader.format('mltable').load(uri, storage_options)
+
+    DataFrameReader.mltable = mltable
 
 
 class _DataframeWriterManager(object):
@@ -90,38 +151,13 @@ def _write_mltable_yaml(uri, output_path_pattern, manager):
 
 
 def _write_spark_dataframe(dataframe, uri, **kwargs):
-    import os
-    from pyspark.sql import SparkSession, SQLContext
-
-    if isinstance(dataframe.write._spark, SparkSession):
-        spark_session = dataframe.write._spark
-    elif isinstance(dataframe.write._spark, SQLContext):
-        spark_session = dataframe.write._spark.sparkSession
-    else:
-        raise (f"Unsupported type for spark context: {type(dataframe.write._spark)}")
-
-    spark_conf = spark_session.sparkContext.getConf()
-    spark_conf_vars = {
-        "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",
-        "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT": "spark.tokenServiceEndpoint",
-    }
-
-    aux_envvars = {
-        "AZUREML_RUN_TOKEN": os.environ["AZUREML_RUN_TOKEN"],
-        "AZUREML_RUN_TOKEN_EXPIRY": os.environ["AZUREML_RUN_TOKEN_EXPIRY"],
-    }
-
-    for env_key, conf_key in spark_conf_vars.items():
-        value = spark_conf.get(conf_key)
-        if value:
-            aux_envvars[env_key] = value
-            os.environ[env_key] = value
-
+    from shared_utilities.io_utils import convert_to_azureml_uri
     manager = _DataframeWriterManager(dataframe, uri, **kwargs)
 
     output_path_pattern = manager.write()
+    output_path_pattern_azureml = convert_to_azureml_uri(output_path_pattern)
 
-    _write_mltable_yaml(uri, output_path_pattern, manager)
+    _write_mltable_yaml(uri, output_path_pattern_azureml, manager)
 
 
 def _patch_spark_dataframewriter_format():
@@ -266,6 +302,9 @@ def _patch_spark_dataframewriter_mltable():
 
 def patch_all():
     """Patch all."""
+    _patch_spark_dataframereader_format()
+    _patch_spark_dataframereader_mltable()
+
     _patch_spark_dataframewriter_format()
     _patch_spark_dataframewriter_mltable()
     _patch_spark_dataframewriter_option()

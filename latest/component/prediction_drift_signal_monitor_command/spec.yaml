@@ -60,11 +60,6 @@ jobs:
     outputs:
       feature_names:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   compute_drift_metrics:
     type: spark
     component: azureml://registries/azureml/components/data_drift_compute_metrics_command/versions/0.0.1
@@ -85,11 +80,6 @@ jobs:
     outputs:
       signal_metrics:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   output_signal_metrics:
     type: spark
     component: azureml://registries/azureml/components/model_monitor_output_metrics_command/versions/0.0.1
@@ -106,11 +96,6 @@ jobs:
         type: uri_folder
         path: ${{parent.outputs.signal_output}}
         mode: direct
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   evaluate_metric_thresholds:
     type: spark
     component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold_command/versions/0.0.1
@@ -120,8 +105,3 @@ jobs:
         path: ${{parent.jobs.compute_drift_metrics.outputs.signal_metrics}}
       notification_emails: ${{parent.inputs.notification_emails}}
       signal_name: ${{parent.inputs.signal_name}}
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
