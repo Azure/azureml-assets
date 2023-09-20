@@ -10,7 +10,7 @@ from ..header_handler import HeaderHandler
 from ...utils.token_provider import TokenProvider
 from ...utils.common import constants
 
-from azureml.core import Run, Experiment, Workspace
+from azureml.core import Run, Workspace
 from azureml._restclient.clientbase import ClientBase
 from azureml._model_management._util import get_requests_session
 from azureml._model_management._util import _get_mms_url
@@ -20,8 +20,11 @@ class OSSHeaderHandler(HeaderHandler):
     """Class for OSS header handler"""
 
     def __init__(
-            self, token_provider: TokenProvider, user_agent_segment: str = None, batch_pool: str = None, quota_audience: str = None, additional_headers: str = None, deployment_name: str = None,
-            endpoint_subscription: str = None, endpoint_resource_group: str = None, endpoint_workspace: str = None
+            self,
+            token_provider: TokenProvider, user_agent_segment: str = None, batch_pool: str = None,
+            quota_audience: str = None, additional_headers: str = None, deployment_name: str = None,
+            endpoint_subscription: str = None, endpoint_resource_group: str = None,
+            endpoint_workspace: str = None
     ) -> None:
         """The init file."""
         super().__init__(token_provider, user_agent_segment, batch_pool, quota_audience, additional_headers)
@@ -54,17 +57,20 @@ class OSSHeaderHandler(HeaderHandler):
         print(headers)
 
         return headers
-    
+
     def _get_auth_key(self):
         run = Run.get_context()
         curr_workspace = run.experiment.workspace
         if self._endpoint_workspace is None:
             workspace = curr_workspace
         else:
-            workspace = Workspace(self._endpoint_subscription, self._endpoint_resource_group, self._endpoint_workspace, auth=curr_workspace._auth)
+            workspace = Workspace(
+                self._endpoint_subscription, self._endpoint_resource_group, self._endpoint_workspace,
+                auth=curr_workspace._auth)
         headers = workspace._auth.get_authentication_header()
         list_keys_url = _get_mms_url(workspace) + '/onlineEndpoints/{}'.format(self._deployment_name) + '/listkeys'
-        resp = ClientBase._execute_func(get_requests_session().post, list_keys_url, params={}, headers=headers)
+        resp = ClientBase._execute_func(
+            get_requests_session().post, list_keys_url, params={}, headers=headers)
 
         content = resp.content
         if isinstance(content, bytes):

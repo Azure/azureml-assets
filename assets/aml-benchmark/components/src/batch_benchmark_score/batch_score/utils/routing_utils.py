@@ -19,8 +19,7 @@ def classify_response(response_status: int) -> RoutingResponseType:
     """Classify reponse."""
     if abs(response_status) == 200:
         classification = RoutingResponseType.SUCCESS
-    elif abs(response_status) == 408 or \
-        response_status == -1:
+    elif abs(response_status) == 408 or response_status == -1:
         classification = RoutingResponseType.RETRY
     elif abs(response_status) >= 500:
         classification = RoutingResponseType.USE_EXISTING

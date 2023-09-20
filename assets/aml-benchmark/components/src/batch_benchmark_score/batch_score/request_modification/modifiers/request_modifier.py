@@ -5,6 +5,7 @@
 
 from abc import ABC, abstractmethod
 
+
 class RequestModifier(ABC):
     """Request modifier base class."""
 

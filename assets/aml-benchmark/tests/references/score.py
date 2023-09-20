@@ -3,9 +3,11 @@
 
 """Fake score script"""
 
+
 def init():
     """Init method."""
     return
+
 
 def run(raw_data):
     """Run method."""

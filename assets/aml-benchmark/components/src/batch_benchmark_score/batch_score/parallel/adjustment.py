@@ -37,7 +37,7 @@ class AIMD(_ConcurrencyAdjustmentStrategy):
     def __init__(self, request_metrics: RequestMetrics):
         self.__confidence: int = 0
         self._last_adjustment_time: pd.Timestamp = None
-        self.__request_metrics=request_metrics
+        self.__request_metrics = request_metrics
 
         congestion_detector_override = os.environ.get("BATCH_SCORE_CONGESTION_DETECTOR", "WaitTime")
         if congestion_detector_override == "WaitTime":
@@ -71,20 +71,21 @@ class AIMD(_ConcurrencyAdjustmentStrategy):
         new_concurrency = current_concurrency
         now = pd.Timestamp.utcnow()
 
-        congestionState = self.__congestion_detector.detect(self.__request_metrics, self._last_adjustment_time, now)
+        congestion_state = self.__congestion_detector.detect(
+            self.__request_metrics, self._last_adjustment_time, now)
 
-        if congestionState == congestion.CongestionState.FREE:
-            self.__confidence = max(self.__confidence, 0) # Reset confidence
-            self.__confidence = min(self.__confidence + 1, 3) # Increase confidence
-
-            new_concurrency = current_concurrency + self.__additive_increase + self.__confidence # Augment based on confidence
-        elif congestionState == congestion.CongestionState.CONGESTED:
-            self.__confidence = min(self.__confidence, 0) # Reset confidence
-            self.__confidence = max(self.__confidence - 1, -3) # Decrease confidence
-
-            new_concurrency = max(int(current_concurrency * self.__multiplicative_decrease), 1) # Minimum value concurrency is 1
+        if congestion_state == congestion.CongestionState.FREE:
+            self.__confidence = max(self.__confidence, 0)  # Reset confidence
+            self.__confidence = min(self.__confidence + 1, 3)  # Increase confidence
+            # Augment based on confidence
+            new_concurrency = current_concurrency + self.__additive_increase + self.__confidence
+        elif congestion_state == congestion.CongestionState.CONGESTED:
+            self.__confidence = min(self.__confidence, 0)  # Reset confidence
+            self.__confidence = max(self.__confidence - 1, -3)  # Decrease confidence
+            # Minimum value concurrency is 1
+            new_concurrency = max(int(current_concurrency * self.__multiplicative_decrease), 1)
         else:
-            self.__confidence = 0 # Reset confidence
+            self.__confidence = 0  # Reset confidence
 
         lu.get_logger().info(
             "AIMD: current_concurrency: {} -- new_concurrency: {} -- __confidence: {}".format(

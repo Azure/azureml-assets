@@ -6,6 +6,7 @@
 from ..header_handler import HeaderHandler
 from ...utils.token_provider import TokenProvider
 
+
 class MedsHeaderHandler(HeaderHandler):
     """Class for MedsHeaderHandler."""
 

@@ -5,6 +5,7 @@
 
 import pandas as pd
 
+
 class RequestMetrics:
     """Class for request metrics."""
 
@@ -30,7 +31,7 @@ class RequestMetrics:
             RequestMetrics.COLUMN_REQUEST_TOTAL_WAIT_TIME
         ])
         self.__df.set_index(RequestMetrics.COLUMN_TIMESTAMP, inplace=True)
-    
+
     def add_result(
             self,
             request_id: str,
@@ -50,5 +51,5 @@ class RequestMetrics:
         """Get metrics."""
         if end_time is None:
             end_time = pd.Timestamp.utcnow()
-        # NOTE: This only works on desc sorted data. self.__df is sorted in desc by nature 
+        # NOTE: This only works on desc sorted data. self.__df is sorted in desc by nature.
         return self.__df.loc[start_time:end_time]

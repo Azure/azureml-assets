@@ -28,21 +28,21 @@ class QueueItem:
     ):
         """Init for queue item."""
         self.scoring_request = scoring_request
-        self.segmented_score_context=segmented_score_context
+        self.segmented_score_context = segmented_score_context
 
 
 class Worker:
     """Class for worker."""
 
     def __init__(
-            self, 
-            scoring_client: ScoringClient, 
-            client_session: aiohttp.ClientSession, 
-            scoring_request_queue: "deque[QueueItem]", 
-            result_list: "list[ScoringResult]", 
+            self,
+            scoring_client: ScoringClient,
+            client_session: aiohttp.ClientSession,
+            scoring_request_queue: "deque[QueueItem]",
+            result_list: "list[ScoringResult]",
             request_metrics: RequestMetrics,
-            segment_large_requests: str, 
-            segment_max_token_size: int, 
+            segment_large_requests: str,
+            segment_max_token_size: int,
             id: str,
             max_retry_time_interval: int = None):
         """Init for worker."""
@@ -60,11 +60,12 @@ class Worker:
         self.__segment_max_token_size: int = segment_max_token_size
         self.__segment_large_requests: str = segment_large_requests
 
-        self.__enable_delay_after_success = str2bool(os.environ.get("BATCH_SCORE_DELAY_AFTER_SUCCESSFUL_REQUEST", "True"))
+        self.__enable_delay_after_success = str2bool(
+            os.environ.get("BATCH_SCORE_DELAY_AFTER_SUCCESSFUL_REQUEST", "True"))
         self.__max_retry_time_interval = max_retry_time_interval
 
         lu.get_logger().debug("{}: Created".format(self.id))
-    
+
     def is_running(self) -> bool:
         """Is worker running."""
         return self.__is_running
@@ -85,35 +86,35 @@ class Worker:
 
             start, end = 0, 0
 
-            # If the request's scoring duration exceeds the limit, 
+            # If the request's scoring duration exceeds the limit,
             # log as failure and don't add it back to the queue
             if self.__max_retry_time_interval is not None and \
-                queue_item.scoring_request.scoring_duration > self.__max_retry_time_interval:
+                    queue_item.scoring_request.scoring_duration > self.__max_retry_time_interval:
 
-                    result = ScoringResult(
-                        status=ScoringResultStatus.FAILURE,
-                        start=0,
-                        end=0,
-                        request_obj=queue_item.scoring_request.original_payload_obj,
-                        request_metadata=queue_item.scoring_request.request_metadata,
-                        response_body=None,
-                        response_headers=None,
-                        num_retries=queue_item.scoring_request.retry_count,
-                        omit=False
-                    )
+                result = ScoringResult(
+                    status=ScoringResultStatus.FAILURE,
+                    start=0,
+                    end=0,
+                    request_obj=queue_item.scoring_request.original_payload_obj,
+                    request_metadata=queue_item.scoring_request.request_metadata,
+                    response_body=None,
+                    response_headers=None,
+                    num_retries=queue_item.scoring_request.retry_count,
+                    omit=False
+                )
 
-                    self.__add_result(queue_item.scoring_request, result)
+                self.__add_result(queue_item.scoring_request, result)
 
-                    lu.get_logger().debug(
-                        "{}: Score failed: Payload scored for {} seconds, "
-                        "which exceeded the maximum time interval of {} seconds. internal_id: {}, "
-                        "total_wait_time: {}, retry_count: {}".format(
-                            self.id,
-                            round(queue_item.scoring_request.scoring_duration, 2),
-                            self.__max_retry_time_interval,
-                            queue_item.scoring_request.internal_id,
-                            queue_item.scoring_request.total_wait_time,
-                            queue_item.scoring_request.retry_count))
+                lu.get_logger().debug(
+                    "{}: Score failed: Payload scored for {} seconds, "
+                    "which exceeded the maximum time interval of {} seconds. internal_id: {}, "
+                    "total_wait_time: {}, retry_count: {}".format(
+                        self.id,
+                        round(queue_item.scoring_request.scoring_duration, 2),
+                        self.__max_retry_time_interval,
+                        queue_item.scoring_request.internal_id,
+                        queue_item.scoring_request.total_wait_time,
+                        queue_item.scoring_request.retry_count))
             else:
                 try:
                     start = time.time()
@@ -131,7 +132,7 @@ class Worker:
                     end = time.time()
 
                     # Back-off 1 second before adding ScoringRequest back to the queue
-                    # TODO: consider adjusting back-off. 
+                    # TODO: consider adjusting back-off.
                     #   - None-429s: increase backoff for consecutive retries
                     #   - 429s: vary backoff based on request cost to prevent large request starvation
                     back_off = e.retry_after or 1
@@ -143,13 +144,13 @@ class Worker:
                         queue_item.scoring_request.total_wait_time += wait_time
 
                     self.__request_metrics.add_result(
-                        request_id = queue_item.scoring_request.internal_id,
-                        response_code = e.status_code,
-                        response_payload = e.response_payload,
-                        model_response_code = e.model_response_code,
-                        model_response_reason = e.model_response_reason,
-                        additional_wait_time = wait_time,
-                        request_total_wait_time = queue_item.scoring_request.total_wait_time)
+                        request_id=queue_item.scoring_request.internal_id,
+                        response_code=e.status_code,
+                        response_payload=e.response_payload,
+                        model_response_code=e.model_response_code,
+                        model_response_reason=e.model_response_reason,
+                        additional_wait_time=wait_time,
+                        request_total_wait_time=queue_item.scoring_request.total_wait_time)
 
                     lu.get_logger().debug(
                         "{}: Encountered retriable exception. internal_id: {}, "
@@ -167,9 +168,12 @@ class Worker:
                     self.__scoring_request_queue.append(queue_item)
 
                 except Exception as e:
+                    print(e)
                     end = time.time()
 
-                    lu.get_logger().error("{}: Encountered unhandled exception. internal_id: {}, error: {}".format(self.id, queue_item.scoring_request.internal_id, traceback.format_exc()))
+                    lu.get_logger().error(
+                        "{}: Encountered unhandled exception. internal_id: {}, error: {}".format(
+                            self.id, queue_item.scoring_request.internal_id, traceback.format_exc()))
                     await asyncio.sleep(1)
 
                     queue_item.scoring_request.scoring_duration += end - start
@@ -189,7 +193,7 @@ class Worker:
                     self.__scoring_client, self.__client_session, worker_id=self.id)
 
                 if scoring_result.status == ScoringResultStatus.SUCCESS:
-                    if queue_item.segmented_score_context.has_more():  
+                    if queue_item.segmented_score_context.has_more():
                         self.__scoring_request_queue.append(queue_item)
                     else:
                         scoring_result = queue_item.segmented_score_context.build_scoring_result(
@@ -208,7 +212,7 @@ class Worker:
 
     def __add_result(self, scoring_request: ScoringRequest, scoring_result: ScoringResult):
         self.__result_list.append(scoring_result)
-        
+
         self.__request_metrics.add_result(
             scoring_request.internal_id,
             scoring_result.status,
@@ -219,5 +223,5 @@ class Worker:
                 "ms-azureml-model-error-reason", ""),
             0,
             scoring_request.total_wait_time)
-        
+
         lu.get_events_client().emit_row_completed(1, str(scoring_result.status))

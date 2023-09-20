@@ -52,7 +52,7 @@ def parse_args() -> argparse.Namespace:
 @swallow_all_exceptions(logger)
 def main(
     input_dataset: str,
-    formatted_dataset:str,
+    formatted_dataset: str,
     model_type: str,
     batch_input_pattern: str
 ) -> None:

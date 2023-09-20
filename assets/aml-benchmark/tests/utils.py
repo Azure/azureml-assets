@@ -7,7 +7,6 @@ import os
 import subprocess
 from typing import Dict, Any, Optional, List
 import hashlib
-from time import sleep
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
@@ -16,7 +15,6 @@ from azure.ai.ml.entities import (
     ManagedOnlineEndpoint,
     ManagedOnlineDeployment,
     Model,
-    Environment,
     CodeConfiguration,
 )
 from azureml._common._error_response._error_response_constants import ErrorCodes
@@ -264,7 +262,7 @@ def assert_logged_params(job_name: str, exp_name: str, **expected_params: Any) -
 
 def _deploy_endpoint(ml_client, endpoint_name):
     endpoint = ManagedOnlineEndpoint(
-            name = endpoint_name,
+            name=endpoint_name,
             description="this is a sample endpoint",
             auth_mode="key"
         )
@@ -274,7 +272,7 @@ def _deploy_endpoint(ml_client, endpoint_name):
 
 def _deploy_fake_model(ml_client, endpoint_name, deployment_name):
     model = Model(path=os.path.join(Constants.REFERENCES_DIR, "fake_model"))
-    
+
     deployment = ManagedOnlineDeployment(
         name=deployment_name,
         endpoint_name=endpoint_name,
@@ -316,7 +314,7 @@ def deploy_fake_test_endpoint_maybe(
         should_deploy = True
 
     if should_deploy:
-        # endpoint = _deploy_endpoint(ml_client, endpoint_name)
+        endpoint = _deploy_endpoint(ml_client, endpoint_name)
         deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
 
     return endpoint.scoring_uri, deployment.name

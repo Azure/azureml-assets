@@ -9,7 +9,7 @@ from .utils.common.common import convert_result_list
 from .utils import logging_utils as lu
 from .utils.scoring_request import ScoringRequest
 from .utils.scoring_result import ScoringResult, ScoringResultStatus
-from .parallel import Conductor
+from .parallel.conductor import Conductor
 from .request_modification.input_transformer import InputTransformer
 from .request_modification.modifiers.request_modifier import RequestModificationException
 
@@ -46,7 +46,7 @@ class Parallel:
                 scoring_requests.append(scoring_request)
             except RequestModificationException as e:
                 lu.get_logger().info(f"RequestModificationException raised: {e}")
-                lu.get_logger().info(f"Faking failed ScoringResult, omit=False")
+                lu.get_logger().info("Faking failed ScoringResult, omit=False")
                 scoring_results.append(
                     ScoringResult(
                         status=ScoringResultStatus.FAILURE, omit=False,

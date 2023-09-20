@@ -42,7 +42,7 @@ class TestBatchBenchmarkScoreComponent:
         pipeline_job = self._get_pipeline_job(
             self.test_batch_benchmark_score.__name__,
             score_url,
-            '{"azureml-model-deployment": "'+ deployment_name + '"}',
+            '{"azureml-model-deployment": "' + deployment_name + '"}',
             temp_dir,
         )
         # submit the pipeline job

@@ -31,7 +31,7 @@ class ScoringRequest:
         self.__cleaned_payload_obj = json.loads(original_payload)
         self.__loggable_payload_obj = json.loads(original_payload)
 
-        # Scrub metadata from payload, if present 
+        # Scrub metadata from payload, if present.
         self.__request_metadata = self.__cleaned_payload_obj.pop(self.__BATCH_REQUEST_METADATA, None)
 
         # Apply any modifiers to the original payload
@@ -45,7 +45,7 @@ class ScoringRequest:
         self.__loggable_payload = json.dumps(self.__loggable_payload_obj, cls=BatchComponentJSONEncoder)
 
         # tuple(endpoint_base_url: str, response_status: int, model_response_code: str, is_retriable: bool)
-        self.request_history: list[tuple[str, int, str, bool]] = [] # Stack
+        self.request_history: list[tuple[str, int, str, bool]] = []  # Stack
         self.estimated_cost: int = None
         self.total_wait_time: int = 0
         self.retry_count: int = 0
@@ -67,7 +67,7 @@ class ScoringRequest:
     def original_payload_obj(self):
         """Original payload object."""
         return self.__original_payload_obj
-    
+
     # read-only
     @property
     def cleaned_payload_obj(self):

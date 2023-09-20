@@ -10,6 +10,7 @@ from abc import ABC, abstractclassmethod
 from ..utils.token_provider import TokenProvider
 from ..utils.common import constants
 
+
 class HeaderHandler(ABC):
     """Class for header handler"""
     def __init__(self,
@@ -32,7 +33,7 @@ class HeaderHandler(ABC):
             self._additional_headers = {}
 
     @abstractclassmethod
-    def get_headers(self, additional_headers: "dict[str, any]" = None)-> "dict[str, any]":
+    def get_headers(self, additional_headers: "dict[str, any]" = None) -> "dict[str, any]":
         """Get headers interface."""
         pass
 
@@ -49,7 +50,8 @@ class HeaderHandler(ABC):
         return self._quota_audience
 
     def _get_user_agent(self) -> str:
-        workload_id = ":".join([x for x in [self._batch_pool, self._quota_audience, self._user_agent_segment] if x is not None])
+        workload_id = ":".join(
+            [x for x in [self._batch_pool, self._quota_audience, self._user_agent_segment] if x is not None])
 
         return 'BatchScoreComponent:{}/Workload:{}/Run:{}:{}'.format(
             constants.BATCH_SCORE_COMPONENT_VERSION,

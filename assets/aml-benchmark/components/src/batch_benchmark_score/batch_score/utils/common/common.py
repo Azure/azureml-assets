@@ -17,7 +17,7 @@ def get_base_url(url: str) -> str:
     """Get base url."""
     if not url:
         return url
-    
+
     parse_result = urlparse(url)
     return f"{parse_result.scheme}://{parse_result.netloc}"
 
@@ -51,25 +51,26 @@ def convert_result_list(results: "list[ScoringResult]") -> "list[str]":
         output["end"] = scoringResult.end * 1000
         output["latency"] = (scoringResult.end - scoringResult.start) * 1000
 
-        if scoringResult.segmented_response_bodies != None and len(scoringResult.segmented_response_bodies) > 0:
+        if scoringResult.segmented_response_bodies is not None and len(scoringResult.segmented_response_bodies) > 0:
             output["segmented_responses"] = scoringResult.segmented_response_bodies
 
         if scoringResult.request_metadata is not None:
             output["request_metadata"] = scoringResult.request_metadata
-        
+
         output_list.append(json.dumps(output, cls=BatchComponentJSONEncoder))
 
     return output_list
 
 
-def convert_to_list(data: pd.DataFrame, additional_properties:str = None) -> "list[str]":
+def convert_to_list(data: pd.DataFrame, additional_properties: str = None) -> "list[str]":
     """Convert data to list."""
     columns = data.keys()
     payloads: list[str] = []
     additional_properties_list = None
-    
+
     # Per https://platform.openai.com/docs/api-reference/
-    int_forceable_properties = ["max_tokens", "n", "logprobs", "best_of", "n_epochs", "batch_size", "classification_n_classes"]
+    int_forceable_properties = [
+        "max_tokens", "n", "logprobs", "best_of", "n_epochs", "batch_size", "classification_n_classes"]
 
     if additional_properties is not None:
         additional_properties_list = json.loads(additional_properties)
@@ -79,16 +80,16 @@ def convert_to_list(data: pd.DataFrame, additional_properties:str = None) -> "li
         for indx, col in enumerate(columns):
             payload_val = row[indx]
             if isinstance(payload_val, collections.abc.Sequence) or isinstance(payload_val, numpy.ndarray) or\
-                not pd.isnull(payload_val):
+                    not pd.isnull(payload_val):
                 if col in int_forceable_properties:
                     payload_val = int(payload_val)
                 payload_obj[col] = payload_val
-        
+
         if additional_properties_list is not None:
             for key, value in additional_properties_list.items():
                 payload_obj[key] = value
 
         payload = json.dumps(payload_obj, cls=NumpyArrayEncoder)
         payloads.append(payload)
-    
+
     return payloads

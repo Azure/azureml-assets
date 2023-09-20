@@ -17,8 +17,8 @@ from opencensus.ext.azure.log_exporter import AzureLogHandler
 
 _default_logger_name = "BatchScoreComponent"
 _custom_dimensions = {}
-_default_logger:logging.LoggerAdapter = None
-_events_client:EventsClient = None
+_default_logger: logging.LoggerAdapter = None
+_events_client: EventsClient = None
 
 _ctx_worker_id = ContextVar("Async worker ID", default=None)
 _ctx_mini_batch_id = ContextVar("Async mini-batch ID", default=None)
@@ -45,13 +45,13 @@ def setup_logger(log_level: str, app_insights_connection_string: str = None):
     stream_handler.setFormatter(stream_formatter)
 
     logger = logging.getLogger(_default_logger_name)
-    
+
     logger.addHandler(stream_handler)
 
     if app_insights_connection_string is not None:
         print("Enabling application insights logs")
         azure_formatter = logging.Formatter('%(message)s')
-        azure_handler = AzureLogHandler(connection_string = app_insights_connection_string)
+        azure_handler = AzureLogHandler(connection_string=app_insights_connection_string)
         azure_handler.setFormatter(azure_formatter)
         logger.addHandler(azure_handler)
 
@@ -120,7 +120,8 @@ def __calculate_custom_dimensions():
         custom_dimensions["ParentRunId"] = run.parent.id
         custom_dimensions["StepName"] = run.name
         custom_dimensions["ExperimentName"] = run.experiment.name
-    except:
+    except Exception as e:
+        print(e)
         print("Failed to get run context")
 
     try:
@@ -130,11 +131,11 @@ def __calculate_custom_dimensions():
         args, unknown_args = parser.parse_known_args()
 
         arg_value = getattr(args, prs_internal_arg_name)
-        if arg_value != None:
+        if arg_value is not None:
             agent_args = json.loads(arg_value)
-            
             custom_dimensions["PRSAgentName"] = agent_args["agent_name"]
-    except:
+    except Exception as e:
+        print(e)
         print("Failed to get PRS agent name")
 
     try:
@@ -144,7 +145,8 @@ def __calculate_custom_dimensions():
             custom_dimensions["ClusterName"] = compute_context["cluster_name"]
             if "node_id" in compute_context:
                 custom_dimensions["NodeId"] = compute_context["node_id"]["Literal"]
-    except:
+    except Exception as e:
+        print(e)
         print("Failed to parse compute context")
 
     return custom_dimensions

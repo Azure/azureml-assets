@@ -6,7 +6,10 @@
 from typing import Any
 import traceback
 from datetime import datetime, timezone
-import aiohttp, time, asyncio, uuid
+import aiohttp
+import time
+import asyncio
+import uuid
 
 from .scoring_result import RetriableException, ScoringResult, ScoringResultStatus
 from .scoring_request import ScoringRequest
@@ -42,12 +45,12 @@ class ScoringClient:
 
         # Check for invalid parameter combination
         if self.__routing_client is not None and \
-            (self.__online_endpoint_url is not None or 
+            (self.__online_endpoint_url is not None or
              "azureml-model-deployment" in self.__header_handler.get_headers()):
             lu.get_logger().error(
                 "Invalid parameter combination. batch_pool AND "
                 "(online_endpoint_url or azureml-model-deployment header) are provided.")
-            
+
             raise Exception("Invalid parameter combination")
 
     async def score_until_completion(
@@ -128,7 +131,7 @@ class ScoringClient:
                 scoring_request.request_history[-1][1] == 429
                 or scoring_request.request_history[-1][2] == "429"
                 or (scoring_request.request_history[-1][1] == 404 and
-                    scoring_request.request_history[-1][3] == True)):
+                    scoring_request.request_history[-1][3] is True)):
                 exclude_endpoint = scoring_request.request_history[-1][0]
                 lu.get_logger().debug(
                     "{}: Excluding endpoint '{}' from consideration "
@@ -140,14 +143,14 @@ class ScoringClient:
         endpoint_base_url = get_base_url(target_endpoint_url)
 
         # lu.get_logger().info("{}: Score start: {}, url={} internal_id={} x-ms-client-request-id=[{}]".format(
-        #     worker_id, 
+        #     worker_id,
         #     datetime.fromtimestamp(start, timezone.utc),
         #     target_endpoint_url,
         #     scoring_request.internal_id,
         #     headers["x-ms-client-request-id"]))
 
         lu.get_logger().info("{}: url={} internal_id={} x-ms-client-request-id=[{}]".format(
-            worker_id, 
+            worker_id,
             target_endpoint_url,
             scoring_request.internal_id,
             headers["x-ms-client-request-id"]))
@@ -166,7 +169,11 @@ class ScoringClient:
             if self.__routing_client is not None:
                 self.__routing_client.increment(endpoint_base_url, scoring_request)
 
-            async with session.post(url = target_endpoint_url, headers=headers, data=scoring_request.cleaned_payload, trace_request_ctx={"worker_id": worker_id}) as response:
+            async with session.post(
+                url=target_endpoint_url,
+                headers=headers, data=scoring_request.cleaned_payload,
+                trace_request_ctx={"worker_id": worker_id}
+            ) as response:
                 response_status = response.status
                 response_headers = response.headers
                 model_response_code = response_headers.get("ms-azureml-model-error-statuscode")
@@ -187,16 +194,16 @@ class ScoringClient:
                             response_payload))
         except asyncio.TimeoutError as e:
             client_exception = e
-            response_status = -408 # Manually attribute -408 as a tell to retry on asyncio exception
+            response_status = -408  # Manually attribute -408 as a tell to retry on asyncio exception
 
             lu.get_logger().error(
                 "{}: Score failed: asyncio.TimeoutError -- internal_id: {} x-ms-client-request-id: {}".format(
-                    worker_id, 
+                    worker_id,
                     scoring_request.internal_id,
                     headers["x-ms-client-request-id"]))
         except aiohttp.ServerConnectionError as e:
             client_exception = e
-            response_status = -408 # Manually attribute -408 as a tell to retry on this exception
+            response_status = -408  # Manually attribute -408 as a tell to retry on this exception
 
             lu.get_logger().error(
                 "{}: Score failed: aiohttp.ServerConnectionError -- internal_id: {}"
@@ -207,7 +214,7 @@ class ScoringClient:
                     e))
         except aiohttp.ClientConnectorError as e:
             client_exception = e
-            response_status = -408 # Manually attribute -408 as a tell to retry on this exception
+            response_status = -408  # Manually attribute -408 as a tell to retry on this exception
 
             lu.get_logger().error(
                 "{}: Score failed: aiohttp.ClientConnectorError -- x-ms-client-request-id: {}."
@@ -259,7 +266,7 @@ class ScoringClient:
             lu.get_logger().info(
                 "{}: Score succeeded at {} -- internal_id: {} x-ms-client-request-id: {} "
                 "total_wait_time: {}".format(
-                    worker_id, 
+                    worker_id,
                     datetime.fromtimestamp(end, timezone.utc),
                     scoring_request.internal_id,
                     headers["x-ms-client-request-id"],
@@ -281,7 +288,7 @@ class ScoringClient:
             raise RetriableException(
                 status_code=response_status, response_payload=response_payload,
                 model_response_code=model_response_code, model_response_reason=model_response_reason)
-        else: # Score failed
+        else:  # Score failed
             result = ScoringResult(
                 status=ScoringResultStatus.FAILURE,
                 start=start,

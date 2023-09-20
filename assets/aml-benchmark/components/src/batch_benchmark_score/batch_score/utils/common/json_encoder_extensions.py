@@ -3,7 +3,8 @@
 
 """The class for json encoder."""
 
-import json, numpy
+import json
+import numpy
 from .. import logging_utils as lu
 
 
@@ -28,14 +29,15 @@ class BatchComponentJSONEncoder(json.JSONEncoder):
             *,
             skipkeys: bool = None, ensure_ascii: bool = None,
             check_circular: bool = None, allow_nan: bool = None,
-            sort_keys: bool = None, indent = None, separators = None, default = None
+            sort_keys: bool = None, indent: int = None,
+            separators: str = None, default: str = None
     ) -> None:
         """Init class for JSON encoder class."""
         global _default_encoder_configuration
         if _default_encoder_configuration:
             lu.get_logger().info("JSONEncoder configured, using configuration")
             super().__init__(
-                ensure_ascii = _default_encoder_configuration.ensure_ascii
+                ensure_ascii=_default_encoder_configuration.ensure_ascii
             )
         else:
             lu.get_logger().info("No JSONEncoder configured, falling back to default")
@@ -54,6 +56,8 @@ class NumpyArrayEncoder(BatchComponentJSONEncoder):
 
 # Global module variable to keep track of state
 _default_encoder_configuration: BatchComponentJSONEncoderConfiguration = None
+
+
 def setup_encoder(ensure_ascii: bool = True):
     """Setup encoder for global use."""
     global _default_encoder_configuration

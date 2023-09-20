@@ -28,8 +28,7 @@ from .utils.common.common import str2bool, convert_to_list
 from .utils import logging_utils as lu
 from .utils.logging_utils import setup_logger, get_logger, get_events_client, set_mini_batch_id
 from .utils.common.json_encoder_extensions import setup_encoder
-from .header_handlers.oss import OSSHeaderHandler
-
+from .header_handlers.oss.oss_header_handler import OSSHeaderHandler
 
 
 par: parallel.Parallel = None
@@ -109,7 +108,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
     set_mini_batch_id(mini_batch_context.minibatch_index)
 
     ret = []
-    
+
     data_list = convert_to_list(input_data, additional_properties=args.additional_properties)
 
     get_events_client().emit_mini_batch_started(input_row_count=len(data_list))
@@ -128,7 +127,7 @@ def run(input_data: pd.DataFrame, mini_batch_context):
             save_mini_batch_results(ret, mini_batch_context)
         else:
             lu.get_logger().info("save_mini_batch_results is disabled")
-        
+
     except Exception as e:
         get_events_client().emit_mini_batch_completed(
             input_row_count=len(data_list),
@@ -167,16 +166,16 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--token_file_path", default=None, type=str)
 
     # Component parameters
-    parser.add_argument("--debug_mode", default = False, type=str2bool)
+    parser.add_argument("--debug_mode", default=False, type=str2bool)
     parser.add_argument("--app_insights_connection_string", nargs='?', const=None, type=str)
     parser.add_argument("--additional_properties", nargs='?', const=None, type=str)
     parser.add_argument("--run_type", type=str)
 
-    ## Sequential-specific parameters
+    # Sequential-specific parameters
     parser.add_argument("--sorted", default=False, type=str2bool)
     parser.add_argument("--max_prompts", default=2500, type=int)
 
-    ## Parallel-specific parameters
+    # Parallel-specific parameters
     parser.add_argument("--initial_worker_count", default=5, type=int)
     parser.add_argument("--max_worker_count", default=200, type=int)
 
@@ -185,7 +184,7 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--segment_max_token_size", default=800, type=int)
     parser.add_argument("--save_mini_batch_results", type=str)
     parser.add_argument("--mini_batch_results_out_directory", type=str)
-    parser.add_argument("--ensure_ascii", default = False, type=str2bool)
+    parser.add_argument("--ensure_ascii", default=False, type=str2bool)
     parser.add_argument("--output_behavior", type=str)
     parser.add_argument("--batch_pool", nargs='?', const=None, default=None, type=str)
     parser.add_argument("--request_path", default='score', type=str)
@@ -208,13 +207,15 @@ def print_arguments(args: Namespace):
     lu.get_logger().debug("token_file_path path: %s" % args.token_file_path)
 
     lu.get_logger().debug("debug_mode path: %s" % args.debug_mode)
-    lu.get_logger().debug("app_insights_connection_string: %s" % "None" if args.app_insights_connection_string is None else "[redacted]")
+    lu.get_logger().debug(
+        "app_insights_connection_string: %s" % "None" if args.app_insights_connection_string is None else "[redacted]"
+    )
     lu.get_logger().debug("additional_properties path: %s" % args.additional_properties)
     lu.get_logger().debug("run_type path: %s" % args.run_type)
 
     lu.get_logger().debug("sorted path: %s" % args.sorted)
     lu.get_logger().debug("max_prompts path: %s" % args.max_prompts)
-    
+
     lu.get_logger().debug("initial_worker_count path: %s" % args.initial_worker_count)
     lu.get_logger().debug("max_worker_count path: %s" % args.max_worker_count)
 
@@ -222,7 +223,7 @@ def print_arguments(args: Namespace):
     lu.get_logger().debug("segment_large_requests path: %s" % args.segment_large_requests)
     lu.get_logger().debug("segment_max_token_size path: %s" % args.segment_max_token_size)
     lu.get_logger().debug("save_mini_batch_results: %s" % args.save_mini_batch_results)
-    lu.get_logger().debug("mini_batch_results_out_directory: %s" % args.mini_batch_results_out_directory)    
+    lu.get_logger().debug("mini_batch_results_out_directory: %s" % args.mini_batch_results_out_directory)
     lu.get_logger().debug("ensure_ascii path: %s" % args.ensure_ascii)
     lu.get_logger().debug("output_behavior: %s" % args.output_behavior)
     lu.get_logger().debug("batch_pool: %s" % args.batch_pool)
@@ -264,7 +265,9 @@ def setup_trace_configs():
 
     if is_enabled and is_enabled.lower() == "true":
         lu.get_logger().info("Trace logging enabled, populating trace_configs.")
-        trace_configs = [ExceptionTrace(), ResponseChunkReceivedTrace(), RequestEndTrace(), RequestRedirectTrace(), ConnectionCreateStartTrace(), ConnectionCreateEndTrace(), ConnectionReuseconnTrace()]
+        trace_configs = [
+            ExceptionTrace(), ResponseChunkReceivedTrace(), RequestEndTrace(), RequestRedirectTrace(),
+            ConnectionCreateStartTrace(), ConnectionCreateEndTrace(), ConnectionReuseconnTrace()]
     else:
         lu.get_logger().info("Trace logging disabled")
 
@@ -290,7 +293,7 @@ def setup_loop() -> asyncio.AbstractEventLoop:
     if sys.platform == 'win32':
         # For windows environment
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-    
+
     return asyncio.new_event_loop()
 
 

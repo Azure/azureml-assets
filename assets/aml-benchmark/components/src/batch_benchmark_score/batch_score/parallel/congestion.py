@@ -64,7 +64,7 @@ class WaitTimeCongestionDetector(CongestionDetector):
             request_metrics: RequestMetrics,
             start_time: pd.Timestamp,
             end_time: pd.Timestamp = None
-        ) -> CongestionState:
+    ) -> CongestionState:
         """Detect method."""
         requests = request_metrics.get_metrics(start_time, end_time)
         response_count = len(requests.index)
@@ -121,9 +121,13 @@ class ThrottleCountCongestionDetector(CongestionDetector):
             float(saturation_override) if saturation_override else self.DEFAULT_SATURATION_THRESHOLD)
 
         lu.get_logger().info(
-            f"ThrottleCountCongestionDetector using congestion threshold: {self.__congestion_threshold}, saturation threshold: {self.__saturation_threshold}")
+            f"ThrottleCountCongestionDetector using congestion threshold: {self.__congestion_threshold},"
+            f" saturation threshold: {self.__saturation_threshold}")
 
-    def detect(self, request_metrics: RequestMetrics, start_time: pd.Timestamp, end_time: pd.Timestamp = None) -> CongestionState:
+    def detect(
+            self,
+            request_metrics: RequestMetrics, start_time: pd.Timestamp, end_time: pd.Timestamp = None
+    ) -> CongestionState:
         """Detect method."""
         requests = request_metrics.get_metrics(start_time, end_time)
         response_count = len(requests.index)
@@ -139,7 +143,7 @@ class ThrottleCountCongestionDetector(CongestionDetector):
 
         retry_count = len(df.index)
 
-        result:CongestionState
+        result: CongestionState
 
         if response_count == 0:
             result = CongestionState.UNKNOWN

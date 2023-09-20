@@ -32,7 +32,7 @@ class TestBatchBenchmarkInferenceComponent:
         pipeline_job = self._get_pipeline_job(
             self.test_batch_benchmark_inference.__name__,
             score_url,
-            '{"azureml-model-deployment": "'+ deployment_name + '"}',
+            '{"azureml-model-deployment": "' + deployment_name + '"}',
             '{'
             '   "input_data":'
             '   {'
@@ -95,7 +95,7 @@ class TestBatchBenchmarkInferenceComponent:
         pipeline_job.display_name = display_name
 
         return pipeline_job
-    
+
     def _create_inference_yaml(self):
         original_yml_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
@@ -117,7 +117,7 @@ class TestBatchBenchmarkInferenceComponent:
         with open(new_yaml_path, "w") as f2:
             f2.writelines(new_lines)
         return new_yaml_path
-    
+
     def _get_updated_lines(self, current_section, line):
         param_mapping_dict = {
             "input_dataset:": ['  input_dataset:\n', '    type: uri_folder\n', '    path: ../data/\n'],
@@ -155,10 +155,10 @@ class TestBatchBenchmarkInferenceComponent:
                 if f"azureml:{component}" in line:
                     return [f"    component: ../../components/{component.replace('_', '-')}/spec.yaml\n"]
         return [line]
-    
+
     def _get_yml_key(self, line):
         return line.strip().split()[0]
-    
+
     def _update_currect_section(self, current_section, line):
         if line.startswith("inputs:"):
             return "inputs"
@@ -167,14 +167,14 @@ class TestBatchBenchmarkInferenceComponent:
         if line.startswith("jobs:"):
             return "jobs"
         return current_section
-    
+
     def _should_keep_line(self, current_section, line):
         if current_section == "main":
             return self._get_yml_key(line) not in {"version:", "name:"}
         if current_section == "inputs" or current_section == "output":
             return self._get_yml_key(line) not in {'optional:', 'type:', 'default:', 'description:'}
         return True
-    
+
     def _read_data(self, file_path):
         with open(file_path) as f:
             output_records = [json.loads(line) for line in f]
@@ -184,7 +184,7 @@ class TestBatchBenchmarkInferenceComponent:
         for df in dfs:
             for col in column_list:
                 assert col in df, f"{col} not found in df."
-    
+
     def _check_output_data(self, output_dir, file_name, expected_col_list):
         output_file = os.path.join(output_dir, file_name)
         assert os.path.isfile(output_file), f"{output_file} is not a file"

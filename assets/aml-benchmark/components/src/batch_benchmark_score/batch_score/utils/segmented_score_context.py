@@ -31,10 +31,10 @@ class SegmentedScoreContext:
             self.__original_max_tokens = int(payload_object.get("max_tokens"))
 
         if ("n" in payload_object and (int)(payload_object["n"]) > 1) or \
-            ("stream" in payload_object and str2bool(payload_object["stream"])) or \
-            (self.__original_max_tokens is not None and self.__original_max_tokens <= segment_max_token_size):
+                ("stream" in payload_object and str2bool(payload_object["stream"])) or \
+                (self.__original_max_tokens is not None and self.__original_max_tokens <= segment_max_token_size):
             self.__supports_segmentation = False
-            
+
         self.__segment_max_token_size = segment_max_token_size
         self.__segmented_results: list[ScoringResult] = []
         self.__total_tokens_generated = 0
@@ -44,7 +44,7 @@ class SegmentedScoreContext:
     async def score_until_completion(
         self,
         scoring_client: ScoringClient,
-        session: aiohttp.ClientSession, 
+        session: aiohttp.ClientSession,
         worker_id: str = "1"
     ) -> ScoringResult:
         """Score until completion."""
@@ -63,7 +63,7 @@ class SegmentedScoreContext:
     async def score_next_once(
         self,
         scoring_client: ScoringClient,
-        session: aiohttp.ClientSession, 
+        session: aiohttp.ClientSession,
         worker_id: str = "1"
     ) -> ScoringResult:
         """Score next once."""
@@ -78,7 +78,7 @@ class SegmentedScoreContext:
         self.__next_scoring_request = None
 
         if next_result.status == ScoringResultStatus.SUCCESS:
-            self.__add_successful_result(next_result)            
+            self.__add_successful_result(next_result)
 
         return next_result
 
@@ -99,7 +99,7 @@ class SegmentedScoreContext:
 
                 return (self.__last_stop_reason is None or self.__last_stop_reason != "stop") and \
                     self.__total_tokens_generated < self.__original_max_tokens
-            else: # not self.__supports_segmentation
+            else:
                 return False
 
         return True
@@ -123,12 +123,12 @@ class SegmentedScoreContext:
             return final_result
 
     def __merge_logprobs(self, final_result: ScoringResult):
-        logprobs_properties = [ "tokens", "token_logprobs", "top_logprobs", "text_offset"]
-        
+        logprobs_properties = ["tokens", "token_logprobs", "top_logprobs", "text_offset"]
+
         if "logprobs" in final_result.response_body["choices"][0]:
             final_logprobs = final_result.response_body["choices"][0]["logprobs"]
 
-            if final_logprobs != None:
+            if final_logprobs is not None:
                 for logprobs_property in logprobs_properties:
                     final_logprobs[logprobs_property] = []
 
@@ -137,7 +137,8 @@ class SegmentedScoreContext:
                         current_logprobs = current_result.response_body["choices"][0]["logprobs"]
 
                         for logprobs_property in logprobs_properties:
-                            if logprobs_property in current_logprobs and current_logprobs[logprobs_property] is not None:
+                            if logprobs_property in current_logprobs and \
+                                    current_logprobs[logprobs_property] is not None:
                                 final_logprobs[logprobs_property].extend(current_logprobs[logprobs_property])
 
     def __merge_usage(self, final_result: ScoringResult):
@@ -146,7 +147,7 @@ class SegmentedScoreContext:
         if "usage" in final_result.response_body:
             final_usage = final_result.response_body["usage"]
 
-            if final_usage != None:
+            if final_usage is not None:
                 for usage_property in usage_properties:
                     final_usage[usage_property] = 0
 

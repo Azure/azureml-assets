@@ -23,10 +23,10 @@ class Conductor:
     """The conductor class."""
 
     def __init__(
-            self, 
+            self,
             loop: asyncio.AbstractEventLoop,
             scoring_client: ScoringClient,
-            segment_large_requests: str, 
+            segment_large_requests: str,
             segment_max_token_size: int,
             initial_worker_count: int,
             max_worker_count: int,
@@ -74,7 +74,11 @@ class Conductor:
         "Run method."
         self.__add_requests(requests)
 
-        lu.get_logger().info("Conductor: Starting with {} running workers and {} target worker count. There are {} workers in the worker pool.".format(len(list(filter(lambda worker: worker.is_running, self.__workers))), self.__target_worker_count, len(self.__workers)))
+        lu.get_logger().info(
+            "Conductor: Starting with {} running workers and {} target worker count. "
+            "There are {} workers in the worker pool.".format(
+                len(list(filter(lambda worker: worker.is_running, self.__workers))),
+                self.__target_worker_count, len(self.__workers)))
 
         client_session = await self.__get_session()
         tasks: "list[asyncio.Task]" = []
@@ -86,14 +90,19 @@ class Conductor:
             adjustments = self.__cas.calculate_next_concurrency(self.__target_worker_count)
 
             if adjustments.new_concurrency <= self.__target_worker_count or \
-                (adjustments.new_concurrency > self.__target_worker_count and adjustments.new_concurrency < len(self.__scoring_request_queue)):
+                    (adjustments.new_concurrency > self.__target_worker_count and \
+                    adjustments.new_concurrency < len(self.__scoring_request_queue)):
 
-                lu.get_logger().info("Conductor: Taking adjustment of {} to {}".format(self.__target_worker_count, adjustments.new_concurrency))
+                lu.get_logger().info(
+                    "Conductor: Taking adjustment of {} to {}".format(
+                        self.__target_worker_count, adjustments.new_concurrency))
                 self.__target_worker_count = adjustments.new_concurrency
 
                 if self.__max_worker_count is not None:
                     if self.__max_worker_count < self.__target_worker_count:
-                        lu.get_logger().debug("Conductor: Overriding with self.__max_worker_count value of {}".format(self.__max_worker_count))
+                        lu.get_logger().debug(
+                            "Conductor: Overriding with self.__max_worker_count value of {}".format(
+                                self.__max_worker_count))
                     # Upper bound is self.__max_worker_count, if present
                     self.__target_worker_count = min(self.__target_worker_count, self.__max_worker_count)
 
@@ -102,12 +111,12 @@ class Conductor:
 
             while len(self.__workers) < self.__target_worker_count:
                 worker = Worker(
-                    scoring_client=self.__scoring_client, 
-                    client_session=client_session, 
-                    scoring_request_queue=self.__scoring_request_queue, 
-                    result_list=self.__result_list, 
+                    scoring_client=self.__scoring_client,
+                    client_session=client_session,
+                    scoring_request_queue=self.__scoring_request_queue,
+                    result_list=self.__result_list,
                     request_metrics=self.__request_metrics,
-                    segment_large_requests=self.__segment_large_requests, 
+                    segment_large_requests=self.__segment_large_requests,
                     segment_max_token_size=self.__segment_max_token_size,
                     id=str(len(self.__workers)),
                     max_retry_time_interval=self.__max_retry_time_interval)
@@ -129,7 +138,7 @@ class Conductor:
         for worker in self.__workers:
             worker.stop()
 
-        ret:list[ScoringResult] = []
+        ret: list[ScoringResult] = []
 
         # Remove items from __result_list without creating a new reference
         while len(self.__result_list) > 0:
@@ -145,11 +154,11 @@ class Conductor:
 
     async def __get_session(self) -> aiohttp.ClientSession:
         if self.__client_session is None:
-            total = 30 * 60 # Default timeout to 30 minutes
+            total = 30 * 60  # Default timeout to 30 minutes
             if self.__segment_large_requests == "enabled":
-                total = self.__segment_max_token_size * 1 # Assume 1 second per token generation
-                total = max(total, 3 * 60) # Lower bound of 3 minutes
-            
+                total = self.__segment_max_token_size * 1  # Assume 1 second per token generation
+                total = max(total, 3 * 60)  # Lower bound of 3 minutes
+
             timeout_override = os.environ.get("BATCH_SCORE_REQUEST_TIMEOUT")
             total = int(timeout_override) if timeout_override else total
 
@@ -159,10 +168,11 @@ class Conductor:
                 timeout=timeout,
                 trace_configs=self.__trace_configs
             )
-        
+
         return self.__client_session
 
-    async def __sleep(self, duration: int,  tasks: "list[asyncio.Task]", target_result_len: int) -> "list[asyncio.Task]":
+    async def __sleep(
+            self, duration: int,  tasks: "list[asyncio.Task]", target_result_len: int) -> "list[asyncio.Task]":
         """Waits for the configured sleep interval, but wakes up early if the workers finish."""
 
         sleep_task = asyncio.create_task(asyncio.sleep(duration))
@@ -174,4 +184,3 @@ class Conductor:
         sleep_task.cancel()
 
         return list(tasks)
-

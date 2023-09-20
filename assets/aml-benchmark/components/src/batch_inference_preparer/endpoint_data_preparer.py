@@ -30,7 +30,7 @@ class EndpointDataPreparer:
                 errors.append(
                     "`input_string` should be presented in the `input_data` fields of payload json.")
             elif isinstance(output_payload_dict["input_data"]["input_string"], list):
-                errors.append("`input_string` field should be a list")   
+                errors.append("`input_string` field should be a list")
         return errors
 
     def _convert_python_pattern(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
