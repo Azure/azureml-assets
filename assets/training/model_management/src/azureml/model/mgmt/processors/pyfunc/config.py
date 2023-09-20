@@ -32,9 +32,3 @@ class SupportedTextToImageModelFamily(_CustomEnum):
     """Supported text to image models."""
 
     STABLE_DIFFUSION = "stable-diffusion"
-
-
-class SupportedTextToImageInpaintingModelFamily(_CustomEnum):
-    """Supported text to image inpainting models."""
-
-    STABLE_DIFFUSION = "stable-diffusion"

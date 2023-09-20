@@ -46,12 +46,9 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             return VisionMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
-        elif task == PyFuncSupportedTasks.TEXT_TO_IMAGE.value:
-            return DiffusersMLflowConvertorFactory.create_mlflow_convertor(
-                model_dir, output_dir, temp_dir, translate_params
-            )
-        elif task == PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value:
-            return DiffusersMLflowInpaintingConvertorFactory.create_mlflow_convertor(
+        elif task in [PyFuncSupportedTasks.TEXT_TO_IMAGE.value,
+                      PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value]:
+            return TextToImageMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         elif task == SupportedTasks.AUTOMATIC_SPEECH_RECOGNITION.value:
@@ -126,20 +123,30 @@ class ASRMLflowConvertorFactory(MLflowConvertorFactoryInterface):
         raise Exception("Unsupported ASR model family")
 
 
-class DiffusersMLflowConvertorFactory(MLflowConvertorFactoryInterface):
-    """Factory class for diffusor model family."""
+class TextToImageMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for text to image model."""
+
+    STABLE_DIFFUSION_TASK_MAP = {
+        PyFuncSupportedTasks.TEXT_TO_IMAGE.value: StableDiffusionMlflowConvertor,
+        PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value: StableDiffusionInpaintingMlflowConvertor,
+    }
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for diffusers."""
+
         misc = translate_params["misc"]
         if misc and SupportedTextToImageModelFamily.STABLE_DIFFUSION.value in misc:
-            return StableDiffusionMlflowConvertor(
-                model_dir=model_dir,
-                output_dir=output_dir,
-                temp_dir=temp_dir,
-                translate_params=translate_params,
-            )
-        raise Exception("Unsupported diffuser model family")
+            try:
+                converter = TextToImageMLflowConvertorFactory.STABLE_DIFFUSION_TASK_MAP[translate_params["task"]]
+                return converter(
+                    model_dir=model_dir,
+                    output_dir=output_dir,
+                    temp_dir=temp_dir,
+                    translate_params=translate_params,
+                )
+            except KeyError:
+                raise Exception("Unsupported task for stable diffusion model family")
+        raise Exception("Unsupported model family for text to image model")
 
 
 class MMLabDetectionMLflowConvertorFactory(MLflowConvertorFactoryInterface):
@@ -166,19 +173,3 @@ class CLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
             temp_dir=temp_dir,
             translate_params=translate_params,
         )
-
-
-class DiffusersMLflowInpaintingConvertorFactory(MLflowConvertorFactoryInterface):
-    """Factory class for diffusor inpainting model family."""
-
-    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
-        """Create MLflow convertor for diffusers inpainting."""
-        misc = translate_params["misc"]
-        if misc and SupportedTextToImageInpaintingModelFamily.STABLE_DIFFUSION.value in misc:
-            return StableDiffusionInpaintingMlflowConvertor(
-                model_dir=model_dir,
-                output_dir=output_dir,
-                temp_dir=temp_dir,
-                translate_params=translate_params,
-            )
-        raise Exception("Unsupported diffuser model family")
