@@ -385,11 +385,7 @@ class LLaVAMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         # Get the name of the only subdirectory of the model directory.
         sd = next(
-            (
-                d
-                for d in os.listdir(self._model_dir)
-                if (d not in [".", ".."]) and os.path.isdir(os.path.join(self._model_dir, d))
-            ),
+            (d for d in os.listdir(self._model_dir) if os.path.isdir(os.path.join(self._model_dir, d))),
             self._model_dir
         )
 
