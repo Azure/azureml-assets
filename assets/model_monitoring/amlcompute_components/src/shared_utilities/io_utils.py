@@ -36,6 +36,7 @@ def _get_datastore_relative_data_path(data_path):
 
 
 def convert_to_azureml_uri(data_path: str):
+    """Convert the local data path to azureml data path uri."""
     import os
     datastore_id = _get_datastore_id()
     relative_data_path = _get_datastore_relative_data_path(data_path)
