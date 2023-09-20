@@ -56,7 +56,15 @@ def main(
     model_type: str,
     batch_input_pattern: str
 ) -> None:
-    """Entry function of the script."""
+    """
+    Entry function of the script.
+
+    :param input_dataset: The input dataset which can be MLTable or uri_folder.
+    :param formatted_dataset: The output dataset that has the payload.
+    :param model_type: The model type.
+    :param batch_input_pattern: The input pattern that used to generate payload.
+    :return: None
+    """
     # online_endpoint = OnlineEndpoint.from_args(args)
     # if online_endpoint.should_deploy():
     #     online_endpoint.deploy_model()

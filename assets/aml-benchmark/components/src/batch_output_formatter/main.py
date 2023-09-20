@@ -48,7 +48,22 @@ def main(
         perf_data: str,
         predict_ground_truth_data: str
 ) -> None:
-    """Entry script for the script."""
+    """
+    Entry script for the script.
+    
+    :param batch_inference_output: Path to the batch inference output.
+    :param model_type: The model type.
+    :param data_id_key: If ground_truth_input is provided, data_id_key should be a unique key
+        that in the ground_truth_input to identify corresponding the request payload.
+    :param metadata_key: The key that contains ground truth in the request payload. If this is
+        empty, the `batch_metadata` will be used.
+    :param label_key: The key contains ground truth either in the metadata or in the ground_truth_input.
+    :param ground_truth_input: The ground_truth_input which should contains data_id_key and label_key.
+    :param prediction_data: The path to the prediction data.
+    :param perf_data: The path to the perf data.
+    :param predict_ground_truth_data: The ground truth data that correspond to the prediction_data.
+    :return: None
+    """
     logger.info("Read batch output data now.")
     data_files = [
         f for f in os.listdir(batch_inference_output) if f.endswith("json") or f.endswith("jsonl")

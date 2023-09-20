@@ -13,7 +13,23 @@ inputs:
     optional: False
   batch_input_pattern:
     type: string
-    description: The string for the batch input pattern.
+    description: >- 
+      The string for the batch input pattern. The input should be the payload format with substitution
+      for the key for the value put in the `###<key>`. For example, one can use the following format for
+      a llama text-gen model with a input dataset has `prompt` for the payload
+      and `_batch_request_metadata` storing the corresponding ground truth.
+      {"input_data": 
+        {
+          "input_string": ["###<prompt>"],
+          "parameters":
+          {
+            "temperature": 0.6,
+            "max_new_tokens": 100,
+            "do_sample": true
+          }
+        },
+        "_batch_request_metadata": ###<_batch_request_metadata>
+      }
     optional: False
 outputs:
   formatted_data:

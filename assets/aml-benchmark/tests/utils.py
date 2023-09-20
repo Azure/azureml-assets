@@ -7,6 +7,7 @@ import os
 import subprocess
 from typing import Dict, Any, Optional, List
 import hashlib
+import time
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
@@ -281,7 +282,7 @@ def _deploy_fake_model(ml_client, endpoint_name, deployment_name):
         code_configuration=CodeConfiguration(
             code=Constants.REFERENCES_DIR, scoring_script="score.py"
         ),
-        instance_type="Standard_DS3_v2",
+        instance_type="Standard_E2s_v3",
         instance_count=1,
     )
     ml_client.online_deployments.begin_create_or_update(deployment=deployment).wait()
@@ -289,7 +290,7 @@ def _deploy_fake_model(ml_client, endpoint_name, deployment_name):
 
 
 def deploy_fake_test_endpoint_maybe(
-        ml_client, endpoint_name="aml-benchmark-test-wzvkqd", deployment_name="test-model"
+        ml_client, endpoint_name="aml-benchmark-test-bzvkqd", deployment_name="test-model"
 ):
     """Deploy a fake test endpoint."""
     should_deploy = False
@@ -298,6 +299,7 @@ def deploy_fake_test_endpoint_maybe(
         while should_wait:
             endpoint = ml_client.online_endpoints.get(name=endpoint_name)
             if endpoint.provisioning_state.lower() in ["creating", "updating", 'deleting']:
+                time.sleep(30)
                 continue
             deployment = ml_client.online_deployments.get(
                 endpoint_name=endpoint_name, name=deployment_name)
@@ -308,6 +310,7 @@ def deploy_fake_test_endpoint_maybe(
             elif deployment.provisioning_state.lower() == 'succeeded':
                 break
             else:
+                time.sleep(30)
                 continue
     except Exception as e:
         print(f"Get endpont met {e}")
