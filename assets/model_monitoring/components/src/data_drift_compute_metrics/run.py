@@ -4,8 +4,14 @@
 """Entry script for Data Drift Compute Metrics Spark Component."""
 
 import argparse
-from io_utils import select_columns_from_spark_df, output_computed_measures_tests, get_output_spark_df
-from shared_utilities.io_utils import try_read_mltable_in_spark_with_warning, try_read_mltable_in_spark
+from io_utils import (
+    select_columns_from_spark_df,
+    output_computed_measures_tests,
+)
+from shared_utilities.io_utils import (
+    try_read_mltable_in_spark_with_warning,
+    try_read_mltable_in_spark,
+)
 from compute_data_drift import compute_data_drift_measures_tests
 
 from shared_utilities.patch_mltable import patch_all
@@ -30,8 +36,12 @@ def run():
     # Select columns
     select_columns = None
 
-    baseline_df = try_read_mltable_in_spark_with_warning(args.baseline_dataset, "baseline_dataset")
-    production_df = try_read_mltable_in_spark_with_warning(args.production_dataset, "production_dataset")
+    baseline_df = try_read_mltable_in_spark_with_warning(
+        args.baseline_dataset, "baseline_dataset"
+    )
+    production_df = try_read_mltable_in_spark_with_warning(
+        args.production_dataset, "production_dataset"
+    )
 
     if not baseline_df or not production_df:
         print("Skipping metric computation.")
@@ -44,12 +54,8 @@ def run():
             return
 
         select_columns = [row["featureName"] for row in features.collect()]
-        baseline_df = select_columns_from_spark_df(
-            baseline_df, select_columns
-        )
-        production_df = select_columns_from_spark_df(
-            production_df, select_columns
-        )
+        baseline_df = select_columns_from_spark_df(baseline_df, select_columns)
+        production_df = select_columns_from_spark_df(production_df, select_columns)
 
     metrics_df = compute_data_drift_measures_tests(
         baseline_df,

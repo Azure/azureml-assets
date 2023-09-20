@@ -5,7 +5,11 @@
 
 import argparse
 from pyspark.sql.functions import split, trim, col
-from shared_utilities.io_utils import try_read_mltable_in_spark_with_warning, try_read_mltable_in_spark, save_spark_df_as_mltable
+from shared_utilities.io_utils import (
+    try_read_mltable_in_spark_with_warning,
+    try_read_mltable_in_spark,
+    save_spark_df_as_mltable,
+)
 from shared_utilities.df_utils import select_columns_from_spark_df
 from compute_data_quality_metrics import compute_data_quality_metrics
 
@@ -31,7 +35,9 @@ def run():
 
     # READ INPUT TABLES
     df = try_read_mltable_in_spark_with_warning(args.input_data, "input_data")
-    data_stats_table = try_read_mltable_in_spark_with_warning(args.data_statistics, "data_statistics")
+    data_stats_table = try_read_mltable_in_spark_with_warning(
+        args.data_statistics, "data_statistics"
+    )
 
     if not df or not data_stats_table:
         print("Skipping data quality metrics computation.")
