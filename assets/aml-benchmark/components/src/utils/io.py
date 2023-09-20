@@ -7,7 +7,6 @@ from typing import Any, List, Dict, Optional
 import uuid
 import json
 import os
-import pandas as pd
 import glob
 
 import mltable
