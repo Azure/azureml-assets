@@ -42,6 +42,7 @@ class WaitTimeCongestionDetector(CongestionDetector):
     DEFAULT_USE_TOTAL_WAIT_TIME = True
 
     def __init__(self):
+        """Init method."""
         congestion_override = os.environ.get("BATCH_SCORE_CONGESTION_THRESHOLD_P90_WAITTIME")
         self.__congestion_threshold = (
             float(congestion_override) if congestion_override else self.DEFAULT_CONGESTION_P90_THRESHOLD)
@@ -112,6 +113,7 @@ class ThrottleCountCongestionDetector(CongestionDetector):
     DEFAULT_SATURATION_THRESHOLD = 0.05
 
     def __init__(self):
+        """Init method."""
         congestion_override = os.environ.get("BATCH_SCORE_CONGESTION_THRESHOLD_THROTTLE_PERCENTAGE")
         self.__congestion_threshold = (
             float(congestion_override) if congestion_override else self.DEFAULT_CONGESTION_THRESHOLD)

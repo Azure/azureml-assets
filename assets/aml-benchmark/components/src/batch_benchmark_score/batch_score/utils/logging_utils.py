@@ -33,7 +33,7 @@ class UTCFormatter(logging.Formatter):
 
 
 def setup_logger(log_level: str, app_insights_connection_string: str = None):
-    """Setup logger."""
+    """Init logger."""
     global _custom_dimensions
     global _default_logger
     global _events_client

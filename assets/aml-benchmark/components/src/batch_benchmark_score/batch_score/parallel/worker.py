@@ -27,6 +27,7 @@ class QueueItem:
             scoring_request: ScoringRequest, segmented_score_context: SegmentedScoreContext = None
     ):
         """Init for queue item."""
+
         self.scoring_request = scoring_request
         self.segmented_score_context = segmented_score_context
 

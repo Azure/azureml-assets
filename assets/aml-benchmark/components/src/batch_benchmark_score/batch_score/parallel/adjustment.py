@@ -13,6 +13,7 @@ from ..utils import logging_utils as lu
 
 class _ConcurrencyAdjustment:
     def __init__(self, new_concurrency: int, next_adjustment_delay: int):
+        """Init method."""
         self.new_concurrency = new_concurrency
         self.next_adjustment_delay = next_adjustment_delay
 
@@ -35,6 +36,7 @@ class AIMD(_ConcurrencyAdjustmentStrategy):
     DEFAULT_MULTIPLICATIVE_DECREASE = 0.75
 
     def __init__(self, request_metrics: RequestMetrics):
+        """Init method."""
         self.__confidence: int = 0
         self._last_adjustment_time: pd.Timestamp = None
         self.__request_metrics = request_metrics

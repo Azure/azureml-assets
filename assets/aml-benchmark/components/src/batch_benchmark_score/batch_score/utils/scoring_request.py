@@ -83,7 +83,7 @@ class ScoringRequest:
     # read-only
     @property
     def loggable_payload(self):
-        """"Loggable payload."""
+        """Loggable payload."""
         return self.__loggable_payload
 
     # read-only

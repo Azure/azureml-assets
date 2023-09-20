@@ -22,6 +22,7 @@ class Parallel:
                  conductor: Conductor,
                  request_input_transformer: InputTransformer = None,
                  logging_input_transformer: InputTransformer = None):
+        """Init for parallel driver."""
         self.__loop = loop
         self.__conductor: Conductor = conductor
         self.__request_input_transformer: InputTransformer = request_input_transformer

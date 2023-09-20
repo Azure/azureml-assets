@@ -22,6 +22,7 @@ from .request_modification.modifiers.request_modifier import RequestModification
 
 class Sequential:
     """Sequential endpoint class."""
+
     def __init__(self,
                  scoring_client: ScoringClient,
                  segment_large_requests: str,

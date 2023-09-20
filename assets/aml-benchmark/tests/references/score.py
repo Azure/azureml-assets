@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Fake score script"""
+"""Fake score script."""
 
 
 def init():

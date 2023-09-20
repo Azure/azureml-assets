@@ -48,7 +48,7 @@ class NumpyArrayEncoder(BatchComponentJSONEncoder):
     """Numpy array encoder class."""
 
     def default(self, obj):
-        """Default encoder method."""
+        """Override the `default` method."""
         if isinstance(obj, numpy.ndarray):
             return obj.tolist()
         return super().default(self, obj)
@@ -59,7 +59,7 @@ _default_encoder_configuration: BatchComponentJSONEncoderConfiguration = None
 
 
 def setup_encoder(ensure_ascii: bool = True):
-    """Setup encoder for global use."""
+    """Init encoder for global use."""
     global _default_encoder_configuration
     if not _default_encoder_configuration:
         _default_encoder_configuration = BatchComponentJSONEncoderConfiguration(

@@ -9,6 +9,7 @@ from . import logging_utils as lu
 
 class RoutingResponseType(Enum):
     """Enum for routing response type."""
+
     RETRY = 1,
     USE_EXISTING = 2,
     FAILURE = 3,

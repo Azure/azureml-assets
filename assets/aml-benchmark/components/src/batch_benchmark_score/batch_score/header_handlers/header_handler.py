@@ -13,12 +13,14 @@ from ..utils.common import constants
 
 class HeaderHandler(ABC):
     """Class for header handler"""
+
     def __init__(self,
                  token_provider: TokenProvider,
                  user_agent_segment: str = None,
                  batch_pool: str = None,
                  quota_audience: str = None,
                  additional_headers: str = None) -> None:
+        """Init method."""
         if user_agent_segment and (":" in user_agent_segment or "/" in user_agent_segment):
             raise Exception("user_agent_segment should not contain characters ':' or '/'")
 
@@ -40,7 +42,7 @@ class HeaderHandler(ABC):
     # read-only
     @property
     def batch_pool(self):
-        """batch pool."""
+        """Batch pool."""
         return self._batch_pool
 
     # read-only

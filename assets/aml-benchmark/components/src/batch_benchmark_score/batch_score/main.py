@@ -37,7 +37,7 @@ args: Namespace = None
 
 
 def init():
-    """The init method for PRS."""
+    """PRS init method."""
     global par
     global seq
     global args
@@ -99,7 +99,7 @@ def init():
 
 
 def run(input_data: pd.DataFrame, mini_batch_context):
-    """The PRS run method."""
+    """PRS run method."""
     global par
     global seq
     global args
@@ -161,7 +161,7 @@ def shutdown():
 
 
 def setup_arguments(parser: ArgumentParser):
-    """Setup run arguments."""
+    """Add run arguments to parser."""
     # Local runs only
     parser.add_argument("--token_file_path", default=None, type=str)
 
@@ -204,6 +204,7 @@ def setup_arguments(parser: ArgumentParser):
 
 
 def print_arguments(args: Namespace):
+    """Print all input arguments."""
     lu.get_logger().debug("token_file_path path: %s" % args.token_file_path)
 
     lu.get_logger().debug("debug_mode path: %s" % args.debug_mode)
@@ -289,7 +290,7 @@ def get_return_value(ret: 'list[str]', output_behavior: str):
 
 
 def setup_loop() -> asyncio.AbstractEventLoop:
-    """Setup event loop."""
+    """Start event loop."""
     if sys.platform == 'win32':
         # For windows environment
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -298,7 +299,7 @@ def setup_loop() -> asyncio.AbstractEventLoop:
 
 
 def setup_scoring_client() -> ScoringClient:
-    """Setup scoring client."""
+    """Start scoring client."""
     token_provider = TokenProvider(
         token_file_path=args.token_file_path
     )
@@ -322,7 +323,7 @@ def setup_scoring_client() -> ScoringClient:
 
 
 def setup_header_handler(token_provider: TokenProvider) -> OSSHeaderHandler:
-    """Setup header handler."""
+    """Add header handler."""
     return OSSHeaderHandler(
         token_provider=token_provider, user_agent_segment=args.user_agent_segment,
         batch_pool=args.batch_pool,

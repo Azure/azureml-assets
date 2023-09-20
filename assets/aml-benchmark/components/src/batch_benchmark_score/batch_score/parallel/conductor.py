@@ -32,7 +32,7 @@ class Conductor:
             max_worker_count: int,
             max_retry_time_interval: int = None,
             trace_configs: "list[TraceConfig]" = None):
-        """The init method."""
+        """Init method."""
         self.__loop: asyncio.AbstractEventLoop = loop
         self.__scoring_client: ScoringClient = scoring_client
         self.__segment_large_requests: str = segment_large_requests
@@ -71,7 +71,7 @@ class Conductor:
             lu.get_logger().info("Conductor: No open ClientSession exists")
 
     async def run(self, requests: "list[ScoringRequest]") -> "list[ScoringResult]":
-        "Run method."
+        """Run method."""
         self.__add_requests(requests)
 
         lu.get_logger().info(
@@ -173,7 +173,7 @@ class Conductor:
 
     async def __sleep(
             self, duration: int,  tasks: "list[asyncio.Task]", target_result_len: int) -> "list[asyncio.Task]":
-        """Waits for the configured sleep interval, but wakes up early if the workers finish."""
+        """Wait for the configured sleep interval, but wakes up early if the workers finish."""
 
         sleep_task = asyncio.create_task(asyncio.sleep(duration))
         tasks = [*tasks, sleep_task]

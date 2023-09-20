@@ -17,7 +17,7 @@ from azureml._model_management._util import _get_mms_url
 
 
 class OSSHeaderHandler(HeaderHandler):
-    """Class for OSS header handler"""
+    """Class for OSS header handler."""
 
     def __init__(
             self,
@@ -26,7 +26,7 @@ class OSSHeaderHandler(HeaderHandler):
             endpoint_subscription: str = None, endpoint_resource_group: str = None,
             endpoint_workspace: str = None
     ) -> None:
-        """The init file."""
+        """Init method."""
         super().__init__(token_provider, user_agent_segment, batch_pool, quota_audience, additional_headers)
         self._deployment_name = deployment_name
         self._endpoint_subscription = endpoint_subscription
