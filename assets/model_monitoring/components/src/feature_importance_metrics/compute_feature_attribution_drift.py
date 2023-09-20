@@ -13,9 +13,6 @@ from shared_utilities import constants
 
 from feature_importance_metrics.feature_importance_utilities import convert_pandas_to_spark, log_time_and_message
 
-from shared_utilities.patch_mltable import patch_all
-patch_all()
-
 
 def parse_args():
     """Parse arguments."""
