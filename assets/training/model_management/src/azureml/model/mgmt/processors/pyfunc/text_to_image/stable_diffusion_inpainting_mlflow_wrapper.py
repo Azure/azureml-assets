@@ -62,10 +62,10 @@ class StableDiffusionInpaintingMLflowWrapper(mlflow.pyfunc.PythonModel):
 
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
-        :param input_data: Pandas DataFrame with a column name ["prompt"] having text
-                           input for which image has to be generated.
+        :param input_data: Pandas DataFrame with 3 columns named "prompt", "image", "mask_image" having text
+                           input, initial image and mask image.
         :type input_data: pd.DataFrame
-        :return: Pandas dataframe with input text prompts, their corresponding generated images and NSFW flag.
+        :return: Pandas dataframe with corresponding generated images and NSFW flag.
                  Images in form of base64 string.
         :rtype: pd.DataFrame
         """
