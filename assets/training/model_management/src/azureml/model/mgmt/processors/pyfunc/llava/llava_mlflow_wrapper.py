@@ -12,7 +12,7 @@ import pandas as pd
 from PIL import Image
 from transformers import TextStreamer
 
-from config import MLflowLiterals, MLflowSchemaLiterals
+from config import MLflowLiterals, MLflowSchemaLiterals, Tasks
 from utils import process_image
 
 
@@ -22,7 +22,8 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
     LLAVA_MPT = "mpt"
     LLAVA_7B = "7b"
     LLAVA_13B = "13b"
-    MODEL_VERSIONS = [LLAVA_MPT, LLAVA_7B, LLAVA_13B]
+    LLAVA_13B2 = "13b2"
+    MODEL_VERSIONS = [LLAVA_MPT, LLAVA_7B, LLAVA_13B, LLAVA_13B2]
 
     def __init__(self, task_type: str) -> None:
         """Construct LLaVA MLflow wrapper object.
@@ -43,47 +44,56 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
         from llava.conversation import conv_templates
         from llava.model.builder import load_pretrained_model
 
-        try:
-            # Get the top level model directory (contains model directory itself and potentially auxiliary directory).
-            model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
+        if self._task_type == Tasks.IMAGE_TEXT_TO_TEXT.value:
+            try:
+                # Get the top level model directory (has main model directory + auxiliary directory in some cases).
+                model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
 
-            # Infer the model version from the model directory.
-            self._model_version = next(
-                (n for n in self.MODEL_VERSIONS if model_dir.endswith(n)), None
-            )
+                # Infer the model version from the model directory.
+                self._model_version = next(
+                    (n for n in self.MODEL_VERSIONS if model_dir.endswith(n)), None
+                )
 
-            # Set the model name, model base and stop string from the model version.
-            if self._model_version == self.LLAVA_MPT:
-                model_name = "LLaVA-Lightning-MPT-7B-preview"
-                model_base = None
-                stop_str = conv_templates["mpt"].sep
+                # Set the model name, model base and stop string from the model version.
+                if self._model_version == self.LLAVA_MPT:
+                    model_name = "LLaVA-Lightning-MPT-7B-preview"
+                    model_base = None
+                    stop_str = conv_templates["mpt"].sep
 
-            elif self._model_version == self.LLAVA_7B:
-                model_name = "llava-llama-2-7b-chat-lightning-lora-preview"
-                model_base = os.path.join(model_dir, "Llama-2-7b-chat")
-                stop_str = conv_templates["llava_llama_2"].sep
+                elif self._model_version == self.LLAVA_7B:
+                    model_name = "llava-llama-2-7b-chat-lightning-lora-preview"
+                    model_base = os.path.join(model_dir, "Llama-2-7b-chat")
+                    stop_str = conv_templates["llava_llama_2"].sep
 
-            elif self._model_version == self.LLAVA_13B:
-                model_name = "llava-v1-0719-336px-lora-merge-vicuna-13b-v1.3"
-                model_base = None
-                stop_str = conv_templates["llava_v1"].sep2
+                elif self._model_version == self.LLAVA_13B:
+                    model_name = "llava-v1-0719-336px-lora-merge-vicuna-13b-v1.3"
+                    model_base = None
+                    stop_str = conv_templates["llava_v1"].sep2
 
-            else:
-                raise NotImplementedError(f"Model name {self._model_version} not supported.")
+                elif self._model_version == self.LLAVA_13B2:
+                    model_name = "llava-llama-2-13b-chat-lightning-preview"
+                    model_base = os.path.join(model_dir, "llama-2-13b-chat")
+                    stop_str = conv_templates["llava_llama_2"].sep
 
-            # Make the model and preprocessing objects.
-            self._tokenizer, self._model, self._image_processor, _ = load_pretrained_model(
-                os.path.join(model_dir, model_name), model_base, model_name, False, False
-            )
-            self._streamer = TextStreamer(self._tokenizer, skip_prompt=True, skip_special_tokens=True)
-            self._stop_str = stop_str
+                else:
+                    raise NotImplementedError(f"Model name {self._model_version} not supported.")
 
-            print("Model loaded successfully")
+                # Make the model and preprocessing objects.
+                self._tokenizer, self._model, self._image_processor, _ = load_pretrained_model(
+                    os.path.join(model_dir, model_name), model_base, model_name, False, False
+                )
+                self._streamer = TextStreamer(self._tokenizer, skip_prompt=True, skip_special_tokens=True)
+                self._stop_str = stop_str
 
-        except Exception as e:
-            print("Failed to load the the model.")
-            print(e)
-            raise
+                print("Model loaded successfully")
+
+            except Exception as e:
+                print("Failed to load the the model.")
+                print(e)
+                raise
+
+        else:
+            raise ValueError(f"invalid task type {self._task_type}")
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
         """Perform inference on the input data.
@@ -129,6 +139,12 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
                         f"input to llava: A chat between a curious human and an artificial intelligence assistant. "
                         f"The assistant gives helpful, detailed, and polite answers to the human's questions. USER: "
                         f"<im_start><image><im_end>\n{direct_question} ASSISTANT:"
+                    )
+                elif self._model_version == self.LLAVA_13B2:
+                    prompt = (
+                        f"[INST] <<SYS>>\nYou are a helpful language and vision assistant. You are able to understand "
+                        f"the visual content that the user provides, and assist the user with a variety of tasks "
+                        f"using natural language.\n<</SYS>>\n\n<image>\n{direct_question} [/INST]"
                     )
             else:
                 prompt_from_direct_question = False
