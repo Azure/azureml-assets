@@ -15,7 +15,6 @@ from azureml.model.mgmt.processors.pyfunc.config import (
     MMLabDetectionTasks,
     SupportedTasks as PyFuncSupportedTasks,
     SupportedTextToImageModelFamily,
-    SupportedTextToImageInpaintingModelFamily,
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from azureml.model.mgmt.processors.transformers.convertors import (
