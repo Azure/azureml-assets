@@ -6,4 +6,4 @@ image:
     dockerfile: Dockerfile
   publish:
     location: mcr
-    visibility: unlisted
+    visibility: public
