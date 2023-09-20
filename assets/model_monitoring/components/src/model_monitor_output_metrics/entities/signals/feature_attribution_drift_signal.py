@@ -31,6 +31,7 @@ class FeatureAttributionDriftSignal(Signal):
             metrics,
         )
         self.global_metrics = {}
+        self.feature_metrics = []
         self.row_count_metrics = RowCountMetrics(metrics)
         self._build_metrics(monitor_name, signal_name, metrics)
 

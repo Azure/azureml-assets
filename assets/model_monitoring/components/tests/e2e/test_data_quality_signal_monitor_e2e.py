@@ -66,11 +66,10 @@ class TestDataQualityModelMonitor:
 
         assert pipeline_job.status == "Completed"
 
-    @pytest.mark.e2e2
-    def test_monitoring_run_use_defaults_empty_data_successful(
+    def test_monitoring_run_use_defaults_empty_production_data_successful(
         self, ml_client: MLClient, get_component, test_suite_name
     ):
-        """Test the happy path scenario where the data has drift and default settings are used."""
+        """Test the scenario where the production data is empty."""
         pipeline_job = _submit_data_quality_signal_monitor_job(
             ml_client,
             get_component,
