@@ -3,7 +3,7 @@
 # Licensed under the MIT License.
 # ---------------------------------------------------------
 
-"""Inference Postprocessor class and runner methods."""
+"""Inference Postprocessor class and runner methods for 3P."""
 
 import pandas as pd
 import json
@@ -128,8 +128,8 @@ class InferencePostprocessor(object):
         if self.user_postprocessor:
             self.run_user_postprocessor()
             return
-        # this is written with the assumption that {tokenizer_config:{return_full_text:False}} is the default setting in model
-        # prediction component for text generation models
+        # this is written with the assumption that {tokenizer_config:{return_full_text:False}} is the
+        # default setting in model prediction component for text generation models.
         if self.template:
             # process extraction logic based on template
             self.extract_using_template()

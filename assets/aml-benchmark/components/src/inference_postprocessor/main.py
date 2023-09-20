@@ -3,7 +3,7 @@
 # Licensed under the MIT License.
 # ---------------------------------------------------------
 
-"""Entry script for Inference Postprocessor Component."""
+"""Entry script for 3P Inference Postprocessor Component."""
 
 import argparse
 from . import inference_postprocessor as inferpp

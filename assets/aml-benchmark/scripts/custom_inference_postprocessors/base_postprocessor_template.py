@@ -16,13 +16,13 @@ def _parse_args():
     """Parse the arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--prediction_dataset", 
-        type=str, 
+        "--prediction_dataset",
+        type=str,
         required=True,
         help="Path to load the prediction dataset."
     )
     parser.add_argument(
-        "--ground_truth_dataset", 
+        "--ground_truth_dataset",
         type=str,
         help="Path to load the actual dataset."
     )
@@ -93,8 +93,9 @@ def _run(
     predictions = run_prediction_extractor(pred_data)
     if ground_truth_dataset:
         actual_data = _read_jsonl_file(ground_truth_dataset)
-        ground_truths = run_ground_truth_extractor(ground_truth_dataset)
+        ground_truths = run_ground_truth_extractor(actual_data)
     _write_to_jsonl_file(predictions, ground_truths, output_path)
+
 
 def run_ground_truth_extractor(
     data: List[Dict[str, Any]]
