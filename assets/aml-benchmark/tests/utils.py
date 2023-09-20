@@ -184,6 +184,7 @@ def get_mlflow_logged_metrics(job_name: str, exp_name: str) -> Dict[str, Any]:
     """
     runs = _get_runs(job_name, exp_name)
     logged_metrics = runs[0].data.metrics
+    print(runs[0])
     return logged_metrics
 
 

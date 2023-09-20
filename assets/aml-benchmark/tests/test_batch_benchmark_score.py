@@ -101,4 +101,4 @@ class TestBatchBenchmarkScoreComponent:
             with open(output_file_path, "r") as f:
                 output_records = [json.loads(line) for line in f]
             for r in output_records:
-                assert r["status"] == 'success', f"status should be success"
+                assert r["status"] == 'success', "status should be success"
