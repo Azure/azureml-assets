@@ -8,7 +8,6 @@ import pandas as pd
 import numpy
 import collections.abc
 
-from argparse import ArgumentParser
 from urllib.parse import urlparse
 from ..scoring_result import ScoringResult, ScoringResultStatus
 from .json_encoder_extensions import BatchComponentJSONEncoder, NumpyArrayEncoder

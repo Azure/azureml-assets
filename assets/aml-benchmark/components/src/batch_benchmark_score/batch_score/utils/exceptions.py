@@ -3,18 +3,8 @@
 
 """Exceptions util."""
 
-import time
-import logging
-import traceback
-from functools import wraps
-from typing import Callable, Any
-
 from azureml._common.exceptions import AzureMLException
-from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml._common._error_response._error_response_constants import ErrorCodes
-from azureml.core.run import Run
-
-from .error_definitions import BenchmarkSystemError
 
 
 class BenchmarkException(AzureMLException):
