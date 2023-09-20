@@ -137,7 +137,8 @@ def parse_args():
     parser.add_argument(
         "--task_type", type=str, required=True,
         choices=[TaskType.TEXT_CLASSIFICATION,
-                 TaskType.MULTILABEL_TEXT_CLASSIFICATION]
+                 TaskType.MULTILABEL_TEXT_CLASSIFICATION,
+                 TaskType.QUESTION_ANSWERING]
     )
 
     parser.add_argument(

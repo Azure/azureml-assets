@@ -8,6 +8,7 @@ import uuid
 import json
 import os
 import pandas as pd
+import glob
 
 import mltable
 from azureml._common._error_definition.azureml_error import AzureMLError
@@ -95,7 +96,7 @@ def resolve_io_path(dataset: str) -> List[str]:
     :return: List of sorted file paths
     """
     if _is_mltable(dataset):
-        logger.warn(
+        logger.warning(
             "Received 'dataset' as MLTable. Trying to process."
         )
         df = mltable.load(dataset).to_pandas_dataframe()
@@ -104,7 +105,7 @@ def resolve_io_path(dataset: str) -> List[str]:
         return [file_path]
 
     if not os.path.isfile(dataset):
-        logger.warn(
+        logger.warning(
             "Received 'dataset' as URI_FOLDER. Trying to resolve paths."
         )
         return _get_file_paths_from_folder(dataset)
@@ -188,3 +189,55 @@ def read_pandas_data(data_path: str) -> pd.DataFrame:
             raise ValueError(mssg)
 
     return all_data
+
+
+def read_json_data(data_path: Optional[str]) -> Dict[str, Any]:
+    """
+    Read json file(s) from a given file or directory path. \
+    If multiple json files are found, they are merged in one dictionary.
+
+    :param data_path: Path to the data.
+    :returns: The dictionary representing the json data.
+    """
+    if data_path is None:
+        return {}
+    file_paths: List[str] = []
+    if os.path.isfile(path=data_path):
+        file_paths = [data_path]
+    elif os.path.isdir(data_path):
+        file_paths = glob.glob(
+            pathname=os.path.join(data_path, "**/*.json"),
+            recursive=True
+        )
+    json_output: Dict[str, Any] = {}
+    for file_path in file_paths:
+        with open(file=file_path, mode='r') as file:
+            data: Dict[str, Any] = json.load(file)
+        json_output = {**json_output, **data}
+
+    # Read artifacts.
+    file_paths = glob.glob(
+        pathname=os.path.join(data_path, "*", "artifacts", "*"),
+        recursive=True
+    )
+    for file_path in file_paths:
+        try:
+            logger.info(f"Trying to read metrics from {file_path}")
+            with open(file=file_path, mode='r') as file:
+                data: Dict[str, Any] = json.load(file)
+            key = os.path.basename(file_path)
+            json_output[key] = data
+        except Exception as exception:
+            logger.warning(f"Failed to read metrics from {file_path} due to {exception}")
+    return json_output
+
+
+def save_json_to_file(json_dict: Dict[Any, Any], path: str) -> None:
+    """
+    Save the json represented as dictionary as a file in the specified path.
+
+    :param json_dict: The json represented as dictionary.
+    :param path: The path where it has to be saved.
+    """
+    with open(path, mode='w') as file:
+        json.dump(json_dict, file, indent=4)
