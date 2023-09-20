@@ -11,7 +11,6 @@ from pyspark.sql import Row
 from dateutil import parser
 from shared_utilities.io_utils import (
     try_read_mltable_in_spark,
-    save_spark_df_as_mltable,
 )
 from model_monitor_output_metrics.factories.signal_factory import SignalFactory
 from model_monitor_output_metrics.entities.signals.signal import Signal
@@ -46,14 +45,14 @@ def run():
 
     if args.baseline_histogram:
         baseline_histogram_df = try_read_mltable_in_spark(
-            args.baseline_histogram, "baseline_histogram does not contain data."
+            args.baseline_histogram, "baseline_histogram"
         )
         if baseline_histogram_df:
             baseline_histogram: List[Row] = baseline_histogram_df.collect()
 
     if args.target_histogram:
         target_histogram_df = try_read_mltable_in_spark(
-            args.target_histogram, "target_histogram does not contain data."
+            args.target_histogram, "target_histogram"
         )
         if target_histogram_df:
             target_histogram: List[Row] = target_histogram_df.collect()
