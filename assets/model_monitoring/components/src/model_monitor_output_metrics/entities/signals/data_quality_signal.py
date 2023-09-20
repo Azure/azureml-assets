@@ -29,7 +29,6 @@ class DataQualitySignal(Signal):
         self.feature_metrics: List[FeatureMetrics] = self._build_feature_metrics(
             monitor_name, signal_name, metrics
         )
-        
 
     def to_dict(self) -> dict:
         """Convert to a dictionary object."""
