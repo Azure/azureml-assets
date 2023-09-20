@@ -8,6 +8,7 @@ import os
 import yaml
 from abc import ABC, abstractmethod
 from azureml.evaluate import mlflow as hf_mlflow
+from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
 from azureml.model.mgmt.processors.transformers.config import (
     HF_CONF,
     MODEL_FILE_PATTERN,
@@ -25,7 +26,6 @@ from azureml.model.mgmt.utils.common_utils import (
     get_list_from_comma_separated_str,
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
-from diffusers import StableDiffusionPipeline
 from mlflow.models import ModelSignature
 from mlflow.types.schema import ColSpec
 from mlflow.types.schema import DataType, Schema
@@ -52,7 +52,7 @@ from typing import Any, Dict
 logger = get_logger(__name__)
 
 
-class HFMLFLowConvertor(ABC):
+class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
     """HF MlfLow convertor base class."""
 
     CONDA_FILE_NAME = "conda.yaml"
@@ -78,6 +78,7 @@ class HFMLFLowConvertor(ABC):
         translate_params: Dict,
     ):
         """Initialize MLflow convertor for HF models."""
+        self._validate(translate_params)
         self._model_dir = model_dir
         self._output_dir = output_dir
         self._temp_dir = temp_dir
@@ -230,6 +231,15 @@ class HFMLFLowConvertor(ABC):
             yaml.safe_dump(conda_dict, f)
             logger.info("updated conda.yaml")
 
+    def _validate(self, translate_params):
+        if not translate_params.get("model_id"):
+            raise Exception("model_id is a required parameter for hftransformers MLflow flavor.")
+        if not translate_params.get("task"):
+            raise Exception("task is a required parameter for hftransformers MLflow flavor.")
+        task = translate_params["task"]
+        if not SupportedTasks.has_value(task):
+            raise Exception(f"Unsupported task {task} for hftransformers MLflow flavor.")
+
 
 class VisionMLflowConvertor(HFMLFLowConvertor):
     """HF MlfLow convertor for vision models."""
@@ -327,40 +337,6 @@ class WhisperMLflowConvertor(ASRMLflowConvertor):
             code_paths=[WhisperMLflowConvertor.PREDICT_FILE_PATH],
             segregate=True,
         )
-
-
-class TextToImageDiffuserMLflowConvertor(HFMLFLowConvertor):
-    """HF MlfLow convertor base class for text to image diffuser models."""
-
-    def __init__(self, **kwargs):
-        """Initialize MLflow convertor for text to image models."""
-        super().__init__(**kwargs)
-
-    def get_model_signature(self):
-        """Return model signature for text to image models."""
-        return ModelSignature(
-            inputs=Schema(inputs=[ColSpec(name="input_string", type=DataType.string)]),
-            outputs=Schema(inputs=[ColSpec(name="image", type=DataType.string)]),
-        )
-
-
-class StableDiffusionMlflowConvertor(TextToImageDiffuserMLflowConvertor):
-    """HF MlfLow convertor class for stable diffusion models."""
-
-    def __init__(self, **kwargs):
-        """Initialize MLflow convertor for SD models."""
-        super().__init__(**kwargs)
-
-    def save_as_mlflow(self):
-        """Prepare SD model for save to MLflow."""
-        hf_conf = self._hf_conf
-        hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = StableDiffusionPipeline.__name__
-        hf_conf[HF_CONF.CUSTOM_CONFIG_MODULE.value] = "diffusers"
-        hf_conf[HF_CONF.CUSTOM_MODLE_MODULE.value] = "diffusers"
-        hf_conf[HF_CONF.CUSTOM_TOKENIZER_MODULE.value] = "diffusers"
-        hf_conf[HF_CONF.FORCE_LOAD_CONFIG.value] = False
-        hf_conf[HF_CONF.FORCE_LOAD_TOKENIZER.value] = False
-        return super()._save()
 
 
 class NLPMLflowConvertor(HFMLFLowConvertor):

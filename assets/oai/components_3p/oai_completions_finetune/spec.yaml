@@ -1,7 +1,7 @@
 $schema: http://azureml/sdk-2-0/PipelineComponent.json
 display_name: OpenAI Completions Finetune Pipeline
 name: openai_completions_finetune
-version: 0.1.0
+version: 0.2.1
 type: pipeline
 description: Finetune your own OAI model. Visit https://learn.microsoft.com/en-us/azure/cognitive-services/openai/ for more info.
 settings:
@@ -73,6 +73,10 @@ inputs:
     type: string
     optional: True
     description: If this is provided, we calculate F-beta scores at the specified beta values. The F-beta score is a generalization of F-1 score. This is only used for binary classification. With a beta of 1 (i.e. the F-1 score), precision and recall are given the same weight. A larger beta score puts more weight on recall and less on precision. A smaller beta score puts more weight on precision and less on recall. The value specified should be a comma separated list of doubles.
+  quota_enforcement_resource_id:
+    type: string
+    optional: True
+    description: Owner subscription id. 
 
 outputs:
   output_model:
@@ -83,7 +87,10 @@ outputs:
 jobs:
   fine_tune:
     type: command
-    component: azureml://registries/azure-openai-preview/components/openai_completions_finetune/versions/0.3.0
+    resources:
+      properties:
+        quota_enforcement_resource_id: ${{parent.inputs.quota_enforcement_resource_id}}
+    component: azureml://registries/azure-openai-preview/components/openai_completions_finetune/versions/0.3.3
     inputs:
       model: ${{parent.inputs.model}}
       registered_model_name: ${{parent.inputs.registered_model_name}}
