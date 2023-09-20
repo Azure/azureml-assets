@@ -20,7 +20,7 @@ def try_read_mltable_in_spark_with_warning(
     """Read mltable in spark. In case of failure, posts a warning and returns None."""
     try:
         return read_mltable_in_spark(mltable_path)
-    except:
+    except IndexError:
         error_message = f"No data was found for input '{input_name}'."
         print(error_message)
         post_warning_event(
@@ -34,8 +34,7 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str) -> DataFrame:
     """Read mltable in spark. In case of failure, returns None."""
     try:
         return read_mltable_in_spark(mltable_path)
-    except:
-
+    except IndexError:
         print(f"No data was found for input '{input_name}'.")
         return None
 
@@ -43,12 +42,7 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str) -> DataFrame:
 def read_mltable_in_spark(mltable_path: str):
     """Read mltable in spark."""
     spark = init_spark()
-    try:
-        return spark.read.mltable(mltable_path)
-    except:
-        raise Exception(
-            f"Input '{mltable_path}' contains not data. Please visit aka.ms/mlmonitoringhelp for more information."
-        )
+    return spark.read.mltable(mltable_path)
 
 
 def save_spark_df_as_mltable(metrics_df, folder_path: str):

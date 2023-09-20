@@ -4,13 +4,10 @@
 """Entry script for Data Drift Evaluate Metrics Threshold Component."""
 
 import argparse
-from pyspark.sql import DataFrame
 from evaluate_metrics_threshold import (
     evaluate_metrics_threshold,
 )
 from shared_utilities.io_utils import try_read_mltable_in_spark
-
-
 
 
 def run():

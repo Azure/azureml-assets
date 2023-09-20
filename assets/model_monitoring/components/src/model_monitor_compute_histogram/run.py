@@ -11,7 +11,12 @@ from pyspark.sql.types import (
     StringType,
     DoubleType,
 )
-from shared_utilities.io_utils import try_read_mltable_in_spark, try_read_mltable_in_spark_with_warning, init_spark, save_spark_df_as_mltable
+from shared_utilities.io_utils import (
+    try_read_mltable_in_spark,
+    try_read_mltable_in_spark_with_warning,
+    init_spark,
+    save_spark_df_as_mltable,
+)
 
 
 def _create_empty_histogram_buckets_df():
@@ -41,7 +46,9 @@ def run():
         print("Skipping histogram generation.")
         return
 
-    histogram_buckets = try_read_mltable_in_spark(args.histogram_buckets, "histogram_buckets")
+    histogram_buckets = try_read_mltable_in_spark(
+        args.histogram_buckets, "histogram_buckets"
+    )
     if not histogram_buckets:
         histogram_buckets = _create_empty_histogram_buckets_df()
 

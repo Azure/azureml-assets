@@ -75,7 +75,7 @@ def run():
     args = parser.parse_args()
 
     histogram_df = try_read_mltable_in_spark_with_warning(args.annotation_histogram, "annotation_histogram")
-    
+
     if not histogram_df:
         print("No histogram to annotate. Skipping computing annotation metrics.")
         return

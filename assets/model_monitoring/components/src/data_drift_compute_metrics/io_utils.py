@@ -7,7 +7,6 @@ import pyspark.sql as pyspark_sql
 from pyspark.sql.types import StructType, StructField, StringType, FloatType
 from shared_utilities.io_utils import (
     init_spark,
-    try_read_mltable_in_spark_with_warning,
     save_spark_df_as_mltable,
 )
 
