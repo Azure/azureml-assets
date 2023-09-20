@@ -135,8 +135,7 @@ def _get_input_assets(run_definition: Dict[str, Any]) -> Dict[str, Any]:
                 }
             except Exception as ex:
                 logger.warning(
-                f"Falied to get asset information for {input_name}: {asset_details} due to {ex}"
-                )
+                    f"Falied to get asset information for {input_name}: {asset_details} due to {ex}")
     return input_assets_dict
 
 
@@ -166,6 +165,7 @@ def _get_pipeline_params() -> Tuple[
         input_assets = _get_input_assets(run_definition)
         log_files = run_details.get('logFiles', None)
         vm_size = get_compute_information(log_files, run_v1)
+        component_config = run_definition.get('componentConfiguration', {})
 
         pipeline_params[step_name] = {
             'inputs': input_assets,
@@ -177,8 +177,7 @@ def _get_pipeline_params() -> Tuple[
             'node_count': run_definition.get('nodeCount', None),
             'vm_size': vm_size,
             'maxRunDurationSeconds': run_details.get('maxRunDurationSeconds', None),
-            'component_id': \
-                run_definition['componentConfiguration'].get('componentIdentifier', None),
+            'component_id': component_config.get('componentIdentifier', None),
             **_get_run_reused_properties(run_v1_properties),
             **_get_run_environment_properties(run_definition),
         }
@@ -196,7 +195,7 @@ def _get_pipeline_params() -> Tuple[
                 continue
             model_uri = asset['assetId']
             name, version, registry = \
-            get_mlflow_model_name_version(model_uri)
+                get_mlflow_model_name_version(model_uri)
             if model_name is None:
                 model_name = name
                 model_version = version
