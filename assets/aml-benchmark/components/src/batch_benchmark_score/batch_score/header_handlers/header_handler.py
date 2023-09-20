@@ -16,7 +16,7 @@ from ..utils.error_definitions import BenchmarkValidationError
 
 
 class HeaderHandler(ABC):
-    """Class for header handler"""
+    """Class for header handler."""
 
     def __init__(self,
                  token_provider: TokenProvider,

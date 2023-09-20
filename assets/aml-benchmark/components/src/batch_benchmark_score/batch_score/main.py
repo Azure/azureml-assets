@@ -267,7 +267,7 @@ def save_mini_batch_results(mini_batch_results: list, mini_batch_context):
 
 
 def setup_trace_configs():
-    """Setup trace configs."""
+    """Init trace configs."""
     is_enabled = os.environ.get(constants.BATCH_SCORE_TRACE_LOGGING, None)
     trace_configs = None
 

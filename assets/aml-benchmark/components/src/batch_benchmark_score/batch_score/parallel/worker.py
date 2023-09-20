@@ -27,7 +27,6 @@ class QueueItem:
             scoring_request: ScoringRequest, segmented_score_context: SegmentedScoreContext = None
     ):
         """Init for queue item."""
-
         self.scoring_request = scoring_request
         self.segmented_score_context = segmented_score_context
 
@@ -47,7 +46,6 @@ class Worker:
             id: str,
             max_retry_time_interval: int = None):
         """Init for worker."""
-
         self.__scoring_client: ScoringClient = scoring_client
         self.__client_session = client_session
 

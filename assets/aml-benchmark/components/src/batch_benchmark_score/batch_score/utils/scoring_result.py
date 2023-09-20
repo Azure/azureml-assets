@@ -32,13 +32,14 @@ class ScoringResultStatus(Enum):
 
 
 class ScoringResult:
-    """Scoring result class"""
+    """Scoring result class."""
 
     def __init__(
             self, status: ScoringResultStatus, start: float, end: float, request_obj: any,
             request_metadata: any, response_body: any,
             response_headers: CIMultiDictProxy[str], num_retries: int, omit: bool = False
     ):
+        """Init method."""
         self.status = status
         self.start = start
         self.end = end
