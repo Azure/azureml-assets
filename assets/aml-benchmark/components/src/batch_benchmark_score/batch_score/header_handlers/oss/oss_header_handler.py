@@ -55,7 +55,7 @@ class OSSHeaderHandler(HeaderHandler):
         return headers
 
     def _get_auth_key(self):
-        curr_workspace = self._get_curr_workspace
+        curr_workspace = self._get_curr_workspace()
         if self._endpoint_workspace is None:
             workspace = curr_workspace
         else:
