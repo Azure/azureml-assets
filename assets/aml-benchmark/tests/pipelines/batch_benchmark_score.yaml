@@ -10,7 +10,7 @@ inputs:
   data_input_table:
     type: uri_folder
     path: ../data/
-  online_endpoint_url: 'https://yuzhua-ws-eastus-mxawd.eastus.inference.ml.azure.com/score'
+  online_endpoint_url: 'a_url'
   additional_headers: '"azureml-model-deployment": "test-model-1"'
   initial_worker_count: 1
   max_worker_count: 10

@@ -22,7 +22,7 @@ outputs:
     type: uri_file
   perf_data:
     type: uri_file
-  predict_ground_truth_data:
+  ground_truth_data:
     type: uri_file
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
@@ -35,7 +35,7 @@ command: >-
   --batch_inference_output ${{inputs.batch_inference_output}}
   --prediction_data ${{outputs.prediction_data}}
   --perf_data ${{outputs.perf_data}}
-  --predict_ground_truth_data ${{outputs.predict_ground_truth_data}}
+  --predict_ground_truth_data ${{outputs.ground_truth_data}}
   --label_key ${{inputs.label_key}}
   --model_type llama
   $[[--metadata_key ${{inputs.metadata_key}}]]

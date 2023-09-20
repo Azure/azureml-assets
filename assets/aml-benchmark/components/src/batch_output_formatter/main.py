@@ -7,7 +7,7 @@ import argparse
 import os
 import pandas as pd
 
-from utils.io import read_pandas_data
+from utils.io import resolve_io_path, read_jsonl_files
 from utils.logging import get_logger
 from utils.exceptions import swallow_all_exceptions
 from .result_converters import ResultConverters
@@ -73,7 +73,11 @@ def main(
     new_df = []
     perf_df = []
     ground_truth = []
-    ground_truth_input = read_pandas_data(ground_truth_input) if ground_truth_input else None
+    if ground_truth_input:
+        input_file_paths = resolve_io_path(batch_inference_output)
+        ground_truth_input = pd.DataFrame(read_jsonl_files(input_file_paths))
+    else:
+        ground_truth_input = None
     rc = ResultConverters(
         model_type, metadata_key, data_id_key, label_key, ground_truth_input)
     logger.info("Convert the data now.")

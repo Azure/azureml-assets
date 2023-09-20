@@ -34,10 +34,6 @@ inputs:
   online_endpoint_url:
     type: string
     optional: False
-  debug_mode:
-    type: boolean
-    optional: False
-    default: False
   additional_headers:
     type: string
     optional: True
@@ -76,6 +72,11 @@ inputs:
     type: string
     optional: False
     description: The label column key.
+  debug_mode:
+    type: boolean
+    optional: False
+    default: False
+    description: Enable debug mode will print all the debug logs in the score step.
   n_samples:
     type: integer
     description: The number of top samples send to endpoint.
@@ -87,7 +88,7 @@ outputs:
   perf_data:
     type: uri_file
     description: The performance data.
-  predict_ground_truth_data:
+  ground_truth_data:
     type: uri_file
     description: The ground truth data that has a one-to-one mapping with the prediction data.
 
@@ -145,6 +146,6 @@ jobs:
       perf_data:
         type: uri_file
         path: ${{parent.outputs.perf_data}}
-      predict_ground_truth_data:
+      ground_truth_data:
         type: uri_file
-        path: ${{parent.outputs.predict_ground_truth_data}}
+        path: ${{parent.outputs.ground_truth_data}}

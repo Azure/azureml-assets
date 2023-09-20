@@ -19,9 +19,9 @@ outputs:
   perf_data:
     type: uri_file
     path: azureml://datastores/${{default_datastore}}/paths/${{name}}/perf_data.jsonl
-  predict_ground_truth_data:
+  ground_truth_data:
     type: uri_file
-    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/predict_ground_truth_data.jsonl
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/ground_truth_data.jsonl
 
 jobs:
   run_batch_output_formatter:
@@ -35,4 +35,4 @@ jobs:
     outputs:
       prediction_data: ${{parent.outputs.prediction_data}}
       perf_data: ${{parent.outputs.perf_data}}
-      predict_ground_truth_data: ${{parent.outputs.predict_ground_truth_data}}
+      ground_truth_data: ${{parent.outputs.ground_truth_data}}

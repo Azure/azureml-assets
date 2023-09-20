@@ -141,10 +141,10 @@ class TestBatchBenchmarkInferenceComponent:
             "perf_data:": [
                 '  perf_data:\n', '    type: uri_file\n',
                 '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/perf_data.jsonl\n'],
-            "predict_ground_truth_data:": [
-                '  predict_ground_truth_data:\n', '    type: uri_file\n',
+            "ground_truth_data:": [
+                '  ground_truth_data:\n', '    type: uri_file\n',
                 '    path: azureml://datastores/${{default_datastore}}'
-                '/paths/${{name}}/predict_ground_truth_data.jsonl\n']
+                '/paths/${{name}}/ground_truth_data.jsonl\n']
         }
         if current_section == "inputs" or current_section == "outputs":
             line_key = self._get_yml_key(line)

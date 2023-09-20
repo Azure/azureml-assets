@@ -7,7 +7,7 @@ import os
 import argparse
 import pandas as pd
 
-from utils.io import read_pandas_data
+from utils.io import resolve_io_path, read_jsonl_files
 from utils.logging import get_logger
 from .endpoint_data_preparer import EndpointDataPreparer
 from utils.exceptions import swallow_all_exceptions
@@ -73,7 +73,8 @@ def main(
 
     # Read the data file into a pandas dataframe
     logger.info("Read data now.")
-    df = read_pandas_data(input_dataset)
+    input_file_paths = resolve_io_path(input_dataset)
+    df = pd.DataFrame(read_jsonl_files(input_file_paths))
 
     # Reformat the columns and save
     new_df = []

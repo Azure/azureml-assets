@@ -144,53 +144,6 @@ def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
     return data_dicts
 
 
-def read_pandas_data(data_path: str) -> pd.DataFrame:
-    """
-    Read data that is formatted in a JSON line format and return a pandas dataframe.
-
-    This supports URI_FOLDERs, if those folders only contain JSON line-formatted data.
-    This does not require the files to have the .jsonl extension, however.
-
-    Raises exception if the file contains invalid JSON.
-
-    :param file_path: Path to JSON file/folder.
-    :return: Pandas Dataframe
-    """
-    all_data = pd.DataFrame()
-
-    # Check whether we're working with URI_FILE, URI_FOLDER, or MLTABLE
-    if _is_mltable(data_path):
-        logger.info("Received MLTABLE; assuming all files in the MLTABLE contain jsonl-formatted data.")
-        try:
-            all_data = mltable.load(data_path).to_pandas_dataframe()
-        except json.JSONDecodeError:
-            mssg = f"Invalid JSON format in provided file given by the MLTABLE '{data_path}'."
-            logger.error(mssg)
-            raise ValueError(mssg)
-
-    elif os.path.isdir(data_path):
-        logger.info("Received URI_FOLDER; assuming all files contain jsonl-formatted data.")
-        for f in os.listdir(data_path):
-            try:
-                df = pd.read_json(os.path.join(data_path, f), lines=True)
-                all_data = pd.concat([all_data, df])
-            except json.JSONDecodeError:
-                mssg = f"Invalid JSON format in the file '{os.path.join(data_path, f)}'."
-                logger.error(mssg)
-                raise ValueError(mssg)
-
-    else:
-        logger.info("Received URI_FILE; assuming the file contains jsonl-formatted data.")
-        try:
-            all_data = pd.read_json(data_path, lines=True)
-        except json.JSONDecodeError:
-            mssg = f"Invalid JSON format in the file '{data_path}'."
-            logger.error(mssg)
-            raise ValueError(mssg)
-
-    return all_data
-
-
 def read_json_data(data_path: Optional[str]) -> Dict[str, Any]:
     """
     Read json file(s) from a given file or directory path. \

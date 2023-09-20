@@ -13,10 +13,6 @@ inputs:
     type: string
     optional: True
     description: Mutually exclusive with batch_pool parameter
-  debug_mode:
-    type: boolean
-    optional: False
-    default: False
   additional_properties:
     type: string
     optional: True
@@ -47,6 +43,11 @@ inputs:
     optional: False
     default: 200
     description: Overrides initial_worker_count if necessary
+  debug_mode:
+    type: boolean
+    optional: False
+    default: False
+    description: Enable debug mode will print all the debug logs in the score step.
 outputs:
   job_out_path:
     type: uri_file
