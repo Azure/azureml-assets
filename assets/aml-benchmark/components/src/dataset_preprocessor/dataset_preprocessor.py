@@ -132,5 +132,5 @@ class DatasetPreprocessor(object):
                 --output_path {self.output_dataset}'
             )
         except Exception as e:
-            logger.error('Script failed', e)
+            logger.exception('Script failed', e)
         return

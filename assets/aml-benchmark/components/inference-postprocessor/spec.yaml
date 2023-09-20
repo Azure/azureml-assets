@@ -1,0 +1,94 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: inference_postprocessor
+display_name: Inference Postprocessor
+description: Inference Postprocessor
+version: 0.0.19
+is_deterministic: true
+
+inputs:
+  prediction_dataset:
+    type: uri_file
+    description: >-
+      A file that contains predicted values
+    optional: False
+  prediction_column_name:
+    type: string
+    description: >-
+      Key in prediction dataset that contains predictions.
+    optional: False
+  ground_truth_dataset:
+    type: uri_file
+    description: >-
+      A file that contains the ground truth
+    optional: True
+  ground_truth_column_name:
+    type: string
+    description: >-
+      Key in ground truth dataset that contains ground truth. If ground_truth_dataset is given, then,
+      this is required input.
+    optional: True
+  separator:
+    type: string
+    description: >-
+      The separator used in few_shot patterns. One common example is "###".
+      If provided, response will be split on this separator, and only the first part will be used.
+      Example: "This is the first part ### This is the second part" will result in
+      "This is the first part".
+    optional: True
+  regex_expr:
+    type: string
+    description: >-
+      A regular expression to extract the answer from the inference results. The pattern
+      must contain a group to be extracted. The first group and the first match will be used. 
+      Example: "\n\nThe answer is: (\d)."
+    optional: True
+  strip_prefix:
+    type: string
+    description: >-
+      Characters to remove from the beginning of the extracted answer.
+      It is applied in the very end of the extraction process.
+    optional: True
+  strip_suffix:
+    type: string
+    description: >-
+      Characters to remove from the end of the extracted answer.
+      It is applied in the very end of the extraction process.
+    optional: True
+  template:
+    type: string
+    description: >-
+      Jinja template containing logic to extract prediction.
+    optional: True
+  script_path:
+    type: uri_file
+    description: >-
+      Custom python script to extract prediction.
+      The base template that should be used to create a custom postprocessor script is provided here:
+      scripts/custom_inference_postprocessors/base_postprocessor_template.py
+    optional: True
+
+outputs:
+  output_dataset_result:
+    type: uri_file
+    description: >-
+      Path to the output the post processed result in .jsonl file.
+
+code: ../src
+
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+
+command: >-
+  python -m inference_postprocessor.main
+  --prediction_dataset ${{inputs.prediction_dataset}}
+  --prediction_column_name ${{inputs.prediction_column_name}}
+  $[[--ground_truth_dataset ${{inputs.ground_truth_dataset}}]]
+  $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
+  $[[--separator '${{inputs.separator}}']]
+  $[[--regex_expr '${{inputs.regex_expr}}']]
+  $[[--strip_prefix '${{inputs.strip_prefix}}']]
+  $[[--strip_suffix '${{inputs.strip_suffix}}']]
+  $[[--template '${{inputs.template}}']]
+  $[[--script_path ${{inputs.script_path}}]]
+  --output_dataset_result ${{outputs.output_dataset_result}}

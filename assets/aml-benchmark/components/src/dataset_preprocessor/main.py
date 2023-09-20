@@ -8,7 +8,6 @@
 import argparse
 import os
 from . import dataset_preprocessor as dsp
-# import dataset_preprocessor as dsp
 import sys
 from utils.logging import get_logger, log_mlflow_params
 from utils.exceptions import swallow_all_exceptions
@@ -44,8 +43,9 @@ def parse_arguments() -> argparse.Namespace:
         "--encoder_config",
         type=str,
         default=None,
-        help=("Dictionary in json format that contains idtolabel or labeltoid to encode."
-              "This is not aplicable to custom scripts.")
+        help=('Dictionary in json format that contains idtolabel or labeltoid to encode.'
+              'Example: {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}.'
+              'This is not applicable to custom scripts.')
     )
     parser.add_argument(
         "--output_dataset",

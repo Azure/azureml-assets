@@ -5,7 +5,6 @@ display_name: Dataset Preprocessor Component
 description: Pipeline to test Dataset Preprocessor component
 settings:
   default_compute: azureml:serverless
-  # default_compute: azureml:components-testing-gpu-1
 
 inputs:
   dataset:
@@ -20,7 +19,7 @@ inputs:
 outputs:
   output_dataset:
     type: uri_file
-    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/output_dataset.jsonl  #${{output_name}}   #output_dataset.jsonl
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/output_dataset.jsonl
 
 jobs:
   run_dataset_preprocessor:

@@ -25,13 +25,18 @@ inputs:
   script_path:
     type: uri_file
     description: >-
-      Path to the custom preprocessor python script provided by user. If this is provided, then, this takes precedence.  
+      Path to the custom preprocessor python script provided by user. If both this input and template_input` are provided,
+      then, `template_input` is ignored.
+      The base template that should be used to create a custom preprocessor script is provided here:
+      scripts/custom_dataset_preprocessors/base_preprocessor_template.py
     optional: True
   encoder_config:
     type: string
     description: >-
       Dictionary in json format that contains column/key name to encode associated with dict key `column_name` followed by  
       idtolabel or labeltoid mappers as key-value pair.
+      Example format:
+      {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}
     optional: True
   
 outputs:
