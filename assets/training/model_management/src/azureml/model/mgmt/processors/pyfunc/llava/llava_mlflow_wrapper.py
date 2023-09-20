@@ -72,7 +72,7 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
 
                 elif self._model_version == self.LLAVA_13B2:
                     model_name = "llava-llama-2-13b-chat-lightning-preview"
-                    model_base = os.path.join(model_dir, "llama-2-13b-chat")
+                    model_base = None
                     stop_str = conv_templates["llava_llama_2"].sep
 
                 else:
