@@ -11,14 +11,16 @@ def _get_datastore_id():
     import os
     import re
     workspace_scope = os.environ['AZUREML_WORKSPACE_SCOPE'].lower()
-    pattern = r"^/subscriptions/(.+?)/resourcegroups/(.+?)/providers/microsoft.machinelearningservices/workspaces/(.+?)$"
+    pattern = r"^/subscriptions/(.+?)/resourcegroups/(.+?)/providers"\
+              + r"/microsoft.machinelearningservices/workspaces/(.+?)$"
 
     match = re.search(pattern, workspace_scope)
     subscription_id = match.group(1)
     resource_group_name = match.group(2)
     workspace_name = match.group(3)
 
-    return f"azureml://subscriptions/{subscription_id}/resourcegroups/{resource_group_name}/workspaces/{workspace_name}/datastores/workspaceblobstore"
+    return f"azureml://subscriptions/{subscription_id}/resourcegroups/{resource_group_name}"\
+           + f"/workspaces/{workspace_name}/datastores/workspaceblobstore"
 
 
 def _get_datastore_relative_data_path(data_path):

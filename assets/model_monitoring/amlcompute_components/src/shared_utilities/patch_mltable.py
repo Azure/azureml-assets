@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 """Contains functionality to patch pyspark classes for MLTable read and write support."""
 
+
 def _patch_spark_dataframereader_format():
     from functools import update_wrapper
     from logging import warning
@@ -32,21 +33,9 @@ def _patch_spark_dataframereader_format():
             else:
                 raise(f'Unsupported type for spark context: {type(self._dataframe_reader._spark)}')
 
-            spark_conf = spark_session.sparkContext.getConf()
-            spark_conf_vars = {
-                'AZUREML_SYNAPSE_CLUSTER_IDENTIFIER': 'spark.synapse.clusteridentifier',
-                'AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT': 'spark.tokenServiceEndpoint',
-            }
-
             aux_envvars = {
                 'AZUREML_RUN_TOKEN': os.environ['AZUREML_RUN_TOKEN'],
             }
-
-            for env_key, conf_key in spark_conf_vars.items():
-                value = spark_conf.get(conf_key)
-                if value:
-                    aux_envvars[env_key] = value
-                    os.environ[env_key] = value
 
             table = mltable.load(uri, storage_options)
             # TODO: remove the fallback invocation once dataprep and mltable have released
