@@ -33,7 +33,8 @@ RUN pip install 'shap==0.41.0' \
                 'setuptools>=65.5.1' \
                 'numpy==1.22.0' \
                 'scipy==1.10.0' \
-                'statsmodels==0.14.0'
+                'statsmodels==0.14.0' \
+                'torch==1.13.1'
 
 RUN pip freeze
 
