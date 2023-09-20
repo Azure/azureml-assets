@@ -132,7 +132,6 @@ class TextToImageMLflowConvertorFactory(MLflowConvertorFactoryInterface):
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for diffusers."""
-
         misc = translate_params["misc"]
         if misc and SupportedTextToImageModelFamily.STABLE_DIFFUSION.value in misc:
             try:
