@@ -236,9 +236,9 @@ def main(
     """
     Entry function for the benchmark result aggregator.
 
-    :param quality_metrics_path: The path to quality metrics
-    :param performance_metrics_path: The path to the performance metrics.
-    :param output_dataset_path: The path where the result has to be stored.
+    :param quality_metrics_path: The path to quality metrics file/directory.
+    :param performance_metrics_path: The path to the performance metrics file/directory.
+    :param output_dataset_path: The path to file where the result has to be stored.
     """
     quality_metrics = read_json_data(quality_metrics_path)
     performance_metrics = read_json_data(performance_metrics_path)
