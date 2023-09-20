@@ -17,7 +17,7 @@ def init_spark():
 def try_read_mltable_in_spark_with_warning(
     mltable_path: str, input_name: str
 ) -> DataFrame:
-    """Read mltable in spark."""
+    """Read mltable in spark. In case of failure, posts a warning and returns None."""
     try:
         return read_mltable_in_spark(mltable_path)
     except:
@@ -31,7 +31,7 @@ def try_read_mltable_in_spark_with_warning(
 
 
 def try_read_mltable_in_spark(mltable_path: str, input_name: str) -> DataFrame:
-    """Read mltable in spark."""
+    """Read mltable in spark. In case of failure, returns None."""
     try:
         return read_mltable_in_spark(mltable_path)
     except:
