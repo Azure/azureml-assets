@@ -11,13 +11,6 @@ inputs:
     type: uri_folder
     description: Input jsonl dataset that contains prompt.
     optional: False
-  model_type:
-    type: string
-    description: The model type.
-    optional: False
-    enum:
-      - llama
-      - aoai
   batch_input_pattern:
     type: string
     description: The string for the batch input pattern.
@@ -32,6 +25,6 @@ environment: azureml://registries/azureml/environments/model-evaluation/labels/l
 command: >-
   python -m batch_inference_preparer.main
   --input_dataset ${{inputs.input_dataset}}
-  --model_type ${{inputs.model_type}}
+  --model_type llama
   --batch_input_pattern '${{inputs.batch_input_pattern}}'
   --formatted_data ${{outputs.formatted_data}}

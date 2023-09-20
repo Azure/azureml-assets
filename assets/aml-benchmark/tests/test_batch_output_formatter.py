@@ -29,7 +29,6 @@ class TestBatchOutputFormatterComponent:
         ml_client = get_mlclient()
         pipeline_job = self._get_pipeline_job(
             self.test_batch_output_formatter.__name__,
-            "llama",
             'label',
             temp_dir,
         )
@@ -47,12 +46,11 @@ class TestBatchOutputFormatterComponent:
         )
 
     def _get_pipeline_job(
-                self,
-                display_name: str,
-                model_type: str,
-                label_key: str,
-                temp_dir: Optional[str] = None,
-            ) -> Job:
+            self,
+            display_name: str,
+            label_key: str,
+            temp_dir: Optional[str] = None,
+    ) -> Job:
         pipeline_job = load_yaml_pipeline("batch_output_formatter.yaml")
 
         # avoid blob exists error when running pytest with multiple workers
@@ -70,6 +68,7 @@ class TestBatchOutputFormatterComponent:
         pipeline_job.inputs.label_key = label_key
 
         pipeline_job.display_name = display_name
+        pipeline_job.name = str(uuid.uuid4())
 
         return pipeline_job
 

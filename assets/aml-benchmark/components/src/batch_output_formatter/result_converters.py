@@ -13,6 +13,7 @@ class ResultConverters:
 
     TOKEN_KEYS = ["completion_tokens", "prompt_tokens", "total_tokens"]
     LATENCY_KEYS = ["start", "end", "latency"]
+    METADATA_KEY_IN_RESULT = 'request_metadata'
 
     def __init__(
             self, model_type: str, metadata_key: str, data_id_key: str,
@@ -46,7 +47,10 @@ class ResultConverters:
         """Convert the result to ground truth."""
         ground_truth = ''
         if self._is_llama_model():
-            ground_truth = result[self._metadata_key][self._label_key]
+            if self._metadata_key:
+                ground_truth = self._get_request(result)[self._metadata_key][self._label_key]
+            else:
+                ground_truth = result[self.METADATA_KEY_IN_RESULT][self._label_key]
         elif self._is_aoai_model():
             for k, v in self._lookup_dict.items():
                 if k in self._get_request(result):

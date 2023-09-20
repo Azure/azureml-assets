@@ -9,13 +9,6 @@ inputs:
     type: uri_folder
     description: The raw batch inference output.
     optional: False
-  model_type:
-    type: string
-    description: The model type.
-    optional: False
-    enum:
-      - llama
-      - aoai
   metadata_key:
     type: string
     optional: True
@@ -44,5 +37,5 @@ command: >-
   --perf_data ${{outputs.perf_data}}
   --predict_ground_truth_data ${{outputs.predict_ground_truth_data}}
   --label_key ${{inputs.label_key}}
-  --model_type ${{inputs.model_type}}
+  --model_type llama
   $[[--metadata_key ${{inputs.metadata_key}}]]

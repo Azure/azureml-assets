@@ -84,6 +84,7 @@ class TestBatchBenchmarkScoreComponent:
         pipeline_job.inputs.additional_headers = additional_headers
 
         pipeline_job.display_name = display_name
+        pipeline_job.name = str(uuid.uuid4())
 
         return pipeline_job
 

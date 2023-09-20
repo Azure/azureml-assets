@@ -10,7 +10,6 @@ inputs:
   batch_inference_output:
     type: uri_folder
     path: ../data/
-  model_type: llama
   label_key: label
 
 outputs:
@@ -32,7 +31,6 @@ jobs:
       timeout: 900
     inputs:
       batch_inference_output: ${{parent.inputs.batch_inference_output}}
-      model_type: ${{parent.inputs.model_type}}
       label_key: ${{parent.inputs.label_key}}
     outputs:
       prediction_data: ${{parent.outputs.prediction_data}}

@@ -29,7 +29,6 @@ class TestBatchInferencePreparerComponent:
         ml_client = get_mlclient()
         pipeline_job = self._get_pipeline_job(
             self.test_batch_inference_preparer.__name__,
-            "llama",
             '{'
             '   "input_data":'
             '   {'
@@ -63,7 +62,6 @@ class TestBatchInferencePreparerComponent:
     def _get_pipeline_job(
                 self,
                 display_name: str,
-                model_type: str,
                 batch_input_pattern: str,
                 temp_dir: Optional[str] = None,
             ) -> Job:
@@ -80,10 +78,10 @@ class TestBatchInferencePreparerComponent:
         pipeline_job.inputs.input_dataset = Input(
             type="uri_folder", path=temp_dir
         )
-        pipeline_job.inputs.model_type = model_type
         pipeline_job.inputs.batch_input_pattern = batch_input_pattern
 
         pipeline_job.display_name = display_name
+        pipeline_job.name = str(uuid.uuid4())
 
         return pipeline_job
 

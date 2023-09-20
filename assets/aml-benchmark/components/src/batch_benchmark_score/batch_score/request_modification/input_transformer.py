@@ -14,7 +14,7 @@ class InputTransformer():
     def __init__(self, modifiers: "list[RequestModifier]") -> None:
         """Init class."""
         self.__modifiers = modifiers
-    
+
     def apply_modifications(self, request_obj: Any) -> Any:
         """Apply modifications."""
         if self.__modifiers and len(self.__modifiers) > 0:

@@ -289,7 +289,7 @@ def _deploy_fake_model(ml_client, endpoint_name, deployment_name):
 
 
 def deploy_fake_test_endpoint_maybe(
-        ml_client, endpoint_name="aml-benchmark-test-wzvqd", deployment_name="test-model"
+        ml_client, endpoint_name="aml-benchmark-test-wzvkqd", deployment_name="test-model"
 ):
     """Deploy a fake test endpoint"""
     should_deploy = False
@@ -301,7 +301,7 @@ def deploy_fake_test_endpoint_maybe(
                 continue
             deployment = ml_client.online_deployments.get(
                 endpoint_name=endpoint_name, name=deployment_name)
-            if deployment.provisioning_state.lower() != 'succeeded':
+            if deployment.provisioning_state.lower() == 'failed':
                 endpoint.begin_delete(name=endpoint_name)
                 should_deploy = True
                 break

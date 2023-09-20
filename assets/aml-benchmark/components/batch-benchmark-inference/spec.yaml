@@ -30,7 +30,7 @@ inputs:
     type: boolean
     optional: False
     default: False
-    description: If ensure_ascii is true, the output is guaranteed to have all incoming non-ASCII characters escaped. If ensure_ascii is false, these characters will be output as-is. More defailted information can be found at https://docs.python.org/3/library/json.html
+    description: If ensure_ascii is true, the output is guaranteed to have all incoming non-ASCII characters escaped. If ensure_ascii is false, these characters will be output as-is. More detailed information can be found at https://docs.python.org/3/library/json.html
   max_retry_time_interval:
     type: integer
     optional: True
@@ -51,14 +51,15 @@ inputs:
   max_concurrency_per_instance:
     type: integer
     default: 1
-    description: 'Number of processes that will be run concurrently on any given node. This number should not be larger than 1/2 of the number of cores in an individual node in the specified cluster.'
+    description: Number of processes that will be run concurrently on any given node. This number should not be larger than 1/2 of the number of cores in an individual node in the specified cluster.
   metadata_key:
     type: string
     optional: True
-    default: 'request_metadata'
+    description: The metadata key that in the request payload that contains label columns. If not provided, the `request_metadata` will be used in the batch benchmark score output to retrieve ground truth.
   label_key:
     type: string
     optional: False
+    description: The label column key.
   n_samples:
     type: integer
     description: The number of top samples send to endpoint.
@@ -66,11 +67,13 @@ inputs:
 outputs:
   prediction_data:
     type: uri_file
+    description: The prediction data.
   perf_data:
     type: uri_file
+    description: The performance data.
   predict_ground_truth_data:
     type: uri_file
-  
+    description: The ground truth data that has a one-to-one mapping with the prediction data.
 
 jobs:
   # Preparer
