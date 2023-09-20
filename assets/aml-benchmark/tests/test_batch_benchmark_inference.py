@@ -199,8 +199,8 @@ class TestBatchBenchmarkInferenceComponent:
     def _verify_output(self, job, output_dir):
         prediction_data = job.outputs.prediction_data.port_name
         perf_data = job.outputs.perf_data.port_name
-        predict_ground_truth_data = job.outputs.predict_ground_truth_data.port_name
-        for output_name in [prediction_data, perf_data, predict_ground_truth_data]:
+        ground_truth_data = job.outputs.ground_truth_data.port_name
+        for output_name in [prediction_data, perf_data, ground_truth_data]:
             download_outputs(
                 job_name=job.name, output_name=output_name, download_path=output_dir
             )
@@ -211,4 +211,4 @@ class TestBatchBenchmarkInferenceComponent:
             os.path.join(output_dir, "perf_data"), "perf_data", ["start", "end", "latency"])
         self._check_output_data(
             os.path.join(
-                output_dir, "predict_ground_truth_data"), "predict_ground_truth_data", ["ground_truth"])
+                output_dir, "ground_truth_data"), "ground_truth_data", ["ground_truth"])
