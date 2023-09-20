@@ -31,7 +31,7 @@ def _patch_spark_dataframereader_format():
             elif isinstance(self._dataframe_reader._spark, SQLContext):
                 spark_session = self._dataframe_reader._spark.sparkSession
             else:
-                raise(f'Unsupported type for spark context: {type(self._dataframe_reader._spark)}')
+                raise Exception(f'Unsupported type for spark context: {type(self._dataframe_reader._spark)}')
 
             aux_envvars = {
                 'AZUREML_RUN_TOKEN': os.environ['AZUREML_RUN_TOKEN'],
