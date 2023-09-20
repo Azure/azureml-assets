@@ -2,8 +2,6 @@
 # Licensed under the MIT License.
 """Contains functionality to patch pyspark classes for MLTable read and write support."""
 
-import datetime
-
 def _patch_spark_dataframereader_format():
     from functools import update_wrapper
     from logging import warning
@@ -163,53 +161,12 @@ def _write_mltable_yaml(uri, output_path_pattern, manager):
                 yaml.dump(mltable_obj, yaml_file)
 
 
-def _convert_to_azureml_uri(local_uri: str):
-    import os
-    import re
-    workspace_scope_var = os.environ['AZUREML_WORKSPACE_SCOPE']
-    workspace_scope = workspace_scope_var.replace("/subscriptions", "subscriptions").replace("/providers/Microsoft.MachineLearningServices", "").lower()
-    datastore_id = os.path.join("azureml://", workspace_scope, "datastores/workspaceblobstore")
-    job_id = os.environ['MLFLOW_RUN_ID']
-    pattern = r"file:///(.+?)/cap/data-capability/wd/(.+?)$"
-    match = re.search(pattern, local_uri)
-    output_folder = match.group(2)
-    azureml_uri = os.path.join(datastore_id, "paths/azureml", job_id, output_folder)
-    print(f"_DataframeWriterManager.write: workspace_scope_var: {workspace_scope_var}, workspace_scope: {workspace_scope}, local_uri: {local_uri}, output_folder: {output_folder}, datastore_id: {datastore_id}, azureml_uri: {azureml_uri}")
-
-    return azureml_uri
-
-
 def _write_spark_dataframe(dataframe, uri, **kwargs):
-    import os
-    from pyspark.sql import SparkSession, SQLContext
-
-    if isinstance(dataframe.write._spark, SparkSession):
-        spark_session = dataframe.write._spark
-    elif isinstance(dataframe.write._spark, SQLContext):
-        spark_session = dataframe.write._spark.sparkSession
-    else:
-        raise (f"Unsupported type for spark context: {type(dataframe.write._spark)}")
-
-    spark_conf = spark_session.sparkContext.getConf()
-    spark_conf_vars = {
-        "AZUREML_SYNAPSE_CLUSTER_IDENTIFIER": "spark.synapse.clusteridentifier",
-        "AZUREML_SYNAPSE_TOKEN_SERVICE_ENDPOINT": "spark.tokenServiceEndpoint",
-    }
-
-    aux_envvars = {
-        "AZUREML_RUN_TOKEN": os.environ["AZUREML_RUN_TOKEN"],
-    }
-
-    for env_key, conf_key in spark_conf_vars.items():
-        value = spark_conf.get(conf_key)
-        if value:
-            aux_envvars[env_key] = value
-            os.environ[env_key] = value
-
+    from shared_utilities.io_utils import convert_to_azureml_uri
     manager = _DataframeWriterManager(dataframe, uri, **kwargs)
 
     output_path_pattern = manager.write()
-    output_path_pattern_azureml = _convert_to_azureml_uri(output_path_pattern)
+    output_path_pattern_azureml = convert_to_azureml_uri(output_path_pattern)
 
     _write_mltable_yaml(uri, output_path_pattern_azureml, manager)
 
