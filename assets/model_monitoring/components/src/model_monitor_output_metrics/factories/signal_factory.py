@@ -57,10 +57,6 @@ class SignalFactory:
             return FeatureAttributionDriftSignal(
                 monitor_name=monitor_name, signal_name=signal_name, metrics=metrics
             )
-        elif signal_type == SignalType.GENERATION_SAFETY_SIGNAL_QUALITY.name:
-            return GenerationSafetyQualitySignal(
-                monitor_name=monitor_name, signal_name=signal_name, metrics=metrics
-            )
         else:
             raise Exception(
                 f"Invalid signal type '{signal_type}'. Available signals are [{SignalType.DATA_DRIFT.name}, {SignalType.PREDICTION_DRIFT.name}, {SignalType.DATA_QUALITY.name}, {SignalType.FEATURE_ATTRIBUTION_DRIFT.name}]" # noqa
