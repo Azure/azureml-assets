@@ -10,6 +10,10 @@ from abc import ABC, abstractclassmethod
 from ..utils.token_provider import TokenProvider
 from ..utils.common import constants
 
+from azureml._common._error_definition.azureml_error import AzureMLError
+from utils.exceptions import BenchmarkValidationException
+from utils.error_definitions import BenchmarkValidationError
+
 
 class HeaderHandler(ABC):
     """Class for header handler"""
@@ -22,7 +26,11 @@ class HeaderHandler(ABC):
                  additional_headers: str = None) -> None:
         """Init method."""
         if user_agent_segment and (":" in user_agent_segment or "/" in user_agent_segment):
-            raise Exception("user_agent_segment should not contain characters ':' or '/'")
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(
+                    BenchmarkValidationError,
+                    error_details="user_agent_segment should not contain characters ':' or '/'")
+            )
 
         self._token_provider = token_provider
         self._user_agent_segment = user_agent_segment

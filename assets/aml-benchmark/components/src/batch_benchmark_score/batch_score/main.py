@@ -9,6 +9,11 @@ import asyncio
 import sys
 import pandas as pd
 from argparse import ArgumentParser, Namespace
+
+from azureml._common._error_definition.azureml_error import AzureMLError
+from utils.exceptions import BenchmarkValidationException
+from utils.error_definitions import BenchmarkValidationError
+
 from .utils.token_provider import TokenProvider
 from .utils.tally_failed_request_handler import TallyFailedRequestHandler
 from . import sequential
@@ -120,7 +125,9 @@ def run(input_data: pd.DataFrame, mini_batch_context):
         elif args.run_type == "parallel":
             ret = par.start(data_list)
         else:
-            raise Exception("Invalid run type")
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details="Invalid run type")
+            )
 
         if args.save_mini_batch_results == "enabled":
             lu.get_logger().info("save_mini_batch_results is enabled")

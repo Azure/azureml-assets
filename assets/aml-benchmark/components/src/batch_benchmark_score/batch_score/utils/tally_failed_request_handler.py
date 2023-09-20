@@ -3,6 +3,10 @@
 
 """The class for Tally failed request handler."""
 
+from azureml._common._error_definition.azureml_error import AzureMLError
+from utils.exceptions import BenchmarkValidationException
+from utils.error_definitions import BenchmarkValidationError
+
 from . import logging_utils as lu
 
 
@@ -19,8 +23,11 @@ class TallyFailedRequestHandler(object):
                 exclusion.strip().lower() for exclusion in tally_exclusions.split('|')]
 
             if "none" in self.__exclusions and len(self.__exclusions) > 1:
-                raise Exception(
-                    "Conflicting tally_exclusions: \"none\" specified alongside other exclusions.")
+                raise BenchmarkValidationException._with_error(
+                    AzureMLError.create(
+                        BenchmarkValidationError,
+                        error_details="Conflicting tally_exclusions: \"none\" specified alongside other exclusions.")
+                )
 
     def should_tally(self, response_status: int, model_response_status: int) -> bool:
         """Check if response should tally."""

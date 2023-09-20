@@ -11,6 +11,10 @@ import time
 import asyncio
 import uuid
 
+from azureml._common._error_definition.azureml_error import AzureMLError
+from utils.exceptions import BenchmarkValidationException
+from utils.error_definitions import BenchmarkValidationError
+
 from .scoring_result import RetriableException, ScoringResult, ScoringResultStatus
 from .scoring_request import ScoringRequest
 from .tally_failed_request_handler import TallyFailedRequestHandler
@@ -50,8 +54,10 @@ class ScoringClient:
             lu.get_logger().error(
                 "Invalid parameter combination. batch_pool AND "
                 "(online_endpoint_url or azureml-model-deployment header) are provided.")
-
-            raise Exception("Invalid parameter combination")
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(
+                    BenchmarkValidationError, error_details="Invalid parameter combination")
+            )
 
     async def score_until_completion(
             self,
