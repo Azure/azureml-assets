@@ -298,13 +298,13 @@ def deploy_fake_test_endpoint_maybe(
     try:
         while should_wait:
             endpoint = ml_client.online_endpoints.get(name=endpoint_name)
-            if endpoint.provisioning_state.lower() in ["creating", "updating", 'deleting']:
+            if endpoint.provisioning_state.lower() in ["creating", "updating", 'deleting', 'provisioning']:
                 time.sleep(30)
                 continue
             deployment = ml_client.online_deployments.get(
                 endpoint_name=endpoint_name, name=deployment_name)
             if deployment.provisioning_state.lower() == 'failed':
-                endpoint.begin_delete(name=endpoint_name)
+                ml_client.online_endpoints.begin_delete(name=endpoint_name)
                 should_deploy = True
                 break
             elif deployment.provisioning_state.lower() == 'succeeded':
