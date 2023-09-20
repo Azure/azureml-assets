@@ -23,8 +23,6 @@ class Tasks(_CustomEnum):
     MM_OBJECT_DETECTION = "image-object-detection"
     MM_INSTANCE_SEGMENTATION = "image-instance-segmentation"
 
-    IMAGE_TEXT_TO_TEXT = "image-text-to-text"
-
 
 class MMDetLiterals:
     """MMDetection constants."""

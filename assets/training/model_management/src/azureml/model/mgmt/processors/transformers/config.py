@@ -103,4 +103,3 @@ class SupportedTasks(_CustomEnum):
     IMAGE_CLASSIFICATION = "image-classification"
     # ASR
     AUTOMATIC_SPEECH_RECOGNITION = "automatic-speech-recognition"
-    IMAGE_TEXT_TO_TEXT = "image-text-to-text"
