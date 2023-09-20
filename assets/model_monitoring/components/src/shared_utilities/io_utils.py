@@ -21,9 +21,7 @@ def try_read_mltable_in_spark_with_warning(
     try:
         return read_mltable_in_spark(mltable_path)
     except Exception as error:
-        print(error)
-        print(error.args)
-        if isinstance(error, IndexError) or "StreamError(NotFound)" in error.args[0]:
+        if isinstance(error, IndexError) or "The requested stream was not found" in error.args[0]:
             print(error)
             error_message = f"No data was found for input '{input_name}'."
             print(error_message)
@@ -41,9 +39,7 @@ def try_read_mltable_in_spark(mltable_path: str, input_name: str) -> DataFrame:
     try:
         return read_mltable_in_spark(mltable_path)
     except Exception as error:
-        print(error)
-        print(error.args)
-        if isinstance(error, IndexError) or "StreamError(NotFound)" in error.args[0]:
+        if isinstance(error, IndexError) or "The requested stream was not found" in error.args[0]:
             print(error)
             error_message = f"No data was found for input '{input_name}'."
             print(error_message)
