@@ -82,8 +82,8 @@ class StableDiffusionInpaintingMLflowWrapper(mlflow.pyfunc.PythonModel):
 
         assert len(text_prompts) == len(images) == len(mask_images), (
             f"Invalid input. Number of text prompt, image and mask image are expected to be same. "
-            f"But, found text prompt length {len(text_prompts)}, image length {len(image)} and "
-            f"mask_image length {len(mask_image)}"
+            f"But, found text prompt length {len(text_prompts)}, image length {len(images)} and "
+            f"mask_image length {len(mask_images)}"
         )
 
         generated_images = []
