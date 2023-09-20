@@ -62,6 +62,9 @@ class FeatureAttributionDriftSignal(Signal):
 
     def _build_metrics(self, monitor_name: str, signal_name: str, metrics: List[dict]):
         """Build metrics."""
+        if not metrics or len(metrics) == 0:
+            return []
+
         feature_metric_cache = {}
         global_metric_cache = {}
         for metric in metrics:
