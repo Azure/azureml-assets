@@ -118,6 +118,7 @@ class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
     """PyFunc MLfLow convertor for detection models from MMLab."""
 
     MODEL_DIR = os.path.join(os.path.dirname(__file__), "vision")
+    COMMON_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "common")
 
     def __init__(self, **kwargs):
         """Initialize MLflow convertor for vision models."""
@@ -161,6 +162,7 @@ class MMLabDetectionMLflowConvertor(PyFuncMLFLowConvertor):
         code_path = [
             os.path.join(self.MODEL_DIR, "detection_predict.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
         ]
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
@@ -191,6 +193,7 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
     """PyFunc MLfLow convertor for CLIP models."""
 
     MODEL_DIR = os.path.join(os.path.dirname(__file__), "clip")
+    COMMON_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "common")
 
     def __init__(self, **kwargs):
         """Initialize MLflow convertor for CLIP models."""
@@ -234,7 +237,7 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
         code_path = [
             os.path.join(self.MODEL_DIR, "mlflow_wrapper.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
-            os.path.join(self.MODEL_DIR, "utils.py")
+            os.path.join(self.COMMON_DIR, "vision_utils.py"),
         ]
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
