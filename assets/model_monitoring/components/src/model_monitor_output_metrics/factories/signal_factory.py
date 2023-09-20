@@ -19,9 +19,6 @@ from model_monitor_output_metrics.entities.signals.data_quality_signal import (
 from model_monitor_output_metrics.entities.signals.feature_attribution_drift_signal import (
     FeatureAttributionDriftSignal,
 )
-from model_monitor_output_metrics.entities.signals.generation_safety_quality_signal import (
-    GenerationSafetyQualitySignal,
-)
 
 
 class SignalFactory:
