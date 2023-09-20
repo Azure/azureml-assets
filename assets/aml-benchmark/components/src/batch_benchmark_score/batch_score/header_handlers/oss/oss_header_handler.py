@@ -10,7 +10,7 @@ from ..header_handler import HeaderHandler
 from ...utils.token_provider import TokenProvider
 from ...utils.common import constants
 
-from azureml.core import Run, Workspace
+from azureml.core import Workspace
 from azureml._restclient.clientbase import ClientBase
 from azureml._model_management._util import get_requests_session
 from azureml._model_management._util import _get_mms_url
@@ -37,8 +37,6 @@ class OSSHeaderHandler(HeaderHandler):
         """Get handers."""
         bearer_token, _ = self._get_auth_key()
 
-        print(f"bearer_token is {bearer_token}")
-
         user_agent = self._get_user_agent()
 
         headers = {
@@ -54,13 +52,10 @@ class OSSHeaderHandler(HeaderHandler):
         if additional_headers:
             headers.update(additional_headers)
 
-        print(headers)
-
         return headers
 
     def _get_auth_key(self):
-        run = Run.get_context()
-        curr_workspace = run.experiment.workspace
+        curr_workspace = self._get_curr_workspace
         if self._endpoint_workspace is None:
             workspace = curr_workspace
         else:
