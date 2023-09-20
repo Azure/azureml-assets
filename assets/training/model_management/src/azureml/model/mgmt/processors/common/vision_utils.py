@@ -128,4 +128,3 @@ def get_current_device() -> torch.device:
         return torch.device(type="cuda", index=device_idx)
     else:
         return torch.device(type="cpu")
-
