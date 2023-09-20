@@ -73,3 +73,7 @@ class HeaderHandler(ABC):
         run = Run.get_context()
         curr_workspace = run.experiment.workspace
         return curr_workspace
+    
+    @abstractclassmethod
+    def _get_list_key_url(self, workspace, resource_name):
+        pass

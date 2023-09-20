@@ -8,6 +8,7 @@ import subprocess
 from typing import Dict, Any, Optional, List
 import hashlib
 import time
+import uuid
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
@@ -317,7 +318,16 @@ def deploy_fake_test_endpoint_maybe(
         should_deploy = True
 
     if should_deploy:
-        endpoint = _deploy_endpoint(ml_client, endpoint_name)
-        deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
+        try:
+            endpoint = _deploy_endpoint(ml_client, endpoint_name)
+            deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
+        except Exception as e:
+            print("Failed deployment due to {}.".format(e))
+            print("Trying deploy using a new name now.")
+            if "There is already an endpoint with this name" in str(e):
+                endpoint_name = str(uuid.uuid4().hex)
+                print("deploying using {}".format(endpoint_name))
+                endpoint = _deploy_endpoint(ml_client, endpoint_name)
+                deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
 
     return endpoint.scoring_uri, deployment.name

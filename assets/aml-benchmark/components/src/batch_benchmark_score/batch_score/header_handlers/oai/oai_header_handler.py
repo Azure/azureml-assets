@@ -16,7 +16,7 @@ from azureml._model_management._util import get_requests_session
 from azureml._model_management._util import _get_mms_url
 
 
-class OSSHeaderHandler(HeaderHandler):
+class OAIHeaderHandler(HeaderHandler):
     """Class for OSS header handler."""
 
     def __init__(
@@ -53,24 +53,6 @@ class OSSHeaderHandler(HeaderHandler):
 
         return headers
 
-    def _get_auth_key(self):
-        curr_workspace = self._get_curr_workspace()
-        if self._endpoint_workspace is None:
-            workspace = curr_workspace
-        else:
-            workspace = Workspace(
-                self._endpoint_subscription, self._endpoint_resource_group, self._endpoint_workspace,
-                auth=curr_workspace._auth)
-        headers = workspace._auth.get_authentication_header()
-        list_keys_url = _get_mms_url(workspace) + '/onlineEndpoints/{}'.format(self._deployment_name) + '/listkeys'
-        resp = ClientBase._execute_func(
-            get_requests_session().post, list_keys_url, params={}, headers=headers)
-
-        content = resp.content
-        if isinstance(content, bytes):
-            content = content.decode('utf-8')
-        keys_content = json.loads(content)
-        print(keys_content)
-        primary_key = keys_content['primaryKey']
-        secondary_key = keys_content['secondaryKey']
-        return primary_key, secondary_key
+    def _get_auth_key(self) -> str:
+        curr_workspace = self._get_curr_workspace
+        auth_header = curr_workspace._auth.get_authentication_header()
