@@ -50,7 +50,7 @@ def main(
 ) -> None:
     """
     Entry script for the script.
-    
+
     :param batch_inference_output: Path to the batch inference output.
     :param model_type: The model type.
     :param data_id_key: If ground_truth_input is provided, data_id_key should be a unique key
