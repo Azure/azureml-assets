@@ -143,28 +143,6 @@ def read_jsonl_files(file_paths: List[str]) -> List[Dict[str, Any]]:
     return data_dicts
 
 
-def read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
-    """
-    Read a .jsonl file and return a list of dictionaries.
-
-    Raises exception if file is not a .jsonl file or if the file contains invalid JSON.
-
-    :param file_path: Path to .jsonl file.
-    :return: List of dictionaries.
-    """
-    _raise_if_not_jsonl_file(file_path)
-    data_dicts = []
-    with open(file_path, 'r') as file:
-        for i, line in enumerate(file):
-            try:
-                data_dicts.append(json.loads(line))
-            except json.JSONDecodeError:
-                mssg = f"Invalid JSON format in line {i + 1} of file '{file_path}'."
-                logger.error(mssg)
-                raise ValueError(mssg)
-    return data_dicts
-
-
 def read_pandas_data(data_path: str) -> pd.DataFrame:
     """
     Read data that is formatted in a JSON line format and return a pandas dataframe.

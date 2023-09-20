@@ -82,7 +82,6 @@ jobs:
     component: azureml:batch_inference_preparer:0.0.1
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
-      model_type: 'llama'
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
       n_samples: ${{parent.inputs.n_samples}}
     outputs:
@@ -121,7 +120,6 @@ jobs:
     component: azureml:batch_output_formatter:0.0.1
     inputs:
       batch_inference_output: ${{parent.jobs.real_point_batch_score.outputs.mini_batch_results_out_directory}}
-      model_type: 'llama'
       metadata_key: ${{parent.inputs.metadata_key}}
       label_key: ${{parent.inputs.label_key}}
     outputs:

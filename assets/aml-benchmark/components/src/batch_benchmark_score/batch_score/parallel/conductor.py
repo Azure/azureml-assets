@@ -90,7 +90,7 @@ class Conductor:
             adjustments = self.__cas.calculate_next_concurrency(self.__target_worker_count)
 
             if adjustments.new_concurrency <= self.__target_worker_count or \
-                    (adjustments.new_concurrency > self.__target_worker_count and 
+                    (adjustments.new_concurrency > self.__target_worker_count and
                      adjustments.new_concurrency < len(self.__scoring_request_queue)):
 
                 lu.get_logger().info(
