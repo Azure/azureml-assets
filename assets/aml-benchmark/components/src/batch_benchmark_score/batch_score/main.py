@@ -11,8 +11,8 @@ import pandas as pd
 from argparse import ArgumentParser, Namespace
 
 from azureml._common._error_definition.azureml_error import AzureMLError
-from utils.exceptions import BenchmarkValidationException
-from utils.error_definitions import BenchmarkValidationError
+from .utils.exceptions import BenchmarkException
+from .utils.error_definitions import BenchmarkValidationError
 
 from .utils.token_provider import TokenProvider
 from .utils.tally_failed_request_handler import TallyFailedRequestHandler

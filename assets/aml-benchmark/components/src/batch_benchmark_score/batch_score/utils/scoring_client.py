@@ -12,8 +12,8 @@ import asyncio
 import uuid
 
 from azureml._common._error_definition.azureml_error import AzureMLError
-from utils.exceptions import BenchmarkValidationException
-from utils.error_definitions import BenchmarkValidationError
+from ..utils.exceptions import BenchmarkValidationException
+from ..utils.error_definitions import BenchmarkValidationError
 
 from .scoring_result import RetriableException, ScoringResult, ScoringResultStatus
 from .scoring_request import ScoringRequest

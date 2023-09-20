@@ -146,7 +146,7 @@ class TestBatchBenchmarkInferenceComponent:
                 '    path: azureml://datastores/${{default_datastore}}'
                 '/paths/${{name}}/predict_ground_truth_data.jsonl\n']
         }
-        if current_section == "inputs" or current_section == "output":
+        if current_section == "inputs" or current_section == "outputs":
             line_key = self._get_yml_key(line)
             if line_key in param_mapping_dict:
                 return param_mapping_dict[line_key]
@@ -157,7 +157,9 @@ class TestBatchBenchmarkInferenceComponent:
         return [line]
 
     def _get_yml_key(self, line):
-        return line.strip().split()[0]
+        if line.strip():
+            return line.strip().split()[0]
+        return line
 
     def _update_currect_section(self, current_section, line):
         if line.startswith("inputs:"):
@@ -171,7 +173,9 @@ class TestBatchBenchmarkInferenceComponent:
     def _should_keep_line(self, current_section, line):
         if current_section == "main":
             return self._get_yml_key(line) not in {"version:", "name:"}
-        if current_section == "inputs" or current_section == "output":
+        if current_section == "inputs" or current_section == "outputs":
+            if line.startswith("      "):
+                return False
             return self._get_yml_key(line) not in {'optional:', 'type:', 'default:', 'description:'}
         return True
 

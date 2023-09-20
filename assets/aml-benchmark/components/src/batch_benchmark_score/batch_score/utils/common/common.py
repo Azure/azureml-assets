@@ -14,8 +14,8 @@ from ..scoring_result import ScoringResult, ScoringResultStatus
 from .json_encoder_extensions import BatchComponentJSONEncoder, NumpyArrayEncoder
 
 from azureml._common._error_definition.azureml_error import AzureMLError
-from utils.exceptions import BenchmarkValidationException
-from utils.error_definitions import BenchmarkValidationError
+from ...utils.exceptions import BenchmarkValidationException
+from ...utils.error_definitions import BenchmarkValidationError
 
 
 def get_base_url(url: str) -> str:

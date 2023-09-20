@@ -4,8 +4,8 @@
 """The class for Tally failed request handler."""
 
 from azureml._common._error_definition.azureml_error import AzureMLError
-from utils.exceptions import BenchmarkValidationException
-from utils.error_definitions import BenchmarkValidationError
+from ..utils.exceptions import BenchmarkValidationException
+from ..utils.error_definitions import BenchmarkValidationError
 
 from . import logging_utils as lu
 
