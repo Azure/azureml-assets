@@ -599,7 +599,7 @@ def finetune(args: Namespace):
             )
             setattr(args, "apply_deepspeed", False)
 
-    setattr(args, "apply_ort", should_apply_ort(args, logger))
+    setattr(args, "apply_ort", can_apply_ort(args, logger))
 
     # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
     if args.apply_deepspeed and args.deepspeed is None:
@@ -654,8 +654,8 @@ def finetune(args: Namespace):
     hf_task_runner.run_finetune(args)
 
 
-def should_apply_ort(args: Namespace, logger):
-    """Should ORT be enabled."""
+def can_apply_ort(args: Namespace, logger):
+    """Can ORT be enabled."""
     if args.apply_ort and args.task_name in (Tasks.SUMMARIZATION, Tasks.TRANSLATION):
         logger.warning("Enabling ORT has a breaking change with summarization and translation tasks "
                        "so diabling ORT for SUMMARIZATION and TRANSLATION tasks")
