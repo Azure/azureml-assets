@@ -134,7 +134,7 @@ def run():
             aggregated_metrics_df = aggregated_metrics_df.filter(col(METRIC_NAME_COLUMN)
                                                                  != full_per_instance_score_metric_name)
         else:
-            threshold = get_per_instance_threshold(histogram_df, metric_name)
+            threshold = _get_per_instance_threshold(histogram_df, metric_name)
             threshold_row = spark.createDataFrame(
                     [
                         (
