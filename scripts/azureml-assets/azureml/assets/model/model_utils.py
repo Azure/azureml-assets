@@ -187,7 +187,7 @@ def update_model_metadata(
         if model.description != update.description:
             logger.print("description has been updated")
             model.description = update.description
-        
+
         # Update the model even if no changes to update, hack to keep latest version as it is.
         ml_client.models.create_or_update(model)
         logger.print(f"Model metadata updated successfully for {model_name}")
