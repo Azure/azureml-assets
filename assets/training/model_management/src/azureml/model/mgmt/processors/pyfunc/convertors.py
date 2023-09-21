@@ -37,6 +37,8 @@ class PyFuncMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
     CONDA_FILE_NAME = "conda.yaml"
     REQUIREMENTS_FILE_NAME = "requirements.txt"
+    COMMON_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "common")
+    sys.path.append(COMMON_DIR)
 
     @abstractmethod
     def get_model_signature(self) -> ModelSignature:
@@ -314,7 +316,7 @@ class StableDiffusionMlflowConvertor(TextToImageMLflowConvertor):
         code_path = [
             os.path.join(self.MODEL_DIR, "stable_diffusion_mlflow_wrapper.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
-            os.path.join(self.MODEL_DIR, "utils.py")
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
         ]
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
@@ -384,7 +386,7 @@ class StableDiffusionInpaintingMlflowConvertor(TextToImageInpaintingMLflowConver
         code_path = [
             os.path.join(self.MODEL_DIR, "stable_diffusion_inpainting_mlflow_wrapper.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
-            os.path.join(self.MODEL_DIR, "utils.py")
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
         ]
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,

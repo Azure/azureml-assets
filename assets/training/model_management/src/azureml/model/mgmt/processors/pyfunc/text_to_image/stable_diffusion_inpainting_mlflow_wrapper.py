@@ -13,7 +13,7 @@ import os
 import pandas as pd
 from diffusers import StableDiffusionInpaintPipeline
 from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants
-from utils import image_to_str, save_image, get_current_device, process_image, get_pil_image
+from vision_utils import get_pil_image, process_image, get_current_device, image_to_base64, save_image
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ class StableDiffusionInpaintingMLflowWrapper(mlflow.pyfunc.PythonModel):
             )
 
             for img in outputs.images:
-                generated_images.append(image_to_str(img))
+                generated_images.append(image_to_base64(img))
 
             nsfw_content = outputs.nsfw_content_detected
 

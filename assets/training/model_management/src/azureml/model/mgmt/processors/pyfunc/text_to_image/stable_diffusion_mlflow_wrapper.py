@@ -14,7 +14,7 @@ import pandas as pd
 import torch
 
 from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants
-from utils import image_to_str, save_image
+from vision_utils import save_image, image_to_base64
 
 
 class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -115,7 +115,7 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             output = self._pipe(text_prompts)
             generated_images = []
             for img in output.images:
-                generated_images.append(image_to_str(img))
+                generated_images.append(image_to_base64(img))
 
             df = pd.DataFrame(
                 {
