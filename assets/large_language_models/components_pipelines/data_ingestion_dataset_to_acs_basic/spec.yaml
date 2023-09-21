@@ -110,7 +110,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_validate_deployments:0.0.29'
+    component: 'azureml:llm_rag_validate_deployments:0.0.28'
     identity:
       type: user_identity
     inputs:
@@ -159,7 +159,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_create_promptflow:0.0.35'
+    component: 'azureml:llm_rag_create_promptflow:0.0.36'
     inputs:
       mlindex_asset_id: ${{parent.jobs.register_mlindex_asset_job.outputs.asset_id}}
       mlindex_name: ${{parent.inputs.embeddings_dataset_name}}
