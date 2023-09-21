@@ -4,7 +4,7 @@ type: pipeline
 name: data_drift_signal_monitor_command
 display_name: Data Drift - Signal Monitor
 description: Computes the data drift between a baseline and production data assets.
-version: 0.0.1
+version: 0.0.2
 is_deterministic: true
 
 inputs:
@@ -49,8 +49,8 @@ outputs:
     mode: direct
 jobs:
   compute_feature_importances:
-    type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/feature_importance_metrics_command/versions/0.0.2
     inputs:
       baseline_data:
         type: mltable
@@ -59,14 +59,9 @@ jobs:
     outputs:
       signal_metrics:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   feature_selection:
-    type: spark
-    component: azureml://registries/azureml/components/model_monitor_feature_selector_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/model_monitor_feature_selector_command/versions/0.0.2
     inputs:
       input_data_1:
         type: mltable
@@ -80,14 +75,9 @@ jobs:
     outputs:
       feature_names:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   compute_drift_metrics:
-    type: spark
-    component: azureml://registries/azureml/components/data_drift_compute_metrics_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/data_drift_compute_metrics_command/versions/0.0.2
     inputs:
       production_dataset:
         type: mltable
@@ -105,14 +95,9 @@ jobs:
     outputs:
       signal_metrics:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   compute_histogram_buckets:
-    type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram_buckets_command/versions/0.0.2
     inputs:
       input_data_1:
         type: mltable
@@ -123,14 +108,9 @@ jobs:
     outputs:
       histogram_buckets:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   compute_baseline_histogram:
-    type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram_command/versions/0.0.2
     inputs:
       input_data:
         type: mltable
@@ -141,14 +121,9 @@ jobs:
     outputs:
       histogram:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   compute_target_histogram:
-    type: spark
-    component: azureml://registries/azureml/components/model_monitor_compute_histogram_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/model_monitor_compute_histogram_command/versions/0.0.2
     inputs:
       input_data:
         type: mltable
@@ -159,14 +134,9 @@ jobs:
     outputs:
       histogram:
         type: mltable
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   output_signal_metrics:
-    type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/model_monitor_output_metrics_command/versions/0.0.2
     inputs:
       signal_metrics:
         type: mltable
@@ -186,22 +156,12 @@ jobs:
         type: uri_folder
         path: ${{parent.outputs.signal_output}}
         mode: direct
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
   evaluate_metric_thresholds:
-    type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold_command/versions/0.0.2
     inputs:
       signal_metrics:
         type: mltable
         path: ${{parent.jobs.compute_drift_metrics.outputs.signal_metrics}}
       notification_emails: ${{parent.inputs.notification_emails}}
       signal_name: ${{parent.inputs.signal_name}}
-    resources:
-      instance_type: standard_e4s_v3
-      runtime_version: "3.3"
-    identity:
-      type: aml_token
