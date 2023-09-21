@@ -4,7 +4,7 @@ type: pipeline
 tags:
     Preview: ""
 
-version: 0.0.49
+version: 0.0.48
 name: llm_ingest_git_to_faiss
 display_name: LLM - Git to FAISS Pipeline (With Test Data Generation and Auto Prompt)
 is_deterministic: false
