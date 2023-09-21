@@ -176,11 +176,11 @@ def main(args, ws, current_run, activity_logger: Logger):
 
     if completion_model_name.startswith("gpt-"):
         is_chat = True
-        file_name = "chat_flow_with_varients_mlindex.json"
+        file_name = "chat_flow_with_variants_mlindex.json"
         print("Using chat flows")
     else:
         is_chat = False
-        file_name = "flow_with_varients_mlindex.json"
+        file_name = "flow_with_variants_mlindex.json"
         print("Not using chat flows")
 
     if args.best_prompts is None:
@@ -221,48 +221,48 @@ def main(args, ws, current_run, activity_logger: Logger):
     if isinstance(top_prompts, str):
         top_prompts = [top_prompts, top_prompts, top_prompts]
 
-    # for top prompts, construct top templates and inject into varients
+    # for top prompts, construct top templates and inject into variants
     with open(os.path.join(Path(__file__).parent.absolute(), file_name), "r") as file:
-        flow_with_varients = file.read()
+        flow_with_variants = file.read()
 
     flow_name = args.mlindex_name + "-sample-flow"
-    flow_with_varients = flow_with_varients.replace(
+    flow_with_variants = flow_with_variants.replace(
         "@@Flow_Name", flow_name)
-    flow_with_varients = flow_with_varients.replace(
+    flow_with_variants = flow_with_variants.replace(
         "@@MLIndex_Asset_Id", mlindex_asset_id)
 
-    # replace varients with actual metric name and value
-    flow_with_varients = flow_with_varients.replace(
-        "@@Primary_Metric_Name", _STATIC_METRIC_PRIORITY_LIST[0])
-    flow_with_varients = flow_with_varients.replace(
-        "@@Second_Metric_Name", _STATIC_METRIC_PRIORITY_LIST[1])
-    flow_with_varients = flow_with_varients.replace(
-        "@@Third_Metric_Name", _STATIC_METRIC_PRIORITY_LIST[2])
-    flow_with_varients = flow_with_varients.replace(
-        "@@prompt_varient_0",
+    # replace variants with actual metric name and value
+    flow_with_variants = flow_with_variants.replace(
+        "@@Variant_0", "Variant_0")
+    flow_with_variants = flow_with_variants.replace(
+        "@@Variant_1", "Variant_1")
+    flow_with_variants = flow_with_variants.replace(
+        "@@Variant_2", "Variant_2")
+    flow_with_variants = flow_with_variants.replace(
+        "@@prompt_variant_0",
         post_processing_prompts(json_stringify(top_prompts[0]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
-    flow_with_varients = flow_with_varients.replace(
-        "@@prompt_varient_1",
+    flow_with_variants = flow_with_variants.replace(
+        "@@prompt_variant_1",
         post_processing_prompts(json_stringify(top_prompts[1]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
-    flow_with_varients = flow_with_varients.replace(
-        "@@prompt_varient_2",
+    flow_with_variants = flow_with_variants.replace(
+        "@@prompt_variant_2",
         post_processing_prompts(json_stringify(top_prompts[2]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
 
     # replace deployment name, connection name and API with right names
-    flow_with_varients = flow_with_varients.replace(
+    flow_with_variants = flow_with_variants.replace(
         "@@Embedding_Deployment_Name", embedding_deployment_name)
-    flow_with_varients = flow_with_varients.replace(
+    flow_with_variants = flow_with_variants.replace(
         "@@Embedding_Connection", embedding_connection_name)
-    flow_with_varients = flow_with_varients.replace(
+    flow_with_variants = flow_with_variants.replace(
         "@@Completion_Deployment_Name", completion_deployment_name)
-    flow_with_varients = flow_with_varients.replace(
+    flow_with_variants = flow_with_variants.replace(
         "@@Completion_Connection", completion_connection_name)
     api_name = "chat" if completion_model_name == "gpt-35-turbo" else "completion"
-    flow_with_varients = flow_with_varients.replace("@@API", api_name)
+    flow_with_variants = flow_with_variants.replace("@@API", api_name)
 
     activity_logger.info(
         "[Promptflow Creation]: Json payload successfully generated, trying to parse into json dict...")
-    json_payload = json.loads(flow_with_varients)
+    json_payload = json.loads(flow_with_variants)
     activity_logger.info(
         "[Promptflow Creation]: Json payload successfully parsed, submit to promptflow service now...")
 
