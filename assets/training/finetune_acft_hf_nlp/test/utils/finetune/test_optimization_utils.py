@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from azureml.acft.contrib.hf.nlp.constants.constants import Tasks
 from src.utils.finetune.optimization_utils import should_apply_ort
 from argparse import Namespace
