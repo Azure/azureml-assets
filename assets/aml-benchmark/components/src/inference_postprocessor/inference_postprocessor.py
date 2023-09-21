@@ -43,7 +43,7 @@ class InferencePostprocessor(object):
         template: str = None,
         user_postprocessor: str = None,
         output_dataset: str = None
-    ):
+    ) -> None:
         """Inference Postprocessor class.
 
         :param prediction_dataset: Path to the directory to load the prediction dataset.
@@ -70,9 +70,12 @@ class InferencePostprocessor(object):
         self.template = template
         self.user_postprocessor = user_postprocessor
         self.result = output_dataset
+
+    def __post_init__(self) -> None:
+        """Post init call."""
         self.validate()
 
-    def validate(self):
+    def validate(self) -> None:
         """Validate the parameters."""
         if self.prediction_dataset is None:
             mssg = (
@@ -96,7 +99,7 @@ class InferencePostprocessor(object):
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
 
-    def extract_using_template(self):
+    def extract_using_template(self) -> None:
         """Postprocessor run using template."""
         result_df = pd.DataFrame()
         if self.ground_truth_dataset:
@@ -123,7 +126,7 @@ class InferencePostprocessor(object):
         result_df.to_json(self.result, lines=True, orient='records')
         return
 
-    def run(self):
+    def run(self) -> None:
         """Postprocessor runner."""
         if self.user_postprocessor:
             self.run_user_postprocessor()
@@ -170,7 +173,7 @@ class InferencePostprocessor(object):
         result_df.to_json(self.result, lines=True, orient='records')
         return
 
-    def run_user_preprocessor(self):
+    def run_user_preprocessor(self) -> None:
         """Postprocessor run using custom template."""
         try:
             os.system(

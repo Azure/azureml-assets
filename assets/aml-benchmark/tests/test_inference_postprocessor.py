@@ -11,14 +11,14 @@ import pytest
 import os
 
 from azure.ai.ml.constants import AssetTypes
-from utils import (
+from test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     download_outputs,
     assert_logged_params,
 )
 
-INPUT_PATH = os.path.join(os.getcwd(), 'data')
+INPUT_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 class TestInferencePostprocessor:

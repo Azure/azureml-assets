@@ -11,15 +11,17 @@ import pytest
 import json
 import os
 from azure.ai.ml.constants import AssetTypes
-from utils import (
+from test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     download_outputs,
     assert_logged_params,
+    get_src_dir
 )
+import sys
 
-INPUT_DATASET = os.path.join(os.getcwd(), 'data/process_sample_examples.jsonl')
-CUSTOM_SCRIPT_PATH = os.path.join(os.getcwd(), '../scripts/custom_dataset_preprocessors')
+INPUT_DATASET = os.path.join(os.path.dirname(__file__), 'data/process_sample_examples.jsonl')
+CUSTOM_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '../scripts/custom_dataset_preprocessors')
 
 
 class TestDatasetPreprocessor:
@@ -145,3 +147,38 @@ class TestDatasetPreprocessor:
         download_outputs(
             job_name=job.name, output_name=output_name, download_path=output_dir
         )
+
+    @pytest.mark.parametrize(
+        "dataset_name, dataset, input_template, return_template",
+        [
+            (
+                "mnli", INPUT_DATASET,
+                """ {"premise":{{premise}}, "hypothesis":{{hypothesis}},"label":{{label}}} """,
+                """ {"premise":{{premise|tojson}}, "hypothesis":{{hypothesis|tojson}},"label":{{label|tojson}}} """
+            ),
+        ],
+    )
+    def test_add_json_filter(
+        self,
+        dataset_name: str,
+        dataset: str,
+        input_template: str,
+        return_template: str
+    ):
+        """Test if tojson filter is added to each value in the template."""
+        with open(
+            os.path.join(os.path.dirname(INPUT_DATASET), "process_one_example.jsonl"), "w"
+        ) as writer:
+            with open(INPUT_DATASET, "r") as reader:
+                for line in reader:
+                    out_row = json.loads(line)
+                    if out_row.get('name') == dataset_name:
+                        del out_row['name']
+                        writer.write(json.dumps(out_row) + "\n")
+        dataset = os.path.join(os.path.dirname(INPUT_DATASET), "process_one_example.jsonl")
+        dir_ = get_src_dir()
+        sys.path.append(dir_)
+        from dataset_preprocessor import dataset_preprocessor as dsp
+        obj = dsp.DatasetPreprocessor(input_dataset=dataset, template=input_template)
+        template = obj.add_json_filter(obj.template)
+        assert (template == return_template)

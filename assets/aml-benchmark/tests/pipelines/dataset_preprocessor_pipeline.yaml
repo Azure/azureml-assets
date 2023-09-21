@@ -14,7 +14,7 @@ inputs:
   script_path: 
     type: uri_file
     path: ../../scripts/custom_dataset_preprocessors/base_preprocessor_template.py
-  encoder_config: '{"context":{{ctx|tojson}},"endings":{{endings|tojson}},"option1":{{endings[0]|tojson}}}'
+  encoder_config: '{"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}'
 
 outputs:
   output_dataset:

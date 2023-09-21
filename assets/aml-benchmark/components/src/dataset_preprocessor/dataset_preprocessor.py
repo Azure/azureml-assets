@@ -44,8 +44,10 @@ class DatasetPreprocessor(object):
             dict value is presented using jinja template logic which will be used to extract the \
             respective value from the dataset.
         :param user_preprocessor: Path to the custom preprocessor python script provided by user.
-        :param encoder_config: Dictionary in json format that contains idtolabel or labeltoid to encode. This is not \
-            applicable to custom scripts.
+        :param encoder_config: Dictionary in json format that contains column/key name to encode associated \
+            with dict key `column_name` followed by idtolabel or labeltoid mappers as key-value pair. Example format: \
+            {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}. This is not applicable to \
+            custom scripts.
         :param output_dataset: Path to the dump the processed .jsonl file.
         """
         self.input_dataset = input_dataset
@@ -53,9 +55,12 @@ class DatasetPreprocessor(object):
         self.user_preprocessor = user_preprocessor
         self.encoder_config = encoder_config
         self.output_dataset = output_dataset
-        self.validate()
 
-    def validate(self):
+    def __post_init__(self) -> None:
+        """Post init call."""
+        self._validate()
+
+    def validate(self) -> None:
         """Validate the parameters."""
         if self.input_dataset is None:
             mssg = (
@@ -80,7 +85,7 @@ class DatasetPreprocessor(object):
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
 
-    def add_json_filter(self, template):
+    def add_json_filter(self, template) -> str:
         """Add tojson filter in the template."""
         patt = r'({{.*?}})'
         pat = re.compile(patt)
@@ -92,7 +97,7 @@ class DatasetPreprocessor(object):
         logger.info(f"Final template:{template}")
         return template
 
-    def prep_using_template(self):
+    def prep_using_template(self) -> None:
         """Preprocessor run using template."""
         data = read_jsonl_files([self.input_dataset])
         template = json.dumps(self.template)
@@ -112,7 +117,7 @@ class DatasetPreprocessor(object):
                 f.write(json.dumps(out_dict) + "\n")
         return
 
-    def run(self):
+    def run(self) -> None:
         """Preprocessor runner."""
         if self.user_preprocessor:
             self.run_user_preprocessor()
@@ -124,7 +129,7 @@ class DatasetPreprocessor(object):
             self.prep_using_template()
             return
 
-    def run_user_preprocessor(self):
+    def run_user_preprocessor(self) -> None:
         """Prerpocessor run using custom template."""
         try:
             os.system(

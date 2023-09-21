@@ -10,12 +10,12 @@ is_deterministic: true
 inputs:
   dataset: 
     type: uri_file
-    description: >-
+    description: |
       Path to load the dataset.
     optional: False
   template_input:
     type: string
-    description: >-
+    description: |
       A json dictionary where key is the name of the column enclosed in " " and associated dict value is presented using jinja template logic 
       which will be used to extract respective value from the dataset. 
       Example format:
@@ -24,15 +24,16 @@ inputs:
     optional: True
   script_path:
     type: uri_file
-    description: >-
+    description: |
       Path to the custom preprocessor python script provided by user. If both this input and template_input` are provided,
       then, `template_input` is ignored.
-      The base template that should be used to create a custom preprocessor script is provided here:
-      scripts/custom_dataset_preprocessors/base_preprocessor_template.py
+      This [base template]
+      (https://github.com/Azure/azureml-assets/assets/aml-benchmark/scripts/custom_dataset_preprocessors/base_preprocessor_template.py) 
+      should be used to create a custom preprocessor script.
     optional: True
   encoder_config:
     type: string
-    description: >-
+    description: |
       Dictionary in json format that contains column/key name to encode associated with dict key `column_name` followed by  
       idtolabel or labeltoid mappers as key-value pair.
       Example format:
@@ -42,7 +43,7 @@ inputs:
 outputs:
   output_dataset:
     type: uri_file
-    description: >-
+    description: |
       Path to the output the processed .jsonl file.
 
 code: ../src
