@@ -41,13 +41,13 @@ ALL_METRIC_NAMES = [
 ]
 
 
-def get_per_instance_threshold(df, metric_name):
+def _get_per_instance_threshold(df, metric_name):
     return df.filter(col(METRIC_NAME_COLUMN).contains(metric_name)).select(THRESHOLD_COLUMN
                                                                            ).collect()[0][THRESHOLD_COLUMN]
 
 
 def _calculate_passrate(df, metric_name):
-    threshold = get_per_instance_threshold(df, metric_name)
+    threshold = _get_per_instance_threshold(df, metric_name)
 
     df_with_buckets = df.filter(
         col(METRIC_NAME_COLUMN).contains(metric_name)
