@@ -2,8 +2,8 @@ set -eux;
 arch="$(dpkg --print-architecture)";
 case "$arch" in
 'amd64')
-downloadUrl='https://download.java.net/java/early_access/jdk21/34/GPL/openjdk-21-ea+34_linux-x64_bin.tar.gz';
-downloadSha256='d16356385a726320077563c6180f2eabf72ded64b5695f24f3e7a2d3980b1f11';
+downloadUrl='https://download.java.net/java/GA/jdk21/fd2272bbf8e04c3dbaee13770090416c/35/GPL/openjdk-21_linux-x64_bin.tar.gz';
+downloadSha256='a30c454a9bef8f46d5f1bf3122830014a8fbe7ac03b5f8729bc3add4b92a1d0a';
 ;;
 *) echo >&2 "error: unsupported architecture: '$arch'"; exit 1 ;;
 esac;
