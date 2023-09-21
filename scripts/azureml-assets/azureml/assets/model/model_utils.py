@@ -154,7 +154,6 @@ def update_model_metadata(
     try:
         model = ml_client.models.get(name=model_name, version=model_version)
 
-        need_update = False
         updated_tags = copy.deepcopy(model.tags)
         updated_properties = copy.deepcopy(model.properties)
         if update.tags:
@@ -172,7 +171,6 @@ def update_model_metadata(
         if updated_tags != model.tags:
             logger.print("tags has been updated.")
             model.tags = updated_tags
-            need_update = True
 
         if update.properties:
             if update.properties.add is not None:
@@ -185,17 +183,13 @@ def update_model_metadata(
         if updated_properties != model.properties:
             logger.print("properties has been updated.")
             model.properties = updated_properties
-            need_update = True
 
         if model.description != update.description:
             logger.print("description has been updated")
             model.description = update.description
-            need_update = True
-
-        if not need_update:
-            logger.print(f"No update found for model {model_name}. Skipping")
-        else:
-            ml_client.models.create_or_update(model)
-            logger.print(f"Model metadata updated successfully for {model_name}")
+        
+        # Update the model even if no changes to update, hack to keep latest version as it is.
+        ml_client.models.create_or_update(model)
+        logger.print(f"Model metadata updated successfully for {model_name}")
     except Exception as e:
         logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")
