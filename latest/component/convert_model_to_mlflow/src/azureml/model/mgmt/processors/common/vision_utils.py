@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Mlflow PythonModel wrapper helper scripts."""
+"""Helper utils for vision Mlflow models."""
 
 import logging
 import tempfile
@@ -13,6 +13,7 @@ import requests
 import torch
 
 from PIL import Image, UnidentifiedImageError
+from typing import Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -20,15 +21,15 @@ logger = logging.getLogger(__name__)
 # logging.getLogger("mlflow").setLevel(logging.DEBUG)
 
 
-def create_temp_file(request_body: bytes, parent_dir: str) -> str:
-    """Create temporory file, save image and return path to the file.
+def create_temp_file(request_body: bytes, parent_dir: str) -> Tuple[str, Image.Image]:
+    """Create temporory file from image bytes, save image and return path to the file and PIL Image.
 
     :param request_body: Image
     :type request_body: bytes
     :param parent_dir: directory name
     :type parent_dir: str
-    :return: Path to the file
-    :rtype: str
+    :return: Path to the file, PIL Image
+    :rtype: Tuple[str, Image.Image]
     """
     with tempfile.NamedTemporaryFile(dir=parent_dir, mode="wb", delete=False) as image_file_fp:
         img_path = image_file_fp.name + ".png"
@@ -38,17 +39,18 @@ def create_temp_file(request_body: bytes, parent_dir: str) -> str:
             logger.error("Invalid image format. Please use base64 encoding for input images.")
             raise e
         img.save(img_path)
-        return img_path
+        return img_path, img
 
 
 def process_image(img: pd.Series) -> pd.Series:
     """Process input image and return bytes.
 
+    If input image is in bytes format, return it as it is.
     If input image is in base64 string format, decode it to bytes.
     If input image is in url format, download it and return bytes.
     https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
 
-    :param img: pandas series with image in base64 string format or url.
+    :param img: pandas series with image in base64 string format or url or bytes.
     :type img: pd.Series
     :return: decoded image in pandas series format.
     :rtype: Pandas Series
@@ -58,8 +60,13 @@ def process_image(img: pd.Series) -> pd.Series:
         return img
     elif isinstance(image, str):
         if _is_valid_url(image):
-            image = requests.get(image).content
-            return pd.Series(image)
+            try:
+                response = requests.get(image)
+                response.raise_for_status()  # Raise exception in case of unsuccessful response code.
+                image = response.content
+                return pd.Series(image)
+            except requests.exceptions.RequestException as ex:
+                raise ValueError(f"Unable to retrieve image from url string due to exception: {ex}")
         else:
             try:
                 return pd.Series(base64.b64decode(image))
