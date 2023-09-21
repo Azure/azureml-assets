@@ -1,11 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""File containing utils function related to optimization."""
+
 from azureml.acft.contrib.hf.nlp.constants.constants import Tasks
 from argparse import Namespace
 
 
 def should_apply_ort(args: Namespace, logger):
+    """Should ORT be enabled."""
     if args.apply_ort and args.task_name in (Tasks.SUMMARIZATION, Tasks.TRANSLATION):
         logger.warning("Enabling ORT has a breaking change with summarization and translation tasks "
                        "so diabling ORT for SUMMARIZATION and TRANSLATION tasks")
