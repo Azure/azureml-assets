@@ -29,7 +29,7 @@ Question Answering | Extractive Q&A | <a href="https://huggingface.co/datasets/s
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "question": ["What is my name?", "Where do I live?"],
         "context": ["My name is John and I live in Seattle.", "My name is Ravi and I live in Hyderabad."]
     }

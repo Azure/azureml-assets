@@ -41,5 +41,5 @@ tags:
     apply_deepspeed: 'true'
     apply_lora: 'true'
     apply_ort: 'true'
-  task: token-classification
-version: 8
+  task: text-named-entity-recognition
+version: 9
