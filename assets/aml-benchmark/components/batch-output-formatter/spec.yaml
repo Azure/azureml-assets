@@ -1,0 +1,41 @@
+name: batch_output_formatter
+version: 0.0.1
+display_name: Batch Output Formatter
+is_deterministic: True
+type: command
+description: Output Formatter for batch inference output
+inputs:
+  batch_inference_output:
+    type: uri_folder
+    description: The raw batch inference output.
+    optional: False
+  metadata_key:
+    type: string
+    optional: True
+    description: The metadata key that stores ground truth `label_key` in the response. If using azureml llama model and pass `_batch_request_metadata`, then this one can left empty or using `request_metadata`.
+  label_key:
+    type: string
+    optional: False
+    description: The key that stores the ground truth value.
+outputs:
+  prediction_data:
+    type: uri_file
+  perf_data:
+    type: uri_file
+  ground_truth_data:
+    type: uri_file
+code: ../src
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+
+resources:
+  instance_count: 1
+
+command: >-
+  python -m batch_output_formatter.main
+  --batch_inference_output ${{inputs.batch_inference_output}}
+  --prediction_data ${{outputs.prediction_data}}
+  --perf_data ${{outputs.perf_data}}
+  --predict_ground_truth_data ${{outputs.ground_truth_data}}
+  --label_key ${{inputs.label_key}}
+  --model_type llama
+  $[[--metadata_key ${{inputs.metadata_key}}]]

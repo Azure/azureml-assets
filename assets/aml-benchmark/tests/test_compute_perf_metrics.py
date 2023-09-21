@@ -8,6 +8,7 @@ import json
 import os
 import subprocess
 from math import isclose
+import time
 import uuid
 
 import numpy as np
@@ -600,7 +601,15 @@ class TestComputePerfMetricsComponent:
         :rtype: NoneType
         """
         logged_metrics = get_mlflow_logged_metrics(job_name, self.EXP_NAME)
-        print(logged_metrics)
+        counter = 0
+        while not logged_metrics:
+            time.sleep(10)
+            # It looks like sometimes the metrics is not flowed, and we need to wait a little bit.
+            logged_metrics = get_mlflow_logged_metrics(job_name, self.EXP_NAME)
+            print(logged_metrics)
+            counter += 1
+            if counter > 6:
+                break
 
         # Verify the logged parameters
         assert logged_metrics["latency_avg"] == output_records["latency_avg"]
