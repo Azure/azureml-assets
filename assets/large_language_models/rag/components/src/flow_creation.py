@@ -32,12 +32,18 @@ WORKSPACE_SCOPE = os.environ.get("AZUREML_WORKSPACE_SCOPE", "")
 RUN_TOKEN = os.environ.get("AZUREML_RUN_TOKEN", "")
 _CITATION_TEMPLATE = r'\nPlease add citation after each sentence when possible in a form \"(Source: citation)\".'
 _USER_INPUT = r'{{contexts}} \n Human: {{question}} \nAI:'
+_CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ item.inputs.question }} \nassistant: \n{{ item.outputs.output }} \n{% endfor %}'
 _STATIC_METRIC_PRIORITY_LIST = ["gpt_similarity", "gpt_relevance", "bert_f1"]
 
 
-def post_processing_prompts(prompt, citation_templates, user_input):
+def post_processing_prompts(prompt, citation_templates, user_input, is_chat):
     """Post processing prompts to include multiple roles to make it compatible with completion and chat API."""
-    return r'system: \n' + prompt + citation_templates + r'\n\n user: \n ' + user_input
+    if is_chat:
+        full_prompt = r'system: \n' + prompt + citation_templates + r'\n\n user: \n {{contexts}} \n' + _CHAT_HISTORY + r'\n\nHuman: {{question}} \nAI:'
+    else:
+        full_prompt = r'system: \n' + prompt + citation_templates + r'\n\n user: \n ' + user_input
+    
+    return full_prompt
 
 
 def get_default_headers(token, content_type=None, read_bytes=None):
@@ -166,6 +172,15 @@ def main(args, ws, current_run, activity_logger: Logger):
     print("embedding_deployment_name: %s" % embedding_deployment_name)
     print("embedding_model_name: %s" % embedding_model_name)
 
+    if completion_model_name.startswith("gpt-"):
+        is_chat = True
+        file_name = "chat_flow_with_varients_mlindex.json"
+        print("We are using chat flows")
+    else:
+        is_chat = False
+        file_name = "flow_with_varients_mlindex.json"
+        print(f"We are not using chat flows")
+
     if args.best_prompts is None:
         top_prompts = [
             'You are an AI assistant that helps users answer questions given a specific context. You will be '
@@ -205,7 +220,7 @@ def main(args, ws, current_run, activity_logger: Logger):
         top_prompts = [top_prompts, top_prompts, top_prompts]
 
     # for top prompts, construct top templates and inject into varients
-    with open(os.path.join(Path(__file__).parent.absolute(), "flow_with_varients_mlindex.json"), "r") as file:
+    with open(os.path.join(Path(__file__).parent.absolute(), file_name), "r") as file:
         flow_with_varients = file.read()
 
     flow_name = args.mlindex_name + "-sample-flow"
@@ -222,11 +237,11 @@ def main(args, ws, current_run, activity_logger: Logger):
     flow_with_varients = flow_with_varients.replace(
         "@@Third_Metric_Name", _STATIC_METRIC_PRIORITY_LIST[2])
     flow_with_varients = flow_with_varients.replace(
-        "@@prompt_varient_0", post_processing_prompts(json_stringify(top_prompts[0]), _CITATION_TEMPLATE, _USER_INPUT))
+        "@@prompt_varient_0", post_processing_prompts(json_stringify(top_prompts[0]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
     flow_with_varients = flow_with_varients.replace(
-        "@@prompt_varient_1", post_processing_prompts(json_stringify(top_prompts[1]), _CITATION_TEMPLATE, _USER_INPUT))
+        "@@prompt_varient_1", post_processing_prompts(json_stringify(top_prompts[1]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
     flow_with_varients = flow_with_varients.replace(
-        "@@prompt_varient_2", post_processing_prompts(json_stringify(top_prompts[2]), _CITATION_TEMPLATE, _USER_INPUT))
+        "@@prompt_varient_2", post_processing_prompts(json_stringify(top_prompts[2]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
 
     # replace deployment name, connection name and API with right names
     flow_with_varients = flow_with_varients.replace(
