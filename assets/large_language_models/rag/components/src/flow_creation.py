@@ -36,6 +36,7 @@ _CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ i
     r'\nassistant: \n{{ item.outputs.output }} \n{% endfor %}'
 _STATIC_METRIC_PRIORITY_LIST = ["gpt_similarity", "gpt_relevance", "bert_f1"]
 
+
 def post_processing_prompts(prompt, citation_templates, user_input, is_chat):
     """Post processing prompts to include multiple roles to make it compatible with completion and chat API."""
     if is_chat:
@@ -180,7 +181,7 @@ def main(args, ws, current_run, activity_logger: Logger):
     else:
         is_chat = False
         file_name = "flow_with_varients_mlindex.json"
-        print(f"Not using chat flows")
+        print("Not using chat flows")
 
     if args.best_prompts is None:
         top_prompts = [
