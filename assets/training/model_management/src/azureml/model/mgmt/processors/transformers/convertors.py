@@ -246,6 +246,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
 
     VISION_DIR = Path(__file__).parent / "vision"
     PREDICT_FILE_PATH = VISION_DIR / HFMLFLowConvertor.PREDICT_FILE_NAME
+    VISION_UTILS_FILE_PATH = Path(__file__).parent.parent / "common" / "vision_utils.py"
 
     def __init__(self, **kwargs):
         """Initialize MLflow convertor for vision models."""
@@ -280,7 +281,7 @@ class VisionMLflowConvertor(HFMLFLowConvertor):
         hf_conf[HF_CONF.TRAIN_LABEL_LIST.value] = list(config.id2label.values())
 
         return super()._save(
-            code_paths=[VisionMLflowConvertor.PREDICT_FILE_PATH],
+            code_paths=[VisionMLflowConvertor.PREDICT_FILE_PATH, VisionMLflowConvertor.VISION_UTILS_FILE_PATH],
             segregate=True,
         )
 
