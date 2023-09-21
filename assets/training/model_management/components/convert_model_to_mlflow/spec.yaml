@@ -43,7 +43,7 @@ inputs:
     enum:
       - Huggingface
       - MMLab
-      - pyfunc_llava
+      - llava
     default: Huggingface
     optional: false
     description: Framework from which model is imported from.

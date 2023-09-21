@@ -29,7 +29,7 @@ class ModelFramework(_CustomEnum):
 
     HUGGINGFACE = "Huggingface"
     MMLAB = "MMLab"
-    PYFUNC_LLAVA = "pyfunc_llava"
+    LLAVA = "llava"
 
 
 class PathType(_CustomEnum):

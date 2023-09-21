@@ -67,8 +67,8 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             )
         else:
             raise Exception(f"Models from {model_framework} for {task} not supported for MLflow conversion")
-    elif model_framework == ModelFramework.PYFUNC_LLAVA.value:
-        # Models from PYFUNC_LLAVA model framework exported in PyFunc mlflow flavor
+    elif model_framework == ModelFramework.LLAVA.value:
+        # Models from LLAVA model framework exported in PyFunc mlflow flavor
         if task == PyFuncSupportedTasks.IMAGE_TEXT_TO_TEXT.value:
             return LLaVAMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
