@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: databricks-dolly-v2-3b
-path: ./
+path:/
 properties:
   SHA: f6c9be08f16fe4d3a719bee0a4a7c7415b5c65df
   datasets: databricks/databricks-dolly-15k
