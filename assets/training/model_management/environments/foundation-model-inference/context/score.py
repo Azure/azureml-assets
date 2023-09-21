@@ -109,6 +109,10 @@ default_generator_configs = {
 aacs_threshold = int(os.environ.get("CONTENT_SAFETY_THRESHOLD", 2))
 aacs_client = None
 
+# Chat completion
+SPECIAL_TAGS = ["[INST]", "[/INST]", "<<SYS>>", "<</SYS>>"]
+UNSAFE_ERROR = "Error: special tags are not allowed as part of the prompt."
+
 
 def init():
     """Initialize MII server and MII client."""
@@ -575,7 +579,6 @@ def get_request_data(
             })
         )
 
-
 def build_chat_completion_prompt(data: List[str]) -> dict:
     """
     Build a chat completion prompt based on a list of conversation data.
@@ -605,16 +608,22 @@ def build_chat_completion_prompt(data: List[str]) -> dict:
         if conv["role"] == "system":
             assert next_turn == "system", "System prompts can only be set at the start of the conversation"
             next_turn = "user"
-            conversation.add_user_input(B_SYS + conv_arr[0]["content"].strip() + E_SYS)
+            content=conv_arr[0]["content"].strip()
+            validate_content(content)
+            conversation.add_user_input(B_SYS + content + E_SYS)
             conversation.mark_processed()
         if conv["role"] == "assistant":
             assert next_turn == "assistant", "Invalid Turn. Expected user input"
             next_turn = "user"
-            conversation.append_response(conv["content"].strip())
+            content=conv["content"].strip()
+            validate_content(content)
+            conversation.append_response(content)
         elif conv["role"] == "user":
             assert next_turn == "user", "Invalid Turn. Expected assistant input"
             next_turn = "assistant"
-            conversation.add_user_input(conv["content"].strip())
+            content=conv["content"].strip()
+            validate_content(content)
+            conversation.add_user_input(content)
             if i != len(conv_arr[0:]) - 1:
                 conversation.mark_processed()
     conv_dict = conversation.__dict__
@@ -625,6 +634,9 @@ def build_chat_completion_prompt(data: List[str]) -> dict:
     result['generated_responses'] = conv_dict['generated_responses']
     return result
 
+def validate_content(content: str) -> None:
+    if any(token in content for token in SPECIAL_TAGS):
+        raise ValueError(UNSAFE_ERROR)
 
 def _allocate_processes(hostfile_path):
     from mii.server import _allocate_processes
