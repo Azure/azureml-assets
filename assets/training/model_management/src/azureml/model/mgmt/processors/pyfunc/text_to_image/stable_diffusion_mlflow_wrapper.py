@@ -13,7 +13,7 @@ import os
 import pandas as pd
 import torch
 
-from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants
+from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants, DatatypeLiterals
 from vision_utils import save_image, image_to_base64
 
 
@@ -52,7 +52,8 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             output = self._pipe(text_prompt)
             img = output.images[0]
             nsfw_content = output.nsfw_content_detected[0] if output.nsfw_content_detected else None
-            generated_images.append(save_image(self.batch_output_folder, img))
+            file_name = save_image(self.batch_output_folder, img, format=DatatypeLiterals.IMAGE_FORMAT)
+            generated_images.append(file_name)
             nsfw_content_detected.append(nsfw_content)
 
         df = pd.DataFrame(
@@ -115,7 +116,7 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             output = self._pipe(text_prompts)
             generated_images = []
             for img in output.images:
-                generated_images.append(image_to_base64(img))
+                generated_images.append(image_to_base64(img, format=DatatypeLiterals.IMAGE_FORMAT))
 
             df = pd.DataFrame(
                 {

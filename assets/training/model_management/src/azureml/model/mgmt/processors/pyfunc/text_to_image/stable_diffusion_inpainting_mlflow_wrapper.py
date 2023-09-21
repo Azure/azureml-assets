@@ -12,7 +12,7 @@ import mlflow
 import os
 import pandas as pd
 from diffusers import StableDiffusionInpaintPipeline
-from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants
+from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants, DatatypeLiterals
 from vision_utils import get_pil_image, process_image, get_current_device, image_to_base64, save_image
 
 logger = logging.getLogger(__name__)
@@ -99,7 +99,8 @@ class StableDiffusionInpaintingMLflowWrapper(mlflow.pyfunc.PythonModel):
                 )
 
                 # Save image in batch output folder and append the image file name to generated_images list
-                generated_images.append(save_image(self._batch_output_folder, output.images[0]))
+                filename = save_image(self._batch_output_folder, output.images[0], format=DatatypeLiterals.IMAGE_FORMAT)
+                generated_images.append(filename)
                 nsfw_content.append(output.nsfw_content_detected[0] if output.nsfw_content_detected else None)
         else:
             # Online endpoint
@@ -111,7 +112,7 @@ class StableDiffusionInpaintingMLflowWrapper(mlflow.pyfunc.PythonModel):
             )
 
             for img in outputs.images:
-                generated_images.append(image_to_base64(img))
+                generated_images.append(image_to_base64(img, format=DatatypeLiterals.IMAGE_FORMAT))
 
             nsfw_content = outputs.nsfw_content_detected
 

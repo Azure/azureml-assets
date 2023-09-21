@@ -23,7 +23,7 @@ class Tasks(_CustomEnum):
 class DatatypeLiterals:
     """Literals related to data type."""
 
-    IMAGE_FORMAT = "JPEG"
+    IMAGE_FORMAT = "PNG"
     STR_ENCODING = "utf-8"
 
 
