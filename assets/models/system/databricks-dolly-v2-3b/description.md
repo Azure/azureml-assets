@@ -42,7 +42,8 @@ Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/d
 ```json
 {
     "input_data": {
-        "input_string": [ "Once upon a time,"]
+        "input_string": ["My name is John and I am", "Once upon a time,"],
+           "parameters": {"max_new_tokens":100, "do_sample":true,"return_full_text": true}
     }
 }
 ```
@@ -50,6 +51,9 @@ Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/d
 #### Sample output
 ```json
 [
+    {
+            "0": "My name is John and I am a Dog."
+     }
    
     {
         "0": "Once upon a time there was an island, and it was called Colony. This island has 2 main buildings. One preserving old technology, the other futuristic. The old building is referred to as castle. Inside this building, you'll find the captain, chief engineer and a few other scientists. The new building is referred to as Transcender. This building can exchange old technology for futuristic technology."
