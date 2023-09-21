@@ -40,7 +40,8 @@ ALL_METRIC_NAMES = [
     "AggregatedRelevancePassRate",
 ]
 
-def get_per_instance_threshold(df, metric_name): 
+
+def get_per_instance_threshold(df, metric_name):
     return df.filter(col(METRIC_NAME_COLUMN).contains(metric_name)).select(THRESHOLD_COLUMN
                                                                            ).collect()[0][THRESHOLD_COLUMN]
 
@@ -66,6 +67,7 @@ def _calculate_passrate(df, metric_name):
         return "1"
     passrate = passing / total
     return str(passrate)
+
 
 def run():
     """Compute metrics."""
