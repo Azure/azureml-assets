@@ -11,6 +11,7 @@ from azureml.evaluate import mlflow as hf_mlflow
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
 from azureml.model.mgmt.processors.transformers.config import (
     HF_CONF,
+    META_FILE_PATTERN,
     SupportedNLPTasks,
     SupportedTasks,
     SupportedVisionTasks,
@@ -18,7 +19,8 @@ from azureml.model.mgmt.processors.transformers.config import (
 from azureml.model.mgmt.utils.common_utils import (
     KV_EQ_SEP,
     ITEM_COMMA_SEP,
-    copy_file_paths_to_destination,
+    copy_files,
+    move_files,
     get_dict_from_comma_separated_str,
     get_list_from_comma_separated_str,
     run_command,
@@ -174,15 +176,18 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         if segregate:
             logger.info("Segregate input model dir and present into separate folders for model, config and tokenizer")
+            logger.info("Preparing model files")
+            tmp_model_dir = Path(self._temp_dir) / HF_CONF.HF_MODEL_PATH.value
+            copy_files(self._model_dir, tmp_model_dir)
+            model = str(tmp_model_dir)
+            logger.info("Loading config")
             config = self._hf_config_cls.from_pretrained(
                 self._model_dir, **self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
             )
+            logger.info("Loading tokenizer")
             tokenizer = self._hf_tokenizer_cls.from_pretrained(
                 self._model_dir, **self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
             )
-            tmp_model_dir = Path(self._temp_dir) / HF_CONF.HF_MODEL_PATH.value
-            copy_file_paths_to_destination(self._model_dir, tmp_model_dir)
-            model = str(tmp_model_dir)
 
         # Set experimental flag
         if self._experimental:
@@ -203,6 +208,10 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
             extra_pip_requirements=self._extra_pip_requirements,
             path=self._output_dir,
         )
+
+        # move metadata files to parent folder
+        logger.info("Moving meta files such as license, use_policy, readme to parent")
+        move_files(Path(self._output_dir) / "data/model", self._output_dir, include_pattern_str=META_FILE_PATTERN, ignore_case=True)
 
         # pin pycocotools==2.0.4
         self._update_conda_dependencies({"pycocotools": "2.0.4"})
