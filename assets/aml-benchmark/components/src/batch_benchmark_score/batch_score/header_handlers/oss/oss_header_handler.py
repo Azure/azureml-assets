@@ -35,7 +35,7 @@ class OSSHeaderHandler(HeaderHandler):
 
     def get_headers(self, additional_headers: "dict[str, any]" = None) -> "dict[str, any]":
         """Get handers."""
-        bearer_token, _ = self._get_auth_key()
+        bearer_token = self._get_auth_key()
         user_agent = self._get_user_agent()
 
         headers = {
@@ -52,25 +52,20 @@ class OSSHeaderHandler(HeaderHandler):
             headers.update(additional_headers)
 
         return headers
+    
+    def _get_list_key_url(self, workspace: Workspace) -> str:
+        return _get_mms_url(workspace) + '/onlineEndpoints/{}'.format(self._deployment_name) + '/listkeys'
 
-    def _get_auth_key(self):
-        curr_workspace = self._get_curr_workspace()
+    @property
+    def _auth_key_in_resp(self) -> str:
+        return 'primaryKey'
+    
+    def _get_curr_workspace(self) -> Workspace:
+        curr_workspace = super()._get_curr_workspace()
         if self._endpoint_workspace is None:
             workspace = curr_workspace
         else:
             workspace = Workspace(
                 self._endpoint_subscription, self._endpoint_resource_group, self._endpoint_workspace,
                 auth=curr_workspace._auth)
-        headers = workspace._auth.get_authentication_header()
-        list_keys_url = _get_mms_url(workspace) + '/onlineEndpoints/{}'.format(self._deployment_name) + '/listkeys'
-        resp = ClientBase._execute_func(
-            get_requests_session().post, list_keys_url, params={}, headers=headers)
-
-        content = resp.content
-        if isinstance(content, bytes):
-            content = content.decode('utf-8')
-        keys_content = json.loads(content)
-        print(keys_content)
-        primary_key = keys_content['primaryKey']
-        secondary_key = keys_content['secondaryKey']
-        return primary_key, secondary_key
+        return workspace

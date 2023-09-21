@@ -7,6 +7,8 @@ import json
 import os
 
 from abc import ABC, abstractclassmethod
+from azureml._restclient.clientbase import ClientBase
+from azureml._model_management._util import get_requests_session
 from ..utils.token_provider import TokenProvider
 from ..utils.common import constants
 from azureml.core import Workspace, Run
@@ -58,6 +60,15 @@ class HeaderHandler(ABC):
     def quota_audience(self):
         """Quota audience."""
         return self._quota_audience
+    
+    @property
+    @abstractclassmethod
+    def _auth_key_in_resp(self):
+        pass
+
+    @abstractclassmethod
+    def _get_list_key_url(self, workspace: Workspace) -> str:
+        pass
 
     def _get_user_agent(self) -> str:
         workload_id = ":".join(
@@ -68,12 +79,23 @@ class HeaderHandler(ABC):
             workload_id if workload_id else "Unknown",
             os.environ.get(constants.OS_ENVIRON_WORKSPACE, "DNE"),
             os.environ.get(constants.OS_ENVIRON_RUN_ID, "DNE"))
+    
+    def _get_auth_key(self):
+        workspace = self._get_curr_workspace()
+        key_endpoint = self._get_list_key_url(workspace)
+        resp = ClientBase._execute_func(
+            get_requests_session().post, key_endpoint, params={},
+            headers=workspace._auth.get_authentication_header())
+        return self._retrieve_key(resp)
 
     def _get_curr_workspace(self) -> Workspace:
         run = Run.get_context()
         curr_workspace = run.experiment.workspace
         return curr_workspace
     
-    @abstractclassmethod
-    def _get_list_key_url(self, workspace, resource_name):
-        pass
+    def _retrieve_key(self, resp) -> str:
+        content = resp.content
+        if isinstance(content, bytes):
+            content = content.decode('utf-8')
+        keys_content = json.loads(content)
+        return keys_content[self._auth_key_in_resp]
