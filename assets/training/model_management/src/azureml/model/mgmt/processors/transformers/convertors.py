@@ -185,28 +185,18 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         try:
 
-            logger.info(f"TEMP LOG - BEFORE task: {self._task}, model: {model}, tokenizer: {tokenizer}, config: {config}")
-
             model_pipeline = transformers.pipeline(task=self._task, model=model)
-            logger.info("TEMP LOG - PIPELINE PASSED")
 
-            logger.info(f"Conda env: {conda_env}, "
-                        f"extra_pip_requirements: {self._extra_pip_requirements}, "
-                        f"pip_requirements: {pip_requirements}, code_paths: {code_paths},"
-                        f"signatures: {self._signatures}, input_example: {input_example},"
-                        f"path: {self._output_dir}")
-
-            with mlflow.start_run():
-                mlflow.transformers.save_model(
-                    transformers_model=model_pipeline,
-                    conda_env=conda_env,
-                    code_paths=code_paths,
-                    signature=self._signatures,
-                    input_example=input_example,
-                    pip_requirements=pip_requirements,
-                    extra_pip_requirements=self._extra_pip_requirements,
-                    path=self._output_dir,
-                )
+            mlflow.transformers.save_model(
+                transformers_model=model_pipeline,
+                conda_env=conda_env,
+                code_paths=code_paths,
+                signature=self._signatures,
+                input_example=input_example,
+                pip_requirements=pip_requirements,
+                extra_pip_requirements=self._extra_pip_requirements,
+                path=self._output_dir,
+            )
 
             logger.info("Model saved with mlflow OSS flow for task: {}".format(self._task))
         except Exception as e:
@@ -426,9 +416,4 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = self._hf_model_cls.__name__
         hf_conf[HF_CONF.HF_TOKENIZER_CLASS.value] = self._hf_tokenizer_cls.__name__
 
-        conda_dir = Path(__file__).parent / "conda.yaml"
-        conda_env = {}
-        with open(conda_dir) as f:
-            conda_env = yaml.safe_load(f)
-
-        return super()._save(segregate=False, conda_env=conda_env)
+        return super()._save(segregate=False)

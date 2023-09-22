@@ -147,8 +147,6 @@ def run():
     # update custom dimensions with input parameters
     custom_dimensions.update_custom_dimensions(preprocess_args)
 
-    logger.info(f"TEMP LOG - mlflow flavor: {args.mlflow_flavor}, model_path: {args.model_path}")
-
     logger.info(f"Preprocess args : {preprocess_args}")
 
     with TemporaryDirectory(dir=mlflow_model_output_dir) as working_dir, TemporaryDirectory(
