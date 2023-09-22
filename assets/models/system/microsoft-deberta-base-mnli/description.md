@@ -30,7 +30,7 @@ Text Classification|Textual Entailment|<a href="https://huggingface.co/datasets/
 #### Sample input
 ```json
 {
-    "inputs": {
+    "input_data": {
         "input_string": ["Today was an amazing day!", "It was an unfortunate series of events."]
     }
 }
