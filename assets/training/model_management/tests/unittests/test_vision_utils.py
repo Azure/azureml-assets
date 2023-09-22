@@ -18,6 +18,7 @@ class TestVisionUtilities:
     """Test vision utility functions."""
 
     def test_process_image_bytes(self):
+        """Test process_image() with a bytes object."""
         image_bytes = bytes([0, 1])
 
         assert process_image(image_bytes) == image_bytes
