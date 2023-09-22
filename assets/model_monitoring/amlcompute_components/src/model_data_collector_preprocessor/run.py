@@ -10,19 +10,20 @@ import tempfile
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
 from pyspark.sql.functions import col, lit
-from shared_utilities.datetime_utils import parse_datetime_from_string
-from shared_utilities.io_utils import (
-    init_spark,
-    read_mltable_in_spark,
-    save_spark_df_as_mltable,
-)
 
 from shared_utilities.constants import (
     MDC_CHAT_HISTORY_COLUMN,
     MDC_CORRELATION_ID_COLUMN,
     MDC_DATA_COLUMN
 )
-
+from shared_utilities.datetime_utils import parse_datetime_from_string
+from shared_utilities.io_utils import (
+    init_spark,
+    read_mltable_in_spark,
+    save_spark_df_as_mltable,
+)
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 def _convert_uri_folder_to_mltable(
     start_datetime: datetime,

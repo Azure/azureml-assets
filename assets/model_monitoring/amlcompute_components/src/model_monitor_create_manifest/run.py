@@ -8,9 +8,9 @@ import glob
 import json
 import os
 import uuid
-from shared_utilities.patch_mltable import patch_all
-from shared_utilities.amlfs import amlfs_put_as_json, amlfs_download, amlfs_upload
 
+from shared_utilities.amlfs import amlfs_put_as_json, amlfs_download, amlfs_upload
+from shared_utilities.patch_mltable import patch_all
 patch_all()
 
 
