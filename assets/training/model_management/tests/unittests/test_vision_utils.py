@@ -24,6 +24,7 @@ class TestVisionUtilities:
 
     @patch("requests.get")
     def test_process_image_url_successful(self, mock_requests_get):
+        """Test process_image() with a 'correct' URL."""
         image_url = "http://microsoft.com/image.jpg"
         image_bytes = bytes([2, 3])
 
@@ -34,6 +35,7 @@ class TestVisionUtilities:
 
     @patch("requests.get")
     def test_process_image_url_unavailable(self, mock_requests_get):
+        """Test process_image() with an 'incorrect' URL."""
         image_url = "http://microsoft.com/this_image_does_not_exist.jpg"
 
         response = mock_requests_get.return_value
@@ -44,12 +46,14 @@ class TestVisionUtilities:
         assert "Unable to retrieve image from url string due to exception: " in str(e.value)
 
     def test_process_image_b64(self):
+        """Test process_image() with a b64encoded string."""
         image_bytes = b"45"
         image_str = base64.encodebytes(image_bytes).decode("utf-8")
 
         assert process_image(image_str) == image_bytes
 
     def test_process_image_url_invalid(self):
+        """Test process_image() with an invalid URL."""
         image_url = "ftp://microsoft.com/image.jpg"
 
         with pytest.raises(ValueError) as e:
@@ -59,6 +63,7 @@ class TestVisionUtilities:
         )
 
     def test_process_image_list(self):
+        """Test process_image() with an invalid image type."""
         image_array = [6, 7]
 
         with pytest.raises(ValueError) as e:
@@ -69,12 +74,14 @@ class TestVisionUtilities:
         ) in str(e.value)
 
     def test_process_image_pandas_series1(self):
+        """Test process_image_pandas_series() with a b64encoded string."""
         image_bytes = b"89"
         image_str = base64.encodebytes(image_bytes).decode("utf-8")
 
         assert (process_image_pandas_series(pd.Series(image_str)) == pd.Series(image_bytes)).all()
 
     def test_process_image_pandas_series2(self):
+        """Test process_image_pandas_series() with similar usage as in the CLIP wrapper."""
         input_data = pd.DataFrame(
             columns=["image", "text"],
             data=[
@@ -91,4 +98,5 @@ class TestVisionUtilities:
             assert decoded_image == expected_decoded_image
 
     def test_is_valid_url_llava_example(self):
+        """Test that the function validating the URL validates the LLaVA example URL."""
         assert _is_valid_url("https://llava-vl.github.io/static/images/view.jpg")
