@@ -48,7 +48,7 @@ def _calculate_passrate(df, metric_name):
         ),
     )
     passing = (
-        df_with_buckets.filter(col("bucket") >= int(threshold))
+        df_with_buckets.filter(col("bucket") > int(threshold))
         .select(sum("metric_value"))
         .head()[0]
     )
