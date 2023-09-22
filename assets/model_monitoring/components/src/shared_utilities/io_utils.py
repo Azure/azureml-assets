@@ -25,7 +25,7 @@ def _is_not_found_exception(error: Exception):
 def try_read_mltable_in_spark_with_warning(
     mltable_path: str, input_name: str
 ) -> DataFrame:
-    """Read mltable in spark. In case of failure, posts a warning and returns None."""
+    """Read mltable in spark. In case of failure, posts a warning to the job and returns None."""
     try:
         return read_mltable_in_spark(mltable_path)
     except Exception as error:
