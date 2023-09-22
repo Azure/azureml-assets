@@ -99,7 +99,8 @@ class StableDiffusionInpaintingMLflowWrapper(mlflow.pyfunc.PythonModel):
                 )
 
                 # Save image in batch output folder and append the image file name to generated_images list
-                filename = save_image(self._batch_output_folder, output.images[0], format=DatatypeLiterals.IMAGE_FORMAT)
+                filename = save_image(self._batch_output_folder, output.images[0],
+                                      format=DatatypeLiterals.IMAGE_FORMAT)
                 generated_images.append(filename)
                 nsfw_content.append(output.nsfw_content_detected[0] if output.nsfw_content_detected else None)
         else:
