@@ -10,7 +10,7 @@ import random
 
 from azureml._common._error_definition.azureml_error import AzureMLError
 
-from utils.io import resolve_io_path, get_output_file_path
+from utils.io import resolve_io_path
 from utils.logging import get_logger, log_mlflow_params
 from utils.exceptions import swallow_all_exceptions, BenchmarkValidationException
 from utils.error_definitions import BenchmarkValidationError
@@ -63,7 +63,7 @@ def parse_args() -> argparse.Namespace:
         "--random_seed", type=int, default=0, help="Random seed for sampling mode."
     )
     parser.add_argument(
-        "--output_dataset", type=str, required=True, help="Path to the dataset output."
+        "--output_dataset", type=str, required=True, help="Path to the output file."
     )
 
     args, _ = parser.parse_known_args()
@@ -92,13 +92,12 @@ def sample_from_head(
     Sample from the head of the file.
 
     :param input_file_paths: List of file paths
-    :param output_path: Path to output directory
+    :param output_path: Path to output file
     :param n_samples: List of absolute number of lines to sample
     :return: None
     """
     for i, (input_file_path, n_sample) in enumerate(zip(input_file_paths, n_samples)):
-        output_file_path = get_output_file_path(input_file_path, output_path, i + 1)
-        with open(input_file_path, "r") as f, open(output_file_path, "w") as f_out:
+        with open(input_file_path, "r") as f, open(output_path, "a") as f_out:
             for i, line in enumerate(f):
                 f_out.write(line)
 
@@ -114,15 +113,14 @@ def sample_from_tail(
     Sample from the tail of the file.
 
     :param input_file_paths: List of file paths
-    :param output_path: Path to output directory
+    :param output_path: Path to output file
     :param line_counts: List of number of lines in the list of files
     :param n_samples: List of absolute number of lines to sample
     :return: None
     """
     for i, (input_file_path, line_count, n_sample) in enumerate(zip(input_file_paths, line_counts, n_samples)):
         start_index = line_count - n_sample
-        output_file_path = get_output_file_path(input_file_path, output_path, i + 1)
-        with open(input_file_path, "r") as f, open(output_file_path, "w") as f_out:
+        with open(input_file_path, "r") as f, open(output_path, "a") as f_out:
             for i, line in enumerate(f):
                 # start sampling when we reach start_index
                 if i < start_index:
@@ -142,7 +140,7 @@ def sample_from_random(
     Sample from the file randomly.
 
     :param input_file_paths: List of file paths
-    :param output_path: Path to output directory
+    :param output_path: Path to output file
     :param line_counts: List of number of lines in the list of files
     :param n_samples: List of absolute number of lines to sample
     :param random_seed: Random seed for sampling
@@ -152,8 +150,7 @@ def sample_from_random(
     logger.info(f"Using random seed: {random_seed}.")
     for i, (input_file_path, line_count, n_sample) in enumerate(zip(input_file_paths, line_counts, n_samples)):
         indices = set(random.sample(range(line_count), n_sample))
-        output_file_path = get_output_file_path(input_file_path, output_path, i + 1)
-        with open(input_file_path, "r") as f, open(output_file_path, "w") as f_out:
+        with open(input_file_path, "r") as f, open(output_path, "a") as f_out:
             for i, line in enumerate(f):
                 if i in indices:
                     f_out.write(line)
@@ -166,14 +163,13 @@ def sample_from_duplicate(
     Sample by duplicating the rows of the file.
 
     :param input_file_paths: List of file paths
-    :param output_path: Path to output directory
+    :param output_path: Path to output file
     :param n_samples: List of absolute number of lines to sample
     :return: None
     """
     for i, (input_file_path, n_sample) in enumerate(zip(input_file_paths, n_samples)):
-        output_file_path = get_output_file_path(input_file_path, output_path, i + 1)
         counter = 0
-        with open(input_file_path, "r") as f, open(output_file_path, "w") as f_out:
+        with open(input_file_path, "r") as f, open(output_path, "a") as f_out:
             while counter < n_sample:
                 f.seek(0)
                 for line in f:
@@ -199,7 +195,7 @@ def main(
 
     Either `sampling_ratio` or `n_samples` must be supplied; but not both.
 
-    :param output_dataset: Path to the directory where the sampled dataset will be saved.
+    :param output_dataset: Path to the file where the sampled dataset will be saved.
     :param dataset: Path to the input directory or .jsonl file from which the data will be sampled.
     :param sampling_style: Strategy used to sample. Either 'head', 'tail' or 'random'.
     :param sampling_ratio: Ratio of samples to be taken specified as a float in (0, 1] (alternative to `n_samples`).

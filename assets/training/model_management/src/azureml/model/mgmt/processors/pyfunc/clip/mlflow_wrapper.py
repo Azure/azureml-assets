@@ -11,8 +11,14 @@ import tempfile
 
 from transformers import AutoProcessor, AutoModelForZeroShotImageClassification
 from config import MLflowSchemaLiterals, MLflowLiterals, Tasks
-from utils import create_temp_file, process_image, get_current_device
 from typing import List, Tuple
+
+try:
+    # Use try/except since vision_utils is added as part of model export and not available when initializing
+    # model wrapper for save_model().
+    from vision_utils import create_temp_file, process_image, get_current_device
+except ImportError:
+    pass
 
 
 class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
@@ -90,7 +96,7 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         with tempfile.TemporaryDirectory() as tmp_output_dir:
             image_path_list = (
                 decoded_images.iloc[:, 0]
-                .map(lambda row: create_temp_file(row, tmp_output_dir))
+                .map(lambda row: create_temp_file(row, tmp_output_dir)[0])
                 .tolist()
             )
             conf_scores = self.run_inference_batch(
