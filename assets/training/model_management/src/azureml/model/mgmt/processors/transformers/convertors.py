@@ -200,7 +200,8 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
             logger.info("Model saved with mlflow OSS flow for task: {}".format(self._task))
         except Exception as e:
-            logger.error("Model save failed with mlflow OSS flow for task: {} with exception: {}".format(self._task, e))
+            logger.error("Model save failed with mlflow OSS flow for task: {} "
+                         "with exception: {}".format(self._task, e))
 
             hf_mlflow.hftransformers.save_model(
                 config=config,
