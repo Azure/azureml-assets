@@ -44,23 +44,23 @@ inputs:
   groundedness_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   similarity_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   relevance_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   fluency_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   coherence_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   groundedness_passrate_threshold:
     type: number
     optional: true
@@ -137,7 +137,7 @@ jobs:
       type: managed
   compute_metrics:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.3.4
+    component: azureml://registries/azureml/components/gsq_annotation_compute_metrics/versions/0.3.3
     inputs:
       annotation_histogram:
         type: mltable
