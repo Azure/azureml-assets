@@ -27,20 +27,6 @@ RUN pip install azureml-rag azureml-contrib-services azure-cosmos
 COPY ./extra_requirements.txt ./
 RUN pip install -r extra_requirements.txt
 
-# Copy & install DBCopilot related code
-COPY ./*.whl /tmp/dbcopilot/
-
-# # Install CLI to support fuse
-# RUN apt-get install -y fuse libfuse-dev kmod
-
-# RUN curl -o /tmp/dbcopilot/rslex-fuse-cli https://ragsample.blob.core.windows.net/ragdata/wheels/dbcopilot/rslex-fuse-cli
-
-# RUN chmod +x /tmp/dbcopilot/rslex-fuse-cli
-
-# RUN modprobe fuse
-
-RUN pip install /tmp/dbcopilot/*.whl 
-
 RUN pip install plotly~=5.13.1 azure-kusto-data==4.2.0 recognizers-text-suite~=1.0.2a2
 
 # For GUNICORN_CMD_ARGS, we need to set the timeout to be 0 so that the server will not timeout
