@@ -17,9 +17,9 @@ from exceptions import (
     DataLoaderException,
     PredictException,
     ModelEvaluationException,
-    swallow_all_exceptions
+    swallow_all_exceptions, DataValidationException
 )
-from error_definitions import ModelPredictionInternalError, BadModel, BadInputData
+from error_definitions import ModelPredictionInternalError, BadModel, BadInputData, InvalidGroundTruthColumnNameCodeGen
 from logging_utilities import custom_dimensions, current_run, get_logger, log_traceback
 from azureml.telemetry.activity import log_activity
 from image_constants import ImageDataFrameParams
@@ -29,7 +29,7 @@ from utils import (
     get_predictor,
     read_data,
     prepare_data,
-    filter_pipeline_params
+    filter_pipeline_params, parse_input_ground_truth_col
 )
 from validation import _validate, validate_args
 from azureml._common._error_definition.azureml_error import AzureMLError
@@ -48,7 +48,7 @@ class ModelPredictionRunner:
     """Main Class for Inferencing all tasks modes."""
 
     def __init__(self, model_uri, task, device,
-                 batch_size, config):
+                 batch_size, label_column_name,  config):
         """__init__.
 
         Args:
@@ -75,7 +75,7 @@ class ModelPredictionRunner:
                 self.device = -1
         self.batch_size = batch_size
         self.masks_required = True if task == constants.TASK.IMAGE_INSTANCE_SEGMENTATION else False
-
+        self.label_column_name, self.extra_y_test_cols = parse_input_ground_truth_col(label_column_name)
         with log_activity(logger, constants.TelemetryConstants.LOAD_MODEL,
                           custom_dimensions=custom_dims_dict):
             logger.info("Loading model.")
@@ -92,12 +92,11 @@ class ModelPredictionRunner:
                 log_traceback(exception, logger)
                 raise exception
 
-    def load_data(self, test_data, label_column_name=None, input_column_names=None, is_mltable=True):
+    def load_data(self, test_data, input_column_names=None, is_mltable=True):
         """Load Data.
 
         Args:
             test_data (_type_): _description_
-            label_column_name (_type_, optional): _description_. Defaults to None.
             input_column_names (list): Name of input column names
 
         Raises:
@@ -106,19 +105,30 @@ class ModelPredictionRunner:
         Returns:
             _type_: _description_
         """
+        if self.task == constants.TASK.TEXT_GENERATION:
+            if self.config.get(constants.TextGenerationColumns.SUBTASKKEY, '') == constants.SubTask.CODEGENERATION:
+                # Ensure that user always has "," in label_col_name
+                if self.extra_y_test_cols is None and self.label_column_name is None:
+                    exception = DataValidationException._with_error(
+                        AzureMLError.create(InvalidGroundTruthColumnNameCodeGen)
+                    )
+                    log_traceback(exception, logger)
+                    raise exception
         if self.task in constants.IMAGE_TASKS:
             from image_dataset import get_image_dataset
             df = get_image_dataset(task_type=self.task, test_mltable=test_data)
             data = iter([df])
             input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]
-            label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
+            self.label_column_name = ImageDataFrameParams.LABEL_COLUMN_NAME
             if self.task in [constants.TASK.IMAGE_OBJECT_DETECTION,
                              constants.TASK.IMAGE_INSTANCE_SEGMENTATION]:
                 input_column_names.append(ImageDataFrameParams.IMAGE_META_INFO)
         else:
             data = read_data(test_data, is_mltable)
-        data = map(_validate, data, repeat(input_column_names), repeat(label_column_name))
-        data = map(prepare_data, data, repeat(self.task), repeat(label_column_name))
+        data = map(_validate, data, repeat(input_column_names), repeat(self.label_column_name),
+                   repeat(self.extra_y_test_cols))
+        data = map(prepare_data, data, repeat(self.task), repeat(self.label_column_name), repeat(False),
+                   repeat(self.extra_y_test_cols))
         return data  # X_test, y_test
 
     def load_tokenizer(self, token_counts_enabled):
@@ -147,7 +157,7 @@ class ModelPredictionRunner:
         logger.info(f"Tokenizer load time ms: {(time.time() - tokenizer_load_start) * 1000}")
         return tokenizer
 
-    def predict(self, data, label_column_name):
+    def predict(self, data):
         """Predict.
 
         Args:
@@ -212,10 +222,17 @@ class ModelPredictionRunner:
                 if pred_probas_chunk is not None and not isinstance(pred_probas_chunk, pd.DataFrame):
                     pred_probas_chunk = pd.DataFrame(pred_probas_chunk)
                 if y_test_chunk is not None:
-                    y_test_chunk = pd.DataFrame(y_test_chunk, index=X_test.index, columns=[label_column_name])
-                    if isinstance(y_test_chunk[label_column_name].iloc[0], str) \
-                            and self.task in constants.MULTIPLE_OUTPUTS_SET:
-                        y_test_chunk[label_column_name] = y_test_chunk[label_column_name].apply(
+                    cols = []
+                    if self.extra_y_test_cols is not None:
+                        cols += self.extra_y_test_cols
+                    if self.label_column_name is not None:
+                        cols += [self.label_column_name]
+                    y_test_chunk = pd.DataFrame(y_test_chunk, index=X_test.index, columns=cols)
+                    # Below code won't work with extra_cols
+                    if (self.label_column_name is not None
+                            and isinstance(y_test_chunk[self.label_column_name].iloc[0], str)
+                            and self.task in constants.MULTIPLE_OUTPUTS_SET):
+                        y_test_chunk[self.label_column_name] = y_test_chunk[self.label_column_name].apply(
                             lambda x: ast.literal_eval(x)
                         )
                 else:
@@ -346,6 +363,7 @@ def run():
         model_uri=model_uri,
         device=args.device,
         batch_size=args.batch_size,
+        label_column_name=args.label_column_name,
         config=args.config
     )
 
@@ -354,7 +372,7 @@ def run():
         logger.info("Loading Data.")
         try:
             is_mltable = check_and_return_if_mltable(args.data)
-            data = runner.load_data(args.data, args.label_column_name, args.input_column_names, is_mltable)
+            data = runner.load_data(args.data, args.input_column_names, is_mltable)
         except Exception as e:
             exception = DataLoaderException._with_error(
                 AzureMLError.create(BadInputData, error=repr(e)),
@@ -366,7 +384,7 @@ def run():
     with log_activity(logger, constants.TelemetryConstants.PREDICT_NAME,
                       custom_dimensions=custom_dims_dict):
         logger.info("Model Prediction.")
-        preds, pred_probas, ground_truth, perf_data = runner.predict(data, args.label_column_name)
+        preds, pred_probas, ground_truth, perf_data = runner.predict(data)
 
     logger.info("Saving outputs.")
     preds.to_json(args.predictions, orient="records", lines=True)
