@@ -8,15 +8,24 @@ import pandas as pd
 import numpy as np
 from abc import abstractmethod
 
+from exceptions import (
+    DataValidationException,
+)
+from error_definitions import (
+    InvalidGroundTruthColumnNameData,
+    InvalidYTestCasesColumnNameData,
+    InvalidGroundTruthColumnNameCodeGen
+)
 # TODO: Import ForecastColumns from azureml.evaluate.mlflow, when it will be
 # available.
-from constants import TASK, ForecastingConfigContract, ForecastColumns
+from constants import TASK, ForecastingConfigContract, ForecastColumns, TextGenerationColumns, DataFrameParams, SubTask
 from image_constants import ImageDataFrameParams, ODISLiterals, SettingLiterals
 from azureml.evaluate.mlflow.models.evaluation.azureml._image_od_is_evaluator import (
     ImageOdIsEvaluator,
 )
+from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.metrics import compute_metrics, constants
-from logging_utilities import get_logger
+from logging_utilities import get_logger, log_traceback
 
 logger = get_logger(name=__name__)
 
@@ -58,6 +67,8 @@ class EvaluatorFactory:
         Returns:
             _type_: _description_
         """
+        if metrics_config.get(TextGenerationColumns.SUBTASKKEY, "") == SubTask.CODEGENERATION:
+            return CodeGenerationEvaluator(task_type, metrics_config)
         return self._evaluators[task_type](task_type, metrics_config)
 
     def register(self, name, obj):
@@ -491,6 +502,77 @@ class TextGenerationEvaluator(Evaluator):
             y_test = np.reshape(y_test, (-1, 1))
         metrics = compute_metrics(task_type=constants.Tasks.TEXT_GENERATION, y_test=y_test.tolist(),
                                   y_pred=y_pred.tolist(), **self.metrics_config)
+        return metrics
+
+
+class CodeGenerationEvaluator(Evaluator):
+    """Code Generation Evaluator.
+
+    Args:
+        Evaluator (_type_): _description_
+    """
+
+    def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
+        super().__init__(task_type, metrics_config)
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """Evaluate TextGeneration.
+
+        Args:
+            y_test (_type_): _description_
+            y_pred (_type_): _description_
+            y_test_cases: list of strings
+
+        Returns:
+            _type_: _description_
+        """
+        y_test_cases = None
+        extra_cols = kwargs.get(DataFrameParams.Extra_Cols, None)
+        y_test_col_name = kwargs.get(DataFrameParams.Ground_Truth_Column_Name, None)
+        # TodO: This validaion should ideally be done while data loading. Design needs to be reconsidered
+        if extra_cols is None and y_test_col_name is None:
+            exception = DataValidationException._with_error(
+                AzureMLError.create(InvalidGroundTruthColumnNameCodeGen)
+            )
+            log_traceback(exception, logger)
+            raise exception
+        y_test_case_col_name = extra_cols[0] if extra_cols is not None and len(extra_cols) > 0 else None
+        if y_test_case_col_name is not None:
+            if y_test_case_col_name in y_test.columns:
+                y_test_cases = y_test[[y_test_case_col_name]]
+            else:
+                exception = DataValidationException._with_error(
+                    AzureMLError.create(InvalidYTestCasesColumnNameData)
+                )
+                log_traceback(exception, logger)
+                raise exception
+
+        if y_test_col_name is not None:
+            if y_test_col_name in y_test.columns:
+                y_test = y_test[[y_test_col_name]]
+            else:
+                exception = DataValidationException._with_error(
+                    AzureMLError.create(InvalidGroundTruthColumnNameData)
+                )
+                log_traceback(exception, logger)
+                raise exception
+
+        y_pred = self._convert_predictions(y_pred)
+        y_test = self._convert_predictions(y_test)
+        if y_test_cases is not None:
+            y_test_cases = self._convert_predictions(y_test_cases).tolist()
+        if y_test.ndim == 1:
+            y_test = np.reshape(y_test, (-1, 1))
+        if y_pred.ndim == 1:
+            y_pred = np.reshape(y_pred, (-1, 1))
+        metrics = compute_metrics(task_type=constants.Tasks.CODE_GENERATION, y_test=y_test.tolist(),
+                                  y_pred=y_pred.tolist(), test_cases=y_test_cases, **self.metrics_config)
         return metrics
 
 
