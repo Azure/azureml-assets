@@ -107,6 +107,7 @@ THRESHOLD_PARAMS = [
 
 CL_100K_BASE = "cl100k_base"
 GPT_35_TURBO = "gpt-35-turbo"
+GPT_35_TURBO_16K= "gpt-35-turbo-16k"
 GPT_4 = "gpt-4"
 GPT_4_32K = "gpt-4-32k"
 BASE_MAX_TOKENS = 1000
@@ -115,6 +116,7 @@ BASE_MAX_PROMPT_TOKENS = 3000
 MODEL_TYPE_FACTOR = {
     GPT_35_TURBO: 1,
     GPT_4: 2,
+    GPT_35_TURBO_16K: 4,
     GPT_4_32K: 8
 }
 
