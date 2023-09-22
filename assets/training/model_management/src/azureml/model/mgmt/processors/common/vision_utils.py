@@ -71,10 +71,10 @@ def process_image(image: Union[str, bytes]) -> bytes:
             try:
                 return base64.b64decode(image)
             except ValueError:
-                raise ValueError("The provided image string cannot be decoded."
+                raise ValueError("The provided image string cannot be decoded. "
                                  "Expected format is base64 string or url string.")
     else:
-        raise ValueError(f"Image received in {type(image)} format which is not supported."
+        raise ValueError(f"Image received in {type(image)} format which is not supported. "
                          "Expected format is bytes, base64 string or url string.")
 
 
