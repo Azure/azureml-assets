@@ -240,7 +240,7 @@
               ]
             }
           },
-          "code": "@@prompt_varient_1",
+          "code": "@@prompt_variant_1",
           "is_builtin": false
         },
         {
@@ -266,7 +266,7 @@
               ]
             }
           },
-          "code": "@@prompt_varient_2",
+          "code": "@@prompt_variant_2",
           "is_builtin": false
         },
         {
