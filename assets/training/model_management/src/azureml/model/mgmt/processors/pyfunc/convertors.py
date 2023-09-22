@@ -331,6 +331,7 @@ class LLaVAMLFlowConvertor(PyFuncMLFLowConvertor):
     """PyFunc MLfLow convertor for LLaVA models."""
 
     MODEL_DIR = os.path.join(os.path.dirname(__file__), "llava")
+    COMMON_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "common")
 
     def __init__(self, **kwargs):
         """Initialize MLflow convertor for LLaVA models."""
@@ -371,7 +372,7 @@ class LLaVAMLFlowConvertor(PyFuncMLFLowConvertor):
         code_path = [
             os.path.join(self.MODEL_DIR, "llava_mlflow_wrapper.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
-            os.path.join(self.MODEL_DIR, "utils.py")
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
         ]
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,

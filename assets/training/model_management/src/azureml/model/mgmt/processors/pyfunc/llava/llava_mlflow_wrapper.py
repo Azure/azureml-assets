@@ -13,7 +13,6 @@ from PIL import Image
 from transformers import TextStreamer
 
 from config import MLflowLiterals, MLflowSchemaLiterals, Tasks
-from utils import process_image
 
 
 class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -108,6 +107,7 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
         """
         from llava.constants import IMAGE_TOKEN_INDEX
         from llava.mm_utils import tokenizer_image_token, KeywordsStoppingCriteria
+        from vision_utils import process_image
 
         # Do inference one input at a time.
         responses = []
