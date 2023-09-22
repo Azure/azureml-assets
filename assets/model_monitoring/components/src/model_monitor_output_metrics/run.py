@@ -9,7 +9,9 @@ from typing import List
 import uuid
 from pyspark.sql import Row
 from dateutil import parser
-from shared_utilities.io_utils import read_mltable_in_spark
+from shared_utilities.io_utils import (
+    try_read_mltable_in_spark,
+)
 from model_monitor_output_metrics.factories.signal_factory import SignalFactory
 from model_monitor_output_metrics.entities.signals.signal import Signal
 from shared_utilities.amlfs import amlfs_upload
@@ -30,20 +32,30 @@ def run():
 
     args = arg_parser.parse_args()
 
-    metrics: List[Row] = read_mltable_in_spark(args.signal_metrics).collect()
+    signal_metrics = try_read_mltable_in_spark(
+        args.signal_metrics, "signal_metrics does not contain data."
+    )
+
+    metrics: List[Row] = []
+    if signal_metrics:
+        metrics = signal_metrics.collect()
 
     baseline_histogram = None
     target_histogram = None
 
-    if args.baseline_histogram is not None:
-        baseline_histogram: List[Row] = read_mltable_in_spark(
-            args.baseline_histogram
-        ).collect()
+    if args.baseline_histogram:
+        baseline_histogram_df = try_read_mltable_in_spark(
+            args.baseline_histogram, "baseline_histogram"
+        )
+        if baseline_histogram_df:
+            baseline_histogram: List[Row] = baseline_histogram_df.collect()
 
-    if args.target_histogram is not None:
-        target_histogram: List[Row] = read_mltable_in_spark(
-            args.target_histogram
-        ).collect()
+    if args.target_histogram:
+        target_histogram_df = try_read_mltable_in_spark(
+            args.target_histogram, "target_histogram"
+        )
+        if target_histogram_df:
+            target_histogram: List[Row] = target_histogram_df.collect()
 
     signal: Signal = SignalFactory().produce(
         signal_type=args.signal_type,
