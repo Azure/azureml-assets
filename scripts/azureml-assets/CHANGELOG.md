@@ -3,6 +3,14 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.2 (2023-09-23)
+### 🐛 Bugs Fixed
+- [#1288](https://github.com/Azure/azureml-assets/pull/1288) Add arg for no-op model updates
+
+## 1.16.1 (2023-09-22)
+### 🐛 Bugs Fixed
+- [#1288](https://github.com/Azure/azureml-assets/pull/1288) Support to keep latest model version intact
+
 ## 1.16.0 (2023-09-12)
 ### 🚀 New Features
 - [#1207](https://github.com/Azure/azureml-assets/pull/1207) Support copy of changed files
