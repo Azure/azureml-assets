@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: qna-with-your-own-data-using-faiss-index
+path: ./
+properties:
+  is-promptflow: true
+  azureml.promptflow.section: gallery
+  azureml.promptflow.type: standard
+  azureml.promptflow.name: QnA with Your Own Data Using Faiss Index
+  azureml.promptflow.description: Q&A with GPT3.5 using domain knowledge from Faiss index to make the answer more grounded.
+  inference-min-sku-spec: 2|0|14|28
+  inference-recommended-sku: Standard_DS3_v2
+version: 1

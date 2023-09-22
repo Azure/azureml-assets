@@ -1,43 +1,29 @@
-This is a companion flow to "Ask Wikipedia". It demonstrates how to create a chatbot that can remember previous interactions and use the conversation history to generate next message.
+The "Chat with Wikipedia" is a pre-trained chat model with GPT3.5: it combines conversation history and information from Wikipedia to make the answer more grounded. It involves finding a relevant Wikipedia link and getting page contents for the question. It can remember previous interactions and generate the next message based on the conversation history and the new search content.
 
-Brief description: ChatGPT-based chatbot that leverages Wikipedia data to ground the responses.
 
-### What you will learn
+### Inference samples
 
-In this flow, you will learn
-- how to compose a chat flow.
-- prompt template format of LLM tool chat api. Message delimiter is a separate line containing role name and colon: "system:", "user:", "assistant:".
-See <a href="https://platform.openai.com/docs/api-reference/chat/create#chat/create-role" target="_blank">OpenAI Chat</a> for more about message role.
-    ```jinja
-    system:
-    You are a chatbot having a conversation with a human.
+Inference type|Python sample (Notebook)|CLI with YAML
+|--|--|--|
+Real time|<a href="https://github.com/microsoft/promptflow/blob/pm/3p-inside-materials/docs/media/deploy-to-aml-code/sdk/deploy.ipynb" target="_blank">deploy-promptflow-model-python-example</a>|<a href="https://github.com/microsoft/promptflow/blob/pm/3p-inside-materials/docs/go-to-production/deploy-to-aml-code.md" target="_blank">deploy-promptflow-model-cli-example</a>
+Batch | N/A | N/A
 
-    user:
-    {{question}}
-    ```
-- how to consume chat history in prompt.
-    ```jinja
-    {% for item in chat_history %}
-    user:
-    {{item.inputs.question}}
-    assistant:
-    {{item.outputs.answer}}
-    {% endfor %}
-    ```
+### Sample inputs and outputs (for real-time inference)
 
-### Getting started
+#### Sample input
+```json
+{
+    "inputs": {
+        "question": "What is ChatGPT?"
+    }
+}
+```
 
-#### 1 Create connection for LLM tool to use
-Go to "Prompt flow" "Connections" tab. Click on "Create" button, select one of LLM tool supported connection types and fill in the configurations.
-
-Currently, there are two connection types supported by LLM tool: "AzureOpenAI" and "OpenAI". If you want to use "AzureOpenAI" connection type, you need to create an Azure OpenAI service first. Please refer to <a href="https://azure.microsoft.com/en-us/products/cognitive-services/openai-service/" target="_blank">Azure OpenAI Service</a> for more details. If you want to use "OpenAI" connection type, you need to create an OpenAI account first. Please refer to <a href="https://platform.openai.com/" target="_blank">OpenAI</a> for more details.
-
-#### 2 Configure the flow with your connection
-Click "Clone" button to start a new flow, and go to nodes "extract_query_from_question" and "augmented_chat". Pick the connection you created in step 1 in the node parameter "Connection" dropdown list.
-
-#### 3 Start chatting
-Click "Chat" button to open the chat window. Type in your question and click "Send" button. The chatbot will reply with an answer. You can continue chatting with the chatbot by typing in your next question and click "Send" button again.
-
-### Used tools
-- LLM Tool
-- Python Tool
+#### Sample output
+```json
+{
+    "outputs": {
+        "answer": "ChatGPT is a chatbot product developed by OpenAI. It is powered by the Generative Pre-trained Transformer (GPT) series of language models, with GPT-4 being the latest version. ChatGPT uses natural language processing to generate responses to user inputs in a conversational manner. It was released as ChatGPT Plus, a premium version, which provides enhanced features and access to the GPT-4 based version of OpenAI's API. ChatGPT allows users to interact and have conversations with the language model, utilizing both text and image inputs. It is designed to be more reliable, creative, and capable of handling nuanced instructions compared to previous versions. However, it is important to note that while GPT-4 improves upon its predecessors, it still retains some of the same limitations and challenges."
+    }
+}
+```
