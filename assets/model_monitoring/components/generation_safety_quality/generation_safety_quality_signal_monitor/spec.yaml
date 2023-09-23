@@ -4,7 +4,7 @@ type: pipeline
 name: generation_safety_quality_signal_monitor
 display_name: Generation Safety & Quality - Signal Monitor
 description: Computes the content generation safety metrics over LLM outputs.
-version: 0.4.1
+version: 0.4.2
 is_deterministic: true
 inputs:
   monitor_name:
@@ -44,23 +44,23 @@ inputs:
   groundedness_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   similarity_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   relevance_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   fluency_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   coherence_rating_threshold:
     type: integer
     optional: true
-    default: 3
+    default: 4
   groundedness_passrate_threshold:
     type: number
     optional: true
@@ -97,7 +97,7 @@ outputs:
 jobs:
   compute_histogram:
     type: spark
-    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.1
+    component: azureml://registries/azureml/components/gsq_annotation_compute_histogram/versions/0.4.2
     inputs:
       production_dataset:
         type: mltable
