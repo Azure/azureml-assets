@@ -25,6 +25,7 @@ class DataQualitySignal(Signal):
         super().__init__(
             monitor_name, signal_name, "1.0.0", SignalType.DATA_QUALITY, metrics
         )
+        self.row_count_metrics = None
         self.feature_metrics: List[FeatureMetrics] = self._build_feature_metrics(
             monitor_name, signal_name, metrics
         )
@@ -38,7 +39,8 @@ class DataQualitySignal(Signal):
             "metrics": {"features": {}},
         }
 
-        signal_payload["metrics"]["rowCount"] = self.row_count_metrics
+        if self.row_count_metrics:
+            signal_payload["metrics"]["rowCount"] = self.row_count_metrics
 
         for feature_metric in self.feature_metrics:
             signal_payload["metrics"]["features"][
@@ -72,7 +74,11 @@ class DataQualitySignal(Signal):
         Returns:
         List[FeatureMetrics]: The feature-level metrics.
         """
+        if not metrics or len(metrics) == 0:
+            return []
+
         output = {}
+
         for metric in metrics:
             if metric["metric_name"] == "RowCount" and metric["feature_name"] == "":
                 self.row_count_metrics = {
