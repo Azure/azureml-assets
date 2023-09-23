@@ -1401,11 +1401,11 @@ def run():
     parser.add_argument("--presence_penalty", type=float, default=0.0)
     parser.add_argument("--stop", type=str, default=None)
 
-    parser.add_argument("--groundedness_rating_threshold", type=int, default=3)
-    parser.add_argument("--similarity_rating_threshold", type=int, default=3)
-    parser.add_argument("--relevance_rating_threshold", type=int, default=3)
-    parser.add_argument("--fluency_rating_threshold", type=int, default=3)
-    parser.add_argument("--coherence_rating_threshold", type=int, default=3)
+    parser.add_argument("--groundedness_rating_threshold", type=int, default=4)
+    parser.add_argument("--similarity_rating_threshold", type=int, default=4)
+    parser.add_argument("--relevance_rating_threshold", type=int, default=4)
+    parser.add_argument("--fluency_rating_threshold", type=int, default=4)
+    parser.add_argument("--coherence_rating_threshold", type=int, default=4)
 
     parser.add_argument("--prompt_column_name", type=str, default=PROMPT)
     parser.add_argument("--completion_column_name", type=str, default=COMPLETION)

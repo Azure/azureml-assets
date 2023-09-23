@@ -89,7 +89,7 @@ def mdc_preprocessor(
     df = try_read_mltable_in_spark(des_path, "preprocessed_data")
 
     if not df:
-        print(" ''.")
+        print("Skipping the Model Data Collector preprocessor.")
         post_warning_event(
             "Although data was found, the window for this current run contains no data. "
             + "Please visit aka.ms/mlmonitoringhelp for more information."

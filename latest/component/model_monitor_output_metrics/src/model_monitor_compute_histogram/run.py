@@ -6,16 +6,16 @@
 import argparse
 from histogram import compute_histograms
 from pyspark.sql.types import (
-    StructType,
-    StructField,
-    StringType,
     DoubleType,
+    StringType,
+    StructField,
+    StructType,
 )
 from shared_utilities.io_utils import (
-    try_read_mltable_in_spark,
-    try_read_mltable_in_spark_with_warning,
     init_spark,
     save_spark_df_as_mltable,
+    try_read_mltable_in_spark,
+    try_read_mltable_in_spark_with_warning,
 )
 
 
@@ -43,7 +43,7 @@ def run():
     df = try_read_mltable_in_spark_with_warning(args.input_data, "input_data")
 
     if not df:
-        print("Skipping histogram generation.")
+        print("No histogram buckets detected. Skipping histogram generation.")
         return
 
     histogram_buckets = try_read_mltable_in_spark(
