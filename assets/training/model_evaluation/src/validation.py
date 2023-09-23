@@ -235,17 +235,19 @@ def _check_if_non_empty(val: Union[str, list, int]) -> bool:
     return True
 
 
-def _validate(data, input_column_names=None, label_column_name=None):
+def _validate(data, input_column_names=None, label_column_name=None, extra_cols=None):
     try:
         # If input_column_names are not sent as argument we are retaining all columns
         if input_column_names is None:
             input_column_names = list(data.columns)
             if label_column_name in input_column_names:
                 input_column_names.remove(label_column_name)
-        if label_column_name is not None and label_column_name not in input_column_names:
-            data = _clean_and_validate_dataset(data, input_column_names + [label_column_name])
-        else:
-            data = _clean_and_validate_dataset(data, input_column_names)
+        if extra_cols is not None:
+            input_column_names += extra_cols
+        if label_column_name is not None:
+            input_column_names += [label_column_name]
+        data = _clean_and_validate_dataset(data, input_column_names)
+
     except Exception as e:
         if isinstance(e, AzureMLException):
             exception = e
