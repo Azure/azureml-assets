@@ -25,7 +25,7 @@ def _submit_feature_attribution_drift_model_monitor_job(
         COMPONENT_NAME_FEATURE_ATTRIBUTION_DRIFT_SIGNAL_MONITOR
     )
 
-    @pipeline()
+    @pipeline(default_compute="compute-cluster")
     def _feature_attr_drift_signal_monitor_e2e():
         feature_attr_drift_signal_monitor_output = feature_attr_drift_signal_monitor(
             signal_name="my-feature-attr-signal",
@@ -41,7 +41,7 @@ def _submit_feature_attribution_drift_model_monitor_job(
         }
 
     pipeline_job = _feature_attr_drift_signal_monitor_e2e()
-    pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
+    pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="mount")
 
     pipeline_job = ml_client.jobs.create_or_update(
         pipeline_job, experiment_name=experiment_name
