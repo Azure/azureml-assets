@@ -6,13 +6,13 @@
 """Entry script for 3P Inference Postprocessor Component."""
 
 import argparse
-from . import inference_postprocessor as inferpp
-import sys
+
 from utils.logging import get_logger, log_mlflow_params
 from utils.exceptions import swallow_all_exceptions
 
+from . import inference_postprocessor as inferpp
+
 logger = get_logger(__name__)
-logger.info("SYSTEM ARGUMENTS: ", sys.argv)
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -92,7 +92,7 @@ def parse_arguments() -> argparse.Namespace:
         "--output_dataset_result",
         type=str,
         default=None,
-        help="Path to the output the processed .jsonl file."
+        help="Path to the jsonl file where the processed data will be saved."
     )
     argss, _ = parser.parse_known_args()
     return argss
@@ -125,7 +125,7 @@ def main(
     :param strip_suffix: "Characters to remove from the end of the extracted answer."
     :param template: Jinja template containing the extraction logic of inference post-processing.
     :param script_path: Path to the custom preprocessor python script provided by user.
-    :param output_dataset: Path to the dump the processed .jsonl file.
+    :param output_dataset: Path to the jsonl file where the processed data will be saved.
     :return: None
     """
     processor = inferpp.InferencePostprocessor(

@@ -7,12 +7,13 @@
 
 import argparse
 import os
-from . import dataset_preprocessor as dsp
-import sys
+
 from utils.logging import get_logger, log_mlflow_params
 from utils.exceptions import swallow_all_exceptions
+
+from . import dataset_preprocessor as dsp
+
 logger = get_logger(__name__)
-logger.info("SYSTEM ARGUMENTS: ", sys.argv)
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -43,14 +44,16 @@ def parse_arguments() -> argparse.Namespace:
         "--encoder_config",
         type=str,
         default=None,
-        help=('Dictionary in json format that contains idtolabel or labeltoid to encode.'
+        help=('JSON serialized dictionary to perform mapping. Must contain key-value pair'
+              '"column_name": "<actual_column_name>" whose value needs mapping, followed by'
+              'key-value pairs containing idtolabel or labeltoid mappers.'
               'Example: {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}.'
               'This is not applicable to custom scripts.')
     )
     parser.add_argument(
         "--output_dataset",
         type=str,
-        help="Path to the output the processed .jsonl file."
+        help="Path to the jsonl file where the processed data will be saved."
     )
     argss, _ = parser.parse_known_args()
     return argss
@@ -72,9 +75,10 @@ def main(
         dict value is presented using jinja template logic which will be used to extract the \
         respective value from the dataset.
     :param script_path: Path to the custom preprocessor python script provided by user.
-    :param encoder_config: Dictionary in json format that contains idtolabel or labeltoid to encode. This is not \
-        aplicable to custom scripts.
-    :param output_dataset: Path to the dump the processed .jsonl file.
+    :param encoder_config: JSON serialized dictionary to perform mapping. Must contain key-value pair \
+        "column_name": "<actual_column_name>" whose value needs mapping, followed by key-value pairs containing \
+        idtolabel or labeltoid mappers. This is not aplicable to custom scripts.
+    :param output_dataset: Path to the jsonl file where the processed data will be saved.
     :return: None
     """
     processor = dsp.DatasetPreprocessor(

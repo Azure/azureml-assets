@@ -9,17 +9,14 @@ import pandas as pd
 import json
 import os
 import re
-import sys
 import jinja2
+
+from azureml._common._error_definition.azureml_error import AzureMLError
 from utils.error_definitions import BenchmarkValidationError
 from utils.exceptions import BenchmarkValidationException
 from utils.logging import get_logger
 from utils.io import read_jsonl_files
-from azureml._common._error_definition.azureml_error import AzureMLError
 
-current_folder = os.path.dirname(os.path.abspath(__file__))
-parent_folder = os.path.dirname(current_folder)
-sys.path.append(parent_folder)
 logger = get_logger(__name__)
 
 jinja2.filters.FILTERS['zip'] = zip
@@ -56,7 +53,7 @@ class InferencePostprocessor(object):
         :param strip_suffix: "Characters to remove from the end of the extracted answer."
         :param template: Jinja template containing the extraction logic of inference post-processing.
         :param script_path: Path to the custom preprocessor python script provided by user.
-        :param output_dataset: Path to the dump the processed .jsonl file.
+        :param output_dataset: Path to the jsonl file where the processed data will be saved.
         :return: None
         """
         self.prediction_dataset = prediction_dataset
@@ -175,11 +172,7 @@ class InferencePostprocessor(object):
 
     def run_user_preprocessor(self) -> None:
         """Postprocessor run using custom template."""
-        try:
-            os.system(
-                f'python {self.user_preprocessor} --prediction_dataset {self.prediction_dataset} \
-                --ground_truth_dataset {self.ground_truth_dataset} --output_dataset {self.result}'
-            )
-        except Exception as e:
-            logger.error('Script failed', e)
-        return
+        os.system(
+            f'python {self.user_preprocessor} --prediction_dataset {self.prediction_dataset} \
+            --ground_truth_dataset {self.ground_truth_dataset} --output_dataset {self.result}'
+        )

@@ -9,16 +9,13 @@ import json
 import os
 import re
 import jinja2
-import sys
+
+from azureml._common._error_definition.azureml_error import AzureMLError
 from utils.exceptions import BenchmarkValidationException
 from utils.error_definitions import BenchmarkValidationError
 from utils.logging import get_logger
 from utils.io import read_jsonl_files
-from azureml._common._error_definition.azureml_error import AzureMLError
 
-current_folder = os.path.dirname(os.path.abspath(__file__))
-parent_folder = os.path.dirname(current_folder)
-sys.path.append(parent_folder)
 logger = get_logger(__name__)
 
 jinja2.filters.FILTERS['zip'] = zip
@@ -44,11 +41,12 @@ class DatasetPreprocessor(object):
             dict value is presented using jinja template logic which will be used to extract the \
             respective value from the dataset.
         :param user_preprocessor: Path to the custom preprocessor python script provided by user.
-        :param encoder_config: Dictionary in json format that contains column/key name to encode associated \
-            with dict key `column_name` followed by idtolabel or labeltoid mappers as key-value pair. Example format: \
+        :param encoder_config: JSON serialized dictionary to perform mapping. Must contain key-value pair \
+            "column_name": "<actual_column_name>" whose value needs mapping, followed by key-value pairs containing \
+            idtolabel or labeltoid mappers. Example format: \
             {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}. This is not applicable to \
             custom scripts.
-        :param output_dataset: Path to the dump the processed .jsonl file.
+        :param output_dataset: Path to the jsonl file where the processed data will be saved.
         """
         self.input_dataset = input_dataset
         self.template = template
@@ -131,11 +129,7 @@ class DatasetPreprocessor(object):
 
     def run_user_preprocessor(self) -> None:
         """Prerpocessor run using custom template."""
-        try:
-            os.system(
-                f'python {self.user_preprocessor} --input_path {self.input_dataset} \
-                --output_path {self.output_dataset}'
-            )
-        except Exception as e:
-            logger.exception('Script failed', e)
-        return
+        os.system(
+            f'python {self.user_preprocessor} --input_path {self.input_dataset} \
+            --output_path {self.output_dataset}'
+        )
