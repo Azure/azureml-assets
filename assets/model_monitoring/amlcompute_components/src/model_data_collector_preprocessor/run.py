@@ -79,7 +79,7 @@ def mdc_preprocessor(
 
     # Save preprocessed_data MLTable to temp location
     des_path = preprocessed_input_data + "/temp"
-    shutil.copytree(save_path, des_path)
+    shutil.copytree(save_path, des_path, dirs_exist_ok=True)
 
     # Read mltable from preprocessed_data
     df = read_mltable_in_spark(mltable_path=des_path)
