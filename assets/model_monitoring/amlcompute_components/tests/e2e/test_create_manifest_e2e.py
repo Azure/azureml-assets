@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import MLClient, Output, Input
-from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.entities import Command
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_DRIFT_SIGNAL_MONITOR,
@@ -43,7 +43,7 @@ def _submit_data_drift_and_create_manifest_job(
             notification_emails="yeta@microsoft.com",
         )
 
-        create_manifest_output: Spark = create_manifest(
+        create_manifest_output: Command = create_manifest(
             signal_outputs_1=dd_model_monitor_metrics_output.outputs.signal_output,
         )
 

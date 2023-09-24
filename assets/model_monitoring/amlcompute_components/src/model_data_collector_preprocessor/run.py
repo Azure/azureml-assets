@@ -26,6 +26,7 @@ from shared_utilities.io_utils import (
 from shared_utilities.patch_mltable import patch_all
 patch_all()
 
+
 def _convert_uri_folder_to_mltable(
     start_datetime: datetime,
     end_datetime: datetime,

@@ -14,6 +14,7 @@ from shared_utilities.io_utils import (
 from shared_utilities.patch_mltable import patch_all
 patch_all()
 
+
 def _validate_join_column_in_input_data(
     input_data_df: pyspark_sql.DataFrame,
     join_column: str,
