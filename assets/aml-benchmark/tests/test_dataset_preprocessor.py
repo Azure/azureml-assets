@@ -187,7 +187,11 @@ class TestDatasetPreprocessorScript:
         [
             (
                 "gsm8k", INPUT_DATASET,
-                '{"question":{{question}}, "solution":{{answer.split("#### ")[0]}},"answer":{{answer.split("#### ")[-1]|string}}}',
+                """ {
+                    "question":{{question}},
+                    "solution":{{answer.split("#### ")[0]}},
+                    "answer":{{answer.split("#### ")[-1]|string}}
+                } """,
                 None, None
             ),
             ("quac", INPUT_DATASET, None, os.path.join(CUSTOM_SCRIPT_PATH, "quac_textgen_babel.py"), None),
