@@ -4,7 +4,7 @@ type: pipeline
 name: prediction_drift_signal_monitor_command
 display_name: Prediction Drift - Signal Monitor
 description: Computes the prediction drift between a baseline and a target data assets.
-version: 0.0.1
+version: 0.0.2
 is_deterministic: true
 
 inputs:
@@ -43,11 +43,10 @@ inputs:
 outputs:
   signal_output:
     type: uri_folder
-    mode: direct
 jobs:
   feature_selection:
-    type: spark
-    component: azureml://registries/azureml/components/model_monitor_feature_selector_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/model_monitor_feature_selector_command/versions/0.0.2
     inputs:
       input_data_1:
         type: mltable
@@ -61,8 +60,8 @@ jobs:
       feature_names:
         type: mltable
   compute_drift_metrics:
-    type: spark
-    component: azureml://registries/azureml/components/data_drift_compute_metrics_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/data_drift_compute_metrics_command/versions/0.0.2
     inputs:
       production_dataset:
         type: mltable
@@ -81,8 +80,8 @@ jobs:
       signal_metrics:
         type: mltable
   output_signal_metrics: 
-    type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/model_monitor_output_metrics_command/versions/0.0.2
     inputs:
       signal_metrics:
         type: mltable
@@ -95,10 +94,9 @@ jobs:
       signal_output:
         type: uri_folder
         path: ${{parent.outputs.signal_output}}
-        mode: direct
   evaluate_metric_thresholds: 
-    type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold_command/versions/0.0.2
     inputs:
       signal_metrics: 
         type: mltable
