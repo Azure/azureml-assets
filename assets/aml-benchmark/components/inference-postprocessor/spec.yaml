@@ -4,7 +4,7 @@ type: command
 name: inference_postprocessor
 display_name: Inference Postprocessor
 description: Inference Postprocessor
-version: 0.0.1
+version: 0.0.20
 is_deterministic: true
 
 inputs:
@@ -64,9 +64,9 @@ inputs:
   script_path:
     type: uri_file
     description: >-
-      Custom python script to extract prediction.
+      Path to the custom postprocessor python script to extract prediction.
       This [base template]
-      (https://github.com/Azure/azureml-assets/assets/aml-benchmark/scripts/custom_inference_postprocessors/base_postprocessor_template.py)
+      (https://github.com/Azure/azureml-assets/tree/main/assets/aml-benchmark/scripts/custom_inference_postprocessors/base_postprocessor_template.py)
       tshould be used to create a custom postprocessor script.
     optional: True
 
