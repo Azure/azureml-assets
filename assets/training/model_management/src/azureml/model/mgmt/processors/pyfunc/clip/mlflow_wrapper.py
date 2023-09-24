@@ -16,7 +16,7 @@ from typing import List, Tuple
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
     # model wrapper for save_model().
-    from vision_utils import create_temp_file, process_image, get_current_device
+    from vision_utils import create_temp_file, process_image_pandas_series, get_current_device
 except ImportError:
     pass
 
@@ -76,7 +76,7 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         # Decode the base64 image column
         decoded_images = input_data.loc[
             :, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
-        ].apply(axis=1, func=process_image)
+        ].apply(axis=1, func=process_image_pandas_series)
 
         try:
             # parse comma separated labels and remove leading and trailing whitespace

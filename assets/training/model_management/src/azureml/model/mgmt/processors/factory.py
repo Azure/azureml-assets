@@ -27,6 +27,7 @@ from azureml.model.mgmt.processors.pyfunc.convertors import (
     MMLabDetectionMLflowConvertor,
     CLIPMLFlowConvertor,
     StableDiffusionMlflowConvertor,
+    LLaVAMLFlowConvertor,
 )
 
 
@@ -62,6 +63,14 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
         # Models from MMLAB model framework exported in PyFunc mlflow flavor
         if MMLabDetectionTasks.has_value(task):
             return MMLabDetectionMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        else:
+            raise Exception(f"Models from {model_framework} for {task} not supported for MLflow conversion")
+    elif model_framework == ModelFramework.LLAVA.value:
+        # Models from LLAVA model framework exported in PyFunc mlflow flavor
+        if task == PyFuncSupportedTasks.IMAGE_TEXT_TO_TEXT.value:
+            return LLaVAMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         else:
@@ -156,6 +165,19 @@ class CLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for CLIP model."""
         return CLIPMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class LLaVAMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for LLaVA model family."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for LLaVA model."""
+        return LLaVAMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,
