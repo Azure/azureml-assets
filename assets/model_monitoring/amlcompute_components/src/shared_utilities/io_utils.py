@@ -15,6 +15,9 @@ def _get_datastore_id():
               + r"/microsoft.machinelearningservices/workspaces/(.+?)$"
 
     match = re.search(pattern, workspace_scope)
+    if not match:
+        raise ValueError(f"'{workspace_scope}' is not a valid workspace scope.")
+
     subscription_id = match.group(1)
     resource_group_name = match.group(2)
     workspace_name = match.group(3)
@@ -30,6 +33,9 @@ def _get_datastore_relative_data_path(data_path):
     pattern = r"^(.+?)/cap/data-capability/wd/(.+?)$"
 
     match = re.search(pattern, data_path)
+    if not match:
+        raise ValueError(f"'{data_path}' is not a valid data path.")
+
     output_folder = match.group(2)
 
     return f"paths/azureml/{job_id}/{output_folder}"

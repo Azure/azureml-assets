@@ -23,13 +23,13 @@ def _submit_data_drift_and_create_manifest_job(
     create_manifest = get_component(COMPONENT_NAME_CREATE_MANIFEST)
     mdc_preprocessor = get_component(COMPONENT_NAME_MDC_PREPROCESSOR)
 
-    @pipeline()
+    @pipeline(default_compute="compute-cluster")
     def _create_manifest_e2e():
 
         mdc_preprocessor_output = mdc_preprocessor(
             data_window_start="2023-01-29T00:00:00Z",
             data_window_end="2023-02-03T00:00:00Z",
-            input_data=Input(path=target_data, mode="direct", type="uri_folder"),
+            input_data=Input(path=target_data, mode="mount", type="uri_folder"),
         )
 
         dd_model_monitor_metrics_output = dd_model_monitor(
@@ -40,24 +40,12 @@ def _submit_data_drift_and_create_manifest_job(
             monitor_current_time="2023-02-02T00:00:00Z",
             filter_type="Subset",
             filter_value="sepal_length,sepal_width",
-            notification_emails="a0142e223_7301@ac5ea71d52378.com",
+            notification_emails="yeta@microsoft.com",
         )
 
         create_manifest_output: Spark = create_manifest(
             signal_outputs_1=dd_model_monitor_metrics_output.outputs.signal_output,
         )
-
-        mdc_preprocessor_output.identity = AmlTokenConfiguration()
-        mdc_preprocessor_output.resources = {
-            "instance_type": "Standard_E8S_V3",
-            "runtime_version": "3.3",
-        }
-
-        create_manifest_output.identity = AmlTokenConfiguration()
-        create_manifest_output.resources = {
-            "instance_type": "Standard_E8S_V3",
-            "runtime_version": "3.3",
-        }
 
         return {
             "model_monitor_metrics_output": create_manifest_output.outputs.model_monitor_metrics_output
@@ -65,7 +53,7 @@ def _submit_data_drift_and_create_manifest_job(
 
     pipeline_job = _create_manifest_e2e()
     pipeline_job.outputs.model_monitor_metrics_output = Output(
-        type="uri_folder", mode="direct"
+        type="uri_folder", mode="mount"
     )
 
     pipeline_job = ml_client.jobs.create_or_update(

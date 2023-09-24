@@ -7,9 +7,10 @@ import argparse
 import pandas as pd
 import mltable
 import tempfile
-from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
+import os
 from pyspark.sql.functions import col, lit
+import shutil
 
 from shared_utilities.constants import (
     MDC_CHAT_HISTORY_COLUMN,
@@ -32,7 +33,7 @@ def _convert_uri_folder_to_mltable(
 ):
     # Extract partition format
     table = mltable.from_json_lines_files(
-        paths=[{"pattern": f"{input_data}**/*.jsonl"}]
+        paths=[{"pattern": os.path.join(input_data, "**/*.jsonl")}]
     )
     # Uppercase HH for hour info
     partitionFormat = "{PartitionDate:yyyy/MM/dd/HH}/{fileName}.jsonl"
@@ -76,16 +77,8 @@ def mdc_preprocessor(
     table.save(save_path)
 
     # Save preprocessed_data MLTable to temp location
-    des_path = preprocessed_input_data + "temp"
-    fs = AzureMachineLearningFileSystem(des_path)
-    print("MLTable path:", des_path)
-    # TODO: Evaluate if we need to overwrite
-    fs.upload(
-        lpath=save_path,
-        rpath="",
-        **{"overwrite": "MERGE_WITH_OVERWRITE"},
-        recursive=True,
-    )
+    des_path = preprocessed_input_data + "/temp"
+    shutil.copytree(save_path, des_path)
 
     # Read mltable from preprocessed_data
     df = read_mltable_in_spark(mltable_path=des_path)
