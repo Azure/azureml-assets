@@ -35,7 +35,6 @@ from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_
 from azureml.acft.common_components.utils.error_handling.error_definitions import SKUNotSupported
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
-
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
@@ -455,7 +454,7 @@ def finetune(args: Namespace):
         args.model_name_or_path = args.model_name
 
     # Enable QLoRA finetune for Llama-70B
-    model_asset_id = getattr(args, "model_asset_id", "")
+    model_asset_id = getattr(args, "model_asset_id", None) or ""
     if any(
         [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
     ):
@@ -482,6 +481,12 @@ def finetune(args: Namespace):
             f"Identified model type: {args.model_type}. Forcing `ignore_mismatched_sizes` to False."
         )
         setattr(args, "ignore_mismatched_sizes", False)
+
+    # set eval_accumulation_steps to None if passed a non-positive value
+    if getattr(args, "eval_accumulation_steps", -1) <= 0:
+        setattr(args, "eval_accumulation_steps", None)
+
+    logger.info(f"eval_accumulation_steps: {getattr(args, 'eval_accumulation_steps', None)}")
 
     # read FT config
     ft_config_path = Path(args.model_selector_output, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)
@@ -510,6 +515,11 @@ def finetune(args: Namespace):
                     f"Adding mlflow model signature for task {args.task_name} - "
                     f"{MLFLOW_MODEL_SIGNATURES[args.task_name]}"
                 )
+
+    # remove mlflow_model_signature if empty
+    if "mlflow_model_signature" in mlflow_ft_conf \
+            and len(mlflow_ft_conf["mlflow_model_signature"]) == 0:
+        del mlflow_ft_conf["mlflow_model_signature"]
 
     model_name_or_type = None
     # pass `mlflow_hftransformers_misc_conf` to be set in mlflow model
@@ -589,11 +599,7 @@ def finetune(args: Namespace):
             )
             setattr(args, "apply_deepspeed", False)
 
-    # disable ORT as optimum package is not compatible with transformers 4.31.0
-    if args.apply_ort:
-        logger.info("Optimum has a breaking change with transformers 4.31.0.")
-        logger.info("Resetting ORT to false")
-        setattr(args, "apply_ort", False)
+    setattr(args, "apply_ort", can_apply_ort(args, logger))
 
     # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
     if args.apply_deepspeed and args.deepspeed is None:
@@ -648,6 +654,15 @@ def finetune(args: Namespace):
     hf_task_runner.run_finetune(args)
 
 
+def can_apply_ort(args: Namespace, logger):
+    """Can ORT be enabled."""
+    if args.apply_ort and args.task_name in (Tasks.SUMMARIZATION, Tasks.TRANSLATION):
+        logger.warning("Enabling ORT has a breaking change with summarization and translation tasks "
+                       "so diabling ORT for SUMMARIZATION and TRANSLATION tasks")
+        return False
+    return args.apply_ort
+
+
 @swallow_all_exceptions(time_delay=60)
 def main():
     """Parse args and finetune."""
@@ -685,6 +700,7 @@ def main():
             AutoModelForSequenceClassification,
             AutoModelForTokenClassification,
             AutoModelForQuestionAnswering,
+            AutoModelForCausalLM,
         )
 
         # Updata lora target modules for falcon
@@ -699,7 +715,10 @@ def main():
         AutoModelForQuestionAnswering.from_pretrained = partial(
             AutoModelForQuestionAnswering.from_pretrained, trust_remote_code=True
         )
-        logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA")
+        AutoModelForCausalLM.from_pretrained = partial(
+            AutoModelForCausalLM.from_pretrained, trust_remote_code=True
+        )
+        logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA and Text Gen")
 
     finetune(args)
 

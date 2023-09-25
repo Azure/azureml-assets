@@ -1,0 +1,17 @@
+group,metric_value,metric_name,threshold_value
+5,3,AcceptableFluencyScorePerInstance,3
+4,2,AcceptableFluencyScorePerInstance,3
+1,0,AcceptableFluencyScorePerInstance,3
+2,0,AcceptableFluencyScorePerInstance,3
+3,0,AcceptableFluencyScorePerInstance,3
+5,5,AcceptableCoherenceScorePerInstance,3
+1,0,AcceptableCoherenceScorePerInstance,3
+2,0,AcceptableCoherenceScorePerInstance,3
+3,0,AcceptableCoherenceScorePerInstance,3
+4,0,AcceptableCoherenceScorePerInstance,3
+production_data,5,RowCount,
+reference_data,5,RowCount,""
+,1,AggregatedFluencyPassRate,0.7
+,1,AggregatedCoherencePassRate,0.7
+,,AcceptableCoherenceScorePerInstance,3
+,,AcceptableFluencyScorePerInstance,3
