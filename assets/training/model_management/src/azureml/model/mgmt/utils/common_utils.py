@@ -127,7 +127,12 @@ def get_mlclient(registry_name: str = None):
 
 
 @log_execution_time
-def copy_files(src_dir: Path, destn_dir: Path, include_pattern_str: str = r"^.*$", exclude_pattern_str: Optional[str] = None) -> None:
+def copy_files(
+    src_dir: Path,
+    destn_dir: Path,
+    include_pattern_str: str = r"^.*$",
+    exclude_pattern_str: Optional[str] = None
+) -> None:
     """Copy files to destination directory [Non-recursively] based on regex pattern provided."""
     if not Path(src_dir).is_dir():
         raise Exception("src path provided should be a dir")
@@ -158,7 +163,6 @@ def move_files(src_dir: Path, destn_dir: Path, include_pattern_str: str = r"^.*$
     for file_name in os.listdir(src_dir):
         if include_pattern.match(file_name):
             shutil.move(os.path.join(src_dir, file_name), destn_dir)
-
 
 
 def create_namespace_from_dict(var: Any):

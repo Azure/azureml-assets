@@ -211,7 +211,12 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
 
         # move metadata files to parent folder
         logger.info("Moving meta files such as license, use_policy, readme to parent")
-        move_files(Path(self._output_dir) / "data/model", self._output_dir, include_pattern_str=META_FILE_PATTERN, ignore_case=True)
+        move_files(
+            Path(self._output_dir) / "data/model",
+            self._output_dir,
+            include_pattern_str=META_FILE_PATTERN,
+            ignore_case=True
+        )
 
         # pin pycocotools==2.0.4
         self._update_conda_dependencies({"pycocotools": "2.0.4"})
