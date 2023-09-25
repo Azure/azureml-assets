@@ -61,6 +61,14 @@ inputs:
     description: MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.
 
   # Data PreProcess parameters (See [docs](https://aka.ms/azureml/components/question_answering_datapreprocess) to learn more)
+  task_name:
+      type: string
+      optional: false
+      enum:
+        - QuestionAnswering
+      default: QuestionAnswering
+      description: QuestionAnswering task type
+  
   question_key:
     type: string
     optional: false
