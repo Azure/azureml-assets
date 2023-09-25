@@ -9,10 +9,10 @@ RUN apt-get update -y && \
 ENV JAVA_HOME='/usr/lib/jvm/java-8-openjdk-amd64'
 
 # Install Apache Spark
-RUN wget -q https://archive.apache.org/dist/spark/spark-3.4.1/spark-3.4.1-bin-hadoop3.tgz && \
-   tar xzf spark-3.4.1-bin-hadoop3.tgz -C /opt && \
-   mv /opt/spark-3.4.1-bin-hadoop3 /opt/spark && \
-   rm spark-3.4.1-bin-hadoop3.tgz
+RUN wget -q https://archive.apache.org/dist/spark/spark-3.5.0/spark-3.5.0-bin-hadoop3.tgz && \
+   tar xzf spark-3.5.0-bin-hadoop3.tgz -C /opt && \
+   mv /opt/spark-3.5.0-bin-hadoop3 /opt/spark && \
+   rm spark-3.5.0-bin-hadoop3.tgz
 ENV SPARK_HOME=/opt/spark
 ENV PYSPARK_PYTHON=python
 ENV PYTHONPATH=$PYTHONPATH:$SPARK_HOME/python
