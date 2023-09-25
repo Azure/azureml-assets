@@ -19,8 +19,8 @@ from azure.ai.ml.entities import (
     OnlineRequestSettings,
 )
 from azureml.rag.utils.connections import (
+    connection_to_credential,
     get_connection_by_id_v2,
-    workspace_connection_to_credential,
 )
 from component_base import OBOComponentBase, main_entry_point
 from db_copilot_tool.contracts.db_copilot_config import DBCopilotConfig
@@ -66,7 +66,7 @@ class EndpointDeploymentBase(OBOComponentBase):
                 "chat": chat_connection_id,
             }.items():
                 connection = get_connection_by_id_v2(connection_id)
-                credential = workspace_connection_to_credential(connection)
+                credential = connection_to_credential(connection)
                 if hasattr(credential, "key"):
                     secrets.update(
                         {
