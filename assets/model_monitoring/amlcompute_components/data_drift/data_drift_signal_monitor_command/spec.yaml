@@ -46,7 +46,6 @@ inputs:
 outputs:
   signal_output:
     type: uri_folder
-    mode: direct
 jobs:
   compute_feature_importances:
     type: command
@@ -155,7 +154,6 @@ jobs:
       signal_output:
         type: uri_folder
         path: ${{parent.outputs.signal_output}}
-        mode: direct
   evaluate_metric_thresholds:
     type: command
     component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold_command/versions/0.0.2
