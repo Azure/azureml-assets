@@ -21,6 +21,12 @@ from azureml.rag.utils.logging import (
     track_activity,
     _logger_factory
 )
+from azure.identity import DefaultAzureCredential, InteractiveBrowserCredential
+from azure.ai.ml import MLClient
+from azure.storage.fileshare import ShareDirectoryClient
+from azure.core.exceptions import ResourceExistsError
+from azure.ai.ml._artifacts._fileshare_storage_helper import FileStorageClient
+
 
 logger = get_logger('flow_creation')
 
@@ -30,6 +36,7 @@ SERVICE_ENDPOINT = os.environ.get("AZUREML_SERVICE_ENDPOINT", "")
 EXPERIMENT_SCOPE = os.environ.get("AZUREML_EXPERIMENT_SCOPE", "")
 WORKSPACE_SCOPE = os.environ.get("AZUREML_WORKSPACE_SCOPE", "")
 RUN_TOKEN = os.environ.get("AZUREML_RUN_TOKEN", "")
+CODE_DIR = "code_flow"
 _CITATION_TEMPLATE = r'\nPlease add citation after each sentence when possible in a form \"(Source: citation)\".'
 _USER_INPUT = r'{{contexts}} \n Human: {{question}} \nAI:'
 _CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ item.inputs.question }} ' + \
@@ -131,6 +138,78 @@ def get_deployment_and_model_name(s):
     return (deployment_name, model_name)
 
 
+def get_user_alias_from_credential(credential):
+    """Used to get alias. Copied from PF code."""
+    import jwt
+    token = credential.get_token("https://storage.azure.com/.default").token
+    decode_json = jwt.decode(token, options={"verify_signature": False, "verify_aud": False})
+    try:
+        email = decode_json["upn"]
+        return email.split("@")[0]
+    except Exception:
+        # use oid when failed to get upn, e.g. service principal
+        return decode_json["oid"]
+
+
+class CustomFileStorageClient(FileStorageClient):
+    """Wrapper around FileStorageClient to allof for custom directory client."""
+    def __init__(self, credential: str, file_share_name: str, account_url: str, azure_cred):
+        super().__init__(credential=credential, file_share_name=file_share_name, account_url=account_url)
+        try:
+            user_alias = get_user_alias_from_credential(azure_cred)
+        except Exception:
+            # fall back to unknown user when failed to get credential.
+            user_alias = "unknown_user"
+        self._user_alias = user_alias
+
+        # TODO: update this after we finalize the design for flow file storage client
+        # create user folder if not exist
+        for directory_path in ["Users", f"Users/{user_alias}", f"Users/{user_alias}/Promptflows"]:
+            self.directory_client = ShareDirectoryClient(
+                account_url=account_url,
+                credential=credential,
+                share_name=file_share_name,
+                directory_path=directory_path,
+            )
+
+            # try to create user folder if not exist
+            try:
+                self.directory_client.create_directory()
+            except ResourceExistsError:
+                pass
+
+
+def upload_code_files(ws, name):
+    """Upload the files in the code flow directory."""
+    try:
+        credential = DefaultAzureCredential()
+        # Check if given credential can get token successfully.
+        credential.get_token("https://management.azure.com/.default")
+    except Exception:
+        # Fall back to InteractiveBrowserCredential in case DefaultAzureCredential not work
+        credential = InteractiveBrowserCredential()
+    ml_client = MLClient(
+        credential=credential,
+        subscription_id=ws.subscription_id,  # this will look like xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        resource_group_name=ws.resource_group,
+        workspace_name=ws.name
+    )
+    ds = ml_client.datastores.get("workspaceworkingdirectory", include_secrets=True)
+    storage_url = f"https://{ds.account_name}.file.core.windows.net"
+    file_share_name = ds.file_share_name
+
+    file_helper = CustomFileStorageClient(ds.credentials.account_key,
+                                          file_share_name,
+                                          storage_url,
+                                          credential)
+    import uuid
+    asset_id = str(uuid.uuid4())
+    asset_info = file_helper.upload(os.path.join(Path(__file__).parent.absolute(), CODE_DIR),
+                                    name, "1", asset_hash=asset_id, show_progress=False)
+    remote_path = asset_info["remote path"]
+    return file_helper.directory_client.directory_path + "/" + remote_path
+
+
 def main(args, ws, current_run, activity_logger: Logger):
     """Extract main method."""
     activity_logger.info(
@@ -174,13 +253,17 @@ def main(args, ws, current_run, activity_logger: Logger):
     print("embedding_deployment_name: %s" % embedding_deployment_name)
     print("embedding_model_name: %s" % embedding_model_name)
 
+    # Hard coded for ease of reverting if there are issues
+    code_first = True
+
     if completion_model_name.startswith("gpt-"):
-        is_chat = True
-        file_name = "chat_flow_with_variants_mlindex.json"
         print("Using chat flows")
+        is_chat = True
+        prefix = "chat_"
     else:
+        print("Not using chat flows")
         is_chat = False
-        file_name = "flow_with_variants_mlindex.json"
+        prefix = ""
         print("Not using chat flows")
 
     if args.best_prompts is None:
@@ -221,34 +304,22 @@ def main(args, ws, current_run, activity_logger: Logger):
     if isinstance(top_prompts, str):
         top_prompts = [top_prompts, top_prompts, top_prompts]
 
+    if code_first:
+        file_name = os.path.join(Path(__file__).parent.absolute(),
+                                 "flow_yamls",
+                                 prefix + "flow.dag.yaml")
+    else:
+        file_name = os.path.join(Path(__file__).parent.absolute(),
+                                 "flow_jsons",
+                                 prefix + "flow_with_variants_mlindex.json")
+
     # for top prompts, construct top templates and inject into variants
-    with open(os.path.join(Path(__file__).parent.absolute(), file_name), "r") as file:
+    with open(file_name, "r") as file:
         flow_with_variants = file.read()
 
     flow_name = args.mlindex_name + "-sample-flow"
-    flow_with_variants = flow_with_variants.replace(
-        "@@Flow_Name", flow_name)
-    flow_with_variants = flow_with_variants.replace(
-        "@@MLIndex_Asset_Id", mlindex_asset_id)
 
-    # replace variants with actual metric name and value
-    flow_with_variants = flow_with_variants.replace(
-        "@@Variant_0", "Variant_0")
-    flow_with_variants = flow_with_variants.replace(
-        "@@Variant_1", "Variant_1")
-    flow_with_variants = flow_with_variants.replace(
-        "@@Variant_2", "Variant_2")
-    flow_with_variants = flow_with_variants.replace(
-        "@@prompt_variant_0",
-        post_processing_prompts(json_stringify(top_prompts[0]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
-    flow_with_variants = flow_with_variants.replace(
-        "@@prompt_variant_1",
-        post_processing_prompts(json_stringify(top_prompts[1]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
-    flow_with_variants = flow_with_variants.replace(
-        "@@prompt_variant_2",
-        post_processing_prompts(json_stringify(top_prompts[2]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
-
-    # replace deployment name, connection name and API with right names
+    # Replace these values in both code first and json
     flow_with_variants = flow_with_variants.replace(
         "@@Embedding_Deployment_Name", embedding_deployment_name)
     flow_with_variants = flow_with_variants.replace(
@@ -257,14 +328,67 @@ def main(args, ws, current_run, activity_logger: Logger):
         "@@Completion_Deployment_Name", completion_deployment_name)
     flow_with_variants = flow_with_variants.replace(
         "@@Completion_Connection", completion_connection_name)
+    flow_with_variants = flow_with_variants.replace(
+        "@@MLIndex_Asset_Id", mlindex_asset_id)
+
     api_name = "chat" if completion_model_name == "gpt-35-turbo" else "completion"
     flow_with_variants = flow_with_variants.replace("@@API", api_name)
 
-    activity_logger.info(
-        "[Promptflow Creation]: Json payload successfully generated, trying to parse into json dict...")
-    json_payload = json.loads(flow_with_variants)
-    activity_logger.info(
-        "[Promptflow Creation]: Json payload successfully parsed, submit to promptflow service now...")
+    if code_first:
+
+        # write flow dag yaml back to file
+        with open(os.path.join(Path(__file__).parent.absolute(), CODE_DIR, "flow.dag.yaml"), "w") as file:
+            file.write(flow_with_variants)
+        import codecs
+        # Write prompt file content for Variants
+        for idx in range(0, len(top_prompts)):
+            prompt_str = post_processing_prompts(
+                json_stringify(top_prompts[idx]),
+                _CITATION_TEMPLATE, _USER_INPUT, is_chat)
+            with open(os.path.join(
+                    Path(__file__).parent.absolute(),
+                    CODE_DIR,
+                    f"Prompt_variants__Variant_{idx}.jinja2"), "w") as file:
+                file.write(codecs.decode(prompt_str, 'unicode_escape'))
+
+        # upload code
+        yaml_path = upload_code_files(ws, flow_name) + "/flow.dag.yaml"
+
+        # Load in Json
+        json_name = os.path.join("flow_jsons", prefix + "flow_with_variants_mlindex_code_first.json")
+        with open(os.path.join(Path(__file__).parent.absolute(), json_name), "r") as file:
+            flow_submit_data = file.read()
+
+        flow_submit_data = flow_submit_data.replace(
+            "@@Flow_Name", flow_name)
+        flow_submit_data = flow_submit_data.replace(
+            "@@Flow_Definition_Path", yaml_path)
+        # replace values as it should
+        activity_logger.info(
+            "[Promptflow Creation]: Json payload successfully generated, trying to parse into json dict...")
+        json_payload = json.loads(flow_submit_data)
+        activity_logger.info(
+            "[Promptflow Creation]: Json payload successfully parsed, submit to promptflow service now...")
+    else:
+        flow_with_variants = flow_with_variants.replace(
+            "@@Flow_Name", flow_name)
+
+        # replace variants with actual metric name and value
+        flow_with_variants = flow_with_variants.replace(
+            "@@prompt_variant_0",
+            post_processing_prompts(json_stringify(top_prompts[0]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
+        flow_with_variants = flow_with_variants.replace(
+            "@@prompt_variant_1",
+            post_processing_prompts(json_stringify(top_prompts[1]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
+        flow_with_variants = flow_with_variants.replace(
+            "@@prompt_variant_2",
+            post_processing_prompts(json_stringify(top_prompts[2]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
+
+        activity_logger.info(
+            "[Promptflow Creation]: Json payload successfully generated, trying to parse into json dict...")
+        json_payload = json.loads(flow_with_variants)
+        activity_logger.info(
+            "[Promptflow Creation]: Json payload successfully parsed, submit to promptflow service now...")
 
     ###########################################################################
     # ### construct PF MT service endpoints ### #
