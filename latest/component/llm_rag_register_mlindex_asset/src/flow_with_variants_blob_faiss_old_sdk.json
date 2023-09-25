@@ -38,8 +38,8 @@
           "reduce": false
         },
         {
-          "name": "Prompt_varients",
-          "tool": "Prompt_varients",
+          "name": "Prompt_variants",
+          "tool": "Prompt_variants",
           "inputs": {
             "contexts": "${generate_prompt_context.output}",
             "question": "${flow.question}"
@@ -62,7 +62,7 @@
             "frequency_penalty": "0",
             "best_of": "1",
             "logit_bias": "",
-            "prompt_text": "${Prompt_varients.output}"
+            "prompt_text": "${Prompt_variants.output}"
           },
           "provider": "AzureOpenAI",
           "connection": "azure_open_ai_connection",
@@ -182,7 +182,7 @@
           "is_builtin": false
         },
         {
-          "name": "Prompt_varients",
+          "name": "Prompt_variants",
           "type": "prompt",
           "inputs": {
             "contexts": {
@@ -198,11 +198,11 @@
               ]
             }
           },
-          "code": "@@prompt_varient_0",
+          "code": "@@prompt_variant_0",
           "is_builtin": false
         },
         {
-          "name": "Prompt_varients__variant_1",
+          "name": "Prompt_variants__variant_1",
           "type": "prompt",
           "inputs": {
             "contexts": {
@@ -218,11 +218,11 @@
               ]
             }
           },
-          "code": "@@prompt_varient_1",
+          "code": "@@prompt_variant_1",
           "is_builtin": false
         },
         {
-          "name": "Prompt_varients__variant_2",
+          "name": "Prompt_variants__variant_2",
           "type": "prompt",
           "inputs": {
             "contexts": {
@@ -238,7 +238,7 @@
               ]
             }
           },
-          "code": "@@prompt_varient_2",
+          "code": "@@prompt_variant_2",
           "is_builtin": false
         }
       ]
@@ -317,7 +317,7 @@
                 "frequency_penalty": "0",
                 "best_of": "1",
                 "logit_bias": "",
-                "prompt_text": "${Prompt_varients.output}"
+                "prompt_text": "${Prompt_variants.output}"
               },
               "provider": "AzureOpenAI",
               "connection": "azure_open_ai_connection",
@@ -327,13 +327,13 @@
           }
         }
       },
-      "Prompt_varients": {
+      "Prompt_variants": {
         "defaultVariantId": "variant_0",
         "variants": {
           "variant_0": {
             "node": {
-              "name": "Prompt_varients",
-              "tool": "Prompt_varients",
+              "name": "Prompt_variants",
+              "tool": "Prompt_variants",
               "inputs": {
                 "contexts": "${generate_prompt_context.output}",
                 "question": "${flow.question}"
@@ -343,8 +343,8 @@
           },
           "variant_1": {
             "node": {
-              "name": "Prompt_varients",
-              "tool": "Prompt_varients__variant_1",
+              "name": "Prompt_variants",
+              "tool": "Prompt_variants__variant_1",
               "inputs": {
                 "contexts": "${generate_prompt_context.output}",
                 "question": "${flow.question}"
@@ -354,8 +354,8 @@
           },
           "variant_2": {
             "node": {
-              "name": "Prompt_varients",
-              "tool": "Prompt_varients__variant_2",
+              "name": "Prompt_variants",
+              "tool": "Prompt_variants__variant_2",
               "inputs": {
                 "contexts": "${generate_prompt_context.output}",
                 "question": "${flow.question}"
