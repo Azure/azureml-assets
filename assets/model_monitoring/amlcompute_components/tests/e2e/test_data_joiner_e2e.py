@@ -5,7 +5,7 @@
 
 import pytest
 from azure.ai.ml import Input, MLClient, Output
-from azure.ai.ml.entities import Spark, AmlTokenConfiguration
+from azure.ai.ml.entities import Command
 from azure.ai.ml.dsl import pipeline
 from tests.e2e.utils.constants import (
     COMPONENT_NAME_DATA_JOINER,
@@ -28,20 +28,14 @@ def _submit_data_joiner_job(
 ):
     data_joiner_component = get_component(COMPONENT_NAME_DATA_JOINER)
 
-    @pipeline()
+    @pipeline(default_compute="compute-cluster")
     def _data_joiner_e2e():
-        data_joiner_output: Spark = data_joiner_component(
-            left_input_data=Input(path=left_input_data, mode='direct', type='mltable'),
+        data_joiner_output: Command = data_joiner_component(
+            left_input_data=Input(path=left_input_data, mode='mount', type='mltable'),
             left_join_column=left_join_column,
-            right_input_data=Input(path=right_input_data, mode='direct', type='mltable'),
+            right_input_data=Input(path=right_input_data, mode='mount', type='mltable'),
             right_join_column=right_join_column
         )
-
-        data_joiner_output.identity = AmlTokenConfiguration()
-        data_joiner_output.resources = {
-            'instance_type': 'Standard_E8S_V3',
-            'runtime_version': '3.3',
-        }
 
         return {
             'joined_data': data_joiner_output.outputs.joined_data
@@ -49,7 +43,7 @@ def _submit_data_joiner_job(
 
     pipeline_job = _data_joiner_e2e()
     pipeline_job.outputs.joined_data = Output(
-        type='mltable', mode='direct'
+        type='mltable', mode='mount'
     )
 
     pipeline_job = ml_client.jobs.create_or_update(

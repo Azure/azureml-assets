@@ -9,6 +9,7 @@ is_deterministic: true
 
 code: ../../src
 environment: azureml:model_monitor_spark_standalone_feature_attribution:1
+
 inputs:
   baseline_data:
     type: mltable
