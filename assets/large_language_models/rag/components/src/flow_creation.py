@@ -139,7 +139,7 @@ def get_deployment_and_model_name(s):
 
 
 def get_user_alias_from_credential(credential):
-    """Used to get alias. Copied from PF code."""
+    """Gets alias from credential. Copied from PF code."""
     import jwt
     token = credential.get_token("https://storage.azure.com/.default").token
     decode_json = jwt.decode(token, options={"verify_signature": False, "verify_aud": False})
@@ -153,7 +153,9 @@ def get_user_alias_from_credential(credential):
 
 class CustomFileStorageClient(FileStorageClient):
     """Wrapper around FileStorageClient to allof for custom directory client."""
+
     def __init__(self, credential: str, file_share_name: str, account_url: str, azure_cred):
+        """Initialize client."""
         super().__init__(credential=credential, file_share_name=file_share_name, account_url=account_url)
         try:
             user_alias = get_user_alias_from_credential(azure_cred)

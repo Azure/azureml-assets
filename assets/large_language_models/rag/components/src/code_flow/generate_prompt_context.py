@@ -7,7 +7,9 @@ from promptflow_vectordb.core.contracts import SearchResultEntity
 
 @tool
 def generate_prompt_context(search_result: List[dict]) -> str:
+    """Generate the context for the prompt."""
     def format_doc(doc: dict):
+        """Format Doc."""
         return f"Content: {doc['Content']}\nSource: {doc['Source']}"
 
     SOURCE_KEY = "source"
