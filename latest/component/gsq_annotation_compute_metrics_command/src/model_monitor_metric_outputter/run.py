@@ -23,6 +23,8 @@ from shared_utilities.io_utils import (
     np_encoder,
     read_mltable_in_spark,
 )
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 
 def run():

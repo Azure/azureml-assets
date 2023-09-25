@@ -4,17 +4,20 @@
 """This file contains utilities to read write data."""
 
 import numpy as np
+import os
 from pyspark.sql import SparkSession
 
 
 def _get_datastore_id():
-    import os
     import re
     workspace_scope = os.environ['AZUREML_WORKSPACE_SCOPE'].lower()
     pattern = r"^/subscriptions/(.+?)/resourcegroups/(.+?)/providers"\
               + r"/microsoft.machinelearningservices/workspaces/(.+?)$"
 
     match = re.search(pattern, workspace_scope)
+    if not match:
+        raise ValueError(f"'{workspace_scope}' is not a valid workspace scope.")
+
     subscription_id = match.group(1)
     resource_group_name = match.group(2)
     workspace_name = match.group(3)
@@ -24,12 +27,14 @@ def _get_datastore_id():
 
 
 def _get_datastore_relative_data_path(data_path):
-    import os
     import re
     job_id = os.environ['AZUREML_RUN_ID']
     pattern = r"^(.+?)/cap/data-capability/wd/(.+?)$"
 
     match = re.search(pattern, data_path)
+    if not match:
+        raise ValueError(f"'{data_path}' is not a valid data path.")
+
     output_folder = match.group(2)
 
     return f"paths/azureml/{job_id}/{output_folder}"
@@ -37,7 +42,6 @@ def _get_datastore_relative_data_path(data_path):
 
 def convert_to_azureml_uri(data_path: str):
     """Convert the local data path to azureml data path uri."""
-    import os
     datastore_id = _get_datastore_id()
     relative_data_path = _get_datastore_relative_data_path(data_path)
 
@@ -54,6 +58,21 @@ def np_encoder(object):
     """Json encoder for numpy types."""
     if isinstance(object, np.generic):
         return object.item()
+
+
+def save_dict_as_json(payload: dict, dest_path: str):
+    """Save a dictionary object in json format to the destination path.
+
+    Args:
+        payload: The dictionary object to be uploaded.
+        dest_path: The destination path.
+    """
+    import json
+    content = json.dumps(payload, indent=4, default=np_encoder)
+
+    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+    with open(dest_path, "w") as fp:
+        fp.write(content)
 
 
 def read_mltable_in_spark(mltable_path: str):

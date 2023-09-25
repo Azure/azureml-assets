@@ -5,11 +5,14 @@
 
 import argparse
 import pyspark.sql as pyspark_sql
+
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
     read_mltable_in_spark,
     save_spark_df_as_mltable,
 )
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 
 def _validate_join_column_in_input_data(

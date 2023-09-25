@@ -7,10 +7,11 @@ import argparse
 import glob
 import json
 import os
+import shutil
 import uuid
-from shared_utilities.patch_mltable import patch_all
-from shared_utilities.amlfs import amlfs_put_as_json, amlfs_download, amlfs_upload
 
+from shared_utilities.io_utils import save_dict_as_json
+from shared_utilities.patch_mltable import patch_all
 patch_all()
 
 
@@ -51,13 +52,12 @@ def run():
 
     temp_path = str(uuid.uuid4())
     for signal_output in signals_outputs:
-        amlfs_download(remote_path=signal_output, local_path=temp_path)
-    amlfs_upload(local_path=temp_path, remote_path=args.model_monitor_metrics_output)
-    amlfs_put_as_json(
-        _generate_manifest(temp_path),
-        args.model_monitor_metrics_output,
-        "manifest.json",
-    )
+        shutil.copytree(signal_output, temp_path, dirs_exist_ok=True)
+        shutil.copytree(temp_path, args.model_monitor_metrics_output, dirs_exist_ok=True)
+
+        manifest_dict = _generate_manifest(temp_path)
+        manifest_dest_path = os.path.join(args.model_monitor_metrics_output, "manifest.json")
+        save_dict_as_json(manifest_dict, manifest_dest_path)
 
     print("*************** output metrics ***************")
     print("Successfully executed the create manifest component.")
