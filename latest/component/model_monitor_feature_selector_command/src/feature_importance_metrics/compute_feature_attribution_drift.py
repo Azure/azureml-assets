@@ -8,11 +8,10 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import ndcg_score
 
-from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
-from shared_utilities import constants
-
 from feature_importance_metrics.feature_importance_utilities import convert_pandas_to_spark, log_time_and_message
 
+from shared_utilities import constants
+from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
 from shared_utilities.patch_mltable import patch_all
 patch_all()
 

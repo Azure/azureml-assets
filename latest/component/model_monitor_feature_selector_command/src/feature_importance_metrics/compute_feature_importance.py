@@ -11,24 +11,23 @@ from pyspark.sql.types import (
     StringType,
     FloatType
 )
-from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable, init_spark
-from shared_utilities import constants
-
-from responsibleai import RAIInsights, FeatureMetadata
 from ml_wrappers.model.predictions_wrapper import (
     PredictionsModelWrapperClassification,
     PredictionsModelWrapperRegression)
+from responsibleai import RAIInsights, FeatureMetadata
+
+from feature_importance_metrics.feature_importance_utilities import (
+    compute_categorical_features, convert_pandas_to_spark, log_time_and_message)
+
+from shared_utilities import constants
+from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable, init_spark
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 try:
     from lightgbm import LGBMClassifier, LGBMRegressor
 except ImportError:
     pass
-
-from feature_importance_metrics.feature_importance_utilities import (
-    compute_categorical_features, convert_pandas_to_spark, log_time_and_message)
-
-from shared_utilities.patch_mltable import patch_all
-patch_all()
 
 
 def parse_args():
