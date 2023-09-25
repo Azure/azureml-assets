@@ -19,4 +19,4 @@ tags:
     apply_deepspeed: 'true'
     apply_ort: 'true'
   task: image-classification
-version: 6
+version: 7
