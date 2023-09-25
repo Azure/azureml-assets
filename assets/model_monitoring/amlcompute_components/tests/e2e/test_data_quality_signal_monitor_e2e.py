@@ -18,7 +18,7 @@ def _submit_data_quality_signal_monitor_job(
 ):
     dd_signal_monitor = get_component(COMPONENT_NAME_DATA_QUALITY_SIGNAL_MONITOR)
 
-    @pipeline()
+    @pipeline(default_compute="compute-cluster")
     def _data_quality_signal_monitor_e2e():
         dd_signal_monitor_output = dd_signal_monitor(
             target_data=target_data,
@@ -35,7 +35,7 @@ def _submit_data_quality_signal_monitor_job(
         return {"signal_output": dd_signal_monitor_output.outputs.signal_output}
 
     pipeline_job = _data_quality_signal_monitor_e2e()
-    pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
+    pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="mount")
 
     pipeline_job = ml_client.jobs.create_or_update(
         pipeline_job, experiment_name=experiment_name
