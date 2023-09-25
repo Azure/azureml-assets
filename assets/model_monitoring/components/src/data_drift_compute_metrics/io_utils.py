@@ -7,7 +7,6 @@ import pyspark.sql as pyspark_sql
 from pyspark.sql.types import StructType, StructField, StringType, FloatType
 from shared_utilities.io_utils import (
     init_spark,
-    read_mltable_in_spark,
     save_spark_df_as_mltable,
 )
 
@@ -40,9 +39,8 @@ def output_computed_measures_tests(metrics_df: pyspark_sql.DataFrame, folder_pat
     save_spark_df_as_mltable(metrics_df, folder_path)
 
 
-def select_columns_from_spark_df(mltable_path: str, column_list: list):
+def select_columns_from_spark_df(df, column_list: list):
     """Select comlumns from given spark dataFrame."""
     column_list = list(map(str.strip, column_list))
-    df = read_mltable_in_spark(mltable_path)
     df = df.select(column_list)
     return df

@@ -11,6 +11,7 @@ import sys
 from abc import ABC, abstractmethod
 from mlflow.models.signature import ModelSignature
 from mlflow.pyfunc import PyFuncModel
+from mlflow.types import DataType
 from mlflow.types.schema import ColSpec, Schema
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -25,6 +26,8 @@ from azureml.model.mgmt.processors.pyfunc.text_to_image.config import (
     MLflowSchemaLiterals as TextToImageMLFlowSchemaLiterals,
     MLflowLiterals as TextToImageMLflowLiterals,
 )
+from azureml.model.mgmt.processors.pyfunc.llava.config import \
+    MLflowSchemaLiterals as LLaVAMLFlowSchemaLiterals, MLflowLiterals as LLaVAMLflowLiterals
 from azureml.model.mgmt.processors.pyfunc.vision.config import \
     MLflowSchemaLiterals as VisionMLFlowSchemaLiterals, MMDetLiterals
 
@@ -322,3 +325,76 @@ class StableDiffusionMlflowConvertor(TextToImageMLflowConvertor):
             conda_env=conda_env_file,
             code_path=code_path,
         )
+
+
+class LLaVAMLFlowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for LLaVA models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "llava")
+    COMMON_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "common")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for LLaVA models."""
+        super().__init__(**kwargs)
+        if self._task != SupportedTasks.IMAGE_TEXT_TO_TEXT.value:
+            raise Exception("Unsupported task")
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the given input task.
+
+        :return: MLflow model signature.
+        :rtype: mlflow.models.signature.ModelSignature
+        """
+        input_schema = Schema(
+            [
+                ColSpec(DataType.string, LLaVAMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
+                ColSpec(DataType.string, LLaVAMLFlowSchemaLiterals.INPUT_COLUMN_PROMPT),
+                ColSpec(DataType.string, LLaVAMLFlowSchemaLiterals.INPUT_COLUMN_DIRECT_QUESTION),
+            ]
+        )
+
+        output_schema = Schema(
+            [
+                ColSpec(DataType.string, LLaVAMLFlowSchemaLiterals.OUTPUT_COLUMN_RESPONSE)
+            ]
+        )
+
+        return ModelSignature(inputs=input_schema, outputs=output_schema)
+
+    def save_as_mlflow(self):
+        """Prepare model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+        from llava_mlflow_wrapper import LLaVAMLflowWrapper
+
+        mlflow_model_wrapper = LLaVAMLflowWrapper(task_type=self._task)
+        artifacts_dict = self._prepare_artifacts_dict()
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = [
+            os.path.join(self.MODEL_DIR, "llava_mlflow_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
+        ]
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env_file,
+            code_path=code_path,
+        )
+
+    def _prepare_artifacts_dict(self) -> Dict:
+        """Prepare artifacts dict for MLflow model.
+
+        :return: artifacts dict
+        :rtype: Dict
+        """
+        # Get the name of the only subdirectory of the model directory.
+        sd = next(
+            (d for d in os.listdir(self._model_dir) if os.path.isdir(os.path.join(self._model_dir, d))),
+            self._model_dir
+        )
+
+        # Set model_dir parameter to point to subdirectory.
+        artifacts_dict = {
+            LLaVAMLflowLiterals.MODEL_DIR: os.path.join(self._model_dir, sd)
+        }
+        return artifacts_dict

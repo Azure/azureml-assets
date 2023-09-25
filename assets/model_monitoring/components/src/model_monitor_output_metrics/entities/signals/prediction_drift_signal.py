@@ -66,6 +66,9 @@ class PredictionDriftSignal(Signal):
         Returns:
         List[FeatureMetrics]: The feature-level metrics.
         """
+        if not metrics or len(metrics) == 0:
+            return []
+
         output = {}
         for metric in metrics:
 
