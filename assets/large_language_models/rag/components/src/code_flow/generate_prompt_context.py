@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
+"""File for context getting tool."""
 from typing import List
 from promptflow import tool
 from promptflow_vectordb.core.contracts import SearchResultEntity

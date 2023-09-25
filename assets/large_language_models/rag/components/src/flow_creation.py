@@ -139,7 +139,7 @@ def get_deployment_and_model_name(s):
 
 
 def get_user_alias_from_credential(credential):
-    """Gets alias from credential. Copied from PF code."""
+    """Get alias from credential. Copied from PF code."""
     import jwt
     token = credential.get_token("https://storage.azure.com/.default").token
     decode_json = jwt.decode(token, options={"verify_signature": False, "verify_aud": False})
