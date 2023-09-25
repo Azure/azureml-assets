@@ -3,7 +3,7 @@ type: command
 tags: {}
 name: llm_dbcopilot_deploy_endpoint
 display_name: DBCopilot Deploy Endpoint Component
-version: 0.0.1
+version: 0.0.2
 inputs:
   deployment_name:
     type: string
@@ -62,6 +62,9 @@ inputs:
   knowledge_pieces:
     type: string
     optional: true
+  sku:
+    type: string
+    optional: true
 outputs: {}
 code: ../src
 environment: azureml:llm-dbcopilot-embeddings@latest
@@ -75,4 +78,4 @@ command: python endpoint_deployment.py --deployment_name '${{inputs.deployment_n
   '${{inputs.max_columns}}']] $[[--max_rows '${{inputs.max_rows}}']] $[[--max_text_length
   '${{inputs.max_text_length}}']] $[[--tools '${{inputs.tools}}']] $[[--temperature
   '${{inputs.temperature}}']] $[[--top_p '${{inputs.top_p}}']] $[[--knowledge_pieces
-  '${{inputs.knowledge_pieces}}']]
+  '${{inputs.knowledge_pieces}}']] $[[--sku '${{inputs.sku}}']]
