@@ -479,6 +479,10 @@ jobs:
     inputs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
       compute_finetune: '${{parent.inputs.compute_finetune}}'
+      compute_model_import: '${{parent.inputs.compute_model_import}}'
+      compute_data_preprocess: '${{parent.inputs.compute_preprocess}}'
+      task_name: '${{parent.inputs.task_name}}'
+      number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
   translation_model_import:
     type: command
     component: azureml:translation_model_import:0.0.18
