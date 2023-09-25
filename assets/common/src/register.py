@@ -108,12 +108,8 @@ def is_model_available(ml_client, model_name, model_version):
 def get_input_asset_id(input_name: str):
     run_details: RunDetails = RunDetails.get_run_details()
     input_assets = run_details.input_assets.get(input_name, None)
-    if (input_assets
-        and input_name in input_assets
-        and "asset" in input_assets[input_name]
-        and "assetId" in input_assets[input_name]["asset"]
-    ):
-       return input_assets[input_name]["asset"]["assetId"]
+    if (input_assets and "asset" in input_assets and "assetId" in input_assets["asset"]):
+       return input_assets["asset"]["assetId"]
     return None
 
 
