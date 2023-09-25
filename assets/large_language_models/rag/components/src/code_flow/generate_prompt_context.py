@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
 from typing import List
 from promptflow import tool
 from promptflow_vectordb.core.contracts import SearchResultEntity
