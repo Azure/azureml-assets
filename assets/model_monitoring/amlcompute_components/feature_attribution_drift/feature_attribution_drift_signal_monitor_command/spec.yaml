@@ -4,7 +4,7 @@ type: pipeline
 name: feature_attribution_drift_signal_monitor_command
 display_name: Feature Attribution Drift - Signal Monitor
 description: Computes the feature attribution between a baseline and production data assets.
-version: 0.0.1
+version: 0.0.2
 is_deterministic: true
 
 inputs:
@@ -33,8 +33,8 @@ outputs:
 
 jobs:
   compute_baseline_explanations:
-    type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/feature_importance_metrics_command/versions/0.0.2
     inputs:
       baseline_data:
         type: mltable
@@ -45,8 +45,8 @@ jobs:
       signal_metrics:
         type: mltable
   compute_production_explanations:
-    type: spark
-    component: azureml://registries/azureml/components/feature_importance_metrics_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/feature_importance_metrics_command/versions/0.0.2
     inputs:
       baseline_data:
         type: mltable
@@ -57,8 +57,8 @@ jobs:
       signal_metrics:
         type: mltable
   compute_feature_attribution:
-    type: spark
-    component: azureml://registries/azureml/components/feature_attribution_drift_compute_metrics_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/feature_attribution_drift_compute_metrics_command/versions/0.0.2
     inputs:
       production_data:
         type: mltable
@@ -71,8 +71,8 @@ jobs:
       signal_metrics:
         type: mltable
   output_signal_metrics:
-    type: spark
-    component: azureml://registries/azureml/components/model_monitor_output_metrics_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/model_monitor_output_metrics_command/versions/0.0.2
     inputs:
       signal_metrics:
         type: mltable
@@ -85,10 +85,9 @@ jobs:
       signal_output:
         type: uri_folder
         path: ${{parent.outputs.signal_output}}
-        mode: direct
   evaluate_metric_thresholds:
-    type: spark
-    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold_command/versions/0.0.1
+    type: command
+    component: azureml://registries/azureml/components/model_monitor_evaluate_metrics_threshold_command/versions/0.0.2
     inputs:
       signal_metrics:
         type: mltable
