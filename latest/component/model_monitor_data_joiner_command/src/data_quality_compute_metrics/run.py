@@ -5,9 +5,12 @@
 
 import argparse
 from pyspark.sql.functions import split, trim, col
+
+from .compute_data_quality_metrics import compute_data_quality_metrics
 from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
 from shared_utilities.df_utils import select_columns_from_spark_df
-from compute_data_quality_metrics import compute_data_quality_metrics
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 
 def _filter_metrics(df, metrics, data_type):

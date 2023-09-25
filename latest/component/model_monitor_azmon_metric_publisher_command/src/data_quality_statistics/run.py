@@ -6,8 +6,11 @@
 import argparse
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import regexp_replace
+
+from .compute_data_quality_statistics import compute_data_quality_statistics
 from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable
-from compute_data_quality_statistics import compute_data_quality_statistics
+from shared_utilities.patch_mltable import patch_all
+patch_all()
 
 
 def run():
