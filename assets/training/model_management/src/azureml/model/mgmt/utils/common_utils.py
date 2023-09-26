@@ -25,7 +25,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
 
@@ -126,17 +126,43 @@ def get_mlclient(registry_name: str = None):
     return MLClient(credential=credential, registry_name=registry_name)
 
 
-def copy_file_paths_to_destination(src_dir: Path, destn_dir: Path, regex: str) -> None:
+@log_execution_time
+def copy_files(
+    src_dir: Path,
+    destn_dir: Path,
+    include_pattern_str: str = r"^.*$",
+    exclude_pattern_str: Optional[str] = None
+) -> None:
     """Copy files to destination directory [Non-recursively] based on regex pattern provided."""
     if not Path(src_dir).is_dir():
         raise Exception("src path provided should be a dir")
-    if Path(destn_dir).exists():
-        raise Exception("destination dir should be empty")
-    os.makedirs(destn_dir)
-    pattern = re.compile(regex)
+
+    os.makedirs(destn_dir, exist_ok=True)
+
+    include_pattern = re.compile(include_pattern_str)
+    exclude_pattern = None if not exclude_pattern_str else re.compile(exclude_pattern_str)
     for file_name in os.listdir(src_dir):
-        if pattern.match(file_name):
+        if exclude_pattern and exclude_pattern.match(file_name):
+            continue
+        if include_pattern.match(file_name):
             shutil.copy(os.path.join(src_dir, file_name), destn_dir)
+
+
+@log_execution_time
+def move_files(src_dir: Path, destn_dir: Path, include_pattern_str: str = r"^.*$", ignore_case: bool = False) -> None:
+    """Move files to destination directory [Non-recursively] based on regex pattern provided."""
+    if not Path(src_dir).is_dir():
+        raise Exception("src path provided should be a dir")
+
+    os.makedirs(destn_dir, exist_ok=True)
+
+    include_pattern = re.compile(include_pattern_str)
+    if ignore_case:
+        include_pattern = re.compile(include_pattern_str, re.IGNORECASE)
+
+    for file_name in os.listdir(src_dir):
+        if include_pattern.match(file_name):
+            shutil.move(os.path.join(src_dir, file_name), destn_dir)
 
 
 def create_namespace_from_dict(var: Any):
