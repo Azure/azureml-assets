@@ -290,11 +290,13 @@ def _deploy_fake_model(ml_client, endpoint_name, deployment_name):
 
 
 def deploy_fake_test_endpoint_maybe(
-        ml_client, endpoint_name="aml-benchmark-test-bzvkqd", deployment_name="test-model"
+        ml_client, endpoint_name="benchmark", deployment_name="test-model", use_workspace_name=True
 ):
     """Deploy a fake test endpoint."""
     should_deploy = False
     should_wait = True
+    if use_workspace_name:
+        endpoint_name = f"{endpoint_name}-{ml_client.workspace_name}"
     try:
         while should_wait:
             endpoint = ml_client.online_endpoints.get(name=endpoint_name)
