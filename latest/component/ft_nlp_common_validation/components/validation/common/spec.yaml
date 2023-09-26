@@ -23,10 +23,40 @@ inputs:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for model_eavaluation eg. provide 'FT-Cluster'
+    description: compute to be used for finetune component eg. provide 'FT-Cluster'
       if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid
       in the parameter value. If compute cluster name is provided, instance_type field
       will be ignored and the respective cluster will be used
+
+  compute_model_import:
+    type: string
+    optional: true
+    default: serverless
+    description: compute to be used for model import component eg. provide 'FT-Cluster'
+      if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid
+      in the parameter value. If compute cluster name is provided, instance_type field
+      will be ignored and the respective cluster will be used
+
+  compute_data_preprocess:
+    type: string
+    optional: true
+    default: serverless
+    description: compute to be used for data preprocess component eg. provide 'FT-Cluster'
+      if your compute is named 'FT-Cluster'. Special characters like \ and ' are invalid
+      in the parameter value. If compute cluster name is provided, instance_type field
+      will be ignored and the respective cluster will be used
+
+  task_name:
+    type: string
+    optional: true
+    default: SingleLabelClassification
+    description: Finetuning task type
+
+  number_of_gpu_to_use_finetuning:
+    type: integer
+    optional: true
+    default: 1
+    description: Number of GPUs to use for finetuning
 
 outputs:
   validation_info:
