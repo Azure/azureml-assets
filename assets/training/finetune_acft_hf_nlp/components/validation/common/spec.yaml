@@ -46,7 +46,7 @@ inputs:
     type: string
     optional: true
     default: SingleLabelClassification
-    description: Text Classification task type
+    description: Finetuning task type
 
   number_of_gpu_to_use_finetuning:
     type: integer
