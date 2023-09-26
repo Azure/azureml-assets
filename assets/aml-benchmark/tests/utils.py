@@ -297,7 +297,7 @@ def deploy_fake_test_endpoint_maybe(
     should_deploy = False
     should_wait = True
     if use_workspace_name:
-        endpoint_name = f"{endpoint_name}-{ml_client.workspace_name}"
+        endpoint_name = f"{endpoint_name}-{ml_client.workspace_name.split('-')[-1]}"
     try:
         while should_wait:
             endpoint = ml_client.online_endpoints.get(name=endpoint_name)
