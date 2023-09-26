@@ -4,6 +4,7 @@
 """Read the args from preprocess component."""
 
 import json
+import logging
 import argparse
 from pathlib import Path
 from argparse import Namespace
@@ -297,7 +298,16 @@ def main():
             LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+        log_level=logging.ERROR
     )
+    # check handlers
+    from transformers.utils.logging import get_logger
+    transformer_logger = get_logger()
+    logger.info(transformer_logger.handlers)
+
+    from datasets.utils.logging import get_logger
+    datasets_logger = get_logger()
+    logger.info(datasets_logger.handlers)
 
     pre_process(parsed_args, unparsed_args)
 

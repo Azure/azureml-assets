@@ -54,11 +54,13 @@ inputs:
   pytorch_model_path:
     type: custom_model
     optional: true
+    mode: download
     description: Pytorch model asset path. Special characters like \ and ' are invalid in the parameter value.
 
   mlflow_model_path:
     type: mlflow_model
     optional: true
+    mode: download
     description: MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.
 
   # Data PreProcess parameters (See [docs](https://aka.ms/azureml/components/text_classification_datapreprocess) to learn more)
@@ -268,6 +270,14 @@ inputs:
     default: -1
     optional: true
     description: Number of predictions steps to accumulate before moving the tensors to the CPU, will be passed as None if set to -1
+  gradient_checkpointing:
+    type: string
+    default: "false"
+    optional: true
+    enum:
+      - "true"
+      - "false"
+    description: Few of the activations are saved to disk
 
   lr_scheduler_type:
     type: string
@@ -315,9 +325,10 @@ inputs:
   ignore_mismatched_sizes:
     type: string
     enum:
+      - "auto"
       - "true"
       - "false"
-    default: "true"
+    default: "auto"
     optional: true
     description: Not setting this flag will raise an error if some of the weights from the checkpoint do not have the same size as the weights of the model.
 
@@ -503,10 +514,15 @@ jobs:
       number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
   text_classification_model_import:
     type: command
-    component: azureml:text_classification_model_import:0.0.19
+    component: azureml://registries/azureml/components/text_classification_model_import/versions/0.0.14
     compute: '${{parent.inputs.compute_model_import}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_import}}'
+      properties:
+        singularity:
+          imageVersion: ''
+          SLATier: 'Basic'
+          priority: 'Medium'
     inputs:
       huggingface_id: '${{parent.inputs.huggingface_id}}'
       pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
@@ -514,10 +530,15 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   text_classification_datapreprocess:
     type: command
+<<<<<<< Updated upstream
     component: azureml:text_classification_datapreprocess:0.0.19
-    compute: '${{parent.inputs.compute_preprocess}}'
-    resources:
+=======
+    component: azureml://registries/azureml/components/text_classification_datapreprocess/versions/0.0.14
       instance_type: '${{parent.inputs.instance_type_preprocess}}'
+        singularity:
+          imageVersion: ''
+          SLATier: 'Basic'
+          priority: 'Medium'
     inputs:
       task_name: '${{parent.inputs.task_name}}'
       sentence1_key: '${{parent.inputs.sentence1_key}}'
@@ -535,7 +556,11 @@ jobs:
       model_selector_output: '${{parent.jobs.text_classification_model_import.outputs.output_dir}}'
   text_classification_finetune:
     type: command
+<<<<<<< Updated upstream
     component: azureml:text_classification_finetune:0.0.19
+=======
+    component: azureml://registries/azureml/components/text_classification_finetune/versions/0.0.14
+>>>>>>> Stashed changes
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch
@@ -543,6 +568,11 @@ jobs:
     resources:
       instance_count: '${{parent.inputs.num_nodes_finetune}}'
       instance_type: '${{parent.inputs.instance_type_finetune}}'
+      properties:
+        singularity:
+          imageVersion: ''
+          SLATier: 'Basic'
+          priority: 'Medium'
     inputs:
       apply_lora: '${{parent.inputs.apply_lora}}'
       merge_lora_weights: '${{parent.inputs.merge_lora_weights}}'
@@ -562,7 +592,11 @@ jobs:
       adam_beta2: '${{parent.inputs.adam_beta2}}'
       adam_epsilon: '${{parent.inputs.adam_epsilon}}'
       gradient_accumulation_steps: '${{parent.inputs.gradient_accumulation_steps}}'
+<<<<<<< Updated upstream
       eval_accumulation_steps: '${{parent.inputs.eval_accumulation_steps}}'
+=======
+      gradient_checkpointing: '${{parent.inputs.gradient_checkpointing}}'
+>>>>>>> Stashed changes
       lr_scheduler_type: '${{parent.inputs.lr_scheduler_type}}'
       precision: '${{parent.inputs.precision}}'
       seed: '${{parent.inputs.seed}}'
@@ -591,10 +625,19 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
+<<<<<<< Updated upstream
     component: azureml:model_prediction:0.0.13
+=======
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.13
+>>>>>>> Stashed changes
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+      properties:
+        singularity:
+          imageVersion: ''
+          SLATier: 'Basic'
+          priority: 'Medium'
     inputs:
       task: text-classification
       test_data: '${{parent.jobs.text_classification_datapreprocess.outputs.output_dir}}'
@@ -605,10 +648,19 @@ jobs:
       mlflow_model: '${{parent.jobs.text_classification_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
+<<<<<<< Updated upstream
     component: azureml:compute_metrics:0.0.13
+=======
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.13
+>>>>>>> Stashed changes
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+      properties:
+        singularity:
+          imageVersion: ''
+          SLATier: 'Basic'
+          priority: 'Medium'
     inputs:
       task: text-classification
       ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'

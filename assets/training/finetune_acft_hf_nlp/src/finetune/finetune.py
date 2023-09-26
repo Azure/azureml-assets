@@ -2,14 +2,21 @@
 # Licensed under the MIT License.
 
 """File containing function for finetune component."""
-
+import os
+import time
+import uuid
 import json
+import touch
 import argparse
 from pathlib import Path
 from argparse import Namespace
 from copy import deepcopy
+import logging
+from typing import Dict, Any, Optional
 
 import torch
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 from transformers.trainer_utils import set_seed, enable_full_determinism
 
@@ -22,11 +29,13 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
+from azureml.acft.contrib.hf.nlp.utils.data_utils import copy_and_overwrite
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
 from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
+from azureml.acft.common_components.utils.logging_utils import SystemSettings
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
@@ -50,8 +59,6 @@ RUN_PROPERTIES = {
     "showMetricsAtRoot": "true",
 }
 
-add_run_properties(ROOT_RUN_PROPERTIES, logger, add_to_root=True)
-add_run_properties(RUN_PROPERTIES, logger)
 
 # mlflow model task based signature for inference
 MLFLOW_MODEL_SIGNATURES = {
@@ -113,6 +120,8 @@ MLFLOW_HFTRANSFORMERS_MISC_CONF = {
 def str2bool(arg):
     """Convert string to bool."""
     arg = arg.lower()
+    if arg == "auto":
+        return "auto"
     if arg in ["true", '1']:
         return True
     elif arg in ["false", '0']:
@@ -234,6 +243,24 @@ def get_parser():
         help="Number of updates steps to accumulate the gradients for, before performing a backward/update pass",
     )
     parser.add_argument(
+        "--gradient_checkpointing",
+        default="false",
+        type=str2bool,
+        help="Enable / disable gradient checkpointing",
+    )
+    parser.add_argument(
+        "--fp16",
+        default="false",
+        type=str2bool,
+        help="Enable mixed precision training",
+    )
+    parser.add_argument(
+        "--bf16",
+        default="false",
+        type=str2bool,
+        help="Enable mixed precision training",
+    )
+    parser.add_argument(
         "--lr_scheduler_type",
         default="linear",
         type=str,
@@ -269,7 +296,7 @@ def get_parser():
     parser.add_argument(
         "--ignore_mismatched_sizes",
         type=str2bool,
-        default="true",
+        default="auto",
         help=(
             "Whether or not to raise an error if some of the weights from the "
             "checkpoint do not have the same size as the weights of the model"
@@ -441,28 +468,123 @@ def copy_preprocess_args(args: Namespace) -> Namespace:
     return args
 
 
+def identify_ds_stage(ds_config: str) -> Optional[int]:
+    """Read the deepspeed stage information from the config file."""
+
+    if ds_config is None:
+        return None
+
+    with open(ds_config, 'r', encoding='utf-8') as fp:
+        ds_data = json.load(fp)
+    zero_optimization_config = ds_data.get("zero_optimization", {})
+    return zero_optimization_config.get("stage", None)
+
+
+def case_download_model(args: Namespace) -> bool:
+    """Check if the conditions meet to download the model from model selector output."""
+    return (
+        args.ignore_mismatched_sizes and
+        args.deepspeed and
+        identify_ds_stage(args.deepspeed) == 3
+    )
+
+
+def download_model(args: Namespace):
+    """Copy the model from model selector output to local disk."""
+    model_name_or_path = Path(args.model_selector_output, args.model_name)
+    from filelock import FileLock
+    if model_name_or_path.is_dir():
+        file_path = args.model_name
+        lock_path = file_path + ".lock"
+        finish_status_file = file_path + ".complete"
+        lock = FileLock(lock_path)
+        with lock:
+            if not Path(finish_status_file).is_file():
+                copy_and_overwrite(str(model_name_or_path), args.model_name)
+                touch.touch(finish_status_file)
+                logger.info("`.complete` file created")
+    else:
+        logger.info("The model selector output doesn't contain the model artifacts.")
+
+
+def set_ignore_mismatched_sizes_flag(mlmodel_data: Dict[str, Any], finetune_args: Namespace):
+    """Check for :param checkpoint_source in mlmodel_data and if exists and the value is `finetune`,
+    then set :param ignore_mismatched_sizes to true."""
+
+    if mlmodel_data is None:
+        logger.info("No mlmodel file found. Setting the ignore mismatched sizes to false")
+        setattr(finetune_args, "ignore_mismatched_sizes", False)
+        return
+
+    flavor_name = [
+        key
+        for key in mlmodel_data.get("flavors", {})
+        if key.startswith("hftransformers")
+    ]
+    if flavor_name:
+        flavor_name = flavor_name[0]
+        logger.info(f"Identified flavor name: {flavor_name}")
+    else:
+        logger.info("couldn't find the flavor name")
+
+    checkpoint_source = mlmodel_data["flavors"][flavor_name].get("checkpoint_source", "pretrained")
+    ignore_mismatched_sizes = getattr(finetune_args, "ignore_mismatched_sizes", False)
+    # setting ignore mismatch sizes to True for already finetuned models
+    if checkpoint_source == "finetune":
+        logger.info(
+            f"Found checkpoint source as {checkpoint_source} and ignore_mismatched_sizes as {ignore_mismatched_sizes}. "
+            "Setting `ignore_mismatched_sizes` to True."
+        )
+        setattr(finetune_args, "ignore_mismatched_sizes", True)
+
+    elif checkpoint_source == "pretrained":
+        if (
+            hasattr(finetune_args, "model_type")
+            and finetune_args.model_type in IGNORE_MISMATCHED_SIZES_FALSE_MODELS
+        ):
+            logger.info(
+                f"Identified model type: {finetune_args.model_type}. Setting `ignore_mismatched_sizes` to False."
+            )
+            setattr(finetune_args, "ignore_mismatched_sizes", False)
+        else:
+            logger.info("Setting `ignore_mismatched_sizes` to True")
+            setattr(finetune_args, "ignore_mismatched_sizes", True)
+
+
+def find_model_name_or_path(args: Namespace) -> str:
+    """The input to the finetune pipeline can be a model or huggingface_id.
+    If the input is a model, the model is copied over to the output of model selector component.
+    If the input is a huggingface_id, the model artifacts will be downloaded dynamically from HF
+    hub.
+    """
+
+    model_name_or_path = Path(args.model_selector_output, args.model_name)
+    # In case of deepspeed stage3 the model artifacts are downloaded to local disk. This
+    # is done to be able to modify the artifacts when :param ignore_mismatched_sizes is
+    # enabled. So the local disk is checked to check if model is downloaded to disk.
+    if Path(args.model_name).is_dir():
+        return args.model_name
+    elif model_name_or_path.is_dir():
+        return model_name_or_path
+    else:
+        return args.model_name
+
+
 def finetune(args: Namespace):
     """Finetune."""
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
     enable_full_determinism(args.seed) if args.enable_full_determinism else set_seed(args.seed)
 
-    # Update the model name or path
-    model_name_or_path = Path(args.model_selector_output, args.model_name)
-    if model_name_or_path.is_dir():
-        args.model_name_or_path = model_name_or_path
-    else:
-        args.model_name_or_path = args.model_name
-
     # Enable QLoRA finetune for Llama-70B
     model_asset_id = getattr(args, "model_asset_id", None) or ""
-    if any(
-        [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
-    ):
-        logger.info(
-            f"Identified asset id: {model_asset_id}. Enabling QLoRA finetuning."
-        )
-        setattr(args, "apply_lora", True)
-        setattr(args, "precision", 4)
+    # if any(
+    #     [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
+    # ):
+    #     logger.info(
+    #         f"Identified asset id: {model_asset_id}. Enabling QLoRA finetuning."
+    #     )
+    #     setattr(args, "apply_lora", True)
+    #     setattr(args, "precision", 4)
 
     # additional logging
     logger.info(f"Model name: {getattr(args, 'model_name', None)}")
@@ -471,22 +593,6 @@ def finetune(args: Namespace):
     logger.info(f"enable DeepSpeed: {getattr(args, 'apply_deepspeed', None)}")
     logger.info(f"enable ORT: {getattr(args, 'apply_ort', None)}")
     logger.info(f"Precision: {getattr(args, 'precision', None)}")
-
-    # set `ignore_mismatched_sizes` to `false` by default
-    if (
-        hasattr(args, "model_type")
-        and args.model_type in IGNORE_MISMATCHED_SIZES_FALSE_MODELS
-    ):
-        logger.info(
-            f"Identified model type: {args.model_type}. Forcing `ignore_mismatched_sizes` to False."
-        )
-        setattr(args, "ignore_mismatched_sizes", False)
-
-    # set eval_accumulation_steps to None if passed a non-positive value
-    if getattr(args, "eval_accumulation_steps", -1) <= 0:
-        setattr(args, "eval_accumulation_steps", None)
-
-    logger.info(f"eval_accumulation_steps: {getattr(args, 'eval_accumulation_steps', None)}")
 
     # read FT config
     ft_config_path = Path(args.model_selector_output, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)
@@ -502,7 +608,12 @@ def finetune(args: Namespace):
     # `mlflow_ft_conf` - contains all mlflow related properties
     mlflow_ft_conf = {
         "mlflow_model_signature": {},
-        "mlflow_hftransformers_misc_conf": {},
+        "mlflow_hftransformers_misc_conf": {
+            "model_hf_load_kwargs": {
+                "torch_dtype": "torch.float16"
+            },
+            "checkpoint_source": "finetune"
+        },
     }
 
     # set task based mlflow_model_signature
@@ -540,9 +651,9 @@ def finetune(args: Namespace):
 
     # if MLmodel file exists pass to finetuned model as `base_model_mlmodel`
     mlflow_config_file = Path(args.model_selector_output, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
+    mlflow_data = None
     if mlflow_config_file.is_file():
         import yaml
-        mlflow_data = None
         try:
             with open(mlflow_config_file, "r") as rptr:
                 mlflow_data = yaml.safe_load(rptr)
@@ -563,6 +674,20 @@ def finetune(args: Namespace):
         logger.info("MLmodel file does not exist")
 
     logger.info(f"FT MLFlow config - {mlflow_ft_conf}")
+
+    # re adjust ignore mismatched sizes
+    if args.ignore_mismatched_sizes == "auto":
+        logger.info("`ignore mismatched sizes` is passed as auto. setting the correct boolean value.")
+        set_ignore_mismatched_sizes_flag(mlmodel_data=mlflow_data, finetune_args=args)
+
+    # download the model
+    if case_download_model(args):
+        logger.info("downloading the model to disk")
+        download_model(args)
+
+    # update the model name or path
+    args.model_name_or_path = find_model_name_or_path(args)
+    logger.info(f"Updated model name or path: {args.model_name_or_path}")
 
     mlflow_ft_conf = deep_update(mlflow_ft_conf, args.finetune_config.get("mlflow_ft_conf", {}))
     args.finetune_config["mlflow_ft_conf"] = deepcopy(mlflow_ft_conf)
@@ -620,13 +745,13 @@ def finetune(args: Namespace):
         zero_optimization_config = ds_data.get("zero_optimization", {})
         ds_stage = zero_optimization_config.get("stage", None)
         # `apply_lora=true` is not supported with stage3 deepspeed config
-        if ds_stage == 3 and args.apply_lora:
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(ACFTUserError, error=(
-                    "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
-                    )
-                )
-            )
+        # if ds_stage == 3 and args.apply_lora:
+        #     raise ACFTValidationException._with_error(
+        #         AzureMLError.create(ACFTUserError, error=(
+        #             "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
+        #             )
+        #         )
+        #     )
         # `stage3_gather_16bit_weights_on_model_save=false` is not supported for stage3 deepspeed config
         if ds_stage == 3 and not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
             raise ACFTValidationException._with_error(
@@ -676,6 +801,7 @@ def main():
     args = copy_preprocess_args(args)
 
     # Set logging parameters
+    SystemSettings.LOG_FILENAME = SystemSettings.LOG_FILENAME + f".{str(uuid.uuid4())}"
     set_logging_parameters(
         task_type=args.task_name,
         acft_custom_dimensions={
@@ -684,8 +810,11 @@ def main():
             LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME,
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+        log_level=logging.INFO
     )
 
+    add_run_properties(ROOT_RUN_PROPERTIES, logger, add_to_root=True)
+    add_run_properties(RUN_PROPERTIES, logger)
     # XXX Hack to support model loading in accelerator package for falcon models
     # with `trust_remote_code=True`
     # This is needed as FT config is ONLY used in contrib package which is causing

@@ -278,6 +278,14 @@ inputs:
     default: -1
     optional: true
     description: Number of predictions steps to accumulate before moving the tensors to the CPU, will be passed as None if set to -1
+  gradient_checkpointing:
+    type: string
+    default: "false"
+    optional: true
+    enum:
+      - "true"
+      - "false"
+    description: Few of the activations are saved to disk
 
   lr_scheduler_type:
     type: string
@@ -325,9 +333,10 @@ inputs:
   ignore_mismatched_sizes:
     type: string
     enum:
+      - "auto"
       - "true"
       - "false"
-    default: "true"
+    default: "auto"
     optional: true
     description: Whether or not to raise an error if some of the weights from the checkpoint do not have the same size as the weights of the model
 
@@ -596,10 +605,15 @@ jobs:
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.13
+    component: azureml://registries/azureml/components/model_prediction/versions/0.0.13
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+      properties:
+        singularity:
+          imageVersion: ''
+          SLATier: 'Premium'
+          priority: 'Medium'
     inputs:
       task: text-generation
       test_data: '${{parent.jobs.text_generation_datapreprocess.outputs.output_dir}}'
@@ -610,10 +624,15 @@ jobs:
       mlflow_model: '${{parent.jobs.text_generation_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.13
+    component: azureml://registries/azureml/components/compute_metrics/versions/0.0.13
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
+      properties:
+        singularity:
+          imageVersion: ''
+          SLATier: 'Premium'
+          priority: 'Medium'
     inputs:
       task: text-generation
       ground_truth: '${{parent.jobs.model_prediction.outputs.ground_truth}}'

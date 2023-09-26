@@ -25,6 +25,7 @@ inputs:
   pytorch_model_path:
     type: custom_model
     optional: true
+    mode: download
     description: Pytorch model asset path
 
   # MLflow model as an input
@@ -33,6 +34,7 @@ inputs:
   mlflow_model_path:
     type:  mlflow_model
     optional: true
+    mode: download
     description: MLflow model asset path
 
   # Output of validation component
