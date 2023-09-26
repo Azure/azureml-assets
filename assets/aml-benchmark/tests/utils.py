@@ -268,6 +268,7 @@ def _deploy_endpoint(ml_client, endpoint_name):
             auth_mode="key"
         )
     ml_client.online_endpoints.begin_create_or_update(endpoint).wait()
+    endpoint = ml_client.online_endpoints.get(name=endpoint_name)
     return endpoint
 
 
