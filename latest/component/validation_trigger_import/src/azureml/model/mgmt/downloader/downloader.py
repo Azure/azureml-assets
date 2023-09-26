@@ -99,6 +99,8 @@ class GITDownloader:
     """Downloader class for model hosted on public git repositories."""
 
     URI_TYPE = PathType.GIT.value
+    FILES_TO_REMOVE = [".gitattributes"]
+    DIRS_TO_REMOVE = [".git"]
 
     def __init__(self, model_uri: str, download_dir: Path):
         """GIT downloader init.
@@ -155,8 +157,16 @@ class GITDownloader:
                     AzureMLError.create(GITCloneError, uri=self._model_uri, error=stdout)
                 )
 
-            git_path = os.path.join(self._download_dir, ".git")
-            shutil.rmtree(git_path, onerror=self._onerror)
+            for dir_path in GITDownloader.DIRS_TO_REMOVE:
+                path = os.path.join(self._download_dir, dir_path)
+                if os.path.exists(path) and os.path.isdir(path):
+                    shutil.rmtree(path, onerror=self._onerror)
+
+            for file_path in GITDownloader.FILES_TO_REMOVE:
+                path = os.path.join(self._download_dir, file_path)
+                if os.path.exists(path) and os.path.isfile(path):
+                    os.remove(path)
+
             return {
                 "download_time_utc": get_system_time_utc(),
                 "size": round_size(get_file_or_folder_size(self._download_dir)),
