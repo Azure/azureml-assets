@@ -16,7 +16,14 @@ inputs:
     type: uri_folder
     description: The performance metrics in json format.
     optional: True
-
+  model_type:
+    type: string
+    optional: False
+    description: The endpoint model type.
+    enum:
+      - llama
+      - gpt
+    default: llama
 outputs:
   benchmark_result:
     type: uri_file
@@ -29,3 +36,4 @@ command: >-
   $[[--quality_metrics_path ${{inputs.quality_metrics}}]] 
   $[[--performance_metrics_path ${{inputs.performance_metrics}}]] 
   --output_dataset_path ${{outputs.benchmark_result}}
+  --model_type ${{inputs.model_type}}

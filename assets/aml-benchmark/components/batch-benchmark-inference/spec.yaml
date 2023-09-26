@@ -34,6 +34,14 @@ inputs:
   online_endpoint_url:
     type: string
     optional: False
+  model_type:
+    type: string
+    optional: False
+    description: The endpoint model type.
+    enum:
+      - llama
+      - gpt
+    default: llama
   additional_headers:
     type: string
     optional: True
@@ -100,6 +108,7 @@ jobs:
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
+      model_type: ${{parent.inputs.model_type}}
       n_samples: ${{parent.inputs.n_samples}}
     outputs:
       formatted_data:
@@ -117,6 +126,7 @@ jobs:
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
+      model_type: ${{parent.inputs.model_type}}
     outputs:
       job_out_path:
         type: uri_file
@@ -139,6 +149,7 @@ jobs:
       batch_inference_output: ${{parent.jobs.real_point_batch_score.outputs.mini_batch_results_out_directory}}
       metadata_key: ${{parent.inputs.metadata_key}}
       label_key: ${{parent.inputs.label_key}}
+      model_type: ${{parent.inputs.model_type}}
     outputs:
       prediction_data:
         type: uri_file

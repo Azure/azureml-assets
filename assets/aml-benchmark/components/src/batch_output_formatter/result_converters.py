@@ -69,7 +69,7 @@ class ResultConverters:
         return self._model_type.lower() == "llama"
 
     def _is_aoai_model(self) -> bool:
-        return self._model_type.lower() == "aoai"
+        return self._model_type.lower() == "gpt"
 
     @staticmethod
     def _get_request(result: Dict[str, Any]) -> Any:

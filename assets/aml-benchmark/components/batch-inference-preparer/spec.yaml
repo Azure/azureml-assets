@@ -31,6 +31,18 @@ inputs:
         "_batch_request_metadata": ###<_batch_request_metadata>
       }
     optional: False
+  model_type:
+    type: string
+    optional: False
+    description: The endpoint model type.
+    enum:
+      - llama
+      - gpt
+    default: llama
+  n_samples:
+    type: integer
+    description: The number of top samples send to endpoint.
+    optional: True
 outputs:
   formatted_data:
     type: mltable
@@ -41,6 +53,7 @@ environment: azureml://registries/azureml/environments/model-evaluation/labels/l
 command: >-
   python -m batch_inference_preparer.main
   --input_dataset ${{inputs.input_dataset}}
-  --model_type llama
+  --model_type ${{inputs.model_type}}
   --batch_input_pattern '${{inputs.batch_input_pattern}}'
   --formatted_data ${{outputs.formatted_data}}
+  $[[--n_samples ${{inputs.n_samples}}]]

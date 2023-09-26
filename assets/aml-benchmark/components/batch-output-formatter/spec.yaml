@@ -17,6 +17,20 @@ inputs:
     type: string
     optional: False
     description: The key that stores the ground truth value.
+  data_id_key:
+    type: string
+    optional: True
+  model_type:
+    type: string
+    optional: False
+    description: The endpoint model type.
+    enum:
+      - llama
+      - gpt
+  ground_truth_input:
+    type: uri_folder
+    description: The raw batch inference output.
+    optional: True
 outputs:
   prediction_data:
     type: uri_file
@@ -37,5 +51,7 @@ command: >-
   --perf_data ${{outputs.perf_data}}
   --predict_ground_truth_data ${{outputs.ground_truth_data}}
   --label_key ${{inputs.label_key}}
-  --model_type llama
+  --model_type ${{inputs.model_type}}
   $[[--metadata_key ${{inputs.metadata_key}}]]
+  $[[--data_id_key ${{inputs.data_id_key}}]]
+  $[[--ground_truth_input ${{inputs.ground_truth_input}}]]

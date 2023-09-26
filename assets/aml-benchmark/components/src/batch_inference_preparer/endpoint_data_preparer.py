@@ -31,6 +31,14 @@ class EndpointDataPreparer:
                     "`input_string` should be presented in the `input_data` fields of payload json.")
             elif isinstance(output_payload_dict["input_data"]["input_string"], list):
                 errors.append("`input_string` field should be a list")
+        if self._model_type.lower == "gpt":
+            if "messages" not in output_payload_dict:
+                errors.append(
+                    "`messages` should be presented in the payload json.")
+            elif not isinstance(output_payload_dict['messages'], list):
+                errors.append(
+                    "`messages` field in the payload should be a list."
+                )
         return errors
 
     def _convert_python_pattern(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:

@@ -54,7 +54,10 @@ class OSSHeaderHandler(HeaderHandler):
         return headers
     
     def _get_list_key_url(self, workspace: Workspace) -> str:
-        return _get_mms_url(workspace) + '/onlineEndpoints/{}'.format(self._deployment_name) + '/listkeys'
+        url_list = [
+            _get_mms_url(workspace), 'onlineEndpoints', self._deployment_name, 'listkeys'
+        ]
+        return '/'.join(url_list)
 
     @property
     def _auth_key_in_resp(self) -> str:

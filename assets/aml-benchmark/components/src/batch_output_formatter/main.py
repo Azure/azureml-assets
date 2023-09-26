@@ -74,6 +74,7 @@ def main(
     perf_df = []
     ground_truth = []
     if ground_truth_input:
+        print(os.listdir(ground_truth_input))
         input_file_paths = resolve_io_path(batch_inference_output)
         ground_truth_input = pd.DataFrame(read_jsonl_files(input_file_paths))
     else:

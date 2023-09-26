@@ -33,7 +33,9 @@ from .utils.common.common import str2bool, convert_to_list
 from .utils import logging_utils as lu
 from .utils.logging_utils import setup_logger, get_logger, get_events_client, set_mini_batch_id
 from .utils.common.json_encoder_extensions import setup_encoder
+from .header_handlers.header_handler import HeaderHandler
 from .header_handlers.oss.oss_header_handler import OSSHeaderHandler
+from .header_handlers.oai.oai_header_handler import OAIHeaderHandler
 
 
 par: parallel.Parallel = None
@@ -177,6 +179,7 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--app_insights_connection_string", nargs='?', const=None, type=str)
     parser.add_argument("--additional_properties", nargs='?', const=None, type=str)
     parser.add_argument("--run_type", type=str)
+    parser.add_argument("--model_type", type=str)
 
     # Sequential-specific parameters
     parser.add_argument("--sorted", default=False, type=str2bool)
@@ -208,6 +211,7 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--endpoint_subscription_id", default=None, type=str)
     parser.add_argument("--endpoint_resource_group", default=None, type=str)
     parser.add_argument("--endpoint_workspace", default=None, type=str)
+    parser.add_argument("--use_managed_identity", default=False, type=str2bool)
 
 
 def print_arguments(args: Namespace):
@@ -249,6 +253,8 @@ def print_arguments(args: Namespace):
     lu.get_logger().debug("endpoint_subscription_id: %s" % args.endpoint_subscription_id)
     lu.get_logger().debug("endpoint_resource_group: %s" % args.endpoint_resource_group)
     lu.get_logger().debug("endpoint_workspace: %s" % args.endpoint_workspace)
+    lu.get_logger().debug("mdoel_type: %s" % args.model_type)
+    lu.get_logger().debug("use_managed_identity: %s" % args.use_managed_identity)
 
 
 def save_mini_batch_results(mini_batch_results: list, mini_batch_context):
@@ -316,7 +322,7 @@ def setup_scoring_client() -> ScoringClient:
         tally_exclusions=args.tally_exclusions
     )
 
-    header_handler = setup_header_handler(token_provider=token_provider)
+    header_handler = setup_header_handler(token_provider=token_provider, model_type=args.model_type)
 
     scoring_client = ScoringClient(
         header_handler=header_handler,
@@ -329,8 +335,17 @@ def setup_scoring_client() -> ScoringClient:
     return scoring_client
 
 
-def setup_header_handler(token_provider: TokenProvider) -> OSSHeaderHandler:
+def setup_header_handler(token_provider: TokenProvider, model_type: str) -> OSSHeaderHandler:
     """Add header handler."""
+    if model_type == 'gpt':
+        return OAIHeaderHandler(
+            token_provider=token_provider, user_agent_segment=args.user_agent_segment,
+            batch_pool=args.batch_pool,
+            quota_audience=args.quota_audience,
+            additional_headers=args.additional_headers,
+            deployment_name=args.online_endpoint_url.split('/')[2].split('.')[0],
+            use_managed_identity=args.use_managed_identity
+        )
     return OSSHeaderHandler(
         token_provider=token_provider, user_agent_segment=args.user_agent_segment,
         batch_pool=args.batch_pool,
@@ -339,5 +354,6 @@ def setup_header_handler(token_provider: TokenProvider) -> OSSHeaderHandler:
         deployment_name=args.online_endpoint_url.split('/')[2].split('.')[0],
         endpoint_subscription=args.endpoint_subscription_id,
         endpoint_resource_group=args.endpoint_resource_group,
-        endpoint_workspace=args.endpoint_workspace
+        endpoint_workspace=args.endpoint_workspace,
+        use_managed_identity=args.use_managed_identity
     )
