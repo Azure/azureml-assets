@@ -203,6 +203,14 @@ ACFT_CONFIG = {
         "load_tokenizer_kwargs": {
             "add_eos_token": True,
             "padding_side": "right"
+        },
+        "mlflow_ft_conf": {
+            "mlflow_hftransformers_misc_conf": {
+                "tokenizer_hf_load_kwargs": {
+                    "add_eos_token": True,
+                    "padding_side": "right",
+                },
+            }
         }
     }
 }
