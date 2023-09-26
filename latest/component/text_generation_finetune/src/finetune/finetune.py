@@ -4,6 +4,7 @@
 """File containing function for finetune component."""
 
 import json
+import logging
 import argparse
 from pathlib import Path
 from argparse import Namespace
@@ -684,6 +685,7 @@ def main():
             LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME,
         },
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+        log_level=logging.INFO,
     )
 
     # XXX Hack to support model loading in accelerator package for falcon models
