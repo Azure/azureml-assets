@@ -206,9 +206,9 @@ class TestBatchBenchmarkInferenceComponent:
             )
         output_dir = os.path.join(output_dir, "named-outputs")
         self._check_output_data(
-            os.path.join(output_dir, "prediction_data"), "prediction_data", ["prediction"])
+            os.path.join(output_dir, "prediction_data"), "prediction.jsonl", ["prediction"])
         self._check_output_data(
-            os.path.join(output_dir, "perf_data"), "perf_data", ["start", "end", "latency"])
+            os.path.join(output_dir, "perf_data"), "perf_data.jsonl", ["start", "end", "latency"])
         self._check_output_data(
             os.path.join(
-                output_dir, "ground_truth_data"), "ground_truth_data", ["ground_truth"])
+                output_dir, "ground_truth_data"), "ground_truth_data.jsonl", ["ground_truth"])

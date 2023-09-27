@@ -20,7 +20,7 @@ def _submit_prediction_drift_model_monitor_job(
         COMPONENT_NAME_PREDICTION_DRIFT_SIGNAL_MONITOR
     )
 
-    @pipeline()
+    @pipeline(default_compute="compute-cluster")
     def _prediction_drift_signal_monitor_e2e():
         prediction_drift_signal_monitor_output = prediction_drift_signal_monitor(
             target_data=target_data,
@@ -36,7 +36,7 @@ def _submit_prediction_drift_model_monitor_job(
         }
 
     pipeline_job = _prediction_drift_signal_monitor_e2e()
-    pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="direct")
+    pipeline_job.outputs.signal_output = Output(type="uri_folder", mode="mount")
 
     pipeline_job = ml_client.jobs.create_or_update(
         pipeline_job, experiment_name=experiment_name
