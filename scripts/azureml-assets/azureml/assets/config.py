@@ -25,6 +25,7 @@ class AssetType(Enum):
     DATA = 'data'
     ENVIRONMENT = 'environment'
     MODEL = 'model'
+    PROMPT = 'prompt'
 
 
 class ComponentType(Enum):
