@@ -1,6 +1,0 @@
-$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
-name: "model-monitor-spark-standalone"
-version: "2"
-build:
-  path: docker-context
-description: Spark environment for running model monitor jobs on AzureML compute clusters.
