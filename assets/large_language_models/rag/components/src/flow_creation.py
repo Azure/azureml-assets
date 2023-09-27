@@ -28,7 +28,7 @@ logger = get_logger('flow_creation')
 
 MAX_POST_TIMES = 3
 SLEEP_DURATION = 1
-CODE_FIRST = True
+USE_CODE_FIRST = True
 USE_CHAT_FLOWS = False
 SERVICE_ENDPOINT = os.environ.get("AZUREML_SERVICE_ENDPOINT", "")
 EXPERIMENT_SCOPE = os.environ.get("AZUREML_EXPERIMENT_SCOPE", "")
@@ -244,7 +244,7 @@ def main(args, ws, current_run, activity_logger: Logger):
     if isinstance(top_prompts, str):
         top_prompts = [top_prompts, top_prompts, top_prompts]
 
-    if CODE_FIRST:
+    if USE_CODE_FIRST:
         file_name = os.path.join(Path(__file__).parent.absolute(),
                                  "flow_yamls",
                                  prefix + "flow.dag.yaml")
@@ -274,7 +274,7 @@ def main(args, ws, current_run, activity_logger: Logger):
     api_name = "chat" if completion_model_name.startswith("gpt-") else "completion"
     flow_with_variants = flow_with_variants.replace("@@API", api_name)
 
-    if CODE_FIRST:
+    if USE_CODE_FIRST:
 
         # write flow dag yaml back to file
         with open(os.path.join(Path(__file__).parent.absolute(), CODE_DIR, "flow.dag.yaml"), "w") as file:
