@@ -140,88 +140,17 @@ def get_deployment_and_model_name(s):
     return (deployment_name, model_name)
 
 
-def get_user_alias_from_credential(credential):
-    """Get alias from credential. Copied from PF code."""
-    import jwt
-    token = credential.get_token("https://storage.azure.com/.default").token
-    decode_json = jwt.decode(token, options={"verify_signature": False, "verify_aud": False})
-    try:
-        email = decode_json["upn"]
-        return email.split("@")[0]
-    except Exception:
-        # use oid when failed to get upn, e.g. service principal
-        return decode_json["oid"]
-
-
-class CustomFileStorageClient(FileStorageClient):
-    """Wrapper around FileStorageClient to all of for custom directory client."""
-
-    def __init__(self, credential: str, file_share_name: str, account_url: str, azure_cred):
-        """Initialize client."""
-        super().__init__(credential=credential, file_share_name=file_share_name, account_url=account_url)
-        try:
-            user_alias = get_user_alias_from_credential(azure_cred)
-        except Exception:
-            # fall back to unknown user when failed to get credential.
-            user_alias = "unknown_user"
-        self._user_alias = user_alias
-
-        # TODO: update this after we finalize the design for flow file storage client
-        # create user folder if not exist
-        for directory_path in ["Users", f"Users/{user_alias}", f"Users/{user_alias}/Promptflows"]:
-            self.directory_client = ShareDirectoryClient(
-                account_url=account_url,
-                credential=credential,
-                share_name=file_share_name,
-                directory_path=directory_path,
-            )
-
-            # try to create user folder if not exist
-            try:
-                self.directory_client.create_directory()
-            except ResourceExistsError:
-                pass
-
-
 def upload_code_files(ws: Workspace, name):
     """Upload the files in the code flow directory."""
     from azureml.data.dataset_factory import FileDatasetFactory
     working_directory = ws.datastores.get("workspaceworkingdirectory")
-    alias = get_user_alias_from_credential(ws._auth)
     asset_id = str(uuid.uuid4())
-    dest = f"Users/{alias}/Promptflows/{asset_id}/{CODE_DIR}"
+    dest = f"Users/{name}/Promptflows/{asset_id}/{CODE_DIR}"
     file = FileDatasetFactory.upload_directory(
         os.path.join(Path(__file__).parent.absolute(), CODE_DIR),
         (working_directory, dest))
 
     return dest
-
-    # try:
-    #     credential = DefaultAzureCredential()
-    #     # Check if given credential can get token successfully.
-    #     credential.get_token("https://management.azure.com/.default")
-    # except Exception:
-    #     # Fall back to InteractiveBrowserCredential in case DefaultAzureCredential not work
-    #     credential = InteractiveBrowserCredential()
-    # ml_client = MLClient(
-    #     credential=credential,
-    #     subscription_id=ws.subscription_id,  # this will look like xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    #     resource_group_name=ws.resource_group,
-    #     workspace_name=ws.name
-    # )
-    # ds = ml_client.datastores.get("workspaceworkingdirectory", include_secrets=True)
-    # storage_url = f"https://{ds.account_name}.file.core.windows.net"
-    # file_share_name = ds.file_share_name
-
-    # file_helper = CustomFileStorageClient(ds.credentials.account_key,
-    #                                       file_share_name,
-    #                                       storage_url,
-    #                                       credential)
-    # asset_id = str(uuid.uuid4())
-    # asset_info = file_helper.upload(os.path.join(Path(__file__).parent.absolute(), CODE_DIR),
-    #                                 name, "1", asset_hash=asset_id, show_progress=False)
-    # remote_path = asset_info["remote path"]
-    # return file_helper.directory_client.directory_path + "/" + remote_path
 
 
 def main(args, ws, current_run, activity_logger: Logger):
@@ -366,7 +295,11 @@ def main(args, ws, current_run, activity_logger: Logger):
                 file.write(codecs.decode(prompt_str, 'unicode_escape'))
 
         # upload code
-        yaml_path = upload_code_files(ws, flow_name) + "/flow.dag.yaml"
+        details = current_run.get_details()
+        user_name = details.get("submittedBy", "systemcreated")
+        user_name = user_name.lower().replace(" ", "")
+
+        yaml_path = upload_code_files(ws, user_name) + "/flow.dag.yaml"
         activity_logger.info(
             "[Promptflow Creation]: Code first flow files successfully uploaded!")
         # Load in Json
@@ -447,7 +380,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--best_prompts", type=str)
-    parser.add_argument("--mlindex_asset_id", type=str, required=False, default="azureml://subscriptions/381b38e9-9840-4719-a5a0-61d9585e1e91/resourcegroups/baker-static/providers/Microsoft.MachineLearningServices/workspaces/baker-eastus2/data/tidy-ring-78lzkwl4fn/versions/1")
+    parser.add_argument("--mlindex_asset_id", type=str)
     parser.add_argument("--mlindex_name", type=str, required=False,
                         dest='mlindex_name', default='Baker_Example_With_Variants')
     parser.add_argument(
