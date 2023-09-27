@@ -292,9 +292,13 @@ def main(args, ws, current_run, activity_logger: Logger):
                 file.write(codecs.decode(prompt_str, 'unicode_escape'))
 
         # upload code
-        details = current_run.get_details()
-        user_name = details.get("submittedBy", "systemcreated")
-        user_name = user_name.lower().replace(" ", "")
+        try:
+            details = current_run.get_details()
+            user_name = details.get("submittedBy", "systemcreated")
+            user_name = user_name.lower().replace(" ", "")
+        except:
+            # For local runs, get_details fails
+            user_name = "systemcreated"
 
         yaml_path = upload_code_files(ws, user_name) + "/flow.dag.yaml"
         activity_logger.info(
