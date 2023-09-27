@@ -61,6 +61,14 @@ inputs:
     description: MLflow model asset path. Special characters like \ and ' are invalid in the parameter value.
 
   # Data PreProcess parameters (See [docs](https://aka.ms/azureml/components/question_answering_datapreprocess) to learn more)
+  task_name:
+      type: string
+      optional: false
+      enum:
+        - QuestionAnswering
+      default: QuestionAnswering
+      description: QuestionAnswering task type
+  
   question_key:
     type: string
     optional: false
@@ -516,6 +524,10 @@ jobs:
     inputs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
       compute_finetune: '${{parent.inputs.compute_finetune}}'
+      compute_model_import: '${{parent.inputs.compute_model_import}}'
+      compute_data_preprocess: '${{parent.inputs.compute_preprocess}}'
+      task_name: '${{parent.inputs.task_name}}'
+      number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
   question_answering_model_import:
     type: command
     component: azureml:question_answering_model_import:0.0.19

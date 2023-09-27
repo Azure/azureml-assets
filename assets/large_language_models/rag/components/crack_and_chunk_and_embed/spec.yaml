@@ -4,9 +4,9 @@ type: command
 tags:
     Preview: ""
 
-version: 0.0.29
-name: llm_rag_crack_and_chunk
-display_name: LLM - Crack and Chunk Data
+version: 0.0.1
+name: llm_rag_crack_and_chunk_and_embed
+display_name: LLM - Crack, Chunk and Embed Data
 is_deterministic: true
 
 description: |
@@ -16,6 +16,10 @@ description: |
   Chunking allows splitting source data of various formats into small but coherent snippets of information which can be 'packed' into LLM prompts when asking for answers to user querys related to the sorce documents.
 
   Supported formats: md, txt, html/htm, pdf, ppt(x), doc(x), xls(x), py
+
+  Also generates embeddings vectors for data chunks if configured.
+
+  If `embeddings_container` is supplied, input chunks are compared to existing chunks in the Embeddings Container and only changed/new chunks are embedded, existing chunks being reused.
 
 inputs:
   # Input AzureML Data
@@ -28,10 +32,6 @@ inputs:
     type: string
     optional: true
     description: "Limit files opened from `input_data`, defaults to '**/*'."
-  allowed_extensions:
-    type: string
-    optional: true
-    description: "Comma separated list of extensions to include, if not provided the default list of supported extensions will be used. e.g. '.md,.txt,.html,.py,.pdf.'"
   # Chunking options
   chunk_size:
     type: integer
@@ -41,18 +41,14 @@ inputs:
     type: integer
     default: 0
     description: "Number of tokens to overlap between chunks."
-  data_source_url:
+  citation_url:
     type: string
     optional: true
     description: "Base URL to join with file paths to create full source file URL for chunk metadata."
-  document_path_replacement_regex:
+  citation_replacement_regex:
     type: string
     optional: true
     description: "A JSON string with two fields, 'match_pattern' and 'replacement_pattern' to be used with re.sub on the source url. e.g. '{\"match_pattern\": \"(.*)/articles/(.*)(\\\\.[^.]+)$\", \"replacement_pattern\": \"\\\\1/\\\\2\"}' would remove '/articles' from the middle of the url."
-  max_sample_files:
-    type: integer
-    default: -1
-    description: "Number of files to chunk. Specify -1 to chunk all documents in input path."
   use_rcts:
     type: string
     default: "True"
@@ -60,31 +56,38 @@ inputs:
     - "True"
     - "False"
     description:  "Whether to use RecursiveCharacterTextSplitter to split documents into chunks"
-  output_format:
+  # If adding to previously generated Embeddings
+  embeddings_container:
+    type: uri_folder
+    optional: true
+    mode: direct
+    description: "Folder containing previously generated embeddings. Should be parent folder of the 'embeddings' output path used for for this component. Will compare input data to existing embeddings and only embed changed/new data, reusing existing chunks."
+  # Embeddings settings
+  embeddings_model:
     type: string
-    default: "jsonl"
-    enum:
-    - "csv"
-    - "jsonl"
-    description: "Format of the output chunk file"
-
+    default: "hugging_face://model/sentence-transformers/all-mpnet-base-v2"
+    description: "The model to use to embed data. E.g. 'hugging_face://model/sentence-transformers/all-mpnet-base-v2' or 'azure_open_ai://deployment/{deployment_name}/model/{model_name}'"
+  embeddings_connection_id:
+    type: string
+    optional: true
+    description: "The connection id of the Embeddings Model provider to use."
 outputs:
-   output_chunks:
-     type: uri_folder
-     description: "Uri Folder containing chunks. Each chunk will be a separate file in the folder"
+  embeddings:
+    type: uri_folder
+    description: "Where to save data with embeddings. This should be a subfolder of previous embeddings if supplied, typically named using '${name}'. e.g. /my/prev/embeddings/${name}"
 
 environment: azureml:llm-rag-embeddings@latest
-code: '../src'
+code: '../src/'
 command: >-
-  python -m azureml.rag.tasks.crack_and_chunk
+  python -m azureml.rag.tasks.crack_and_chunk_and_embed
   --input_data ${{inputs.input_data}}
   $[[--input_glob '${{inputs.input_glob}}']]
-  $[[--allowed_extensions ${{inputs.allowed_extensions}}]]
-  --output_chunks ${{outputs.output_chunks}}
   --chunk_size ${{inputs.chunk_size}}
   --chunk_overlap ${{inputs.chunk_overlap}}
-  $[[--data_source_url ${{inputs.data_source_url}}]]
-  $[[--document_path_replacement_regex '${{inputs.document_path_replacement_regex}}']]
-  --max_sample_files ${{inputs.max_sample_files}}
   --use_rcts '${{inputs.use_rcts}}'
-  --output_format ${{inputs.output_format}}
+  $[[--citation_url ${{inputs.citation_url}}]]
+  $[[--citation_replacement_regex '${{inputs.citation_replacement_regex}}']]
+  --embeddings_model ${{inputs.embeddings_model}}
+  $[[--embeddings_connection_id ${{inputs.embeddings_connection_id}}]]
+  $[[--embeddings_container ${{inputs.embeddings_container}}]]
+  --output_path ${{outputs.embeddings}}
