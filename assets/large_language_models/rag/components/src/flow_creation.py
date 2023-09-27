@@ -192,20 +192,6 @@ def main(args, ws, current_run, activity_logger: Logger):
     print("embedding_deployment_name: %s" % embedding_deployment_name)
     print("embedding_model_name: %s" % embedding_model_name)
 
-    # Hard coded for ease of reverting if there are issues
-
-    if completion_model_name.startswith("gpt-") and USE_CHAT_FLOWS:
-        is_chat = True
-        file_name = "chat_flow_with_variants_mlindex.json"
-        print("Using chat flows")
-        is_chat = True
-        prefix = "chat_"
-    else:
-        print("Not using chat flows")
-        is_chat = False
-        prefix = ""
-        print("Not using chat flows")
-
     if args.best_prompts is None:
         top_prompts = [
             'You are an AI assistant that helps users answer questions given a specific context. You will be '
@@ -241,8 +227,18 @@ def main(args, ws, current_run, activity_logger: Logger):
 
     print(mlindex_asset_id)
     print(top_prompts)
+
     if isinstance(top_prompts, str):
         top_prompts = [top_prompts, top_prompts, top_prompts]
+
+    if completion_model_name.startswith("gpt-") and USE_CHAT_FLOWS:
+        print("Using chat flows")
+        is_chat = True
+        prefix = "chat_"
+    else:
+        print("Not using chat flows")
+        is_chat = False
+        prefix = ""
 
     if USE_CODE_FIRST:
         file_name = os.path.join(Path(__file__).parent.absolute(),
