@@ -268,6 +268,7 @@ def _deploy_endpoint(ml_client, endpoint_name):
             auth_mode="key"
         )
     ml_client.online_endpoints.begin_create_or_update(endpoint).wait()
+    endpoint = ml_client.online_endpoints.get(name=endpoint_name)
     return endpoint
 
 
@@ -290,17 +291,23 @@ def _deploy_fake_model(ml_client, endpoint_name, deployment_name):
 
 
 def deploy_fake_test_endpoint_maybe(
-        ml_client, endpoint_name="aml-benchmark-test-bzvkqd", deployment_name="test-model"
+        ml_client, endpoint_name="benchmark", deployment_name="test-model", use_workspace_name=True
 ):
     """Deploy a fake test endpoint."""
     should_deploy = False
     should_wait = True
+    if use_workspace_name:
+        endpoint_name = f"{endpoint_name}-{ml_client.workspace_name.split('-')[-1]}"
     try:
         while should_wait:
             endpoint = ml_client.online_endpoints.get(name=endpoint_name)
             if endpoint.provisioning_state.lower() in ["creating", "updating", 'deleting', 'provisioning']:
                 time.sleep(30)
                 continue
+            elif endpoint.provisioning_state.lower() == 'failed':
+                ml_client.online_endpoints.begin_delete(name=endpoint_name)
+                should_deploy = True
+                break
             deployment = ml_client.online_deployments.get(
                 endpoint_name=endpoint_name, name=deployment_name)
             if deployment.provisioning_state.lower() == 'failed':

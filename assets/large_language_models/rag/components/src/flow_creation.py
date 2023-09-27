@@ -29,6 +29,7 @@ logger = get_logger('flow_creation')
 MAX_POST_TIMES = 3
 SLEEP_DURATION = 1
 CODE_FIRST = True
+USE_CHAT_FLOWS = False
 SERVICE_ENDPOINT = os.environ.get("AZUREML_SERVICE_ENDPOINT", "")
 EXPERIMENT_SCOPE = os.environ.get("AZUREML_EXPERIMENT_SCOPE", "")
 WORKSPACE_SCOPE = os.environ.get("AZUREML_WORKSPACE_SCOPE", "")
@@ -193,7 +194,9 @@ def main(args, ws, current_run, activity_logger: Logger):
 
     # Hard coded for ease of reverting if there are issues
 
-    if completion_model_name.startswith("gpt-"):
+    if completion_model_name.startswith("gpt-") and USE_CHAT_FLOWS:
+        is_chat = True
+        file_name = "chat_flow_with_variants_mlindex.json"
         print("Using chat flows")
         is_chat = True
         prefix = "chat_"
