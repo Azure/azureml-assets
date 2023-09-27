@@ -22,11 +22,6 @@ from azureml.rag.utils.logging import (
     track_activity,
     _logger_factory
 )
-from azure.identity import DefaultAzureCredential, InteractiveBrowserCredential
-from azure.ai.ml import MLClient
-from azure.storage.fileshare import ShareDirectoryClient
-from azure.core.exceptions import ResourceExistsError
-from azure.ai.ml._artifacts._fileshare_storage_helper import FileStorageClient
 
 
 logger = get_logger('flow_creation')
@@ -238,9 +233,8 @@ def main(args, ws, current_run, activity_logger: Logger):
         raise FileNotFoundError(errno.ENOENT, os.strerror(
             errno.ENOENT), "mlindex_asset_id_file")
     else:
-        # with open(args.mlindex_asset_id, "r") as f:
-        #     mlindex_asset_id = f.read()
-        mlindex_asset_id = args.mlindex_asset_id
+        with open(args.mlindex_asset_id, "r") as f:
+            mlindex_asset_id = f.read()
 
     print(mlindex_asset_id)
     print(top_prompts)
@@ -274,7 +268,7 @@ def main(args, ws, current_run, activity_logger: Logger):
     flow_with_variants = flow_with_variants.replace(
         "@@MLIndex_Asset_Id", mlindex_asset_id)
 
-    api_name = "chat" if completion_model_name == "gpt-35-turbo" else "completion"
+    api_name = "chat" if completion_model_name.startswith("gpt-") else "completion"
     flow_with_variants = flow_with_variants.replace("@@API", api_name)
 
     if CODE_FIRST:
