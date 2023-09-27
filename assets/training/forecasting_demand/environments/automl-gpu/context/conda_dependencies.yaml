@@ -21,7 +21,6 @@ dependencies:
 - openssl=1.1.1s
 - pip:
   - inference-schema
-  - cryptography==41.0.3
   - azureml-core=={{latest-pypi-version}}
   - azureml-mlflow=={{latest-pypi-version}}
   - azureml-defaults=={{latest-pypi-version}}
