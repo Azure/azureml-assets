@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.4 (2023-09-27)
+### 🚀 New Features
+- [#1327](https://github.com/Azure/azureml-assets/pull/1327) Support prompt asset type
+
 ## 1.16.3 (2023-09-26)
 ### 🐛 Bugs Fixed
 - [#1317](https://github.com/Azure/azureml-assets/pull/1317) Improve sovereign cloud support by removing direct reference to Azure Public Cloud
