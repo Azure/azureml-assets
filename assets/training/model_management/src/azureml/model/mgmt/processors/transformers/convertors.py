@@ -304,7 +304,7 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
             process = subprocess.run(conda_list_cmd, shell=False, check=True,
                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         except (FileNotFoundError, subprocess.CalledProcessError) as err:
-            logger.warning('subprocess failed to get dependencies list from conda')
+            logger.warning('subprocess failed to get dependencies list from conda with error: {}'.format(err))
             return []
         output_str = process.stdout.decode('ascii')
         output_json = json.loads(output_str)
