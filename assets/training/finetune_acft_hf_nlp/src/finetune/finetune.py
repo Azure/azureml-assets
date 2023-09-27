@@ -23,7 +23,6 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
-from azureml.acft.contrib.hf.nlp.utils.data_utils import copy_and_overwrite
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
