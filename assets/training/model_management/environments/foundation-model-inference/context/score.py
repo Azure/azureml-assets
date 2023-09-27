@@ -603,7 +603,7 @@ def build_chat_completion_prompt(data: List[str]) -> dict:
     assert len(conv_arr) > 0
     assert conv_arr[-1]["role"] == "user"
     next_turn = "system" if conv_arr[0]["role"] == "system" else "user"
-    system_message=""
+    system_message = ""
     # Build conversation
     if next_turn == "system":
         content = conv_arr[0]["content"].strip()
