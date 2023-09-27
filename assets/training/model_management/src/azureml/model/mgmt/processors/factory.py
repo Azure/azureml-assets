@@ -15,6 +15,7 @@ from azureml.model.mgmt.processors.transformers.config import (
 )
 from azureml.model.mgmt.processors.pyfunc.config import (
     MMLabDetectionTasks,
+    MMTrackVideoTasks,
     SupportedTasks as PyFuncSupportedTasks
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
@@ -25,6 +26,7 @@ from azureml.model.mgmt.processors.transformers.convertors import (
 )
 from azureml.model.mgmt.processors.pyfunc.convertors import (
     MMLabDetectionMLflowConvertor,
+    MMTrackVideoMLflowConvertor,
     CLIPMLFlowConvertor,
     StableDiffusionMlflowConvertor,
     LLaVAMLFlowConvertor,
@@ -75,6 +77,11 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             )
         else:
             raise Exception(f"Models from {model_framework} for {task} not supported for MLflow conversion")
+    elif model_framework == ModelFramework.MMTRACK.value:
+        if MMTrackVideoTasks.has_value(task):
+            return MMTrackVideoMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
     else:
         raise Exception(f"Models from {model_framework} not supported for MLflow conversion")
 
@@ -178,6 +185,19 @@ class LLaVAMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for LLaVA model."""
         return LLaVAMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class MMTrackVideoMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for MMTrack video model family."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for vision tasks."""
+        return MMTrackVideoMLflowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,
