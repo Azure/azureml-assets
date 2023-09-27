@@ -30,6 +30,7 @@ class ModelFramework(_CustomEnum):
     HUGGINGFACE = "Huggingface"
     MMLAB = "MMLab"
     LLAVA = "llava"
+    MMTRACK = "MMTrack"
 
 
 class PathType(_CustomEnum):
