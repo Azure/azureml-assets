@@ -2,13 +2,15 @@
 # Licensed under the MIT License.
 
 """HFTransformers MLflow model convertors."""
-
+from typing import List
 import transformers
+import platform
 import mlflow
 import os
 import yaml
 from abc import ABC, abstractmethod
 from azureml.evaluate import mlflow as hf_mlflow
+from azureml.core.conda_dependencies import CondaDependencies
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
 from azureml.model.mgmt.processors.transformers.config import (
     HF_CONF,
@@ -184,12 +186,20 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         logger.info(f"TEMP LOG - Self: {self.__dict__}, model_id: {self._model_id}")
 
         try:
+            # create a conda environment for OSS transformers Flavor
+            python_version = platform.python_version()
+            pip_pkgs = self._get_curated_environment_pip_package_list()
+            conda_deps = CondaDependencies.create(conda_packages=None,
+                                                  python_version=python_version,
+                                                  pip_packages=pip_pkgs,
+                                                  pin_sdk_version=False)
+            curated_conda_env = conda_deps.as_dict()
 
             model_pipeline = transformers.pipeline(task=self._task, model=model)
 
             mlflow.transformers.save_model(
                 transformers_model=model_pipeline,
-                conda_env=conda_env,
+                conda_env=curated_conda_env,
                 code_paths=code_paths,
                 signature=self._signatures,
                 input_example=input_example,
@@ -254,6 +264,42 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         with open(conda_file_path, "w") as f:
             yaml.safe_dump(conda_dict, f)
             logger.info("updated conda.yaml")
+
+    def _get_curated_environment_pip_package_list(self) -> List[str]:
+        """
+        Retrieve the packages using 'conda list' command.
+
+        :return: A List of the pip package and the corresponding versions.
+        """
+        import subprocess
+        import json
+
+        PIP_LIST = ['mlflow', 'accelerate', 'cffi', 'dill', 'google-api-core', 'numpy',
+                    'packaging', 'pillow', 'protobuf', 'pyyaml', 'requests', 'scikit-learn',
+                    'scipy', 'sentencepiece', 'torch', 'transformers']
+        ADD_PACKAGE_LIST = ['torchvision==0.14.1']
+
+        conda_list_cmd = ["conda", "list", "--json"]
+        try:
+            process = subprocess.run(conda_list_cmd, shell=False, check=True,
+                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except (FileNotFoundError, subprocess.CalledProcessError) as err:
+            logger.warning('subprocess failed to get dependencies list from conda')
+            return []
+        output_str = process.stdout.decode('ascii')
+        output_json = json.loads(output_str)
+        pip_list = []
+        for pkg in output_json:
+            pkg_name = pkg['name']
+            pkg_version = pkg['version']
+            if pkg_name in PIP_LIST:
+                pip_list.append(pkg_name + "==" + pkg_version)
+
+        for pkg in ADD_PACKAGE_LIST:
+            pip_list.append(pkg)
+
+        logger.info("pip list: {}".format(pip_list))
+        return pip_list
 
     def _validate(self, translate_params):
         if not translate_params.get("model_id"):
