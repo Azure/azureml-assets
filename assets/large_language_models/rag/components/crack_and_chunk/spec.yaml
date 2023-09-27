@@ -80,7 +80,7 @@ command: >-
   --input_data ${{inputs.input_data}}
   $[[--input_glob '${{inputs.input_glob}}']]
   $[[--allowed_extensions ${{inputs.allowed_extensions}}]]
-  --output_title_chunk ${{outputs.output_chunks}}
+  --output_chunks ${{outputs.output_chunks}}
   --chunk_size ${{inputs.chunk_size}}
   --chunk_overlap ${{inputs.chunk_overlap}}
   $[[--data_source_url ${{inputs.data_source_url}}]]
