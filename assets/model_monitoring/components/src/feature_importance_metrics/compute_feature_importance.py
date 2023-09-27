@@ -13,7 +13,7 @@ from pyspark.sql.types import (
 )
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_warning, save_spark_df_as_mltable, init_spark
 from shared_utilities import constants
-
+from sklearn.model_selection import train_test_split
 from responsibleai import RAIInsights, FeatureMetadata
 from ml_wrappers.model.predictions_wrapper import (
     PredictionsModelWrapperClassification,
@@ -114,6 +114,7 @@ def get_model_wrapper(task_type, target_column, baseline_data):
             x_train[column] = x_train[column].astype('category')
     model = create_lightgbm_model(x_train, y_train, task_type)
     model_predict = model.predict(x_train)
+    log_time_and_message("Called predict on model")
 
     if task_type == constants.CLASSIFICATION:
         model_predict_proba = model.predict_proba(x_train)
@@ -144,15 +145,24 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     :return: explanation scores for the input data
     :rtype: list[float]
     """
-    # Create the RAI Insights object, use baseline as train and test data
+    # Create the RAI Insights object, split baseline data into train and test data
     feature_metadata = FeatureMetadata(categorical_features=categorical_features, dropped_features=[])
+    row_count = len(data.index)
+    
+    test_size = 0.5
+    if row_count > 10000:
+        test_size = 5000
+
+    train_data, test_data = train_test_split(data, test_size=test_size, random_state=0)
+    log_time_and_message(f"Split data into train and test. Train size: {len(train_data.index)}, Test size: {len(test_data.index)}")
+
     rai_i: RAIInsights = RAIInsights(
-        model_wrapper, data, data, target_column, task_type, feature_metadata=feature_metadata
+        model_wrapper, train_data, test_data, target_column, task_type, feature_metadata=feature_metadata
     )
     log_time_and_message("Created RAIInsights")
     # Add the global explanations using batching to allow for larger input data sizes
     rai_i.explainer.add()
-    evaluation_data = data.drop([target_column], axis=1)
+    evaluation_data = train_data.drop([target_column], axis=1)
     log_time_and_message("Requesting explanations")
     explanationData = rai_i.explainer.request_explanations(local=False, data=evaluation_data)
     return explanationData.precomputedExplanations.globalFeatureImportance['scores']
