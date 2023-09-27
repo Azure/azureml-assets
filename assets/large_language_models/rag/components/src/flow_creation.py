@@ -142,7 +142,7 @@ def upload_code_files(ws: Workspace, name):
     working_directory = ws.datastores.get("workspaceworkingdirectory")
     asset_id = str(uuid.uuid4())
     dest = f"Users/{name}/Promptflows/{asset_id}/{CODE_DIR}"
-    file = FileDatasetFactory.upload_directory(
+    FileDatasetFactory.upload_directory(
         os.path.join(Path(__file__).parent.absolute(), CODE_DIR),
         (working_directory, dest))
 
@@ -292,7 +292,7 @@ def main(args, ws, current_run, activity_logger: Logger):
             details = current_run.get_details()
             user_name = details.get("submittedBy", "systemcreated")
             user_name = user_name.lower().replace(" ", "")
-        except:
+        except Exception:
             # For local runs, get_details fails
             user_name = "systemcreated"
 
