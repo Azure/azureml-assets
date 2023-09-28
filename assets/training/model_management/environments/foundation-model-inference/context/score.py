@@ -603,16 +603,16 @@ def build_chat_completion_prompt(data: List[str]) -> dict:
     assert len(conv_arr) > 0
     assert conv_arr[-1]["role"] == "user"
     next_turn = "system" if conv_arr[0]["role"] == "system" else "user"
+    system_message = ""
     # Build conversation
+    if next_turn == "system":
+        content = conv_arr[0]["content"].strip()
+        _check_unsafe_content(content)
+        system_message = B_SYS + content + E_SYS
+        conv_arr = conv_arr[1:]
+        next_turn = "user"
     conversation = Conversation()
     for i, conv in enumerate(conv_arr):
-        if conv["role"] == "system":
-            assert next_turn == "system", "System prompts can only be set at the start of the conversation"
-            next_turn = "user"
-            content = conv_arr[0]["content"].strip()
-            _check_unsafe_content(content)
-            conversation.add_user_input(B_SYS + content + E_SYS)
-            conversation.mark_processed()
         if conv["role"] == "assistant":
             assert next_turn == "assistant", "Invalid Turn. Expected user input"
             next_turn = "user"
@@ -624,7 +624,11 @@ def build_chat_completion_prompt(data: List[str]) -> dict:
             next_turn = "assistant"
             content = conv["content"].strip()
             _check_unsafe_content(content)
-            conversation.add_user_input(content)
+            if system_message:
+                conversation.add_user_input(system_message + content)
+                system_message = ""
+            else:
+                conversation.add_user_input(content)
             if i != len(conv_arr[0:]) - 1:
                 conversation.mark_processed()
     conv_dict = conversation.__dict__

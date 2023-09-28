@@ -11,6 +11,7 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from packaging import version
 from typing import Dict, List, Set, Tuple, Union
+from azure.ai.ml._azure_environments import _get_storage_endpoint_from_metadata
 
 
 class ValidationException(Exception):
@@ -24,6 +25,7 @@ class AssetType(Enum):
     DATA = 'data'
     ENVIRONMENT = 'environment'
     MODEL = 'model'
+    PROMPT = 'prompt'
 
 
 class ComponentType(Enum):
@@ -446,8 +448,6 @@ class LocalAssetPath(AssetPath):
 class AzureBlobstoreAssetPath(AssetPath):
     """Azure Blobstore asset path."""
 
-    BLOBSTORE_URI = "https://{}.blob.core.windows.net/{}/{}"
-
     def __init__(self, storage_name: str, container_name: str, container_path: str):
         """Create a Blobstore path.
 
@@ -461,7 +461,8 @@ class AzureBlobstoreAssetPath(AssetPath):
         self._storage_name = storage_name
         self._container_name = container_name
         self._container_path = container_path
-        uri = AzureBlobstoreAssetPath.BLOBSTORE_URI.format(storage_name, container_name, container_path)
+
+        uri = f"https://{storage_name}.blob.{_get_storage_endpoint_from_metadata()}/{container_name}/{container_path}"
         super().__init__(PathType.AZUREBLOB, uri)
 
 
