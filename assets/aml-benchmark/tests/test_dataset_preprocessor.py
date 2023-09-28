@@ -9,7 +9,7 @@ import pytest
 import json
 import os
 import glob
-from typing import List, Dict, Any
+import subprocess
 
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
@@ -22,24 +22,35 @@ from test_utils import (
     get_src_dir,
     download_outputs,
     assert_logged_params,
-    run_command
+    run_command,
+    assert_exception_mssg
 )
 
 
-INPUT_DATASET = os.path.join(os.path.dirname(__file__), 'data/process_sample_examples.jsonl')
-CUSTOM_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), '../scripts/custom_dataset_preprocessors')
-
-
 def _verify_and_get_output_records(
-    inputs: List[str],
+    dataset_name: str,
+    input_file: str,
+    expected_output_file: str,
     outputs: str
-) -> List[Dict[str, Any]]:
+) -> None:
     """Verify the output and get output records.
 
-    :param inputs: The list of input file with absolute path.
+    :param dataset_name: The path to jsonl file passed as input_dataset in pipeline.
+    :param input_file: The path to jsonl file passed as input_dataset in pipeline or scripts.
+    :param expected_output_file: The path to jsonl file containing expected outputs.
     :param outputs: Either path to output file or output directory containing output files.
-    :return: list of json records
     """
+    with open(input_file, "r") as f:
+        input_records = [json.loads(line) for line in f]
+        input_row_count = len(input_records)
+    expected_output_records = []
+    with open(expected_output_file, "r") as f:
+        for line in f:
+            out = json.loads(line)
+            if out.get('name') == dataset_name:
+                del out['name']
+                expected_output_records.append(out)
+    expected_output_row_count = len(expected_output_records)
     if not os.path.isfile(outputs):
         output_files = glob.glob(outputs + '/**/*.jsonl', recursive=True)
     else:
@@ -48,12 +59,9 @@ def _verify_and_get_output_records(
     with open(output_files[0], "r") as f:
         output_records = [json.loads(line) for line in f]
     output_row_count = len(output_records)
-    for input in inputs:
-        with open(input, "r") as f:
-            input_records = [json.loads(line) for line in f]
-            input_row_count = len(input_records)
-            assert input_row_count == output_row_count
-    return output_records
+    assert input_row_count == output_row_count == expected_output_row_count
+    assert output_records == expected_output_records
+    return
 
 
 class TestDatasetPreprocessorComponent:
@@ -65,17 +73,20 @@ class TestDatasetPreprocessorComponent:
         "dataset_name, dataset,template_input,script_path, encoder_config",
         [
             (
-                "gsm8k", INPUT_DATASET,
+                "gsm8k", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
                 """ {
                     "question":{{question}},
                     "solution":{{answer.split("#### ")[0]}},
                     "answer":{{answer.split("#### ")[-1]|string}}
                 } """,
-                None, None
+                None, None,
             ),
-            ("quac_org", INPUT_DATASET, None, os.path.join(CUSTOM_SCRIPT_PATH, "quac_textgen_babel.py"), None),
             (
-                "mnli", INPUT_DATASET,
+                "quac_org", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, None,
+                os.path.join(Constants.CUSTOM_PREPROCESSOR_SCRIPT_PATH, "quac_textgen_babel.py"), None
+            ),
+            (
+                "mnli", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
                 """ {"premise":{{premise}}, "hypothesis":{{hypothesis}},"label":{{label|string}}} """,
                 None, '{"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}'
             ),
@@ -91,15 +102,20 @@ class TestDatasetPreprocessorComponent:
     ) -> None:
         """Dataset Preprocessor component test."""
         with open(
-            os.path.join(os.path.dirname(INPUT_DATASET), "process_one_example.jsonl"), "w"
-        ) as writer:
-            with open(INPUT_DATASET, "r") as reader:
+            os.path.join(
+                os.path.dirname(
+                    Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE), "process_one_example.jsonl"), "w"
+                ) as writer:
+            with open(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, "r") as reader:
                 for line in reader:
                     out_row = json.loads(line)
                     if out_row.get('name') == dataset_name:
                         del out_row['name']
                         writer.write(json.dumps(out_row) + "\n")
-        dataset = os.path.join(os.path.dirname(INPUT_DATASET), "process_one_example.jsonl")
+        dataset = os.path.join(
+            os.path.dirname(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE),
+            "process_one_example.jsonl"
+        )
         ml_client = get_mlclient()
         exp_name = f"{self.EXP_NAME}"
         pipeline_job = self._get_pipeline_job(
@@ -112,9 +128,10 @@ class TestDatasetPreprocessorComponent:
         )
         pipeline_job = ml_client.create_or_update(pipeline_job, experiment_name=exp_name)
         ml_client.jobs.stream(pipeline_job.name)
-        print(pipeline_job)
         self._verify_and_get_output_records(
-            pipeline_job, [dataset], output_dir=os.path.dirname(INPUT_DATASET)
+            pipeline_job, dataset_name, dataset,
+            Constants.PREPROCESS_SAMPLE_EXAMPLES_EXPECTED_OUTPUT_FILE,
+            output_dir=os.path.join(os.path.dirname(__file__), 'data')
         )
         assert_logged_params(
             pipeline_job.name,
@@ -155,28 +172,41 @@ class TestDatasetPreprocessorComponent:
     def _verify_and_get_output_records(
         self,
         job: Job,
-        input_files: List[str],
+        dataset_name: str,
+        input_file: str,
+        expected_output_file: str,
         output_dir: str = None
-    ) -> List[Dict[str, Any]]:
+    ) -> None:
         """Verify the output and get output records.
 
         :param job: The pipeline job object.
         :type job: Job
-        :param output_dir: The local output directory to download pipeline outputs
+        :param dataset_name: The path to jsonl file passed as input_dataset in pipeline.
+        :type dataset_name: str
+        :param input_file: The path to jsonl file passed as input_dataset in pipeline.
+        :type input_file: str
+        :param expected_output_file: The path to josnl file containing expected outputs for given inputs.
+        :type expected_output_file
+        :param output_dir: The local output directory to download pipeline outputs.
         :type output_dir: str
-        :return: output records
-        :rtype: List[Dict[str, Any]]
         """
         output_name = job.outputs.output_dataset.port_name
         if not output_dir:
-            output_dir = Constants.OUTPUT_DIR.format(os.getcwd(), output_name=output_name)
+            output_dir = Constants.OUTPUT_DIR.format(
+                os.getcwd(), output_name=output_name
+            )
         else:
-            output_dir = Constants.OUTPUT_DIR.format(output_dir=output_dir, output_name=output_name)
+            output_dir = Constants.OUTPUT_DIR.format(
+                output_dir=output_dir, output_name=output_name
+            )
         download_outputs(
-            job_name=job.name, output_name=output_name, download_path=output_dir
+            job_name=job.name, output_name=output_name,
+            download_path=output_dir
         )
-        records = _verify_and_get_output_records(input_files, output_dir)
-        return records
+        _verify_and_get_output_records(
+            dataset_name, input_file, expected_output_file, output_dir
+        )
+        return
 
 
 class TestDatasetPreprocessorScript:
@@ -186,7 +216,7 @@ class TestDatasetPreprocessorScript:
         "dataset_name, dataset,template_input,script_path, encoder_config",
         [
             (
-                "gsm8k", INPUT_DATASET,
+                "gsm8k", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
                 """ {
                     "question":{{question}},
                     "solution":{{answer.split("#### ")[0]}},
@@ -194,7 +224,10 @@ class TestDatasetPreprocessorScript:
                 } """,
                 None, None
             ),
-            ("quac", INPUT_DATASET, None, os.path.join(CUSTOM_SCRIPT_PATH, "quac_textgen_babel.py"), None),
+            (
+                "quac_org", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, None,
+                os.path.join(Constants.CUSTOM_PREPROCESSOR_SCRIPT_PATH, "quac_textgen_babel.py"), None
+            )
         ],
     )
     def test_dataset_preprocessor_as_script(
@@ -204,22 +237,30 @@ class TestDatasetPreprocessorScript:
         template_input: str,
         script_path: str,
         encoder_config: str,
-        output_dataset: str = os.path.join(os.path.dirname(INPUT_DATASET), "processed_output.jsonl"),
+        output_dataset: str = os.path.join(
+            os.path.dirname(__file__), 'data/processed_output.jsonl'
+        ),
     ) -> None:
         """Dataset Preprocessor script test."""
         src_dir = get_src_dir()
         with open(
             os.path.join(
-                os.path.dirname(INPUT_DATASET), "process_one_example.jsonl"
-                    ), "w"
+                os.path.dirname(
+                    Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE), "process_one_example.jsonl"), "w"
                 ) as writer:
-            with open(INPUT_DATASET, "r") as reader:
+            with open(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, "r") as reader:
                 for line in reader:
                     out_row = json.loads(line)
                     if out_row.get('name') == dataset_name:
+                        del out_row['name']
                         writer.write(json.dumps(out_row) + "\n")
-        dataset = os.path.join(os.path.dirname(INPUT_DATASET), "process_one_example.jsonl")
+        dataset = os.path.join(
+            os.path.dirname(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE),
+            "process_one_example.jsonl"
+        )
         argss = ["--dataset", dataset, "--output_dataset", output_dataset,]
+        if dataset is not None:
+            argss.extend(["--dataset", dataset])
         if template_input is not None:
             argss.extend(["--template_input", f"'{template_input}'"])
         elif script_path is not None:
@@ -229,30 +270,18 @@ class TestDatasetPreprocessorScript:
         argss = " ".join(argss)
         cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
         run_command(f"{cmd}")
-        _verify_and_get_output_records([dataset], output_dataset)
+        _verify_and_get_output_records(
+            dataset_name, dataset,
+            Constants.PREPROCESS_SAMPLE_EXAMPLES_EXPECTED_OUTPUT_FILE,
+            output_dataset
+        )
         return
-
-    def _verify_and_get_output_records(
-        self,
-        input_files: List[str],
-        output_dataset: str
-    ) -> List[Dict[str, Any]]:
-        """Verify the output and get output records.
-
-        :param job: The pipeline job object.
-        :type job: Job
-        :param input_files: The list of input file with absolute path.
-        :param output_dataset: path to output file.
-        :rtype: List[Dict[str, Any]]
-        """
-        records = _verify_and_get_output_records(input_files, output_dataset)
-        return records
 
     @pytest.mark.parametrize(
         "dataset_name, dataset, input_template, return_template",
         [
             (
-                "mnli", INPUT_DATASET,
+                "mnli", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
                 """ {"premise":{{premise}}, "hypothesis":{{hypothesis}},"label":{{label}}} """,
                 """ {"premise":{{premise|tojson}}, "hypothesis":{{hypothesis|tojson}},"label":{{label|tojson}}} """
             ),
@@ -269,15 +298,90 @@ class TestDatasetPreprocessorScript:
         sys.path.append(get_src_dir())
         from dataset_preprocessor import dataset_preprocessor as dsp
         with open(
-            os.path.join(os.path.dirname(INPUT_DATASET), "process_one_example.jsonl"), "w"
+            os.path.join(os.path.dirname(
+                Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE), "process_one_example.jsonl"), "w"
         ) as writer:
-            with open(INPUT_DATASET, "r") as reader:
+            with open(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, "r") as reader:
                 for line in reader:
                     out_row = json.loads(line)
                     if out_row.get('name') == dataset_name:
                         del out_row['name']
                         writer.write(json.dumps(out_row) + "\n")
-        dataset = os.path.join(os.path.dirname(INPUT_DATASET), "process_one_example.jsonl")
+        dataset = os.path.join(
+            os.path.dirname(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE), "process_one_example.jsonl"
+        )
         obj = dsp.DatasetPreprocessor(input_dataset=dataset, template=input_template)
         template = obj.add_json_filter(obj.template)
         assert (template == return_template)
+
+    @pytest.mark.parametrize(
+        "dataset_name, dataset,template_input,script_path, encoder_config",
+        [
+            (
+                "gsm8k", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE,
+                """ {
+                    "question":{{question}},
+                    "solution":{{answer.split("#### ")[0]}},
+                    "answer":{{answer.split("#### ")[-1]|string}}
+                } """,
+                None, None
+            )
+        ],
+    )
+    def test_invalid_inputs(
+        self,
+        dataset_name: str,
+        dataset: str,
+        template_input: str,
+        script_path: str,
+        encoder_config: str
+    ):
+        """Test the exceptions raise during inputs validation."""
+        invalid_dataset_error_mssg = (
+            "the following arguments are required: --dataset"
+        )
+        invalid_jsonl_dataset_mssg = (
+            "No .jsonl files found in the given input dataset."
+        )
+        invalid_preprocessor_logic_exception_mssg = (
+           "Please provide the input to apply preprocessing logic either via template input or script_path."
+        )
+        invalid_user_script_mssg = (
+            "Please provide python script containing your custom preprocessor logic."
+        )
+        src_dir = get_src_dir()
+        try:
+            argss = " ".join(["--template_input", f"'{template_input}'"])
+            cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
+            run_command(f"{cmd}")
+        except subprocess.CalledProcessError as e:
+            out_message = e.output.strip()
+            assert invalid_dataset_error_mssg in out_message
+
+        dummy_dataset_path = os.path.join(os.getcwd(), "input_dataset_path")
+        os.system(f"mkdir {dummy_dataset_path}")
+        try:
+            argss = " ".join(["--dataset", dummy_dataset_path])
+            cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
+            run_command(f"{cmd}")
+        except subprocess.CalledProcessError as e:
+            exception_message = e.output.strip()
+            assert_exception_mssg(exception_message, invalid_jsonl_dataset_mssg)
+
+        try:
+            argss = " ".join(["--dataset", dataset])
+            cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
+            run_command(f"{cmd}")
+        except subprocess.CalledProcessError as e:
+            exception_message = e.output.strip()
+            assert_exception_mssg(exception_message, invalid_preprocessor_logic_exception_mssg)
+
+        dummy_script_path = os.path.join(os.getcwd(), "user_script.json")
+        os.system(f"touch {dummy_script_path}")
+        try:
+            argss = " ".join(["--dataset", dataset, "--script_path", dummy_script_path])
+            cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
+            run_command(f"{cmd}")
+        except subprocess.CalledProcessError as e:
+            exception_message = e.output.strip()
+            assert_exception_mssg(exception_message, invalid_user_script_mssg)
