@@ -469,9 +469,21 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
     raise an User Error otherwise reset the args using the valid_settings."""
 
     invalid_ds_zero3_settings = [
-        dict(invalid_settings=dict(apply_lora=True), fail_run=True, valid_settings=None),
-        dict(invalid_settings=dict(apply_ort=True), fail_run=True, valid_settings=None),
-        dict(invalid_settings=dict(auto_find_batch_size=True), fail_run=False, valid_settings=dict(auto_find_batch_size=False))
+        dict(
+            invalid_settings=dict(apply_lora=True),
+            fail_run=True,
+            valid_settings=None
+        ),
+        dict(
+            invalid_settings=dict(apply_ort=True),
+            fail_run=True,
+            valid_settings=None
+        ),
+        dict(
+            invalid_settings=dict(auto_find_batch_size=True),
+            fail_run=False,
+            valid_settings=dict(auto_find_batch_size=False)
+        )
     ]
     for setting in invalid_ds_zero3_settings:
         invalid_settings = setting["invalid_settings"]
@@ -495,7 +507,10 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
                             pii_safe_message="Valid settings cannot be None."
                         )
                     )
-                logger.info(f"Found invalid settings with deepspeed stage3. Reconfiguring the user parameters: {valid_settings}.")
+                logger.info(
+                    "Found invalid settings with deepspeed stage3."
+                    f"Reconfiguring the user parameters: {valid_settings}."
+                )
                 for key, value in valid_settings.items():
                     setattr(args, key, value)
 
