@@ -19,4 +19,4 @@ tags:
   license: llama2
   author: meta
   task: text-generation
-version: 1
+version: 2

@@ -49,4 +49,4 @@ tags:
   inference_supported_envs:
   - ds_mii
   SharedComputeCapacityEnabled: ''
-version: 8
+version: 9

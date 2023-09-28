@@ -49,4 +49,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: text-generation
-version: 9
+version: 10

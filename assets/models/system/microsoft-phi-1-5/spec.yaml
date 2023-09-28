@@ -22,4 +22,4 @@ tags:
   - Standard_ND96amsr_A100_v4
   license: other
   task: text-generation
-version: 1
+version: 2

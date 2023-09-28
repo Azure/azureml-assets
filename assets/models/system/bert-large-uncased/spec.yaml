@@ -52,4 +52,4 @@ tags:
     apply_lora: 'true'
     apply_ort: 'true'
   task: fill-mask
-version: 11
+version: 12

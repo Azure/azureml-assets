@@ -25,4 +25,4 @@ tags:
   disable-batch: 'true'
   task: chat-completion
   SharedComputeCapacityEnabled: ''
-version: 10
+version: 11
