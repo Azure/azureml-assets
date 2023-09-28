@@ -3,7 +3,6 @@
 
 """File containing test cases for invalid user settings for deepspeed stage3."""
 
-import tempfile
 from unittest import TestCase
 from argparse import Namespace
 
