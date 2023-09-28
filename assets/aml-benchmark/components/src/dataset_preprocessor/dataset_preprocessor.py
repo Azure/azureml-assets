@@ -11,10 +11,10 @@ import re
 import jinja2
 
 from azureml._common._error_definition.azureml_error import AzureMLError
-from utils.exceptions import BenchmarkValidationException
-from utils.error_definitions import BenchmarkValidationError
+from utils.exceptions import BenchmarkValidationException, BenchmarkUserException
+from utils.error_definitions import BenchmarkValidationError, BenchmarkUserError
 from utils.logging import get_logger
-from utils.io import read_jsonl_files
+from utils.io import resolve_io_path, read_jsonl_files
 
 logger = get_logger(__name__)
 
@@ -36,7 +36,7 @@ class DatasetPreprocessor(object):
     ):
         """Dataset Preprocessor Class.
 
-        :param input_dataset: Path to the directory to load the dataset.
+        :param input_dataset: Path to the jsonl file to load the dataset.
         :param template: A json dictionary where key is the name of the column enclosed in " " and associated \
             dict value is presented using jinja template logic which will be used to extract the \
             respective value from the dataset.
@@ -53,24 +53,31 @@ class DatasetPreprocessor(object):
         self.user_preprocessor = user_preprocessor
         self.encoder_config = encoder_config
         self.output_dataset = output_dataset
+        self.__post_init__()
 
     def __post_init__(self) -> None:
         """Post init call."""
-        self._validate()
+        self.validate()
 
     def validate(self) -> None:
         """Validate the parameters."""
         if self.input_dataset is None:
             mssg = (
-                "Path to load the dataset is not provided."
+                "Path to jsonl file to load the dataset is not provided."
             )
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
+        if len([
+            file for file in resolve_io_path(self.input_dataset) if file.endswith(".jsonl")
+        ]) == 0:
+            mssg = "No .jsonl files found in the given input dataset."
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
         if self.template is None and self.user_preprocessor is None:
             mssg = (
-                "Please provide the input to apply preprocessing logic either via template input or \
-                script_path."
+                "Please provide the input to apply preprocessing logic either via template input or script_path."
             )
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
@@ -84,20 +91,29 @@ class DatasetPreprocessor(object):
             )
 
     def add_json_filter(self, template) -> str:
-        """Add tojson filter in the template."""
-        patt = r'({{.*?}})'
-        pat = re.compile(patt)
-        matches = re.findall(pat, template)
+        """
+        Add "tojson" filter in the template.
+
+        For example: if template_input is
+            {"premise":{{premise}}, "hypothesis":{{hypothesis}},"label":{{label}}}
+        then, this method returns a formatted template as
+            {"premise":{{premise|tojson}}, "hypothesis":{{hypothesis|tojson}},"label":{{label|tojson}}}
+        """
+        # below pattern is supposed to extract matches within {{}}.
+        pattern = r'({{.*?}})'
+        regex_pattern = re.compile(pattern)
+        matches = re.findall(regex_pattern, template)
         for m in range(len(matches)):
             logger.info(f"{template}, {matches[m]}")
-            s1 = '{{'+matches[m].lstrip('{{').rstrip('}}')+'|tojson}}'
-            template = template.replace(matches[m], s1)
+            new_string = '{{'+matches[m].lstrip('{{').rstrip('}}')+'|tojson}}'
+            template = template.replace(matches[m], new_string)
         logger.info(f"Final template:{template}")
         return template
 
     def prep_using_template(self) -> None:
         """Preprocessor run using template."""
-        data = read_jsonl_files([self.input_dataset])
+        from utils.io import resolve_io_path
+        data = read_jsonl_files(resolve_io_path(self.input_dataset))
         template = json.dumps(self.template)
         template = json.loads(template)
         template = self.add_json_filter(template)
@@ -129,7 +145,12 @@ class DatasetPreprocessor(object):
 
     def run_user_preprocessor(self) -> None:
         """Prerpocessor run using custom template."""
-        os.system(
-            f'python {self.user_preprocessor} --input_path {self.input_dataset} \
-            --output_path {self.output_dataset}'
-        )
+        try:
+            os.system(
+                f'python {self.user_preprocessor} --input_path {self.input_dataset} \
+                --output_path {self.output_dataset}'
+            )
+        except Exception as e:
+            raise BenchmarkUserException._with_error(
+                AzureMLError.create(BenchmarkUserError, error_details=e)
+            )

@@ -29,6 +29,11 @@ inputs:
       Key in ground truth dataset that contains ground truth. If ground_truth_dataset is given, then,
       this is required input.
     optional: True
+  prediction_probabilities_dataset:
+    type: uri_file
+    description: >-
+      A file that contains the prediction probabilities.
+    optional: True
   separator:
     type: string
     description: >-
@@ -43,6 +48,13 @@ inputs:
       A regular expression to extract the answer from the inference results. The pattern
       must contain a group to be extracted. The first group and the first match will be used. 
       Example: "\n\nThe answer is: (\d)."
+    optional: True
+  extract_value_at_index:
+    type: integer
+    description: >-
+      If the regex_expr finds multiple strings matching the pattern in `regex_expr`, this can be used 
+      to extract the preferred value at a given index out of all matched patterns to be used as prediction 
+      value. If omitted, the default behaviour is first matched. 
     optional: True
   strip_prefix:
     type: string
@@ -69,6 +81,15 @@ inputs:
       (https://github.com/Azure/azureml-assets/tree/main/assets/aml-benchmark/scripts/custom_inference_postprocessors/base_postprocessor_template.py)
       tshould be used to create a custom postprocessor script.
     optional: True
+  encoder_config:
+    type: string
+    description: |
+      JSON serialized dictionary to perform mapping. Must contain key-value pair "column_name": "<actual_column_name>" whose 
+      value needs mapping, followed by key-value pairs containing idtolabel or labeltoid mappers.
+      Example format:
+      {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}
+    optional: True
+
 
 outputs:
   output_dataset_result:
@@ -86,8 +107,11 @@ command: >-
   --prediction_column_name ${{inputs.prediction_column_name}}
   $[[--ground_truth_dataset ${{inputs.ground_truth_dataset}}]]
   $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
+  $[[--prediction_probabilities_dataset ${{inputs.prediction_probabilities_dataset}}]]
+  $[[--encoder_config '${{inputs.encoder_config}}']]
   $[[--separator '${{inputs.separator}}']]
   $[[--regex_expr '${{inputs.regex_expr}}']]
+  $[[--extract_value_at_index ${{inputs.extract_value_at_index}}]]
   $[[--strip_prefix '${{inputs.strip_prefix}}']]
   $[[--strip_suffix '${{inputs.strip_suffix}}']]
   $[[--template '${{inputs.template}}']]

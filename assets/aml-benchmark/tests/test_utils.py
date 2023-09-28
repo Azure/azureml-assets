@@ -43,6 +43,24 @@ class Constants:
     BATCH_INFERENCE_FILE_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data", "batch_inference_input.json"
     )
+    PROCESS_SAMPLE_EXAMPLES_INPUT_FILE = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/process_sample_examples.jsonl"
+    )
+    PREPROCESS_SAMPLE_EXAMPLES_EXPECTED_OUTPUT_FILE = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/sample_examples_expected_preprocessed_outputs.jsonl"
+    )
+    CUSTOM_PREPROCESSOR_SCRIPT_PATH = os.path.join(
+        os.path.dirname(__file__), '../scripts/custom_dataset_preprocessors'
+    )
+    POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/process_inference_sample_examples.jsonl"
+    )
+    POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/process_ground_truth_sample_examples.jsonl"
+    )
+    POSTPROCESS_SAMPLE_EXAMPLES_EXPECTED_OUTPUT_FILE = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/sample_examples_expected_postprocessed_outputs.jsonl"
+    )
     REFERENCES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "references")
     OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"
     OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"

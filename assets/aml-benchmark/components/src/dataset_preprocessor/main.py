@@ -70,7 +70,7 @@ def main(
     """
     Entry function for Dataset Preprocessor.
 
-    :param dataset: Path to the directory to load the dataset.
+    :param dataset: Path to the jsonl file to load the dataset.
     :param template_input: A json dictionary where key is the name of the column enclosed in " " and associated \
         dict value is presented using jinja template logic which will be used to extract the \
         respective value from the dataset.
