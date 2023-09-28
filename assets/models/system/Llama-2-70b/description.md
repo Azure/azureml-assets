@@ -129,7 +129,7 @@ Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn
       "parameters": {
             "top_p": 0.8,
             "temperature": 0.8,
-            "max_gen_len": 100,
+            "max_new_tokens": 100,
             "do_sample": true
         }
     }
