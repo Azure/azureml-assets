@@ -5,7 +5,7 @@ dependencies:
 - python=3.8
 - pip=21.2.4
 - pip:
-  - azureml-rag[cognitive_search,data_generation]==0.2.2
+  - azureml-rag[cognitive_search,data_generation]==0.2.6
   - matplotlib>=3.3,<3.4
   - psutil>=5.8,<5.9
   - tqdm>=4.59,<4.60
