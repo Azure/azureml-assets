@@ -203,6 +203,14 @@ ACFT_CONFIG = {
         "load_tokenizer_kwargs": {
             "add_eos_token": True,
             "padding_side": "right"
+        },
+        "mlflow_ft_conf": {
+            "mlflow_hftransformers_misc_conf": {
+                "tokenizer_hf_load_kwargs": {
+                    "add_eos_token": True,
+                    "padding_side": "right",
+                },
+            }
         }
     }
 }
@@ -377,30 +385,40 @@ def model_selector(args: Namespace):
             # pass mlflow data to ft config if available
             mlflow_ftconf_data = {}
             mlflow_data = None
-            if args.task_name == "TextGeneration":
-                try:
-                    with open(str(mlflow_config_file), "r") as fp:
-                        mlflow_data = yaml.safe_load(fp)
-                    if mlflow_data and "flavors" in mlflow_data:
-                        for key in mlflow_data["flavors"]:
-                            if key in ["hftransformers", "hftransformersv2"]:
-                                for key2 in mlflow_data["flavors"][key]:
-                                    if key2 == "generator_config":
-                                        generator_config = mlflow_data["flavors"][key]["generator_config"]
-                                        mlflow_ftconf_data.update(
-                                            {
-                                                "load_config_kwargs": copy.deepcopy(generator_config),
-                                                "mlflow_ft_conf": {
-                                                    "mlflow_hftransformers_misc_conf": {
-                                                        "generator_config": copy.deepcopy(generator_config),
-                                                    },
+            try:
+                with open(str(mlflow_config_file), "r") as fp:
+                    mlflow_data = yaml.safe_load(fp)
+                if mlflow_data and "flavors" in mlflow_data:
+                    for key in mlflow_data["flavors"]:
+                        if key in ["hftransformers", "hftransformersv2"]:
+                            for key2 in mlflow_data["flavors"][key]:
+                                if key2 == "generator_config" and args.task_name == "TextGeneration":
+                                    generator_config = mlflow_data["flavors"][key]["generator_config"]
+                                    mlflow_ftconf_data.update(
+                                        {
+                                            "load_config_kwargs": copy.deepcopy(generator_config),
+                                            "mlflow_ft_conf": {
+                                                "mlflow_hftransformers_misc_conf": {
+                                                    "generator_config": copy.deepcopy(generator_config),
                                                 },
-                                            }
-                                        )
-                    ft_config_data = deep_update(mlflow_ftconf_data, ft_config_data)
-                    logger.info(f"Updated FT config data - {ft_config_data}")
-                except Exception:
-                    logger.info("Unable to read MLModel file")
+                                            },
+                                        }
+                                    )
+                                elif key2 == "model_hf_load_kwargs":
+                                    model_hf_load_kwargs = mlflow_data["flavors"][key]["model_hf_load_kwargs"]
+                                    mlflow_ftconf_data.update(
+                                        {
+                                            "mlflow_ft_conf": {
+                                                "mlflow_hftransformers_misc_conf": {
+                                                    "model_hf_load_kwargs": copy.deepcopy(model_hf_load_kwargs),
+                                                },
+                                            },
+                                        }
+                                    )
+                ft_config_data = deep_update(mlflow_ftconf_data, ft_config_data)
+                logger.info(f"Updated FT config data - {ft_config_data}")
+            except Exception:
+                logger.info("Unable to read MLModel file")
         else:
             logger.info("MLmodel file does not exist")
     else:
