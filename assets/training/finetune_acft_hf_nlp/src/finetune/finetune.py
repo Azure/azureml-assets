@@ -468,8 +468,9 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
     """Check if invalid ds3 settings are selected by the user.
 
     If fail_run is enabled for a setting raise an User Error otherwise reset the args using the valid_settings.
+    :param args: User passed args
+    :type Namespace
     """
-
     invalid_ds_zero3_settings = [
         dict(
             invalid_settings=dict(apply_lora=True),
@@ -518,7 +519,11 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
 
 
 def validate_ds_zero3_config(deepspeed_config: str):
-    """Validate the deepspeed zero3 config file."""
+    """Validate the deepspeed zero3 config file.
+
+    :param deepspeed_config: path to the deepspeed config file
+    :type str
+    """
     with open(deepspeed_config, "r", encoding="utf-8") as fp:
         ds_config_json = json.load(fp)
     zero_optimization_config = ds_config_json.get("zero_optimization", {})
@@ -533,6 +538,25 @@ def validate_ds_zero3_config(deepspeed_config: str):
                 )
             )
         )
+
+
+def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
+    """Setup the deepspeed default config file and validate the user passed configs.
+
+    :param args: User passed args
+    :type Namespace
+    :param do_validate: Validates the deepspeed config file in case of deepspeed stage3
+    :type bool
+    """
+    # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
+    args.deepspeed = getattr(args, "deepspeed", None) or DEFAULT_DEEPSPEED_CONFIG
+
+    # add validations for deepspeed stage3
+    if do_validate and identify_deepspeed_stage(args.deepspeed) == 3:
+        # validate the ds config file
+        validate_ds_zero3_config(args.deepspeed)
+        # check for invalid settings
+        check_for_invalid_ds_zero3_settings(args)
 
 
 def finetune(args: Namespace):
@@ -697,21 +721,8 @@ def finetune(args: Namespace):
 
     # Deepspeed enabled
     if args.apply_deepspeed:
-        # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
-        args.deepspeed = getattr(args, "deepspeed", None) or DEFAULT_DEEPSPEED_CONFIG
-
-        # add validations for deepspeed stage3
-        if identify_deepspeed_stage(args.deepspeed) == 3:
-            # validate the ds config file
-            validate_ds_zero3_config(args.deepspeed)
-            # check for invalid settings
-            check_for_invalid_ds_zero3_settings(args)
+        setup_and_validate_deepspeed(args)
     else:
-        # do not use deepspeed config if provided when apply_deepspeed is set to false
-        args.deepspeed = None
-    if args.apply_deepspeed and args.deepspeed is None:
-        args.deepspeed = "./zero2.json"
-    elif not args.apply_deepspeed:
         # do not use deepspeed config if provided when apply_deepspeed is set to false
         args.deepspeed = None
 

@@ -3,13 +3,17 @@
 
 """File containing test cases for invalid user settings for deepspeed stage3."""
 
+import tempfile
 from unittest import TestCase
+from argparse import Namespace
+
 from src.finetune.finetune import (
     validate_ds_zero3_config,
     check_for_invalid_ds_zero3_settings,
-    identify_deepspeed_stage
+    identify_deepspeed_stage,
+    setup_and_validate_deepspeed,
+    DEFAULT_DEEPSPEED_CONFIG
 )
-from argparse import Namespace
 
 
 def test_identify_deepspeed_stage():
@@ -19,7 +23,6 @@ def test_identify_deepspeed_stage():
 
 def test_validate_ds_zero3_config():
     """Validate deepspeed config parameters passed in by the user."""
-
     # catch the error in the invalid case
     ut_obj = TestCase()
     with ut_obj.assertRaises(Exception) as context:
@@ -69,3 +72,11 @@ def test_invalid_setting_ds3_auto_find_bs():
     check_for_invalid_ds_zero3_settings(args)
 
     assert getattr(args, "auto_find_batch_size") is False
+
+
+def test_default_deepspeed_config():
+    """Test if the default deepspeed config is applied or not."""
+    args = Namespace(apply_deepspeed=True)
+    setup_and_validate_deepspeed(args, do_validate=False)
+
+    assert getattr(args, "deepspeed") is DEFAULT_DEEPSPEED_CONFIG
