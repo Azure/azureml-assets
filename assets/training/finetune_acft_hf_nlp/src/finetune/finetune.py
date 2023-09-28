@@ -465,8 +465,10 @@ def identify_deepspeed_stage(deepspeed_config: str) -> int:
 
 
 def check_for_invalid_ds_zero3_settings(args: Namespace):
-    """Check if invalid ds3 settings are selected by the user. If fail_run is enabled for a setting
-    raise an User Error otherwise reset the args using the valid_settings."""
+    """Check if invalid ds3 settings are selected by the user.
+
+    If fail_run is enabled for a setting raise an User Error otherwise reset the args using the valid_settings.
+    """
 
     invalid_ds_zero3_settings = [
         dict(
