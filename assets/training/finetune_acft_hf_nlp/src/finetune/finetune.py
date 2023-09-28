@@ -541,7 +541,7 @@ def validate_ds_zero3_config(deepspeed_config: str):
 
 
 def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
-    """Setup the deepspeed default config file and validate the user passed configs.
+    """Deepspeed initialization and validation.
 
     :param args: User passed args
     :type Namespace
