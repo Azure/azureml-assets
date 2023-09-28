@@ -62,8 +62,8 @@ class Constants:
         os.path.dirname(os.path.abspath(__file__)), "data/sample_examples_expected_postprocessed_outputs.jsonl"
     )
     REFERENCES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "references")
-    OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"  # output_dataset
-    OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"    # output.jsonl
+    OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"
+    OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"
     TEST_REGISTRY_NAME = "Benchmark-Test"
     MATH_DATASET_LOADER_SCRIPT = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
