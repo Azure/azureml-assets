@@ -3,21 +3,16 @@
 
 """MLflow PythonModel wrapper class that loads the MLflow model, preprocess inputs and performs inference."""
 
-import base64
-import io
 import re
 import subprocess
 import sys
-import tempfile
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import mlflow
-import numpy as np
 import pandas as pd
-import requests
 import torch
-from PIL import Image
-from config import Tasks, MMDetLiterals, MLflowSchemaLiterals, MOTLiterals
+from config import MMDetLiterals, MLflowSchemaLiterals, MOTLiterals
+
 
 def _is_valid_url(text: str) -> bool:
     """Check if text is url or base64 string.
@@ -111,7 +106,6 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
             # importing mmdet/mmcv after installing using mim
             from mmtrack.apis import init_model, inference_mot
             import mmcv
-            from mmcv import Config, VideoReader
             self._inference_detector = inference_mot
             self.video_reader = mmcv.VideoReader
 
@@ -121,8 +115,8 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
 
                 if not torch.cuda.is_available():
                     raise RuntimeError("CUDA is not available. GPU needed for MOT inference!")
-                self._config = Config.fromfile(model_config_path)
-                self._model = init_model(self._config)
+                self._config = mmcv.Config.fromfile(model_config_path)
+                self._model = init_model(self._config, model_weights_path)
 
                 print("Model loaded successfully")
             except Exception:
