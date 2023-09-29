@@ -162,7 +162,6 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         type video_url: str
         return: dictionary of current image predictions
         """
-        print(result.keys())
         det_bboxes = result[MOTLiterals.DET_BBOXES]
         track_bboxes = result[MOTLiterals.TRACK_BBOXES]
 

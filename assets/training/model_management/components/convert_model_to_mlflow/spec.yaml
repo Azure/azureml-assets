@@ -44,7 +44,6 @@ inputs:
       - Huggingface
       - MMLab
       - llava
-      - MMTrack
     default: Huggingface
     optional: false
     description: Framework from which model is imported from.
