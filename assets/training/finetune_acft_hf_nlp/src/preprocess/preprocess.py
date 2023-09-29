@@ -37,6 +37,7 @@ from azureml._common._error_definition.azureml_error import AzureMLError  # type
 logger = get_logger_app(__name__)
 
 COMPONENT_NAME = "ACFT-Preprocess"
+MIXFORMER_SEQUENTIAL = "mixformer-sequential" # Phi models
 
 
 def str2bool(arg):
@@ -163,6 +164,7 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
         model_selector_args = json.load(rptr)
         parsed_args.model_asset_id = model_selector_args.get("model_asset_id")
         parsed_args.model_name = model_selector_args.get("model_name")
+        parsed_args.model_type = model_selector_args.get("model_type")
         model_name_or_path = Path(parsed_args.model_selector_output, parsed_args.model_name)
         # Transformers lib searches for tokenizer files locally only if the folder path is same as model's name
         if model_name_or_path.is_dir():
@@ -183,6 +185,8 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
     # additional logging
     logger.info(f"Model name: {getattr(parsed_args, 'model_name', None)}")
     logger.info(f"Task name: {getattr(parsed_args, 'task_name', None)}")
+    logger.info(f"Model asset id: {getattr(parsed_args, 'model_asset_id', None)}")
+    logger.info(f"model_type: {getattr(parsed_args, 'model_type', None)}")
 
     if getattr(parsed_args, "task_name", None) == Tasks.TRANSLATION and \
             getattr(parsed_args, "model_name", None) is not None:
@@ -205,6 +209,22 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
                     f"{list(T5_CODE2LANG_MAP.keys())}"
                 ))
             )
+        
+        logger.info("Got model_type = " + model_type)
+
+    # Overriding from_pretrained method for AutoConfig to use trust_remote_code. TODO: Move to model specific config
+    if hasattr(parsed_args, "model_type") and parsed_args.model_type in [MIXFORMER_SEQUENTIAL]:
+        from functools import partial
+        from transformers import AutoTokenizer
+        from transformers import AutoConfig
+        AutoConfig.from_pretrained = partial(
+            AutoConfig.from_pretrained, trust_remote_code=True
+        )
+        logger.info("Updated `from_pretrained` method for AutoConfig to use trust remote code")
+        AutoTokenizer.from_pretrained = partial(
+            AutoTokenizer.from_pretrained, trust_remote_code=True
+        )
+        logger.info("Updated `from_pretrained` method for AutoTokenizer to use trust remote code")
 
     # update dataset paths
     parsed_args.train_data_path = parsed_args.train_file_path

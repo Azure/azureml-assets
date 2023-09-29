@@ -360,6 +360,10 @@ def model_selector(args: Namespace):
     except Exception:
         logger.info(f"Unable to fetch model_type for {model_name}")
 
+    if model_type is not None:
+        logger.info(f"Setting model_type in model_selector args - {model_type}")
+        model_selector_args["model_type"] = model_type
+
     if model_type is not None and model_type in ACFT_CONFIG:
         model_ft_config = copy.deepcopy(ACFT_CONFIG[model_type])
         model_ft_config.update(ft_config_data)
@@ -427,6 +431,9 @@ def model_selector(args: Namespace):
     # saving FT config
     with open(str(Path(args.output_dir, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)), "w") as rptr:
         json.dump(ft_config_data, rptr, indent=2)
+    # updating model selector args
+    with open(str(Path(args.output_dir, SaveFileConstants.MODEL_SELECTOR_ARGS_SAVE_PATH)), "w") as rptr:
+        json.dump(model_selector_args, rptr, indent=2)
     logger.info(f"Saved {SaveFileConstants.ACFT_CONFIG_SAVE_PATH}")
 
     # additional logging

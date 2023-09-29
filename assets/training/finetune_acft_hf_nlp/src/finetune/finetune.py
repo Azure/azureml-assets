@@ -43,6 +43,7 @@ COMPONENT_NAME = "ACFT-Finetune"
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
+MIXFORMER_SEQUENTIAL = "mixformer-sequential" # Phi models
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
@@ -487,6 +488,7 @@ def finetune(args: Namespace):
     # additional logging
     logger.info(f"Model name: {getattr(args, 'model_name', None)}")
     logger.info(f"Task name: {getattr(args, 'task_name', None)}")
+    logger.info(f"Model asset id: {model_asset_id}")
     logger.info(f"enable LoRA: {getattr(args, 'apply_lora', None)}")
     logger.info(f"enable DeepSpeed: {getattr(args, 'apply_deepspeed', None)}")
     logger.info(f"enable ORT: {getattr(args, 'apply_ort', None)}")
@@ -715,6 +717,7 @@ def main():
         HfModelTypes.REFINEDWEBMODEL,
         HfModelTypes.FALCON,
         REFINED_WEB,
+        MIXFORMER_SEQUENTIAL
     ]:
         from functools import partial
         from transformers.models.auto import (
@@ -740,6 +743,15 @@ def main():
             AutoModelForCausalLM.from_pretrained, trust_remote_code=True
         )
         logger.info("Updated `from_pretrained` method for Seq cls, Tok cls, QnA and Text Gen")
+
+    # Overriding from_pretrained method for AutoConfig to use trust_remote_code. TODO: Move to model specific config
+    if hasattr(args, "model_type") and args.model_type in [MIXFORMER_SEQUENTIAL]:
+        from transformers.models.auto import AutoConfig
+
+        AutoConfig.from_pretrained = partial(
+            AutoConfig.from_pretrained, trust_remote_code=True
+        )
+        logger.info("Updated `from_pretrained` method for AutoConfig to use trust remote code")
 
     finetune(args)
 
