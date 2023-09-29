@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.5 (2023-09-29)
+### 🚀 New Features
+- []() Prevent nested directory creation during model upload
+
 ## 1.16.4 (2023-09-27)
 ### 🚀 New Features
 - [#1327](https://github.com/Azure/azureml-assets/pull/1327) Support prompt asset type
