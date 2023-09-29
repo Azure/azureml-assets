@@ -25,6 +25,11 @@ inputs:
     default: Standard_nc24rs_v3
     description: Instance type to be used for finetune component in case of serverless compute, eg. standard_nc24rs_v3. 
       The parameter compute_finetune must be set to 'serverless' for instance_type to be used
+  shm_size_finetune:
+    type: string
+    optional: true
+    default: 8g
+    description: Shared memory size to be used for finetune component. It is useful while using Nebula (via DeepSpeed) which uses shared memory to save checkpoints.
   instance_type_model_evaluation:
     type: string
     optional: true
@@ -543,6 +548,7 @@ jobs:
     resources:
       instance_count: '${{parent.inputs.num_nodes_finetune}}'
       instance_type: '${{parent.inputs.instance_type_finetune}}'
+      shm_size: '${{parent.inputs.shm_size_finetune}}'
     inputs:
       apply_lora: '${{parent.inputs.apply_lora}}'
       merge_lora_weights: '${{parent.inputs.merge_lora_weights}}'
