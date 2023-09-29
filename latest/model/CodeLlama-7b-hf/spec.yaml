@@ -3,6 +3,8 @@ name: CodeLlama-7b-hf
 path: ./
 properties:
   SHA: 3773f63b4511b9e47a9a7ffc765eed7eb0169486
+  inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3,
+    Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: EN
 tags:
   Featured: ''
@@ -17,7 +19,7 @@ tags:
   license: llama2
   author: meta
   task: text-generation
-version: 1
+version: 2
 description: |
   # **Code Llama**
   Code Llama is a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 34 billion parameters. This is the repository for the base 7B version in the Hugging Face Transformers format. This model is designed for general code synthesis and understanding. Links to other models can be found in the index at the bottom.

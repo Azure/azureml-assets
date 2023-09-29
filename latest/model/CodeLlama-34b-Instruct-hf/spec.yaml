@@ -4,6 +4,7 @@ path: ./
 properties:
   datasets: Publicly available sources
   finetuning-tasks: text-classification
+  inference-recommended-sku: Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: EN
   azureml.copyRegistryFilesToWorkspace: true
 tags:
@@ -22,7 +23,7 @@ tags:
   task: text-generation
   SharedComputeCapacityEnabled: ''
   disable-batch: 'true'
-version: 1
+version: 2
 description: |
   # **Model Details**
   Note: Use of this model is governed by the Meta license. Click on View License above.
