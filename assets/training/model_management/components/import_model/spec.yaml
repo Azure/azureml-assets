@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.18.cond13
+version: 0.0.18.cond15
 
 # Pipeline inputs
 inputs:
@@ -212,7 +212,6 @@ jobs:
     type: if_else
     condition: ${{parent.jobs.validation_trigger_import.outputs.output}}
     true_block: ${{parent.jobs.download_model}}
-    false_block: ${{parent.jobs.output_selector}}
 
   download_model:
     component: azureml://registries/azureml-preview-test1/components/download_model/versions/0.0.15.cond1
@@ -291,9 +290,9 @@ jobs:
 
   
   output_selector:
-    component: azureml://registries/azureml-preview-test1/components/output_selector/versions/0.0.1.cond9
+    component: azureml://registries/azureml-preview-test1/components/output_selector/versions/0.0.1
     inputs:
-      #condition: ${{parent.jobs.validation_trigger_import.outputs.output}}
+      condition: ${{parent.jobs.validation_trigger_import.outputs.output}}
       input_a: ${{parent.jobs.register_model.outputs.registration_details_folder}}
       input_b: ${{parent.jobs.validation_trigger_import.outputs.registration_details_folder}}
     outputs:
