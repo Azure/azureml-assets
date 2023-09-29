@@ -101,12 +101,12 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
             3. for numpy, we are reinstalling numpy to older version to be compatible to opencv. more info:
                 https://stackoverflow.com/questions/20518632/importerror-numpy-core-multiarray-failed-to-import
             """
-            # subprocess.check_call([sys.executable, "-m", "mim", "install", "mmcv-full==1.7.1"])
-            # subprocess.check_call([sys.executable, "-m", "mim", "install", "mmdet==2.28.2"])
-            # subprocess.check_call([sys.executable, "-m", "mim", "install", "--no-deps", "mmtrack==0.14.0"])
-            # subprocess.check_call([sys.executable, "-m", "pip", "install",
-            #                        "opencv-python-headless==4.7.0.72", "--force-reinstall"])
-            # subprocess.check_call([sys.executable, "-m", "pip", "install", "numpy==1.19.3", "--force-reinstall"])
+            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmcv-full==1.7.1"])
+            subprocess.check_call([sys.executable, "-m", "mim", "install", "mmdet==2.28.2"])
+            subprocess.check_call([sys.executable, "-m", "mim", "install", "--no-deps", "mmtrack==0.14.0"])
+            subprocess.check_call([sys.executable, "-m", "pip", "install",
+                                   "opencv-python-headless==4.7.0.72", "--force-reinstall"])
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "numpy==1.19.3", "--force-reinstall"])
 
             # importing mmdet/mmcv after installing using mim
             from mmtrack.apis import init_model, inference_mot
