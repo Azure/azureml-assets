@@ -75,7 +75,7 @@ class ISLiterals(ODLiterals):
 
 
 class MOTLiterals(ODLiterals):
-    """MMTracking dataset constants"""
+    """MMTracking dataset constants."""
 
     DET_BBOXES = "det_bboxes"
     DET_LABELS = "det_labels"

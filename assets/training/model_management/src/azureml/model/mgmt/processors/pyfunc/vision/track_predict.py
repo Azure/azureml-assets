@@ -46,8 +46,8 @@ def _is_valid_url(text: str) -> bool:
 
 def _process_video(vid: pd.Series) -> str:
     """If input video is in url format, return the video url.
-       This function called for each row in the input data, i.e one video a time.
 
+    This function called for each row in the input data, i.e one video a time.
     :param vid: pandas series with valid video url.
     :type vid: pd.Series
     :return: video link str.
@@ -67,7 +67,7 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         self,
         task_type: str,
     ) -> None:
-        """This method is called when the python model wrapper is initialized.
+        """Convert AutoML video models to MLflow.
 
         :param task_type: Task type used in training.
         :type task_type: str
@@ -79,7 +79,7 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         self.video_reader = None
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
-        """This method is called when loading a Mlflow model with pyfunc.load_model().
+        """Load a MLflow model with pyfunc.load_model().
 
         :param context: Mlflow context containing artifacts that the model can use for inference.
         :type context: mlflow.pyfunc.PythonModelContext
@@ -154,6 +154,7 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
 
     def _parse_mot_output(self, result, frame_id, video_url) -> List[Dict]:
         """Parse the output of inference_mot() to a list of dictionaries.
+
         param result: output of inference_mot()
         type result: tuple
         param frame_id: frame id of the current frame
