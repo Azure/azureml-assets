@@ -14,7 +14,7 @@ class MMLabDetectionTasks(_CustomEnum):
 
 
 class MMTrackVideoTasks(_CustomEnum):
-    """Supported tasks from MMTrack model framework for video."""
+    """Supported tasks from MMLab model framework for video."""
 
     MM_MULTI_OBJECT_TRACKING = "video-multi-object-tracking"
 

@@ -67,6 +67,10 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             return MMLabDetectionMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
+        elif MMTrackVideoTasks.has_value(task):
+            return MMTrackVideoMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
         else:
             raise Exception(f"Models from {model_framework} for {task} not supported for MLflow conversion")
     elif model_framework == ModelFramework.LLAVA.value:
@@ -77,11 +81,6 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             )
         else:
             raise Exception(f"Models from {model_framework} for {task} not supported for MLflow conversion")
-    elif model_framework == ModelFramework.MMTRACK.value:
-        if MMTrackVideoTasks.has_value(task):
-            return MMTrackVideoMLflowConvertorFactory.create_mlflow_convertor(
-                model_dir, output_dir, temp_dir, translate_params
-            )
     else:
         raise Exception(f"Models from {model_framework} not supported for MLflow conversion")
 
