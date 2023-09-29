@@ -91,7 +91,7 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         """
         print("Inside load_context()")
 
-        if self._task_type in [Tasks.MM_MULTI_OBJECT_TRACKING]:
+        if self._task_type in ["video-multi-object-tracking"]:
             """
             Install mmtrack, mmcv and mmdet using mim, with pip installation is not working
             1. for mmtrack, one of its dependency is mmcv 1.6.2, which will trigger cuda related issues.
@@ -131,7 +131,7 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
 
         else:
             raise ValueError(f"invalid task type {self._task_type}."
-                             f"Supported tasks: {Tasks.MM_MULTI_OBJECT_TRACKING}")
+                             f"Supported tasks: video-multi-object-tracking")
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
         """Perform inference on the input data.
