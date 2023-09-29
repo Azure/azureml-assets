@@ -1,0 +1,122 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+type: command
+
+name: inference_postprocessor
+display_name: Inference Postprocessor
+description: Inference Postprocessor
+version: 0.0.1
+is_deterministic: true
+
+inputs:
+  prediction_dataset:
+    type: uri_file
+    description: >-
+      A file that contains predicted values
+    optional: false
+  prediction_column_name:
+    type: string
+    description: >-
+      Key in prediction dataset that contains predictions.
+    optional: false
+  ground_truth_dataset:
+    type: uri_file
+    description: >-
+      A file that contains the ground truth
+    optional: true
+  ground_truth_column_name:
+    type: string
+    description: >-
+      Key in ground truth dataset that contains ground truth. If ground_truth_dataset
+      is given, then,
+      this is required input.
+    optional: true
+  prediction_probabilities_dataset:
+    type: uri_file
+    description: >-
+      A file that contains the prediction probabilities.
+    optional: true
+  separator:
+    type: string
+    description: >-
+      The separator used in few_shot patterns. One common example is "###".
+      If provided, response will be split on this separator, and only the first part
+      will be used.
+      Example: "This is the first part ### This is the second part" will result in
+      "This is the first part".
+    optional: true
+  regex_expr:
+    type: string
+    description: >-
+      A regular expression to extract the answer from the inference results. The pattern
+      must contain a group to be extracted. The first group and the first match will
+      be used.  Example: "\n\nThe answer is: (\d)."
+    optional: true
+  extract_value_at_index:
+    type: integer
+    description: >-
+      If the regex_expr finds multiple strings matching the pattern in `regex_expr`,
+      this can be used  to extract the preferred value at a given index out of all
+      matched patterns to be used as prediction  value. If omitted, the default behaviour
+      is first matched. 
+    optional: true
+  strip_prefix:
+    type: string
+    description: >-
+      Characters to remove from the beginning of the extracted answer.
+      It is applied in the very end of the extraction process.
+    optional: true
+  strip_suffix:
+    type: string
+    description: >-
+      Characters to remove from the end of the extracted answer.
+      It is applied in the very end of the extraction process.
+    optional: true
+  template:
+    type: string
+    description: >-
+      Jinja template containing logic to extract prediction.
+    optional: true
+  script_path:
+    type: uri_file
+    description: >-
+      Path to the custom postprocessor python script to extract prediction.
+      This [base template]
+      (https://github.com/Azure/azureml-assets/tree/main/assets/aml-benchmark/scripts/custom_inference_postprocessors/base_postprocessor_template.py)
+      tshould be used to create a custom postprocessor script.
+    optional: true
+  encoder_config:
+    type: string
+    description: |
+      JSON serialized dictionary to perform mapping. Must contain key-value pair "column_name": "<actual_column_name>" whose 
+      value needs mapping, followed by key-value pairs containing idtolabel or labeltoid mappers.
+      Example format:
+      {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}
+    optional: true
+
+
+outputs:
+  output_dataset_result:
+    type: uri_file
+    description: >-
+      Path to the output the post processed result in .jsonl file.
+
+code: ../src
+
+environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
+
+command: >-
+  python -m inference_postprocessor.main
+  --prediction_dataset ${{inputs.prediction_dataset}}
+  --prediction_column_name ${{inputs.prediction_column_name}}
+  $[[--ground_truth_dataset ${{inputs.ground_truth_dataset}}]]
+  $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
+  $[[--prediction_probabilities_dataset ${{inputs.prediction_probabilities_dataset}}]]
+  $[[--encoder_config '${{inputs.encoder_config}}']]
+  $[[--separator '${{inputs.separator}}']]
+  $[[--regex_expr '${{inputs.regex_expr}}']]
+  $[[--extract_value_at_index ${{inputs.extract_value_at_index}}]]
+  $[[--strip_prefix '${{inputs.strip_prefix}}']]
+  $[[--strip_suffix '${{inputs.strip_suffix}}']]
+  $[[--template '${{inputs.template}}']]
+  $[[--script_path ${{inputs.script_path}}]]
+  --output_dataset_result ${{outputs.output_dataset_result}}
