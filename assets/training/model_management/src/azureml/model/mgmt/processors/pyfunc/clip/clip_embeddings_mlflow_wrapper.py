@@ -22,7 +22,7 @@ except ImportError:
 
 
 class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
-    """MLflow model wrapper for CLIP model."""
+    """MLflow model wrapper for CLIP model, used for getting feature embeddings."""
 
     def __init__(
         self,
@@ -63,12 +63,15 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         """Perform inference on the input data.
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
-        :param input_data: Input images for prediction and candidate labels.
+        :param input_data: Input images and text for feature embeddings.
         :type input_data: Pandas DataFrame with a first column name ["image"] of images where each
-        image is in base64 String format, and second column name ["text"] where the first row contains the
-        candidate labels and the remaining rows are ignored.
+        image is in base64 String format, and second column name ["text"] containing a string. The following cases
+        are supported:
+        - all rows in image column are populated with valid values and text column only contains empty string/null,
+        - all rows in text column are populated with valid values and image column only contains empty string/null,
+        - all rows in both columns are populated with valid values
         :return: Output of inferencing
-        :rtype: Pandas DataFrame with columns ["probs", "labels"]
+        :rtype: Pandas DataFrame with columns ["image_features", "text_features"]
         """
         
         has_images, has_text = self.validate_input(input_data)
@@ -88,7 +91,7 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             if has_images:
                 image_path_list = (
                     decoded_images.iloc[:, 0]
-                    .map(lambda row: create_temp_file(row, tmp_output_dir))
+                    .map(lambda row: create_temp_file(row, tmp_output_dir)[0])
                     .tolist()
                 )
             else:
@@ -129,13 +132,13 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :param image_processor: Preprocessing configuration loader.
         :type image_processor: transformers.AutoImageProcessor
         :param model: Pytorch model weights.
-        :type model: transformers.AutoModelForImageClassification
+        :type model: transformers.AutoModelForZeroShotImageClassification
         :param image_path_list: list of image paths for inferencing.
         :type image_path_list: List
         :param task_type: Task type of the model.
         :type task_type: Tasks
-        :return: Predicted probabilities
-        :rtype: Tuple of torch.tensor
+        :return: image features and text features
+        :rtype: either torch.tensor of size (#inputs, 512) or None
         """
 
         if image_path_list:
@@ -156,21 +159,28 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         return image_features, text_features
     
     def validate_input(self, input_data):
+        """Validate input and raise exception if input is invalid
+
+        :param input_data: input to validate
+        :type input_data: pandas.DataFrame
+        """
+
+        error_string = """Embeddings cannot be retrieved for the given input. The following cases are supported:
+        - all rows in image column are populated with public urls or base64 encoded images and text column only contains empty string/null,
+        - all rows in text column are populated with strings and image column only contains empty string/null,
+        - all rows in both columns are populated with valid values"""
         # Validate Input
         input_data_all = input_data.all()
         input_data_any = input_data.any()
 
         if input_data_any['image'] and not input_data_all['image']:
-            print("image column has some images but not all")
-            raise
+            raise ValueError(error_string)
 
         if input_data_any['text'] and not input_data_all['text']:
-            print("text column has some text but not all")
-            raise
+            raise ValueError(error_string)
 
         if not input_data_any['text'] and not input_data_any['image']:
-            print("text and image columns are empty")
-            raise
+            raise ValueError(error_string)
 
         has_images = input_data_all['image']
         has_text = input_data_all['text']

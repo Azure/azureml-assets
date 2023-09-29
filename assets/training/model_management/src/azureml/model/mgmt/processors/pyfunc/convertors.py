@@ -249,8 +249,8 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
             mlflow_model_wrapper = CLIPMLFlowModelWrapper(task_type=self._task)
             mlflow_model_wrapper_path = os.path.join(self.MODEL_DIR, "clip_mlflow_wrapper.py")
         else:  # SupportedTasks.IMAGE_TEXT_EMBEDDINGS
-            from clip_embeddings_mlflow_wrapper import CLIPEmbeddingsMLFLowModelWrapper
-            mlflow_model_wrapper = CLIPEmbeddingsMLFLowModelWrapper(task_type=self._task)
+            from clip_embeddings_mlflow_wrapper import CLIPEmbeddingsMLFlowModelWrapper
+            mlflow_model_wrapper = CLIPEmbeddingsMLFlowModelWrapper(task_type=self._task)
             mlflow_model_wrapper_path = os.path.join(self.MODEL_DIR, "clip_embeddings_mlflow_wrapper.py")
 
 
