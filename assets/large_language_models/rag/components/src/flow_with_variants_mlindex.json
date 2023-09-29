@@ -10,6 +10,7 @@
           "tool": "Embedding",
           "inputs": {
             "connection": "@@Embedding_Connection",
+            "model": "@@Embedding_Deployment_Name",
             "deployment_name": "@@Embedding_Deployment_Name",
             "input": "${flow.question}"
           }
@@ -59,7 +60,7 @@
             "logit_bias": "",
             "prompt_text": "${Prompt_variants.output}"
           },
-          "provider": "AzureOpenAI",
+          "provider": "@@Completion_Provider",
           "connection": "@@Completion_Connection",
           "api": "@@API",
           "module": "promptflow.tools.aoai",
@@ -271,6 +272,7 @@
               "tool": "Embedding",
               "inputs": {
                 "connection": "@@Embedding_Connection",
+                "model": "@@Embedding_Deployment_Name",
                 "deployment_name": "@@Embedding_Deployment_Name",
                 "input": "${flow.question}"
               },
@@ -358,6 +360,7 @@
               "tool": "answer_the_question_with_context",
               "inputs": {
                 "deployment_name": "@@Completion_Deployment_Name",
+                "model": "@@Completion_Deployment_Name",
                 "suffix": "",
                 "max_tokens": "1000",
                 "temperature": "0",
@@ -371,7 +374,7 @@
                 "logit_bias": "",
                 "prompt_text": "${Prompt_variants.output}"
               },
-              "provider": "AzureOpenAI",
+              "provider": "@@Completion_Provider",
               "connection": "@@Completion_Connection",
               "api": "@@API",
               "module": "promptflow.tools.aoai",
@@ -381,6 +384,5 @@
         }
       }
     }
-  },
-  "flowType": "Default"
+  }
 }

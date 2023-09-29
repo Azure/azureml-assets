@@ -27,10 +27,11 @@ logger = get_logger('flow_creation')
 MAX_POST_TIMES = 3
 SLEEP_DURATION = 1
 USE_CHAT_FLOWS = False
-SERVICE_ENDPOINT = os.environ.get("AZUREML_SERVICE_ENDPOINT", "")
+
+SERVICE_ENDPOINT = os.environ.get("AZUREML_SERVICE_ENDPOINT", "https://eastus2.api.azureml.ms")
 EXPERIMENT_SCOPE = os.environ.get("AZUREML_EXPERIMENT_SCOPE", "")
-WORKSPACE_SCOPE = os.environ.get("AZUREML_WORKSPACE_SCOPE", "")
-RUN_TOKEN = os.environ.get("AZUREML_RUN_TOKEN", "")
+WORKSPACE_SCOPE = os.environ.get("AZUREML_WORKSPACE_SCOPE", "/subscriptions/381b38e9-9840-4719-a5a0-61d9585e1e91/resourceGroups/baker-static/providers/Microsoft.MachineLearningServices/workspaces/baker-eastus2")
+RUN_TOKEN = os.environ.get("AZUREML_RUN_TOKEN", "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyIsImtpZCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyJ9.eyJhdWQiOiJodHRwczovL21hbmFnZW1lbnQuY29yZS53aW5kb3dzLm5ldC8iLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC83MmY5ODhiZi04NmYxLTQxYWYtOTFhYi0yZDdjZDAxMWRiNDcvIiwiaWF0IjoxNjk2MDIyNjYzLCJuYmYiOjE2OTYwMjI2NjMsImV4cCI6MTY5NjAyNzQ1NSwiX2NsYWltX25hbWVzIjp7Imdyb3VwcyI6InNyYzEifSwiX2NsYWltX3NvdXJjZXMiOnsic3JjMSI6eyJlbmRwb2ludCI6Imh0dHBzOi8vZ3JhcGgud2luZG93cy5uZXQvNzJmOTg4YmYtODZmMS00MWFmLTkxYWItMmQ3Y2QwMTFkYjQ3L3VzZXJzL2M5YmFlZWQ5LWUwMjktNGEyMy04NjE2LWFhY2M5YzNkYzhmYi9nZXRNZW1iZXJPYmplY3RzIn19LCJhY3IiOiIxIiwiYWlvIjoiQVlRQWUvOFVBQUFBOHo3dHB2NGIyS1R6NVk1M3dJcEJCZkhxdVphbHI3WUQwMGt3REdaRkxYUk05MVhYOFI3ME9PcVpzZ1BhWGlSTU42NXBPLzk0VE5jOTFDbm9INmF5ZW5yekZVMEVGL1puelBYa1dnckhsOUNiWURNM2Zha3JhTXA2cUF3MW9SODliV0RzZlcycis3STdFL3FNa1lGU1ptWUVBN2tickVrVi9VN1E1ZU5LL0VZPSIsImFtciI6WyJyc2EiLCJtZmEiXSwiYXBwaWQiOiIwNGIwNzc5NS04ZGRiLTQ2MWEtYmJlZS0wMmY5ZTFiZjdiNDYiLCJhcHBpZGFjciI6IjAiLCJkZXZpY2VpZCI6Ijk2ZGFhMzFmLTMxMWEtNGE0Yy05MjM0LWVkOTNiZWQyOWI0NiIsImZhbWlseV9uYW1lIjoiRHlyZSIsImdpdmVuX25hbWUiOiJHZW9yZ2UiLCJpZHR5cCI6InVzZXIiLCJpcGFkZHIiOiIxNzQuNjEuMTM2Ljc5IiwibmFtZSI6Ikdlb3JnZSBEeXJlIiwib2lkIjoiYzliYWVlZDktZTAyOS00YTIzLTg2MTYtYWFjYzljM2RjOGZiIiwib25wcmVtX3NpZCI6IlMtMS01LTIxLTIxMjc1MjExODQtMTYwNDAxMjkyMC0xODg3OTI3NTI3LTUwOTIwMDgxIiwicHVpZCI6IjEwMDMyMDAxNjdCOTQ2QjkiLCJyaCI6IjAuQVFFQXY0ajVjdkdHcjBHUnF5MTgwQkhiUjBaSWYza0F1dGRQdWtQYXdmajJNQk1hQUQwLiIsInNjcCI6InVzZXJfaW1wZXJzb25hdGlvbiIsInN1YiI6Ii1iUTllck05Y0hHX3pCN19QMU9scG5SVmlOVC1YT1E0YVlWOWk1ZVBFTWMiLCJ0aWQiOiI3MmY5ODhiZi04NmYxLTQxYWYtOTFhYi0yZDdjZDAxMWRiNDciLCJ1bmlxdWVfbmFtZSI6Imdlb3JnZWR5cmVAbWljcm9zb2Z0LmNvbSIsInVwbiI6Imdlb3JnZWR5cmVAbWljcm9zb2Z0LmNvbSIsInV0aSI6IlJXT2xtZXBPQ0VDYU54eTB1eU1JQUEiLCJ2ZXIiOiIxLjAiLCJ3aWRzIjpbImI3OWZiZjRkLTNlZjktNDY4OS04MTQzLTc2YjE5NGU4NTUwOSJdLCJ4bXNfdGNkdCI6MTI4OTI0MTU0N30.pl-Pv-sV2PCkmlCHmErlam4TvU5uz0f39YNFn0KcXJ2HLGr_sgHgbLFz93E4FEmpKWwfqYUuy3G8aPZYVTuTmuYy-dQ4D2hSsbxcI5OhnaTksGxEqKdOl7CTmzQIbyYB3_itWu-ZsCm-d6u74n8t049RmThjxryupJUYhD1wnm4s5iiz8Qu3QgUbhBKM8sw6EOuiki0Mcgt79onyKTrkIIO_e_TkWDVjK_0HUrVfmgbI_A7V-65BJJTl3AwWEISPyF_LmCycrzw9lDQIX4nk5lRglzARpRRHUImg-WrnHG-fFxVs4-y5xfNoQgOioWB58cBI031ORw1PFHenZbITTQ")
 _CITATION_TEMPLATE = r'\nPlease add citation after each sentence when possible in a form \"(Source: citation)\".'
 _USER_INPUT = r'{{contexts}} \n Human: {{question}} \nAI:'
 _CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ item.inputs.question }} ' + \
@@ -126,10 +127,15 @@ def get_connection_name(s):
 
 def get_deployment_and_model_name(s):
     """get_deployment_and_model_name."""
-    deployment_and_model = s.split("/deployment/")[1]
-    deployment_name = deployment_and_model.split("/model/")[0]
-    model_name = deployment_and_model.split("/model/")[1]
-    return (deployment_name, model_name)
+    model_type = s.split("://")[0]
+    if model_type == "open_ai":
+        model_name = s.split("/model/")[1]
+        return (model_name, model_name)
+    else:
+        deployment_and_model = s.split("/deployment/")[1]
+        deployment_name = deployment_and_model.split("/model/")[0]
+        model_name = deployment_and_model.split("/model/")[1]
+        return (deployment_name, model_name)
 
 
 def main(args, ws, current_run, activity_logger: Logger):
@@ -150,27 +156,41 @@ def main(args, ws, current_run, activity_logger: Logger):
     completion_connection_name = get_connection_name(
         args.llm_connection_name)
     completion_config = json.loads(args.llm_config)
-    completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
-    completion_deployment_name = completion_config.get(
-        "deployment_name", "gpt-35-turbo")
+
+    if completion_config.get("type") == "open_ai":
+        completion_model_name = completion_config.get("model_name", "gpt-3.5-turbo")
+        completion_deployment_name = completion_model_name
+        completion_model_name = "gpt-3.5-turbo" if completion_model_name is None else completion_model_name
+        completion_deployment_name = "gpt-3.5-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_provider = "OpenAI"
+    else:
+        completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
+        completion_deployment_name = completion_config.get(
+            "deployment_name", "gpt-35-turbo")
     # Set default if key exsits but is set to None (as it is for basic pipelines)
-    completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
-    completion_deployment_name = "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
+        completion_deployment_name = "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_provider = "AzureOpenAI"
+
     embedding_connection_name = get_connection_name(
         args.embedding_connection)
     if (completion_connection_name == "azureml-rag-default-aoai" and
             embedding_connection_name != "azureml-rag-default-aoai"):
         # default completion connection name to embedding ones if embedding conenction is provided
         completion_connection_name = embedding_connection_name
+    
     embedding_deployment_name_and_model_name = get_deployment_and_model_name(
         args.embeddings_model)
     embedding_deployment_name = embedding_deployment_name_and_model_name[0]
     embedding_model_name = embedding_deployment_name_and_model_name[1]
+
     print("completion_connection_name: %s" %
           completion_connection_name)
+    print("completion_provider: %s" % completion_provider)
     print("completion_model_name: %s" % completion_model_name)
     print("completion_deployment_name: %s" %
           completion_deployment_name)
+
     print("embedding_connection_name: %s" % embedding_connection_name)
     print("embedding_deployment_name: %s" % embedding_deployment_name)
     print("embedding_model_name: %s" % embedding_model_name)
@@ -254,10 +274,14 @@ def main(args, ws, current_run, activity_logger: Logger):
         "@@Embedding_Deployment_Name", embedding_deployment_name)
     flow_with_variants = flow_with_variants.replace(
         "@@Embedding_Connection", embedding_connection_name)
+    
     flow_with_variants = flow_with_variants.replace(
         "@@Completion_Deployment_Name", completion_deployment_name)
     flow_with_variants = flow_with_variants.replace(
         "@@Completion_Connection", completion_connection_name)
+    flow_with_variants = flow_with_variants.replace(
+        "@@Completion_Provider", completion_provider)
+
     api_name = "chat" if completion_model_name == "gpt-35-turbo" else "completion"
     flow_with_variants = flow_with_variants.replace("@@API", api_name)
 
@@ -324,7 +348,7 @@ if __name__ == '__main__':
         type=str,
         required=False,
         dest='llm_config',
-        default='{"type": "azure_open_ai", "model_name": "gpt-35-turbo", '
+        default='{"type": "open_ai", "model_name": "gpt-3.5-turbo", '
         + '"deployment_name": "gpt-35-turbo", "temperature": 0, "max_tokens": 2000}')
     parser.add_argument(
         "--embedding_connection",

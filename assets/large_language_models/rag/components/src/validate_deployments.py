@@ -470,6 +470,10 @@ def validate_openai_deployments(parser_args, check_completion, check_embeddings,
         raise Exception(
             "ConnectionID for Embeddings is empty and check_embeddings = True")
 
+    # dummy output to allow step ordering
+    with open(parser_args.output_data, "w") as f:
+        json.dump({"deployment_validation_success": "true"}, f)
+
     activity_logger.info(
         "[Validate Deployments]: Success! OpenAI deployments have been validated.")
 
