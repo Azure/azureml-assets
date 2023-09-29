@@ -37,8 +37,13 @@ RUN_TOKEN = os.environ.get("AZUREML_RUN_TOKEN", "")
 CODE_DIR = "rag_code_flow"
 _CITATION_TEMPLATE = r'\nPlease add citation after each sentence when possible in a form \"(Source: citation)\".'
 _USER_INPUT = r'{{contexts}} \n user: {{question}} \nassistant:'
+_MODIFY_INPUT = r'Given the following conversation and a follow up question, rephrase the follow up question ' + \
+    r'be a standalone question, in its original language.\nIf there is nothing relevent in the conversation, ' + \
+    r'you can restate the original question.\n'
 _CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ item.inputs.question }} ' + \
     r'\nassistant: \n{{ item.outputs.output }} \n{% endfor %}'
+_MODIFY_PROMPT = r'system: \n' + _MODIFY_INPUT + r'\nconversation:\n' + _CHAT_HISTORY + \
+    r'\n\nFollow up Input: {{question}} \nStandalone Question:'
 _STATIC_METRIC_PRIORITY_LIST = ["gpt_similarity", "gpt_relevance", "bert_f1"]
 
 
@@ -287,6 +292,14 @@ def main(args, ws, current_run, activity_logger: Logger):
                     f"Prompt_variants__Variant_{idx}.jinja2"), "w") as file:
                 file.write(codecs.decode(prompt_str, 'unicode_escape'))
 
+        if USE_CHAT_FLOWS:
+            # Write extra modify query prompt to folder
+            with open(os.path.join(
+                    Path(__file__).parent.absolute(),
+                    CODE_DIR,
+                    f"modify_query_with_history.jinja2"), "w") as file:
+                file.write(codecs.decode(_MODIFY_PROMPT, 'unicode_escape'))
+
         # upload code
         try:
             details = current_run.get_details()
@@ -328,6 +341,9 @@ def main(args, ws, current_run, activity_logger: Logger):
         flow_with_variants = flow_with_variants.replace(
             "@@prompt_variant_2",
             post_processing_prompts(json_stringify(top_prompts[2]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
+
+        if USE_CHAT_FLOWS:
+            flow_with_variants = flow_with_variants.replace("@@modify_prompt", _MODIFY_PROMPT)
 
         activity_logger.info(
             "[Promptflow Creation]: Json payload successfully generated, trying to parse into json dict...")
