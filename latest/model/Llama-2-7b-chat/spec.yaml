@@ -37,7 +37,7 @@ tags:
   inference_supported_envs:
   - ds_mii
   SharedComputeCapacityEnabled: ''
-version: 12
+version: 13
 description: |
   # **Model Details**
   Note: Use of this model is governed by the Meta license. Click on View License above.
