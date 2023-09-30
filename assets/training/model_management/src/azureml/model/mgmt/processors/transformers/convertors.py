@@ -176,21 +176,6 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
             else:
                 logger.info(f"Successully installed {pkgs}. pip logs =>\n{stdout}\n")
 
-        if segregate:
-            logger.info("Segregate input model dir and present into separate folders for model, config and tokenizer")
-            logger.info("Preparing model files")
-            tmp_model_dir = Path(self._temp_dir) / HF_CONF.HF_MODEL_PATH.value
-            copy_files(self._model_dir, tmp_model_dir)
-            model = str(tmp_model_dir)
-            logger.info("Loading config")
-            config = self._hf_config_cls.from_pretrained(
-                self._model_dir, **self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
-            )
-            logger.info("Loading tokenizer")
-            tokenizer = self._hf_tokenizer_cls.from_pretrained(
-                self._model_dir, **self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
-            )
-
         # Set experimental flag
         if self._experimental:
             logger.info("Experimental features enabled for MLflow conversion")
@@ -223,6 +208,20 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
         except Exception as e:
             logger.error("Model save failed with mlflow OSS flow for task: {} "
                          "with exception: {}".format(self._task, e))
+
+            logger.info("Segregate input model dir and present into separate folders for model, config and tokenizer")
+            logger.info("Preparing model files")
+            tmp_model_dir = Path(self._temp_dir) / HF_CONF.HF_MODEL_PATH.value
+            copy_files(self._model_dir, tmp_model_dir)
+            model = str(tmp_model_dir)
+            logger.info("Loading config")
+            config = self._hf_config_cls.from_pretrained(
+                self._model_dir, **self._hf_conf.get(HF_CONF.HF_CONFIG_ARGS.value, {})
+            )
+            logger.info("Loading tokenizer")
+            tokenizer = self._hf_tokenizer_cls.from_pretrained(
+                self._model_dir, **self._hf_conf.get(HF_CONF.HF_TOKENIZER_ARGS.value, {})
+            )
 
             hf_mlflow.hftransformers.save_model(
                 config=config,
@@ -480,4 +479,4 @@ class NLPMLflowConvertor(HFMLFLowConvertor):
         hf_conf[HF_CONF.HF_PRETRAINED_CLASS.value] = self._hf_model_cls.__name__
         hf_conf[HF_CONF.HF_TOKENIZER_CLASS.value] = self._hf_tokenizer_cls.__name__
 
-        return super()._save(segregate=False)
+        return super()._save(segregate=True)
