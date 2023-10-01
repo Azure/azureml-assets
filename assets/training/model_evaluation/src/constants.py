@@ -2,6 +2,8 @@
 # Licensed under the MIT License.
 
 """File containing constants for model evaluation script."""
+from azureml.evaluate.mlflow.constants import ForecastFlavors
+
 
 PREDICTIONS_COLUMN_NAME = "predictions"
 TRANSFORMER_KEY = "y_transformer"
@@ -44,6 +46,7 @@ class TASK:
     QnA = "question-answering"
     TRANSLATION = "text-translation"
     TEXT_GENERATION = "text-generation"
+    TEXT_GENERATION_CODE = "text-generation-code"
     FILL_MASK = "fill-mask"
     IMAGE_CLASSIFICATION = "image-classification"
     IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
@@ -100,7 +103,7 @@ MLFLOW_MODEL_TYPE_MAP = {
     TASK.TEXT_CLASSIFICATION: "text-classifier",
     TASK.TEXT_CLASSIFICATION_MULTILABEL: "classifier-multilabel",
     TASK.NER: "text-ner",
-    TASK.FORECASTING: "forecasting",
+    TASK.FORECASTING: "forecaster",
     TASK.TRANSLATION: "translation",
     TASK.QnA: "question-answering",
     TASK.SUMMARIZATION: "summarization",
@@ -204,6 +207,11 @@ class ErrorStrings:
     InvalidGroundTruthColumnName = "Ground truth column name should be passed since columns in data are > 0."
     InvalidGroundTruthColumnNameData = "Ground truth column name not found in input data."
     InvalidPredictionColumnNameData = "Prediction Column name not found in input data."
+    InvalidYTestCasesColumnNameData = "y_test_cases column name not found in input data."
+    InvalidGroundTruthColumnNameCodeGen = "The format for the label column name in code generation should follow " \
+                                          "the pattern: '<label_col_name>,<test_case_col_name>'. Either " \
+                                          "<label_col_name> or <test_case_col_name> can be empty, but at least one " \
+                                          "of them must be set."
 
     # Data Asset related
     BadLabelColumnName = "No label column found in test data."
@@ -229,7 +237,11 @@ class ForecastingConfigContract:
 
     TIME_COLUMN_NAME = 'time_column_name'
     TIME_SERIES_ID_COLUMN_NAMES = 'time_series_id_column_names'
+    FORECAST_FLAVOR = ForecastFlavors.FLAVOUR
+    ROLLING_FORECAST_STEP = 'step'
     FORECAST_ORIGIN_COLUMN_NAME = 'forecast_origin_column_name'
+    FORECAST_PREDICTIONS = "predictions_column_name"
+    FORECAST_GROUND_TRUTH = "ground_truths_column_name"
 
 
 class ForecastColumns:
@@ -262,3 +274,24 @@ ALLOWED_PIPELINE_PARAMS = {
     "source_lang",
     "target_lang"
 }
+
+
+class DataFrameParams:
+    """DataFrame parameters for  dataset."""
+
+    Ground_Truth_Column_Name = "ground_truths_column_name"
+    Extra_Cols = "extra_cols"
+
+
+class TextGenerationColumns:
+    """Constants for Text Generation tasks."""
+
+    SUBTASKKEY = "sub_task"
+    Text_GEN_TEST_CASE_COLUMN_NAME = "test_case_column_name"
+    Text_GEN_Y_TEST_COLUMN_NAME = "y_test_column_name"
+
+
+class SubTask:
+    """Constants for sub-tasks."""
+
+    CODEGENERATION = "code"

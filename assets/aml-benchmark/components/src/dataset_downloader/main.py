@@ -257,9 +257,15 @@ def main(
             [output_dataset] * config_len,
         )
 
-    # log any exceptions raised inside calls
-    for _ in my_iter:
-        pass
+    # raise exception if exception was raised inside calls
+    try:
+        for _ in my_iter:
+            pass
+    except Exception as e:
+        mssg = f"Exception occurred in one of the processes: {e}"
+        raise DatasetDownloadException._with_error(
+            AzureMLError.create(DatasetDownloadError, error_details=mssg)
+        )
 
     log_mlflow_params(
         dataset_name=args.dataset_name,

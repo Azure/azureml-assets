@@ -7,7 +7,6 @@ import azureml.evaluate.mlflow as aml_mlflow
 import os
 import constants
 import torch
-from mlflow.models import Model
 from itertools import repeat
 
 from image_constants import ImageDataFrameParams, SettingLiterals as ImageSettingLiterals
@@ -35,10 +34,10 @@ from utils import (
     fetch_compute_metrics_args
 )
 from validation import _validate, validate_args, validate_Xy
+from task_factory.base import BasePredictor
 
 logger = get_logger(name=__name__)
 custom_dimensions.app_name = constants.TelemetryConstants.EVALUATE_MODEL_NAME
-# current_run = TestRun()
 test_run = current_run.run
 root_run = current_run.root_run
 ws = current_run.workspace
@@ -46,7 +45,7 @@ aml_mlflow.set_tracking_uri(ws.get_mlflow_tracking_uri())
 custom_dims_dict = vars(custom_dimensions)
 
 
-class EvaluateModel:
+class EvaluateModel(BasePredictor):
     """EvaluateModel object."""
 
     def __init__(self,
@@ -67,6 +66,8 @@ class EvaluateModel:
             config: dict,
             batch_size: int
         """
+        super().__init__(model_uri, task, device)
+
         self.task = task
         self.model_uri = model_uri
         self.output = output
@@ -88,67 +89,11 @@ class EvaluateModel:
                 self.device = -1
         logger.info("Logging to check metrics config in evaluate_model: " + str(self.config))
 
-    def _ensure_model_on_cpu(self):
-        """Ensure model is on cpu.
-
-        Args:
-            model (_type_): _description_
-        """
-        if self.is_hf:
-            if hasattr(self.model._model_impl, "hf_model"):
-                self.model._model_impl.hf_model = self.model._model_impl.hf_model.cpu()
-            else:
-                logger.warning("hf_model not found in mlflow model")
-        elif self.is_torch:
-            import torch
-            if isinstance(self.model, torch.nn.Module):
-                self.model = self.model.cpu()
-            elif hasattr(self.model, "_model_impl") and isinstance(self.model._model_impl, torch.nn.Module):
-                self.model._model_impl = self.model._model_impl.cpu()
-            else:
-                logger.warning("Torch model is not of type nn.Module")
-
-    def handle_device_failure(self):
-        """Handle device failure."""
-        if self.device == constants.DEVICE.AUTO and torch.cuda.is_available():
-            try:
-                cuda_current_device = torch.cuda.current_device()
-                logger.info("Loading model and prediction with cuda current device ")
-                if self.current_device != cuda_current_device:
-                    logger.info(
-                        f"Current Device: {self.current_device} does not match expected device {cuda_current_device}")
-                    # self.model = load_model(self.model_uri, cuda_current_device, self.task_type)
-                    self.current_device = cuda_current_device
-                # self.device = self.current_device
-            except Exception as e:
-                logger.info("Failed on GPU with error: " + repr(e))
-        if self.device != -1:
-            logger.warning("Predict failed on GPU. Falling back to CPU")
-            try:
-                logger.info("Loading model and prediction with cuda current device. Trying CPU ")
-                if self.current_device != -1:
-                    self.current_device = -1
-                    # self._ensure_model_on_cpu()
-                self.device = -1
-            except Exception as e:
-                logger.info("Failed on CPU with error: " + repr(e))
-                raise e
-        curr_model = Model.load(self.model_uri).flavors
-        aml_args = {
-            "model_hf_load_kwargs": curr_model.get("model_hf_load_kwargs", {})
-        }
-        if self.device == constants.DEVICE.AUTO:
-            aml_args["model_hf_load_kwargs"]["device_map"] = constants.DEVICE.AUTO
-        else:
-            aml_args["model_hf_load_kwargs"]["device_map"] = "eval_na"
-
-        self.model = aml_mlflow.aml.load_model(self.model_uri, constants.MLFLOW_MODEL_TYPE_MAP[self.task], **aml_args)
-
     def _validate_schema(self, X_test):
         with log_activity(logger, constants.TelemetryConstants.LOAD_MODEL,
                           custom_dimensions=custom_dims_dict):
             try:
-                self.handle_device_failure()  # Handling device failure
+                self.handle_device_failure(X_test)  # Handling device failure
                 predictor_cls = get_predictor(self.task)
                 predictor = predictor_cls(self.model_uri, self.task, self.device)
                 logger.info(f"model loaded, Device: {getattr(predictor.model, 'device', 'not present')}")
@@ -216,7 +161,6 @@ class EvaluateModel:
             self.config.update(
                 {
                     "log_activity": log_activity,
-                    # "log_traceback": log_traceback,
                     "custom_dimensions": custom_dims_dict,
                     "output": self.output,
                     "device": self.device,
@@ -229,7 +173,6 @@ class EvaluateModel:
             )
             result = None
             try:
-                # print(self.config)
                 try:
                     dataset_name = test_run.experiment.name
                 except Exception:
@@ -246,7 +189,7 @@ class EvaluateModel:
                     evaluator_config={"azureml": self.config},
                 )
             except RuntimeError:
-                self.handle_device_failure()
+                self.handle_device_failure(X_test)
 
             except Exception as e:
                 message = f"mlflow.evaluate failed with {repr(e)}"
@@ -292,7 +235,7 @@ def run():
     # Outputs
     parser.add_argument("--output", type=str, dest="output")
 
-    args, unknown_args_ = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
 
     with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME,
                       custom_dimensions=custom_dims_dict):

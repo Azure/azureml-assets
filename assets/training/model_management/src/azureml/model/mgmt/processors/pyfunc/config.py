@@ -25,3 +25,6 @@ class SupportedTasks(_CustomEnum):
 
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
+
+    # LLaVA task
+    IMAGE_TEXT_TO_TEXT = "image-text-to-text"
