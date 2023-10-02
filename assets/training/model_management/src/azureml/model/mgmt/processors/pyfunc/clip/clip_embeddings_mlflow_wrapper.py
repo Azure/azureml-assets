@@ -73,7 +73,7 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns "image_features" and/or "text_features"
         """
-        
+
         has_images, has_text = self.validate_input(input_data)
 
         if has_images:
@@ -110,7 +110,6 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         if text_features is not None:
             df_result[MLflowSchemaLiterals.OUTPUT_TEXT_FEATURES] = text_features.tolist()
         return df_result
-
 
     def run_inference_batch(
         self,
@@ -150,7 +149,6 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             text_features = None
 
         return image_features, text_features
-    
 
     def validate_input(self, input_data):
         """Validate input and raise exception if input is invalid
@@ -170,20 +168,24 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             input_data[MLflowSchemaLiterals.INPUT_COLUMN_TEXT] = ""
 
         error_string = """Embeddings cannot be retrieved for the given input. The following cases are supported:
-        - all rows in image column are populated with public urls or base64 encoded images and text column only contains empty string,
+        - all rows in image column are populated with public urls or base64 encoded images and
+          text column only contains empty string,
         - all rows in text column are populated with strings and image column only contains empty string,
         - all rows in both columns are populated with valid values"""
         # Validate Input
         input_data_all = input_data.all()
         input_data_any = input_data.any()
 
-        if input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE] and not input_data_all[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]:
+        if input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE] and \
+            not input_data_all[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]:
             raise ValueError(error_string)
 
-        if input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_TEXT] and not input_data_all[MLflowSchemaLiterals.INPUT_COLUMN_TEXT]:
+        if input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_TEXT] and \
+            not input_data_all[MLflowSchemaLiterals.INPUT_COLUMN_TEXT]:
             raise ValueError(error_string)
 
-        if not input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_TEXT] and not input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]:
+        if not input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_TEXT] and \
+            not input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]:
             raise ValueError(error_string)
 
         has_images = input_data_all[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
