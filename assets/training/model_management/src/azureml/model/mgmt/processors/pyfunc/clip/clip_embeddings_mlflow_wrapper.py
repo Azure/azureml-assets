@@ -67,11 +67,11 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :type input_data: Pandas DataFrame with a first column name ["image"] of images where each
         image is in base64 String format, and second column name ["text"] containing a string. The following cases
         are supported:
-        - all rows in image column are populated with valid values and text column only contains empty string/null,
-        - all rows in text column are populated with valid values and image column only contains empty string/null,
+        - all rows in image column are populated with valid values and text column only contains empty string,
+        - all rows in text column are populated with valid values and image column only contains empty string,
         - all rows in both columns are populated with valid values
         :return: Output of inferencing
-        :rtype: Pandas DataFrame with columns ["image_features", "text_features"]
+        :rtype: Pandas DataFrame with columns "image_features" and/or "text_features"
         """
         
         has_images, has_text = self.validate_input(input_data)
@@ -83,7 +83,7 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             ].apply(axis=1, func=process_image_pandas_series)
 
         if has_text:
-            text_list = input_data['text'].tolist()
+            text_list = input_data[MLflowSchemaLiterals.INPUT_COLUMN_TEXT].tolist()
         else:
             text_list = None
 
@@ -101,15 +101,9 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
                 model=self._model,
                 image_path_list=image_path_list,
                 text_list=text_list,
-                task_type=self._task_type
             )
 
-        df_result = pd.DataFrame(
-            columns=[
-                MLflowSchemaLiterals.OUTPUT_IMAGE_FEATURES,
-                MLflowSchemaLiterals.OUTPUT_TEXT_FEATURES,
-            ]
-        )
+        df_result = pd.DataFrame()
 
         if image_features is not None:
             df_result[MLflowSchemaLiterals.OUTPUT_IMAGE_FEATURES] = image_features.tolist()
@@ -124,21 +118,20 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         model,
         image_path_list: List,
         text_list: List,
-        task_type: Tasks,
     ) -> Tuple[torch.tensor]:
         """Perform inference on batch of input images.
         :param test_args: Training arguments path.
         :type test_args: transformers.TrainingArguments
-        :param image_processor: Preprocessing configuration loader.
-        :type image_processor: transformers.AutoImageProcessor
+        :param processor: Preprocessing configuration loader.
+        :type processor: transformers.AutoProcessor
         :param model: Pytorch model weights.
         :type model: transformers.AutoModelForZeroShotImageClassification
         :param image_path_list: list of image paths for inferencing.
-        :type image_path_list: List
-        :param task_type: Task type of the model.
-        :type task_type: Tasks
+        :type image_path_list: List[str]
+        :param text_list: list of text strings for inferencing
+        :type text_list: List[str]
         :return: image features and text features
-        :rtype: either torch.tensor of size (#inputs, 512) or None
+        :rtype: each return is either torch.tensor of size (#inputs, 512) or None
         """
 
         if image_path_list:

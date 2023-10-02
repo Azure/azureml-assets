@@ -220,6 +220,7 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
             ]
         )
 
+        output_schema = None
         if self._task == SupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value:
             output_schema = Schema(
                 [
@@ -227,15 +228,6 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
                             CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_PROBS),
                     ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
                             CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_LABELS),
-                ]
-            )
-        else:  # task is IMAGE_TEXT_EMBEDDINGS
-            output_schema = Schema(
-                [
-                    ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
-                            CLIPMLFlowSchemaLiterals.OUTPUT_IMAGE_FEATURES),
-                    ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
-                            CLIPMLFlowSchemaLiterals.OUTPUT_TEXT_FEATURES),
                 ]
             )
 
