@@ -348,7 +348,7 @@ if __name__ == '__main__':
         type=str,
         required=False,
         dest='llm_config',
-        default='{"type": "open_ai", "model_name": "gpt-3.5-turbo", '
+        default='{"type": "azure_open_ai", "model_name": "gpt-35-turbo", '
         + '"deployment_name": "gpt-35-turbo", "temperature": 0, "max_tokens": 2000}')
     parser.add_argument(
         "--embedding_connection",
