@@ -291,7 +291,7 @@ def get_workspace_and_run() -> Tuple[Workspace, Run]:
 
 def is_default_connection(connection) -> bool:
     """Check if connection retrieved is a default AOAI connection."""
-    return connection.get("name", None) == "Default_AzureOpenAI"
+    return connection.name == "Default_AzureOpenAI"
 
 
 def validate_aoai_deployments(parser_args, check_completion, check_embeddings, activity_logger: Logger):
@@ -321,9 +321,8 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
             print(
                 f"Completion model name: {completion_params['model_name']}")
             completion_params["openai_api_key"] = credential.key
-            completion_params["openai_api_base"] = connection['properties'].get('target', {
-            })
-            connection_metadata = connection['properties'].get('metadata', {})
+            completion_params["openai_api_base"] = connection.target
+            connection_metadata = connection.metadata
             completion_params["openai_api_type"] = connection_metadata.get(
                 'apiType',
                 connection_metadata.get('ApiType', "azure"))
@@ -375,9 +374,8 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
             print(
                 f"Embedding model name: {embedding_params['model_name']}")
             embedding_params["openai_api_key"] = credential.key
-            embedding_params["openai_api_base"] = connection['properties'].get('target', {
-            })
-            connection_metadata = connection['properties'].get('metadata', {})
+            embedding_params["openai_api_base"] = connection.target
+            connection_metadata = connection.metadata
             embedding_params["openai_api_type"] = connection_metadata.get(
                 'apiType',
                 connection_metadata.get('ApiType', "azure"))
