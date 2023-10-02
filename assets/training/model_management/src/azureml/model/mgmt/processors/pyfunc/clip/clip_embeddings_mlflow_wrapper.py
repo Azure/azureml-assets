@@ -28,7 +28,8 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         self,
         task_type: str,
     ) -> None:
-        """Constructor for MLflow wrapper class
+        """Construct MLflow wrapper class.
+
         :param task_type: Task type used in training.
         :type task_type: str
         """
@@ -40,6 +41,7 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """
         Load a MLflow model with pyfunc.load_model().
+
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
@@ -61,6 +63,7 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
         """Perform inference on the input data.
+
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         :param input_data: Input images and text for feature embeddings.
@@ -73,7 +76,6 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns "image_features" and/or "text_features"
         """
-
         has_images, has_text = self.validate_input(input_data)
 
         if has_images:
@@ -119,6 +121,7 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         text_list: List,
     ) -> Tuple[torch.tensor]:
         """Perform inference on batch of input images.
+
         :param test_args: Training arguments path.
         :type test_args: transformers.TrainingArguments
         :param processor: Preprocessing configuration loader.
@@ -132,7 +135,6 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :return: image features and text features
         :rtype: each return is either torch.tensor of size (#inputs, 512) or None
         """
-
         if image_path_list:
             image_list = [Image.open(img_path) for img_path in image_path_list]
             inputs = processor(text=None, images=image_list, return_tensors="pt", padding=True)
@@ -151,12 +153,11 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         return image_features, text_features
 
     def validate_input(self, input_data):
-        """Validate input and raise exception if input is invalid
+        """Validate input and raise exception if input is invalid.
 
         :param input_data: input to validate
         :type input_data: pandas.DataFrame
         """
-
         # Handle case where entire column is NaN, because batch inference
         # will read in empty column from CSV as NaN
         if input_data[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE].isna().all():
