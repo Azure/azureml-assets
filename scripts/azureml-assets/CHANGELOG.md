@@ -5,7 +5,7 @@
 
 ## 1.16.6 (2023-10-02)
 ### 🚀 New Features
-- [#1341](https://github.com/Azure/azureml-assets/pull/1341) Prevent nested directory creation during model upload
+- [#1357](https://github.com/Azure/azureml-assets/pull/1357) Fix validate_assets arg
 
 ## 1.16.5 (2023-09-29)
 ### 🚀 New Features
