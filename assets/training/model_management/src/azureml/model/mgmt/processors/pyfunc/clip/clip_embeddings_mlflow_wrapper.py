@@ -177,15 +177,15 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         input_data_any = input_data.any()
 
         if input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE] and \
-            not input_data_all[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]:
+                not input_data_all[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]:
             raise ValueError(error_string)
 
         if input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_TEXT] and \
-            not input_data_all[MLflowSchemaLiterals.INPUT_COLUMN_TEXT]:
+                not input_data_all[MLflowSchemaLiterals.INPUT_COLUMN_TEXT]:
             raise ValueError(error_string)
 
         if not input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_TEXT] and \
-            not input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]:
+                not input_data_any[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]:
             raise ValueError(error_string)
 
         has_images = input_data_all[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
