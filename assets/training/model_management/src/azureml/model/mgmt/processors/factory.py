@@ -54,7 +54,7 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             return ASRMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params)
         # Models from Hugging face framework exported in PyFunc mlflow flavor
         elif task == PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value or \
-            task == PyFuncSupportedTasks.IMAGE_TEXT_EMBEDDINGS.value:
+                task == PyFuncSupportedTasks.IMAGE_TEXT_EMBEDDINGS.value:
             return CLIPMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )

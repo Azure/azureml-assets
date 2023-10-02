@@ -245,7 +245,6 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
             mlflow_model_wrapper = CLIPEmbeddingsMLFlowModelWrapper(task_type=self._task)
             mlflow_model_wrapper_path = os.path.join(self.MODEL_DIR, "clip_embeddings_mlflow_wrapper.py")
 
-
         artifacts_dict = self._prepare_artifacts_dict()
         conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
         code_path = [
