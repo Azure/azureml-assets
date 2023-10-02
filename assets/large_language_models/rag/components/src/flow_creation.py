@@ -36,7 +36,7 @@ WORKSPACE_SCOPE = os.environ.get("AZUREML_WORKSPACE_SCOPE", "")
 RUN_TOKEN = os.environ.get("AZUREML_RUN_TOKEN", "")
 CODE_DIR = "rag_code_flow"
 _CITATION_TEMPLATE = r'\nPlease add citation after each sentence when possible in a form \"(Source: citation)\".'
-_USER_INPUT = r'{{contexts}} \n Human: {{question}} \nAI:'
+_USER_INPUT = r'{{contexts}} \n user: {{question}} \nassistant:'
 _CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ item.inputs.question }} ' + \
     r'\nassistant: \n{{ item.outputs.output }} \n{% endfor %}'
 _STATIC_METRIC_PRIORITY_LIST = ["gpt_similarity", "gpt_relevance", "bert_f1"]
