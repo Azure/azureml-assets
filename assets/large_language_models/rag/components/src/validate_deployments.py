@@ -337,7 +337,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                 activity_logger.info(
                     "[Validate Deployments]: Completion model using Default AOAI connection, parsing ResourceId")
                 cog_workspace_details = split_details(
-                    connection["properties"]["metadata"]["ResourceId"], start=1)
+                    connection_metadata["ResourceId"], start=1)
                 completion_params["default_aoai_name"] = cog_workspace_details["accounts"]
         if completion_params == {}:
             activity_logger.info(
@@ -387,7 +387,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                 activity_logger.info(
                     "[Validate Deployments]: Completion model using Default AOAI connection, parsing ResourceId")
                 cog_workspace_details = split_details(
-                    connection["properties"]["metadata"]["ResourceId"], start=1)
+                    connection_metadata["ResourceId"], start=1)
                 embedding_params["default_aoai_name"] = cog_workspace_details["accounts"]
             print("Using workspace connection key for OpenAI embeddings")
         if embedding_params == {}:
