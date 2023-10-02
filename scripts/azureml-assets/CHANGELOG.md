@@ -4,11 +4,11 @@
 ### 🐛 Bugs Fixed
 
 ## 1.16.6 (2023-10-02)
-### 🚀 New Features
+### 🐛 Bugs Fixed
 - [#1357](https://github.com/Azure/azureml-assets/pull/1357) Fix validate_assets arg
 
 ## 1.16.5 (2023-09-29)
-### 🚀 New Features
+### 🐛 Bugs Fixed
 - [#1341](https://github.com/Azure/azureml-assets/pull/1341) Prevent nested directory creation during model upload
 
 ## 1.16.4 (2023-09-27)
