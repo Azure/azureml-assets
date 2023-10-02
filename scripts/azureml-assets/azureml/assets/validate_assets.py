@@ -396,7 +396,8 @@ def validate_assets(input_dirs: List[Path],
             # Validate Dockerfile
             if asset_config.type == assets.AssetType.ENVIRONMENT:
                 error_count += validate_dockerfile(asset_config.extra_config_as_object())
-                error_count += validate_build_context(asset_config.extra_config_as_object())
+                if check_build_context:
+                    error_count += validate_build_context(asset_config.extra_config_as_object())
 
             # Validate categories
             if check_categories:
