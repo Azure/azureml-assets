@@ -143,6 +143,7 @@ class OnlineEndpoint:
 
     def _get_resource_state(self, resp: Response) -> ResourceState:
         """Get the resource state."""
+        LOGGER.info(f"Get resource state from response: {resp.status_code}")
         if resp.status_code == 200:
             return ResourceState.SUCCESS
         elif resp.status_code == 404:

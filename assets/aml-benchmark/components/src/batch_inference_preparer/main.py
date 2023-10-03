@@ -65,6 +65,9 @@ def deploy_model_maybe(online_endpoint: OnlineEndpoint, output_metadata_dir: str
     """Deploy the model if it is not deployed."""
     managed_endpoint = False
     managed_deployment = False
+    logger.info(
+        f'input endpoint state: {online_endpoint.endpoint_state()}, '
+        f'deployment state: {online_endpoint.deployment_state()}')
     if online_endpoint.endpoint_state() == ResourceState.FAILURE:
         logger.info("Endpoint is in failure state, delete it now.")
         online_endpoint.delete_endpoint()
@@ -81,7 +84,7 @@ def deploy_model_maybe(online_endpoint: OnlineEndpoint, output_metadata_dir: str
         managed_deployment = True
     EndpointUtilities.dump_endpoint_metadata_json(
         online_endpoint, managed_endpoint, managed_deployment, output_metadata_dir)
-    print("Endpoint is ready/checked now.")
+    logger.info("Endpoint is ready/checked now.")
 
 
 @swallow_all_exceptions(logger)

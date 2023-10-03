@@ -63,14 +63,18 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         """Get the deployment name."""
         return self._online_endpoint_url.split('/')[5]
 
-    def endpoint_exists(self) -> ResourceState:
+    def endpoint_state(self) -> ResourceState:
         """Check if the endpoint exists."""
         resp = self._call_endpoint(get_requests_session().get, self._aoai_account_url)
+        logger.info("Calling {} returned {} with content {}.".format(
+            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
         return self._get_resource_state(resp)
 
-    def deployment_exists(self) -> ResourceState:
+    def deployment_state(self) -> ResourceState:
         """Check if the deployment exists."""
         resp = self._call_endpoint(get_requests_session().get, self._aoai_deployment_url)
+        logger.info("Calling {} returned {} with content {}.".format(
+            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
         return self._get_resource_state(resp)
 
     def create_endpoint(self):
