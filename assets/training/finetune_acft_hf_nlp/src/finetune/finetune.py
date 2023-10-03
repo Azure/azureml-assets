@@ -2,13 +2,14 @@
 # Licensed under the MIT License.
 
 """File containing function for finetune component."""
-
+import os
 import json
 import logging
 import argparse
 from pathlib import Path
 from argparse import Namespace
 from copy import deepcopy
+from typing import Dict, Any
 
 import torch
 
@@ -444,11 +445,9 @@ def copy_preprocess_args(args: Namespace) -> Namespace:
     return args
 
 
-def identify_deepspeed_stage(deepspeed_config: str) -> int:
+def identify_deepspeed_stage(deepspeed_config_json: Dict[str, Any]) -> int:
     """Read the deepspeed stage from the deepspeed config."""
-    with open(deepspeed_config, "r", encoding="utf-8") as fp:
-        ds_config_json = json.load(fp)
-    zero_optimization_config = ds_config_json.get("zero_optimization", {})
+    zero_optimization_config = deepspeed_config_json.get("zero_optimization", {})
 
     ds_stage = zero_optimization_config.get("stage", None)
     if not isinstance(ds_stage, int):
@@ -460,6 +459,8 @@ def identify_deepspeed_stage(deepspeed_config: str) -> int:
                     )
                 )
             )
+
+    logger.info(f"Identified deepspeed stage: {ds_stage}.")
 
     return ds_stage
 
@@ -518,15 +519,13 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
                     setattr(args, key, value)
 
 
-def validate_ds_zero3_config(deepspeed_config: str):
+def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
     """Validate the deepspeed zero3 config file.
 
     :param deepspeed_config: path to the deepspeed config file
     :type str
     """
-    with open(deepspeed_config, "r", encoding="utf-8") as fp:
-        ds_config_json = json.load(fp)
-    zero_optimization_config = ds_config_json.get("zero_optimization", {})
+    zero_optimization_config = deepspeed_config_json.get("zero_optimization", {})
 
     if not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
         raise ACFTValidationException._with_error(
@@ -548,14 +547,24 @@ def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
     :param do_validate: Validates the deepspeed config file in case of deepspeed stage3
     :type bool
     """
+    logger.info("Setting up deespeed.")
     # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
     args.deepspeed = getattr(args, "deepspeed", None) or DEFAULT_DEEPSPEED_CONFIG
+    if args.deepspeed is None:
+        logger.info("Deepspeed is not enabled. Nothing to setup!")
+        return
+
+    # load deepspeed config
+    with open(args.deepspeed, "r", encoding="utf-8") as fp:
+        ds_config_json = json.load(fp)
 
     # add validations for deepspeed stage3
-    if do_validate and identify_deepspeed_stage(args.deepspeed) == 3:
+    if do_validate and identify_deepspeed_stage(ds_config_json) == 3:
         # validate the ds config file
-        validate_ds_zero3_config(args.deepspeed)
+        logger.info("Validating deepspeed config.")
+        validate_ds_zero3_config(ds_config_json)
         # check for invalid settings
+        logger.info("Checking for invalid deepspeed configurations.")
         check_for_invalid_ds_zero3_settings(args)
 
 
