@@ -47,7 +47,7 @@ DEFAULT_DEEPSPEED_CONFIG = "zero2.json"
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
-MIXFORMER_SEQUENTIAL = "mixformer-sequential" # Phi models
+MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
