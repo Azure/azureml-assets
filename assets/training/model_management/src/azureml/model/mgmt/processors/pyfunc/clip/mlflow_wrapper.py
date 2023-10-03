@@ -11,8 +11,14 @@ import tempfile
 
 from transformers import AutoProcessor, AutoModelForZeroShotImageClassification
 from config import MLflowSchemaLiterals, MLflowLiterals, Tasks
-from utils import create_temp_file, process_image, get_current_device
 from typing import List, Tuple
+
+try:
+    # Use try/except since vision_utils is added as part of model export and not available when initializing
+    # model wrapper for save_model().
+    from vision_utils import create_temp_file, process_image_pandas_series, get_current_device
+except ImportError:
+    pass
 
 
 class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
@@ -70,7 +76,7 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         # Decode the base64 image column
         decoded_images = input_data.loc[
             :, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
-        ].apply(axis=1, func=process_image)
+        ].apply(axis=1, func=process_image_pandas_series)
 
         try:
             # parse comma separated labels and remove leading and trailing whitespace
@@ -90,7 +96,7 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         with tempfile.TemporaryDirectory() as tmp_output_dir:
             image_path_list = (
                 decoded_images.iloc[:, 0]
-                .map(lambda row: create_temp_file(row, tmp_output_dir))
+                .map(lambda row: create_temp_file(row, tmp_output_dir)[0])
                 .tolist()
             )
             conf_scores = self.run_inference_batch(

@@ -27,10 +27,19 @@ def evaluate_metrics_threshold(
     is_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(
         metrics_to_evaluate_df.threshold_value.isNull()
     )
+
+    is_nan_metrics_threshold_df = is_nan_metrics_threshold_df.filter(
+        is_nan_metrics_threshold_df.metric_value.isNull()
+    )
+
     metrics_without_threshold_count = is_nan_metrics_threshold_df.count()
 
     is_not_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(
         metrics_to_evaluate_df.threshold_value.isNotNull()
+    )
+
+    is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
+        is_not_nan_metrics_threshold_df.metric_value.isNotNull()
     )
 
     is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.where(

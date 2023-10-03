@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_generation_pipeline
-version: 0.0.18
+version: 0.0.19
 type: pipeline
 display_name: Text Generation Pipeline
 description: Pipeline component for text generation
@@ -69,6 +69,14 @@ inputs:
       Proper model/huggingface id must be passed.
 
   # Preprocessing parameters
+  task_name:
+    type: string
+    optional: false
+    enum:
+      - TextGeneration
+    default: TextGeneration
+    description: TextGeneration task type
+
   text_key:
     type: string
     optional: false
@@ -496,14 +504,18 @@ outputs:
 jobs:
   ft_nlp_common_validation:
     type: command
-    component: azureml:ft_nlp_common_validation:0.0.18
+    component: azureml:ft_nlp_common_validation:0.0.19
     compute: '${{parent.inputs.compute_model_import}}'
     inputs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
       compute_finetune: '${{parent.inputs.compute_finetune}}'
+      compute_model_import: '${{parent.inputs.compute_model_import}}'
+      compute_data_preprocess: '${{parent.inputs.compute_preprocess}}'
+      task_name: '${{parent.inputs.task_name}}'
+      number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
   text_generation_model_import:
     type: command
-    component: azureml:text_generation_model_import:0.0.18
+    component: azureml:text_generation_model_import:0.0.19
     compute: '${{parent.inputs.compute_model_import}}'
     inputs:
       huggingface_id: '${{parent.inputs.huggingface_id}}'
@@ -512,7 +524,7 @@ jobs:
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
   text_generation_datapreprocess:
     type: command
-    component: azureml:text_generation_datapreprocess:0.0.18
+    component: azureml:text_generation_datapreprocess:0.0.19
     compute: '${{parent.inputs.compute_preprocess}}'
     inputs:
       text_key: '${{parent.inputs.text_key}}'
@@ -529,7 +541,7 @@ jobs:
       model_selector_output: '${{parent.jobs.text_generation_model_import.outputs.output_dir}}'
   text_generation_finetune:
     type: command
-    component: azureml:text_generation_finetune:0.0.18
+    component: azureml:text_generation_finetune:0.0.19
     compute: '${{parent.inputs.compute_finetune}}'
     distribution:
       type: pytorch

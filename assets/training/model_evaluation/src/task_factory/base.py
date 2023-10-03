@@ -119,12 +119,13 @@ class BasePredictor(ABC):
             except Exception as e:
                 logger.info("Failed on GPU with error: " + repr(e))
         if self.device != -1:
-            logger.warning("Predict failed on GPU. Falling back to CPU")
+            logger.warning("Running predictions on CPU")
+            if self.current_device != -1:
+                self.current_device = -1
+                self._ensure_model_on_cpu()
+            self.model = load_model(self.model_uri, self.device, self.task_type)
             try:
                 logger.info("Loading model and prediction with cuda current device. Trying CPU ")
-                if self.current_device != -1:
-                    self.current_device = -1
-                    self._ensure_model_on_cpu()
                 kwargs["device"] = -1
                 return self.model.predict(X_test, **kwargs)
             except TypeError:
@@ -171,5 +172,15 @@ class ForecastWrapper(BasePredictor):
         Args:
             X_test (_type_): _description_
             y_context (_type_): _description_
+        """
+        pass
+
+    @abstractmethod
+    def rolling_forecast(self, X_test, step=1):
+        """Abstract forecast.
+
+        Args:
+            X_test (_type_): _description_
+            step (_type_): _description_
         """
         pass
