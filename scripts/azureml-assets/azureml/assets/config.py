@@ -556,7 +556,7 @@ class ModelConfig(Config):
         if path and path.get('type'):
             path_type = path.get('type')
             if path_type == PathType.AZUREBLOB.value:
-                self._path = AzureBlobstoreAssetPath(     # TODO this need to change?????
+                self._path = AzureBlobstoreAssetPath(
                     storage_name=path['storage_name'],
                     container_name=path['container_name'],
                     container_path=path['container_path'],
