@@ -20,6 +20,9 @@ from azure.ai.ml.entities import (
     ProbeSettings,
 )
 
+from azureml._common._error_definition.azureml_error import AzureMLError
+from utils.error_definitions import BenchmarkValidationError
+from utils.exceptions import BenchmarkValidationException
 from .online_endpoint import OnlineEndpoint, ResourceState
 from .online_endpoint_model import OnlineEndpointModel
 
@@ -151,14 +154,12 @@ class OSSOnlineEndpoint(OnlineEndpoint):
 
     def _get_endpoint_authorization_header_identity(self) -> dict:
         """Get the authorization header using managed identity."""
-        self._build_auth_headers(self.ml_client.online_endpoints.get_keys(self.endpoint_name).primary_key)
+        return self._build_auth_headers(self.ml_client.online_endpoints.get_keys(self.endpoint_name).primary_key)
 
     def _get_endpoint_authorization_header_token(self) -> dict:
         """Get the authorization header using workspace authorization token."""
         resp = self._call_endpoint(get_requests_session().post, self._endpoint_list_key_url)
-        if resp.status_code != 200:
-            raise RuntimeError(
-                f'Failed to get endpoint keys. {resp.text}')
+        self._raise_if_not_success(resp)
         content_dict = self._get_content_from_response(resp)
         self._build_auth_headers(content_dict['primaryKey'])
     
@@ -169,9 +170,12 @@ class OSSOnlineEndpoint(OnlineEndpoint):
         try:
             self.ml_client.begin_create_or_update(resource).wait()
         except Exception as err:
-            raise RuntimeError(
-                f"Deployment creation failed. Detailed Response:\n{err}"
-            ) from err
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(
+                    BenchmarkValidationError,
+                    error_details=f"Deployment creation failed. Detailed Response:\n{err}."
+                                   " Please fix the issue and try to submit the job again.")
+                )
 
     def _get_deployment_state_identity(self) -> ResourceState:
         return self._get_status_identity("deployment")
@@ -190,6 +194,10 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             while curr_state in ["creating", "updating", 'deleting', 'provisioning']:
                 if resource_name == "endpoint":
                     resource = self.ml_client.online_endpoints.get(self.endpoint_name)
+                    default_deployment_name = self._get_default_deployment_identity(resource)
+                    if self._generated_deployment_name and default_deployment_name:
+                        self._deployment_name = default_deployment_name
+                        self._generated_deployment_name = False
                 else:
                     resource = self.ml_client.online_deployments.get(
                         endpoint_name=self.endpoint_name, name=self.deployment_name)
@@ -216,9 +224,16 @@ class OSSOnlineEndpoint(OnlineEndpoint):
                 self._online_endpoint_url = content_dict['endpoint']
             if content_dict['state'].lower() == "succeeded" and self.deployment_name in content_dict['trafficRules']:
                 return ResourceState.SUCCESS
-        raise RuntimeError(
-            'Endpoint {} does not exist. To use auto-deploy, please assign managed identity to the compute.'.format(
-                self.endpoint_name))
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(
+                BenchmarkValidationError,
+                error_details='Endpoint {} does not exist. To use auto-deploy, '
+                              'please assign managed identity to the compute.'.format(self.endpoint_name))
+            )
+
+    def _get_default_deployment_identity(self, endpoint: ManagedOnlineDeployment) -> str:
+        """Get the default deployment name using managed identity."""
+        return sorted(endpoint.traffic.items(), key=lambda x: -x[1])[0][0]
 
     @property        
     def _endpoint_url(self) -> str:

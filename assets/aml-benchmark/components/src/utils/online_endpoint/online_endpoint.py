@@ -14,6 +14,9 @@ from requests.models import Response
 from azureml.core import Run, Workspace
 from azure.identity import ManagedIdentityCredential
 from azureml._restclient.clientbase import ClientBase
+from azureml._common._error_definition.azureml_error import AzureMLError
+from utils.error_definitions import BenchmarkValidationError
+from utils.exceptions import BenchmarkValidationException
 from .online_endpoint_model import OnlineEndpointModel
 
 from ..logging import get_logger
@@ -57,12 +60,14 @@ class OnlineEndpoint:
         self._model = online_endpoint_model
         self._endpoint_name = endpoint_name
         self._deployment_name = deployment_name
+        self._generated_deployment_name = False
         if self._get_client_id() is None:
             LOGGER.info("Client id is not provided.")
             self._credential = None
         else:
             self._credential = self.get_credential()
         self._curr_worspace = None
+        self._managed_identity_required = False
 
     @property
     def endpoint_name(self) -> str:
@@ -82,6 +87,7 @@ class OnlineEndpoint:
         if self._deployment_name is None:
             if self._online_endpoint_url is None or self._model.is_oss_model():
                 self._deployment_name = ("b-" + str(uuid.uuid4().hex))[:16]
+                self._generated_deployment_name = True
                 LOGGER.info(f"Deployment name is not provided, use a random one. {self._deployment_name}")
             else:
                 self._deployment_name = self.get_deployment_name_from_url()
@@ -235,3 +241,26 @@ class OnlineEndpoint:
     def delete_deployment(self):
         """Delete the deployment."""
         pass
+
+    def _raise_if_not_success(self, resp: Response) -> None:
+        """Raise error if not success."""
+        if resp.status_code not in (200, 201, 202):
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(
+                    BenchmarkValidationError,
+                    error_details=f'Failed to get endpoint keys. {resp.text}\n '
+                                   'If you want to use managed deployment, please use compute with managed identity.')
+                )
+
+    def _validate_settings(self) -> None:
+        """Validate the settings."""
+        if self._managed_identity_required:
+            self._validate_managed_identity()
+
+    def _validate_managed_identity(self) -> None:
+        if self._credential is None:
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(
+                    BenchmarkValidationError,
+                    error_details='Managed identity is required for this scenario.')
+                )

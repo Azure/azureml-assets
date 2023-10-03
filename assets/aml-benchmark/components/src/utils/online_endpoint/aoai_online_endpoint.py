@@ -10,6 +10,9 @@ from azureml._model_management._util import get_requests_session
 
 from .online_endpoint import OnlineEndpoint, ResourceState
 from .online_endpoint_model import OnlineEndpointModel
+from azureml._common._error_definition.azureml_error import AzureMLError
+from utils.error_definitions import BenchmarkValidationError
+from utils.exceptions import BenchmarkValidationException
 
 
 class AOAIOnlineEndpoint(OnlineEndpoint):
@@ -41,6 +44,8 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         )
         self._api_version = api_version
         self._location = location
+        self._managed_identity_required = True
+        self._validate_settings()
 
     @property
     def scoring_url(self) -> str:
@@ -130,11 +135,6 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def sku(self) -> str:
         """Get the sku."""
         return int(self._sku) if self._sku else 120
-        
-    def _raise_if_not_success(self, resp: Response) -> None:
-        """Raise error if not success."""
-        if resp.status_code not in (200, 201, 202):
-            raise RuntimeError(f'Failed to create endpoint. {resp.text}')
 
     @property
     def _aoai_base_url(self) -> str:

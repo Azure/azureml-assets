@@ -28,7 +28,7 @@ class ResultConverters:
         self._lookup_dict = {}
         self._fallback_value = fallback_value
         if ground_truth_df is not None and self._is_aoai_model():
-            print("receive ground truth columsns{}".format(ground_truth_df.columns))
+            print("receive ground truth columns {}".format(ground_truth_df.columns))
             for index, row in ground_truth_df.iterrows():
                 self._lookup_dict[row[self._data_id_key]] = row[self._label_key]
 

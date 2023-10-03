@@ -336,7 +336,7 @@ def setup_scoring_client() -> ScoringClient:
         headers.update(json.loads(input_additional_headers))
         
     header_handler = setup_header_handler(
-        token_provider=token_provider, model_type=args.model_type, input_metadata=input_metadata, input_headers=headers)
+        token_provider=token_provider, model_type=args.model_type, input_metadata=input_metadata, input_headers=json.dumps(headers))
 
     scoring_client = ScoringClient(
         header_handler=header_handler,
@@ -349,12 +349,13 @@ def setup_scoring_client() -> ScoringClient:
     return scoring_client
 
 
-def setup_header_handler(token_provider: TokenProvider, model_type: str, input_metadata: dict, input_headers: dict) -> HeaderHandler:
+def setup_header_handler(token_provider: TokenProvider, model_type: str, input_metadata: dict, input_headers: str) -> HeaderHandler:
     """Add header handler."""
     endpoint_workspace = input_metadata.get("workspace_name", args.endpoint_workspace)
     endpoint_resource_group = input_metadata.get("resource_group", args.endpoint_resource_group)
     endpoint_subscription_id = input_metadata.get("subscription_id", args.endpoint_subscription_id)
     endpoint_name = input_metadata.get("endpoint_name", args.online_endpoint_url.split('/')[2].split('.')[0])
+    deployment_name = input_metadata.get("deployment_name")
 
     model = OnlineEndpointModel(model=None, model_version=None, model_type=model_type)
     if model.is_aoai_model():
@@ -365,7 +366,8 @@ def setup_header_handler(token_provider: TokenProvider, model_type: str, input_m
             additional_headers=input_headers,
             endpoint_name=endpoint_name,
             endpoint_subscription=endpoint_subscription_id,
-            endpoint_resource_group=endpoint_resource_group
+            endpoint_resource_group=endpoint_resource_group,
+            deployment_name=deployment_name
         )
     return OSSHeaderHandler(
         token_provider=token_provider, user_agent_segment=args.user_agent_segment,
@@ -375,5 +377,6 @@ def setup_header_handler(token_provider: TokenProvider, model_type: str, input_m
         endpoint_name=endpoint_name,
         endpoint_subscription=endpoint_subscription_id,
         endpoint_resource_group=endpoint_resource_group,
-        endpoint_workspace=endpoint_workspace
+        endpoint_workspace=endpoint_workspace,
+        deployment_name=deployment_name
     )
