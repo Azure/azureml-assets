@@ -13,7 +13,7 @@ import os
 import pandas as pd
 from diffusers import StableDiffusionInpaintPipeline
 from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants, DatatypeLiterals
-from vision_utils import get_pil_image, process_image, get_current_device, image_to_base64, save_image
+from vision_utils import get_pil_image, process_image, get_current_device, image_to_base64
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,6 @@ class StableDiffusionInpaintingMLflowWrapper(mlflow.pyfunc.PythonModel):
         except Exception as e:
             logger.error(f"Failed while running inference. {str(e)}")
             raise
-
 
         for img in outputs.images:
             generated_images.append(image_to_base64(img, format=DatatypeLiterals.IMAGE_FORMAT))
