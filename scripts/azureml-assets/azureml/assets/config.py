@@ -11,8 +11,11 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from packaging import version
 from typing import Dict, List, Set, Tuple, Union
-from azure.ai.ml._azure_environments import _get_storage_endpoint_from_metadata
-
+from azure.ai.ml._azure_environments import (
+    AzureEnvironments,
+    _get_default_cloud_name,
+    _get_storage_endpoint_from_metadata
+)
 
 class ValidationException(Exception):
     """Validation errors."""
@@ -448,6 +451,8 @@ class LocalAssetPath(AssetPath):
 class AzureBlobstoreAssetPath(AssetPath):
     """Azure Blobstore asset path."""
 
+    DEFAULT_BLOBSTORE_URI = "https://{}.blob.core.windows.net/{}/{}"
+
     def __init__(self, storage_name: str, container_name: str, container_path: str):
         """Create a Blobstore path.
 
@@ -462,7 +467,15 @@ class AzureBlobstoreAssetPath(AssetPath):
         self._container_name = container_name
         self._container_path = container_path
 
-        uri = f"https://{storage_name}.blob.{_get_storage_endpoint_from_metadata()}/{container_name}/{container_path}"
+        # AzureCloud, USGov, and China clouds should all pull from the same endpoint
+        # associated with AzureCloud.If the cloud is not one of these, then the
+        # endpoint will be dynamically acquired based on the currently configured
+        # cloud.
+        if _get_default_cloud_name() in [AzureEnvironments.ENV_DEFAULT, AzureEnvironments.ENV_US_GOVERNMENT, AzureEnvironments.ENV_CHINA]:
+            uri = AzureBlobstoreAssetPath.DEFAULT_BLOBSTORE_URI.format(storage_name, container_name, container_path)
+        else:
+            uri = f"https://{storage_name}.blob.{_get_storage_endpoint_from_metadata()}/{container_name}/{container_path}"
+
         super().__init__(PathType.AZUREBLOB, uri)
 
 
@@ -533,7 +546,7 @@ class ModelConfig(Config):
         if path and path.get('type'):
             path_type = path.get('type')
             if path_type == PathType.AZUREBLOB.value:
-                self._path = AzureBlobstoreAssetPath(
+                self._path = AzureBlobstoreAssetPath(     # TODO this need to change?????
                     storage_name=path['storage_name'],
                     container_name=path['container_name'],
                     container_path=path['container_path'],
