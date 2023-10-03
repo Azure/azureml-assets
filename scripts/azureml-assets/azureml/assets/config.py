@@ -468,7 +468,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         self._container_path = container_path
 
         # AzureCloud, USGov, and China clouds should all pull from the same endpoint
-        # associated with AzureCloud.If the cloud is not one of these, then the
+        # associated with AzureCloud. If the cloud is not one of these, then the
         # endpoint will be dynamically acquired based on the currently configured
         # cloud.
         if _get_default_cloud_name() in [AzureEnvironments.ENV_DEFAULT, AzureEnvironments.ENV_US_GOVERNMENT, AzureEnvironments.ENV_CHINA]:
