@@ -9,57 +9,32 @@ import pandas as pd
 import torch
 import tempfile
 
-from transformers import AutoProcessor, AutoModelForZeroShotImageClassification
-from config import MLflowSchemaLiterals, MLflowLiterals, Tasks
+from clip_mlflow_wrapper import CLIPMLFlowModelWrapper
+from config import MLflowSchemaLiterals, Tasks
 from typing import List, Tuple
 
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
     # model wrapper for save_model().
-    from vision_utils import create_temp_file, process_image_pandas_series, get_current_device
+    from vision_utils import create_temp_file, process_image_pandas_series
 except ImportError:
     pass
 
 
-class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
+class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
     """MLflow model wrapper for CLIP model, used for getting feature embeddings."""
 
     def __init__(
         self,
         task_type: str,
     ) -> None:
-        """Construct MLflow wrapper class.
+        """Initialize MLflow wrapper class.
 
         :param task_type: Task type used in training.
         :type task_type: str
         """
-        super().__init__()
-        self._processor = None
-        self._model = None
-        self._task_type = task_type
-
-    def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
-        """
-        Load a MLflow model with pyfunc.load_model().
-
-        :param context: MLflow context containing artifacts that the model can use for inference
-        :type context: mlflow.pyfunc.PythonModelContext
-        """
-        if self._task_type == Tasks.IMAGE_TEXT_EMBEDDINGS.value:
-            try:
-                model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
-                self._processor = AutoProcessor.from_pretrained(model_dir)
-                self._model = AutoModelForZeroShotImageClassification.from_pretrained(model_dir)
-                self._device = get_current_device()
-                self._model.to(self._device)
-
-                print("Model loaded successfully")
-            except Exception as e:
-                print("Failed to load the the model.")
-                print(e)
-                raise
-        else:
-            raise ValueError(f"invalid task type {self._task_type}")
+        super().__init__(task_type)
+        self._supported_task = Tasks.IMAGE_TEXT_EMBEDDINGS.value
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
         """Perform inference on the input data.
@@ -99,8 +74,6 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             else:
                 image_path_list = None
             image_features, text_features = self.run_inference_batch(
-                processor=self._processor,
-                model=self._model,
                 image_path_list=image_path_list,
                 text_list=text_list,
             )
@@ -115,20 +88,11 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
 
     def run_inference_batch(
         self,
-        processor,
-        model,
         image_path_list: List,
         text_list: List,
     ) -> Tuple[torch.tensor]:
         """Perform inference on batch of input images.
 
-        :param test_args: Training arguments path.
-        :type test_args: transformers.TrainingArguments
-        :param processor: Preprocessing configuration loader.
-        :type processor: transformers.AutoProcessor
-        :param model: Pytorch model weights.
-        :type model: transformers.AutoModelForZeroShotImageClassification
-        :param image_path_list: list of image paths for inferencing.
         :type image_path_list: List[str]
         :param text_list: list of text strings for inferencing
         :type text_list: List[str]
@@ -137,16 +101,16 @@ class CLIPEmbeddingsMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         """
         if image_path_list:
             image_list = [Image.open(img_path) for img_path in image_path_list]
-            inputs = processor(text=None, images=image_list, return_tensors="pt", padding=True)
+            inputs = self._processor(text=None, images=image_list, return_tensors="pt", padding=True)
             inputs = inputs.to(self._device)
-            image_features = model.get_image_features(**inputs)
+            image_features = self._model.get_image_features(**inputs)
         else:
             image_features = None
 
         if text_list:
-            inputs = processor(text=text_list, images=None, return_tensors="pt", padding=True)
+            inputs = self._processor(text=text_list, images=None, return_tensors="pt", padding=True)
             inputs = inputs.to(self._device)
-            text_features = model.get_text_features(**inputs)
+            text_features = self._model.get_text_features(**inputs)
         else:
             text_features = None
 

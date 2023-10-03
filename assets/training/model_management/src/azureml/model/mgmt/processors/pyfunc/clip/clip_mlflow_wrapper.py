@@ -37,6 +37,7 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         self._processor = None
         self._model = None
         self._task_type = task_type
+        self._supported_task = Tasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """
@@ -45,7 +46,7 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        if self._task_type == Tasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value:
+        if self._task_type != self._supported_task:
             try:
                 model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
                 self._processor = AutoProcessor.from_pretrained(model_dir)
@@ -121,11 +122,8 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
 
     def run_inference_batch(
         self,
-        processor,
-        model,
         image_path_list: List,
         text_list: List,
-        task_type: Tasks,
     ) -> Tuple[torch.tensor]:
         """Perform inference on batch of input images.
 
@@ -143,9 +141,9 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :rtype: Tuple of torch.tensor
         """
         image_list = [Image.open(img_path) for img_path in image_path_list]
-        inputs = processor(text=text_list, images=image_list, return_tensors="pt", padding=True)
+        inputs = self._processor(text=text_list, images=image_list, return_tensors="pt", padding=True)
         inputs = inputs.to(self._device)
-        outputs = model(**inputs)
+        outputs = self._model(**inputs)
         logits_per_image = outputs.logits_per_image  # this is the image-text similarity score
         probs = logits_per_image.softmax(dim=1)  # we can take the softmax to get the label probabilities
         return probs
