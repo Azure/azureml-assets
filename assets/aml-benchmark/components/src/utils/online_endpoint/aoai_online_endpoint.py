@@ -11,6 +11,10 @@ from utils.error_definitions import BenchmarkValidationError
 from utils.exceptions import BenchmarkValidationException
 from .online_endpoint import OnlineEndpoint, ResourceState
 from .online_endpoint_model import OnlineEndpointModel
+from utils.logging import get_logger
+
+
+logger = get_logger(__name__)
 
 
 class AOAIOnlineEndpoint(OnlineEndpoint):
@@ -85,6 +89,8 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         }
         resp = self._call_endpoint(get_requests_session().put, self._aoai_account_url, payload=payload)
         self._raise_if_not_success(resp)
+        logger.info("Calling {} returned {} with content {}.".format(
+            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
 
     def create_deployment(self):
         """Create deployment."""
@@ -109,6 +115,8 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         }
         resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
         self._raise_if_not_success(resp)
+        logger.info("Calling {} returned {} with content {}.".format(
+            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
 
     def get_endpoint_authorization_header(self) -> dict:
         """Get the authorization header."""
@@ -129,11 +137,15 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         """Delete the endpoint."""
         resp = self._call_endpoint(get_requests_session().delete, self._aoai_account_url)
         self._raise_if_not_success(resp)
+        logger.info("Calling {} returned {} with content {}.".format(
+            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
 
     def delete_deployment(self):
         """Delete the deployment."""
         resp = self._call_endpoint(get_requests_session().delete, self._aoai_deployment_url)
         self._raise_if_not_success(resp)
+        logger.info("Calling {} returned {} with content {}.".format(
+            self._aoai_deployment_url, resp.status_code, self._get_content_from_response(resp)))
 
     @property
     def sku(self) -> str:
