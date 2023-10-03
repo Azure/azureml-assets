@@ -2,8 +2,6 @@
 # Licensed under the MIT License.
 
 """Test CLIP Embeddings helper code."""
-import sys
-sys.path.append("../../src")
 import base64
 import pytest
 import pandas as pd
