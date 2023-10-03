@@ -5,14 +5,12 @@
 
 
 from typing import Optional
-from requests.models import Response
 from azureml._model_management._util import get_requests_session
-
-from .online_endpoint import OnlineEndpoint, ResourceState
-from .online_endpoint_model import OnlineEndpointModel
 from azureml._common._error_definition.azureml_error import AzureMLError
 from utils.error_definitions import BenchmarkValidationError
 from utils.exceptions import BenchmarkValidationException
+from .online_endpoint import OnlineEndpoint, ResourceState
+from .online_endpoint_model import OnlineEndpointModel
 
 
 class AOAIOnlineEndpoint(OnlineEndpoint):
@@ -73,6 +71,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
 
     def create_endpoint(self):
         """Create the endpoint."""
+        self._validate_model(validate_version=False)
         payload = {
             "location": self._location,
             "kind": "OpenAI",
@@ -86,9 +85,10 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         }
         resp = self._call_endpoint(get_requests_session().put, self._aoai_account_url, payload=payload)
         self._raise_if_not_success(resp)
-        
+
     def create_deployment(self):
         """Create deployment."""
+        self._validate_model(validate_version=False)
         payload = {
             "sku":
             {
@@ -99,12 +99,12 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             {
                 "model":
                 {
-                    "format":"OpenAI",
+                    "format": "OpenAI",
                     "name": self._model.model_name,
                     "version": self._model.model_version
                 },
-                "raiPolicyName":"Microsoft.Default",
-                "versionUpgradeOption":"OnceNewDefaultVersionAvailable"
+                "raiPolicyName": "Microsoft.Default",
+                "versionUpgradeOption": "OnceNewDefaultVersionAvailable"
             }
         }
         resp = self._call_endpoint(get_requests_session().put, self._aoai_deployment_url, payload=payload)
@@ -124,7 +124,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def get_resource_authorization_header(self) -> dict:
         """Get the authorization header."""
         return {'Authorization': f'Bearer {self._get_resource_token()}'} if self._credential else {}
-    
+
     def delete_endpoint(self):
         """Delete the endpoint."""
         resp = self._call_endpoint(get_requests_session().delete, self._aoai_account_url)
@@ -134,7 +134,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         """Delete the deployment."""
         resp = self._call_endpoint(get_requests_session().delete, self._aoai_deployment_url)
         self._raise_if_not_success(resp)
-    
+
     @property
     def sku(self) -> str:
         """Get the sku."""
@@ -187,3 +187,16 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             self.deployment_name, 'chat', 'completions?api-version=2023-07-01-preview'
         ]
         return '/'.join(url_list)
+    
+    def _validate_settings(self) -> None:
+        """Validate settings."""
+        super()._validate_settings()
+        try:
+            if self._sku is not None:
+                _ = int(self._sku)
+        except ValueError:
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(
+                    BenchmarkValidationError,
+                    error_details='SKU for AOAI model must be int.')
+                )

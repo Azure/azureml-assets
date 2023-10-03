@@ -51,7 +51,7 @@ class OnlineEndpointFactory:
                 deployment_name,
                 sku
             )
-        
+
     @staticmethod
     def from_metadata(
         metadata_dict: dict
@@ -72,7 +72,7 @@ class OnlineEndpointFactory:
             None,
             None
         )
-    
+
     @staticmethod
     def _is_endpoint_url(endpoint: str) -> bool:
         """Check if the endpoint is url."""

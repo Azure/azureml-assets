@@ -8,7 +8,6 @@ import uuid
 from ..header_handler import HeaderHandler
 from ...utils.token_provider import TokenProvider
 
-from azureml.core import Workspace
 from utils.online_endpoint.aoai_online_endpoint import AOAIOnlineEndpoint
 
 
@@ -50,4 +49,3 @@ class OAIHeaderHandler(HeaderHandler):
             headers.update(additional_headers)
 
         return headers
-    

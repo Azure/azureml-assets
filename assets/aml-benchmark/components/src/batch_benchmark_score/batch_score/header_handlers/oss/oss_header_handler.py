@@ -3,7 +3,6 @@
 
 """The class for OSS header handler."""
 
-import json
 import uuid
 
 from ..header_handler import HeaderHandler

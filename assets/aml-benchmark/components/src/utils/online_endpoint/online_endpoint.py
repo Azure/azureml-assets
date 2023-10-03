@@ -11,7 +11,7 @@ import json
 import os
 import uuid
 from requests.models import Response
-from azureml.core import Run, Workspace
+from azureml.core import Run
 from azure.identity import ManagedIdentityCredential
 from azureml._restclient.clientbase import ClientBase
 from azureml._common._error_definition.azureml_error import AzureMLError
@@ -80,7 +80,7 @@ class OnlineEndpoint:
                 self._endpoint_name = self.get_endpoint_name_from_url()
                 LOGGER.info(f"Endpoint name is not provided, use the one from url. {self._endpoint_name}")
         return self._endpoint_name
-    
+
     @property
     def deployment_name(self) -> str:
         """Get the deployment name."""
@@ -100,14 +100,14 @@ class OnlineEndpoint:
         if self._curr_worspace is None:
             self._curr_worspace = Run.get_context().experiment.workspace
         return self._curr_worspace
-    
+
     @property
     def workspace_name(self) -> str:
         """Get the workspace name."""
         if self._workspace_name is None:
             self._workspace_name = self.curr_workspace.name
         return self._workspace_name
-    
+
     @property
     def resource_group(self) -> str:
         """Get the resource group."""
@@ -115,7 +115,7 @@ class OnlineEndpoint:
             self._resource_group = self.curr_workspace.resource_group
             LOGGER.info(f"Resource group is not provided, use the one from workspace. {self._resource_group}")
         return self._resource_group
-    
+
     @property
     def subscription_id(self) -> str:
         """Get the subscription id."""
@@ -130,12 +130,12 @@ class OnlineEndpoint:
         client_id = os.environ.get(OnlineEndpoint.ENV_CLIENT_ID_KEY, None)
         credential = ManagedIdentityCredential(client_id=client_id)
         return credential
-    
+
     @property
     def scoring_url(self) -> str:
         """Get the scoring url."""
         return self._online_endpoint_url
-    
+
     @property
     def model(self) -> OnlineEndpointModel:
         """Get the model."""
@@ -170,7 +170,7 @@ class OnlineEndpoint:
             LOGGER.error(f"Failed to get content from response: {err}")
             return {}
 
-    @property    
+    @property
     def _arm_base_url(self) -> str:
         """Get the arm base url."""
         url_list = [
@@ -180,7 +180,7 @@ class OnlineEndpoint:
         return "/".join(url_list)
 
     def _call_endpoint(
-            self, call_method: Any, url: str, payload: Optional[dict]=None
+            self, call_method: Any, url: str, payload: Optional[dict] = None
     ) -> Response:
         headers = self.get_resource_authorization_header()
         resp = ClientBase._execute_func(
@@ -242,7 +242,7 @@ class OnlineEndpoint:
         """Delete the deployment."""
         pass
 
-    def _raise_if_not_success(self, resp: Response, msg: Optional[str]=None) -> None:
+    def _raise_if_not_success(self, resp: Response, msg: Optional[str] = None) -> None:
         """Raise error if not success."""
         default_msg = f'Failed to due to {resp.content} after getting {resp.status_code}'
         if resp.status_code not in (200, 201, 202):
@@ -263,4 +263,19 @@ class OnlineEndpoint:
                 AzureMLError.create(
                     BenchmarkValidationError,
                     error_details='Managed identity is required for this scenario.')
+                )
+
+    def _validate_model(self, validate_version: bool = True) -> None:
+        """Validate the model."""
+        if self._model.model_name is None:
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(
+                    BenchmarkValidationError,
+                    error_details='Model is required for managed deployment.')
+                )
+        if validate_version and self._model.model_version is None:
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(
+                    BenchmarkValidationError,
+                    error_details='Model version is required for managed deployment.')
                 )

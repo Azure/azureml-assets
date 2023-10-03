@@ -218,6 +218,7 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--endpoint_workspace", default=None, type=str)
     parser.add_argument("--input_metadata", default=None, type=str)
 
+
 def print_arguments(args: Namespace):
     """Print all input arguments."""
     lu.get_logger().debug("token_file_path path: %s" % args.token_file_path)
@@ -334,9 +335,10 @@ def setup_scoring_client() -> ScoringClient:
     input_additional_headers = args.additional_headers
     if input_additional_headers:
         headers.update(json.loads(input_additional_headers))
-        
+
     header_handler = setup_header_handler(
-        token_provider=token_provider, model_type=args.model_type, input_metadata=input_metadata, input_headers=json.dumps(headers))
+        token_provider=token_provider, model_type=args.model_type, input_metadata=input_metadata,
+        input_headers=json.dumps(headers))
 
     scoring_client = ScoringClient(
         header_handler=header_handler,
@@ -349,7 +351,8 @@ def setup_scoring_client() -> ScoringClient:
     return scoring_client
 
 
-def setup_header_handler(token_provider: TokenProvider, model_type: str, input_metadata: dict, input_headers: str) -> HeaderHandler:
+def setup_header_handler(
+        token_provider: TokenProvider, model_type: str, input_metadata: dict, input_headers: str) -> HeaderHandler:
     """Add header handler."""
     endpoint_workspace = input_metadata.get("workspace_name", args.endpoint_workspace)
     endpoint_resource_group = input_metadata.get("resource_group", args.endpoint_resource_group)

@@ -86,6 +86,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
 
     def create_endpoint(self) -> None:
         """Create the endpoint."""
+        self._validate_model()
         endpoint = ManagedOnlineEndpoint(
             name=self.endpoint_name,
             description="this is a benchmark endpoint",
@@ -97,6 +98,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             self._online_endpoint_url = endpoint.scoring_uri
 
     def create_deployment(self) -> None:
+        self._validate_model()
         deployment_env_vars = {
             "SUBSCRIPTION_ID": self._subscription_id,
             "RESOURCE_GROUP_NAME": self._resource_group
@@ -162,7 +164,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
         self._raise_if_not_success(resp)
         content_dict = self._get_content_from_response(resp)
         self._build_auth_headers(content_dict['primaryKey'])
-    
+
     def _build_auth_headers(self, token: str) -> dict:
         return {'Authorization': f'Bearer {token}'}
 
@@ -174,7 +176,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
                 AzureMLError.create(
                     BenchmarkValidationError,
                     error_details=f"Deployment creation failed. Detailed Response:\n{err}."
-                                   " Please fix the issue and try to submit the job again.")
+                                  f" Please fix the issue and try to submit the job again.")
                 )
 
     def _get_deployment_state_identity(self) -> ResourceState:
@@ -236,7 +238,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
         """Get the default deployment name using managed identity."""
         return sorted(endpoint.traffic.items(), key=lambda x: -x[1])[0][0]
 
-    @property        
+    @property
     def _endpoint_url(self) -> str:
         url_list = [
             _get_mms_url(self.curr_workspace), 'onlineEndpoints', self.endpoint_name

@@ -7,11 +7,8 @@ import json
 import os
 
 from abc import ABC, abstractclassmethod
-from azureml._restclient.clientbase import ClientBase
-from azureml._model_management._util import get_requests_session
 from ..utils.token_provider import TokenProvider
 from ..utils.common import constants
-from azureml.core import Workspace, Run
 from azureml._common._error_definition.azureml_error import AzureMLError
 from ..utils.exceptions import BenchmarkValidationException
 from ..utils.error_definitions import BenchmarkValidationError
