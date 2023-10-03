@@ -178,6 +178,34 @@ class InvalidGroundTruthColumnNameData(BadArgument):
 
 
 @error_decorator(use_parent_error_code=True)
+class InvalidYTestCasesColumnNameData(BadArgument):
+    """Invalid Ground Truth Column Name data error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.InvalidYTestCasesColumnNameData
+
+
+@error_decorator(use_parent_error_code=True)
+class InvalidGroundTruthColumnNameCodeGen(BadArgument):
+    """Invalid Ground Truth Column Name data error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.InvalidGroundTruthColumnNameCodeGen
+
+
+@error_decorator(use_parent_error_code=True)
 class InvalidGroundTruthColumnName(BadArgument):
     """Ground Truth Column Name should be passed."""
 

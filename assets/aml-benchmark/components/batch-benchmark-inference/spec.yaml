@@ -249,3 +249,4 @@ jobs:
       ground_truth:
         type: uri_file
         path: ${{parent.outputs.ground_truth}}
+

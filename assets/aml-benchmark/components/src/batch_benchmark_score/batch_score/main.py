@@ -377,6 +377,5 @@ def setup_header_handler(token_provider: TokenProvider, model_type: str, input_m
         endpoint_name=endpoint_name,
         endpoint_subscription=endpoint_subscription_id,
         endpoint_resource_group=endpoint_resource_group,
-        endpoint_workspace=endpoint_workspace,
-        deployment_name=deployment_name
+        endpoint_workspace=endpoint_workspace
     )

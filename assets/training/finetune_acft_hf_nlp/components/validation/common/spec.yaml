@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: ft_nlp_common_validation
-version: 0.0.18
+version: 0.0.19
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/21
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/23
 
 code: ../../../src/validation
 
@@ -22,10 +22,38 @@ inputs:
     type: string
     optional: true
     default: serverless
-    description: compute to be used for model_eavaluation eg. provide 'FT-Cluster' if your
+    description: compute to be used for finetune component eg. provide 'FT-Cluster' if your
       compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
       If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
 
+  compute_model_import:
+    type: string
+    optional: true
+    default: serverless
+    description: compute to be used for model import component eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
+      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+
+  compute_data_preprocess:
+    type: string
+    optional: true
+    default: serverless
+    description: compute to be used for data preprocess component eg. provide 'FT-Cluster' if your
+      compute is named 'FT-Cluster'. Special characters like \ and ' are invalid in the parameter value.
+      If compute cluster name is provided, instance_type field will be ignored and the respective cluster will be used
+
+  task_name:
+    type: string
+    optional: true
+    default: SingleLabelClassification
+    description: Finetuning task type
+
+  number_of_gpu_to_use_finetuning:
+    type: integer
+    optional: true
+    default: 1
+    description: Number of GPUs to use for finetuning
+  
 outputs:
   validation_info:
     type: uri_file
