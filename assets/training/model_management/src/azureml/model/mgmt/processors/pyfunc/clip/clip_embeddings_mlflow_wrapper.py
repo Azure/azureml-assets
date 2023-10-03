@@ -9,8 +9,8 @@ import pandas as pd
 import torch
 import tempfile
 
-from clip_mlflow_wrapper import CLIPMLFlowModelWrapper
-from config import MLflowSchemaLiterals, Tasks
+from .clip_mlflow_wrapper import CLIPMLFlowModelWrapper
+from .config import MLflowSchemaLiterals, Tasks
 from typing import List, Tuple
 
 try:
