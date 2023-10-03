@@ -112,8 +112,12 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
 
     def get_endpoint_authorization_header(self) -> dict:
         """Get the authorization header."""
-        resp = self._call_endpoint(get_requests_session().get, self._aoai_deployment_list_key_url)
-        self._raise_if_not_success(resp)
+        resp = self._call_endpoint(get_requests_session().post, self._aoai_deployment_list_key_url)
+        self._raise_if_not_success(
+            resp,
+            msg=f'Failed to get the keys using {self._aoai_deployment_list_key_url}.'
+                f'response code: {resp.status_code}, response content: {resp.content}.'
+        )
         keys_content = self._get_content_from_response(resp)
         return {'api-key': keys_content['key1']}
 
@@ -164,7 +168,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     @property
     def _aoai_deployment_list_key_url(self) -> str:
         """Aoai deployment list key url."""
-        return f'{self._aoai_deployment_base_url}/listKeys?api-version={self._api_version}'
+        return f'{self._aoai_account_base_url}/listKeys?api-version={self._api_version}'
 
     @property
     def _aoai_account_url(self) -> str:

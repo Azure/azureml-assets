@@ -147,7 +147,8 @@ def main(
     if not is_performance_test:
         input_file_paths = resolve_io_path(input_dataset)
     else:
-        input_file_paths = [os.path.join("resources", "performance_test_data.jsonl")]
+        input_file_paths = [
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "perf_data.jsonl")]
     df = pd.DataFrame(read_jsonl_files(input_file_paths))
 
     # Reformat the columns and save

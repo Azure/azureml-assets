@@ -15,7 +15,8 @@ from utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
-    download_outputs
+    download_outputs,
+    deploy_fake_test_endpoint_maybe
 )
 
 
@@ -27,6 +28,7 @@ class TestBatchInferencePreparerComponent:
     def test_batch_inference_preparer(self, temp_dir: str):
         """Test batch inference preparer."""
         ml_client = get_mlclient()
+        score_url, _ = deploy_fake_test_endpoint_maybe(ml_client)
         pipeline_job = self._get_pipeline_job(
             self.test_batch_inference_preparer.__name__,
             '{'
@@ -42,7 +44,8 @@ class TestBatchInferencePreparerComponent:
             '   },'
             '   "_batch_request_metadata": ###<_batch_request_metadata>'
             '}',
-            temp_dir,
+            endpoint=score_url,
+            temp_dir=temp_dir,
         )
         # submit the pipeline job
         pipeline_job = ml_client.create_or_update(
@@ -63,6 +66,7 @@ class TestBatchInferencePreparerComponent:
                 self,
                 display_name: str,
                 batch_input_pattern: str,
+                endpoint: str,
                 temp_dir: Optional[str] = None,
             ) -> Job:
         pipeline_job = load_yaml_pipeline("batch_inference_preparer.yaml")
@@ -79,7 +83,7 @@ class TestBatchInferencePreparerComponent:
             type="uri_folder", path=temp_dir
         )
         pipeline_job.inputs.batch_input_pattern = batch_input_pattern
-
+        pipeline_job.inputs.endpoint = endpoint
         pipeline_job.display_name = display_name
         pipeline_job.name = str(uuid.uuid4())
 

@@ -195,7 +195,8 @@ class OSSOnlineEndpoint(OnlineEndpoint):
                 if resource_name == "endpoint":
                     resource = self.ml_client.online_endpoints.get(self.endpoint_name)
                     default_deployment_name = self._get_default_deployment_identity(resource)
-                    if self._generated_deployment_name and default_deployment_name:
+                    if (self._generated_deployment_name or self._deployment_name is None) and default_deployment_name:
+                        LOGGER.info("Using default deployment name %s", default_deployment_name)
                         self._deployment_name = default_deployment_name
                         self._generated_deployment_name = False
                 else:
@@ -216,7 +217,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
     def _get_endpoint_state_token(self) -> ResourceState:
         """Get the endpoint state using workspace token."""
         resp = self._call_endpoint(
-            get_requests_session().get, '/'.join(self._endpoint_url), self.get_resource_authorization_header())
+            get_requests_session().get, self._endpoint_url, self.get_resource_authorization_header())
         resource_state = self._get_resource_state(resp)
         if resource_state == ResourceState.SUCCESS:
             content_dict = self._get_content_from_response(resp)

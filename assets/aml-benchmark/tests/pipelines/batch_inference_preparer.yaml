@@ -4,7 +4,7 @@ type: pipeline
 display_name: test_endpoint_preparer
 description: Pipeline to test endpoint preparer.
 settings:
-  default_compute: azureml:yuzhua-e4s
+  default_compute: azureml:serverless
 
 inputs:
   input_dataset:
@@ -23,10 +23,11 @@ inputs:
       },
     "_batch_request_metadata": ###<_batch_request_metadata>
     }'
-  model: gpt-35-turbo-16k
-  model_type: oai
-  deployment_sku: 120
-  endpoint: test-oai-yuzhua
+  model: a_model
+  model_type: oss
+  deployment_sku: a_sku
+  is_performance_test: False
+  endpoint: test-endpoint
 
 outputs:
   formatted_data:
@@ -49,6 +50,7 @@ jobs:
       model: ${{parent.inputs.model}}
       deployment_sku: ${{parent.inputs.deployment_sku}}
       endpoint: ${{parent.inputs.endpoint}}
+      is_performance_test: ${{parent.inputs.is_performance_test}}
     outputs:
       formatted_data: ${{parent.outputs.formatted_data}}
       output_metadata: ${{parent.outputs.output_metadata}}

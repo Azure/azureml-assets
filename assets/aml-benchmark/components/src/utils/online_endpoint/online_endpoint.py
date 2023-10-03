@@ -242,14 +242,14 @@ class OnlineEndpoint:
         """Delete the deployment."""
         pass
 
-    def _raise_if_not_success(self, resp: Response) -> None:
+    def _raise_if_not_success(self, resp: Response, msg: Optional[str]=None) -> None:
         """Raise error if not success."""
+        default_msg = f'Failed to due to {resp.content} after getting {resp.status_code}'
         if resp.status_code not in (200, 201, 202):
             raise BenchmarkValidationException._with_error(
                 AzureMLError.create(
                     BenchmarkValidationError,
-                    error_details=f'Failed to get endpoint keys. {resp.text}\n '
-                                   'If you want to use managed deployment, please use compute with managed identity.')
+                    error_details=msg if msg else default_msg)
                 )
 
     def _validate_settings(self) -> None:

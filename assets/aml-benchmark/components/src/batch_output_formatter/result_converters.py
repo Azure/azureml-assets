@@ -7,6 +7,8 @@ import copy
 from typing import Any, Dict, Optional
 import pandas as pd
 
+from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
+
 
 class ResultConverters:
     """Convert the batch inference output to different results."""
@@ -21,13 +23,13 @@ class ResultConverters:
             label_key: str, ground_truth_df: Optional[pd.DataFrame], fallback_value: str
     ) -> None:
         """Init for the result converter."""
-        self._model_type = model_type
+        self._model = OnlineEndpointModel(model=None, model_version=None, model_type=model_type)
         self._metadata_key = metadata_key
         self._label_key = label_key
         self._data_id_key = data_id_key
         self._lookup_dict = {}
         self._fallback_value = fallback_value
-        if ground_truth_df is not None and self._is_aoai_model():
+        if ground_truth_df is not None and self._model.is_aoai_model():
             print("receive ground truth columns {}".format(ground_truth_df.columns))
             for index, row in ground_truth_df.iterrows():
                 self._lookup_dict[row[self._data_id_key]] = row[self._label_key]
@@ -51,12 +53,12 @@ class ResultConverters:
     def convert_result_ground_truth(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the result to ground truth."""
         ground_truth = ''
-        if self._is_llama_model():
+        if self._model.is_oss_model():
             if self._metadata_key:
                 ground_truth = self._get_request(result)[self._metadata_key][self._label_key]
             else:
                 ground_truth = result[self.METADATA_KEY_IN_RESULT][self._label_key]
-        elif self._is_aoai_model():
+        elif self._model.is_aoai_model():
             for k, v in self._lookup_dict.items():
                 if k in self._get_request(result):
                     ground_truth = v
@@ -64,21 +66,15 @@ class ResultConverters:
 
     def _get_raw_output(self, result: Dict[str, Any]) -> Dict[str, Any]:
         prediction = ''
-        if self._is_llama_model():
+        if self._model.is_oss_model():
             prediction = ResultConverters._get_oss_response_result(result)
-        elif self._is_aoai_model():
+        elif self._model.is_aoai_model():
             prediction = ResultConverters._get_aoai_response_result(result)
         return {ResultConverters.PREDICTION_COL_NAME: prediction}
 
-    def _is_llama_model(self) -> bool:
-        return self._model_type.lower() == "llama"
-
-    def _is_aoai_model(self) -> bool:
-        return self._model_type.lower() == "gpt"
-    
     def _get_fallback_output(self) -> Dict[str, Any]:
         return {ResultConverters.PREDICTION_COL_NAME: self._fallback_value}
-    
+
     def is_result_success(self, result: Dict[str, Any]) -> bool:
         """Check if the result contains a successful response."""
         if result['status'].lower() != "success":
