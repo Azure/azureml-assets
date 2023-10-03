@@ -4,7 +4,7 @@ description: >-
   GPU based environment for AML Data Labeling SAM Embedding Generation.
 
 name: "data-labeling-sam"
-version: "2"
+version: "3"
 
 build:
   path: "context"
