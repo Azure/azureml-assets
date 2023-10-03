@@ -17,6 +17,7 @@ from azure.ai.ml._azure_environments import (
     _get_storage_endpoint_from_metadata
 )
 
+
 class ValidationException(Exception):
     """Validation errors."""
 
@@ -471,10 +472,20 @@ class AzureBlobstoreAssetPath(AssetPath):
         # associated with AzureCloud. If the cloud is not one of these, then the
         # endpoint will be dynamically acquired based on the currently configured
         # cloud.
-        if _get_default_cloud_name() in [AzureEnvironments.ENV_DEFAULT, AzureEnvironments.ENV_US_GOVERNMENT, AzureEnvironments.ENV_CHINA]:
-            uri = AzureBlobstoreAssetPath.DEFAULT_BLOBSTORE_URI.format(storage_name, container_name, container_path)
+        if _get_default_cloud_name() in [
+            AzureEnvironments.ENV_DEFAULT,
+            AzureEnvironments.ENV_US_GOVERNMENT,
+            AzureEnvironments.ENV_CHINA]:
+            uri = AzureBlobstoreAssetPath.DEFAULT_BLOBSTORE_URI.format(
+                storage_name,
+                container_name,
+                container_path)
         else:
-            uri = f"https://{storage_name}.blob.{_get_storage_endpoint_from_metadata()}/{container_name}/{container_path}"
+            uri = "https://{}.blob.{}/{}/{}".format(
+                storage_name,
+                _get_storage_endpoint_from_metadata(),
+                container_name,
+                container_path)
 
         super().__init__(PathType.AZUREBLOB, uri)
 
