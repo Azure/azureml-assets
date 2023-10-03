@@ -132,6 +132,10 @@ inputs:
     type: string
     optional: False
     description: The label column key.
+  data_id_key:
+    type: string
+    optional: True
+    description: The key that contains data identifier in the ground truth data.
   debug_mode:
     type: boolean
     optional: False
@@ -239,6 +243,7 @@ jobs:
       delete_managed_resources: ${{parent.inputs.delete_managed_resources}}
       deployment_metadata_dir: ${{parent.jobs.batch_inference_preparer.outputs.output_metadata}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
+      data_id_key: ${{parent.inputs.data_id_key}}
     outputs:
       predictions:
         type: uri_file
