@@ -58,7 +58,6 @@ class EndpointDataPreparer:
                     new_json_string = new_json_string.replace(placeholder, json.dumps(v))
                 else:
                     new_json_string = new_json_string.replace(placeholder, str(v))
-        print(new_json_string)
         return json.loads(new_json_string)
 
     @staticmethod

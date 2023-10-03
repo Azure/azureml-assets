@@ -55,7 +55,7 @@ class TestBatchInferencePreparerComponent:
         os.makedirs(out_dir, exist_ok=True)
         self._verify_output(
             pipeline_job, output_dir=out_dir, check_key=["input_data", "_batch_request_metadata"],
-            model_type='llama',
+            model_type='oss',
             check_param_dict={"temperature": 0.6, "max_new_tokens": 100, "do_sample": True}
         )
 
@@ -99,6 +99,6 @@ class TestBatchInferencePreparerComponent:
         for r in output_records:
             for k in check_key:
                 assert k in r, f"{k} not in records {r}"
-            if model_type == "llama":
+            if model_type == "oss":
                 for k, v in check_param_dict.items():
                     assert r['input_data']['parameters'][k] == v, f"{k} not equal to {v}"

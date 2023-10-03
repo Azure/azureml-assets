@@ -5,12 +5,17 @@
 
 import traceback
 import os
+import json
 import asyncio
 import sys
 import pandas as pd
 from argparse import ArgumentParser, Namespace
 
 from azureml._common._error_definition.azureml_error import AzureMLError
+
+from utils.online_endpoint.endpoint_utils import EndpointUtilities
+from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
+
 from .utils.exceptions import BenchmarkValidationException
 from .utils.error_definitions import BenchmarkValidationError
 
@@ -211,8 +216,7 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--endpoint_subscription_id", default=None, type=str)
     parser.add_argument("--endpoint_resource_group", default=None, type=str)
     parser.add_argument("--endpoint_workspace", default=None, type=str)
-    parser.add_argument("--use_managed_identity", default=False, type=str2bool)
-
+    parser.add_argument("--input_metadata", default=None, type=str)
 
 def print_arguments(args: Namespace):
     """Print all input arguments."""
@@ -254,7 +258,6 @@ def print_arguments(args: Namespace):
     lu.get_logger().debug("endpoint_resource_group: %s" % args.endpoint_resource_group)
     lu.get_logger().debug("endpoint_workspace: %s" % args.endpoint_workspace)
     lu.get_logger().debug("mdoel_type: %s" % args.model_type)
-    lu.get_logger().debug("use_managed_identity: %s" % args.use_managed_identity)
 
 
 def save_mini_batch_results(mini_batch_results: list, mini_batch_context):
@@ -322,38 +325,55 @@ def setup_scoring_client() -> ScoringClient:
         tally_exclusions=args.tally_exclusions
     )
 
-    header_handler = setup_header_handler(token_provider=token_provider, model_type=args.model_type)
+    input_metadata = {}
+    if args.input_metadata is not None:
+        input_metadata = EndpointUtilities.load_endpoint_metadata_json(args.input_metadata)
+
+    online_endpoint_url = input_metadata.get("scoring_url", args.online_endpoint_url)
+    headers = input_metadata.get("scoring_headers", {})
+    input_additional_headers = args.additional_headers
+    if input_additional_headers:
+        headers.update(json.loads(input_additional_headers))
+        
+    header_handler = setup_header_handler(
+        token_provider=token_provider, model_type=args.model_type, input_metadata=input_metadata, input_headers=headers)
 
     scoring_client = ScoringClient(
         header_handler=header_handler,
         quota_client=None,
         routing_client=None,
-        online_endpoint_url=args.online_endpoint_url,
+        online_endpoint_url=online_endpoint_url,
         tally_handler=tally_handler,
     )
 
     return scoring_client
 
 
-def setup_header_handler(token_provider: TokenProvider, model_type: str) -> OSSHeaderHandler:
+def setup_header_handler(token_provider: TokenProvider, model_type: str, input_metadata: dict, input_headers: dict) -> HeaderHandler:
     """Add header handler."""
-    if model_type == 'gpt':
+    endpoint_workspace = input_metadata.get("workspace_name", args.endpoint_workspace)
+    endpoint_resource_group = input_metadata.get("resource_group", args.endpoint_resource_group)
+    endpoint_subscription_id = input_metadata.get("subscription_id", args.endpoint_subscription_id)
+    endpoint_name = input_metadata.get("endpoint_name", args.online_endpoint_url.split('/')[2].split('.')[0])
+
+    model = OnlineEndpointModel(model=None, model_version=None, model_type=model_type)
+    if model.is_aoai_model():
         return OAIHeaderHandler(
             token_provider=token_provider, user_agent_segment=args.user_agent_segment,
             batch_pool=args.batch_pool,
             quota_audience=args.quota_audience,
-            additional_headers=args.additional_headers,
-            deployment_name=args.online_endpoint_url.split('/')[2].split('.')[0],
-            use_managed_identity=args.use_managed_identity
+            additional_headers=input_headers,
+            endpoint_name=endpoint_name,
+            endpoint_subscription=endpoint_subscription_id,
+            endpoint_resource_group=endpoint_resource_group
         )
     return OSSHeaderHandler(
         token_provider=token_provider, user_agent_segment=args.user_agent_segment,
         batch_pool=args.batch_pool,
         quota_audience=args.quota_audience,
-        additional_headers=args.additional_headers,
-        deployment_name=args.online_endpoint_url.split('/')[2].split('.')[0],
-        endpoint_subscription=args.endpoint_subscription_id,
-        endpoint_resource_group=args.endpoint_resource_group,
-        endpoint_workspace=args.endpoint_workspace,
-        use_managed_identity=args.use_managed_identity
+        additional_headers=input_headers,
+        endpoint_name=endpoint_name,
+        endpoint_subscription=endpoint_subscription_id,
+        endpoint_resource_group=endpoint_resource_group,
+        endpoint_workspace=endpoint_workspace
     )

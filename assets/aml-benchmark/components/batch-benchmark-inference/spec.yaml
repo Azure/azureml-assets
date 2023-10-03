@@ -9,8 +9,8 @@ version: 0.0.1
 inputs:
   input_dataset:
     type: uri_folder
-    description: Input jsonl dataset that contains prompt.
-    optional: False
+    description: Input jsonl dataset that contains prompt.  For the performance test, this one will be neglected.
+    optional: True
   batch_input_pattern:
     type: string
     description: >- 
@@ -18,7 +18,7 @@ inputs:
       for the key for the value put in the `###<key>`. For example, one can use the following format for
       a llama text-gen model with a input dataset has `prompt` for the payload
       and `_batch_request_metadata` storing the corresponding ground truth.
-      {"input_data": 
+      {"input_data":
         {
           "input_string": ["###<prompt>"],
           "parameters":
@@ -29,19 +29,71 @@ inputs:
           }
         },
         "_batch_request_metadata": ###<_batch_request_metadata>
+      }\n
+      For the OAI endpoint, one can use the following format,
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "###<prompt>"
+          }
+        ],
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "frequency_penalty": 0,
+        "presence_penalty": 0,
+        "max_tokens": 800,
+        "stop": null
       }
-    optional: False
-  online_endpoint_url:
-    type: string
     optional: False
   model_type:
     type: string
     optional: False
     description: The endpoint model type.
     enum:
-      - llama
-      - gpt
-    default: llama
+      - oss
+      - oai
+    default: oss
+  endpoint:
+    type: string
+    optional: True
+    description: The endpoint name or url. If not provided, the endpoint will be created.
+  is_performance_test:
+    type: boolean
+    default: False
+    description: If true, the performance test will be run.
+  deployment_name:
+    type: string
+    optional: True
+    description: The deployment name. If not provided, the deployment will be created.
+  model:
+    type: string
+    optional: True
+    description: Model name or model asset path. Only needed for managed deployment.
+  model_version:
+    type: string
+    optional: True
+    description: Model version. If model asset path provided, this one can be optional.
+  deployment_sku:
+    type: string
+    optional: True
+    description: The sku for the deployment. Only needed for managed deployment.
+  endpoint_workspace:
+    type: string
+    optional: True
+    description: The workspace name for the endpoint. If not provided, the same workspace of the run will be used.
+  endpoint_resource_group:
+    type: string
+    optional: True
+    description: The resource group name for the endpoint. If not provided, the same resource group of the run will be used.
+  endpoint_subscription_id:
+    type: string
+    optional: True
+    description: The subscription id for the endpoint. If not provided, the same subscription id of the run will be used.
+  endpoint_location:
+    type: string
+    optional: True
+    description: The location for the endpoint. Only required for the AOAI endpoint. If not provided, the same location of the run will be used.
   additional_headers:
     type: string
     optional: True
@@ -85,18 +137,38 @@ inputs:
     optional: False
     default: False
     description: Enable debug mode will print all the debug logs in the score step.
+  delete_managed_resources:
+    type: boolean
+    default: True
+    description: If true, the managed resources created during the run will be deleted.
   n_samples:
     type: integer
-    description: The number of top samples send to endpoint.
+    description: The number of top samples send to endpoint. When performance test is enabled, this will be the number of repeated samples send to the endpoint.
+    optional: True
+  ground_truth_input:
+    type: uri_folder
+    description: Input jsonl dataset that contains prompt.
+    optional: True
+  handle_response_failure:
+    type: string
+    optional: False
+    description: The way that the formatter handles the failed response.
+    enum:
+      - use_fallback
+      - neglect
+    default: use_fallback
+  fallback_value:
+    description: The fallback value that can be used when request payload failed.
+    type: string
     optional: True
 outputs:
-  prediction_data:
+  predictions:
     type: uri_file
     description: The prediction data.
-  perf_data:
+  performance_metadata:
     type: uri_file
     description: The performance data.
-  ground_truth_data:
+  ground_truth:
     type: uri_file
     description: The ground truth data that has a one-to-one mapping with the prediction data.
 
@@ -108,8 +180,18 @@ jobs:
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
+      is_performance_test: ${{parent.inputs.is_performance_test}}
       model_type: ${{parent.inputs.model_type}}
       n_samples: ${{parent.inputs.n_samples}}
+      endpoint: ${{parent.inputs.endpoint}}
+      deployment_name: ${{parent.inputs.deployment_name}}
+      model: ${{parent.inputs.model}}
+      model_version: ${{parent.inputs.model_version}}
+      deployment_sku: ${{parent.inputs.deployment_sku}}
+      endpoint_workspace: ${{parent.inputs.endpoint_workspace}}
+      endpoint_resource_group: ${{parent.inputs.endpoint_resource_group}}
+      endpoint_subscription_id: ${{parent.inputs.endpoint_subscription_id}}
+      endpoint_location: ${{parent.inputs.endpoint_location}}
     outputs:
       formatted_data:
         type: mltable
@@ -118,7 +200,7 @@ jobs:
     type: parallel
     component: azureml:batch_benchmark_score:0.0.1
     inputs:
-      online_endpoint_url: ${{parent.inputs.online_endpoint_url}}
+      online_endpoint_url: ${{parent.inputs.endpoint}}
       debug_mode: ${{parent.inputs.debug_mode}}
       additional_headers: ${{parent.inputs.additional_headers}}
       ensure_ascii: ${{parent.inputs.ensure_ascii}}
@@ -127,6 +209,7 @@ jobs:
       max_worker_count: ${{parent.inputs.max_worker_count}}
       data_input_table: ${{parent.jobs.batch_inference_preparer.outputs.formatted_data}}
       model_type: ${{parent.inputs.model_type}}
+      input_metadata: ${{parent.jobs.batch_inference_preparer.outputs.output_metadata}}
     outputs:
       job_out_path:
         type: uri_file
@@ -150,13 +233,19 @@ jobs:
       metadata_key: ${{parent.inputs.metadata_key}}
       label_key: ${{parent.inputs.label_key}}
       model_type: ${{parent.inputs.model_type}}
+      ground_truth_input: ${{parent.inputs.ground_truth_input}}
+      fallback_value: ${{parent.inputs.fallback_value}}
+      handle_response_failure: ${{parent.inputs.handle_response_failure}}
+      delete_managed_resources: ${{parent.inputs.delete_managed_resources}}
+      deployment_metadata_dir: ${{parent.jobs.batch_inference_preparer.outputs.output_metadata}}
+      is_performance_test: ${{parent.inputs.is_performance_test}}
     outputs:
-      prediction_data:
+      predictions:
         type: uri_file
-        path: ${{parent.outputs.prediction_data}}
-      perf_data:
+        path: ${{parent.outputs.predictions}}
+      performance_metadata:
         type: uri_file
-        path: ${{parent.outputs.perf_data}}
-      ground_truth_data:
+        path: ${{parent.outputs.performance_metadata}}
+      ground_truth:
         type: uri_file
-        path: ${{parent.outputs.ground_truth_data}}
+        path: ${{parent.outputs.ground_truth}}

@@ -25,18 +25,43 @@ inputs:
     optional: False
     description: The endpoint model type.
     enum:
-      - llama
-      - gpt
+      - oss
+      - oai
   ground_truth_input:
     type: uri_folder
     description: The raw batch inference output.
     optional: True
+  delete_managed_resources:
+    type: boolean
+    optional: True
+    default: True
+    description: If true, the managed resources created during the run will be deleted.
+  deployment_metadata_dir:
+    type: uri_folder
+    optional: True
+    description: The deployment metadata directory that contains deployment details.
+  handle_response_failure:
+    type: string
+    optional: False
+    description: The way that the formatter handles the failed response.
+    enum:
+      - use_fallback
+      - neglect
+    default: use_fallback
+  fallback_value:
+    description: The fallback value that can be used when request payload failed.
+    type: string
+    optional: True
+  is_performance_test:
+    type: boolean
+    default: False
+    description: If true, the performance test will be run.
 outputs:
-  prediction_data:
+  predictions:
     type: uri_file
-  perf_data:
+  performance_metadata:
     type: uri_file
-  ground_truth_data:
+  ground_truth:
     type: uri_file
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
@@ -47,11 +72,16 @@ resources:
 command: >-
   python -m batch_output_formatter.main
   --batch_inference_output ${{inputs.batch_inference_output}}
-  --prediction_data ${{outputs.prediction_data}}
-  --perf_data ${{outputs.perf_data}}
-  --predict_ground_truth_data ${{outputs.ground_truth_data}}
+  --prediction_data ${{outputs.predictions}}
+  --perf_data ${{outputs.performance_metadata}}
+  --predict_ground_truth_data ${{outputs.ground_truth}}
   --label_key ${{inputs.label_key}}
   --model_type ${{inputs.model_type}}
+  --handle_response_failure ${{inputs.handle_response_failure}}
+  --is_performance_test ${{inputs.is_performance_test}}
   $[[--metadata_key ${{inputs.metadata_key}}]]
   $[[--data_id_key ${{inputs.data_id_key}}]]
+  $[[--fallback_value ${{inputs.fallback_value}}]]
   $[[--ground_truth_input ${{inputs.ground_truth_input}}]]
+  $[[--delete_managed_resources ${{inputs.delete_managed_resources}}]]
+  $[[--deployment_metadata_dir ${{inputs.deployment_metadata_dir}}]]

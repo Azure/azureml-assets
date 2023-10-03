@@ -10,6 +10,9 @@ import pandas as pd
 from utils.io import resolve_io_path, read_jsonl_files
 from utils.logging import get_logger
 from utils.exceptions import swallow_all_exceptions
+from utils.aml_run_utils import str2bool
+from utils.online_endpoint.endpoint_utils import EndpointUtilities
+from utils.online_endpoint.online_endpoint_factory import OnlineEndpointFactory
 from .result_converters import ResultConverters
 
 
@@ -31,9 +34,38 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--metadata_key", type=str, help="metadata key", default=None)
     parser.add_argument("--data_id_key", type=str, help="metadata key", default=None)
     parser.add_argument("--label_key", type=str, help="label key")
+    parser.add_argument("--handle_response_failure", type=str, help="how to handler failed response.")
+    parser.add_argument("--fallback_value", type=str, help="The fallback value.", default='')
+    parser.add_argument(
+        "--delete_managed_resources",
+        default=True, type=str2bool,
+        help="Delete managed resources create during the run.",
+    )
+    parser.add_argument(
+        "--deployment_metadata_dir", default=None, type=str,
+        help="Directory contains deployment metadata.",
+    )
+    parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
     return args
+
+
+def delete_managed_resources_maybe(
+        delete_managed_resources: bool,
+        deployment_metadata_dir: str,
+) -> None:
+    """Delete managed resources if delete_managed_resources is True."""
+    if delete_managed_resources and deployment_metadata_dir:
+        print("Deleting managed resources.")
+        deployment_metadata = EndpointUtilities.load_endpoint_metadata_json(deployment_metadata_dir)
+        endpoint = OnlineEndpointFactory.from_metadata(deployment_metadata)
+        if deployment_metadata['is_managed_endpoint']:
+            logger.info("Deleting endpoint.")
+            endpoint.delete_endpoint()
+        elif deployment_metadata['is_managed_deployment']:
+            logger.info("Deleting deployment.")
+            endpoint.delete_deployment()
 
 
 @swallow_all_exceptions(logger)
@@ -46,7 +78,12 @@ def main(
         ground_truth_input: str,
         prediction_data: str,
         perf_data: str,
-        predict_ground_truth_data: str
+        predict_ground_truth_data: str,
+        delete_managed_resources: bool,
+        deployment_metadata_dir: str,
+        handle_response_failure: str,
+        fallback_value: str,
+        is_performance_test: bool
 ) -> None:
     """
     Entry script for the script.
@@ -62,6 +99,11 @@ def main(
     :param prediction_data: The path to the prediction data.
     :param perf_data: The path to the perf data.
     :param predict_ground_truth_data: The ground truth data that correspond to the prediction_data.
+    :param delete_managed_resources: Whether to delete managed resources.
+    :param deployment_metadata_dir: The directory contains deployment metadata.
+    :param handle_response_failure: How to handle the response failure.
+    :param fallback_value: The fallback value.
+    :param is_performance_test: Whether it is a performance test.
     :return: None
     """
     logger.info("Read batch output data now.")
@@ -75,20 +117,27 @@ def main(
     ground_truth = []
     if ground_truth_input:
         print(os.listdir(ground_truth_input))
-        input_file_paths = resolve_io_path(batch_inference_output)
-        ground_truth_input = pd.DataFrame(read_jsonl_files(input_file_paths))
+        input_file_paths = resolve_io_path(ground_truth_input)
+        ground_truth_df = pd.DataFrame(read_jsonl_files(input_file_paths))
     else:
-        ground_truth_input = None
+        ground_truth_df = None
     rc = ResultConverters(
-        model_type, metadata_key, data_id_key, label_key, ground_truth_input)
+        model_type, metadata_key, data_id_key, label_key, ground_truth_df, fallback_value=fallback_value)
     logger.info("Convert the data now.")
     for f in data_files:
         print(f"Processing file {f}")
         df = pd.read_json(os.path.join(batch_inference_output, f), lines=True)
         for index, row in df.iterrows():
+            if not rc.is_result_success(row):
+                logger.warn("Met failed response {} at index {} of file {}".format(row, index, f))
+                if handle_response_failure == 'neglect':
+                    continue
             new_df.append(rc.convert_result(row))
             perf_df.append(rc.convert_result_perf(row))
-            ground_truth.append(rc.convert_result_ground_truth(row))
+            if not is_performance_test:
+                ground_truth.append(rc.convert_result_ground_truth(row))
+            else:
+                ground_truth.append({"ground_truth": ''})
     logger.info("Output data now.")
     new_df = pd.DataFrame(new_df)
     perf_df = pd.DataFrame(perf_df)
@@ -96,6 +145,8 @@ def main(
     new_df.to_json(prediction_data, orient="records", lines=True)
     perf_df.to_json(perf_data, orient="records", lines=True)
     ground_truth.to_json(predict_ground_truth_data, orient="records", lines=True)
+
+    delete_managed_resources_maybe(delete_managed_resources, deployment_metadata_dir)
 
 
 if __name__ == "__main__":
@@ -109,5 +160,10 @@ if __name__ == "__main__":
         ground_truth_input=args.ground_truth_input,
         prediction_data=args.prediction_data,
         perf_data=args.perf_data,
-        predict_ground_truth_data=args.predict_ground_truth_data
+        predict_ground_truth_data=args.predict_ground_truth_data,
+        delete_managed_resources=args.delete_managed_resources,
+        deployment_metadata_dir=args.deployment_metadata_dir,
+        handle_response_failure=args.handle_response_failure,
+        fallback_value=args.fallback_value,
+        is_performance_test=args.is_performance_test
     )

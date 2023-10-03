@@ -4,7 +4,7 @@
 """Class for convert the results to dict."""
 
 import copy
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import pandas as pd
 
 
@@ -14,10 +14,11 @@ class ResultConverters:
     TOKEN_KEYS = ["completion_tokens", "prompt_tokens", "total_tokens"]
     LATENCY_KEYS = ["start", "end", "latency"]
     METADATA_KEY_IN_RESULT = 'request_metadata'
+    PREDICTION_COL_NAME = 'prediction'
 
     def __init__(
             self, model_type: str, metadata_key: str, data_id_key: str,
-            label_key: str, ground_truth_df: pd.DataFrame
+            label_key: str, ground_truth_df: Optional[pd.DataFrame], fallback_value: str
     ) -> None:
         """Init for the result converter."""
         self._model_type = model_type
@@ -25,12 +26,16 @@ class ResultConverters:
         self._label_key = label_key
         self._data_id_key = data_id_key
         self._lookup_dict = {}
-        if ground_truth_df and self._is_aoai_model():
+        self._fallback_value = fallback_value
+        if ground_truth_df is not None and self._is_aoai_model():
+            print("receive ground truth columsns{}".format(ground_truth_df.columns))
             for index, row in ground_truth_df.iterrows():
-                self._lookup_dict[row[self._data_id_key]] = row[label_key]
+                self._lookup_dict[row[self._data_id_key]] = row[self._label_key]
 
     def convert_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the input result to predictions."""
+        if not self.is_result_success(result):
+            return self._get_fallback_output()
         return self._get_raw_output(result)
 
     def convert_result_perf(self, result: Dict[str, Any]) -> Dict[str, Any]:
@@ -63,13 +68,28 @@ class ResultConverters:
             prediction = ResultConverters._get_oss_response_result(result)
         elif self._is_aoai_model():
             prediction = ResultConverters._get_aoai_response_result(result)
-        return {'prediction': prediction}
+        return {ResultConverters.PREDICTION_COL_NAME: prediction}
 
     def _is_llama_model(self) -> bool:
         return self._model_type.lower() == "llama"
 
     def _is_aoai_model(self) -> bool:
         return self._model_type.lower() == "gpt"
+    
+    def _get_fallback_output(self) -> Dict[str, Any]:
+        return {ResultConverters.PREDICTION_COL_NAME: self._fallback_value}
+    
+    def is_result_success(self, result: Dict[str, Any]) -> bool:
+        """Check if the result contains a successful response."""
+        if result['status'].lower() != "success":
+            return False
+        # handle the scenario the 200 with failure in response.
+        try:
+            _ = self._get_raw_output(result)
+        except Exception as e:
+            print(f'Converting meet errors {e}')
+            return False
+        return True
 
     @staticmethod
     def _get_request(result: Dict[str, Any]) -> Any:
