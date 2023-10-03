@@ -66,7 +66,7 @@ def copy_azure_artifacts(src_uri: str, dstn_uri: str) -> bool:
     """
     try:
         download_cmd = f"azcopy copy '{src_uri}' '{dstn_uri}' " \
-                       "--recursive --skip-version-check --output-level essential"
+                       "--recursive --as-subdir=false --skip-version-check --output-level essential"
         result = run_cmd(download_cmd)
         logger.print(f"azcopy result {result}")
         # TODO: Handle error case correctly, since azcopy exits with 0 exit code, even in case of error.
