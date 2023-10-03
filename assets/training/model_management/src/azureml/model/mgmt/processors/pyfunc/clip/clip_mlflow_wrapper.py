@@ -46,7 +46,7 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        if self._task_type != self._supported_task:
+        if self._task_type == self._supported_task:
             try:
                 model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
                 self._processor = AutoProcessor.from_pretrained(model_dir)
