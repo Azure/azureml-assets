@@ -57,7 +57,7 @@ def delete_managed_resources_maybe(
 ) -> None:
     """Delete managed resources if delete_managed_resources is True."""
     if delete_managed_resources and deployment_metadata_dir:
-        print("Deleting managed resources.")
+        logger.info("Deleting managed resources.")
         deployment_metadata = EndpointUtilities.load_endpoint_metadata_json(deployment_metadata_dir)
         endpoint = OnlineEndpointFactory.from_metadata(deployment_metadata)
         if deployment_metadata['is_managed_endpoint']:
@@ -125,7 +125,7 @@ def main(
         model_type, metadata_key, data_id_key, label_key, ground_truth_df, fallback_value=fallback_value)
     logger.info("Convert the data now.")
     for f in data_files:
-        print(f"Processing file {f}")
+        logger.info(f"Processing file {f}")
         df = pd.read_json(os.path.join(batch_inference_output, f), lines=True)
         for index, row in df.iterrows():
             if not rc.is_result_success(row):

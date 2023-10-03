@@ -199,7 +199,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def _get_scoring_url(self) -> str:
         """Get the scoring url."""
         url_list = [
-            f'https://{self.endpoint_name}.api.azureml.ms', 'openai', 'deployments',
+            f'https://{self.endpoint_name}.openai.azure.com', 'openai', 'deployments',
             self.deployment_name, 'chat', 'completions?api-version=2023-07-01-preview'
         ]
         return '/'.join(url_list)

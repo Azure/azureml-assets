@@ -29,7 +29,7 @@ class ResultConverters:
         self._data_id_key = data_id_key
         self._lookup_dict = {}
         self._fallback_value = fallback_value
-        if ground_truth_df is not None and self._model.is_aoai_model():
+        if ground_truth_df is not None:
             print("receive ground truth columns {}".format(ground_truth_df.columns))
             for index, row in ground_truth_df.iterrows():
                 self._lookup_dict[row[self._data_id_key]] = row[self._label_key]
@@ -53,12 +53,17 @@ class ResultConverters:
     def convert_result_ground_truth(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the result to ground truth."""
         ground_truth = ''
+        use_ground_truth_input = False
         if self._model.is_oss_model():
             if self._metadata_key:
                 ground_truth = self._get_request(result)[self._metadata_key][self._label_key]
-            else:
+            elif self.METADATA_KEY_IN_RESULT in result:
                 ground_truth = result[self.METADATA_KEY_IN_RESULT][self._label_key]
+            else:
+                use_ground_truth_input = True
         elif self._model.is_aoai_model():
+            use_ground_truth_input = True
+        if use_ground_truth_input:
             for k, v in self._lookup_dict.items():
                 if k in self._get_request(result):
                     ground_truth = v

@@ -57,15 +57,15 @@ inputs:
   endpoint:
     type: string
     optional: True
-    description: The endpoint name or url. If not provided, the endpoint will be created.
+    description: The endpoint name or url. If not provided, the endpoint will be created by using a random name.
   is_performance_test:
     type: boolean
     default: False
-    description: If true, the performance test will be run.
+    description: If true, the performance test will be run and the input dataset will be neglected.
   deployment_name:
     type: string
     optional: True
-    description: The deployment name. If not provided, the deployment will be created.
+    description: The deployment name. If not provided, the default deployment of oss model will be used. If no default deployment, the deployment will be created by using a random name.
   model:
     type: string
     optional: True
@@ -111,6 +111,7 @@ inputs:
     type: integer
     optional: False
     default: 5
+    description: The initial number of workers to use for scoring.
   max_worker_count:
     type: integer
     optional: False
@@ -151,7 +152,7 @@ inputs:
     optional: True
   ground_truth_input:
     type: uri_folder
-    description: Input jsonl dataset that contains prompt.
+    description: Input jsonl dataset that contains prompt. OAI model will default use this one as the optional input in the payload is not supported
     optional: True
   handle_response_failure:
     type: string
@@ -162,7 +163,7 @@ inputs:
       - neglect
     default: use_fallback
   fallback_value:
-    description: The fallback value that can be used when request payload failed.
+    description: The fallback value that can be used when request payload failed. If not provided, the fallback value will be an empty string.
     type: string
     optional: True
 outputs:

@@ -221,6 +221,8 @@ class OSSOnlineEndpoint(OnlineEndpoint):
         resp = self._call_endpoint(
             get_requests_session().get, self._endpoint_url, self.get_resource_authorization_header())
         resource_state = self._get_resource_state(resp)
+        LOGGER.info("Calling {} returned {} with content {}.".format(
+            self._endpoint_url, resp.status_code, self._get_content_from_response(resp)))
         if resource_state == ResourceState.SUCCESS:
             content_dict = self._get_content_from_response(resp)
             if self._online_endpoint_url is None:
