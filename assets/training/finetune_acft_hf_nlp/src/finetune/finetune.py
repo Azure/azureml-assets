@@ -43,7 +43,7 @@ COMPONENT_NAME = "ACFT-Finetune"
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
-MIXFORMER_SEQUENTIAL = "mixformer-sequential" # Phi models
+MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",

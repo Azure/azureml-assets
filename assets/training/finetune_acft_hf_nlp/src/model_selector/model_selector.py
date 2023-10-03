@@ -27,7 +27,7 @@ COMPONENT_NAME = "ACFT-Model_import"
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
-MIXFORMER_SEQUENTIAL = "mixformer-sequential" # Phi models
+MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
 
 
 # TODO Move this constants class to package
