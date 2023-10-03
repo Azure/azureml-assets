@@ -14,7 +14,7 @@ import pandas as pd
 import torch
 
 from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants, DatatypeLiterals
-from vision_utils import save_image, image_to_base64
+from vision_utils import image_to_base64
 
 
 class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -75,7 +75,6 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         :rtype: pd.DataFrame
         """
         text_prompts = input_data[MLflowSchemaLiterals.INPUT_COLUMN_PROMPT].tolist()
-
 
         output = self._pipe(text_prompts)
         generated_images = []

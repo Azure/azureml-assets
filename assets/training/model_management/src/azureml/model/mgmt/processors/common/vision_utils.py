@@ -93,7 +93,6 @@ def image_to_base64(img: PIL.Image.Image, format: str) -> str:
     return img_str
 
 
-
 def process_image(image: Union[str, bytes]) -> bytes:
     """Process image.
 
