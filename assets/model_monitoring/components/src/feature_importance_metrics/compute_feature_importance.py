@@ -11,7 +11,7 @@ from pyspark.sql.types import (
     StringType,
     FloatType
 )
-from shared_utilities.io_utils import read_mltable_in_spark, save_spark_df_as_mltable, init_spark
+from shared_utilities.io_utils import try_read_mltable_in_spark_with_warning, save_spark_df_as_mltable, init_spark
 from shared_utilities import constants
 
 from responsibleai import RAIInsights, FeatureMetadata
@@ -26,9 +26,6 @@ except ImportError:
 
 from feature_importance_metrics.feature_importance_utilities import (
     compute_categorical_features, convert_pandas_to_spark, log_time_and_message)
-
-from shared_utilities.patch_mltable import patch_all
-patch_all()
 
 
 def parse_args():
@@ -253,7 +250,12 @@ def run(args):
             write_empty_signal_metrics_dataframe()
             return
         log_time_and_message("Reading data in spark and converting to pandas")
-        baseline_df = read_mltable_in_spark(args.baseline_data).toPandas()
+        baseline_df = try_read_mltable_in_spark_with_warning(args.baseline_data, "baseline_data")
+        if not baseline_df:
+            print("Skipping feature importance calculation.")
+            return
+
+        baseline_df = baseline_df.toPandas()
         task_type = args.task_type if args.task_type else determine_task_type(args.target_column, baseline_df)
         task_type = task_type.lower()
         log_time_and_message(f"Computed task type is {task_type}")

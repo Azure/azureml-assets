@@ -12,6 +12,7 @@ MLFLOW_ARTIFACT_DIRECTORY = "mlflow_model_folder"
 MODEL_CONFIG_FILE_PATTERN = r"^config\.json|.+\.py$"
 MODEL_FILE_PATTERN = r"^pytorch.*|.+\.py$"
 TOKENIZER_FILE_PATTERN = r"^.*token.*|.*vocab.*|.*processor.*|.+\.py$"
+META_FILE_PATTERN = r"^.*README.*|.*LICENSE.*|.*USE_POLICY.*$"
 
 
 class _CustomEnum(Enum):

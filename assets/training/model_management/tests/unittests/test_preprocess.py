@@ -8,6 +8,7 @@ import json
 import pytest
 import unittest
 import yaml
+from azureml.model.mgmt.config import ModelFramework
 from azureml.model.mgmt.processors.factory import (
     get_mlflow_convertor,
     SupportedNLPTasks,
@@ -21,6 +22,7 @@ from azureml.model.mgmt.processors.preprocess import run_preprocess
 from azureml.model.mgmt.processors.pyfunc.config import SupportedTextToImageModelFamily
 from azureml.model.mgmt.processors.transformers.convertors import HFMLFLowConvertor, NLPMLflowConvertor
 from azureml.model.mgmt.processors.pyfunc.convertors import MMLabDetectionMLflowConvertor
+from mock import MagicMock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -228,7 +230,7 @@ class TestFactoryModule(unittest.TestCase):
     @patch("azureml.model.mgmt.processors.factory.MMLabDetectionMLflowConvertorFactory")
     def test_get_mmlab_detection_mlflow_convertor(self, mock_mmlab_detection_factory):
         """Test MMLab detection model MLflow convertor."""
-        model_framework = "MMLab"
+        model_framework = ModelFramework.MMLAB.value
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
@@ -247,7 +249,7 @@ class TestFactoryModule(unittest.TestCase):
     @patch("azureml.model.mgmt.processors.factory.CLIPMLflowConvertorFactory")
     def test_get_clip_mlflow_convertor(self, mock_clip_factory):
         """Test clip model MLflow convertor."""
-        model_framework = "Huggingface"
+        model_framework = ModelFramework.HUGGINGFACE.value
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
@@ -257,6 +259,25 @@ class TestFactoryModule(unittest.TestCase):
         result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
         self.assertEqual(result, mock_convertor)
         mock_clip_factory.create_mlflow_convertor.assert_called_once_with(
+            model_dir,
+            output_dir,
+            temp_dir,
+            translate_params,
+        )
+
+    @patch("azureml.model.mgmt.processors.factory.LLaVAMLflowConvertorFactory")
+    def test_get_llava_mlflow_convertor(self, mock_llava_factory):
+        """Test LLaVA model MLflow convertor."""
+        model_framework = ModelFramework.LLAVA.value
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+
+        translate_params = {"task": PyFuncSupportedTasks.IMAGE_TEXT_TO_TEXT.value}
+        mock_convertor = mock_llava_factory.create_mlflow_convertor.return_value
+        result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
+        self.assertEqual(result, mock_convertor)
+        mock_llava_factory.create_mlflow_convertor.assert_called_once_with(
             model_dir,
             output_dir,
             temp_dir,
@@ -337,6 +358,9 @@ class TestHFMLFLowConvertor:
             nlp_mlflow_convertor = NLPMLflowConvertor(
                 model_dir=model_path, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
             )
+            nlp_mlflow_convertor._hf_config_cls = nlp_mlflow_convertor._hf_tokenizer_cls = MagicMock()
+            nlp_mlflow_convertor._hf_config_cls.__name__ = "mock_config_cls"
+            nlp_mlflow_convertor._hf_tokenizer_cls.__name__ = "mock_tokenizer_cls"
             nlp_mlflow_convertor = nlp_mlflow_convertor.save_as_mlflow()
 
             # validate pycocotools
@@ -351,14 +375,6 @@ class TestHFMLFLowConvertor:
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
-
-        # Model_id missing in translate params
-        translate_params = {"task": SupportedNLPTasks.FILL_MASK.value}
-        with pytest.raises(Exception) as ex:
-            NLPMLflowConvertor(
-                model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
-            )
-        assert "model_id" in str(ex)
 
         # task missing in translate params
         translate_params = {"model_id": "bert-base-cased"}

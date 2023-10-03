@@ -60,6 +60,11 @@ DOCKERFILE_IMAGE_PATTERN = re.compile(r"^FROM\s+mcr\.microsoft\.com/azureml/cura
 # Image naming convention
 IMAGE_NAME_PATTERN = re.compile(r"^azureml/curated/(.+)")
 
+# Docker build context stuff to not allow
+BUILD_CONTEXT_DISALLOWED_PATTERNS = [
+    re.compile(r"extra-index-url", re.IGNORECASE),
+]
+
 
 def _log_error(file: Path, error: str) -> None:
     """Log error.
@@ -169,6 +174,32 @@ def validate_dockerfile(environment_config: assets.EnvironmentConfig) -> int:
         _log_error(environment_config.dockerfile_with_path,
                    "Referencing curated environment images in Dockerfile is not allowed")
         error_count += 1
+
+    return error_count
+
+
+def validate_build_context(environment_config: assets.EnvironmentConfig) -> int:
+    """Validate environment build context.
+
+    Args:
+        environment_config (EnvironmentConfig): Environment config.
+
+    Returns:
+        int: Number of errors.
+    """
+    error_count = 0
+    # Iterate over all files in the build context
+    for file_path in environment_config.release_paths:
+        with open(file_path) as f:
+            # Read file into memory, normalize EOL characters
+            contents = f.read()
+            contents = contents.replace("\r\n", "\n")
+
+            # Check disallowed pattersn
+            for pattern in BUILD_CONTEXT_DISALLOWED_PATTERNS:
+                if pattern.search(contents):
+                    _log_error(file_path, f"Found disallowed pattern '{pattern.pattern}'")
+                    error_count += 1
 
     return error_count
 
@@ -288,7 +319,8 @@ def validate_assets(input_dirs: List[Path],
                     check_names: bool = False,
                     check_names_skip_pattern: re.Pattern = None,
                     check_images: bool = False,
-                    check_categories: bool = False) -> bool:
+                    check_categories: bool = False,
+                    check_build_context: bool = False) -> bool:
     """Validate assets.
 
     Args:
@@ -299,6 +331,7 @@ def validate_assets(input_dirs: List[Path],
         check_names_skip_pattern (re.Pattern, optional): Regex pattern to skip name validation. Defaults to None.
         check_images (bool, optional): Whether to check image names. Defaults to False.
         check_categories (bool, optional): Whether to check asset categories. Defaults to False.
+        check_build_context (bool, optional): Whether to check environment build context. Defaults to False.
 
     Raises:
         ValidationException: If validation fails.
@@ -363,6 +396,8 @@ def validate_assets(input_dirs: List[Path],
             # Validate Dockerfile
             if asset_config.type == assets.AssetType.ENVIRONMENT:
                 error_count += validate_dockerfile(asset_config.extra_config_as_object())
+                if check_build_context:
+                    error_count += validate_build_context(asset_config.extra_config_as_object())
 
             # Validate categories
             if check_categories:
@@ -422,6 +457,8 @@ if __name__ == '__main__':
                         help="Check asset categories")
     parser.add_argument("-N", "--check-names-skip-pattern", type=re.compile,
                         help="Regex pattern to skip name validation, in the format <type>/<name>/<version>")
+    parser.add_argument("-b", "--check-build-context", action="store_true",
+                        help="Check environment build context")
     args = parser.parse_args()
 
     # Convert comma-separated values to lists
@@ -443,6 +480,7 @@ if __name__ == '__main__':
                               check_names=args.check_names,
                               check_names_skip_pattern=args.check_names_skip_pattern,
                               check_images=args.check_images,
-                              check_categories=args.check_categories)
+                              check_categories=args.check_categories,
+                              check_build_context=args.check_build_context)
     if not success:
         sys.exit(1)
