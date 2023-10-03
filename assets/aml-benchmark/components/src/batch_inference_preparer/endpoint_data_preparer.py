@@ -7,13 +7,15 @@ from typing import Any, Dict
 import json
 import re
 
+from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
+
 
 class EndpointDataPreparer:
     """Endpoint data preparer class."""
 
     def __init__(self, model_type: str, batch_input_pattern: str):
         """Init for endpoint data preparer."""
-        self._model_type = model_type
+        self._model = OnlineEndpointModel(model_type=model_type, model=None, model_version=None)
         self._batch_input_pattern = batch_input_pattern
 
     def convert_input_dict(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
@@ -23,7 +25,7 @@ class EndpointDataPreparer:
     def validate_output(self, output_payload_dict: Dict[str, Any]):
         """Validate the output payload."""
         errors = []
-        if self._model_type.lower == "llama":
+        if self._model.is_oss_model():
             if "input_data" not in output_payload_dict:
                 errors.append("`input_data` should be presented in the payload json.")
             elif "input_string" not in output_payload_dict["input_data"]:
@@ -31,7 +33,7 @@ class EndpointDataPreparer:
                     "`input_string` should be presented in the `input_data` fields of payload json.")
             elif isinstance(output_payload_dict["input_data"]["input_string"], list):
                 errors.append("`input_string` field should be a list")
-        if self._model_type.lower == "gpt":
+        if self._model.is_aoai_model():
             if "messages" not in output_payload_dict:
                 errors.append(
                     "`messages` should be presented in the payload json.")
