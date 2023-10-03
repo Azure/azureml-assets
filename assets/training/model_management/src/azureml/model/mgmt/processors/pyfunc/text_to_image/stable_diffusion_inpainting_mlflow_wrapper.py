@@ -88,34 +88,22 @@ class StableDiffusionInpaintingMLflowWrapper(mlflow.pyfunc.PythonModel):
 
         generated_images = []
         nsfw_content = []
-        if self._batch_output_folder:
-            # Batch endpoint
-            for image, mask_image, text_prompt in zip(images, mask_images, text_prompts):
-                output = self._pipe(
-                    prompt=text_prompt,
-                    image=image,
-                    mask_image=mask_image,
-                    return_dict=True,
-                )
-
-                # Save image in batch output folder and append the image file name to generated_images list
-                filename = save_image(self._batch_output_folder, output.images[0],
-                                      format=DatatypeLiterals.IMAGE_FORMAT)
-                generated_images.append(filename)
-                nsfw_content.append(output.nsfw_content_detected[0] if output.nsfw_content_detected else None)
-        else:
-            # Online endpoint
+        try:
             outputs = self._pipe(
                 prompt=text_prompts,
                 image=images,
                 mask_image=mask_images,
                 return_dict=True,
             )
+        except Exception as e:
+            logger.error(f"Failed while running inference. {str(e)}")
+            raise
 
-            for img in outputs.images:
-                generated_images.append(image_to_base64(img, format=DatatypeLiterals.IMAGE_FORMAT))
 
-            nsfw_content = outputs.nsfw_content_detected
+        for img in outputs.images:
+            generated_images.append(image_to_base64(img, format=DatatypeLiterals.IMAGE_FORMAT))
+
+        nsfw_content = outputs.nsfw_content_detected
 
         df = pd.DataFrame(
             {
