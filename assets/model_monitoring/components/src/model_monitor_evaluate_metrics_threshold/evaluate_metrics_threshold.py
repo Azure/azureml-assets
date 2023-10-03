@@ -39,13 +39,13 @@ def evaluate_metrics_threshold(
     is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
         is_not_nan_metrics_threshold_df.metric_value.isNotNull()
     )
-    
+
     metrics_threshold_breached_df = is_not_nan_metrics_threshold_df.where(
         F.col("metric_value") > F.col("threshold_value")
     )
 
     metrics_threshold_breached_df.show()
-    
+
     if metrics_threshold_breached_df.count() > 0:
         error_message = _generate_error_message(metrics_to_evaluate_df, signal_name)
         post_warning_event(error_message)
