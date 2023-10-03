@@ -98,9 +98,14 @@ def openai_init(llm_config, **openai_params):
         credential = workspace_connection_to_credential(connection)
         if hasattr(credential, 'key'):
             llm_config["key"] = credential.key
-            llm_config["base"] = connection['properties'].get('target', {})
-            openai_api_type = connection['properties'].get('metadata', {}).get('apiType', "azure")
-            openai_api_version = connection['properties'].get('metadata', {}).get('apiVersion', "2023-03-15-preview")
+            llm_config["base"] = connection.target
+            connection_metadata = connection.metadata
+            openai_api_type = connection_metadata.get(
+                'apiType',
+                connection_metadata.get('ApiType', "azure"))
+            openai_api_version = connection_metadata.get(
+                'apiVersion',
+                connection_metadata.get('ApiVersion', "2023-03-15-preview"))
             log_info(logger, "Using workspace connection key for OpenAI", CUSTOM_DIMENSIONS)
             fetch_from_connection = True
     if not fetch_from_connection:

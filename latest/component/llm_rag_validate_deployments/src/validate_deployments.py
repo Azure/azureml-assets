@@ -492,8 +492,8 @@ def validate_acs(acs_config, activity_logger: Logger):
     for index in range(MAX_RETRIES+1):
         try:
             connection = get_connection_by_id_v2(connection_id_acs)
-            acs_config['endpoint'] = connection['properties']['target']
-            acs_metadata = connection['properties'].get('metadata', {})
+            acs_config['endpoint'] = connection.target
+            acs_metadata = connection.metadata
             acs_config['api_version'] = acs_metadata.get('apiVersion', "2023-07-01-preview")
             connection_args = {}
             connection_args['connection_type'] = 'workspace_connection'
