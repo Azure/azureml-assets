@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """File containing function for finetune component."""
-import os
 import json
 import logging
 import argparse
