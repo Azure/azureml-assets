@@ -472,10 +472,9 @@ class AzureBlobstoreAssetPath(AssetPath):
         # associated with AzureCloud. If the cloud is not one of these, then the
         # endpoint will be dynamically acquired based on the currently configured
         # cloud.
-        if _get_default_cloud_name() in [
-            AzureEnvironments.ENV_DEFAULT,
-            AzureEnvironments.ENV_US_GOVERNMENT,
-            AzureEnvironments.ENV_CHINA]:
+        if _get_default_cloud_name() in [AzureEnvironments.ENV_DEFAULT,
+                                         AzureEnvironments.ENV_US_GOVERNMENT,
+                                         AzureEnvironments.ENV_CHINA]:
             uri = AzureBlobstoreAssetPath.DEFAULT_BLOBSTORE_URI.format(
                 storage_name,
                 container_name,
