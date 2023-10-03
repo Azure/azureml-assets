@@ -10,7 +10,7 @@ import torch
 import tempfile
 
 from transformers import AutoProcessor, AutoModelForZeroShotImageClassification
-from .config import MLflowSchemaLiterals, MLflowLiterals, Tasks
+from config import MLflowSchemaLiterals, MLflowLiterals, Tasks
 from typing import List, Tuple
 
 try:
