@@ -5,7 +5,7 @@
 
 import argparse
 import re
-from pyspark.sql.functions import col, udf, sum, lit
+from pyspark.sql.functions import col, lit, sum, udf
 from pyspark.sql.types import IntegerType, StructField, StructType, StringType
 from shared_utilities.io_utils import (
     read_mltable_in_spark,
@@ -13,11 +13,11 @@ from shared_utilities.io_utils import (
     init_spark,
 )
 
-THRESHOLD_COLUMN = "threshold_value"
-METRIC_NAME_COLUMN = "metric_name"
-METRIC_VALUE_COLUMN = "metric_value"
 GROUP_COLUMN = "group"
 GROUP_DIMENSION_COLUMN = "group_dimension"
+METRIC_NAME_COLUMN = "metric_name"
+METRIC_VALUE_COLUMN = "metric_value"
+THRESHOLD_COLUMN = "threshold_value"
 
 THRESHOLD_PARAMS = [
     "groundedness_passrate_threshold",
@@ -103,6 +103,9 @@ def run():
     compact_metric_names = list(set(pruned_metric_names))
 
     aggregated_metrics_df = histogram_df.withColumn(GROUP_DIMENSION_COLUMN, lit(""))
+
+    # overwrite threshold value column
+    aggregated_metrics_df = aggregated_metrics_df.withColumn(THRESHOLD_COLUMN, lit(""))
     metadata_schema = StructType(
             [
                 StructField(GROUP_COLUMN, StringType(), True),
