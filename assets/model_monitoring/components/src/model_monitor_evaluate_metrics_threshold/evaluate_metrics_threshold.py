@@ -27,20 +27,26 @@ def evaluate_metrics_threshold(
     is_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(
         metrics_to_evaluate_df.threshold_value.isNull()
     )
-    metrics_without_threshold_count = is_nan_metrics_threshold_df.count()
+
+    is_nan_metrics_threshold_df = is_nan_metrics_threshold_df.filter(
+        is_nan_metrics_threshold_df.metric_value.isNull()
+    )
 
     is_not_nan_metrics_threshold_df = metrics_to_evaluate_df.filter(
         metrics_to_evaluate_df.threshold_value.isNotNull()
     )
 
-    is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.where(
+    is_not_nan_metrics_threshold_df = is_not_nan_metrics_threshold_df.filter(
+        is_not_nan_metrics_threshold_df.metric_value.isNotNull()
+    )
+
+    metrics_threshold_breached_df = is_not_nan_metrics_threshold_df.where(
         F.col("metric_value") > F.col("threshold_value")
     )
 
-    output_df = is_nan_metrics_threshold_df.union(is_not_nan_metrics_threshold_df)
-    output_df.show()
+    metrics_threshold_breached_df.show()
 
-    if output_df.count() > metrics_without_threshold_count:
+    if metrics_threshold_breached_df.count() > 0:
         error_message = _generate_error_message(metrics_to_evaluate_df, signal_name)
         post_warning_event(error_message)
         if notification_emails is not None and notification_emails != "":
