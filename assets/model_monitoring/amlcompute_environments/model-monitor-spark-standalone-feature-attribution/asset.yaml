@@ -1,6 +1,0 @@
-name: model-monitor-spark-standalone-feature-attribution
-version: auto
-type: environment
-spec: spec.yaml
-extra_config: environment.yaml
-categories: ["Model monitoring"]
