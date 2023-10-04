@@ -81,3 +81,23 @@ def get_model_name(model_id: str):
         return match.group(2) or match.group(5)
     else:
         raise AzureMLException._with_error(AzureMLError.create(InvalidModelIDError, model_id=model_id))
+
+
+def get_model_name_version(model_id: str):
+    """Return model name from model_id."""
+    ws_pattern = r"azureml:(.+):(.+)"
+    reg_pattern = r"azureml:\/\/.*\/models\/(.+)\/versions\/(.+)"
+
+    # try registry pattern followed by ws pattern
+    match = re.search(reg_pattern, model_id)
+    if match:
+        logger.info(f"registry asset URI, returning {match.group(1)}, {match.group(2)}")
+        return match.group(1), match.group(2)
+
+    match = re.search(ws_pattern, model_id)
+    if match:
+        logger.info(f"ws asset URI, returning {match.group(1)}, {match.group(2)}")
+        return match.group(2) or match.group(5)
+
+    logger.info(f"Unsupported model asset uri: {model_id}")
+    raise AzureMLException._with_error(AzureMLError.create(InvalidModelIDError, model_id=model_id))

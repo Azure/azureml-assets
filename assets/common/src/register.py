@@ -16,7 +16,7 @@ from azure.ai.ml.entities import Model
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
 
-from utils.common_utils import get_mlclient
+from utils.common_utils import get_mlclient, get_model_name_version
 from utils.config import AppName, ComponentVariables
 from utils.logging_utils import custom_dimensions, get_logger
 from utils.run_utils import RunDetails
@@ -162,7 +162,12 @@ def main():
     # check if we can have lineage and update the model path for ws import
     if not registry_name and get_input_asset_id("model_path"):
         logger.info("Using model output of previous job as run lineage to register the model")
-        model_path = get_input_asset_id("model_path")
+        anon_model_asset_uri = get_input_asset_id("model_path")
+        anon_model_name, anon_model_version = get_model_name_version(anon_model_asset_uri)
+        logger.info(f"{anon_model_name} : {anon_model_version}")
+        anon_model = ml_client.models.get(name=anon_model_name, version=anon_model_version)
+        model_path = anon_model.path
+        logger.info(f"Updated model path {model_path}")
     elif model_type == AssetTypes.MLFLOW_MODEL:
         if not os.path.exists(os.path.join(model_path, MLFLOW_MODEL_FOLDER)):
             logger.info(f"Making sure, model parent directory is `{MLFLOW_MODEL_FOLDER}`")
