@@ -4,10 +4,15 @@ path: ./
 properties:
   SHA: a998a81ca5b57a10404d4615e85ff3b6d62ae649
   inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_ND40rs_v2
   languages: EN
 tags:
   Featured: ''
   Preview: ''
+  computes_allow_list:
+  - Standard_ND40rs_v2
+  evaluation_compute_allow_list:
+  - Standard_ND40rs_v2
   inference_compute_allow_list:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
@@ -15,4 +20,4 @@ tags:
   license: llama2
   author: meta
   disable-batch: true
-version: 2
+version: 3
