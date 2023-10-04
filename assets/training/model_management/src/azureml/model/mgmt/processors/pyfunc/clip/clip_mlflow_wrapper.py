@@ -10,6 +10,10 @@ import torch
 import tempfile
 
 from transformers import AutoProcessor, AutoModelForZeroShotImageClassification
+import os
+MODEL_DIR = os.path.dirname(__file__)
+import sys
+sys.path.append(MODEL_DIR)
 from config import MLflowSchemaLiterals, MLflowLiterals, Tasks
 from typing import List, Tuple
 

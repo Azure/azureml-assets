@@ -9,16 +9,13 @@ import pandas as pd
 import torch
 import tempfile
 
+import os
+MODEL_DIR = os.path.dirname(__file__)
+import sys
+sys.path.append(MODEL_DIR)
 from clip_mlflow_wrapper import CLIPMLFlowModelWrapper
 from config import MLflowSchemaLiterals, Tasks
 from typing import List, Tuple
-
-try:
-    # Use try/except since vision_utils is added as part of model export and not available when initializing
-    # model wrapper for save_model().
-    from vision_utils import create_temp_file, process_image_pandas_series
-except ImportError:
-    pass
 
 
 class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
@@ -51,6 +48,8 @@ class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns "image_features" and/or "text_features"
         """
+        # import in predict() since vision_utils.py is added during model export
+        from vision_utils import create_temp_file, process_image_pandas_series
         has_images, has_text = self.validate_input(input_data)
 
         if has_images:
