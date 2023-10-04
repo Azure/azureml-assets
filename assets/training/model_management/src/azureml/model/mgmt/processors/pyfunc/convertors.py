@@ -202,7 +202,7 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
         """Initialize MLflow convertor for CLIP models."""
         super().__init__(**kwargs)
         if self._task not in \
-                [SupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value, SupportedTasks.IMAGE_TEXT_EMBEDDINGS.value]:
+                [SupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value, SupportedTasks.EMBEDDINGS.value]:
             raise Exception("Unsupported task")
 
     def get_model_signature(self) -> ModelSignature:
@@ -220,7 +220,6 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
             ]
         )
 
-        output_schema = None
         if self._task == SupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value:
             output_schema = Schema(
                 [
@@ -230,30 +229,36 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
                             CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_LABELS),
                 ]
             )
+        elif self._task == SupportedTasks.EMBEDDINGS.value:
+            output_schema = Schema(
+                [
+                    ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                            CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_IMAGE_FEATURES),
+                    ColSpec(CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                            CLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_TEXT_FEATURES),
+                ]
+            )
+        else:
+            raise Exception("Unsupported task")
 
         return ModelSignature(inputs=input_schema, outputs=output_schema)
 
     def save_as_mlflow(self):
         """Prepare model for save to MLflow."""
         sys.path.append(self.MODEL_DIR)
-        from clip_mlflow_wrapper import CLIPMLFlowModelWrapper
-        mlflow_model_wrapper = CLIPMLFlowModelWrapper(task_type=self._task)
-        mlflow_model_wrapper_path = os.path.join(self.MODEL_DIR, "clip_mlflow_wrapper.py")
+
+        if self._task == SupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value:
+            from clip_mlflow_wrapper import CLIPMLFlowModelWrapper
+            mlflow_model_wrapper = CLIPMLFlowModelWrapper(task_type=self._task)
+        elif self._task == SupportedTasks.EMBEDDINGS.value:
+            from clip_embeddings_mlflow_wrapper import CLIPEmbeddingsMLFlowModelWrapper
+            mlflow_model_wrapper = CLIPEmbeddingsMLFlowModelWrapper(task_type=self._task)
+        else:
+            raise Exception("Unsupported task")
 
         artifacts_dict = self._prepare_artifacts_dict()
         conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
-        code_path = [
-            mlflow_model_wrapper_path,
-            os.path.join(self.MODEL_DIR, "config.py"),
-            os.path.join(self.COMMON_DIR, "vision_utils.py"),
-        ]
-
-        # if embeddings task, include both clip_mlflow_wrapper.py
-        # and clip_embeddings_mlflow_wrapper.py for class inheritance
-        if self._task == SupportedTasks.IMAGE_TEXT_EMBEDDINGS.value:
-            from clip_embeddings_mlflow_wrapper import CLIPEmbeddingsMLFlowModelWrapper
-            mlflow_model_wrapper = CLIPEmbeddingsMLFlowModelWrapper(task_type=self._task)
-            code_path.append(os.path.join(self.MODEL_DIR, "clip_embeddings_mlflow_wrapper.py"))
+        code_path = self._get_code_path()
 
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
@@ -261,6 +266,23 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
             conda_env=conda_env_file,
             code_path=code_path,
         )
+
+    def _get_code_path(self):
+        """Return code path for saving mlflow model depending on task type
+
+        :return: code path
+        :rtype: List[str]
+        """
+        code_path = [
+            os.path.join(self.MODEL_DIR, "clip_mlflow_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
+        ]
+        if self._task == SupportedTasks.EMBEDDINGS.value:
+            code_path.append(os.path.join(self.MODEL_DIR, "clip_embeddings_mlflow_wrapper.py"))
+
+        return code_path
+
 
     def _prepare_artifacts_dict(self) -> Dict:
         """Prepare artifacts dict for MLflow model.

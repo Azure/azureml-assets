@@ -6,50 +6,52 @@ import base64
 import pytest
 import pandas as pd
 
+# add clip directory to sys path to resolve imports
+import os
+MODEL_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "./azureml/model/mgmt/processors/pyfunc/clip"))
+import sys
+sys.path.append(MODEL_DIR)
 from azureml.model.mgmt.processors.pyfunc.clip.clip_embeddings_mlflow_wrapper import CLIPEmbeddingsMLFlowModelWrapper
-from azureml.model.mgmt.processors.pyfunc.clip.config import Tasks
 
 class TestCLIPEmbeddings:
     """Test class for clip embeddings helper functions"""
 
     def test_valid_input_clip(self):
         """Test that the validate_input function for CLIP Embeddings model allows invalid input"""
-        mlflow_model_wrapper = CLIPEmbeddingsMLFlowModelWrapper(task_type=Tasks.IMAGE_TEXT_EMBEDDINGS)
         input_cases = InputCases()
 
-        has_image, has_text = mlflow_model_wrapper.validate_input(input_cases.valid_text_input())
+        has_image, has_text = CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_cases.valid_text_input())
         assert not has_image
         assert has_text
         
-        has_image, has_text = mlflow_model_wrapper.validate_input(input_cases.valid_text_input_nan())
+        has_image, has_text = CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_cases.valid_text_input_nan())
         assert not has_image
         assert has_text
 
-        has_image, has_text = mlflow_model_wrapper.validate_input(input_cases.valid_image_input())
+        has_image, has_text = CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_cases.valid_image_input())
         assert has_image
         assert not has_text
 
-        has_image, has_text = mlflow_model_wrapper.validate_input(input_cases.valid_image_input_nan())
+        has_image, has_text = CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_cases.valid_image_input_nan())
         assert has_image
         assert not has_text
 
-        has_image, has_text = mlflow_model_wrapper.validate_input(input_cases.valid_combination_input())
+        has_image, has_text = CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_cases.valid_combination_input())
         assert has_image
         assert has_text
 
     def test_invalid_input_clip(self):
         """Test that the validate_input function for CLIP Embeddings model catches valid input"""
-        mlflow_model_wrapper = CLIPEmbeddingsMLFlowModelWrapper(task_type=Tasks.IMAGE_TEXT_EMBEDDINGS)
         input_cases = InputCases()
 
         with pytest.raises(ValueError):
-            mlflow_model_wrapper.validate_input(input_cases.invalid_text_input())
+            CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_cases.invalid_text_input())
 
         with pytest.raises(ValueError):
-            mlflow_model_wrapper.validate_input(input_cases.invalid_image_input())
+            CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_cases.invalid_image_input())
 
         with pytest.raises(ValueError):
-            mlflow_model_wrapper.validate_input(input_cases.invalid_combination_input())
+            CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_cases.invalid_combination_input())
 
 class InputCases:
     """Class for generating valid and invalid inputs for CLIP Embeddings"""

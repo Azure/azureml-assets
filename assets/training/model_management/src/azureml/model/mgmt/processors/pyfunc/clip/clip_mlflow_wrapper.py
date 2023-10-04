@@ -10,10 +10,6 @@ import torch
 import tempfile
 
 from transformers import AutoProcessor, AutoModelForZeroShotImageClassification
-import os
-MODEL_DIR = os.path.dirname(__file__)
-import sys
-sys.path.append(MODEL_DIR)
 from config import MLflowSchemaLiterals, MLflowLiterals, Tasks
 from typing import List, Tuple
 
@@ -105,11 +101,8 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
                 .tolist()
             )
             conf_scores = self.run_inference_batch(
-                processor=self._processor,
-                model=self._model,
                 image_path_list=image_path_list,
                 text_list=captions,
-                task_type=self._task_type
             )
 
         df_result = pd.DataFrame(
@@ -131,16 +124,8 @@ class CLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
     ) -> Tuple[torch.tensor]:
         """Perform inference on batch of input images.
 
-        :param test_args: Training arguments path.
-        :type test_args: transformers.TrainingArguments
-        :param image_processor: Preprocessing configuration loader.
-        :type image_processor: transformers.AutoImageProcessor
-        :param model: Pytorch model weights.
-        :type model: transformers.AutoModelForImageClassification
         :param image_path_list: list of image paths for inferencing.
         :type image_path_list: List
-        :param task_type: Task type of the model.
-        :type task_type: Tasks
         :return: Predicted probabilities
         :rtype: Tuple of torch.tensor
         """

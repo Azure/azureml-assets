@@ -9,10 +9,6 @@ import pandas as pd
 import torch
 import tempfile
 
-import os
-MODEL_DIR = os.path.dirname(__file__)
-import sys
-sys.path.append(MODEL_DIR)
 from clip_mlflow_wrapper import CLIPMLFlowModelWrapper
 from config import MLflowSchemaLiterals, Tasks
 from typing import List, Tuple
@@ -31,7 +27,7 @@ class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
         :type task_type: str
         """
         super().__init__(task_type)
-        self._supported_task = Tasks.IMAGE_TEXT_EMBEDDINGS.value
+        self._supported_task = Tasks.EMBEDDINGS.value
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
         """Perform inference on the input data.
@@ -39,9 +35,9 @@ class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         :param input_data: Input images and text for feature embeddings.
-        :type input_data: Pandas DataFrame with a first column name ["image"] of images where each
-        image is in base64 String format, and second column name ["text"] containing a string. The following cases
-        are supported:
+        :type input_data: Pandas DataFrame with a first column name ["image"] containing images where each
+        row is an image in base64 String format or publicly accessible url format,
+        and second column name ["text"] containing a string. The following cases are supported:
         - all rows in image column are populated with valid values and text column only contains empty string,
         - all rows in text column are populated with valid values and image column only contains empty string,
         - all rows in both columns are populated with valid values
@@ -50,7 +46,7 @@ class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
         """
         # import in predict() since vision_utils.py is added during model export
         from vision_utils import create_temp_file, process_image_pandas_series
-        has_images, has_text = self.validate_input(input_data)
+        has_images, has_text = CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_data)
 
         if has_images:
             # Decode the base64 image column
@@ -96,7 +92,7 @@ class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
         :param text_list: list of text strings for inferencing
         :type text_list: List[str]
         :return: image features and text features
-        :rtype: each return is either torch.tensor of size (#inputs, 512) or None
+        :rtype: Tuple where each value is either torch.tensor of size (#inputs, 512) or None
         """
         if image_path_list:
             image_list = [Image.open(img_path) for img_path in image_path_list]
@@ -115,7 +111,8 @@ class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
 
         return image_features, text_features
 
-    def validate_input(self, input_data):
+    @staticmethod
+    def validate_input(input_data):
         """Validate input and raise exception if input is invalid.
 
         :param input_data: input to validate
