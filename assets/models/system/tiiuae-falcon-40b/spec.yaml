@@ -7,7 +7,7 @@ properties:
   languages: en, de, es, fr
   inference-min-sku-spec: 24|4|448|1344
   inference-recommended-sku: Standard_ND40rs_v2
-  finetuning-tasks: text-classification, question-answering
+  finetuning-tasks: text-classification
 tags:
   Featured: ''
   Preview: ''
