@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: tiiuae-falcon-40b
+name: tiiuae-falcon-40b-instruct
 path: ./
 properties:
   SHA: ca78eac0ed45bf64445ff0687fabba1598daebf3
