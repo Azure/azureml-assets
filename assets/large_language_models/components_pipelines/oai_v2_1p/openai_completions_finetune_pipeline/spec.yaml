@@ -73,7 +73,7 @@ jobs:
       model: ${{parent.inputs.model}}
   openai_completions_finetune:
     type: command
-    component: azureml://registries/azure-openai-v2/components/openai_completions_finetune/versions/0.3.5
+    component: azureml://registries/azure-openai-v2/components/openai_completions_finetune/versions/0.3.10
     inputs:
       input_dataset: ${{parent.jobs.openai_data_import.outputs.out_dataset}}
       model: ${{parent.inputs.model}}
