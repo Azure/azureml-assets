@@ -3,14 +3,15 @@ $schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
 description: >-
   Environment used by Hugging Face NLP Finetune components
 
-name: "{{asset.name}}"
-version: "{{asset.version}}"
+# name: "{{asset.name}}"
+# version: "{{asset.version}}"
+name: acft-hf-nlp-gpu
+version: 23.shivam.5
 
 build:
-  path: "{{image.context.path}}"
-  dockerfile_path: "{{image.dockerfile.path}}"
+  # path: "{{image.context.path}}"
+  # dockerfile_path: "{{image.dockerfile.path}}"
+  path: "context"
+  dockerfile_path: "Dockerfile"
 
 os_type: linux
-
-tags:
-  Preview: ""
