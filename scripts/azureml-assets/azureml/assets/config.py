@@ -376,7 +376,7 @@ class Spec(Config):
 
     @property
     def generic_asset_data_path_with_path(self) -> Path:
-        """ata path for a generic asset, relative to spec file's parent directory."""
+        """Data path for a generic asset, relative to spec file's parent directory."""
         dir = self.generic_asset_data_path
         return self._append_to_file_path(dir) if dir else None
 
