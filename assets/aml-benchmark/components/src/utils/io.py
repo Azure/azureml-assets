@@ -99,7 +99,7 @@ def resolve_io_path(dataset: str) -> List[str]:
             "Received 'dataset' as MLTable. Trying to process."
         )
         df = mltable.load(dataset).to_pandas_dataframe()
-        file_path = os.path.join(dataset, f"{uuid.uuid4()}.jsonl")
+        file_path = os.path.join(os.getcwd(), f"{uuid.uuid4()}.jsonl")
         df.to_json(file_path, orient="records", lines=True)
         return [file_path]
 
