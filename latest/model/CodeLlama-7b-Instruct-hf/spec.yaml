@@ -35,7 +35,7 @@ tags:
   author: meta
   task: text-generation
   SharedComputeCapacityEnabled: ''
-version: 2
+version: 1
 description: |
   # **Model Details**
   Note: Use of this model is governed by the Meta license. Click on View License above.
