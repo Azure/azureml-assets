@@ -235,7 +235,9 @@ ACFT_CONFIG = {
                 },
                 "model_hf_load_kwargs": {
                     "trust_remote_code": True,
+                    "ignore_mismatched_sizes": True,
                 },
+                "hf_predict_module": "phi_predict"
                 # "tokenizer_config": {
                 #     "return_token_type_ids": False,
                 # },
