@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """File containing function for finetune component."""
+
 import os
 import json
 import logging
@@ -9,6 +10,7 @@ import argparse
 from pathlib import Path
 from argparse import Namespace
 from copy import deepcopy
+from typing import Dict, Any
 
 import torch
 
@@ -26,7 +28,7 @@ from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
 
 from azureml.acft.accelerator.utils.run_utils import add_run_properties
 from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException
-from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError
+from azureml.acft.common_components.utils.error_handling.error_definitions import ACFTUserError, ACFTSystemError
 from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
 from azureml.acft.common_components.utils.logging_utils import SystemSettings
 from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
@@ -40,6 +42,8 @@ from azureml._common._error_definition.azureml_error import AzureMLError  # type
 logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.finetune.finetune")
 
 COMPONENT_NAME = "ACFT-Finetune"
+
+DEFAULT_DEEPSPEED_CONFIG = "zero2.json"
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
@@ -461,6 +465,129 @@ def copy_preprocess_args(args: Namespace) -> Namespace:
     return args
 
 
+def identify_deepspeed_stage(deepspeed_config_json: Dict[str, Any]) -> int:
+    """Read the deepspeed stage from the deepspeed config."""
+    zero_optimization_config = deepspeed_config_json.get("zero_optimization", {})
+
+    ds_stage = zero_optimization_config.get("stage", None)
+    if not isinstance(ds_stage, int):
+        raise ACFTValidationException._with_error(
+                AzureMLError.create(
+                    ACFTUserError,
+                    pii_safe_message=(
+                        "Invalid deepspeed config file. Stage information is missing from the config file."
+                    )
+                )
+            )
+
+    logger.info(f"Identified deepspeed stage: {ds_stage}.")
+
+    return ds_stage
+
+
+def check_for_invalid_ds_zero3_settings(args: Namespace):
+    """Check if invalid ds3 settings are selected by the user.
+
+    If fail_run is enabled for a setting raise an User Error otherwise reset the args using the valid_settings.
+    :param args: User passed args
+    :type Namespace
+    """
+    invalid_ds_zero3_settings = [
+        dict(
+            invalid_settings=dict(apply_lora=True),
+            fail_run=True,
+            valid_settings=None
+        ),
+        dict(
+            invalid_settings=dict(apply_ort=True),
+            fail_run=True,
+            valid_settings=None
+        ),
+        dict(
+            invalid_settings=dict(auto_find_batch_size=True),
+            fail_run=False,
+            valid_settings=dict(auto_find_batch_size=False)
+        )
+    ]
+    for setting in invalid_ds_zero3_settings:
+        invalid_settings = setting["invalid_settings"]
+        fail_run = setting["fail_run"]
+        valid_settings = setting["valid_settings"]
+        if all([getattr(args, key, None) == value for key, value in invalid_settings.items()]):
+            if fail_run:
+                raise ACFTValidationException._with_error(
+                    AzureMLError.create(
+                        ACFTUserError,
+                        pii_safe_message=(
+                            f"Invalid settings found. Deep Speed stage3 doesn't work with {invalid_settings}."
+                        )
+                    )
+                )
+            else:
+                if valid_settings is None:
+                    raise ACFTValidationException._with_error(
+                        AzureMLError.create(
+                            ACFTSystemError,
+                            pii_safe_message="Valid settings cannot be None."
+                        )
+                    )
+                logger.info(
+                    "Found invalid settings with deepspeed stage3."
+                    f"Reconfiguring the user parameters: {valid_settings}."
+                )
+                for key, value in valid_settings.items():
+                    setattr(args, key, value)
+
+
+def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
+    """Validate the deepspeed zero3 config file.
+
+    :param deepspeed_config: path to the deepspeed config file
+    :type str
+    """
+    zero_optimization_config = deepspeed_config_json.get("zero_optimization", {})
+
+    if not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "stage3_gather_16bit_weights_on_model_save should be "
+                    "`true` in deepspeed stage 3 config."
+                )
+            )
+        )
+
+
+def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
+    """Deepspeed initialization and validation.
+
+    :param args: User passed args
+    :type Namespace
+    :param do_validate: Validates the deepspeed config file in case of deepspeed stage3
+    :type bool
+    """
+    logger.info("Setting up deespeed.")
+    # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
+    args.deepspeed = getattr(args, "deepspeed", None) or DEFAULT_DEEPSPEED_CONFIG
+    if args.deepspeed is None:
+        logger.info("Deepspeed is not enabled. Nothing to setup!")
+        return
+
+    # load deepspeed config
+    with open(args.deepspeed, "r", encoding="utf-8") as fp:
+        ds_config_json = json.load(fp)
+
+    # add validations for deepspeed stage3
+    if do_validate and identify_deepspeed_stage(ds_config_json) == 3:
+        # validate the ds config file
+        logger.info("Validating deepspeed config.")
+        validate_ds_zero3_config(ds_config_json)
+        # check for invalid settings
+        logger.info("Checking for invalid deepspeed configurations.")
+        check_for_invalid_ds_zero3_settings(args)
+
+
 def finetune(args: Namespace):
     """Finetune."""
     logger.info(f"full_determinism is set to {args.enable_full_determinism}")
@@ -618,41 +745,12 @@ def finetune(args: Namespace):
 
     setattr(args, "apply_ort", can_apply_ort(args, logger))
 
-    # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
-    if args.apply_deepspeed and args.deepspeed is None:
-        args.deepspeed = "./zero2.json"
-    elif not args.apply_deepspeed:
+    # Deepspeed enabled
+    if args.apply_deepspeed:
+        setup_and_validate_deepspeed(args)
+    else:
         # do not use deepspeed config if provided when apply_deepspeed is set to false
         args.deepspeed = None
-
-    if args.deepspeed:
-        if getattr(args, "auto_find_batch_size", False):
-            logger.info(
-                "Auto find batch size with deepspeed has breaking change with transformers 4.31.0. "
-                "Resetting auto_find_batch_size to false."
-            )
-            setattr(args, "auto_find_batch_size", False)
-        with open(args.deepspeed, "r") as fp:
-            ds_data = json.load(fp)
-        zero_optimization_config = ds_data.get("zero_optimization", {})
-        ds_stage = zero_optimization_config.get("stage", None)
-        # `apply_lora=true` is not supported with stage3 deepspeed config
-        if ds_stage == 3 and args.apply_lora:
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(ACFTUserError, error=(
-                    "`apply_lora=true` configuration is currently not supported with deepspeed stage3 optimization"
-                    )
-                )
-            )
-        # `stage3_gather_16bit_weights_on_model_save=false` is not supported for stage3 deepspeed config
-        if ds_stage == 3 and not zero_optimization_config.get("stage3_gather_16bit_weights_on_model_save", False):
-            raise ACFTValidationException._with_error(
-                AzureMLError.create(ACFTUserError, error=(
-                    "stage3_gather_16bit_weights_on_model_save should be "
-                    "`true` in deepspeed stage 3 config"
-                    )
-                )
-            )
 
     if (
         not isinstance(args.evaluation_steps_interval, float) or
