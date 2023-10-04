@@ -12,7 +12,3 @@ tags:
 
 template:  
   path: ./prompt.yaml
-
-# Specify as top-level 'path' so it will be copied as a data item
-# Temporary workaround until we have a proper AssetConfig implemented
-path: ./prompt.yaml

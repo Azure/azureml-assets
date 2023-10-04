@@ -73,6 +73,13 @@ class ModelType(Enum):
     TRITON = 'triton_model'
 
 
+class GenericAssetType(Enum):
+    """Enum for generic asset types."""
+
+    PROMPT = 'prompt'
+    BENCHMARKRESULT = 'benchmarkresult'
+
+
 class Os(Enum):
     """Operating system types."""
 
@@ -357,6 +364,23 @@ class Spec(Config):
         return self._append_to_file_path(data_path) if data_path else None
 
     @property
+    def generic_asset_data_path(self) -> str:
+        """Data path for a generic asset."""
+        if self.type == GenericAssetType.PROMPT.value:
+            template = self._yaml.get('template')
+            return None if template is None else template.get('path')
+        elif self.type == GenericAssetType.BENCHMARKRESULT.value:
+            return self._yaml.get('path')
+        else:
+            return None
+
+    @property
+    def generic_asset_data_path_with_path(self) -> Path:
+        """ata path for a generic asset, relative to spec file's parent directory."""
+        dir = self.generic_asset_data_path
+        return self._append_to_file_path(dir) if dir else None
+
+    @property
     def release_paths(self) -> List[Path]:
         """Files that are required to create this asset."""
         release_paths = super().release_paths
@@ -370,6 +394,12 @@ class Spec(Config):
         data_path = self.data_path_with_path
         if data_path:
             release_paths.extend(Config._expand_path(data_path))
+
+        # Add files from generic assets
+        data_path = self.generic_asset_data_path_with_path
+        if data_path:
+            release_paths.extend(Config._expand_path(data_path))
+
         return release_paths
 
     @property
