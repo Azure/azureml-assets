@@ -17,7 +17,7 @@ Falcon-40B-Instruct may carry biases commonly found online due to its training d
 Users are advised to implement guardrails and take precautions for production use.
 It's mostly suited for English and French and may not generalize well to other languages.
 
-> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/tiiuae/falcon-40b" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+> The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/tiiuae/falcon-40b-instruct" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
 
 ## Training Details
 
