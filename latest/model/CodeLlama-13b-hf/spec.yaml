@@ -17,7 +17,7 @@ tags:
   - Standard_ND96amsr_A100_v4
   license: llama2
   author: meta
-version: 2
+version: 1
 description: |
   # **Code Llama**
 
