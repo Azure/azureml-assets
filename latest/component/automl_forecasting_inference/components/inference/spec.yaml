@@ -45,7 +45,7 @@ outputs:
       \ metrics component."
 
 code: ../../src
-environment: azureml://registries/azureml/environments/automl-gpu/versions/2
+environment: azureml://registries/azureml/environments/automl-gpu/versions/3
 
 command: >-
   python inference.py
