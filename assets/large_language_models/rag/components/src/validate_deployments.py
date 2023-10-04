@@ -57,7 +57,7 @@ def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=
     """Validate default aoai deployments and attempt creation if does not exist."""
     client = get_cognitive_services_client(ws)
     response = client.deployments.get(
-        resource_group_name=model_params["resource_group"],
+        resource_group_name=model_params.get("resource_group", ws.resource_group),
         account_name=model_params["default_aoai_name"],
         deployment_name=model_params["deployment_id"],
     )
@@ -293,8 +293,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                     'openai_api_type': completion_params["openai_api_type"],
                     'model_name': completion_params["model_name"],
                     'deployment_name': completion_params["deployment_id"],
-                    'is_default_aoai': "default_aoai_name" in completion_params,
-                    'resource_group': completion_params["resource_group"]}})
+                    'is_default_aoai': "default_aoai_name" in completion_params}})
     elif check_completion:
         activity_logger.info(
             "ValidationFailed: ConnectionID for LLM is empty and check_embeddings = True")
@@ -346,8 +345,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                     'openai_api_type': embedding_params["openai_api_type"],
                     'model_name': embedding_params["model_name"],
                     'deployment_name': embedding_params["deployment_id"],
-                    'is_default_aoai': "default_aoai_name" in embedding_params,
-                    'resource_group': embedding_params["resource_group"]}})
+                    'is_default_aoai': "default_aoai_name" in embedding_params}})
     elif check_embeddings:
         activity_logger.info(
             "ValidationFailed: ConnectionID for Embeddings is empty and check_embeddings = True")
