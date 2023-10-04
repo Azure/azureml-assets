@@ -23,6 +23,9 @@ tags:
   - Standard_NC96ads_A100_v4
   finetune_compute_allow_list:
   - Standard_ND96amsr_A100_v4
+  - Standard_NC24ads_A100_v4
+  - Standard_NC48ads_A100_v4 
+  - Standard_NC96ads_A100_v4
   license: custom
   author: meta
   model_specific_defaults:
