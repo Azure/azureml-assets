@@ -5,10 +5,18 @@ properties:
   SHA: 488587ade99c84ea4325e6d620d307372728cc97
   inference-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: EN
 tags:
   Featured: ''
   Preview: ''
+  evaluation_compute_allow_list:
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  - Standard_ND96amsr_A100_v4
   inference_compute_allow_list:
   - Standard_NC24s_v3
   - Standard_NC24rs_v3
@@ -18,7 +26,7 @@ tags:
   license: llama2
   author: meta
   task: text-generation
-version: 2
+version: 1
 description: |
   # **Code Llama**
   Code Llama is a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 34 billion parameters. This is the repository for the base 34B version in the Hugging Face Transformers format. This model is designed for general code synthesis and understanding. Links to other models can be found in the index at the bottom.
