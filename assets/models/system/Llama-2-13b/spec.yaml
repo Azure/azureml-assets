@@ -45,7 +45,7 @@ tags:
   model_specific_defaults:
     apply_deepspeed: 'true'
     apply_lora: 'true'
-    apply_lora: 'true'
+    apply_ort: 'true'
     precision: '16'
   task: text-generation
   inference_supported_envs:
