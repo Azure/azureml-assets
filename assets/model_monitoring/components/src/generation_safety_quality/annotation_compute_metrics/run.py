@@ -110,7 +110,7 @@ def run():
     aggregated_metrics_df = histogram_df.withColumn(GROUP_DIMENSION_COLUMN, lit(""))
 
     # overwrite threshold value column
-    aggregated_metrics_df = aggregated_metrics_df.withColumn(THRESHOLD_COLUMN, lit(""))
+    aggregated_metrics_df = aggregated_metrics_df.withColumn(THRESHOLD_COLUMN, lit("nan").cast("float"))
     metadata_schema = StructType(
             [
                 StructField(GROUP_COLUMN, StringType(), True),
