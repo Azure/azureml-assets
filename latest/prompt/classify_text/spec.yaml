@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+version: 0.0.1
+name: classify_text
+display_name: Classify Text
+description: Classify Text
+
+tags:
+  modality: completion
+  task: classification
+
+template:
+  path: ./prompt.yaml
