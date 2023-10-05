@@ -183,7 +183,8 @@ def main(args, ws, current_run, activity_logger: Logger):
         completion_model_name = completion_config.get("model_name", "gpt-3.5-turbo")
         completion_deployment_name = completion_model_name
         completion_model_name = "gpt-3.5-turbo" if completion_model_name is None else completion_model_name
-        completion_deployment_name = "gpt-3.5-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_deployment_name = \
+            "gpt-3.5-turbo" if completion_deployment_name is None else completion_deployment_name
         completion_provider = "OpenAI"
     else:
         completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
@@ -191,7 +192,8 @@ def main(args, ws, current_run, activity_logger: Logger):
             "deployment_name", "gpt-35-turbo")
     # Set default if key exsits but is set to None (as it is for basic pipelines)
         completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
-        completion_deployment_name = "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_deployment_name = \
+            "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
         completion_provider = "AzureOpenAI"
 
     embedding_connection_name = get_connection_name(
@@ -200,7 +202,7 @@ def main(args, ws, current_run, activity_logger: Logger):
             embedding_connection_name != "azureml-rag-default-aoai"):
         # default completion connection name to embedding ones if embedding conenction is provided
         completion_connection_name = embedding_connection_name
-    
+
     embedding_deployment_name_and_model_name = get_deployment_and_model_name(
         args.embeddings_model)
     embedding_deployment_name = embedding_deployment_name_and_model_name[0]
