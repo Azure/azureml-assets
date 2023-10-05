@@ -9,7 +9,6 @@ import polling2
 import traceback
 import requests
 from logging import Logger
-from azure.core.exceptions import ResourceNotFoundError, ResourceExistsError
 from azureml.rag.utils.connections import get_connection_by_id_v2, workspace_connection_to_credential
 from azureml.rag.utils.connections import get_connection_credential
 import time
@@ -36,54 +35,6 @@ MAX_RETRIES = 3
 SLEEP_DURATION = 2
 
 
-def create_aoai_deployment(
-        id,
-        model,
-        client: CognitiveServicesManagementClient,
-        ws,
-        default_aoai_name,
-        activity_logger=None):
-    """Create AOAI default resource deployment."""
-    # Attempt deployment creation 3x
-    for index in range(MAX_RETRIES+1):
-        try:
-            deployment_result = client.deployments.begin_create_or_update(
-                resource_group_name=ws.resource_group,
-                account_name=default_aoai_name,
-                deployment_name=id,
-                deployment={
-                    "properties": {
-                        "model": {
-                            "format": "OpenAI",
-                            "name": model
-                        },
-                        "scaleSettings": {
-                            "scaleType": "Standard"
-                        }
-                    }
-                }
-            )
-            result = deployment_result.result()
-            print(f"Deployment result: {result}")
-            return
-        except ResourceExistsError:
-            activity_logger.info("ValidationFailed: Failed to create deployment due to existing deployment"
-                                 + " for model: {}".format(traceback.format_exc()))
-            raise Exception(
-                f"Found existing deployment for model {model} specified. Please re-submit Vector Index "
-                + "creation with existing deployment name.")
-        except Exception as ex:
-            if (index < MAX_RETRIES):
-                time.sleep(SLEEP_DURATION)
-                activity_logger.info(
-                    "Failed to create deployment. Attempting retry of create_or_update deployment...")
-            else:
-                activity_logger.info(
-                    "ValidationFailed: Failed to create deployment despite retries with the following "
-                    + "exception: {}".format(traceback.format_exc()))
-                raise ex
-
-
 def get_cognitive_services_client(ws):
     """Get cognitive services client."""
     client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID", None)
@@ -104,43 +55,32 @@ def get_cognitive_services_client(ws):
 
 def validate_and_create_default_aoai_resource(ws, model_params, activity_logger=None):
     """Validate default aoai deployments and attempt creation if does not exist."""
-    try:
-        client = get_cognitive_services_client(ws)
-        response = client.deployments.get(
-            resource_group_name=ws.resource_group,
-            account_name=model_params["default_aoai_name"],
-            deployment_name=model_params["deployment_id"],
-        )
-        response_status = str.lower(response.properties.provisioning_state)
-        if (response_status != "succeeded"):
-            # log this becauase we need to find out what the possible states are
-            print(
-                f"Deployment is not yet in status 'succeeded'. Current status is: {response_status}")
-        if (response_status == "failed" or response_status == "deleting"):
-            # Do not allow polling to continue if deployment state is failed or deleting
-            activity_logger.info(
-                f"ValidationFailed: Deployment {model_params['deployment_id']} for model "
-                + f"{model_params['model_name']} is in failed or deleting state. Please resubmit job with a "
-                + "successful deployment.")
-            raise Exception(
-                f"Deployment {model_params['deployment_id']} for model {model_params['model_name']} is in failed "
-                + "or deleting state. Please resubmit job with a successful deployment.")
-        completion_succeeded = (response_status == "succeeded")
-        if (completion_succeeded):
-            activity_logger.info(
-                f"[Validate Deployments]: Default AOAI resource deployment {model_params['deployment_id']} for "
-                + f"model {model_params['model_name']} is in 'succeeded' status")
-        return completion_succeeded
-    except ResourceNotFoundError:
+    client = get_cognitive_services_client(ws)
+    response = client.deployments.get(
+        resource_group_name=model_params.get("resource_group", ws.resource_group),
+        account_name=model_params["default_aoai_name"],
+        deployment_name=model_params["deployment_id"],
+    )
+    response_status = str.lower(response.properties.provisioning_state)
+    if (response_status != "succeeded"):
+        # log this becauase we need to find out what the possible states are
+        print(
+            f"Deployment is not yet in status 'succeeded'. Current status is: {response_status}")
+    if (response_status == "failed" or response_status == "deleting"):
+        # Do not allow polling to continue if deployment state is failed or deleting
         activity_logger.info(
-            f"ResourceNotFound: Attempting to create deployment {model_params['deployment_id']} for model "
-            + f"{model_params['model_name']} in default AOAI workspace...")
-        create_aoai_deployment(id=model_params["deployment_id"],
-                               model=model_params["model_name"],
-                               client=client,
-                               ws=ws,
-                               default_aoai_name=model_params["default_aoai_name"],
-                               activity_logger=activity_logger)
+            f"ValidationFailed: Deployment {model_params['deployment_id']} for model "
+            + f"{model_params['model_name']} is in failed or deleting state. Please resubmit job with a "
+            + "successful deployment.")
+        raise Exception(
+            f"Deployment {model_params['deployment_id']} for model {model_params['model_name']} is in failed "
+            + "or deleting state. Please resubmit job with a successful deployment.")
+    completion_succeeded = (response_status == "succeeded")
+    if (completion_succeeded):
+        activity_logger.info(
+            f"[Validate Deployments]: Default AOAI resource deployment {model_params['deployment_id']} for "
+            + f"model {model_params['model_name']} is in 'succeeded' status")
+    return completion_succeeded
 
 
 def check_deployment_status(model_params, model_type, activity_logger=None):
@@ -339,6 +279,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                 cog_workspace_details = split_details(
                     connection_metadata["ResourceId"], start=1)
                 completion_params["default_aoai_name"] = cog_workspace_details["accounts"]
+                completion_params["resource_group"] = cog_workspace_details["resourceGroups"]
         if completion_params == {}:
             activity_logger.info(
                 "ValidationFailed: Completion model LLM connection was unable to pull information")
@@ -389,6 +330,7 @@ def validate_aoai_deployments(parser_args, check_completion, check_embeddings, a
                 cog_workspace_details = split_details(
                     connection_metadata["ResourceId"], start=1)
                 embedding_params["default_aoai_name"] = cog_workspace_details["accounts"]
+                embedding_params["resource_group"] = cog_workspace_details["resourceGroups"]
             print("Using workspace connection key for OpenAI embeddings")
         if embedding_params == {}:
             activity_logger.info(
@@ -492,8 +434,8 @@ def validate_acs(acs_config, activity_logger: Logger):
     for index in range(MAX_RETRIES+1):
         try:
             connection = get_connection_by_id_v2(connection_id_acs)
-            acs_config['endpoint'] = connection['properties']['target']
-            acs_metadata = connection['properties'].get('metadata', {})
+            acs_config['endpoint'] = connection.target
+            acs_metadata = connection.metadata
             acs_config['api_version'] = acs_metadata.get('apiVersion', "2023-07-01-preview")
             connection_args = {}
             connection_args['connection_type'] = 'workspace_connection'
