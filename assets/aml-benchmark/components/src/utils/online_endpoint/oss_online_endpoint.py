@@ -9,7 +9,6 @@ import time
 from azureml._model_management._util import get_requests_session
 from azureml._model_management._util import _get_mms_url
 
-from azure.ai.ml import MLClient
 from azure.ai.ml.entities import (
     ManagedOnlineEndpoint,
     ManagedOnlineDeployment
@@ -47,7 +46,8 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             endpoint_name: Optional[str] = None,
             deployment_name: Optional[str] = None,
             sku: Optional[str] = None,
-            api_version: str = '2023-04-01-Preview'
+            api_version: str = '2023-04-01-Preview',
+            connections_name: str = None
     ):
         super().__init__(
             workspace_name,
@@ -57,10 +57,10 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             endpoint_name,
             deployment_name,
             sku,
-            online_endpoint_model
+            online_endpoint_model,
+            connections_name
         )
         self._api_version = api_version
-        self._ml_client = None
 
     def get_endpoint_name_from_url(self) -> str:
         """Get the endpoint."""
@@ -157,6 +157,9 @@ class OSSOnlineEndpoint(OnlineEndpoint):
     def _get_endpoint_authorization_header_identity(self) -> dict:
         """Get the authorization header using managed identity."""
         return self._build_auth_headers(self.ml_client.online_endpoints.get_keys(self.endpoint_name).primary_key)
+
+    def _get_endpoint_token(self) -> str:
+        return self.ml_client.online_endpoints.get_keys(self.endpoint_name).primary_key
 
     def _get_endpoint_authorization_header_token(self) -> dict:
         """Get the authorization header using workspace authorization token."""
@@ -264,11 +267,3 @@ class OSSOnlineEndpoint(OnlineEndpoint):
     def _has_managed_identity(self) -> bool:
         """Check if the compute has managed identity."""
         return self._credential is not None
-
-    @property
-    def ml_client(self) -> MLClient:
-        """Get the ml client."""
-        if self._ml_client is None:
-            self._ml_client = MLClient(
-                self._credential, self.subscription_id, self.resource_group, self.workspace_name)
-        return self._ml_client

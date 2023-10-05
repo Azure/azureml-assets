@@ -31,15 +31,6 @@ inputs:
     type: uri_folder
     description: The raw batch inference output.
     optional: True
-  delete_managed_resources:
-    type: boolean
-    optional: True
-    default: True
-    description: If true, the managed resources created during the run will be deleted.
-  deployment_metadata_dir:
-    type: uri_folder
-    optional: True
-    description: The deployment metadata directory that contains deployment details.
   handle_response_failure:
     type: string
     optional: False
@@ -76,12 +67,9 @@ command: >-
   --perf_data ${{outputs.performance_metadata}}
   --predict_ground_truth_data ${{outputs.ground_truth}}
   --label_key ${{inputs.label_key}}
-  --model_type ${{inputs.model_type}}
   --handle_response_failure ${{inputs.handle_response_failure}}
   --is_performance_test ${{inputs.is_performance_test}}
   $[[--metadata_key ${{inputs.metadata_key}}]]
   $[[--data_id_key ${{inputs.data_id_key}}]]
   $[[--fallback_value ${{inputs.fallback_value}}]]
   $[[--ground_truth_input ${{inputs.ground_truth_input}}]]
-  $[[--delete_managed_resources ${{inputs.delete_managed_resources}}]]
-  $[[--deployment_metadata_dir ${{inputs.deployment_metadata_dir}}]]

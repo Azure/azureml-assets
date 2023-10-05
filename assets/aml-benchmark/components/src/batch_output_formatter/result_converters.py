@@ -4,19 +4,25 @@
 """Class for convert the results to dict."""
 
 import copy
+import datetime
 from typing import Any, Dict, Optional
 import pandas as pd
 
 from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
+from utils.logging import get_logger
+
+
+logger = get_logger(__name__)
 
 
 class ResultConverters:
     """Convert the batch inference output to different results."""
 
-    TOKEN_KEYS = ["completion_tokens", "prompt_tokens", "total_tokens"]
-    LATENCY_KEYS = ["start", "end", "latency"]
+    PERF_OUTPUT_KEYS = [
+        "start_time_iso", "end_time_iso", "time_taken_ms", "output_token_count", "input_token_count"]
     METADATA_KEY_IN_RESULT = 'request_metadata'
     PREDICTION_COL_NAME = 'prediction'
+    DEFAULT_ISO_FORMAT = '2000-01-01T00:00:00.000000+00:00'
 
     def __init__(
             self, model_type: str, metadata_key: str, data_id_key: str,
@@ -42,12 +48,29 @@ class ResultConverters:
 
     def convert_result_perf(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the result to perf metrics."""
-        usage = copy.deepcopy(result.get('usage', {}))
-        for key in ResultConverters.TOKEN_KEYS:
-            if key not in usage:
-                usage[key] = -1
-        for key in ResultConverters.LATENCY_KEYS:
-            usage[key] = result.get(key, -1)
+        if not self.is_result_success(result):
+            return self._get_fallback_output(is_perf=True)
+        response = self._get_response(result)
+        usage = copy.deepcopy(response.get('usage', {}))
+        result = {}
+        for new_key, old_key in zip(
+                ResultConverters.PERF_OUTPUT_KEYS, [
+                    "start", "end", "latency", "completion_tokens", "prompt_tokens"]):
+            if new_key in usage:
+                # For the token scenario, no need to do the conversion.
+                usage[new_key] = usage[new_key]
+            elif "time_iso" in new_key:
+                if old_key not in result:
+                    logger.warning(
+                        "Cannot find {} in response {}. Using default now.".format(old_key, result))
+                    usage[new_key] = ResultConverters.DEFAULT_ISO_FORMAT
+                    continue
+                dt = datetime.datetime.utcfromtimestamp(result[old_key] / 1000)
+                usage[new_key] = dt.astimezone().isoformat()
+            else:
+                # For the token and latency scenarios, no need to do the conversion.
+                usage[new_key] = result.get(old_key, -1)
+        usage['batch_size'] = result.get('batch_size', 1)
         return usage
 
     def convert_result_ground_truth(self, result: Dict[str, Any]) -> Dict[str, Any]:
@@ -77,7 +100,11 @@ class ResultConverters:
             prediction = ResultConverters._get_aoai_response_result(result)
         return {ResultConverters.PREDICTION_COL_NAME: prediction}
 
-    def _get_fallback_output(self) -> Dict[str, Any]:
+    def _get_fallback_output(self, is_perf: bool = False) -> Dict[str, Any]:
+        if is_perf:
+            result = {k: -1 for k in ResultConverters.PERF_OUTPUT_KEYS}
+            result['start_time_iso'] = ResultConverters.DEFAULT_ISO_FORMAT
+            result['end_time_iso'] = datetime.datetime.utcnow().isoformat()
         return {ResultConverters.PREDICTION_COL_NAME: self._fallback_value}
 
     def is_result_success(self, result: Dict[str, Any]) -> bool:

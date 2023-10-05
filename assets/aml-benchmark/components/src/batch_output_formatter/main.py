@@ -38,7 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--fallback_value", type=str, help="The fallback value.", default='')
     parser.add_argument(
         "--delete_managed_resources",
-        default=True, type=str2bool,
+        default=False, type=str2bool,
         help="Delete managed resources create during the run.",
     )
     parser.add_argument(
@@ -49,23 +49,6 @@ def parse_args() -> argparse.Namespace:
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
     return args
-
-
-def delete_managed_resources_maybe(
-        delete_managed_resources: bool,
-        deployment_metadata_dir: str,
-) -> None:
-    """Delete managed resources if delete_managed_resources is True."""
-    if delete_managed_resources and deployment_metadata_dir:
-        logger.info("Deleting managed resources.")
-        deployment_metadata = EndpointUtilities.load_endpoint_metadata_json(deployment_metadata_dir)
-        endpoint = OnlineEndpointFactory.from_metadata(deployment_metadata)
-        if deployment_metadata['is_managed_endpoint']:
-            logger.info("Deleting endpoint.")
-            endpoint.delete_endpoint()
-        elif deployment_metadata['is_managed_deployment']:
-            logger.info("Deleting deployment.")
-            endpoint.delete_deployment()
 
 
 @swallow_all_exceptions(logger)
@@ -79,8 +62,6 @@ def main(
         prediction_data: str,
         perf_data: str,
         predict_ground_truth_data: str,
-        delete_managed_resources: bool,
-        deployment_metadata_dir: str,
         handle_response_failure: str,
         fallback_value: str,
         is_performance_test: bool
@@ -110,13 +91,12 @@ def main(
     data_files = [
         f for f in os.listdir(batch_inference_output) if f.endswith("json") or f.endswith("jsonl")
     ]
-    print(f"Receiving {data_files}")
+    logger.info(f"Receiving {data_files}")
 
     new_df = []
     perf_df = []
     ground_truth = []
     if ground_truth_input:
-        print(os.listdir(ground_truth_input))
         input_file_paths = resolve_io_path(ground_truth_input)
         ground_truth_df = pd.DataFrame(read_jsonl_files(input_file_paths))
     else:
@@ -146,8 +126,6 @@ def main(
     perf_df.to_json(perf_data, orient="records", lines=True)
     ground_truth.to_json(predict_ground_truth_data, orient="records", lines=True)
 
-    delete_managed_resources_maybe(delete_managed_resources, deployment_metadata_dir)
-
 
 if __name__ == "__main__":
     args = parse_args()
@@ -161,8 +139,6 @@ if __name__ == "__main__":
         prediction_data=args.prediction_data,
         perf_data=args.perf_data,
         predict_ground_truth_data=args.predict_ground_truth_data,
-        delete_managed_resources=args.delete_managed_resources,
-        deployment_metadata_dir=args.deployment_metadata_dir,
         handle_response_failure=args.handle_response_failure,
         fallback_value=args.fallback_value,
         is_performance_test=args.is_performance_test

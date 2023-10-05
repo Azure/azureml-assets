@@ -217,6 +217,8 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--endpoint_resource_group", default=None, type=str)
     parser.add_argument("--endpoint_workspace", default=None, type=str)
     parser.add_argument("--input_metadata", default=None, type=str)
+    parser.add_argument("--deployment_name", default=None, type=str)
+    parser.add_argument("--connections_name", default=None, type=str)
 
 
 def print_arguments(args: Namespace):
@@ -259,6 +261,8 @@ def print_arguments(args: Namespace):
     lu.get_logger().debug("endpoint_resource_group: %s" % args.endpoint_resource_group)
     lu.get_logger().debug("endpoint_workspace: %s" % args.endpoint_workspace)
     lu.get_logger().debug("mdoel_type: %s" % args.model_type)
+    lu.get_logger().debug("deployment_name: %s" % args.deployment_name)
+    lu.get_logger().debug("connections_name: %s" % args.connections_name)
 
 
 def save_mini_batch_results(mini_batch_results: list, mini_batch_context):
@@ -360,9 +364,10 @@ def setup_header_handler(
     endpoint_resource_group = input_metadata.get("resource_group", args.endpoint_resource_group)
     endpoint_subscription_id = input_metadata.get("subscription_id", args.endpoint_subscription_id)
     endpoint_name = input_metadata.get("endpoint_name", scoring_url.split('/')[2].split('.')[0])
-    deployment_name = input_metadata.get("deployment_name")
+    deployment_name = input_metadata.get("deployment_name", args.deployment_name)
 
-    model = OnlineEndpointModel(model=None, model_version=None, model_type=model_type)
+    model = OnlineEndpointModel(
+        model=None, model_version=None, model_type=model_type, endpoint_url=scoring_url)
     if model.is_aoai_model():
         return OAIHeaderHandler(
             token_provider=token_provider, user_agent_segment=args.user_agent_segment,
@@ -382,5 +387,6 @@ def setup_header_handler(
         endpoint_name=endpoint_name,
         endpoint_subscription=endpoint_subscription_id,
         endpoint_resource_group=endpoint_resource_group,
-        endpoint_workspace=endpoint_workspace
+        endpoint_workspace=endpoint_workspace,
+        deployment_name=deployment_name
     )

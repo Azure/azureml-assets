@@ -9,7 +9,10 @@ from typing import Optional
 
 class OnlineEndpointModel:
     """Class for online endpoint model."""
-    def __init__(self, model: str, model_version: Optional[str], model_type: str):
+    def __init__(
+            self, model: str, model_version: Optional[str], model_type: str,
+            endpoint_url: Optional[str] = None
+    ):
         if model is not None and model.startswith('azureml:'):
             self._model_name = model.split('/')[-3]
             self._model_path = model
@@ -19,6 +22,8 @@ class OnlineEndpointModel:
             self._model_name = model
             self._model_path = None
             self._model_version = model_version
+        if model_type is None:
+            self._model_type = self._get_model_type_from_url(endpoint_url)
         self._model_type = model_type
 
     @property
@@ -53,3 +58,8 @@ class OnlineEndpointModel:
     def is_oss_model(self) -> bool:
         """Check if the model is llama model."""
         return self._model_type == 'oss'
+
+    def _get_model_type_from_url(self, endpoint_url: str) -> str:
+        if 'openai.azure.com' in endpoint_url:
+            return 'oai'
+        return 'oss'

@@ -31,7 +31,8 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             deployment_name: Optional[str] = None,
             sku: Optional[str] = None,
             location: Optional[str] = None,
-            api_version: str = '2023-05-01'
+            api_version: str = '2023-05-01',
+            connections_name: Optional[str] = None
     ):
         # For AOAI endpoint, the account name is the same as the endpoint name.
         super().__init__(
@@ -42,7 +43,8 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             endpoint_name,
             deployment_name,
             sku,
-            online_endpoint_model
+            online_endpoint_model,
+            connections_name
         )
         self._api_version = api_version
         self._location = location
@@ -124,6 +126,9 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
 
     def get_endpoint_authorization_header(self) -> dict:
         """Get the authorization header."""
+        return {'api-key': self._get_endpoint_token()}
+    
+    def _get_endpoint_token(self) -> str:
         resp = self._call_endpoint(get_requests_session().post, self._aoai_deployment_list_key_url)
         self._raise_if_not_success(
             resp,
@@ -131,7 +136,8 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
                 f'response code: {resp.status_code}, response content: {resp.content}.'
         )
         keys_content = self._get_content_from_response(resp)
-        return {'api-key': keys_content['key1']}
+        return keys_content['key1']
+
 
     def get_resource_authorization_header(self) -> dict:
         """Get the authorization header."""

@@ -23,7 +23,8 @@ class OnlineEndpointFactory:
             endpoint: Optional[str] = None,
             deployment_name: Optional[str] = None,
             sku: Optional[str] = None,
-            location: Optional[str] = None
+            location: Optional[str] = None,
+            connections_name: Optional[str] = None
     ) -> OnlineEndpoint:
         """Get the online endpoint."""
         online_endpoint_url = endpoint if OnlineEndpointFactory._is_endpoint_url(endpoint) else None
@@ -38,7 +39,8 @@ class OnlineEndpointFactory:
                 endpoint_name,
                 deployment_name,
                 sku,
-                location
+                location,
+                connections_name=connections_name
             )
         else:
             return OSSOnlineEndpoint(
@@ -49,7 +51,8 @@ class OnlineEndpointFactory:
                 online_endpoint_url,
                 endpoint_name,
                 deployment_name,
-                sku
+                sku,
+                connections_name=connections_name
             )
 
     @staticmethod
@@ -70,7 +73,8 @@ class OnlineEndpointFactory:
             metadata_dict['scoring_url'],
             metadata_dict['deployment_name'],
             None,
-            None
+            None,
+            metadata_dict['connections_name']
         )
 
     @staticmethod
