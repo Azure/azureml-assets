@@ -52,7 +52,7 @@ tags:
   model_specific_defaults:
     apply_lora: 'true'
     precision: '4'
-version: 1
+version: 2
 
 description: |
   # Description

@@ -11,7 +11,7 @@ dependencies:
       - azureml-contrib-services
       - azure-identity==1.14.0
       - azureml-core==1.53.0
-      - azure-ai-ml==1.10.1
+      - azure-ai-ml==1.11.0
       - azure-kusto-data==4.2.0
       - plotly~=5.13.1
       - recognizers-text-suite~=1.0.2a2
