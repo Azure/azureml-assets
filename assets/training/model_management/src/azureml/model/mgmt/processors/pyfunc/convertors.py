@@ -268,7 +268,7 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
         )
 
     def _get_code_path(self):
-        """Return code path for saving mlflow model depending on task type
+        """Return code path for saving mlflow model depending on task type.
 
         :return: code path
         :rtype: List[str]

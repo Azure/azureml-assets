@@ -59,8 +59,9 @@ class TestCLIPEmbeddings:
 
 class InputCases:
     """Class for generating valid and invalid inputs for CLIP Embeddings."""
+
     def __init__(self):
-        """Initialize text and image data"""
+        """Initialize text and image data."""
         self.text_list = [
             "text 1", "text 2", "text 3"
         ]
