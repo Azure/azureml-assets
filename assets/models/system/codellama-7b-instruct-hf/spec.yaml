@@ -35,4 +35,4 @@ tags:
   author: meta
   task: text-generation
   SharedComputeCapacityEnabled: ''
-version: 1
+version: 2
