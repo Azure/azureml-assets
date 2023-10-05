@@ -13,6 +13,27 @@ outputs:
     evaluation_only: false
     is_chat_output: true
 nodes:
+- name: modify_query_with_history
+  type: llm
+  source:
+    type: code
+    path: modify_query_with_history.jinja2
+  inputs:
+    deployment_name: @@Completion_Deployment_Name
+    temperature: 1
+    top_p: 1
+    stop: ""
+    max_tokens: 0
+    presence_penalty: 0
+    frequency_penalty: 0
+    logit_bias: ""
+    chat_history: ${inputs.chat_history}
+    question: ${flow.question}
+  provider: AzureOpenAI
+  connection: @@Completion_Connection
+  api: @@API
+  module: promptflow.tools.aoai
+  use_variants: false
 - name: embed_the_question
   type: python
   source:
@@ -21,7 +42,7 @@ nodes:
   inputs:
     connection: @@Embedding_Connection
     deployment_name: @@Embedding_Deployment_Name
-    input: ${flow.question}
+    input: ${modify_query_with_history.output}
   aggregation: false
 - name: search_question_from_indexed_docs
   type: python
@@ -79,7 +100,7 @@ node_variants:
             path: Prompt_variants__Variant_0.jinja2
           inputs:
             contexts: ${generate_prompt_context.output}
-            question: ${flow.question}
+            question: ${modify_query_with_history.output}
             chat_history: ${flow.chat_history}
           aggregation: false
       Variant_1:
@@ -90,7 +111,7 @@ node_variants:
             path: Prompt_variants__Variant_1.jinja2
           inputs:
             contexts: ${generate_prompt_context.output}
-            question: ${flow.question}
+            question: ${modify_query_with_history.output}
             chat_history: ${flow.chat_history}
           aggregation: false
       Variant_2:
@@ -101,7 +122,7 @@ node_variants:
             path: Prompt_variants__Variant_2.jinja2
           inputs:
             contexts: ${generate_prompt_context.output}
-            question: ${flow.question}
+            question: ${modify_query_with_history.output}
             chat_history: ${flow.chat_history}
           aggregation: false
 environment:
