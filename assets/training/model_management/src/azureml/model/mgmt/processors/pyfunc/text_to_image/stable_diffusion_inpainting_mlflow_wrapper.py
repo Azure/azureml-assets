@@ -13,7 +13,7 @@ import os
 import pandas as pd
 from diffusers import StableDiffusionInpaintPipeline
 from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants, DatatypeLiterals
-from vision_utils import get_pil_image, process_image, get_current_device, image_to_base64
+from vision_utils import get_pil_image, process_image_pandas_series, get_current_device, image_to_base64
 
 logger = logging.getLogger(__name__)
 
@@ -70,11 +70,11 @@ class StableDiffusionInpaintingMLflowWrapper(mlflow.pyfunc.PythonModel):
         :rtype: pd.DataFrame
         """
         # Decode the base64 image column
-        images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(axis=1, func=process_image)
+        images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(axis=1, func=process_image_pandas_series)
         images = images.loc[:, 0].apply(func=get_pil_image).tolist()
 
         mask_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_MASK_IMAGE]].apply(
-            axis=1, func=process_image
+            axis=1, func=process_image_pandas_series
         )
         mask_images = mask_images.loc[:, 0].apply(func=get_pil_image).tolist()
 

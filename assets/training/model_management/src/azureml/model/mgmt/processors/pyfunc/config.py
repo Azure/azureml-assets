@@ -27,11 +27,11 @@ class SupportedTasks(_CustomEnum):
     TEXT_TO_IMAGE = "text-to-image"
     TEXT_TO_IMAGE_INPAINTING = "text-to-image-inpainting"
 
+    # LLaVA task
+    IMAGE_TEXT_TO_TEXT = "image-text-to-text"
+
 
 class SupportedTextToImageModelFamily(_CustomEnum):
     """Supported text to image models."""
 
     STABLE_DIFFUSION = "stable-diffusion"
-
-    # LLaVA task
-    IMAGE_TEXT_TO_TEXT = "image-text-to-text"
