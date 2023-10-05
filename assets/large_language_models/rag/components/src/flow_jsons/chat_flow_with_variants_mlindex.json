@@ -462,7 +462,7 @@
                 "presence_penalty": "0",
                 "frequency_penalty": "0",
                 "logit_bias": "",
-                "question": "${inputs.question}",
+                "question": "${flow.question}",
                 "chat_history": "${flow.chat_history}"
               },
               "api": "@@API",

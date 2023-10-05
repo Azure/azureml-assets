@@ -37,9 +37,9 @@ RUN_TOKEN = os.environ.get("AZUREML_RUN_TOKEN", "")
 CODE_DIR = "rag_code_flow"
 _CITATION_TEMPLATE = r'\nPlease add citation after each sentence when possible in a form \"(Source: citation)\".'
 _USER_INPUT = r'{{contexts}} \n user: {{question}} \nassistant:'
-_MODIFY_INPUT = r'Given the following conversation and a follow up question, rephrase the follow up question ' + \
-    r'be a standalone question, in its original language.\nIf there is nothing relevent in the conversation, ' + \
-    r'you can restate the original question.\n'
+_MODIFY_INPUT = r'system: \nGiven the following conversation history and the users next question,' + \
+    r'rephrase the question to be a stand alone question.\nIf the conversation is irrelevant ' + \
+    r'or empty, just restate the original question.\nDo not add more details than necessary to the question.'
 _CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ item.inputs.question }} ' + \
     r'\nassistant: \n{{ item.outputs.output }} \n{% endfor %}'
 _MODIFY_PROMPT = r'system: \n' + _MODIFY_INPUT + r'\nconversation:\n' + _CHAT_HISTORY + \
@@ -51,7 +51,7 @@ def post_processing_prompts(prompt, citation_templates, user_input, is_chat):
     """Post processing prompts to include multiple roles to make it compatible with completion and chat API."""
     if is_chat:
         full_prompt = r'system: \n' + prompt + citation_templates + r'\n\n user: \n {{contexts}} \n' + \
-                _CHAT_HISTORY + r'\n\nHuman: {{question}} \nAI:'
+                _CHAT_HISTORY + r'\nuser: {{question}} \nassistant:'
     else:
         full_prompt = r'system: \n' + prompt + citation_templates + r'\n\n user: \n ' + user_input
 
