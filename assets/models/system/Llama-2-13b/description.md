@@ -102,7 +102,8 @@ Please see the Responsible Use Guide available at [https://ai.meta.com/llama/res
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |--|--|--|--|--|
-Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://aka.ms/azureml-ft-sdk-emotion-detection" target="_blank">emotion-detection.ipynb</a>| coming soon
+Text Generation|Summarization|<a href="https://huggingface.co/datasets/samsum" target="_blank">Samsum</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/foundation-models/system/finetune/Llama-notebooks/text-generation/summarization_with_text_gen.ipynb" target="_blank">summarization_with_text_gen.ipynb</a>| <a href="https://github.com/Azure/azureml-examples/blob/main/cli/foundation-models/system/finetune/text-generation/text-generation.sh">text-generation.sh</a>
+Text Classification|Emotion Detection|<a href="https://huggingface.co/datasets/dair-ai/emotion" target="_blank">Emotion</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/foundation-models/system/finetune/Llama-notebooks/text-classification/emotion-detection-llama.ipynb" target="_blank">emotion-detection-llama.ipynb</a>| <a href="https://github.com/Azure/azureml-examples/blob/main/cli/foundation-models/system/finetune/text-classification/emotion-detection.sh">emotion-detection.sh</a>
 
 ## **Model Evaluation**
 
@@ -120,7 +121,7 @@ Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn
         "parameters": {
                 "top_p": 0.9,
                 "temperature": 0.7,
-                "max_gen_len": 50,
+                "max_new_tokens": 50,
                 "do_sample": true
             }
     }
