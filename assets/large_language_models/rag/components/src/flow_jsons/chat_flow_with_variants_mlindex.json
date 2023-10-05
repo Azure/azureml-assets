@@ -37,7 +37,8 @@
           "tool": "Prompt_variants",
           "inputs": {
             "contexts": "${generate_prompt_context.output}",
-            "question": "${flow.question}"
+            "question": "${flow.question}",
+            "chat_history": "${flow.chat_history}"
           },
           "reduce": false
         },
@@ -69,6 +70,11 @@
       "inputs": {
         "question": {
           "type": "string",
+          "is_chat_input": true
+        },
+        "chat_history": {
+          "type": "list",
+          "is_chat_history": true,
           "is_chat_input": false
         }
       },
@@ -77,7 +83,7 @@
           "type": "string",
           "reference": "${answer_the_question_with_context.output}",
           "evaluation_only": false,
-          "is_chat_output": false
+          "is_chat_output": true
         }
       },
       "tools": [
@@ -200,6 +206,12 @@
               "type": [
                 "string"
               ]
+            },
+            "chat_history": {
+              "name": "chat_history",
+              "type": [
+                "string"
+              ]
             }
           },
           "code": "@@prompt_variant_0",
@@ -220,6 +232,12 @@
               "type": [
                 "string"
               ]
+            },
+            "chat_history": {
+              "name": "chat_history",
+              "type": [
+                "string"
+              ]
             }
           },
           "code": "@@prompt_variant_1",
@@ -237,6 +255,12 @@
             },
             "question": {
               "name": "question",
+              "type": [
+                "string"
+              ]
+            },
+            "chat_history": {
+              "name": "chat_history",
               "type": [
                 "string"
               ]
@@ -312,37 +336,40 @@
         }
       },
       "Prompt_variants": {
-        "defaultVariantId": "@@Variant_0",
+        "defaultVariantId": "Variant_0",
         "variants": {
-          "@@Variant_0": {
+          "Variant_0": {
             "node": {
               "name": "Prompt_variants",
               "tool": "Prompt_variants",
               "inputs": {
                 "contexts": "${generate_prompt_context.output}",
-                "question": "${flow.question}"
+                "question": "${flow.question}",
+                "chat_history": "${flow.chat_history}"
               },
               "reduce": false
             }
           },
-          "@@Variant_1": {
+          "Variant_1": {
             "node": {
               "name": "Prompt_variants",
               "tool": "Prompt_variants__variant_1",
               "inputs": {
                 "contexts": "${generate_prompt_context.output}",
-                "question": "${flow.question}"
+                "question": "${flow.question}",
+                "chat_history": "${flow.chat_history}"
               },
               "reduce": false
             }
           },
-          "@@Variant_2": {
+          "Variant_2": {
             "node": {
               "name": "Prompt_variants",
               "tool": "Prompt_variants__variant_2",
               "inputs": {
                 "contexts": "${generate_prompt_context.output}",
-                "question": "${flow.question}"
+                "question": "${flow.question}",
+                "chat_history": "${flow.chat_history}"
               },
               "reduce": false
             }
@@ -382,5 +409,5 @@
       }
     }
   },
-  "flowType": "Default"
+  "flowType": "Chat"
 }
