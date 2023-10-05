@@ -297,7 +297,7 @@ def main(args, ws, current_run, activity_logger: Logger):
             with open(os.path.join(
                     Path(__file__).parent.absolute(),
                     CODE_DIR,
-                    f"modify_query_with_history.jinja2"), "w") as file:
+                    "modify_query_with_history.jinja2"), "w") as file:
                 file.write(codecs.decode(_MODIFY_PROMPT, 'unicode_escape'))
 
         # upload code
