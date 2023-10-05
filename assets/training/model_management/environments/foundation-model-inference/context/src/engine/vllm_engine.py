@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 import concurrent
 import json
 import subprocess
@@ -21,6 +24,7 @@ logger = configure_logger(__name__)
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 8000
 
+# fmt: off
 VLLM_SAMPLING_PARAMS = {
     "n": "Number of output sequences to return for the given prompt.",
     "best_of": "Number of output sequences that are generated from the prompt. From these `best_of` sequences, the top `n` sequences are returned. `best_of` must be greater than or equal to `n`. This is treated as the beam width when `use_beam_search` is True. By default, `best_of` is set to `n`.",
@@ -40,7 +44,7 @@ VLLM_SAMPLING_PARAMS = {
     "skip_special_tokens": "Whether to skip special tokens in the output. Defaults to true.",
     "_batch_size": "Number of prompts to generate in parallel. Defaults to 1.",
 }
-
+# fmt: on
 
 class VLLMEngine(AbstractEngine):
     def __init__(self, engine_config: EngineConfig, task_config: TaskConfig):

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from dataclasses import dataclass
 from constants import TaskType
 from typing import Dict

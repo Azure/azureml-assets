@@ -1,32 +1,35 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from setuptools import setup, find_packages
 
 # Read requirements.txt
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     requirements = f.read().splitlines()
 
 
 setup(
-    name='fm-optimized-inference',
-    version='0.1.0.dev0',
-    author='Microsoft',
-    author_email='',
-    description='',
-    long_description=open('README.md').read(),
-    long_description_content_type='text/markdown',
+    name="fm-optimized-inference",
+    version="0.1.0.dev0",
+    author="Microsoft",
+    author_email="",
+    description="",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     url="",
-    packages=find_packages(where='src'),
-    package_dir={'': 'src'},
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',  # Update the license as needed
-        'Programming Language :: Python :: 3.8',
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",  # Update the license as needed
+        "Programming Language :: Python :: 3.8",
     ],
     install_requires=requirements,
     extras_require={
-        'dev': [
+        "dev": [
             "pytest",
         ],
     },
-    python_requires='>=3.8',
+    python_requires=">=3.8",
 )
