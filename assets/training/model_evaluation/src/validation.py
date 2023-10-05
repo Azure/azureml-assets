@@ -247,14 +247,14 @@ def _clean_and_validate_dataset(data, keep_columns, batch_size=None):
     )
 
     # remove the null values
-    pre_filter_examples = data.shape[0]
+    pre_filter_examples = len(data)
     logger.info("Filtering rows with 'None' values")
     logger.info(f"Number of examples before filter: {pre_filter_examples}")
     # TODO support batched=True and handle processing multiple examples in lambda
     data['to_filter'] = data.apply(lambda x: all(_check_if_non_empty(x[col]) for col in keep_columns), axis=1)
     data = data.loc[data['to_filter']]
     data = data.drop('to_filter', axis=1)
-    post_filter_examples = data.shape[0]
+    post_filter_examples = len(data)
     logger.info(f"Number of examples after postprocessing: {post_filter_examples}")
     if post_filter_examples == 0 and batch_size is None:
         exception = DataValidationException._with_error(

@@ -176,7 +176,7 @@ class ModelPredictionRunner:
 
         for idx, (X_test, y_test_batch) in enumerate(data):
             logger.info("batch: " + str(idx))
-            if X_test.shape[0] == 0:
+            if len(X_test) == 0:
                 logger.info("No samples in batch. Skipping.")
                 continue
 
@@ -321,7 +321,7 @@ class ModelPredictionRunner:
                     log_traceback(exception, logger)
                 raise exception
 
-        if self.batch_size is not None and predictions.shape[0] == 0:
+        if self.batch_size is not None and len(predictions) == 0:
             exception = DataValidationException._with_error(
                 AzureMLError.create(EmptyInputData)
             )
