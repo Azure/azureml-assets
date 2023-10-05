@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This module provides the FMScore class for running inference engines with given prompts and parameters."""
+
 from typing import Dict, List
 from configs import EngineConfig, TaskConfig
 from constants import TaskType
@@ -13,6 +15,7 @@ logger = configure_logger(__name__)
 
 
 def get_engine(engine_name: str, engine_config: EngineConfig, task_config: TaskConfig):
+    """Return the appropriate engine based on the engine name."""
     if engine_name == "hf":
         return HfEngine(engine_config)
     elif engine_name == "vllm":
@@ -28,6 +31,7 @@ def get_engine(engine_name: str, engine_config: EngineConfig, task_config: TaskC
 
 
 def get_formatter(model_name: str):
+    """Return the appropriate formatter based on the model name."""
     if model_name == "Llama2":
         return Llama2Formatter()
     else:
@@ -35,11 +39,15 @@ def get_formatter(model_name: str):
 
 
 class FMScore:
+    """Class for running inference engines with given prompts and parameters."""
+
     def __init__(self, config: Dict):
+        """Initialize the FMScore with the given configuration."""
         self.task_config = TaskConfig.from_dict(config["task"])
         self.engine_config = EngineConfig.from_dict(config["engine"])
 
     def init(self):
+        """Initialize the engine and formatter."""
         self.engine = self._initialize_engine()
         self.formatter = self._initialize_formatter()
 
@@ -47,6 +55,7 @@ class FMScore:
     def run(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
         """
         Run the engine with the given prompts and parameters.
+
         :param prompts: List of prompts
         :param params: Dictionary of parameters
         :return: A list of InferenceResult objects, each containing the response and metadata related to the inference
@@ -111,4 +120,4 @@ if __name__ == "__main__":
 
     fms = FMScore(sample_config)
     fms.init()
-    fms.run("Today is a wonderful day to ", {"max_length": 128})
+    fms.run(["Today is a wonderful day to "], {"max_length": 128})

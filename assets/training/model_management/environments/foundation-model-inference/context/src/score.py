@@ -67,7 +67,7 @@ class CsChunkingUtils:
 
     def chunkstring(self, string, length):
         """Chunk strings in a given length."""
-        return (string[0 + i: length + i] for i in range(0, len(string), length))
+        return (string[0 + i : length + i] for i in range(0, len(string), length))
 
     def split_by(self, input):
         """Split the input."""

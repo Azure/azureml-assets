@@ -1,11 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Module for configuring the logger."""
+
 import logging
 import sys
 
 
 def configure_logger(name):
+    """Configure and return a logger with the given name."""
     logger = logging.getLogger(name)
     logger.propagate = False
     logger.setLevel(logging.DEBUG)

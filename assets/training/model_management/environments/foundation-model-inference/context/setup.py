@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Setup script for the package."""
+
 from setuptools import setup, find_packages
 
 # Read requirements.txt
@@ -10,7 +12,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="fm-optimized-inference",
-    version="0.1.0.dev0",
+    version="0.1",
     author="Microsoft",
     author_email="",
     description="",
@@ -22,7 +24,7 @@ setup(
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",  # Update the license as needed
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.8",
     ],
     install_requires=requirements,

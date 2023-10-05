@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This module provides classes and methods for handling inference tasks."""
+
 import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -16,6 +18,8 @@ from utils import log_execution_time
 
 @dataclass
 class InferenceResult:
+    """Data class for storing inference results."""
+
     response: str
     inference_time_ms: float
     time_per_token_ms: float
@@ -23,33 +27,42 @@ class InferenceResult:
 
 
 class AbstractEngine(ABC):
+    """Abstract base class for inference engines."""
+
     @abstractmethod
     def load_model(self):
-        pass
+        """Abstract method to load the model."""
+        raise NotImplementedError("load_model method not implemented.")
 
     @abstractmethod
     def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
-        pass
+        """Abstract method to generate responses for given prompts."""
+        raise NotImplementedError("generate method not implemented.")
 
     def _del_prompt_if_req(
         self, prompt: str, response: str, force: bool = False
     ) -> str:
+        """Delete the prompt from the response if required."""
         if force:
-            return response[len(prompt):].strip()
+            return response[len(prompt) :].strip()
 
         if self.task_config.task_type == TaskType.TEXT_GENERATION:
             return response
         elif self.task_config.task_type == TaskType.CONVERSATIONAL:
-            return response[len(prompt):].strip()
+            return response[len(prompt) :].strip()
         else:
             raise ValueError(f"Invalid task type {self.task_config.task_type}.")
 
 
 class HfEngine(AbstractEngine):
+    """Inference engine using Hugging Face methods."""
+
     def __init__(self, engine_config: EngineConfig):
+        """Initialize the HfEngine with the given engine configuration."""
         self.engine_config = engine_config
 
     def load_model(self):
+        """Load the model from the pretrained model specified in the engine configuration."""
         self.tokenizer = AutoTokenizer.from_pretrained(self.engine_config.model_id)
         self.model = AutoModelForCausalLM.from_pretrained(self.engine_config.model_id)
         # move to the model to the GPU if testing on GPU
@@ -59,6 +72,7 @@ class HfEngine(AbstractEngine):
 
     @log_execution_time
     def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
+        """Generate responses for given prompts."""
         inference_results = []  # type: List[InferenceResult]
         with torch.no_grad():
             for i, prompt in enumerate(prompts):

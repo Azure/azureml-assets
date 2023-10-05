@@ -1,6 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""VLLM Engine module.
+
+This module contains the VLLMEngine class which is responsible for initializing the VLLM server,
+generating responses for given prompts, and managing the server processes.
+"""
+
 # flake8: noqa
 
 import json
@@ -47,7 +53,14 @@ VLLM_SAMPLING_PARAMS = {
 
 
 class VLLMEngine(AbstractEngine):
+    """VLLM Engine class.
+
+    This class is responsible for initializing the VLLM server, generating responses for given prompts,
+    and managing the server processes.
+    """
+
     def __init__(self, engine_config: EngineConfig, task_config: TaskConfig):
+        """Initialize the VLLMEngine with the given engine and task configurations."""
         self.engine_config: EngineConfig = engine_config
         self.task_config: TaskConfig = task_config
         self._server_process: Optional[subprocess.Popen] = None
@@ -56,6 +69,7 @@ class VLLMEngine(AbstractEngine):
 
     @log_execution_time
     def load_model(self):
+        """Load the model from the pretrained model specified in the engine configuration."""
         server_args = self._load_vllm_defaults()
         self._start_server(server_args)
         self._wait_until_server_healthy()
@@ -74,6 +88,7 @@ class VLLMEngine(AbstractEngine):
         return self._vllm_args
 
     def _start_server(self, server_args: Dict):
+        """Start the VLLM server with the given arguments."""
         cmd = ["python", "-m", "vllm.entrypoints.api_server"]
         cmd.extend([f"--{k}={v}" for k, v in server_args.items()])
         logger.info(f"Starting VLLM server with command: {cmd}")
@@ -82,6 +97,7 @@ class VLLMEngine(AbstractEngine):
 
     @log_execution_time
     def _wait_until_server_healthy(self):
+        """Wait until the VLLM server is healthy."""
         start_time = time.time()
         while time.time() - start_time < 15 * 60:  # 15 minutes
             is_healthy = is_port_open(self._vllm_args["host"], self._vllm_args["port"])
@@ -93,17 +109,21 @@ class VLLMEngine(AbstractEngine):
         raise Exception("VLLM server did not become healthy within 15 minutes.")
 
     def _stop_server(self):
+        """Stop the VLLM server."""
         if self._server_process:
             self._server_process.terminate()
             logger.info("VLLM server stopped.")
 
     def _get_generate_uri(self) -> str:
+        """Get the URI for the generate endpoint of the VLLM server."""
         return f"http://{self._vllm_args['host']}:{self._vllm_args['port']}/generate"
 
     def __del__(self):
+        """Stop the VLLM server when the VLLMEngine object is deleted."""
         self._stop_server()
 
     def _gen_params_to_vllm_params(self, params: Dict) -> Dict:
+        """Convert generation parameters to VLLM parameters."""
         if "max_gen_len" in params:
             params["max_tokens"] = params["max_gen_len"]
 
@@ -134,6 +154,7 @@ class VLLMEngine(AbstractEngine):
 
     @log_execution_time
     def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
+        """Generate responses for the given prompts with the given parameters."""
         params = self._gen_params_to_vllm_params(params)
 
         # pop _batch_size from params if it exists, set it to 1 by default (for testing only)
@@ -151,6 +172,7 @@ class VLLMEngine(AbstractEngine):
 
     @log_execution_time
     def _generate_single_prompt(self, prompt: str, params: Dict) -> InferenceResult:
+        """Generate a response for a single prompt with the given parameters."""
         api_url = self._get_generate_uri()
         params = self._gen_params_to_vllm_params(params)
         headers = {"User-Agent": "VLLMEngine Client"}
@@ -172,9 +194,9 @@ class VLLMEngine(AbstractEngine):
 
             # TODO: Until mii returns the num tokens, approximate num_tokens. roughly, 75 words ~= 100 tokens
             num_tokens = (
-                    len(self._del_prompt_if_req(prompt, output, force=True).split(" "))
-                    // 75
-                    * 100
+                len(self._del_prompt_if_req(prompt, output, force=True).split(" "))
+                // 75
+                * 100
             )
             time_per_token_ms = inference_time_ms / num_tokens if num_tokens > 0 else 0
             logger.info(

@@ -1,6 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Mii Engine module.
+
+This module contains the MiiEngine class which is responsible for initializing the MII server and client,
+generating responses for given prompts, and managing the allocation of processes and load balancing.
+"""
+
 from configs import EngineConfig, TaskConfig
 from engine.engine import AbstractEngine, InferenceResult
 import os
@@ -26,7 +32,10 @@ MODEL_PATH = "mlflow_model_folder/data/model"
 
 
 class MiiEngine(AbstractEngine):
+    """Inference engine using MII methods."""
+
     def __init__(self, config: EngineConfig, task_config: TaskConfig):
+        """Initialize the MiiEngine with the given engine and task configurations."""
         self.engine_config = config
         self.task_config = task_config
         self.mii_config = self.engine_config.mii_config
@@ -102,7 +111,7 @@ class MiiEngine(AbstractEngine):
 
     @log_execution_time
     def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
-        """Call the model to get the text generation or chat completion results."""
+        """Generate responses for given prompts."""
         queries = {"query": prompts}
         start_time = time.time()
         responses = self.model.query(queries, **params)
@@ -131,6 +140,7 @@ class MiiEngine(AbstractEngine):
         return inference_results
 
     def _allocate_processes(self, hostfile_path):
+        """Allocate processes based on the hostfile path."""
         from mii.server import _allocate_processes
 
         if hostfile_path is None:
@@ -146,6 +156,7 @@ class MiiEngine(AbstractEngine):
         )
 
     def _generate_load_balancer_config(self):
+        """Generate load balancer configuration."""
         replica_pool = self._allocate_processes(hostfile_path=None)
         replica_configs = [
             ReplicaConfig(
