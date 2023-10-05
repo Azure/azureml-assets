@@ -399,7 +399,7 @@ class InferencePostprocessor(object):
             return
         # 3P post processor logic is written with the assumption that {tokenizer_config:{return_full_text:False}}
         # is the default setting in model prediction component for text generation models.
-        # 1P logic should work as long as they contain "prompt" key and it's associated value in their 
+        # 1P logic should work as long as they contain "prompt" key and it's associated value in their
         # prediction dataset.
         # Removing completion_key that Babel has, but this can be passed in the kwargs.
         if self.template:
