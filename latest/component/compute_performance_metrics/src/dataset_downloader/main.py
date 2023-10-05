@@ -38,7 +38,10 @@ def parse_args() -> argparse.Namespace:
         "--configuration",
         type=str,
         default=None,
-        help="Sub-part of the dataset to download; specify 'all' to download all sub-parts."
+        help=(
+            "Sub-part of the dataset to download; specify 'all' to download all sub-parts; specify "
+            "comma-separated values to download multiple sub-parts (Ex: config1,config2)."
+        )
     )
     parser.add_argument(
         "--split",
@@ -92,12 +95,14 @@ def resolve_configuration(
     if configuration == ALL:
         return available_configs
 
-    if configuration not in available_configs:
-        mssg = f"Configuration '{configuration}' not available for dataset '{dataset_name}'."
-        raise BenchmarkValidationException._with_error(
-            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
-        )
-    return [configuration]
+    configuration_arr = configuration.split(",")
+    for configuration in configuration_arr:
+        if configuration not in available_configs:
+            mssg = f"Configuration '{configuration}' not available for dataset '{dataset_name}'."
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
+    return configuration_arr
 
 
 def resolve_split(
@@ -268,10 +273,10 @@ def main(
         )
 
     log_mlflow_params(
-        dataset_name=args.dataset_name,
-        configuration=args.configuration,
-        split=args.split,
-        script=args.script,
+        dataset_name=dataset_name if script is None else None,
+        configuration=configuration,
+        split=split,
+        script=script,
     )
 
 
