@@ -11,7 +11,7 @@ import yaml
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
-from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
+from azureml.acft.contrib.hf.nlp.constants.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS, FLAVOR_MAP
 from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, HfModelTypes
 
 from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
@@ -390,7 +390,7 @@ def model_selector(args: Namespace):
                     mlflow_data = yaml.safe_load(fp)
                 if mlflow_data and "flavors" in mlflow_data:
                     for key in mlflow_data["flavors"]:
-                        if key in ["hftransformers", "hftransformersv2"]:
+                        if key in FLAVOR_MAP.keys():
                             for key2 in mlflow_data["flavors"][key]:
                                 if key2 == "generator_config" and args.task_name == "TextGeneration":
                                     generator_config = mlflow_data["flavors"][key]["generator_config"]
