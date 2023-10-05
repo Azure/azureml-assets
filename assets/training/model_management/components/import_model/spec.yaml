@@ -4,7 +4,7 @@ type: pipeline
 name: import_model
 display_name: Import model
 description: Import a model into a workspace or a registry
-version: 0.0.18.cond15
+version: 0.0.18.cond25
 
 # Pipeline inputs
 inputs:
@@ -212,6 +212,7 @@ jobs:
     type: if_else
     condition: ${{parent.jobs.validation_trigger_import.outputs.output}}
     true_block: ${{parent.jobs.download_model}}
+    false_block: ${{parent.jobs.get_registry_model}}
 
   download_model:
     component: azureml://registries/azureml-preview-test1/components/download_model/versions/0.0.15.cond1
@@ -265,7 +266,8 @@ jobs:
       test_data_path: ${{parent.inputs.local_validation_test_data}}
       column_rename_map: ${{parent.inputs.local_validation_column_rename_map}}
     outputs:
-      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
+      mlflow_model_folder:
+        type: mlflow_model
 
   register_model:
     component: azureml://registries/azureml/components/register_model/versions/0.0.8
@@ -288,15 +290,25 @@ jobs:
       registration_details_folder:
         type: uri_folder
 
-  
+  get_registry_model:
+    component: azureml://registries/azureml-preview-test1/components/get_registry_model/versions/0.0.1.cond10
+    inputs:
+      registration_details_folder: ${{parent.jobs.validation_trigger_import.outputs.registration_details_folder}}
+    outputs:
+      mlflow_model_folder:
+        type: mlflow_model
+
   output_selector:
-    component: azureml://registries/azureml-preview-test1/components/output_selector/versions/0.0.1
+    component: azureml://registries/azureml-preview-test1/components/output_selector/versions/0.0.1.cond15
     inputs:
       condition: ${{parent.jobs.validation_trigger_import.outputs.output}}
-      input_a: ${{parent.jobs.register_model.outputs.registration_details_folder}}
-      input_b: ${{parent.jobs.validation_trigger_import.outputs.registration_details_folder}}
+      input_a_registration_details_folder: ${{parent.jobs.register_model.outputs.registration_details_folder}}
+      input_a_mlflow_model_folder: ${{parent.jobs.mlflow_model_local_validation.outputs.mlflow_model_folder}}
+      input_b_registration_details_folder: ${{parent.jobs.validation_trigger_import.outputs.registration_details_folder}}
+      input_b_mlflow_model_folder: ${{parent.jobs.get_registry_model.outputs.mlflow_model_folder}}
     outputs:
-      output: ${{parent.outputs.model_registration_details}} 
+      regsitration_details_folder: ${{parent.outputs.model_registration_details}}
+      mlflow_model_folder: ${{parent.outputs.mlflow_model_folder}}
 
 tags:
     Preview: ""

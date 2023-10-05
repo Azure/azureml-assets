@@ -1,0 +1,36 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: get_registry_model
+version: 0.0.1.cond10
+type: command
+
+is_deterministic: True
+
+display_name: Get Registry Model
+description: Gets model from registry
+
+environment: azureml://registries/azureml/environments/model-management/versions/15
+
+code: ../../src/
+command: >
+  python run_get_registry_model.py
+  --registration_details_folder ${{inputs.registration_details_folder}}
+  --mlflow_model_folder ${{outputs.mlflow_model_folder}}
+
+inputs:
+
+  registration_details_folder:
+    type: uri_folder
+    optional: false
+    mode: mount
+    description: Registration Details Folder
+
+outputs:
+  mlflow_model_folder:
+    type: mlflow_model
+    description: MLFlow Model Folder
+    mode: link
+
+tags:
+  Preview: ""
+  Internal: ""
