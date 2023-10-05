@@ -19,7 +19,7 @@ tags:
   - Standard_ND96amsr_A100_v4
   license: llama2
   author: meta
-version: 1
+version: 2
 description: |
   # **Code Llama**
   Code Llama is a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 34 billion parameters. This is the repository for the base 34B version in the Hugging Face Transformers format. This model is designed for general code synthesis and understanding. Links to other models can be found in the index at the bottom.
