@@ -1,12 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from dataclasses import dataclass
-from constants import TaskType
-from typing import Dict
-from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from typing import Dict, Type, TypeVar, Optional
+
+from constants import TaskType
 
 
 @dataclass
@@ -29,11 +27,11 @@ class MiiEngineConfig(SerializableDataClass):
 
     def __eq__(self, other):
         return (
-            self.deployment_name == other.deployment_name
-            and self.mii_configs == other.mii_configs
-            and self.ds_config == other.ds_config
-            and self.ds_optimize == other.ds_optimize
-            and self.ds_zero == other.ds_zero
+                self.deployment_name == other.deployment_name
+                and self.mii_configs == other.mii_configs
+                and self.ds_config == other.ds_config
+                and self.ds_optimize == other.ds_optimize
+                and self.ds_zero == other.ds_zero
         )
 
 

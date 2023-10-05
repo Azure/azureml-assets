@@ -1,25 +1,22 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-import concurrent
+# flake8: noqa
+
 import json
+import socket
 import subprocess
 import time
-import logging
 from concurrent.futures import ThreadPoolExecutor
-
-import requests
-import socket
 from typing import Dict, List, Optional
 
+import requests
 from configs import EngineConfig, TaskConfig
-from constants import TaskType
 from engine.engine import AbstractEngine, InferenceResult
 from logging_config import configure_logger
 from utils import log_execution_time
 
 logger = configure_logger(__name__)
-
 
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 8000
@@ -44,7 +41,10 @@ VLLM_SAMPLING_PARAMS = {
     "skip_special_tokens": "Whether to skip special tokens in the output. Defaults to true.",
     "_batch_size": "Number of prompts to generate in parallel. Defaults to 1.",
 }
+
+
 # fmt: on
+
 
 class VLLMEngine(AbstractEngine):
     def __init__(self, engine_config: EngineConfig, task_config: TaskConfig):
@@ -111,15 +111,15 @@ class VLLMEngine(AbstractEngine):
             params["max_tokens"] = params.pop("max_new_tokens")
 
         if "do_sample" in params and not params["do_sample"]:
-            logger.info(f"do_sample is false, setting temperature to 0.")
+            logger.info("do_sample is false, setting temperature to 0.")
             params["temperature"] = 0.0
 
         if "use_beam_search" in params and params["use_beam_search"]:
-            logger.info(f"Beam search is enabled, setting temperature to 0.")
+            logger.info("Beam search is enabled, setting temperature to 0.")
             params["temperature"] = 0.0
 
             if "best_of" not in params:
-                logger.info(f"Beam search is enabled, setting best_of to 2.")
+                logger.info("Beam search is enabled, setting best_of to 2.")
                 params["best_of"] = 2
 
         # Remove unsupported keys and log a warning for each
@@ -172,9 +172,9 @@ class VLLMEngine(AbstractEngine):
 
             # TODO: Until mii returns the num tokens, approximate num_tokens. roughly, 75 words ~= 100 tokens
             num_tokens = (
-                len(self._del_prompt_if_req(prompt, output, force=True).split(" "))
-                // 75
-                * 100
+                    len(self._del_prompt_if_req(prompt, output, force=True).split(" "))
+                    // 75
+                    * 100
             )
             time_per_token_ms = inference_time_ms / num_tokens if num_tokens > 0 else 0
             logger.info(

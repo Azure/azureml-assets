@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from configs import EngineConfig, MiiEngineConfig, TaskConfig
+from configs import EngineConfig, TaskConfig
 from engine.engine import AbstractEngine, InferenceResult
 import os
 import torch

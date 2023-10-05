@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-from dataclasses import dataclass, field
-from typing import List, Union, Optional
-from enum import Enum
 import json
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import List, Optional
 
 
 class Role(Enum):
