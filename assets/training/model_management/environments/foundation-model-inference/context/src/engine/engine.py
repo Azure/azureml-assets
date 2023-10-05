@@ -44,12 +44,12 @@ class AbstractEngine(ABC):
     ) -> str:
         """Delete the prompt from the response if required."""
         if force:
-            return response[len(prompt) :].strip()
+            return response[len(prompt):].strip()
 
         if self.task_config.task_type == TaskType.TEXT_GENERATION:
             return response
         elif self.task_config.task_type == TaskType.CONVERSATIONAL:
-            return response[len(prompt) :].strip()
+            return response[len(prompt):].strip()
         else:
             raise ValueError(f"Invalid task type {self.task_config.task_type}.")
 
