@@ -70,7 +70,8 @@ class StableDiffusionInpaintingMLflowWrapper(mlflow.pyfunc.PythonModel):
         :rtype: pd.DataFrame
         """
         # Decode the base64 image column
-        images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(axis=1, func=process_image_pandas_series)
+        images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
+            axis=1, func=process_image_pandas_series)
         images = images.loc[:, 0].apply(func=get_pil_image).tolist()
 
         mask_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_MASK_IMAGE]].apply(
