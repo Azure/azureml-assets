@@ -25,6 +25,7 @@ class ValidationException(Exception):
 class AssetType(Enum):
     """Asset type."""
 
+    BENCHMARKRESULT = 'benchmarkresult'
     COMPONENT = 'component'
     DATA = 'data'
     ENVIRONMENT = 'environment'
