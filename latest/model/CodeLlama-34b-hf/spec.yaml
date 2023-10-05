@@ -4,6 +4,8 @@ path: ./
 properties:
   SHA: 14e224d625f24d8774c010a15fe9244d1772f50d
   inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_NC24s_v3, Standard_ND40rs_v2, Standard_ND96asr_v4,
+    Standard_ND96amsr_A100_v4
   languages: EN
 tags:
   Featured: ''
@@ -12,9 +14,15 @@ tags:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
+  evaluation_compute_allow_list:
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  - Standard_ND96amsr_A100_v4
   license: llama2
   author: meta
-version: 2
+version: 1
 description: |
   # **Code Llama**
   Code Llama is a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 34 billion parameters. This is the repository for the base 34B version in the Hugging Face Transformers format. This model is designed for general code synthesis and understanding. Links to other models can be found in the index at the bottom.
@@ -86,6 +94,22 @@ description: |
   Code Llama and its variants are a new technology that carries risks with use. Testing conducted to date has been in English, and has not covered, nor could it cover all scenarios. For these reasons, as with all LLMs, Code Llama’s potential outputs cannot be predicted in advance, and the model may in some instances produce inaccurate or objectionable responses to user prompts. Therefore, before deploying any applications of Code Llama, developers should perform safety testing and tuning tailored to their specific applications of the model.
 
   Please see the Responsible Use Guide available available at [https://ai.meta.com/llama/responsible-user-guide](https://ai.meta.com/llama/responsible-user-guide).
+
+
+  # Model Evaluation Sample
+
+  Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+  |--|--|--|--|--|
+  Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+
+
+  # Inference samples
+
+  Inference type|Python sample (Notebook)|CLI with YAML
+  |--|--|--|
+  Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint-dolly.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint-dolly.sh</a>
+  Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
+
 
   ## Sample inputs and outputs (for real-time inference)
 
