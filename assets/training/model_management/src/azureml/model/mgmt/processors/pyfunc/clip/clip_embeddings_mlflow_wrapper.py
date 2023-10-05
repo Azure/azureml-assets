@@ -76,9 +76,9 @@ class CLIPEmbeddingsMLFlowModelWrapper(CLIPMLFlowModelWrapper):
         df_result = pd.DataFrame()
 
         if image_features is not None:
-            df_result[MLflowSchemaLiterals.OUTPUT_IMAGE_FEATURES] = image_features.tolist()
+            df_result[MLflowSchemaLiterals.OUTPUT_COLUMN_IMAGE_FEATURES] = image_features.tolist()
         if text_features is not None:
-            df_result[MLflowSchemaLiterals.OUTPUT_TEXT_FEATURES] = text_features.tolist()
+            df_result[MLflowSchemaLiterals.OUTPUT_COLUMN_TEXT_FEATURES] = text_features.tolist()
         return df_result
 
     def run_inference_batch(
