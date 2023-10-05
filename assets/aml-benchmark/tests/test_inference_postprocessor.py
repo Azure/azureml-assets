@@ -81,72 +81,26 @@ class TestInferencePostprocessorComponent:
         pred_probs_dataset, label_map, find_first",
         [
             (
-                "gsm8k",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE,
-                "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE,
-                "final_answer",
-                None,
-                None,
-                None,
-                None,
-                None,
-                """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
-                None,
-                None,
-                None,
-                None,
+                "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None,
+                None, None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
+                None, None, None, None,
             ),
             (
-                "human-eval",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE,
-                "samples",
-                None,
-                None,
-                None,
-                "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)",
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
+                "human-eval", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
+                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
+                None, None, None, None, None,
             ),
             (
-                "gsm8k_multiple_preds",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE,
-                "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE,
-                "final_answer",
-                None,
-                None,
-                None,
-                None,
-                None,
-                """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
-                None,
-                None,
-                None,
-                None,
+                "gsm8k_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None,
+                None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
+                None, None, None, None,
             ),
             (
-                "human-eval_multiple_preds",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE,
-                "samples",
-                None,
-                None,
-                None,
-                "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)",
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
+                "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
+                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
+                None, None, None,
             ),
         ],
     )
@@ -372,72 +326,26 @@ class TestInferencePostprocessorScript:
         pred_probs_dataset, label_map, find_first",
         [
             (
-                "gsm8k",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE,
-                "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE,
-                "final_answer",
-                None,
-                None,
-                None,
-                None,
-                None,
-                """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
-                None,
-                None,
-                None,
-                None,
+                "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None,
+                None, None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
+                None, None, None, None,
             ),
             (
-                "human-eval",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE,
-                "samples",
-                None,
-                None,
-                None,
-                "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)",
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
+                "human-eval", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
+                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
+                None, None, None, None, None,
             ),
             (
-                "gsm8k_multiple_preds",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE,
-                "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE,
-                "final_answer",
-                None,
-                None,
-                None,
-                None,
-                None,
-                """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
-                None,
-                None,
-                None,
-                None,
+                "gsm8k_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None,
+                None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
+                None, None, None, None,
             ),
             (
-                "human-eval_multiple_preds",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE,
-                "samples",
-                None,
-                None,
-                None,
-                "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)",
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
+                "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
+                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
+                None, None, None,
             ),
         ],
     )
@@ -731,10 +639,36 @@ class TestInferencePostprocessorScript:
             (
                 "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)",
                 [
-                    '   for i in range(len(numbers) - 1):\n        for j in range(i + 1, len(numbers)):\n            if abs(numbers[i] - numbers[j]) < threshold:\n                return True\n    return False\n\n\ndef has_close_elements_2(numbers: List[float], threshold: float) -> bool:\n    """ Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)\n    False\n    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    """\n    for i in range(len(numbers) - 1):\n        for j in range(i + 1, len(numbers)):\n            if abs(numbers[i] - numbers[j]) < threshold:\n                return True\n    return False\n\n\ndef has_close_elements_3(numbers: List[float], threshold: float) -> bool:\n    """ Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)\n    False\n    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    """\n    for i in range(len(numbers) - 1):\n        for j in range(i + 1, len(numbers)):\n            if abs(numbers[i] - numbers[j]) < threshold:\n                return True\n    return False\n\n\ndef has_close_elements_4(numbers: List[float], threshold: float) -> bool:\n    """ Check if in given list of numbers, are any two numbers closer to each other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0],'
+                    '   for i in range(len(numbers) - 1):\n        \
+                        for j in range(i + 1, len(numbers)):\n            \
+                        if abs(numbers[i] - numbers[j]) < threshold:\n                \
+                        return True\n    return False\n\n\ndef \
+                        has_close_elements_2(numbers: List[float], threshold: float) -> bool:\n    \
+                        """ Check if in given list of numbers, are any two numbers closer to each other than\n    \
+                        given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)\n    False\n    \
+                        >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    """\n    \
+                        for i in range(len(numbers) - 1):\n        \
+                        for j in range(i + 1, len(numbers)):\n            \
+                        if abs(numbers[i] - numbers[j]) < threshold:\n                \
+                        return True\n    \
+                        return False\n\n\ndef has_close_elements_3(numbers: List[float], threshold: float) \
+                        -> bool:\n    \
+                        """ Check if in given list of numbers, are any two numbers closer to each other than\n    \
+                        given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)\n    False\n    \
+                        >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)\n    True\n    \
+                        """\n    for i in range(len(numbers) - 1):\n        \
+                        for j in range(i + 1, len(numbers)):\n            \
+                        if abs(numbers[i] - numbers[j]) < threshold:\n                \
+                        return True\n    \
+                        return False\n\n\ndef has_close_elements_4(numbers: List[float], threshold: float) \
+                        -> bool:\n    """ Check if in given list of numbers, are any two numbers closer to each \
+                        other than\n    given threshold.\n    >>> has_close_elements([1.0, 2.0, 3.0],'
                 ],
                 [
-                    "   for i in range(len(numbers) - 1):\n        for j in range(i + 1, len(numbers)):\n            if abs(numbers[i] - numbers[j]) < threshold:\n                return True\n    return False\n\n"
+                    "   for i in range(len(numbers) - 1):\n        \
+                        for j in range(i + 1, len(numbers)):\n            \
+                        if abs(numbers[i] - numbers[j]) < threshold:\n                \
+                        return True\n    return False\n\n"
                 ],
             ),
         ],
