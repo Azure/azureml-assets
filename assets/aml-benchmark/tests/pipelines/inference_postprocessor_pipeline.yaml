@@ -4,7 +4,7 @@ type: pipeline
 display_name: Test Inference Postprocessor
 description: Pipeline to test Inference Postprocessor component
 settings:
-  default_compute: azureml:serverless
+  default_compute: azureml:components-testing-gpu-2  #serverless
 
 inputs:
   prediction_dataset:
@@ -20,15 +20,15 @@ inputs:
     path: ../data/sample_ground_truths.jsonl
   separator: '\n\n'
   regex_expr: '(\d)'
-  strip_prefix: '.'
-  strip_suffix: '##'
+  remove_prefixes: '###,>>>'
+  strip_characters: '\n\n'
+  extract_number: 'first'
   template: '{{prediction}}'
-  extract_value_at_index: 0
   script_path:
     type: uri_file
     path: ../data/test_custom_postprocessor.py
-  encoder_config: '{"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}'
-  
+  label_map: '{"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}'
+  find_first: 'A,B,C'
 
 outputs:
   output_dataset_result:
@@ -49,11 +49,13 @@ jobs:
       prediction_probabilities_dataset: ${{parent.inputs.prediction_probabilities_dataset}}
       separator: ${{parent.inputs.separator}}
       regex_expr: ${{parent.inputs.regex_expr}}
-      strip_prefix: ${{parent.inputs.strip_prefix}}
-      strip_suffix: ${{parent.inputs.strip_suffix}}
+      remove_prefixes: ${{parent.inputs.remove_prefixes}}
+      strip_characters: ${{parent.inputs.strip_characters}}
+      extract_number: ${{parent.inputs.extract_number}}
       template: ${{parent.inputs.template}}
       script_path: ${{parent.inputs.script_path}}
-      encoder_config: ${{parent.inputs.encoder_config}}
+      label_map: ${{parent.inputs.label_map}}
+      find_first: ${{parent.inputs.find_first}}
 
     outputs:
       output_dataset_result : ${{parent.outputs.output_dataset_result}}
