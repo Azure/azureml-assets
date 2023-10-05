@@ -283,7 +283,6 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
 
         return code_path
 
-
     def _prepare_artifacts_dict(self) -> Dict:
         """Prepare artifacts dict for MLflow model.
 

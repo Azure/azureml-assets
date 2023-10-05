@@ -8,10 +8,13 @@ import pandas as pd
 
 # add clip directory to sys path to resolve imports
 import os
-MODEL_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "./azureml/model/mgmt/processors/pyfunc/clip"))
 import sys
+MODEL_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "./azureml/model/mgmt/processors/pyfunc/clip"))
 sys.path.append(MODEL_DIR)
-from azureml.model.mgmt.processors.pyfunc.clip.clip_embeddings_mlflow_wrapper import CLIPEmbeddingsMLFlowModelWrapper
+from azureml.model.mgmt.processors.pyfunc.clip.clip_embeddings_mlflow_wrapper import (  # noqa: E402
+    CLIPEmbeddingsMLFlowModelWrapper
+)
+
 
 class TestCLIPEmbeddings:
     """Test class for clip embeddings helper functions"""
@@ -23,7 +26,7 @@ class TestCLIPEmbeddings:
         has_image, has_text = CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_cases.valid_text_input())
         assert not has_image
         assert has_text
-        
+
         has_image, has_text = CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_cases.valid_text_input_nan())
         assert not has_image
         assert has_text
@@ -52,6 +55,7 @@ class TestCLIPEmbeddings:
 
         with pytest.raises(ValueError):
             CLIPEmbeddingsMLFlowModelWrapper.validate_input(input_cases.invalid_combination_input())
+
 
 class InputCases:
     """Class for generating valid and invalid inputs for CLIP Embeddings"""
