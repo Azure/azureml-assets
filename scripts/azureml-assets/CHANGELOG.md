@@ -3,6 +3,28 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.9 (2023-10-05)
+### 🚀 New Features
+- [#1345](https://github.com/Azure/azureml-assets/pull/1345) Add sample prompt assets and prompt publishing
+
+## 1.16.8 (2023-10-05)
+### 🐛 Bugs Fixed
+- [#1393](https://github.com/Azure/azureml-assets/pull/1393) Fix mlflow model and keep parent mlflow_model_folder
+
+
+## 1.16.7 (2023-10-03)
+### 🐛 Bugs Fixed
+- [#1363](https://github.com/Azure/azureml-assets/pull/1363) Fix AzureBlobstoreAssetPath storage account
+  URI logic
+
+## 1.16.6 (2023-10-02)
+### 🐛 Bugs Fixed
+- [#1357](https://github.com/Azure/azureml-assets/pull/1357) Fix validate_assets arg
+
+## 1.16.5 (2023-09-29)
+### 🐛 Bugs Fixed
+- [#1341](https://github.com/Azure/azureml-assets/pull/1341) Prevent nested directory creation during model upload
+
 ## 1.16.4 (2023-09-27)
 ### 🚀 New Features
 - [#1327](https://github.com/Azure/azureml-assets/pull/1327) Support prompt asset type
