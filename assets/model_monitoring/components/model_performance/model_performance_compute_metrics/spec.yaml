@@ -2,19 +2,18 @@ $schema: http://azureml/sdk-2-0/SparkComponent.json
 type: spark
 
 name: model_performance_compute_metrics
-display_name:  Model Performance - Compute Metrics
+display_name: Model Performance - Compute Metrics
 description: Compute model performance metrics leveraged by the model performance monitor.
 version: 0.0.2
 is_deterministic: true
 
 code: ../../src
 entry:
-  file: ./model_performance_metrics/compute_metrics.py
+  file: ./model_performance_metrics/run.py
 
 inputs:
   task:
     type: string
-    optional: false
     default: tabular-classification
     enum: [
       tabular-classification,
@@ -25,17 +24,17 @@ inputs:
   baseline_data:
     type: mltable
     mode: direct
-  baseline_data_column_name:
+  baseline_data_target_column:
     type: string
     optional: true
     description: "Column name which contains ground truths in provided input for baseline_data. (Optional if we have one column name.)"
   production_data:
     type: mltable
     mode: direct
-  production_data_column_name:
+  production_data_target_column:
     type: string
     optional: true
-    description: "Column name which contains predictions in provided input for production_data_column_name. (Optional if we have one column name.)"
+    description: "Column name which contains predictions in provided input for production_data_target_column. (Optional if we have one column name.)"
 
 outputs:
   signal_metrics:
@@ -57,9 +56,6 @@ conf:
     dependencies:
       - python=3.8
       - pip:
-        - scipy~=1.10.0
-        - numpy~=1.21.0
-        - pandas~=1.4.3
         - azureml-metrics~=0.0.27
         - mltable~=1.3.0
         - azureml-fsspec
@@ -68,11 +64,7 @@ conf:
 args: >-
   --task ${{inputs.task}}
   --baseline_data ${{inputs.baseline_data}}
-  --$[[baseline_data_column_name ${{inputs.baseline_data_column_name}}]]
+  $[[--baseline_data_target_column ${{inputs.baseline_data_target_column}}]]
   --production_data ${{inputs.production_data}}
-  --$[[production_data_column_name ${{inputs.production_data_column_name}}]]
+  $[[--production_data_target_column ${{inputs.production_data_target_column}}]]
   --signal_metrics ${{outputs.signal_metrics}}
-
-resources:
-  instance_type: standard_e4s_v3
-  runtime_version: "3.3"

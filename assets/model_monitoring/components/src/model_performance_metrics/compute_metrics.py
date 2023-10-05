@@ -1,63 +1,52 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Evaluator."""
-
-import ast
-import pandas as pd
-import numpy as np
 from abc import abstractmethod
-
-from constants import TASK
+import ast
+import numpy as np
+import pandas as pd
 
 from azureml.metrics import compute_metrics, constants
 from azureml.metrics.constants import Metric
+
+from constants import TASK
 
 
 class EvaluatorFactory:
     """Evaluator Factory Class."""
 
     def __init__(self):
-        """__init__."""
+        """
+        Initialize evaluator factory and register evaluators for each task type.
+        """
         self._evaluators = {
             TASK.CLASSIFICATION: ClassifierEvaluator,
             TASK.CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
-            "multiclass": ClassifierEvaluator,
-            "tabular-regressor": RegressorEvaluator,
             TASK.REGRESSION: RegressorEvaluator,
         }
 
     def get_evaluator(self, task_type, metrics_config=None):
-        """Get evaluator.
-
+        """
+        Get evaluator based on task type.
         Args:
-            task_type (_type_): _description_
-            metrics_config (_type_, optional): _description_. Defaults to None.
+            task_type: task type
+            metrics_config: metrics config
 
-        Returns:
-            _type_: _description_
+        Returns: evaluator object
+
         """
         return self._evaluators[task_type](task_type, metrics_config)
-
-    def register(self, name, obj):
-        """Register evaluator.
-
-        Args:
-            name (_type_): _description_
-            obj (_type_): _description_
-        """
-        self._evaluators[name] = obj
 
 
 class Evaluator:
     """Evaluator for Compute Metrics mode."""
 
     def __init__(self, task_type, metrics_config):
-        """__init__.
-
+        """
+        Initialize evaluator.
         Args:
-            task_type (_type_): _description_
-            metrics_config (_type_): _description_
+            task_type: string
+            metrics_config: dict
         """
         self.task_type = task_type
         self.metrics_config = metrics_config
@@ -67,10 +56,10 @@ class Evaluator:
         """Evaluate predictions.
 
         Args:
-            metrics_dto: _description_
+            metrics_dto: metrics dto
 
         Returns:
-            _type_: _description_
+            metrics: dict
         """
         pass
 
@@ -78,10 +67,10 @@ class Evaluator:
         """Convert predictions to np array.
 
         Args:
-            preds (_type_): _description_
+            preds: predictions
 
-        Returns:
-            _type_: _description_
+        Returns: np array of predictions
+
         """
         if isinstance(preds, pd.DataFrame) and len(preds.columns) == 1:
             return preds[preds.columns[0]].to_numpy()
@@ -93,18 +82,13 @@ class Evaluator:
 
 
 class ClassifierEvaluator(Evaluator):
-    """Classifier Evaluator.
-
-    Args:
-        Evaluator (_type_): _description_
-    """
 
     def __init__(self, task_type, metrics_config):
-        """__init__.
-
+        """
+        Initialize classifier evaluator.
         Args:
-            task_type (_type_): _description_
-            metrics_config (_type_): _description_
+            task_type: string
+            metrics_config: dict
         """
         super().__init__(task_type, metrics_config)
 
@@ -112,10 +96,9 @@ class ClassifierEvaluator(Evaluator):
         """Evaluate classification.
 
         Args:
-            metrics_dto (_type_): _description_
+            metrics_dto: metrics dto
 
-        Returns:
-            _type_: _description_
+        Returns: metrics
         """
         y_pred = self._convert_predictions(metrics_dto.predictions)
         y_test = self._convert_predictions(metrics_dto.ground_truth)
@@ -138,8 +121,8 @@ class RegressorEvaluator(Evaluator):
         """__init__.
 
         Args:
-            task_type (_type_): _description_
-            metrics_config (_type_): _description_
+            task_type: string
+            metrics_config: dict
         """
         super().__init__(task_type, metrics_config)
 
@@ -147,10 +130,10 @@ class RegressorEvaluator(Evaluator):
         """
 
         Args:
-            metrics_dto: _description_
+            metrics_dto: metrics dto
             **kwargs:
 
-        Returns:
+        Returns: metrics
 
         """
         y_pred = self._convert_predictions(metrics_dto.predictions)
@@ -164,17 +147,13 @@ class RegressorEvaluator(Evaluator):
 
 class ClassifierMultilabelEvaluator(Evaluator):
     """Classifier Multilabel.
-
-    Args:
-        Evaluator (_type_): _description_
     """
 
     def __init__(self, task_type, metrics_config):
-        """__init__.
-
+        """
         Args:
-            task_type (_type_): _description_
-            metrics_config (_type_): _description_
+            task_type: string
+            metrics_config: dict
         """
         super().__init__(task_type, metrics_config)
 
@@ -182,10 +161,9 @@ class ClassifierMultilabelEvaluator(Evaluator):
         """Convert predictions to np array.
 
         Args:
-            preds (_type_): _description_
+            preds: predictions
 
-        Returns:
-            _type_: _description_
+        Returns: np array of predictions
         """
         preds = super()._convert_predictions(preds)
         if hasattr(preds, "ndim") and preds.ndim == 1 and len(preds) > 0 and isinstance(preds[0], str):
@@ -193,13 +171,13 @@ class ClassifierMultilabelEvaluator(Evaluator):
         return preds
 
     def evaluate(self, metrics_dto, **kwargs):
-        """Evaluate multilabel.
-
+        """
+        Evaluate multilabel classification.
         Args:
-            metrics_dto: _description_
+            metrics_dto: Metrics DTO
 
         Returns:
-            _type_: _description_
+            metrics: dict
         """
         y_pred = self._convert_predictions(metrics_dto.predictions)
         y_test = self._convert_predictions(metrics_dto.ground_truth)
