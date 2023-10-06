@@ -25,7 +25,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
    "input_data": {
         "columns": ["prompt"],
         "data": ["a photograph of an astronaut riding a horse"],
-        "data": ["a photograph of an astronaut riding a horse"],
         "index": [0]
     }
 }

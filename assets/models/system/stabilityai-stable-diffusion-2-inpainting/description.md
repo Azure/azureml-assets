@@ -43,8 +43,8 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
 
 > Note:
 >
-> - "image1" and "image2" string are base64 format.
-> - "mask1" and "mask2" string are base64 format.
+> - "image1" and "image2" strings are base64 format.
+> - "mask1" and "mask2" strings are base64 format.
 
 #### Sample output
 
@@ -65,7 +65,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
 
 > Note:
 >
-> - "inpainted_image1" and "inpainted_image2" string are base64 format.
+> - "inpainted_image1" and "inpainted_image2" strings are base64 format.
 > - If "nsfw_content_detected" is True then generated image will be totally black.
 
 #### Model inference: visualization for a sample input

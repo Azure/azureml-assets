@@ -49,7 +49,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
 
 > Note:
 >
-> - "image1" and "image2" string are base64 format.
+> - "image1" and "image2" strings are base64 format.
 > - If "nsfw_content_detected" is True then generated image will be totally black.
 
 #### Model inference: visualization for the prompt - "a photograph of an astronaut riding a horse"
