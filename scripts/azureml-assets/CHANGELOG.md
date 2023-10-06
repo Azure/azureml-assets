@@ -3,6 +3,10 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.10 (2023-10-06)
+### 🐛 Bugs Fixed
+- [#1411](https://github.com/Azure/azureml-assets/pull/1411) Prevent Config._expand_path from returning directories
+
 ## 1.16.9 (2023-10-05)
 ### 🚀 New Features
 - [#1345](https://github.com/Azure/azureml-assets/pull/1345) Add sample prompt assets and prompt publishing
