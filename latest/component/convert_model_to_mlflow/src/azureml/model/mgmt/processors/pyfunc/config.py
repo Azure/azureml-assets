@@ -22,6 +22,7 @@ class SupportedTasks(_CustomEnum):
 
     # CLIP task
     ZERO_SHOT_IMAGE_CLASSIFICATION = "zero-shot-image-classification"
+    EMBEDDINGS = "embeddings"
 
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
