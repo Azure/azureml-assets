@@ -183,6 +183,7 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
     # additional logging
     logger.info(f"Model name: {getattr(parsed_args, 'model_name', None)}")
     logger.info(f"Task name: {getattr(parsed_args, 'task_name', None)}")
+    logger.info(f"Model asset id: {getattr(parsed_args, 'model_asset_id', None)}")
 
     if getattr(parsed_args, "task_name", None) == Tasks.TRANSLATION and \
             getattr(parsed_args, "model_name", None) is not None:
