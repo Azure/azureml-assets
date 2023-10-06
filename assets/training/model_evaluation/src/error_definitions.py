@@ -52,6 +52,20 @@ class ComputeMetricsInternalError(ClientError):
 
 
 @error_decorator(use_parent_error_code=True)
+class DownloadDependenciesError(ClientError):
+    """Download Dependencies error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.DownloadDependenciesFailed
+
+
+@error_decorator(use_parent_error_code=True)
 class InvalidTaskType(BadArgument):
     """Task Validation error."""
 
@@ -105,6 +119,20 @@ class InvalidTestData(BadArgument):
             str: _description_
         """
         return ErrorStrings.InvalidTestData
+
+
+@error_decorator(use_parent_error_code=True)
+class InvalidFileInputSource(BadArgument):
+    """Invalid Test Data Source error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.InvalidFileInputSource
 
 
 @error_decorator(use_parent_error_code=True)
@@ -231,6 +259,20 @@ class BadInputData(BadData):
             str: _description_
         """
         return ErrorStrings.BadInputData
+
+
+@error_decorator(use_parent_error_code=True)
+class EmptyInputData(BadData):
+    """Bad Input Data error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.EmptyInputData
 
 
 @error_decorator(use_parent_error_code=True)
