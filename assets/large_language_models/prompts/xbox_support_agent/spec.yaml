@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+name: irs_chatbot
+version: 0.0.10
+display_name: Xbox customer support agent
+description: An Xbox customer support agent whose primary goal is to help users with issues they are experiencing with their Xbox devices.
+
+tags:  
+  task: chatbot
+
+template:  
+  path: ./prompt.yaml
