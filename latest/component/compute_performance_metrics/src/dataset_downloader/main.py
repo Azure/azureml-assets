@@ -6,7 +6,6 @@
 import argparse
 import os
 from typing import Optional, List
-from concurrent.futures import ProcessPoolExecutor
 
 from datasets import load_dataset, get_dataset_split_names, get_dataset_config_names
 import pandas as pd
@@ -144,6 +143,7 @@ def download_dataset_from_hf(
     """
     splits = resolve_split(dataset_name, configuration, split)
     for split in splits:
+        logger.info(f"Downloading - Configuration: '{configuration}', Split: '{split}'.")
         try:
             dataset = load_dataset(path=dataset_name, name=configuration, split=split)
         except Exception as e:
@@ -155,7 +155,7 @@ def download_dataset_from_hf(
         os.makedirs(out_dir, exist_ok=True)
         output_file_path = os.path.join(out_dir, "data.jsonl")
         dataset.to_json(output_file_path)
-        logger.info(f"Configuration: '{configuration}', Split: '{split}' downloaded.")
+        logger.info(f"Downloaded - Configuration: '{configuration}', Split: '{split}'.")
 
 
 def download_file_from_url(url: str, output_dir: str) -> None:
@@ -251,25 +251,13 @@ def main(
             AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
-    config_len = len(configurations)
     logger.info(f"Following configurations will be downloaded: {configurations}.")
-    with ProcessPoolExecutor(min(os.cpu_count(), config_len)) as executor:
-        my_iter = executor.map(
-            download_dataset_from_hf,
-            [dataset_name] * config_len,
-            configurations,
-            [split] * config_len,
-            [output_dataset] * config_len,
-        )
-
-    # raise exception if exception was raised inside calls
-    try:
-        for _ in my_iter:
-            pass
-    except Exception as e:
-        mssg = f"Exception occurred in one of the processes: {e}"
-        raise DatasetDownloadException._with_error(
-            AzureMLError.create(DatasetDownloadError, error_details=mssg)
+    for config in configurations:
+        download_dataset_from_hf(
+            dataset_name,
+            config,
+            split,
+            output_dataset,
         )
 
     log_mlflow_params(
