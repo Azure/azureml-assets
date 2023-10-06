@@ -23,7 +23,7 @@ outputs:
     description: 'Output metadata that contains train status.'
 
 code: ../../src/collect
-environment: azureml://registries/azureml/environments/automl-gpu/versions/3
+environment: azureml://registries/azureml/environments/automl-gpu/versions/4
 
 command: >-
   python collect.py  --input-metadata ${{inputs.input_metadata}}
