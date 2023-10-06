@@ -258,7 +258,7 @@ class Config:
         if not path.exists():
             raise ValidationException(f"{path} not found")
         if path.is_dir():
-            contents = list([p for p in path.rglob("*") if p.is_file()])
+            contents = [p for p in path.rglob("*") if p.is_file()]
             return contents
         return [path]
 
