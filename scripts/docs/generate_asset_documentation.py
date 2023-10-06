@@ -389,7 +389,6 @@ class PromptInfo(AssetInfo):
         self._add_doc_description(_doc)
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
-        self._add_doc_link(_doc)
 
         return _doc
 
