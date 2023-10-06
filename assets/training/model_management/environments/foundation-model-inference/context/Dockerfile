@@ -1,8 +1,5 @@
 FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch201:latest
 
-# Install basic dependencies and pip
-RUN apt-get update
-
 WORKDIR /
 
 # support Deepspeed launcher requirement of passwordless ssh login

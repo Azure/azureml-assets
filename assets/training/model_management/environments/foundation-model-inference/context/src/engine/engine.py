@@ -34,6 +34,10 @@ class AbstractEngine(ABC):
         """Abstract method to load the model."""
         raise NotImplementedError("load_model method not implemented.")
 
+    def init_client(self):
+        """Initialize client[s] for the engine to receive requests on."""
+        pass
+
     @abstractmethod
     def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
         """Abstract method to generate responses for given prompts."""

@@ -10,6 +10,7 @@ generating responses for given prompts, and managing the server processes.
 # flake8: noqa
 
 import json
+import os
 import socket
 import subprocess
 import time
@@ -17,6 +18,8 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, List, Optional
 
 import requests
+import torch.cuda
+
 from configs import EngineConfig, TaskConfig
 from engine.engine import AbstractEngine, InferenceResult
 from logging_config import configure_logger
@@ -26,6 +29,8 @@ logger = configure_logger(__name__)
 
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 8000
+WAIT_TIME_MIN = 15  # time to wait for the server to become healthy
+
 
 # fmt: off
 VLLM_SAMPLING_PARAMS = {
@@ -72,6 +77,9 @@ class VLLMEngine(AbstractEngine):
         """Load the model from the pretrained model specified in the engine configuration."""
         server_args = self._load_vllm_defaults()
         self._start_server(server_args)
+
+    def init_client(self):
+        """Initialize client[s] for the engine to receive requests on."""
         self._wait_until_server_healthy()
 
     def _load_vllm_defaults(self):
@@ -81,7 +89,7 @@ class VLLMEngine(AbstractEngine):
         if "port" not in self._vllm_args:
             self._vllm_args["port"] = DEFAULT_PORT
         if "tensor-parallel-size" not in self._vllm_args:
-            self._vllm_args["tensor-parallel-size"] = self.engine_config.tensor_parallel
+            self._vllm_args["tensor-parallel-size"] = torch.cuda.device_count()
         if "model" not in self._vllm_args:
             self._vllm_args["model"] = self.engine_config.model_id
 
@@ -99,7 +107,7 @@ class VLLMEngine(AbstractEngine):
     def _wait_until_server_healthy(self):
         """Wait until the VLLM server is healthy."""
         start_time = time.time()
-        while time.time() - start_time < 15 * 60:  # 15 minutes
+        while time.time() - start_time < WAIT_TIME_MIN * 60:
             is_healthy = is_port_open(self._vllm_args["host"], self._vllm_args["port"])
             if is_healthy:
                 logger.info("VLLM server is healthy.")
@@ -128,7 +136,7 @@ class VLLMEngine(AbstractEngine):
             params["max_tokens"] = params["max_gen_len"]
 
         if "max_new_tokens" in params:
-            params["max_tokens"] = params.pop("max_new_tokens")
+            params["max_tokens"] = params["max_new_tokens"]
 
         if "do_sample" in params and not params["do_sample"]:
             logger.info("do_sample is false, setting temperature to 0.")

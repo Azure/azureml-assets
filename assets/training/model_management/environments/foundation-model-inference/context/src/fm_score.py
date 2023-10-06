@@ -3,6 +3,7 @@
 
 """This module provides the FMScore class for running inference engines with given prompts and parameters."""
 
+import os
 from typing import Dict, List
 from configs import EngineConfig, TaskConfig
 from constants import TaskType
@@ -77,7 +78,42 @@ class FMScore:
         self.engine = get_engine(
             self.engine_config.engine_name, self.engine_config, self.task_config
         )
-        self.engine.load_model()
+
+        """
+        This block of code is used to handle the loading of the model in a multi-process environment.
+        A flag file at "/tmp/model_loaded_flag.txt" is used as a lock to ensure that the model is loaded only once.
+        If the flag file exists, it means the model is already being loaded by another worker.
+        If the flag file does not exist, the current worker creates the flag file and loads the model.
+        If the flag file creation fails due to FileExistsError, it means another worker is currently loading
+        the model.
+        The current worker then waits for the model to finish loading.
+        After the model has been loaded and the client has been initialized, the flag file is removed,
+        acting as releasing the lock.
+        """
+        flag_file_path = "/tmp/model_loaded_flag.txt"
+        if os.path.exists(flag_file_path):
+            logger.info(
+                f"Model already loaded by another worker. Current worker pid: {os.getpid()}"
+            )
+        else:
+            try:
+                with open(flag_file_path, "x"):
+                    logger.info(
+                        f"Lock acquired by worker with pid: {os.getpid()}. Loading model."
+                    )
+                    self.engine.load_model()
+                    logger.info(f"Model loaded by worker with pid: {os.getpid()}")
+            except FileExistsError:
+                logger.info(
+                    f"Model already being loaded by another worker. Waiting for model to finish loading. "
+                    f"Current worker pid: {os.getpid()}"
+                )
+
+        self.engine.init_client()  # wait for the model to finish loading
+
+        if os.path.exists(flag_file_path):
+            os.remove(flag_file_path)
+
         return self.engine
 
     def _initialize_formatter(self):

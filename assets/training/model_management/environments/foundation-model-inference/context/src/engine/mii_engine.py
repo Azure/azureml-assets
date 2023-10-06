@@ -105,13 +105,19 @@ class MiiEngine(AbstractEngine):
             logger.info("Completed server setup")
             time.sleep(20)
 
-        self.model = mii.MIIClient(
-            task_name, "localhost", configs["mii_configs"]["port_number"]
-        )
+    def init_client(self):
+        """Initialize the MII client."""
+        if self.model is None:
+            self.model = mii.MIIClient(
+                self.task_config.task_type, "localhost", LOAD_BALANCING_PORT
+            )
 
     @log_execution_time
     def generate(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
         """Generate responses for given prompts."""
+        assert (
+            self.model is not None
+        ), "MII client not initialized. Please call init_client() before calling generate()"
         queries = {"query": prompts}
         start_time = time.time()
         responses = self.model.query(queries, **params)

@@ -44,7 +44,9 @@ class SupportedTask:
 # default values
 DEVICE_COUNT = torch.cuda.device_count()
 REPLICA_NUM = int(os.getenv("WORKER_COUNT", 1))
-TENSOR_PARALLEL = int(DEVICE_COUNT / REPLICA_NUM)
+TENSOR_PARALLEL = int(
+    DEVICE_COUNT / REPLICA_NUM
+)  # use this only for mii. pass device count for vllm
 MLMODEL_PATH = "mlflow_model_folder/MLmodel"
 DEFAULT_MLFLOW_MODEL_PATH = "mlflow_model_folder/data/model"
 task_type = SupportedTask.TEXT_GENERATION
@@ -461,19 +463,26 @@ def init():
         logger.info(f"List model_path = {os.listdir(model_path)}")
 
         is_70b_model = "Llama-2-70b" in model_path or "Llama-2-70b-chat" in model_path
-        default_engine = EngineName.VLLM.value if is_70b_model else EngineName.MII.value
+        default_engine = EngineName.VLLM if is_70b_model else EngineName.MII
         engine_config = {
             "engine_name": os.getenv("ENGINE_NAME", default_engine),
             "model_id": model_path,
             "tensor_parallel": int(os.getenv("TENSOR_PARALLEL", TENSOR_PARALLEL)),
         }
-        if engine_config["engine_name"] == EngineName.MII.value:
+        if engine_config["engine_name"] == EngineName.MII:
             mii_engine_config = {
                 "deployment_name": os.getenv("DEPLOYMENT_NAME", "llama-deployment"),
                 "mii_configs": {},
             }
 
             engine_config["mii_config"] = mii_engine_config
+
+        if engine_config["engine_name"] == EngineName.VLLM:
+            vllm_config = {
+                "tensor-parallel-size": DEVICE_COUNT,
+            }
+
+            engine_config["vllm_config"] = vllm_config
 
         task_config = {
             "task_type": TaskType.CONVERSATIONAL
@@ -490,9 +499,10 @@ def init():
         g_fmscorer.init()
 
         # run nvidia-smi
-        logger.info("###### GPU INFO ######")
-        logger.info(os.system("nvidia-smi"))
-        logger.info("###### GPU INFO ######")
+        if REPLICA_NUM == 1:
+            logger.info("###### GPU INFO ######")
+            logger.info(os.system("nvidia-smi"))
+            logger.info("###### GPU INFO ######")
     except Exception as e:
         raise Exception(f"Error in creating client or server: {e}") from e
 

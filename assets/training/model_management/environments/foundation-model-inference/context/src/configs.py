@@ -50,7 +50,9 @@ class EngineConfig(SerializableDataClass):
 
     engine_name: str
     model_id: str
-    tensor_parallel: int = 1
+    tensor_parallel: int = (
+        1  # TODO: Remove this field, let is be specific to the engine
+    )
     trust_remote_code: bool = True
     mii_config: Optional[MiiEngineConfig] = None
     vllm_config: Optional[Dict] = None
