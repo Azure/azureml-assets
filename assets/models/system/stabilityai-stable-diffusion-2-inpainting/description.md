@@ -53,12 +53,12 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
     {
         "prompt": "Face of a yellow cat, high resolution, sitting on a park bench",
         "generated_image": "inpainted_image1",
-        "nsfw_content_detected": False
+        "nsfw_content_detected": null
     },
     {
         "prompt": "Face of a green cat, high resolution, sitting on a park bench",
         "generated_image": "inpainted_image2",
-        "nsfw_content_detected": False
+        "nsfw_content_detected": null
     }
 ]
 ```
@@ -66,7 +66,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
 > Note:
 >
 > - "inpainted_image1" and "inpainted_image2" strings are base64 format.
-> - If "nsfw_content_detected" is True then generated image will be totally black.
+> - The `stabilityai-stable-diffusion-2-inpainting` model doesn't check for the NSFW content in generated image. We highly recommend to use the model with <a href="https://learn.microsoft.com/en-us/azure/ai-services/content-safety/studio-quickstart" target="_blank">Azure AI Content Safety (AACS)</a>. Please refer sample <a href="https://aka.ms/azureml-infer-sdk-safe-text-to-image-inpainting" target="_blank">online</a> and <a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpainting" target="_blank">batch</a> notebooks for AACS integrated deployments.
 
 #### Model inference: visualization for the prompt - "a small flower vase featuring a blend of yellow and orange"
 

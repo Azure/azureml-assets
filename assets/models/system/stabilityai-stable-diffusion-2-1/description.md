@@ -37,7 +37,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image" targe
     {
         "prompt": "a photograph of an astronaut riding a horse",
         "generated_image": "image",
-        "nsfw_content_detected": None
+        "nsfw_content_detected": null
     }
 ]
 ```
