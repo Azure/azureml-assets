@@ -20,11 +20,10 @@ tags:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
-  license: custom
-  author: meta
-  task: text-generation
   SharedComputeCapacityEnabled: ''
-  disable-batch: 'true'
+  task: text-generation
+  license: llama2
+  author: meta
 version: 2
 description: |
   # **Model Details**

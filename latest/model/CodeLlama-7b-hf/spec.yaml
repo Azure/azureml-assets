@@ -11,6 +11,7 @@ properties:
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   finetuning-tasks: text-classification
   languages: EN
+  azureml.copyRegistryFilesToWorkspace: true
 tags:
   Featured: ''
   Preview: ''
@@ -34,13 +35,14 @@ tags:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
-  license: llama2
-  author: meta
-  task: text-generation
   model_specific_defaults:
     apply_deepspeed: 'true'
     apply_lora: 'true'
     precision: '16'
+  SharedComputeCapacityEnabled: ''
+  task: text-generation
+  license: llama2
+  author: meta
 version: 2
 description: |
   # **Code Llama**
