@@ -78,30 +78,36 @@ class TestInferencePostprocessorComponent:
     @pytest.mark.parametrize(
         "dataset_name, prediction_dataset, prediction_column_name, ground_truth_dataset, ground_truth_column_name, \
         separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, script_path, \
-        pred_probs_dataset, label_map, find_first",
+        label_map, find_first",
         [
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
                 Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None,
                 None, None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
-                None, None, None, None,
-            ),
-            (
-                "human-eval", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
-                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
-                None, None, None, None, None,
-            ),
-            (
-                "gsm8k_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None,
-                None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
-                None, None, None, None,
-            ),
-            (
-                "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
-                None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
                 None, None, None,
             ),
+            # (
+            #     "human-eval", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
+            #     None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
+            #     None, None, None, None, None,
+            # ),
+            # (
+            #     "gsm8k_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+            #     Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None,
+            #     None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
+            #     None, None, None, None,
+            # ),
+            # (
+            #     "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
+            #     None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
+            #     None, None, None,
+            # ),
+            # (
+            #     "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+            #     #Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer",
+            #     None, None, "\n\n",
+            #     None, None, ".", "last", None, None, None, None,
+            # ),
         ],
     )
     def test_inference_postprocessor_as_component(
@@ -118,7 +124,6 @@ class TestInferencePostprocessorComponent:
         extract_number: str,
         template: str,
         script_path: str,
-        pred_probs_dataset: str,
         label_map: str,
         find_first: str,
     ) -> None:
@@ -162,6 +167,7 @@ class TestInferencePostprocessorComponent:
             os.path.dirname(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE),
             "process_one_prediction_example.jsonl",
         )
+        import pdb;pdb.set_trace();
         ml_client = get_mlclient()
         exp_name = f"{self.EXP_NAME}"
         pipeline_job = self._get_pipeline_job(
@@ -176,12 +182,12 @@ class TestInferencePostprocessorComponent:
             extract_number,
             template,
             script_path,
-            pred_probs_dataset,
             label_map,
             find_first,
             self.test_inference_postprocessor_as_component.__name__,
             pipeline_file="inference_postprocessor_pipeline.yaml",
         )
+        import pdb;pdb.set_trace();
         # submit the pipeline job
         pipeline_job = ml_client.create_or_update(
             pipeline_job, experiment_name=self.EXP_NAME
@@ -211,8 +217,7 @@ class TestInferencePostprocessorComponent:
             template=template,
             script_path=script_path,
             label_map=label_map,
-            pred_probs_dataset=[pred_probs_dataset] if pred_probs_dataset else None,
-            find_first=find_first,
+            find_first=find_first
         )
 
     def _get_pipeline_job(
@@ -228,7 +233,6 @@ class TestInferencePostprocessorComponent:
         extract_number: str,
         template: str,
         script_path: str,
-        pred_probs_dataset: str,
         label_map: str,
         find_first: str,
         display_name: str,
@@ -247,17 +251,11 @@ class TestInferencePostprocessorComponent:
             )
         else:
             pipeline_job.inputs.ground_truth_dataset = None
-        pipeline_job.inputs.ground_truth_column_name = (
-            ground_truth_column_name if ground_truth_column_name else None
-        )
+        pipeline_job.inputs.ground_truth_column_name = ground_truth_column_name if ground_truth_column_name else None
         pipeline_job.inputs.separator = separator if separator else None
         pipeline_job.inputs.regex_expr = regex_expr if regex_expr else None
-        pipeline_job.inputs.remove_prefixes = (
-            remove_prefixes if remove_prefixes else None
-        )
-        pipeline_job.inputs.strip_characters = (
-            strip_characters if strip_characters else None
-        )
+        pipeline_job.inputs.remove_prefixes = remove_prefixes if remove_prefixes else None
+        pipeline_job.inputs.strip_characters = strip_characters if strip_characters else None
         pipeline_job.inputs.extract_number = extract_number if extract_number else None
         pipeline_job.inputs.template = template if template else None
         if script_path:
@@ -266,12 +264,6 @@ class TestInferencePostprocessorComponent:
             )
         else:
             pipeline_job.inputs.script_path = None
-        if pred_probs_dataset:
-            pipeline_job.inputs.prediction_probabilities_dataset = Input(
-                type=AssetTypes.URI_FILE, path=pred_probs_dataset
-            )
-        else:
-            pipeline_job.inputs.prediction_probabilities_dataset = None
         pipeline_job.inputs.label_map = label_map if label_map else None
         pipeline_job.inputs.find_first = find_first if find_first else None
         pipeline_job.display_name = display_name
@@ -346,6 +338,11 @@ class TestInferencePostprocessorScript:
                 "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
                 None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
                 None, None, None,
+            ),
+            (
+                "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "\n\n",
+                None, None, ".", "last", None, None, None, None, None,
             ),
         ],
     )
