@@ -65,6 +65,7 @@ class PromptCrafter:
         additional_payload: Optional[str],
         system_message: Optional[str],
         base_prompt_factory_cls=PromptFactory,
+        output_filename: Optional[str] = OUTPUT_FILENAME,
     ):
         self.metadata_keys = metadata_keys
         self.additional_payload = additional_payload
@@ -80,7 +81,7 @@ class PromptCrafter:
 
         # create input/output file
         self.input_path = resolve_file(input_path=input_dir, filename=input_filename)
-        self.output_path = os.path.join(output_dir, self.OUTPUT_FILENAME)
+        self.output_path = os.path.join(output_dir, output_filename)
         self.mltable_output_path = self._prepare_ml_table_output_file(output_mltable=output_mltable)
 
         # init prompt factory
