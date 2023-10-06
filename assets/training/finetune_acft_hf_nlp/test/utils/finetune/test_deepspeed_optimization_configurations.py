@@ -3,8 +3,10 @@
 
 """File containing test cases for invalid user settings for deepspeed stage3."""
 
+import json
 from unittest import TestCase
 from argparse import Namespace
+from typing import Dict, Any
 
 from src.finetune.finetune import (
     validate_ds_zero3_config,
@@ -15,9 +17,16 @@ from src.finetune.finetune import (
 )
 
 
+def read_json_file(file_path: str) -> Dict[str, Any]:
+    """Read json file."""
+    with open(file_path, 'r', encoding='utf-8') as rptr:
+        file_path_dict = json.load(rptr)
+    return file_path_dict
+
+
 def test_identify_deepspeed_stage():
     """Test if the right deepspeed stage is getting identified."""
-    assert identify_deepspeed_stage("test/utils/finetune/data/valid_ds3_config.json") == 3
+    assert identify_deepspeed_stage(read_json_file("test/utils/finetune/data/valid_ds3_config.json")) == 3
 
 
 def test_validate_ds_zero3_config():
@@ -25,7 +34,7 @@ def test_validate_ds_zero3_config():
     # catch the error in the invalid case
     ut_obj = TestCase()
     with ut_obj.assertRaises(Exception) as context:
-        validate_ds_zero3_config("test/utils/finetune/data/invalid_ds3_config.json")
+        validate_ds_zero3_config(read_json_file("test/utils/finetune/data/invalid_ds3_config.json"))
 
     ut_obj.assertTrue(
         (
@@ -36,7 +45,7 @@ def test_validate_ds_zero3_config():
     )
 
     # valid case
-    validate_ds_zero3_config("test/utils/finetune/data/valid_ds3_config.json")
+    validate_ds_zero3_config(read_json_file("test/utils/finetune/data/valid_ds3_config.json"))
 
 
 def test_invalid_fail_run_setting_ds3_ort():
@@ -67,10 +76,26 @@ def test_invalid_fail_run_setting_ds3_lora():
 
 def test_invalid_setting_ds3_auto_find_bs():
     """Test can_apply_ort return true for generation task."""
-    args = Namespace(auto_find_batch_size=True, apply_deepspeed=True, deepspeed="./data/valid_ds3_config.json")
+    args = Namespace(
+        auto_find_batch_size=True,
+        apply_deepspeed=True,
+        deepspeed="test/utils/finetune/data/valid_ds3_config.json"
+    )
     check_for_invalid_ds_zero3_settings(args)
 
     assert getattr(args, "auto_find_batch_size") is False
+
+
+def test_enable_gradient_checkpointing():
+    """Test can_apply_ort return true for generation task."""
+    args = Namespace(
+        model_type="llama",
+        apply_deepspeed=True,
+        deepspeed="test/utils/finetune/data/valid_ds3_config.json"
+    )
+    setup_and_validate_deepspeed(args, do_validate=True)
+
+    assert getattr(args, "gradient_checkpointing") is True
 
 
 def test_default_deepspeed_config():

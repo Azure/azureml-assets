@@ -33,7 +33,7 @@ class TestDatasetDownloaderComponent:
         "dataset_name, configuration, split, script",
         [
             ("xquad", "xquad.en", "validation", None),
-            ("xquad", "xquad.en", "all", None),
+            ("xquad", "xquad.en,xquad.hi", "all", None),
             ("xquad", "all", "all", None),
             (None, "all", "test", Constants.MATH_DATASET_LOADER_SCRIPT),
         ],
@@ -69,7 +69,8 @@ class TestDatasetDownloaderComponent:
         if configuration == "all":
             file_count = len(get_dataset_config_names(path))
         elif split == "all":
-            file_count = len(get_dataset_split_names(path, configuration))
+            configs = configuration.split(",")
+            file_count = sum(len(get_dataset_split_names(path, config)) for config in configs)
         self._verify_output(pipeline_job, temp_dir, file_count)
         assert_logged_params(
             pipeline_job.name,

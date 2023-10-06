@@ -312,9 +312,9 @@
         }
       },
       "Prompt_variants": {
-        "defaultVariantId": "@@Variant_0",
+        "defaultVariantId": "Variant_0",
         "variants": {
-          "@@Variant_0": {
+          "Variant_0": {
             "node": {
               "name": "Prompt_variants",
               "tool": "Prompt_variants",
@@ -325,7 +325,7 @@
               "reduce": false
             }
           },
-          "@@Variant_1": {
+          "Variant_1": {
             "node": {
               "name": "Prompt_variants",
               "tool": "Prompt_variants__variant_1",
@@ -336,7 +336,7 @@
               "reduce": false
             }
           },
-          "@@Variant_2": {
+          "Variant_2": {
             "node": {
               "name": "Prompt_variants",
               "tool": "Prompt_variants__variant_2",
