@@ -28,12 +28,12 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
             {
                 "prompt": "Face of a yellow cat, high resolution, sitting on a park bench",
                 "image": "image1",
-                "mask": "mask1"
+                "mask_image": "mask1"
             },
             {
                 "prompt": "Face of a green cat, high resolution, sitting on a park bench",
                 "image": "image2",
-                "mask": "mask2"
+                "mask_image": "mask2"
             }
         ],
         "index": [0, 1]
@@ -70,4 +70,4 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
 
 #### Model inference: visualization for the prompt - "a small flower vase featuring a blend of yellow and orange"
 
-<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_gridviz_stabilityai_stable_diffusion_2_inpainting.jpg" alt="stabilityai_stable_diffusion_2_inpainting input image mask image and output visualization">
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_gridviz_stabilityai_stable_diffusion_2_inpainting.png" alt="stabilityai_stable_diffusion_2_inpainting input image mask image and output visualization">
