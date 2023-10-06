@@ -252,15 +252,14 @@ class Config:
             ValidationException: If the path doesn't exist.
 
         Returns:
-            List[Path]: If path is a file or empty directory, just return it.
+            List[Path]: If path is a file, just return it.
                         Otherwise, return the files contained by the directory.
         """
         if not path.exists():
             raise ValidationException(f"{path} not found")
         if path.is_dir():
-            contents = list(path.rglob("*"))
-            if contents:
-                return contents
+            contents = list([p for p in path.rglob("*") if p.is_file()])
+            return contents
         return [path]
 
 
