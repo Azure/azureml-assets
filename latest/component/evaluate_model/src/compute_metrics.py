@@ -76,11 +76,14 @@ class ComputeMetricsRunner:
         self.is_ground_truth_mltable = is_ground_truth_mltable
         self.is_predictions_mltable = is_predictions_mltable
         self.is_predictions_probabilities_mltable = is_prediction_probabilities_mltable
-        self.ground_truths_column_name, self.extra_y_test_cols = \
-            parse_input_ground_truth_col(ground_truths_column_name)
+        if self.task != constants.TASK.CHAT_COMPLETION and ground_truths_column_name is not None:
+            self.ground_truths_column_name, self.extra_y_test_cols = \
+                parse_input_ground_truth_col(ground_truths_column_name)
+        else:
+            self.ground_truths_column_name = None
+            self.extra_y_test_cols = None
         self.predictions_column_name = predictions_column_name
 
-        self.label_column_name, self.prediction_column_name = None, None
         self.config = config
         self._is_multilabel = self.config.get("multilabel", False)
         self._has_multiple_output = self._is_multilabel or self.task == constants.TASK.NER
@@ -362,19 +365,21 @@ def run():
                 log_traceback(exception, logger)
                 raise exception
 
-    runner = ComputeMetricsRunner(
-        task=args.task,
-        ground_truth=ground_truths,
-        predictions=predictions,
-        prediction_probabilities=prediction_probabilities,
-        output=args.output,
-        config=config,
-        is_ground_truth_mltable=is_ground_truths_mltable,
-        is_predictions_mltable=is_predictions_mltable,
-        is_prediction_probabilities_mltable=is_prediction_probabilities_mltable,
-        ground_truths_column_name=args.ground_truths_column_name,
-        predictions_column_name=args.predictions_column_name
-    )
+    with log_activity(logger, constants.TelemetryConstants.INITIALISING_RUNNER,
+                      custom_dimensions=custom_dims_dict):
+        runner = ComputeMetricsRunner(
+            task=args.task,
+            ground_truth=ground_truths,
+            predictions=predictions,
+            prediction_probabilities=prediction_probabilities,
+            output=args.output,
+            config=config,
+            is_ground_truth_mltable=is_ground_truths_mltable,
+            is_predictions_mltable=is_predictions_mltable,
+            is_prediction_probabilities_mltable=is_prediction_probabilities_mltable,
+            ground_truths_column_name=args.ground_truths_column_name,
+            predictions_column_name=args.predictions_column_name
+        )
 
     with log_activity(logger, activity_name=constants.TelemetryConstants.DATA_LOADING,
                       custom_dimensions=custom_dims_dict):
