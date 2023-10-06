@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-name: irs_chatbot
+name: json_formatter_assistant
 version: 0.0.10
 display_name: JSON formatter assistant
 description: An AI chatbot that helps users turn a natural language list into JSON format

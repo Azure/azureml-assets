@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-name: irs_chatbot
+name: marketing_writing_assistant
 version: 0.0.10
 display_name: Marketing Writing Assistant
 description: A marketing writing assistant that will help come up with creative content ideas and content like marketing emails, blog posts, tweets, ad copy and product descriptions.

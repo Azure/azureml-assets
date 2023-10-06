@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-name: irs_chatbot
+name: hiking_chatbot
 version: 0.0.10
 display_name: Hiking recommendations chatbot
 
