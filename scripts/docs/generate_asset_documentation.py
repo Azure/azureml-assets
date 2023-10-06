@@ -14,7 +14,7 @@ from glob import glob as search
 
 SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA, AssetType.PROMPT]
 DEFAULT_CATEGORY = "Uncategorized"
-PLURALIZED_ASSET_TYPE = {"environment": "environments", "component": "components", "model": "models", "data": "data", 
+PLURALIZED_ASSET_TYPE = {"environment": "environments", "component": "components", "model": "models", "data": "data",
                          "prompt": "prompts"}
 
 
