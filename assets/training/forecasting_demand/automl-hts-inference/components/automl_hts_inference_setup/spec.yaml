@@ -67,7 +67,7 @@ outputs:
 
 
 code: ../../src/setup
-environment: azureml://registries/azureml/environments/automl-gpu/versions/3
+environment: azureml://registries/azureml/environments/automl-gpu/versions/4
 
 command: >-
   python setup.py 

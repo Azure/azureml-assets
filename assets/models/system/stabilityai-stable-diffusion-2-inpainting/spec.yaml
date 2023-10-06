@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: stabilityai-stable-diffusion-2-inpainting
+path: ./
+properties:
+  SHA: 81a84f49b15956b60b4272a405ad3daef3da4590
+  datasets: LAION-5B
+  inference-min-sku-spec: 4|1|28|176
+  inference-recommended-sku: Standard_NC6s_v3
+  model_id: stabilityai/stable-diffusion-2-inpainting
+tags:
+  Preview: ''
+  license: creativeml-openrail++-m
+  task: text-to-image
+version: 1
