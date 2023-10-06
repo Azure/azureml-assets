@@ -68,6 +68,6 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-safe-text-to-image-inpain
 > - "inpainted_image1" and "inpainted_image2" strings are base64 format.
 > - If "nsfw_content_detected" is True then generated image will be totally black.
 
-#### Model inference: visualization for a sample input
+#### Model inference: visualization for the prompt - "a small flower vase featuring a blend of yellow and orange"
 
-<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_runwayml_stable_diffusion_v1_5.jpg" alt="runwayml_stable_diffusion_v1_5 visualization">
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_gridviz_runwayml_stable_diffusion_inpainting.jpg" alt="runwayml_stable_diffusion_inpainting input image mask image and output visualization">
