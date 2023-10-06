@@ -66,6 +66,7 @@ inputs:
     - image-object-detection
     - image-instance-segmentation
     - text-to-image
+    - text-to-image-inpainting
     - image-text-to-text
     - zero-shot-image-classification
     description: A Hugging face task on which model was trained on. A required parameter

@@ -25,14 +25,14 @@ dependencies:
   - azureml-telemetry==1.53.0
   - azureml-interpret==1.53.0
   - azureml-responsibleai==1.53.0
-  - azureml-automl-core==1.53.1
-  - azureml-automl-runtime==1.53.1
-  - azureml-train-automl-client==1.53.0
-  - azureml-train-automl-runtime==1.53.1
+  - azureml-automl-core==1.53.2
+  - azureml-automl-runtime==1.53.2
+  - azureml-train-automl-client==1.53.2
+  - azureml-train-automl-runtime==1.53.2
   - azureml-dataset-runtime==1.53.0
   - azureml-contrib-dataset==1.53.0
   - azureml-train-automl==1.53.0
-  - azureml-contrib-automl-dnn-forecasting==1.53.1
+  - azureml-contrib-automl-dnn-forecasting==1.53.2
   - https://aka.ms/automl-resources/packages/en_core_web_sm-2.1.0.tar.gz
   - cryptography>=41.0.2
   - scipy==1.10.1
