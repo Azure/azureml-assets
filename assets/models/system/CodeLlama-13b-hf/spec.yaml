@@ -37,4 +37,4 @@ tags:
   task: text-generation
   license: llama2
   author: meta
-version: 3
+version: 2

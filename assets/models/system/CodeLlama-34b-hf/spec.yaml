@@ -25,4 +25,4 @@ tags:
   task: text-generation
   license: llama2
   author: meta
-version: 2
+version: 1
