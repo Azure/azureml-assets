@@ -30,6 +30,7 @@ MAX_POST_TIMES = 3
 SLEEP_DURATION = 1
 USE_CODE_FIRST = False
 USE_CHAT_FLOWS = False
+
 SERVICE_ENDPOINT = os.environ.get("AZUREML_SERVICE_ENDPOINT", "")
 EXPERIMENT_SCOPE = os.environ.get("AZUREML_EXPERIMENT_SCOPE", "")
 WORKSPACE_SCOPE = os.environ.get("AZUREML_WORKSPACE_SCOPE", "")
@@ -37,8 +38,13 @@ RUN_TOKEN = os.environ.get("AZUREML_RUN_TOKEN", "")
 CODE_DIR = "rag_code_flow"
 _CITATION_TEMPLATE = r'\nPlease add citation after each sentence when possible in a form \"(Source: citation)\".'
 _USER_INPUT = r'{{contexts}} \n user: {{question}} \nassistant:'
+_MODIFY_INPUT = r'system: \nGiven the following conversation history and the users next question,' + \
+    r'rephrase the question to be a stand alone question.\nIf the conversation is irrelevant ' + \
+    r'or empty, just restate the original question.\nDo not add more details than necessary to the question.'
 _CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ item.inputs.question }} ' + \
     r'\nassistant: \n{{ item.outputs.output }} \n{% endfor %}'
+_MODIFY_PROMPT = r'system: \n' + _MODIFY_INPUT + r'\nconversation:\n' + _CHAT_HISTORY + \
+    r'\n\nFollow up Input: {{question}} \nStandalone Question:'
 _STATIC_METRIC_PRIORITY_LIST = ["gpt_similarity", "gpt_relevance", "bert_f1"]
 
 
@@ -46,7 +52,7 @@ def post_processing_prompts(prompt, citation_templates, user_input, is_chat):
     """Post processing prompts to include multiple roles to make it compatible with completion and chat API."""
     if is_chat:
         full_prompt = r'system: \n' + prompt + citation_templates + r'\n\n user: \n {{contexts}} \n' + \
-                _CHAT_HISTORY + r'\n\nHuman: {{question}} \nAI:'
+                _CHAT_HISTORY + r'\nuser: {{question}} \nassistant:'
     else:
         full_prompt = r'system: \n' + prompt + citation_templates + r'\n\n user: \n ' + user_input
 
@@ -130,10 +136,15 @@ def get_connection_name(s):
 
 def get_deployment_and_model_name(s):
     """get_deployment_and_model_name."""
-    deployment_and_model = s.split("/deployment/")[1]
-    deployment_name = deployment_and_model.split("/model/")[0]
-    model_name = deployment_and_model.split("/model/")[1]
-    return (deployment_name, model_name)
+    model_type = s.split("://")[0]
+    if model_type == "open_ai":
+        model_name = s.split("/model/")[1]
+        return (model_name, model_name)
+    else:
+        deployment_and_model = s.split("/deployment/")[1]
+        deployment_name = deployment_and_model.split("/model/")[0]
+        model_name = deployment_and_model.split("/model/")[1]
+        return (deployment_name, model_name)
 
 
 def upload_code_files(ws: Workspace, name):
@@ -167,27 +178,43 @@ def main(args, ws, current_run, activity_logger: Logger):
     completion_connection_name = get_connection_name(
         args.llm_connection_name)
     completion_config = json.loads(args.llm_config)
-    completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
-    completion_deployment_name = completion_config.get(
-        "deployment_name", "gpt-35-turbo")
+
+    if completion_config.get("type") == "open_ai":
+        completion_model_name = completion_config.get("model_name", "gpt-3.5-turbo")
+        completion_deployment_name = completion_model_name
+        completion_model_name = "gpt-3.5-turbo" if completion_model_name is None else completion_model_name
+        completion_deployment_name = \
+            "gpt-3.5-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_provider = "OpenAI"
+    else:
+        completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
+        completion_deployment_name = completion_config.get(
+            "deployment_name", "gpt-35-turbo")
     # Set default if key exsits but is set to None (as it is for basic pipelines)
-    completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
-    completion_deployment_name = "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
+        completion_deployment_name = \
+            "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_provider = "AzureOpenAI"
+
     embedding_connection_name = get_connection_name(
         args.embedding_connection)
     if (completion_connection_name == "azureml-rag-default-aoai" and
             embedding_connection_name != "azureml-rag-default-aoai"):
         # default completion connection name to embedding ones if embedding conenction is provided
         completion_connection_name = embedding_connection_name
+
     embedding_deployment_name_and_model_name = get_deployment_and_model_name(
         args.embeddings_model)
     embedding_deployment_name = embedding_deployment_name_and_model_name[0]
     embedding_model_name = embedding_deployment_name_and_model_name[1]
+
     print("completion_connection_name: %s" %
           completion_connection_name)
+    print("completion_provider: %s" % completion_provider)
     print("completion_model_name: %s" % completion_model_name)
     print("completion_deployment_name: %s" %
           completion_deployment_name)
+
     print("embedding_connection_name: %s" % embedding_connection_name)
     print("embedding_deployment_name: %s" % embedding_deployment_name)
     print("embedding_model_name: %s" % embedding_model_name)
@@ -265,6 +292,8 @@ def main(args, ws, current_run, activity_logger: Logger):
     flow_with_variants = flow_with_variants.replace(
         "@@Completion_Connection", completion_connection_name)
     flow_with_variants = flow_with_variants.replace(
+        "@@Completion_Provider", completion_provider)
+    flow_with_variants = flow_with_variants.replace(
         "@@MLIndex_Asset_Id", mlindex_asset_id)
 
     api_name = "chat" if completion_model_name.startswith("gpt-") else "completion"
@@ -286,6 +315,14 @@ def main(args, ws, current_run, activity_logger: Logger):
                     CODE_DIR,
                     f"Prompt_variants__Variant_{idx}.jinja2"), "w") as file:
                 file.write(codecs.decode(prompt_str, 'unicode_escape'))
+
+        if USE_CHAT_FLOWS:
+            # Write extra modify query prompt to folder
+            with open(os.path.join(
+                    Path(__file__).parent.absolute(),
+                    CODE_DIR,
+                    "modify_query_with_history.jinja2"), "w") as file:
+                file.write(codecs.decode(_MODIFY_PROMPT, 'unicode_escape'))
 
         # upload code
         try:
@@ -328,6 +365,9 @@ def main(args, ws, current_run, activity_logger: Logger):
         flow_with_variants = flow_with_variants.replace(
             "@@prompt_variant_2",
             post_processing_prompts(json_stringify(top_prompts[2]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
+
+        if USE_CHAT_FLOWS:
+            flow_with_variants = flow_with_variants.replace("@@modify_prompt", _MODIFY_PROMPT)
 
         activity_logger.info(
             "[Promptflow Creation]: Json payload successfully generated, trying to parse into json dict...")
