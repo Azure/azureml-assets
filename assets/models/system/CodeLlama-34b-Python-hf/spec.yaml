@@ -6,6 +6,7 @@ properties:
   inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   evaluation-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: EN
+  azureml.copyRegistryFilesToWorkspace: true
 tags:
   Featured: ''
   Preview: ''
@@ -17,6 +18,8 @@ tags:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
+  SharedComputeCapacityEnabled: ''
+  task: text-generation
   license: llama2
   author: meta
-version: 2
+version: 3
