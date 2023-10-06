@@ -190,17 +190,16 @@ def validate_build_context(environment_config: assets.EnvironmentConfig) -> int:
     error_count = 0
     # Iterate over all files in the build context
     for file_path in environment_config.release_paths:
-        if file_path.is_file():
-            with open(file_path) as f:
-                # Read file into memory, normalize EOL characters
-                contents = f.read()
-                contents = contents.replace("\r\n", "\n")
+        with open(file_path) as f:
+            # Read file into memory, normalize EOL characters
+            contents = f.read()
+            contents = contents.replace("\r\n", "\n")
 
-                # Check disallowed pattersn
-                for pattern in BUILD_CONTEXT_DISALLOWED_PATTERNS:
-                    if pattern.search(contents):
-                        _log_error(file_path, f"Found disallowed pattern '{pattern.pattern}'")
-                        error_count += 1
+            # Check disallowed pattersn
+            for pattern in BUILD_CONTEXT_DISALLOWED_PATTERNS:
+                if pattern.search(contents):
+                    _log_error(file_path, f"Found disallowed pattern '{pattern.pattern}'")
+                    error_count += 1
 
     return error_count
 
