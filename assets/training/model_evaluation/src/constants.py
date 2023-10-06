@@ -53,6 +53,7 @@ class TASK:
     IMAGE_OBJECT_DETECTION = "image-object-detection"
     IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
     FORECASTING = "tabular-forecasting"
+    CHAT_COMPLETION = "chat-completion"
 
 
 ALL_TASKS = [
@@ -70,6 +71,7 @@ ALL_TASKS = [
     TASK.TEXT_GENERATION,
     TASK.IMAGE_CLASSIFICATION,
     TASK.IMAGE_CLASSIFICATION_MULTILABEL,
+    TASK.CHAT_COMPLETION,
     TASK.IMAGE_OBJECT_DETECTION,
     TASK.IMAGE_INSTANCE_SEGMENTATION
 ]
@@ -109,6 +111,7 @@ MLFLOW_MODEL_TYPE_MAP = {
     TASK.SUMMARIZATION: "summarization",
     TASK.TEXT_GENERATION: "text-generation",
     TASK.FILL_MASK: "fill-mask",
+    TASK.CHAT_COMPLETION: "chat-completion",
     TASK.IMAGE_CLASSIFICATION: "image-classifier",
     TASK.IMAGE_CLASSIFICATION_MULTILABEL: "image-classifier-multilabel",
     TASK.IMAGE_OBJECT_DETECTION: "image-object-detection",
@@ -130,7 +133,8 @@ TEXT_TOKEN_TASKS = [
     TASK.QnA,
     TASK.SUMMARIZATION,
     TASK.TEXT_GENERATION,
-    TASK.FILL_MASK
+    TASK.FILL_MASK,
+    TASK.CHAT_COMPLETION
 ]
 
 TEXT_OUTPUT_TOKEN_TASKS = [
@@ -138,7 +142,8 @@ TEXT_OUTPUT_TOKEN_TASKS = [
     TASK.QnA,
     TASK.SUMMARIZATION,
     TASK.TEXT_GENERATION,
-    TASK.FILL_MASK
+    TASK.FILL_MASK,
+    TASK.CHAT_COMPLETION
 ]
 
 
@@ -147,6 +152,7 @@ class TelemetryConstants:
 
     COMPONENT_NAME = "model_evaluation"
 
+    INITIALISING_RUNNER = "initialising_runner"
     VALIDATION_NAME = "argument_validation"
     DATA_LOADING = "loading_data"
     LOG_AND_SAVE_OUTPUT = "log_and_save_output"
@@ -158,6 +164,7 @@ class TelemetryConstants:
     COMPUTE_METRICS_NAME = "compute_metrics"
     SCORE_NAME = "score"
     EVALUATE_MODEL_NAME = "evaluate_model"
+    DOWNLOAD_MODEL_DEPENDENCIES = "download_model_dependencies"
 
     MLFLOW_NAME = "mlflow_evaluate"
 
@@ -193,6 +200,9 @@ class ErrorStrings:
     GenericModelPredictionError = "Model Prediction failed due to [{error}]"
     GenericComputeMetricsError = "Compute metrics failed due to [{error}]"
 
+    # Download dependencies
+    DownloadDependenciesFailed = "Failed to install model dependencies: [{dependencies}]"
+
     # Arguments related
     ArgumentParsingError = "Failed to parse input arguments."
     InvalidTaskType = "Given Task Type [{TaskName}] is not supported. " + \
@@ -202,6 +212,7 @@ class ErrorStrings:
                    "If you have passed Model URI, your Model URI is incorrect."
     BadModelData = "Model load failed due to error: [{error}]"
     InvalidTestData = "Test data should be passed."
+    InvalidFileInputSource = "File input source [{input_port}] must be of type ro_mount."
     InvalidPredictionsData = "Predictions should be passed."
     InvalidGroundTruthData = "Ground truth should be passed."
     InvalidGroundTruthColumnName = "Ground truth column name should be passed since columns in data are > 0."
@@ -218,6 +229,7 @@ class ErrorStrings:
     BadFeatureColumnNames = "input_column_names is not a subset of input test dataset columns.\
                  input_column_names include [{keep_columns}] whereas data has [{data_columns}]"
     BadInputData = "Failed to load data with error: [{error}]"
+    EmptyInputData = "Input data contains no data."
     BadEvaluationConfigFile = "Evaluation Config file failed to load due to [{error}]"
     BadEvaluationConfigParam = "Evaluation Config Params failed to load due to [{error}]"
     BadEvaluationConfig = "Evaluation Config failed to load due to [{error}]"

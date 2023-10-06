@@ -12,9 +12,10 @@ from pathlib import Path
 from azureml.assets.config import AssetConfig, AssetType
 from glob import glob as search
 
-SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA]
+SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA, AssetType.PROMPT]
 DEFAULT_CATEGORY = "Uncategorized"
-PLURALIZED_ASSET_TYPE = {"environment": "environments", "component": "components", "model": "models", "data": "data"}
+PLURALIZED_ASSET_TYPE = {"environment": "environments", "component": "components", "model": "models", "data": "data",
+                         "prompt": "prompts"}
 
 
 class AssetInfo:
@@ -103,6 +104,8 @@ class AssetInfo:
             return ModelInfo(asset_config)
         if asset_config.type == AssetType.DATA:
             return DataInfo(asset_config)
+        if asset_config.type == AssetType.PROMPT:
+            return PromptInfo(asset_config)
 
         raise Exception(f"Not supported asset type {asset_config.type}. Use {SUPPORTED_ASSET_TYPES}")
 
@@ -370,6 +373,27 @@ class DataInfo(AssetInfo):
         return _doc
 
 
+class PromptInfo(AssetInfo):
+    """Prompt asset class."""
+
+    def __init__(self, asset_config: AssetConfig):
+        """Instantiate Prompt asset class."""
+        super().__init__(asset_config)
+
+    @AssetInfo.doc.getter
+    def doc(self) -> snakemd.document.Document:
+        """Generate prompt markdown document."""
+        _doc = snakemd.new_doc()
+        self._add_doc_name(_doc)
+        self._add_doc_overview(_doc)
+        self._add_doc_description(_doc)
+        self._add_doc_asset_version(_doc)
+        self._add_doc_tags(_doc)
+        self._add_doc_link(_doc)
+
+        return _doc
+
+
 class Categories:
     """Categories structured by type."""
 
@@ -381,6 +405,7 @@ class Categories:
         self._categories[AssetType.COMPONENT.value] = None
         self._categories[AssetType.MODEL.value] = None
         self._categories[AssetType.DATA.value] = None
+        self._categories[AssetType.PROMPT.value] = None
 
     def classify_asset(self, asset: AssetInfo):
         """Classify an asset."""
