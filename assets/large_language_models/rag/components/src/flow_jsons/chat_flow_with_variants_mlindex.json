@@ -81,7 +81,7 @@
             "logit_bias": "",
             "prompt_text": "${Prompt_variants.output}"
           },
-          "provider": "AzureOpenAI",
+          "provider": "@@Completion_Provider",
           "connection": "@@Completion_Connection",
           "api": "@@API",
           "module": "promptflow.tools.aoai",
@@ -438,7 +438,7 @@
                 "logit_bias": "",
                 "prompt_text": "${Prompt_variants.output}"
               },
-              "provider": "AzureOpenAI",
+              "provider": "@@Completion_Provider",
               "connection": "@@Completion_Connection",
               "api": "@@API",
               "module": "promptflow.tools.aoai",
