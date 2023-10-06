@@ -30,6 +30,7 @@ MAX_POST_TIMES = 3
 SLEEP_DURATION = 1
 USE_CODE_FIRST = False
 USE_CHAT_FLOWS = False
+
 SERVICE_ENDPOINT = os.environ.get("AZUREML_SERVICE_ENDPOINT", "")
 EXPERIMENT_SCOPE = os.environ.get("AZUREML_EXPERIMENT_SCOPE", "")
 WORKSPACE_SCOPE = os.environ.get("AZUREML_WORKSPACE_SCOPE", "")
@@ -135,10 +136,15 @@ def get_connection_name(s):
 
 def get_deployment_and_model_name(s):
     """get_deployment_and_model_name."""
-    deployment_and_model = s.split("/deployment/")[1]
-    deployment_name = deployment_and_model.split("/model/")[0]
-    model_name = deployment_and_model.split("/model/")[1]
-    return (deployment_name, model_name)
+    model_type = s.split("://")[0]
+    if model_type == "open_ai":
+        model_name = s.split("/model/")[1]
+        return (model_name, model_name)
+    else:
+        deployment_and_model = s.split("/deployment/")[1]
+        deployment_name = deployment_and_model.split("/model/")[0]
+        model_name = deployment_and_model.split("/model/")[1]
+        return (deployment_name, model_name)
 
 
 def upload_code_files(ws: Workspace, name):
@@ -172,27 +178,43 @@ def main(args, ws, current_run, activity_logger: Logger):
     completion_connection_name = get_connection_name(
         args.llm_connection_name)
     completion_config = json.loads(args.llm_config)
-    completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
-    completion_deployment_name = completion_config.get(
-        "deployment_name", "gpt-35-turbo")
+
+    if completion_config.get("type") == "open_ai":
+        completion_model_name = completion_config.get("model_name", "gpt-3.5-turbo")
+        completion_deployment_name = completion_model_name
+        completion_model_name = "gpt-3.5-turbo" if completion_model_name is None else completion_model_name
+        completion_deployment_name = \
+            "gpt-3.5-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_provider = "OpenAI"
+    else:
+        completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
+        completion_deployment_name = completion_config.get(
+            "deployment_name", "gpt-35-turbo")
     # Set default if key exsits but is set to None (as it is for basic pipelines)
-    completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
-    completion_deployment_name = "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
+        completion_deployment_name = \
+            "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_provider = "AzureOpenAI"
+
     embedding_connection_name = get_connection_name(
         args.embedding_connection)
     if (completion_connection_name == "azureml-rag-default-aoai" and
             embedding_connection_name != "azureml-rag-default-aoai"):
         # default completion connection name to embedding ones if embedding conenction is provided
         completion_connection_name = embedding_connection_name
+
     embedding_deployment_name_and_model_name = get_deployment_and_model_name(
         args.embeddings_model)
     embedding_deployment_name = embedding_deployment_name_and_model_name[0]
     embedding_model_name = embedding_deployment_name_and_model_name[1]
+
     print("completion_connection_name: %s" %
           completion_connection_name)
+    print("completion_provider: %s" % completion_provider)
     print("completion_model_name: %s" % completion_model_name)
     print("completion_deployment_name: %s" %
           completion_deployment_name)
+
     print("embedding_connection_name: %s" % embedding_connection_name)
     print("embedding_deployment_name: %s" % embedding_deployment_name)
     print("embedding_model_name: %s" % embedding_model_name)
@@ -269,6 +291,8 @@ def main(args, ws, current_run, activity_logger: Logger):
         "@@Completion_Deployment_Name", completion_deployment_name)
     flow_with_variants = flow_with_variants.replace(
         "@@Completion_Connection", completion_connection_name)
+    flow_with_variants = flow_with_variants.replace(
+        "@@Completion_Provider", completion_provider)
     flow_with_variants = flow_with_variants.replace(
         "@@MLIndex_Asset_Id", mlindex_asset_id)
 
