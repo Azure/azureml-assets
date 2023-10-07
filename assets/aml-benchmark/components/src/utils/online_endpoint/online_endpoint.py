@@ -200,14 +200,15 @@ class OnlineEndpoint:
     @property
     def _resource_scope(self) -> str:
         return OnlineEndpoint.SCOPE_ARM
-    
+
     @property
     def connections_name(self) -> str:
+        """Get the connections name."""
         if self._connections_name is None:
             self._connections_name = ("b-" + str(uuid.uuid4().hex))[:16]
             logger.info(f"Connections name is not provided, use a random one. {self._connections_name}")
         return self._connections_name
-    
+
     def delete_connections(self):
         """Delete the connections."""
         self.ml_client.connections.delete(self._connections_name)
@@ -228,11 +229,11 @@ class OnlineEndpoint:
     def create_connections(self) -> str:
         """Create the connections."""
         target = self.scoring_url
-        wps_connection=WorkspaceConnection(
+        wps_connection = WorkspaceConnection(
             name=self.connections_name,
             type="s3",
-            target= target,
-            credentials= AccessKeyConfiguration(
+            target=target,
+            credentials=AccessKeyConfiguration(
                 access_key_id="api-key" if self._model.is_aoai_model() else "Authorization",
                 secret_access_key=self._get_endpoint_token())
         )

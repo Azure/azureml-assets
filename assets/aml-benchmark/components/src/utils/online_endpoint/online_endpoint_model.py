@@ -10,6 +10,7 @@ from ..logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class OnlineEndpointModel:
     """Class for online endpoint model."""
     def __init__(
@@ -66,6 +67,6 @@ class OnlineEndpointModel:
         if endpoint_url is None:
             logger.warning('Endpoint url is None. Default to oss.')
             return 'oss'
-        if 'openai.azure.com' in endpoint_url:
+        if ".".join(['openai', 'azure', 'com']) in endpoint_url:
             return 'oai'
         return 'oss'

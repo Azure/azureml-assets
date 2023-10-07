@@ -51,7 +51,7 @@ class EndpointUtilities:
         """Load endpoint info metadata json."""
         with open(os.path.join(output_dir, EndpointUtilities.METADATA_FILE), 'r') as metadata_file:
             return json.load(metadata_file)
-        
+
     @staticmethod
     def dump_delete_status(
         is_endpoint_deleted: bool,

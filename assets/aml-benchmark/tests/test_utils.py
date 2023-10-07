@@ -337,11 +337,11 @@ def deploy_fake_test_endpoint_maybe(
                 endpoint = _deploy_endpoint(ml_client, endpoint_name)
                 deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
 
-    wps_connection=WorkspaceConnection(
+    wps_connection = WorkspaceConnection(
         name=connections_name,
         type="azure_sql_db",
-        target= endpoint.scoring_uri,
-        credentials= AccessKeyConfiguration(
+        target=endpoint.scoring_uri,
+        credentials=AccessKeyConfiguration(
             access_key_id="Authorization",
             secret_access_key=ml_client.online_endpoints.get_keys(endpoint_name).primary_key
         )

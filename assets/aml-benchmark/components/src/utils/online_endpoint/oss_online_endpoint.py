@@ -15,7 +15,6 @@ from azure.ai.ml.entities import (
 )
 from azure.ai.ml.entities import (
     OnlineRequestSettings,
-    ManagedOnlineDeployment,
     ProbeSettings,
 )
 

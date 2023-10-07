@@ -6,8 +6,6 @@
 """Entry script for Batch resource manager."""
 
 import argparse
-import os
-import pandas as pd
 
 from utils.logging import get_logger
 from utils.exceptions import swallow_all_exceptions
@@ -15,10 +13,7 @@ from utils.aml_run_utils import str2bool
 from utils.online_endpoint.endpoint_utils import EndpointUtilities
 from utils.online_endpoint.online_endpoint_factory import OnlineEndpointFactory
 from utils.online_endpoint.online_endpoint import OnlineEndpoint, ResourceState
-from utils.online_endpoint.online_endpoint_factory import OnlineEndpointFactory
 from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
-
-
 
 
 logger = get_logger(__name__)

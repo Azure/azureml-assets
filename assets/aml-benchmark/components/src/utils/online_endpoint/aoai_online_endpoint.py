@@ -127,7 +127,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def get_endpoint_authorization_header(self) -> dict:
         """Get the authorization header."""
         return {'api-key': self._get_endpoint_token()}
-    
+
     def _get_endpoint_token(self) -> str:
         resp = self._call_endpoint(get_requests_session().post, self._aoai_deployment_list_key_url)
         self._raise_if_not_success(
@@ -137,7 +137,6 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         )
         keys_content = self._get_content_from_response(resp)
         return keys_content['key1']
-
 
     def get_resource_authorization_header(self) -> dict:
         """Get the authorization header."""
@@ -209,7 +208,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             self.deployment_name, 'chat', 'completions?api-version=2023-07-01-preview'
         ]
         return '/'.join(url_list)
-    
+
     def _validate_settings(self) -> None:
         """Validate settings."""
         super()._validate_settings()
