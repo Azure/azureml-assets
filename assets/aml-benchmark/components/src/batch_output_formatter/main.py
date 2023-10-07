@@ -11,8 +11,7 @@ from utils.io import resolve_io_path, read_jsonl_files
 from utils.logging import get_logger
 from utils.exceptions import swallow_all_exceptions
 from utils.aml_run_utils import str2bool
-from utils.online_endpoint.endpoint_utils import EndpointUtilities
-from utils.online_endpoint.online_endpoint_factory import OnlineEndpointFactory
+from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from .result_converters import ResultConverters
 
 
@@ -30,7 +29,7 @@ def parse_args() -> argparse.Namespace:
         "--predict_ground_truth_data", type=str,
         help="The ground truth data mapping 1-1 to the prediction data.")
     parser.add_argument("--perf_data", type=str, help="path to output location")
-    parser.add_argument("--model_type", type=str, help="model type", default='llama')
+    parser.add_argument("--endpoint_url", type=str, help="endpoint_url")
     parser.add_argument("--metadata_key", type=str, help="metadata key", default=None)
     parser.add_argument("--data_id_key", type=str, help="metadata key", default=None)
     parser.add_argument("--label_key", type=str, help="label key")
@@ -54,7 +53,6 @@ def parse_args() -> argparse.Namespace:
 @swallow_all_exceptions(logger)
 def main(
         batch_inference_output: str,
-        model_type: str,
         data_id_key: str,
         metadata_key: str,
         label_key: str,
@@ -64,13 +62,13 @@ def main(
         predict_ground_truth_data: str,
         handle_response_failure: str,
         fallback_value: str,
-        is_performance_test: bool
+        is_performance_test: bool,
+        endpoint_url: str
 ) -> None:
     """
     Entry script for the script.
 
     :param batch_inference_output: Path to the batch inference output.
-    :param model_type: The model type.
     :param data_id_key: If ground_truth_input is provided, data_id_key should be a unique key
         that in the ground_truth_input to identify corresponding the request payload.
     :param metadata_key: The key that contains ground truth in the request payload. If this is
@@ -101,8 +99,10 @@ def main(
         ground_truth_df = pd.DataFrame(read_jsonl_files(input_file_paths))
     else:
         ground_truth_df = None
+    online_model = OnlineEndpointModel(None, None, None, endpoint_url=endpoint_url)
     rc = ResultConverters(
-        model_type, metadata_key, data_id_key, label_key, ground_truth_df, fallback_value=fallback_value)
+        online_model._model_type, metadata_key, data_id_key,
+        label_key, ground_truth_df, fallback_value=fallback_value)
     logger.info("Convert the data now.")
     for f in data_files:
         logger.info(f"Processing file {f}")
@@ -131,7 +131,6 @@ if __name__ == "__main__":
     args = parse_args()
     main(
         batch_inference_output=args.batch_inference_output,
-        model_type=args.model_type,
         data_id_key=args.data_id_key,
         metadata_key=args.metadata_key,
         label_key=args.label_key,
@@ -141,5 +140,6 @@ if __name__ == "__main__":
         predict_ground_truth_data=args.predict_ground_truth_data,
         handle_response_failure=args.handle_response_failure,
         fallback_value=args.fallback_value,
-        is_performance_test=args.is_performance_test
+        is_performance_test=args.is_performance_test,
+        endpoint_url=args.endpoint_url
     )

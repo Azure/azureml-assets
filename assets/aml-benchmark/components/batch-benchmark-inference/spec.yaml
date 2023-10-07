@@ -33,7 +33,7 @@ inputs:
     optional: False
   endpoint_url:
     type: string
-    optional: True
+    optional: False
     description: The endpointurl.
   is_performance_test:
     type: boolean
@@ -43,6 +43,10 @@ inputs:
     type: string
     optional: True
     description: The deployment name. Only needed for managed OSS deployment.
+  connections_name:
+    type: string
+    optional: False
+    description: Connections name for the endpoint.
   metadata_key:
     type: string
     optional: True
@@ -136,14 +140,14 @@ jobs:
     outputs:
       formatted_data:
         type: mltable
-      ouptut_metadata:
-        type: uri_folder
   # Inference
   real_point_batch_score: 
     type: parallel
     component: azureml:batch_benchmark_score:0.0.1
     inputs:
-      online_endpoint_url: ${{parent.inputs.endpoint}}
+      online_endpoint_url: ${{parent.inputs.endpoint_url}}
+      deployment_name: ${{parent.inputs.deployment_name}}
+      connections_name: ${{parent.inputs.connections_name}}
       debug_mode: ${{parent.inputs.debug_mode}}
       additional_headers: ${{parent.inputs.additional_headers}}
       ensure_ascii: ${{parent.inputs.ensure_ascii}}
@@ -178,6 +182,7 @@ jobs:
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
       data_id_key: ${{parent.inputs.data_id_key}}
+      endpoint_url: ${{parent.inputs.endpoint_url}}
     outputs:
       predictions:
         type: uri_file

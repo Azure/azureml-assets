@@ -5,7 +5,10 @@
 
 
 from typing import Optional
+from ..logging import get_logger
 
+
+logger = get_logger(__name__)
 
 class OnlineEndpointModel:
     """Class for online endpoint model."""
@@ -22,9 +25,9 @@ class OnlineEndpointModel:
             self._model_name = model
             self._model_path = None
             self._model_version = model_version
+        self._model_type = model_type
         if model_type is None:
             self._model_type = self._get_model_type_from_url(endpoint_url)
-        self._model_type = model_type
 
     @property
     def model_name(self) -> str:
@@ -60,6 +63,9 @@ class OnlineEndpointModel:
         return self._model_type == 'oss'
 
     def _get_model_type_from_url(self, endpoint_url: str) -> str:
+        if endpoint_url is None:
+            logger.warning('Endpoint url is None. Default to oss.')
+            return 'oss'
         if 'openai.azure.com' in endpoint_url:
             return 'oai'
         return 'oss'

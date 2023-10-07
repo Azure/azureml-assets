@@ -19,6 +19,8 @@ from azure.ai.ml.entities import (
     Model,
     CodeConfiguration,
 )
+from azure.ai.ml.entities import WorkspaceConnection
+from azure.ai.ml.entities import AccessKeyConfiguration
 from azureml._common._error_response._error_response_constants import ErrorCodes
 import mlflow
 
@@ -292,7 +294,9 @@ def _deploy_fake_model(ml_client, endpoint_name, deployment_name):
 
 
 def deploy_fake_test_endpoint_maybe(
-        ml_client, endpoint_name="aml-benchmark-test-bzvkqd", deployment_name="test-model", use_workspace_name=True
+        ml_client, endpoint_name="aml-benchmark-test-bzvkqd", deployment_name="test-model",
+        use_workspace_name=True,
+        connections_name='aml-benchmark-connection'
 ):
     """Deploy a fake test endpoint."""
     should_deploy = False
@@ -333,4 +337,15 @@ def deploy_fake_test_endpoint_maybe(
                 endpoint = _deploy_endpoint(ml_client, endpoint_name)
                 deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
 
-    return endpoint.scoring_uri, deployment.name
+    wps_connection=WorkspaceConnection(
+        name=connections_name,
+        type="azure_sql_db",
+        target= endpoint.scoring_uri,
+        credentials= AccessKeyConfiguration(
+            access_key_id="Authorization",
+            secret_access_key=ml_client.online_endpoints.get_keys(endpoint_name).primary_key
+        )
+    )
+    ml_client.connections.create_or_update(workspace_connection=wps_connection)
+
+    return endpoint.scoring_uri, deployment.name, connections_name

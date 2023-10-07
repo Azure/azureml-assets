@@ -48,11 +48,14 @@ class ResultConverters:
 
     def convert_result_perf(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the result to perf metrics."""
+        logger.info(result['start'])
         if not self.is_result_success(result):
             return self._get_fallback_output(is_perf=True)
         response = self._get_response(result)
-        usage = copy.deepcopy(response.get('usage', {}))
-        result = {}
+        if not isinstance(response, dict):
+            usage = {}
+        else:
+            usage = copy.deepcopy(response.get('usage', {}))
         for new_key, old_key in zip(
                 ResultConverters.PERF_OUTPUT_KEYS, [
                     "start", "end", "latency", "completion_tokens", "prompt_tokens"]):
@@ -62,14 +65,16 @@ class ResultConverters:
             elif "time_iso" in new_key:
                 if old_key not in result:
                     logger.warning(
-                        "Cannot find {} in response {}. Using default now.".format(old_key, result))
+                        "Cannot find {} in result {}. Using default now.".format(old_key, result))
                     usage[new_key] = ResultConverters.DEFAULT_ISO_FORMAT
                     continue
                 dt = datetime.datetime.utcfromtimestamp(result[old_key] / 1000)
                 usage[new_key] = dt.astimezone().isoformat()
             else:
                 # For the token and latency scenarios, no need to do the conversion.
-                usage[new_key] = result.get(old_key, -1)
+                usage[new_key] = usage[old_key] if old_key in usage else result.get(old_key, -1)
+            if old_key in usage:
+                del usage[old_key]
         usage['batch_size'] = result.get('batch_size', 1)
         return usage
 
@@ -88,7 +93,7 @@ class ResultConverters:
             use_ground_truth_input = True
         if use_ground_truth_input:
             for k, v in self._lookup_dict.items():
-                if k in self._get_request(result):
+                if k in self._get_request_content(result):
                     ground_truth = v
         return {'ground_truth': ground_truth}
 
@@ -124,12 +129,14 @@ class ResultConverters:
         return result['request']
 
     @staticmethod
-    def _get_raw_prompt(result: Dict[str, Any]) -> Any:
-        return ResultConverters._get_request(result)['input_data']['input_string']
-
-    @staticmethod
     def _get_response(result: Dict[str, Any]) -> Any:
         return result['response']
+
+    def _get_request_content(self, result: Dict[str, Any]) -> Any:
+        if self._model.is_aoai_model():
+            return self._get_request(result)['messages'][0]['content']
+        elif self._model.is_oss_model():
+            return self._get_request(result)['input_data']['input_string']
 
     @staticmethod
     def _get_aoai_response_result(result: Dict[str, Any]) -> Any:

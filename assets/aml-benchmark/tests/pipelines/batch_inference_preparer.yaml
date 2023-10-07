@@ -23,11 +23,8 @@ inputs:
       },
     "_batch_request_metadata": ###<_batch_request_metadata>
     }'
-  model: a_model
-  model_type: oss
-  deployment_sku: a_sku
   is_performance_test: False
-  endpoint: test-endpoint
+  endpoint_url: test-endpoint
 
 outputs:
   formatted_data:
@@ -46,10 +43,7 @@ jobs:
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
-      model_type: ${{parent.inputs.model_type}}
-      model: ${{parent.inputs.model}}
-      deployment_sku: ${{parent.inputs.deployment_sku}}
-      endpoint: ${{parent.inputs.endpoint}}
+      online_endpoint_url: ${{parent.inputs.endpoint_url}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
     outputs:
       formatted_data: ${{parent.outputs.formatted_data}}

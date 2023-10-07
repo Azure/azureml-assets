@@ -20,13 +20,9 @@ inputs:
   data_id_key:
     type: string
     optional: True
-  model_type:
+  endpoint_url:
     type: string
     optional: False
-    description: The endpoint model type.
-    enum:
-      - oss
-      - oai
   ground_truth_input:
     type: uri_folder
     description: The raw batch inference output.
@@ -47,6 +43,7 @@ inputs:
     type: boolean
     default: False
     description: If true, the performance test will be run.
+    optional: False
 outputs:
   predictions:
     type: uri_file
@@ -66,6 +63,7 @@ command: >-
   --prediction_data ${{outputs.predictions}}
   --perf_data ${{outputs.performance_metadata}}
   --predict_ground_truth_data ${{outputs.ground_truth}}
+  --endpoint_url ${{inputs.endpoint_url}}
   --label_key ${{inputs.label_key}}
   --handle_response_failure ${{inputs.handle_response_failure}}
   --is_performance_test ${{inputs.is_performance_test}}

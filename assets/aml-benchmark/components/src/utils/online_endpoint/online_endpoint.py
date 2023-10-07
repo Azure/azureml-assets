@@ -219,10 +219,11 @@ class OnlineEndpoint:
         if self._model.is_aoai_model():
             return {'api-key': resp['properties']['credentials']['key']}
         else:
+            access_key_id = credentials.get('access_key_id')
             credentials = resp['properties'].get('credentials')
             token = credentials['secretAccessKey'] \
-                if credentials['access_key_id'] == 'api-key' else 'Bearer ' + credentials['secretAccessKey']
-            return {credentials['access_key_id']: token}
+                if access_key_id == 'api-key' else 'Bearer ' + credentials['secretAccessKey']
+            return {access_key_id if access_key_id else "Authorization": token}
 
     def create_connections(self) -> str:
         """Create the connections."""
@@ -369,7 +370,7 @@ class OnlineEndpoint:
             backoff_factor=backoff_factor,
             status_forcelist=status_forcelist,
             # By default this is True. We set it to false to get the full error trace, including url and
-            # status code of the last retry. Otherwise, the error message is 'too many 500 error responses',
+            # status code of the last retry. Otherwise, the error message is too many 500 error responses',
             # which is not useful.
             raise_on_status=False
         )

@@ -69,7 +69,7 @@ def main(
     :param is_performance_test: Whether it is performance test.
     :return: None
     """
-    online_model = OnlineEndpointModel(None, None, None, endpoint_url)
+    online_model = OnlineEndpointModel(None, None, None, endpoint_url=endpoint_url)
 
     endpoint_data_preparer = EndpointDataPreparer(online_model._model_type, batch_input_pattern)
 
