@@ -31,8 +31,10 @@ class EndpointDataPreparer:
             elif "input_string" not in output_payload_dict["input_data"]:
                 errors.append(
                     "`input_string` should be presented in the `input_data` fields of payload json.")
-            elif isinstance(output_payload_dict["input_data"]["input_string"], list):
-                errors.append("`input_string` field should be a list")
+            elif not isinstance(output_payload_dict["input_data"]["input_string"], list):
+                errors.append("`input_string` field should be a list while got {}".format(
+                    output_payload_dict["input_data"]["input_string"]
+                ))
         if self._model.is_aoai_model():
             if "messages" not in output_payload_dict:
                 errors.append(
