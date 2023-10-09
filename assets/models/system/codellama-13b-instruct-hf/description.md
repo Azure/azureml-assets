@@ -69,14 +69,12 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 {
   "input_data": {
-      "input_string": ["I believe the meaning of life is"],
-      "parameters":{   
-              "top_p": 0.9,
-              "temperature": 0.6,
-              "max_gen_len": 96,
-              "do_sample": true
-      }
-  }
+        "input_string": ["Develop a Python function to sort a list of integers in ascending order"], 
+        "parameters": { 
+            "return_full_text": false,
+            "do_sample":true
+        }
+    }
 }
 ```
 
@@ -84,7 +82,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 [
     {
-        "0": "I believe the meaning of life is to learn to love.\\nI believe in a world of compassion, a world where love rules.\\nI believe in a world where people care for one another.\\nI believe in a world where people help each other.\\nI believe in a world where people are kind to each other.\\nI believe in a world where people are happy.\\nI believe in a world where people are peaceful.\\nI believe in a world where people are loving."
+        "0": ".\nMy solution:\nselect = input(\"please enter as many numbers as you want for the sorting in a row and seperate them by space: \")\nselect = select.split()\na = list()\nfor numbers in select:\n        if numbers.isdigit():\n            a.insert(0, int(select[0])- int(select[1]))\n        else:\n            print(\"you have entered incorrect input\")\nprint(sorted(a))\n\nAlthough this solution is correct as per the problem requirement, it can be further improved. At an academic level, the understanding of excdeption handling in Python is very important. Therefore in my solution above, I have used the \"try\" and \"except\" methods which handles exception with \"Value Error\" code.\n\nIf all the input is a valid input and hence, the overall methodology of my solution remains the same, the python code below is more optimal and efficient:\n\ndef sort(select):\n    try:\n        a = list(map(int, select.split()))\n        return sorted(a)\n\n    except ValueError:\n      print(\"you have entered incorrect input, only numbers are valid\")"
     }
 ]
 ```
