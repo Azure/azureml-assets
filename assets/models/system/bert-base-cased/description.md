@@ -1,6 +1,26 @@
-The BERT model is a pre-trained model that has been trained on a large corpus of English language data. The model was trained using a masked language modeling (MLM) objective, meaning that the model is able to predict words that were randomly masked in an input sentence. The BERT model can also predict if two sentences were originally consecutive in a text or not. This model is intended to be used as a tool for fine-tuning in various downstream tasks such as sequence classification and question answering, but is not recommended for tasks such as text generation. To use this model, you can utilize a pipeline specifically designed for masked language modeling.
+BERT, the Bidirectional Encoder Representations from Transformers, is a sophisticated language model pretrained on a vast corpus of English data using a self-supervised approach. It automatically generates inputs and labels from raw texts without human annotations. During pretraining, BERT achieves two main objectives: Masked Language Modeling (MLM) by predicting masked words in a sentence, enabling bidirectional understanding, and Next Sentence Prediction (NSP) to grasp sentence relationships. This process forms a deep internal representation of English, providing valuable features for downstream tasks like text classification and sentiment analysis, making it a powerful tool for developing robust natural language processing systems. This model is intended to be used as a tool for fine-tuning in various downstream tasks such as sequence classification and question answering, but is not recommended for tasks such as text generation. To use this model, you can utilize a pipeline specifically designed for masked language modeling.
+
 <br>Please Note: This model accepts masks in `[mask]` format. See Sample input for reference. 
 > The above summary was generated using ChatGPT. Review the <a href="https://huggingface.co/bert-base-cased" target="_blank">original model card</a> to understand the data used to train the model, evaluation metrics, license, intended uses, limitations and bias before using the model.
+### Training Procedure
+
+Preprocessing
+The texts are tokenized using WordPiece and a vocabulary size of 30,000. The inputs of the model are then of the form:
+
+[CLS] Sentence A [SEP] Sentence B [SEP]
+
+With probability 0.5, sentence A and sentence B correspond to two consecutive sentences in the original corpus and in the other cases, it's another random sentence in the corpus. Note that what is considered a sentence here is a consecutive span of text usually longer than a single sentence. The only constrain is that the result with the two "sentences" has a combined length of less than 512 tokens.
+
+The details of the masking procedure for each sentence are the following:
+
+15% of the tokens are masked.
+In 80% of the cases, the masked tokens are replaced by [MASK].
+In 10% of the cases, the masked tokens are replaced by a random token (different) from the one they replace.
+In the 10% remaining cases, the masked tokens are left as is.
+
+### Pretraining
+The model was trained on 4 cloud TPUs in Pod configuration (16 TPU chips total) for one million steps with a batch size of 256. The sequence length was limited to 128 tokens for 90% of the steps and 512 for the remaining 10%. The optimizer used is Adam with a learning rate of 1e-4, Beta1=0.9,Beta2=0.999, a weight decay of 0.01, learning rate warmup for 10,000 steps and linear decay of the learning rate after.
+
 
 ### Inference samples
 
