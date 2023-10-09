@@ -394,8 +394,7 @@ def model_selector(args: Namespace):
                             for key2 in mlflow_data["flavors"][key]:
                                 if key2 == "generator_config" and args.task_name == "TextGeneration":
                                     generator_config = mlflow_data["flavors"][key]["generator_config"]
-                                    mlflow_ftconf_data.update(
-                                        {
+                                    mlflow_ftconf_data_temp = {
                                             "load_config_kwargs": copy.deepcopy(generator_config),
                                             "mlflow_ft_conf": {
                                                 "mlflow_hftransformers_misc_conf": {
@@ -403,18 +402,17 @@ def model_selector(args: Namespace):
                                                 },
                                             },
                                         }
-                                    )
+                                    mlflow_ftconf_data = deep_update(mlflow_ftconf_data_temp, mlflow_ftconf_data)
                                 elif key2 == "model_hf_load_kwargs":
                                     model_hf_load_kwargs = mlflow_data["flavors"][key]["model_hf_load_kwargs"]
-                                    mlflow_ftconf_data.update(
-                                        {
+                                    mlflow_ftconf_data_temp = {
                                             "mlflow_ft_conf": {
                                                 "mlflow_hftransformers_misc_conf": {
                                                     "model_hf_load_kwargs": copy.deepcopy(model_hf_load_kwargs),
                                                 },
                                             },
                                         }
-                                    )
+                                    mlflow_ftconf_data = deep_update(mlflow_ftconf_data_temp, mlflow_ftconf_data)
                 ft_config_data = deep_update(mlflow_ftconf_data, ft_config_data)
                 logger.info(f"Updated FT config data - {ft_config_data}")
             except Exception:
