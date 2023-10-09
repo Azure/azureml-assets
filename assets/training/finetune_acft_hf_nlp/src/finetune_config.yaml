@@ -1,0 +1,41 @@
+# Replace this config with another format that support data type validations
+# installs
+# uninstalls
+environment:
+  installs:
+  - transformers==4.34.0
+task_specific_parameters:
+  # microsoft phi-1.5
+  # invalid configurations
+  # lora config
+  # training args
+  TextGeneration:
+    load_config_kwargs:
+      trust_remote_code: true
+    load_tokenizer_kwargs:
+      pad_token: <|endoftext|>
+      trust_remote_code: true
+    finetune_args:
+    MlModelSaveParameters:
+      hf_conf:
+        hf_config_class: AutoConfig
+        hf_tokenizer_class: AutoTokenizer
+        hf_pretrained_class: AutoModelForCausalLM
+        config_hf_load_kwargs.trust_remote_code: true
+        model_hf_load_kwargs.trust_remote_code: true
+        model_hf_load_kwargs.ignore_mismatched_sizes: true
+        tokenizer_config.max_length: -1
+        tokenizer_config.return_full_text: false
+        tokenizer_hf_load_kwargs.clean_up_tokenization_spaces: true
+        tokenizer_hf_load_kwargs.padding: -1
+        tokenizer_hf_load_kwargs.truncation: -1
+        tokenizer_hf_load_kwargs.return_token_type_ids: false
+        hf_predict_module: phi_predict
+        train_label_list: -1
+        huggingface_id: microsoft/phi-1_5
+        task_type: -1
+        metadata.is_finetune_model: true
+      mlflow_save_model_kwargs:
+        extra_pip_requirements:
+        - einops
+    
