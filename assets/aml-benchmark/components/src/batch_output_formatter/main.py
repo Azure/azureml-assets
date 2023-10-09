@@ -28,7 +28,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--predict_ground_truth_data", type=str,
         help="The ground truth data mapping 1-1 to the prediction data.")
-    
+
     parser.add_argument("--perf_data", type=str, help="path to output location")
     parser.add_argument("--endpoint_url", type=str, help="endpoint_url")
     parser.add_argument("--metadata_key", type=str, help="metadata key", default=None)
