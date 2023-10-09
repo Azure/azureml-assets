@@ -28,6 +28,8 @@ from azureml.model.mgmt.processors.pyfunc.text_to_image.config import (
 )
 from azureml.model.mgmt.processors.pyfunc.llava.config import \
     MLflowSchemaLiterals as LLaVAMLFlowSchemaLiterals, MLflowLiterals as LLaVAMLflowLiterals
+from azureml.model.mgmt.processors.pyfunc.segment_anything.config import \
+    MLflowSchemaLiterals as SegmentAnythingMLFlowSchemaLiterals, MLflowLiterals as SegmentAnythingMLflowLiterals
 from azureml.model.mgmt.processors.pyfunc.vision.config import \
     MLflowSchemaLiterals as VisionMLFlowSchemaLiterals, MMDetLiterals
 
@@ -468,5 +470,73 @@ class LLaVAMLFlowConvertor(PyFuncMLFLowConvertor):
         # Set model_dir parameter to point to subdirectory.
         artifacts_dict = {
             LLaVAMLflowLiterals.MODEL_DIR: os.path.join(self._model_dir, sd)
+        }
+        return artifacts_dict
+
+
+class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for SAM models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "segment_anything")
+    COMMON_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "common")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for SAM models."""
+        super().__init__(**kwargs)
+        if self._task != SupportedTasks.SEGMENT_ANYTHING.value:
+            raise Exception("Unsupported task")
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the given input task.
+
+        :return: MLflow model signature.
+        :rtype: mlflow.models.signature.ModelSignature
+        """
+
+        input_schema = Schema(
+            [
+                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
+                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS, optional=True),
+                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES, optional=True),
+                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS, optional=True),
+            ]
+        )
+
+        output_schema = Schema(
+            [
+                ColSpec(SegmentAnythingMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.OUTPUT_COLUMN_RESPONSE)
+            ]
+        )
+
+        return ModelSignature(inputs=input_schema, outputs=output_schema)
+
+    def save_as_mlflow(self):
+        """Prepare model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+        from segment_anything_mlflow_wrapper import SegmentAnythingDiffusionMLflowWrapper
+
+        mlflow_model_wrapper = SegmentAnythingDiffusionMLflowWrapper(task_type=self._task)
+        artifacts_dict = self._prepare_artifacts_dict()
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = [
+            os.path.join(self.MODEL_DIR, "segment_anything_mlflow_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
+        ]
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env_file,
+            code_path=code_path,
+        )
+
+    def _prepare_artifacts_dict(self) -> Dict:
+        """Prepare artifacts dict for MLflow model.
+
+        :return: artifacts dict
+        :rtype: Dict
+        """
+        artifacts_dict = {
+            SegmentAnythingMLflowLiterals.MODEL_DIR: self._model_dir
         }
         return artifacts_dict

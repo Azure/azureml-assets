@@ -14,6 +14,7 @@ import io
 import re
 import requests
 import torch
+from ast import literal_eval
 
 from PIL import Image, UnidentifiedImageError
 from typing import Tuple, Union
@@ -195,3 +196,23 @@ def get_current_device() -> torch.device:
         return torch.device(type="cuda", index=device_idx)
     else:
         return torch.device(type="cpu")
+
+def string_to_nested_float_list(s: str) -> list:
+    # Check if string matches the expected format using a regex pattern.
+    # This pattern ensures that the string only contains brackets, numbers, dots, and commas.
+    if not re.match(r'^\[((\[|\]|\s|\d|\,|\.|-)*?)\]$', s):
+        raise ValueError("Invalid format")
+
+    # Convert string to nested list using literal_eval
+    nested_list = literal_eval(s)
+    
+    # Helper function to convert nested lists to floats
+    def to_float_recursive(lst):
+        for i, item in enumerate(lst):
+            if isinstance(item, list):
+                to_float_recursive(item)
+            else:
+                lst[i] = float(item)
+
+    to_float_recursive(nested_list)
+    return nested_list

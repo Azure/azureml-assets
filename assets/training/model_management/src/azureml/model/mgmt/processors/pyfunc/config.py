@@ -30,6 +30,9 @@ class SupportedTasks(_CustomEnum):
     # LLaVA task
     IMAGE_TEXT_TO_TEXT = "image-text-to-text"
 
+    # Segment Anything
+    SEGMENT_ANYTHING = "segment-anything"
+
 
 class SupportedTextToImageModelFamily(_CustomEnum):
     """Supported text to image models."""
