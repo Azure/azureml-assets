@@ -25,4 +25,4 @@ tags:
   task: text-generation
   SharedComputeCapacityEnabled: ''
   disable-batch: 'true'
-version: 1
+version: 2
