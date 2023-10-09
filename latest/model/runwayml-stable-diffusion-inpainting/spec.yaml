@@ -11,7 +11,7 @@ tags:
   Preview: ''
   license: creativeml-openrail-m
   task: text-to-image
-version: 1
+version: 2
 description: |
   ___runwayml/stable-diffusion-inpainting___ is a versatile text-to-image model capable of producing realistic images from text input and performing inpainting using masks. It was initialized with Stable-Diffusion-v-1-2 weights and underwent two training phases: 595k steps of regular training and 440k steps of inpainting training at 512x512 resolution using the "laion-aesthetics v2 5+" dataset. To enhance performance, 10% of text-conditioning was dropped during inpainting training. The model employed a UNet with 5 extra input channels, and synthetic masks were generated during training, with 25% of the data being masked for inpainting refinement. The model has various applications in research, art, education, and creative tools. However, there are strict guidelines for the model's use to prevent misuse and malicious activities. It should not be used to create harmful, offensive, or discriminatory content. Additionally, the model has limitations, such as difficulties with photorealism, rendering legible text, and generating complex compositions. The model's training data primarily containing English descriptions, which can lead to biases and limitations in generating non-English content. To enhance safety, a Safety Checker is recommended for use with this model.
 
