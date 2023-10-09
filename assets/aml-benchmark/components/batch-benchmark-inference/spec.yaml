@@ -18,7 +18,8 @@ inputs:
       for the key for the value put in the `###<key>`. For example, one can use the following format for
       a llama text-gen model with a input dataset has `prompt` for the payload
       and `_batch_request_metadata` storing the corresponding ground truth.
-      {"input_data":
+      {
+        "input_data":
         {
           "input_string": ["###<prompt>"],
           "parameters":
@@ -29,6 +30,19 @@ inputs:
           }
         },
         "_batch_request_metadata": ###<_batch_request_metadata>
+      }
+
+      For AOAI model, the following pattern can be used,
+      {
+          "messages":
+          [
+            {"role": "user", "content": "###<prompt>" } ],
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "frequency_penalty": 0,
+            "presence_penalty": 0,
+            "max_tokens": 800,
+            "stop": null
       }
     optional: False
   endpoint_url:
