@@ -1,8 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-name: endpoint_batch_inference
-display_name: Endpoint Inference
+name: batch_benchmark_inference
+display_name: Batch Benchmark Inference
 description: Components for batch endpoint inference
 version: 0.0.1
 

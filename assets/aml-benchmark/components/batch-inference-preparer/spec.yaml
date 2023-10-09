@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.jso
 type: command
 
 name: batch_inference_preparer
-display_name: Batch Input Formatter
+display_name: Batch Inference Preparer
 description: Prepare the jsonl file and endpoint for batch inference component.
 version: 0.0.1
 

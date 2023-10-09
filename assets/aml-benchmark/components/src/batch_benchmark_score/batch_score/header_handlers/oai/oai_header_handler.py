@@ -13,7 +13,7 @@ from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 
 
 class OAIHeaderHandler(HeaderHandler):
-    """Class for OSS header handler."""
+    """Class for OAI header handler."""
 
     def __init__(
             self,

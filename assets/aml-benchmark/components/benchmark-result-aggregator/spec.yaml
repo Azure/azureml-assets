@@ -16,14 +16,6 @@ inputs:
     type: uri_folder
     description: The performance metrics in json format.
     optional: True
-  model_type:
-    type: string
-    optional: False
-    description: The endpoint model type.
-    enum:
-      - llama
-      - gpt
-    default: llama
 outputs:
   benchmark_result:
     type: uri_file

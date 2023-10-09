@@ -60,7 +60,7 @@ def init():
 
     setup_arguments(parser)
     args, unknown_args = parser.parse_known_args()
-    print(unknown_args)
+    lu.get_logger().debug(unknown_args)
     setup_logger("DEBUG" if args.debug_mode else "INFO", args.app_insights_connection_string)
     logger = get_logger()
 
