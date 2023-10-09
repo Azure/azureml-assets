@@ -10,7 +10,7 @@ description: Import PyTorch / MLFlow model
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/25
 
-code: ../../../src/model_selector
+code: ../../../src
 
 inputs:
   # Model and task name

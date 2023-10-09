@@ -10,7 +10,7 @@ description: Component to preprocess data for single label classification task. 
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/25
 
-code: ../../../src/preprocess
+code: ../../../src
 
 inputs:
   # Text Claasification task type

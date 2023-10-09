@@ -10,7 +10,7 @@ description: Component to finetune Hugging Face pretrained models for translatio
 
 environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/25
 
-code: ../../../src/finetune
+code: ../../../src
 
 distribution:
   type: pytorch
