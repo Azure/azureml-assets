@@ -3,7 +3,7 @@ name: compute_metrics
 display_name: Compute Metrics
 description: Calculate model performance metrics, given ground truth and prediction data.
 
-version: 0.0.15
+version: 0.0.16
 type: command
 tags:
   type: evaluation
@@ -30,6 +30,7 @@ inputs:
       fill-mask,
       image-classification,
       image-classification-multilabel,
+      chat-completion,
       image-object-detection,
       image-instance-segmentation,
     ]
@@ -37,6 +38,7 @@ inputs:
   ground_truth:
     type: uri_folder
     optional: false
+    mode: ro_mount
     description: "Ground Truths of Test Data as a 1-column JSON Lines file"
   ground_truth_column_name:
     type: string
@@ -45,6 +47,7 @@ inputs:
   prediction:
     type: uri_folder
     optional: false
+    mode: ro_mount
     description: "Model Predictions as a 1-column JSON Lines file"
   prediction_column_name:
     type: string
@@ -53,10 +56,12 @@ inputs:
   prediction_probabilities:
     type: uri_folder
     optional: true
+    mode: ro_mount
     description: "Predictions Probabilities as 1-column JSON Lines file"
   evaluation_config:
     type: uri_file
     optional: true
+    mode: ro_mount
     description: "Additional parameters required for evaluation."
   evaluation_config_params:
     type: string
@@ -69,16 +74,16 @@ outputs:
 
 is_deterministic: True
 code: ../../src
-environment: azureml://registries/azureml/environments/model-evaluation/versions/12
+environment: azureml://registries/azureml/environments/model-evaluation/versions/13
 
 command: >-
   python compute_metrics.py
-  --task ${{inputs.task}}
+  --task '${{inputs.task}}'
   --ground_truths '${{inputs.ground_truth}}'
   --predictions '${{inputs.prediction}}'
   --output '${{outputs.evaluation_result}}'
   $[[--prediction_probabilities '${{inputs.prediction_probabilities}}']]
   $[[--config-file-name '${{inputs.evaluation_config}}']]
-  $[[--ground_truths_column_name ${{inputs.ground_truth_column_name}}]]
-  $[[--predictions_column_name ${{inputs.prediction_column_name}}]]
+  $[[--ground_truths_column_name '${{inputs.ground_truth_column_name}}']]
+  $[[--predictions_column_name '${{inputs.prediction_column_name}}']]
   $[[--config_str '${{inputs.evaluation_config_params}}']]

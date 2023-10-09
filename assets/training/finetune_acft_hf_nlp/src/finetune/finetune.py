@@ -47,6 +47,7 @@ DEFAULT_DEEPSPEED_CONFIG = "zero2.json"
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
+MIXFORMER_SEQUENTIAL = "mixformer-sequential"  # Phi models
 
 ROOT_RUN_PROPERTIES = {
     "PipelineType": "Finetune",
@@ -114,6 +115,11 @@ MLFLOW_HFTRANSFORMERS_MISC_CONF = {
         },
     },
 }
+
+
+GRADIENT_CHECKPOINTING_SUPPORTED_MODEL_TYPES = [
+    HfModelTypes.LLAMA,
+]
 
 
 def str2bool(arg):
@@ -580,12 +586,29 @@ def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
 
     # add validations for deepspeed stage3
     if do_validate and identify_deepspeed_stage(ds_config_json) == 3:
+        # activate few deepspeed stage3 specific configurations
+        enable_ds3_model_specific_args(args)
         # validate the ds config file
         logger.info("Validating deepspeed config.")
         validate_ds_zero3_config(ds_config_json)
         # check for invalid settings
         logger.info("Checking for invalid deepspeed configurations.")
         check_for_invalid_ds_zero3_settings(args)
+
+
+def enable_ds3_model_specific_args(args: Namespace):
+    """Override or enable few model specific parameters.
+
+    Invoke the function only when deepspeed stage3 is enabled.
+    """
+    if (
+        hasattr(args, "model_type")
+        and args.model_type in GRADIENT_CHECKPOINTING_SUPPORTED_MODEL_TYPES
+    ):
+        logger.info(
+            f"Identified model type: {args.model_type}. Forcing `gradient_checkpointing` to True."
+        )
+        setattr(args, "gradient_checkpointing", True)
 
 
 def finetune(args: Namespace):
@@ -614,6 +637,7 @@ def finetune(args: Namespace):
     # additional logging
     logger.info(f"Model name: {getattr(args, 'model_name', None)}")
     logger.info(f"Task name: {getattr(args, 'task_name', None)}")
+    logger.info(f"Model asset id: {model_asset_id}")
     logger.info(f"enable LoRA: {getattr(args, 'apply_lora', None)}")
     logger.info(f"enable DeepSpeed: {getattr(args, 'apply_deepspeed', None)}")
     logger.info(f"enable ORT: {getattr(args, 'apply_ort', None)}")
@@ -775,7 +799,8 @@ def can_apply_ort(args: Namespace, logger):
         logger.warning("Enabling ORT has a breaking change with summarization and translation tasks "
                        "so diabling ORT for SUMMARIZATION and TRANSLATION tasks")
         return False
-    return args.apply_ort
+    logger.warning("Disabling ORT for all tasks")
+    return False
 
 
 @swallow_all_exceptions(time_delay=60)
@@ -813,6 +838,7 @@ def main():
         HfModelTypes.REFINEDWEBMODEL,
         HfModelTypes.FALCON,
         REFINED_WEB,
+        MIXFORMER_SEQUENTIAL
     ]:
         from functools import partial
         from transformers.models.auto import (
