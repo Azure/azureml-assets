@@ -28,6 +28,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--predict_ground_truth_data", type=str,
         help="The ground truth data mapping 1-1 to the prediction data.")
+    
     parser.add_argument("--perf_data", type=str, help="path to output location")
     parser.add_argument("--endpoint_url", type=str, help="endpoint_url")
     parser.add_argument("--metadata_key", type=str, help="metadata key", default=None)
@@ -35,15 +36,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--label_key", type=str, help="label key")
     parser.add_argument("--handle_response_failure", type=str, help="how to handler failed response.")
     parser.add_argument("--fallback_value", type=str, help="The fallback value.", default='')
-    parser.add_argument(
-        "--delete_managed_resources",
-        default=False, type=str2bool,
-        help="Delete managed resources create during the run.",
-    )
-    parser.add_argument(
-        "--deployment_metadata_dir", default=None, type=str,
-        help="Directory contains deployment metadata.",
-    )
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
@@ -78,8 +70,6 @@ def main(
     :param prediction_data: The path to the prediction data.
     :param perf_data: The path to the perf data.
     :param predict_ground_truth_data: The ground truth data that correspond to the prediction_data.
-    :param delete_managed_resources: Whether to delete managed resources.
-    :param deployment_metadata_dir: The directory contains deployment metadata.
     :param handle_response_failure: How to handle the response failure.
     :param fallback_value: The fallback value.
     :param is_performance_test: Whether it is a performance test.
@@ -102,7 +92,7 @@ def main(
     online_model = OnlineEndpointModel(None, None, None, endpoint_url=endpoint_url)
     rc = ResultConverters(
         online_model._model_type, metadata_key, data_id_key,
-        label_key, ground_truth_df, fallback_value=fallback_value)
+        label_key, ground_truth_df, fallback_value=fallback_value, is_performance_test=is_performance_test)
     logger.info("Convert the data now.")
     for f in data_files:
         logger.info(f"Processing file {f}")

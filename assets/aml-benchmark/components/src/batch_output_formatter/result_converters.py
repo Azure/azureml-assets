@@ -5,7 +5,7 @@
 
 import copy
 import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 import pandas as pd
 
 from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
@@ -23,10 +23,12 @@ class ResultConverters:
     METADATA_KEY_IN_RESULT = 'request_metadata'
     PREDICTION_COL_NAME = 'prediction'
     DEFAULT_ISO_FORMAT = '2000-01-01T00:00:00.000000+00:00'
+    DEFAULT_PERF_INPUT_TOKEN = 512
 
     def __init__(
             self, model_type: str, metadata_key: str, data_id_key: str,
-            label_key: str, ground_truth_df: Optional[pd.DataFrame], fallback_value: str
+            label_key: str, ground_truth_df: Optional[pd.DataFrame], fallback_value: str,
+            is_performance_test: bool = False
     ) -> None:
         """Init for the result converter."""
         self._model = OnlineEndpointModel(model=None, model_version=None, model_type=model_type)
@@ -35,6 +37,7 @@ class ResultConverters:
         self._data_id_key = data_id_key
         self._lookup_dict = {}
         self._fallback_value = fallback_value
+        self._is_performance_test = is_performance_test
         if ground_truth_df is not None:
             print("receive ground truth columns {}".format(ground_truth_df.columns))
             for index, row in ground_truth_df.iterrows():
@@ -48,7 +51,6 @@ class ResultConverters:
 
     def convert_result_perf(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the result to perf metrics."""
-        logger.info(result['start'])
         if not self.is_result_success(result):
             return self._get_fallback_output(is_perf=True)
         response = self._get_response(result)
@@ -76,6 +78,9 @@ class ResultConverters:
             if old_key in usage:
                 del usage[old_key]
         usage['batch_size'] = result.get('batch_size', 1)
+        if self._model.is_oss_model():
+            usage['input_token_count'] = self._get_oss_input_token(usage)
+            usage['output_token_count'] = self._get_oss_output_token(result, usage)
         return usage
 
     def convert_result_ground_truth(self, result: Dict[str, Any]) -> Dict[str, Any]:
@@ -120,9 +125,22 @@ class ResultConverters:
         try:
             _ = self._get_raw_output(result)
         except Exception as e:
-            print(f'Converting meet errors {e}')
+            logger.warning(f'Converting meet errors {e}')
             return False
         return True
+    
+    def _get_oss_input_token(self, perf_metrics: Any) -> Tuple[int, int]:
+        if self._is_performance_test:
+            return ResultConverters.DEFAULT_PERF_INPUT_TOKEN
+        return perf_metrics.get('input_token_count', -1)
+
+    def _get_oss_output_token(self, result: Any, perf_metrics: Any) -> Tuple[int, int]:
+        input_parameters = ResultConverters._get_oss_input_parameters(result)
+        return input_parameters.get("max_new_tokens", perf_metrics.get('output_token_count', -1))
+    
+    @staticmethod
+    def _get_oss_input_parameters(result: Any) -> Any:
+        return ResultConverters._get_request(result)['input_data'].get('parameters', {})
 
     @staticmethod
     def _get_request(result: Dict[str, Any]) -> Any:
@@ -146,7 +164,6 @@ class ResultConverters:
     @staticmethod
     def _get_oss_response_result(result: Dict[str, Any]) -> Any:
         response = ResultConverters._get_response(result)
-        print(f"response is {response}")
         if isinstance(response, str):
             return response
         if isinstance(response, list):
