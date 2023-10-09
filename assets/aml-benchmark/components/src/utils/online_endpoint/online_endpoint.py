@@ -32,6 +32,7 @@ logger = get_logger(__name__)
 
 class ResourceState(Enum):
     """Enum for resource state."""
+
     SUCCESS = "Success"
     FAILURE = "Failure"
     NOT_FOUND = "NotFound"
@@ -56,6 +57,7 @@ class OnlineEndpoint:
             online_endpoint_model: Optional[OnlineEndpointModel] = None,
             connections_name: Optional[str] = None
     ):
+        """Init method."""
         self._subscription_id = subscription_id
         self._resource_group = resource_group
         self._workspace_name = workspace_name
@@ -261,12 +263,12 @@ class OnlineEndpoint:
 
     @abstractmethod
     def create_endpoint(self) -> None:
-        """create the endpoint."""
+        """Create the endpoint."""
         pass
 
     @abstractmethod
     def create_deployment(self) -> None:
-        """create the deployment."""
+        """Create the deployment."""
         pass
 
     @abstractmethod
@@ -347,7 +349,6 @@ class OnlineEndpoint:
         :type retry: int
         rtype: Response
         """
-
         retry_policy = self._get_retry_policy(num_retry=retry)
 
         session = requests.Session()

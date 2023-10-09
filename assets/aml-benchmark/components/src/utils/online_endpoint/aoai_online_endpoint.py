@@ -34,6 +34,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
             api_version: str = '2023-05-01',
             connections_name: Optional[str] = None
     ):
+        """Init method."""
         # For AOAI endpoint, the account name is the same as the endpoint name.
         super().__init__(
             workspace_name,
@@ -53,6 +54,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
 
     @property
     def scoring_url(self) -> str:
+        """Get the scoring url."""
         if self._online_endpoint_url is None:
             return self._get_scoring_url()
         return self._online_endpoint_url

@@ -13,10 +13,12 @@ logger = get_logger(__name__)
 
 class OnlineEndpointModel:
     """Class for online endpoint model."""
+
     def __init__(
             self, model: str, model_version: Optional[str], model_type: str,
             endpoint_url: Optional[str] = None
     ):
+        """Init method."""
         if model is not None and model.startswith('azureml:'):
             self._model_name = model.split('/')[-3]
             self._model_path = model

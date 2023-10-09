@@ -48,6 +48,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             api_version: str = '2023-04-01-Preview',
             connections_name: str = None
     ):
+        """Init method."""
         super().__init__(
             workspace_name,
             resource_group,
@@ -97,6 +98,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             self._online_endpoint_url = endpoint.scoring_uri
 
     def create_deployment(self) -> None:
+        """Create the deployment."""
         self._validate_model()
         deployment_env_vars = {
             "SUBSCRIPTION_ID": self._subscription_id,
