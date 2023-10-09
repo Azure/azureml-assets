@@ -35,7 +35,7 @@ def run_cmd(cmd, cwd: Path = "./") -> int:
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         encoding=sys.stdout.encoding,
-        errors="ignore"
+        errors="ignore",
     )
     if result.returncode != 0:
         logger.log_error(f"Failed with error {result.stdout}.")
