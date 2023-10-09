@@ -152,13 +152,14 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     # Create the RAI Insights object, split baseline data into train and test data
     feature_metadata = FeatureMetadata(categorical_features=categorical_features, dropped_features=[])
     row_count = len(data.index)
-    
+
     test_size = 0.5
     if row_count > 10000:
         test_size = 5000
 
     train_data, test_data = train_test_split(data, test_size=test_size, random_state=0)
-    log_time_and_message(f"Split data into train and test. Train size: {len(train_data.index)}, Test size: {len(test_data.index)}")
+    log_time_and_message("Split data into train and test. Train size:"
+                         f"{len(train_data.index)}, Test size: {len(test_data.index)}")
 
     rai_i: RAIInsights = RAIInsights(
         model_wrapper, train_data, test_data, target_column, task_type, feature_metadata=feature_metadata
@@ -270,7 +271,7 @@ def run(args):
             return
 
         baseline_df = baseline_df.toPandas()
-        task_type =  determine_task_type(args.task_type, args.target_column, baseline_df)
+        task_type = determine_task_type(args.task_type, args.target_column, baseline_df)
         log_time_and_message(f"Computed task type is {task_type}")
 
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
