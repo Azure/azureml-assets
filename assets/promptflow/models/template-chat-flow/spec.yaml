@@ -3,10 +3,10 @@ name: template-chat-flow
 path: ./
 properties:
   is-promptflow: true
-  promptflow.section: template
-  promptflow.type: chat
-  promptflow.name: Template Chat Flow
-  promptflow.description: Template Chat Flow
+  azureml.promptflow.section: template
+  azureml.promptflow.type: chat
+  azureml.promptflow.name: Template Chat Flow
+  azureml.promptflow.description: Template Chat Flow
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 2
+version: 4

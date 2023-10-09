@@ -6,13 +6,12 @@
 import argparse
 import os
 from typing import Optional, List
-from concurrent.futures import ProcessPoolExecutor
 
 from datasets import load_dataset, get_dataset_split_names, get_dataset_config_names
 import pandas as pd
 from azureml._common._error_definition.azureml_error import AzureMLError
 
-from utils.helper import get_logger, log_mlflow_params
+from utils.logging import get_logger, log_mlflow_params
 from utils.exceptions import (
     swallow_all_exceptions,
     BenchmarkValidationException,
@@ -38,19 +37,29 @@ def parse_args() -> argparse.Namespace:
         "--configuration",
         type=str,
         default=None,
-        help="Sub-part of the dataset to download; specify 'all' to download all sub-parts."
+        help=(
+            "Sub-part of the dataset to download; specify 'all' to download all sub-parts; specify "
+            "comma-separated values to download multiple sub-parts (Ex: config1,config2)."
+        )
     )
     parser.add_argument(
         "--split",
         type=str,
-        default=None,
+        required=True,
         help="Split of the dataset to download; specify 'all' to download all splits.",
     )
     parser.add_argument(
-        "--url", type=str, default=None, help="URL of the dataset to download."
+        "--script",
+        default=None,
+        type=str,
+        help=(
+            "Path to the dataset loading script. Must follow the HuggingFace dataset loading script template. "
+            "For example, please refer "
+            "https://github.com/Azure/azureml-assets/tree/main/assets/aml-benchmark/scripts/data_loaders."
+        )
     )
     parser.add_argument(
-        "--output_dataset", type=str, required=True, help="Path to the dataset output."
+        "--output_dataset", type=str, required=True, help="Path to the directory where the dataset will be downloaded."
     )
 
     args, _ = parser.parse_known_args()
@@ -85,12 +94,14 @@ def resolve_configuration(
     if configuration == ALL:
         return available_configs
 
-    if configuration not in available_configs:
-        mssg = f"Configuration '{configuration}' not available for dataset '{dataset_name}'."
-        raise BenchmarkValidationException._with_error(
-            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
-        )
-    return [configuration]
+    configuration_arr = configuration.split(",")
+    for configuration in configuration_arr:
+        if configuration not in available_configs:
+            mssg = f"Configuration '{configuration}' not available for dataset '{dataset_name}'."
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
+    return configuration_arr
 
 
 def resolve_split(
@@ -132,6 +143,7 @@ def download_dataset_from_hf(
     """
     splits = resolve_split(dataset_name, configuration, split)
     for split in splits:
+        logger.info(f"Downloading - Configuration: '{configuration}', Split: '{split}'.")
         try:
             dataset = load_dataset(path=dataset_name, name=configuration, split=split)
         except Exception as e:
@@ -139,11 +151,11 @@ def download_dataset_from_hf(
             raise DatasetDownloadException._with_error(
                 AzureMLError.create(DatasetDownloadError, error_details=mssg)
             )
-        out_dir = os.path.join(output_dir, configuration, split)
+        out_dir = os.path.join(output_dir, str(configuration), split)
         os.makedirs(out_dir, exist_ok=True)
         output_file_path = os.path.join(out_dir, "data.jsonl")
         dataset.to_json(output_file_path)
-        logger.info(f"Configuration: '{configuration}', Split: '{split}' downloaded.")
+        logger.info(f"Downloaded - Configuration: '{configuration}', Split: '{split}'.")
 
 
 def download_file_from_url(url: str, output_dir: str) -> None:
@@ -194,60 +206,74 @@ def download_file_from_url(url: str, output_dir: str) -> None:
 
 
 @swallow_all_exceptions(logger)
-def main(args: argparse.Namespace) -> None:
+def main(
+    output_dataset: str,
+    split: str,
+    dataset_name: Optional[str] = None,
+    configuration: Optional[str] = None,
+    script: Optional[str] = None,
+) -> None:
     """
-    Entry function for Dataset Downloader Component.
+    Entry function for Dataset Downloader.
 
-    :param args: Command-line arguments
+    Either `dataset_name` or `script` must be supplied; but not both.
+
+    :param output_dataset: Path to the directory where the dataset will be downloaded.
+    :param split: Split of the dataset to download.
+    :param dataset_name: Name of the dataset to download.
+    :param configuration: Sub-dataset of the dataset to download.
+    :param script: Path to the dataset loading script. Must follow the HuggingFace dataset loading script template.
     :return: None
     """
-    dataset_name = args.dataset_name
-    configuration = args.configuration
-    split = args.split
-    output_dataset = args.output_dataset
-    url = args.url
-
-    # Check if dataset_name and split or url is supplied
-    if (not dataset_name or not split) and not url:
-        mssg = "Either 'dataset_name' with 'split', or 'url' must be supplied."
+    # Check if dataset_name and script are supplied
+    if dataset_name and script:
+        mssg = "Either 'dataset_name' or 'script' must be supplied; but not both."
         raise BenchmarkValidationException._with_error(
             AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
-    # Check if dataset_name and split and url are supplied
-    if dataset_name and split and url:
-        mssg = "Either 'dataset_name' with 'split', or 'url' must be supplied; but not both."
+    # Check if dataset_name or script is supplied
+    if not (dataset_name or script):
+        mssg = "Either 'dataset_name' or 'script' must be supplied."
         raise BenchmarkValidationException._with_error(
             AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
 
-    if url:
-        # Download file from URL
-        download_file_from_url(url, output_dataset)
-    else:
-        # Get the configurations to download
+    if not dataset_name:
+        dataset_name = script
+
+    # Get the configurations to download
+    try:
         configurations = resolve_configuration(dataset_name, configuration)
-        config_len = len(configurations)
-        logger.info(
-            f"Following configurations will be downloaded: {configurations}."
+    except FileNotFoundError as e:
+        mssg = f"FileNotFoundError: {e}"
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details=mssg)
         )
-        with ProcessPoolExecutor(min(os.cpu_count(), config_len)) as executor:
-            executor.map(
-                download_dataset_from_hf,
-                [dataset_name] * config_len,
-                configurations,
-                [split] * config_len,
-                [output_dataset] * config_len,
-            )
+
+    logger.info(f"Following configurations will be downloaded: {configurations}.")
+    for config in configurations:
+        download_dataset_from_hf(
+            dataset_name,
+            config,
+            split,
+            output_dataset,
+        )
 
     log_mlflow_params(
-        dataset_name=dataset_name,
+        dataset_name=dataset_name if script is None else None,
         configuration=configuration,
         split=split,
-        url=url,
+        script=script,
     )
 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args)
+    main(
+        dataset_name=args.dataset_name,
+        configuration=args.configuration,
+        split=args.split,
+        script=args.script,
+        output_dataset=args.output_dataset,
+    )

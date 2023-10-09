@@ -1,0 +1,2 @@
+{"input_data":{"input_string":["Question 1"],"parameters":{"temperature":0.6,"max_new_tokens":100,"do_sample":true}},"_batch_request_metadata":{"label":1,"completion":1}}
+{"input_data":{"input_string":["Question 2"],"parameters":{"temperature":0.6,"max_new_tokens":100,"do_sample":true}},"_batch_request_metadata":{"label":1,"completion":1}}

@@ -4,17 +4,18 @@
 """Asset config classes."""
 
 import re
-import warnings
 from collections import defaultdict
 from enum import Enum
 from functools import total_ordering
 from pathlib import Path
 from ruamel.yaml import YAML
-from setuptools._vendor.packaging import version
+from packaging import version
 from typing import Dict, List, Set, Tuple, Union
-
-# Ignore setuptools warning about replacing distutils
-warnings.filterwarnings("ignore", message="Setuptools is replacing distutils.", category=UserWarning)
+from azure.ai.ml._azure_environments import (
+    AzureEnvironments,
+    _get_default_cloud_name,
+    _get_storage_endpoint_from_metadata
+)
 
 
 class ValidationException(Exception):
@@ -24,10 +25,12 @@ class ValidationException(Exception):
 class AssetType(Enum):
     """Asset type."""
 
+    BENCHMARKRESULT = 'benchmarkresult'
     COMPONENT = 'component'
     DATA = 'data'
     ENVIRONMENT = 'environment'
     MODEL = 'model'
+    PROMPT = 'prompt'
 
 
 class ComponentType(Enum):
@@ -75,6 +78,13 @@ class ModelType(Enum):
     TRITON = 'triton_model'
 
 
+class GenericAssetType(Enum):
+    """Enum for generic asset types."""
+
+    PROMPT = 'prompt'
+    BENCHMARKRESULT = 'benchmarkresult'
+
+
 class Os(Enum):
     """Operating system types."""
 
@@ -114,8 +124,10 @@ DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
 EXCLUDE_PREFIX = "!"
 FULL_ASSET_NAME_DELIMITER = "/"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
+GENERIC_ASSET_TYPES = [AssetType.PROMPT]
 PARTIAL_ASSET_NAME_TEMPLATE = "{type}/{name}"
 PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: 'mcr.microsoft.com'}
+STANDARD_ASSET_TYPES = [AssetType.COMPONENT, AssetType.DATA, AssetType.ENVIRONMENT, AssetType.MODEL]
 TEMPLATE_CHECK = re.compile(r"\{\{.*\}\}")
 VERSION_AUTO = "auto"
 
@@ -240,15 +252,14 @@ class Config:
             ValidationException: If the path doesn't exist.
 
         Returns:
-            List[Path]: If path is a file or empty directory, just return it.
+            List[Path]: If path is a file, just return it.
                         Otherwise, return the files contained by the directory.
         """
         if not path.exists():
             raise ValidationException(f"{path} not found")
         if path.is_dir():
-            contents = list(path.rglob("*"))
-            if contents:
-                return contents
+            contents = [p for p in path.rglob("*") if p.is_file()]
+            return contents
         return [path]
 
 
@@ -359,6 +370,23 @@ class Spec(Config):
         return self._append_to_file_path(data_path) if data_path else None
 
     @property
+    def generic_asset_data_path(self) -> str:
+        """Data path for a generic asset."""
+        if self.type == GenericAssetType.PROMPT.value:
+            template = self._yaml.get('template')
+            return None if template is None else template.get('path')
+        elif self.type == GenericAssetType.BENCHMARKRESULT.value:
+            return self._yaml.get('path')
+        else:
+            return None
+
+    @property
+    def generic_asset_data_path_with_path(self) -> Path:
+        """Data path for a generic asset, relative to spec file's parent directory."""
+        dir = self.generic_asset_data_path
+        return self._append_to_file_path(dir) if dir else None
+
+    @property
     def release_paths(self) -> List[Path]:
         """Files that are required to create this asset."""
         release_paths = super().release_paths
@@ -372,6 +400,12 @@ class Spec(Config):
         data_path = self.data_path_with_path
         if data_path:
             release_paths.extend(Config._expand_path(data_path))
+
+        # Add files from generic assets
+        data_path = self.generic_asset_data_path_with_path
+        if data_path:
+            release_paths.extend(Config._expand_path(data_path))
+
         return release_paths
 
     @property
@@ -450,7 +484,7 @@ class LocalAssetPath(AssetPath):
 class AzureBlobstoreAssetPath(AssetPath):
     """Azure Blobstore asset path."""
 
-    BLOBSTORE_URI = "https://{}.blob.core.windows.net/{}/{}"
+    DEFAULT_BLOBSTORE_URI = "https://{}.blob.core.windows.net/{}/{}"
 
     def __init__(self, storage_name: str, container_name: str, container_path: str):
         """Create a Blobstore path.
@@ -465,7 +499,25 @@ class AzureBlobstoreAssetPath(AssetPath):
         self._storage_name = storage_name
         self._container_name = container_name
         self._container_path = container_path
-        uri = AzureBlobstoreAssetPath.BLOBSTORE_URI.format(storage_name, container_name, container_path)
+
+        # AzureCloud, USGov, and China clouds should all pull from the same endpoint
+        # associated with AzureCloud. If the cloud is not one of these, then the
+        # endpoint will be dynamically acquired based on the currently configured
+        # cloud.
+        if _get_default_cloud_name() in [AzureEnvironments.ENV_DEFAULT,
+                                         AzureEnvironments.ENV_US_GOVERNMENT,
+                                         AzureEnvironments.ENV_CHINA]:
+            uri = AzureBlobstoreAssetPath.DEFAULT_BLOBSTORE_URI.format(
+                storage_name,
+                container_name,
+                container_path)
+        else:
+            uri = "https://{}.blob.{}/{}/{}".format(
+                storage_name,
+                _get_storage_endpoint_from_metadata(),
+                container_name,
+                container_path)
+
         super().__init__(PathType.AZUREBLOB, uri)
 
 
@@ -514,6 +566,7 @@ class ModelConfig(Config):
         """Initialize object for the Model Properties extracted from extra_config model.yaml."""
         super().__init__(file_name)
         self._path = None
+        self._description = ""
         self._validate()
 
     def _validate(self):
@@ -521,7 +574,9 @@ class ModelConfig(Config):
         Config._validate_exists('model.path', self.path)
         Config._validate_enum('model.path.type', self.path.type.value, PathType, True)
         Config._validate_exists('model.publish', self._publish)
-        Config._validate_exists('model.description', self.description)
+        Config._validate_exists('model.description', self._description_file_path)
+        if self._description_file_path and not self._description_file_path.exists():
+            raise ValidationException(f"description_file {self._description_file_path} not found")
         Config._validate_enum('model.type', self._type, ModelType, True)
 
     @property
@@ -554,9 +609,17 @@ class ModelConfig(Config):
         return self._yaml.get('publish')
 
     @property
-    def description(self) -> Dict[str, object]:
+    def _description_file_path(self) -> Path:
+        """Model description file path."""
+        return self._file_path / self._publish.get('description')
+
+    @property
+    def description(self) -> str:
         """Model description."""
-        return self._publish.get('description')
+        if self._description_file_path and not self._description:
+            with open(self._description_file_path) as f:
+                self._description = f.read()
+        return self._description
 
     @property
     def _type(self) -> str:

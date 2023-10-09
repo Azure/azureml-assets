@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.7
+version: 0.0.8
 name: image_object_detection_pipeline
 display_name: Image Object Detection Pipeline
 description: Pipeline component for image object detection.
@@ -37,6 +37,12 @@ inputs:
     type: string
     optional: true
     description: Name of the model. Based on this model name, a framework will be selected (Hugging Face, MM Detection).
+
+  download_from_source:
+      type: boolean
+      optional: true
+      default: false
+      description: Download model directly from MMDetection instead of system registry
 
   # ------------------- Data Inputs ------------------
   training_data:
@@ -318,7 +324,7 @@ outputs:
 jobs:
   framework_selector:
     type: command
-    component: azureml:image_framework_selector:0.0.7
+    component: azureml:image_framework_selector:0.0.8
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       task_type: ${{parent.inputs.task_type}}
@@ -326,7 +332,7 @@ jobs:
 
   image_object_detection_runtime_component:
     type: command
-    component:  azureml:train_object_detection_model:0.0.4
+    component:  azureml:train_object_detection_model:0.0.5
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
@@ -373,17 +379,18 @@ jobs:
       warmup_cosine_lr_warmup_epochs: ${{parent.inputs.warmup_cosine_lr_warmup_epochs}}
       weight_decay: ${{parent.inputs.weight_decay}}
 
-  mm_detection_model_selector:
+  mm_detection_model_import:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.7
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_model_import:0.0.8
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: 'MmDetectionImage'
       model_name: ${{parent.inputs.model_name}}
+      download_from_source: ${{parent.inputs.download_from_source}}
 
   mm_detection_finetune:
     type: command
-    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.7
+    component: azureml:mmdetection_image_objectdetection_instancesegmentation_finetune:0.0.8
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -393,7 +400,7 @@ jobs:
       shm_size: '16g'
     inputs:
       # Model path is same as what is output of model selector
-      model_path: ${{parent.jobs.mm_detection_model_selector.outputs.output_dir}}
+      model_path: ${{parent.jobs.mm_detection_model_import.outputs.output_dir}}
       training_data: ${{parent.inputs.training_data}}
       validation_data: ${{parent.inputs.validation_data}}
       image_min_size: ${{parent.inputs.min_size}}
@@ -423,11 +430,11 @@ jobs:
     type: if_else
     true_block: ${{parent.jobs.image_object_detection_runtime_component}}
     condition: ${{parent.jobs.framework_selector.outputs.output}}
-    false_block: ${{parent.jobs.mm_detection_model_selector}}
+    false_block: ${{parent.jobs.mm_detection_model_import}}
 
   output_selector:
     type: command
-    component: azureml:image_model_output_selector:0.0.7
+    component: azureml:image_model_output_selector:0.0.8
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_t: ${{parent.jobs.image_object_detection_runtime_component.outputs.mlflow_model_folder}}

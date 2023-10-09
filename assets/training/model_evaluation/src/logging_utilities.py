@@ -9,6 +9,7 @@ import uuid
 import json
 import azureml.core
 import traceback
+import sys
 
 from azureml.telemetry.logging_handler import get_appinsights_log_handler
 from azureml.telemetry import INSTRUMENTATION_KEY
@@ -66,7 +67,7 @@ class CustomDimensions:
     def __init__(self,
                  run_details,
                  app_name=constants.TelemetryConstants.COMPONENT_NAME,
-                 model_evaluation_version="0.0.10",
+                 model_evaluation_version="0.0.16",
                  os_info=platform.system(),
                  task_type="") -> None:
         """__init__.
@@ -91,8 +92,15 @@ class CustomDimensions:
         self.task_type = task_type
         self.rootAttribution = run_details.root_attribute
         run_info = run_details.get_extra_run_info
-        self.moduleVersion = run_info.get("moduleVersion", model_evaluation_version)
         self.location = run_info.get("location", "")
+
+        self.moduleVersion = run_info.get("moduleVersion", model_evaluation_version)
+        if run_info.get("moduleId", None):
+            self.moduleId = run_info.get("moduleId")
+        if run_info.get("moduleSource", None):
+            self.moduleSource = run_info.get("moduleSource")
+        if run_info.get("moduleRegistryName", None):
+            self.moduleRegistryName = run_info.get("moduleRegistryName")
 
         if run_info.get("model_asset_id", None):
             self.model_asset_id = run_info.get("model_asset_id")
@@ -261,11 +269,14 @@ def log_traceback(exception: AzureMLException, logger, message=None, is_critical
     exception_class_name = exception.__class__.__name__
 
     error_code, error_type, exception_target = _get_error_details(exception, logger)
-    traceback_obj = exception.__traceback__
     traceback_message = message
+    traceback_obj = exception.__traceback__ if hasattr(exception, "__traceback__") else None
     if traceback_obj is None:
-        if getattr(traceback_obj, "inner_exception", None):
-            traceback_obj = exception.inner_exception.__traceback__
+        inner_exception = getattr(exception, "inner_exception", None)
+        if inner_exception and hasattr(inner_exception, "__traceback__"):
+            traceback_obj = inner_exception.__traceback__
+        else:
+            traceback_obj = sys.exc_info()[2]
     if traceback_obj is not None:
         traceback_message = "\n".join(traceback.format_tb(traceback_obj))
     logger_message = "\n".join([

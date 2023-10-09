@@ -8,10 +8,12 @@ Utility File for incrementing, synchronizing, and updating all LLM versions.
 Also checks Environments are tagging latest.
 
 To update all:
-\\azureml-assets\assets>python utils\ComponentVersionUpdator.py --input_folder . --update_all
+\\azureml-assets\assets>
+python utils\ComponentVersionUpdator.py --input_folder . --update_all
 
 To only update component pipelines with updated components:
-\\azureml-assets\assets>python utils\ComponentVersionUpdator.py --input_folder .
+\\azureml-assets\assets>
+python utils\ComponentVersionUpdator.py --input_folder .
 """
 
 from typing import List, Dict, Any, Tuple
@@ -181,12 +183,19 @@ validate_fields = {
     'environment': validate_environment
 }
 
+skip_dirs = [
+    "oai_v2_1p",  # owned by oai team
+]
+
 
 def generate_assets(folder_path: List[str]) -> Tuple[Dict[str, Component], Dict[str, Pipeline]]:
     """Walk the file tree and pull out all the components and component pipelines."""
     comp_assets_all = {}
     pipe_assets_all = {}
     for root, _, files in os.walk(folder_path):
+        if [d for d in skip_dirs if d in root]:
+            print(f"Skipping {root}")
+            continue
         comp = parse_asset_yamls(files, root)
         if comp is not None:
             if isinstance(comp, Pipeline):
