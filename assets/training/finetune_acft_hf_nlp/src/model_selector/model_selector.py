@@ -8,6 +8,7 @@ import json
 from argparse import Namespace
 import copy
 import yaml
+from typing import Dict, Any
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
@@ -213,39 +214,6 @@ ACFT_CONFIG = {
                 },
             }
         }
-    },
-    MIXFORMER_SEQUENTIAL: {
-        "load_config_kwargs": {
-            "trust_remote_code": True,
-        },
-        "load_tokenizer_kwargs": {
-            # adding eos_token as pad_token. The value of eos_token is taken from tokenization_config.json file
-            "pad_token": "<|endoftext|>",
-            "trust_remote_code": True,
-        },
-        "finetune_args": {},
-        "mlflow_ft_conf": {
-            "mlflow_hftransformers_misc_conf": {
-                "config_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                },
-                "tokenizer_hf_load_kwargs": {
-                    # "model_input_names": ["input_ids", "attention_mask"],
-                    "return_token_type_ids": False,
-                },
-                "model_hf_load_kwargs": {
-                    "trust_remote_code": True,
-                    "ignore_mismatched_sizes": True,
-                },
-                "hf_predict_module": "phi_predict"
-                # "tokenizer_config": {
-                #     "return_token_type_ids": False,
-                # },
-            },
-            "mlflow_save_model_kwargs": {
-                "extra_pip_requirements": ["einops"],
-            },
-        }
     }
 }
 
@@ -331,8 +299,57 @@ def get_parser():
     return parser
 
 
+def is_model_folder_input(args: Namespace) -> bool:
+    """Check if model folder is passed as input"""
+    return any(
+        [
+            getattr(args, "pytorch_model_path", None),
+            getattr(args, "mlflow_model_path", None)
+        ]
+    )
+
+
+def load_ft_config(args: Namespace):
+    """Search for finetune config and update ACFT_CONFIG.
+
+    preference: user passed finetune config > model packaged finetune config.
+    """
+    global ACFT_CONFIG
+
+    # user passed finetune config
+    # check if finetune config is inside pytorch/mlflow model folder
+    if (
+        args.finetune_config_path is None and
+        is_model_folder_input(args)
+    ):
+        model_folder_input = (
+            args.pytorch_model_path
+            if getattr(args, "pytorch_model_path", None) is not None else
+            args.mlflow_model_path
+        )
+        logger.info(f"Model folder input: {model_folder_input}")
+        finetune_config_path = Path(model_folder_input, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)
+        if finetune_config_path.is_file():
+            logger.info(f"Found finetune config path in model artifacts folder: {finetune_config_path}.")
+            setattr(args, "finetune_config_path", str(finetune_config_path))
+
+    # load the finetune config if exists
+    if args.finetune_config_path is not None:
+        try:
+            with open(args.finetune_config_path, "r", encoding="utf-8") as rptr:
+                ft_config_data = json.load(rptr)
+            ACFT_CONFIG.update(ft_config_data)
+            logger.info("Updated the ACFT_CONFIG")
+        except Exception as e:
+            logger.info(f"Unable to load {SaveFileConstants.ACFT_CONFIG_SAVE_PATH} - {e}")
+    else:
+        logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} doesn't exist.")
+
+
 def model_selector(args: Namespace):
     """Model selector."""
+    global ACFT_CONFIG
+
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     if args.huggingface_id is not None:
@@ -349,27 +366,6 @@ def model_selector(args: Namespace):
 
     task_runner = get_task_runner(task_name=args.task_name)()
     task_runner.run_modelselector(**vars(args))
-
-    # load user provided finetune_config.json
-    ft_config_path = getattr(args, "finetune_config_path", None)
-    # if ft_config_path is not provided check inside pytorch/mlflow model folder
-    if ft_config_path is None:
-        model_path = getattr(args, "pytorch_model_path", None) \
-            if getattr(args, "pytorch_model_path", None) is not None else getattr(args, "mlflow_model_path", None)
-        if model_path is not None:
-            ft_model_config_path = Path(model_path, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)
-            if ft_model_config_path.is_file():
-                ft_config_path = str(ft_model_config_path)
-    if ft_config_path is not None:
-        try:
-            with open(ft_config_path, "r") as rptr:
-                ft_config_data = json.load(rptr)
-        except Exception as e:
-            logger.info(f"Unable to load {SaveFileConstants.ACFT_CONFIG_SAVE_PATH} - {e}")
-            ft_config_data = {}
-    else:
-        logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
-        ft_config_data = {}
 
     # read model selector args
     # fetch model details
@@ -394,18 +390,16 @@ def model_selector(args: Namespace):
     except Exception:
         logger.info(f"Unable to fetch model_type for {model_name}")
 
+    # Save the ft config data
+    ft_config_data = {}
     if model_type is not None and model_type in ACFT_CONFIG:
-        model_ft_config = copy.deepcopy(ACFT_CONFIG[model_type])
-        model_ft_config.update(ft_config_data)
-        ft_config_data = copy.deepcopy(model_ft_config)
+        ft_config_data = copy.deepcopy(ACFT_CONFIG[model_type])
         logger.info(f"Updated FT config from model_type data - {ft_config_data}")
     elif model_name is not None and model_name in ACFT_CONFIG:
-        model_ft_config = copy.deepcopy(ACFT_CONFIG[model_name])
-        model_ft_config.update(ft_config_data)
-        ft_config_data = copy.deepcopy(model_ft_config)
+        ft_config_data = copy.deepcopy(ACFT_CONFIG[model_name])
         logger.info(f"Updated FT config from model_name data - {ft_config_data}")
     else:
-        logger.info(f"Not updating FT config data - {ft_config_data}")
+        logger.info("Not updating FT config data")
 
     # for base curated models forward MLmodel info
     if getattr(args, "mlflow_model_path", None) is not None:
@@ -485,6 +479,10 @@ def main():
         azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
     )
 
+    # load ft config and update ACFT config
+    load_ft_config(args)
+
+    # run model selector
     model_selector(args)
 
 
