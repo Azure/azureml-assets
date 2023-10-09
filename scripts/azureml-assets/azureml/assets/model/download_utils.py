@@ -79,7 +79,10 @@ def copy_azure_artifacts(src_uri: str, dstn_uri: str) -> bool:
         if _get_default_cloud_name() not in [AzureEnvironments.ENV_DEFAULT,
                                              AzureEnvironments.ENV_US_GOVERNMENT,
                                              AzureEnvironments.ENV_CHINA]:
-            download_cmd += f" --trusted-microsoft-suffixes {_get_storage_endpoint_from_metadata()}"
+            suffix = _get_storage_endpoint_from_metadata()
+            if not suffix.startswith("."):
+                suffix = "." + suffix
+            download_cmd += f" --trusted-microsoft-suffixes {suffix}"
 
         result = run_cmd(download_cmd)
         logger.print(f"azcopy result {result}")
