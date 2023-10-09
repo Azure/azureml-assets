@@ -7,10 +7,8 @@ from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 import snakemd
 import re
-import os
 from pathlib import Path
 from azureml.assets.config import AssetConfig, AssetType
-from glob import glob as search
 
 SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA, AssetType.PROMPT]
 DEFAULT_CATEGORY = "Uncategorized"
