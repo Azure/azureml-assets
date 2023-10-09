@@ -8,7 +8,6 @@ import json
 from argparse import Namespace
 import copy
 import yaml
-from typing import Dict, Any
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
