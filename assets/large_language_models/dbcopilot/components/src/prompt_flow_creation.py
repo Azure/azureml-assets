@@ -132,9 +132,8 @@ class PromptFlowCreation(ComponentBase):
             )
             flow_string = flow_string.replace("@@DB_CONTEXT_URI@@", db_context_uri)
             flow_string = flow_string.replace("@@DATASTORE_URI@@", datastore_uri)
-            flow_string = flow_string.replace(
-                "@@EXAMPLE_EMBEDDING_URI@@", example_embedding_uri
-            )
+            flow_string = flow_string.replace("@@EXAMPLE_EMBEDDING_URI@@", example_embedding_uri
+                                              if example_embedding_uri else "")
             flow_json = json.loads(flow_string)
         response = request(
             "post", self.prompt_flow_url, json=flow_json, headers=self.default_headers
