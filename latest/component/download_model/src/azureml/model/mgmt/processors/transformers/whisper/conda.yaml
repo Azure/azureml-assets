@@ -7,17 +7,14 @@ dependencies:
 - python=3.8.13
 - ffmpeg=4.2.2
 - pip:
-  - azureml-evaluate-mlflow==0.0.23
-  - datasets==2.11.0
-  - requests==2.31.0
-  - torch>=1.9,!=1.12.0
+  - azureml-evaluate-mlflow==0.0.27
   - torchaudio
-  - sentencepiece==0.1.97
-  - protobuf==3.20.2
   - pyctcdecode==0.5.0
   - phonemizer==3.2.1
   - more-itertools==9.1.0
   - ffmpeg-python==0.2.0
   - decord==0.6.0
   - wget==3.2
+  - numpy>=1.22.0
+  - scipy>=1.10.0
 name: mlflow-env
