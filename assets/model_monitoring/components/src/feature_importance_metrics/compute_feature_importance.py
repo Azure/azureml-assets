@@ -41,9 +41,11 @@ def parse_args():
     return args
 
 
-def determine_task_type(target_column, baseline_data):
+def determine_task_type(task_type, target_column, baseline_data):
     """Determine the task type based on the type of the target column.
 
+    :param task_type: the task type (regression or classification) of the resulting model
+    :type task_type: string or None
     :param target_column: the column to predict
     :type target_column: string
     :param baseline_data: The baseline data meaning the data used to create the
@@ -52,6 +54,8 @@ def determine_task_type(target_column, baseline_data):
     :return: task type, either regression or classification
     :rtype: string
     """
+    if task_type is not None:
+        return task_type.lower()
     baseline_column = pd.Series(baseline_data[target_column])
     baseline_column_type = baseline_column.dtype.name
     if baseline_column_type == "float64":
@@ -266,8 +270,7 @@ def run(args):
             return
 
         baseline_df = baseline_df.toPandas()
-        task_type = args.task_type if args.task_type else determine_task_type(args.target_column, baseline_df)
-        task_type = task_type.lower()
+        task_type =  determine_task_type(args.task_type, args.target_column, baseline_df)
         log_time_and_message(f"Computed task type is {task_type}")
 
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
