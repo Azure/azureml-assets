@@ -5,12 +5,17 @@
 
 import traceback
 import os
+import json
 import asyncio
 import sys
 import pandas as pd
 from argparse import ArgumentParser, Namespace
 
 from azureml._common._error_definition.azureml_error import AzureMLError
+
+from utils.online_endpoint.endpoint_utils import EndpointUtilities
+from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
+
 from .utils.exceptions import BenchmarkValidationException
 from .utils.error_definitions import BenchmarkValidationError
 
@@ -33,7 +38,9 @@ from .utils.common.common import str2bool, convert_to_list
 from .utils import logging_utils as lu
 from .utils.logging_utils import setup_logger, get_logger, get_events_client, set_mini_batch_id
 from .utils.common.json_encoder_extensions import setup_encoder
+from .header_handlers.header_handler import HeaderHandler
 from .header_handlers.oss.oss_header_handler import OSSHeaderHandler
+from .header_handlers.oai.oai_header_handler import OAIHeaderHandler
 
 
 par: parallel.Parallel = None
@@ -53,7 +60,6 @@ def init():
 
     setup_arguments(parser)
     args, unknown_args = parser.parse_known_args()
-
     setup_logger("DEBUG" if args.debug_mode else "INFO", args.app_insights_connection_string)
     logger = get_logger()
 
@@ -69,7 +75,6 @@ def init():
     if args.run_type == "sequential":
         logger.info("using sequential run type")
 
-        args, unknown_args = parser.parse_known_args()
         seq = sequential.Sequential(
             scoring_client=scoring_client,
             segment_large_requests=args.segment_large_requests,
@@ -80,8 +85,6 @@ def init():
 
     if args.run_type == "parallel":
         logger.info("using parallel run type")
-
-        args, unknown_args = parser.parse_known_args()
 
         loop = setup_loop()
         conductor = parallel.Conductor(
@@ -177,6 +180,7 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--app_insights_connection_string", nargs='?', const=None, type=str)
     parser.add_argument("--additional_properties", nargs='?', const=None, type=str)
     parser.add_argument("--run_type", type=str)
+    parser.add_argument("--model_type", type=str)
 
     # Sequential-specific parameters
     parser.add_argument("--sorted", default=False, type=str2bool)
@@ -186,6 +190,7 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--initial_worker_count", default=5, type=int)
     parser.add_argument("--max_worker_count", default=200, type=int)
 
+    parser.add_argument("--online_endpoint_url", type=str)
     parser.add_argument("--max_retry_time_interval", nargs='?', const=None, default=None, type=int)
     parser.add_argument("--segment_large_requests", default="disabled", type=str)
     parser.add_argument("--segment_max_token_size", default=800, type=int)
@@ -199,7 +204,6 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--quota_audience")
     parser.add_argument("--quota_estimator", default="completion")
     parser.add_argument("--user_agent_segment", nargs='?', const=None, default=None, type=str)
-    parser.add_argument("--online_endpoint_url", type=str)
     parser.add_argument("--additional_headers", nargs='?', const=None, type=str)
     parser.add_argument("--tally_failed_requests", default=False, type=str2bool)
     parser.add_argument("--tally_exclusions", default="none", type=str)
@@ -208,6 +212,9 @@ def setup_arguments(parser: ArgumentParser):
     parser.add_argument("--endpoint_subscription_id", default=None, type=str)
     parser.add_argument("--endpoint_resource_group", default=None, type=str)
     parser.add_argument("--endpoint_workspace", default=None, type=str)
+    parser.add_argument("--input_metadata", default=None, type=str)
+    parser.add_argument("--deployment_name", default=None, type=str)
+    parser.add_argument("--connections_name", default=None, type=str)
 
 
 def print_arguments(args: Namespace):
@@ -249,6 +256,9 @@ def print_arguments(args: Namespace):
     lu.get_logger().debug("endpoint_subscription_id: %s" % args.endpoint_subscription_id)
     lu.get_logger().debug("endpoint_resource_group: %s" % args.endpoint_resource_group)
     lu.get_logger().debug("endpoint_workspace: %s" % args.endpoint_workspace)
+    lu.get_logger().debug("mdoel_type: %s" % args.model_type)
+    lu.get_logger().debug("deployment_name: %s" % args.deployment_name)
+    lu.get_logger().debug("connections_name: %s" % args.connections_name)
 
 
 def save_mini_batch_results(mini_batch_results: list, mini_batch_context):
@@ -316,28 +326,69 @@ def setup_scoring_client() -> ScoringClient:
         tally_exclusions=args.tally_exclusions
     )
 
-    header_handler = setup_header_handler(token_provider=token_provider)
+    input_metadata = {}
+    if args.input_metadata is not None:
+        input_metadata = EndpointUtilities.load_endpoint_metadata_json(args.input_metadata)
+
+    online_endpoint_url = input_metadata.get("scoring_url", args.online_endpoint_url)
+    headers = input_metadata.get("scoring_headers", {})
+    input_additional_headers = args.additional_headers
+    if input_additional_headers:
+        headers.update(json.loads(input_additional_headers))
+
+    header_handler = setup_header_handler(
+        token_provider=token_provider, model_type=args.model_type, input_metadata=input_metadata,
+        input_headers=json.dumps(headers), scoring_url=online_endpoint_url,
+        connections_name=args.connections_name
+    )
 
     scoring_client = ScoringClient(
         header_handler=header_handler,
         quota_client=None,
         routing_client=None,
-        online_endpoint_url=args.online_endpoint_url,
+        online_endpoint_url=online_endpoint_url,
         tally_handler=tally_handler,
     )
 
     return scoring_client
 
 
-def setup_header_handler(token_provider: TokenProvider) -> OSSHeaderHandler:
+def setup_header_handler(
+        token_provider: TokenProvider, model_type: str, input_metadata: dict, input_headers: str,
+        scoring_url: str, connections_name: str
+) -> HeaderHandler:
     """Add header handler."""
+    endpoint_workspace = input_metadata.get("workspace_name", args.endpoint_workspace)
+    endpoint_resource_group = input_metadata.get("resource_group", args.endpoint_resource_group)
+    endpoint_subscription_id = input_metadata.get("subscription_id", args.endpoint_subscription_id)
+    endpoint_name = input_metadata.get("endpoint_name", scoring_url.split('/')[2].split('.')[0])
+    deployment_name = input_metadata.get("deployment_name", args.deployment_name)
+
+    model = OnlineEndpointModel(
+        model=None, model_version=None, model_type=model_type, endpoint_url=scoring_url)
+    if model.is_aoai_model():
+        return OAIHeaderHandler(
+            token_provider=token_provider, user_agent_segment=args.user_agent_segment,
+            batch_pool=args.batch_pool,
+            quota_audience=args.quota_audience,
+            additional_headers=input_headers,
+            endpoint_name=endpoint_name,
+            endpoint_subscription=endpoint_subscription_id,
+            endpoint_resource_group=endpoint_resource_group,
+            deployment_name=deployment_name,
+            connections_name=connections_name,
+            online_endpoint_model=model
+        )
     return OSSHeaderHandler(
         token_provider=token_provider, user_agent_segment=args.user_agent_segment,
         batch_pool=args.batch_pool,
         quota_audience=args.quota_audience,
-        additional_headers=args.additional_headers,
-        deployment_name=args.online_endpoint_url.split('/')[2].split('.')[0],
-        endpoint_subscription=args.endpoint_subscription_id,
-        endpoint_resource_group=args.endpoint_resource_group,
-        endpoint_workspace=args.endpoint_workspace
+        additional_headers=input_headers,
+        endpoint_name=endpoint_name,
+        endpoint_subscription=endpoint_subscription_id,
+        endpoint_resource_group=endpoint_resource_group,
+        endpoint_workspace=endpoint_workspace,
+        deployment_name=deployment_name,
+        connections_name=connections_name,
+        online_endpoint_model=model
     )

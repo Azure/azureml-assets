@@ -12,6 +12,10 @@ from mlflow.entities import Run as MLFlowRun
 from azureml.core import Run
 from utils.logging import get_logger
 
+from azureml._common._error_definition.azureml_error import AzureMLError
+from .exceptions import BenchmarkValidationException
+from .error_definitions import BenchmarkValidationError
+
 
 logger = get_logger(__name__)
 
@@ -94,3 +98,17 @@ def get_mlflow_model_name_version(model_uri: str) -> Tuple[str, Optional[str], O
         model_version = None
         model_registry = None
     return model_name, model_version, model_registry
+
+
+def str2bool(v):
+    """Convert str to bool."""
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise BenchmarkValidationException._with_error(
+            AzureMLError.create(BenchmarkValidationError, error_details='Boolean value expected.')
+        )
