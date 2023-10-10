@@ -12,7 +12,7 @@ import pandas as pd
 from PIL import Image
 from transformers import TextStreamer
 
-from config import MLflowLiterals, MLflowSchemaLiterals, Tasks
+from config import MAX_PROMPT_LENGTH, MLflowLiterals, MLflowSchemaLiterals, Tasks
 
 
 class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -159,6 +159,16 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
                 prompt, self._tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt"
             ).unsqueeze(0).cuda()
             stopping_criteria = KeywordsStoppingCriteria([self._stop_str], self._tokenizer, input_ids)
+
+            # For small models on V100 machines, long prompts cause a GPU OOMs which the server does not recover from.
+            # To prevent this, we are using a length threshold that allows for a small number of question-answer pairs
+            # (e.g. 5-10) in each prompt.
+            if self._model_version in [self.LLAVA_MPT, self.LLAVA_7B]:
+                prompt_length = max([len(i) for i in input_ids])
+                if prompt_length > MAX_PROMPT_LENGTH:
+                    raise ValueError(
+                        f"Prompt too long: {prompt_length} tokens. Maximum allowed is {MAX_PROMPT_LENGTH}."
+                    )
 
             # Call model.
             output_ids = self._model.generate(

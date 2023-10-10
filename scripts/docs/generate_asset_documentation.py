@@ -7,10 +7,8 @@ from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 import snakemd
 import re
-import os
 from pathlib import Path
 from azureml.assets.config import AssetConfig, AssetType
-from glob import glob as search
 
 SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA, AssetType.PROMPT]
 DEFAULT_CATEGORY = "Uncategorized"
@@ -158,26 +156,10 @@ class AssetInfo:
     def _add_doc_docker_context(self, doc):
         """Add docker context content."""
         doc.add_heading("Docker build context", level=2)
-        context = {}
-        dockerfile = ""
-        for context_file in search(str(self._extra_config_object.context_dir_with_path) + "/*"):
-            content = ""
-            with open(context_file, "r") as f:
-                # do not expect nested structure for now
-                content = f.read()
-            filename = os.path.basename(context_file)
-            if filename.lower() == "dockerfile":
-                dockerfile = content
-            else:
-                context[filename] = content
 
         doc.add_heading("Dockerfile", level=3)
+        dockerfile = self._extra_config_object.get_dockerfile_contents()
         doc.add_code(dockerfile, lang="dockerfile")
-
-        for name, file_content in context.items():
-            doc.add_heading(name, level=3)
-            filename, file_extension = os.path.splitext(name)
-            doc.add_code(file_content, lang=file_extension.strip("."))
 
     def _add_doc_component_type_and_code(self, doc):
         # TODO: have a code reference on GH
@@ -389,7 +371,6 @@ class PromptInfo(AssetInfo):
         self._add_doc_description(_doc)
         self._add_doc_asset_version(_doc)
         self._add_doc_tags(_doc)
-        self._add_doc_link(_doc)
 
         return _doc
 
