@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: compvis-stable-diffusion-v1-4
+path: ./
+properties:
+  SHA: 133a221b8aa7292a167afc5127cb63fb5005638b
+  datasets: LAION-5B
+  inference-min-sku-spec: 4|1|28|176
+  inference-recommended-sku: Standard_NC6s_v3
+  model_id: CompVis/stable-diffusion-v1-4
+tags:
+  Preview: ''
+  license: creativeml-openrail-m
+  task: text-to-image
+version: 2

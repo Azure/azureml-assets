@@ -1,7 +1,7 @@
 name: automl-gpu
 channels:
-- anaconda
 - conda-forge
+- anaconda
 dependencies:
 - python=3.8
 - pip=22.1.2
