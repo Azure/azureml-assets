@@ -128,7 +128,7 @@ class ResultConverters:
             logger.warning(f'Converting meet errors {e}')
             return False
         return True
-    
+
     def _get_oss_input_token(self, perf_metrics: Any) -> Tuple[int, int]:
         if self._is_performance_test:
             return ResultConverters.DEFAULT_PERF_INPUT_TOKEN
@@ -137,7 +137,7 @@ class ResultConverters:
     def _get_oss_output_token(self, result: Any, perf_metrics: Any) -> Tuple[int, int]:
         input_parameters = ResultConverters._get_oss_input_parameters(result)
         return input_parameters.get("max_new_tokens", perf_metrics.get('output_token_count', -1))
-    
+
     @staticmethod
     def _get_oss_input_parameters(result: Any) -> Any:
         return ResultConverters._get_request(result)['input_data'].get('parameters', {})
