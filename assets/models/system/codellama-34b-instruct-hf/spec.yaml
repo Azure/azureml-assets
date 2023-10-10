@@ -2,9 +2,10 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: CodeLlama-34b-Instruct-hf
 path: ./
 properties:
+  SHA: 38a1e15d8524a1f0a7760a7acf8242b81ae4eb87
   datasets: Publicly available sources
-  inference-recommended-sku: Standard_ND40rs_v2
-  evaluation-recommended-sku: Standard_ND40rs_v2
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: EN
   azureml.copyRegistryFilesToWorkspace: true
 tags:
@@ -24,4 +25,4 @@ tags:
   task: text-generation
   license: llama2
   author: meta
-version: 2
+version: 3
