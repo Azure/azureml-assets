@@ -60,18 +60,22 @@ class TestComputeFeatureImportanceMetrics:
 
     def test_determine_task_type_classification(self, get_fraud_data, get_zipcode_data):
         """Test deteremine task type for classification scenario."""
-        task_type = determine_task_type("ISPROXYIP", get_fraud_data)
+        task_type = determine_task_type(None, "ISPROXYIP", get_fraud_data)
         assert task_type == "classification"
-
-        task_type = determine_task_type("zipcode", get_zipcode_data)
+        task_type = determine_task_type("invalid", "zipcode", get_zipcode_data)
+        assert task_type == "classification"
+        task_type = determine_task_type("Classification", "zipcode", get_zipcode_data)
         assert task_type == "classification"
 
     def test_determine_task_type_regression(self, get_fraud_data):
         """Test deteremine task type for regression scenario."""
-        task_type = determine_task_type("TRANSACTIONAMOUNTUSD", get_fraud_data)
+        task_type = determine_task_type(None, "TRANSACTIONAMOUNTUSD", get_fraud_data)
         assert task_type == "regression"
-        task_type = determine_task_type("PHYSICALITEMCOUNT", get_fraud_data)
+        task_type = determine_task_type("invalid", "PHYSICALITEMCOUNT", get_fraud_data)
         assert task_type == "regression"
+        task_type = determine_task_type("Regression", "TRANSACTIONAMOUNTUSD", get_fraud_data)
+        assert task_type == "regression"
+
 
     def test_drop_metadata_columns(self):
         """Test drop columns when baseline and production do not match."""

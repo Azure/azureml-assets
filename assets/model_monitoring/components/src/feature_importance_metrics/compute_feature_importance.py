@@ -55,7 +55,12 @@ def determine_task_type(task_type, target_column, baseline_data):
     :rtype: string
     """
     if task_type is not None:
-        return task_type.lower()
+        task_type_lower = task_type.lower()
+        if task_type_lower != constants.CLASSIFICATION or task_type_lower != constants.REGRESSION:
+            log_time_and_message(f"Supported task types are classification and regression, received {task_type}."
+                                 "Attempting to determine task type based on target column.")
+        else:
+            return task_type_lower
     baseline_column = pd.Series(baseline_data[target_column])
     baseline_column_type = baseline_column.dtype.name
     if baseline_column_type == "float64":
