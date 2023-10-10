@@ -49,7 +49,6 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         )
         self._api_version = api_version
         self._location = location
-        self._managed_identity_required = True
         self._validate_settings()
 
     @property
