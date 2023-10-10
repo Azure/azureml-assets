@@ -69,9 +69,8 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 {
   "input_data": {
-        "input_string": ["Develop a Python function to sort a list of integers in ascending order"], 
+        "input_string": ["def fibonacci("], 
         "parameters": { 
-            "return_full_text": false,
             "do_sample":true
         }
     }
@@ -80,9 +79,10 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 
 ### **Sample output**
 ```json
-[
-    {
-        "0": ".\nMy solution:\nselect = input(\"please enter as many numbers as you want for the sorting in a row and seperate them by space: \")\nselect = select.split()\na = list()\nfor numbers in select:\n        if numbers.isdigit():\n            a.insert(0, int(select[0])- int(select[1]))\n        else:\n            print(\"you have entered incorrect input\")\nprint(sorted(a))\n\nAlthough this solution is correct as per the problem requirement, it can be further improved. At an academic level, the understanding of excdeption handling in Python is very important. Therefore in my solution above, I have used the \"try\" and \"except\" methods which handles exception with \"Value Error\" code.\n\nIf all the input is a valid input and hence, the overall methodology of my solution remains the same, the python code below is more optimal and efficient:\n\ndef sort(select):\n    try:\n        a = list(map(int, select.split()))\n        return sorted(a)\n\n    except ValueError:\n      print(\"you have entered incorrect input, only numbers are valid\")"
-    }
+[ 
+    { 
+        "0": "def fibonacci(n = 0):\n a = 0\n b = 1\n if n <= 1:\n return n\n else:\n c = 0\n for i in range(n-1):\n a = b\n b = c\n c = a + b\n return c\n\n\nfibonacci(10)\n" 
+    } 
 ]
+
 ```
