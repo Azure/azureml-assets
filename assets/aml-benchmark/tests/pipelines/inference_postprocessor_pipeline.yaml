@@ -19,18 +19,18 @@ inputs:
   regex_expr: '(\d)'
   remove_prefixes: '###,>>>'
   strip_characters: '\n\n'
-  extract_number: first
+  extract_number: 'first'
   template: '{{prediction}}'
   script_path:
     type: uri_file
     path: ../data/sample_ground_truths.jsonl
   label_map: '{"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}'
-  find_first: A,B,C
+  find_first: 'A,B,C'
 
 outputs:
   output_dataset_result:
     type: uri_file
-    path: azureml://datastores/workspaceblobstore/paths/output.jsonl  #azureml://datastores/${{default_datastore}}/paths/${{name}}/output.jsonl
+    path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
 
 jobs:
   run_inference_postprocessor:

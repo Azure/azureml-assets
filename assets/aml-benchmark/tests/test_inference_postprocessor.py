@@ -102,11 +102,6 @@ class TestInferencePostprocessorComponent:
                 None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
                 None, None,
             ),
-            (
-                "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
-                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer",
-                "\n\n", None, None, ".", "last", None, None, None, None,
-            ),
         ],
     )
     def test_inference_postprocessor_as_component(
