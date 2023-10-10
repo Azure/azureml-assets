@@ -145,6 +145,25 @@ def get_model_wrapper(task_type, target_column, baseline_data):
     log_time_and_message("Created ml wrapper")
     return model_wrapper
 
+def get_train_test_data(data):
+    """Split data into train and test data
+
+    :param  data: The data used to calculate the explanations
+    :type data: pandas.Dataframe
+    :return: train and test data
+    :rtype: tuple of pandas dataframe
+    """
+    row_count = len(data.index)
+
+    test_size = 0.5
+    if row_count > 10000:
+        test_size = 5000
+
+    train_data, test_data = train_test_split(data, test_size=test_size, random_state=0)
+    log_time_and_message("Split data into train and test. Train size:"
+                         f"{len(train_data.index)}, Test size: {len(test_data.index)}")
+    return train_data, test_data
+
 
 def compute_explanations(model_wrapper, data, categorical_features, target_column, task_type):
     """Compute explanations (feature importances) for a given dataset.
@@ -164,15 +183,7 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     """
     # Create the RAI Insights object, split baseline data into train and test data
     feature_metadata = FeatureMetadata(categorical_features=categorical_features, dropped_features=[])
-    row_count = len(data.index)
-
-    test_size = 0.5
-    if row_count > 10000:
-        test_size = 5000
-
-    train_data, test_data = train_test_split(data, test_size=test_size, random_state=0)
-    log_time_and_message("Split data into train and test. Train size:"
-                         f"{len(train_data.index)}, Test size: {len(test_data.index)}")
+    train_data, test_data = get_train_test_data(data)
 
     rai_i: RAIInsights = RAIInsights(
         model_wrapper, train_data, test_data, target_column, task_type, feature_metadata=feature_metadata
