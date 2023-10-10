@@ -89,24 +89,23 @@ class TestInferencePostprocessorComponent:
             (
                 "human-eval", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
                 None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
-                None, None, None, None, None,
+                None, None, None, None,
             ),
             (
                 "gsm8k_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
                 Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None,
                 None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
-                None, None, None, None,
+                None, None, None,
             ),
             (
                 "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
                 None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
-                None, None, None,
+                None, None,
             ),
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
                 Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer",
-                None, None, "\n\n",
-                None, None, ".", "last", None, None, None, None,
+                "\n\n", None, None, ".", "last", None, None, None, None,
             ),
         ],
     )
@@ -313,34 +312,34 @@ class TestInferencePostprocessorScript:
     @pytest.mark.parametrize(
         "dataset_name, prediction_dataset, prediction_column_name, ground_truth_dataset, ground_truth_column_name, \
         separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, script_path, \
-        pred_probs_dataset, label_map, find_first",
+        label_map, find_first",
         [
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
                 Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None,
                 None, None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
-                None, None, None, None,
+                None, None, None,
             ),
             (
                 "human-eval", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
                 None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None,
-                None, None, None, None, None,
+                None, None, None, None,
             ),
             (
                 "gsm8k_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
                 Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None, None,
                 None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
-                None, None, None, None,
+                None, None, None,
             ),
             (
                 "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
                 None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
-                None, None, None,
+                None, None,
             ),
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
                 Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "\n\n",
-                None, None, ".", "last", None, None, None, None, None,
+                None, None, ".", "last", None, None, None, None,
             ),
         ],
     )
@@ -358,7 +357,6 @@ class TestInferencePostprocessorScript:
         extract_number: str,
         template: str,
         script_path: str,
-        pred_probs_dataset: str,
         label_map: str,
         find_first: str,
         output_dataset: str = os.path.join(INPUT_PATH, "postprocessed_output.jsonl"),
@@ -431,8 +429,6 @@ class TestInferencePostprocessorScript:
             argss.extend(["--extract_number", f"'{extract_number}'"])
         if find_first is not None:
             argss.extend(["--find_first", f"'{find_first}'"])
-        if pred_probs_dataset is not None:
-            argss.extend(["--pred_probs_dataset", f"'{pred_probs_dataset}'"])
         if label_map is not None:
             argss.extend(["--label_map", f"'{label_map}'"])
         argss = " ".join(argss)
