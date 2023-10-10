@@ -59,7 +59,7 @@ def _parse_arguments():
         default=None,
         type=str,
         required=False,
-        help="Input: Path to the data directory, including data directory,such as data_dir, train_data_dir, val_data_dir"
+        help="Input: Path to the data directory, including data directory such as data_dir, train_data_dir etc"
     )
     parser.add_argument(
         "--optimized_parameters_path",
@@ -158,7 +158,7 @@ def _move_model_and_config_to_output_path(optimized_parameters_path, optimized_m
                          f"{optimized_model_path}/{prefix}_model/model.onnx")
                 os.makedirs(f"{optimized_model_path}/{prefix}_model", exist_ok=True)
                 shutil.copy2(os.path.join(dirpath, file),
-                            f"{optimized_model_path}/{prefix}_model/model.onnx")
+                             f"{optimized_model_path}/{prefix}_model/model.onnx")
             elif file.endswith("model.onnx.data") and optimized_model_path is not None:
                 log.info(f"copy optimized model data {os.path.join(dirpath, file)} to "
                          f"{optimized_model_path}/{prefix}/model.onnx.data")
