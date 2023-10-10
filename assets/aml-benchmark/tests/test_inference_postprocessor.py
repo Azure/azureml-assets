@@ -78,13 +78,13 @@ class TestInferencePostprocessorComponent:
     @pytest.mark.parametrize(
         "dataset_name, prediction_dataset, prediction_column_name, ground_truth_dataset, ground_truth_column_name, \
         separator, regex_expr, remove_prefixes, strip_characters, extract_number, template, script_path, \
-        pred_probs_dataset, label_map, find_first",
+        label_map, find_first",
         [
             (
                 "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
                 Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", None,
                 None, None, None, None, """{{prediction.split("\n\n")[0].split(" ")[-1].rstrip(".")}}""",
-                None, None, None, None,
+                None, None, None,
             ),
             (
                 "human-eval", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
@@ -102,6 +102,12 @@ class TestInferencePostprocessorComponent:
                 None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
                 None, None, None,
             ),
+            (
+                "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer",
+                None, None, "\n\n",
+                None, None, ".", "last", None, None, None, None,
+            ),
         ],
     )
     def test_inference_postprocessor_as_component(
@@ -118,7 +124,6 @@ class TestInferencePostprocessorComponent:
         extract_number: str,
         template: str,
         script_path: str,
-        pred_probs_dataset: str,
         label_map: str,
         find_first: str,
     ) -> None:
@@ -176,7 +181,6 @@ class TestInferencePostprocessorComponent:
             extract_number,
             template,
             script_path,
-            pred_probs_dataset,
             label_map,
             find_first,
             self.test_inference_postprocessor_as_component.__name__,
@@ -211,8 +215,7 @@ class TestInferencePostprocessorComponent:
             template=template,
             script_path=script_path,
             label_map=label_map,
-            pred_probs_dataset=[pred_probs_dataset] if pred_probs_dataset else None,
-            find_first=find_first,
+            find_first=find_first
         )
 
     def _get_pipeline_job(
@@ -228,7 +231,6 @@ class TestInferencePostprocessorComponent:
         extract_number: str,
         template: str,
         script_path: str,
-        pred_probs_dataset: str,
         label_map: str,
         find_first: str,
         display_name: str,
@@ -247,17 +249,11 @@ class TestInferencePostprocessorComponent:
             )
         else:
             pipeline_job.inputs.ground_truth_dataset = None
-        pipeline_job.inputs.ground_truth_column_name = (
-            ground_truth_column_name if ground_truth_column_name else None
-        )
+        pipeline_job.inputs.ground_truth_column_name = ground_truth_column_name if ground_truth_column_name else None
         pipeline_job.inputs.separator = separator if separator else None
         pipeline_job.inputs.regex_expr = regex_expr if regex_expr else None
-        pipeline_job.inputs.remove_prefixes = (
-            remove_prefixes if remove_prefixes else None
-        )
-        pipeline_job.inputs.strip_characters = (
-            strip_characters if strip_characters else None
-        )
+        pipeline_job.inputs.remove_prefixes = remove_prefixes if remove_prefixes else None
+        pipeline_job.inputs.strip_characters = strip_characters if strip_characters else None
         pipeline_job.inputs.extract_number = extract_number if extract_number else None
         pipeline_job.inputs.template = template if template else None
         if script_path:
@@ -266,12 +262,6 @@ class TestInferencePostprocessorComponent:
             )
         else:
             pipeline_job.inputs.script_path = None
-        if pred_probs_dataset:
-            pipeline_job.inputs.prediction_probabilities_dataset = Input(
-                type=AssetTypes.URI_FILE, path=pred_probs_dataset
-            )
-        else:
-            pipeline_job.inputs.prediction_probabilities_dataset = None
         pipeline_job.inputs.label_map = label_map if label_map else None
         pipeline_job.inputs.find_first = find_first if find_first else None
         pipeline_job.display_name = display_name
@@ -346,6 +336,11 @@ class TestInferencePostprocessorScript:
                 "human-eval_multiple_preds", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "samples",
                 None, None, None, "^(.*?)(\nclass|\ndef|\n#|\nif|\nprint|$)", None, None, None, None, None,
                 None, None, None,
+            ),
+            (
+                "gsm8k", Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "prediction",
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_GROUND_TRUTH_FILE, "final_answer", "\n\n",
+                None, None, ".", "last", None, None, None, None, None,
             ),
         ],
     )
@@ -429,13 +424,15 @@ class TestInferencePostprocessorScript:
         if regex_expr is not None:
             argss.extend(["--regex_expr", f"'{regex_expr}'"])
         if remove_prefixes is not None:
-            argss.extend(["--remove_prefixes", f"'{regex_expr}'"])
+            argss.extend(["--remove_prefixes", f"'{remove_prefixes}'"])
         if strip_characters is not None:
             argss.extend(["--strip_characters", f"'{strip_characters}'"])
         if extract_number is not None:
             argss.extend(["--extract_number", f"'{extract_number}'"])
+        if find_first is not None:
+            argss.extend(["--find_first", f"'{find_first}'"])
         if pred_probs_dataset is not None:
-            argss.extend(["--strip_suffix", f"'{pred_probs_dataset}'"])
+            argss.extend(["--pred_probs_dataset", f"'{pred_probs_dataset}'"])
         if label_map is not None:
             argss.extend(["--label_map", f"'{label_map}'"])
         argss = " ".join(argss)
@@ -908,3 +905,102 @@ class TestInferencePostprocessorScript:
         for input in mock_completion_list:
             output.append(obj.apply_remove_prompt_prefix(text=input, data=data))
         assert output == expected_completion_list
+
+    @pytest.mark.parametrize(
+        "dataset_name, if_input_dir, input_uri_file, if_input_filename, completion_key, extracted_prediction_key, \
+        remove_prompt_prefix, separator, regex_expr, remove_prefixes, strip_characters, extract_number, \
+        label_map, find_first",
+        [
+            (
+                "babel_gsm8k", False, Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, False,
+                "samples", None, False, 'Q:', None, None, None, 'last', None, None,
+            ),
+            (
+                "babel_gsm8k_multiple_preds", True,
+                os.path.dirname(Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE), True,
+                "samples", None, False, 'Q:', None, None, None, 'last', None, None,
+            ),
+
+        ],
+    )
+    def test_babel_runner_as_script(
+        self,
+        dataset_name: str,
+        if_input_dir: bool,
+        input_uri_file: str,
+        if_input_filename: bool,
+        completion_key: str,
+        extracted_prediction_key: str,
+        remove_prompt_prefix: bool,
+        separator: str,
+        regex_expr: str,
+        remove_prefixes: str,
+        strip_characters: str,
+        extract_number: str,
+        label_map: str,
+        find_first: str,
+        output_dataset: str = INPUT_PATH,
+    ) -> None:
+        """Inference Postprocessor script test."""
+        with open(
+            os.path.join(
+                os.path.dirname(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE),
+                "process_one_prediction_example.jsonl",
+            ),
+            "w",
+        ) as writer:
+            with open(
+                Constants.POSTPROCESS_SAMPLE_EXAMPLES_INFERENCE_FILE, "r"
+            ) as reader:
+                for line in reader:
+                    out_row = json.loads(line)
+                    if out_row.get("name") == dataset_name:
+                        del out_row["name"]
+                        writer.write(json.dumps(out_row) + "\n")
+        input_uri_file = os.path.join(
+            os.path.dirname(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE),
+            "process_one_prediction_example.jsonl",
+        )
+        argss = [
+            "--completion_key",
+            completion_key,
+            "--output_dataset",
+            output_dataset,
+        ]
+        if if_input_dir:
+            input_dir = os.path.dirname(input_uri_file)
+            argss.extend(["--input_dir", input_dir])
+            if if_input_filename:
+                input_filename = input_uri_file.split('/')[-1]
+                argss.extend(["--input_filename", input_filename])
+        else:
+            argss.extend(["--input_uri_file", input_uri_file])
+        if extracted_prediction_key is not None:
+            argss.extend(["--extracted_prediction_key", extracted_prediction_key])
+        if remove_prompt_prefix:
+            argss.extend(["--remove_prompt_prefix", remove_prompt_prefix])
+        if separator is not None:
+            argss.extend(["--separator", f"'{separator}'"])
+        if regex_expr is not None:
+            argss.extend(["--regex", f"'{regex_expr}'"])
+        if remove_prefixes is not None:
+            argss.extend(["--remove_prefixes", f"'{remove_prefixes}'"])
+        if strip_characters is not None:
+            argss.extend(["--strip_characters", f"'{strip_characters}'"])
+        if extract_number is not None:
+            argss.extend(["--extract_number", f"'{extract_number}'"])
+        if find_first is not None:
+            argss.extend(["--find_first", f"'{find_first}'"])
+        if label_map is not None:
+            argss.extend(["--label_map", f"'{label_map}'"])
+        argss = " ".join(argss)
+        src_dir = get_src_dir()
+        cmd = f"cd {src_dir} && python -m inference_postprocessor.runner {argss}"
+        run_command(f"{cmd}")
+        _verify_and_get_output_records(
+            dataset_name,
+            Constants.POSTPROCESS_SAMPLE_EXAMPLES_EXPECTED_OUTPUT_FILE,
+            os.path.join(output_dataset, "extracted_data.jsonl"),
+            input_file=None,
+        )
+        return
