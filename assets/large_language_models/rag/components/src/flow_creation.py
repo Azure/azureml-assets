@@ -188,12 +188,13 @@ def main(args, ws, current_run, activity_logger: Logger):
         completion_provider = "OpenAI"
     else:
         completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
+        # If completion deployment not set, set as blank in PF rather than a placeholder
         completion_deployment_name = completion_config.get(
-            "deployment_name", "gpt-35-turbo")
+            "deployment_name", None)
     # Set default if key exsits but is set to None (as it is for basic pipelines)
         completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
         completion_deployment_name = \
-            "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
+            "" if completion_deployment_name is None else completion_deployment_name
         completion_provider = "AzureOpenAI"
 
     embedding_connection_name = get_connection_name(
