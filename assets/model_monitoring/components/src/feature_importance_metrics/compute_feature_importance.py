@@ -56,18 +56,23 @@ def determine_task_type(task_type, target_column, baseline_data):
     """
     if task_type is not None:
         task_type_lower = task_type.lower()
-        if task_type_lower != constants.CLASSIFICATION or task_type_lower != constants.REGRESSION:
+        if task_type_lower != constants.CLASSIFICATION and task_type_lower != constants.REGRESSION:
             log_time_and_message(f"Supported task types are classification and regression, received {task_type}."
                                  " Attempting to determine task type based on target column.")
         else:
             return task_type_lower
     baseline_column = pd.Series(baseline_data[target_column])
     baseline_column_type = baseline_column.dtype.name
-    if baseline_column_type == "float64":
+    if (pd.api.types.is_float_dtype(baseline_column)
+        or pd.api.types.is_timedelta64_ns_dtype(baseline_column)):
         return constants.REGRESSION
-    if baseline_column_type == "object" or baseline_column_type == "bool":
+    if (pd.api.types.is_object_dtype(baseline_column) or
+        pd.api.types.is_string_dtype(baseline_column) or
+        pd.api.types.is_datetime64_any_dtype(baseline_column) or
+        pd.api.types.is_timedelta64_dtype(baseline_column) or
+        baseline_column_type == "bool"):
         return constants.CLASSIFICATION
-    if baseline_column_type == "int64":
+    if pd.api.types.is_integer_dtype(baseline_column):
         distinct_column_values = len(baseline_column.unique())
         total_column_values = len(baseline_column)
         distinct_value_ratio = distinct_column_values / total_column_values
@@ -75,6 +80,9 @@ def determine_task_type(task_type, target_column, baseline_data):
             return constants.CLASSIFICATION
         else:
             return constants.REGRESSION
+    # Log the datatype detected and default to classification
+    log_time_and_message(f"Target column datatype detected: {baseline_column_type}")
+    return constants.CLASSIFICATION
 
 
 def create_lightgbm_model(X, y, task_type):
