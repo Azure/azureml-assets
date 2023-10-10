@@ -57,8 +57,8 @@ RUN_PROPERTIES = {
     "showMetricsAtRoot": "true",
 }
 
-add_run_properties(ROOT_RUN_PROPERTIES, logger, add_to_root=True)
-add_run_properties(RUN_PROPERTIES, logger)
+add_run_properties(ROOT_RUN_PROPERTIES, add_to_root=True)
+add_run_properties(RUN_PROPERTIES)
 
 # mlflow model task based signature for inference
 MLFLOW_MODEL_SIGNATURES = {
