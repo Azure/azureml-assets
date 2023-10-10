@@ -57,25 +57,28 @@ Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn
 
 
 ## **Inference samples**
-
-Inference type|Python sample (Notebook)|CLI with YAML
-|--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
-Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
 
 
 ## **Sample inputs and outputs (for real-time inference)**
 
 ### **Sample input**
 ```json
-{"input_data": {
-    "input_string": ["Develop a Python function to sort a list of integers in ascending order"], "parameters": {"top_p":0.9,
-        "temperature":0.6,
-        "do_sample":true, 
-        "max_new_tokens": 120,
-        "return_full_text":false
-        }
+{
+  "input_data": {
+    "input_string": [
+      "Develop a Python function to sort a list of integers in ascending order"
+    ],
+    "parameters": {
+      "top_p": 0.9,
+      "temperature": 0.6,
+      "do_sample": true,
+      "max_new_tokens": 120,
+      "return_full_text": false
     }
+  }
 } 
 ```
 
