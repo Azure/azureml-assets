@@ -223,7 +223,9 @@ class OnlineEndpoint:
             return {'api-key': resp['properties']['credentials']['key']}
         else:
             access_key_id = credentials.get('access_key_id')
-            credentials = resp['properties'].get('credentials')
+            credentials = resp['properties'].get('credentials', {})
+            if 'secretAccessKey' not in credentials and 'keys' in credentials:
+                credentials = credentials['keys']
             token = credentials['secretAccessKey'] \
                 if access_key_id == 'api-key' else 'Bearer ' + credentials['secretAccessKey']
             return {access_key_id if access_key_id else "Authorization": token}
