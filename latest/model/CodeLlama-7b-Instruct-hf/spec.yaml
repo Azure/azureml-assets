@@ -102,22 +102,20 @@ description: |
   ```json
   {
     "input_data": {
-        "input_string": ["I believe the meaning of life is"],
-        "parameters":{   
-                "top_p": 0.9,
-                "temperature": 0.6,
-                "max_gen_len": 96,
-                "do_sample": true
-        }
-    }
+          "input_string": ["def fibonacci("], 
+          "parameters": { 
+              "do_sample":true
+          }
+      }
   }
   ```
 
   ### **Sample output**
   ```json
-  [
-      {
-          "0": "I believe the meaning of life is to learn to love.\\nI believe in a world of compassion, a world where love rules.\\nI believe in a world where people care for one another.\\nI believe in a world where people help each other.\\nI believe in a world where people are kind to each other.\\nI believe in a world where people are happy.\\nI believe in a world where people are peaceful.\\nI believe in a world where people are loving."
-      }
+  [ 
+      { 
+          "0": "def fibonacci(n = 0):\n a = 0\n b = 1\n if n <= 1:\n return n\n else:\n c = 0\n for i in range(n-1):\n a = b\n b = c\n c = a + b\n return c\n\n\nfibonacci(10)\n" 
+      } 
   ]
+
   ```
