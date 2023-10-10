@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Entry script for Prompt Crafter Component."""
 import os
 from argparse import ArgumentParser
 import logging
@@ -32,6 +36,7 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def main():
     args = parse_args()
 
@@ -65,6 +70,7 @@ def main():
         output_pattern=args.output_pattern,
         system_message=args.system_message,
         random_seed=args.random_seed)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

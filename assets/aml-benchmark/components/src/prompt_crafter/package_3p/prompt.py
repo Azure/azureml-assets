@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import auto

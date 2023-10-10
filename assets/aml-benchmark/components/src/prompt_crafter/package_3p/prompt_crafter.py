@@ -1,4 +1,7 @@
-from typing import Dict, Optional
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+from typing import Optional
 import json
 import logging
 import os
@@ -33,12 +36,13 @@ class _MLFlowLogger():
         mlflow.log_metric("min_prompt_word_count", self._min_prompt_word_count)
         mlflow.log_metric("average_prompt_word_count", self._prompt_length_sum / self.steps)
         mlflow.log_metric("total_prompts", self.steps)
-    
+
     def save_parameters(self, params, output_mltable):
         mlflow.log_dict(params, "params.json")
 
         with open(os.path.join(output_mltable, "params.json"), "w") as f:
             json.dump(params, f)
+
 
 class PromptCrafter:
     OUTPUT_FILENAME = "few_shot_prompt.jsonl"
@@ -69,7 +73,7 @@ class PromptCrafter:
     ):
         self.metadata_keys = metadata_keys
         self.additional_payload = additional_payload
-        params = {k:v for k,v in locals().items() if k not in ["self", "base_prompt_factory_cls", "params"]}
+        params = {k: v for k, v in locals().items() if k not in ["self", "base_prompt_factory_cls", "params"]}
         self.mlflow_logger = _MLFlowLogger()
         self.mlflow_logger.save_parameters(params=params, output_mltable=output_mltable)
 
@@ -115,7 +119,7 @@ transformations:
         with open(mltable_file_output_path, 'w') as f:
             f.write(s)
         return mltable_output_path
-        
+
     @staticmethod
     def _read_few_shot_pool(few_shot_dir:str, few_shot_filename: str = None):
         few_shot_pool = None
@@ -165,10 +169,10 @@ transformations:
 
                     ml_table_output_data = self.row_output_post_process(output_data)
                     f_mltable.write(json.dumps(ml_table_output_data) + "\n")
-                    
-        
+
+
         self.mlflow_logger.log_aggregates()
-        
+
         # NOTE: currently, openai_api component handles the payload parameters
         # like temperature etc. This is why we compute the checksum on output_data
         # instead of new_data. Conceptually, prompt crafter should be preparing the payloads

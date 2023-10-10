@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import json
@@ -12,6 +15,7 @@ logger = logging.getLogger(__name__)
 PATIENCE = 100
 
 JINJA_ENV = Environment(keep_trailing_newline=True)
+
 
 @dataclass
 class PromptFactory(ABC):
@@ -44,11 +48,11 @@ class PromptFactory(ABC):
             self.validate_jinja_template(self.prompt_pattern, "Prompt pattern is not a valid jinja pattern.")
         else:
             raise("A prompt pattern (in jinja template) is required.")
-        
+
         # Validate output_pattern
         if self.output_pattern:
             self.validate_jinja_template(self.output_pattern, "Output pattern is not a valid jinja pattern.")
-        
+
         # Validate few_shot_pattern
         if self.n_shots > 0:
             if self.few_shot_pattern:
@@ -56,7 +60,7 @@ class PromptFactory(ABC):
             else:
                 self.augmented_few_shot_pattern = self.prompt_pattern + self.output_pattern
             self.validate_jinja_template(self.augmented_few_shot_pattern, "Few shot pattern is not a valid jinja pattern.")
-            
+
     def validate_jinja_template(self, template: str, error_message: str):
         try:
             _ = JINJA_ENV.from_string(template)
@@ -156,7 +160,7 @@ class PromptFactory(ABC):
                     else:
                         logger.warning(f"Metadata key {k} not found in data at row {index}")
                 return metadata
-            
+
             metadata = collect_metadata(
                 metadata_keys=self.metadata_keys,
                 data=row,
@@ -189,11 +193,11 @@ class CompletionsPromptFactory(PromptFactory):
         if self.few_shot_pool is not None and self.n_shots > 0:
             few_shots = self._create_few_shots(row)
             prompt = few_shots + prompt
-        
+
         # add prefix
         if self.prefix is not None:
             prompt = self.prefix + prompt
-        
+
         prompt = CompletionsPrompt(prompt)
 
         return prompt
@@ -209,7 +213,7 @@ class CompletionsPromptFactory(PromptFactory):
             if self.augmented_few_shot_pattern:
                 few_shot_template = JINJA_ENV.from_string(self.augmented_few_shot_pattern)
                 few_shot_prompt += few_shot_template.render(few_shot)
-            
+
             if self.few_shot_separator is not None:
                 few_shot_prompt += self.few_shot_separator
 
@@ -294,5 +298,3 @@ class ChatPromptFactory(PromptFactory):
         if isinstance(messages, dict):
             messages = [messages]
         return messages
-
-
