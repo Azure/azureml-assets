@@ -145,7 +145,7 @@ def get_model_wrapper(task_type, target_column, baseline_data):
 
 
 def get_train_test_data(data):
-    """Split data into train and test data
+    """Split data into train and test data.
 
     :param  data: The data used to calculate the explanations
     :type data: pandas.Dataframe
