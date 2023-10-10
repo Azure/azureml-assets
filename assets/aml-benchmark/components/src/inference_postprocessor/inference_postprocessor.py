@@ -10,9 +10,12 @@ import os
 import re
 import jinja2
 import codecs
+import mlflow
+import tqdm
+import glob
 import numpy as np
 import pandas as pd
-from typing import Union, List
+from typing import Union, List, Optional
 
 from azureml._common._error_definition.azureml_error import AzureMLError
 from utils.error_definitions import BenchmarkValidationError, BenchmarkUserError
@@ -191,7 +194,7 @@ class InferencePostprocessor(object):
     def apply_regex_expr(self, text: str) -> str:
         """Apply regex on the given text."""
         if self.regex_expr:
-            ##self.regex_expr = json.loads(json.dumps(self.regex_expr))
+            # self.regex_expr = json.loads(json.dumps(self.regex_expr))
             self.regex_expr = self._convert_to_unicode(self.regex_expr)
             matches = re.search(self.regex_expr, text, flags=re.DOTALL)
             if matches is None or len(matches.groups()) == 0:
@@ -348,9 +351,21 @@ class InferencePostprocessor(object):
         result_df.to_json(self.result, lines=True, orient="records")
         return
 
+    def apply_generic_processor(self, out_string: str, row: dict = None) -> List:
+        """Processor steps."""
+        out_string = self.apply_remove_prompt_prefix(out_string, row)
+        out_string = self.apply_remove_prefixes(out_string)
+        out_string = self.apply_separator(out_string)
+        out_string = self.apply_find_first(out_string)
+        out_string = self.apply_extract_number(out_string)
+        out_string = self.apply_regex_expr(out_string)
+        out_string = self.apply_strip_characters(out_string)
+        out_string = self.apply_label_map(out_string)
+        return out_string
+
     def extract_inferences(
         self, result_df: pd.DataFrame, key: str = None, processor_order: List = None
-    ):
+    ) -> pd.DataFrame:
         """Extract inferences using generic method if no template or custom post-processor is provided."""
         predicted_data = read_jsonl_files(resolve_io_path(self.prediction_dataset))
         pred_list = []
@@ -364,26 +379,12 @@ class InferencePostprocessor(object):
                 curr_pred_list = []
                 for i in range(0, len(predicted)):
                     out_string = predicted[i]
-                    out_string = self.apply_remove_prompt_prefix(out_string, row)
-                    out_string = self.apply_remove_prefixes(out_string)
-                    out_string = self.apply_separator(out_string)
-                    out_string = self.apply_find_first(out_string)
-                    out_string = self.apply_extract_number(out_string)
-                    out_string = self.apply_regex_expr(out_string)
-                    out_string = self.apply_strip_characters(out_string)
-                    out_string = self.apply_label_map(out_string)
+                    out_string = self.apply_generic_processor(out_string, row)
                     curr_pred_list.append(out_string)
                 pred_list.append(curr_pred_list)
             else:
                 out_string = predicted if isinstance(predicted, str) else predicted[0]
-                out_string = self.apply_remove_prompt_prefix(out_string, row)
-                out_string = self.apply_remove_prefixes(out_string)
-                out_string = self.apply_separator(out_string)
-                out_string = self.apply_find_first(out_string)
-                out_string = self.apply_extract_number(out_string)
-                out_string = self.apply_regex_expr(out_string)
-                out_string = self.apply_strip_characters(out_string)
-                out_string = self.apply_label_map(out_string)
+                out_string = self.apply_generic_processor(out_string, row)
                 pred_list.append(out_string)
         if isinstance(pred_list[0], list) and len(pred_list[0]) > 1:
             cols = [
@@ -426,7 +427,8 @@ class InferencePostprocessor(object):
         result_df = pd.DataFrame()
         result_df = self.read_ground_truth_dataset(result_df)
         result_df = self.extract_inferences(result_df, key, processor_order)
-        result_df.to_json(self.result, lines=True, orient="records")
+        if len(result_df) > 0:
+            result_df.to_json(self.result, lines=True, orient="records")
         return
 
     def run_user_preprocessor(self) -> None:
@@ -440,3 +442,294 @@ class InferencePostprocessor(object):
             raise BenchmarkUserException._with_error(
                 AzureMLError.create(BenchmarkUserError, error_details=e)
             )
+
+
+class MLFlowLogger():
+    """MLFlowLogger class."""
+
+    def __init__(self):
+        """Logger to log predictions or missing predictions."""
+        self.steps = 0
+        self.num_missing_completions = 0
+        self.raw_completion_length = 0
+        self.extracted_completion_length = 0
+
+    def increment_step(self):
+        """Log each step."""
+        # Increment, but don't log on every step, since MLFlow logging is slooow.
+        self.steps += 1
+
+    def log_raw_completion_length(self, completion_length):
+        """Log the raw generated text."""
+        self.raw_completion_length += completion_length
+
+    def log_extracted_completion_length(self, completion_length):
+        """Log extracted prediction from the generated text."""
+        self.extracted_completion_length += completion_length
+
+    def log_missing_completion(self):
+        """Log the missing generations."""
+        self.num_missing_completions += 1
+
+    def log_aggregates(self):
+        """Log aggregated logs."""
+        mlflow.log_metric("missing_completions", self.num_missing_completions)
+        mlflow.log_metric("raw_completion_length_avg", self.raw_completion_length / self.steps)
+        mlflow.log_metric("extracted_completion_length_avg", self.extracted_completion_length / self.steps)
+        mlflow.log_metric("total_completions", self.steps)
+
+        if self.num_missing_completions > 0:
+            logger.warning("For some lines no completions were received")
+
+
+class BabelInferencePostProcessor(InferencePostprocessor):
+    """Babel inference post processor."""
+
+    def __init__(
+        self,
+        prediction_dataset: str = None,
+        prediction_column_name: str = None,
+        separator: str = None,
+        find_first: str = None,
+        regex_expr: str = None,
+        remove_prefixes: str = None,
+        strip_characters: str = None,
+        label_map: str = None,
+        output_dataset: str = None,
+        extract_number: str = None,
+        remove_prompt_prefix: str = False,
+        prediction_dir: str = None,
+        prediction_filename: str = "few_shot_prompt",
+        **kwargs
+    ) -> None:
+        """Inference Postprocessor class.
+
+        :param prediction_dataset: Path to the jsonl file to load the prediction dataset.
+        :param prediction_column_name: Name of prediction column/key.
+        :param ground_truth_dataset: Path to the jsonl file to load the prediction dataset.
+        :param ground_truth_column_name: Name of ground truth column/key.
+        :param separator: Few shot separator used in prompt crafter.
+        :param find_first: A list of strings to search for in the inference results. The first occurrence \
+            of each string will be extracted. Must provide a comma-separated list of strings.
+            Example, for the following input:
+            >>> find_first = "positive,negative"
+            >>> completion = "This is a positive example, not negative"
+            # Output: "positive"
+        :param regex_expr: A regex pattern to extract the answer from the inference results.
+        :param remove_prefixes: A set of string prefixes separated by comma list of string prefixes to be removed \
+            from the inference results in sequence. This can also be used to remove the prompt from the inference \
+            results. The prefixes should be separated by a comma.
+        :param strip_characters: A set of characters to remove from the beginning or end of the extracted answer.\
+            It is applied in the very end of the extraction process.
+        :param label_map: JSON serialized dictionary to perform mapping. Must contain key-value pair \
+            "column_name": "<actual_column_name>" whose value needs mapping, followed by key-value pairs containing \
+            idtolabel or labeltoid mappers. Example format: \
+            {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}. This is not applicable \
+            to custom scripts.
+        :param extract_number: A enum that takes two values - "first" or "last". The default value is "first". \
+            If the inference results contain a number, this can be used to extract the first or last number in the \
+            inference results. The number will be extracted as a string.
+            Example:
+            >>> extract_number = "first"
+            >>> completion = "Adding 0.3 to 1,000 gives 1,000.3"
+            # Output: "0.3"
+            Example:
+            >>> extract_number = "last"
+            >>> completion = "Adding 0.3 to 1,000 gives 1,000.3"
+            # Output: "1000.3"
+        :param remove_prompt_prefix: A boolean flag, when set to True, remove the prompt generated by prompt \
+            crafter if the generated text contains it when flag in model's parameter return_full_text is set to True.
+        :param template: Jinja template containing the extraction logic of inference post-processing.
+        :param script_path: Path to the custom preprocessor python script provided by user.
+        :param output_dataset: Path to the jsonl file where the processed data will be saved.
+        :param prediction_dir: Path to the directory containing the jsonl file with the inference results. If \
+            prediction_dataset is specified, prediction_dataset takes priority.
+        :param prediction_filename: The name of the jsonl file with the inference results. If \
+            prediction_dataset is specified, prediction_dataset takes priority.
+            The name of the jsonl file with the inference results. Supports any glob pattern that returns a \
+            unique .jsonl file within the specified directory. Gets ignored if prediction_dataset is specified.
+        :return: None
+        """
+        super().__init__(
+            prediction_dir=prediction_dir,
+            prediction_filename=prediction_filename,
+            prediction_dataset=prediction_dataset,
+            prediction_column_name=prediction_column_name,  # if prediction_column_name else 'prediction',
+            separator=separator,
+            find_first=find_first,
+            regex_expr=regex_expr,
+            remove_prefixes=remove_prefixes,
+            strip_characters=strip_characters,
+            extract_number=extract_number,
+            label_map=label_map,
+            remove_prompt_prefix=remove_prompt_prefix,
+            output_dataset=output_dataset,
+            **kwargs
+        )
+
+    def validate(self) -> None:
+        """Validate the parameters."""
+        if self.prediction_dataset is None and self.prediction_dir is None:
+            mssg = "Path to load the prediction dataset is not provided."
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
+        return
+
+    def unpack_with_adjustment(self, line: str):
+        """Unpack the metadata."""
+        data = json.loads(line)
+        if 'request' in data:
+            data = self.batch_score_response_format_adjustment(data)
+
+        # flatten metadata
+        if "metadata" in data:
+            for k, v in data["metadata"].items():
+                # Avoid accidental override of key in data
+                key = f"{k}_metadata" if k in data else k
+                data[key] = v
+            del data["metadata"]
+
+        if '_batch_request_metadata' in data:
+            for k, v in data["_batch_request_metadata"].items():
+                # Avoid accidental override of key in data
+                key = f"{k}_metadata" if k in data else k
+                data[key] = v
+            del data["_batch_request_metadata"]
+
+        return data
+
+    def batch_score_response_format_adjustment(self, data, completion_key="samples"):
+        """
+        Format the response if it is generated by batch score component.
+
+        Because the response format is different between the scoring components, we
+        need to adjust the schema for batch_score to be in line with other Babel components.
+        """
+        try:
+            new_data = {
+                "prompt": data["request"]["prompt"],
+                completion_key: [sample["text"] for sample in data["response"]["choices"]],
+            }
+            if "request_metadata" in data:
+                new_data["metadata"] = data["request_metadata"]
+                if "completion" in new_data["metadata"]:
+                    new_data["completion"] = new_data["metadata"]["completion"]
+        except Exception:
+            parsed_response = json.loads(data["response"])
+            if "error" in parsed_response:
+                logger.error(f"Error returned by the endpoint:\n{parsed_response['error']}")
+            else:
+                logger.exception("Something went wrong while converting schema.")
+            new_data = data
+        return new_data
+
+    def resolve_file(self, input_path: str, filename: Optional[str] = None):
+        """Resolve input path as single file from directory.
+
+        Given input path can be either a file, or a directory. If its a file, it
+        will be returned. If its a directory with a single file, that will be returned.
+        If its a directory with multiple files and filename is provided, it will return
+        the unique file matching the filename.
+
+        Args:
+            input_path (str): Either file or directory path
+            filename (Optional[str]): If provided, will look for this file in dataset,
+                assuming its a directory. Supports glob patterns.
+
+        Examples:
+            # my_dir contains only one file
+            >>> resolve_file("my_dir")
+
+            # my_dir contains multiple files
+            >>> resolve_file("my_dir", "my_file.txt")
+
+            # my_dir contains unique .txt file
+            >>> resolve_file("my_dir", "*.txt")
+
+        Returns:
+            str: path to file
+        """
+        if os.path.isfile(input_path):
+            logger.info(f"Found input file: {input_path}")
+            return input_path
+
+        if os.path.isdir(input_path):
+            all_files = os.listdir(input_path)
+
+            if not all_files:
+                raise RuntimeError(f"Could not find any file in specified input directory {input_path}")
+
+            if len(all_files) == 1:
+                logger.info(f"Found input directory {input_path}, selecting unique file {all_files[0]}")
+                return os.path.join(input_path, all_files[0])
+
+            elif len(all_files) > 1 and filename is not None:
+
+                logger.info(f"Found input directory {input_path}, selecting unique file {filename}")
+                all_files = glob.glob(os.path.join(input_path, filename))
+                if len(all_files) == 1:
+                    return all_files[0]
+                else:
+                    raise RuntimeError(f"Found multiple files in input file path {input_path} for glob pattern {filename}")
+
+            else:
+                raise RuntimeError(f"Found multiple files in input file path {input_path}, specify the file name in addition.")
+
+        logger.critical(f"Provided INPUT path {input_path} is neither a directory nor a file.")
+        return input_path
+
+    def extract_inferences(
+        self, result_df: pd.DataFrame, key: str = None, processor_order: List = None
+    ):
+        """Extract inferences using generic method if no template or custom post-processor is provided."""
+        result_df = pd.DataFrame()
+        completion_key = key if key else self.kwargs.get("completion_key")
+        if self.prediction_dataset:
+            pass
+        else:
+            if self.prediction_filename and not self.prediction_filename.endswith(".jsonl"):
+                self.prediction_filename = self.prediction_filename+".jsonl"
+            self.prediction_dataset = self.resolve_file(input_path=self.prediction_dir,
+                                                        filename=self.prediction_filename)
+        logger.info(f"Input path: {self.prediction_dataset}")
+        mlflow_logger = MLFlowLogger()
+        with open(self.result, "w") as writer:
+            with open(self.prediction_dataset) as reader:
+                for line in tqdm.tqdm(reader):
+                    mlflow_logger.increment_step()
+
+                    data = self.unpack_with_adjustment(line)
+                    # It's possible for completions to be null e.g.
+                    # when doing streaming in a perf benchmark.
+                    completion_list = data.get(completion_key, None)
+
+                    # If the label key in the source data matches the completion key
+                    # from the inference component, it will be renamed to x_metadata
+                    # when the data is unpacked. We need to rename it back here, once
+                    # we have extracted the completion data.
+                    # Right now this is just for race_high_static and cnndm
+                    if f"{completion_key}_metadata" in data:
+                        data[completion_key] = data[f"{completion_key}_metadata"]
+                        del data[f"{completion_key}_metadata"]
+
+                    if isinstance(completion_list, str):
+                        completion_list = [completion_list]
+                    if not completion_list:  # received no predictions
+                        mlflow_logger.log_missing_completion()
+                        continue
+
+                    raw_length = np.mean([len(str(completion)) for completion in completion_list])
+                    mlflow_logger.log_raw_completion_length(completion_length=raw_length)
+                    processed_completion_list = [
+                        self.apply_generic_processor(completion) for completion in completion_list
+                    ]
+                    data[self.prediction_column_name] = processed_completion_list
+                    extracted_length = np.mean([len(str(completion)) for completion in processed_completion_list])
+                    mlflow_logger.log_extracted_completion_length(completion_length=extracted_length)
+                    data['raw_completion_length'] = raw_length
+                    data['extracted_completion_length'] = extracted_length
+
+                    writer.write(json.dumps(data) + "\n")
+                mlflow_logger.log_aggregates()
+        return result_df
