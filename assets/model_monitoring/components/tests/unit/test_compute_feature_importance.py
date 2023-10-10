@@ -93,7 +93,6 @@ class TestComputeFeatureImportanceMetrics:
         task_type = determine_task_type("Regression", "TRANSACTIONAMOUNTUSD", get_fraud_data)
         assert task_type == "regression"
 
-
     def test_drop_metadata_columns(self):
         """Test drop columns when baseline and production do not match."""
         baseline_data = {

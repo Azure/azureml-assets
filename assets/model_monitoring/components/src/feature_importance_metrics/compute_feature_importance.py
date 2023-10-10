@@ -64,13 +64,11 @@ def determine_task_type(task_type, target_column, baseline_data):
     baseline_column = pd.Series(baseline_data[target_column])
     baseline_column_type = baseline_column.dtype.name
     if (pd.api.types.is_float_dtype(baseline_column)
-        or pd.api.types.is_timedelta64_ns_dtype(baseline_column)):
+            or pd.api.types.is_timedelta64_ns_dtype(baseline_column)):
         return constants.REGRESSION
-    if (pd.api.types.is_object_dtype(baseline_column) or
-        pd.api.types.is_string_dtype(baseline_column) or
-        pd.api.types.is_datetime64_any_dtype(baseline_column) or
-        pd.api.types.is_timedelta64_dtype(baseline_column) or
-        baseline_column_type == "bool"):
+    if (pd.api.types.is_object_dtype(baseline_column) or pd.api.types.is_string_dtype(baseline_column) or
+            pd.api.types.is_datetime64_any_dtype(baseline_column) or pd.api.types.is_timedelta64_dtype(baseline_column)
+            or baseline_column_type == "bool"):
         return constants.CLASSIFICATION
     if pd.api.types.is_integer_dtype(baseline_column):
         distinct_column_values = len(baseline_column.unique())
@@ -144,6 +142,7 @@ def get_model_wrapper(task_type, target_column, baseline_data):
 
     log_time_and_message("Created ml wrapper")
     return model_wrapper
+
 
 def get_train_test_data(data):
     """Split data into train and test data
