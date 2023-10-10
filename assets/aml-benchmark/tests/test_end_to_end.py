@@ -1,22 +1,35 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Tests for Prompt Crafter Checksum Component."""
+
 import os
 import sys
-from pathlib import Path
+import pytest
 
-package_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, package_path)  
+from test_utils import get_src_dir
+PROMPT_CRAFTER_NAME = "prompt_crafter"
+sys.path.insert(0, os.path.join(get_src_dir(), PROMPT_CRAFTER_NAME))
+from package_3p.prompt_crafter import PromptCrafter
 
-from prompt_crafter import PromptCrafter
 
-TEST_DATA = Path(__file__).parent / "test_data"
-OUTPUT_PATH = Path(__file__).parent / "outputs"
+# Setting dataset path
+TEST_DATA = os.path.join(
+            os.path.dirname(__file__), 'data/test_data')
+OUTPUT_PATH = os.path.join(
+            os.path.dirname(__file__), 'data')
 
-def setup_folder(dataset_name):
-    dataset_path = str((TEST_DATA / dataset_name).absolute())
-    test_output_path = str((OUTPUT_PATH / dataset_name / "output_dir").absolute())
-    test_output_mltable_path = str((OUTPUT_PATH / dataset_name / "output_mltable").absolute())
+
+def setup_folder(dataset_name: str):
+    # Setting dataset path
+    dataset_path = os.path.join(TEST_DATA, dataset_name)
+    test_output_path = os.path.join(OUTPUT_PATH, dataset_name, "output_dir")
+    test_output_mltable_path = os.path.join(OUTPUT_PATH, dataset_name, "output_mltable")
+
     os.makedirs(test_output_path, exist_ok=True)
     os.makedirs(test_output_mltable_path, exist_ok=True)
     return dataset_path, test_output_path, test_output_mltable_path
+
 
 def base_test_output(prompt_crafter: PromptCrafter, output_dir_path: str, output_mltable_path: str):
     # Check if the output files exist
@@ -24,7 +37,9 @@ def base_test_output(prompt_crafter: PromptCrafter, output_dir_path: str, output
     assert os.path.exists(os.path.join(output_mltable_path, prompt_crafter.OUTPUT_FILENAME))
     assert os.path.exists(os.path.join(output_mltable_path, prompt_crafter.MLTABLE_FILENAME))
 
+
 def base_test(dataset_name, completion_ground_truth_checksum, chat_ground_truth_checksum, params):
+    # Check output checksums for completion and chat prompt types
     dataset_path, test_output_path, test_output_mltable_path = setup_folder(dataset_name)
 
     if completion_ground_truth_checksum:
@@ -60,6 +75,9 @@ def base_test(dataset_name, completion_ground_truth_checksum, chat_ground_truth_
         checksum = prompt_crafter.run()
         assert checksum == chat_ground_truth_checksum
 
+
+# Test cases
+@pytest.mark.test_mnli
 def test_mnli():
     completion_ground_truth_checksum = "25ed56454fc4f7d5c042372e34a32f0a14ec7b5779deec0ab57a6be82aaee258"
     chat_ground_truth_checksum = "541038f3df8cb820729f633a9149c0c3a13daa81bf2a9ab2c6be3a3501e67942"
@@ -78,6 +96,8 @@ def test_mnli():
     }
     base_test("mnli", completion_ground_truth_checksum, chat_ground_truth_checksum, params)
 
+
+@pytest.mark.test_anli
 def test_anli():
     completion_ground_truth_checksum = "1e614c621f02f318c55877ac41e8244f9659ea4902971d5ae5a5ef038071539c"
     chat_ground_truth_checksum = "5e1ba228d89613cedc2f523922da582dbc3c02c5e2e6cab85964c1bab3835fd3"
@@ -96,6 +116,8 @@ def test_anli():
     }
     base_test("anli", completion_ground_truth_checksum, chat_ground_truth_checksum, params)
 
+
+@pytest.mark.test_gsm8k_chain_of_thought
 def test_gsm8k_chain_of_thought():
     completion_ground_truth_checksum = "a087a01eb5cf98c1700f9aa4415ebb920418d6b0311998955e29dff757aef712"
     chat_ground_truth_checksum = "6b03925c3bcf5923182f7a9bb9e28ade7754ad21d9bb78d85ab1793e384bb2ff"
@@ -114,6 +136,8 @@ def test_gsm8k_chain_of_thought():
     }
     base_test("gsm8k_chain_of_thought", completion_ground_truth_checksum, chat_ground_truth_checksum, params)
 
+
+@pytest.mark.test_bigbench_hard_casual_judgment
 def test_bigbench_hard_casual_judgment():
     completion_ground_truth_checksum = None
     chat_ground_truth_checksum = "68a53edfe173c735e88cea0767f4e9e3788b8027d80b306103750d1f0de89fc7"
@@ -130,5 +154,4 @@ def test_bigbench_hard_casual_judgment():
         "label_map": None,
         "additional_payload": None,
     }
-    
     base_test("bigbench-hard_causal_judgement", completion_ground_truth_checksum, chat_ground_truth_checksum, params)
