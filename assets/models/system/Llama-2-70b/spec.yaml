@@ -30,4 +30,4 @@ tags:
     precision: '4'
   task: text-generation
   SharedComputeCapacityEnabled: ''
-version: 9
+version: 10
