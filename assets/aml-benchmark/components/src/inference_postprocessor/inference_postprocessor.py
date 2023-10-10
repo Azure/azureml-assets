@@ -671,10 +671,14 @@ class BabelInferencePostProcessor(InferencePostprocessor):
                 if len(all_files) == 1:
                     return all_files[0]
                 else:
-                    raise RuntimeError(f"Found multiple files in input file path {input_path} for glob pattern {filename}")
+                    raise RuntimeError(
+                        f"Found multiple files in input file path {input_path} for glob pattern {filename}"
+                    )
 
             else:
-                raise RuntimeError(f"Found multiple files in input file path {input_path}, specify the file name in addition.")
+                raise RuntimeError(
+                    f"Found multiple files in input file path {input_path}, specify the file name in addition."
+                )
 
         logger.critical(f"Provided INPUT path {input_path} is neither a directory nor a file.")
         return input_path
