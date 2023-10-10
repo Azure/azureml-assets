@@ -33,7 +33,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline_data", type=str)
     parser.add_argument("--target_column", type=str, required=False)
-    parser.add_argument("--task_type", type=str, required=False)
+    parser.add_argument("--task_type", type=str)
     parser.add_argument("--signal_metrics", type=str)
 
     args = parser.parse_args()
@@ -58,7 +58,7 @@ def determine_task_type(task_type, target_column, baseline_data):
         task_type_lower = task_type.lower()
         if task_type_lower != constants.CLASSIFICATION or task_type_lower != constants.REGRESSION:
             log_time_and_message(f"Supported task types are classification and regression, received {task_type}."
-                                 "Attempting to determine task type based on target column.")
+                                 " Attempting to determine task type based on target column.")
         else:
             return task_type_lower
     baseline_column = pd.Series(baseline_data[target_column])
