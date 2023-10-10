@@ -332,7 +332,7 @@ jobs:
 
   image_object_detection_runtime_component:
     type: command
-    component:  azureml:train_object_detection_model:0.0.4
+    component:  azureml:train_object_detection_model:0.0.5
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
