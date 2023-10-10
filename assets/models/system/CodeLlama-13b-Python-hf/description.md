@@ -62,6 +62,19 @@ All experiments reported here and the released models have been trained and fine
 
 See evaluations for the main models and detailed ablations in Section 3 and safety evaluations in Section 4 of the research paper.
 
+# Model Evaluation samples
+
+ 
+
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+
+|--|--|--|--|--|
+
+Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+
+ 
+
+ 
 
 ## Ethical Considerations and Limitations
 
