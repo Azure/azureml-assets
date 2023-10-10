@@ -15,6 +15,7 @@ from pathlib import Path
 from zipfile import ZipFile
 from azureml.core import Run
 from olive.workflows import run as olive_run
+from olive.resource_path import LOCAL_RESOURCE_TYPES, ResourceType
 
 logging.basicConfig(stream=sys.stdout,
                     level=logging.INFO,
@@ -47,7 +48,12 @@ def _parse_arguments():
                         default=None,
                         type=str,
                         required=False,
-                        help="Input: Path to the code directory, including user script, data directory etc")
+                        help="Input: Path to the code directory, including user script, user script dependencies, requirements etc")
+    parser.add_argument("--data_path",
+                        default=None,
+                        type=str,
+                        required=False,
+                        help="Input: Path to the data directory, including data directory, such as data_dir, train_data_dir, val_data_dir")
     parser.add_argument("--optimized_parameters_path",
                         default=None,
                         type=str,
@@ -63,12 +69,14 @@ def _parse_arguments():
     config_path = arguments.config_path
     model_folder_path = arguments.model_path
     code_folder_path = arguments.code
+    data_folder_path = arguments.data_path
     optimized_parameters_path = arguments.optimized_parameters_path
     optimized_model_path = arguments.optimized_model_path
 
     log.info(f"config_path: {config_path}")
     log.info(f"model_folder_path: {model_folder_path}")
     log.info(f"code_folder_path: {code_folder_path}")
+    log.info(f"data_folder_path: {data_folder_path}")
     log.info(f"optimized_parameters_path: {optimized_parameters_path}")
     log.info(f"optimized_model_path: {optimized_model_path}")
 
@@ -82,7 +90,7 @@ def _parse_arguments():
 
     if model_folder_path is not None:
         shutil.copytree(model_folder_path, workdir, dirs_exist_ok=True)
-        log.info(f"move all files in model folder {model_folder_path} to {workdir}")
+        log.info(f"replace all files in model folder {model_folder_path} to {workdir}")
 
     if code_folder_path is not None:
         shutil.copytree(code_folder_path, workdir, dirs_exist_ok=True)
@@ -90,12 +98,12 @@ def _parse_arguments():
 
     _set_default_setting(config)
     log.info(f"config: {config}")
-    return config, model_folder_path, code_folder_path, optimized_parameters_path, optimized_model_path
+    return config, model_folder_path, code_folder_path, data_folder_path, optimized_parameters_path, optimized_model_path
 
 
 def _validate_config(config):
     """Validate the config file."""
-    if "aml_system" in config['systems'] or "docker_system" in config['systems']:
+    if 'systems' in config.keys() and ("aml_system" in config['systems'] or "docker_system" in config['systems']):
         raise Exception("aml_system or docker_system is not supported yet, will exit!")
     if "engine" not in config.keys():
         raise Exception("engine is not found in config, will exit!")
@@ -126,19 +134,20 @@ def _move_model_and_config_to_output_path(optimized_parameters_path, optimized_m
             parentpath = os.path.split(dirpath)
             prefix = os.path.split(parentpath[0])[1] + "_" + parentpath[1]
             if file.endswith("inference_config.json") and optimized_parameters_path is not None:
-                log.info(f"copy inference_config {os.path.join(dirpath, file)} \
-                         to {optimized_parameters_path}/{prefix}_inference_config.json")
-                shutil.copy2(os.path.join(dirpath, file),
-                             f"{optimized_parameters_path}/{prefix}_inference_config.json")
+                log.info(f"copy inference_config {os.path.join(dirpath, file)} to {optimized_parameters_path}/{prefix}_inference_config.json")
+                shutil.copy2(os.path.join(dirpath, file), f"{optimized_parameters_path}/{prefix}_inference_config.json")
             elif file.endswith("metrics.json"):
                 with open(os.path.join(dirpath, file), "r") as f:
                     metrics = json.load(f)
                     _report_job_metrics(f"metrics_value_{prefix}", metrics)
             elif file.endswith("model.onnx") and optimized_model_path is not None:
-                log.info(f"copy optimized model {os.path.join(dirpath, file)} \
-                         to {optimized_model_path}/{prefix}_model.onnx")
-                shutil.copy2(os.path.join(dirpath, file),
-                             f"{optimized_model_path}/{prefix}_model.onnx")
+                log.info(f"copy optimized model {os.path.join(dirpath, file)} to {optimized_model_path}/{prefix}_model/model.onnx")
+                os.makedirs(f"{optimized_model_path}/{prefix}_model", exist_ok=True)
+                shutil.copy2(os.path.join(dirpath, file), f"{optimized_model_path}/{prefix}_model/model.onnx")
+            elif file.endswith("model.onnx.data") and optimized_model_path is not None:
+                log.info(f"copy optimized model data {os.path.join(dirpath, file)} to {optimized_model_path}/{prefix}/model.onnx.data")
+                os.makedirs(f"{optimized_model_path}/{prefix}_model", exist_ok=True)
+                shutil.copy2(os.path.join(dirpath, file), f"{optimized_model_path}/{prefix}_model/model.onnx.data")
             elif dirpath.endswith("model") and optimized_model_path is not None:
                 openvinopath = os.path.split(Path(Path(dirpath).parent))
                 prefix = os.path.split(openvinopath[0])[1] + "_" + openvinopath[1]
@@ -161,7 +170,7 @@ def _report_job_metrics(name, values):
 
 def run():
     """Invoke the olive_run."""
-    config, model_folder_path, code_folder_path, optimized_parameters_path, optimized_model_path = _parse_arguments()
+    config, model_folder_path, code_folder_path, data_folder_path, optimized_parameters_path, optimized_model_path = _parse_arguments()
     os.chdir(workdir)
     if code_folder_path is not None:
         log.info("Current working directory: {0}".format(os.getcwd()))
@@ -169,7 +178,10 @@ def run():
             log.info("pip install requirements")
             subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
     try:
-        olive_run(config)
+        if data_folder_path is not None:
+            olive_run(config=config, data_root=data_folder_path)
+        else:
+            olive_run(config)
         _move_model_and_config_to_output_path(optimized_parameters_path, optimized_model_path)
     except Exception as exception:
         log.exception(exception)
