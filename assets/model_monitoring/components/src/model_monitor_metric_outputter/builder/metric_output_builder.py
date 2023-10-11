@@ -107,8 +107,6 @@ class MetricOutputBuilder:
                             metric_name=metric_name,
                             groups=groups)
         else:
-            print( metric[VALUE] is not None)
-            print( metric[VALUE])
             if VALUE in metric and metric[VALUE] is not None:
                 cur_dict[VALUE] = metric[VALUE]
             if THRESHOLD in metric and metric[THRESHOLD] is not None:
