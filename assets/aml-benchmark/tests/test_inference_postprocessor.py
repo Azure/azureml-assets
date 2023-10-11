@@ -896,4 +896,3 @@ class TestInferencePostprocessorScript:
         for input in mock_completion_list:
             output.append(obj.apply_remove_prompt_prefix(text=input, data=data))
         assert output == expected_completion_list
-

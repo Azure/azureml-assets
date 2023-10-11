@@ -376,16 +376,13 @@ class InferencePostprocessor(object):
         for row in predicted_data:
             predicted = row.get(key)
             if isinstance(predicted, list) and len(predicted[0]) > 1:
-                curr_pred_list = []
-                for i in range(0, len(predicted)):
-                    out_string = predicted[i]
-                    out_string = self.apply_generic_processor(out_string, row)
-                    curr_pred_list.append(out_string)
+                curr_pred_list = [
+                    self.apply_generic_processor(out_string, row) for out_string in predicted
+                ]
                 pred_list.append(curr_pred_list)
             else:
                 out_string = predicted if isinstance(predicted, str) else predicted[0]
-                out_string = self.apply_generic_processor(out_string, row)
-                pred_list.append(out_string)
+                pred_list.append(self.apply_generic_processor(out_string, row))
         if isinstance(pred_list[0], list) and len(pred_list[0]) > 1:
             cols = [
                 f"{self.prediction_column_name}_{i+1}" for i in range(len(pred_list[0]))
