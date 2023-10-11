@@ -49,17 +49,17 @@ Code Llama and its variants are a new technology that carries risks with use. Te
 Please see the Responsible Use Guide available at [https://ai.meta.com/llama/responsible-use-guide/](https://ai.meta.com/llama/responsible-use-guide)
 
 
-## **Inference samples**
+# **Inference samples**
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
+Real time|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/foundation-models/system/inference/text-generation/text-generation-online-endpoint-dolly.ipynb" target="_blank">text-generation-online-endpoint-dolly.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/foundation-models/system/inference/text-generation/text-generation-online-endpoint-dolly.sh" target="_blank">text-generation-online-endpoint-dolly.sh</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
 
-## **Sample inputs and outputs (for real-time inference)**
+# **Sample inputs and outputs (for real-time inference)**
 
-### **Sample input**
+# **Sample input**
 ```json
 {
   "input_data": {
@@ -74,7 +74,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 }
 ```
 
-### **Sample output**
+# **Sample output**
 ```json
 [
     {
