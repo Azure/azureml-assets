@@ -6,6 +6,7 @@
 import pytest
 from typing import List
 from pyspark.sql import Row
+import numpy as np
 
 from model_monitor_metric_outputter.builder.metric_output_builder import MetricOutputBuilder
 
@@ -87,6 +88,19 @@ class TestMetricOutputBuilder:
                 "value": 63.0
                 },
         }
+
+    def test_metrics_with_nan_values(self, mock_runmetric_client, monitor_name, signal_name):
+        """Test metrics output builder metrics with nan."""
+        signal_metrics: List[Row] = [
+            Row(
+                metric_name="num_calls",
+                metric_value=float("Nan")
+            ),
+        ]
+        metric_output_builder = MetricOutputBuilder(mock_runmetric_client, monitor_name, signal_name, signal_metrics)
+        metrics_dict = metric_output_builder.get_metrics_dict()
+        assert np.isnan(metrics_dict["num_calls"]["value"])
+
 
     def test_metrics_with_1_level_groups(self, mock_runmetric_client, monitor_name, signal_name):
         """Test metrics output builder for metrics with one level metric groups."""
