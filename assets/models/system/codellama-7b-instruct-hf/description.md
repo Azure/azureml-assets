@@ -80,7 +80,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
       "return_full_text": false
     }
   }
-} 
+}
 ```
 
 ### **Sample output**

@@ -319,6 +319,7 @@ def deploy_fake_test_endpoint_maybe(
     """Deploy a fake test endpoint."""
     should_deploy = False
     should_wait = True
+    endpoint = None
     if use_workspace_name:
         endpoint_name = f"{endpoint_name}-{ml_client.workspace_name.split('-')[-1]}"
     try:
@@ -354,7 +355,8 @@ def deploy_fake_test_endpoint_maybe(
                 print("deploying using {}".format(endpoint_name))
                 endpoint = _deploy_endpoint(ml_client, endpoint_name)
                 deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
-
+    if endpoint is None:
+        endpoint = ml_client.online_endpoints.get(name=endpoint_name)
     wps_connection = WorkspaceConnection(
         name=connections_name,
         type="azure_sql_db",
