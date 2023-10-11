@@ -101,7 +101,6 @@ class TestMetricOutputBuilder:
         metrics_dict = metric_output_builder.get_metrics_dict()
         assert np.isnan(metrics_dict["num_calls"]["value"])
 
-
     def test_metrics_with_1_level_groups(self, mock_runmetric_client, monitor_name, signal_name):
         """Test metrics output builder for metrics with one level metric groups."""
         signal_metrics: List[Row] = [
