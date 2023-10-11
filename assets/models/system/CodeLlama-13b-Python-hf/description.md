@@ -69,7 +69,7 @@ Code Llama and its variants are a new technology that carries risks with use. Te
 
 Please see the Responsible Use Guide available available at [https://ai.meta.com/llama/responsible-user-guide](https://ai.meta.com/llama/responsible-user-guide).
 
-# Model Evaluation samples
+# **Model Evaluation samples**
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
