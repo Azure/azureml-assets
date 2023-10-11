@@ -49,11 +49,17 @@ Code Llama and its variants are a new technology that carries risks with use. Te
 Please see the Responsible Use Guide available at [https://ai.meta.com/llama/responsible-use-guide/](https://ai.meta.com/llama/responsible-use-guide)
 
 
-## **Inference samples**
+# **Model evaluation sample**
 
+Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+|--|--|--|--|--|
+Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+
+
+# **Inference samples**
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
 
@@ -63,20 +69,25 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 {
   "input_data": {
-        "input_string": ["def fibonacci("], 
-        "parameters": { 
-            "do_sample":true
-        }
+    "input_string": [
+      "Develop a Python function to sort a list of integers in ascending order"
+    ],
+    "parameters": {
+      "top_p": 0.9,
+      "temperature": 0.1,
+      "do_sample": true,
+      "max_new_tokens": 100,
+      "return_full_text": false
     }
+  }
 }
 ```
 
 ### **Sample output**
 ```json
-[ 
-    { 
-        "0": "def fibonacci(n = 0):\n a = 0\n b = 1\n if n <= 1:\n return n\n else:\n c = 0\n for i in range(n-1):\n a = b\n b = c\n c = a + b\n return c\n\n\nfibonacci(10)\n" 
-    } 
+[
+  {
+    "0": ".\n\ndef sort_list(my_list):\n    # Your code here\n    return sorted(my_list)\n\n# Test case 1:\nassert sort_list([]) == []\n# Test case 2:\nassert sort_list([1]) == [1]\n# Test case 3:\nassert sort_list([3, 2, 1]) == [1, 2, 3]"
+  }
 ]
-
 ```
