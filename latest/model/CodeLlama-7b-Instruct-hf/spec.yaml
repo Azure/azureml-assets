@@ -2,32 +2,27 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: CodeLlama-7b-Instruct-hf
 path: ./
 properties:
+  SHA: 6114dd1e16f69e0765ccbd7a64d33d04b265fbd2
   datasets: Publicly available sources
   evaluation-min-sku-spec: 16|0|64|128
-  evaluation-recommended-sku: Standard_NC6s_v3
-  inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_ND40rs_v2,
+  inference-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: EN
   azureml.copyRegistryFilesToWorkspace: true
 tags:
   Featured: ''
   Preview: ''
-  computes_allow_list:
-  - Standard_NC6s_v3
+  evaluation_compute_allow_list:
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
   inference_compute_allow_list:
-  - Standard_NC6s_v3
-  - Standard_NC12s_v3
   - Standard_NC24s_v3
-  - Standard_ND40rs_v2
-  - Standard_ND96asr_v4
-  - Standard_ND96amsr_A100_v4
-  evaluation_compute_allow_list:
-  - Standard_NC6s_v3
-  - Standard_NC12s_v3
-  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
@@ -35,7 +30,7 @@ tags:
   task: text-generation
   license: llama2
   author: meta
-version: 2
+version: 3
 description: |
   # **Model Details**
   Note: Use of this model is governed by the Meta license. Click on View License above.
@@ -88,11 +83,17 @@ description: |
   Please see the Responsible Use Guide available at [https://ai.meta.com/llama/responsible-use-guide/](https://ai.meta.com/llama/responsible-use-guide)
 
 
-  ## **Inference samples**
+  # **Model evaluation sample**
 
+  Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
+  |--|--|--|--|--|
+  Text generation | Text generation | <a href="https://huggingface.co/datasets/cnn_dailymail" target="_blank"> cnn_dailymail </a> | <a href="https://aka.ms/azureml-eval-sdk-text-generation/" target="_blank">evaluate-model-text-generation.ipynb</a> | <a href="https://aka.ms/azureml-eval-cli-text-generation/" target="_blank">evaluate-model-text-generation.yml</a>
+
+
+  # **Inference samples**
   Inference type|Python sample (Notebook)|CLI with YAML
   |--|--|--|
-  Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation" target="_blank">text-generation-online-endpoint.sh</a>
+  Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a>
   Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
 
@@ -102,20 +103,25 @@ description: |
   ```json
   {
     "input_data": {
-          "input_string": ["def fibonacci("], 
-          "parameters": { 
-              "do_sample":true
-          }
+      "input_string": [
+        "Develop a Python function to sort a list of integers in ascending order"
+      ],
+      "parameters": {
+        "top_p": 0.9,
+        "temperature": 0.1,
+        "do_sample": true,
+        "max_new_tokens": 100,
+        "return_full_text": false
       }
+    }
   }
   ```
 
   ### **Sample output**
   ```json
-  [ 
-      { 
-          "0": "def fibonacci(n = 0):\n a = 0\n b = 1\n if n <= 1:\n return n\n else:\n c = 0\n for i in range(n-1):\n a = b\n b = c\n c = a + b\n return c\n\n\nfibonacci(10)\n" 
-      } 
+  [
+    {
+      "0": ".\n\ndef sort_list(my_list):\n    # Your code here\n    return sorted(my_list)\n\n# Test case 1:\nassert sort_list([]) == []\n# Test case 2:\nassert sort_list([1]) == [1]\n# Test case 3:\nassert sort_list([3, 2, 1]) == [1, 2, 3]"
+    }
   ]
-
   ```
