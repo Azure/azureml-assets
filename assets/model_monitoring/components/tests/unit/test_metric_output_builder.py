@@ -15,7 +15,7 @@ class TestMetricOutputBuilder:
     """Test class for metric output builder."""
 
     def test_metrics_with_none_values(self, mock_runmetric_client, monitor_name, signal_name):
-        """Test metrics output builder metrics with none"""
+        """Test metrics output builder metrics with none."""
         signal_metrics: List[Row] = [
             Row(
                 metric_name="num_calls",
