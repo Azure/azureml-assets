@@ -4,7 +4,7 @@ type: command
 name: inference_postprocessor
 display_name: Inference Postprocessor
 description: Inference Postprocessor
-version: 0.0.1.3
+version: 0.0.1
 is_deterministic: true
 
 inputs:
@@ -51,7 +51,8 @@ inputs:
   find_first:
     type: string
     description: >-
-      A list of strings to search for in the inference results. The first occurrence of each string will be extracted. 
+      A list of strings to search for in the inference results. The first occurrence of each string will \
+      be extracted and the occurrence with minimum index will be returned.
       Must provide a comma-separated list of strings.
       Example:
       >>> find_first = "positive,negative"
@@ -72,6 +73,9 @@ inputs:
       >>> prediction = "Adding 0.3 to 1,000 gives 1,000.3"
       # Output: "1000.3"
     optional: True
+    enum:
+      - first
+      - last
   regex_expr:
     type: string
     description: >-
@@ -98,6 +102,10 @@ inputs:
     description: >-
       Jinja template containing logic to extract prediction. In case of multiple predictions, logic must be written in a written in
       format so that it outputs a list of formatted predictions.
+      Example:
+      >>> prediction = ["The answer is phone.", "The answer is cellular."]
+      The provided jinja template logic should be able extract and output in this format:
+      # Output : ["phone", "cellular"]
     optional: True
   script_path:
     type: uri_file
