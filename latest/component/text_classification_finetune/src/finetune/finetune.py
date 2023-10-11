@@ -43,7 +43,9 @@ logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.fine
 
 COMPONENT_NAME = "ACFT-Finetune"
 
-DEFAULT_DEEPSPEED_CONFIG = "zero2.json"
+DEFAULT_DEEPSPEED_STAGE2_CONFIG = "zero2.json"
+DEFAULT_DEEPSPEED_STAGE3_CONFIG = "zero3.json"
+
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
@@ -149,6 +151,17 @@ def get_parser():
         type=str2bool,
         default="false",
         help="If set to true, will enable deepspeed for training",
+    )
+    parser.add_argument(
+        "--deepspeed_stage",
+        type=int,
+        default=2,
+        choices=[2, 3],
+        help=(
+            "This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default "
+            "choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config "
+            "information via deepspeed port."
+        )
     )
     parser.add_argument(
         "--deepspeed",
@@ -565,6 +578,22 @@ def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
         )
 
 
+def resolve_deepspeed_config(args: Namespace) -> str:
+    """Identify the right deepspeed config to be used based on user passed parameters."""
+    # Check for deepspeed config via input port
+    if getattr(args, "deepspeed", None) is not None:
+        logger.info(f"Found deepspeed config via input port - {args.deepspeed}.")
+        return args.deepspeed
+
+    default_deepspeed_config = (
+        DEFAULT_DEEPSPEED_STAGE2_CONFIG
+        if args.deepspeed_stage == 2 else
+        DEFAULT_DEEPSPEED_STAGE3_CONFIG
+    )
+    logger.info(f"Using default deepspeed config: {default_deepspeed_config}")
+    return default_deepspeed_config
+
+
 def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
     """Deepspeed initialization and validation.
 
@@ -575,7 +604,7 @@ def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
     """
     logger.info("Setting up deespeed.")
     # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
-    args.deepspeed = getattr(args, "deepspeed", None) or DEFAULT_DEEPSPEED_CONFIG
+    args.deepspeed = resolve_deepspeed_config(args)
     if args.deepspeed is None:
         logger.info("Deepspeed is not enabled. Nothing to setup!")
         return
