@@ -25,6 +25,7 @@ class ValidationException(Exception):
 class AssetType(Enum):
     """Asset type."""
 
+    BENCHMARKRESULT = 'benchmarkresult'
     COMPONENT = 'component'
     DATA = 'data'
     ENVIRONMENT = 'environment'
@@ -77,6 +78,13 @@ class ModelType(Enum):
     TRITON = 'triton_model'
 
 
+class GenericAssetType(Enum):
+    """Enum for generic asset types."""
+
+    PROMPT = 'prompt'
+    BENCHMARKRESULT = 'benchmarkresult'
+
+
 class Os(Enum):
     """Operating system types."""
 
@@ -116,8 +124,10 @@ DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
 EXCLUDE_PREFIX = "!"
 FULL_ASSET_NAME_DELIMITER = "/"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
+GENERIC_ASSET_TYPES = [AssetType.PROMPT]
 PARTIAL_ASSET_NAME_TEMPLATE = "{type}/{name}"
 PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: 'mcr.microsoft.com'}
+STANDARD_ASSET_TYPES = [AssetType.COMPONENT, AssetType.DATA, AssetType.ENVIRONMENT, AssetType.MODEL]
 TEMPLATE_CHECK = re.compile(r"\{\{.*\}\}")
 VERSION_AUTO = "auto"
 
@@ -242,15 +252,14 @@ class Config:
             ValidationException: If the path doesn't exist.
 
         Returns:
-            List[Path]: If path is a file or empty directory, just return it.
+            List[Path]: If path is a file, just return it.
                         Otherwise, return the files contained by the directory.
         """
         if not path.exists():
             raise ValidationException(f"{path} not found")
         if path.is_dir():
-            contents = list(path.rglob("*"))
-            if contents:
-                return contents
+            contents = [p for p in path.rglob("*") if p.is_file()]
+            return contents
         return [path]
 
 
@@ -361,6 +370,23 @@ class Spec(Config):
         return self._append_to_file_path(data_path) if data_path else None
 
     @property
+    def generic_asset_data_path(self) -> str:
+        """Data path for a generic asset."""
+        if self.type == GenericAssetType.PROMPT.value:
+            template = self._yaml.get('template')
+            return None if template is None else template.get('path')
+        elif self.type == GenericAssetType.BENCHMARKRESULT.value:
+            return self._yaml.get('path')
+        else:
+            return None
+
+    @property
+    def generic_asset_data_path_with_path(self) -> Path:
+        """Data path for a generic asset, relative to spec file's parent directory."""
+        dir = self.generic_asset_data_path
+        return self._append_to_file_path(dir) if dir else None
+
+    @property
     def release_paths(self) -> List[Path]:
         """Files that are required to create this asset."""
         release_paths = super().release_paths
@@ -374,6 +400,12 @@ class Spec(Config):
         data_path = self.data_path_with_path
         if data_path:
             release_paths.extend(Config._expand_path(data_path))
+
+        # Add files from generic assets
+        data_path = self.generic_asset_data_path_with_path
+        if data_path:
+            release_paths.extend(Config._expand_path(data_path))
+
         return release_paths
 
     @property

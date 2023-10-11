@@ -6,12 +6,33 @@
       "name": "@@Flow_Name",
       "nodes": [
         {
+          "name": "modify_query_with_history",
+          "tool": "modify_query_with_history",
+          "inputs": {
+            "deployment_name": "@@Completion_Deployment_Name",
+            "temperature": "1",
+            "top_p": "1.0",
+            "stop": "",
+            "max_tokens": "",
+            "presence_penalty": "0",
+            "frequency_penalty": "0",
+            "logit_bias": "",
+            "question": "${flow.question}",
+            "chat_history": "${flow.chat_history}"
+          },
+          "api": "@@API",
+          "provider": "AzureOpenAI",
+          "connection": "@@Completion_Connection",
+          "module": "promptflow.tools.aoai",
+          "reduce": false
+        },
+        {
           "name": "embed_the_question",
           "tool": "Embedding",
           "inputs": {
             "connection": "@@Embedding_Connection",
             "deployment_name": "@@Embedding_Deployment_Name",
-            "input": "${flow.question}"
+            "input": "${modify_query_with_history.output}"
           }
         },
         {
@@ -60,7 +81,7 @@
             "logit_bias": "",
             "prompt_text": "${Prompt_variants.output}"
           },
-          "provider": "AzureOpenAI",
+          "provider": "@@Completion_Provider",
           "connection": "@@Completion_Connection",
           "api": "@@API",
           "module": "promptflow.tools.aoai",
@@ -282,6 +303,25 @@
           },
           "code": "{{prompt_text}}",
           "is_builtin": false
+        },
+        {
+          "name": "modify_query_with_history",
+          "type": "llm",
+          "inputs": {
+            "question": {
+              "type": [
+                "string"
+              ]
+            },
+            "chat_history": {
+              "type": [
+                "string"
+              ]
+            }
+          },
+          "lkgCode": "@@modify_prompt",
+          "code": "@@modify_prompt",
+          "is_builtin": false
         }
       ]
     },
@@ -296,7 +336,7 @@
               "inputs": {
                 "connection": "@@Embedding_Connection",
                 "deployment_name": "@@Embedding_Deployment_Name",
-                "input": "${flow.question}"
+                "input": "${modify_query_with_history.output}"
               },
               "reduce": false
             }
@@ -398,7 +438,7 @@
                 "logit_bias": "",
                 "prompt_text": "${Prompt_variants.output}"
               },
-              "provider": "AzureOpenAI",
+              "provider": "@@Completion_Provider",
               "connection": "@@Completion_Connection",
               "api": "@@API",
               "module": "promptflow.tools.aoai",
@@ -406,6 +446,34 @@
             }
           }
         }
+      },
+      "modify_query_with_history": {
+        "variants": {
+          "variant_0": {
+            "node": {
+              "name": "modify_query_with_history",
+              "tool": "modify_query_with_history",
+              "inputs": {
+                "deployment_name": "@@Completion_Deployment_Name",
+                "temperature": "1",
+                "top_p": "1.0",
+                "stop": "",
+                "max_tokens": "",
+                "presence_penalty": "0",
+                "frequency_penalty": "0",
+                "logit_bias": "",
+                "question": "${flow.question}",
+                "chat_history": "${flow.chat_history}"
+              },
+              "api": "@@API",
+              "provider": "AzureOpenAI",
+              "connection": "@@Completion_Connection",
+              "module": "promptflow.tools.aoai",
+              "reduce": false
+            }
+          }
+        },
+        "defaultVariantId": "variant_0"
       }
     }
   },

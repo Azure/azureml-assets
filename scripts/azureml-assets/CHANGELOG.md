@@ -3,6 +3,18 @@
 
 ### 🐛 Bugs Fixed
 
+## 1.16.11 (2023-10-09)
+### 🐛 Bugs Fixed
+- [#1428](https://github.com/Azure/azureml-assets/pull/1428) Azcopy fixes to support additional clouds
+
+## 1.16.10 (2023-10-06)
+### 🐛 Bugs Fixed
+- [#1411](https://github.com/Azure/azureml-assets/pull/1411) Prevent Config._expand_path from returning directories
+
+## 1.16.9 (2023-10-05)
+### 🚀 New Features
+- [#1345](https://github.com/Azure/azureml-assets/pull/1345) Add sample prompt assets and prompt publishing
+
 ## 1.16.8 (2023-10-05)
 ### 🐛 Bugs Fixed
 - [#1393](https://github.com/Azure/azureml-assets/pull/1393) Fix mlflow model and keep parent mlflow_model_folder
