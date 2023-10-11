@@ -22,6 +22,7 @@ from azureml.acft.contrib.hf.nlp.constants.constants import (
     HfModelTypes,
     MLFlowHFFlavourConstants,
     LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+    SUPPORTED_FLAVORS,
 )
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
 from azureml.acft.contrib.hf.nlp.utils.common_utils import deep_update
@@ -88,6 +89,18 @@ MLFLOW_MODEL_SIGNATURES = {
         "inputs": '[{"name": "input_string", "type": "string"}]',
         "outputs": '[{"type": "string"}]',
     },
+}
+
+MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR = {
+    SUPPORTED_FLAVORS.TRANSFORMERS : {
+        Tasks.SINGLE_LABEL_CLASSIFICATION: {
+        "inputs": '[{"name": "input_string", "type": "string"}]',
+        "outputs": '[{"type": "string"}]',
+        "params": '[{"name": "return_all_scores", "dtype" : "boolean", "default" : true, "shape" : null}]',
+        },
+    },
+    SUPPORTED_FLAVORS.HFTRANSFORMERS : MLFLOW_MODEL_SIGNATURES,
+    SUPPORTED_FLAVORS.HFTRANSFORMERSV2 : MLFLOW_MODEL_SIGNATURES,
 }
 
 IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
@@ -705,22 +718,6 @@ def finetune(args: Namespace):
         "mlflow_hftransformers_misc_conf": {},
     }
 
-    # set task based mlflow_model_signature
-    if getattr(args, "task_name", None) is not None and args.task_name in MLFLOW_MODEL_SIGNATURES:
-        mlflow_ft_conf["mlflow_model_signature"] = deep_update(
-            mlflow_ft_conf["mlflow_model_signature"],
-            MLFLOW_MODEL_SIGNATURES[args.task_name],
-        )
-        logger.info(
-                    f"Adding mlflow model signature for task {args.task_name} - "
-                    f"{MLFLOW_MODEL_SIGNATURES[args.task_name]}"
-                )
-
-    # remove mlflow_model_signature if empty
-    if "mlflow_model_signature" in mlflow_ft_conf \
-            and len(mlflow_ft_conf["mlflow_model_signature"]) == 0:
-        del mlflow_ft_conf["mlflow_model_signature"]
-
     model_name_or_type = None
     # pass `mlflow_hftransformers_misc_conf` to be set in mlflow model
     if hasattr(args, "model_name") and args.model_name in MLFLOW_HFTRANSFORMERS_MISC_CONF:
@@ -739,6 +736,7 @@ def finetune(args: Namespace):
         )
 
     # if MLmodel file exists pass to finetuned model as `base_model_mlmodel`
+    flavor = None
     mlflow_config_file = Path(args.model_selector_output, MLFlowHFFlavourConstants.MISC_CONFIG_FILE)
     if mlflow_config_file.is_file():
         import yaml
@@ -756,6 +754,13 @@ def finetune(args: Namespace):
                 mlflow_ft_conf["mlflow_hftransformers_misc_conf"],
                 mlflow_hftransformers_misc_conf,
             )
+
+            # fetch flavor
+            for flvr in mlflow_data["flavors"].keys():
+                if flvr in [SUPPORTED_FLAVORS.HFTRANSFORMERS, SUPPORTED_FLAVORS.HFTRANSFORMERSV2, SUPPORTED_FLAVORS.TRANSFORMERS]:
+                    flavor = flvr
+                    break
+
             logger.info(f"Setting `base_model_mlmodel` in finetuned mlflow model - {mlflow_hftransformers_misc_conf}")
         else:
             logger.info("MLmodel file is empty")
@@ -763,6 +768,22 @@ def finetune(args: Namespace):
         logger.info("MLmodel file does not exist")
 
     logger.info(f"FT MLFlow config - {mlflow_ft_conf}")
+
+    # set task based mlflow_model_signature
+    if getattr(args, "task_name", None) is not None and args.task_name in MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[flavor]:
+        mlflow_ft_conf["mlflow_model_signature"] = deep_update(
+            mlflow_ft_conf["mlflow_model_signature"],
+            MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[flavor][args.task_name],
+        )
+        logger.info(
+                    f"Adding mlflow model signature for task {args.task_name} - "
+                    f"{MLFLOW_MODEL_SIGNATURES_FOR_FLAVOR[flavor][args.task_name]}"
+                )
+
+    # remove mlflow_model_signature if empty
+    if "mlflow_model_signature" in mlflow_ft_conf \
+            and len(mlflow_ft_conf["mlflow_model_signature"]) == 0:
+        del(mlflow_ft_conf["mlflow_model_signature"])
 
     mlflow_ft_conf = deep_update(mlflow_ft_conf, args.finetune_config.get("mlflow_ft_conf", {}))
     args.finetune_config["mlflow_ft_conf"] = deepcopy(mlflow_ft_conf)
