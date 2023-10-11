@@ -58,6 +58,50 @@ inputs:
     default: 1
     description: Number of GPUs to use for finetuning
 
+  train_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered training data asset. The supported data formats
+      are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
+      ' are invalid in the parameter value.
+
+  validation_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered validation data asset. The supported data
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters
+      like \ and ' are invalid in the parameter value.
+
+  test_file_path:
+    type: uri_file
+    optional: true
+    description: Path to the registered test data asset. The supported data formats
+      are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
+      ' are invalid in the parameter value.
+
+  train_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered training data asset in `mltable` format. Special
+      characters like \ and ' are invalid in the parameter value.
+
+  validation_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered validation data asset in `mltable` format.
+      Special characters like \ and ' are invalid in the parameter value.
+
+  test_mltable_path:
+    type: mltable
+    optional: true
+    description: Path to the registered test data asset in `mltable` format. Special
+      characters like \ and ' are invalid in the parameter value.
+
+  user_column_names:
+    type: string
+    optional: true
+    description: Comma separated list of column names to be used for training
+
 outputs:
   validation_info:
     type: uri_file
