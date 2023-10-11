@@ -49,7 +49,7 @@ Code Llama and its variants are a new technology that carries risks with use. Te
 Please see the Responsible Use Guide available at [https://ai.meta.com/llama/responsible-use-guide/](https://ai.meta.com/llama/responsible-use-guide)
 
 
-# **Model Evaluation Sample**
+# **Model evaluation sample**
 
 Task| Use case| Dataset| Python sample (Notebook)| CLI with YAML
 |--|--|--|--|--|
@@ -87,7 +87,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 [
   {
-    "0": ".\n\ndef sort_list(my_list):\n    # Your code here\n    return sorted(my_list)\n\n# Test case 1:\nassert sort_list([]) == []\n# Test case 2:\nassert sort_list([1]) == [1]\n# Test case 3:\nassert sort_list([3, 2, 1]) == [1, 2, 3]\n# Test case 4"
+    "0": ".\n\ndef sort_list(my_list):\n    # Your code here\n    return sorted(my_list)\n\n# Test case 1:\nassert sort_list([]) == []\n# Test case 2:\nassert sort_list([1]) == [1]\n# Test case 3:\nassert sort_list([3, 2, 1]) == [1, 2, 3]"
   }
 ]
 ```
