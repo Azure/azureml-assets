@@ -74,9 +74,9 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
     ],
     "parameters": {
       "top_p": 0.9,
-      "temperature": 0.6,
+      "temperature": 0.1,
       "do_sample": true,
-      "max_new_tokens": 120,
+      "max_new_tokens": 100,
       "return_full_text": false
     }
   }
@@ -87,7 +87,7 @@ Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="
 ```json
 [
   {
-    "0": ".\n\n# In[ ]:\n\n\ndef sort_list(my_list):\n    return sorted(my_list)\n\n\n# In[ ]:\n\n\nsort_list([5, 2, 6, 1, 3])\n\n\n# In[ ]:\n\n\ndef sort_list(my_list):\n    return sorted(my_list, reverse=True)\n\n\n# In[ ]:\n\n\nsort_list([5, 2, 6, 1, 3])"
+    "0": ".\n\ndef sort_list(my_list):\n    # Your code here\n    return sorted(my_list)\n\n# Test case 1:\nassert sort_list([]) == []\n# Test case 2:\nassert sort_list([1]) == [1]\n# Test case 3:\nassert sort_list([3, 2, 1]) == [1, 2, 3]\n# Test case 4"
   }
 ]
 ```
