@@ -24,7 +24,7 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
     LLAVA_13B = "13b"
     LLAVA_13B2 = "13b2"
     LLAVA_13B_15 = "13b_15"
-    MODEL_VERSIONS = [LLAVA_MPT, LLAVA_7B, LLAVA_13B, LLAVA_13B2, LLAVA_13B_15]
+    MODEL_VERSIONS = [LLAVA_MPT, LLAVA_7B, LLAVA_7B_15, LLAVA_13B, LLAVA_13B2, LLAVA_13B_15]
 
     def __init__(self, task_type: str) -> None:
         """Construct LLaVA MLflow wrapper object.
@@ -187,7 +187,7 @@ class LLaVAMLflowWrapper(mlflow.pyfunc.PythonModel):
             # For small models on V100 machines, long prompts cause a GPU OOMs which the server does not recover from.
             # To prevent this, we are using a length threshold that allows for a small number of question-answer pairs
             # (e.g. 5-10) in each prompt.
-            if self._model_version in [self.LLAVA_MPT, self.LLAVA_7B, self.LLAVA_7B_15B]:
+            if self._model_version in [self.LLAVA_MPT, self.LLAVA_7B, self.LLAVA_7B_15]:
                 prompt_length = max([len(i) for i in input_ids])
                 if prompt_length > MAX_PROMPT_LENGTH:
                     raise ValueError(
