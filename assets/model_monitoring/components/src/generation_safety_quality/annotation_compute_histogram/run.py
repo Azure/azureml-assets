@@ -107,6 +107,7 @@ THRESHOLD_PARAMS = [
 
 CL_100K_BASE = "cl100k_base"
 GPT_35_TURBO = "gpt-35-turbo"
+GPT_35_TURBO_16K = "gpt-35-turbo-16k"
 GPT_4 = "gpt-4"
 GPT_4_32K = "gpt-4-32k"
 BASE_MAX_TOKENS = 1000
@@ -115,6 +116,7 @@ BASE_MAX_PROMPT_TOKENS = 3000
 MODEL_TYPE_FACTOR = {
     GPT_35_TURBO: 1,
     GPT_4: 2,
+    GPT_35_TURBO_16K: 4,
     GPT_4_32K: 8
 }
 
@@ -1401,11 +1403,11 @@ def run():
     parser.add_argument("--presence_penalty", type=float, default=0.0)
     parser.add_argument("--stop", type=str, default=None)
 
-    parser.add_argument("--groundedness_rating_threshold", type=int, default=3)
-    parser.add_argument("--similarity_rating_threshold", type=int, default=3)
-    parser.add_argument("--relevance_rating_threshold", type=int, default=3)
-    parser.add_argument("--fluency_rating_threshold", type=int, default=3)
-    parser.add_argument("--coherence_rating_threshold", type=int, default=3)
+    parser.add_argument("--groundedness_rating_threshold", type=int, default=4)
+    parser.add_argument("--similarity_rating_threshold", type=int, default=4)
+    parser.add_argument("--relevance_rating_threshold", type=int, default=4)
+    parser.add_argument("--fluency_rating_threshold", type=int, default=4)
+    parser.add_argument("--coherence_rating_threshold", type=int, default=4)
 
     parser.add_argument("--prompt_column_name", type=str, default=PROMPT)
     parser.add_argument("--completion_column_name", type=str, default=COMPLETION)
@@ -1724,7 +1726,7 @@ def apply_annotation(
             samples_index_rows.append({METRIC_NAME: f"Acceptable{metric_name_compact}ScorePerInstance",
                                        GROUP: "",
                                        GROUP_DIMENSION: "",
-                                       SAMPLES_NAME: f"{metric_name_compact} Violations",
+                                       SAMPLES_NAME: "Violations",
                                        ASSET: f"azureml_{run_id}_output_data_{metric_name_compact.lower()}_violations:1"})  # noqa: E501
 
         if all_metrics_pdf is None:

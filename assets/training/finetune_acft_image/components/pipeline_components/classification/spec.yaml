@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 type: pipeline
 
-version: 0.0.7
+version: 0.0.8
 name: image_classification_pipeline
 display_name: Image Classification Pipeline
 description: Pipeline component for image classification.
@@ -37,6 +37,12 @@ inputs:
     description: Name of the model. Based on this model name, a framework will be selected (Hugging Face, MM Detection).
     type: string
     optional: true
+
+  download_from_source:
+    type: boolean
+    optional: true
+    default: false
+    description: Download model directly from HuggingFace instead of system registry
 
   # ------------------- Data Inputs ------------------
   training_data:
@@ -248,7 +254,7 @@ outputs:
 jobs:
   framework_selector:
     type: command
-    component: azureml:image_framework_selector:0.0.7
+    component: azureml:image_framework_selector:0.0.8
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       task_type: 'image-classification'
@@ -256,7 +262,7 @@ jobs:
 
   image_classification_runtime_component:
     type: command
-    component: azureml:train_image_classification_model:0.0.4
+    component: azureml:train_image_classification_model:0.0.5
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
@@ -296,17 +302,18 @@ jobs:
       weight_decay: ${{parent.inputs.weight_decay}}
       weighted_loss: ${{parent.inputs.weighted_loss}}
 
-  hugging_face_model_selector:
+  hugging_face_model_import:
     type: command
-    component: azureml:transformers_image_classification_model_import:0.0.7
+    component: azureml:transformers_image_classification_model_import:0.0.8
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       model_family: 'HuggingFaceImage'
       model_name: ${{parent.inputs.model_name}}
+      download_from_source: ${{parent.inputs.download_from_source}}
 
   hugging_face_finetune:
     type: command
-    component: azureml:transformers_image_classification_finetune:0.0.7
+    component: azureml:transformers_image_classification_finetune:0.0.8
     compute: ${{parent.inputs.compute_finetune}}
     distribution:
       type: pytorch
@@ -316,7 +323,7 @@ jobs:
       shm_size: '16g'
     inputs:
       # Model path is same as what is output of model selector
-      model_path: ${{parent.jobs.hugging_face_model_selector.outputs.output_dir}}
+      model_path: ${{parent.jobs.hugging_face_model_import.outputs.output_dir}}
       training_data: ${{parent.inputs.training_data}}
       validation_data: ${{parent.inputs.validation_data}}
       early_stopping: ${{parent.inputs.early_stopping}}
@@ -344,11 +351,11 @@ jobs:
     type: if_else
     true_block: ${{parent.jobs.image_classification_runtime_component}}
     condition: ${{parent.jobs.framework_selector.outputs.output}}
-    false_block: ${{parent.jobs.hugging_face_model_selector}}
+    false_block: ${{parent.jobs.hugging_face_model_import}}
 
   output_selector:
     type: command
-    component: azureml:image_model_output_selector:0.0.7
+    component: azureml:image_model_output_selector:0.0.8
     compute: ${{parent.inputs.compute_model_import}}
     inputs:
       mlflow_model_t: ${{parent.jobs.image_classification_runtime_component.outputs.mlflow_model_folder}}
