@@ -9,4 +9,4 @@ properties:
   azureml.promptflow.description: Create flow for multi-round Q&A with GPT3.5 using data from your own indexed files to make the answer more grounded for enterprise chat scenarios.
   inference-min-sku-spec: 2|0|14|28
   inference-recommended-sku: Standard_DS3_v2
-version: 2
+version: 3
