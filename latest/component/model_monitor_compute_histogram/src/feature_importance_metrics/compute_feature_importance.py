@@ -13,7 +13,7 @@ from pyspark.sql.types import (
 )
 from shared_utilities.io_utils import try_read_mltable_in_spark_with_warning, save_spark_df_as_mltable, init_spark
 from shared_utilities import constants
-
+from sklearn.model_selection import train_test_split
 from responsibleai import RAIInsights, FeatureMetadata
 from ml_wrappers.model.predictions_wrapper import (
     PredictionsModelWrapperClassification,
@@ -33,7 +33,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline_data", type=str)
     parser.add_argument("--target_column", type=str, required=False)
-    parser.add_argument("--task_type", type=str, required=False)
+    parser.add_argument("--task_type", type=str)
     parser.add_argument("--signal_metrics", type=str)
 
     args = parser.parse_args()
@@ -41,9 +41,11 @@ def parse_args():
     return args
 
 
-def determine_task_type(target_column, baseline_data):
+def determine_task_type(task_type, target_column, baseline_data):
     """Determine the task type based on the type of the target column.
 
+    :param task_type: the task type (regression or classification) of the resulting model
+    :type task_type: string or None
     :param target_column: the column to predict
     :type target_column: string
     :param baseline_data: The baseline data meaning the data used to create the
@@ -52,13 +54,23 @@ def determine_task_type(target_column, baseline_data):
     :return: task type, either regression or classification
     :rtype: string
     """
+    if task_type is not None:
+        task_type_lower = task_type.lower()
+        if task_type_lower != constants.CLASSIFICATION and task_type_lower != constants.REGRESSION:
+            log_time_and_message(f"Supported task types are classification and regression, received {task_type}."
+                                 " Attempting to determine task type based on target column.")
+        else:
+            return task_type_lower
     baseline_column = pd.Series(baseline_data[target_column])
     baseline_column_type = baseline_column.dtype.name
-    if baseline_column_type == "float64":
+    if (pd.api.types.is_float_dtype(baseline_column)
+            or pd.api.types.is_timedelta64_ns_dtype(baseline_column)):
         return constants.REGRESSION
-    if baseline_column_type == "object" or baseline_column_type == "bool":
+    if (pd.api.types.is_object_dtype(baseline_column) or pd.api.types.is_string_dtype(baseline_column) or
+            pd.api.types.is_datetime64_any_dtype(baseline_column) or pd.api.types.is_timedelta64_dtype(baseline_column)
+            or baseline_column_type == "bool"):
         return constants.CLASSIFICATION
-    if baseline_column_type == "int64":
+    if pd.api.types.is_integer_dtype(baseline_column):
         distinct_column_values = len(baseline_column.unique())
         total_column_values = len(baseline_column)
         distinct_value_ratio = distinct_column_values / total_column_values
@@ -66,6 +78,9 @@ def determine_task_type(target_column, baseline_data):
             return constants.CLASSIFICATION
         else:
             return constants.REGRESSION
+    # Log the datatype detected and default to classification
+    log_time_and_message(f"Target column datatype detected: {baseline_column_type}")
+    return constants.CLASSIFICATION
 
 
 def create_lightgbm_model(X, y, task_type):
@@ -114,6 +129,7 @@ def get_model_wrapper(task_type, target_column, baseline_data):
             x_train[column] = x_train[column].astype('category')
     model = create_lightgbm_model(x_train, y_train, task_type)
     model_predict = model.predict(x_train)
+    log_time_and_message("Called predict on model")
 
     if task_type == constants.CLASSIFICATION:
         model_predict_proba = model.predict_proba(x_train)
@@ -126,6 +142,26 @@ def get_model_wrapper(task_type, target_column, baseline_data):
 
     log_time_and_message("Created ml wrapper")
     return model_wrapper
+
+
+def get_train_test_data(data):
+    """Split data into train and test data.
+
+    :param  data: The data used to calculate the explanations
+    :type data: pandas.Dataframe
+    :return: train and test data
+    :rtype: tuple of pandas dataframe
+    """
+    row_count = len(data.index)
+
+    test_size = 0.5
+    if row_count > 10000:
+        test_size = 5000
+
+    train_data, test_data = train_test_split(data, test_size=test_size, random_state=0)
+    log_time_and_message("Split data into train and test. Train size:"
+                         f"{len(train_data.index)}, Test size: {len(test_data.index)}")
+    return train_data, test_data
 
 
 def compute_explanations(model_wrapper, data, categorical_features, target_column, task_type):
@@ -144,15 +180,17 @@ def compute_explanations(model_wrapper, data, categorical_features, target_colum
     :return: explanation scores for the input data
     :rtype: list[float]
     """
-    # Create the RAI Insights object, use baseline as train and test data
+    # Create the RAI Insights object, split baseline data into train and test data
     feature_metadata = FeatureMetadata(categorical_features=categorical_features, dropped_features=[])
+    train_data, test_data = get_train_test_data(data)
+
     rai_i: RAIInsights = RAIInsights(
-        model_wrapper, data, data, target_column, task_type, feature_metadata=feature_metadata
+        model_wrapper, train_data, test_data, target_column, task_type, feature_metadata=feature_metadata
     )
     log_time_and_message("Created RAIInsights")
     # Add the global explanations using batching to allow for larger input data sizes
     rai_i.explainer.add()
-    evaluation_data = data.drop([target_column], axis=1)
+    evaluation_data = train_data.drop([target_column], axis=1)
     log_time_and_message("Requesting explanations")
     explanationData = rai_i.explainer.request_explanations(local=False, data=evaluation_data)
     return explanationData.precomputedExplanations.globalFeatureImportance['scores']
@@ -256,8 +294,7 @@ def run(args):
             return
 
         baseline_df = baseline_df.toPandas()
-        task_type = args.task_type if args.task_type else determine_task_type(args.target_column, baseline_df)
-        task_type = task_type.lower()
+        task_type = determine_task_type(args.task_type, args.target_column, baseline_df)
         log_time_and_message(f"Computed task type is {task_type}")
 
         categorical_features = compute_categorical_features(baseline_df, args.target_column)
