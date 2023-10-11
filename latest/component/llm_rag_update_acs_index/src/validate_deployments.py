@@ -426,12 +426,12 @@ def validate_acs(acs_config, activity_logger: Logger):
     index_name = acs_config.get("index_name")
     import re
     if (index_name is None or index_name == "" or index_name.startswith("-")
-            or index_name.endswith("-") or (not re.search("^[a-z0-9-]+$", index_name))
+            or index_name.endswith("-") or (not re.search("^[a-z0-9-_]+$", index_name))
             or len(index_name) > 128):
 
         error_msg = ("Invalid acs index name provided. Index name must only contain"
-                     "lowercase letters, digits or dashes cannot start or end with"
-                     "dashes and is limited to 128 characters.")
+                     "lowercase letters, digits, dashes and underscores and "
+                     "cannot start or end with dashes and is limited to 128 characters.")
         activity_logger.info("ValidationFailed:" + error_msg)
         raise Exception(error_msg)
 
