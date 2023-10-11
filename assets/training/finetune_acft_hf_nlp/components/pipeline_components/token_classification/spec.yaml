@@ -419,6 +419,15 @@ inputs:
     optional: true
     description: Deepspeed config to be used for finetuning. Special characters like \ and ' are invalid in the parameter value.
 
+  deepspeed_stage:
+    type: string
+    optional: true
+    default: "2"
+    enum:
+       - "2"
+       - "3"
+    description: This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config information via deepspeed port.
+
   apply_ort:
     type: string
     enum:
@@ -581,6 +590,7 @@ jobs:
       early_stopping_threshold: '${{parent.inputs.early_stopping_threshold}}'
       apply_deepspeed: '${{parent.inputs.apply_deepspeed}}'
       deepspeed: '${{parent.inputs.deepspeed}}'
+      deepspeed_stage: '${{parent.inputs.deepspeed_stage}}'
       apply_ort: '${{parent.inputs.apply_ort}}'
       preprocess_output: '${{parent.jobs.token_classification_datapreprocess.outputs.output_dir}}'
       model_selector_output: '${{parent.jobs.token_classification_model_import.outputs.output_dir}}'
