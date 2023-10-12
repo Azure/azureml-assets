@@ -7,6 +7,6 @@ properties:
     model_id: openai/clip-vit-base-patch32
 tags:
    Preview: ''
-   license: apache2.0
+   license: mit
    task: embeddings
 version: 1
