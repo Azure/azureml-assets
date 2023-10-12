@@ -80,13 +80,13 @@ class ResultConverters:
                 usage[new_key] = usage[old_key] if old_key in usage else result.get(old_key, -1)
             if old_key in usage:
                 del usage[old_key]
-        usage['batch_size'] = result.get('batch_size', 1)
         if self._model.is_oss_model():
             usage['input_token_count'] = self._get_oss_input_token(usage)
             usage['output_token_count'] = self._get_oss_output_token(result, usage)
         for k in ["output_token_count", "input_token_count"]:
             if usage[k] == -1:
                 del usage[k]
+        usage['batch_size'] = result.get('batch_size', 1)
         return usage
 
     def convert_result_ground_truth(self, result: Dict[str, Any]) -> Dict[str, Any]:
