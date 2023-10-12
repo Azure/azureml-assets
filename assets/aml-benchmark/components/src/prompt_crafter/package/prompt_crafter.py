@@ -18,6 +18,7 @@ from package_3p.prompt_factory import PromptFactory
 
 logger = logging.getLogger(__name__)
 
+
 class _MLFlowLogger():
     def __init__(self):
         self.steps = 0
@@ -126,10 +127,11 @@ transformations:
         return mltable_output_path
 
     @staticmethod
-    def _read_few_shot_pool(few_shot_dir:str, few_shot_filename: str = None):
+    def _read_few_shot_pool(few_shot_dir: str, few_shot_filename: str = None):
         few_shot_pool = None
         if few_shot_dir is not None:
             few_shot_pool_path = resolve_file(input_path=few_shot_dir, filename=few_shot_filename)
+
             def read_few_shot_data(few_shot_pool_path):
                 few_shot_pool = []
                 with open(few_shot_pool_path) as f:
@@ -176,7 +178,6 @@ transformations:
 
                     ml_table_output_data = self.row_output_post_process(output_data)
                     f_mltable.write(json.dumps(ml_table_output_data) + "\n")
-
 
         self.mlflow_logger.log_aggregates()
 

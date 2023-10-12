@@ -82,5 +82,3 @@ class ChatPrompt(Prompt):
     def to_openai_create_prompt(self):
         """Return the data to be passed as `prompt` to chat models."""
         return {"prompt": self.raw_prompt}
-
-

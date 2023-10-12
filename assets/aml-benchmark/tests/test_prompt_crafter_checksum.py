@@ -12,7 +12,6 @@ PROMPT_CRAFTER_NAME = "prompt_crafter"
 sys.path.insert(0, os.path.join(get_src_dir(), PROMPT_CRAFTER_NAME))
 from package_3p.prompt_crafter import PromptCrafter
 
-
 # Setting dataset path
 TEST_DATA = os.path.join(
             os.path.dirname(__file__), 'data/test_data_prompt_crafter')
@@ -61,8 +60,8 @@ def base_test(dataset_name,
         checksum = prompt_crafter.run()
         assert checksum == completion_ground_truth_checksum
         base_test_output(
-            prompt_crafter=prompt_crafter, 
-            output_dir_path=test_output_path, 
+            prompt_crafter=prompt_crafter,
+            output_dir_path=test_output_path,
             output_mltable_path=test_output_mltable_path
         )
 

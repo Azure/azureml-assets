@@ -3,14 +3,17 @@
 
 """PromptFactory class to create prompts from data."""
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
+
 import json
-from typing import Dict, List, Optional, Union
 import random
 import logging
-from package_3p.prompt import PromptType, Prompt, CompletionsPrompt, ChatPrompt, OpenAICreate, OpenAICreateChatPrompt, Role
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Union
 from jinja2 import TemplateSyntaxError, Environment
+from package_3p.prompt import PromptType, Prompt, CompletionsPrompt, ChatPrompt, OpenAICreate, OpenAICreateChatPrompt, Role
+
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +72,7 @@ class PromptFactory(ABC):
         """Validate a jinja template."""
         try:
             _ = JINJA_ENV.from_string(template)
-        except:
+        except Exception as e:
             raise TemplateSyntaxError(f"{template} is not a valid jinja pattern. Error: {error_message}")
 
     @classmethod
@@ -113,7 +116,6 @@ class PromptFactory(ABC):
     def _inverse_label_map(label_map_str: str) -> Dict:
         label_map = PromptFactory._parse_label_map(label_map_str)
         return {value: key for key, value in label_map.items()}
-
 
     def _sample_few_shots(self, row: Dict[str, str]):
         few_shots = []
@@ -192,6 +194,7 @@ class PromptFactory(ABC):
 
         return output_data
 
+
 @dataclass
 class CompletionsPromptFactory(PromptFactory):
     """Factory for completions prompts."""
@@ -242,7 +245,7 @@ class ChatPromptFactory(PromptFactory):
 
         if self.system_message:
             system_message = self._parse_affix(self.system_message,
-                                                    Role.system.name)
+                                               Role.system.name)
             messages.extend(system_message)
 
         if self.prefix:
@@ -270,14 +273,14 @@ class ChatPromptFactory(PromptFactory):
         if self.few_shot_pattern:
             # Different chat prompt style when user provides few_shot_pattern
             few_shot_template = JINJA_ENV.from_string(self.augmented_few_shot_pattern)
-            for few_shot_dict in few_shots:     
+            for few_shot_dict in few_shots:
                 messages = str(few_shot_template.render(few_shot_dict))
                 messages = self._parse_affix(affix=messages)
                 few_shot_messages.extend(messages)
         else:
             user_template = JINJA_ENV.from_string(self.prompt_pattern)
             assistant_template = JINJA_ENV.from_string(self.output_pattern)
-            for few_shot_dict in few_shots:  
+            for few_shot_dict in few_shots:
                 # User role for few shot chat
                 messages = str(user_template.render(few_shot_dict))
                 messages = self._parse_affix(messages, Role.user.name)
