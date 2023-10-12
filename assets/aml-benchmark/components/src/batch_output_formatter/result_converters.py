@@ -10,6 +10,8 @@ import pandas as pd
 
 from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from utils.logging import get_logger
+from utils.online_endpoint.endpoint_utils import EndpointUtilities
+from batch_inference_preparer.endpoint_data_preparer import EndpointDataPreparer
 
 
 logger = get_logger(__name__)
@@ -39,9 +41,10 @@ class ResultConverters:
         self._fallback_value = fallback_value
         self._is_performance_test = is_performance_test
         if ground_truth_df is not None:
-            print("receive ground truth columns {}".format(ground_truth_df.columns))
+            logger.info("receive ground truth columns {}".format(ground_truth_df.columns))
             for index, row in ground_truth_df.iterrows():
-                self._lookup_dict[row[self._data_id_key]] = row[self._label_key]
+                self._lookup_dict[row[EndpointDataPreparer.PAYLOAD_HASH]] = \
+                        row[EndpointDataPreparer.PAYLOAD_GROUNDTRUTH]
 
     def convert_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the input result to predictions."""
@@ -81,6 +84,9 @@ class ResultConverters:
         if self._model.is_oss_model():
             usage['input_token_count'] = self._get_oss_input_token(usage)
             usage['output_token_count'] = self._get_oss_output_token(result, usage)
+        for k in ["output_token_count", "input_token_count"]:
+            if usage[k] == -1:
+                del usage[k]
         return usage
 
     def convert_result_ground_truth(self, result: Dict[str, Any]) -> Dict[str, Any]:
@@ -97,9 +103,9 @@ class ResultConverters:
         elif self._model.is_aoai_model():
             use_ground_truth_input = True
         if use_ground_truth_input:
-            for k, v in self._lookup_dict.items():
-                if k in self._get_request_content(result):
-                    ground_truth = v
+            request_payload = self._get_request(result)
+            payload_hash = EndpointUtilities.hash_payload_prompt(request_payload, self._model)
+            ground_truth = self._lookup_dict.get(payload_hash, '')
         return {'ground_truth': ground_truth}
 
     def _get_raw_output(self, result: Dict[str, Any]) -> Dict[str, Any]:
