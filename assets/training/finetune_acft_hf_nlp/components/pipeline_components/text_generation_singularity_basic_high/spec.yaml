@@ -488,14 +488,17 @@ outputs:
   pytorch_model_folder:
     type: uri_folder
     description: Output dir to save the finetune model and other metadata
+    mode: rw_mount
 
   mlflow_model_folder:
     type: mlflow_model
     description: Output dir to save the finetune model as mlflow model
+    mode: rw_mount
 
   evaluation_result:
     type: uri_folder
     description: Test Data Evaluation Results
+    mode: rw_mount
 
 jobs:
   ft_nlp_common_validation:
