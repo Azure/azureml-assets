@@ -347,7 +347,10 @@ class OnlineEndpoint:
     @property
     def ml_client_curr_workspace(self) -> MLClient:
         """Get the ml client for current workspace."""
-        return MLClient(self._credential, self.curr_workspace.subscription_id, self.curr_workspace.resource_group, self.curr_workspace.name)
+        return MLClient(
+            self._credential, self.curr_workspace.subscription_id,
+            self.curr_workspace.resource_group,
+            self.curr_workspace.name)
 
     def _create_session_with_retry(self, retry: int = 3) -> requests.Session:
         """
