@@ -128,6 +128,10 @@ def _verify_and_get_output_records(
                 in output_records
             )
             num_metrics += 1
+    assert "tokens_per_seconds" in output_records
+    num_metrics += 1
+    assert "request_per_seconds" in output_records
+    num_metrics += 1
 
     # Check that no other metrics are present
     assert num_metrics == len(output_records)

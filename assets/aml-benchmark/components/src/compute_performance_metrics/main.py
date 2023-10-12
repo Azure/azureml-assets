@@ -244,6 +244,7 @@ def main(
     # Start Logging
     mlflow.start_run()
     results = dict()
+    run_timespan = None
 
     if len(all_data) > 0:
         # Calculate latency data
@@ -260,6 +261,7 @@ def main(
             ]
         )
         latency_data = (end_data - start_data) * 1000
+        run_timespan = np.max(end_data) - np.min(start_data)
         latency_data = latency_data / np.array(all_data[batch_size_column_name])
         results["latency_avg"] = np.average(latency_data)
 
@@ -400,6 +402,8 @@ def main(
             results["total_output_tokens"] = int(output_token_count)
             total_latency = np.sum(latency_data)
             results["output_token_throughput"] = output_token_count / total_latency
+            if run_timespan is not None:
+                results["tokens_per_second"] = output_token_count / run_timespan
 
             output_token_normalized_latency = latency_data / output_token_data
             results["latency_per_output_token_avg"] = np.average(
@@ -460,6 +464,8 @@ def main(
                         for val in zip(latency_data, input_output_token_data)
                     ],
                 )
+    if run_timespan is not None:
+        results["request_per_second"] = len(all_data) / run_timespan
 
     # Output the metrics that are logged in the metrics file
     mlflow.log_metrics(results)
