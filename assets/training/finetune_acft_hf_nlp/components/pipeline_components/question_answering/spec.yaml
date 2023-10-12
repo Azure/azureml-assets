@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: question_answering_pipeline
-version: 0.0.22
+version: 0.0.22.1
 type: pipeline
 display_name: Question Answering Pipeline
 description: Pipeline Component to finetune Hugging Face pretrained models for extractive question answering task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/question_answering_pipeline) to learn more.
@@ -648,7 +648,7 @@ jobs:
       test_data: '${{parent.jobs.question_answering_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.answers_key}}'
       input_column_names: "'${{parent.inputs.question_key}}','${{parent.inputs.context_key}}'"
-      batch_size: '${{parent.inputs.batch_size}}'
+#      batch_size: '${{parent.inputs.batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
