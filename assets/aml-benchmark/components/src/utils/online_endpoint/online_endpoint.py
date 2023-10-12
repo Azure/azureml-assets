@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation.connection
+# Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
 """Class for online endpoint."""
