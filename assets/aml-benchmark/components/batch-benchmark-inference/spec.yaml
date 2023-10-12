@@ -61,25 +61,13 @@ inputs:
     type: string
     optional: False
     description: Connections name for the endpoint.
-  metadata_key:
+  label_column_name:
     type: string
     optional: True
-    description: The metadata key that in the request payload that contains label columns. If not provided, the `request_metadata` will be used in the batch benchmark score output to retrieve ground truth.
-  label_key:
-    type: string
-    optional: False
-    description: The label column key.
-  data_id_key:
-    type: string
-    optional: True
-    description: The key that contains data identifier in the ground truth data.
+    description: The label column name.
   n_samples:
     type: integer
     description: The number of top samples send to endpoint. When performance test is enabled, this will be the number of repeated samples send to the endpoint.
-    optional: True
-  ground_truth_input:
-    type: uri_folder
-    description: Input jsonl dataset that contains prompt. OAI model will default use this one as the optional input in the payload is not supported
     optional: True
   handle_response_failure:
     type: string
@@ -151,11 +139,14 @@ jobs:
       is_performance_test: ${{parent.inputs.is_performance_test}}
       n_samples: ${{parent.inputs.n_samples}}
       endpoint_url: ${{parent.inputs.endpoint_url}}
+      label_column_name: ${{parent.inputs.label_column_name}}
     outputs:
       formatted_data:
         type: mltable
+      ground_truth_metadata:
+        type: uri_folder
   # Inference
-  real_point_batch_score: 
+  endpoint_batch_score:
     type: parallel
     component: azureml:batch_benchmark_score:0.0.1
     inputs:
@@ -188,14 +179,12 @@ jobs:
     type: command
     component: azureml:batch_output_formatter:0.0.1
     inputs:
-      batch_inference_output: ${{parent.jobs.real_point_batch_score.outputs.mini_batch_results_out_directory}}
-      metadata_key: ${{parent.inputs.metadata_key}}
-      label_key: ${{parent.inputs.label_key}}
-      ground_truth_input: ${{parent.inputs.ground_truth_input}}
+      batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
+      label_column_name: ${{parent.inputs.label_column_name}}
+      ground_truth_input: ${{parent.jobs.batch_inference_preparer.outputs.ground_truth_metadata}}
       fallback_value: ${{parent.inputs.fallback_value}}
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
       is_performance_test: ${{parent.inputs.is_performance_test}}
-      data_id_key: ${{parent.inputs.data_id_key}}
       endpoint_url: ${{parent.inputs.endpoint_url}}
     outputs:
       predictions:
