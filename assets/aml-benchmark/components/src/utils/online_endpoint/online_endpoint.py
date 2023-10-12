@@ -390,7 +390,6 @@ class OnlineEndpoint:
         with self._create_session_with_retry() as session:
             response = session.post(url, data=json.dumps(payload), headers=headers)
             # Raise an exception if the response contains an HTTP error status code
-            logger.error(f"Response status code: {response.status_code}, content: {response.content}")
             response.raise_for_status()
 
         return response
