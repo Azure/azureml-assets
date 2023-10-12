@@ -103,7 +103,8 @@ class AssetInfo:
         if asset_config.type == AssetType.DATA:
             return DataInfo(asset_config)
         if asset_config.type == AssetType.PROMPT:
-            return PromptInfo(asset_config)
+            return None
+            # return PromptInfo(asset_config)
 
         raise Exception(f"Not supported asset type {asset_config.type}. Use {SUPPORTED_ASSET_TYPES}")
 
