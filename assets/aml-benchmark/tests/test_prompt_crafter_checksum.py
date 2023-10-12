@@ -15,7 +15,7 @@ from package_3p.prompt_crafter import PromptCrafter
 
 # Setting dataset path
 TEST_DATA = os.path.join(
-            os.path.dirname(__file__), 'data/test_data')
+            os.path.dirname(__file__), 'data/test_data_prompt_crafter')
 OUTPUT_PATH = os.path.join(
             os.path.dirname(__file__), 'data')
 

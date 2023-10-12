@@ -15,7 +15,7 @@ inputs:
     optional: false
     enum:
       - chat
-      - completion
+      - completions
     description: |
       Determine the prompt format. This component supports chat and completion apis.
       Completion: 
@@ -26,7 +26,7 @@ inputs:
       {"prompt": [{"role": "system", "content": "You are a helpful assistant"},
                     {"role": "user", "content": "Example chat input"},
                     {"role": "assistant", "content": "Example chat output"}]}
-    default: completion
+    default: completions
   test_data:
     type: uri_file
     optional: false
