@@ -36,10 +36,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--batch_input_pattern", nargs='?', const=None, type=str,
         help="The input patterns for the batch endpoint.", default="{}")
+    parser.add_argument("--label_key", type=str, help="label key", default=None)
     parser.add_argument(
         "--n_samples", type=int, help="Top samples sending to the endpoint.", default=-1)
     parser.add_argument("--formatted_data", type=str, help="path to output location")
     parser.add_argument("--endpoint_url", type=str, help="endpoint_url", default=None)
+    parser.add_argument("--output_metadata", type=str, help="path to ground_truth location", default=None)
     parser.add_argument("--is_performance_test", default=False, type=str2bool, help="is_performance_test")
     args, _ = parser.parse_known_args()
     logger.info(f"Arguments: {args}")
@@ -54,6 +56,8 @@ def main(
     n_samples: int,
     endpoint_url: str,
     is_performance_test: bool,
+    label_key: str,
+    output_metadata: str
 ) -> None:
     """
     Entry function of the script.
@@ -71,7 +75,8 @@ def main(
     """
     online_model = OnlineEndpointModel(None, None, None, endpoint_url=endpoint_url)
 
-    endpoint_data_preparer = EndpointDataPreparer(online_model._model_type, batch_input_pattern)
+    endpoint_data_preparer = EndpointDataPreparer(
+        online_model._model_type, batch_input_pattern, label_key=label_key)
 
     # Read the data file into a pandas dataframe
     logger.info("Read data now.")
@@ -84,14 +89,17 @@ def main(
 
     # Reformat the columns and save
     new_df = []
+    ground_truth_df = []
     sample_count = 0
     logger.info("Process data now.")
     if not is_performance_test:
         for index, row in df.iterrows():
             new_data = endpoint_data_preparer.convert_input_dict(row)
             validate_errors = endpoint_data_preparer.validate_output(new_data)
+            ground_truth_data = endpoint_data_preparer.convert_ground_truth(row, new_data)
             if not validate_errors:
                 new_df.append(new_data)
+                ground_truth_df.append(ground_truth_data)
             else:
                 print("Payload {} meeting the following errors: {}.".format(new_data, validate_errors))
             sample_count += 1
@@ -99,6 +107,8 @@ def main(
                 break
     else:
         new_data = endpoint_data_preparer.convert_input_dict(df.iloc[0])
+        ground_truth_df = [
+            endpoint_data_preparer.convert_ground_truth(df.iloc[0], new_data)]
         validate_errors = endpoint_data_preparer.validate_output(new_data)
         if n_samples == -1:
             logger.info("n_samples is not entered, use the default value 100.")
@@ -113,6 +123,9 @@ def main(
 
     new_df = pd.DataFrame(new_df)
     new_df.to_json(os.path.join(formatted_dataset, "formatted_data.json"), orient="records", lines=True)
+    ground_truth_df = pd.DataFrame(ground_truth_df)
+    ground_truth_df.to_json(
+        os.path.join(output_metadata, "ground_truth_data.jsonl"), orient="records", lines=True)
 
 
 if __name__ == "__main__":
@@ -123,5 +136,7 @@ if __name__ == "__main__":
         batch_input_pattern=args.batch_input_pattern,
         n_samples=args.n_samples,
         endpoint_url=args.endpoint_url,
-        is_performance_test=args.is_performance_test
+        is_performance_test=args.is_performance_test,
+        label_key=args.label_key,
+        output_metadata=args.output_metadata
     )

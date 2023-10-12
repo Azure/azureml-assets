@@ -13,7 +13,9 @@ from src.finetune.finetune import (
     check_for_invalid_ds_zero3_settings,
     identify_deepspeed_stage,
     setup_and_validate_deepspeed,
-    DEFAULT_DEEPSPEED_CONFIG
+    resolve_deepspeed_config,
+    DEFAULT_DEEPSPEED_STAGE2_CONFIG,
+    DEFAULT_DEEPSPEED_STAGE3_CONFIG
 )
 
 
@@ -100,7 +102,10 @@ def test_enable_gradient_checkpointing():
 
 def test_default_deepspeed_config():
     """Test if the default deepspeed config is applied or not."""
-    args = Namespace(apply_deepspeed=True)
-    setup_and_validate_deepspeed(args, do_validate=False)
+    # Check for default stage2 config
+    args = Namespace(apply_deepspeed=True, deepspeed_stage=2, deepspeed=None)
+    assert resolve_deepspeed_config(args) is DEFAULT_DEEPSPEED_STAGE2_CONFIG
 
-    assert getattr(args, "deepspeed") is DEFAULT_DEEPSPEED_CONFIG
+    # Check for default stage3 config
+    args = Namespace(apply_deepspeed=True, deepspeed_stage=3, deepspeed=None)
+    assert resolve_deepspeed_config(args) is DEFAULT_DEEPSPEED_STAGE3_CONFIG

@@ -142,7 +142,7 @@ class TestBatchBenchmarkInferenceComponent:
             "max_concurrency_per_instance:": ["  max_concurrency_per_instance: 1\n"],
             "ground_truth_input:": ['  ground_truth_input:\n', '    type: uri_folder\n', '    path: ../data/\n'],
             "metadata_key:": ["  metadata_key: _batch_request_metadata\n"],
-            "label_key:": ["  label_key: label\n"],
+            "label_column_name:": ["  label_column_name: label\n"],
             "n_samples:": ["  n_samples: 10\n"],
             "predictions:": [
                 '  predictions:\n', '    type: uri_file\n',
@@ -207,18 +207,19 @@ class TestBatchBenchmarkInferenceComponent:
         self._check_columns_in_dfs(expected_col_list, dfs)
 
     def _verify_output(self, job, output_dir):
-        prediction_data = job.outputs.prediction_data.port_name
-        perf_data = job.outputs.perf_data.port_name
-        ground_truth_data = job.outputs.ground_truth_data.port_name
-        for output_name in [prediction_data, perf_data, ground_truth_data]:
+        prediction_data = job.outputs.predictions.port_name
+        performance_metadata = job.outputs.performance_metadata.port_name
+        ground_truth = job.outputs.ground_truth.port_name
+        for output_name in [prediction_data, performance_metadata, ground_truth]:
             download_outputs(
                 job_name=job.name, output_name=output_name, download_path=output_dir
             )
         output_dir = os.path.join(output_dir, "named-outputs")
         self._check_output_data(
-            os.path.join(output_dir, "prediction_data"), "prediction_data", ["prediction"])
+            os.path.join(output_dir, "predictions"), "predictions.jsonl", ["prediction"])
         self._check_output_data(
-            os.path.join(output_dir, "perf_data"), "perf_data", ["start", "end", "latency"])
+            os.path.join(output_dir, "performance_metadata.jsonl"),
+            "performance_metadata", ["start", "end", "latency"])
         self._check_output_data(
             os.path.join(
-                output_dir, "ground_truth_data"), "ground_truth_data", ["ground_truth"])
+                output_dir, "ground_truth"), "ground_truth.jsonl", ["ground_truth"])
