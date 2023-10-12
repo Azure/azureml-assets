@@ -81,10 +81,6 @@ inputs:
     description: The fallback value that can be used when request payload failed. If not provided, the fallback value will be an empty string.
     type: string
     optional: True
-  metadata_key:
-    type: string
-    optional: True
-    description: The metadata key that in the request payload that contains label columns. If not provided, the `request_metadata` will be used in the batch benchmark score output to retrieve ground truth.
   additional_headers:
     type: string
     optional: True

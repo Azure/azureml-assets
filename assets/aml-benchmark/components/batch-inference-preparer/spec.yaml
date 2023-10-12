@@ -34,7 +34,7 @@ inputs:
   label_column_name:
     type: string
     optional: True
-    description: The key that stores the ground truth value.
+    description: The label column name.
   is_performance_test:
     type: boolean
     default: False

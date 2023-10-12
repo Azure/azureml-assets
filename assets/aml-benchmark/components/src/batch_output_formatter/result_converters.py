@@ -22,7 +22,7 @@ class ResultConverters:
 
     PERF_OUTPUT_KEYS = [
         "start_time_iso", "end_time_iso", "time_taken_ms", "output_token_count", "input_token_count"]
-    METADATA_KEY_IN_RESULT = 'request_metadata'
+    METADATA_KEY_IN_RESULT = 'metadata_key'
     PREDICTION_COL_NAME = 'prediction'
     DEFAULT_ISO_FORMAT = '2000-01-01T00:00:00.000000+00:00'
     DEFAULT_PERF_INPUT_TOKEN = 512

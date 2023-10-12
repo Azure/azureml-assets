@@ -9,14 +9,10 @@ inputs:
     type: uri_folder
     description: The raw batch inference output.
     optional: False
-  metadata_key:
-    type: string
-    optional: True
-    description: The metadata key that stores ground truth `label_key` in the response. If using azureml llama model and pass `_batch_request_metadata`, then this one can left empty or using `request_metadata`.
   label_column_name:
     type: string
     optional: True
-    description: The key that stores the ground truth value.
+    description: The label column name.
   endpoint_url:
     type: string
     optional: False
@@ -64,6 +60,5 @@ command: >-
   $[[--label_key ${{inputs.label_column_name}}]]
   --handle_response_failure ${{inputs.handle_response_failure}}
   --is_performance_test ${{inputs.is_performance_test}}
-  $[[--metadata_key ${{inputs.metadata_key}}]]
   $[[--fallback_value ${{inputs.fallback_value}}]]
   $[[--ground_truth_input ${{inputs.ground_truth_input}}]]
