@@ -1,0 +1,8 @@
+path:
+  container_name: finetuning-image-models
+  container_path: HuggingFace-mlflow/image-text-embeddings-openai-clip-vit-base-patch32/1696630981/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
