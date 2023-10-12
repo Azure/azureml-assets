@@ -213,7 +213,7 @@ class OnlineEndpoint:
 
     def delete_connections(self):
         """Delete the connections."""
-        self.ml_client.connections.delete(self._connections_name)
+        self.ml_client_curr_workspace.connections.delete(self._connections_name)
 
     def get_endpoint_authorization_header_from_connections(self) -> dict:
         """Get the authorization header."""
@@ -241,7 +241,7 @@ class OnlineEndpoint:
                 access_key_id="api-key" if self._model.is_aoai_model() else "Authorization",
                 secret_access_key=self._get_endpoint_token())
         )
-        self.ml_client.connections.create_or_update(workspace_connection=wps_connection)
+        self.ml_client_curr_workspace.connections.create_or_update(workspace_connection=wps_connection)
 
     @abstractmethod
     def get_endpoint_name_from_url(self) -> str:
@@ -344,6 +344,14 @@ class OnlineEndpoint:
                 self._credential, self.subscription_id, self.resource_group, self.workspace_name)
         return self._ml_client
 
+    @property
+    def ml_client_curr_workspace(self) -> MLClient:
+        """Get the ml client for current workspace."""
+        return MLClient(
+            self._credential, self.curr_workspace.subscription_id,
+            self.curr_workspace.resource_group,
+            self.curr_workspace.name)
+
     def _create_session_with_retry(self, retry: int = 3) -> requests.Session:
         """
         Create requests.session with retry.
@@ -385,7 +393,6 @@ class OnlineEndpoint:
         with self._create_session_with_retry() as session:
             response = session.post(url, data=json.dumps(payload), headers=headers)
             # Raise an exception if the response contains an HTTP error status code
-            print(response.__dict__)
             response.raise_for_status()
 
         return response

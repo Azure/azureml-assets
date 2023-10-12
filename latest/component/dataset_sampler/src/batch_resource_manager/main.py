@@ -51,27 +51,26 @@ def parse_args() -> argparse.Namespace:
 
 def delete_managed_resources_maybe(
         output_metadata_dir: bool,
-        deployment_metadata_dir: str,
+        deployment_metadata: dict,
+        online_endpoint: OnlineEndpoint
 ) -> None:
     """Delete managed resources if delete_managed_resources is True."""
     logger.info("Deleting managed resources.")
-    deployment_metadata = EndpointUtilities.load_endpoint_metadata_json(deployment_metadata_dir)
-    endpoint = OnlineEndpointFactory.from_metadata(deployment_metadata)
     is_endpoint_deleted = False
     is_deployment_deleted = False
     is_connections_deleted = False
-    if deployment_metadata['is_managed_endpoint']:
+    if deployment_metadata.get('is_managed_endpoint', True):
         logger.info("Deleting endpoint.")
-        endpoint.delete_endpoint()
+        online_endpoint.delete_endpoint()
         is_endpoint_deleted = True
         is_deployment_deleted = True
-    elif deployment_metadata['is_managed_deployment']:
+    elif deployment_metadata.get('is_managed_deployment', True):
         logger.info("Deleting deployment.")
-        endpoint.delete_deployment()
+        online_endpoint.delete_deployment()
         is_deployment_deleted = True
-    if deployment_metadata['is_managed_connections']:
+    if deployment_metadata.get('is_managed_connections', True):
         logger.info("Deleting connections.")
-        endpoint.delete_connections()
+        online_endpoint.delete_connections()
         is_connections_deleted = True
     EndpointUtilities.dump_delete_status(
         is_endpoint_deleted,
@@ -162,7 +161,24 @@ def main(
         )
         deploy_model_maybe(online_endpoint, output_metadata_dir)
     else:
-        delete_managed_resources_maybe(output_metadata_dir, deployment_metadata_dir)
+        if not deployment_metadata_dir:
+            online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name)
+            online_endpoint = OnlineEndpointFactory.get_online_endpoint(
+                endpoint_workspace,
+                endpoint_resource_group,
+                endpoint_subscription_id,
+                online_model,
+                endpoint_name,
+                deployment_name,
+                deployment_sku,
+                endpoint_location,
+                connections_name=connections_name
+            )
+            deployment_metadata = {}
+        else:
+            deployment_metadata = EndpointUtilities.load_endpoint_metadata_json(deployment_metadata_dir)
+            online_endpoint = OnlineEndpointFactory.from_metadata(deployment_metadata)
+        delete_managed_resources_maybe(output_metadata_dir, deployment_metadata, online_endpoint)
 
 
 if __name__ == "__main__":

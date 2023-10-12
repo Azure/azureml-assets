@@ -10,6 +10,8 @@ import pandas as pd
 
 from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from utils.logging import get_logger
+from utils.online_endpoint.endpoint_utils import EndpointUtilities
+from batch_inference_preparer.endpoint_data_preparer import EndpointDataPreparer
 
 
 logger = get_logger(__name__)
@@ -20,7 +22,7 @@ class ResultConverters:
 
     PERF_OUTPUT_KEYS = [
         "start_time_iso", "end_time_iso", "time_taken_ms", "output_token_count", "input_token_count"]
-    METADATA_KEY_IN_RESULT = 'request_metadata'
+    METADATA_KEY_IN_RESULT = 'metadata_key'
     PREDICTION_COL_NAME = 'prediction'
     DEFAULT_ISO_FORMAT = '2000-01-01T00:00:00.000000+00:00'
     DEFAULT_PERF_INPUT_TOKEN = 512
@@ -39,9 +41,10 @@ class ResultConverters:
         self._fallback_value = fallback_value
         self._is_performance_test = is_performance_test
         if ground_truth_df is not None:
-            print("receive ground truth columns {}".format(ground_truth_df.columns))
+            logger.info("receive ground truth columns {}".format(ground_truth_df.columns))
             for index, row in ground_truth_df.iterrows():
-                self._lookup_dict[row[self._data_id_key]] = row[self._label_key]
+                self._lookup_dict[row[EndpointDataPreparer.PAYLOAD_HASH]] = \
+                        row[EndpointDataPreparer.PAYLOAD_GROUNDTRUTH]
 
     def convert_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Convert the input result to predictions."""
@@ -77,10 +80,13 @@ class ResultConverters:
                 usage[new_key] = usage[old_key] if old_key in usage else result.get(old_key, -1)
             if old_key in usage:
                 del usage[old_key]
-        usage['batch_size'] = result.get('batch_size', 1)
         if self._model.is_oss_model():
             usage['input_token_count'] = self._get_oss_input_token(usage)
             usage['output_token_count'] = self._get_oss_output_token(result, usage)
+        for k in ["output_token_count", "input_token_count"]:
+            if usage[k] == -1:
+                del usage[k]
+        usage['batch_size'] = result.get('batch_size', 1)
         return usage
 
     def convert_result_ground_truth(self, result: Dict[str, Any]) -> Dict[str, Any]:
@@ -97,9 +103,9 @@ class ResultConverters:
         elif self._model.is_aoai_model():
             use_ground_truth_input = True
         if use_ground_truth_input:
-            for k, v in self._lookup_dict.items():
-                if k in self._get_request_content(result):
-                    ground_truth = v
+            request_payload = self._get_request(result)
+            payload_hash = EndpointUtilities.hash_payload_prompt(request_payload, self._model)
+            ground_truth = self._lookup_dict.get(payload_hash, '')
         return {'ground_truth': ground_truth}
 
     def _get_raw_output(self, result: Dict[str, Any]) -> Dict[str, Any]:
@@ -115,7 +121,7 @@ class ResultConverters:
             result = {k: -1 for k in ResultConverters.PERF_OUTPUT_KEYS}
             result['start_time_iso'] = ResultConverters.DEFAULT_ISO_FORMAT
             result['end_time_iso'] = datetime.datetime.utcnow().isoformat()
-        return {ResultConverters.PREDICTION_COL_NAME: self._fallback_value}
+        return {ResultConverters.PREDICTION_COL_NAME: self._fallback_value} if not is_perf else result
 
     def is_result_success(self, result: Dict[str, Any]) -> bool:
         """Check if the result contains a successful response."""
