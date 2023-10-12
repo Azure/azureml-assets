@@ -10,7 +10,7 @@ inputs:
   batch_inference_output:
     type: uri_folder
     path: ../data/
-  label_key: label
+  label_column_name: label
   endpoint_url: http://test-endpoint.com
   handle_response_failure: use_fallback
   is_performance_test: False
@@ -34,7 +34,7 @@ jobs:
       timeout: 900
     inputs:
       batch_inference_output: ${{parent.inputs.batch_inference_output}}
-      label_key: ${{parent.inputs.label_key}}
+      label_column_name: ${{parent.inputs.label_column_name}}
       endpoint_url: ${{parent.inputs.endpoint_url}}
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
       is_performance_test: ${{parent.inputs.is_performance_test}}

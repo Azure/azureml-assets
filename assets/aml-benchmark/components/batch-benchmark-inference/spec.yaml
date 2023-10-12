@@ -61,10 +61,10 @@ inputs:
     type: string
     optional: False
     description: Connections name for the endpoint.
-  label_key:
+  label_column_name:
     type: string
     optional: True
-    description: The label column key.
+    description: The label column name.
   n_samples:
     type: integer
     description: The number of top samples send to endpoint. When performance test is enabled, this will be the number of repeated samples send to the endpoint.
@@ -143,11 +143,11 @@ jobs:
       is_performance_test: ${{parent.inputs.is_performance_test}}
       n_samples: ${{parent.inputs.n_samples}}
       endpoint_url: ${{parent.inputs.endpoint_url}}
-      label_key: ${{parent.inputs.label_key}}
+      label_column_name: ${{parent.inputs.label_column_name}}
     outputs:
       formatted_data:
         type: mltable
-      output_metadata:
+      ground_truth_metadata:
         type: uri_folder
   # Inference
   endpoint_batch_score:
@@ -184,8 +184,8 @@ jobs:
     component: azureml:batch_output_formatter:0.0.1
     inputs:
       batch_inference_output: ${{parent.jobs.endpoint_batch_score.outputs.mini_batch_results_out_directory}}
-      label_key: ${{parent.inputs.label_key}}
-      ground_truth_input: ${{parent.jobs.batch_inference_preparer.outputs.output_metadata}}
+      label_column_name: ${{parent.inputs.label_column_name}}
+      ground_truth_input: ${{parent.jobs.batch_inference_preparer.outputs.ground_truth_metadata}}
       fallback_value: ${{parent.inputs.fallback_value}}
       handle_response_failure: ${{parent.inputs.handle_response_failure}}
       is_performance_test: ${{parent.inputs.is_performance_test}}

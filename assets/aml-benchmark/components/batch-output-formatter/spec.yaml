@@ -13,7 +13,7 @@ inputs:
     type: string
     optional: True
     description: The metadata key that stores ground truth `label_key` in the response. If using azureml llama model and pass `_batch_request_metadata`, then this one can left empty or using `request_metadata`.
-  label_key:
+  label_column_name:
     type: string
     optional: True
     description: The key that stores the ground truth value.
@@ -61,7 +61,7 @@ command: >-
   --perf_data ${{outputs.performance_metadata}}
   --predict_ground_truth_data ${{outputs.ground_truth}}
   --endpoint_url ${{inputs.endpoint_url}}
-  $[[--label_key ${{inputs.label_key}}]]
+  $[[--label_key ${{inputs.label_column_name}}]]
   --handle_response_failure ${{inputs.handle_response_failure}}
   --is_performance_test ${{inputs.is_performance_test}}
   $[[--metadata_key ${{inputs.metadata_key}}]]

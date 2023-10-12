@@ -142,7 +142,7 @@ class TestBatchBenchmarkInferenceComponent:
             "max_concurrency_per_instance:": ["  max_concurrency_per_instance: 1\n"],
             "ground_truth_input:": ['  ground_truth_input:\n', '    type: uri_folder\n', '    path: ../data/\n'],
             "metadata_key:": ["  metadata_key: _batch_request_metadata\n"],
-            "label_key:": ["  label_key: label\n"],
+            "label_column_name:": ["  label_column_name: label\n"],
             "n_samples:": ["  n_samples: 10\n"],
             "predictions:": [
                 '  predictions:\n', '    type: uri_file\n',
