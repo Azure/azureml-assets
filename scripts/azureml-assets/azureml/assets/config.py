@@ -25,10 +25,12 @@ class ValidationException(Exception):
 class AssetType(Enum):
     """Asset type."""
 
+    # TODO: Remove BENCHMARKRESULT after other scripts are updated to switch to EVALUATIONRESULT
     BENCHMARKRESULT = 'benchmarkresult'
     COMPONENT = 'component'
     DATA = 'data'
     ENVIRONMENT = 'environment'
+    EVALUATIONRESULT = 'evaluationresult'
     MODEL = 'model'
     PROMPT = 'prompt'
 
@@ -82,7 +84,7 @@ class GenericAssetType(Enum):
     """Enum for generic asset types."""
 
     PROMPT = 'prompt'
-    BENCHMARKRESULT = 'benchmarkresult'
+    EVALUATIONRESULT = 'evaluationresult'
 
 
 class Os(Enum):
@@ -124,7 +126,7 @@ DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
 EXCLUDE_PREFIX = "!"
 FULL_ASSET_NAME_DELIMITER = "/"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
-GENERIC_ASSET_TYPES = [AssetType.PROMPT]
+GENERIC_ASSET_TYPES = [AssetType.EVALUATIONRESULT, AssetType.PROMPT]
 PARTIAL_ASSET_NAME_TEMPLATE = "{type}/{name}"
 PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: 'mcr.microsoft.com'}
 STANDARD_ASSET_TYPES = [AssetType.COMPONENT, AssetType.DATA, AssetType.ENVIRONMENT, AssetType.MODEL]
@@ -373,9 +375,8 @@ class Spec(Config):
     def generic_asset_data_path(self) -> str:
         """Data path for a generic asset."""
         if self.type == GenericAssetType.PROMPT.value:
-            template = self._yaml.get('template')
-            return None if template is None else template.get('path')
-        elif self.type == GenericAssetType.BENCHMARKRESULT.value:
+            return self._yaml.get('data_uri')
+        elif self.type == GenericAssetType.EVALUATIONRESULT.value:
             return self._yaml.get('path')
         else:
             return None
