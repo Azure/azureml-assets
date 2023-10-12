@@ -23,6 +23,7 @@ dependencies:
   - xz=5.4.2=h5eee18b_0
   - zlib=1.2.13=h5eee18b_0
   - pip:
+      - mlflow==2.3.1
       - accelerate==0.21.0
       - aiofiles==23.2.1
       - aiohttp==3.8.6
@@ -67,7 +68,7 @@ dependencies:
       - kiwisolver==1.4.5
       - linkify-it-py==2.0.2
       - lit==17.0.2
-      - llava-torch==1.1.0
+      - llava-torch==1.1.1
       - markdown-it-py==2.2.0
       - markdown2==2.4.10
       - markupsafe==2.1.3
