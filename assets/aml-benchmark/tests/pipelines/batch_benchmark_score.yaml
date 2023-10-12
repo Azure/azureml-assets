@@ -11,9 +11,11 @@ inputs:
     type: uri_folder
     path: ../data/
   online_endpoint_url: 'a_url'
-  additional_headers: '"azureml-model-deployment": "test-model-1"'
+  deployment_name: 'a_deployment_name'
   initial_worker_count: 1
   max_worker_count: 10
+  connections_name: aml-benchmark-connection
+  debug_mode: True
 
 outputs:
   job_out_path:
@@ -33,9 +35,11 @@ jobs:
     inputs:
       data_input_table: ${{parent.inputs.data_input_table}}
       online_endpoint_url: ${{parent.inputs.online_endpoint_url}}
-      additional_headers: ${{parent.inputs.additional_headers}}
       initial_worker_count: ${{parent.inputs.initial_worker_count}}
       max_worker_count: ${{parent.inputs.max_worker_count}}
+      deployment_name: ${{parent.inputs.deployment_name}}
+      connections_name: ${{parent.inputs.connections_name}}
+      debug_mode: ${{parent.inputs.debug_mode}}
     outputs:
       job_out_path: ${{parent.outputs.job_out_path}}
       mini_batch_results_out_directory: ${{parent.outputs.mini_batch_results_out_directory}}

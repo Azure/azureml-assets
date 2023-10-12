@@ -1,0 +1,13 @@
+*.pyc
+*.egg-info
+__pycache__
+scripts/outputs
+scripts/deployment_details*
+scripts/labench*
+*.log
+.idea
+Customers
+Pipelines
+docs
+scratch
+tests

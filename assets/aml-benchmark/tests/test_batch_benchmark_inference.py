@@ -28,11 +28,12 @@ class TestBatchBenchmarkInferenceComponent:
     def test_batch_benchmark_inference(self, temp_dir: str):
         """Test batch inference preparer."""
         ml_client = get_mlclient()
-        score_url, deployment_name = deploy_fake_test_endpoint_maybe(ml_client)
+        score_url, deployment_name, connections_name = deploy_fake_test_endpoint_maybe(ml_client)
         pipeline_job = self._get_pipeline_job(
             self.test_batch_benchmark_inference.__name__,
             score_url,
-            '{"azureml-model-deployment": "' + deployment_name + '"}',
+            deployment_name,
+            connections_name,
             '{'
             '   "input_data":'
             '   {'
@@ -66,7 +67,8 @@ class TestBatchBenchmarkInferenceComponent:
                 self,
                 display_name: str,
                 online_endpoint_url: str,
-                additional_headers: str,
+                deployment_name: str,
+                connections_name: str,
                 batch_input_pattern: str,
                 label_key: str,
                 temp_dir: Optional[str] = None,
@@ -85,8 +87,9 @@ class TestBatchBenchmarkInferenceComponent:
         pipeline_job.inputs.input_dataset = Input(
             type="uri_folder", path=temp_dir
         )
-        pipeline_job.inputs.online_endpoint_url = online_endpoint_url
-        pipeline_job.inputs.additional_headers = additional_headers
+        pipeline_job.inputs.endpoint_url = online_endpoint_url
+        pipeline_job.inputs.connections_name = connections_name
+        pipeline_job.inputs.deployment_name = deployment_name
         pipeline_job.inputs.initial_worker_count = 1
         pipeline_job.inputs.max_worker_count = 10
         pipeline_job.inputs.batch_input_pattern = batch_input_pattern
@@ -122,29 +125,35 @@ class TestBatchBenchmarkInferenceComponent:
         param_mapping_dict = {
             "input_dataset:": ['  input_dataset:\n', '    type: uri_folder\n', '    path: ../data/\n'],
             "batch_input_pattern:": ["  batch_input_pattern: wrong_pattern\n"],
-            "online_endpoint_url:": ["  online_endpoint_url: a_bad_url\n"],
+            "endpoint_url:": ["  endpoint_url: a_bad_url\n"],
+            "handle_response_failure:": ["  handle_response_failure: true\n"],
+            "connections_name:": ["  connections_name: a_bad_connection\n"],
+            "fallback_value:": ["  fallback_value: a_value\n"],
+            "deployment_name:": ["  deployment_name: a_bad_deployment\n"],
             "debug_mode:": ["  debug_mode: false\n"],
-            "additional_headers:": ["  additional_headers: 'some_header'\n"],
+            "additional_headers:": ["  additional_headers: '{}'\n"],
             "ensure_ascii:": ["  ensure_ascii: false\n"],
+            "is_performance_test:": ["  is_performance_test: false\n"],
             "max_retry_time_interval:": ["  max_retry_time_interval: 600\n"],
             "initial_worker_count:": ["  initial_worker_count: 1\n"],
             "max_worker_count:": ["  max_worker_count: 10\n"],
+            "data_id_key:": ["  data_id_key: data_id\n"],
             "instance_count:": ["  instance_count: 1\n"],
             "max_concurrency_per_instance:": ["  max_concurrency_per_instance: 1\n"],
             "ground_truth_input:": ['  ground_truth_input:\n', '    type: uri_folder\n', '    path: ../data/\n'],
             "metadata_key:": ["  metadata_key: _batch_request_metadata\n"],
             "label_key:": ["  label_key: label\n"],
             "n_samples:": ["  n_samples: 10\n"],
-            "prediction_data:": [
-                '  prediction_data:\n', '    type: uri_file\n',
-                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/prediction.jsonl\n'],
-            "perf_data:": [
-                '  perf_data:\n', '    type: uri_file\n',
-                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/perf_data.jsonl\n'],
-            "ground_truth_data:": [
-                '  ground_truth_data:\n', '    type: uri_file\n',
+            "predictions:": [
+                '  predictions:\n', '    type: uri_file\n',
+                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/predictions.jsonl\n'],
+            "performance_metadata:": [
+                '  performance_metadata:\n', '    type: uri_file\n',
+                '    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/performance_metadata.jsonl\n'],
+            "ground_truth:": [
+                '  ground_truth:\n', '    type: uri_file\n',
                 '    path: azureml://datastores/${{default_datastore}}'
-                '/paths/${{name}}/ground_truth_data.jsonl\n']
+                '/paths/${{name}}/ground_truth.jsonl\n']
         }
         if current_section == "inputs" or current_section == "outputs":
             line_key = self._get_yml_key(line)
@@ -176,7 +185,8 @@ class TestBatchBenchmarkInferenceComponent:
         if current_section == "inputs" or current_section == "outputs":
             if line.startswith("      "):
                 return False
-            return self._get_yml_key(line) not in {'optional:', 'type:', 'default:', 'description:'}
+            return self._get_yml_key(line) not in {
+                'optional:', 'type:', 'default:', 'description:', 'enum:'}
         return True
 
     def _read_data(self, file_path):
@@ -206,9 +216,9 @@ class TestBatchBenchmarkInferenceComponent:
             )
         output_dir = os.path.join(output_dir, "named-outputs")
         self._check_output_data(
-            os.path.join(output_dir, "prediction_data"), "prediction.jsonl", ["prediction"])
+            os.path.join(output_dir, "prediction_data"), "prediction_data", ["prediction"])
         self._check_output_data(
-            os.path.join(output_dir, "perf_data"), "perf_data.jsonl", ["start", "end", "latency"])
+            os.path.join(output_dir, "perf_data"), "perf_data", ["start", "end", "latency"])
         self._check_output_data(
             os.path.join(
-                output_dir, "ground_truth_data"), "ground_truth_data.jsonl", ["ground_truth"])
+                output_dir, "ground_truth_data"), "ground_truth_data", ["ground_truth"])

@@ -1,7 +1,6 @@
 # Description
 Falcon-7B is a large language model with 7 billion parameters. It is a causal decoder-only model developed by TII and trained on 1,500 billion tokens of RefinedWeb dataset, which was enhanced with curated corpora. The model is available under the Apache 2.0 license. It outperforms comparable open-source models and features an architecture optimized for inference. However, it is a raw, pretrained model that should be further finetuned for most use cases.
 
-
 The model is recommended for research on large language models and as a foundation for further specialization and finetuning for specific tasks. It should not be used in production without adequate assessment of risks and mitigation. The model carries biases commonly encountered online and is trained on English and French data only.
 
 The training details of Falcon-7B include information about the training data, training procedure, and hyperparameters used. It was trained on 384 A100 40GB GPUs using a 2D parallelism strategy combined with ZeRO. The model description mentions the architectural adaptations from the GPT-3 model, such as rotary positional embeddings, multiquery attention, and FlashAttention.
@@ -13,7 +12,7 @@ The training details of Falcon-7B include information about the training data, t
 
 #### Training Data
 
-Falcon-7B was trained on 1,500B tokens of [RefinedWeb](https://huggingface.co/datasets/tiiuae/falcon-refinedweb), a high-quality filtered and deduplicated web dataset which we enhanced with curated corpora. Significant components from our curated copora were inspired by The Pile ([Gao et al., 2020](https://arxiv.org/abs/2101.00027)). 
+Falcon-7B was trained on 1,500B tokens of [RefinedWeb](https://huggingface.co/datasets/tiiuae/falcon-refinedweb), a high-quality filtered and deduplicated web dataset which we enhanced with curated corpora. Significant components from our curated copora were inspired by The Pile ([Gao et al., 2020](https://arxiv.org/abs/2101.00027)).
 
 
 | **Data source**    | **Fraction** | **Tokens** | **Sources**                       |
@@ -43,7 +42,7 @@ Falcon-7B was trained on 384 A100 40GB GPUs, using a 2D parallelism strategy (PP
 
 #### Speeds, Sizes, Times
 
-Training happened in early March 2023 and took about two weeks. 
+Training happened in early March 2023 and took about two weeks.
 
 
 #### Evaluation
