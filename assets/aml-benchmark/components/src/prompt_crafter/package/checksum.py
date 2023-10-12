@@ -1,19 +1,26 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Checksum functionality used in Prompt Crafter Component."""
+
 import hashlib
 from typing import Dict, Any
 
 
 class SHA256Checksum:
+    """SHA256 checksum class."""
+
     def __init__(self):
+        """Initialize the checksum object."""
         self._hash = hashlib.sha256()
 
     def update(self, jsonl_line):
+        """Update the checksum with a new jsonl line."""
         line_as_str = self.__class__._prepare_jsonl_line(jsonl_line)
         self._hash.update(line_as_str)
 
     def digest(self):
+        """Return the checksum as a hex string."""
         return self._hash.hexdigest()
 
     @staticmethod

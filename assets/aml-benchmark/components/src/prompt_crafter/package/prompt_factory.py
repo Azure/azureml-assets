@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""PromptFactory class to create prompts from data."""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import json
@@ -19,6 +21,7 @@ JINJA_ENV = Environment(keep_trailing_newline=True)
 
 @dataclass
 class PromptFactory(ABC):
+    """Factory for creating prompts."""
 
     n_shots: int
     prompt_pattern: str
@@ -34,6 +37,7 @@ class PromptFactory(ABC):
     _messages: Optional[OpenAICreate] = None
 
     def __post_init__(self):
+        """Validate and initialize the prompt factory."""
         if self.n_shots > 0 and self.n_shots > len(self.few_shot_pool) and self.few_shot_pattern:
             raise ValueError(f"n_shots ({self.n_shots}) > |few_shot pool| ({len(self.few_shot_pool)})")
 
@@ -62,6 +66,7 @@ class PromptFactory(ABC):
             self.validate_jinja_template(self.augmented_few_shot_pattern, "Few shot pattern is not a valid jinja pattern.")
 
     def validate_jinja_template(self, template: str, error_message: str):
+        """Validate a jinja template."""
         try:
             _ = JINJA_ENV.from_string(template)
         except:
@@ -69,6 +74,7 @@ class PromptFactory(ABC):
 
     @classmethod
     def from_type(cls, prompt_type: PromptType):
+        """Create a prompt factory from a prompt type."""
         if prompt_type == PromptType.completions:
             return CompletionsPromptFactory
         elif prompt_type == PromptType.chat:
@@ -78,11 +84,12 @@ class PromptFactory(ABC):
 
     @abstractmethod
     def create_prompt(row: Dict) -> Prompt:
-        """Create prompts from a row of data"""
+        """Create prompts from a row of data."""
         pass
 
     @staticmethod
     def _parse_label_map(label_map_str: str) -> Dict:
+        """Parse label map string into a dictionary."""
         try:
             label_map = json.loads(label_map_str)
             label_map = {int(k): v for k, v in label_map.items()}
@@ -131,7 +138,8 @@ class PromptFactory(ABC):
 
         return few_shots
 
-    def get_label_from_output_pattern(self, row):
+    def get_label_from_output_pattern(self, row) -> str:
+        """Get label from output jinja pattern."""
         if self.label_map_str:
             output_label_map_pattern = self.label_map_jinja_prefix + self.output_pattern
             output_label = JINJA_ENV.from_string(output_label_map_pattern).render(row)
@@ -144,6 +152,7 @@ class PromptFactory(ABC):
             return label_template.render(row)
 
     def process_row(self, row: Dict, index: int) -> Dict:
+        """Process a row of data and return the output data."""
         prompt = self.create_prompt(row=row)
         output_data = prompt.to_openai_create_prompt()
         output_data["prompt_length"] = len(prompt)
@@ -185,8 +194,10 @@ class PromptFactory(ABC):
 
 @dataclass
 class CompletionsPromptFactory(PromptFactory):
+    """Factory for completions prompts."""
 
     def create_prompt(self, row: Dict) -> CompletionsPrompt:
+        """Create completions prompts."""
         prompt_template = JINJA_ENV.from_string(self.prompt_pattern)
         prompt = str(prompt_template.render(row))
 
@@ -203,6 +214,7 @@ class CompletionsPromptFactory(PromptFactory):
         return prompt
 
     def _create_few_shots(self, row: Dict[str, str]) -> OpenAICreateChatPrompt:
+        """Create few shot prompts for completions prompt."""
         few_shots = self._sample_few_shots(row)
 
         few_shot_prompt = ""
@@ -222,8 +234,10 @@ class CompletionsPromptFactory(PromptFactory):
 
 @dataclass
 class ChatPromptFactory(PromptFactory):
+    """Factory for chat prompts."""
 
     def create_prompt(self, row: Dict) -> ChatPrompt:
+        """Create chat prompts."""
         messages = []
 
         if self.system_message:

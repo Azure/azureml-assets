@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Prompt Crafter runner."""
+
 from typing import Optional
 import json
 import logging
@@ -45,6 +47,8 @@ class _MLFlowLogger():
 
 
 class PromptCrafter:
+    """Prompt Crafter class to create prompts from input data."""
+
     OUTPUT_FILENAME = "few_shot_prompt.jsonl"
     MLTABLE_FILENAME = "MLTable"
 
@@ -71,6 +75,7 @@ class PromptCrafter:
         base_prompt_factory_cls=PromptFactory,
         output_filename: Optional[str] = OUTPUT_FILENAME,
     ):
+        """Initialize the prompt crafter."""
         self.metadata_keys = metadata_keys
         self.additional_payload = additional_payload
         params = {k: v for k, v in locals().items() if k not in ["self", "base_prompt_factory_cls", "params"]}
@@ -138,6 +143,7 @@ transformations:
 
     @staticmethod
     def row_output_post_process(row_output_data):
+        """Post process the output data for the row."""
         # metadata is named differently for batch scoring component, so we need to pop it
         # and add it back with the correct key
         metadata = row_output_data.pop("metadata", {})
@@ -153,6 +159,7 @@ transformations:
         return new_data
 
     def run(self):
+        """Create prompts by iterating over the input files."""
         checksum = SHA256Checksum()
 
         with open(self.output_path, "w") as f, open(self.mltable_output_path, "w") as f_mltable:

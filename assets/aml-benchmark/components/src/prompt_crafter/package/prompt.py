@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Prompt Type init file."""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import auto
@@ -21,11 +23,15 @@ OpenAICreate = Union[OpenAICreatePrompt, OpenAICreateChatPrompt]
 
 
 class PromptType(StrEnum):
+    """Prompt types supported by the Prompt Crafter."""
+
     completions = auto()
     chat = auto()
 
 
 class Role(StrEnum):
+    """Role of the messages in a chat prompt."""
+
     system = auto()
     user = auto()
     assistant = auto()
@@ -33,16 +39,11 @@ class Role(StrEnum):
 
 @dataclass
 class Prompt(ABC):
-    """
-    Class for handling the creation of prompts for OpenAI's APIs.
-    """
+    """Class for handling the creation of prompts for OpenAI's APIs."""
 
     @abstractmethod
     def to_openai_create_prompt(self):
-        """
-        Return the actual data to be passed as the `prompt` field to either `openai.ChatCompletion.create`,
-        if the model is a chat model, or `openai.Completion.create` otherwise.
-        """
+        """Return the actual data to be passed as `prompt` to a model."""
         pass
 
     @abstractmethod
@@ -53,27 +54,33 @@ class Prompt(ABC):
 
 @dataclass
 class CompletionsPrompt(Prompt):
+    """Class for handling the creation of completion prompts."""
 
     raw_prompt: OpenAICreatePrompt
     prompt_prefix = 'prompt'
 
     def __len__(self):
+        """Return the number of words in the prompt."""
         return len(self.raw_prompt.split())
 
     def to_openai_create_prompt(self):
+        """Return the data to be passed as `prompt` to text completion models."""
         return {"prompt": self.raw_prompt}
 
 
 @dataclass
 class ChatPrompt(Prompt):
+    """Class for handling the creation of chat prompts."""
 
     raw_prompt: OpenAICreateChatPrompt
     prompt_prefix = 'messages'
 
     def __len__(self):
+        """Return the number of words in the prompt."""
         return sum(len(msg["content"].split()) for msg in self.raw_prompt)
 
     def to_openai_create_prompt(self):
+        """Return the data to be passed as `prompt` to chat models."""
         return {"prompt": self.raw_prompt}
 
 

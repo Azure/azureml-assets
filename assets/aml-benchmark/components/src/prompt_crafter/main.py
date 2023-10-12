@@ -10,7 +10,8 @@ from package_3p.prompt_crafter import PromptCrafter
 from utils.logging import log_mlflow_params
 
 
-def parse_args():
+def parse_args() -> ArgumentParser:
+    """Parse command line arguments."""
     parser = ArgumentParser()
     parser.add_argument("--input_dir", type=str, required=False)
     parser.add_argument("--test_data", type=str, required=True)
@@ -37,7 +38,8 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
+    """Entry function for Prompt Crafter Component."""
     args = parse_args()
 
     prompt_crafter = PromptCrafter(

@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Tests for Prompt Crafter Component."""
+
 import os
 import sys
 from test_utils import get_src_dir
@@ -8,10 +13,13 @@ sys.path.insert(0, os.path.join(get_src_dir(), PROMPT_CRAFTER_NAME))
 from package_3p.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
 
 
-def test_chat_prompts():
-    """Test that the role of the few shot prompts outputs are correctly set to user/assistant 
-    roles. This is applicable when few_shot_prompts are not present in the input data.
-    If few_shot_pattern is present, then assistant role is not added to the few_shot_prompts."""
+def test_chat_prompts() -> None:
+    """Test the functionality of the chat prompts with various inputs.
+
+    The role of the few shot prompts outputs should be correctly set to user/
+    assistant roles. If few_shot_pattern is present, then assistant role is
+    not added to the few_shot_prompts.
+    """
     n_shots = 1
     prompt_pattern = '[{"role": "user", "content": "{{input}}?"}]'
     output_pattern = '{{output}}'
@@ -54,7 +62,8 @@ def test_chat_prompts():
     assert prompt.raw_prompt == expected_output_with_few_shot_pattern
 
 
-def test_completions_prompts():
+def test_completions_prompts() -> None:
+    """Test the functionality of the completions prompt factory."""
     n_shots = 1
     prompt_pattern = 'Input:{{input}}\nOutput:'
     few_shot_pattern = 'Input:{{input}}\nOutput:{{output}}'

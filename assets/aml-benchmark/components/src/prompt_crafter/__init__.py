@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Prompt crafter init file."""
+"""Prompt Crafter init file."""
 
 import sys
 import os
