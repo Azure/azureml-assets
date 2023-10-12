@@ -26,7 +26,7 @@ class EndpointDataPreparer:
     def convert_input_dict(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Convert input dict to the corresponding payload."""
         return self._convert_python_pattern(origin_json_dict)
-    
+
     def convert_ground_truth(
             self, origin_json_dict: Dict[str, Any], payload: Any
     ) -> Dict[str, Any]:
