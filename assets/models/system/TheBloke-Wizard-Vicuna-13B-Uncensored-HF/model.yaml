@@ -1,0 +1,8 @@
+path:
+  container_name: models
+  container_path: huggingface/TheBloke-Wizard-Vicuna-13B-Uncensored-HF/1697084369/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model
