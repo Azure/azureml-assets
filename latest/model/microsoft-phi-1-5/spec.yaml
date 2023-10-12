@@ -50,8 +50,12 @@ tags:
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
   license: other
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'false'
+    apply_ort: 'false'
   task: text-generation
-version: 3
+version: 4
 description: |
   # **Microsoft Phi-1.5**
 
