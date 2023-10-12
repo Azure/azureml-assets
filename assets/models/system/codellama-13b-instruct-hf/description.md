@@ -50,10 +50,9 @@ Please see the Responsible Use Guide available at [https://ai.meta.com/llama/res
 
 
 # **Inference samples**
-
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://github.com/Azure/azureml-examples/blob/main/sdk/python/foundation-models/system/inference/text-generation/text-generation-online-endpoint-dolly.ipynb" target="_blank">text-generation-online-endpoint-dolly.ipynb</a>|<a href="https://github.com/Azure/azureml-examples/blob/main/cli/foundation-models/system/inference/text-generation/text-generation-online-endpoint-dolly.sh" target="_blank">text-generation-online-endpoint-dolly.sh</a>
+Real time|<a href="https://aka.ms/azureml-infer-online-sdk-text-generation-dolly" target="_blank">text-generation-online-endpoint.ipynb</a>|<a href="https://aka.ms/azureml-infer-online-cli-text-generation-dolly" target="_blank">text-generation-online-endpoint.sh</a>
 Batch |<a href="https://aka.ms/azureml-infer-batch-sdk-text-generation" target="_blank">text-generation-batch-endpoint.ipynb</a>| coming soon
 
 
