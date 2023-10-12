@@ -121,7 +121,7 @@ class ResultConverters:
             result = {k: -1 for k in ResultConverters.PERF_OUTPUT_KEYS}
             result['start_time_iso'] = ResultConverters.DEFAULT_ISO_FORMAT
             result['end_time_iso'] = datetime.datetime.utcnow().isoformat()
-        return {ResultConverters.PREDICTION_COL_NAME: self._fallback_value}
+        return {ResultConverters.PREDICTION_COL_NAME: self._fallback_value} if not is_perf else result
 
     def is_result_success(self, result: Dict[str, Any]) -> bool:
         """Check if the result contains a successful response."""
