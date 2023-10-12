@@ -47,7 +47,6 @@ inputs:
     type: integer
     description: The number of top samples send to endpoint.
     optional: True
-
 outputs:
   formatted_data:
     type: mltable
