@@ -53,7 +53,7 @@ outputs:
     description: Path to the folder where the payload will be stored.
   ground_truth_metadata:
     type: uri_folder
-    description: Path to the folder where the payload will be stored.
+    description: Path to the folder where the ground truth metadata will be stored.
 
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
