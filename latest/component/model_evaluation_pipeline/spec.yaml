@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: model_evaluation_pipeline
-version: 0.0.16
+version: 0.0.17
 type: pipeline
 display_name: Model Evaluation Pipeline
 description: Pipeline component for model evaluation for supported tasks. \ Generates
@@ -86,7 +86,7 @@ jobs:
       label_column_name: '${{parent.inputs.label_column_name}}'
       input_column_names: '${{parent.inputs.input_column_names}}'
       device: '${{parent.inputs.device}}'
-      batch_size: '${{parent.inputs.batch_size}}'
+#      batch_size: '${{parent.inputs.batch_size}}'
       evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
 

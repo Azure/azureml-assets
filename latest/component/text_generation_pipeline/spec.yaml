@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: text_generation_pipeline
-version: 0.0.22
+version: 0.0.23
 type: pipeline
 display_name: Text Generation Pipeline
 description: Pipeline component for text generation
@@ -665,7 +665,7 @@ jobs:
       test_data: '${{parent.jobs.text_generation_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.ground_truth_key}}'
       input_column_names: '${{parent.inputs.text_key}}'
-      batch_size: '${{parent.inputs.batch_size}}'
+#      batch_size: '${{parent.inputs.batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.text_generation_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
