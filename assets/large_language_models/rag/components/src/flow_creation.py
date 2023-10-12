@@ -38,7 +38,7 @@ RUN_TOKEN = os.environ.get("AZUREML_RUN_TOKEN", "")
 CODE_DIR = "rag_code_flow"
 _CITATION_TEMPLATE = r'\nPlease add citation after each sentence when possible in a form \"(Source: citation)\".'
 _USER_INPUT = r'{{contexts}} \n user: {{question}} \nassistant:'
-_MODIFY_INPUT = r'system: \nGiven the following conversation history and the users next question,' + \
+_MODIFY_INPUT = r'Given the following conversation history and the users next question,' + \
     r'rephrase the question to be a stand alone question.\nIf the conversation is irrelevant ' + \
     r'or empty, just restate the original question.\nDo not add more details than necessary to the question.'
 _CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ item.inputs.question }} ' + \
