@@ -3,7 +3,8 @@ name: Llama-2-70b
 path: ./
 properties:
   datasets: Publicly available sources
-  finetuning-tasks: text-classification
+  finetuning-tasks: text-classification,text-generation
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_NC96ads_A100_v4
   languages: EN
   azureml.copyRegistryFilesToWorkspace: true
   SharedComputeCapacityEnabled: true
@@ -11,12 +12,13 @@ tags:
   Featured: ''
   Preview: ''
   inference_supported_envs:
-  - hf_tgi
+  - vllm
   evaluation_compute_allow_list:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
   inference_compute_allow_list:
+  - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
   - Standard_NC96ads_A100_v4
@@ -29,4 +31,4 @@ tags:
     precision: '4'
   task: text-generation
   SharedComputeCapacityEnabled: ''
-version: 8
+version: 11

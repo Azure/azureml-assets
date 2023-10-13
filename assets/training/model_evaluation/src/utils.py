@@ -24,10 +24,11 @@ from task_factory.text.summarization import Summarizer
 from task_factory.text.translation import Translator
 from task_factory.text.text_generation import TextGenerator
 from task_factory.text.fill_mask import FillMask
+from task_factory.text.chat_completion import ChatCompletion
 from task_factory.image.classification import ImageMulticlassClassifier, ImageMultilabelClassifier
 from task_factory.image.od_is import ImageOdIsPredictor
 from evaluators.evaluators import EvaluatorFactory
-from run_utils import TestRun
+from logging_utilities import current_run
 from azureml.metrics import _scoring_utilities, constants as metrics_constants
 from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 import azureml.evaluate.mlflow as aml_mlflow
@@ -184,7 +185,7 @@ def _log_metrics(metrics, artifacts):
     table_scores = {}
     nonscalar_scores = {}
     list_metrics = [metrics_constants.Metric.FMPerplexity]
-    run = TestRun().run
+    run = current_run.run
     list_scores = {}
     classwise_scores = {}
 
@@ -214,15 +215,18 @@ def _log_metrics(metrics, artifacts):
     try:
         # Log the scalar metrics. (Currently, these are stored in CosmosDB)
         for name, score in metrics.items():
+            if isinstance(score, list):
+                list_scores[name] = list(score)
+                continue
             run.log(name, score)
 
         for name, score in table_scores.items():
             run.log_table(name, score)
 
-        for name, score in list_scores.items():
-            # TODO: Add checks for logging longer lists
-            pass
-            # run.log_list(name, score)
+        # for name, score in list_scores.items():
+        #     # TODO: Add checks for logging longer lists
+        #     pass
+        #     # run.log_list(name, score)
 
         # Log the non-scalar metrics. (Currently, these are all artifact-based.)
         for name, score in nonscalar_scores.items():
@@ -318,6 +322,7 @@ def get_predictor(task):
         TASK.TRANSLATION: Translator,
         TASK.TEXT_GENERATION: TextGenerator,
         TASK.FILL_MASK: FillMask,
+        TASK.CHAT_COMPLETION: ChatCompletion,
         TASK.FORECASTING: TabularForecast,
         TASK.IMAGE_CLASSIFICATION: ImageMulticlassClassifier,
         TASK.IMAGE_CLASSIFICATION_MULTILABEL: ImageMultilabelClassifier,
@@ -621,6 +626,7 @@ def read_data(file_path, is_mltable=True, batch_size=None):
     Args:
         file_path (_type_): _description_
         is_mltable: (_type_, optional): _description_. Defaults to True.
+        batch_size (_type_): _description_
 
     Raises:
         DataValidationException: _description_
@@ -679,8 +685,12 @@ def read_dataframe(file_path, batch_size=None):
         # Reading a TSV file with the specified batch_size and skipping initial spaces
         return pd.read_csv(file_path, sep='\t', chunksize=batch_size, skipinitialspace=True)
     elif file_extension == '.jsonl':
-        # Reading a JSONL file with the specified batch_size
-        return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
+        try:
+            # Reading a JSONL file with the specified batch_size
+            return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
+        except Exception as e:
+            logger.info("Loading the data without chunksize. Exception: {}".format(str(e)))
+            return pd.read_json(file_path)
     else:
         # Default to reading JSONL files without raising an exception
         return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
@@ -767,8 +777,17 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False,
             exception = DataLoaderException(exception_message=message)
             log_traceback(exception, logger, message)
             raise exception
+
     if y_test is not None:
         y_test = y_test.values
+
+    if task == constants.TASK.CHAT_COMPLETION:
+        X_test = []
+        y_test = None
+        for conversation in data[label_column_name]:
+            df = pd.DataFrame({"input_string": conversation})
+            X_test.append(df)
+
     return X_test, y_test
 
 
@@ -806,6 +825,8 @@ def read_config(conf_file):
     Returns:
         _type_: _description_
     """
+    if not conf_file:
+        return dict()
     try:
         import json
         with open(conf_file, "r") as f:
@@ -833,6 +854,8 @@ def read_config_str(conf_str):
     Returns:
         _type_: _description_
     """
+    if not conf_str:
+        return dict()
     try:
         import json
         data = json.loads(conf_str)
@@ -904,9 +927,9 @@ def read_conll(stream_info, labels=None):
 def parse_input_ground_truth_col(col_name):
     """Parse input ground truth columns."""
     extra_cols = None
-    if "," in col_name:
+    if col_name is not None and "," in col_name:
         col_name, extra_cols = col_name.split(",", 1)
-        # Adding this to be consistent with how it is being used elsewhere, ideally it shoudl be ""
+        # Adding this to be consistent with how it is being used elsewhere, ideally it should be ""
         col_name = None if col_name == "" else col_name
         extra_cols = extra_cols.split(",") if extra_cols != "" else None
     return col_name, extra_cols
