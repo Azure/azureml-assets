@@ -30,10 +30,17 @@ inputs:
       is given, then,
       this is required input.
     optional: true
-  prediction_probabilities_dataset:
-    type: uri_file
+  remove_prefixes:
+    type: string
     description: >-
-      A file that contains the prediction probabilities.
+      A set of string prefixes separated by comma list of string prefixes to be removed
+      from the inference
+      results in sequence. The prefixes should be separated by a comma.
+      Example: for the inference string - 
+        "###>>>Hello world."
+      and prefixes -
+        "###,>>>"
+      will output "Hello world".
     optional: true
   separator:
     type: string
@@ -44,6 +51,36 @@ inputs:
       Example: "This is the first part ### This is the second part" will result in
       "This is the first part".
     optional: true
+  find_first:
+    type: string
+    description: >-
+      A list of strings to search for in the inference results. The first occurrence
+      of each string will \
+      be extracted and the occurrence with minimum index will be returned.
+      Must provide a comma-separated list of strings.
+      Example:
+      >>> find_first = "positive,negative"
+      >>> completion = "This is a positive example, not negative"
+      # Output: "positive"
+    optional: true
+  extract_number:
+    type: string
+    description: >
+      If the inference results contain a number, this can be used to extract the first
+      or last number in the inference results.
+      The number will be extracted as a string.
+      Example:
+      >>> extract_number = "first"
+      >>> prediction = "Adding 0.3 to 1,000 gives 1,000.3"
+      # Output: "0.3"
+      Example:
+      >>> extract_number = "last"
+      >>> prediction = "Adding 0.3 to 1,000 gives 1,000.3"
+      # Output: "1000.3"
+    optional: true
+    enum:
+    - first
+    - last
   regex_expr:
     type: string
     description: >-
@@ -51,30 +88,32 @@ inputs:
       must contain a group to be extracted. The first group and the first match will
       be used.  Example: "\n\nThe answer is: (\d)."
     optional: true
-  extract_value_at_index:
-    type: integer
-    description: >-
-      If the regex_expr finds multiple strings matching the pattern in `regex_expr`,
-      this can be used  to extract the preferred value at a given index out of all
-      matched patterns to be used as prediction  value. If omitted, the default behaviour
-      is first matched. 
-    optional: true
-  strip_prefix:
+  strip_characters:
     type: string
     description: >-
-      Characters to remove from the beginning of the extracted answer.
-      It is applied in the very end of the extraction process.
+      A set of characters to remove from the beginning or end of the extracted answer.It
+      is applied in the very end
+      of the extraction process.
     optional: true
-  strip_suffix:
+  label_map:
     type: string
-    description: >-
-      Characters to remove from the end of the extracted answer.
-      It is applied in the very end of the extraction process.
+    description: |
+      JSON serialized dictionary to perform mapping. Must contain key-value pair "column_name": "<actual_column_name>" whose 
+      value needs mapping, followed by key-value pairs containing idtolabel or labeltoid mappers.
+      Example format:
+      {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}
     optional: true
   template:
     type: string
     description: >-
-      Jinja template containing logic to extract prediction.
+      Jinja template containing logic to extract prediction. In case of multiple predictions,
+      logic must be written in a written in
+      format so that it outputs a list of formatted predictions.
+      Example:
+      >>> prediction = ["The answer is phone.", "The answer is cellular."]
+      The provided jinja template logic should be able extract and output in this
+      format:
+      # Output : ["phone", "cellular"]
     optional: true
   script_path:
     type: uri_file
@@ -83,14 +122,6 @@ inputs:
       This [base template]
       (https://github.com/Azure/azureml-assets/tree/main/assets/aml-benchmark/scripts/custom_inference_postprocessors/base_postprocessor_template.py)
       tshould be used to create a custom postprocessor script.
-    optional: true
-  encoder_config:
-    type: string
-    description: |
-      JSON serialized dictionary to perform mapping. Must contain key-value pair "column_name": "<actual_column_name>" whose 
-      value needs mapping, followed by key-value pairs containing idtolabel or labeltoid mappers.
-      Example format:
-      {"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}
     optional: true
 
 
@@ -110,13 +141,13 @@ command: >-
   --prediction_column_name ${{inputs.prediction_column_name}}
   $[[--ground_truth_dataset ${{inputs.ground_truth_dataset}}]]
   $[[--ground_truth_column_name ${{inputs.ground_truth_column_name}}]]
-  $[[--prediction_probabilities_dataset ${{inputs.prediction_probabilities_dataset}}]]
-  $[[--encoder_config '${{inputs.encoder_config}}']]
   $[[--separator '${{inputs.separator}}']]
+  $[[--find_first '${{inputs.find_first}}']]
   $[[--regex_expr '${{inputs.regex_expr}}']]
-  $[[--extract_value_at_index ${{inputs.extract_value_at_index}}]]
-  $[[--strip_prefix '${{inputs.strip_prefix}}']]
-  $[[--strip_suffix '${{inputs.strip_suffix}}']]
+  $[[--remove_prefixes '${{inputs.remove_prefixes}}']]
+  $[[--strip_characters '${{inputs.strip_characters}}']]
+  $[[--extract_number '${{inputs.extract_number}}']]
+  $[[--label_map '${{inputs.label_map}}']]
   $[[--template '${{inputs.template}}']]
   $[[--script_path ${{inputs.script_path}}]]
   --output_dataset_result ${{outputs.output_dataset_result}}
