@@ -93,4 +93,4 @@ Note: "video_link" should be publicly accessible urls.
 
 #### Model inference - visualization for a sample video
 
-<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_bytetrack_yolox_x_crowdhuman_mot17-private-half.gif" alt="od visualization">
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/plot_mot_bdd.gif" alt="mot visualization">
