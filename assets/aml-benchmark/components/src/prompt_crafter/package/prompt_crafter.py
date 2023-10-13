@@ -12,9 +12,9 @@ import random
 import mlflow
 import tqdm
 
-from package_3p.dataset_resolver import resolve_file
-from package_3p.checksum import SHA256Checksum
-from package_3p.prompt_factory import PromptFactory
+from package.dataset_resolver import resolve_file
+from package.checksum import SHA256Checksum
+from package.prompt_factory import PromptFactory
 
 logger = logging.getLogger(__name__)
 
