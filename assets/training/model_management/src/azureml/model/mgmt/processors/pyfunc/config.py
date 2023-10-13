@@ -13,7 +13,7 @@ class MMLabDetectionTasks(_CustomEnum):
     MM_INSTANCE_SEGMENTATION = "image-instance-segmentation"
 
 
-class MMTrackVideoTasks(_CustomEnum):
+class MMLabTrackingTasks(_CustomEnum):
     """Supported tasks from MMLab model framework for video."""
 
     MM_MULTI_OBJECT_TRACKING = "video-multi-object-tracking"
