@@ -11,37 +11,13 @@ from typing import Dict, List
 import mlflow
 import pandas as pd
 import torch
-from config import MMDetLiterals, MLflowSchemaLiterals, MOTLiterals
-
-
-def _is_valid_url(text: str) -> bool:
-    """Check if text is url or base64 string.
-
-    :param text: text to validate
-    :type text: str
-    :return: True if url else false
-    :rtype: bool
-    """
-    regex = (
-        "((http|https)://)(www.)?"
-        + "[a-zA-Z0-9@:%._\\+~#?&//=]"
-        + "{2,256}\\.[a-z]"
-        + "{2,6}\\b([-a-zA-Z0-9@:%"
-        + "._\\+~#?&//=]*)"
-    )
-    p = re.compile(regex)
-
-    # If the string is empty
-    # return false
-    if str is None:
-        return False
-
-    # Return if the string
-    # matched the ReGex
-    if re.search(p, text):
-        return True
-    else:
-        return False
+from config import MMDetLiterals, MLflowSchemaLiterals, MOTLiterals, Tasks
+try:
+    # Use try/except since vision_utils is added as part of model export and not available when initializing
+    # model wrapper for save_model().
+    from vision_utils import _is_valid_url
+except ImportError:
+    pass
 
 
 def _process_video(vid: pd.Series) -> str:
@@ -61,7 +37,7 @@ def _process_video(vid: pd.Series) -> str:
 
 
 class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
-    """MLFlow model wrapper for AutoML for Images models."""
+    """MLFlow model wrapper for AutoML Video Object Tracking models."""
 
     def __init__(
         self,
@@ -76,7 +52,7 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         self._model = None
         self._task_type = task_type
         self._inference_detector = None
-        self.video_reader = None
+        self._video_reader = None
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """Load a MLflow model with pyfunc.load_model().
@@ -86,7 +62,7 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         """
         print("Inside load_context()")
 
-        if self._task_type in ["video-multi-object-tracking"]:
+        if self._task_type in [Tasks.MM_MULTI_OBJECT_TRACKING.value]:
             """
             Install mmtrack, mmcv and mmdet using mim, with pip installation is not working
             1. for mmtrack, one of its dependency is mmcv 1.6.2, which will trigger cuda related issues.
@@ -107,7 +83,7 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
             from mmtrack.apis import init_model, inference_mot
             import mmcv
             self._inference_detector = inference_mot
-            self.video_reader = mmcv.VideoReader
+            self._video_reader = mmcv.VideoReader
 
             try:
                 model_config_path = context.artifacts[MMDetLiterals.CONFIG_PATH]
@@ -125,16 +101,16 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
 
         else:
             raise ValueError(f"invalid task type {self._task_type}."
-                             f"Supported tasks: video-multi-object-tracking")
+                             f"Supported tasks: {Tasks.MM_MULTI_OBJECT_TRACKING.value}")
 
     def predict(self, context: mlflow.pyfunc.PythonModelContext, input_data: pd.DataFrame) -> pd.DataFrame:
         """Perform inference on the input data.
 
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
-        :param input_data: Input images for prediction
-        :type input_data: Pandas DataFrame with a first column name ["image"] of images where each
-        image is in base64 String format.
+        :param input_data: Input video link for prediction
+        :type input_data: Pandas DataFrame with a first column name ["video"] of videos where each
+        video is a publicly accessible video link.
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns ["boxes"] for object detection
         """
@@ -144,7 +120,7 @@ class VideosTrackingMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         )
         all_predictions = []
         for _, video_url in processed_videos.iteritems():
-            video_frames = self.video_reader(video_url)
+            video_frames = self._video_reader(video_url)
             for j, img in enumerate(video_frames):
                 result = self._inference_detector(self._model, img, frame_id=j)
                 result = self._parse_mot_output(result, j, video_url)

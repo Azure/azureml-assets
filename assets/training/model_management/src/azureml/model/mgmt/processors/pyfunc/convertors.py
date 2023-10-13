@@ -19,7 +19,7 @@ from typing import Dict, List, Optional
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from azureml.model.mgmt.processors.convertors import MLFLowConvertorInterface
 from azureml.model.mgmt.processors.pyfunc.config import (
-    MMLabDetectionTasks, MMTrackVideoTasks, SupportedTasks)
+    MMLabDetectionTasks, MMLabTrackingTasks, SupportedTasks)
 
 from azureml.model.mgmt.processors.pyfunc.clip.config import \
     MLflowSchemaLiterals as CLIPMLFlowSchemaLiterals, MLflowLiterals as CLIPMLflowLiterals
@@ -507,15 +507,16 @@ class LLaVAMLFlowConvertor(PyFuncMLFLowConvertor):
         return artifacts_dict
 
 
-class MMTrackVideoMLflowConvertor(PyFuncMLFLowConvertor):
-    """PyFunc MLfLow convertor for detection models from MMLab."""
+class MMLabTrackingMLflowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for tracking models from MMLab."""
 
     MODEL_DIR = os.path.join(os.path.dirname(__file__), "vision")
+    COMMON_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "common")
 
     def __init__(self, **kwargs):
         """Initialize MLflow convertor for vision models."""
         super().__init__(**kwargs)
-        if not MMTrackVideoTasks.has_value(self._task):
+        if not MMLabTrackingTasks.has_value(self._task):
             raise Exception("Unsupported vision task")
 
     def get_model_signature(self) -> ModelSignature:
@@ -531,7 +532,7 @@ class MMTrackVideoMLflowConvertor(PyFuncMLFLowConvertor):
             ]
         )
 
-        if self._task in [MMTrackVideoTasks.MM_MULTI_OBJECT_TRACKING.value]:
+        if self._task in [MMLabTrackingTasks.MM_MULTI_OBJECT_TRACKING.value]:
             output_schema = Schema(
                 [
                     ColSpec(VisionMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
@@ -553,6 +554,7 @@ class MMTrackVideoMLflowConvertor(PyFuncMLFLowConvertor):
         code_path = [
             os.path.join(self.MODEL_DIR, "track_predict.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py")
         ]
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
