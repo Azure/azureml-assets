@@ -4,9 +4,13 @@
 """Entry script for Model Data Collector Data Window Component."""
 
 import argparse
+
 import pandas as pd
+from pyspark.sql import DataFrame
+from dateutil import parser
 import mltable
 import tempfile
+from fsspec import AbstractFileSystem
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
 from pyspark.sql.functions import col, lit
@@ -45,42 +49,26 @@ def _convert_uri_folder_to_mltable(
     return table
 
 
-def mdc_preprocessor(
-    data_window_start: str,
-    data_window_end: str,
-    input_data: str,
-    preprocessed_input_data: str,
-    extract_correlation_id: bool,
-):
-    """Extract data based on window size provided and preprocess it into MLTable.
-
-    Args:
-        production_data: The data asset on which the date filter is applied.
-        monitor_current_time: The current time of the window (inclusive).
-        window_size_in_days: Number of days from current time to start time window (exclusive).
-        preprocessed_data: The mltable path pointing to location where the outputted mltable will be written to.
-        extract_correlation_id: The boolean to extract correlation Id from the MDC logs.
-    """
-    # Format the dates
-    format_data = "%Y-%m-%d %H:%M:%S"
-    start_datetime = parse_datetime_from_string(format_data, data_window_start)
-    end_datetime = parse_datetime_from_string(format_data, data_window_end)
+def _uri_folder_to_spark_df(data_window_start: datetime, data_window_end: datetime, input_data: str, preprocessed_input_data: str, extract_correlation_id: bool, fs : AbstractFileSystem = None) -> DataFrame:
+    # Parse the dates
+    start_datetime = parser.parse(data_window_start)
+    end_datetime = parser.parse(data_window_end)
 
     # Create mltable definition - extract, filter and convert columns.
     table = _convert_uri_folder_to_mltable(start_datetime, end_datetime, input_data)
 
     # Create MLTable in different location
-    save_path = tempfile.mktemp()
+    save_path = tempfile.mktemp() # TODO: replace tempfile.mktemp() with tempfile.mkstemp() or NamedTemporaryFile()
     table.save(save_path)
 
     # Save preprocessed_data MLTable to temp location
     des_path = preprocessed_input_data + "temp"
-    fs = AzureMachineLearningFileSystem(des_path)
+    fs = fs or AzureMachineLearningFileSystem(des_path) # for testing
     print("MLTable path:", des_path)
     # TODO: Evaluate if we need to overwrite
     fs.upload(
         lpath=save_path,
-        rpath="",
+        rpath=des_path, #"",
         **{"overwrite": "MERGE_WITH_OVERWRITE"},
         recursive=True,
     )
@@ -95,6 +83,8 @@ def mdc_preprocessor(
             + "Please visit aka.ms/mlmonitoringhelp for more information."
         )
         return
+    
+    df.show()
 
     # Output MLTable
     first_data_row = df.select(MDC_DATA_COLUMN).rdd.map(lambda x: x).first()
@@ -106,6 +96,7 @@ def mdc_preprocessor(
     We are removing the column because the pyspark DF is unable to parse it.
     This version of the MDC is applied only to GSQ.
     """
+    # Richard: So do we need this column when monitoring GSQ signal? If yes, how can we remove it? If no, why MDC collect this column?
     if MDC_CHAT_HISTORY_COLUMN in data_as_df.columns:
         data_as_df = data_as_df.drop(col(MDC_CHAT_HISTORY_COLUMN))
 
@@ -146,6 +137,26 @@ def mdc_preprocessor(
         transformed_df = df.select(MDC_DATA_COLUMN).mapInPandas(
             transform_df_function_without_correlation_id, schema=data_as_df.schema
         )
+    return transformed_df
+
+def mdc_preprocessor(
+    data_window_start: str,
+    data_window_end: str,
+    input_data: str,
+    preprocessed_input_data: str,
+    extract_correlation_id: bool,
+    fs: AbstractFileSystem = None,
+):
+    """Extract data based on window size provided and preprocess it into MLTable.
+
+    Args:
+        data_window_start: The start date of the data window.
+        data_window_end: The end date of the data window.
+        input_data: The data asset on which the date filter is applied.
+        preprocessed_data: The mltable path pointing to location where the outputted mltable will be written to.
+        extract_correlation_id: The boolean to extract correlation Id from the MDC logs.
+    """
+    transformed_df = _uri_folder_to_spark_df(data_window_start, data_window_end, input_data, preprocessed_input_data, extract_correlation_id, fs)
 
     save_spark_df_as_mltable(transformed_df, preprocessed_input_data)
 
