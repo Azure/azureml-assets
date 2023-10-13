@@ -8,9 +8,13 @@ import sys
 import pytest
 
 from test_utils import get_src_dir
-PROMPT_CRAFTER_NAME = "prompt_crafter"
-sys.path.insert(0, os.path.join(get_src_dir(), PROMPT_CRAFTER_NAME))
-from package_3p.prompt_crafter import PromptCrafter
+
+sys.path.insert(0, os.path.join(get_src_dir(), 'prompt_crafter'))
+try:
+    from package_3p.prompt_crafter import PromptCrafter
+except ImportError:
+    raise ImportError("Please install the package 'prompt_crafter' to run this test.")
+
 
 # Setting dataset path
 TEST_DATA = os.path.join(

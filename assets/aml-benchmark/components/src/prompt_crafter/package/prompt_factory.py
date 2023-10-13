@@ -54,7 +54,7 @@ class PromptFactory(ABC):
             self.prompt_pattern = self.label_map_jinja_prefix + self.prompt_pattern
             self.validate_jinja_template(self.prompt_pattern, "Prompt pattern is not a valid jinja pattern.")
         else:
-            raise("A prompt pattern (in jinja template) is required.")
+            raise ValueError("A prompt pattern (in jinja template) is required.")
 
         # Validate output_pattern
         if self.output_pattern:
@@ -72,7 +72,7 @@ class PromptFactory(ABC):
         """Validate a jinja template."""
         try:
             _ = JINJA_ENV.from_string(template)
-        except Exception as e:
+        except Exception:
             raise TemplateSyntaxError(f"{template} is not a valid jinja pattern. Error: {error_message}")
 
     @classmethod
@@ -96,7 +96,7 @@ class PromptFactory(ABC):
         try:
             label_map = json.loads(label_map_str)
             label_map = {int(k): v for k, v in label_map.items()}
-        except Exception as e:
+        except Exception:
             logger.exception(f"Invalid label map string:\n{label_map_str}")
             raise ValueError(f"Invalid label map string:\n{label_map_str}")
         return label_map
@@ -108,7 +108,7 @@ class PromptFactory(ABC):
         logger.info(f"Created label map jinja prefix:\n{label_map_jinja_prefix}")
         try:
             _ = JINJA_ENV.from_string(label_map_jinja_prefix)
-        except:
+        except Exception:
             raise TemplateSyntaxError("Label map is not a valid jinja template.")
         return label_map_jinja_prefix
 
@@ -182,7 +182,7 @@ class PromptFactory(ABC):
         if self.additional_payload:
             try:
                 additional_payload = json.loads(self.additional_payload)
-            except:
+            except Exception:
                 raise ValueError("Additional payload is not a valid json")
         else:
             additional_payload = {}
