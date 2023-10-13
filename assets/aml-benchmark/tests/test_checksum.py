@@ -10,7 +10,7 @@ import pytest
 from test_utils import get_src_dir
 sys.path.insert(0, os.path.join(get_src_dir(), 'prompt_crafter'))
 try:
-    from package_3p.checksum import SHA256Checksum
+    from package.checksum import SHA256Checksum
 except ImportError:
     raise ImportError("Please install the package 'prompt_crafter' to run this test.")
 

@@ -7,12 +7,16 @@
 import json
 import random
 import logging
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
-from jinja2 import TemplateSyntaxError, Environment
-from package_3p.prompt import PromptType, Prompt, CompletionsPrompt, ChatPrompt, OpenAICreate, OpenAICreateChatPrompt, Role
+from jinja2 import Environment
+
+from azureml._common._error_definition.azureml_error import AzureMLError
+
+from package.prompt import PromptType, Prompt, CompletionsPrompt, ChatPrompt, OpenAICreate, OpenAICreateChatPrompt, Role
+from utils.exceptions import BenchmarkValidationException
+from utils.error_definitions import BenchmarkValidationError
 
 
 logger = logging.getLogger(__name__)
@@ -73,7 +77,9 @@ class PromptFactory(ABC):
         try:
             _ = JINJA_ENV.from_string(template)
         except Exception:
-            raise TemplateSyntaxError(f"{template} is not a valid jinja pattern. Error: {error_message}")
+            mssg = f"{template} is not a valid jinja pattern. Error: {error_message}"
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg))
 
     @classmethod
     def from_type(cls, prompt_type: PromptType):
@@ -97,8 +103,10 @@ class PromptFactory(ABC):
             label_map = json.loads(label_map_str)
             label_map = {int(k): v for k, v in label_map.items()}
         except Exception:
-            logger.exception(f"Invalid label map string:\n{label_map_str}")
-            raise ValueError(f"Invalid label map string:\n{label_map_str}")
+            mssg = f"Invalid label map string:\n{label_map_str}"
+            logger.exception(mssg)
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg))
         return label_map
 
     @staticmethod
@@ -109,7 +117,9 @@ class PromptFactory(ABC):
         try:
             _ = JINJA_ENV.from_string(label_map_jinja_prefix)
         except Exception:
-            raise TemplateSyntaxError("Label map is not a valid jinja template.")
+            mssg = "Label map is not a valid jinja template."
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg))
         return label_map_jinja_prefix
 
     @staticmethod
@@ -183,7 +193,9 @@ class PromptFactory(ABC):
             try:
                 additional_payload = json.loads(self.additional_payload)
             except Exception:
-                raise ValueError("Additional payload is not a valid json")
+                mssg = "Additional payload is not a valid json"
+                raise BenchmarkValidationException._with_error(
+                    AzureMLError.create(BenchmarkValidationError, error_details=mssg))
         else:
             additional_payload = {}
 

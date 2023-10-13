@@ -6,8 +6,12 @@ import os
 from argparse import ArgumentParser
 import logging
 
-from package_3p.prompt_crafter import PromptCrafter
-from utils.logging import log_mlflow_params
+from package.prompt_crafter import PromptCrafter
+from utils.exceptions import swallow_all_exceptions
+from utils.logging import get_logger, log_mlflow_params
+
+
+logger = get_logger(__name__)
 
 
 def parse_args() -> ArgumentParser:
@@ -38,6 +42,7 @@ def parse_args() -> ArgumentParser:
     return parser.parse_args()
 
 
+@swallow_all_exceptions(logger)
 def main() -> None:
     """Entry function for Prompt Crafter Component."""
     args = parse_args()

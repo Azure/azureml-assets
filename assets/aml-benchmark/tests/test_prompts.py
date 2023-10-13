@@ -9,7 +9,7 @@ from test_utils import get_src_dir
 
 sys.path.insert(0, os.path.join(get_src_dir(), 'prompt_crafter'))
 try:
-    from package_3p.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
+    from package.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
 except ImportError:
     raise ImportError("Please install the package 'prompt_crafter' to run this test.")
 
