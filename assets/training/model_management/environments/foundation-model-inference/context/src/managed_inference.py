@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""This module defines the MIRPayload and request payload related functions."""
+
 import json
 from dataclasses import dataclass
 from typing import Any, Dict, List, Tuple, Union
@@ -13,18 +15,23 @@ logger = configure_logger(__name__)
 
 @dataclass
 class MIRPayload(SerializableDataClass):
+    """Class representing the payload for the MIR request."""
+
     query: Union[str, List[str]]
     params: Dict[str, Any]
     task_type: str
 
     @classmethod
     def from_dict(cls, mir_input_data: Dict):
+        """Create an instance of MIRPayload from the given dictionary."""
         query, params, task_type = get_request_data(mir_input_data)
         return MIRPayload(query, params, task_type)
 
     def convert_query_to_list(self) -> None:
         """
-        Converts the query prompts into a list. FMScore.run expects a list of prompts.
+        Converts the query prompts into a list.
+
+        FMScore.run expects a list of prompts.
         In the case of chat completion, a single string is produced and needs to be
         put inside of a list.
         """
@@ -32,9 +39,7 @@ class MIRPayload(SerializableDataClass):
             self.query = [self.query]
 
     def update_params(self, new_params: Dict) -> None:
-        """
-        The new parameters the MIRPayload should have
-        """
+        """Update the params with the given dictionary."""
         self.params = new_params
 
 
