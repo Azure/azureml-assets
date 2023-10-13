@@ -27,3 +27,15 @@ class TaskType(str, Enum):
     def __str__(self):
         """Return the string representation of the task type."""
         return self.value
+
+
+class SupportedTask:
+    """Supported tasks by text-generation-inference."""
+
+    TEXT_GENERATION = "text-generation"
+    CHAT_COMPLETION = "chat-completion"
+
+
+class ServerSetupParams:
+    """Parameters for setting up the server."""
+    WAIT_TIME_MIN = 15  # time to wait for the server to become healthy

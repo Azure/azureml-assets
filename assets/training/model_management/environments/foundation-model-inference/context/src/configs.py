@@ -2,8 +2,7 @@
 # Licensed under the MIT License.
 
 """Configuration classes for the Engine and Task."""
-
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Dict, Type, TypeVar, Optional
 
 from constants import TaskType
@@ -29,8 +28,8 @@ class MiiEngineConfig(SerializableDataClass):
 
     deployment_name: str
     mii_configs: dict
-    ds_config: Optional[str] = None
-    ds_optimize: bool = True
+    ds_config: dict = field(default_factory=dict)
+    enable_deepspeed: bool = True
     ds_zero: bool = False
 
     def __eq__(self, other):
@@ -39,7 +38,7 @@ class MiiEngineConfig(SerializableDataClass):
             self.deployment_name == other.deployment_name
             and self.mii_configs == other.mii_configs
             and self.ds_config == other.ds_config
-            and self.ds_optimize == other.ds_optimize
+            and self.enable_deepspeed == other.enable_deepspeed
             and self.ds_zero == other.ds_zero
         )
 
@@ -50,9 +49,6 @@ class EngineConfig(SerializableDataClass):
 
     engine_name: str
     model_id: str
-    tensor_parallel: int = (
-        1  # TODO: Remove this field, let is be specific to the engine
-    )
     trust_remote_code: bool = True
     mii_config: Optional[MiiEngineConfig] = None
     vllm_config: Optional[Dict] = None

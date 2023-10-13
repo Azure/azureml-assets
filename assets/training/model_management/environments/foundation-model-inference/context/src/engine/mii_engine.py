@@ -9,11 +9,12 @@ generating responses for given prompts, and managing the allocation of processes
 
 from configs import EngineConfig, TaskConfig
 from engine.engine import AbstractEngine, InferenceResult
+import math
 import os
+import psutil
 import torch
 import time
 import mii
-from mii.config import LoadBalancerConfig, ReplicaConfig
 from typing import Dict, List
 from logging_config import configure_logger
 from utils import log_execution_time
@@ -22,13 +23,11 @@ logger = configure_logger(__name__)
 
 
 # TODO: Move them to mii config
-LOAD_BALANCING_PORT = 50050
 MAX_TOKENS = int(os.environ.get("MAX_TOTAL_TOKENS", 4096))
-TORCH_DIST_PORT = 29501
-REPLICA_NUM = int(os.getenv("WORKER_COUNT", 1))
-DEVICE_COUNT = torch.cuda.device_count()
+REPLICA_NUM = os.environ.get("REPLICA_NUM", None)
 MODEL_DIR = os.getenv("AZUREML_MODEL_DIR", "")
 MODEL_PATH = "mlflow_model_folder/data/model"
+DEVICE_COUNT = torch.cuda.device_count()
 
 
 class MiiEngine(AbstractEngine):
@@ -38,78 +37,23 @@ class MiiEngine(AbstractEngine):
         """Initialize the MiiEngine with the given engine and task configurations."""
         self.engine_config = config
         self.task_config = task_config
-        self.mii_config = self.engine_config.mii_config
         self.model = None
+        self.mii_config = self._get_mii_config()
 
     def load_model(self):
         """Initialize MII server and MII client."""
-        load_balancer_config = self._generate_load_balancer_config()
-        is_70b_model = "Llama-2-70b" in MODEL_DIR or "Llama-2-70b-chat" in MODEL_DIR
-        replace_with_kernel_inject = not is_70b_model
-        default_mii_configs = {
-            "checkpoint_dict": None,
-            "deploy_rank": load_balancer_config.replica_configs[0].gpu_indices,
-            "dtype": torch.float16,
-            "enable_cuda_graph": False,
-            "enable_restful_api": False,
-            "hf_auth_token": None,
-            "load_with_sys_mem": True,
-            "max_tokens": MAX_TOKENS,
-            "meta_tensor": False,
-            "port_number": LOAD_BALANCING_PORT,
-            "profile_model_time": False,
-            "replace_with_kernel_inject": replace_with_kernel_inject,
-            "replica_num": REPLICA_NUM,
-            "skip_model_check": True,
-            "tensor_parallel": self.engine_config.tensor_parallel,
-            "torch_dist_port": TORCH_DIST_PORT,
-            "trust_remote_code": False,
-        }
-        configs = {
-            "deployment_name": self.mii_config.deployment_name,
-            "ds_config": self.mii_config.ds_config,
-            "ds_optimize": self.mii_config.ds_optimize,
-            "ds_zero": self.mii_config.ds_zero,
-            "load_balancer_config": load_balancer_config,
-            "mii_configs": {**default_mii_configs, **self.mii_config.mii_configs},
-            # TODO: Change this to model_id
-            "model_name": MODEL_DIR,
-            "model_path": MODEL_PATH,
-            # TODO: Use self.task_config.task_type, figure out why 'conversational' isn't working
-            "task_name": "text-generation",
-        }
-
-        deployment_name = configs["deployment_name"]
-        model_path = mii.utils.full_model_path(MODEL_PATH)
-        model_name = configs["model_name"]
-        task_name = configs["task_name"]
-
-        start_server = True
-        if int(os.getpid()) % configs.get("mii_configs").get("replica_num") != 0:
-            start_server = False
-            logger.info("Skip MII server setup for this process")
-
-        if start_server:
-            logger.info("Start server setup")
-            self.mii_server = mii.MIIServer(
-                deployment_name,
-                task_name,
-                model_name,
-                model_path,
-                ds_optimize=configs["ds_optimize"],
-                ds_zero=configs["ds_zero"],
-                ds_config=configs["ds_config"],
-                mii_configs=configs["mii_configs"],
-                lb_config=load_balancer_config,
-            )
-            logger.info("Completed server setup")
-            time.sleep(20)
+        logger.info("MII Config: " + str(self.mii_config))
+        logger.info("Start server setup")
+        self.mii_server = mii.MIIServer(self.mii_config)
+        logger.info("Completed server setup")
 
     def init_client(self):
         """Initialize the MII client."""
+        # wait until server is healthy then create client
+        self.wait_until_server_healthy("localhost", self.mii_config.port_number)
         if self.model is None:
             self.model = mii.MIIClient(
-                self.task_config.task_type, "localhost", LOAD_BALANCING_PORT
+                self.mii_config.model_config.task, "localhost", self.mii_config.port_number
             )
 
     @log_execution_time
@@ -145,45 +89,94 @@ class MiiEngine(AbstractEngine):
             inference_results.append(result)
         return inference_results
 
-    def _allocate_processes(self, hostfile_path):
-        """Allocate processes based on the hostfile path."""
-        from mii.server import _allocate_processes
+    def _get_mii_config(self):
+        """Get MII configuration."""
+        is_70b_model = "Llama-2-70b" in MODEL_DIR or "Llama-2-70b-chat" in MODEL_DIR
+        replace_with_kernel_inject = not is_70b_model
+        replica_num = self._calculate_replicas()
+        tensor_parallel = int(DEVICE_COUNT / replica_num)
 
-        if hostfile_path is None:
-            import tempfile
+        default_mii_config = {
+            "deployment_name": self.engine_config.mii_config.deployment_name,
+            "deployment_type": mii.constants.DeploymentType.AML,
+            "instance_type": "",  # this is only used for creating deployment script, can be left empty
+            "model_config": {
+                "checkpoint_dict": None,
+                "deploy_rank": list(range(tensor_parallel)),
+                "ds_config": self.engine_config.mii_config.ds_config,
+                "dtype": torch.float16,
+                "enable_cuda_graph": False,
+                "enable_deepspeed": self.engine_config.mii_config.enable_deepspeed,
+                "enable_zero": self.engine_config.mii_config.ds_zero,
+                "hf_auth_token": None,
+                "load_with_sys_mem": True,
+                "max_tokens": MAX_TOKENS,
+                "meta_tensor": False,
+                "model": MODEL_DIR,
+                "model_path": MODEL_PATH,
+                "profile_model_time": False,
+                "replace_with_kernel_inject": replace_with_kernel_inject,
+                "replica_configs": [],
+                "replica_num": replica_num,
+                "skip_model_check": True,
+                # "task": self.task_config.task_type,
+                "task": "text-generation",
+                "tensor_parallel": tensor_parallel,
+                "trust_remote_code": False
+            }
+        }
+        mii_config = mii.MIIConfig(**default_mii_config)
+        return mii_config
 
-            hostfile_path = tempfile.NamedTemporaryFile(delete=False).name
-            print(f"hostfile_path: {hostfile_path}")
-            num_gpu = DEVICE_COUNT
-            with open(hostfile_path, "w") as f:
-                f.write(f"localhost slots={num_gpu}")
-        return _allocate_processes(
-            hostfile_path, self.engine_config.tensor_parallel, REPLICA_NUM
-        )
+    def _calculate_replicas(self) -> int:
+        """Calculate the number of replicas."""
+        # if REPLICA_NUM is set, use that
+        if REPLICA_NUM is not None:
+            if int(REPLICA_NUM) <= DEVICE_COUNT:
+                return int(REPLICA_NUM)
+            else:
+                logger.warning(
+                    f"REPLICA_NUM ({REPLICA_NUM}) is larger than the number of GPUs ({DEVICE_COUNT}). "
+                    f"Proceeding to calculate the number of replicas based on the model size."
+                )
 
-    def _generate_load_balancer_config(self):
-        """Generate load balancer configuration."""
-        replica_pool = self._allocate_processes(hostfile_path=None)
-        replica_configs = [
-            ReplicaConfig(
-                hostname=hostname,
-                tensor_parallel_ports=list(
-                    range(
-                        LOAD_BALANCING_PORT
-                        + i * self.engine_config.tensor_parallel
-                        + 1,
-                        LOAD_BALANCING_PORT
-                        + i * self.engine_config.tensor_parallel
-                        + 1
-                        + self.engine_config.tensor_parallel,
-                    )
-                ),
-                torch_dist_port=i + TORCH_DIST_PORT,
-                gpu_indices=gpu_indices,
-            )
-            for i, (hostname, gpu_indices) in enumerate(replica_pool)
-        ]
-        load_balancer_config = LoadBalancerConfig(
-            port=LOAD_BALANCING_PORT, replica_configs=replica_configs
-        )
-        return load_balancer_config
+        # Check RAM required for loading the model
+        # TODO: Check if meta tensor is available and if so, skip RAM check.
+        device_count = torch.cuda.device_count()
+        total_ram_in_gb = psutil.virtual_memory().total / (1024 ** 3)
+        model_size_in_gb = self._get_model_size()
+        total_required_ram_in_gb = model_size_in_gb * device_count
+        if total_ram_in_gb < total_required_ram_in_gb:
+            raise ValueError("Total RAM is smaller than required RAM.")
+        # Check GPU size and calculate number of replicas it can handle
+        gpu_size_in_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
+        # For now, max 1 replica per 1 GPU
+        # Taking in extra memory for cache
+        # TODO: improve this logic based on the amount of KV cache required and token length
+        num_possible_replicas = int(device_count/math.ceil((model_size_in_gb/0.8)/gpu_size_in_gb))
+        if num_possible_replicas == 0:
+            raise ValueError("Not enough GPU to support model. Please select bigger SKU.")
+        return num_possible_replicas
+
+    def _get_model_size(self) -> int:
+        # Loop through the files in the folder
+        file_ext = ""
+        for file in os.listdir(self.engine_config.model_id):
+            # Get the file extension
+            curr_file_ext = os.path.splitext(file)[1]
+            # Check if the file extension is .bin
+            if curr_file_ext == ".bin" or curr_file_ext == ".safetensors":
+                file_ext = curr_file_ext
+                break
+        # Initialize a variable to store the total size
+        total_size = 0
+        for file in os.listdir(self.engine_config.model_id):
+            if file.endswith(file_ext):
+                # Get the full path of the file
+                file_path = os.path.join(self.engine_config.model_id, file)
+                # Get the size of the file in bytes
+                file_size = os.path.getsize(file_path)
+                # Add the size to the total size
+                total_size += file_size
+        # Return the total size
+        return math.ceil(total_size / (1024 ** 3))
