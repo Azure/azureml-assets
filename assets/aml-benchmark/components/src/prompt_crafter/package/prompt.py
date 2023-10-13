@@ -5,8 +5,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from enum import auto
-from strenum import StrEnum
+from enum import auto, Enum
 from typing import Dict, List, Union
 import logging
 
@@ -22,14 +21,14 @@ OpenAICreateChatPrompt = List[OpenAIChatMessage]
 OpenAICreate = Union[OpenAICreatePrompt, OpenAICreateChatPrompt]
 
 
-class PromptType(StrEnum):
+class PromptType(str, Enum):
     """Prompt types supported by the Prompt Crafter."""
 
     completions = auto()
     chat = auto()
 
 
-class Role(StrEnum):
+class Role(str, Enum):
     """Role of the messages in a chat prompt."""
 
     system = auto()
