@@ -63,6 +63,7 @@ inputs:
       - image-object-detection
       - image-instance-segmentation
       - text-to-image
+      - text-to-image-inpainting
       - image-text-to-text
       - zero-shot-image-classification
       - video-multi-object-tracking
