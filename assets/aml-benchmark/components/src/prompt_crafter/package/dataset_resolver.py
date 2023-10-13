@@ -64,10 +64,12 @@ def resolve_file(input_path: str, filename: Optional[str] = None):
             if len(all_files) == 1:
                 return all_files[0]
             else:
-                raise RuntimeError(f"Found multiple files in input file path {input_path} for glob pattern {filename}")
+                mssg = f"Found multiple files in input file path {input_path} for glob pattern {filename}"
+                raise RuntimeError(mssg)
 
         else:
-            raise RuntimeError(f"Found multiple files in input file path {input_path}, specify the file name in addition.")
+            mssg = f"Found multiple files in input file path {input_path}, specify the file name in addition."
+            raise RuntimeError(mssg)
 
     logger.critical(f"Provided INPUT path {input_path} is neither a directory nor a file.")
     return input_path
@@ -113,7 +115,8 @@ def resolve_file_list(input_path: str, filename: Optional[str] = None):
             if len(all_files) >= 1:
                 return all_files
             else:
-                raise RuntimeError(f"Could not find any file in input file path {input_path} for glob pattern {filename}")
+                mssg = f"Could not find any file in input file path {input_path} for glob pattern {filename}"
+                raise RuntimeError(mssg)
         else:
             return [os.path.join(input_path, file) for file in all_files]
 

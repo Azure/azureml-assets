@@ -14,9 +14,17 @@ from jinja2 import Environment
 
 from azureml._common._error_definition.azureml_error import AzureMLError
 
-from package.prompt import PromptType, Prompt, CompletionsPrompt, ChatPrompt, OpenAICreate, OpenAICreateChatPrompt, Role
 from utils.exceptions import BenchmarkValidationException
 from utils.error_definitions import BenchmarkValidationError
+from package.prompt import (
+    PromptType, 
+    Prompt, 
+    CompletionsPrompt, 
+    ChatPrompt, 
+    OpenAICreate, 
+    OpenAICreateChatPrompt, 
+    Role,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -62,7 +70,8 @@ class PromptFactory(ABC):
 
         # Validate output_pattern
         if self.output_pattern:
-            self.validate_jinja_template(self.output_pattern, "Output pattern is not a valid jinja pattern.")
+            self.validate_jinja_template(self.output_pattern, 
+                                         "Output pattern is not a valid jinja pattern.")
 
         # Validate few_shot_pattern
         if self.n_shots > 0:
@@ -70,7 +79,8 @@ class PromptFactory(ABC):
                 self.augmented_few_shot_pattern = self.label_map_jinja_prefix + self.few_shot_pattern
             else:
                 self.augmented_few_shot_pattern = self.prompt_pattern + self.output_pattern
-            self.validate_jinja_template(self.augmented_few_shot_pattern, "Few shot pattern is not a valid jinja pattern.")
+            self.validate_jinja_template(self.augmented_few_shot_pattern, 
+                                         "Few shot pattern is not a valid jinja pattern.")
 
     def validate_jinja_template(self, template: str, error_message: str):
         """Validate a jinja template."""
