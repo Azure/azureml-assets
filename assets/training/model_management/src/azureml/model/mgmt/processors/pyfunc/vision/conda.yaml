@@ -8,9 +8,9 @@ dependencies:
   - cloudpickle==2.2.0
   - datasets==2.12.0
   - openmim
-  - torch==1.13.0
-  - torchvision==0.14.0
-  - transformers==4.29.1
+  - torch==1.13.1
+  - torchvision==0.14.1
+  - transformers==4.33.1
   - accelerate==0.19.0
   - attributee
   - dotty_dict
