@@ -344,18 +344,6 @@ inputs:
     optional: true
     description: Deepspeed config to be used for finetuning
 
-  deepspeed_stage:
-    type: string
-    optional: true
-    default: "2"
-    enum:
-    - "2"
-    - "3"
-    description: This parameter configures which DEFAULT deepspeed config to be used
-      - stage2 or stage3. The default choice is stage2. Note that, this parameter
-      is ONLY applicable when user doesn't pass any config information via deepspeed
-      port.
-
   # ORT Parameters
   # ONNX Runtime is a cross-platform machine-learning model accelerator, with a flexible interface to integrate hardware-specific libraries.
   apply_ort:
@@ -417,7 +405,7 @@ command: >-
   $[[--early_stopping_patience '${{inputs.early_stopping_patience}}']] $[[--early_stopping_threshold
   '${{inputs.early_stopping_threshold}}']] $[[--apply_ort '${{inputs.apply_ort}}']]
   $[[--apply_deepspeed '${{inputs.apply_deepspeed}}']] $[[--deepspeed '${{inputs.deepspeed}}']]
-  $[[--deepspeed_stage '${{inputs.deepspeed_stage}}']] --model_selector_output '${{inputs.model_selector_output}}'
-  --preprocess_output '${{inputs.preprocess_output}}' --pytorch_model_folder '${{outputs.pytorch_model_folder}}'
+  --model_selector_output '${{inputs.model_selector_output}}' --preprocess_output
+  '${{inputs.preprocess_output}}' --pytorch_model_folder '${{outputs.pytorch_model_folder}}'
   --mlflow_model_folder '${{outputs.mlflow_model_folder}}'
 

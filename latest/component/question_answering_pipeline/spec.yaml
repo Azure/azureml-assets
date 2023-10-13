@@ -524,18 +524,6 @@ inputs:
     description: Deepspeed config to be used for finetuning. Special characters like
       \ and ' are invalid in the parameter value.
 
-  deepspeed_stage:
-    type: string
-    optional: true
-    default: "2"
-    enum:
-    - "2"
-    - "3"
-    description: This parameter configures which DEFAULT deepspeed config to be used
-      - stage2 or stage3. The default choice is stage2. Note that, this parameter
-      is ONLY applicable when user doesn't pass any config information via deepspeed
-      port.
-
   apply_ort:
     type: string
     enum:
@@ -620,13 +608,6 @@ jobs:
       compute_data_preprocess: '${{parent.inputs.compute_preprocess}}'
       task_name: '${{parent.inputs.task_name}}'
       number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
-      train_file_path: '${{parent.inputs.train_file_path}}'
-      validation_file_path: '${{parent.inputs.validation_file_path}}'
-      test_file_path: '${{parent.inputs.test_file_path}}'
-      train_mltable_path: '${{parent.inputs.train_mltable_path}}'
-      validation_mltable_path: '${{parent.inputs.validation_mltable_path}}'
-      test_mltable_path: '${{parent.inputs.test_mltable_path}}'
-      user_column_names: '${{parent.inputs.question_key}},${{parent.inputs.context_key}},${{parent.inputs.answers_key}}'
   question_answering_model_import:
     type: command
     component: azureml:question_answering_model_import:0.0.21
@@ -713,7 +694,6 @@ jobs:
       early_stopping_threshold: '${{parent.inputs.early_stopping_threshold}}'
       apply_deepspeed: '${{parent.inputs.apply_deepspeed}}'
       deepspeed: '${{parent.inputs.deepspeed}}'
-      deepspeed_stage: '${{parent.inputs.deepspeed_stage}}'
       apply_ort: '${{parent.inputs.apply_ort}}'
       preprocess_output: '${{parent.jobs.question_answering_datapreprocess.outputs.output_dir}}'
       model_selector_output: '${{parent.jobs.question_answering_model_import.outputs.output_dir}}'
