@@ -496,9 +496,9 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
         input_schema = Schema(
             [
                 ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
-                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS, optional=True),
-                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES, optional=True),
-                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS, optional=True),
+                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS),
+                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES),
+                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS),
             ]
         )
 

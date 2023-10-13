@@ -8,47 +8,16 @@ Has methods to load the model and predict.
 """
 
 import mlflow
-import os
 import io
 import pandas as pd
 import torch
-import torch
 from transformers import SamModel, SamProcessor
 from PIL import Image
-from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants
-
-
-def polygon_cal(numpy_array):
-    from masktools import convert_mask_to_polygon
-
-    # Initialize a list to store polygons for each batch
-    all_polygons = []
-
-    batch_size, num_channels, height, width = numpy_array.shape
-    try:
-        # Loop through batches
-        for batch_index in range(batch_size):
-            # Initialize a list to store polygons for each channel in the current batch
-            batch_polygons = []
-
-            # Loop through channels
-            for channel_index in range(num_channels):
-                channel = numpy_array[batch_index, channel_index, :, :]
-                polygon = convert_mask_to_polygon(channel)
-                batch_polygons.append(polygon)
-
-            # Append the list of polygons for the current batch to the overall list
-            all_polygons.append(batch_polygons)
-        print("Successfully converted the mask to polygon.")
-    except Exception as e:
-        print("Failed to convert the mask to polygon.")
-        print(e)
-        raise
-    return all_polygons
+from config import MLflowSchemaLiterals, Tasks, MLflowLiterals
 
 
 class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
-    """MLflow model wrapper for stable diffusion models."""
+    """MLflow model wrapper for segment anything models."""
 
     def __init__(
         self,
@@ -61,7 +30,6 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         """
         super().__init__()
         self._task_type = task_type
-        self.batch_output_folder = None
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """
@@ -70,10 +38,6 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        self.batch_output_folder = os.getenv(
-            BatchConstants.BATCH_OUTPUT_PATH, default=False
-        )
-        
 
         if self._task_type == Tasks.SEGMENT_ANYTHING.value:
             try:
@@ -106,7 +70,7 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         from vision_utils import process_image, string_to_nested_float_list
 
         # Do inference one input at a time.
-
+        response = []
         for image, input_points, input_boxes, input_labels in zip(
             input_data[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE],
             input_data[MLflowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS],
@@ -144,22 +108,13 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             masks = self._processor.image_processor.post_process_masks(outputs.pred_masks.to(_map_location), processed_inputs["original_sizes"].to(_map_location), processed_inputs["reshaped_input_sizes"].to(_map_location))
             scores = outputs.iou_scores
 
-            # convert the tensors to numpy array for mask to polygon conversion
-            masks_numpy = masks[0].cpu().numpy()
-            scores_numpy = scores.squeeze(dim=0).cpu().numpy()
-
-            # convert the numpy binary mask to polygon
-            polygons = polygon_cal(masks_numpy)
+            # convert the tensors to list
+            masks_list = masks[0].tolist()
+            scores_list = scores.squeeze(dim=0).tolist()
 
             # prepare the response dataframe
-            pred = {"masks" : []}
+            pred = {"masks" : masks_list, "scores": scores_list}
+            response.append(pred)
 
-            for i in range(len(polygons)):
-                list_of_mask = []
-                for j in range(len(polygons[i])):
-                    mask = {"polygon" : polygons[i][j], "iou_score" : scores_numpy[i][j]}
-                    list_of_mask.append(mask)
-                pred["masks"].append(list_of_mask)
-
-            df_responses = pd.DataFrame(pred)
-            return df_responses
+        df_responses = pd.DataFrame({MLflowSchemaLiterals.OUTPUT_COLUMN_RESPONSE: response})
+        return df_responses

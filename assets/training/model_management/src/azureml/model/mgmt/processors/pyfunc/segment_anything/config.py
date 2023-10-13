@@ -32,13 +32,12 @@ class MLflowSchemaLiterals:
     INPUT_COLUMN_INPUT_POINTS = "input_points"
     INPUT_COLUMN_INPUT_BOXES = "input_boxes"
     INPUT_COLUMN_INPUT_LABELS = "input_labels"
-    INPUT_COLUMN_IMAGE_DATA_TYPE = DataType.binary
+    INPUT_COLUMN_IMAGE_DATA_TYPE = DataType.string
     INPUT_COLUMN_INPUT_POINTS_DATA_TYPE = DataType.string
     INPUT_COLUMN_INPUT_BOXES_DATA_TYPE = DataType.string
     INPUT_COLUMN_INPUT_LABELS_DATA_TYPE = DataType.string
     OUTPUT_COLUMN_DATA_TYPE = DataType.string
-    OUTPUT_COLUMN_MASKS = "masks"
-    OUTPUT_COLUMN_IOU_SCORES = "iou_scores"
+    OUTPUT_COLUMN_RESPONSE = "response"
 
 class BatchConstants:
     """Constants related to Batch inference."""
