@@ -29,7 +29,7 @@ class MIRPayload(SerializableDataClass):
 
     def convert_query_to_list(self) -> None:
         """
-        Converts the query prompts into a list.
+        Convert the query prompts into a list.
 
         FMScore.run expects a list of prompts.
         In the case of chat completion, a single string is produced and needs to be
