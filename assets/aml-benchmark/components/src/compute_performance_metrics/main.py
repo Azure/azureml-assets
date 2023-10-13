@@ -465,7 +465,7 @@ def main(
                     ],
                 )
     if run_timespan is not None:
-        results["request_per_second"] = len(all_data) / run_timespan
+        results["requests_per_second"] = len(all_data) / run_timespan
 
     # Output the metrics that are logged in the metrics file
     mlflow.log_metrics(results)
