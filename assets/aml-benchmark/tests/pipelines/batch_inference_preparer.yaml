@@ -23,11 +23,16 @@ inputs:
       },
     "_batch_request_metadata": ###<_batch_request_metadata>
     }'
+  is_performance_test: False
+  endpoint_url: test-endpoint
 
 outputs:
   formatted_data:
     type: uri_folder
-    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/formatted_data/
+  ground_truth_metadata:
+    type: uri_folder
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/ground_truth_metadata/
 
 jobs:
   run_batch_inference_preparer:
@@ -38,5 +43,8 @@ jobs:
     inputs:
       input_dataset: ${{parent.inputs.input_dataset}}
       batch_input_pattern: ${{parent.inputs.batch_input_pattern}}
+      online_endpoint_url: ${{parent.inputs.endpoint_url}}
+      is_performance_test: ${{parent.inputs.is_performance_test}}
     outputs:
       formatted_data: ${{parent.outputs.formatted_data}}
+      ground_truth_metadata: ${{parent.outputs.ground_truth_metadata}}

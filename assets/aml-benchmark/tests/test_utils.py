@@ -8,6 +8,7 @@ import subprocess
 from typing import Dict, Any, Optional, List
 import hashlib
 import time
+import uuid
 
 from azure.ai.ml import MLClient, load_job
 from azure.ai.ml.entities import Job
@@ -18,6 +19,8 @@ from azure.ai.ml.entities import (
     Model,
     CodeConfiguration,
 )
+from azure.ai.ml.entities import WorkspaceConnection
+from azure.ai.ml.entities import AccessKeyConfiguration
 from azureml._common._error_response._error_response_constants import ErrorCodes
 import mlflow
 
@@ -309,11 +312,14 @@ def _deploy_fake_model(ml_client, endpoint_name, deployment_name):
 
 
 def deploy_fake_test_endpoint_maybe(
-        ml_client, endpoint_name="benchmark", deployment_name="test-model", use_workspace_name=True
+        ml_client, endpoint_name="aml-benchmark-test-bzvkqd", deployment_name="test-model",
+        use_workspace_name=True,
+        connections_name='aml-benchmark-connection'
 ):
     """Deploy a fake test endpoint."""
     should_deploy = False
     should_wait = True
+    endpoint = None
     if use_workspace_name:
         endpoint_name = f"{endpoint_name}-{ml_client.workspace_name.split('-')[-1]}"
     try:
@@ -322,10 +328,6 @@ def deploy_fake_test_endpoint_maybe(
             if endpoint.provisioning_state.lower() in ["creating", "updating", 'deleting', 'provisioning']:
                 time.sleep(30)
                 continue
-            elif endpoint.provisioning_state.lower() == 'failed':
-                ml_client.online_endpoints.begin_delete(name=endpoint_name)
-                should_deploy = True
-                break
             deployment = ml_client.online_deployments.get(
                 endpoint_name=endpoint_name, name=deployment_name)
             if deployment.provisioning_state.lower() == 'failed':
@@ -342,7 +344,28 @@ def deploy_fake_test_endpoint_maybe(
         should_deploy = True
 
     if should_deploy:
-        endpoint = _deploy_endpoint(ml_client, endpoint_name)
-        deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
+        try:
+            endpoint = _deploy_endpoint(ml_client, endpoint_name)
+            deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
+        except Exception as e:
+            print("Failed deployment due to {}.".format(e))
+            print("Trying deploy using a new name now.")
+            if "There is already an endpoint with this name" in str(e):
+                endpoint_name = str(uuid.uuid4().hex)
+                print("deploying using {}".format(endpoint_name))
+                endpoint = _deploy_endpoint(ml_client, endpoint_name)
+                deployment = _deploy_fake_model(ml_client, endpoint_name, deployment_name)
+    if endpoint is None:
+        endpoint = ml_client.online_endpoints.get(name=endpoint_name)
+    wps_connection = WorkspaceConnection(
+        name=connections_name,
+        type="azure_sql_db",
+        target=endpoint.scoring_uri,
+        credentials=AccessKeyConfiguration(
+            access_key_id="Authorization",
+            secret_access_key=ml_client.online_endpoints.get_keys(endpoint_name).primary_key
+        )
+    )
+    ml_client.connections.create_or_update(workspace_connection=wps_connection)
 
-    return endpoint.scoring_uri, deployment.name
+    return endpoint.scoring_uri, deployment.name, connections_name
