@@ -136,20 +136,22 @@ class AgiEval(datasets.GeneratorBasedBuilder):
         return splits
 
     def _generate_examples(self, eval_path, fewshot_path):
-        # Load the few shot data for the config
+        # Load few shot data
         df_fs = pd.read_csv(fewshot_path, keep_default_na=False)
-        samples = df_fs[df_fs.index % 2 == 0].reset_index(drop=True)
+        shots = df_fs[df_fs.index % 2 == 0].reset_index(drop=True)
         explanations = df_fs[df_fs.index % 2 != 0].reset_index(drop=True)
 
-        # Extract fewshot samples
-        n_shots = samples.shape[0]
+        # Format fewshot prompt
+        n_shots = shots.shape[0]
         lang = _get_language(self.config.name)
         fs_str = _INTRO[lang] + '\n'
-        for key in range(samples.shape[0]):
-            fs_dict = ast.literal_eval(samples[self.config.name][key])
-            fs_str += _format_question(fs_dict, lang, key + 1, add_label=True)
+        for ishot in range(shots.shape[0]):
+            if pd.isna(shots[self.config.name][ishot]):
+                continue
+            fs_dict = ast.literal_eval(shots[self.config.name][ishot])
+            fs_str += _format_question(fs_dict, lang, ishot + 1, add_label=True)
 
-        # Extract the eval data 
+        # Format eval questions for the prompt 
         df = pd.read_json(eval_path, lines=True)
         for key, row in df.iterrows():
             prompt_str = _format_question(row, lang, n_shots + 1, add_label=False)
