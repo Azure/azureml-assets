@@ -24,6 +24,7 @@ from azureml.model.mgmt.processors.transformers.convertors import (
     WhisperMLflowConvertor,
 )
 from azureml.model.mgmt.processors.pyfunc.convertors import (
+    BLIPMLFlowConvertor,
     MMLabDetectionMLflowConvertor,
     CLIPMLFlowConvertor,
     StableDiffusionMlflowConvertor,
@@ -54,6 +55,10 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
         # Models from Hugging face framework exported in PyFunc mlflow flavor
         elif task == PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value:
             return CLIPMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif task == PyFuncSupportedTasks.IMAGE_CAPTIONING.value:
+            return BLIPMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         else:
@@ -156,6 +161,19 @@ class CLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for CLIP model."""
         return CLIPMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class BLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for blip model family."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for BLIP model."""
+        return BLIPMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,

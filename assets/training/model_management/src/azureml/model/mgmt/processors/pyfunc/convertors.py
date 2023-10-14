@@ -21,6 +21,8 @@ from azureml.model.mgmt.processors.pyfunc.config import MMLabDetectionTasks, Sup
 
 from azureml.model.mgmt.processors.pyfunc.clip.config import \
     MLflowSchemaLiterals as CLIPMLFlowSchemaLiterals, MLflowLiterals as CLIPMLflowLiterals
+from azureml.model.mgmt.processors.pyfunc.blip.config import \
+    MLflowSchemaLiterals as BLIPMLFlowSchemaLiterals, MLflowLiterals as BLIPMLflowLiterals
 from azureml.model.mgmt.processors.pyfunc.text_to_image.config import (
     MLflowSchemaLiterals as TextToImageMLFlowSchemaLiterals,
     MLflowLiterals as TextToImageMLflowLiterals,
@@ -254,6 +256,72 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
         """
         artifacts_dict = {
             CLIPMLflowLiterals.MODEL_DIR: self._model_dir
+        }
+        return artifacts_dict
+
+
+class BLIPMLFlowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for BLIP models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "blip")
+    COMMON_DIR = os.path.join(os.path.dirname(
+        os.path.dirname(__file__)), "common")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for BLIP models."""
+        super().__init__(**kwargs)
+        if self._task != (SupportedTasks.IMAGE_CAPTIONING.value):
+            raise Exception("Unsupported task")
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the given input task.
+
+        :return: MLflow model signature.
+        :rtype: mlflow.models.signature.ModelSignature
+        """
+        input_schema = Schema(
+            [
+                ColSpec(BLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE,
+                        BLIPMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
+            ]
+        )
+        output_schema = Schema(
+            [
+                ColSpec(BLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                        BLIPMLFlowSchemaLiterals.OUTPUT_COLUMN_TEXT),
+            ]
+        )
+
+        return ModelSignature(inputs=input_schema, outputs=output_schema)
+
+    def save_as_mlflow(self):
+        """Prepare model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+        from mlflow_wrapper import BLIPMLFlowModelWrapper
+
+        mlflow_model_wrapper = BLIPMLFlowModelWrapper(task_type=self._task)
+        artifacts_dict = self._prepare_artifacts_dict()
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = [
+            os.path.join(self.MODEL_DIR, "mlflow_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py"),
+        ]
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env_file,
+            code_path=code_path,
+        )
+
+    def _prepare_artifacts_dict(self) -> Dict:
+        """Prepare artifacts dict for MLflow model.
+
+        :return: artifacts dict
+        :rtype: Dict
+        """
+        artifacts_dict = {
+            BLIPMLflowLiterals.MODEL_DIR: self._model_dir
         }
         return artifacts_dict
 

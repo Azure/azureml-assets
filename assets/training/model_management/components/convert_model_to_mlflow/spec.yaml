@@ -58,6 +58,7 @@ inputs:
       - text-generation
       - text-classification
       - translation
+      - image-captioning
       - image-classification
       - image-object-detection
       - image-instance-segmentation
