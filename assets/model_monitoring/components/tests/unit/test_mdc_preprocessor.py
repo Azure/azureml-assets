@@ -3,7 +3,7 @@ import fsspec
 import shutil
 import os
 import spark_mltable # to enable spark.read.mltable
-from model_data_collector_preprocessor.run import _uri_folder_to_spark_df, mdc_preprocessor
+from model_data_collector_preprocessor.run import _raw_mdc_uri_folder_to_preprocessed_spark_df, mdc_preprocessor
 
 @pytest.mark.unit
 class TestMDCPreprocessor:
@@ -12,8 +12,8 @@ class TestMDCPreprocessor:
         os.environ["PYSPARK_PYTHON"] = "C:\\Users\\richli\\AppData\\Local\\anaconda3\\envs\\momo\\python.exe"
         fs = fsspec.filesystem("file")
         preprocessed_output = "tests/unit/preprocessed_mdc_data"
-        shutil.rmtree(f"{preprocessed_output}temp")
-        df = _uri_folder_to_spark_df(
+        shutil.rmtree(f"{preprocessed_output}temp", True)
+        df = _raw_mdc_uri_folder_to_preprocessed_spark_df(
             "2023-10-11T20:00:00",
             "2023-10-11T21:00:00",
             "tests/unit/raw_mdc_data/",
@@ -23,7 +23,7 @@ class TestMDCPreprocessor:
         )
         print("preprocessed dataframe:")
         df.show()
-        assert True
+        assert False
         # assert df.head()[0] == 2 #1
 
     def test_mdc_preprocessor(self):
