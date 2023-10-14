@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Data Loading Script for AGIEval."""
+
 import datasets
 import json
 import ast
@@ -33,15 +38,12 @@ _CONFIGS = [
     'gaokao-english',
     'gaokao-geography',
     'gaokao-history',
-    'gaokao-mathcloze',
     'gaokao-mathqa',
     'logiqa-en',
     'logiqa-zh',
     'lsat-ar',
     'lsat-lr',
     'lsat-rc',
-    'math',
-    'sat-en-without-passage',
     'sat-en',
     'sat-math'
 ]
@@ -57,7 +59,6 @@ _PROBLEM_TEMPLATE = {
 }
 
 _CHOOSE_OPTIONS = {
-
     'english': 'Choose from the following options:',
     'chinese': '\u4ece\u4ee5\u4e0b\u9009\u9879\u4e2d\u9009\u62e9'
 }
@@ -70,14 +71,17 @@ _ANSWER_INTRO = {
 _SHOT_SEPARATOR = '\n<END>\n'
 
 def _get_language(config):
-    if 'gaokao' in config or config == 'logiqa-zh':
+    if config != 'gaokao-english' and ('gaokao' in config or config == 'logiqa-zh'):
         return 'chinese'
     else:
         return 'english'
     
 
-def _format_question(src_dict, lang, problem_number, add_label=False):
+def _format_question(config, src_dict, problem_number, add_label=False):
+    lang = _get_language(config)
     s = _PROBLEM_TEMPLATE[lang].format(problem_number) + '   '
+    if 'passage' in src_dict and isinstance(src_dict['passage'], str) and len(src_dict['passage']) > 0:
+        s += src_dict['passage'] + ' '
     s += src_dict['question'] + '\n'
     s += _CHOOSE_OPTIONS[lang] + '    '
     s += ' '.join(src_dict['options']) + '\n'
@@ -137,24 +141,25 @@ class AgiEval(datasets.GeneratorBasedBuilder):
 
     def _generate_examples(self, eval_path, fewshot_path):
         # Load few shot data
-        df_fs = pd.read_csv(fewshot_path, keep_default_na=False)
+        df_fs = pd.read_csv(fewshot_path)
         shots = df_fs[df_fs.index % 2 == 0].reset_index(drop=True)
         explanations = df_fs[df_fs.index % 2 != 0].reset_index(drop=True)
 
         # Format fewshot prompt
-        n_shots = shots.shape[0]
+        ishot = 0
         lang = _get_language(self.config.name)
         fs_str = _INTRO[lang] + '\n'
-        for ishot in range(shots.shape[0]):
-            if pd.isna(shots[self.config.name][ishot]):
+        for i in range(shots.shape[0]):
+            if pd.isna(shots[self.config.name][i]):
                 continue
-            fs_dict = ast.literal_eval(shots[self.config.name][ishot])
-            fs_str += _format_question(fs_dict, lang, ishot + 1, add_label=True)
+            fs_dict = ast.literal_eval(shots[self.config.name][i])
+            fs_str += _format_question(self.config.name, fs_dict, ishot + 1, add_label=True)
+            ishot += 1
 
         # Format eval questions for the prompt 
         df = pd.read_json(eval_path, lines=True)
         for key, row in df.iterrows():
-            prompt_str = _format_question(row, lang, n_shots + 1, add_label=False)
+            prompt_str = _format_question(self.config.name, row, ishot + 1, add_label=False)
             yield key, {
                 "fewshot_prompt": fs_str + prompt_str,
                 "label": row["label"],
