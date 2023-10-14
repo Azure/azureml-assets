@@ -4,21 +4,20 @@ import ast
 import pandas as pd
 
 _CITATION = """\
-@ARTICLE{10174688,
-  author={Liu, Hanmeng and Liu, Jian and Cui, Leyang and Teng, Zhiyang and Duan, Nan and Zhou, Ming and Zhang, Yue},
-  journal={IEEE/ACM Transactions on Audio, Speech, and Language Processing},
-  title={LogiQA 2.0 — An Improved Dataset for Logical Reasoning in Natural Language Understanding},
-  year={2023},
-  volume={},
-  number={},
-  pages={1-16},
-  doi={10.1109/TASLP.2023.3293046}}
+@misc{zhong2023agieval,
+      title={AGIEval: A Human-Centric Benchmark for Evaluating Foundation Models}, 
+      author={Wanjun Zhong and Ruixiang Cui and Yiduo Guo and Yaobo Liang and Shuai Lu and Yanlin Wang and Amin Saied and Weizhu Chen and Nan Duan},
+      year={2023},
+      eprint={2304.06364},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
 """
 
-_HOMEPAGE = "https://github.com/csitfun/LogiQA2.0/tree/main"
+_HOMEPAGE = "https://github.com/ruixiangcui/AGIEval/tree/main"
 
 _LICENSE = (
-    "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License"
+    "https://github.com/ruixiangcui/AGIEval/blob/main/LICENSE"
 )
 
 _HEAD = 'https://raw.githubusercontent.com/ruixiangcui/AGIEval/main/data/v1/'
@@ -70,14 +69,14 @@ _ANSWER_INTRO = {
 
 _SHOT_SEPARATOR = '\n<END>\n'
 
-def get_language(config):
+def _get_language(config):
     if 'gaokao' in config or config == 'logiqa-zh':
         return 'chinese'
     else:
         return 'english'
     
 
-def format_question(src_dict, lang, problem_number, add_label=False):
+def _format_question(src_dict, lang, problem_number, add_label=False):
     s = _PROBLEM_TEMPLATE[lang].format(problem_number) + '   '
     s += src_dict['question'] + '\n'
     s += _CHOOSE_OPTIONS[lang] + '    '
@@ -144,16 +143,16 @@ class AgiEval(datasets.GeneratorBasedBuilder):
 
         # Extract fewshot samples
         n_shots = samples.shape[0]
-        lang = get_language(self.config.name)
+        lang = _get_language(self.config.name)
         fs_str = _INTRO[lang] + '\n'
         for key in range(samples.shape[0]):
             fs_dict = ast.literal_eval(samples[self.config.name][key])
-            fs_str += format_question(fs_dict, lang, key + 1, add_label=True)
+            fs_str += _format_question(fs_dict, lang, key + 1, add_label=True)
 
         # Extract the eval data 
         df = pd.read_json(eval_path, lines=True)
         for key, row in df.iterrows():
-            prompt_str = format_question(row, lang, n_shots + 1, add_label=False)
+            prompt_str = _format_question(row, lang, n_shots + 1, add_label=False)
             yield key, {
                 "fewshot_prompt": fs_str + prompt_str,
                 "label": row["label"],
