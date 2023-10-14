@@ -22,9 +22,20 @@ class SupportedTasks(_CustomEnum):
 
     # CLIP task
     ZERO_SHOT_IMAGE_CLASSIFICATION = "zero-shot-image-classification"
+    EMBEDDINGS = "embeddings"
 
     # BLIP2 task
     IMAGE_CAPTIONING = "image-captioning"
 
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
+    TEXT_TO_IMAGE_INPAINTING = "text-to-image-inpainting"
+
+    # LLaVA task
+    IMAGE_TEXT_TO_TEXT = "image-text-to-text"
+
+
+class SupportedTextToImageModelFamily(_CustomEnum):
+    """Supported text to image models."""
+
+    STABLE_DIFFUSION = "stable-diffusion"

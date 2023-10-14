@@ -16,6 +16,7 @@ from mltable import load
 from task_factory.tabular.classification import TabularClassifier
 from task_factory.text.classification import TextClassifier
 from task_factory.tabular.regression import TabularRegressor
+from task_factory.tabular.forecast import TabularForecast
 # from task_factory.text.regression import TextRegressor
 from task_factory.text.ner import TextNerPredictor
 from task_factory.text.qna import QnAPredictor
@@ -23,10 +24,11 @@ from task_factory.text.summarization import Summarizer
 from task_factory.text.translation import Translator
 from task_factory.text.text_generation import TextGenerator
 from task_factory.text.fill_mask import FillMask
+from task_factory.text.chat_completion import ChatCompletion
 from task_factory.image.classification import ImageMulticlassClassifier, ImageMultilabelClassifier
 from task_factory.image.od_is import ImageOdIsPredictor
 from evaluators.evaluators import EvaluatorFactory
-from run_utils import TestRun
+from logging_utilities import current_run
 from azureml.metrics import _scoring_utilities, constants as metrics_constants
 from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 import azureml.evaluate.mlflow as aml_mlflow
@@ -183,7 +185,7 @@ def _log_metrics(metrics, artifacts):
     table_scores = {}
     nonscalar_scores = {}
     list_metrics = [metrics_constants.Metric.FMPerplexity]
-    run = TestRun().run
+    run = current_run.run
     list_scores = {}
     classwise_scores = {}
 
@@ -199,7 +201,7 @@ def _log_metrics(metrics, artifacts):
                     metrics["mean_" + name] = np.mean(score)
             except TypeError:
                 logger.warning(f"{name} is not of type list.")
-        elif name in metrics_constants.Metric.NONSCALAR_FULL_SET or\
+        elif name in metrics_constants.Metric.NONSCALAR_FULL_SET or \
                 name in metrics_constants.FULL_NONSCALAR_SET:
             nonscalar_scores[name] = score
         elif name in metrics_constants.TrainingResultsType.ALL_TIME:
@@ -213,15 +215,18 @@ def _log_metrics(metrics, artifacts):
     try:
         # Log the scalar metrics. (Currently, these are stored in CosmosDB)
         for name, score in metrics.items():
+            if isinstance(score, list):
+                list_scores[name] = list(score)
+                continue
             run.log(name, score)
 
         for name, score in table_scores.items():
             run.log_table(name, score)
 
-        for name, score in list_scores.items():
-            # TODO: Add checks for logging longer lists
-            pass
-            # run.log_list(name, score)
+        # for name, score in list_scores.items():
+        #     # TODO: Add checks for logging longer lists
+        #     pass
+        #     # run.log_list(name, score)
 
         # Log the non-scalar metrics. (Currently, these are all artifact-based.)
         for name, score in nonscalar_scores.items():
@@ -267,7 +272,7 @@ def _log_metrics(metrics, artifacts):
         raise exception
 
 
-def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config, X_test=None):
+def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config, X_test=None, **kwargs):
     """Compute metrics mode method.
 
     Args:
@@ -282,7 +287,7 @@ def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config
         _type_: _description_
     """
     evaluator = EvaluatorFactory().get_evaluator(task_type, metrics_config)
-    res = evaluator.evaluate(y_test, y_pred, y_pred_proba=y_pred_proba, X_test=X_test)
+    res = evaluator.evaluate(y_test, y_pred, y_pred_proba=y_pred_proba, X_test=X_test, **kwargs)
     metrics = res[metrics_constants.Metric.Metrics]
     artifacts = res[metrics_constants.Metric.Artifacts]
     _log_metrics(metrics, artifacts)
@@ -317,6 +322,8 @@ def get_predictor(task):
         TASK.TRANSLATION: Translator,
         TASK.TEXT_GENERATION: TextGenerator,
         TASK.FILL_MASK: FillMask,
+        TASK.CHAT_COMPLETION: ChatCompletion,
+        TASK.FORECASTING: TabularForecast,
         TASK.IMAGE_CLASSIFICATION: ImageMulticlassClassifier,
         TASK.IMAGE_CLASSIFICATION_MULTILABEL: ImageMultilabelClassifier,
         TASK.IMAGE_OBJECT_DETECTION: ImageOdIsPredictor,
@@ -485,7 +492,12 @@ class ArgumentsSet:
             "metrics": "list(val)",
             "smoothing": "bool(val)",
             "aggregator": "bool(val)",
-            "stemmer": "bool(val)"
+            "stemmer": "bool(val)",
+            "sub_task": "str(val)",
+            "allow_code_eval": "bool(val)",
+            "no_of_candidates": "list(val)",
+            "num_workers": "int(val)",
+            "timeout": "int(val)"
         }
         return args_map
 
@@ -530,9 +542,12 @@ class ArgumentsSet:
         args_map = {
             ForecastingConfigContract.TIME_COLUMN_NAME: "str(val)",
             ForecastingConfigContract.TIME_SERIES_ID_COLUMN_NAMES: "val",
+            ForecastingConfigContract.FORECAST_FLAVOR: "str(val)",
+            ForecastingConfigContract.ROLLING_FORECAST_STEP: "int(val)",
             ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)",
-            "predictions_column_name": "val",
-            "ground_truths_column_name": "val"
+            ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)",
+            ForecastingConfigContract.FORECAST_PREDICTIONS: "val",
+            ForecastingConfigContract.FORECAST_GROUND_TRUTH: "val"
         }
         return args_map
 
@@ -611,6 +626,7 @@ def read_data(file_path, is_mltable=True, batch_size=None):
     Args:
         file_path (_type_): _description_
         is_mltable: (_type_, optional): _description_. Defaults to True.
+        batch_size (_type_): _description_
 
     Raises:
         DataValidationException: _description_
@@ -669,14 +685,18 @@ def read_dataframe(file_path, batch_size=None):
         # Reading a TSV file with the specified batch_size and skipping initial spaces
         return pd.read_csv(file_path, sep='\t', chunksize=batch_size, skipinitialspace=True)
     elif file_extension == '.jsonl':
-        # Reading a JSONL file with the specified batch_size
-        return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
+        try:
+            # Reading a JSONL file with the specified batch_size
+            return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
+        except Exception as e:
+            logger.info("Loading the data without chunksize. Exception: {}".format(str(e)))
+            return pd.read_json(file_path)
     else:
         # Default to reading JSONL files without raising an exception
         return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
 
 
-def prepare_data(data, task, label_column_name=None, _has_multiple_output=False):
+def prepare_data(data, task, label_column_name=None, _has_multiple_output=False, extra_y_test_cols=None):
     """Prepare data.
 
     Args:
@@ -685,6 +705,7 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
         label_column_name (_type_, optional): _description_. Defaults to None.
         input_column_names (_type_, optional): _description_. Defaults to None.
         _has_multiple_output (bool, optional): _description_. Defaults to False.
+        extra_y_test_cols (_type_, optional): _description_. Defaults to None.
 
     Raises:
         ModelEvaluationException: _description_
@@ -694,8 +715,15 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
         _type_: _description_
     """
     X_test, y_test = data, None
-    if label_column_name is not None:
+    if extra_y_test_cols is not None and label_column_name is not None:
+        # IF extra_y_test_cols is not None, label_column_name should also be not None;
+        # extra_y_test_cols is accepted only for text-gen
+        X_test, y_test = X_test.drop(extra_y_test_cols + [label_column_name], axis=1), \
+                         data[extra_y_test_cols + [label_column_name]]
+    elif label_column_name is not None:
         X_test, y_test = data.drop(label_column_name, axis=1), data[label_column_name]
+    elif extra_y_test_cols is not None:
+        X_test, y_test = data.drop(extra_y_test_cols, axis=1), data[extra_y_test_cols]
     if task == constants.TASK.REGRESSION:
         if y_test is not None:
             try:
@@ -707,7 +735,6 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
                 )
                 log_traceback(exception, logger)
                 raise exception
-
     if task == constants.TASK.NER:
         if len(X_test.columns) > 1 and "tokens" not in X_test.columns:
             message = "Too many feature columns in dataset. Only 1 feature column should be passed for NER."
@@ -750,8 +777,17 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
             exception = DataLoaderException(exception_message=message)
             log_traceback(exception, logger, message)
             raise exception
+
     if y_test is not None:
         y_test = y_test.values
+
+    if task == constants.TASK.CHAT_COMPLETION:
+        X_test = []
+        y_test = None
+        for conversation in data[label_column_name]:
+            df = pd.DataFrame({"input_string": conversation})
+            X_test.append(df)
+
     return X_test, y_test
 
 
@@ -789,6 +825,8 @@ def read_config(conf_file):
     Returns:
         _type_: _description_
     """
+    if not conf_file:
+        return dict()
     try:
         import json
         with open(conf_file, "r") as f:
@@ -816,6 +854,8 @@ def read_config_str(conf_str):
     Returns:
         _type_: _description_
     """
+    if not conf_str:
+        return dict()
     try:
         import json
         data = json.loads(conf_str)
@@ -882,3 +922,14 @@ def read_conll(stream_info, labels=None):
         tokens.append(np.array(cur_sentence))
         targets.append(np.array(cur_target))
     return np.asarray(tokens), np.asarray(targets), labels_list
+
+
+def parse_input_ground_truth_col(col_name):
+    """Parse input ground truth columns."""
+    extra_cols = None
+    if col_name is not None and "," in col_name:
+        col_name, extra_cols = col_name.split(",", 1)
+        # Adding this to be consistent with how it is being used elsewhere, ideally it should be ""
+        col_name = None if col_name == "" else col_name
+        extra_cols = extra_cols.split(",") if extra_cols != "" else None
+    return col_name, extra_cols

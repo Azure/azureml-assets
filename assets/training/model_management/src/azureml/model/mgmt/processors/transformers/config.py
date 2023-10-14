@@ -12,6 +12,7 @@ MLFLOW_ARTIFACT_DIRECTORY = "mlflow_model_folder"
 MODEL_CONFIG_FILE_PATTERN = r"^config\.json|.+\.py$"
 MODEL_FILE_PATTERN = r"^pytorch.*|.+\.py$"
 TOKENIZER_FILE_PATTERN = r"^.*token.*|.*vocab.*|.*processor.*|.+\.py$"
+META_FILE_PATTERN = r"^.*README.*|.*LICENSE.*|.*USE_POLICY.*$"
 
 
 class _CustomEnum(Enum):
@@ -68,18 +69,6 @@ class SupportedNLPTasks(_CustomEnum):
     TEXT_GENERATION = "text-generation"
     TEXT_CLASSIFICATION = "text-classification"
     TRANSLATION = "translation"
-
-
-class SupportedDiffusersTask(_CustomEnum):
-    """Supported diffusers task."""
-
-    TEXT_TO_IMAGE = "text-to-image"
-
-
-class SupportedTextToImageModelFamily(_CustomEnum):
-    """Supported text to image models."""
-
-    STABLE_DIFFUSION = "stable-diffusion"
 
 
 class SupportedASRModelFamily(_CustomEnum):

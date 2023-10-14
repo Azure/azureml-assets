@@ -17,7 +17,7 @@ from config import Tasks, MMDetLiterals, MLflowSchemaLiterals, ODLiterals, ISLit
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
     # model wrapper for save_model().
-    from vision_utils import create_temp_file, process_image
+    from vision_utils import create_temp_file, process_image_pandas_series
 except ImportError:
     pass
 
@@ -205,7 +205,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         """
         # process the images in image column
         processed_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
-            axis=1, func=process_image
+            axis=1, func=process_image_pandas_series
         )
 
         with tempfile.TemporaryDirectory() as tmp_output_dir:

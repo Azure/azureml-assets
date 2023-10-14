@@ -30,6 +30,8 @@ class FeatureAttributionDriftSignal(Signal):
             SignalType.FEATURE_ATTRIBUTION_DRIFT,
             metrics,
         )
+        self.global_metrics = {}
+        self.feature_metrics = []
         self.row_count_metrics = RowCountMetrics(metrics)
         self._build_metrics(monitor_name, signal_name, metrics)
 
@@ -62,6 +64,9 @@ class FeatureAttributionDriftSignal(Signal):
 
     def _build_metrics(self, monitor_name: str, signal_name: str, metrics: List[dict]):
         """Build metrics."""
+        if not metrics or len(metrics) == 0:
+            return []
+
         feature_metric_cache = {}
         global_metric_cache = {}
         for metric in metrics:

@@ -2,8 +2,10 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: CodeLlama-34b-Instruct-hf
 path: ./
 properties:
+  SHA: 38a1e15d8524a1f0a7760a7acf8242b81ae4eb87
   datasets: Publicly available sources
-  finetuning-tasks: text-classification
+  inference-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
   languages: EN
   azureml.copyRegistryFilesToWorkspace: true
 tags:
@@ -12,14 +14,15 @@ tags:
   inference_supported_envs:
   - hf_tgi
   inference_compute_allow_list:
+  - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
-  license: custom
-  author: meta
-  model_specific_defaults:
-    apply_lora: 'true'
-    precision: '4'
-  task: text-generation
+  evaluation_compute_allow_list:
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  - Standard_ND96amsr_A100_v4
   SharedComputeCapacityEnabled: ''
-  disable-batch: 'true'
-version: 1
+  task: text-generation
+  license: llama2
+  author: meta
+version: 3
