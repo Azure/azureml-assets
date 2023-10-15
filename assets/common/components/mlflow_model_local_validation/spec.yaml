@@ -17,6 +17,7 @@ command: >-
   --model-path ${{inputs.model_path}}
   $[[--test-data-path ${{inputs.test_data_path}}]]
   $[[--column-rename-map "${{inputs.column_rename_map}}"]]
+  $[[--task-name ${{inputs.task_name}}]]
   --output-model-path ${{outputs.mlflow_model_folder}}
 
 inputs:
@@ -35,7 +36,24 @@ inputs:
     optional: true
     description: |
       Provide mapping of dataset column names that should be renamed before inferencing.
-      eg: col1:ren1; col2:ren2; col3:ren3 
+      eg: col1:ren1; col2:ren2; col3:ren3
+
+  task_name:
+    description: A Hugging face task on which model was trained on
+    enum:
+      - text-classification
+      - fill-mask
+      - token-classification
+      - question-answering
+      - summarization
+      - text-generation
+      - text-classification
+      - translation
+      - image-classification
+      - text-to-image
+      - zero-shot-image-classification
+    optional: true
+    type: string
 
 outputs:
   mlflow_model_folder:

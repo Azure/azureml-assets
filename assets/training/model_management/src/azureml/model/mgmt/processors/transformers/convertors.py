@@ -30,8 +30,7 @@ from azureml.model.mgmt.utils.common_utils import (
 )
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from mlflow.models import ModelSignature
-from mlflow.types.schema import ColSpec
-from mlflow.types.schema import DataType, Schema
+from mlflow.types.schema import ColSpec, DataType, Schema, ParamSpec, ParamSchema
 from pathlib import Path
 from transformers import (
     AutoImageProcessor,
@@ -191,7 +190,20 @@ class HFMLFLowConvertor(MLFLowConvertorInterface, ABC):
                                                   pin_sdk_version=False)
             curated_conda_env = conda_deps.as_dict()
 
-            model_pipeline = transformers.pipeline(task=self._task, model=model)
+            # handle OSS model loading with device map
+            try:
+                model_pipeline = transformers.pipeline(task=self._task, model=model, device_map="auto")
+                logger.info("OSS model loaded with device_map auto")
+            except Exception as e:
+                logger.error("OSS Model load failed with exception: {}, reloading without device_map auto".format(e))
+                model_pipeline = transformers.pipeline(task=self._task, model=model)
+
+                # pass in signature for a text-classification model
+            if self._task == SupportedNLPTasks.TEXT_CLASSIFICATION.value:
+                inputs = Schema([ColSpec(DataType.string)])
+                outputs = None
+                params = ParamSchema([ParamSpec("return_all_scores", "boolean", default=True)])
+                self._signatures = ModelSignature(inputs=inputs, outputs=outputs, params=params)
 
             mlflow.transformers.save_model(
                 transformers_model=model_pipeline,
