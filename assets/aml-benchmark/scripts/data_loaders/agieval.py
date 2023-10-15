@@ -4,14 +4,14 @@
 """Data Loading Script for AGIEval."""
 
 import datasets
-import json
 import ast
 import pandas as pd
 
 _CITATION = """\
 @misc{zhong2023agieval,
-      title={AGIEval: A Human-Centric Benchmark for Evaluating Foundation Models}, 
-      author={Wanjun Zhong and Ruixiang Cui and Yiduo Guo and Yaobo Liang and Shuai Lu and Yanlin Wang and Amin Saied and Weizhu Chen and Nan Duan},
+      title={AGIEval: A Human-Centric Benchmark for Evaluating Foundation Models},
+      author={Wanjun Zhong and Ruixiang Cui and Yiduo Guo and Yaobo Liang and Shuai Lu \
+        and Yanlin Wang and Amin Saied and Weizhu Chen and Nan Duan},
       year={2023},
       eprint={2304.06364},
       archivePrefix={arXiv},
@@ -27,7 +27,10 @@ _LICENSE = (
 
 _HEAD = 'https://raw.githubusercontent.com/ruixiangcui/AGIEval/main/data/v1/'
 _FEWSHOT_URL = 'https://raw.githubusercontent.com/ruixiangcui/AGIEval/main/data/few_shot_prompts.csv'
-_DESCRIPTION = "AGIEval is a human-centric benchmark specifically designed to evaluate the general abilities of foundation models in tasks pertinent to human cognition and problem-solving. This benchmark is derived from 20 official, public, and high-standard admission and qualification exams intended for general human test-takers, such as general college admission tests"
+_DESCRIPTION = "AGIEval is a human-centric benchmark specifically designed to evaluate the general abilities \
+    of foundation models in tasks pertinent to human cognition and problem-solving. This benchmark is derived \
+    from 20 official, public, and high-standard admission and qualification exams intended for \
+    general human test-takers, such as general college admission tests"
 
 _CONFIGS = [
     'aqua-rat',
@@ -67,12 +70,13 @@ _ANSWER_INTRO = {
 
 _SHOT_SEPARATOR = '\n<END>\n'
 
+
 def _get_language(config):
     if config != 'gaokao-english' and ('gaokao' in config or config == 'logiqa-zh'):
         return 'chinese'
     else:
         return 'english'
-    
+
 
 def _format_question(config, src_dict, problem_number, add_label=False):
     lang = _get_language(config)
@@ -129,7 +133,6 @@ class AgiEval(datasets.GeneratorBasedBuilder):
         # Load few shot data
         df_fs = pd.read_csv(fewshot_path)
         shots = df_fs[df_fs.index % 2 == 0].reset_index(drop=True)
-        explanations = df_fs[df_fs.index % 2 != 0].reset_index(drop=True)
 
         # Format fewshot prompt
         ishot = 0
@@ -142,7 +145,7 @@ class AgiEval(datasets.GeneratorBasedBuilder):
             fs_str += _format_question(self.config.name, fs_dict, ishot + 1, add_label=True)
             ishot += 1
 
-        # Format eval questions for the prompt 
+        # Format eval questions for the prompt
         df = pd.read_json(eval_path, lines=True)
         for key, row in df.iterrows():
             prompt_str = _format_question(self.config.name, row, ishot + 1, add_label=False)
