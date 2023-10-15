@@ -27,7 +27,6 @@ _LICENSE = (
 
 _HEAD = 'https://raw.githubusercontent.com/ruixiangcui/AGIEval/main/data/v1/'
 _FEWSHOT_URL = 'https://raw.githubusercontent.com/ruixiangcui/AGIEval/main/data/few_shot_prompts.csv'
-
 _DESCRIPTION = "AGIEval is a human-centric benchmark specifically designed to evaluate the general abilities of foundation models in tasks pertinent to human cognition and problem-solving. This benchmark is derived from 20 official, public, and high-standard admission and qualification exams intended for general human test-takers, such as general college admission tests"
 
 _CONFIGS = [
@@ -39,8 +38,6 @@ _CONFIGS = [
     'gaokao-geography',
     'gaokao-history',
     'gaokao-mathqa',
-    'logiqa-en',
-    'logiqa-zh',
     'lsat-ar',
     'lsat-lr',
     'lsat-rc',
@@ -92,7 +89,7 @@ def _format_question(config, src_dict, problem_number, add_label=False):
 
 
 class AgiEval(datasets.GeneratorBasedBuilder):
-    """TODO: Short description of my dataset."""
+    """Builder for AGIEval dataset."""
 
     BUILDER_CONFIGS = [
         datasets.BuilderConfig(
@@ -105,17 +102,6 @@ class AgiEval(datasets.GeneratorBasedBuilder):
     DEFAULT_CONFIG_NAME = "aqua-rat"
 
     def _info(self):
-
-        features = datasets.Features(
-            {
-                "passage": datasets.Value("string"),
-                "question": datasets.Value("string"),
-                "options": datasets.features.Sequence(datasets.Value("string")),
-                "label": datasets.ClassLabel(num_classes=5, names=["A", "B", "C", "D", "E"]),
-                "solution": datasets.Value("string"),
-            }
-        )
-
         return datasets.DatasetInfo(
             description=_DESCRIPTION,
             features=None,
