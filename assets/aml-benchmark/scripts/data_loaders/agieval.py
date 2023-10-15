@@ -88,7 +88,7 @@ def _format_question(config, src_dict, problem_number, add_label=False):
     s += ' '.join(src_dict['options']) + '\n'
     if add_label:
         s += _ANSWER_INTRO[lang] + f' {src_dict["label"]}' + _SHOT_SEPARATOR
-    
+
     return s
 
 
