@@ -8,8 +8,8 @@
 from typing import Any, Dict, List, Union
 import argparse
 import json
-import logging as logger
 import pandas as pd
+from random import shuffle
 
 
 def _parse_args():
@@ -25,7 +25,6 @@ def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
     """Read `.jsonl` file and return a list of dictionaries."""
     if not file_path.endswith(".jsonl"):
         mssg = f"Input file '{file_path}' is not a .jsonl file."
-        logger.ERROR(mssg)
         raise ValueError(mssg)
     data_dicts = []
     with open(file_path, 'r', encoding="utf8") as file:
@@ -53,23 +52,21 @@ def _run(input_path: str, output_path: str) -> None:
     _write_to_jsonl_file(processed_data, output_path)
 
 
+def format_string(sentence: str) -> str:
+    """Apply formatting at the end of the text and adds fullstop if it does not ned with it."""
+    if not sentence.endswith("."):
+        sentence = sentence + "."
+    return sentence
+
+
 def run_processor(data: List[Dict[str, Any]]) -> Union[pd.DataFrame, List[Dict[str, Any]]]:
     """Run the custom processor function."""
-    from random import shuffle
     # generic preprocessor
-    input_keys = list(map(lambda x: x.strip(), "question,best_answer,incorrect_answers".split(',')))
+    input_keys = ["question", "best_answer", "incorrect_answers"]
     label_key = "correct_answers"
 
-    def format(sentence: str) -> str:
-        if sentence[-1] != ".":
-            sentence = sentence + "."
-        return sentence
-
-    encoder_config = {
-        "1": "A", "2": "B", "3": "C", "4": "D", "5": "E", "6": "F",
-        "7": "G", "8": "H", "9": "I", "10": "J", "11": "K", "12": "L",
-        "13": "M", "14": "N", "15": "O", "16": "P"
-    }
+    # create following dictionary for labels in format {'1': 'A', '2': 'B', ... '26': 'Z'}
+    encoder_config = {str(i): chr(i+ord('A')-1) for i in range(1, 27)}
     ret_data = []
     for example in data:
         out_dict = {}
@@ -88,8 +85,7 @@ def run_processor(data: List[Dict[str, Any]]) -> Union[pd.DataFrame, List[Dict[s
         out_dict['best_answer_index'] = str(choices.index(out_dict['best_answer'])+1)
         out_dict['correct_answers'] = [format(i.strip()) for i in example.get(label_key)]
         out_dict['labels'] = [chr(i+ord('A')) for i in range(len(choices))]
-        if encoder_config:
-            out_dict['best_answer_label'] = encoder_config.get(str(out_dict.get('best_answer_index')))
+        out_dict['best_answer_label'] = encoder_config.get(str(out_dict.get('best_answer_index')))
         ret_data.append(out_dict)
     return ret_data
 
