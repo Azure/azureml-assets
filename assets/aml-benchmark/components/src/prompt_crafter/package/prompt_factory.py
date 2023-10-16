@@ -99,7 +99,8 @@ class PromptFactory(ABC):
         elif prompt_type == PromptType.chat.name:
             return ChatPromptFactory
         else:
-            raise ValueError(f"Unrecognized prompt type {prompt_type}. Should be one of {PromptType.chat.name} or {PromptType.completions.name}")
+            raise ValueError(f"Unrecognized prompt type {prompt_type}. Should be \
+                             one of {PromptType.chat.name} or {PromptType.completions.name}")
 
     @abstractmethod
     def create_prompt(row: Dict) -> Prompt:

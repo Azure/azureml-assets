@@ -1,8 +1,8 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-name: prompt_crafter_component
-display_name: Benchmarking Prompt Crafter
+name: prompt_crafter_
+display_name: BenchmarkingPromptCrafter
 description: Create prompts from a given dataset. From a given jinja prompt 
   template, it will generate prompts. It can also create few-shot prompts 
   given a few-shot dataset and the number of shots.
@@ -58,7 +58,7 @@ inputs:
     description: |
       The number of shots to use in the few-shot prompts. Default is 0, which means no few-shot
       examples will be generated. n_shots must be smaller than the size of few_shot dataset.
-  fewshot_data:
+  few_shot_data:
     type: uri_file
     optional: true
     description: |
@@ -96,7 +96,7 @@ environment: azureml://registries/azureml/environments/model-evaluation/labels/l
 command: >-
   python -m prompt_crafter.main 
   --test_data ${{inputs.test_data}}
-  $[[--fewshot_data ${{inputs.fewshot_data}}]]
+  $[[--few_shot_data ${{inputs.few_shot_data}}]]
   --n_shots ${{inputs.n_shots}}
   --prompt_type ${{inputs.prompt_type}}
   $[[--random_seed ${{inputs.random_seed}}]]

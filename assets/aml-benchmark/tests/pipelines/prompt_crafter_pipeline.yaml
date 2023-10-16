@@ -2,7 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
 type: pipeline
 
 display_name: test_prompt_crafter_converged
-description: Pipeline to test Prompt Crafter component.
+description: Pipeline to test Prompt Crafter.
 settings:
   default_compute: azureml:serverless
 
@@ -10,7 +10,7 @@ inputs:
   test_data:
     type: uri_file
     path: ../data/test_data_prompt_crafter/inferencesample.jsonl
-  fewshot_data:
+  few_shot_data:
     type: uri_file
     path: ../data/test_data_prompt_crafter/fewshotsample.jsonl
   n_shots: 3
@@ -32,7 +32,7 @@ jobs:
       timeout: 900
     inputs:
       test_data: ${{parent.inputs.test_data}}
-      fewshot_data: ${{parent.inputs.fewshot_data}}
+      few_shot_data: ${{parent.inputs.few_shot_data}}
       n_shots: ${{parent.inputs.n_shots}}
       prompt_pattern: ${{parent.inputs.prompt_pattern}}
       output_pattern: ${{parent.inputs.output_pattern}}
