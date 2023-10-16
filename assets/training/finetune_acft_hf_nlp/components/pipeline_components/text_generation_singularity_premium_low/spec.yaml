@@ -442,6 +442,12 @@ inputs:
   #   optional: true
   #   description: Additional parameters as JSON serielized string
 
+  # Validation parameters
+  system_properties:
+    type: string
+    optional: true
+    description: Validation parameters propagated from pipeline.
+
   # Compute parameters
   compute_model_import:
     type: string
@@ -507,6 +513,18 @@ jobs:
     inputs:
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
       compute_finetune: '${{parent.inputs.compute_finetune}}'
+      compute_model_import: '${{parent.inputs.compute_model_import}}'
+      compute_data_preprocess: '${{parent.inputs.compute_preprocess}}'
+      task_name: '${{parent.inputs.task_name}}'
+      number_of_gpu_to_use_finetuning: '${{parent.inputs.number_of_gpu_to_use_finetuning}}'
+      train_file_path: '${{parent.inputs.train_file_path}}'
+      validation_file_path: '${{parent.inputs.validation_file_path}}'
+      test_file_path: '${{parent.inputs.test_file_path}}'
+      train_mltable_path: '${{parent.inputs.train_mltable_path}}'
+      validation_mltable_path: '${{parent.inputs.validation_mltable_path}}'
+      test_mltable_path: '${{parent.inputs.test_mltable_path}}'
+      user_column_names: '${{parent.inputs.text_key}},${{parent.inputs.ground_truth_key}}'
+      system_properties: '${{parent.inputs.system_properties}}'
   text_generation_model_import_singularity:
     type: command
     component: azureml:text_generation_model_import_singularity:0.0.21
@@ -523,6 +541,7 @@ jobs:
       pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
       validation_output: '${{parent.jobs.ft_nlp_common_validation_singularity.outputs.validation_info}}'
+      system_properties: '${{parent.inputs.system_properties}}'
   text_generation_datapreprocess_singularity:
     type: command
     component: azureml:text_generation_datapreprocess_singularity:0.0.21
@@ -547,6 +566,7 @@ jobs:
       validation_mltable_path: '${{parent.inputs.validation_mltable_path}}'
       test_mltable_path: '${{parent.inputs.test_mltable_path}}'
       model_selector_output: '${{parent.jobs.text_generation_model_import_singularity.outputs.output_dir}}'
+      system_properties: '${{parent.inputs.system_properties}}'
   text_generation_finetune_singularity:
     type: command
     component: azureml:text_generation_finetune_singularity:0.0.21
@@ -605,6 +625,7 @@ jobs:
       apply_ort: '${{parent.inputs.apply_ort}}'
       preprocess_output: '${{parent.jobs.text_generation_datapreprocess_singularity.outputs.output_dir}}'
       model_selector_output: '${{parent.jobs.text_generation_model_import_singularity.outputs.output_dir}}'
+      system_properties: '${{parent.inputs.system_properties}}'
     outputs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
       mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
