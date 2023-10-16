@@ -94,12 +94,12 @@ class PromptFactory(ABC):
     @classmethod
     def from_type(cls, prompt_type: PromptType):
         """Create a prompt factory from a prompt type."""
-        if prompt_type == PromptType.completions:
+        if prompt_type == PromptType.completions.name:
             return CompletionsPromptFactory
-        elif prompt_type == PromptType.chat:
+        elif prompt_type == PromptType.chat.name:
             return ChatPromptFactory
         else:
-            raise ValueError(f"Unrecognized prompt type {prompt_type}. Should be one of `chat` or `completion`")
+            raise ValueError(f"Unrecognized prompt type {prompt_type}. Should be one of {PromptType.chat.name} or {PromptType.completions.name}")
 
     @abstractmethod
     def create_prompt(row: Dict) -> Prompt:

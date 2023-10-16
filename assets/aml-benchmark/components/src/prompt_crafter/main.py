@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 import logging
 
 from .package.prompt_crafter import PromptCrafter
+from .package.prompt import PromptType
 from utils.exceptions import swallow_all_exceptions
 from utils.logging import get_logger, log_mlflow_params
 
@@ -20,7 +21,8 @@ def parse_args() -> ArgumentParser:
     parser.add_argument("--input_dir", type=str, required=False)
     parser.add_argument("--test_data", type=str, required=True)
     parser.add_argument("--few_shot_data", type=str, required=False)
-    parser.add_argument("--prompt_type", type=str, required=True, choices=['chat', 'completions'])
+    parser.add_argument("--prompt_type", type=str, required=True,
+                        choices=[PromptType.chat.name, PromptType.completions.name])
     parser.add_argument("--n_shots", type=int, required=True)
     parser.add_argument("--random_seed", type=int, default=0, required=True)
     parser.add_argument("--output_file", type=str, required=True)
