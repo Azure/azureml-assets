@@ -7,14 +7,13 @@ from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 import snakemd
 import re
-import os
 from pathlib import Path
 from azureml.assets.config import AssetConfig, AssetType
-from glob import glob as search
 
-SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA]
+SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA, AssetType.PROMPT]
 DEFAULT_CATEGORY = "Uncategorized"
-PLURALIZED_ASSET_TYPE = {"environment": "environments", "component": "components", "model": "models", "data": "data"}
+PLURALIZED_ASSET_TYPE = {"environment": "environments", "component": "components", "model": "models", "data": "data",
+                         "prompt": "prompts"}
 
 
 class AssetInfo:
@@ -103,6 +102,8 @@ class AssetInfo:
             return ModelInfo(asset_config)
         if asset_config.type == AssetType.DATA:
             return DataInfo(asset_config)
+        if asset_config.type == AssetType.PROMPT:
+            return PromptInfo(asset_config)
 
         raise Exception(f"Not supported asset type {asset_config.type}. Use {SUPPORTED_ASSET_TYPES}")
 
@@ -155,26 +156,10 @@ class AssetInfo:
     def _add_doc_docker_context(self, doc):
         """Add docker context content."""
         doc.add_heading("Docker build context", level=2)
-        context = {}
-        dockerfile = ""
-        for context_file in search(str(self._extra_config_object.context_dir_with_path) + "/*"):
-            content = ""
-            with open(context_file, "r") as f:
-                # do not expect nested structure for now
-                content = f.read()
-            filename = os.path.basename(context_file)
-            if filename.lower() == "dockerfile":
-                dockerfile = content
-            else:
-                context[filename] = content
 
         doc.add_heading("Dockerfile", level=3)
+        dockerfile = self._extra_config_object.get_dockerfile_contents()
         doc.add_code(dockerfile, lang="dockerfile")
-
-        for name, file_content in context.items():
-            doc.add_heading(name, level=3)
-            filename, file_extension = os.path.splitext(name)
-            doc.add_code(file_content, lang=file_extension.strip("."))
 
     def _add_doc_component_type_and_code(self, doc):
         # TODO: have a code reference on GH
@@ -370,6 +355,26 @@ class DataInfo(AssetInfo):
         return _doc
 
 
+class PromptInfo(AssetInfo):
+    """Prompt asset class."""
+
+    def __init__(self, asset_config: AssetConfig):
+        """Instantiate Prompt asset class."""
+        super().__init__(asset_config)
+
+    @AssetInfo.doc.getter
+    def doc(self) -> snakemd.document.Document:
+        """Generate prompt markdown document."""
+        _doc = snakemd.new_doc()
+        self._add_doc_name(_doc)
+        self._add_doc_overview(_doc)
+        self._add_doc_description(_doc)
+        self._add_doc_asset_version(_doc)
+        self._add_doc_tags(_doc)
+
+        return _doc
+
+
 class Categories:
     """Categories structured by type."""
 
@@ -381,6 +386,7 @@ class Categories:
         self._categories[AssetType.COMPONENT.value] = None
         self._categories[AssetType.MODEL.value] = None
         self._categories[AssetType.DATA.value] = None
+        self._categories[AssetType.PROMPT.value] = None
 
     def classify_asset(self, asset: AssetInfo):
         """Classify an asset."""

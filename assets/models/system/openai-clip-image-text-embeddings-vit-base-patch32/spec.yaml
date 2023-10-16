@@ -1,0 +1,12 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: OpenAI-CLIP-Image-Text-Embeddings-vit-base-patch32
+path: ./
+properties:
+    inference-min-sku-spec: 2|0|7|14
+    inference-recommended-sku: Standard_DS3_v2
+    model_id: openai/clip-vit-base-patch32
+tags:
+   Preview: ''
+   license: mit
+   task: embeddings
+version: 1

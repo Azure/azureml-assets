@@ -31,7 +31,8 @@ from utils import (
     fetch_compute_metrics_args,
     check_and_return_if_mltable,
     read_data,
-    evaluate_predictions
+    evaluate_predictions,
+    parse_input_ground_truth_col
 )
 from validation import validate_compute_metrics_args
 from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
@@ -75,10 +76,14 @@ class ComputeMetricsRunner:
         self.is_ground_truth_mltable = is_ground_truth_mltable
         self.is_predictions_mltable = is_predictions_mltable
         self.is_predictions_probabilities_mltable = is_prediction_probabilities_mltable
-        self.ground_truths_column_name = ground_truths_column_name
+        if self.task != constants.TASK.CHAT_COMPLETION and ground_truths_column_name is not None:
+            self.ground_truths_column_name, self.extra_y_test_cols = \
+                parse_input_ground_truth_col(ground_truths_column_name)
+        else:
+            self.ground_truths_column_name = None
+            self.extra_y_test_cols = None
         self.predictions_column_name = predictions_column_name
 
-        self.label_column_name, self.prediction_column_name = None, None
         self.config = config
         self._is_multilabel = self.config.get("multilabel", False)
         self._has_multiple_output = self._is_multilabel or self.task == constants.TASK.NER
@@ -120,7 +125,9 @@ class ComputeMetricsRunner:
         else:
             ground_truth = read_data(self.ground_truth, is_mltable=self.is_ground_truth_mltable)
         ground_truth = list(ground_truth)[0]
-        ground_truth = filter_ground_truths(ground_truth, self.task, self.ground_truths_column_name)
+
+        ground_truth = filter_ground_truths(ground_truth, self.task, self.ground_truths_column_name,
+                                            self.config)
 
         if os.path.isdir(self.predictions) and not self.is_predictions_mltable:
             predictions = self.read_multiple_files(path=self.predictions)
@@ -157,7 +164,7 @@ class ComputeMetricsRunner:
                     # and give it a default name. Later we will rename this column back.
                     if forecast_origin_column in ground_true_regressors:
                         ground_true_regressors[forecast_origin_column] = pd.to_datetime(
-                            self.predictions[forecast_origin_column], unit='ms')
+                            ground_true_regressors[forecast_origin_column], unit='ms')
                         if forecast_origin_column != constants.ForecastColumns._FORECAST_ORIGIN_COLUMN_DEFAULT:
                             ground_true_regressors.rename({
                                 forecast_origin_column: constants.ForecastColumns._FORECAST_ORIGIN_COLUMN_DEFAULT},
@@ -166,8 +173,14 @@ class ComputeMetricsRunner:
                                 constants.ForecastColumns._FORECAST_ORIGIN_COLUMN_DEFAULT: forecast_origin_column}
                     if self.predictions_column_name:
                         self.predictions = self.predictions.pop(self.predictions_column_name)
+            extra_args = {}
+            if self.extra_y_test_cols is not None:
+                extra_args[constants.DataFrameParams.Extra_Cols] = self.extra_y_test_cols
+            if self.ground_truths_column_name is not None:
+                extra_args[constants.DataFrameParams.Ground_Truth_Column_Name] = self.ground_truths_column_name
+
             return evaluate_predictions(self.ground_truth, self.predictions, self.predictions_probabilities,
-                                        self.task, self.config, ground_true_regressors)
+                                        self.task, self.config, ground_true_regressors, **extra_args)
         except Exception as e:
             exception = ComputeMetricsException._with_error(
                 AzureMLError.create(ComputeMetricsInternalError, error=repr(e)),
@@ -197,7 +210,7 @@ class ComputeMetricsRunner:
             result.save(os.path.join(self.output, constants.EVALUATION_RESULTS_PATH))
 
 
-def filter_ground_truths(data, task_type, column_name=None):
+def filter_ground_truths(data, task_type, column_name=None, config=None):
     """Read Json file utility function.
 
     Args:
@@ -207,10 +220,11 @@ def filter_ground_truths(data, task_type, column_name=None):
     Returns:
         _type_: _description_
     """
-    if task_type in [constants.TASK.IMAGE_INSTANCE_SEGMENTATION, constants.TASK.IMAGE_OBJECT_DETECTION]:
+    if task_type in [constants.TASK.IMAGE_INSTANCE_SEGMENTATION, constants.TASK.IMAGE_OBJECT_DETECTION] or \
+            (task_type == constants.TASK.TEXT_GENERATION and
+             config.get(constants.TextGenerationColumns.SUBTASKKEY, "") == constants.SubTask.CODEGENERATION):
         # do not filter as these contains multiple required columns
         return data
-
     #  for Question-Answering checking for multiple columns in ground truth
     if task_type == constants.TASK.QnA and column_name:
         if isinstance(data[data.columns[0]][0], dict) and len(data[data.columns[0]][0].keys()) > 1:
@@ -351,19 +365,21 @@ def run():
                 log_traceback(exception, logger)
                 raise exception
 
-    runner = ComputeMetricsRunner(
-        task=args.task,
-        ground_truth=ground_truths,
-        predictions=predictions,
-        prediction_probabilities=prediction_probabilities,
-        output=args.output,
-        config=config,
-        is_ground_truth_mltable=is_ground_truths_mltable,
-        is_predictions_mltable=is_predictions_mltable,
-        is_prediction_probabilities_mltable=is_prediction_probabilities_mltable,
-        ground_truths_column_name=args.ground_truths_column_name,
-        predictions_column_name=args.predictions_column_name
-    )
+    with log_activity(logger, constants.TelemetryConstants.INITIALISING_RUNNER,
+                      custom_dimensions=custom_dims_dict):
+        runner = ComputeMetricsRunner(
+            task=args.task,
+            ground_truth=ground_truths,
+            predictions=predictions,
+            prediction_probabilities=prediction_probabilities,
+            output=args.output,
+            config=config,
+            is_ground_truth_mltable=is_ground_truths_mltable,
+            is_predictions_mltable=is_predictions_mltable,
+            is_prediction_probabilities_mltable=is_prediction_probabilities_mltable,
+            ground_truths_column_name=args.ground_truths_column_name,
+            predictions_column_name=args.predictions_column_name
+        )
 
     with log_activity(logger, activity_name=constants.TelemetryConstants.DATA_LOADING,
                       custom_dimensions=custom_dims_dict):

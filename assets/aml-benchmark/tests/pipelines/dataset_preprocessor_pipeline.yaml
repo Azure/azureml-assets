@@ -1,0 +1,36 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+display_name: Dataset Preprocessor Component
+description: Pipeline to test Dataset Preprocessor component
+settings:
+  default_compute: azureml:serverless
+
+inputs:
+  dataset:
+    type: uri_file
+    path: ../data/process_one_example.jsonl
+  template_input: '{"question":{{question}},"solution":{{answer.split("#### ")[0]}},"answer":{{answer.split("#### ")[-1]|string}}}'
+  script_path: 
+    type: uri_file
+    path: ../../scripts/custom_dataset_preprocessors/base_preprocessor_template.py
+  encoder_config: '{"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}'
+
+outputs:
+  output_dataset:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/azureml/${{name}}/${{output_name}}.jsonl
+
+jobs:
+  run_dataset_preprocessor:
+    type: command
+    component: ../../components/dataset-preprocessor/spec.yaml
+    limits:
+      timeout: 900
+    inputs:
+      dataset: ${{parent.inputs.dataset}}
+      template_input: ${{parent.inputs.template_input}}
+      script_path: ${{parent.inputs.script_path}}
+      encoder_config: ${{parent.inputs.encoder_config}}
+    outputs:
+      output_dataset: ${{parent.outputs.output_dataset}}

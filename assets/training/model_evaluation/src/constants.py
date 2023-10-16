@@ -2,6 +2,8 @@
 # Licensed under the MIT License.
 
 """File containing constants for model evaluation script."""
+from azureml.evaluate.mlflow.constants import ForecastFlavors
+
 
 PREDICTIONS_COLUMN_NAME = "predictions"
 TRANSFORMER_KEY = "y_transformer"
@@ -44,12 +46,14 @@ class TASK:
     QnA = "question-answering"
     TRANSLATION = "text-translation"
     TEXT_GENERATION = "text-generation"
+    TEXT_GENERATION_CODE = "text-generation-code"
     FILL_MASK = "fill-mask"
     IMAGE_CLASSIFICATION = "image-classification"
     IMAGE_CLASSIFICATION_MULTILABEL = "image-classification-multilabel"
     IMAGE_OBJECT_DETECTION = "image-object-detection"
     IMAGE_INSTANCE_SEGMENTATION = "image-instance-segmentation"
     FORECASTING = "tabular-forecasting"
+    CHAT_COMPLETION = "chat-completion"
 
 
 ALL_TASKS = [
@@ -67,6 +71,7 @@ ALL_TASKS = [
     TASK.TEXT_GENERATION,
     TASK.IMAGE_CLASSIFICATION,
     TASK.IMAGE_CLASSIFICATION_MULTILABEL,
+    TASK.CHAT_COMPLETION,
     TASK.IMAGE_OBJECT_DETECTION,
     TASK.IMAGE_INSTANCE_SEGMENTATION
 ]
@@ -100,12 +105,13 @@ MLFLOW_MODEL_TYPE_MAP = {
     TASK.TEXT_CLASSIFICATION: "text-classifier",
     TASK.TEXT_CLASSIFICATION_MULTILABEL: "classifier-multilabel",
     TASK.NER: "text-ner",
-    TASK.FORECASTING: "forecasting",
+    TASK.FORECASTING: "forecaster",
     TASK.TRANSLATION: "translation",
     TASK.QnA: "question-answering",
     TASK.SUMMARIZATION: "summarization",
     TASK.TEXT_GENERATION: "text-generation",
     TASK.FILL_MASK: "fill-mask",
+    TASK.CHAT_COMPLETION: "chat-completion",
     TASK.IMAGE_CLASSIFICATION: "image-classifier",
     TASK.IMAGE_CLASSIFICATION_MULTILABEL: "image-classifier-multilabel",
     TASK.IMAGE_OBJECT_DETECTION: "image-object-detection",
@@ -127,7 +133,8 @@ TEXT_TOKEN_TASKS = [
     TASK.QnA,
     TASK.SUMMARIZATION,
     TASK.TEXT_GENERATION,
-    TASK.FILL_MASK
+    TASK.FILL_MASK,
+    TASK.CHAT_COMPLETION
 ]
 
 TEXT_OUTPUT_TOKEN_TASKS = [
@@ -135,7 +142,8 @@ TEXT_OUTPUT_TOKEN_TASKS = [
     TASK.QnA,
     TASK.SUMMARIZATION,
     TASK.TEXT_GENERATION,
-    TASK.FILL_MASK
+    TASK.FILL_MASK,
+    TASK.CHAT_COMPLETION
 ]
 
 
@@ -144,6 +152,7 @@ class TelemetryConstants:
 
     COMPONENT_NAME = "model_evaluation"
 
+    INITIALISING_RUNNER = "initialising_runner"
     VALIDATION_NAME = "argument_validation"
     DATA_LOADING = "loading_data"
     LOG_AND_SAVE_OUTPUT = "log_and_save_output"
@@ -155,6 +164,7 @@ class TelemetryConstants:
     COMPUTE_METRICS_NAME = "compute_metrics"
     SCORE_NAME = "score"
     EVALUATE_MODEL_NAME = "evaluate_model"
+    DOWNLOAD_MODEL_DEPENDENCIES = "download_model_dependencies"
 
     MLFLOW_NAME = "mlflow_evaluate"
 
@@ -190,6 +200,9 @@ class ErrorStrings:
     GenericModelPredictionError = "Model Prediction failed due to [{error}]"
     GenericComputeMetricsError = "Compute metrics failed due to [{error}]"
 
+    # Download dependencies
+    DownloadDependenciesFailed = "Failed to install model dependencies: [{dependencies}]"
+
     # Arguments related
     ArgumentParsingError = "Failed to parse input arguments."
     InvalidTaskType = "Given Task Type [{TaskName}] is not supported. " + \
@@ -199,17 +212,24 @@ class ErrorStrings:
                    "If you have passed Model URI, your Model URI is incorrect."
     BadModelData = "Model load failed due to error: [{error}]"
     InvalidTestData = "Test data should be passed."
+    InvalidFileInputSource = "File input source [{input_port}] must be of type ro_mount."
     InvalidPredictionsData = "Predictions should be passed."
     InvalidGroundTruthData = "Ground truth should be passed."
     InvalidGroundTruthColumnName = "Ground truth column name should be passed since columns in data are > 0."
     InvalidGroundTruthColumnNameData = "Ground truth column name not found in input data."
     InvalidPredictionColumnNameData = "Prediction Column name not found in input data."
+    InvalidYTestCasesColumnNameData = "y_test_cases column name not found in input data."
+    InvalidGroundTruthColumnNameCodeGen = "The format for the label column name in code generation should follow " \
+                                          "the pattern: '<label_col_name>,<test_case_col_name>'. Either " \
+                                          "<label_col_name> or <test_case_col_name> can be empty, but at least one " \
+                                          "of them must be set."
 
     # Data Asset related
     BadLabelColumnName = "No label column found in test data."
     BadFeatureColumnNames = "input_column_names is not a subset of input test dataset columns.\
                  input_column_names include [{keep_columns}] whereas data has [{data_columns}]"
     BadInputData = "Failed to load data with error: [{error}]"
+    EmptyInputData = "Input data contains no data."
     BadEvaluationConfigFile = "Evaluation Config file failed to load due to [{error}]"
     BadEvaluationConfigParam = "Evaluation Config Params failed to load due to [{error}]"
     BadEvaluationConfig = "Evaluation Config failed to load due to [{error}]"
@@ -229,7 +249,11 @@ class ForecastingConfigContract:
 
     TIME_COLUMN_NAME = 'time_column_name'
     TIME_SERIES_ID_COLUMN_NAMES = 'time_series_id_column_names'
+    FORECAST_FLAVOR = ForecastFlavors.FLAVOUR
+    ROLLING_FORECAST_STEP = 'step'
     FORECAST_ORIGIN_COLUMN_NAME = 'forecast_origin_column_name'
+    FORECAST_PREDICTIONS = "predictions_column_name"
+    FORECAST_GROUND_TRUTH = "ground_truths_column_name"
 
 
 class ForecastColumns:
@@ -262,3 +286,24 @@ ALLOWED_PIPELINE_PARAMS = {
     "source_lang",
     "target_lang"
 }
+
+
+class DataFrameParams:
+    """DataFrame parameters for  dataset."""
+
+    Ground_Truth_Column_Name = "ground_truths_column_name"
+    Extra_Cols = "extra_cols"
+
+
+class TextGenerationColumns:
+    """Constants for Text Generation tasks."""
+
+    SUBTASKKEY = "sub_task"
+    Text_GEN_TEST_CASE_COLUMN_NAME = "test_case_column_name"
+    Text_GEN_Y_TEST_COLUMN_NAME = "y_test_column_name"
+
+
+class SubTask:
+    """Constants for sub-tasks."""
+
+    CODEGENERATION = "code"

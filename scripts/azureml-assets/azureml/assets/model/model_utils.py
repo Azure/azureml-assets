@@ -149,6 +149,7 @@ def update_model_metadata(
     model_version: str,
     update: AssetVersionUpdate,
     ml_client: MLClient,
+    allow_no_op_update: bool = False,
 ):
     """Update the mutable metadata of already registered Model."""
     try:
@@ -192,10 +193,10 @@ def update_model_metadata(
             model.description = update.description
             need_update = True
 
-        if not need_update:
-            logger.print(f"No update found for model {model_name}. Skipping")
-        else:
+        if allow_no_op_update or need_update:
             ml_client.models.create_or_update(model)
             logger.print(f"Model metadata updated successfully for {model_name}")
+        else:
+            logger.print(f"No update found for model {model_name}. Skipping")
     except Exception as e:
         logger.log_error(f"Failed to update metadata for model : {model_name} : {e}")

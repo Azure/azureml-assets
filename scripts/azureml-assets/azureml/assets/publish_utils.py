@@ -429,7 +429,7 @@ def stringify_dictionary(dictionary: Dict):
     return new_dict
 
 
-def update_asset_metadata(asset: AssetConfig, ml_client: MLClient):
+def update_asset_metadata(asset: AssetConfig, ml_client: MLClient, allow_no_op_update: bool = False):
     """Update the mutable metadata of asset."""
     if asset.type == AssetType.MODEL:
         model_name = asset.name
@@ -463,6 +463,7 @@ def update_asset_metadata(asset: AssetConfig, ml_client: MLClient):
                 description=model_config.description
             ),
             ml_client=ml_client,
+            allow_no_op_update=allow_no_op_update,
         )
     else:
         logger.print(f"Skipping metadata update of {asset.name}. Not supported for type {asset.type}")
@@ -490,7 +491,7 @@ def create_asset(asset: AssetConfig, registry_name: str, ml_client: MLClient, ve
     if get_asset_details(asset.type.value, asset.name, asset.version, registry_name):
         logger.print(f"{asset.name} {asset.version} already exists, updating the metadata")
         try:
-            update_asset_metadata(asset, ml_client)
+            update_asset_metadata(asset=asset, ml_client=ml_client, allow_no_op_update=False)
             return True
         except Exception as e:
             logger.log_error(f"Failed to update metadata for {asset.name}:{asset.version} - {e}")

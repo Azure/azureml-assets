@@ -5,6 +5,7 @@ import argparse
 import os
 import json
 import errno
+import uuid
 
 import requests
 import traceback
@@ -22,22 +23,40 @@ from azureml.rag.utils.logging import (
     _logger_factory
 )
 
+
 logger = get_logger('flow_creation')
 
 MAX_POST_TIMES = 3
 SLEEP_DURATION = 1
+USE_CODE_FIRST = True
+USE_CHAT_FLOWS = True
+
 SERVICE_ENDPOINT = os.environ.get("AZUREML_SERVICE_ENDPOINT", "")
 EXPERIMENT_SCOPE = os.environ.get("AZUREML_EXPERIMENT_SCOPE", "")
 WORKSPACE_SCOPE = os.environ.get("AZUREML_WORKSPACE_SCOPE", "")
 RUN_TOKEN = os.environ.get("AZUREML_RUN_TOKEN", "")
+CODE_DIR = "rag_code_flow"
 _CITATION_TEMPLATE = r'\nPlease add citation after each sentence when possible in a form \"(Source: citation)\".'
-_USER_INPUT = r'{{contexts}} \n Human: {{question}} \nAI:'
+_USER_INPUT = r'{{contexts}} \n user: {{question}} \nassistant:'
+_MODIFY_INPUT = r'Given the following conversation history and the users next question,' + \
+    r'rephrase the question to be a stand alone question.\nIf the conversation is irrelevant ' + \
+    r'or empty, just restate the original question.\nDo not add more details than necessary to the question.'
+_CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ item.inputs.question }} ' + \
+    r'\nassistant: \n{{ item.outputs.output }} \n{% endfor %}'
+_MODIFY_PROMPT = r'system: \n' + _MODIFY_INPUT + r'\nconversation:\n' + _CHAT_HISTORY + \
+    r'\n\nFollow up Input: {{question}} \nStandalone Question:'
 _STATIC_METRIC_PRIORITY_LIST = ["gpt_similarity", "gpt_relevance", "bert_f1"]
 
 
-def post_processing_prompts(prompt, citation_templates, user_input):
+def post_processing_prompts(prompt, citation_templates, user_input, is_chat):
     """Post processing prompts to include multiple roles to make it compatible with completion and chat API."""
-    return r'system: \n' + prompt + citation_templates + r'\n\n user: \n ' + user_input
+    if is_chat:
+        full_prompt = r'system: \n' + prompt + citation_templates + r'\n\n user: \n {{contexts}} \n' + \
+                _CHAT_HISTORY + r'\nuser: {{question}} \nassistant:'
+    else:
+        full_prompt = r'system: \n' + prompt + citation_templates + r'\n\n user: \n ' + user_input
+
+    return full_prompt
 
 
 def get_default_headers(token, content_type=None, read_bytes=None):
@@ -117,10 +136,28 @@ def get_connection_name(s):
 
 def get_deployment_and_model_name(s):
     """get_deployment_and_model_name."""
-    deployment_and_model = s.split("/deployment/")[1]
-    deployment_name = deployment_and_model.split("/model/")[0]
-    model_name = deployment_and_model.split("/model/")[1]
-    return (deployment_name, model_name)
+    model_type = s.split("://")[0]
+    if model_type == "open_ai":
+        model_name = s.split("/model/")[1]
+        return (model_name, model_name)
+    else:
+        deployment_and_model = s.split("/deployment/")[1]
+        deployment_name = deployment_and_model.split("/model/")[0]
+        model_name = deployment_and_model.split("/model/")[1]
+        return (deployment_name, model_name)
+
+
+def upload_code_files(ws: Workspace, name):
+    """Upload the files in the code flow directory."""
+    from azureml.data.dataset_factory import FileDatasetFactory
+    working_directory = ws.datastores.get("workspaceworkingdirectory")
+    asset_id = str(uuid.uuid4())
+    dest = f"Users/{name}/Promptflows/{asset_id}/{CODE_DIR}"
+    FileDatasetFactory.upload_directory(
+        os.path.join(Path(__file__).parent.absolute(), CODE_DIR),
+        (working_directory, dest))
+
+    return dest
 
 
 def main(args, ws, current_run, activity_logger: Logger):
@@ -141,42 +178,83 @@ def main(args, ws, current_run, activity_logger: Logger):
     completion_connection_name = get_connection_name(
         args.llm_connection_name)
     completion_config = json.loads(args.llm_config)
-    completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
-    completion_deployment_name = completion_config.get(
-        "deployment_name", "gpt-35-turbo")
+
+    if completion_config.get("type") == "open_ai":
+        completion_model_name = completion_config.get("model_name", "gpt-3.5-turbo")
+        completion_deployment_name = completion_model_name
+        completion_model_name = "gpt-3.5-turbo" if completion_model_name is None else completion_model_name
+        completion_deployment_name = \
+            "gpt-3.5-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_provider = "OpenAI"
+    else:
+        completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
+        # If completion deployment not set, set as blank in PF rather than a placeholder
+        completion_deployment_name = completion_config.get(
+            "deployment_name", None)
     # Set default if key exsits but is set to None (as it is for basic pipelines)
-    completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
-    completion_deployment_name = "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
+        completion_deployment_name = \
+            "" if completion_deployment_name is None else completion_deployment_name
+        completion_provider = "AzureOpenAI"
+
     embedding_connection_name = get_connection_name(
         args.embedding_connection)
     if (completion_connection_name == "azureml-rag-default-aoai" and
             embedding_connection_name != "azureml-rag-default-aoai"):
         # default completion connection name to embedding ones if embedding conenction is provided
         completion_connection_name = embedding_connection_name
+
     embedding_deployment_name_and_model_name = get_deployment_and_model_name(
         args.embeddings_model)
     embedding_deployment_name = embedding_deployment_name_and_model_name[0]
     embedding_model_name = embedding_deployment_name_and_model_name[1]
+
     print("completion_connection_name: %s" %
           completion_connection_name)
+    print("completion_provider: %s" % completion_provider)
     print("completion_model_name: %s" % completion_model_name)
     print("completion_deployment_name: %s" %
           completion_deployment_name)
+
     print("embedding_connection_name: %s" % embedding_connection_name)
     print("embedding_deployment_name: %s" % embedding_deployment_name)
     print("embedding_model_name: %s" % embedding_model_name)
 
+    if completion_model_name.startswith("gpt-") and USE_CHAT_FLOWS:
+        print("Using chat flows")
+        is_chat = True
+        prefix = "chat_"
+    else:
+        print("Not using chat flows")
+        is_chat = False
+        prefix = ""
+
     if args.best_prompts is None:
-        top_prompts = [
-            'You are an AI assistant that helps users answer questions given a specific context. You will be '
-            + 'given a context, and then asked a question based on that context. Your answer should be as '
-            + 'precise as possible, and should only come from the context.',
-            'You are an AI assistant that helps users answer questions given a specific context. You will be '
-            + 'given a context and asked a question based on that context. Your answer should be as precise '
-            + 'as possible and should only come from the context.',
-            'You are an chat assistant for helping users answering question given a specific context.You are '
-            + 'given a context and you\'ll be asked a question based on the context.Your answer should be '
-            + 'as precise as possible and answer should be only from the context.']
+        if is_chat:
+            top_prompts = [
+                'You are an AI assistant that helps users answer questions given a specific context and '
+                + 'conversation history. You will be given a context and chat history, and then asked a '
+                + 'question based on that context and history. Your answer should be as '
+                + 'precise as possible, and should only come from the context.',
+                'You are an AI assistant that helps users answer questions given a specific context and '
+                + 'chat history. You will be given a context and history and asked a question based on '
+                + 'that context and chat history. Your answer should be as precise as possible and should '
+                + 'only come from the context.',
+                'You are an chat assistant for helping users answering question given a specific context and '
+                + 'history. You are given a context and conversation history and you\'ll be asked a question '
+                + 'based on the context and history. Your answer should be as precise as possible and answer '
+                + 'should be only from the context.']
+        else:
+            top_prompts = [
+                'You are an AI assistant that helps users answer questions given a specific context. You will be '
+                + 'given a context, and then asked a question based on that context. Your answer should be as '
+                + 'precise as possible, and should only come from the context.',
+                'You are an AI assistant that helps users answer questions given a specific context. You will be '
+                + 'given a context and asked a question based on that context. Your answer should be as precise '
+                + 'as possible and should only come from the context.',
+                'You are an chat assistant for helping users answering question given a specific context.You are '
+                + 'given a context and you\'ll be asked a question based on the context.Your answer should be '
+                + 'as precise as possible and answer should be only from the context.']
     else:
         with open(args.best_prompts, "r") as f:
             promt_json = json.load(f)
@@ -201,50 +279,117 @@ def main(args, ws, current_run, activity_logger: Logger):
 
     print(mlindex_asset_id)
     print(top_prompts)
+
     if isinstance(top_prompts, str):
         top_prompts = [top_prompts, top_prompts, top_prompts]
 
-    # for top prompts, construct top templates and inject into varients
-    with open(os.path.join(Path(__file__).parent.absolute(), "flow_with_varients_mlindex.json"), "r") as file:
-        flow_with_varients = file.read()
+    if USE_CODE_FIRST:
+        file_name = os.path.join(Path(__file__).parent.absolute(),
+                                 "flow_yamls",
+                                 prefix + "flow.dag.yaml")
+    else:
+        file_name = os.path.join(Path(__file__).parent.absolute(),
+                                 "flow_jsons",
+                                 prefix + "flow_with_variants_mlindex.json")
+
+    # for top prompts, construct top templates and inject into variants
+    with open(file_name, "r") as file:
+        flow_with_variants = file.read()
 
     flow_name = args.mlindex_name + "-sample-flow"
-    flow_with_varients = flow_with_varients.replace(
-        "@@Flow_Name", flow_name)
-    flow_with_varients = flow_with_varients.replace(
+
+    # Replace these values in both code first and json
+    flow_with_variants = flow_with_variants.replace(
+        "@@Embedding_Deployment_Name", embedding_deployment_name)
+    flow_with_variants = flow_with_variants.replace(
+        "@@Embedding_Connection", embedding_connection_name)
+    flow_with_variants = flow_with_variants.replace(
+        "@@Completion_Deployment_Name", completion_deployment_name)
+    flow_with_variants = flow_with_variants.replace(
+        "@@Completion_Connection", completion_connection_name)
+    flow_with_variants = flow_with_variants.replace(
+        "@@Completion_Provider", completion_provider)
+    flow_with_variants = flow_with_variants.replace(
         "@@MLIndex_Asset_Id", mlindex_asset_id)
 
-    # replace varients with actual metric name and value
-    flow_with_varients = flow_with_varients.replace(
-        "@@Primary_Metric_Name", _STATIC_METRIC_PRIORITY_LIST[0])
-    flow_with_varients = flow_with_varients.replace(
-        "@@Second_Metric_Name", _STATIC_METRIC_PRIORITY_LIST[1])
-    flow_with_varients = flow_with_varients.replace(
-        "@@Third_Metric_Name", _STATIC_METRIC_PRIORITY_LIST[2])
-    flow_with_varients = flow_with_varients.replace(
-        "@@prompt_varient_0", post_processing_prompts(json_stringify(top_prompts[0]), _CITATION_TEMPLATE, _USER_INPUT))
-    flow_with_varients = flow_with_varients.replace(
-        "@@prompt_varient_1", post_processing_prompts(json_stringify(top_prompts[1]), _CITATION_TEMPLATE, _USER_INPUT))
-    flow_with_varients = flow_with_varients.replace(
-        "@@prompt_varient_2", post_processing_prompts(json_stringify(top_prompts[2]), _CITATION_TEMPLATE, _USER_INPUT))
+    api_name = "chat" if completion_model_name.startswith("gpt-") else "completion"
+    flow_with_variants = flow_with_variants.replace("@@API", api_name)
 
-    # replace deployment name, connection name and API with right names
-    flow_with_varients = flow_with_varients.replace(
-        "@@Embedding_Deployment_Name", embedding_deployment_name)
-    flow_with_varients = flow_with_varients.replace(
-        "@@Embedding_Connection", embedding_connection_name)
-    flow_with_varients = flow_with_varients.replace(
-        "@@Completion_Deployment_Name", completion_deployment_name)
-    flow_with_varients = flow_with_varients.replace(
-        "@@Completion_Connection", completion_connection_name)
-    api_name = "chat" if completion_model_name == "gpt-35-turbo" else "completion"
-    flow_with_varients = flow_with_varients.replace("@@API", api_name)
+    if USE_CODE_FIRST:
 
-    activity_logger.info(
-        "[Promptflow Creation]: Json payload successfully generated, trying to parse into json dict...")
-    json_payload = json.loads(flow_with_varients)
-    activity_logger.info(
-        "[Promptflow Creation]: Json payload successfully parsed, submit to promptflow service now...")
+        # write flow dag yaml back to file
+        with open(os.path.join(Path(__file__).parent.absolute(), CODE_DIR, "flow.dag.yaml"), "w") as file:
+            file.write(flow_with_variants)
+        import codecs
+        # Write prompt file content for Variants
+        for idx in range(0, len(top_prompts)):
+            prompt_str = post_processing_prompts(
+                json_stringify(top_prompts[idx]),
+                _CITATION_TEMPLATE, _USER_INPUT, is_chat)
+            with open(os.path.join(
+                    Path(__file__).parent.absolute(),
+                    CODE_DIR,
+                    f"Prompt_variants__Variant_{idx}.jinja2"), "w") as file:
+                file.write(codecs.decode(prompt_str, 'unicode_escape'))
+
+        if USE_CHAT_FLOWS:
+            # Write extra modify query prompt to folder
+            with open(os.path.join(
+                    Path(__file__).parent.absolute(),
+                    CODE_DIR,
+                    "modify_query_with_history.jinja2"), "w") as file:
+                file.write(codecs.decode(_MODIFY_PROMPT, 'unicode_escape'))
+
+        # upload code
+        try:
+            details = current_run.get_details()
+            user_name = details.get("submittedBy", "systemcreated")
+            user_name = user_name.lower().replace(" ", "")
+        except Exception:
+            # For local runs, get_details fails
+            user_name = "systemcreated"
+
+        yaml_path = upload_code_files(ws, user_name) + "/flow.dag.yaml"
+        activity_logger.info(
+            "[Promptflow Creation]: Code first flow files successfully uploaded!")
+        # Load in Json
+        json_name = os.path.join("flow_jsons", prefix + "flow_with_variants_mlindex_code_first.json")
+        with open(os.path.join(Path(__file__).parent.absolute(), json_name), "r") as file:
+            flow_submit_data = file.read()
+
+        flow_submit_data = flow_submit_data.replace(
+            "@@Flow_Name", flow_name)
+        flow_submit_data = flow_submit_data.replace(
+            "@@Flow_Definition_Path", yaml_path)
+        # replace values as it should
+        activity_logger.info(
+            "[Promptflow Creation]: Code first json payload successfully generated, trying to parse into json dict...")
+        json_payload = json.loads(flow_submit_data)
+        activity_logger.info(
+            "[Promptflow Creation]: Code first json payload successfully parsed, submit to promptflow service now...")
+    else:
+        flow_with_variants = flow_with_variants.replace(
+            "@@Flow_Name", flow_name)
+
+        # replace variants with actual metric name and value
+        flow_with_variants = flow_with_variants.replace(
+            "@@prompt_variant_0",
+            post_processing_prompts(json_stringify(top_prompts[0]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
+        flow_with_variants = flow_with_variants.replace(
+            "@@prompt_variant_1",
+            post_processing_prompts(json_stringify(top_prompts[1]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
+        flow_with_variants = flow_with_variants.replace(
+            "@@prompt_variant_2",
+            post_processing_prompts(json_stringify(top_prompts[2]), _CITATION_TEMPLATE, _USER_INPUT, is_chat))
+
+        if USE_CHAT_FLOWS:
+            flow_with_variants = flow_with_variants.replace("@@modify_prompt", _MODIFY_PROMPT)
+
+        activity_logger.info(
+            "[Promptflow Creation]: Json payload successfully generated, trying to parse into json dict...")
+        json_payload = json.loads(flow_with_variants)
+        activity_logger.info(
+            "[Promptflow Creation]: Json payload successfully parsed, submit to promptflow service now...")
 
     ###########################################################################
     # ### construct PF MT service endpoints ### #
