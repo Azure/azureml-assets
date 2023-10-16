@@ -25,8 +25,6 @@ class ValidationException(Exception):
 class AssetType(Enum):
     """Asset type."""
 
-    # TODO: Remove BENCHMARKRESULT after other scripts are updated to switch to EVALUATIONRESULT
-    BENCHMARKRESULT = 'benchmarkresult'
     COMPONENT = 'component'
     DATA = 'data'
     ENVIRONMENT = 'environment'
