@@ -134,7 +134,7 @@ class AgiEval(datasets.GeneratorBasedBuilder):
         df_fs = pd.read_csv(fewshot_path)
         shots = df_fs[df_fs.index % 2 == 0].reset_index(drop=True)
 
-        # Add optional, language dependent intros/headings 
+        # Add optional, language dependent intros/headings
         lang = _get_language(self.config.name)
         out_dict = {}
         out_dict['prompt_intro'] = _INTRO[lang]
