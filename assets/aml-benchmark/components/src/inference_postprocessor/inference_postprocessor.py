@@ -160,8 +160,13 @@ class InferencePostprocessor(object):
                 AzureMLError.create(BenchmarkValidationError, error_details=mssg)
             )
 
-    def read_ground_truth_dataset(self, result_df: pd.DataFrame) -> pd.DataFrame:
-        """Read the ground truth dataset if provided."""
+    def read_ground_truth_dataset(self) -> pd.DataFrame:
+        """
+        Read the ground truth dataset if provided.
+
+        If ground truth dataset is n-D array, then read only the provided ground truth column name.
+        """
+        result_df = pd.DataFrame()
         if self.ground_truth_dataset:
             actual_df = pd.json_normalize(
                 read_jsonl_files(resolve_io_path(self.ground_truth_dataset))
@@ -304,7 +309,7 @@ class InferencePostprocessor(object):
     def run_processor_using_template(self, key: str = None) -> None:
         """Postprocessor run using template."""
         result_df = pd.DataFrame()
-        result_df = self.read_ground_truth_dataset(result_df)
+        result_df = self.read_ground_truth_dataset()
         # read the prediction dataset
         predicted_data = read_jsonl_files(resolve_io_path(self.prediction_dataset))
         pred_list = []
@@ -315,11 +320,19 @@ class InferencePostprocessor(object):
         template = self.template
         env = jinja2.Environment()
         jinja_template = env.from_string(template)
-        for row in predicted_data:
+        for idx, row in enumerate(predicted_data):
             if key != self.prediction_column_name:
                 row[self.prediction_column_name] = row.get(key)
             predicted = row.get(self.prediction_column_name)
-            if isinstance(predicted, list):
+            if predicted is None:
+                logger.warning(f"Received None as prediction at index {idx}. \
+                               Falling back to an empty string.")
+                pred_list.append("")
+            elif isinstance(predicted, list) and len(predicted) == 0:
+                logger.warning(f"Received an empty array of predictions at index {idx}. \
+                               Falling back to an empty string.")
+                pred_list.append("")
+            elif isinstance(predicted, list):
                 try:
                     out_string = jinja_template.render(predicted)
                     pred_list.append(out_string)
@@ -364,15 +377,10 @@ class InferencePostprocessor(object):
         return out_string
 
     def extract_inferences(
-        self, result_df: pd.DataFrame, key: str = None, processor_order: List = None
+        self, key: str = None, processor_order: List = None
     ) -> pd.DataFrame:
         """Extract inferences using generic method if no template or custom post-processor is provided."""
         predicted_data = read_jsonl_files(resolve_io_path(self.prediction_dataset))
-        if len(predicted_data) == 0:
-            mssg = "Received 0 records in the prediction datset."
-            raise BenchmarkValidationException._with_error(
-                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
-            )
         pred_list = []
         if self.prediction_column_name in predicted_data[0].keys():
             key = self.prediction_column_name
@@ -381,7 +389,7 @@ class InferencePostprocessor(object):
         for idx, row in enumerate(predicted_data):
             predicted = row.get(key)
             if predicted is None:
-                logger.warning(f"Received an no prediction at index {idx}. \
+                logger.warning(f"Received None as prediction at index {idx}. \
                                Falling back to an empty string.")
                 pred_list.append("")
             elif isinstance(predicted, list) and len(predicted) == 0:
@@ -401,8 +409,8 @@ class InferencePostprocessor(object):
                 f"{self.prediction_column_name}_{i+1}" for i in range(len(pred_list[0]))
             ]
         else:
-            cols = self.prediction_column_name
-        result_df[cols] = pred_list
+            cols = [self.prediction_column_name]
+        result_df = pd.DataFrame(pred_list, columns=cols)
         return result_df
 
     def run(self):
@@ -433,11 +441,9 @@ class InferencePostprocessor(object):
             if "processor_order" in self.kwargs
             else None
         )
-        result_df = pd.DataFrame()
-        result_df = self.read_ground_truth_dataset(result_df)
-        result_df = self.extract_inferences(result_df, key, processor_order)
-        if len(result_df) > 0:
-            result_df.to_json(self.result, lines=True, orient="records")
+        actual_df = self.read_ground_truth_dataset()
+        predicted_df = self.extract_inferences(key, processor_order)
+        pd.concat([actual_df, predicted_df], axis=1).to_json(self.result, lines=True, orient='records')
         return
 
     def run_user_postprocessor(self) -> None:
