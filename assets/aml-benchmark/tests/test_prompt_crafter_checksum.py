@@ -7,11 +7,11 @@ import os
 import sys
 import pytest
 
-from test_utils import get_src_dir
+from .test_utils import get_src_dir
 
-sys.path.insert(0, os.path.join(get_src_dir(), 'prompt_crafter'))
+sys.path.append(get_src_dir())
 try:
-    from package.prompt_crafter import PromptCrafter
+    from prompt_crafter.package.prompt_crafter import PromptCrafter
 except ImportError:
     raise ImportError("Please install the package 'prompt_crafter' to run this test.")
 

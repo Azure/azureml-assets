@@ -6,7 +6,7 @@ import os
 from argparse import ArgumentParser
 import logging
 
-from package.prompt_crafter import PromptCrafter
+from .package.prompt_crafter import PromptCrafter
 from utils.exceptions import swallow_all_exceptions
 from utils.logging import get_logger, log_mlflow_params
 

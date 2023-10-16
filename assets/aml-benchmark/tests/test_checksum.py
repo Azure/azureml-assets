@@ -3,14 +3,14 @@
 
 """Tests for Checksum functionality used in Prompt Crafter Component."""
 
-import os
 import sys
 import pytest
 
-from test_utils import get_src_dir
-sys.path.insert(0, os.path.join(get_src_dir(), 'prompt_crafter'))
+from .test_utils import get_src_dir
+
+sys.path.append(get_src_dir())
 try:
-    from package.checksum import SHA256Checksum
+    from prompt_crafter.package.prompt_factory import ChatPromptFactory, CompletionsPromptFactory
 except ImportError:
     raise ImportError("Please install the package 'prompt_crafter' to run this test.")
 

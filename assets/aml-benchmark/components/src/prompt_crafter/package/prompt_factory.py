@@ -16,7 +16,7 @@ from azureml._common._error_definition.azureml_error import AzureMLError
 
 from utils.exceptions import BenchmarkValidationException
 from utils.error_definitions import BenchmarkValidationError
-from package.prompt import (
+from .prompt import (
     PromptType,
     Prompt,
     CompletionsPrompt,

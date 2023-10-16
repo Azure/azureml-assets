@@ -208,7 +208,9 @@ def get_mlflow_logged_metrics(job_name: str, exp_name: str) -> Dict[str, Any]:
 def get_src_dir() -> str:
     """Get the source directory for component code."""
     cwd = os.getcwd()
-    if os.path.basename(cwd) == "azureml-assets":
+    if os.path.basename(cwd) == "aml-benchmark":
+        src_dir = "components/src"
+    elif os.path.basename(cwd) == "azureml-assets":
         # when running tests locally
         src_dir = "assets/aml-benchmark/components/src"
     else:
