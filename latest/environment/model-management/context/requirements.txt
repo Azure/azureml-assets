@@ -10,7 +10,3 @@ wget==3.2
 applicationinsights==0.11.10
 azureml-automl-core==1.53.2
 azureml-telemetry==1.53.0
-cryptography==41.0.3
-scipy==1.10.0
-aiohttp==3.8.5
-certifi==2023.07.22
