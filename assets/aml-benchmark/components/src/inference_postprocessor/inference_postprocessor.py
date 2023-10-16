@@ -368,14 +368,27 @@ class InferencePostprocessor(object):
     ) -> pd.DataFrame:
         """Extract inferences using generic method if no template or custom post-processor is provided."""
         predicted_data = read_jsonl_files(resolve_io_path(self.prediction_dataset))
+        if len(predicted_data) == 0:
+            mssg = "Received 0 records in the prediction datset."
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
         pred_list = []
         if self.prediction_column_name in predicted_data[0].keys():
             key = self.prediction_column_name
         else:
             key = key if key else "0"
-        for row in predicted_data:
+        for idx, row in enumerate(predicted_data):
             predicted = row.get(key)
-            if isinstance(predicted, list) and len(predicted[0]) > 1:
+            if predicted is None:
+                logger.warning(f"Received an no prediction at index {idx}. \
+                               Falling back to an empty string.")
+                pred_list.append("")
+            elif isinstance(predicted, list) and len(predicted) == 0:
+                logger.warning(f"Received an empty array of predictions at index {idx}. \
+                               Falling back to an empty string.")
+                pred_list.append("")
+            elif isinstance(predicted, list) and len(predicted[0]) > 1:
                 curr_pred_list = [
                     self.apply_generic_processor(out_string, row) for out_string in predicted
                 ]
@@ -427,12 +440,20 @@ class InferencePostprocessor(object):
             result_df.to_json(self.result, lines=True, orient="records")
         return
 
-    def run_user_preprocessor(self) -> None:
+    def run_user_postprocessor(self) -> None:
         """Postprocessor run using custom template."""
         try:
+            argss = [
+                "--prediction_dataset",
+                self.prediction_dataset,
+                "--output_dataset",
+                self.result
+            ]
+            if self.ground_truth_dataset:
+                argss.extend("--ground_truth_dataset", self.ground_truth_dataset)
+            argss = " ".join(argss)
             os.system(
-                f"python {self.user_preprocessor} --prediction_dataset {self.prediction_dataset} \
-                --ground_truth_dataset {self.ground_truth_dataset} --output_dataset {self.result}"
+                f"python {self.user_postprocessor} {argss}"
             )
         except Exception as e:
             raise BenchmarkUserException._with_error(
