@@ -49,6 +49,7 @@ class EngineConfig(SerializableDataClass):
 
     engine_name: str
     model_id: str
+    tensor_parallel: Optional[int] = None
     trust_remote_code: bool = True
     mii_config: Optional[MiiEngineConfig] = None
     vllm_config: Optional[Dict] = None

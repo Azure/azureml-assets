@@ -318,9 +318,13 @@ def init():
         logger.info(f"List model_path = {os.listdir(model_path)}")
 
         default_engine = EngineName.VLLM
+        tensor_parallel = os.getenv("TENSOR_PARALLEL", None)
+        if tensor_parallel:
+            tensor_parallel = int(tensor_parallel)
         engine_config = {
             "engine_name": os.getenv("ENGINE_NAME", default_engine),
             "model_id": model_path,
+            "tensor_parallel": tensor_parallel
         }
         if engine_config["engine_name"] == EngineName.MII:
             mii_engine_config = {
@@ -332,7 +336,7 @@ def init():
 
         if engine_config["engine_name"] == EngineName.VLLM:
             vllm_config = {
-                "tensor-parallel-size": DEVICE_COUNT,
+                "tensor-parallel-size": tensor_parallel if tensor_parallel else DEVICE_COUNT,
             }
 
             engine_config["vllm_config"] = vllm_config

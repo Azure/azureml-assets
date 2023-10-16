@@ -24,7 +24,6 @@ logger = configure_logger(__name__)
 
 # TODO: Move them to mii config
 MAX_TOKENS = int(os.environ.get("MAX_TOTAL_TOKENS", 4096))
-REPLICA_NUM = os.environ.get("REPLICA_NUM", None)
 MODEL_DIR = os.getenv("AZUREML_MODEL_DIR", "")
 MODEL_PATH = "mlflow_model_folder/data/model"
 DEVICE_COUNT = torch.cuda.device_count()
@@ -91,10 +90,24 @@ class MiiEngine(AbstractEngine):
 
     def _get_mii_config(self):
         """Get MII configuration."""
+        # TODO: Remove this once DS-Inference supports 70b models
         is_70b_model = "Llama-2-70b" in MODEL_DIR or "Llama-2-70b-chat" in MODEL_DIR
         replace_with_kernel_inject = not is_70b_model
-        replica_num = self._calculate_replicas()
-        tensor_parallel = int(DEVICE_COUNT / replica_num)
+
+        # TODO: Update to check whether meta tensor is supported for the model
+        meta_tensor = False
+        model_size_in_gb = self._get_model_size_in_gb()
+        self._check_memory_requirement(model_size_in_gb, meta_tensor)
+
+        if self.engine_config.tensor_parallel is not None:
+            if self.engine_config.tensor_parallel > DEVICE_COUNT:
+                raise ValueError(
+                    f"TENSOR_PARALLEL ({self.engine_config.tensor_parallel}) is larger than the available GPUs"
+                )
+            replica_num = int(DEVICE_COUNT / self.engine_config.tensor_parallel)
+        else:
+            replica_num = self._calculate_replicas(model_size_in_gb)
+            self.engine_config.tensor_parallel = int(DEVICE_COUNT / replica_num)
 
         default_mii_config = {
             "deployment_name": self.engine_config.mii_config.deployment_name,
@@ -102,7 +115,7 @@ class MiiEngine(AbstractEngine):
             "instance_type": "",  # this is only used for creating deployment script, can be left empty
             "model_config": {
                 "checkpoint_dict": None,
-                "deploy_rank": list(range(tensor_parallel)),
+                "deploy_rank": list(range(self.engine_config.tensor_parallel)),
                 "ds_config": self.engine_config.mii_config.ds_config,
                 "dtype": torch.float16,
                 "enable_cuda_graph": False,
@@ -121,44 +134,47 @@ class MiiEngine(AbstractEngine):
                 "skip_model_check": True,
                 # "task": self.task_config.task_type,
                 "task": "text-generation",
-                "tensor_parallel": tensor_parallel,
+                "tensor_parallel": self.engine_config.tensor_parallel,
                 "trust_remote_code": False
             }
         }
         mii_config = mii.MIIConfig(**default_mii_config)
         return mii_config
 
-    def _calculate_replicas(self) -> int:
-        """Calculate the number of replicas."""
-        # if REPLICA_NUM is set, use that
-        if REPLICA_NUM is not None:
-            if int(REPLICA_NUM) <= DEVICE_COUNT:
-                return int(REPLICA_NUM)
-            else:
-                logger.warning(
-                    f"REPLICA_NUM ({REPLICA_NUM}) is larger than the number of GPUs ({DEVICE_COUNT}). "
-                    f"Proceeding to calculate the number of replicas based on the model size."
-                )
+    def _check_memory_requirement(self, model_size_in_gb, meta_tensor):
+        """Check if the model can be loaded in the available memory.
 
+        If loading with system memory, DeepSpeed-Inference requires RAM size of model_size * DEVICE_COUNT.
+        If meta_tensor is enabled instead for the model, then skip this check.
+        """
         # Check RAM required for loading the model
-        # TODO: Check if meta tensor is available and if so, skip RAM check.
-        device_count = torch.cuda.device_count()
-        total_ram_in_gb = psutil.virtual_memory().total / (1024 ** 3)
-        model_size_in_gb = self._get_model_size()
-        total_required_ram_in_gb = model_size_in_gb * device_count
-        if total_ram_in_gb < total_required_ram_in_gb:
-            raise ValueError("Total RAM is smaller than required RAM.")
+        # If meta tensor is available and if so, skip RAM check.
+        if not meta_tensor:
+            total_ram_in_gb = psutil.virtual_memory().total / (1024 ** 3)
+            total_required_ram_in_gb = model_size_in_gb * DEVICE_COUNT
+            if total_ram_in_gb < total_required_ram_in_gb:
+                raise ValueError("Total RAM is smaller than required RAM.")
+
+    def _calculate_replicas(self, model_size_in_gb) -> int:
+        """Calculate the number of replicas."""
         # Check GPU size and calculate number of replicas it can handle
         gpu_size_in_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
         # For now, max 1 replica per 1 GPU
         # Taking in extra memory for cache
         # TODO: improve this logic based on the amount of KV cache required and token length
-        num_possible_replicas = int(device_count/math.ceil((model_size_in_gb/0.8)/gpu_size_in_gb))
+        num_possible_replicas = int(DEVICE_COUNT/math.ceil((model_size_in_gb/0.8)/gpu_size_in_gb))
         if num_possible_replicas == 0:
-            raise ValueError("Not enough GPU to support model. Please select bigger SKU.")
+            logger.debug(
+                "Tensor parallel / model replica calculation with extra memory for cache "
+                "results in 0 replicas. Calculating without extra memory for cache."
+            )
+            num_possible_replicas = int(DEVICE_COUNT/math.ceil((model_size_in_gb)/gpu_size_in_gb))
+            if num_possible_replicas == 0:
+                raise ValueError("Not enough GPU to support model. Please select bigger SKU.")
+
         return num_possible_replicas
 
-    def _get_model_size(self) -> int:
+    def _get_model_size_in_gb(self) -> int:
         # Loop through the files in the folder
         file_ext = ""
         for file in os.listdir(self.engine_config.model_id):

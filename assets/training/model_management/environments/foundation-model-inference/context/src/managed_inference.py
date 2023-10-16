@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""This module defines the MIRPayload and request payload related functions."""
+"""This module provides the MIRPayload class that codifies the payload that is received in the scoring script."""
 
 import json
 from dataclasses import dataclass
@@ -15,7 +15,7 @@ logger = configure_logger(__name__)
 
 @dataclass
 class MIRPayload(SerializableDataClass):
-    """Class representing the payload for the MIR request."""
+    """Json serializable dataclass that represents the input received from the server."""
 
     query: Union[str, List[str]]
     params: Dict[str, Any]
@@ -23,7 +23,8 @@ class MIRPayload(SerializableDataClass):
 
     @classmethod
     def from_dict(cls, mir_input_data: Dict):
-        """Create an instance of MIRPayload from the given dictionary."""
+        """Create an instance of MIRPayload from input data received from the server."""
+
         query, params, task_type = get_request_data(mir_input_data)
         return MIRPayload(query, params, task_type)
 
@@ -35,6 +36,7 @@ class MIRPayload(SerializableDataClass):
         In the case of chat completion, a single string is produced and needs to be
         put inside of a list.
         """
+
         if not isinstance(self.query, list):
             self.query = [self.query]
 

@@ -87,7 +87,11 @@ class VLLMEngine(AbstractEngine):
         if "port" not in self._vllm_args:
             self._vllm_args["port"] = DEFAULT_PORT
         if "tensor-parallel-size" not in self._vllm_args:
-            self._vllm_args["tensor-parallel-size"] = torch.cuda.device_count()
+            self._vllm_args["tensor-parallel-size"] = (
+                self.engine_config.tensor_parallel
+                if self.engine_config.tensor_parallel is not None
+                else torch.cuda.device_count()
+            )
         if "model" not in self._vllm_args:
             self._vllm_args["model"] = self.engine_config.model_id
 
