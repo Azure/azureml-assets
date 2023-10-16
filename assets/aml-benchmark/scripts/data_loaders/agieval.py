@@ -53,9 +53,9 @@ _INTRO = {
     'chinese': '\u4ee5\u4e0b\u662f\u8003\u8bd5\u4e2d\u5404\u4e2a\u95ee\u9898\u7684\u7b54\u6848\u3002',
 }
 
-_PROBLEM_TEMPLATE = {
-    'english': 'Problem {}.',
-    'chinese': '\u95ee\u9898 {}.   '
+_PROBLEM_HEADING = {
+    'english': 'Problem',
+    'chinese': '\u95ee\u9898'
 }
 
 _CHOOSE_OPTIONS = {
@@ -68,8 +68,6 @@ _ANSWER_INTRO = {
     'chinese': '\u7b54\u6848\u662f'
 }
 
-_SHOT_SEPARATOR = '\n<END>\n'
-
 
 def _get_language(config):
     if config != 'gaokao-english' and ('gaokao' in config or config == 'logiqa-zh'):
@@ -78,18 +76,20 @@ def _get_language(config):
         return 'english'
 
 
-def _format_question(config, src_dict, problem_number, add_label=False):
-    lang = _get_language(config)
-    s = _PROBLEM_TEMPLATE[lang].format(problem_number) + '   '
+def _construct_example_dict(src_dict):
+    # Extract a single example from the source dictionary
+    out_dict = {}
+    out_dict['passage'] = ''
+    out_dict['solution'] = ''
     if 'passage' in src_dict and isinstance(src_dict['passage'], str) and len(src_dict['passage']) > 0:
-        s += src_dict['passage'] + ' '
-    s += src_dict['question'] + '\n'
-    s += _CHOOSE_OPTIONS[lang] + '    '
-    s += ' '.join(src_dict['options']) + '\n'
-    if add_label:
-        s += _ANSWER_INTRO[lang] + f' {src_dict["label"]}' + _SHOT_SEPARATOR
+        out_dict['passage'] = src_dict['passage']
+    if 'other' in src_dict and 'solution' in src_dict['other'] and len(src_dict['other']) > 0:
+        out_dict['solution'] = src_dict['other']['solution']
+    out_dict['question'] = src_dict['question']
+    out_dict['options'] = src_dict['options']
+    out_dict['label'] = src_dict['label']
 
-    return s
+    return out_dict
 
 
 class AgiEval(datasets.GeneratorBasedBuilder):
@@ -134,22 +134,25 @@ class AgiEval(datasets.GeneratorBasedBuilder):
         df_fs = pd.read_csv(fewshot_path)
         shots = df_fs[df_fs.index % 2 == 0].reset_index(drop=True)
 
-        # Format fewshot prompt
-        ishot = 0
+        # Add optional, language dependent intros/headings 
         lang = _get_language(self.config.name)
-        fs_str = _INTRO[lang] + '\n'
+        out_dict = {}
+        out_dict['prompt_intro'] = _INTRO[lang]
+        out_dict['problem_heading'] = _PROBLEM_HEADING[lang]
+        out_dict['options_intro'] = _CHOOSE_OPTIONS[lang]
+        out_dict['answer_intro'] = _ANSWER_INTRO[lang]
+
+        # Add list of example shots
+        shot_list = []
         for i in range(shots.shape[0]):
             if pd.isna(shots[self.config.name][i]):
                 continue
             fs_dict = ast.literal_eval(shots[self.config.name][i])
-            fs_str += _format_question(self.config.name, fs_dict, ishot + 1, add_label=True)
-            ishot += 1
+            shot_list.append(_construct_example_dict(fs_dict))
+        out_dict['shots'] = shot_list
 
-        # Format eval questions for the prompt
+        # Load eval data and yield examples
         df = pd.read_json(eval_path, lines=True)
         for key, row in df.iterrows():
-            prompt_str = _format_question(self.config.name, row, ishot + 1, add_label=False)
-            yield key, {
-                "fewshot_prompt": fs_str + prompt_str,
-                "label": row["label"],
-            }
+            out_dict.update(_construct_example_dict(row))
+            yield key, out_dict.copy()
