@@ -12,7 +12,6 @@ import pandas as pd
 import numpy as np
 
 from mlflow.pyfunc.scoring_server import _get_jsonable_obj
-from typing import List, Dict, Any, Tuple, Union
 
 from azure.ai.contentsafety import ContentSafetyClient
 from azure.core.credentials import AzureKeyCredential
@@ -22,9 +21,10 @@ from azure.core.pipeline.policies import HeadersPolicy
 from azureml.ai.monitoring import Collector
 
 
-from constants import EngineName, TaskType
+from constants import EngineName, TaskType, SupportedTask
 from fm_score import FMScore
 from logging_config import configure_logger
+from managed_inference import MIRPayload
 
 logger = configure_logger(__name__)
 
@@ -34,19 +34,8 @@ g_aacs_threshold = int(os.environ.get("CONTENT_SAFETY_THRESHOLD", 2))
 g_aacs_client = None
 
 
-class SupportedTask:
-    """Supported tasks by text-generation-inference."""
-
-    TEXT_GENERATION = "text-generation"
-    CHAT_COMPLETION = "chat-completion"
-
-
 # default values
 DEVICE_COUNT = torch.cuda.device_count()
-REPLICA_NUM = int(os.getenv("WORKER_COUNT", 1))
-TENSOR_PARALLEL = int(
-    DEVICE_COUNT / REPLICA_NUM
-)  # use this only for mii. pass device count for vllm
 MLMODEL_PATH = "mlflow_model_folder/MLmodel"
 DEFAULT_MLFLOW_MODEL_PATH = "mlflow_model_folder/data/model"
 task_type = SupportedTask.TEXT_GENERATION
@@ -69,7 +58,7 @@ class CsChunkingUtils:
 
     def chunkstring(self, string, length):
         """Chunk strings in a given length."""
-        return (string[0 + i : length + i] for i in range(0, len(string), length))
+        return (string[0 + i: length + i] for i in range(0, len(string), length))
 
     def split_by(self, input):
         """Split the input."""
@@ -223,140 +212,6 @@ def get_aacs_access_key():
 # endregion
 
 
-def get_processed_input_data_for_chat_completion(dialog: List[str]) -> str:
-    r"""Process chat completion input request.
-
-    Taken from:
-    https://github.com/facebookresearch/llama/blob/main/llama/generation.py
-
-    example input:
-    [
-        {
-            "role": "user",
-            "content": "What is the tallest building in the world?"
-        },
-        {
-            "role": "assistant",
-            "content": "As of 2021, the Burj Khalifa in Dubai"
-        },
-        {
-            "role": "user",
-            "content": "and in Africa?"
-        },
-    ]
-    example output:
-    "[INST]What is the tallest building in the world?[/INST]
-    As of 2021, the Burj Khalifa in Dubai\n
-    [INST]and in Africa?[/INST]"
-    """
-    SPECIAL_TAGS = ["[INST]", "[/INST]", "<<SYS>>", "<</SYS>>"]
-    UNSAFE_ERROR = "Error: special tags are not allowed as part of the prompt."
-
-    def process_dialog(messages) -> Tuple[str, List[Tuple[str, str]], str]:
-        system_prompt = ""
-        user_assistant_messages = []  # list of (user, assistant) messages
-        user_message = None  # current user message being processed
-        last_user_message = None  # user prompt for which response is needed
-
-        unsafe_request = any(
-            [tag in msg["content"] for tag in SPECIAL_TAGS for msg in messages]
-        )
-        if unsafe_request:
-            raise Exception(UNSAFE_ERROR)
-
-        for i, message in enumerate(messages):
-            role = message["role"]
-            content = message["content"]
-
-            if role == "system" and i == 0:
-                system_prompt = content
-            elif role == "user":
-                if i == len(messages) - 1:
-                    last_user_message = content
-                else:
-                    user_message = content
-            elif role == "assistant" and user_message is not None:
-                user_assistant_messages.append((user_message, content))
-                user_message = None
-
-        return system_prompt, user_assistant_messages, last_user_message
-
-    # ref: https://huggingface.co/spaces/huggingface-projects/\
-    # llama-2-7b-chat/blob/main/model.py
-    def format_chat_conv(
-        message: str, chat_history: List[Tuple[str, str]], system_prompt: str
-    ) -> str:
-        texts = (
-            [f"<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n"]
-            if system_prompt != ""
-            else ["<s>[INST] "]
-        )
-        # The first user input is _not_ stripped
-        do_strip = False
-        for user_input, response in chat_history:
-            user_input = user_input.strip() if do_strip else user_input
-            do_strip = True
-            texts.append(f"{user_input} [/INST] {response.strip()} </s><s>[INST] ")
-        message = message.strip() if do_strip else message
-        texts.append(f"{message} [/INST]")
-        return "".join(texts)
-
-    sys_prompt, user_assistant_msgs, message = process_dialog(dialog)
-    chat_conv = format_chat_conv(message, user_assistant_msgs, sys_prompt)
-    return chat_conv
-
-
-def get_request_data(request_string) -> (Tuple)[Union[str, List[str]], Dict[str, Any]]:
-    """Process and validate inference request.
-
-    return type for chat-completion: str, dict
-    return type for text-generation: list, dict
-    """
-    global task_type
-    try:
-        data = json.loads(request_string)
-        logger.info(f"data: {data}")
-        inputs = data.get("input_data", None)
-
-        input_data = []  # type: Union[str, List[str]]
-        params = {}  # type: Dict[str, Any]
-
-        if not isinstance(inputs, dict):
-            raise Exception("Invalid input data")
-
-        input_data = inputs["input_string"]
-        params = inputs.get("parameters", {})
-
-        if not isinstance(input_data, list):
-            raise Exception("query is not a list")
-
-        if not isinstance(params, dict):
-            raise Exception("parameters is not a dict")
-
-        if task_type == SupportedTask.CHAT_COMPLETION:
-            logger.info("chat-completion task. Processing input data")
-            input_data = get_processed_input_data_for_chat_completion(input_data)
-
-        return input_data, params
-    except Exception as e:
-        raise Exception(
-            json.dumps(
-                {
-                    "error": (
-                        "Expected input format: \n"
-                        '{"input_data": {"input_string": "<query>", '
-                        '"parameters": {"k1":"v1", "k2":"v2"}}}.\n '
-                        "<query> should be in below format:\n "
-                        'For text-generation: ["str1", "str2", ...]\n'
-                        'For chat-completion: [{"role":"user", "content": "str1"},'
-                        '{"role": "assistant", "content": "str2"} ....]'
-                    ),
-                    "exception": str(e),
-                }
-            )
-        )
-
-
 def get_generator_params(params: dict):
     """Return accumulated generator params."""
     updated_params = {}
@@ -462,12 +317,14 @@ def init():
         logger.info(f"Loading model from path {model_path} for task_type: {task_type}")
         logger.info(f"List model_path = {os.listdir(model_path)}")
 
-        is_70b_model = "Llama-2-70b" in model_path or "Llama-2-70b-chat" in model_path
-        default_engine = EngineName.VLLM if is_70b_model else EngineName.MII
+        default_engine = EngineName.VLLM
+        tensor_parallel = os.getenv("TENSOR_PARALLEL", None)
+        if tensor_parallel:
+            tensor_parallel = int(tensor_parallel)
         engine_config = {
             "engine_name": os.getenv("ENGINE_NAME", default_engine),
             "model_id": model_path,
-            "tensor_parallel": int(os.getenv("TENSOR_PARALLEL", TENSOR_PARALLEL)),
+            "tensor_parallel": tensor_parallel
         }
         if engine_config["engine_name"] == EngineName.MII:
             mii_engine_config = {
@@ -479,7 +336,7 @@ def init():
 
         if engine_config["engine_name"] == EngineName.VLLM:
             vllm_config = {
-                "tensor-parallel-size": DEVICE_COUNT,
+                "tensor-parallel-size": tensor_parallel if tensor_parallel else DEVICE_COUNT,
             }
 
             engine_config["vllm_config"] = vllm_config
@@ -498,11 +355,6 @@ def init():
         g_fmscorer = FMScore(config)
         g_fmscorer.init()
 
-        # run nvidia-smi
-        if REPLICA_NUM == 1:
-            logger.info("###### GPU INFO ######")
-            logger.info(os.system("nvidia-smi"))
-            logger.info("###### GPU INFO ######")
     except Exception as e:
         raise Exception(f"Error in creating client or server: {e}") from e
 
@@ -521,16 +373,20 @@ def run(data):
             )
             return {}
 
-        query, params = get_request_data(data)
-        params = get_generator_params(params)
+        data = json.loads(data)
+        data.update({'task_type': task_type})
+
+        payload = MIRPayload.from_dict(data)
+        payload.update_params(get_generator_params(payload.params))
         logger.info(
-            f"Generating response for input_string: {query}, " f"parameters: {params}"
+            f"Processing new request with parameters: {payload.params}"
         )
 
         result_dict = {}
         inference_results = None
         if task_type == SupportedTask.CHAT_COMPLETION:
-            inference_results = g_fmscorer.run([query], params)
+            payload.convert_query_to_list()
+            inference_results = g_fmscorer.run(payload)
             outputs = {str(i): res.response for i, res in enumerate(inference_results)}
             result_dict = {
                 "output": f"{outputs['0']}"
@@ -538,9 +394,9 @@ def run(data):
 
         else:
             assert task_type == SupportedTask.TEXT_GENERATION and isinstance(
-                query, list
+                payload.query, list
             ), "query should be a list for text-generation"
-            inference_results = g_fmscorer.run(query, params)
+            inference_results = g_fmscorer.run(payload)
             outputs = {str(i): res.response for i, res in enumerate(inference_results)}
             result_dict = pd.DataFrame([outputs])
 
@@ -575,7 +431,7 @@ if __name__ == "__main__":
                     "parameters": {
                         "max_new_tokens": 256,
                         "do_sample": True,
-                        "_batch_size": 32,
+                        # "_batch_size": 32,
                     },
                 }
             },

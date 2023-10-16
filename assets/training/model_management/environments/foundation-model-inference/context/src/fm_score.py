@@ -8,6 +8,7 @@ from typing import Dict, List
 from configs import EngineConfig, TaskConfig
 from constants import TaskType
 from engine.engine import HfEngine, InferenceResult
+from managed_inference import MIRPayload
 from prompt_formatter import Llama2Formatter
 from utils import log_execution_time
 from logging_config import configure_logger
@@ -53,20 +54,19 @@ class FMScore:
         self.formatter = self._initialize_formatter()
 
     @log_execution_time
-    def run(self, prompts: List[str], params: Dict) -> List[InferenceResult]:
+    def run(self, payload: MIRPayload) -> List[InferenceResult]:
         """
         Run the engine with the given prompts and parameters.
 
-        :param prompts: List of prompts
-        :param params: Dictionary of parameters
+        :param payload: The parsed input from managed inference that contains the parameters and prompts from the user
         :return: A list of InferenceResult objects, each containing the response and metadata related to the inference
         """
         formatted_prompts = [
-            self.formatter.format_prompt(self.task_config.task_type, prompt, params)
-            for prompt in prompts
+            self.formatter.format_prompt(self.task_config.task_type, prompt, payload.params)
+            for prompt in payload.query
         ]
         print(f"Formatted prompts: {formatted_prompts}")
-        inference_results = self.engine.generate(formatted_prompts, params)
+        inference_results = self.engine.generate(formatted_prompts, payload.params)
         logger.info(
             f"inference_time_ms: {inference_results[0].inference_time_ms}, "
             f"time_per_token_ms: {inference_results[0].time_per_token_ms}"
@@ -91,6 +91,7 @@ class FMScore:
         acting as releasing the lock.
         """
         flag_file_path = "/tmp/model_loaded_flag.txt"
+        process_is_loading_model = False
         if os.path.exists(flag_file_path):
             logger.info(
                 f"Model already loaded by another worker. Current worker pid: {os.getpid()}"
@@ -101,6 +102,7 @@ class FMScore:
                     logger.info(
                         f"Lock acquired by worker with pid: {os.getpid()}. Loading model."
                     )
+                    process_is_loading_model = True
                     self.engine.load_model()
                     logger.info(f"Model loaded by worker with pid: {os.getpid()}")
             except FileExistsError:
@@ -110,9 +112,13 @@ class FMScore:
                 )
 
         self.engine.init_client()  # wait for the model to finish loading
-
-        if os.path.exists(flag_file_path):
-            os.remove(flag_file_path)
+        if process_is_loading_model:
+            # run nvidia-smi to check GPU usage after the model is loaded
+            logger.info("###### GPU INFO ######")
+            logger.info(os.system("nvidia-smi"))
+            logger.info("###### GPU INFO ######")
+            if os.path.exists(flag_file_path):
+                os.remove(flag_file_path)
 
         return self.engine
 
@@ -156,4 +162,4 @@ if __name__ == "__main__":
 
     fms = FMScore(sample_config)
     fms.init()
-    fms.run(["Today is a wonderful day to "], {"max_length": 128})
+    fms.run(MIRPayload("Today is a wonderful day to ", {"max_length": 128}, fms.task_config.task_type))
