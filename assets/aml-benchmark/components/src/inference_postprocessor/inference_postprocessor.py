@@ -427,12 +427,20 @@ class InferencePostprocessor(object):
             result_df.to_json(self.result, lines=True, orient="records")
         return
 
-    def run_user_preprocessor(self) -> None:
+    def run_user_postprocessor(self) -> None:
         """Postprocessor run using custom template."""
         try:
+            argss = [
+                "--prediction_dataset",
+                self.prediction_dataset,
+                "--output_dataset",
+                self.result
+            ]
+            if self.ground_truth_dataset:
+                argss.extend("--ground_truth_dataset", self.ground_truth_dataset)
+            argss = " ".join(argss)
             os.system(
-                f"python {self.user_preprocessor} --prediction_dataset {self.prediction_dataset} \
-                --ground_truth_dataset {self.ground_truth_dataset} --output_dataset {self.result}"
+                f"python {self.user_postprocessor} {argss}"
             )
         except Exception as e:
             raise BenchmarkUserException._with_error(
