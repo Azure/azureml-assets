@@ -368,14 +368,27 @@ class InferencePostprocessor(object):
     ) -> pd.DataFrame:
         """Extract inferences using generic method if no template or custom post-processor is provided."""
         predicted_data = read_jsonl_files(resolve_io_path(self.prediction_dataset))
+        if len(predicted_data) == 0:
+            mssg = "Received 0 records in the prediction datset."
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
         pred_list = []
         if self.prediction_column_name in predicted_data[0].keys():
             key = self.prediction_column_name
         else:
             key = key if key else "0"
-        for row in predicted_data:
+        for idx, row in enumerate(predicted_data):
             predicted = row.get(key)
-            if isinstance(predicted, list) and len(predicted[0]) > 1:
+            if predicted is None:
+                logger.warning(f"Received an no prediction at index {idx}. \
+                               Falling back to an empty string.")
+                pred_list.append("")
+            elif isinstance(predicted, list) and len(predicted) == 0:
+                logger.warning(f"Received an empty array of predictions at index {idx}. \
+                               Falling back to an empty string.")
+                pred_list.append("")
+            elif isinstance(predicted, list) and len(predicted[0]) > 1:
                 curr_pred_list = [
                     self.apply_generic_processor(out_string, row) for out_string in predicted
                 ]
