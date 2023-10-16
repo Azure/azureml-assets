@@ -24,7 +24,6 @@ class MIRPayload(SerializableDataClass):
     @classmethod
     def from_dict(cls, mir_input_data: Dict):
         """Create an instance of MIRPayload from input data received from the server."""
-
         query, params, task_type = get_request_data(mir_input_data)
         return MIRPayload(query, params, task_type)
 
@@ -36,7 +35,6 @@ class MIRPayload(SerializableDataClass):
         In the case of chat completion, a single string is produced and needs to be
         put inside of a list.
         """
-
         if not isinstance(self.query, list):
             self.query = [self.query]
 
