@@ -44,9 +44,10 @@ tags:
     precision: '4'
   task: text-generation
   inference_supported_envs:
+  - vllm
   - ds_mii
   SharedComputeCapacityEnabled: ''
-version: 11
+version: 12
 description: |
   # **Model Details**
   Note: Use of this model is governed by the Meta license. Click on View License above.
