@@ -1,4 +1,4 @@
-azureml-acft-common-components==0.0.29
+azureml-acft-common-components==0.0.30
 azure-ai-ml==1.9.0
 mldesigner
 mlflow
