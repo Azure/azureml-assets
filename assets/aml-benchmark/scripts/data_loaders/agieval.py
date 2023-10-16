@@ -83,8 +83,11 @@ def _construct_example_dict(src_dict):
     out_dict['solution'] = ''
     if 'passage' in src_dict and isinstance(src_dict['passage'], str) and len(src_dict['passage']) > 0:
         out_dict['passage'] = src_dict['passage']
-    if 'other' in src_dict and 'solution' in src_dict['other'] and len(src_dict['other']) > 0:
-        out_dict['solution'] = src_dict['other']['solution']
+    other_dict = src_dict.get('other', {})
+    if isinstance(other_dict, dict):
+        solution = other_dict.get('solution', '')
+        if isinstance(solution, str):
+            out_dict['solution'] = solution
     out_dict['question'] = src_dict['question']
     out_dict['options'] = src_dict['options']
     out_dict['label'] = src_dict['label']
