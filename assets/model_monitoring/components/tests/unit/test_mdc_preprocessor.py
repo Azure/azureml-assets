@@ -9,16 +9,26 @@ from model_data_collector_preprocessor.run import _raw_mdc_uri_folder_to_preproc
 
 @pytest.mark.unit
 class TestMDCPreprocessor:
-    @pytest.mark.parametrize("extract_correlation_id", [True, False])
-    def test_uri_folder_to_spark_df(self, extract_correlation_id):
+    @pytest.mark.parametrize(
+        "window_start_time, window_end_time, extract_correlation_id",
+        [
+            # data
+            ("2023-10-11T20:00:00", "2023-10-11T21:00:00", True),
+            ("2023-10-11T20:00:00", "2023-10-11T21:00:00", False),
+            # dataref
+            ("2023-10-15T17:00:00", "2023-10-15T18:00:00", True),
+            ("2023-10-15T17:00:00", "2023-10-15T18:00:00", False),
+        ]
+    )
+    def test_uri_folder_to_spark_df(self, window_start_time, window_end_time, extract_correlation_id):
         print("testing test_uri_folder_to_spark_df...")
         os.environ["PYSPARK_PYTHON"] = "C:\\Users\\richli\\AppData\\Local\\anaconda3\\envs\\momo\\python.exe"
         fs = fsspec.filesystem("file")
         preprocessed_output = "tests/unit/preprocessed_mdc_data"
         shutil.rmtree(f"{preprocessed_output}temp", True)
         sdf = _raw_mdc_uri_folder_to_preprocessed_spark_df(
-            "2023-10-11T20:00:00",
-            "2023-10-11T21:00:00",
+            window_start_time,
+            window_end_time,
             "tests/unit/raw_mdc_data/",
             preprocessed_output,
             extract_correlation_id,

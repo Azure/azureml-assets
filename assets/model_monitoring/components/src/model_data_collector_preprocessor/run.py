@@ -27,6 +27,7 @@ from shared_utilities.constants import (
     MDC_CHAT_HISTORY_COLUMN,
     MDC_CORRELATION_ID_COLUMN,
     MDC_DATA_COLUMN,
+    MDC_DATAREF_COLUMN
 )
 
 
@@ -108,13 +109,18 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
         return result
 
     def transform_df_function_without_correlation_id(iterator):
+        def read_data(row):
+            data = getattr(row, MDC_DATA_COLUMN)
+            dataref = getattr(row, MDC_DATAREF_COLUMN)
+            return data if data else dataref
+            # TODO: Move this to tracking stream if both data and dataref are NULL
         for df in iterator:
             yield pd.concat(
-                pd.read_json(getattr(row, MDC_DATA_COLUMN)) for row in df.itertuples()
+                pd.read_json(read_data(row)) for row in df.itertuples()
             )
 
     if extract_correlation_id:
-        # Add emtpy column to get the correlationId in the schema
+        # Add empty column to get the correlationId in the schema
         data_as_df = data_as_df.withColumn(MDC_CORRELATION_ID_COLUMN, lit(""))
         transformed_df = df.select(
             MDC_DATA_COLUMN, MDC_CORRELATION_ID_COLUMN
@@ -122,7 +128,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
             tranform_df_function_with_correlation_id, schema=data_as_df.schema
         )
     else:
-        transformed_df = df.select(MDC_DATA_COLUMN).mapInPandas(
+        transformed_df = df.select(MDC_DATA_COLUMN, MDC_DATAREF_COLUMN).mapInPandas(
             transform_df_function_without_correlation_id, schema=data_as_df.schema
         )
     return transformed_df
