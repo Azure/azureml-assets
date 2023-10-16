@@ -54,7 +54,9 @@ class PromptFactory(ABC):
     def __post_init__(self):
         """Validate and initialize the prompt factory."""
         if self.n_shots > 0 and self.n_shots > len(self.few_shot_pool) and self.few_shot_pattern:
-            raise ValueError(f"n_shots ({self.n_shots}) > |few_shot pool| ({len(self.few_shot_pool)})")
+            mssg = f"n_shots ({self.n_shots}) > |few_shot pool| ({len(self.few_shot_pool)})"
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg))
 
         self.label_map_jinja_prefix = ""
         if self.label_map_str:
@@ -66,7 +68,9 @@ class PromptFactory(ABC):
             self.prompt_pattern = self.label_map_jinja_prefix + self.prompt_pattern
             self.validate_jinja_template(self.prompt_pattern, "Prompt pattern is not a valid jinja pattern.")
         else:
-            raise ValueError("A prompt pattern (in jinja template) is required.")
+            mssg = "A prompt pattern (in jinja template) is required."
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg))
 
         # Validate output_pattern
         if self.output_pattern:
@@ -99,8 +103,10 @@ class PromptFactory(ABC):
         elif prompt_type == PromptType.chat.name:
             return ChatPromptFactory
         else:
-            raise ValueError(f"Unrecognized prompt type {prompt_type}. Should be \
-                             one of {PromptType.chat.name} or {PromptType.completions.name}")
+            mssg = f"Unrecognized prompt type {prompt_type}. Should be \
+                             one of {PromptType.chat.name} or {PromptType.completions.name}"
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg))
 
     @abstractmethod
     def create_prompt(row: Dict) -> Prompt:
@@ -147,8 +153,9 @@ class PromptFactory(ABC):
 
             retries += 1
             if retries > PATIENCE:
-                raise ValueError(
-                    f"Unable to find {self.n_shots} few shots after {PATIENCE} retries")
+                mssg = f"Unable to find {self.n_shots} few shots after {PATIENCE} retries"
+                raise BenchmarkValidationException._with_error(
+                    AzureMLError.create(BenchmarkValidationError, error_details=mssg))
 
             id_ = random.randint(0, len(self.few_shot_pool) - 1)
             candidate = self.few_shot_pool[id_]

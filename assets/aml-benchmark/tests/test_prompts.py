@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Tests for Prompt Crafter Component."""
+"""Test the functionality of the prompt factory which powers the prompt crafter."""
 
 import sys
 from .test_utils import get_src_dir

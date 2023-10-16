@@ -14,6 +14,10 @@ import os
 from typing import Optional
 import logging
 
+from azureml._common._error_definition.azureml_error import AzureMLError
+
+from utils.exceptions import BenchmarkValidationException
+from utils.error_definitions import BenchmarkValidationError
 logger = logging.getLogger(__name__)
 
 
@@ -51,7 +55,10 @@ def resolve_file(input_path: str, filename: Optional[str] = None):
         all_files = os.listdir(input_path)
 
         if not all_files:
-            raise RuntimeError(f"Could not find any file in specified input directory {input_path}")
+            mssg = f"Could not find any file in specified input directory {input_path}"
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
 
         if len(all_files) == 1:
             logger.info(f"Found input directory {input_path}, selecting unique file {all_files[0]}")
@@ -64,12 +71,16 @@ def resolve_file(input_path: str, filename: Optional[str] = None):
             if len(all_files) == 1:
                 return all_files[0]
             else:
-                mssg = f"Found multiple files in input file path {input_path} for glob pattern {filename}"
-                raise RuntimeError(mssg)
+                mssg = f"Could not find any file in specified input directory {input_path}"
+                raise BenchmarkValidationException._with_error(
+                    AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+                )
 
         else:
             mssg = f"Found multiple files in input file path {input_path}, specify the file name in addition."
-            raise RuntimeError(mssg)
+            raise BenchmarkValidationException._with_error(
+                    AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
 
     logger.critical(f"Provided INPUT path {input_path} is neither a directory nor a file.")
     return input_path
@@ -106,8 +117,10 @@ def resolve_file_list(input_path: str, filename: Optional[str] = None):
         all_files = os.listdir(input_path)
 
         if not all_files:
-            raise RuntimeError(f"Could not find any file in specified input directory {input_path}")
-
+            mssg = f"Could not find any file in specified input directory {input_path}"
+            raise BenchmarkValidationException._with_error(
+                    AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
         elif filename is not None:
 
             logger.info(f"Found input directory {input_path}, selecting file(s) {filename}")
@@ -116,7 +129,9 @@ def resolve_file_list(input_path: str, filename: Optional[str] = None):
                 return all_files
             else:
                 mssg = f"Could not find any file in input file path {input_path} for glob pattern {filename}"
-                raise RuntimeError(mssg)
+                raise BenchmarkValidationException._with_error(
+                    AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+                )
         else:
             return [os.path.join(input_path, file) for file in all_files]
 

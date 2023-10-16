@@ -5,7 +5,6 @@
 
 from typing import Optional
 import json
-import logging
 import os
 import random
 
@@ -15,8 +14,9 @@ import tqdm
 from .dataset_resolver import resolve_file
 from .checksum import SHA256Checksum
 from .prompt_factory import PromptFactory
+from utils.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class _MLFlowLogger():
@@ -41,10 +41,14 @@ class _MLFlowLogger():
         mlflow.log_metric("total_prompts", self.steps)
 
     def save_parameters(self, params, output_mltable):
-        mlflow.log_dict(params, "params.json")
+        try:
+            mlflow.log_dict(params, "params.json")
 
-        with open(os.path.join(output_mltable, "params.json"), "w") as f:
-            json.dump(params, f)
+            with open(os.path.join(output_mltable, "params.json"), "w") as f:
+                json.dump(params, f)
+        except Exception as ex:
+            logger.warning(
+                f"Failed to save parameters to mlflow folder {output_mltable} due to {ex}")
 
 
 class PromptCrafter:
@@ -122,8 +126,13 @@ transformations:
   - read_json_lines:
       encoding: utf8
       include_path_column: false"""
-        with open(mltable_file_output_path, 'w') as f:
-            f.write(s)
+        try:
+            with open(mltable_file_output_path, 'w') as f:
+                f.write(s)
+        except Exception as ex:
+            logger.warning(
+                f"Failed to prepare mltable file {output_mltable} as {ex}")
+            return None
         return mltable_output_path
 
     @staticmethod
@@ -164,7 +173,10 @@ transformations:
         """Create prompts by iterating over the input files."""
         checksum = SHA256Checksum()
 
-        with open(self.output_path, "w") as f, open(self.mltable_output_path, "w") as f_mltable:
+        if self.mltable_output_path is not None:
+            f_mltable = open(self.mltable_output_path, "w")
+
+        with open(self.output_path, "w") as f:
             with open(self.input_path) as input_f:
                 for index, line in enumerate(tqdm.tqdm(input_f)):
                     self.mlflow_logger.increment_step()
@@ -176,8 +188,13 @@ transformations:
                     checksum.update(output_data)
                     f.write(json.dumps(output_data) + "\n")
 
-                    ml_table_output_data = self.row_output_post_process(output_data)
-                    f_mltable.write(json.dumps(ml_table_output_data) + "\n")
+                    if self.mltable_output_path is not None:
+                        ml_table_output_data = self.row_output_post_process(output_data)
+                        f_mltable.write(json.dumps(ml_table_output_data) + "\n")
+
+        # closing the mltable output file (if exists)
+        if self.mltable_output_path is not None:
+            f_mltable.close()
 
         self.mlflow_logger.log_aggregates()
 

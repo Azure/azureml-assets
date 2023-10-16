@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-name: prompt_crafter_
-display_name: BenchmarkingPromptCrafter
-description: Create prompts from a given dataset. From a given jinja prompt 
-  template, it will generate prompts. It can also create few-shot prompts 
-  given a few-shot dataset and the number of shots.
-version: 0.0.1.0
+name: prompt_crafter
+display_name: Prompt Crafter
+description: This component is used to create prompts from a given dataset. From a 
+  given jinja prompt template, it will generate prompts. It can also create 
+  few-shot prompts given a few-shot dataset and the number of shots.
+version: 0.0.3.0
 is_deterministic: true
 
 inputs:
@@ -17,8 +17,8 @@ inputs:
       - chat
       - completions
     description: |
-      Determine the prompt format. This component supports chat and completion apis.
-      Completion: 
+      Determine the prompt format. This component supports chat and completion moddels.
+      Completions: 
       {"prompt": "Few shot prompts will go here"}
       Chat: 
       Chat models have 3 roles: System, User and Assistant. 
@@ -67,8 +67,8 @@ inputs:
     type: string
     optional: false
     description: |
-      The jinja template representing for the ground truth. For n-shot prompts>0, this will be added
-      to the prompt pattern. For the example above, the output pattern can be: {{answerKey}}
+      The jinja template representing the expected output that would be used for few shot 
+      prompts when n_shot > 0. e.g: {{answerKey}}
   few_shot_separator:
     type: string
     optional: true
@@ -79,7 +79,7 @@ inputs:
     type: string
     optional: true
     description: |
-      (Optional) This is the description of the task that the Assisstant should perform.
+      This is the description of the task that the Assisstant should perform.
       e.g: "You are a helpful assistant."  
   random_seed:
     type: integer
