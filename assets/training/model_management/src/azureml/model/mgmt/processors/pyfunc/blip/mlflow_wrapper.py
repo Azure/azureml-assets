@@ -9,7 +9,7 @@ import pandas as pd
 import torch
 import tempfile
 
-from transformers import Blip2Processor, Blip2ForConditionalGeneration
+from transformers import AutoProcessor, Blip2ForConditionalGeneration
 from config import MLflowSchemaLiterals, MLflowLiterals, Tasks
 from typing import List, Tuple
 
@@ -48,7 +48,7 @@ class BLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         if self._task_type == (Tasks.IMAGE_CAPTIONING.value):
             try:
                 model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
-                self._processor = Blip2Processor.from_pretrained(model_dir)
+                self._processor = AutoProcessor.from_pretrained(model_dir)
                 self._model = Blip2ForConditionalGeneration.from_pretrained(
                     model_dir)
                 self._device = get_current_device()
