@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Constants for LLaVA."""
+"""Constants for SAM."""
 
 from enum import Enum
 from mlflow.types import DataType
@@ -14,7 +14,7 @@ class _CustomEnum(Enum):
 
 
 class Tasks(_CustomEnum):
-    """Task types supported by LLaVA."""
+    """Task types supported by SAM."""
 
     SEGMENT_ANYTHING = "segment-anything"
 
@@ -36,16 +36,25 @@ class MLflowSchemaLiterals:
     INPUT_COLUMN_INPUT_POINTS_DATA_TYPE = DataType.string
     INPUT_COLUMN_INPUT_BOXES_DATA_TYPE = DataType.string
     INPUT_COLUMN_INPUT_LABELS_DATA_TYPE = DataType.string
-    OUTPUT_COLUMN_DATA_TYPE = DataType.string
+    INPUT_PARAM_MULTIMASK_OUTPUT = "multimask_output"
+    INPUT_PARAM_MULTIMASK_OUTPUT_DATA_TYPE = DataType.boolean
+    INPUT_PARAM_MULTIMASK_OUTPUT_DEFAULT_VALUE = True
     OUTPUT_COLUMN_RESPONSE = "response"
+    OUTPUT_COLUMN_DATA_TYPE = DataType.string
+    RESPONSE_DF_PREDICTIONS = "predictions"
+    RESPONSE_DF_MASKS_PER_PREDICTION = "masks_per_prediction"
+    RESPONSE_DF_ENCODED_BINARY_MASK = "encoded_binary_mask"
+    RESPONSE_DF_IOU_SCORE = "iou_score"
 
-class BatchConstants:
-    """Constants related to Batch inference."""
 
-    BATCH_OUTPUT_PATH = "AZUREML_BI_OUTPUT_PATH"
+class SAMHFLiterals:
+    """SAM HF related literals."""
+
+    ORIGINAL_SIZES = "original_sizes"
+    RESHAPE_INPUT_SIZES = "reshaped_input_sizes"
+
 
 class DatatypeLiterals:
     """Literals related to data type."""
 
     IMAGE_FORMAT = "PNG"
-    STR_ENCODING = "utf-8"

@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from mlflow.models.signature import ModelSignature
 from mlflow.pyfunc import PyFuncModel
 from mlflow.types import DataType
-from mlflow.types.schema import ColSpec, Schema
+from mlflow.types.schema import ColSpec, Schema, ParamSpec, ParamSchema
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -495,20 +495,44 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
 
         input_schema = Schema(
             [
-                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
-                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS),
-                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES),
-                ColSpec(SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS),
+                ColSpec(
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE,
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE,
+                ),
+                ColSpec(
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS_DATA_TYPE,
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS,
+                ),
+                ColSpec(
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES_DATA_TYPE,
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES,
+                ),
+                ColSpec(
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS_DATA_TYPE,
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS,
+                ),
+            ]
+        )
+        params_schema = ParamSchema(
+            [
+                ParamSpec(
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT,
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT_DATA_TYPE,
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT_DEFAULT_VALUE,
+                )
             ]
         )
 
         output_schema = Schema(
             [
-                ColSpec(SegmentAnythingMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE, SegmentAnythingMLFlowSchemaLiterals.OUTPUT_COLUMN_RESPONSE)
+                ColSpec(
+                    SegmentAnythingMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                    SegmentAnythingMLFlowSchemaLiterals.OUTPUT_COLUMN_RESPONSE,
+                )
             ]
         )
 
-        return ModelSignature(inputs=input_schema, outputs=output_schema)
+        return ModelSignature(inputs=input_schema, outputs=output_schema, params=params_schema)
 
     def save_as_mlflow(self):
         """Prepare model for save to MLflow."""
@@ -521,7 +545,7 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
         code_path = [
             os.path.join(self.MODEL_DIR, "segment_anything_mlflow_wrapper.py"),
             os.path.join(self.MODEL_DIR, "config.py"),
-            os.path.join(self.COMMON_DIR, "vision_utils.py")
+            os.path.join(self.COMMON_DIR, "vision_utils.py"),
         ]
         super()._save(
             mlflow_model_wrapper=mlflow_model_wrapper,
@@ -536,7 +560,5 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
         :return: artifacts dict
         :rtype: Dict
         """
-        artifacts_dict = {
-            SegmentAnythingMLflowLiterals.MODEL_DIR: self._model_dir
-        }
+        artifacts_dict = {SegmentAnythingMLflowLiterals.MODEL_DIR: self._model_dir}
         return artifacts_dict

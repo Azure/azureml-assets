@@ -122,11 +122,14 @@ def process_image(image: Union[str, bytes]) -> bytes:
             try:
                 return base64.b64decode(image)
             except ValueError:
-                raise ValueError("The provided image string cannot be decoded. "
-                                 "Expected format is base64 string or url string.")
+                raise ValueError(
+                    "The provided image string cannot be decoded. " "Expected format is base64 string or url string."
+                )
     else:
-        raise ValueError(f"Image received in {type(image)} format which is not supported. "
-                         "Expected format is bytes, base64 string or url string.")
+        raise ValueError(
+            f"Image received in {type(image)} format which is not supported. "
+            "Expected format is bytes, base64 string or url string."
+        )
 
 
 def process_image_pandas_series(image_pandas_series: pd.Series) -> pd.Series:
@@ -188,7 +191,7 @@ def get_current_device() -> torch.device:
             # get the current device index
             device_idx = torch.distributed.get_rank()
         except RuntimeError as ex:
-            if 'Default process group has not been initialized'.lower() in str(ex).lower():
+            if "Default process group has not been initialized".lower() in str(ex).lower():
                 device_idx = 0
             else:
                 logger.error(str(ex))
@@ -197,15 +200,16 @@ def get_current_device() -> torch.device:
     else:
         return torch.device(type="cpu")
 
+
 def string_to_nested_float_list(s: str) -> list:
     # Check if string matches the expected format using a regex pattern.
     # This pattern ensures that the string only contains brackets, numbers, dots, and commas.
-    if not re.match(r'^\[((\[|\]|\s|\d|\,|\.|-)*?)\]$', s):
-        raise ValueError("Invalid format")
+    if not re.match(r"^\[((\[|\]|\s|\d|\,|\.|-)*?)\]$", s):
+        raise ValueError("Invalid input format, please use a nested list of ints or floats.")
 
     # Convert string to nested list using literal_eval
     nested_list = literal_eval(s)
-    
+
     # Helper function to convert nested lists to floats
     def to_float_recursive(lst):
         for i, item in enumerate(lst):
