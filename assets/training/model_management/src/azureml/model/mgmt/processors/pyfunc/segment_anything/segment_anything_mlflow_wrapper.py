@@ -13,7 +13,6 @@ import mlflow
 import pandas as pd
 from PIL import Image
 import torch
-from typing import Any, Dict, Optional
 from transformers import SamModel, SamProcessor
 
 from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, SAMHFLiterals, DatatypeLiterals
