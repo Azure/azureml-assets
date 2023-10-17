@@ -21,24 +21,18 @@ def test_chat_prompts() -> None:
     not added to the few_shot_prompts.
     """
     n_shots = 1
-    prompt_pattern = '[{"role": "user", "content": "{{input}}?"}]'
+    prompt_pattern = "{{input}}?"
     output_pattern = '{{output}}'
     few_shot_pool = [{'input': 'fs_in', 'output': 'fs_out'}]
     few_shot_separator = "\n"
     system_message = "You are an assistant."
     row = {'input': 'in4'}
+
+    # Without few_shot_pattern as inputs
     expected_output = [{"role": "system", "content": "You are an assistant."},
                        {"role": "user", "content": "fs_in?"},
                        {"role": "assistant", "content": "fs_out"},
                        {"role": "user", "content": "in4?"}]
-
-    few_shot_pattern = '[{"role": "user", "content": "{{input}}?{{output}}"}]'
-    expected_output_with_few_shot_pattern = [
-        {"role": "system", "content": "You are an assistant."},
-        {"role": "user", "content": "fs_in?fs_out"},
-        {"role": "user", "content": "in4?"}]
-
-    # Without few_shot_pattern as inputs
     prompt_factory = ChatPromptFactory(
         n_shots=n_shots,
         prompt_pattern=prompt_pattern,
@@ -50,6 +44,11 @@ def test_chat_prompts() -> None:
     assert prompt.raw_prompt == expected_output
 
     # When few_shot_prompt is present in input
+    few_shot_pattern = '[{"role": "user", "content": "{{input}}?{{output}}"}]'
+    expected_output_with_few_shot_pattern = [
+        {"role": "system", "content": "You are an assistant."},
+        {"role": "user", "content": "fs_in?fs_out"},
+        {"role": "user", "content": "in4?"}]
     prompt_factory = ChatPromptFactory(
         n_shots=n_shots,
         prompt_pattern=prompt_pattern,
@@ -95,7 +94,6 @@ def test_completions_prompts() -> None:
         n_shots=n_shots,
         prompt_pattern=prompt_pattern,
         few_shot_pool=few_shot_pool,
-        few_shot_pattern="",
         few_shot_separator=few_shot_separator,
         prefix=prefix,
         system_message=system_message,

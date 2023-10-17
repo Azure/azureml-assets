@@ -61,6 +61,12 @@ class Constants:
     POSTPROCESS_SAMPLE_EXAMPLES_EXPECTED_OUTPUT_FILE = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "data/sample_examples_expected_postprocessed_outputs.jsonl"
     )
+    PROMPTCRAFTER_SAMPLE_INPUT_FILE = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/test_data_prompt_crafter/inferencesample.jsonl"
+    )
+    PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "data/test_data_prompt_crafter/fewshotsample.jsonl"
+    )
     REFERENCES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "references")
     OUTPUT_DIR = "{output_dir}/named-outputs/{output_name}"
     OUTPUT_FILE_PATH = OUTPUT_DIR + "/{output_file_name}"
