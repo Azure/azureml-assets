@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: mmeft
+name: MMEFT
 path: ./
 properties:
   inference-min-sku-spec: 2|0|7|14
