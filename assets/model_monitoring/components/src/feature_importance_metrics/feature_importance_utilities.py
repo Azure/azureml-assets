@@ -52,9 +52,9 @@ def is_categorical_column(baseline_data, column_name):
         total_column_values = len(baseline_column)
         distinct_value_ratio = distinct_column_values / total_column_values
         if distinct_value_ratio < 0.05:
-            return True
-        else:
             return False
+        else:
+            return True
     # Log the datatype detected and default to true
     log_time_and_message(f"Unknown column type: {baseline_column_type}")
     return True
