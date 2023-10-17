@@ -67,8 +67,10 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
 
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
-        :param input_data: Pandas DataFrame with a first column name ["image"] which is in base64 String format or an URL, and
-            second column name ["input_points"] - string representation of a numpy array of shape `(batch_size, num_points, 2)`:
+        :param input_data:
+            Pandas DataFrame with a first column name ["image"] which is in base64 String format or an URL, and
+            second column name ["input_points"] -
+            string representation of a numpy array of shape `(batch_size, num_points, 2)`:
             Input 2D spatial points, this is used by the prompt encoder to encode the prompt. Generally yields to much
             better results. The points can be obtained by passing a list of list of list to the processor that will
             create corresponding `torch` tensors of dimension 4. The first dimension is the image batch size, the
@@ -79,7 +81,8 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             mask, the processor will create "PAD" points that will correspond to the (0, 0) coordinate, and the
             computation of the embedding will be skipped for these points using the labels.
 
-            third column name ["input_boxes"] - string representation of a numpy array of shape `(batch_size, num_boxes, 4)`:
+            third column name ["input_boxes"] -
+            string representation of a numpy array of shape `(batch_size, num_boxes, 4)`:
             Input boxes for the points, this is used by the prompt encoder to encode the prompt. Generally yields to
             much better generated masks. The boxes can be obtained by passing a list of list of list to the processor,
             that will generate a `torch` tensor, with each dimension corresponding respectively to the image batch
@@ -91,7 +94,8 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             - `x2`: the x coordinate of the bottom right point of the input box
             - `y2`: the y coordinate of the bottom right point of the input box
 
-            fourth column name ["input_labels"] - string representation of a numpy array of shape `(batch_size, point_batch_size, num_points)`:
+            fourth column name ["input_labels"] -
+            string representation of a numpy array of shape `(batch_size, point_batch_size, num_points)`:
             Input labels for the points, this is used by the prompt encoder to encode the prompt. According to the
             official implementation, there are 3 types of labels
 
@@ -106,11 +110,11 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
 
         :type input_data: pd.DataFrame
         :param params: Optional dictionary of parameters that can be passed to the model for inference.
-            'multimask_output' - If True, the model will output a list of masks for each input point, otherwise it will
-            output a single mask per input point. Defaults to True.
+            'multimask_output' - If True, the model will output a list of masks for each input point, otherwise it
+            will output a single mask per input point. Defaults to True.
         :type params: Optional[Dict[str, Any]]
-        :return: Pandas dataframe with generated masks and IOU score corresponding to each inputs [input_points, input_boxes, input_labels]
-            converted to base64 string.
+        :return: Pandas dataframe with generated masks and IOU score corresponding to each inputs
+            [input_points, input_boxes, input_labels] converted to base64 string.
         :rtype: pd.DataFrame
         """
         from vision_utils import process_image, string_to_nested_float_list, image_to_base64, bool_array_to_pil_image
