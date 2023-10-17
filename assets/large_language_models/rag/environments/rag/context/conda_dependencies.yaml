@@ -17,6 +17,7 @@ dependencies:
   - azure-mgmt-cognitiveservices~=13.4.0
   - azureml-contrib-services
   - azureml-core=={{latest-pypi-version}}
+  - azureml-telemetry=={{latest-pypi-version}}
   - azureml-dataprep=={{latest-pypi-version}}
   - azureml-fsspec
   - azureml-inference-server-http==0.7.6
