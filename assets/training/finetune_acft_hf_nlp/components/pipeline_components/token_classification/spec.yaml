@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/pipelineComponent.schema.json
 name: token_classification_pipeline
-version: 0.0.22
+version: 0.0.23
 type: pipeline
 display_name: Token Classification Pipeline
 description: Pipeline component to finetune Hugging Face pretrained models for token classification task. The component supports optimizations such as LoRA, Deepspeed and ONNXRuntime for performance enhancement. See [docs](https://aka.ms/azureml/components/token_classification_pipeline) to learn more.
@@ -608,7 +608,7 @@ jobs:
       test_data: '${{parent.jobs.token_classification_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.tag_key}}'
       input_column_names: '${{parent.inputs.token_key}}'
-      batch_size: '${{parent.inputs.batch_size}}'
+#      batch_size: '${{parent.inputs.batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.token_classification_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:

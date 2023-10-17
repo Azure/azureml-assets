@@ -10,5 +10,5 @@ tags:
   industry: healthcare
   task: task-extraction
 
-template:  
-  path: ./prompt.yaml
+data_uri: ./prompt
+template_path: prompt.yaml

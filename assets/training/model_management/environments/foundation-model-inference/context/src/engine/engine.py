@@ -3,6 +3,7 @@
 
 """This module provides classes and methods for handling inference tasks."""
 
+import socket
 import time
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -12,8 +13,11 @@ from configs import EngineConfig
 
 from dataclasses import dataclass
 
-from constants import TaskType
+from constants import ServerSetupParams, TaskType
+from logging_config import configure_logger
 from utils import log_execution_time
+
+logger = configure_logger(__name__)
 
 
 @dataclass
@@ -56,6 +60,28 @@ class AbstractEngine(ABC):
             return response[len(prompt):].strip()
         else:
             raise ValueError(f"Invalid task type {self.task_config.task_type}.")
+
+    # Helper function to check if a port is open
+    def _is_port_open(self, host: str = "localhost", port: int = 8000, timeout: float = 1.0) -> bool:
+        """Check if a port is open on the given host."""
+        try:
+            with socket.create_connection((host, port), timeout=timeout):
+                return True
+        except (ConnectionRefusedError, TimeoutError, OSError):
+            return False
+
+    @log_execution_time
+    def wait_until_server_healthy(self, host: str, port: int, timeout: float = 1.0):
+        """Wait until the server is healthy."""
+        start_time = time.time()
+        while time.time() - start_time < ServerSetupParams.WAIT_TIME_MIN * 60:
+            is_healthy = self._is_port_open(host, port, timeout)
+            if is_healthy:
+                logger.info("Server is healthy.")
+                return
+            logger.info("Waiting for server to start...")
+            time.sleep(30)
+        raise Exception("Server did not become healthy within 15 minutes.")
 
 
 class HfEngine(AbstractEngine):
