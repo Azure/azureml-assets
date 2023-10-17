@@ -7,6 +7,6 @@ properties:
   model_id: mmeft
 tags:
   Preview: ''
-  license: msft-mit
+  license: mit
   task: multimodal-classification
 version: 1
