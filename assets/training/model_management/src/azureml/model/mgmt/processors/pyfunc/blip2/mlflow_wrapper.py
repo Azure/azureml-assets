@@ -6,12 +6,11 @@
 import mlflow
 from PIL import Image
 import pandas as pd
-import torch
 import tempfile
 
 from transformers import AutoProcessor, Blip2ForConditionalGeneration
 from config import MLflowSchemaLiterals, MLflowLiterals, Tasks
-from typing import List, Tuple
+from typing import List
 
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
