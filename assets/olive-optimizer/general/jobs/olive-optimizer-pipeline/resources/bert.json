@@ -93,7 +93,7 @@
         "evaluator": "common_evaluator",
         "host": "local_system",
         "target": "local_system",
-        "execution_providers": ["CPUExecutionProvider", "OpenVINOExecutionProvider"],
+        "execution_providers": ["CPUExecutionProvider"],
         "clean_cache": true,
         "cache_dir": "cache"
     }
