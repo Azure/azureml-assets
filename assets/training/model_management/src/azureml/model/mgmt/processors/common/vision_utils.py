@@ -15,6 +15,7 @@ import re
 import requests
 import torch
 from ast import literal_eval
+import numpy as np
 
 from PIL import Image, UnidentifiedImageError
 from typing import Tuple, Union
@@ -225,3 +226,14 @@ def string_to_nested_float_list(s: str) -> list:
 
     to_float_recursive(nested_list)
     return nested_list
+
+
+def bool_array_to_pil_image(bool_array):
+    """Convert boolean array to PIL Image."""
+    # Convert boolean array to uint8
+    uint8_array = bool_array.astype(np.uint8) * 255
+
+    # Create a PIL Image
+    pil_image = Image.fromarray(uint8_array)
+
+    return pil_image
