@@ -202,8 +202,10 @@ def get_current_device() -> torch.device:
 
 
 def string_to_nested_float_list(s: str) -> list:
-    """
-    Convert string to nested list of floats.
+    """Convert string to nested list of floats.
+
+    :return: string converted to nested list of floats
+    :rtype: list
     """
     # Check if string matches the expected format using a regex pattern.
     # This pattern ensures that the string only contains brackets, numbers, dots, and commas.
