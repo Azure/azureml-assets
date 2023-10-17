@@ -77,5 +77,4 @@ def compute_categorical_features(baseline_data, target_column):
             if is_categorical_column(baseline_data, column):
                 categorical_features.append(column)
     print("Successfully categorized columns")
-    print(categorical_features)
     return categorical_features
