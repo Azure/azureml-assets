@@ -41,7 +41,6 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-
         if self._task_type == Tasks.SEGMENT_ANYTHING.value:
             try:
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"

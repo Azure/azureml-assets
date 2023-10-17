@@ -492,7 +492,6 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
         :return: MLflow model signature.
         :rtype: mlflow.models.signature.ModelSignature
         """
-
         input_schema = Schema(
             [
                 ColSpec(
