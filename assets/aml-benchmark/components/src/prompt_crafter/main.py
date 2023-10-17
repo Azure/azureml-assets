@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 """Entry script for Prompt Crafter Component."""
-import os
 from argparse import ArgumentParser
 from typing import Optional
 
@@ -18,25 +17,71 @@ logger = get_logger(__name__)
 def parse_args() -> ArgumentParser:
     """Parse command line arguments."""
     parser = ArgumentParser()
-    parser.add_argument("--test_data", type=str, required=True)
-    parser.add_argument("--few_shot_data", type=str, required=False)
-    parser.add_argument("--prompt_type", type=str, required=True,
-                        choices=[PromptType.chat.name, PromptType.completions.name])
-    parser.add_argument("--n_shots", type=int, required=True)
-    parser.add_argument("--random_seed", type=int, default=0, required=True)
-    parser.add_argument("--output_file", type=str, required=True)
-    parser.add_argument("--output_dir", type=str, required=False)
-    parser.add_argument("--output_mltable", type=str, required=False)
-    parser.add_argument("--metadata_keys", type=str, required=False)
-    parser.add_argument("--prompt_pattern", type=str, required=False)
-    parser.add_argument("--few_shot_pattern", type=str, required=False)
-    parser.add_argument("--few_shot_separator", type=str, required=False)
-    parser.add_argument("--prefix", type=str, required=False)
-    parser.add_argument("--label_map", type=str, required=False)
-    parser.add_argument("--system_message", type=str, required=False)
-    parser.add_argument("--output_pattern", type=str, required=False)
-    parser.add_argument("--additional_payload", type=str, required=False)
-
+    parser.add_argument(
+        "--test_data",
+        type=str,
+        required=True,
+        help="Path to load the test data to generate prompts."
+        )
+    parser.add_argument(
+        "--few_shot_data",
+        type=str,
+        required=False,
+        help="The uri file(jsonl) to generate n-shot prompts.")
+    parser.add_argument(
+        "--prompt_type",
+        type=str,
+        required=True,
+        choices=[PromptType.chat.name, PromptType.completions.name],
+        help="The type of prompt to be generated.")
+    parser.add_argument(
+        "--n_shots",
+        type=int,
+        required=True,
+        help="The number of shots to use for n-shot prompts.")
+    parser.add_argument(
+        "--random_seed",
+        type=int,
+        default=0,
+        required=False,
+        help="The random seed to used for generating prompts.")
+    parser.add_argument(
+        "--output_file",
+        type=str,
+        required=True,
+        help="Path to output jsonl which has the generated prompts.")
+    parser.add_argument(
+        "--prompt_pattern",
+        type=str,
+        required=True,
+        help="The jinja pattern to used for generating prompts.")
+    parser.add_argument(
+        "--few_shot_separator",
+        type=str,
+        default="",
+        required=False,
+        help="The separator to be used for n-shot prompts.")
+    parser.add_argument(
+        "--prefix",
+        type=str,
+        required=False,
+        help="The prefix to be used for prompts.")
+    parser.add_argument(
+        "--label_map",
+        type=str,
+        required=False,
+        help="The label map to be used for prompts.")
+    parser.add_argument(
+        "--system_message",
+        type=str,
+        required=False,
+        help="The system message to be used for chat prompts.")
+    parser.add_argument(
+        "--output_pattern",
+        type=str,
+        required=True,
+        help="The jinja template representing the expected output to \
+         be used for few shot prompts when n_shot > 0")
     return parser.parse_args()
 
 

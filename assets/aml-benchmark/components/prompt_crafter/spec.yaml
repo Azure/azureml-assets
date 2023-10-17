@@ -1,12 +1,12 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
 
-name: prompt_crafter
+name: prompt_crafter_convergence_test
 display_name: Prompt Crafter
 description: This component is used to create prompts from a given dataset. From a 
   given jinja prompt template, it will generate prompts. It can also create 
   few-shot prompts given a few-shot dataset and the number of shots.
-version: 0.0.3.0
+version: 0.0.4.0
 is_deterministic: true
 
 inputs:
@@ -83,6 +83,11 @@ inputs:
       Applicable for chat models only.
       e.g: "You are a helpful assistant." will be added to system role for chat models.
       {"role": "system", "content": "You are a helpful assistant"}
+  prefix:
+    type: string
+    optional: true
+    description: |
+      The prefix to be added to the prompts. e.g: "Question: "
   random_seed:
     type: integer
     optional: true
@@ -105,5 +110,6 @@ command: >-
   --prompt_pattern '${{inputs.prompt_pattern}}'
   --output_pattern '${{inputs.output_pattern}}'
   $[[--system_message '${{inputs.system_message}}']]
+  $[[--prefix '${{inputs.prefix}}']]
   $[[--few_shot_separator '${{inputs.few_shot_separator}}']]
   --output_file ${{outputs.output_file}}

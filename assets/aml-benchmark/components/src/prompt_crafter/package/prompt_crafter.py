@@ -79,7 +79,7 @@ class PromptCrafter:
         additional_payload: Optional[str],
         system_message: Optional[str],
         base_prompt_factory_cls: Optional[PromptFactory] = PromptFactory,
-        output_mltable: Optional[str]=None,
+        output_mltable: Optional[str] = None,
     ):
         """Initialize the prompt crafter."""
         self.metadata_keys = metadata_keys
