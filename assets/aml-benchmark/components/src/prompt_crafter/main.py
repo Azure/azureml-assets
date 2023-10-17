@@ -9,7 +9,7 @@ from .package.prompt_crafter import PromptCrafter
 from .package.prompt import PromptType
 from utils.exceptions import swallow_all_exceptions
 from utils.logging import get_logger, log_mlflow_params
-
+from utils.io import resolve_io_path
 
 logger = get_logger(__name__)
 
@@ -140,7 +140,8 @@ def main(
         prompt_pattern=prompt_pattern,
         output_pattern=output_pattern,
         system_message=system_message,
-        random_seed=random_seed)
+        random_seed=random_seed,
+        output_dataset_checksum=resolve_io_path(output_file))
 
 
 if __name__ == "__main__":
