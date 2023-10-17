@@ -27,7 +27,7 @@ inputs:
 
 outputs:
   mlflow_model_folder:
-    type: mlflow_model
+    type: uri_folder
     description: MLFlow Model Folder
     mode: rw_mount
 

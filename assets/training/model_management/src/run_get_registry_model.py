@@ -2,10 +2,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # ---------------------------------------------------------
 """
-This module link output on run conditionally.
-
-If condition is `true`, link `output` to `input_a`.
-If condition is `false`, link `output` to `input_b`.
+This module downloads the model from the registry.
 """
 import argparse, json, os
 from azureml.model.mgmt.config import ComponentVariables
