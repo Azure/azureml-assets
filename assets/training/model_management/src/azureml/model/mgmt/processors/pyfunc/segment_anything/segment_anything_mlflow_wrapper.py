@@ -59,7 +59,6 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         self,
         context: mlflow.pyfunc.PythonModelContext,
         input_data: pd.DataFrame,
-        params: Optional[Dict[str, Any]] = None,
     ) -> pd.DataFrame:
         """
         Perform inference on the input data.
@@ -107,11 +106,11 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             - `-10`: the point is a padding point, thus should be ignored by the prompt encoder
             The padding labels should be automatically done by the processor.
 
+            fifth column name ["multimask_output"] -
+            boolean value to indicate if the model should return a single mask or multiple masks per input point.
+            If False, the model will return a single mask per input point, if True, the model will return multiple
+            masks per input point. Default is True.
         :type input_data: pd.DataFrame
-        :param params: Optional dictionary of parameters that can be passed to the model for inference.
-            'multimask_output' - If True, the model will output a list of masks for each input point, otherwise it
-            will output a single mask per input point. Defaults to True.
-        :type params: Optional[Dict[str, Any]]
         :return: Pandas dataframe with generated masks and IOU score corresponding to each inputs
             [input_points, input_boxes, input_labels] converted to base64 string.
         :rtype: pd.DataFrame
@@ -120,11 +119,12 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
 
         # Do inference one input at a time.
         response = []
-        for image, input_points, input_boxes, input_labels in zip(
+        for image, input_points, input_boxes, input_labels, multimask_output in zip(
             input_data[MLflowSchemaLiterals.INPUT_COLUMN_IMAGE],
             input_data[MLflowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS],
             input_data[MLflowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES],
             input_data[MLflowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS],
+            input_data[MLflowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT],
         ):
             # Decode the image and make a PIL Image object.
             pil_image = Image.open(io.BytesIO(process_image(image)))
@@ -144,8 +144,7 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             ).to(_map_location)
 
             with torch.no_grad():
-                if params and MLflowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT in params:
-                    multimask_output = params[MLflowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT]
+                if multimask_output in [True, False]:
                     outputs = self._model(**processed_inputs, multimask_output=multimask_output)
                 else:
                     outputs = self._model(**processed_inputs)

@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from mlflow.models.signature import ModelSignature
 from mlflow.pyfunc import PyFuncModel
 from mlflow.types import DataType
-from mlflow.types.schema import ColSpec, Schema, ParamSpec, ParamSchema
+from mlflow.types.schema import ColSpec, Schema
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -510,15 +510,10 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
                     SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS_DATA_TYPE,
                     SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS,
                 ),
-            ]
-        )
-        params_schema = ParamSchema(
-            [
-                ParamSpec(
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT,
+                ColSpec(
                     SegmentAnythingMLFlowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT_DATA_TYPE,
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT_DEFAULT_VALUE,
-                )
+                    SegmentAnythingMLFlowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT,
+                ),
             ]
         )
 
@@ -531,7 +526,7 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
             ]
         )
 
-        return ModelSignature(inputs=input_schema, outputs=output_schema, params=params_schema)
+        return ModelSignature(inputs=input_schema, outputs=output_schema)
 
     def save_as_mlflow(self):
         """Prepare model for save to MLflow."""

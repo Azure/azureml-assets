@@ -38,7 +38,6 @@ class MLflowSchemaLiterals:
     INPUT_COLUMN_INPUT_LABELS_DATA_TYPE = DataType.string
     INPUT_PARAM_MULTIMASK_OUTPUT = "multimask_output"
     INPUT_PARAM_MULTIMASK_OUTPUT_DATA_TYPE = DataType.boolean
-    INPUT_PARAM_MULTIMASK_OUTPUT_DEFAULT_VALUE = True
     OUTPUT_COLUMN_RESPONSE = "response"
     OUTPUT_COLUMN_DATA_TYPE = DataType.string
     RESPONSE_DF_PREDICTIONS = "predictions"
