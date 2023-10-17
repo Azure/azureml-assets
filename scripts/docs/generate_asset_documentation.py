@@ -9,8 +9,9 @@ import snakemd
 import re
 from pathlib import Path
 from azureml.assets.config import AssetConfig, AssetType
+import warnings
 
-SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA, AssetType.PROMPT]
+SUPPORTED_ASSET_TYPES = [AssetType.ENVIRONMENT, AssetType.COMPONENT, AssetType.MODEL, AssetType.DATA]
 DEFAULT_CATEGORY = "Uncategorized"
 PLURALIZED_ASSET_TYPE = {"environment": "environments", "component": "components", "model": "models", "data": "data",
                          "prompt": "prompts"}
@@ -94,19 +95,11 @@ class AssetInfo:
     @staticmethod
     def create_asset_info(asset_config):
         """Instantiate an asset info class."""
-        if asset_config.type == AssetType.ENVIRONMENT:
-            return EnvironmentInfo(asset_config)
-        if asset_config.type == AssetType.COMPONENT:
-            return ComponentInfo(asset_config)
-        if asset_config.type == AssetType.MODEL:
-            return ModelInfo(asset_config)
-        if asset_config.type == AssetType.DATA:
-            return DataInfo(asset_config)
-        if asset_config.type == AssetType.PROMPT:
+        if asset_config.type not in TYPE_TO_DOC_FUNCS:
+            warnings.warn(f"Not supported asset type {asset_config.type}. Use {SUPPORTED_ASSET_TYPES}")
             return None
-            # return PromptInfo(asset_config)
-
-        raise Exception(f"Not supported asset type {asset_config.type}. Use {SUPPORTED_ASSET_TYPES}")
+        
+        return TYPE_TO_DOC_FUNCS[asset_config.type](asset_config)
 
 # region Doc Formatting
     def _add_doc_name(self, doc):
@@ -375,6 +368,12 @@ class PromptInfo(AssetInfo):
 
         return _doc
 
+TYPE_TO_DOC_FUNCS = {
+    AssetType.ENVIRONMENT: EnvironmentInfo,
+    AssetType.COMPONENT: ComponentInfo,
+    AssetType.MODEL: ModelInfo,
+    AssetType.DATA: DataInfo
+}
 
 class Categories:
     """Categories structured by type."""
