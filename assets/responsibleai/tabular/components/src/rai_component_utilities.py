@@ -20,10 +20,10 @@ from arg_helpers import get_from_args
 from azureml.core import Model, Run, Workspace
 from constants import DashboardInfo, PropertyKeyValues, RAIToolType
 from raiutils.exceptions import UserConfigValidationException
-from ..feature_metadata import FeatureMetadata
+from responsibleai.feature_metadata import FeatureMetadata
 
-from . import RAIInsights
-from . import __version__ as responsibleai_version
+from responsibleai import RAIInsights
+from responsibleai import __version__ as responsibleai_version
 
 assetid_re = re.compile(
     r"azureml://locations/(?P<location>.*)/workspaces/(?P<workspaceid>.*)/(?P<assettype>.*)/(?P<assetname>.*)/versions/(?P<assetversion>.*)"  # noqa: E501
