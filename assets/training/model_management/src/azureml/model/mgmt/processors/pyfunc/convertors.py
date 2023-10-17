@@ -339,7 +339,9 @@ class BLIP2MLFlowConvertor(PyFuncMLFLowConvertor):
         from mlflow_wrapper import BLIP2MLFlowModelWrapper
 
         mlflow_model_wrapper = BLIP2MLFlowModelWrapper(task_type=self._task)
-        artifacts_dict = self._prepare_artifacts_dict()
+        artifacts_dict = {
+            BLIP2MLflowLiterals.MODEL_DIR: self._model_dir
+        }
         conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
         code_path = [
             os.path.join(self.MODEL_DIR, "mlflow_wrapper.py"),
@@ -352,17 +354,6 @@ class BLIP2MLFlowConvertor(PyFuncMLFLowConvertor):
             conda_env=conda_env_file,
             code_path=code_path,
         )
-
-    def _prepare_artifacts_dict(self) -> Dict:
-        """Prepare artifacts dict for MLflow model.
-
-        :return: artifacts dict
-        :rtype: Dict
-        """
-        artifacts_dict = {
-            BLIP2MLflowLiterals.MODEL_DIR: self._model_dir
-        }
-        return artifacts_dict
 
 
 class TextToImageMLflowConvertor(PyFuncMLFLowConvertor):

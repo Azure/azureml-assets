@@ -16,7 +16,7 @@ from typing import List, Tuple
 try:
     # Use try/except since vision_utils is added as part of model export and not available when initializing
     # model wrapper for save_model().
-    from vision_utils import create_temp_file, process_image, get_current_device
+    from vision_utils import create_temp_file, process_image_pandas_series, get_current_device
 except ImportError:
     pass
 
@@ -67,16 +67,16 @@ class BLIP2MLFlowModelWrapper(mlflow.pyfunc.PythonModel):
 
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
-        :param input_data: Input images for prediction and text for the question.
+        :param input_data: Input images for prediction.
         :type input_data: Pandas DataFrame with a first column name ["image"] of images where each
-        image is in base64 String format, and second column name ["text"] which contains the question.
+        image is in base64 string format or url to the image.
         :return: Output of inferencing
         :rtype: Pandas DataFrame with columns ["text"]
         """
         # Decode the base64 image column
         decoded_images = input_data.loc[
             :, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]
-        ].apply(axis=1, func=process_image)
+        ].apply(axis=1, func=process_image_pandas_series)
 
         with tempfile.TemporaryDirectory() as tmp_output_dir:
             image_path_list = (
@@ -86,8 +86,6 @@ class BLIP2MLFlowModelWrapper(mlflow.pyfunc.PythonModel):
             )
 
             generated_text_list = self.run_inference_batch(
-                processor=self._processor,
-                model=self._model,
                 image_path_list=image_path_list,
             )
 
@@ -103,32 +101,21 @@ class BLIP2MLFlowModelWrapper(mlflow.pyfunc.PythonModel):
 
     def run_inference_batch(
         self,
-        processor,
-        model,
         image_path_list: List
-    ) -> Tuple[torch.tensor]:
+    ) -> List[str]:
         """Perform inference on batch of input images.
 
-        :param test_args: Training arguments path.
-        :type test_args: transformers.TrainingArguments
-        :param image_processor: Preprocessing configuration loader.
-        :type image_processor: transformers.AutoImageProcessor
-        :param model: Pytorch model weights.
-        :type model: transformers.AutoModelForImageClassification
         :param image_path_list: list of image paths for inferencing.
         :type image_path_list: List
-        :param task_type: Task type of the model.
-        :type task_type: Tasks
         :return: Predicted probabilities
         :rtype: Tuple of torch.tensor
         """
         image_list = [Image.open(img_path) for img_path in image_path_list]
 
-        inputs = processor(images=image_list,
-                           return_tensors="pt").to(self._device)
-        generated_ids = model.generate(**inputs)
-        generated_text_list = processor.batch_decode(
-            generated_ids, skip_special_tokens=True)
+        inputs = self._processor(images=image_list,
+                                 return_tensors="pt").to(self._device)
+        generated_ids = self._model.generate(**inputs)
+        generated_text_list = self._processor.batch_decode(generated_ids, skip_special_tokens=True)
 
         text_list = [t.strip() for t in generated_text_list]
         return text_list
