@@ -106,8 +106,8 @@ class BLIP2MLFlowModelWrapper(mlflow.pyfunc.PythonModel):
 
         :param image_path_list: list of image paths for inferencing.
         :type image_path_list: List
-        :return: Predicted probabilities
-        :rtype: Tuple of torch.tensor
+        :return: List of generated texts
+        :rtype: List of strings
         """
         image_list = [Image.open(img_path) for img_path in image_path_list]
 
