@@ -98,7 +98,7 @@ class AssetInfo:
         if asset_config.type not in TYPE_TO_DOC_FUNCS:
             warnings.warn(f"Not supported asset type {asset_config.type}. Use {SUPPORTED_ASSET_TYPES}")
             return None
-        
+
         return TYPE_TO_DOC_FUNCS[asset_config.type](asset_config)
 
 # region Doc Formatting
@@ -368,12 +368,14 @@ class PromptInfo(AssetInfo):
 
         return _doc
 
+
 TYPE_TO_DOC_FUNCS = {
     AssetType.ENVIRONMENT: EnvironmentInfo,
     AssetType.COMPONENT: ComponentInfo,
     AssetType.MODEL: ModelInfo,
     AssetType.DATA: DataInfo
 }
+
 
 class Categories:
     """Categories structured by type."""
