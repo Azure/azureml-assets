@@ -1,9 +1,11 @@
-Multimodal Early Fusion Transformer (MMEFT): A Transformer based Architecture for Reasoning over Structured and Unstructured Data
+Multimodal Early Fusion Transformer, MMEFT, is a transformer-based model tailored for processing both structured and unstructured data.
 
-MMEFT model can be used for multi-class and multi-label multimodal classification tasks. Dataset can have features belonging to one of the modes in {categorical,numerical,image,text}.
-The MMEFT architecture is composed of embedding, fusion, aggregation, and output layers. The embedding layer creates independent non-contextual embeddings for features of varying modes. The fusion layer inputs these non-contextual embeddings and outputs a set of contextual multimodal embeddings. These are aggregated into a single multimodal embedding in the aggregation layer. The multimodal embedding is then passed through a task-specific output layer which outputs the model’s estimate. 
-BertTokenizer is used to get embeddings for text data. 'openai/clip-vit-base-patch32' model from Hugging Face is used for image embeddings.
-  
+It can be used for multi-class and multi-label multimodal classification tasks, and is capable of handling datasets with features from diverse modes, including categorical, numerical, image, and text.
+The MMEFT architecture is composed of embedding, fusion, aggregation, and output layers. The embedding layer produces independent non-contextual embeddings for features of varying modes. Then, the fusion Layer integrates the non-contextual embeddings to yield contextual multimodal embeddings. The aggregation layer consolidates these contextual multimodal embeddings into a single multimodal embedding vector. Lastly, the output Layer, processes the final multimodal embedding to generate the model's prediction based on task for which it is used. 
+MMEFT uses, utilizes BertTokenizer for text data embeddings, and considers 'openai/clip-vit-base-patch32' model from Hugging Face for image data embeddings.
+This model is designed to offer a comprehensive approach to multimodal data, ensuring accurate and efficient classification across varied datasets.
+NOTE: We highly recommend to finetune the model on your dataset before deploying.
+ 
  ### Inference samples 
   
  Inference type|Python sample (Notebook)|CLI with YAML 
@@ -15,8 +17,8 @@ BertTokenizer is used to get embeddings for text data. 'openai/clip-vit-base-pat
   
  Task|Dataset|Python sample (Notebook)|CLI with YAML 
  |--|--|--|--| 
- Multimodal multi-class classification|TODO: add dataset|<a href='https://aka.ms/azureml-ft-sdk-multimodal-mc-classification' target='_blank'>multimodal-multiclass-classification.ipynb</a>|<a href='https://aka.ms/azureml-ft-cli-multimodal-mc-classification' target='_blank'>multimodal-multiclass-classification.sh</a> 
- Multimodal multi-label classification |TODO: add dataset|<a href='https://aka.ms/azureml-ft-sdk-multimodal-ml-classification' target='_blank'>multimodal-multilabel-classification.ipynb</a>|<a href='https://aka.ms/azureml-ft-cli-multimodal-ml-classification' target='_blank'>multimodal-multilabel-classification.sh</a> 
+ Multimodal multi-class classification|Airbnb listings dataset|<a href='https://aka.ms/azureml-ft-sdk-multimodal-mc-classification' target='_blank'>multimodal-multiclass-classification.ipynb</a>|<a href='https://aka.ms/azureml-ft-cli-multimodal-mc-classification' target='_blank'>multimodal-multiclass-classification.sh</a> 
+ Multimodal multi-label classification |Hateful memes dataset|<a href='https://aka.ms/azureml-ft-sdk-multimodal-ml-classification' target='_blank'>multimodal-multilabel-classification.ipynb</a>|<a href='https://aka.ms/azureml-ft-cli-multimodal-ml-classification' target='_blank'>multimodal-multilabel-classification.sh</a> 
  
  ### Sample inputs and outputs (for real-time inference) 
  #### Sample input 
@@ -34,8 +36,8 @@ BertTokenizer is used to get embeddings for text data. 'openai/clip-vit-base-pat
   
  ```json 
  [ 
-     { 
-         'label1': 0.1,
+     {
+		 'label1': 0.1,
 		 'label2': 0.7,
 		 'label3': 0.2
      } 
@@ -43,6 +45,3 @@ BertTokenizer is used to get embeddings for text data. 'openai/clip-vit-base-pat
   
  ``` 
   
- #### Model inference - visualization for a sample image 
-  
- <img src='https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/TODO' alt='mc visualization'> 
