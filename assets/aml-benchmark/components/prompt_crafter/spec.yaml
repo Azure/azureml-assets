@@ -17,15 +17,15 @@ inputs:
       - chat
       - completions
     description: |
-      Determine the prompt format. This component supports chat and completion moddels.
+      Determine the prompt format. This component supports chat and completion models.
       Completions: 
       {"prompt": "Few shot prompts will go here"}
       Chat: 
       Chat models have 3 roles: System, User and Assistant. 
       Example:
       {"prompt": [{"role": "system", "content": "You are a helpful assistant"},
-                    {"role": "user", "content": "Example chat input"},
-                    {"role": "assistant", "content": "Example chat output"}]}
+                  {"role": "user", "content": "Example chat input"},
+                  {"role": "assistant", "content": "Example chat output"}]}
     default: completions
   test_data:
     type: uri_file
@@ -79,8 +79,10 @@ inputs:
     type: string
     optional: true
     description: |
-      This is the description of the task that the Assisstant should perform.
-      e.g: "You are a helpful assistant."  
+      This is the description of the task that the Assisstant should perform. 
+      Applicable for chat models only.
+      e.g: "You are a helpful assistant." will be added to system role for chat models.
+      {"role": "system", "content": "You are a helpful assistant"}
   random_seed:
     type: integer
     optional: true

@@ -7,14 +7,17 @@ from typing import Optional
 import json
 import os
 import random
-
 import mlflow
 import tqdm
 
-from .dataset_resolver import resolve_file
+from azureml._common._error_definition.azureml_error import AzureMLError
+
 from .checksum import SHA256Checksum
 from .prompt_factory import PromptFactory
+from utils.io import resolve_io_path, read_jsonl_files
 from utils.logging import get_logger
+from utils.exceptions import BenchmarkValidationException
+from utils.error_definitions import BenchmarkValidationError
 
 logger = get_logger(__name__)
 
@@ -41,14 +44,15 @@ class _MLFlowLogger():
         mlflow.log_metric("total_prompts", self.steps)
 
     def save_parameters(self, params, output_mltable):
-        try:
-            mlflow.log_dict(params, "params.json")
+        if output_mltable is not None:
+            try:
+                mlflow.log_dict(params, "params.json")
 
-            with open(os.path.join(output_mltable, "params.json"), "w") as f:
-                json.dump(params, f)
-        except Exception as ex:
-            logger.warning(
-                f"Failed to save parameters to mlflow folder {output_mltable} due to {ex}")
+                with open(os.path.join(output_mltable, "params.json"), "w") as f:
+                    json.dump(params, f)
+            except Exception as ex:
+                logger.warning(
+                    f"Failed to save parameters to mlflow folder {output_mltable} due to {ex}")
 
 
 class PromptCrafter:
@@ -59,26 +63,23 @@ class PromptCrafter:
 
     def __init__(
         self,
-        input_dir: str,
-        few_shot_dir: Optional[str],
-        input_filename: Optional[str],
-        few_shot_filename: Optional[str],
+        test_data: str,
         prompt_type: str,
         n_shots: int,
         random_seed: int,
+        output_file: str,
         output_pattern: Optional[str],
         metadata_keys: Optional[str],
         prompt_pattern: Optional[str],
         few_shot_pattern: Optional[str],
         few_shot_separator: Optional[str],
+        few_shot_data: Optional[str],
         prefix: Optional[str],
         label_map: Optional[str],
-        output_dir: str,
-        output_mltable: str,
         additional_payload: Optional[str],
         system_message: Optional[str],
-        base_prompt_factory_cls=PromptFactory,
-        output_filename: Optional[str] = OUTPUT_FILENAME,
+        base_prompt_factory_cls: Optional[PromptFactory] = PromptFactory,
+        output_mltable: Optional[str]=None,
     ):
         """Initialize the prompt crafter."""
         self.metadata_keys = metadata_keys
@@ -91,14 +92,22 @@ class PromptCrafter:
         random.seed(random_seed)
 
         # sample few shot
-        few_shot_pool = self._read_few_shot_pool(few_shot_dir=few_shot_dir, few_shot_filename=few_shot_filename)
+        few_shot_pool = self._read_few_shot_pool(few_shot_file=few_shot_data)
 
         # create input/output file
-        self.input_path = resolve_file(input_path=input_dir, filename=input_filename)
-        self.output_path = os.path.join(output_dir, output_filename)
+        input_paths = resolve_io_path(test_data)
+        if len(input_paths) == 1:
+            self.input_path = input_paths[0]
+        else:
+            mssg = f"Multiple or No input files found for {test_data}"
+            raise BenchmarkValidationException._with_error(
+                AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+            )
+
+        self.output_path = output_file
         self.mltable_output_path = self._prepare_ml_table_output_file(output_mltable=output_mltable)
 
-        # init prompt factory
+        # Init prompt factory
         typed_prompt_factory_cls = base_prompt_factory_cls.from_type(prompt_type)
         self.prompt_factory = typed_prompt_factory_cls(
             n_shots=n_shots,
@@ -116,6 +125,9 @@ class PromptCrafter:
 
     @staticmethod
     def _prepare_ml_table_output_file(output_mltable: str):
+        """Prepare the mltable output file."""
+        if output_mltable is None:
+            return None
         mltable_output_path = os.path.join(output_mltable, PromptCrafter.OUTPUT_FILENAME)
         # must create MLTable file for the mltable output
         mltable_file_output_path = os.path.join(output_mltable, PromptCrafter.MLTABLE_FILENAME)
@@ -136,20 +148,19 @@ transformations:
         return mltable_output_path
 
     @staticmethod
-    def _read_few_shot_pool(few_shot_dir: str, few_shot_filename: str = None):
+    def _read_few_shot_pool(few_shot_file: str = None):
         few_shot_pool = None
-        if few_shot_dir is not None:
-            few_shot_pool_path = resolve_file(input_path=few_shot_dir, filename=few_shot_filename)
+        if few_shot_file is not None:
+            # create input/output file
+            few_shot_paths = resolve_io_path(few_shot_file)
+            if len(few_shot_paths) == 1:
+                few_shot_pool = read_jsonl_files(few_shot_paths)
+            else:
+                mssg = f"Multiple or No input files found for {few_shot_paths}"
+                raise BenchmarkValidationException._with_error(
+                    AzureMLError.create(BenchmarkValidationError, error_details=mssg)
+                )
 
-            def read_few_shot_data(few_shot_pool_path):
-                few_shot_pool = []
-                with open(few_shot_pool_path) as f:
-                    for line in f.readlines():
-                        data = json.loads(line)
-                        few_shot_pool.append(data)
-                return few_shot_pool
-            # NOTE: We read the few shot data into memory since we need to sample from it.
-            few_shot_pool = read_few_shot_data(few_shot_pool_path)
         return few_shot_pool
 
     @staticmethod

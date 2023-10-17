@@ -53,11 +53,9 @@ def base_test(dataset_name,
     if completion_ground_truth_checksum:
         params["prompt_type"] = "completions"
         prompt_crafter = PromptCrafter(
-            input_dir=dataset_path,
-            input_filename="inference_sample.jsonl",
-            few_shot_dir=dataset_path,
-            few_shot_filename="fewshot_sample.jsonl",
-            output_dir=test_output_path,
+            test_data=os.path.join(dataset_path, "inference_sample.jsonl"),
+            few_shot_data=os.path.join(dataset_path, "fewshot_sample.jsonl"),
+            output_file=os.path.join(dataset_path, "output.jsonl"),
             output_mltable=test_output_mltable_path,
             **params
         )
@@ -72,11 +70,9 @@ def base_test(dataset_name,
     if chat_ground_truth_checksum:
         params["prompt_type"] = "chat"
         prompt_crafter = PromptCrafter(
-            input_dir=dataset_path,
-            input_filename="inference_sample.jsonl",
-            few_shot_dir=dataset_path,
-            few_shot_filename="fewshot_sample.jsonl",
-            output_dir=test_output_path,
+            test_data=os.path.join(dataset_path, "inference_sample.jsonl"),
+            few_shot_data=os.path.join(dataset_path, "fewshot_sample.jsonl"),
+            output_file=os.path.join(dataset_path, "output.jsonl"),
             output_mltable=test_output_mltable_path,
             **params
         )
