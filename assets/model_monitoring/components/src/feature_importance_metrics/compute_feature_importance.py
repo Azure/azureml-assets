@@ -25,7 +25,7 @@ except ImportError:
     pass
 
 from feature_importance_metrics.feature_importance_utilities import (
-    compute_categorical_features, convert_pandas_to_spark, log_time_and_message)
+    compute_categorical_features, convert_pandas_to_spark, is_categorical_column, log_time_and_message)
 
 
 def parse_args():
@@ -61,26 +61,10 @@ def determine_task_type(task_type, target_column, baseline_data):
                                  " Attempting to determine task type based on target column.")
         else:
             return task_type_lower
-    baseline_column = pd.Series(baseline_data[target_column])
-    baseline_column_type = baseline_column.dtype.name
-    if (pd.api.types.is_float_dtype(baseline_column)
-            or pd.api.types.is_timedelta64_ns_dtype(baseline_column)):
-        return constants.REGRESSION
-    if (pd.api.types.is_object_dtype(baseline_column) or pd.api.types.is_string_dtype(baseline_column) or
-            pd.api.types.is_datetime64_any_dtype(baseline_column) or pd.api.types.is_timedelta64_dtype(baseline_column)
-            or baseline_column_type == "bool"):
+
+    if is_categorical_column(baseline_data, target_column):
         return constants.CLASSIFICATION
-    if pd.api.types.is_integer_dtype(baseline_column):
-        distinct_column_values = len(baseline_column.unique())
-        total_column_values = len(baseline_column)
-        distinct_value_ratio = distinct_column_values / total_column_values
-        if distinct_value_ratio < 0.05:
-            return constants.CLASSIFICATION
-        else:
-            return constants.REGRESSION
-    # Log the datatype detected and default to classification
-    log_time_and_message(f"Target column datatype detected: {baseline_column_type}")
-    return constants.CLASSIFICATION
+    return constants.REGRESSION 
 
 
 def create_lightgbm_model(X, y, task_type):
@@ -124,8 +108,7 @@ def get_model_wrapper(task_type, target_column, baseline_data):
     x_train = baseline_data.drop([target_column], axis=1)
     # Transform categorical features into the appropriate type that is expected by LightGBM
     for column in x_train:
-        col_type = x_train[column].dtype.name
-        if col_type == 'object' or col_type == 'category':
+        if is_categorical_column(x_train, column):
             x_train[column] = x_train[column].astype('category')
     model = create_lightgbm_model(x_train, y_train, task_type)
     model_predict = model.predict(x_train)
