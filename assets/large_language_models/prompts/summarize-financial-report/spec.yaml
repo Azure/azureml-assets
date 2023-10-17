@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+name: summarize-financial-report
+version: 0.0.10
+display_name: Summarize Financial Report
+description: Summarize the data in the financial report
+
+tags:    
+  task: summarization
+
+data_uri: ./prompt
+template_path: prompt.yaml

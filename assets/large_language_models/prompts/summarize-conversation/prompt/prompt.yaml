@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+_type: completion
+
+messages: 
+- role: system
+  content: Generate a summary of the below conversation in the following format:\nCustomer problem:\nOutcome of the conversation:\nAction items for follow-up:\nCustomer budget:\nDeparture city:\nDestination city:\n\nConversation:\nUser: Hi there, I’m off between August 25 and September 11. I saved up 4000 for a nice trip. If I flew out from San Francisco, what are your suggestions for where I can go?\nAgent: For that budget you could travel to cities in the US, Mexico, Brazil, Italy or Japan. Any preferences?\nUser: Excellent, I’ve always wanted to see Japan. What kind of hotel can I expect?\nAgent: Great, let me check what I have. First, can I just confirm with you that this is a trip for one adult?\nUser: Yes it is\nAgent: Great, thank you, In that case I can offer you 15 days at HOTEL Sugoi, a 3 star hotel close to a Palace. You would be staying there between August 25th and September 7th. They offer free wifi and have an excellent guest rating of 8.49/10. The entire package costs 2024.25USD. Should I book this for you?\nUser: That sounds really good actually. Please book me at Sugoi.\nAgent: I can do that for you! Can I help you with anything else today?\nUser: No, thanks! Please just send me the itinerary to my email soon.\n\nSummary:
+
+template_format: jinja2

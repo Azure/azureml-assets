@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+name: summarize-conversation
+version: 0.0.10
+display_name: Summarize conversation
+description: Summarize the conversation
+
+tags:    
+  task: summarization
+
+data_uri: ./prompt
+template_path: prompt.yaml

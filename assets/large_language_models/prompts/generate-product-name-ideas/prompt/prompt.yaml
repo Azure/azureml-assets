@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+_type: completion
+
+messages: 
+- role: system
+  content: Generate product name ideas for a yet to be launched wearable health device that will allow users to monitor their health and wellness in real-time using AI and share their health metrics with their friends and family. The generated product name ideas should reflect the product's key features, have an international appeal, and evoke positive emotions.\n\nSeed words: fast, healthy, compact\n\nExample product names: \n1. WellnessVibe\n2. HealthFlux\n3. VitalTracker\n\nProduct names:\n1.`,
+
+template_format: jinja2

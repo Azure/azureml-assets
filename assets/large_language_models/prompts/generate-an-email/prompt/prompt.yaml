@@ -1,0 +1,9 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+_type: completion
+
+messages: 
+- role: system
+  content: Write a product launch email for new AI-powered headphones that are priced at $79.99 and available at Best Buy, Target and Amazon.com. The target audience is tech-savvy music lovers and the tone is friendly and exciting.\n\n1. What should be the subject line of the email?  \n2. What should be the body of the email?`,
+
+template_format: jinja2

@@ -1,0 +1,13 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+name: generate-an-email
+version: 0.0.10
+display_name: GenerateAnEmail
+description: Generate a product launch email
+
+tags:    
+  task: summarization
+
+data_uri: ./prompt
+template_path: prompt.yaml
