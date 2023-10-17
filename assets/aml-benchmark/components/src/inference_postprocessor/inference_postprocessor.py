@@ -456,7 +456,7 @@ class InferencePostprocessor(object):
                 self.result
             ]
             if self.ground_truth_dataset:
-                argss.extend("--ground_truth_dataset", self.ground_truth_dataset)
+                argss.extend(["--ground_truth_dataset", self.ground_truth_dataset])
             argss = " ".join(argss)
             os.system(
                 f"python {self.user_postprocessor} {argss}"
