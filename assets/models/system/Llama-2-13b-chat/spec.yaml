@@ -33,6 +33,7 @@ tags:
   disable-batch: 'true'
   task: chat-completion
   inference_supported_envs:
+  - vllm
   - ds_mii
   SharedComputeCapacityEnabled: ''
-version: 11
+version: 12

@@ -6,5 +6,4 @@ azureml-mlflow
 azureml-core
 requests
 certifi==2023.07.22
-cryptography==41.0.3
 setuptools==67.6.0
