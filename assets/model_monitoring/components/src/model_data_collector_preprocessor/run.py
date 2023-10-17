@@ -74,12 +74,32 @@ def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, f
     # Read mltable from preprocessed_data
     return try_read_mltable_in_spark(des_path, "preprocessed_data")
 
+def _get_data_columns(df: DataFrame) -> list:
+    columns = []
+    if MDC_DATA_COLUMN in df.columns:
+        columns.append(MDC_DATA_COLUMN)
+    if MDC_DATAREF_COLUMN in df.columns:
+        columns.append(MDC_DATAREF_COLUMN)
+    
+    return columns
+
 def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool) -> DataFrame:
+    def read_data(row):
+        data = getattr(row, MDC_DATA_COLUMN, None)
+        if data:
+            return data
+        
+        dataref = getattr(row, MDC_DATAREF_COLUMN, None)
+        return dataref
+        # TODO: Move this to tracking stream if both data and dataref are NULL
+
     # Output MLTable
-    first_data_row = df.select(MDC_DATA_COLUMN).rdd.map(lambda x: x).first()
+    data_columns = _get_data_columns(df)
+    first_data_row = df.select(data_columns).rdd.map(lambda x: x).first()
 
     spark = init_spark()
-    data_as_df = spark.createDataFrame(pd.read_json(first_data_row[MDC_DATA_COLUMN]))
+    data_as_df = spark.createDataFrame(pd.read_json(read_data(first_data_row)))
+    # data_as_df.show() # for testing
 
     """ The temporary workaround to remove the chat_history column if it exists.
     We are removing the column because the pyspark DF is unable to parse it.
@@ -93,7 +113,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
         for df in iterator:
             yield pd.concat(
                 extract_data_and_correlation_id(
-                    getattr(row, MDC_DATA_COLUMN),
+                    read_data(row),
                     getattr(row, MDC_CORRELATION_ID_COLUMN),
                 )
                 for row in df.itertuples()  # noqa
@@ -109,26 +129,22 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
         return result
 
     def transform_df_function_without_correlation_id(iterator):
-        def read_data(row):
-            data = getattr(row, MDC_DATA_COLUMN)
-            dataref = getattr(row, MDC_DATAREF_COLUMN)
-            return data if data else dataref
-            # TODO: Move this to tracking stream if both data and dataref are NULL
         for df in iterator:
             yield pd.concat(
                 pd.read_json(read_data(row)) for row in df.itertuples()
             )
 
+    data_columns = _get_data_columns(df)
     if extract_correlation_id:
         # Add empty column to get the correlationId in the schema
         data_as_df = data_as_df.withColumn(MDC_CORRELATION_ID_COLUMN, lit(""))
-        transformed_df = df.select(
-            MDC_DATA_COLUMN, MDC_CORRELATION_ID_COLUMN
-        ).mapInPandas(
+        data_columns.append(MDC_CORRELATION_ID_COLUMN)
+        transformed_df = df.select(data_columns).mapInPandas(
             tranform_df_function_with_correlation_id, schema=data_as_df.schema
         )
     else:
-        transformed_df = df.select(MDC_DATA_COLUMN, MDC_DATAREF_COLUMN).mapInPandas(
+        # TODO: if neither data and dataref move to tracking stream (or throw ModelMonitoringException?)
+        transformed_df = df.select(data_columns).mapInPandas(
             transform_df_function_without_correlation_id, schema=data_as_df.schema
         )
     return transformed_df

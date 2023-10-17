@@ -12,17 +12,20 @@ class TestMDCPreprocessor:
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, extract_correlation_id",
         [
-            # data
+            # data only
             ("2023-10-11T20:00:00", "2023-10-11T21:00:00", True),
             ("2023-10-11T20:00:00", "2023-10-11T21:00:00", False),
-            # dataref
+            # data and dataref mix
             ("2023-10-15T17:00:00", "2023-10-15T18:00:00", True),
             ("2023-10-15T17:00:00", "2023-10-15T18:00:00", False),
+            # dataref only
+            ("2023-10-16T21:00:00", "2023-10-16T22:00:00", True),
+            ("2023-10-16T21:00:00", "2023-10-16T22:00:00", False),
         ]
     )
     def test_uri_folder_to_spark_df(self, window_start_time, window_end_time, extract_correlation_id):
         print("testing test_uri_folder_to_spark_df...")
-        os.environ["PYSPARK_PYTHON"] = "C:\\Users\\richli\\AppData\\Local\\anaconda3\\envs\\momo\\python.exe"
+        os.environ["PYSPARK_PYTHON"] = "C:\\Users\\richli\\AppData\\Local\\anaconda3\\envs\\momo\\python.exe" # replace with your own python path
         fs = fsspec.filesystem("file")
         preprocessed_output = "tests/unit/preprocessed_mdc_data"
         shutil.rmtree(f"{preprocessed_output}temp", True)
@@ -49,8 +52,7 @@ class TestMDCPreprocessor:
 
         assert_frame_equal(pdf_actual, pdf_expected)
         
-        assert False
-        
+    @pytest.mark.skip(reason="spark write is not ready in local")
     def test_mdc_preprocessor(self):
         print("testing test_mdc_preprocessor...")
         os.environ["PYSPARK_PYTHON"] = "C:\\Users\\richli\\AppData\\Local\\anaconda3\\envs\\momo\\python.exe"
