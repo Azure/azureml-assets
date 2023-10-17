@@ -21,8 +21,8 @@ except ImportError:
     pass
 
 
-class BLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
-    """MLflow model wrapper for BLIP model."""
+class BLIP2MLFlowModelWrapper(mlflow.pyfunc.PythonModel):
+    """MLflow model wrapper for BLIP2 model."""
 
     def __init__(
         self,
@@ -45,7 +45,7 @@ class BLIPMLFlowModelWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        if self._task_type == (Tasks.IMAGE_CAPTIONING.value):
+        if self._task_type == (Tasks.IMAGE_TO_TEXT.value):
             try:
                 model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
                 self._processor = AutoProcessor.from_pretrained(model_dir)

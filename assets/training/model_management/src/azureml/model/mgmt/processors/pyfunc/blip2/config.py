@@ -17,7 +17,7 @@ class _CustomEnum(Enum):
 class Tasks(_CustomEnum):
     """Tasks supported."""
 
-    IMAGE_CAPTIONING = "image-captioning"
+    IMAGE_TO_TEXT = "image-to-text"
 
 
 class MLflowSchemaLiterals:

@@ -25,7 +25,7 @@ class SupportedTasks(_CustomEnum):
     EMBEDDINGS = "embeddings"
 
     # BLIP2 task
-    IMAGE_CAPTIONING = "image-captioning"
+    IMAGE_TO_TEXT = "image-to-text"
 
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
