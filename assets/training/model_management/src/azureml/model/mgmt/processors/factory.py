@@ -204,7 +204,7 @@ class SegmentAnythingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     """Factory class for segment anything (SAM) model."""
 
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
-        """Create MLflow convertor for LLaVA model."""
+        """Create MLflow convertor for segment anything (SAM) model."""
         return SegmentAnythingMLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
