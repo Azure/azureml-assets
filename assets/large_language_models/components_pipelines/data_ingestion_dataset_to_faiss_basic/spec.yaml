@@ -215,7 +215,7 @@ jobs:
       properties:
         compute_specification:
           automatic: true
-    component: 'azureml:llm_rag_create_faiss_index:0.0.33'
+    component: 'azureml:llm_rag_create_faiss_index:0.0.34'
     inputs:
       embeddings:
         type: uri_folder
