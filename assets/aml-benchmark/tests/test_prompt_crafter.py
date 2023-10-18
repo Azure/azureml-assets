@@ -61,33 +61,31 @@ class TestPromptCrafterComponent:
 
     @pytest.mark.parametrize(
         "test_data, prompt_type, n_shots, \
-        few_shot_data, prompt_pattern, output_pattern, output_file",
+        few_shot_data, prompt_pattern, output_pattern",
         [
             (
                 Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "completions", 1,
                 Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE,
                 _prompt_pattern_test,
                 _output_pattern_test,
-                "output_file.jsonl"
             ),
             (
                 Constants.PROMPTCRAFTER_SAMPLE_INPUT_FILE, "chat", 1,
                 Constants.PROMPTCRAFTER_SAMPLE_FEWSHOT_FILE,
                 _prompt_pattern_test,
                 _output_pattern_test,
-                "output_file.jsonl",
             ),
         ]
     )
     def test_prompt_crafter_component(
         self,
+        temp_dir: str,
         test_data: str,
         prompt_type: str,
         n_shots: int,
         few_shot_data: str,
         prompt_pattern: str,
         output_pattern: str,
-        output_file: str,
     ) -> None:
         """Prompt Crafter component test."""
         ml_client = get_mlclient()
@@ -112,8 +110,7 @@ class TestPromptCrafterComponent:
         self._verify_output(
             pipeline_job,
             test_data,
-            output_file,
-            output_dir=os.path.join(os.path.dirname(__file__), 'data')
+            output_dir=temp_dir
         )
 
         assert_logged_params(
@@ -156,8 +153,7 @@ class TestPromptCrafterComponent:
         self,
         job: Job,
         input_file: str,
-        expected_output_file: str,
-        output_dir: str = None
+        output_dir: str
     ) -> None:
         """Verify the output and get output records.
 
@@ -171,20 +167,17 @@ class TestPromptCrafterComponent:
         :type output_dir: str
         """
         output_name = job.outputs.output_file.port_name
-        if not output_dir:
-            output_dir = Constants.OUTPUT_DIR.format(
-                os.getcwd(), output_name=output_name
-            )
-        else:
-            output_dir = Constants.OUTPUT_DIR.format(
-                output_dir=output_dir, output_name=output_name
-            )
         download_outputs(
             job_name=job.name, output_name=output_name,
             download_path=output_dir
         )
+        output_file_path = Constants.OUTPUT_FILE_PATH.format(
+            output_dir=output_dir,
+            output_name=output_name,
+            output_file_name=f"{output_name}.jsonl",  # taken from the pipeline's output path
+        )
         _verify_and_get_output_records(
-            input_file, os.path.join(output_dir, expected_output_file)
+            input_file, output_file_path
         )
         return
 
