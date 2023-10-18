@@ -7,7 +7,6 @@ dependencies:
 - pip=21.3.1
 - scikit-learn==0.24.2
 - pip:
-  - azure-ai-formrecognizer
   - azureml-rag[cognitive_search,data_generation]>=0.2.12
   - azure-search-documents==11.4.0b8
   - langchain==0.0.236
