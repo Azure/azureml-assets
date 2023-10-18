@@ -218,12 +218,12 @@ class OnlineEndpoint:
     def get_endpoint_authorization_header_from_connections(self) -> dict:
         """Get the authorization header."""
         resp = self._get_connections_by_name()
-        credentials = resp['properties'].get('credentials')
-        if self._model.is_aoai_model():
-            return {'api-key': resp['properties']['credentials']['key']}
+        credentials = resp['properties'].get('credentials', {})
+        if self._model.is_aoai_model() and 'key' in credentials:
+            return {'api-key': credentials['key']}
         else:
+            # handles OSS and custom connections AOAI.
             access_key_id = credentials.get('access_key_id')
-            credentials = resp['properties'].get('credentials', {})
             if 'secretAccessKey' not in credentials and 'keys' in credentials:
                 credentials = credentials['keys']
             token = credentials['secretAccessKey'] \
