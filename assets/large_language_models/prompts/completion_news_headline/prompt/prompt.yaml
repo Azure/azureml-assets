@@ -7,6 +7,14 @@ template: |
 input_variables:
   - name: headline_text
     description: Headline Text
-    defaultValue: Chancellor on brink of second bailout for banks
-
+    default: Chancellor on brink of second bailout for banks
+    
+execution_settings:
+  default:
+    temperature: 0
+  gpt-4:
+    model_id: gpt-4
+    temperature: 0
+    evaluation: xxx (for future use to add evaluation results)
+    
 template_format: handlebars
