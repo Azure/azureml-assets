@@ -1,0 +1,14 @@
+$schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
+
+type: prompt
+name: parentteacherconferenceinvitation
+version: 0.1.0
+display_name: parent_teacher_conference_invitation
+
+tags:
+  modality: chat
+  task: content-creation
+  industry: education
+
+data_uri: ./prompt
+template_path: prompt.yaml
