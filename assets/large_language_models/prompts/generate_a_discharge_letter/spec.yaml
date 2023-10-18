@@ -1,9 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-name: generateadischargeletter
+name: generate_a_discharge_letter
 version: 0.1.0
-display_name: generate_a_discharge_letter
+display_name: generate a discharge letter
 
 tags:
   modality: chat

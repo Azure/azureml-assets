@@ -1,9 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-name: personalizedmarketing
+name: personalized_marketing
 version: 0.1.0
-display_name: personalized_marketing
+display_name: personalized marketing
 
 tags:
   modality: chat

@@ -1,9 +1,9 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-name: lessonplanbygradelevelandsubject
+name: lesson_plan_by_grade_level_and_subject
 version: 0.1.0
-display_name: lesson_plan_by_grade_level_and_subject
+display_name: lesson plan by grade level and subject
 
 tags:
   modality: chat
