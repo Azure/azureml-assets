@@ -11,7 +11,11 @@ messages:
     Generate product description and content for product with following information:
     Product details: { "name": "Greenwich Linen Blazer", "features": ["notched lapels", "single-button closure", "padded shoulders"], "material": "100% Italian linen", "color": "white", "ideal_for": "summer, spring seasons, office and casual wear" }
 - role: assistant
-  content: "Product Description and content:\n\"Meet the Greenwich Linen Blazer \xE2\u20AC\u201C a true symbol of refined simplicity and effortless style. Tailored from 100% Italian linen, this blazer offers breathable comfort combined with an unbeatable chic aesthetic.\nIn a pristine white color, it features notched lapels, a stylish single-button closure, and subtly padded shoulders for a structured look. The lightweight nature of the linen makes it a perfect choice for spring and summer seasons, effortlessly taking you from the office to after-work social events.\nPair it with trousers for a classic office look or with jeans for a casual yet sophisticated ensemble. The Greenwich Linen Blazer is your go-to piece for versatility, comfort, and timeless style, an undeniable asset to any fashion-savvy wardrobe.\""
+  content: |
+    Product Description and content:
+    "Meet the Greenwich Linen Blazer - a true symbol of refined simplicity and effortless style. Tailored from 100% Italian linen, this blazer offers breathable comfort combined with an unbeatable chic aesthetic.
+    In a pristine white color, it features notched lapels, a stylish single-button closure, and subtly padded shoulders for a structured look. The lightweight nature of the linen makes it a perfect choice for spring and summer seasons, effortlessly taking you from the office to after-work social events.
+    Pair it with trousers for a classic office look or with jeans for a casual yet sophisticated ensemble. The Greenwich Linen Blazer is your go-to piece for versatility, comfort, and timeless style, an undeniable asset to any fashion-savvy wardrobe."
 - role: user
   content: |
     Product details: { "name": {{name}}, "features": [{{features}}], "material": {{material}}, "color": {{color}}, "ideal_for": {{ideal_for}} }

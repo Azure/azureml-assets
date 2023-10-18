@@ -1,14 +1,14 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt
-name: one_shot_financial_news_summarization
+name: one-shot-financial-news-summarization
 version: 0.1.0
 display_name: one shot financial news summarization
 
 tags:
   modality: chat
   task: summarization
-  industry: financial_services
+  industry: financial-services
 
 data_uri: ./prompt
 template_path: prompt.yaml
