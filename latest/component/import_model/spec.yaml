@@ -62,6 +62,7 @@ inputs:
     - image-classification
     - text-to-image
     - zero-shot-image-classification
+    - video-multi-object-tracking
     optional: true
     type: string
 
