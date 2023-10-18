@@ -6,6 +6,7 @@
 import os
 import sys
 import pytest
+import mlflow
 
 from .test_utils import get_src_dir
 
@@ -48,37 +49,38 @@ def base_test(dataset_name,
               chat_ground_truth_checksum,
               params) -> None:
     """Check output checksums for completion and chat prompt types."""
-    checksum = None
     dataset_path, test_output_path, test_output_mltable_path = setup_folder(dataset_name)
 
     if completion_ground_truth_checksum:
-        params["prompt_type"] = "completions"
-        prompt_crafter = PromptCrafter(
-            test_data=os.path.join(dataset_path, "inference_sample.jsonl"),
-            few_shot_data=os.path.join(dataset_path, "fewshot_sample.jsonl"),
-            output_file=os.path.join(test_output_path, PromptCrafter.OUTPUT_FILENAME),
-            output_mltable=test_output_mltable_path,
-            **params
-        )
-        checksum = prompt_crafter.run()
-        assert checksum == completion_ground_truth_checksum
-        base_test_output(
-            prompt_crafter=prompt_crafter,
-            output_dir_path=test_output_path,
-            output_mltable_path=test_output_mltable_path
-        )
+        with mlflow.start_run() as run:
+            params["prompt_type"] = "completions"
+            prompt_crafter = PromptCrafter(
+                test_data=os.path.join(dataset_path, "inference_sample.jsonl"),
+                few_shot_data=os.path.join(dataset_path, "fewshot_sample.jsonl"),
+                output_file=os.path.join(test_output_path, PromptCrafter.OUTPUT_FILENAME),
+                output_mltable=test_output_mltable_path,
+                **params
+            )
+            checksum = prompt_crafter.run()
+            assert checksum == completion_ground_truth_checksum
+            base_test_output(
+                prompt_crafter=prompt_crafter,
+                output_dir_path=test_output_path,
+                output_mltable_path=test_output_mltable_path
+            )
 
     if chat_ground_truth_checksum:
-        params["prompt_type"] = "chat"
-        prompt_crafter = PromptCrafter(
-            test_data=os.path.join(dataset_path, "inference_sample.jsonl"),
-            few_shot_data=os.path.join(dataset_path, "fewshot_sample.jsonl"),
-            output_file=os.path.join(test_output_path, PromptCrafter.OUTPUT_FILENAME),
-            output_mltable=test_output_mltable_path,
-            **params
-        )
-        checksum = prompt_crafter.run()
-        assert checksum == chat_ground_truth_checksum
+        with mlflow.start_run() as run:
+            params["prompt_type"] = "chat"
+            prompt_crafter = PromptCrafter(
+                test_data=os.path.join(dataset_path, "inference_sample.jsonl"),
+                few_shot_data=os.path.join(dataset_path, "fewshot_sample.jsonl"),
+                output_file=os.path.join(test_output_path, PromptCrafter.OUTPUT_FILENAME),
+                output_mltable=test_output_mltable_path,
+                **params
+            )
+            checksum = prompt_crafter.run()
+            assert checksum == chat_ground_truth_checksum
 
 
 # Test cases
