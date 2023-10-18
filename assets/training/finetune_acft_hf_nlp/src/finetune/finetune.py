@@ -10,7 +10,8 @@ import argparse
 from pathlib import Path
 from argparse import Namespace
 from copy import deepcopy
-from typing import Dict, Any
+from typing import Dict, List, Any, Union
+import re
 
 import torch
 
@@ -98,7 +99,10 @@ IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
 ]
 
 
-FORCE_4BIT_QUANTIZATION_MODELS = ["Llama-2-70b", "tiiuae-falcon-40b"]
+FORCE_4BIT_QUANTIZATION_MODELS = [
+    "Llama-2-70b",
+    "tiiuae-falcon-40b",
+]
 
 
 QLORA_SUPPORTED_MODEL_TYPES = [
@@ -119,8 +123,28 @@ MLFLOW_HFTRANSFORMERS_MISC_CONF = {
 }
 
 
+ACFT_REGEX_PREFIX = "acft_regex:"
+
+DEEPSPEED_STAGE3_SUPPORTED_TASKS = [
+    Tasks.TEXT_GENERATION,
+]
+DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_TASKS)
+# the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_TASKS and matches other words
+DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST})$)(\w*)"
+
+
+DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
+    HfModelTypes.LLAMA,
+    HfModelTypes.FALCON,
+]
+DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
+# the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
+DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST})$)(\w*)"
+
+
 GRADIENT_CHECKPOINTING_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.LLAMA,
+    HfModelTypes.FALCON,
 ]
 
 
@@ -484,6 +508,57 @@ def copy_preprocess_args(args: Namespace) -> Namespace:
     return args
 
 
+def resolve_deepspeed_config(args: Namespace) -> str:
+    """Identify the right deepspeed config to be used based on user passed parameters."""
+    # Check for deepspeed config via input port
+    if getattr(args, "deepspeed", None) is not None:
+        logger.info(f"Found deepspeed config via input port - {args.deepspeed}.")
+        return args.deepspeed
+
+    default_deepspeed_config = (
+        DEFAULT_DEEPSPEED_STAGE2_CONFIG
+        if args.deepspeed_stage == 2 else
+        DEFAULT_DEEPSPEED_STAGE3_CONFIG
+    )
+    logger.info(f"Using default deepspeed config: {default_deepspeed_config}")
+    return default_deepspeed_config
+
+
+def setup_deepspeed(args: Namespace):
+    """Deepspeed initialization
+
+    :param args: User passed args
+    :type Namespace
+    """
+    logger.info("Setting up deespeed.")
+    # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
+    args.deepspeed = resolve_deepspeed_config(args)
+    if args.deepspeed is None:
+        logger.info("Deepspeed is not enabled. Nothing to setup!")
+
+
+def get_deepspeed_config_json(args: Namespace) -> Dict[str, Any]:
+    """Fetches deepspeed config json from file
+
+    :param args: User passed args
+    :type Namespace
+    """
+    # load deepspeed config
+    try:
+        with open(args.deepspeed, "r", encoding="utf-8") as fp:
+            ds_config_json = json.load(fp)
+            return ds_config_json
+    except Exception:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "Invalid deepspeed config file. Unable to load json file."
+                )
+            )
+        )
+
+
 def identify_deepspeed_stage(deepspeed_config_json: Dict[str, Any]) -> int:
     """Read the deepspeed stage from the deepspeed config."""
     zero_optimization_config = deepspeed_config_json.get("zero_optimization", {})
@@ -504,6 +579,29 @@ def identify_deepspeed_stage(deepspeed_config_json: Dict[str, Any]) -> int:
     return ds_stage
 
 
+def validate_setting_value(source: Namespace, key: str, value: Union[List, str]) -> bool:
+    """Validate if given value is present in source."""
+    is_valid_value = False
+    source_value = getattr(source, key, None)
+    if source_value and type(source_value) == str and type(value) == str and value.startswith(ACFT_REGEX_PREFIX):
+        regex_str = value[len(ACFT_REGEX_PREFIX):]
+        re_match = re.match(regex_str, source_value)
+        if re_match is not None:
+            # if there is a regex match then value is matched with value in source
+            is_valid_value = True
+            logger.info(f"Regex matched for {key}.")
+        else:
+            # if there is no regex match
+            is_valid_value = False
+            logger.info(f"Regex did not match for {key}.")
+    else:
+        is_valid_value = source_value == value
+
+    logger.info(f"Is valid value for {key} - {is_valid_value}")
+
+    return is_valid_value
+
+
 def check_for_invalid_ds_zero3_settings(args: Namespace):
     """Check if invalid ds3 settings are selected by the user.
 
@@ -513,7 +611,11 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
     """
     invalid_ds_zero3_settings = [
         dict(
-            invalid_settings=dict(apply_lora=True),
+            invalid_settings=dict(
+                apply_lora=True,
+                task_name=f"{ACFT_REGEX_PREFIX}{DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX}",
+                model_type=f"{ACFT_REGEX_PREFIX}{DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX}",
+            ),
             fail_run=True,
             valid_settings=None
         ),
@@ -532,8 +634,10 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
         invalid_settings = setting["invalid_settings"]
         fail_run = setting["fail_run"]
         valid_settings = setting["valid_settings"]
-        if all([getattr(args, key, None) == value for key, value in invalid_settings.items()]):
+        if all([validate_setting_value(args, key, value) for key, value in invalid_settings.items()]):
+            logger.info(f"All are True - {fail_run}")
             if fail_run:
+                logger.info("Raise acft error")
                 raise ACFTValidationException._with_error(
                     AzureMLError.create(
                         ACFTUserError,
@@ -578,43 +682,16 @@ def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
         )
 
 
-def resolve_deepspeed_config(args: Namespace) -> str:
-    """Identify the right deepspeed config to be used based on user passed parameters."""
-    # Check for deepspeed config via input port
-    if getattr(args, "deepspeed", None) is not None:
-        logger.info(f"Found deepspeed config via input port - {args.deepspeed}.")
-        return args.deepspeed
-
-    default_deepspeed_config = (
-        DEFAULT_DEEPSPEED_STAGE2_CONFIG
-        if args.deepspeed_stage == 2 else
-        DEFAULT_DEEPSPEED_STAGE3_CONFIG
-    )
-    logger.info(f"Using default deepspeed config: {default_deepspeed_config}")
-    return default_deepspeed_config
-
-
-def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
+def validate_deepspeed(args: Namespace, ds_config_json: Dict[str, Any]):
     """Deepspeed initialization and validation.
 
     :param args: User passed args
     :type Namespace
-    :param do_validate: Validates the deepspeed config file in case of deepspeed stage3
-    :type bool
+    :param ds_config_json: deepspeed config json
+    :type dict
     """
-    logger.info("Setting up deespeed.")
-    # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
-    args.deepspeed = resolve_deepspeed_config(args)
-    if args.deepspeed is None:
-        logger.info("Deepspeed is not enabled. Nothing to setup!")
-        return
-
-    # load deepspeed config
-    with open(args.deepspeed, "r", encoding="utf-8") as fp:
-        ds_config_json = json.load(fp)
-
     # add validations for deepspeed stage3
-    if do_validate and identify_deepspeed_stage(ds_config_json) == 3:
+    if identify_deepspeed_stage(ds_config_json) == 3:
         # activate few deepspeed stage3 specific configurations
         enable_ds3_model_specific_args(args)
         # validate the ds config file
@@ -652,11 +729,25 @@ def finetune(args: Namespace):
     else:
         args.model_name_or_path = args.model_name
 
-    # Enable QLoRA finetune for Llama-70B
+    # init deepspeed config params
+    ds_config_json = None
+    ds_stage = None
+    # Deepspeed enabled
+    if args.apply_deepspeed:
+        # set deepspeed file to be used
+        setup_deepspeed(args)
+        if args.deepspeed:
+            ds_config_json = get_deepspeed_config_json(args)
+            ds_stage = identify_deepspeed_stage(ds_config_json)
+    else:
+        # do not use deepspeed config if provided when apply_deepspeed is set to false
+        args.deepspeed = None
+
+    # Enable QLoRA finetune for Llama-70B (ignore if deepspeed is enabled with stage-3)
     model_asset_id = getattr(args, "model_asset_id", None) or ""
     if any(
         [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
-    ):
+    ) and ds_stage != 3:
         logger.info(
             f"Identified asset id: {model_asset_id}. Enabling QLoRA finetuning."
         )
@@ -798,9 +889,9 @@ def finetune(args: Namespace):
 
     setattr(args, "apply_ort", can_apply_ort(args, logger))
 
-    # Deepspeed enabled
-    if args.apply_deepspeed:
-        setup_and_validate_deepspeed(args)
+    if args.apply_deepspeed and args.deepspeed:
+        # validate deepspeed config
+        validate_deepspeed(args, ds_config_json)    # type: ignore
     else:
         # do not use deepspeed config if provided when apply_deepspeed is set to false
         args.deepspeed = None
@@ -816,6 +907,13 @@ def finetune(args: Namespace):
 
     args.save_strategy = args.evaluation_strategy
     args.save_steps = args.eval_steps
+
+    if args.task_name in [Tasks.NLP_MULTICLASS, Tasks.NLP_MULTILABEL, Tasks.NLP_NER]:
+        # Disable adding prefixes to logger for NLP Tasks.
+        args.set_log_prefix = False
+        logger.info(f"Using log prefix - {args.set_log_prefix}")
+
+    logger.info(args)
 
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
