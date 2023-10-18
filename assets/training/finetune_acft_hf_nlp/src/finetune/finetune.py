@@ -130,7 +130,7 @@ DEEPSPEED_STAGE3_SUPPORTED_TASKS = [
 ]
 DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_TASKS)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_TASKS and matches other words
-DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST})$)(\w*)"
+DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST})$)(\\w*)"
 
 
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
@@ -139,7 +139,7 @@ DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
 ]
 DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
 # the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
-DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST})$)(\w*)"
+DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST})$)(\\w*)"
 
 
 GRADIENT_CHECKPOINTING_SUPPORTED_MODEL_TYPES = [
@@ -583,7 +583,8 @@ def validate_setting_value(source: Namespace, key: str, value: Union[List, str])
     """Validate if given value is present in source."""
     is_valid_value = False
     source_value = getattr(source, key, None)
-    if source_value and type(source_value) == str and type(value) == str and value.startswith(ACFT_REGEX_PREFIX):
+    if source_value and isinstance(source_value, str) and isinstance(value, str) and \
+            value.startswith(ACFT_REGEX_PREFIX):
         regex_str = value[len(ACFT_REGEX_PREFIX):]
         re_match = re.match(regex_str, source_value)
         if re_match is not None:

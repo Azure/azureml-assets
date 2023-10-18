@@ -75,14 +75,14 @@ def test_invalid_fail_run_setting_ds3_lora():
         apply_deepspeed=True,
         deepspeed="test/utils/finetune/data/valid_ds3_config.json",
         task_name=Tasks.SINGLE_LABEL_CLASSIFICATION,
-        model_type = HfModelTypes.GPT2,
+        model_type=HfModelTypes.GPT2,
     )
     ut_obj = TestCase()
     with ut_obj.assertRaises(Exception) as context:
         check_for_invalid_ds_zero3_settings(args)
 
     ut_obj.assertTrue(
-        f"Invalid settings found. Deep Speed stage3 doesn't work with "
+        "Invalid settings found. Deep Speed stage3 doesn't work with "
         in str(context.exception)
     )
 
@@ -94,12 +94,13 @@ def test_valid_run_setting_ds3_lora():
         apply_deepspeed=True,
         deepspeed="test/utils/finetune/data/valid_ds3_config.json",
         task_name=Tasks.TEXT_GENERATION,
-        model_type = HfModelTypes.LLAMA,
+        model_type=HfModelTypes.LLAMA,
     )
     try:
         check_for_invalid_ds_zero3_settings(args)
     except Exception as e:
         pytest.fail(str(e))
+
 
 def test_invalid_setting_ds3_auto_find_bs():
     """Test can_apply_ort return true for generation task."""
@@ -122,7 +123,6 @@ def test_enable_gradient_checkpointing():
     )
     setup_deepspeed(args)
     ds_config_json = get_deepspeed_config_json(args)
-    ds_stage = identify_deepspeed_stage(ds_config_json)
     validate_deepspeed(args, ds_config_json)
     assert getattr(args, "gradient_checkpointing") is True
 
