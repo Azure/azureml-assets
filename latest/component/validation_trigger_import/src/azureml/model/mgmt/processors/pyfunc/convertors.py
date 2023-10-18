@@ -22,6 +22,8 @@ from azureml.model.mgmt.processors.pyfunc.config import MMLabDetectionTasks, Sup
 
 from azureml.model.mgmt.processors.pyfunc.clip.config import \
     MLflowSchemaLiterals as CLIPMLFlowSchemaLiterals, MLflowLiterals as CLIPMLflowLiterals
+from azureml.model.mgmt.processors.pyfunc.blip2.config import \
+    MLflowSchemaLiterals as BLIP2MLFlowSchemaLiterals, MLflowLiterals as BLIP2MLflowLiterals
 from azureml.model.mgmt.processors.pyfunc.text_to_image.config import (
     MLflowSchemaLiterals as TextToImageMLFlowSchemaLiterals,
     MLflowLiterals as TextToImageMLflowLiterals,
@@ -295,6 +297,63 @@ class CLIPMLFlowConvertor(PyFuncMLFLowConvertor):
             CLIPMLflowLiterals.MODEL_DIR: self._model_dir
         }
         return artifacts_dict
+
+
+class BLIP2MLFlowConvertor(PyFuncMLFLowConvertor):
+    """PyFunc MLfLow convertor for BLIP2 models."""
+
+    MODEL_DIR = os.path.join(os.path.dirname(__file__), "blip2")
+    COMMON_DIR = os.path.join(os.path.dirname(
+        os.path.dirname(__file__)), "common")
+
+    def __init__(self, **kwargs):
+        """Initialize MLflow convertor for BLIP2 models."""
+        super().__init__(**kwargs)
+        if self._task != (SupportedTasks.IMAGE_TO_TEXT.value):
+            raise Exception("Unsupported task")
+
+    def get_model_signature(self) -> ModelSignature:
+        """Return MLflow model signature with input and output schema for the given input task.
+
+        :return: MLflow model signature.
+        :rtype: mlflow.models.signature.ModelSignature
+        """
+        input_schema = Schema(
+            [
+                ColSpec(BLIP2MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE,
+                        BLIP2MLFlowSchemaLiterals.INPUT_COLUMN_IMAGE),
+            ]
+        )
+        output_schema = Schema(
+            [
+                ColSpec(BLIP2MLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
+                        BLIP2MLFlowSchemaLiterals.OUTPUT_COLUMN_TEXT),
+            ]
+        )
+
+        return ModelSignature(inputs=input_schema, outputs=output_schema)
+
+    def save_as_mlflow(self):
+        """Prepare model for save to MLflow."""
+        sys.path.append(self.MODEL_DIR)
+        from mlflow_wrapper import BLIP2MLFlowModelWrapper
+
+        mlflow_model_wrapper = BLIP2MLFlowModelWrapper(task_type=self._task)
+        artifacts_dict = {
+            BLIP2MLflowLiterals.MODEL_DIR: self._model_dir
+        }
+        conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
+        code_path = [
+            os.path.join(self.MODEL_DIR, "mlflow_wrapper.py"),
+            os.path.join(self.MODEL_DIR, "config.py"),
+            os.path.join(self.COMMON_DIR, "vision_utils.py"),
+        ]
+        super()._save(
+            mlflow_model_wrapper=mlflow_model_wrapper,
+            artifacts_dict=artifacts_dict,
+            conda_env=conda_env_file,
+            code_path=code_path,
+        )
 
 
 class TextToImageMLflowConvertor(PyFuncMLFLowConvertor):
