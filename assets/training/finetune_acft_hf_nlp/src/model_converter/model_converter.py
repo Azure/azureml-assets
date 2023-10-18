@@ -145,7 +145,7 @@ def copy_finetune_args(args: Namespace) -> Namespace:
     """Copy finetune args to model converter."""
     # Read the finetune component args
     # Finetune Component + Preprocess Component + Model Selector Component ---> Model Converter Component
-    # Since all Finetune component args are saved via Preprocess Component and Model Selector Component, 
+    # Since all Finetune component args are saved via Preprocess Component and Model Selector Component,
     # loading the Finetune args suffices
     finetune_args_load_path = str(Path(args.model_path, SaveFileConstants.FINETUNE_ARGS_SAVE_PATH))
     with open(finetune_args_load_path, 'r') as rptr:
@@ -153,13 +153,13 @@ def copy_finetune_args(args: Namespace) -> Namespace:
         for key, value in finetune_args.items():
             if not hasattr(args, key):  # add keys that don't already exist
                 setattr(args, key, value)
-    
+
     finetune_config = {}
     finetune_config_load_path = str(Path(args.model_path, SaveFileConstants.ACFT_CONFIG_SAVE_PATH))
     if Path(finetune_config_load_path).is_file():
         with open(finetune_config_load_path, 'r') as rptr:
             finetune_config = json.load(rptr)
-    
+
     setattr(args, "ft_config", finetune_config)
 
     return args
@@ -195,7 +195,7 @@ class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
 
     def convert_model(self) -> None:
         if self.should_convert_model:
-            # as it is deepspeed stage 3 LoRA model we need to merge weights 
+            # as it is deepspeed stage 3 LoRA model we need to merge weights
             # and then convert to mlflow model
             # load the model in cpu
             ft_pytorch_model_path = self.component_args.model_path
@@ -248,13 +248,13 @@ class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
                         pii_safe_message="Should provide FTed MLFlow model path",
                     )
                 )
-    
+
     def convert_to_mlflow_model(
-            self,
-            component_args: Namespace,
-            model: PreTrainedModel,
-            tokenizer: PreTrainedTokenizerBase,
-        ):
+        self,
+        component_args: Namespace,
+        model: PreTrainedModel,
+        tokenizer: PreTrainedTokenizerBase,
+    ):
         mlflow_model_save_path = component_args.output_dir
         pytorch_model_path = component_args.model_path
         mlflow_infer_params_file_path = str(Path(
@@ -288,7 +288,7 @@ class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
         # if huggingface_id was passed, save it to MLModel file, otherwise not
         if model_name != MLFlowHFFlavourConstants.DEFAULT_MODEL_NAME:
             misc_conf.update({MLFlowHFFlavourConstants.HUGGINGFACE_ID: model_name})
-        
+
         # auto classes need to be passed in misc_conf if custom code files are present in the model folder
         if hasattr(model.config, "auto_map"):
             misc_conf.update(mlflow_hf_args)
@@ -348,7 +348,6 @@ class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
         logger.info("Saved as mlflow model at {}".format(mlflow_model_save_path))
 
 
-
 def model_converter(args: Namespace):
     """Model convertor."""
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
@@ -367,7 +366,7 @@ def model_converter(args: Namespace):
             f"Conversion of model from {input_model_format} format "
             f"to {output_model_format} format is not supported."
         )
-    
+
     model_converter.convert_model()
 
     logger.info(f"Successfully converted {input_model_format} model to {output_model_format} model")
