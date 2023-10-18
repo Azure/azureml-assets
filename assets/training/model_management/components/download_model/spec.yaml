@@ -56,10 +56,6 @@ outputs:
     description: Path to the dowloaded model
     mode: rw_mount
 
-  is_mlflow_model:
-    type: boolean
-    is_control: true
-
 tags:
     Preview: ""
 
