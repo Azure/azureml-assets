@@ -52,7 +52,7 @@ def base_test(dataset_name,
     dataset_path, test_output_path, test_output_mltable_path = setup_folder(dataset_name)
 
     if completion_ground_truth_checksum:
-        with mlflow.start_run() as run:
+        with mlflow.start_run():
             params["prompt_type"] = "completions"
             prompt_crafter = PromptCrafter(
                 test_data=os.path.join(dataset_path, "inference_sample.jsonl"),
@@ -70,7 +70,7 @@ def base_test(dataset_name,
             )
 
     if chat_ground_truth_checksum:
-        with mlflow.start_run() as run:
+        with mlflow.start_run():
             params["prompt_type"] = "chat"
             prompt_crafter = PromptCrafter(
                 test_data=os.path.join(dataset_path, "inference_sample.jsonl"),
