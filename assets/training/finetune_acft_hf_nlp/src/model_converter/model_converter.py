@@ -63,6 +63,7 @@ COMPONENT_NAME = "ACFT-Model_converter"
 @dataclass
 class ModelFormats:
     """Supported model formats."""
+
     PYTORCH = "pytorch"
     MLFLOW = "mlflow"
 
@@ -175,11 +176,12 @@ class ModelConverter(ABC):
 
     @abstractmethod
     def convert_model(self, *args, **kwargs) -> None:
-        """Converts model format."""
+        """Convert model format."""
         pass
 
 
 class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
+    """Convert Pytorch model to Mlflow model."""
 
     def __init__(self, component_args: Namespace) -> None:
         """Init."""
@@ -198,7 +200,7 @@ class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
             self.deepspeed_stage3_fted_model = True
 
     def convert_model(self) -> None:
-        """Converts pytorch model to mlflow model."""
+        """Convert pytorch model to mlflow model."""
         if self.should_convert_model:
             # as it is deepspeed stage 3 LoRA model we need to merge weights
             # and then convert to mlflow model
@@ -260,7 +262,7 @@ class Pytorch_to_MlFlow_ModelConverter(ModelConverter):
         model: PreTrainedModel,
         tokenizer: PreTrainedTokenizerBase,
     ):
-        """Converts to mlflow model."""
+        """Convert to mlflow model."""
         mlflow_model_save_path = component_args.output_dir
         pytorch_model_path = component_args.model_path
         mlflow_infer_params_file_path = str(Path(
