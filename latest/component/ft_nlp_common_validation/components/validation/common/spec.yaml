@@ -18,6 +18,7 @@ inputs:
     optional: true
     description: MLflow model asset path. Special characters like \ and ' are invalid
       in the parameter value.
+    mode: rw_mount
 
   compute_finetune:
     type: string
@@ -64,6 +65,7 @@ inputs:
     description: Path to the registered training data asset. The supported data formats
       are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
       ' are invalid in the parameter value.
+    mode: rw_mount
 
   validation_file_path:
     type: uri_file
@@ -71,6 +73,7 @@ inputs:
     description: Path to the registered validation data asset. The supported data
       formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters
       like \ and ' are invalid in the parameter value.
+    mode: rw_mount
 
   test_file_path:
     type: uri_file
@@ -78,6 +81,7 @@ inputs:
     description: Path to the registered test data asset. The supported data formats
       are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
       ' are invalid in the parameter value.
+    mode: rw_mount
 
   train_mltable_path:
     type: mltable
@@ -106,6 +110,7 @@ outputs:
   validation_info:
     type: uri_file
     description: Validation status.
+    mode: rw_mount
 
 command: >-
   python validation.py --validation-info '${{outputs.validation_info}}'

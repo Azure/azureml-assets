@@ -342,6 +342,7 @@ inputs:
     type: uri_file
     optional: true
     description: Deepspeed config to be used for finetuning
+    mode: rw_mount
 
   deepspeed_stage:
     type: string
@@ -372,12 +373,14 @@ inputs:
     optional: false
     description: output folder of preprocess component containing encoded train, valid
       and test data. The tokenizer is also saved as part of preprocess output
+    mode: rw_mount
 
   model_selector_output:
     type: uri_folder
     optional: false
     description: output folder of model import component containing model artifacts
       and a metadata file.
+    mode: rw_mount
 
 outputs:
   pytorch_model_folder:
@@ -387,10 +390,12 @@ outputs:
       evaluation which is defined by the _evaluation_strategy_. Each checkpoint contains
       the model weight(s), config, tokenizer, optimzer, scheduler and random number
       states.
+    mode: rw_mount
 
   mlflow_model_folder:
     type: mlflow_model
     description: output folder containing _best_ finetuned model in mlflow format.
+    mode: rw_mount
 
 command: >-
   python finetune.py $[[--apply_lora '${{inputs.apply_lora}}']] $[[--merge_lora_weights

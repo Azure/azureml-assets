@@ -67,12 +67,14 @@ inputs:
     optional: true
     description: Pytorch model asset path. Special characters like \ and ' are invalid
       in the parameter value.
+    mode: rw_mount
 
   mlflow_model_path:
     type: mlflow_model
     optional: true
     description: MLflow model asset path. Special characters like \ and ' are invalid
       in the parameter value.
+    mode: rw_mount
 
   # Data PreProcess parameters (See [docs](https://aka.ms/azureml/components/token_classification_datapreprocess) to learn more)
   task_name:
@@ -125,6 +127,7 @@ inputs:
     description: Path to the registered training data asset. The supported data formats
       are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
       ' are invalid in the parameter value.
+    mode: rw_mount
 
   validation_file_path:
     type: uri_file
@@ -132,6 +135,7 @@ inputs:
     description: Path to the registered validation data asset. The supported data
       formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters
       like \ and ' are invalid in the parameter value.
+    mode: rw_mount
 
   test_file_path:
     type: uri_file
@@ -139,6 +143,7 @@ inputs:
     description: Path to the registered test data asset. The supported data formats
       are `jsonl`, `json`, `csv`, `tsv` and `parquet`. Special characters like \ and
       ' are invalid in the parameter value.
+    mode: rw_mount
 
   train_mltable_path:
     type: mltable
@@ -476,6 +481,7 @@ inputs:
     optional: true
     description: Deepspeed config to be used for finetuning. Special characters like
       \ and ' are invalid in the parameter value.
+    mode: rw_mount
 
   deepspeed_stage:
     type: string
@@ -552,10 +558,12 @@ outputs:
       evaluation which is defined by the _evaluation_strategy_. Each checkpoint contains
       the model weight(s), config, tokenizer, optimzer, scheduler and random number
       states.
+    mode: rw_mount
 
   mlflow_model_folder:
     type: mlflow_model
     description: output folder containing _best_ finetuned model in mlflow format.
+    mode: rw_mount
 
   evaluation_result:
     type: uri_folder

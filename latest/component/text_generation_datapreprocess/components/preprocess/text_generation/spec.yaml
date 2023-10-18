@@ -61,32 +61,38 @@ inputs:
   train_file_path:
     type: uri_file
     optional: true
-    description: Enter the train file path
+    description: Path to the registered training data asset. The supported data formats
+      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
-    description: Enter the validation file path
+    description: Path to the registered validation data asset. The supported data
+      formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
 
   test_file_path:
     type: uri_file
     optional: true
-    description: Enter the test file path
+    description: Path to the registered test data asset. The supported data formats
+      are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
 
   train_mltable_path:
     type: mltable
     optional: true
-    description: Enter the train mltable path
+    description: Path to the registered training data asset in `mltable` format.
 
   validation_mltable_path:
     type: mltable
     optional: true
-    description: Enter the validation mltable path
+    description: Path to the registered validation data asset in `mltable` format.
 
   test_mltable_path:
     type: mltable
     optional: true
-    description: Enter the test mltable path
+    description: Path to the registered test data asset in `mltable` format.
 
   # Dataset parameters
   model_selector_output:
@@ -94,11 +100,14 @@ inputs:
     optional: false
     description: output folder of model selector containing model metadata like config,
       checkpoints, tokenizer config
+    mode: rw_mount
 
 outputs:
   output_dir:
     type: uri_folder
-    description: folder to store preprocessed outputs of input data
+    description: The folder contains the tokenized output of the train, validation
+      and test data along with the tokenizer files used to tokenize the data
+    mode: rw_mount
 
 command: >-
   python preprocess.py --task_name TextGeneration --text_key '${{inputs.text_key}}'

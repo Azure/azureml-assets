@@ -28,23 +28,27 @@ inputs:
     optional: true
     description: Input folder path containing pytorch model for further finetuning.
       Proper model/huggingface id must be passed.
+    mode: rw_mount
 
   mlflow_model_path:
     type: mlflow_model
     optional: true
     description: Input folder path containing mlflow model for further finetuning.
       Proper model/huggingface id must be passed.
+    mode: rw_mount
 
   # Output of validation component
   validation_output:
     type: uri_file
     optional: true
     description: Validation status.
+    mode: rw_mount
 
 outputs:
   output_dir:
     type: uri_folder
     description: folder to store model metadata
+    mode: rw_mount
 
 command: >-
   python model_selector.py --task_name TextGeneration $[[--huggingface_id '${{inputs.huggingface_id}}']]

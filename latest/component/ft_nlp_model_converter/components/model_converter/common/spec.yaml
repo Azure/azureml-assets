@@ -17,17 +17,20 @@ inputs:
     type: uri_folder
     optional: false
     description: Pytorch model asset path. Pass the finetune job pytorch model output.
+    mode: rw_mount
 
   converted_model:
     type: mlflow_model
     optional: true
     description: Exisiting converted MlFlow path. Pass the finetune job mlflow model
       output.
+    mode: rw_mount
 
 outputs:
   output_dir:
     type: mlflow_model
     description: output folder containing _best_ finetuned model in mlflow format.
+    mode: rw_mount
 
 command: >-
   python model_converter.py --model_path '${{inputs.model_path}}' $[[--converted_model

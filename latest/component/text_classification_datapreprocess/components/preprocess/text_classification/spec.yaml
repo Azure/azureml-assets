@@ -85,18 +85,21 @@ inputs:
     optional: true
     description: Path to the registered training data asset. The supported data formats
       are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
 
   validation_file_path:
     type: uri_file
     optional: true
     description: Path to the registered validation data asset. The supported data
       formats are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
 
   test_file_path:
     type: uri_file
     optional: true
     description: Path to the registered test data asset. The supported data formats
       are `jsonl`, `json`, `csv`, `tsv` and `parquet`.
+    mode: rw_mount
 
   train_mltable_path:
     type: mltable
@@ -119,12 +122,14 @@ inputs:
     optional: false
     description: output folder of model selector containing model metadata like config,
       checkpoints, tokenizer config
+    mode: rw_mount
 
 outputs:
   output_dir:
     type: uri_folder
     description: The folder contains the tokenized output of the train, validation
       and test data along with the tokenizer files used to tokenize the data
+    mode: rw_mount
 
 command: >-
   python preprocess.py --task_name SingleLabelClassification --sentence1_key '${{inputs.sentence1_key}}'
