@@ -58,7 +58,7 @@
           "tool": "Prompt_variants",
           "inputs": {
             "contexts": "${generate_prompt_context.output}",
-            "question": "${modify_query_with_history.output}",
+            "question": "${flow.question}",
             "chat_history": "${flow.chat_history}"
           },
           "reduce": false
@@ -81,7 +81,7 @@
             "logit_bias": "",
             "prompt_text": "${Prompt_variants.output}"
           },
-          "provider": "AzureOpenAI",
+          "provider": "@@Completion_Provider",
           "connection": "@@Completion_Connection",
           "api": "@@API",
           "module": "promptflow.tools.aoai",
@@ -384,7 +384,7 @@
               "tool": "Prompt_variants",
               "inputs": {
                 "contexts": "${generate_prompt_context.output}",
-                "question": "${modify_query_with_history.output}",
+                "question": "${flow.question}",
                 "chat_history": "${flow.chat_history}"
               },
               "reduce": false
@@ -396,7 +396,7 @@
               "tool": "Prompt_variants__variant_1",
               "inputs": {
                 "contexts": "${generate_prompt_context.output}",
-                "question": "${modify_query_with_history.output}",
+                "question": "${flow.question}",
                 "chat_history": "${flow.chat_history}"
               },
               "reduce": false
@@ -408,7 +408,7 @@
               "tool": "Prompt_variants__variant_2",
               "inputs": {
                 "contexts": "${generate_prompt_context.output}",
-                "question": "${modify_query_with_history.output}",
+                "question": "${flow.question}",
                 "chat_history": "${flow.chat_history}"
               },
               "reduce": false
@@ -438,7 +438,7 @@
                 "logit_bias": "",
                 "prompt_text": "${Prompt_variants.output}"
               },
-              "provider": "AzureOpenAI",
+              "provider": "@@Completion_Provider",
               "connection": "@@Completion_Connection",
               "api": "@@API",
               "module": "promptflow.tools.aoai",

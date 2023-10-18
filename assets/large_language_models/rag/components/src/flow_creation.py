@@ -28,8 +28,9 @@ logger = get_logger('flow_creation')
 
 MAX_POST_TIMES = 3
 SLEEP_DURATION = 1
-USE_CODE_FIRST = False
-USE_CHAT_FLOWS = False
+USE_CODE_FIRST = True
+USE_CHAT_FLOWS = True
+
 SERVICE_ENDPOINT = os.environ.get("AZUREML_SERVICE_ENDPOINT", "")
 EXPERIMENT_SCOPE = os.environ.get("AZUREML_EXPERIMENT_SCOPE", "")
 WORKSPACE_SCOPE = os.environ.get("AZUREML_WORKSPACE_SCOPE", "")
@@ -37,7 +38,7 @@ RUN_TOKEN = os.environ.get("AZUREML_RUN_TOKEN", "")
 CODE_DIR = "rag_code_flow"
 _CITATION_TEMPLATE = r'\nPlease add citation after each sentence when possible in a form \"(Source: citation)\".'
 _USER_INPUT = r'{{contexts}} \n user: {{question}} \nassistant:'
-_MODIFY_INPUT = r'system: \nGiven the following conversation history and the users next question,' + \
+_MODIFY_INPUT = r'Given the following conversation history and the users next question,' + \
     r'rephrase the question to be a stand alone question.\nIf the conversation is irrelevant ' + \
     r'or empty, just restate the original question.\nDo not add more details than necessary to the question.'
 _CHAT_HISTORY = r'\n chat history: \n{% for item in chat_history %} user: \n{{ item.inputs.question }} ' + \
@@ -135,10 +136,15 @@ def get_connection_name(s):
 
 def get_deployment_and_model_name(s):
     """get_deployment_and_model_name."""
-    deployment_and_model = s.split("/deployment/")[1]
-    deployment_name = deployment_and_model.split("/model/")[0]
-    model_name = deployment_and_model.split("/model/")[1]
-    return (deployment_name, model_name)
+    model_type = s.split("://")[0]
+    if model_type == "open_ai":
+        model_name = s.split("/model/")[1]
+        return (model_name, model_name)
+    else:
+        deployment_and_model = s.split("/deployment/")[1]
+        deployment_name = deployment_and_model.split("/model/")[0]
+        model_name = deployment_and_model.split("/model/")[1]
+        return (deployment_name, model_name)
 
 
 def upload_code_files(ws: Workspace, name):
@@ -172,42 +178,83 @@ def main(args, ws, current_run, activity_logger: Logger):
     completion_connection_name = get_connection_name(
         args.llm_connection_name)
     completion_config = json.loads(args.llm_config)
-    completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
-    completion_deployment_name = completion_config.get(
-        "deployment_name", "gpt-35-turbo")
+
+    if completion_config.get("type") == "open_ai":
+        completion_model_name = completion_config.get("model_name", "gpt-3.5-turbo")
+        completion_deployment_name = completion_model_name
+        completion_model_name = "gpt-3.5-turbo" if completion_model_name is None else completion_model_name
+        completion_deployment_name = \
+            "gpt-3.5-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_provider = "OpenAI"
+    else:
+        completion_model_name = completion_config.get("model_name", "gpt-35-turbo")
+        # If completion deployment not set, set as blank in PF rather than a placeholder
+        completion_deployment_name = completion_config.get(
+            "deployment_name", None)
     # Set default if key exsits but is set to None (as it is for basic pipelines)
-    completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
-    completion_deployment_name = "gpt-35-turbo" if completion_deployment_name is None else completion_deployment_name
+        completion_model_name = "gpt-35-turbo" if completion_model_name is None else completion_model_name
+        completion_deployment_name = \
+            "" if completion_deployment_name is None else completion_deployment_name
+        completion_provider = "AzureOpenAI"
+
     embedding_connection_name = get_connection_name(
         args.embedding_connection)
     if (completion_connection_name == "azureml-rag-default-aoai" and
             embedding_connection_name != "azureml-rag-default-aoai"):
         # default completion connection name to embedding ones if embedding conenction is provided
         completion_connection_name = embedding_connection_name
+
     embedding_deployment_name_and_model_name = get_deployment_and_model_name(
         args.embeddings_model)
     embedding_deployment_name = embedding_deployment_name_and_model_name[0]
     embedding_model_name = embedding_deployment_name_and_model_name[1]
+
     print("completion_connection_name: %s" %
           completion_connection_name)
+    print("completion_provider: %s" % completion_provider)
     print("completion_model_name: %s" % completion_model_name)
     print("completion_deployment_name: %s" %
           completion_deployment_name)
+
     print("embedding_connection_name: %s" % embedding_connection_name)
     print("embedding_deployment_name: %s" % embedding_deployment_name)
     print("embedding_model_name: %s" % embedding_model_name)
 
+    if completion_model_name.startswith("gpt-") and USE_CHAT_FLOWS:
+        print("Using chat flows")
+        is_chat = True
+        prefix = "chat_"
+    else:
+        print("Not using chat flows")
+        is_chat = False
+        prefix = ""
+
     if args.best_prompts is None:
-        top_prompts = [
-            'You are an AI assistant that helps users answer questions given a specific context. You will be '
-            + 'given a context, and then asked a question based on that context. Your answer should be as '
-            + 'precise as possible, and should only come from the context.',
-            'You are an AI assistant that helps users answer questions given a specific context. You will be '
-            + 'given a context and asked a question based on that context. Your answer should be as precise '
-            + 'as possible and should only come from the context.',
-            'You are an chat assistant for helping users answering question given a specific context.You are '
-            + 'given a context and you\'ll be asked a question based on the context.Your answer should be '
-            + 'as precise as possible and answer should be only from the context.']
+        if is_chat:
+            top_prompts = [
+                'You are an AI assistant that helps users answer questions given a specific context and '
+                + 'conversation history. You will be given a context and chat history, and then asked a '
+                + 'question based on that context and history. Your answer should be as '
+                + 'precise as possible, and should only come from the context.',
+                'You are an AI assistant that helps users answer questions given a specific context and '
+                + 'chat history. You will be given a context and history and asked a question based on '
+                + 'that context and chat history. Your answer should be as precise as possible and should '
+                + 'only come from the context.',
+                'You are an chat assistant for helping users answering question given a specific context and '
+                + 'history. You are given a context and conversation history and you\'ll be asked a question '
+                + 'based on the context and history. Your answer should be as precise as possible and answer '
+                + 'should be only from the context.']
+        else:
+            top_prompts = [
+                'You are an AI assistant that helps users answer questions given a specific context. You will be '
+                + 'given a context, and then asked a question based on that context. Your answer should be as '
+                + 'precise as possible, and should only come from the context.',
+                'You are an AI assistant that helps users answer questions given a specific context. You will be '
+                + 'given a context and asked a question based on that context. Your answer should be as precise '
+                + 'as possible and should only come from the context.',
+                'You are an chat assistant for helping users answering question given a specific context.You are '
+                + 'given a context and you\'ll be asked a question based on the context.Your answer should be '
+                + 'as precise as possible and answer should be only from the context.']
     else:
         with open(args.best_prompts, "r") as f:
             promt_json = json.load(f)
@@ -236,15 +283,6 @@ def main(args, ws, current_run, activity_logger: Logger):
     if isinstance(top_prompts, str):
         top_prompts = [top_prompts, top_prompts, top_prompts]
 
-    if completion_model_name.startswith("gpt-") and USE_CHAT_FLOWS:
-        print("Using chat flows")
-        is_chat = True
-        prefix = "chat_"
-    else:
-        print("Not using chat flows")
-        is_chat = False
-        prefix = ""
-
     if USE_CODE_FIRST:
         file_name = os.path.join(Path(__file__).parent.absolute(),
                                  "flow_yamls",
@@ -269,6 +307,8 @@ def main(args, ws, current_run, activity_logger: Logger):
         "@@Completion_Deployment_Name", completion_deployment_name)
     flow_with_variants = flow_with_variants.replace(
         "@@Completion_Connection", completion_connection_name)
+    flow_with_variants = flow_with_variants.replace(
+        "@@Completion_Provider", completion_provider)
     flow_with_variants = flow_with_variants.replace(
         "@@MLIndex_Asset_Id", mlindex_asset_id)
 

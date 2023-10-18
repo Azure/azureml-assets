@@ -166,7 +166,7 @@ class ScoringClient:
             "{}: Score request payload: <Redacted from application insights logging;"
             " see job logs directly. payload_correlation_id: {}>".format(
                 worker_id, payload_correlation_id))
-        print("{}: Score request payload [payload_correlation_id: {}]: {}".format(
+        lu.get_logger().debug("{}: Score request payload [payload_correlation_id: {}]: {}".format(
             worker_id, payload_correlation_id, scoring_request.loggable_payload))
 
         start = time.time()

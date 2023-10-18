@@ -25,10 +25,10 @@ class ValidationException(Exception):
 class AssetType(Enum):
     """Asset type."""
 
-    BENCHMARKRESULT = 'benchmarkresult'
     COMPONENT = 'component'
     DATA = 'data'
     ENVIRONMENT = 'environment'
+    EVALUATIONRESULT = 'evaluationresult'
     MODEL = 'model'
     PROMPT = 'prompt'
 
@@ -82,7 +82,7 @@ class GenericAssetType(Enum):
     """Enum for generic asset types."""
 
     PROMPT = 'prompt'
-    BENCHMARKRESULT = 'benchmarkresult'
+    EVALUATIONRESULT = 'evaluationresult'
 
 
 class Os(Enum):
@@ -124,7 +124,7 @@ DEFAULT_TEMPLATE_FILES = [DEFAULT_DOCKERFILE]
 EXCLUDE_PREFIX = "!"
 FULL_ASSET_NAME_DELIMITER = "/"
 FULL_ASSET_NAME_TEMPLATE = "{type}/{name}/{version}"
-GENERIC_ASSET_TYPES = [AssetType.PROMPT]
+GENERIC_ASSET_TYPES = [AssetType.EVALUATIONRESULT, AssetType.PROMPT]
 PARTIAL_ASSET_NAME_TEMPLATE = "{type}/{name}"
 PUBLISH_LOCATION_HOSTNAMES = {PublishLocation.MCR: 'mcr.microsoft.com'}
 STANDARD_ASSET_TYPES = [AssetType.COMPONENT, AssetType.DATA, AssetType.ENVIRONMENT, AssetType.MODEL]
@@ -252,15 +252,14 @@ class Config:
             ValidationException: If the path doesn't exist.
 
         Returns:
-            List[Path]: If path is a file or empty directory, just return it.
+            List[Path]: If path is a file, just return it.
                         Otherwise, return the files contained by the directory.
         """
         if not path.exists():
             raise ValidationException(f"{path} not found")
         if path.is_dir():
-            contents = list(path.rglob("*"))
-            if contents:
-                return contents
+            contents = [p for p in path.rglob("*") if p.is_file()]
+            return contents
         return [path]
 
 
@@ -374,9 +373,8 @@ class Spec(Config):
     def generic_asset_data_path(self) -> str:
         """Data path for a generic asset."""
         if self.type == GenericAssetType.PROMPT.value:
-            template = self._yaml.get('template')
-            return None if template is None else template.get('path')
-        elif self.type == GenericAssetType.BENCHMARKRESULT.value:
+            return self._yaml.get('data_uri')
+        elif self.type == GenericAssetType.EVALUATIONRESULT.value:
             return self._yaml.get('path')
         else:
             return None
