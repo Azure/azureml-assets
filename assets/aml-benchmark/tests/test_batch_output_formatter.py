@@ -66,7 +66,7 @@ class TestBatchOutputFormatterComponent:
         pipeline_job.inputs.batch_inference_output = Input(
             type="uri_folder", path=temp_dir
         )
-        pipeline_job.inputs.label_key = label_key
+        pipeline_job.inputs.label_column_name = label_key
         pipeline_job.inputs.endpoint_url = endpoint_url
 
         pipeline_job.display_name = display_name

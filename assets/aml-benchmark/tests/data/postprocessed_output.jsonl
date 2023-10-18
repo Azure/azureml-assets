@@ -1,1 +1,2 @@
-{"samples":"   for i in range(len(numbers) - 1):\n        for j in range(i + 1, len(numbers)):\n            if abs(numbers[i] - numbers[j]) < threshold:\n                return True\n    return False\n\n"}
+{"final_answer":"18","prediction":"26"}
+{"final_answer":"3","prediction":"3"}

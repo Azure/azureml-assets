@@ -62,6 +62,7 @@ inputs:
       - image-classification
       - image-object-detection
       - image-instance-segmentation
+      - image-to-text
       - text-to-image
       - text-to-image-inpainting
       - image-text-to-text

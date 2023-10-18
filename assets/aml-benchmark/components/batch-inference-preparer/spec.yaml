@@ -31,6 +31,10 @@ inputs:
         "_batch_request_metadata": ###<_batch_request_metadata>
       }
     optional: False
+  label_column_name:
+    type: string
+    optional: True
+    description: The label column name.
   is_performance_test:
     type: boolean
     default: False
@@ -47,6 +51,9 @@ outputs:
   formatted_data:
     type: mltable
     description: Path to the folder where the payload will be stored.
+  ground_truth_metadata:
+    type: uri_folder
+    description: Path to the folder where the ground truth metadata will be stored.
 
 code: ../src
 environment: azureml://registries/azureml/environments/model-evaluation/labels/latest
@@ -54,7 +61,9 @@ command: >-
   python -m batch_inference_preparer.main
   --batch_input_pattern '${{inputs.batch_input_pattern}}'
   --formatted_data ${{outputs.formatted_data}}
+  --output_metadata ${{outputs.ground_truth_metadata}}
   --is_performance_test ${{inputs.is_performance_test}}
   $[[--input_dataset ${{inputs.input_dataset}}]]
   $[[--n_samples ${{inputs.n_samples}}]]
   $[[--endpoint_url ${{inputs.endpoint_url}}]]
+  $[[--label_key ${{inputs.label_column_name}}]]

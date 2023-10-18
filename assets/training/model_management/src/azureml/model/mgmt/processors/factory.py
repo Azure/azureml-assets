@@ -23,6 +23,7 @@ from azureml.model.mgmt.processors.transformers.convertors import (
     WhisperMLflowConvertor,
 )
 from azureml.model.mgmt.processors.pyfunc.convertors import (
+    BLIP2MLFlowConvertor,
     MMLabDetectionMLflowConvertor,
     CLIPMLFlowConvertor,
     StableDiffusionMlflowConvertor,
@@ -57,6 +58,10 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
         elif task in \
                 [PyFuncSupportedTasks.ZERO_SHOT_IMAGE_CLASSIFICATION.value, PyFuncSupportedTasks.EMBEDDINGS.value]:
             return CLIPMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif task == PyFuncSupportedTasks.IMAGE_TO_TEXT.value:
+            return BLIP2MLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         else:
@@ -176,6 +181,19 @@ class CLIPMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for CLIP model."""
         return CLIPMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class BLIP2MLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for BLIP2 model family."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for BLIP2 model."""
+        return BLIP2MLFlowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,

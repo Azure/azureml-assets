@@ -2,8 +2,11 @@ $schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
 
 template: | 
     Classify the following news headline into 1 of the following categories: Business, Tech, Politics, Sport, Entertainment
-    {{input}}
+    {{headline_text}}
 
-input_variables: ['input']
+input_variables:
+  - name: headline_text
+    description: Headline Text
+    defaultValue: Chancellor on brink of second bailout for banks
 
-template_format: jinja2
+template_format: handlebars

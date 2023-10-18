@@ -4,10 +4,18 @@
 """Class for endpoint utilities."""
 
 
+from typing import Any
 import os
 import json
+import hashlib
+import re
 
 from .online_endpoint import OnlineEndpoint
+from .online_endpoint_model import OnlineEndpointModel
+from ..logging import get_logger
+
+
+logger = get_logger(__name__)
 
 
 class EndpointUtilities:
@@ -67,3 +75,30 @@ class EndpointUtilities:
         }
         with open(os.path.join(output_dir, EndpointUtilities.DELETE_STATUS_FILE), 'w') as delete_status_file:
             json.dump(delete_status, delete_status_file)
+
+    @staticmethod
+    def _hash_string_character(input_string: str) -> str:
+        """Hash a string only with its alphanumerical characters."""
+        return hashlib.sha256(
+            re.sub(r'[^A-Za-z0-9 ]+', '', input_string).encode('utf-8')).hexdigest()
+
+    @staticmethod
+    def hash_payload_prompt(
+        payload: Any, model: OnlineEndpointModel
+    ) -> str:
+        """Hash the payload and prompt."""
+        try:
+            if model.is_oss_model():
+                prompt = payload["input_data"]["input_string"]
+                if isinstance(prompt[0], dict):
+                    prompt = " ".join([p['content'] for p in prompt])
+            elif model.is_aoai_model():
+                prompt = payload["messages"][0]["content"]
+            else:
+                # if model is unknown, use the full payload.
+                prompt = str(payload)
+        except Exception as e:
+            logger.warning(
+                "Failed to get the prompt from payload {} use the full payload now.".format(e))
+            prompt = str(payload)
+        return EndpointUtilities._hash_string_character(str(prompt))
