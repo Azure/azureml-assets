@@ -483,7 +483,7 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
     def __init__(self, **kwargs):
         """Initialize MLflow convertor for SAM models."""
         super().__init__(**kwargs)
-        if self._task != SupportedTasks.SEGMENT_ANYTHING.value:
+        if self._task != SupportedTasks.MASK_GENERATION.value:
             raise Exception("Unsupported task")
 
     def get_model_signature(self) -> ModelSignature:
@@ -531,9 +531,9 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
     def save_as_mlflow(self):
         """Prepare model for save to MLflow."""
         sys.path.append(self.MODEL_DIR)
-        from segment_anything_mlflow_wrapper import SegmentAnythingDiffusionMLflowWrapper
+        from segment_anything_mlflow_wrapper import SegmentAnythingMLflowWrapper
 
-        mlflow_model_wrapper = SegmentAnythingDiffusionMLflowWrapper(task_type=self._task)
+        mlflow_model_wrapper = SegmentAnythingMLflowWrapper(task_type=self._task)
         artifacts_dict = self._prepare_artifacts_dict()
         conda_env_file = os.path.join(self.MODEL_DIR, "conda.yaml")
         code_path = [

@@ -30,8 +30,8 @@ class SupportedTasks(_CustomEnum):
     # LLaVA task
     IMAGE_TEXT_TO_TEXT = "image-text-to-text"
 
-    # Segment Anything
-    SEGMENT_ANYTHING = "segment-anything"
+    # mask generation
+    MASK_GENERATION = "mask-generation"
 
 
 class SupportedTextToImageModelFamily(_CustomEnum):

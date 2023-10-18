@@ -59,7 +59,7 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
             return CLIPMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
-        elif task == PyFuncSupportedTasks.SEGMENT_ANYTHING.value:
+        elif task == PyFuncSupportedTasks.MASK_GENERATION.value:
             return SegmentAnythingMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )

@@ -16,9 +16,10 @@ import torch
 from transformers import SamModel, SamProcessor
 
 from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, SAMHFLiterals, DatatypeLiterals
+from vision_utils import process_image, string_to_nested_float_list, image_to_base64, bool_array_to_pil_image
 
 
-class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
+class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
     """MLflow model wrapper for segment anything models."""
 
     def __init__(
@@ -40,7 +41,7 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         :param context: MLflow context containing artifacts that the model can use for inference
         :type context: mlflow.pyfunc.PythonModelContext
         """
-        if self._task_type == Tasks.SEGMENT_ANYTHING.value:
+        if self._task_type == Tasks.MASK_GENERATION.value:
             try:
                 _map_location = "cuda" if torch.cuda.is_available() else "cpu"
                 model_dir = context.artifacts[MLflowLiterals.MODEL_DIR]
@@ -114,8 +115,6 @@ class SegmentAnythingDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
             [input_points, input_boxes, input_labels] converted to base64 string.
         :rtype: pd.DataFrame
         """
-        from vision_utils import process_image, string_to_nested_float_list, image_to_base64, bool_array_to_pil_image
-
         # Do inference one input at a time.
         response = []
         for image, input_points, input_boxes, input_labels, multimask_output in zip(

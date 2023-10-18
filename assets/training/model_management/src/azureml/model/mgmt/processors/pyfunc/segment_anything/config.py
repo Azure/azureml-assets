@@ -16,7 +16,7 @@ class _CustomEnum(Enum):
 class Tasks(_CustomEnum):
     """Task types supported by SAM."""
 
-    SEGMENT_ANYTHING = "segment-anything"
+    MASK_GENERATION = "mask-generation"
 
 
 class MLflowLiterals:
