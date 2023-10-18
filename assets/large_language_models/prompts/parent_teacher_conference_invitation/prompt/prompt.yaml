@@ -11,18 +11,18 @@ messages:
 input_variables:
 - name: areas_of_discussion
   description: areas of discussion
-  defaultValue: performance in science class
+  default: performance in science class
 - name: date
   description: date
-  defaultValue: next Wednesday
+  default: next Wednesday
 - name: grade_level
   description: grade level
-  defaultValue: '8'
+  default: '8'
 - name: place
   description: place
-  defaultValue: Seattle, WA
+  default: Seattle, WA
 - name: time
   description: time
-  defaultValue: 5pm
+  default: 5pm
 
 template_format: handlebars

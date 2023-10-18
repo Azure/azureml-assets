@@ -23,18 +23,18 @@ messages:
 input_variables:
 - name: color
   description: color
-  defaultValue: camel
+  default: camel
 - name: features
   description: features
-  defaultValue: '"hand-stitched finish", "waist tie", "double-breasted front"'
+  default: '"hand-stitched finish", "waist tie", "double-breasted front"'
 - name: ideal_for
   description: ideal for
-  defaultValue: '"fall, winter seasons, formal and casual outings"'
+  default: '"fall, winter seasons, formal and casual outings"'
 - name: material
   description: material
-  defaultValue: 100% premium cashmere
+  default: 100% premium cashmere
 - name: name
   description: name
-  defaultValue: Bellevue Cashmere Trench Coat
+  default: Bellevue Cashmere Trench Coat
 
 template_format: handlebars

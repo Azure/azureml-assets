@@ -31,21 +31,21 @@ messages:
 input_variables:
 - name: age
   description: age
-  defaultValue: '28'
+  default: '28'
 - name: gender
   description: gender
-  defaultValue: female
+  default: female
 - name: interest
   description: interest
-  defaultValue: '"reading", "interior design", "travel"'
+  default: '"reading", "interior design", "travel"'
 - name: name
   description: name
-  defaultValue: Emma
+  default: Emma
 - name: outdoor_sport
   description: outdoor_sport
-  defaultValue: Kayaking
+  default: Kayaking
 - name: purchase_history
   description: purchase_history
-  defaultValue: '"The Great Alone by Kristin Hannah", "Stoneware Vases Set", "Travel Guides: Greece"'
+  default: '"The Great Alone by Kristin Hannah", "Stoneware Vases Set", "Travel Guides: Greece"'
 
 template_format: handlebars

@@ -15,15 +15,15 @@ messages:
 input_variables:
 - name: concept
   description: concept
-  defaultValue: Newton's first law of motion
+  default: Newton's first law of motion
 - name: content_area
   description: content area
-  defaultValue: physics
+  default: physics
 - name: grade_level
   description: grade level
-  defaultValue: '6'
+  default: '6'
 - name: subject
   description: subject
-  defaultValue: science
+  default: science
 
 template_format: handlebars
