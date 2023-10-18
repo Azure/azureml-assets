@@ -604,7 +604,16 @@ jobs:
       model_selector_output: '${{parent.jobs.token_classification_model_import.outputs.output_dir}}'
     outputs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
-      mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
+      # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
+  ft_nlp_model_converter:
+    type: command
+    component: azureml:/subscriptions/ed2cab61-14cc-4fb3-ac23-d72609214cfd/resourceGroups/training_rg/providers/Microsoft.MachineLearningServices/workspaces/train-finetune-dev-workspace/components/ft_nlp_model_converter/versions/12.10.2023-src-007
+    compute: '${{parent.inputs.compute_model_import}}'
+    inputs:
+      model_path: '${{parent.jobs.question_answering_finetune.outputs.pytorch_model_folder}}'
+      converted_model: '${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}'
+    outputs:
+      output_dir: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
     component: azureml:model_prediction:0.0.16
@@ -616,9 +625,9 @@ jobs:
       test_data: '${{parent.jobs.token_classification_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.tag_key}}'
       input_column_names: '${{parent.inputs.token_key}}'
-#      batch_size: '${{parent.inputs.batch_size}}'
+      # batch_size: '${{parent.inputs.batch_size}}'
       device: auto
-      mlflow_model: '${{parent.jobs.token_classification_finetune.outputs.mlflow_model_folder}}'
+      mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.output_dir}}'
   compute_metrics:
     type: command
     component: azureml:compute_metrics:0.0.16
