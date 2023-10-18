@@ -28,9 +28,10 @@ def parse_assets(input_dirs: List[Path],
 
     for asset_config in util.find_assets(input_dirs, asset_config_filename, pattern=pattern):
         asset_info = AssetInfo.create_asset_info(asset_config)
-        categories.classify_asset(asset_info)
-        # Save asset info. Revisit to save all docs after
-        asset_info.save()
+        if asset_info:
+            categories.classify_asset(asset_info)
+            # Save asset info. Revisit to save all docs after
+            asset_info.save()
 
     categories.save()
 
