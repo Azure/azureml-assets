@@ -48,6 +48,7 @@ def base_test(dataset_name,
               chat_ground_truth_checksum,
               params) -> None:
     """Check output checksums for completion and chat prompt types."""
+    checksum = None
     dataset_path, test_output_path, test_output_mltable_path = setup_folder(dataset_name)
 
     if completion_ground_truth_checksum:
