@@ -8,7 +8,8 @@ input_variables:
   - name: headline_text
     description: Headline Text
     default: Chancellor on brink of second bailout for banks
-    
+
+# optional, only add this section when the prompts have been evaluated and get best result with the setting here
 execution_settings:
   default:
     temperature: 0
