@@ -65,6 +65,14 @@ inputs:
       Proper model/huggingface id must be passed.
 
   # Preprocessing parameters
+  task_name:
+    type: string
+    optional: false
+    enum:
+      - TextGeneration
+    default: TextGeneration
+    description: TextGeneration task type
+
   text_key:
     type: string
     optional: false
