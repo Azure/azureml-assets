@@ -56,7 +56,7 @@ def base_test(dataset_name,
         prompt_crafter = PromptCrafter(
             test_data=os.path.join(dataset_path, "inference_sample.jsonl"),
             few_shot_data=os.path.join(dataset_path, "fewshot_sample.jsonl"),
-            output_file=os.path.join(dataset_path, "output.jsonl"),
+            output_file=os.path.join(test_output_path, PromptCrafter.OUTPUT_FILENAME),
             output_mltable=test_output_mltable_path,
             **params
         )
@@ -73,7 +73,7 @@ def base_test(dataset_name,
         prompt_crafter = PromptCrafter(
             test_data=os.path.join(dataset_path, "inference_sample.jsonl"),
             few_shot_data=os.path.join(dataset_path, "fewshot_sample.jsonl"),
-            output_file=os.path.join(dataset_path, "output.jsonl"),
+            output_file=os.path.join(test_output_path, PromptCrafter.OUTPUT_FILENAME),
             output_mltable=test_output_mltable_path,
             **params
         )

@@ -86,6 +86,7 @@ class PromptCrafter:
         self.additional_payload = additional_payload
         params = {k: v for k, v in locals().items() if k not in ["self", "base_prompt_factory_cls", "params"]}
         self.mlflow_logger = _MLFlowLogger()
+        self.output_mltable = output_mltable
         self.mlflow_logger.save_parameters(params=params, output_mltable=output_mltable)
 
         # set seed globally
@@ -214,5 +215,9 @@ transformations:
         # instead of new_data. Conceptually, prompt crafter should be preparing the payloads
         # so we should include them into the checksum calculation.
         output_data_checksum = checksum.digest()
-        mlflow.log_text(output_data_checksum, "checksum.txt")
+        # log the checksum of the output data
+        checksum_param = {"checksum": output_data_checksum}
+        self.mlflow_logger.save_parameters(params=checksum_param,
+                                           output_mltable=self.output_mltable)
+
         return output_data_checksum
