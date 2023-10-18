@@ -525,7 +525,7 @@ def resolve_deepspeed_config(args: Namespace) -> str:
 
 
 def setup_deepspeed(args: Namespace):
-    """Deepspeed initialization
+    """Deepspeed initialization.
 
     :param args: User passed args
     :type Namespace
@@ -538,7 +538,7 @@ def setup_deepspeed(args: Namespace):
 
 
 def get_deepspeed_config_json(args: Namespace) -> Dict[str, Any]:
-    """Fetches deepspeed config json from file
+    """Fetche deepspeed config json from file.
 
     :param args: User passed args
     :type Namespace
