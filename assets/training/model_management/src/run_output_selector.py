@@ -8,7 +8,6 @@ If condition is `true`, link `output` to `input_a`.
 If condition is `false`, link `output` to `input_b`.
 """
 import argparse
-import os
 import shutil
 
 parser = argparse.ArgumentParser()
@@ -39,15 +38,5 @@ else:
     source_registration_folder = args.input_b_mlflow_model_folder
 
 
-allfiles = os.listdir(source_model_folder)
-for f in allfiles:
-    src_path = os.path.join(source_model_folder, f)
-    dst_path = os.path.join(destination_mlflow_model_folder, f)
-    shutil.move(src_path, dst_path)
-
-
-allfiles = os.listdir(source_registration_folder)
-for f in allfiles:
-    src_path = os.path.join(source_registration_folder, f)
-    dst_path = os.path.join(destination_registration_folder, f)
-    shutil.move(src_path, dst_path)
+shutil.copytree(source_model_folder, destination_mlflow_model_folder)
+shutil.copytree(source_registration_folder, destination_registration_folder)
