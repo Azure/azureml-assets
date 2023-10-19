@@ -332,7 +332,8 @@ def get_git_lfs_blob_size_in_kb(git_dir: Path) -> int:
 
 
 class MlflowMetaConstants:
-    """ mlflow consants"""
+    """Mlflow consants."""
+
     IS_FINETUNED_MODEL = "is_finetuned_model"
     IS_ACFT_MODEL = "is_acft_model"
     BASE_MODEL_NAME = "base_model_name"
@@ -341,7 +342,7 @@ class MlflowMetaConstants:
 def fetch_mlflow_acft_metadata(
         is_finetuned_model: bool = False,
         base_model_name: str = None) -> dict:
-    """ fetch metadata to be dumped in MlFlow MlModel File
+    """Fetch metadata to be dumped in MlFlow MlModel File.
 
     :param is_finetuned_model: whether the model is finetuned one or base model
     :type is_finetuned_model: bool
