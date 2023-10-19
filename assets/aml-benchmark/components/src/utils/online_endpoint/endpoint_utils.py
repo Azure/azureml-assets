@@ -93,7 +93,7 @@ class EndpointUtilities:
                 if isinstance(prompt[0], dict):
                     prompt = " ".join([p['content'] for p in prompt])
             elif model.is_aoai_model():
-                prompt = payload["messages"][0]["content"]
+                prompt = " ".join([msg.get("content", "") for msg in payload["messages"]])
             else:
                 # if model is unknown, use the full payload.
                 prompt = str(payload)
