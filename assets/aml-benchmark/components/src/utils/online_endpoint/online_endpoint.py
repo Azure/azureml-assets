@@ -180,12 +180,18 @@ class OnlineEndpoint:
         except Exception as err:
             logger.error(f"Failed to get content from response: {err}")
             return {}
+        
+    @property
+    def _arm_base_subscription(self) -> str:
+        """Get the arm base for subscriptions."""
+        url_list = ['https://management.azure.com', 'subscriptions', self.subscription_id]
+        return "/".join(url_list)
 
     @property
     def _arm_base_url(self) -> str:
         """Get the arm base url."""
         url_list = [
-            'https://management.azure.com', 'subscriptions', self.subscription_id,
+            self._arm_base_subscription,
             'resourceGroups', self.resource_group
         ]
         return "/".join(url_list)
@@ -426,3 +432,7 @@ class OnlineEndpoint:
         }, {})
 
         return resp.json()
+
+    def model_quota(self) -> int:
+        """Get the model quota."""
+        return 1

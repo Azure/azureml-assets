@@ -55,10 +55,24 @@ inputs:
     optional: True
     default: True
     description: If true, the managed resources created during the run will be deleted.
+  do_quota_validation:
+    type: boolean
+    optional: True
+    default: True
+    description: If doing quota valiation or not for AOAI model.
+  use_max_quota:
+    type: boolean
+    optional: True
+    default: True
+    description: If using max quota or not for AOAI model.
   deployment_metadata_dir:
     type: uri_folder
     optional: True
     description: The deployment metadata directory that contains deployment details.
+  additional_deployment_env_vars:
+    type: string
+    optional: True
+    description: additional deployment env vars
 outputs:
   output_metadata:
     type: uri_folder
@@ -76,9 +90,11 @@ command: >-
   $[[--deployment_sku ${{inputs.deployment_sku}}]]
   $[[--endpoint_workspace ${{inputs.endpoint_workspace}}]]
   $[[--endpoint_resource_group ${{inputs.endpoint_resource_group}}]]
-  $[[--endpoint_subscription_id ${{inputs.endpoint_subscription_id}}]]
-  $[[--endpoint_location ${{inputs.endpoint_location}}]]
+  $[[--endpoint_subscription_id '${{inputs.endpoint_subscription_id}}']]
+  $[[--endpoint_location '${{inputs.endpoint_location}}']]
   $[[--connections_name ${{inputs.connections_name}}]]
   $[[--delete_managed_resources ${{inputs.delete_managed_resources}}]]
+  $[[--use_max_quota ${{inputs.use_max_quota}}]]
+  $[[--do_quota_validation ${{inputs.do_quota_validation}}]]
   $[[--deployment_metadata_dir ${{inputs.deployment_metadata_dir}}]]
-
+  $[[--additional_deployment_env_vars  '${{inputs.additional_deployment_env_vars}}']]

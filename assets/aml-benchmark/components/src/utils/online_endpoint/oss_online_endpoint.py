@@ -46,7 +46,8 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             deployment_name: Optional[str] = None,
             sku: Optional[str] = None,
             api_version: str = '2023-04-01-Preview',
-            connections_name: str = None
+            connections_name: str = None,
+            additional_deployment_env_vars = {}
     ):
         """Init method."""
         super().__init__(
@@ -61,6 +62,7 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             connections_name
         )
         self._api_version = api_version
+        self._additional_deployment_env_vars = additional_deployment_env_vars
 
     def get_endpoint_name_from_url(self) -> str:
         """Get the endpoint."""
@@ -102,8 +104,11 @@ class OSSOnlineEndpoint(OnlineEndpoint):
         self._validate_model()
         deployment_env_vars = {
             "SUBSCRIPTION_ID": self._subscription_id,
-            "RESOURCE_GROUP_NAME": self._resource_group
+            "RESOURCE_GROUP_NAME": self._resource_group,
+            "WORKER_COUNT": 256
         }
+        deployment_env_vars.update(self._additional_deployment_env_vars)
+        max_concurrent_requests = 256
         deployment = ManagedOnlineDeployment(
             name=self.deployment_name,
             endpoint_name=self.endpoint_name,
@@ -112,7 +117,10 @@ class OSSOnlineEndpoint(OnlineEndpoint):
             instance_count=1,
             code_configuration=None,
             environment_variables=deployment_env_vars,
-            request_settings=OnlineRequestSettings(request_timeout_ms=OSSOnlineEndpoint.REQUEST_TIMEOUT_MS),
+            request_settings=OnlineRequestSettings(
+                request_timeout_ms=OSSOnlineEndpoint.REQUEST_TIMEOUT_MS,
+                max_concurrent_requests_per_instance=max_concurrent_requests
+            ),
             liveness_probe=ProbeSettings(
                 failure_threshold=30,
                 success_threshold=1,
