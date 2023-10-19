@@ -112,15 +112,14 @@ def deploy_endpoint_maybe(online_endpoint: OnlineEndpoint) -> bool:
 def deploy_model_maybe(
         online_endpoint: OnlineEndpoint, output_metadata_dir: str,
         managed_endpoint: bool
-) -> None:
+) -> bool:
     """Deploy the model if it is not deployed."""
-    
     managed_deployment = False
     managed_connections = True
     logger.info(
         f'deployment state: {online_endpoint.deployment_state()} in '
         f'{online_endpoint.subscription_id} and {online_endpoint.resource_group}.')
-    
+
     if online_endpoint.deployment_state() == ResourceState.FAILURE:
         logger.info("Deployment is in failure state, delete it now.")
         online_endpoint.delete_deployment()
@@ -132,6 +131,7 @@ def deploy_model_maybe(
     EndpointUtilities.dump_endpoint_metadata_json(
         online_endpoint, managed_endpoint, managed_deployment, managed_connections, output_metadata_dir)
     logger.info("model is ready/checked now.")
+    return managed_deployment
 
 
 def _online_endpoint_generator(
@@ -247,12 +247,16 @@ def main(
                 logger.error(f"Failed to deploy endpoint with error {e}.")
                 continue
             try:
-                deploy_model_maybe(online_endpoint, output_metadata_dir, managed_endpoint)
+                managed_deployment = deploy_model_maybe(
+                    online_endpoint, output_metadata_dir, managed_endpoint)
+                if managed_endpoint:
+                    break
             except Exception as e:
                 logger.error(f"Failed to deploy model with error {e}.")
-                if managed_endpoint:
-                    logger.info("Deleting created endpoint now.")
-                    online_endpoint.delete_endpoint()
+            # If endpoint is deployed successfully, the deletion code won't be reached
+            if managed_endpoint:
+                logger.info("Deleting created endpoint now.")
+                online_endpoint.delete_endpoint()
     else:
         if not deployment_metadata_dir:
             online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name)
