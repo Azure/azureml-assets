@@ -120,6 +120,7 @@ def test_enable_gradient_checkpointing():
         deepspeed="test/utils/finetune/data/valid_ds3_config.json"
     )
     setup_and_validate_deepspeed(args, do_validate=True)
+
     assert getattr(args, "gradient_checkpointing") is True
 
 
