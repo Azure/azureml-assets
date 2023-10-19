@@ -26,6 +26,12 @@ inputs:
       output.
     mode: rw_mount
 
+  # Validation parameters
+  system_properties:
+    type: string
+    optional: true
+    description: Validation parameters propagated from pipeline.
+
 outputs:
   output_dir:
     type: mlflow_model
@@ -34,4 +40,5 @@ outputs:
 
 command: >-
   python model_converter.py --model_path '${{inputs.model_path}}' $[[--converted_model
-  '${{inputs.converted_model}}']] --output_dir '${{outputs.output_dir}}'
+  '${{inputs.converted_model}}']] $[[--system_properties '${{inputs.system_properties}}']]
+  --output_dir '${{outputs.output_dir}}'

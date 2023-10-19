@@ -44,6 +44,12 @@ inputs:
     description: Validation status.
     mode: rw_mount
 
+  # Validation parameters
+  system_properties:
+    type: string
+    optional: true
+    description: Validation parameters propagated from pipeline.
+
 outputs:
   output_dir:
     type: uri_folder
@@ -53,5 +59,6 @@ outputs:
 command: >-
   python model_selector.py --task_name TextGeneration $[[--huggingface_id '${{inputs.huggingface_id}}']]
   $[[--pytorch_model_path '${{inputs.pytorch_model_path}}']] $[[--mlflow_model_path
-  '${{inputs.mlflow_model_path}}']] --output_dir '${{outputs.output_dir}}'
+  '${{inputs.mlflow_model_path}}']] $[[--system_properties '${{inputs.system_properties}}']]
+  --output_dir '${{outputs.output_dir}}'
 
