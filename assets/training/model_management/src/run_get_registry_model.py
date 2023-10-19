@@ -29,3 +29,19 @@ mlflow_model_from_registry = ml_client_registry.models.download(
     name=model, version=version, download_path=args.mlflow_model_folder)
 
 print("Downloaded model from registry.")
+
+# Save the model to the output folder
+print("Saving the model to the output folder.")
+
+# gather all files
+source = os.path.join(args.mlflow_model_folder, model+"/mlflow_model_folder/")
+destination = args.mlflow_model_folder
+allfiles = os.listdir(source)
+ 
+# iterate on all files to move them to destination folder
+for f in allfiles:
+    src_path = os.path.join(source, f)
+    dst_path = os.path.join(destination, f)
+    os.rename(src_path, dst_path)
+
+print("Saved the model to the output folder.")

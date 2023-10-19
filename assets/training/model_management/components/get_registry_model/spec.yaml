@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 
 name: get_registry_model
-version: 0.0.1.cond12
+version: 0.0.1.cond13
 type: command
 
 is_deterministic: True
