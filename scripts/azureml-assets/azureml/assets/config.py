@@ -18,7 +18,7 @@ from azure.ai.ml._azure_environments import (
     _get_storage_endpoint_from_metadata
 )
 from azure.identity import DefaultAzureCredential
-from azure.storage.blob import(
+from azure.storage.blob import (
     BlobServiceClient,
     ContainerSasPermissions,
     generate_container_sas
@@ -492,7 +492,7 @@ class AzureBlobstoreAssetPath(AssetPath):
 
     AZURE_CLOUD_SUFFIX = "core.windows.net"
 
-    DEFAULT_EXPIRATION_TIME_DELTA =datetime.timedelta(hours=1)
+    DEFAULT_EXPIRATION_TIME_DELTA = datetime.timedelta(hours=1)
 
     def __init__(self, storage_name: str, container_name: str, container_path: str):
         """Create a Blobstore path.
@@ -532,7 +532,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             )
         container_client = blob_service_client.get_container_client(container=container_name)
 
-        if container_client.get_container_properties().public_access == None:
+        if container_client.get_container_properties().public_access is None:
             start_time = datetime.datetime.now(datetime.timezone.utc)
             expiry_time = start_time + AzureBlobstoreAssetPath.DEFAULT_EXPIRATION_TIME_DELTA
 
@@ -541,7 +541,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             sas_token = "?" + generate_container_sas(
                 account_name=storage_name,
                 container_name=container_name,
-                user_delegation_key = key,
+                user_delegation_key=key,
                 permission=ContainerSasPermissions(read=True, list=True),
                 expiry=expiry_time,
                 start=start_time
