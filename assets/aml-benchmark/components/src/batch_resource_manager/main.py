@@ -154,6 +154,7 @@ def _online_endpoint_generator(
         sku = 1
     for subscription in subscription_lists:
         for region in region_lists:
+            logger.info("Checking {} in region {}.".format(subscription, region))
             online_model = OnlineEndpointModel(model, model_version, model_type, endpoint_name)
             online_endpoint = OnlineEndpointFactory.get_online_endpoint(
                 endpoint_workspace,
@@ -170,6 +171,8 @@ def _online_endpoint_generator(
             )
             if do_quota_validation and online_model.is_aoai_model():
                 current_quota = online_endpoint.model_quota()
+                logger.info(
+                    "Current quota for model {} is {}.".format(online_model.model_name, current_quota))
                 if current_quota < sku:
                     continue
                 if use_max_quota:
