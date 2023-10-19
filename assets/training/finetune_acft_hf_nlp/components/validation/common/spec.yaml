@@ -92,7 +92,13 @@ inputs:
     type: string
     optional: true
     description: Comma separated list of column names to be used for training
-  
+
+  # Validation parameters
+  system_properties:
+    type: string
+    optional: true
+    description: Validation parameters propagated from pipeline.
+
 outputs:
   validation_info:
     type: uri_file
@@ -100,4 +106,4 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python validation.py --validation-info '${{outputs.validation_info}}'
+  python validation.py $[[--system_properties '${{inputs.system_properties}}']] --validation-info '${{outputs.validation_info}}'
