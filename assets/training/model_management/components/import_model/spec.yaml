@@ -271,7 +271,7 @@ jobs:
         type: mlflow_model
 
   register_model:
-    component: azureml://registries/azureml/components/register_model/versions/0.0.8
+    component: azureml://registries/azureml/components/register_model/versions/0.0.10
     compute: ${{parent.inputs.compute}}
     resources:
       instance_type: '${{parent.inputs.instance_type}}'
