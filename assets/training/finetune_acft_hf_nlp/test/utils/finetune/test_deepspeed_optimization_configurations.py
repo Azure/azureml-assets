@@ -12,13 +12,11 @@ from typing import Dict, Any
 from src.finetune.finetune import (
     validate_ds_zero3_config,
     check_for_invalid_ds_zero3_settings,
-    setup_deepspeed,
-    get_deepspeed_config_json,
     identify_deepspeed_stage,
-    validate_deepspeed,
+    setup_and_validate_deepspeed,
     resolve_deepspeed_config,
     DEFAULT_DEEPSPEED_STAGE2_CONFIG,
-    DEFAULT_DEEPSPEED_STAGE3_CONFIG
+    DEFAULT_DEEPSPEED_STAGE3_CONFIG,
 )
 
 from azureml.acft.contrib.hf.nlp.constants.constants import Tasks, HfModelTypes
@@ -121,9 +119,7 @@ def test_enable_gradient_checkpointing():
         apply_deepspeed=True,
         deepspeed="test/utils/finetune/data/valid_ds3_config.json"
     )
-    setup_deepspeed(args)
-    ds_config_json = get_deepspeed_config_json(args)
-    validate_deepspeed(args, ds_config_json)
+    setup_and_validate_deepspeed(args, do_validate=True)
     assert getattr(args, "gradient_checkpointing") is True
 
 
