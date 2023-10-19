@@ -137,17 +137,17 @@ inputs:
   train_mltable_path:
     type: mltable
     optional: true
-    description: Enter the train mltable path
+    description: Path to the registered training data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.
 
   validation_mltable_path:
     type: mltable
     optional: true
-    description: Enter the validation mltable path
+    description: Path to the registered validation data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.
 
   test_mltable_path:
     type: mltable
     optional: true
-    description: Enter the test mltable path
+    description: Path to the registered test data asset in `mltable` format. Special characters like \ and ' are invalid in the parameter value.
 
   # Finetuning parameters
   # Lora parameters
