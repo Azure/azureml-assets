@@ -24,3 +24,4 @@ dependencies:
   - PyJWT<3.0.0
   - pytz
   - cryptography>=41.0.4
+  - azure-ai-formrecognizer==3.3.1
