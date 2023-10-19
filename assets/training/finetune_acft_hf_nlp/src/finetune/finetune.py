@@ -10,7 +10,7 @@ import argparse
 from pathlib import Path
 from argparse import Namespace
 from copy import deepcopy
-from typing import Dict, List, Any, Union
+from typing import Dict, Any
 import re
 
 import torch
