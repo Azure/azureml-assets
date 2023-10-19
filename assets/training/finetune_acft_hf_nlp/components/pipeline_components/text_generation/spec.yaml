@@ -617,7 +617,7 @@ jobs:
       # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   ft_nlp_model_converter:
     type: command
-    component: azureml:/subscriptions/ed2cab61-14cc-4fb3-ac23-d72609214cfd/resourceGroups/training_rg/providers/Microsoft.MachineLearningServices/workspaces/train-finetune-dev-workspace/components/ft_nlp_model_converter/versions/12.10.2023-src-007
+    component: azureml:ft_nlp_model_converter:0.0.21
     compute: '${{parent.inputs.compute_model_import}}'
     inputs:
       model_path: '${{parent.jobs.question_answering_finetune.outputs.pytorch_model_folder}}'
