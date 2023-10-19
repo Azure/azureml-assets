@@ -601,16 +601,7 @@ jobs:
       model_selector_output: '${{parent.jobs.translation_model_import.outputs.output_dir}}'
     outputs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
-      # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
-  ft_nlp_model_converter:
-    type: command
-    component: azureml:ft_nlp_model_converter:0.0.21
-    compute: '${{parent.inputs.compute_model_import}}'
-    inputs:
-      model_path: '${{parent.jobs.question_answering_finetune.outputs.pytorch_model_folder}}'
-      converted_model: '${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}'
-    outputs:
-      output_dir: '${{parent.outputs.mlflow_model_folder}}'
+      mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
     component: azureml:model_prediction:0.0.16
@@ -622,9 +613,9 @@ jobs:
       test_data: '${{parent.jobs.translation_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.target_lang}}'
       input_column_names: '${{parent.inputs.source_lang}}'
-      # batch_size: '${{parent.inputs.batch_size}}'
+#      batch_size: '${{parent.inputs.batch_size}}'
       device: auto
-      mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.output_dir}}'
+      mlflow_model: '${{parent.jobs.translation_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
     component: azureml:compute_metrics:0.0.16
