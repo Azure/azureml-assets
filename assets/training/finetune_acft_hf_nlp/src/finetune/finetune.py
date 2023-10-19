@@ -544,28 +544,27 @@ def identify_deepspeed_stage(deepspeed_config_json: Dict[str, Any]) -> int:
     return ds_stage
 
 
-def validate_setting_value(source: Namespace, key: str, value: Any) -> bool:
-    """Validate if given value is present in source."""
-    is_valid_value = False
-    source_value = getattr(source, key, None)
-    if source_value and isinstance(source_value, str) and isinstance(value, str) and \
-            value.startswith(ACFT_REGEX_PREFIX):
-        regex_str = value[len(ACFT_REGEX_PREFIX):]
-        re_match = re.match(regex_str, source_value)
+def is_match(user_value: Any, match_value: Any) -> bool:
+    """Match if given user value is same value/regex match as expected match value."""
+    is_match = False
+    if user_value and isinstance(user_value, str) and isinstance(match_value, str) and \
+            match_value.startswith(ACFT_REGEX_PREFIX):
+        regex_str = match_value[len(ACFT_REGEX_PREFIX):]
+        re_match = re.match(regex_str, user_value)
         if re_match is not None:
             # if there is a regex match then value is matched with value in source
-            is_valid_value = True
-            logger.info(f"Regex matched for {key}.")
+            is_match = True
+            logger.info(f"Regex matched: {user_value} with {regex_str}.")
         else:
             # if there is no regex match
-            is_valid_value = False
-            logger.info(f"Regex did not match for {key}.")
+            is_match = False
+            logger.info(f"Regex not matched: {user_value} with {regex_str}.")
     else:
-        is_valid_value = bool(source_value == value)
+        is_match = bool(user_value == match_value)
 
-    logger.info(f"Is valid value for {key} - {is_valid_value}")
+    logger.info(f"Is match - {is_match}")
 
-    return is_valid_value
+    return is_match
 
 
 def check_for_invalid_ds_zero3_settings(args: Namespace):
@@ -600,7 +599,7 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
         invalid_settings = setting["invalid_settings"]
         fail_run = setting["fail_run"]
         valid_settings = setting["valid_settings"]
-        if all([validate_setting_value(args, key, value) for key, value in invalid_settings.items()]):
+        if all([is_match(getattr(args, key, None), value) for key, value in invalid_settings.items()]):
             if fail_run:
                 raise ACFTValidationException._with_error(
                     AzureMLError.create(
@@ -705,6 +704,14 @@ def enable_ds3_model_specific_args(args: Namespace):
             f"Identified model type: {args.model_type}. Forcing `gradient_checkpointing` to True."
         )
         setattr(args, "gradient_checkpointing", True)
+
+
+def setup_automl_nlp(args: Namespace) -> None:
+    """Set automl nlp related args."""
+    if args.task_name in [Tasks.NLP_MULTICLASS, Tasks.NLP_MULTILABEL, Tasks.NLP_NER]:
+        # Disable adding prefixes to logger for NLP Tasks.
+        args.set_log_prefix = False
+        logger.info(f"Using log prefix - {args.set_log_prefix}")
 
 
 def finetune(args: Namespace):
@@ -876,12 +883,7 @@ def finetune(args: Namespace):
     args.save_strategy = args.evaluation_strategy
     args.save_steps = args.eval_steps
 
-    if args.task_name in [Tasks.NLP_MULTICLASS, Tasks.NLP_MULTILABEL, Tasks.NLP_NER]:
-        # Disable adding prefixes to logger for NLP Tasks.
-        args.set_log_prefix = False
-        logger.info(f"Using log prefix - {args.set_log_prefix}")
-
-    logger.info(args)
+    setup_automl_nlp(args)
 
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
