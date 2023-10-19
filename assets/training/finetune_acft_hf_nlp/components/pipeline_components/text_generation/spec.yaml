@@ -454,6 +454,12 @@ inputs:
     optional: true
     description: If set to true, will use the ONNXRunTime training
 
+  # Validation parameters
+  system_properties:
+    type: string
+    optional: true
+    description: Validation parameters propagated from pipeline.
+
   # Model Evaluation parameters
   evaluation_config:
     type: uri_file
@@ -533,6 +539,7 @@ jobs:
       validation_mltable_path: '${{parent.inputs.validation_mltable_path}}'
       test_mltable_path: '${{parent.inputs.test_mltable_path}}'
       user_column_names: '${{parent.inputs.text_key}},${{parent.inputs.ground_truth_key}}'
+      system_properties: '${{parent.inputs.system_properties}}'
   text_generation_model_import:
     type: command
     component: azureml:text_generation_model_import:0.0.21
@@ -542,6 +549,7 @@ jobs:
       pytorch_model_path: '${{parent.inputs.pytorch_model_path}}'
       mlflow_model_path: '${{parent.inputs.mlflow_model_path}}'
       validation_output: '${{parent.jobs.ft_nlp_common_validation.outputs.validation_info}}'
+      system_properties: '${{parent.inputs.system_properties}}'
   text_generation_datapreprocess:
     type: command
     component: azureml:text_generation_datapreprocess:0.0.21
@@ -559,6 +567,7 @@ jobs:
       validation_mltable_path: '${{parent.inputs.validation_mltable_path}}'
       test_mltable_path: '${{parent.inputs.test_mltable_path}}'
       model_selector_output: '${{parent.jobs.text_generation_model_import.outputs.output_dir}}'
+      system_properties: '${{parent.inputs.system_properties}}'
   text_generation_finetune:
     type: command
     component: azureml:text_generation_finetune:0.0.21
@@ -612,6 +621,7 @@ jobs:
       apply_ort: '${{parent.inputs.apply_ort}}'
       preprocess_output: '${{parent.jobs.text_generation_datapreprocess.outputs.output_dir}}'
       model_selector_output: '${{parent.jobs.text_generation_model_import.outputs.output_dir}}'
+      system_properties: '${{parent.inputs.system_properties}}'
     outputs:
       pytorch_model_folder: '${{parent.outputs.pytorch_model_folder}}'
       # mlflow_model_folder: '${{parent.outputs.mlflow_model_folder}}'
@@ -622,6 +632,7 @@ jobs:
     inputs:
       model_path: '${{parent.jobs.question_answering_finetune.outputs.pytorch_model_folder}}'
       converted_model: '${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}'
+      system_properties: '${{parent.inputs.system_properties}}'
     outputs:
       output_dir: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
