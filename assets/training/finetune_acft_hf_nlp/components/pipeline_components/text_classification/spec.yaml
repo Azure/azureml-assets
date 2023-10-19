@@ -619,8 +619,8 @@ jobs:
     component: azureml:ft_nlp_model_converter:0.0.21
     compute: '${{parent.inputs.compute_model_import}}'
     inputs:
-      model_path: '${{parent.jobs.question_answering_finetune.outputs.pytorch_model_folder}}'
-      converted_model: '${{parent.jobs.question_answering_finetune.outputs.mlflow_model_folder}}'
+      model_path: '${{parent.jobs.text_classification_finetune.outputs.pytorch_model_folder}}'
+      converted_model: '${{parent.jobs.text_classification_finetune.outputs.mlflow_model_folder}}'
     outputs:
       output_dir: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
