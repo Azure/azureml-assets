@@ -354,7 +354,6 @@ def fetch_mlflow_acft_metadata(
     :return: metadata
     :rtype: dict
     """
-
     metadata = {
         MlflowMetaConstants.IS_FINETUNED_MODEL: is_finetuned_model,
         MlflowMetaConstants.IS_ACFT_MODEL: True,
