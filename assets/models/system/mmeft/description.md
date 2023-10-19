@@ -2,7 +2,7 @@ Multimodal Early Fusion Transformer, MMEFT, is a transformer-based model tailore
 
 It can be used for multi-class and multi-label multimodal classification tasks, and is capable of handling datasets with features from diverse modes, including categorical, numerical, image, and text.
 The MMEFT architecture is composed of embedding, fusion, aggregation, and output layers. The embedding layer produces independent non-contextual embeddings for features of varying modes. Then, the fusion Layer integrates the non-contextual embeddings to yield contextual multimodal embeddings. The aggregation layer consolidates these contextual multimodal embeddings into a single multimodal embedding vector. Lastly, the output Layer, processes the final multimodal embedding to generate the model's prediction based on task for which it is used. 
-MMEFT uses, utilizes BertTokenizer for text data embeddings, and considers 'openai/clip-vit-base-patch32' model from Hugging Face for image data embeddings.
+MMEFT uses BertTokenizer for text data embeddings, and considers 'openai/clip-vit-base-patch32' model from Hugging Face for image data embeddings.
 This model is designed to offer a comprehensive approach to multimodal data, ensuring accurate and efficient classification across varied datasets.
 NOTE: We highly recommend to finetune the model on your dataset before deploying.
  
@@ -26,10 +26,14 @@ NOTE: We highly recommend to finetune the model on your dataset before deploying
  { 
  "input_data": { 
          "columns": ["column1","column2","column3","column4","column5","column6"], 
-         "data": [22,11.2,"It was a great experience!",<base 64 encoded image string>,"Categorical value",True]
+         "data": [22,11.2,"It was a great experience!",image1,"Categorical value",True]
      } 
  } 
  ``` 
+
+> Note:
+>
+> - "image1" string is in base64 format.
   
  #### Sample output 
   
