@@ -508,8 +508,6 @@ class AzureBlobstoreAssetPath(AssetPath):
         self._container_name = container_name
         self._container_path = container_path
 
-        sas_token = ""
-
         # AzureCloud, USGov, and China clouds should all pull from the same endpoint
         # associated with AzureCloud. If the cloud is not one of these, then the
         # endpoint will be dynamically acquired based on the currently configured
@@ -525,14 +523,18 @@ class AzureBlobstoreAssetPath(AssetPath):
         # Check to see if the container allows anonymous access. If it does not,
         # then generate a temporary SAS token for the container and append it to
         # the URI.
-        token_credential = DefaultAzureCredential()
         blob_service_client = BlobServiceClient(
                 account_url=account_uri,
-                credential=token_credential
+                credential=DefaultAzureCredential()
             )
         container_client = blob_service_client.get_container_client(container=container_name)
 
-        if container_client.get_container_properties().public_access is None:
+        if container_client.get_container_properties().public_access is not None:
+            # If the SAS token is not needed due to the container allowing anonymous
+            # access, then it will be an empty string and have no impact on the final
+            # uri.
+            sas_token = ""
+        else:
             start_time = datetime.datetime.now(datetime.timezone.utc)
             expiry_time = start_time + AzureBlobstoreAssetPath.DEFAULT_EXPIRATION_TIME_DELTA
 
@@ -547,9 +549,6 @@ class AzureBlobstoreAssetPath(AssetPath):
                 start=start_time
             )
 
-        # If the SAS token is not needed due to the container allowing anonymous
-        # access, then it will be an empty string and have no impact on the final
-        # uri.
         super().__init__(
             PathType.AZUREBLOB,
             f"{account_uri}/{container_name}/{container_path}{sas_token}"
