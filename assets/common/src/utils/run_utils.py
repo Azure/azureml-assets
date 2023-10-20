@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""Run Utils."""
+
 from azureml.core import Run
 from azureml.core.compute import ComputeTarget
 from utils.config import LoggerConfig

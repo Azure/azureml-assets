@@ -75,7 +75,7 @@ class TestJobRunUtilities(unittest.TestCase):
 
         assert run_details.run_id.startswith("OfflineRun_")
         self.assertEqual(run_details.parent_run_id, LoggerConfig.OFFLINE_RUN_MESSAGE)
-        self.assertEqual(run_details.run_details, LoggerConfig.OFFLINE_RUN_MESSAGE)
+        self.assertEqual(run_details.details, LoggerConfig.OFFLINE_RUN_MESSAGE)
         self.assertEqual(run_details.workspace, LoggerConfig.OFFLINE_RUN_MESSAGE)
         self.assertEqual(run_details.workspace_name, LoggerConfig.OFFLINE_RUN_MESSAGE)
         self.assertEqual(run_details.experiment_id, LoggerConfig.OFFLINE_RUN_MESSAGE)
