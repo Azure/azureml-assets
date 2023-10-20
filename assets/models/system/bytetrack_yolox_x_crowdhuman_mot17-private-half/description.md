@@ -8,13 +8,13 @@ Multi-object tracking (MOT) aims at estimating bounding boxes and identities of 
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-video-mutli-object-tracking-online-inference" target="_blank">video-multi-object-tracking-online-endpoint.ipynb</a>|[video-multi-object-tracking-online-endpoint.sh](https://github.com/Azure/azureml-examples/blob/yiyoulin/mot_examples/cli/foundation-models/system/inference/video-multi-object-tracking/video-multi-object-tracking-online-endpoint.sh)|
+Real time|<a href="https://aka.ms/azureml-video-mutli-object-tracking-online-inference" target="_blank">video-multi-object-tracking-online-endpoint.ipynb</a>|[video-multi-object-tracking-online-endpoint.sh](https://aka.ms/cli-video-multi-object-tracking-online-inference)|
 
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|--|
-Video multi-object tracking|Video multi-object tracking|[MOT17 tiny](https://download.openmmlab.com/mmtracking/data/MOT17_tiny.zip)|<a href="https://aka.ms/azureml-video-multi-object-tracking-finetune" target="_blank">mmtracking-video-multi-object-tracking.ipynb</a>|[mmtracking-mot17tiny-mot.sh](https://github.com/Azure/azureml-examples/blob/yiyoulin/mot_examples/cli/foundation-models/system/finetune/video-multi-object-tracking/mmtracking-mot17tiny-mot.sh)|
+Video multi-object tracking|Video multi-object tracking|[MOT17 tiny](https://download.openmmlab.com/mmtracking/data/MOT17_tiny.zip)|<a href="https://aka.ms/azureml-video-multi-object-tracking-finetune" target="_blank">mmtracking-video-multi-object-tracking.ipynb</a>|[mmtracking-mot17tiny-mot.sh](https://aka.ms/cli-video-multi-object-tracking-finetune)|
 
 
 ### Sample inputs and outputs (for real-time inference)
