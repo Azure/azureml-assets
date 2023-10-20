@@ -107,7 +107,7 @@ def get_model_name_version(model_id: str):
 def get_job_uri_from_input_run_assetId(assetID: str):
     """Return job asset ID post parsing run input asset ID.
 
-    Expected Input assetID pattern: 
+    Expected Input assetID pattern:
         For model:
             azureml://locations/<loc>/workspaces/<ws-d>/model/azureml_<job-id>_output_<output-name>/versions/<v>
         For data:

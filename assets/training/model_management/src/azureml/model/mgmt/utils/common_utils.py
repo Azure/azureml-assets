@@ -136,11 +136,12 @@ def copy_files(
     exclude_pattern_str: Optional[str] = None
 ) -> None:
     """Copy files to destination directory based on regex pattern provided for file name."""
-    if not Path(src_dir).is_dir():
+    src_dir = Path(src_dir)
+    destn_dir = Path(destn_dir)
+    if not src_dir.is_dir():
         raise Exception("src path provided should be a dir")
 
     os.makedirs(destn_dir, exist_ok=True)
-
     include_pattern = re.compile(include_pattern_str)
     exclude_pattern = None if not exclude_pattern_str else re.compile(exclude_pattern_str)
     for fname in os.listdir(src_dir):
@@ -160,11 +161,12 @@ def copy_files(
 @log_execution_time
 def move_files(src_dir: Path, destn_dir: Path, include_pattern_str: str = r"^.*$", ignore_case: bool = False) -> None:
     """Move files to destination directory based on regex pattern provided for file name."""
-    if not Path(src_dir).is_dir():
+    src_dir = Path(src_dir)
+    destn_dir = Path(destn_dir)
+    if not src_dir.is_dir():
         raise Exception("src path provided should be a dir")
 
     os.makedirs(destn_dir, exist_ok=True)
-
     include_pattern = re.compile(include_pattern_str)
     if ignore_case:
         include_pattern = re.compile(include_pattern_str, re.IGNORECASE)
