@@ -366,6 +366,4 @@ def update_run_for_conditional_output(conditional_params):
     mlflow.log_params({"azureml.pipeline.control": json.dumps(params_to_log)})
     run.add_properties({"azureml.pipeline.control": json.dumps(params_to_log)})
     for output_path, output_value in conditional_params.items():
-        output_name = str(output_path).split("/")[-1]
         output_path.write_text(str(output_value))
-        run.upload_file(name=f"primitivetypeoutputs/{output_name}", path_or_stream=str(output_path))
