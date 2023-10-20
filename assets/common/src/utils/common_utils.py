@@ -4,6 +4,7 @@
 """Common utils."""
 
 import os
+import re
 import sys
 from azure.ai.ml import MLClient
 from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
@@ -14,9 +15,9 @@ from azureml.core.run import Run
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
 from typing import Tuple
-import re
 
 from utils.logging_utils import get_logger
+from utils.run_utils import JobRunDetails
 from utils.exceptions import UserIdentityMissingError, InvalidModelIDError
 
 
@@ -101,3 +102,45 @@ def get_model_name_version(model_id: str):
 
     logger.info(f"Unsupported model asset uri: {model_id}")
     raise AzureMLException._with_error(AzureMLError.create(InvalidModelIDError, model_id=model_id))
+
+
+def get_job_uri_from_input_run_assetId(assetID: str):
+    """Return job asset ID post parsing run input asset ID.
+
+    Expected Input assetID pattern: 
+        azureml://locations/<location>/workspaces/<workspace_id>/<asset_type>/azureml_<job_id>_output_<output_name>/versions/<version>
+        examples:
+            model: azureml://locations/australiaeast/workspaces/cb388084-87b9-4542-9f0d-1edaaae8a9a3/models/azureml_3ab5fe5b-5dbf-437a-a056-5f2d0dd6a1f8_output_mlflow_model_folder/versions/1
+            data: azureml://locations/australiaeast/workspaces/cb388084-87b9-4542-9f0d-1edaaae8a9a3/data/azureml_25967082-715b-40f7-a491-01ec3c478692_output_data_model_download_metadata/versions/1
+    Corresponding pattern for job assetID:
+        azureml://jobs/<parent_job_id>/outputs/mlflow_model_folder
+    """
+    input_pattern_str = r"azureml://locations/.+/workspaces/.+/(.+)/azureml_(.+)_output_(.+)/versions/(.+)"
+    pattern = re.compile(input_pattern_str)
+    match = pattern.search(assetID)
+    if not match:
+        logger.warning(f"Returning None, as {assetID} does not match with input asset ID pattern {input_pattern_str}")
+        return None
+
+    input_asset_type = match.group(1)
+    input_parent_job_name = match.group(2)
+    input_asset_name = match.group(3)
+    if input_asset_type.lower() == "data":
+        logger.info("Removing data_ prifix from asset name")
+        input_asset_name = input_asset_name.replace("data_", "")
+    return f"azureml://jobs/{input_parent_job_name}/outputs/{input_asset_name}"
+
+
+def get_run_input_asset_id(input_name: str):
+    """Return Job Input asset ID for a given input name."""
+    run_details: JobRunDetails = JobRunDetails.get_run_details()
+    input_assets = run_details.input_assets.get(input_name, None)
+    if (input_assets and "asset" in input_assets and "assetId" in input_assets["asset"]):
+       return input_assets["asset"]["assetId"]
+    return None
+
+
+def get_job_asset_uri(input_name):
+    """Get Job asset URI for input name."""
+    input_asset_id = get_run_input_asset_id(input_name)
+    return get_job_uri_from_input_run_assetId(input_asset_id)

@@ -4,7 +4,7 @@
 """Logging utils."""
 
 from azureml.model.mgmt.config import AppName, LoggerConfig
-from azureml.model.mgmt.utils.run_utils import RunDetails
+from azureml.model.mgmt.utils.run_utils import JobRunDetails
 from azureml.telemetry import get_telemetry_log_handler
 from azureml.telemetry._telemetry_formatter import ExceptionFormatter
 import platform
@@ -139,5 +139,5 @@ def get_logger(name=LoggerConfig.LOGGER_NAME, level=LoggerConfig.VERBOSITY_LEVEL
     return logger
 
 
-run_details = RunDetails.get_run_details()
+run_details = JobRunDetails.get_run_details()
 custom_dimensions = CustomDimensions(run_details=run_details)

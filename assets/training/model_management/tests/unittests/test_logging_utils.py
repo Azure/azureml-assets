@@ -8,15 +8,15 @@ import sys
 import unittest
 from unittest.mock import MagicMock
 from azureml.core import Run, Workspace
-from azureml.model.mgmt.utils.logging_utils import RunDetails, CustomDimensions
+from azureml.model.mgmt.utils.logging_utils import JobRunDetails, CustomDimensions
 from azureml.model.mgmt.config import AppName, LoggerConfig
 
 
-class TestRunUtilities(unittest.TestCase):
+class TestJobRunUtilities(unittest.TestCase):
     """Test run details."""
 
     def setUp(self):
-        """Set up RunDetails object."""
+        """Set up JobRunDetails object."""
         self.run = MagicMock(spec=Run)
         self.workspace = MagicMock(spec=Workspace)
         self.run.get_context.return_value = self.run
@@ -45,7 +45,7 @@ class TestRunUtilities(unittest.TestCase):
 
     def test_run_details_properties(self):
         """Test run details with mock object."""
-        run_details = RunDetails()
+        run_details = JobRunDetails()
         run_details._run = self.run
 
         self.assertEqual(run_details.run_id, "mock_run_id")
@@ -70,7 +70,7 @@ class TestRunUtilities(unittest.TestCase):
 
     def test_offline_run_details_properties(self):
         """Test mock details for offline run."""
-        run_details = RunDetails()
+        run_details = JobRunDetails()
         run_details._run = Run.get_context()
 
         assert run_details.run_id.startswith("OfflineRun_")
@@ -88,7 +88,7 @@ class TestRunUtilities(unittest.TestCase):
 
     def test_custom_dimensions(self):
         """Test custom dimensions."""
-        run_details = RunDetails()
+        run_details = JobRunDetails()
         run_details._run = self.run
         custom_dimensions = CustomDimensions(run_details)
         self.assertEqual(custom_dimensions.run_id, "mock_run_id")
