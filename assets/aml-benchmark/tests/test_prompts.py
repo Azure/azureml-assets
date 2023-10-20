@@ -5,8 +5,8 @@
 
 import sys
 import pytest
+from typing import List, Dict
 
-from  typing import List, Dict
 from .test_utils import get_src_dir
 
 sys.path.append(get_src_dir())
