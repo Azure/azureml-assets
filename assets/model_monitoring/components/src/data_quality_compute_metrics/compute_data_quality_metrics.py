@@ -37,7 +37,9 @@ from typing import Tuple
 # Init spark session
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
-supported_datatypes = ['timestamp', 'boolean', 'double', 'binary', 'date', 'decimal', 'float', 'integer', 'long', 'short', 'string', 'char(30)', 'varchar(30)', 'byte']
+supported_datatypes = ['timestamp', 'boolean', 'double', 'binary', 'date', 'decimal', 'float', 'integer',
+                       'long', 'short', 'string', 'char(30)', 'varchar(30)', 'byte']
+
 
 def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     """
@@ -302,7 +304,8 @@ def compute_dtype_violation_count_modify_dataset(
 
         if dtype_baseline not in supported_datatypes:
             # we set the default num of error as we do not support this type validation
-            warnings.warn("we set the default num of error to 0 as we do not support this datatype {} validation".format(dtype_baseline))
+            warnings.warn("we set the default num of error to 0 as we do not support \
+                           this datatype {} validation".format(dtype_baseline))
             num_errors = 0
         else:
             # Cast the column to datatype from baseline reference column and count the number of errors
@@ -561,4 +564,3 @@ def compute_data_quality_metrics(df, data_stats_table):
     )
 
     return violation_df_remapped
-
