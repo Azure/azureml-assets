@@ -65,7 +65,7 @@ class TestModelMonitorDataQuality:
             df_without_datatype_violation,
             data_stats_table_mod
     ):
-        """Test datatype with no vialation"""
+        """Test datatype with no violation."""
         _, df_conversion_errors = compute_dtype_violation_count_modify_dataset(df_without_datatype_violation,
                                                                                data_stats_table_mod)
         for rows in df_conversion_errors.select("violationCount").collect():
@@ -78,14 +78,14 @@ class TestModelMonitorDataQuality:
             df_with_datatype_violation,
             data_stats_table_mod
     ):
-        """Test datatype while there are vialation"""
+        """Test datatype while there are violation."""
         _, df_conversion_errors = compute_dtype_violation_count_modify_dataset(df_with_datatype_violation,
                                                                                data_stats_table_mod)
         for rows in df_conversion_errors.select("violationCount").collect():
             assert rows[0] >= 1
 
     def test_compute_dtype_violation_count_modify_dataset_with_unsupported_type(self):
-        """Test datatype while the datatype is unsupported"""
+        """Test datatype while the datatype is unsupported."""
         data = [(1, 2), (2, 3)]
         columns = ["feature_unsupported_1", "feature_unsupported_2"]
         df = create_pyspark_dataframe(data, columns)
@@ -99,7 +99,7 @@ class TestModelMonitorDataQuality:
 
     @pytest.mark.local
     def test_modify_type(self):
-        """Test modify datatype from Datatype() to datatype"""
+        """Test modify datatype from Datatype() to datatype."""
         data = [("BinaryType()", "featureName1"),  ("TimestampType()", "featureName1"),
                 ("BooleanType()", "featureName1"), ("DoubleType()", "featureName1"),
                 ("StringType()", "featureName1"),  ("DateType()", "featureName1"),
