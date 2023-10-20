@@ -20,32 +20,33 @@ NOTE: We highly recommend to finetune the model on your dataset before deploying
  Multimodal multi-class classification|Airbnb listings dataset|<a href='https://aka.ms/azureml-ft-sdk-multimodal-mc-classification' target='_blank'>multimodal-multiclass-classification.ipynb</a>|<a href='https://aka.ms/azureml-ft-cli-multimodal-mc-classification' target='_blank'>multimodal-multiclass-classification.sh</a> 
  Multimodal multi-label classification |Hateful memes dataset|<a href='https://aka.ms/azureml-ft-sdk-multimodal-ml-classification' target='_blank'>multimodal-multilabel-classification.ipynb</a>|<a href='https://aka.ms/azureml-ft-cli-multimodal-ml-classification' target='_blank'>multimodal-multilabel-classification.sh</a> 
  
- ### Sample inputs and outputs (for real-time inference) 
- #### Sample input 
- ```json 
- { 
+### Sample inputs and outputs (for real-time inference) 
+
+#### Sample input 
+
+```json 
+{ 
  "input_data": { 
-         "columns": ["column1","column2","column3","column4","column5","column6"], 
-         "data": [22,11.2,"It was a great experience!",image1,"Categorical value",True]
+        "columns": ["column1","column2","column3","column4","column5","column6"], 
+        "data": [22,11.2,"It was a great experience!",image1,"Categorical value",True]
      } 
- } 
- ``` 
+} 
+``` 
 
 > Note:
 >
 > - "image1" string is in base64 format.
   
- #### Sample output 
+#### Sample output 
   
   
- ```json 
- [ 
+```json 
+[ 
      {
-		 "label1": 0.1,
-		 "label2": 0.7,
-		 "label3": 0.2
+        "label1": 0.1,
+        "label2": 0.7,
+        "label3": 0.2
      } 
- ] 
+] 
   
- ``` 
-  
+```
