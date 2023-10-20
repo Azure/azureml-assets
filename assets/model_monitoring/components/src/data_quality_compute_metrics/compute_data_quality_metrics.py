@@ -3,9 +3,6 @@
 
 """This file contains the core logic for data quality metrics component."""
 
-import pyspark
-import pyspark.pandas as ps
-import warnings
 from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 from pyspark.sql.types import (
@@ -32,6 +29,9 @@ from pyspark.sql.functions import (
 )
 from pyspark.ml.feature import Imputer
 from typing import Tuple
+import pyspark
+import pyspark.pandas as ps
+import warnings
 
 
 # Init spark session
@@ -388,6 +388,7 @@ def impute_categorical_with_mode(df: pyspark.sql.DataFrame) -> pyspark.sql.DataF
 
 def modify_dataType(data_stats_table) -> pyspark.sql.DataFrame:
     """Cast DataType() to DataType."""
+    # When adding new datatype into the cast list, please also add it into supported_datatypes list
     data_stats_table_mod = data_stats_table.withColumn(
         "dataType",
         when(col("dataType") == "DoubleType()", "double")
