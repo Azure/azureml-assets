@@ -66,7 +66,8 @@ class TestModelMonitorDataQuality:
             data_stats_table_mod
     ):
         """Test datatype with no vialation"""
-        _, df_conversion_errors = compute_dtype_violation_count_modify_dataset(df_without_datatype_violation, data_stats_table_mod)
+        _, df_conversion_errors = compute_dtype_violation_count_modify_dataset(df_without_datatype_violation,
+                                                                               data_stats_table_mod)
         for rows in df_conversion_errors.select("violationCount").collect():
             assert rows[0] == 0
 
@@ -78,7 +79,8 @@ class TestModelMonitorDataQuality:
             data_stats_table_mod
     ):
         """Test datatype while there are vialation"""
-        _, df_conversion_errors = compute_dtype_violation_count_modify_dataset(df_with_datatype_violation, data_stats_table_mod)
+        _, df_conversion_errors = compute_dtype_violation_count_modify_dataset(df_with_datatype_violation,
+                                                                               data_stats_table_mod)
         for rows in df_conversion_errors.select("violationCount").collect():
             assert rows[0] >= 1
 
@@ -87,7 +89,8 @@ class TestModelMonitorDataQuality:
         data = [(1, 2), (2, 3)]
         columns = ["feature_unsupported_1", "feature_unsupported_2"]
         df = create_pyspark_dataframe(data, columns)
-        data_stats_tabel_mod_with_unsupported_type = [("feature_unsupported_1", "UnsupportedType()"), ("feature_unsupported_2", "UnsupportedType()")]
+        data_stats_tabel_mod_with_unsupported_type = [("feature_unsupported_1", "UnsupportedType()"),
+                                                      ("feature_unsupported_2", "UnsupportedType()")]
         columns = ['featureName',  'dataType']
         data_stats_table_mod = create_pyspark_dataframe(data_stats_tabel_mod_with_unsupported_type, columns)
         _, df_conversion_errors = compute_dtype_violation_count_modify_dataset(df, data_stats_table_mod)
@@ -97,10 +100,12 @@ class TestModelMonitorDataQuality:
     @pytest.mark.local
     def test_modify_type(self):
         """Test modify datatype from Datatype() to datatype"""
-        data = [("BinaryType()", "featureName1"),  ("TimestampType()", "featureName1"), ("BooleanType()", "featureName1"),
-                ("DoubleType()", "featureName1"),  ("StringType()", "featureName1"),    ("DateType()", "featureName1"),
-                ("LongType()", "featureName1"),    ("ShortType()", "featureName1"),     ("CharType()", "featureName1"),
-                ("VarcharType()", "featureName1"), ("ByteType()", "featureName1"),      ("IntegerType()", "featureName1")]
+        data = [("BinaryType()", "featureName1"),  ("TimestampType()", "featureName1"),
+                ("BooleanType()", "featureName1"), ("DoubleType()", "featureName1"),
+                ("StringType()", "featureName1"),  ("DateType()", "featureName1"),
+                ("LongType()", "featureName1"),    ("ShortType()", "featureName1"),
+                ("CharType()", "featureName1"),    ("VarcharType()", "featureName1"),
+                ("ByteType()", "featureName1"),    ("IntegerType()", "featureName1")]
 
         columns = ["dataType", "featureName"]
         expected = ["binary",      "timestamp", "boolean",
