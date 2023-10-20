@@ -147,7 +147,8 @@ def run():
     logger.info("Updated condition params")
 
     # TODO: add supported framework condition
-    # check if model in sourced from supported sources and scan through files to understand if it can processed by next components
+    # check if model in sourced from supported sources and scan through files to understand 
+    # if it can processed by next components
     # supported fws are:
     # 1. huggingface (contains config.json, tokenizer.json, pytorch_model.bin or many such pytorch bin files)
     # 2. mmlab

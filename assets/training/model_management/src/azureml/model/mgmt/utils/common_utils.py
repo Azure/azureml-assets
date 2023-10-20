@@ -154,7 +154,7 @@ def copy_files(
                 exclude_pattern_str
             )
         elif include_pattern.match(fname) and not (exclude_pattern and exclude_pattern.match(fname)):
-                shutil.copy(os.path.join(src_dir, fname), destn_dir)
+            shutil.copy(os.path.join(src_dir, fname), destn_dir)
 
 
 @log_execution_time
@@ -351,20 +351,19 @@ def get_git_lfs_blob_size_in_kb(git_dir: Path) -> int:
 
 
 def update_run_for_conditional_output(conditional_params):
-    """Update run for conditional params. 
-    
-    Conditional nodel make use of parent run property to read boolean value. 
+    """Update run for conditional params. Conditional nodel make use of parent run property to read boolean value.
 
-    :param conditioanal_params: dict mapping output param value with 
+    :param conditional_params: dict mapping conditional_output_path to value
+        eg: {output/path/is_mlflow_model: True}
     :type conditional_params: Dict
     """
     run = Run.get_context()
     logger.info(conditional_params)
-    params_to_log = {name:details["value"] for name, details in conditional_params.items()}
+    params_to_log = {str(file_path).split("/")[-1]: value for file_path, value in conditional_params.items()}
+    logger.info(params_to_log)
     mlflow.log_params({"azureml.pipeline.control": json.dumps(params_to_log)})
-    run.add_properties({"azureml.pipeline.control": json.dumps(params_to_log)})  
-    for output_name, details in conditional_params.items():
-        output_path = details["path"]
-        val = details["value"]
-        output_path.write_text(str(val))
+    run.add_properties({"azureml.pipeline.control": json.dumps(params_to_log)})
+    for output_path, output_value in conditional_params.items():
+        output_name = str(output_path).split("/")[-1]
+        output_path.write_text(str(output_value))
         run.upload_file(name=f"primitivetypeoutputs/{output_name}", path_or_stream=str(output_path))

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""Test download."""
+"""Test run details"""
 
 import platform
 import sys
@@ -51,7 +51,7 @@ class TestJobRunUtilities(unittest.TestCase):
         self.assertEqual(run_details.run_id, "mock_run_id")
         self.assertEqual(run_details.parent_run_id, "mock_parent_run_id")
         self.assertEqual(
-            run_details.run_details, {"target": "mock_compute", "properties": {"azureml.moduleid": "mock_asset_id"}}
+            run_details.details, {"target": "mock_compute", "properties": {"azureml.moduleid": "mock_asset_id"}}
         )
         self.assertEqual(run_details.workspace, self.workspace)
         self.assertEqual(run_details.workspace_name, "mock_workspace_name")
@@ -63,8 +63,8 @@ class TestJobRunUtilities(unittest.TestCase):
         self.assertEqual(run_details.component_asset_id, "mock_asset_id")
         self.assertEqual(run_details.root_attribute, "mock_parent_run_id")
 
-        run_details._run_details = {"target": "mock_compute2"}
-        self.assertEqual(run_details.run_details, {"target": "mock_compute2"})
+        run_details._details = {"target": "mock_compute2"}
+        self.assertEqual(run_details.details, {"target": "mock_compute2"})
         self.assertEqual(run_details.compute, "mock_compute2")
         self.assertEqual(run_details.component_asset_id, LoggerConfig.ASSET_NOT_FOUND)
 

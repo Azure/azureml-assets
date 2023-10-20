@@ -108,10 +108,10 @@ def get_job_uri_from_input_run_assetId(assetID: str):
     """Return job asset ID post parsing run input asset ID.
 
     Expected Input assetID pattern: 
-        azureml://locations/<location>/workspaces/<workspace_id>/<asset_type>/azureml_<job_id>_output_<output_name>/versions/<version>
-        examples:
-            model: azureml://locations/australiaeast/workspaces/cb388084-87b9-4542-9f0d-1edaaae8a9a3/models/azureml_3ab5fe5b-5dbf-437a-a056-5f2d0dd6a1f8_output_mlflow_model_folder/versions/1
-            data: azureml://locations/australiaeast/workspaces/cb388084-87b9-4542-9f0d-1edaaae8a9a3/data/azureml_25967082-715b-40f7-a491-01ec3c478692_output_data_model_download_metadata/versions/1
+        For model:
+            azureml://locations/<loc>/workspaces/<ws-d>/model/azureml_<job-id>_output_<output-name>/versions/<v>
+        For data:
+            azureml://locations/<loc>/workspaces/<ws-id>/data/azureml_<job-id>_output_data_<output-name>/versions/<v>
     Corresponding pattern for job assetID:
         azureml://jobs/<parent_job_id>/outputs/mlflow_model_folder
     """
@@ -136,7 +136,7 @@ def get_run_input_asset_id(input_name: str):
     run_details: JobRunDetails = JobRunDetails.get_run_details()
     input_assets = run_details.input_assets.get(input_name, None)
     if (input_assets and "asset" in input_assets and "assetId" in input_assets["asset"]):
-       return input_assets["asset"]["assetId"]
+        return input_assets["asset"]["assetId"]
     return None
 
 
