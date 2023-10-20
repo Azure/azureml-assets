@@ -31,7 +31,7 @@ Video multi-object tracking|Video multi-object tracking|[MOT17 tiny](https://dow
 }
 ```
 
-Note: "video_link" should be publicly accessible urls.
+Note: "video_link" should be a publicly accessible url.
 
 #### Sample output
 
@@ -85,7 +85,7 @@ Note: "video_link" should be publicly accessible urls.
       }
     ],
     "frame_id": 0,
-    "video_url": "https://github.com/open-mmlab/mmtracking/raw/master/demo/demo.mp4"
+    "video_url": "video_link"
   }
 ]
 ```
