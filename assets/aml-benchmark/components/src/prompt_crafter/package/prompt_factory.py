@@ -324,7 +324,17 @@ class ChatPromptFactory(PromptFactory):
 
     def _parse_affix(self, affix: str, role="user") -> OpenAICreateChatPrompt:
         """Convert affix string to messages format."""
-        messages = [{"role": role, "content": affix}]
+        try:
+            messages = json.loads(affix)
+        except json.decoder.JSONDecodeError:
+            # NOTE: user role is currently prefered over system role
+            # though this may change in the future as models are updated
+            messages = [{"role": role, "content": affix}]
+
+        # Handling the case where Json.loads load a string with only number as intger.
+        if isinstance(messages, int):
+            messages = [{"role": role, "content": affix}]
+
         messages = self._make_list(messages)
         self._validate_messages(messages)
         return messages
