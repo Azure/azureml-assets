@@ -3,7 +3,7 @@
 
 """MLflow PythonModel wrapper class that loads the MLflow model, preprocess inputs and performs inference."""
 
-import re
+
 import subprocess
 import sys
 from typing import Dict, List
