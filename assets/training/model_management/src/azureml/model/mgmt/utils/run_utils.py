@@ -21,7 +21,7 @@ class JobRunDetails:
 
     @staticmethod
     def get_run_details():
-        """Method to fetch run details instance. This should be called instead of calling JobRunDetails constructor."""
+        """Get JobRunDetails details. This should be called instead of calling JobRunDetails constructor."""
         if not JobRunDetails._instance:
             JobRunDetails._instance = JobRunDetails()
         return JobRunDetails._instance
