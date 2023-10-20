@@ -387,7 +387,7 @@ def impute_categorical_with_mode(df: pyspark.sql.DataFrame) -> pyspark.sql.DataF
 
 
 def modify_dataType(data_stats_table) -> pyspark.sql.DataFrame:
-    """Cast DataType() to DataType"""
+    """Cast DataType() to DataType."""
     data_stats_table_mod = data_stats_table.withColumn(
         "dataType",
         when(col("dataType") == "DoubleType()", "double")
