@@ -249,7 +249,7 @@ def main(
             try:
                 managed_deployment = deploy_model_maybe(
                     online_endpoint, output_metadata_dir, managed_endpoint)
-                if managed_endpoint:
+                if managed_deployment:
                     break
             except Exception as e:
                 logger.error(f"Failed to deploy model with error {e}.")
