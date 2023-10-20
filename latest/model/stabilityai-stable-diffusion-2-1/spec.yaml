@@ -14,7 +14,7 @@ tags:
   Preview: ''
   license: creativeml-openrail++-m
   task: text-to-image
-version: 3
+version: 4
 description: |
   __stabilityai/stable-diffusion-2-1__ model is a fine-tuned version of the Stable Diffusion v2 model, with additional training steps on the same dataset. It's designed for generating and modifying images based on text prompts, utilizing a Latent Diffusion Model with a fixed, pretrained text encoder (OpenCLIP-ViT/H). The model was trained on the LAION-5B dataset and its subsets, with further filtering using LAION's NSFW detector with a conservative "p_unsafe" score of 0.1. The model has various applications in research, art, education, and creative tools. However, there are strict guidelines for the model's use to prevent misuse and malicious activities. It should not be used to create harmful, offensive, or discriminatory content. Additionally, the model has limitations, such as difficulties with photorealism, rendering legible text, and generating complex compositions. The model was primarily trained on English descriptions, potentially leading to biases and limited effectiveness with non-English prompts. To enhance safety, a Safety Checker is recommended for use with this model.
 

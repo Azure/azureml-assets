@@ -14,7 +14,7 @@ tags:
   Preview: ''
   license: creativeml-openrail++-m
   task: text-to-image
-version: 3
+version: 4
 description: |
   ___stabilityai/stable-diffusion-2-inpainting___ model is a continuation of the stable-diffusion-2-base model, with an additional 200,000 steps of training. It utilizes a mask-generation strategy introduced in LAMA and combines this with latent Variational Autoencoder (VAE) representations of the masked image to provide additional conditioning during the training process. LAION-5B and subsets are used as training data, which is further filtered using LAION's NSFW detector, with a "p_unsafe" score of 0.1 (conservative). The model should not be used to create harmful, offensive, or discriminatory content. Additionally, the model has limitations, such as difficulties with photorealism, rendering legible text, and generating complex compositions. The model's training data, LAION-5B, primarily contains English descriptions, which can lead to biases and limitations in generating non-English content. To enhance safety, a Safety Checker is recommended for use with this model.
 
