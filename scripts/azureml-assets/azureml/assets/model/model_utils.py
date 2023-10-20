@@ -93,6 +93,31 @@ class ModelAsset:
         except Exception as e:
             raise Exception(f"Error in copying artifacts to registry storage. Error {e}")
 
+
+class MLFlowModelAsset(ModelAsset):
+    """Asset class for MLflow model."""
+
+    MLMODEL_FILE_NAME = "MLmodel"
+    MLFLOW_MODEL_PATH = "mlflow_model_folder"
+
+    def __init__(self, spec_path, model_config, registry_name, temp_dir):
+        """Initialize Mlflow model asset."""
+        super().__init__(spec_path, model_config, registry_name, temp_dir)
+
+    def prepare_model(self, ml_client: MLClient):
+        """Prepare model for publish."""
+        model_registry_path = self._publish_to_registry(ml_client)
+        self._model.path = model_registry_path + "/" + MLFlowModelAsset.MLFLOW_MODEL_PATH
+        return self._model
+
+
+class CustomModelAsset(ModelAsset):
+    """Asset class for custom model."""
+
+    def __init__(self, spec_path, model_config, registry_name, temp_dir):
+        """Initialize custom model asset."""
+        super().__init__(spec_path, model_config, registry_name, temp_dir)
+
     def prepare_model(self, ml_client: MLClient):
         """Prepare model for publish."""
         model_registry_path = self._publish_to_registry(ml_client)
@@ -105,8 +130,10 @@ def prepare_model(spec_path, model_config, temp_dir, ml_client: MLClient):
     try:
         logger.print(f"Model type: {model_config.type}")
         registry_name = ml_client.models._registry_name
-        if model_config.type in [assets.ModelType.CUSTOM, assets.ModelType.MLFLOW]:
-            model_asset = ModelAsset(spec_path, model_config, registry_name, temp_dir)
+        if model_config.type == assets.ModelType.CUSTOM:
+            model_asset = CustomModelAsset(spec_path, model_config, registry_name, temp_dir)
+        elif model_config.type == assets.ModelType.MLFLOW:
+            model_asset = MLFlowModelAsset(spec_path, model_config, registry_name, temp_dir)
         else:
             logger.log_error(f"Model type {model_config.type.value} not supported")
             return False

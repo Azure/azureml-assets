@@ -26,4 +26,4 @@ dependencies:
   - protobuf~=4.22.0
   - horovod[tensorflow]
   - debugpy~=1.6.3
-  - cryptography>=41.0.2
+  - cryptography>=41.0.4

@@ -13,8 +13,8 @@ import os
 import pandas as pd
 import torch
 
-from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants
-from utils import image_to_str, save_image
+from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, BatchConstants, DatatypeLiterals
+from vision_utils import image_to_base64
 
 
 class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -33,37 +33,6 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         self._pipe = None
         self._task_type = task_type
         self.batch_output_folder = None
-
-    def predict_batch(self, text_prompts):
-        """
-        Predict method text-to-image task for batch endpoint.
-
-        For batch we are try to do prediction in a loop instead of sending complete list at once.
-        Sending a big list of text prompts at once might lead to out of memory related errors.
-
-        :param text_prompts: A list of text prompts for which we need to generate images.
-        :type text_prompts: list
-        :return: Pandas dataframe having generated images and NSFW flag. Images in form of base64 string.
-        :rtype: pandas.DataFrame
-        """
-        generated_images = []
-        nsfw_content_detected = []
-        for text_prompt in text_prompts:
-            output = self._pipe(text_prompt)
-            img = output.images[0]
-            nsfw_content = output.nsfw_content_detected[0] if output.nsfw_content_detected else None
-            generated_images.append(save_image(self.batch_output_folder, img))
-            nsfw_content_detected.append(nsfw_content)
-
-        df = pd.DataFrame(
-            {
-                MLflowSchemaLiterals.INPUT_COLUMN_PROMPT: text_prompts,
-                MLflowSchemaLiterals.OUTPUT_COLUMN_IMAGE: generated_images,
-                MLflowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG: nsfw_content_detected,
-            }
-        )
-
-        return df
 
     def load_context(self, context: mlflow.pyfunc.PythonModelContext) -> None:
         """
@@ -107,22 +76,17 @@ class StableDiffusionMLflowWrapper(mlflow.pyfunc.PythonModel):
         """
         text_prompts = input_data[MLflowSchemaLiterals.INPUT_COLUMN_PROMPT].tolist()
 
-        if self.batch_output_folder:
-            # Batch endpoint
-            return self.predict_batch(text_prompts)
-        else:
-            # Online endpoint
-            output = self._pipe(text_prompts)
-            generated_images = []
-            for img in output.images:
-                generated_images.append(image_to_str(img))
+        output = self._pipe(text_prompts)
+        generated_images = []
+        for img in output.images:
+            generated_images.append(image_to_base64(img, format=DatatypeLiterals.IMAGE_FORMAT))
 
-            df = pd.DataFrame(
-                {
-                    MLflowSchemaLiterals.INPUT_COLUMN_PROMPT: text_prompts,
-                    MLflowSchemaLiterals.OUTPUT_COLUMN_IMAGE: generated_images,
-                    MLflowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG: output.nsfw_content_detected,
-                }
-            )
+        df = pd.DataFrame(
+            {
+                MLflowSchemaLiterals.INPUT_COLUMN_PROMPT: text_prompts,
+                MLflowSchemaLiterals.OUTPUT_COLUMN_IMAGE: generated_images,
+                MLflowSchemaLiterals.OUTPUT_COLUMN_NSFW_FLAG: output.nsfw_content_detected,
+            }
+        )
 
-            return df
+        return df

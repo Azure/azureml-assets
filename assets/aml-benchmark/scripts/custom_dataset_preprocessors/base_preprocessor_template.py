@@ -8,7 +8,6 @@
 from typing import Any, Dict, List, Union
 import argparse
 import json
-import logging as logger
 import pandas as pd
 
 
@@ -29,7 +28,6 @@ def _read_jsonl_file(file_path: str) -> List[Dict[str, Any]]:
     """
     if not file_path.endswith(".jsonl"):
         mssg = f"Input file '{file_path}' is not a .jsonl file."
-        logger.ERROR(mssg)
         raise ValueError(mssg)
     data_dicts = []
     with open(file_path, "r", encoding="utf8") as file:

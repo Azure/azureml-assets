@@ -15,7 +15,7 @@ from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 from azure.ai.ml.constants import AssetTypes
 
-from test_utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
@@ -385,3 +385,69 @@ class TestDatasetPreprocessorScript:
         except subprocess.CalledProcessError as e:
             exception_message = e.output.strip()
             assert_exception_mssg(exception_message, invalid_user_script_mssg)
+
+    @pytest.mark.parametrize(
+        "dataset_name, dataset,template_input,script_path, encoder_config",
+        [
+            (
+                "truthful_qa:generation", Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, None,
+                os.path.join(Constants.CUSTOM_PREPROCESSOR_SCRIPT_PATH, "truthfulqa_hf.py"), None
+            )
+        ],
+    )
+    def test_truthfulqa_hf_dataset_preprocessor(
+        self,
+        dataset_name: str,
+        dataset: str,
+        template_input: str,
+        script_path: str,
+        encoder_config: str,
+        output_dataset: str = os.path.join(
+            os.path.dirname(__file__), 'data/processed_output.jsonl'
+        ),
+    ) -> None:
+        """TruthfulQA-HF Dataset Custom Preprocessor script test."""
+        src_dir = get_src_dir()
+        with open(
+            os.path.join(
+                os.path.dirname(
+                    Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE), "process_one_example.jsonl"), "w"
+                ) as writer:
+            with open(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE, "r") as reader:
+                for line in reader:
+                    out_row = json.loads(line)
+                    if out_row.get('name') == dataset_name:
+                        del out_row['name']
+                        writer.write(json.dumps(out_row) + "\n")
+        dataset = os.path.join(
+            os.path.dirname(Constants.PROCESS_SAMPLE_EXAMPLES_INPUT_FILE),
+            "process_one_example.jsonl"
+        )
+        argss = ["--dataset", dataset, "--output_dataset", output_dataset,]
+        if dataset is not None:
+            argss.extend(["--dataset", dataset])
+        if template_input is not None:
+            argss.extend(["--template_input", f"'{template_input}'"])
+        elif script_path is not None:
+            argss.extend(["--script_path", script_path])
+        if encoder_config is not None:
+            argss.extend(["--encoder_config", str(encoder_config)])
+        argss = " ".join(argss)
+        cmd = f"cd {src_dir} && python -m dataset_preprocessor.main {argss}"
+        run_command(f"{cmd}")
+        with open(dataset, "r") as f:
+            input_records = [json.loads(line) for line in f]
+        input_row_count = len(input_records)
+        if not os.path.isfile(output_dataset):
+            output_files = glob.glob(output_dataset + '/**/*.jsonl', recursive=True)
+        else:
+            output_files = [output_dataset]
+        with open(output_files[0], "r") as f:
+            output_records = [json.loads(line) for line in f]
+        output_row_count = len(output_records)
+        assert input_row_count == output_row_count
+        expected_columns = [
+            'question', 'best_answer', 'choices', 'best_answer_index',
+            'correct_answers', 'labels', 'best_answer_label'
+        ]
+        assert list(output_records[0].keys()) == expected_columns

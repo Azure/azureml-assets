@@ -9,7 +9,7 @@ import json
 from azure.ai.ml.entities import Job
 import pytest
 
-from test_utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     download_outputs,

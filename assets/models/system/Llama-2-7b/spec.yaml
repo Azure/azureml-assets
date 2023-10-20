@@ -47,6 +47,7 @@ tags:
     precision: '4'
   task: text-generation
   inference_supported_envs:
+  - vllm
   - ds_mii
   SharedComputeCapacityEnabled: ''
-version: 9
+version: 12

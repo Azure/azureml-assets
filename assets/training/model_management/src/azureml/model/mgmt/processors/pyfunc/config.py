@@ -13,6 +13,12 @@ class MMLabDetectionTasks(_CustomEnum):
     MM_INSTANCE_SEGMENTATION = "image-instance-segmentation"
 
 
+class MMLabTrackingTasks(_CustomEnum):
+    """Supported tasks from MMLab model framework for video."""
+
+    MM_MULTI_OBJECT_TRACKING = "video-multi-object-tracking"
+
+
 class SupportedTasks(_CustomEnum):
     """Supported tasks for conversion to PyFunc MLflow."""
 
@@ -20,11 +26,25 @@ class SupportedTasks(_CustomEnum):
     MM_OBJECT_DETECTION = "image-object-detection"
     MM_INSTANCE_SEGMENTATION = "image-instance-segmentation"
 
+    # MmTrack video tasks
+    MM_MULTI_OBJECT_TRACKING = "video-multi-object-tracking"
+
     # CLIP task
     ZERO_SHOT_IMAGE_CLASSIFICATION = "zero-shot-image-classification"
+    EMBEDDINGS = "embeddings"
+
+    # BLIP2 task
+    IMAGE_TO_TEXT = "image-to-text"
 
     # Text to Image
     TEXT_TO_IMAGE = "text-to-image"
+    TEXT_TO_IMAGE_INPAINTING = "text-to-image-inpainting"
 
     # LLaVA task
     IMAGE_TEXT_TO_TEXT = "image-text-to-text"
+
+
+class SupportedTextToImageModelFamily(_CustomEnum):
+    """Supported text to image models."""
+
+    STABLE_DIFFUSION = "stable-diffusion"
