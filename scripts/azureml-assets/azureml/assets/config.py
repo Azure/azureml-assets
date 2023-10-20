@@ -492,7 +492,9 @@ class AzureBlobstoreAssetPath(AssetPath):
 
     AZURE_CLOUD_SUFFIX = "core.windows.net"
 
-    DEFAULT_EXPIRATION_TIME_DELTA = datetime.timedelta(hours=1)
+    SAS_EXPIRATION_TIME_DELTA = datetime.timedelta(hours=1)
+
+    AZURE_CLI_PROCESS_LOGIN_TIMEOUT = 60
 
     def __init__(self, storage_name: str, container_name: str, container_path: str):
         """Create a Blobstore path.
@@ -525,7 +527,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         # the URI.
         blob_service_client = BlobServiceClient(
                 account_url=account_uri,
-                credential=AzureCliCredential()
+                credential=AzureCliCredential(process_timeout=AzureBlobstoreAssetPath.AZURE_CLI_PROCESS_LOGIN_TIMEOUT)
             )
         container_client = blob_service_client.get_container_client(container=container_name)
 
@@ -536,7 +538,7 @@ class AzureBlobstoreAssetPath(AssetPath):
             sas_token = ""
         else:
             start_time = datetime.datetime.now(datetime.timezone.utc)
-            expiry_time = start_time + AzureBlobstoreAssetPath.DEFAULT_EXPIRATION_TIME_DELTA
+            expiry_time = start_time + AzureBlobstoreAssetPath.SAS_EXPIRATION_TIME_DELTA
 
             key = blob_service_client.get_user_delegation_key(start_time, expiry_time)
 
