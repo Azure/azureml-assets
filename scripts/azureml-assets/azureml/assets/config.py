@@ -17,7 +17,7 @@ from azure.ai.ml._azure_environments import (
     _get_default_cloud_name,
     _get_storage_endpoint_from_metadata
 )
-from azure.identity import DefaultAzureCredential
+from azure.identity import AzureCliCredential
 from azure.storage.blob import (
     BlobServiceClient,
     ContainerSasPermissions,
@@ -525,7 +525,7 @@ class AzureBlobstoreAssetPath(AssetPath):
         # the URI.
         blob_service_client = BlobServiceClient(
                 account_url=account_uri,
-                credential=DefaultAzureCredential()
+                credential=AzureCliCredential()
             )
         container_client = blob_service_client.get_container_client(container=container_name)
 

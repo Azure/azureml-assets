@@ -3,7 +3,7 @@
 
 ### 🐛 Bugs Fixed
 
-## 1.16.13 (2023-10-12)
+## 1.16.13 (2023-10-20)
 ### 🐛 Bugs Fixed
 - [#1458](https://github.com/Azure/azureml-assets/pull1523 Support for storage accounts that are not configured for anonymous access
 

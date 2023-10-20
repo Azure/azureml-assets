@@ -18,8 +18,6 @@ setup(
       "marshmallow>=3.19",
       "tenacity>=8.2.2",
       "azure-ai-ml>=1.9.0",
-      "azure-storage-blob>=12.18",
-      "azure-identity>=1.14",
    ],
    python_requires=">=3.8,<4.0",
    license="MIT",
