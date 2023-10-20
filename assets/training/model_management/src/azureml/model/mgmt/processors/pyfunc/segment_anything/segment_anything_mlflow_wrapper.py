@@ -16,7 +16,7 @@ import torch
 from transformers import SamModel, SamProcessor
 
 from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, SAMHFLiterals, DatatypeLiterals
-from vision_utils import process_image, string_to_nested_float_list, image_to_base64, bool_array_to_pil_image
+from vision_utils import process_image, check_if_nested_list, image_to_base64, bool_array_to_pil_image
 
 
 class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -127,9 +127,23 @@ class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
             # Decode the image and make a PIL Image object.
             pil_image = Image.open(io.BytesIO(process_image(image)))
 
-            input_points = [string_to_nested_float_list(input_points)] if input_points else None
-            input_boxes = [string_to_nested_float_list(input_boxes)] if input_boxes else None
-            input_labels = [string_to_nested_float_list(input_labels)] if input_labels else None
+            # check if input_points, input_boxes, input_labels are nested lists
+            if input_points:
+                check_if_nested_list(input_points)
+            if input_boxes:
+                check_if_nested_list(input_boxes)
+            if input_labels:
+                check_if_nested_list(input_labels)
+            if multimask_output:
+                # check if multimask_output is a boolean
+                if not isinstance(multimask_output, bool):
+                    raise ValueError(
+                        f"multimask_output should be a boolean value, but got {type(multimask_output)} instead."
+                    )
+
+            input_points = [input_points] if input_points else None
+            input_boxes = [input_boxes] if input_boxes else None
+            input_labels = [input_labels] if input_labels else None
 
             # Do inference.
             _map_location = "cuda" if torch.cuda.is_available() else "cpu"

@@ -585,41 +585,9 @@ class SegmentAnythingMLFlowConvertor(PyFuncMLFLowConvertor):
         :return: MLflow model signature.
         :rtype: mlflow.models.signature.ModelSignature
         """
-        input_schema = Schema(
-            [
-                ColSpec(
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE_DATA_TYPE,
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_IMAGE,
-                ),
-                ColSpec(
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS_DATA_TYPE,
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_POINTS,
-                ),
-                ColSpec(
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES_DATA_TYPE,
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_BOXES,
-                ),
-                ColSpec(
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS_DATA_TYPE,
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_COLUMN_INPUT_LABELS,
-                ),
-                ColSpec(
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT_DATA_TYPE,
-                    SegmentAnythingMLFlowSchemaLiterals.INPUT_PARAM_MULTIMASK_OUTPUT,
-                ),
-            ]
-        )
-
-        output_schema = Schema(
-            [
-                ColSpec(
-                    SegmentAnythingMLFlowSchemaLiterals.OUTPUT_COLUMN_DATA_TYPE,
-                    SegmentAnythingMLFlowSchemaLiterals.OUTPUT_COLUMN_RESPONSE,
-                )
-            ]
-        )
-
-        return ModelSignature(inputs=input_schema, outputs=output_schema)
+        # No Signature for SAM models, this allows nested lists as input
+        # Checks for input would be done in the model predict function
+        return None
 
     def save_as_mlflow(self):
         """Prepare model for save to MLflow."""
