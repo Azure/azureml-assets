@@ -17,5 +17,5 @@ tags:
   model_specific_defaults:
     apply_deepspeed: 'false'
     apply_ort: 'false'
-  task: Multiple-Object Tracking
+  task: multi-object-tracking
 version: 1

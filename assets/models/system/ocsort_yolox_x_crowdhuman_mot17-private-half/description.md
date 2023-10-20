@@ -7,13 +7,13 @@ Multi-Object Tracking (MOT) has rapidly progressed with the development of objec
 
 Inference type|Python sample (Notebook)|CLI with YAML
 |--|--|--|
-Real time|<a href="https://aka.ms/azureml-video-mutli-object-tracking-online-inference" target="_blank">video-multi-object-tracking-online-endpoint.ipynb</a>|[video-multi-object-tracking-online-endpoint.sh](https://aka.ms/cli-video-multi-object-tracking-online-inference)|
+Real time|<a href="https://aka.ms/azureml-video-mutli-object-tracking-online-inference" target="_blank">video-multi-object-tracking-online-endpoint.ipynb</a>|<a href="https://aka.ms/cli-video-multi-object-tracking-online-inference" target="_blank">video-multi-object-tracking-online-endpoint.sh</a>|
 
 ### Finetuning samples
 
 Task|Use case|Dataset|Python sample (Notebook)|CLI with YAML
 |---|--|--|--|--|
-Video multi-object tracking|Video multi-object tracking|[MOT17 tiny](https://download.openmmlab.com/mmtracking/data/MOT17_tiny.zip)|<a href="https://aka.ms/azureml-video-multi-object-tracking-finetune" target="_blank">mmtracking-video-multi-object-tracking.ipynb</a>|[mmtracking-mot17tiny-mot.sh](https://aka.ms/cli-video-multi-object-tracking-finetune)|
+Video multi-object tracking|Video multi-object tracking|[MOT17 tiny](https://download.openmmlab.com/mmtracking/data/MOT17_tiny.zip)|<a href="https://aka.ms/azureml-video-multi-object-tracking-finetune" target="_blank">mot17-tiny-video-multi-object-tracking.ipynb</a>|<a href="https://aka.ms/cli-video-multi-object-tracking-finetune" target="_blank">mot17-tiny-video-multi-object-tracking.sh</a>|
 
 
 ### Sample inputs and outputs (for real-time inference)
