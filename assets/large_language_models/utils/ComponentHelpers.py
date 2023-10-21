@@ -6,6 +6,7 @@ import os
 import re
 import yaml
 
+
 class Component():
     """Base Component Class."""
 

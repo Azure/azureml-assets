@@ -7,6 +7,7 @@
 import pytest
 from utils.ComponentHelpers import is_environment_valid
 
+
 @pytest.mark.unit
 class TestComponentAssets():
 
