@@ -2,8 +2,7 @@
 # Licensed under the MIT License.
 
 """This file contains the core logic for data quality metrics component."""
-from typing import Tuple
-import pyspark
+
 from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 from pyspark.sql.types import (
@@ -29,12 +28,17 @@ from pyspark.sql.functions import (
     concat,
 )
 from pyspark.ml.feature import Imputer
+from typing import Tuple
+import pyspark
 import pyspark.pandas as ps
+import warnings
 
 
 # Init spark session
 sc = SparkContext.getOrCreate()
 spark = SparkSession(sc)
+supported_datatypes = ['timestamp', 'boolean', 'double', 'binary', 'date', 'decimal', 'float', 'integer',
+                       'long', 'short', 'string', 'char(30)', 'varchar(30)', 'byte']
 
 
 def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
@@ -298,12 +302,18 @@ def compute_dtype_violation_count_modify_dataset(
 
         dtype_baseline = dtype_baseline[0][0]
 
-        # Cast the column to datatype from baseline reference column and count the number of errors
-        num_errors = (
-            df.select(column)
-            .where(~col(column).cast(dtype_baseline).isNotNull())
-            .count()
-        )
+        if dtype_baseline not in supported_datatypes:
+            # we set the default num of error as we do not support this type validation
+            warnings.warn("we set the default num of error to 0 as we do not support \
+                           this datatype {} validation".format(dtype_baseline))
+            num_errors = 0
+        else:
+            # Cast the column to datatype from baseline reference column and count the number of errors
+            num_errors = (
+                df.select(column)
+                .where(~col(column).cast(dtype_baseline).isNotNull())
+                .count()
+            )
         # Add the conversion error count to the new DataFrame
         df_conversion_errors = df_conversion_errors.union(
             spark.createDataFrame([(column, num_errors)], schema=mySchema)
@@ -376,6 +386,30 @@ def impute_categorical_with_mode(df: pyspark.sql.DataFrame) -> pyspark.sql.DataF
     return df
 
 
+def modify_dataType(data_stats_table) -> pyspark.sql.DataFrame:
+    """Cast DataType() to DataType."""
+    # When adding new datatype into the cast list, please also add it into supported_datatypes list
+    data_stats_table_mod = data_stats_table.withColumn(
+        "dataType",
+        when(col("dataType") == "DoubleType()", "double")
+        .when(col("dataType") == "StringType()", "string")
+        .when(col("dataType") == "IntegerType()", "integer")
+        .when(col("dataType") == "LongType()", "long")
+        .when(col("dataType") == "TimestampType()", "timestamp")
+        .when(col("dataType") == "BooleanType()", "boolean")
+        .when(col("dataType") == "BinaryType()", "binary")
+        .when(col("dataType") == "DateType()", "date")
+        .when(col("dataType") == "DecimalType()", "decimal")
+        .when(col("dataType") == "FloatType()", "float")
+        .when(col("dataType") == "ShortType()", "short")
+        .when(col("dataType") == "CharType()", "char(30)")
+        .when(col("dataType") == "VarcharType()", "varchar(30)")
+        .when(col("dataType") == "ByteType()", "byte")
+        .otherwise(col("dataType")),
+    )
+    return data_stats_table_mod
+
+
 def compute_data_quality_metrics(df, data_stats_table):
     """Compute data quality metrics."""
     #########################
@@ -385,14 +419,7 @@ def compute_data_quality_metrics(df, data_stats_table):
     df.cache()
     data_stats_table.cache()
 
-    data_stats_table_mod = data_stats_table.withColumn(
-        "dataType",
-        when(col("dataType") == "DoubleType()", "double")
-        .when(col("dataType") == "StringType()", "string")
-        .when(col("dataType") == "IntegerType()", "integer")
-        .when(col("dataType") == "LongType()", "long")
-        .otherwise(col("dataType")),
-    )
+    data_stats_table_mod = modify_dataType(data_stats_table)
 
     #########################
     # COMPUTE VIOLATIONS
