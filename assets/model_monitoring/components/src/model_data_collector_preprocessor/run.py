@@ -11,11 +11,12 @@ from dateutil import parser
 import mltable
 from mltable import MLTable
 import tempfile
+
+from model_data_collector_preprocessor.mdc_preprocessor_helper import convert_to_azureml_long_form, get_datastore_from_input_path
 from fsspec import AbstractFileSystem
 from azureml.fsspec import AzureMachineLearningFileSystem
 from datetime import datetime
 from pyspark.sql.functions import col, lit
-from shared_utilities.datetime_utils import parse_datetime_from_string
 from shared_utilities.event_utils import post_warning_event
 from shared_utilities.io_utils import (
     init_spark,
@@ -29,7 +30,6 @@ from shared_utilities.constants import (
     MDC_DATA_COLUMN,
     MDC_DATAREF_COLUMN
 )
-
 
 def _raw_mdc_uri_folder_to_mltable(
     start_datetime: datetime, end_datetime: datetime, input_data: str
@@ -83,14 +83,15 @@ def _get_data_columns(df: DataFrame) -> list:
     
     return columns
 
-def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool) -> DataFrame:
+def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool, datastore: str) -> DataFrame:
     def read_data(row):
         data = getattr(row, MDC_DATA_COLUMN, None)
         if data:
             return data
         
         dataref = getattr(row, MDC_DATAREF_COLUMN, None)
-        return dataref
+        data_url = convert_to_azureml_long_form(dataref, datastore)
+        return data_url
         # TODO: Move this to tracking stream if both data and dataref are NULL
 
     # Output MLTable
@@ -99,13 +100,11 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
 
     spark = init_spark()
     data_as_df = spark.createDataFrame(pd.read_json(read_data(first_data_row)))
-    # data_as_df.show() # for testing
 
     """ The temporary workaround to remove the chat_history column if it exists.
     We are removing the column because the pyspark DF is unable to parse it.
     This version of the MDC is applied only to GSQ.
     """
-    # Richard: So do we need this column when monitoring GSQ signal? If yes, how can we remove it? If no, why MDC collect this column?
     if MDC_CHAT_HISTORY_COLUMN in data_as_df.columns:
         data_as_df = data_as_df.drop(col(MDC_CHAT_HISTORY_COLUMN))
 
@@ -170,9 +169,9 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
             + "Please visit aka.ms/mlmonitoringhelp for more information."
         )
         return
-    df.show()
 
-    transformed_df = _extract_data_and_correlation_id(df, extract_correlation_id)
+    datastore = get_datastore_from_input_path(input_data)
+    transformed_df = _extract_data_and_correlation_id(df, extract_correlation_id, datastore)
     
     return transformed_df
 

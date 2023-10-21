@@ -1,11 +1,20 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""test class for mdc preprocessor"""
+
 import pytest
+from unittest.mock import Mock
 import fsspec
 import shutil
-import os
+import os, sys
 import spark_mltable # to enable spark.read.mltable
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from model_data_collector_preprocessor.run import _raw_mdc_uri_folder_to_preprocessed_spark_df, mdc_preprocessor
+from model_data_collector_preprocessor.run import (
+    _raw_mdc_uri_folder_to_preprocessed_spark_df,
+    mdc_preprocessor,
+)
 
 @pytest.mark.unit
 class TestMDCPreprocessor:
@@ -25,7 +34,9 @@ class TestMDCPreprocessor:
     )
     def test_uri_folder_to_spark_df(self, window_start_time, window_end_time, extract_correlation_id):
         print("testing test_uri_folder_to_spark_df...")
-        os.environ["PYSPARK_PYTHON"] = "C:\\Users\\richli\\AppData\\Local\\anaconda3\\envs\\momo\\python.exe" # replace with your own python path
+        python_path = sys.executable
+        os.environ["PYSPARK_PYTHON"] = python_path
+        os.environ["PYTHONPATH"] = f"{os.environ.get('PYTHONPATH','')};./src"
         fs = fsspec.filesystem("file")
         preprocessed_output = "tests/unit/preprocessed_mdc_data"
         shutil.rmtree(f"{preprocessed_output}temp", True)
