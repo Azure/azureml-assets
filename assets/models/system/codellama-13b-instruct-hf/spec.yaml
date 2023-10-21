@@ -2,6 +2,7 @@ $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
 name: CodeLlama-13b-Instruct-hf
 path: ./
 properties:
+  SHA: ff0983bc4267bb98ead4fb5168fe2f049b442787
   datasets: Publicly available sources
   inference-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3, Standard_ND40rs_v2,
     Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
@@ -28,4 +29,5 @@ tags:
   task: text-generation
   license: llama2
   author: meta
-version: 1
+version: 2
+

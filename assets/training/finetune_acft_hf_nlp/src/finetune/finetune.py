@@ -11,6 +11,7 @@ from pathlib import Path
 from argparse import Namespace
 from copy import deepcopy
 from typing import Dict, Any
+import re
 
 import torch
 
@@ -43,7 +44,9 @@ logger = get_logger_app("azureml.acft.contrib.hf.scripts.components.scripts.fine
 
 COMPONENT_NAME = "ACFT-Finetune"
 
-DEFAULT_DEEPSPEED_CONFIG = "zero2.json"
+DEFAULT_DEEPSPEED_STAGE2_CONFIG = "zero2.json"
+DEFAULT_DEEPSPEED_STAGE3_CONFIG = "zero3.json"
+
 
 # TODO - Move REFINED_WEB to :dataclass HfModelTypes
 REFINED_WEB = "RefinedWeb"
@@ -57,8 +60,8 @@ RUN_PROPERTIES = {
     "showMetricsAtRoot": "true",
 }
 
-add_run_properties(ROOT_RUN_PROPERTIES, logger, add_to_root=True)
-add_run_properties(RUN_PROPERTIES, logger)
+add_run_properties(ROOT_RUN_PROPERTIES, add_to_root=True)
+add_run_properties(RUN_PROPERTIES)
 
 # mlflow model task based signature for inference
 MLFLOW_MODEL_SIGNATURES = {
@@ -96,9 +99,6 @@ IGNORE_MISMATCHED_SIZES_FALSE_MODELS = [
 ]
 
 
-FORCE_4BIT_QUANTIZATION_MODELS = ["Llama-2-70b", "tiiuae-falcon-40b"]
-
-
 QLORA_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.LLAMA,
     HfModelTypes.REFINEDWEBMODEL,
@@ -117,8 +117,28 @@ MLFLOW_HFTRANSFORMERS_MISC_CONF = {
 }
 
 
-GRADIENT_CHECKPOINTING_SUPPORTED_MODEL_TYPES = [
+ACFT_REGEX_PREFIX = "acft_regex:"
+
+DEEPSPEED_STAGE3_SUPPORTED_TASKS = [
+    Tasks.TEXT_GENERATION,
+]
+DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_TASKS)
+# the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_TASKS and matches other words
+DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX_LIST})$)(\\w*)"
+
+
+DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES = [
     HfModelTypes.LLAMA,
+    HfModelTypes.FALCON,
+]
+DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST = "|".join(DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES)
+# the below regex exludes DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES and matches other words
+DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX = f"^(?!({DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX_LIST})$)(\\w*)"
+
+
+FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES = [
+    HfModelTypes.LLAMA,
+    HfModelTypes.FALCON,
 ]
 
 
@@ -149,6 +169,17 @@ def get_parser():
         type=str2bool,
         default="false",
         help="If set to true, will enable deepspeed for training",
+    )
+    parser.add_argument(
+        "--deepspeed_stage",
+        type=int,
+        default=2,
+        choices=[2, 3],
+        help=(
+            "This parameter configures which DEFAULT deepspeed config to be used - stage2 or stage3. The default "
+            "choice is stage2. Note that, this parameter is ONLY applicable when user doesn't pass any config "
+            "information via deepspeed port."
+        )
     )
     parser.add_argument(
         "--deepspeed",
@@ -471,6 +502,28 @@ def copy_preprocess_args(args: Namespace) -> Namespace:
     return args
 
 
+def get_deepspeed_config_json(args: Namespace) -> Dict[str, Any]:
+    """Fetch deepspeed config json from file.
+
+    :param args: User passed args
+    :type Namespace
+    """
+    # load deepspeed config
+    try:
+        with open(args.deepspeed, "r", encoding="utf-8") as fp:
+            ds_config_json = json.load(fp)
+            return ds_config_json
+    except Exception:
+        raise ACFTValidationException._with_error(
+            AzureMLError.create(
+                ACFTUserError,
+                pii_safe_message=(
+                    "Invalid deepspeed config file. Unable to load json file."
+                )
+            )
+        )
+
+
 def identify_deepspeed_stage(deepspeed_config_json: Dict[str, Any]) -> int:
     """Read the deepspeed stage from the deepspeed config."""
     zero_optimization_config = deepspeed_config_json.get("zero_optimization", {})
@@ -491,6 +544,29 @@ def identify_deepspeed_stage(deepspeed_config_json: Dict[str, Any]) -> int:
     return ds_stage
 
 
+def is_match(user_value: Any, match_value: Any) -> bool:
+    """Match if given user value is same value/regex match as expected match value."""
+    is_match = False
+    if user_value and isinstance(user_value, str) and isinstance(match_value, str) and \
+            match_value.startswith(ACFT_REGEX_PREFIX):
+        regex_str = match_value[len(ACFT_REGEX_PREFIX):]
+        re_match = re.match(regex_str, user_value)
+        if re_match is not None:
+            # if there is a regex match then value is matched with value in source
+            is_match = True
+            logger.info(f"Regex matched: {user_value} with {regex_str}.")
+        else:
+            # if there is no regex match
+            is_match = False
+            logger.info(f"Regex not matched: {user_value} with {regex_str}.")
+    else:
+        is_match = bool(user_value == match_value)
+
+    logger.info(f"Is match - {is_match}")
+
+    return is_match
+
+
 def check_for_invalid_ds_zero3_settings(args: Namespace):
     """Check if invalid ds3 settings are selected by the user.
 
@@ -500,7 +576,11 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
     """
     invalid_ds_zero3_settings = [
         dict(
-            invalid_settings=dict(apply_lora=True),
+            invalid_settings=dict(
+                apply_lora=True,
+                task_name=f"{ACFT_REGEX_PREFIX}{DEEPSPEED_STAGE3_SUPPORTED_TASKS_REGEX}",
+                model_type=f"{ACFT_REGEX_PREFIX}{DEEPSPEED_STAGE3_SUPPORTED_MODEL_TYPES_REGEX}",
+            ),
             fail_run=True,
             valid_settings=None
         ),
@@ -519,7 +599,7 @@ def check_for_invalid_ds_zero3_settings(args: Namespace):
         invalid_settings = setting["invalid_settings"]
         fail_run = setting["fail_run"]
         valid_settings = setting["valid_settings"]
-        if all([getattr(args, key, None) == value for key, value in invalid_settings.items()]):
+        if all([is_match(getattr(args, key, None), value) for key, value in invalid_settings.items()]):
             if fail_run:
                 raise ACFTValidationException._with_error(
                     AzureMLError.create(
@@ -565,6 +645,22 @@ def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
         )
 
 
+def resolve_deepspeed_config(args: Namespace) -> str:
+    """Identify the right deepspeed config to be used based on user passed parameters."""
+    # Check for deepspeed config via input port
+    if getattr(args, "deepspeed", None) is not None:
+        logger.info(f"Found deepspeed config via input port - {args.deepspeed}.")
+        return args.deepspeed
+
+    default_deepspeed_config = (
+        DEFAULT_DEEPSPEED_STAGE2_CONFIG
+        if args.deepspeed_stage == 2 else
+        DEFAULT_DEEPSPEED_STAGE3_CONFIG
+    )
+    logger.info(f"Using default deepspeed config: {default_deepspeed_config}")
+    return default_deepspeed_config
+
+
 def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
     """Deepspeed initialization and validation.
 
@@ -575,14 +671,13 @@ def setup_and_validate_deepspeed(args: Namespace, do_validate: bool = True):
     """
     logger.info("Setting up deespeed.")
     # Read the default deepspeed config if the apply_deepspeed is set to true without providing config file
-    args.deepspeed = getattr(args, "deepspeed", None) or DEFAULT_DEEPSPEED_CONFIG
+    args.deepspeed = resolve_deepspeed_config(args)
     if args.deepspeed is None:
         logger.info("Deepspeed is not enabled. Nothing to setup!")
         return
 
     # load deepspeed config
-    with open(args.deepspeed, "r", encoding="utf-8") as fp:
-        ds_config_json = json.load(fp)
+    ds_config_json = get_deepspeed_config_json(args)
 
     # add validations for deepspeed stage3
     if do_validate and identify_deepspeed_stage(ds_config_json) == 3:
@@ -603,12 +698,20 @@ def enable_ds3_model_specific_args(args: Namespace):
     """
     if (
         hasattr(args, "model_type")
-        and args.model_type in GRADIENT_CHECKPOINTING_SUPPORTED_MODEL_TYPES
+        and args.model_type in FORCE_GRADIENT_CHECKPOINTING_MODEL_TYPES
     ):
         logger.info(
             f"Identified model type: {args.model_type}. Forcing `gradient_checkpointing` to True."
         )
         setattr(args, "gradient_checkpointing", True)
+
+
+def setup_automl_nlp(args: Namespace) -> None:
+    """Set automl nlp related args."""
+    if args.task_name in [Tasks.NLP_MULTICLASS, Tasks.NLP_MULTILABEL, Tasks.NLP_NER]:
+        # Disable adding prefixes to logger for NLP Tasks.
+        args.set_log_prefix = False
+        logger.info(f"Using log prefix - {args.set_log_prefix}")
 
 
 def finetune(args: Namespace):
@@ -623,16 +726,8 @@ def finetune(args: Namespace):
     else:
         args.model_name_or_path = args.model_name
 
-    # Enable QLoRA finetune for Llama-70B
+    # fetch model asset id
     model_asset_id = getattr(args, "model_asset_id", None) or ""
-    if any(
-        [model_name in model_asset_id for model_name in FORCE_4BIT_QUANTIZATION_MODELS]
-    ):
-        logger.info(
-            f"Identified asset id: {model_asset_id}. Enabling QLoRA finetuning."
-        )
-        setattr(args, "apply_lora", True)
-        setattr(args, "precision", 4)
 
     # additional logging
     logger.info(f"Model name: {getattr(args, 'model_name', None)}")
@@ -788,6 +883,8 @@ def finetune(args: Namespace):
     args.save_strategy = args.evaluation_strategy
     args.save_steps = args.eval_steps
 
+    setup_automl_nlp(args)
+
     # Saving the args is done in `run_finetune` to handle the distributed training
     hf_task_runner = get_task_runner(task_name=args.task_name)()
     hf_task_runner.run_finetune(args)
@@ -799,7 +896,8 @@ def can_apply_ort(args: Namespace, logger):
         logger.warning("Enabling ORT has a breaking change with summarization and translation tasks "
                        "so diabling ORT for SUMMARIZATION and TRANSLATION tasks")
         return False
-    return args.apply_ort
+    logger.warning("Disabling ORT for all tasks")
+    return False
 
 
 @swallow_all_exceptions(time_delay=60)
