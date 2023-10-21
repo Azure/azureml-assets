@@ -76,7 +76,6 @@ def test_chat_prompts(
 
 
 def test_chat_prompts_with_few_shot_pattern() -> None:
-
     """Test the functionality of the chat prompts with few_shot_pattern."""
     n_shots = 1
     prompt_pattern = "{{input}}?"
