@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
+"""Helper class for testing and maintaining consistency for LLM Components."""
+
 from typing import List, Dict, Any, Tuple
 import os
 import re
