@@ -10,11 +10,10 @@ from utils.ComponentHelpers import is_environment_valid
 
 @pytest.mark.unit
 class TestComponentAssets():
-    '''TestComponentAssets'''
+    """TestComponentAssets."""
 
     def test_validate_component_environments(self, asset_lists):
-        '''test_validate_component_environments'''
-
+        """test_validate_component_environments."""
         (comp_assets_all, _) = asset_lists
 
         for comp_name in comp_assets_all:
@@ -24,8 +23,7 @@ class TestComponentAssets():
                 assert is_environment_valid(comp.environment)
 
     def test_validate_versions_match(self, asset_lists):
-        '''test_validate_versions_match'''
-
+        """test_validate_versions_match."""
         (comp_assets_all, pipe_assets_all) = asset_lists
 
         for pipeline_name in pipe_assets_all:
