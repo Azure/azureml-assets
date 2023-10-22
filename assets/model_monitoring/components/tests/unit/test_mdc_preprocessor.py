@@ -43,12 +43,12 @@ class TestMDCPreprocessor:
         os.environ["PYSPARK_PYTHON"] = python_path
         os.environ["PYTHONPATH"] = f"{os.environ.get('PYTHONPATH','')};./src"
         fs = fsspec.filesystem("file")
-        preprocessed_output = "tests/unit/preprocessed_mdc_data"
+        preprocessed_output = "assets/model_monitoring/components/tests/unit/preprocessed_mdc_data"
         shutil.rmtree(f"{preprocessed_output}temp", True)
         sdf = _raw_mdc_uri_folder_to_preprocessed_spark_df(
             window_start_time,
             window_end_time,
-            "tests/unit/raw_mdc_data/",
+            "assets/model_monitoring/components/tests/unit/raw_mdc_data/",
             preprocessed_output,
             extract_correlation_id,
             fs,
@@ -82,7 +82,7 @@ class TestMDCPreprocessor:
     def test_mdc_preprocessor(self):
         """Test mdc_preprocessor()."""
         print("testing test_mdc_preprocessor...")
-        os.environ["PYSPARK_PYTHON"] = "C:\\Users\\richli\\AppData\\Local\\anaconda3\\envs\\momo\\python.exe"
+        os.environ["PYSPARK_PYTHON"] = sys.executable
         fs = fsspec.filesystem("file")
         preprocessed_output = "tests/unit/preprocessed_mdc_data"
         shutil.rmtree(f"{preprocessed_output}temp")
