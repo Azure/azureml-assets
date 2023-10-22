@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT License.
+
+"""mltable support for pyspark."""
+
 import datetime
 
 def _patch_spark_dataframereader_format():
