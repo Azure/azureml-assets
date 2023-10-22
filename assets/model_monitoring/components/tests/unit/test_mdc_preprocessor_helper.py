@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""unit tests for mdc_preprocessor_helper"""
+"""unit tests for mdc_preprocessor_helper."""
 
 import pytest
 from unittest.mock import Mock
