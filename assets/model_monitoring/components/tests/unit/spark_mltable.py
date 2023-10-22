@@ -5,6 +5,7 @@
 
 import datetime
 
+
 def _patch_spark_dataframereader_format():
     from functools import update_wrapper
     from logging import warning
@@ -33,7 +34,7 @@ def _patch_spark_dataframereader_format():
             elif isinstance(self._dataframe_reader._spark, SQLContext):
                 spark_session = self._dataframe_reader._spark.sparkSession
             else:
-                raise(f'Unsupported type for spark context: {type(self._dataframe_reader._spark)}')
+                raise f'Unsupported type for spark context: {type(self._dataframe_reader._spark)}'
 
             spark_conf = spark_session.sparkContext.getConf()
             spark_conf_vars = {
@@ -96,7 +97,8 @@ class _DataframeWriterManager(object):
         elif self.output_format == 'json_lines':
             self.extension = 'json'
         else:
-            raise NotImplementedError(f'Unsupported output format "{output_format}". Supported formats are "parquet", "delimited" and "json_lines".')
+            raise NotImplementedError(f'Unsupported output format "{self.output_format}". \
+                                      Supported formats are "parquet", "delimited" and "json_lines".')
 
     def write(self):
         mode = "overwrite" if self.overwrite else "errorifexists"
@@ -104,11 +106,13 @@ class _DataframeWriterManager(object):
         if self.output_format == 'parquet':
             self.dataframe.write.mode(mode).parquet(self.uri)
         elif self.output_format == 'delimited':
-            self.dataframe.write.mode(mode).option('delimiter', self.delimiter).option("header",True).option('encoding', self.encoding).csv(self.uri)
+            self.dataframe.write.mode(mode).option('delimiter', self.delimiter).option("header", True) \
+                .option('encoding', self.encoding).csv(self.uri)
         elif self.output_format == 'json_lines':
             self.dataframe.write.mode(mode).option('encoding', self.encoding).json(self.uri)
         else:
-            raise NotImplementedError(f'Unsupported output format "{self.output_format}". Supported formats are "parquet", "delimited" and "json_lines".')
+            raise NotImplementedError(f'Unsupported output format "{self.output_format}". \
+                                      Supported formats are "parquet", "delimited" and "json_lines".')
 
         base_path = self.uri.rstrip('/')
         return base_path + "/*." + self.extension
@@ -121,21 +125,29 @@ def _write_mltable_yaml(uri, output_path_pattern, manager):
     import yaml
 
     mltable_obj = {
-        'paths': [{'pattern': output_path_pattern}] ,
+        'paths': [{'pattern': output_path_pattern}],
     }
 
     if manager.output_format == 'parquet':
-        mltable_obj['transformations'] = [ 'read_parquet' ]
+        mltable_obj['transformations'] = ['read_parquet']
     elif manager.output_format == 'delimited':
-        mltable_obj['transformations'] = [
-            { 'read_delimited': { 'delimiter': manager.delimiter, 'encoding': manager.encoding, 'header': 'all_files_same_headers' } },
-        ]
+        mltable_obj['transformations'] = [{
+            'read_delimited': {
+                'delimiter': manager.delimiter,
+                'encoding': manager.encoding,
+                'header': 'all_files_same_headers'
+            }
+        }]
     elif manager.output_format == 'json_lines':
-        mltable_obj['transformations'] = [
-            { 'read_json_lines': { 'encoding': manager.encoding, 'invalid_lines': 'error', 'include_path_column': False } },
-        ]
+        mltable_obj['transformations'] = [{
+            'read_json_lines': {
+                'encoding': manager.encoding,
+                'invalid_lines': 'error',
+                'include_path_column': False
+            }
+        }]
 
-    with tempfile.TemporaryDirectory() as temp_dir: 
+    with tempfile.TemporaryDirectory() as temp_dir:
         with rslex_uri_volume_mount(uri=uri, mount_point=temp_dir, options=MountOptions(read_only=False)):
             with open(os.path.join(temp_dir, 'MLTable'), 'w') as yaml_file:
                 yaml.dump(mltable_obj, yaml_file)
@@ -143,16 +155,14 @@ def _write_mltable_yaml(uri, output_path_pattern, manager):
 
 def _write_spark_dataframe(dataframe, uri, **kwargs):
     import os
-    import pandas
-    from pyspark.sql import DataFrameReader, SparkSession, SQLContext
-    from typing import Iterator
+    from pyspark.sql import SparkSession, SQLContext
 
     if isinstance(dataframe.write._spark, SparkSession):
         spark_session = dataframe.write._spark
     elif isinstance(dataframe.write._spark, SQLContext):
         spark_session = dataframe.write._spark.sparkSession
     else:
-        raise(f'Unsupported type for spark context: {type(dataframe.write._spark)}')
+        raise f'Unsupported type for spark context: {type(dataframe.write._spark)}'
 
     spark_conf = spark_session.sparkContext.getConf()
     spark_conf_vars = {
@@ -208,7 +218,7 @@ def _patch_spark_dataframewriter_format():
             return MLTableWriter(dataframe_writer)
         else:
             return original_method(dataframe_writer, source)
-        
+
     DataFrameWriter.format = update_wrapper(format, original_method)
 
 
@@ -218,7 +228,7 @@ def _patch_spark_dataframewriter_option():
 
     original_method = DataFrameWriter.option
 
-    def option(dataframe_writer, key: str, value: "OptionalPrimitiveType") -> "DataFrameWriter":
+    def option(dataframe_writer, key: str, value: "OptionalPrimitiveType") -> DataFrameWriter:
         if not hasattr(dataframe_writer, '_optionsdict'):
             dataframe_writer._optionsdict = dict()
 
@@ -234,7 +244,7 @@ def _patch_spark_dataframewriter_options():
 
     original_method = DataFrameWriter.options
 
-    def options(dataframe_writer, **options: "OptionalPrimitiveType") -> "DataFrameWriter":
+    def options(dataframe_writer, **options: "OptionalPrimitiveType") -> DataFrameWriter:
         if not hasattr(dataframe_writer, '_optionsdict'):
             dataframe_writer._optionsdict = dict()
 
@@ -263,19 +273,19 @@ def patch_all():
     try:
         import mltable
     except Exception as e:
-        print("[" + str(datetime.datetime.now()) + "]" + f'Skip patching mltable feature because import has exception : {e} ')
+        print(f"[{str(datetime.datetime.now())}]Skip patching mltable feature because import has exception: {e} ")
         return
-    print("[" + str(datetime.datetime.now()) + "]" + "Start to patch spark_dataframereader_format.")
+    print(f"[{str(datetime.datetime.now())}]Start to patch spark_dataframereader_format.")
     _patch_spark_dataframereader_format()
-    print("[" + str(datetime.datetime.now()) + "]" + "Start to patch spark_dataframereader_mltable.")
+    print(f"[{str(datetime.datetime.now())}]Start to patch spark_dataframereader_mltable.")
     _patch_spark_dataframereader_mltable()
-    print("[" + str(datetime.datetime.now()) + "]" + "Start to patch spark_dataframewriter_format.")
+    print(f"[{str(datetime.datetime.now())}]Start to patch spark_dataframewriter_format.")
     _patch_spark_dataframewriter_format()
-    print("[" + str(datetime.datetime.now()) + "]" + "Start to patch spark_dataframewriter_mltable.")
+    print(f"[{str(datetime.datetime.now())}]Start to patch spark_dataframewriter_mltable.")
     _patch_spark_dataframewriter_mltable()
-    print("[" + str(datetime.datetime.now()) + "]" + "Start to patch spark_dataframewriter_option.")
+    print(f"[{str(datetime.datetime.now())}]Start to patch spark_dataframewriter_option.")
     _patch_spark_dataframewriter_option()
-    print("[" + str(datetime.datetime.now()) + "]" + "Start to patch spark_dataframewriter_options.")
+    print(f"[{str(datetime.datetime.now())}]Start to patch spark_dataframewriter_options.")
     _patch_spark_dataframewriter_options()
 
 

@@ -9,7 +9,8 @@ from urllib.parse import urlparse
 from azureml.core.run import Run
 from azure.ai.ml import MLClient
 
-def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id = None, rg_name = None, ws_name = None) -> str:
+
+def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_name=None, ws_name=None) -> str:
     """Convert path to AzureML path."""
     url = urlparse(url_str)
     if url.scheme in ["https", "http"]:
@@ -17,28 +18,31 @@ def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id = None, rg
         path = url.path[idx+1:]
     elif url.scheme in ["wasbs", "wasb", "abfss", "abfs"]:
         path = url.path[1:]
-    elif url.scheme == "azureml" and url.hostname == "datastores": # azrueml short form
+    elif url.scheme == "azureml" and url.hostname == "datastores":  # azrueml short form
         idx = url.path.find('/paths/')
         path = url.path[idx+7:]
     else:
-        return url_str # azureml long form, azureml asset, file or other scheme, return original path directly
-    
+        return url_str  # azureml long form, azureml asset, file or other scheme, return original path directly
+
     sub_id = sub_id or os.environ.get("AZUREML_ARM_SUBSCRIPTION", None)
     rg_name = rg_name or os.environ.get("AZUREML_ARM_RESOURCEGROUP", None)
     ws_name = ws_name or os.environ.get("AZUREML_ARM_WORKSPACE_NAME", None)
-    
-    return f"azureml://subscriptions/{sub_id}/resourcegroups/{rg_name}/workspaces/{ws_name}/datastores/{datastore}/paths/{path}"
 
-def get_datastore_from_input_path(input_path: str, ml_client = None) -> str:
+    return f"azureml://subscriptions/{sub_id}/resourcegroups/{rg_name}/workspaces/{ws_name}/datastores" \
+           f"/{datastore}/paths/{path}"
+
+
+def get_datastore_from_input_path(input_path: str, ml_client=None) -> str:
     url = urlparse(input_path)
     if url.scheme == "azureml":
-        if ':' in  url.path: # azureml asset path
+        if ':' in url.path:  # azureml asset path
             return _get_datastore_from_asset_path(input_path, ml_client)
-        else: # azureml long or short form
+        else:  # azureml long or short form
             return _get_datastore_from_azureml_path(input_path)
     else:
         # todo: raise ModelMonitoringException
         return "workspaceblobstore"
+
 
 def _get_workspace_info() -> Tuple[str, str, str]:
     """Get workspace info from environment variables."""
@@ -48,12 +52,14 @@ def _get_workspace_info() -> Tuple[str, str, str]:
     ws_name = ws.name or os.environ.get("AZUREML_ARM_WORKSPACE_NAME")
     return sub_id, rg_name, ws_name
 
+
 def _get_datastore_from_azureml_path(azureml_path: str) -> str:
     start_idx = azureml_path.find('/datastores/')
     end_idx = azureml_path.find('/paths/')
     return azureml_path[start_idx+12:end_idx]
 
-def _get_datastore_from_asset_path(asset_path: str, ml_client = None) -> str:
+
+def _get_datastore_from_asset_path(asset_path: str, ml_client=None) -> str:
     if not ml_client:
         sub_id, rg_name, ws_name = _get_workspace_info()
         ml_client = MLClient(subscription_id=sub_id, resource_group=rg_name, workspace_name=ws_name)

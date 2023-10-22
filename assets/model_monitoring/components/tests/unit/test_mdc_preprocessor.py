@@ -4,17 +4,18 @@
 """test class for mdc preprocessor"""
 
 import pytest
-from unittest.mock import Mock
 import fsspec
 import shutil
-import os, sys
-import spark_mltable # to enable spark.read.mltable
+import os
+import sys
+import spark_mltable  # to enable spark.read.mltable
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from model_data_collector_preprocessor.run import (
     _raw_mdc_uri_folder_to_preprocessed_spark_df,
     mdc_preprocessor,
 )
+
 
 @pytest.mark.unit
 class TestMDCPreprocessor:
@@ -51,10 +52,20 @@ class TestMDCPreprocessor:
         print("preprocessed dataframe:")
         sdf.show(truncate=False)
         pdf_actual = sdf.toPandas()
-        
-        pdf_expected = pd.DataFrame({'sepal_length': [1, 2, 3, 1], 'sepal_width': [2.3, 3.2, 3.4, 1.0], 'petal_length': [2, 3, 3, 4], 'petal_width': [1.3, 1.5, 1.8, 1.6]})
+
+        pdf_expected = pd.DataFrame({
+            'sepal_length': [1, 2, 3, 1],
+            'sepal_width': [2.3, 3.2, 3.4, 1.0],
+            'petal_length': [2, 3, 3, 4],
+            'petal_width': [1.3, 1.5, 1.8, 1.6]
+        })
         if extract_correlation_id:
-            pdf_expected['correlationid'] = ['7f16d5b1-76f9-4b3e-b82d-fc21d29356a5_0', 'f2b524a7-3272-45df-a530-c945004de305_0', 'f2b524a7-3272-45df-a530-c945004de305_1', '95e1afa0-256d-414b-8e4c-fea1baa98225_0']
+            pdf_expected['correlationid'] = [
+                '7f16d5b1-76f9-4b3e-b82d-fc21d29356a5_0',
+                'f2b524a7-3272-45df-a530-c945004de305_0',
+                'f2b524a7-3272-45df-a530-c945004de305_1',
+                '95e1afa0-256d-414b-8e4c-fea1baa98225_0'
+            ]
         pd.set_option('display.max_colwidth', -1)
         pd.set_option('display.max_columns', 10)
         print(pdf_expected)
@@ -62,7 +73,7 @@ class TestMDCPreprocessor:
         pd.reset_option('display.max_columns')
 
         assert_frame_equal(pdf_actual, pdf_expected)
-        
+
     @pytest.mark.skip(reason="spark write is not ready in local")
     def test_mdc_preprocessor(self):
         print("testing test_mdc_preprocessor...")
