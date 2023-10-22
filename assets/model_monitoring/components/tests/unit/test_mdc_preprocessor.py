@@ -17,6 +17,16 @@ from model_data_collector_preprocessor.run import (
 )
 
 
+@pytest.fixture(scope="module")
+def mdc_preprocessor_test_setup():
+    """Change working directory to root of the assets/model_monitoring_components."""
+    original_work_dir = os.getcwd()
+    momo_work_dir = os.path.abspath(f"{os.path.dirname(__file__)}/../..")
+    os.chdir(momo_work_dir)  # change working directory to root of the assets/model_monitoring_components
+    yield
+    os.chdir(original_work_dir)  # change working directory back to original
+
+
 @pytest.mark.unit
 class TestMDCPreprocessor:
     """Test class for MDC Preprocessor."""
@@ -35,7 +45,8 @@ class TestMDCPreprocessor:
             ("2023-10-16T21:00:00", "2023-10-16T22:00:00", False),
         ]
     )
-    def test_uri_folder_to_spark_df(self, window_start_time, window_end_time, extract_correlation_id):
+    def test_uri_folder_to_spark_df(self, mdc_preprocessor_test_setup,
+                                    window_start_time, window_end_time, extract_correlation_id):
         """Test uri_folder_to_spark_df()."""
         print("testing test_uri_folder_to_spark_df...")
         print("working dir:", os.getcwd())
@@ -43,12 +54,12 @@ class TestMDCPreprocessor:
         os.environ["PYSPARK_PYTHON"] = python_path
         os.environ["PYTHONPATH"] = f"{os.environ.get('PYTHONPATH','')};./src"
         fs = fsspec.filesystem("file")
-        preprocessed_output = "assets/model_monitoring/components/tests/unit/preprocessed_mdc_data"
+        preprocessed_output = "tests/unit/preprocessed_mdc_data"
         shutil.rmtree(f"{preprocessed_output}temp", True)
         sdf = _raw_mdc_uri_folder_to_preprocessed_spark_df(
             window_start_time,
             window_end_time,
-            "assets/model_monitoring/components/tests/unit/raw_mdc_data/",
+            "tests/unit/raw_mdc_data/",
             preprocessed_output,
             extract_correlation_id,
             fs,
@@ -79,7 +90,7 @@ class TestMDCPreprocessor:
         assert_frame_equal(pdf_actual, pdf_expected)
 
     @pytest.mark.skip(reason="spark write is not ready in local")
-    def test_mdc_preprocessor(self):
+    def test_mdc_preprocessor(self, mdc_preprocessor_test_setup):
         """Test mdc_preprocessor()."""
         print("testing test_mdc_preprocessor...")
         os.environ["PYSPARK_PYTHON"] = sys.executable
