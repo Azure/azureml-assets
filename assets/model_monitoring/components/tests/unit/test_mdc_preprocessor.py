@@ -8,7 +8,7 @@ import fsspec
 import shutil
 import os
 import sys
-import spark_mltable  # to enable spark.read.mltable
+import spark_mltable  # noqa, to enable spark.read.mltable
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from model_data_collector_preprocessor.run import (

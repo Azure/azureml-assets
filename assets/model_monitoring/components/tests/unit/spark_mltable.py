@@ -228,7 +228,7 @@ def _patch_spark_dataframewriter_option():
 
     original_method = DataFrameWriter.option
 
-    def option(dataframe_writer, key: str, value: "OptionalPrimitiveType") -> DataFrameWriter:
+    def option(dataframe_writer, key: str, value) -> DataFrameWriter:
         if not hasattr(dataframe_writer, '_optionsdict'):
             dataframe_writer._optionsdict = dict()
 
@@ -244,7 +244,7 @@ def _patch_spark_dataframewriter_options():
 
     original_method = DataFrameWriter.options
 
-    def options(dataframe_writer, **options: "OptionalPrimitiveType") -> DataFrameWriter:
+    def options(dataframe_writer, **options) -> DataFrameWriter:
         if not hasattr(dataframe_writer, '_optionsdict'):
             dataframe_writer._optionsdict = dict()
 
@@ -272,6 +272,7 @@ def patch_all():
     print("[" + str(datetime.datetime.now()) + "]" + "Start to import mltable.")
     try:
         import mltable
+        print(mltable.__name__)
     except Exception as e:
         print(f"[{str(datetime.datetime.now())}]Skip patching mltable feature because import has exception: {e} ")
         return

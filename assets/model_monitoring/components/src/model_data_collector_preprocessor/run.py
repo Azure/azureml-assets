@@ -48,7 +48,9 @@ def _raw_mdc_uri_folder_to_mltable(
     table = table.extract_columns_from_partition_format(partitionFormat)
 
     # Filter on partitionFormat based on user data window
-    filterStr = f"PartitionDate >= datetime({start_datetime.year}, {start_datetime.month}, {start_datetime.day}, {start_datetime.hour}) and PartitionDate <= datetime({end_datetime.year}, {end_datetime.month}, {end_datetime.day}, {end_datetime.hour})"  # noqa
+    filterStr = f"PartitionDate >= datetime({start_datetime.year}, {start_datetime.month}, {start_datetime.day}, " \
+                f"{start_datetime.hour}) and PartitionDate <= datetime({end_datetime.year}, {end_datetime.month}, " \
+                f"{end_datetime.day}, {end_datetime.hour})"
     table = table.filter(filterStr)
 
     # Data column is a list of objects, convert it into string because spark.read_json cannot read object
@@ -121,7 +123,7 @@ def _extract_data_and_correlation_id(df: DataFrame, extract_correlation_id: bool
                     read_data(row),
                     getattr(row, MDC_CORRELATION_ID_COLUMN),
                 )
-                for row in df.itertuples()  # noqa
+                for row in df.itertuples()
             )
 
     def extract_data_and_correlation_id(entry, correlationid):
