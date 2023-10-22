@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
 
-"""test class for mdc preprocessor"""
+"""test class for mdc preprocessor."""
 
 import pytest
 import fsspec
@@ -19,6 +19,7 @@ from model_data_collector_preprocessor.run import (
 
 @pytest.mark.unit
 class TestMDCPreprocessor:
+    """Test class for MDC Preprocessor."""
     @pytest.mark.parametrize(
         "window_start_time, window_end_time, extract_correlation_id",
         [
@@ -34,6 +35,7 @@ class TestMDCPreprocessor:
         ]
     )
     def test_uri_folder_to_spark_df(self, window_start_time, window_end_time, extract_correlation_id):
+        """Test uri_folder_to_spark_df()."""
         print("testing test_uri_folder_to_spark_df...")
         python_path = sys.executable
         os.environ["PYSPARK_PYTHON"] = python_path
@@ -76,6 +78,7 @@ class TestMDCPreprocessor:
 
     @pytest.mark.skip(reason="spark write is not ready in local")
     def test_mdc_preprocessor(self):
+        """Test mdc_preprocessor()."""
         print("testing test_mdc_preprocessor...")
         os.environ["PYSPARK_PYTHON"] = "C:\\Users\\richli\\AppData\\Local\\anaconda3\\envs\\momo\\python.exe"
         fs = fsspec.filesystem("file")

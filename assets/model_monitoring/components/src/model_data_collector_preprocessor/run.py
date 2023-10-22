@@ -38,7 +38,7 @@ from shared_utilities.constants import (
 def _raw_mdc_uri_folder_to_mltable(
     start_datetime: datetime, end_datetime: datetime, input_data: str
 ):
-    '''Create mltable definition - extract, filter and convert columns.'''
+    """Create mltable definition - extract, filter and convert columns."""
     # Extract partition format
     table = mltable.from_json_lines_files(
         paths=[{"pattern": f"{input_data}**/*.jsonl"}]
@@ -60,7 +60,6 @@ def _raw_mdc_uri_folder_to_mltable(
 
 def _convert_mltable_to_spark_df(table: MLTable, preprocessed_input_data: str, fs: AbstractFileSystem) -> DataFrame:
     """Convert MLTable to Spark DataFrame."""
-
     with tempfile.TemporaryDirectory() as mltable_temp_path:
         # Save MLTable to temp location
         table.save(mltable_temp_path)
@@ -161,7 +160,7 @@ def _raw_mdc_uri_folder_to_preprocessed_spark_df(
         data_window_start: datetime, data_window_end: datetime,
         input_data: str, preprocessed_input_data: str, extract_correlation_id: bool,
         fs: AbstractFileSystem = None) -> DataFrame:
-    '''Read raw MDC data, preprocess, and return in a Spark DataFrame.'''
+    """Read raw MDC data, preprocess, and return in a Spark DataFrame."""
     # Parse the dates
     start_datetime = parser.parse(data_window_start)
     end_datetime = parser.parse(data_window_end)

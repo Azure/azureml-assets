@@ -33,6 +33,7 @@ def convert_to_azureml_long_form(url_str: str, datastore: str, sub_id=None, rg_n
 
 
 def get_datastore_from_input_path(input_path: str, ml_client=None) -> str:
+    """Get datastore name from input path."""
     url = urlparse(input_path)
     if url.scheme == "azureml":
         if ':' in url.path:  # azureml asset path
@@ -45,7 +46,7 @@ def get_datastore_from_input_path(input_path: str, ml_client=None) -> str:
 
 
 def _get_workspace_info() -> Tuple[str, str, str]:
-    """Get workspace info from environment variables."""
+    """Get workspace info from Run context and environment variables."""
     ws = Run.get_context().experiment.workspace
     sub_id = ws.subscription_id or os.environ.get("AZUREML_ARM_SUBSCRIPTION")
     rg_name = ws.resource_group or os.environ.get("AZUREML_ARM_RESOURCEGROUP")

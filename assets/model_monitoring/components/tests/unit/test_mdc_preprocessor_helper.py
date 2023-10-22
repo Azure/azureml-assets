@@ -29,6 +29,7 @@ from model_data_collector_preprocessor.mdc_preprocessor_helper import (
     ]
 )
 def test_convert_to_azureml_long_form(url_str: str, converted: bool):
+    """Test convert_to_azureml_long_form()."""
     converted_path = convert_to_azureml_long_form(url_str, "my_datastore", "my_sub_id", "my_rg_name", "my_ws_name")
     azureml_long = "azureml://subscriptions/my_sub_id/resourcegroups/my_rg_name/workspaces/my_ws_name" \
                    "/datastores/my_datastore/paths/path/to/file"
@@ -49,6 +50,7 @@ def test_convert_to_azureml_long_form(url_str: str, converted: bool):
     ]
 )
 def test_get_datastore_from_input_path(input_path, expected_datastore):
+    """Test get_datastore_from_input_path()."""
     datastore = get_datastore_from_input_path(input_path)
     assert datastore == expected_datastore
 
@@ -68,6 +70,7 @@ def test_get_datastore_from_input_path(input_path, expected_datastore):
     ]
 )
 def test_get_datastore_from_input_path_with_asset_path(datastore, path, expected_datastore):
+    """Test get_datastore_from_input_path() with asset path."""
     mock_data_asset = Mock(datastore=datastore, path=path)
     mock_ml_client = Mock()
     mock_ml_client.data.get.return_value = mock_data_asset

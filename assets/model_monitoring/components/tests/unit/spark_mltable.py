@@ -269,6 +269,7 @@ def _patch_spark_dataframewriter_mltable():
 
 
 def patch_all():
+    """Patch all spark classes for MLTable support."""
     print("[" + str(datetime.datetime.now()) + "]" + "Start to import mltable.")
     try:
         import mltable
