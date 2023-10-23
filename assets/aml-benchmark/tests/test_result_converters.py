@@ -17,11 +17,13 @@ from batch_output_formatter.result_converters import ResultConverters  # noqa: E
 
 
 class TestResultConverters:
+    """Test result converters."""
 
     @pytest.mark.parametrize(
             'model_type,label_col', [('oai', 'label'), ('oss', None)]
     )
     def test_label_column_name(self, model_type, label_col):
+        """Test label column name."""
         rc = ResultConverters(
             model_type, "metadata_key", "data_id_key", label_col, None, "fallback_value")
         expect_label = label_col if label_col else "ground_truth"
