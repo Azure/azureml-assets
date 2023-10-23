@@ -6,8 +6,9 @@ properties:
   datasets: databricks/databricks-dolly-15k
   evaluation-min-sku-spec: 16|0|64|128
   evaluation-recommended-sku: Standard_NC24s_v3
-  inference-min-sku-spec: 16|0|64|128
-  inference-recommended-sku: Standard_NC24s_v3
+  inference-min-sku-spec: 0|24|448|1344
+  inference-recommended-sku: Standard_FX36mds, Standard_FX48mds, Standard_NC24s_v3,
+    Standard_ND96asr_v4, Standard_ND96amsr_A100_v4, Standard_ND40rs_v2
   languages: en
 tags:
   Featured: ''
@@ -17,4 +18,4 @@ tags:
   - Standard_ND96asr_v4
   license: mit
   task: text-generation
-version: 9
+version: 11

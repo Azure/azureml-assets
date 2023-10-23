@@ -11,7 +11,7 @@ import uuid
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
-from utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
@@ -38,11 +38,12 @@ class TestBatchBenchmarkScoreComponent:
     def test_batch_benchmark_score(self, temp_dir: str):
         """Test batch score preparer."""
         ml_client = get_mlclient()
-        score_url, deployment_name = deploy_fake_test_endpoint_maybe(ml_client)
+        score_url, deployment_name, connections_name = deploy_fake_test_endpoint_maybe(ml_client)
         pipeline_job = self._get_pipeline_job(
             self.test_batch_benchmark_score.__name__,
             score_url,
-            '{"azureml-model-deployment": "' + deployment_name + '"}',
+            deployment_name,
+            connections_name,
             temp_dir,
         )
         # submit the pipeline job
@@ -62,7 +63,8 @@ class TestBatchBenchmarkScoreComponent:
                 self,
                 display_name: str,
                 online_endpoint_url: str,
-                additional_headers: str,
+                deployment_name: str,
+                connections_name: str,
                 temp_dir: Optional[str] = None,
             ) -> Job:
         pipeline_job = load_yaml_pipeline("batch_benchmark_score.yaml")
@@ -81,7 +83,8 @@ class TestBatchBenchmarkScoreComponent:
             type="mltable", path=temp_dir
         )
         pipeline_job.inputs.online_endpoint_url = online_endpoint_url
-        pipeline_job.inputs.additional_headers = additional_headers
+        pipeline_job.inputs.deployment_name = deployment_name
+        pipeline_job.inputs.connections_name = connections_name
 
         pipeline_job.display_name = display_name
         pipeline_job.name = str(uuid.uuid4())

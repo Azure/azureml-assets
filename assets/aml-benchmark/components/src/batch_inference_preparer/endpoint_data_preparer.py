@@ -7,30 +7,57 @@ from typing import Any, Dict
 import json
 import re
 
+from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
+from utils.online_endpoint.endpoint_utils import EndpointUtilities
+
 
 class EndpointDataPreparer:
     """Endpoint data preparer class."""
 
-    def __init__(self, model_type: str, batch_input_pattern: str):
+    PAYLOAD_HASH = "payload_id"
+    PAYLOAD_GROUNDTRUTH = "label"
+
+    def __init__(self, model_type: str, batch_input_pattern: str, label_key: str = None):
         """Init for endpoint data preparer."""
-        self._model_type = model_type
+        self._model = OnlineEndpointModel(model_type=model_type, model=None, model_version=None)
         self._batch_input_pattern = batch_input_pattern
+        self._label_key = label_key
 
     def convert_input_dict(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Convert input dict to the corresponding payload."""
         return self._convert_python_pattern(origin_json_dict)
 
+    def convert_ground_truth(
+            self, origin_json_dict: Dict[str, Any], payload: Any
+    ) -> Dict[str, Any]:
+        """Convert the ground truth to the corresponding payload with id."""
+        row_id = EndpointUtilities.hash_payload_prompt(payload, self._model)
+        return {
+            EndpointDataPreparer.PAYLOAD_HASH: row_id,
+            EndpointDataPreparer.PAYLOAD_GROUNDTRUTH: origin_json_dict.get(self._label_key, ""),
+        }
+
     def validate_output(self, output_payload_dict: Dict[str, Any]):
         """Validate the output payload."""
         errors = []
-        if self._model_type.lower == "llama":
+        if self._model.is_oss_model():
             if "input_data" not in output_payload_dict:
                 errors.append("`input_data` should be presented in the payload json.")
             elif "input_string" not in output_payload_dict["input_data"]:
                 errors.append(
                     "`input_string` should be presented in the `input_data` fields of payload json.")
-            elif isinstance(output_payload_dict["input_data"]["input_string"], list):
-                errors.append("`input_string` field should be a list")
+            elif not isinstance(output_payload_dict["input_data"]["input_string"], list):
+                errors.append("`input_string` field should be a list while got {}".format(
+                    output_payload_dict["input_data"]["input_string"]
+                ))
+        if self._model.is_aoai_model():
+            if "messages" not in output_payload_dict:
+                errors.append(
+                    "`messages` should be presented in the payload json.")
+            elif not isinstance(output_payload_dict['messages'], list):
+                errors.append(
+                    "`messages` field in the payload should be a list."
+                )
         return errors
 
     def _convert_python_pattern(self, origin_json_dict: Dict[str, Any]) -> Dict[str, Any]:
@@ -50,7 +77,6 @@ class EndpointDataPreparer:
                     new_json_string = new_json_string.replace(placeholder, json.dumps(v))
                 else:
                     new_json_string = new_json_string.replace(placeholder, str(v))
-        print(new_json_string)
         return json.loads(new_json_string)
 
     @staticmethod

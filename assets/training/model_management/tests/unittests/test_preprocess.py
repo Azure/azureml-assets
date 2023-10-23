@@ -13,12 +13,13 @@ from azureml.model.mgmt.processors.factory import (
     get_mlflow_convertor,
     SupportedNLPTasks,
     SupportedVisionTasks,
-    SupportedDiffusersTask,
     SupportedTasks,
     MMLabDetectionTasks,
-    PyFuncSupportedTasks
+    PyFuncSupportedTasks,
+    TextToImageMLflowConvertorFactory,
 )
 from azureml.model.mgmt.processors.preprocess import run_preprocess
+from azureml.model.mgmt.processors.pyfunc.config import SupportedTextToImageModelFamily
 from azureml.model.mgmt.processors.transformers.convertors import HFMLFLowConvertor, NLPMLflowConvertor
 from azureml.model.mgmt.processors.pyfunc.convertors import MMLabDetectionMLflowConvertor
 from mock import MagicMock
@@ -187,24 +188,25 @@ class TestFactoryModule(unittest.TestCase):
             translate_params,
         )
 
-    @patch("azureml.model.mgmt.processors.factory.DiffusersMLflowConvertorFactory")
-    def test_get_diffusers_mlflow_convertor(self, mock_diffusers_factory):
-        """Test diffusers model MLflow convertor."""
+    @patch("azureml.model.mgmt.processors.factory.TextToImageMLflowConvertorFactory")
+    def test_get_text_to_image_mlflow_convertor(self, mock_text_to_image_factory):
+        """Test text to image model MLflow convertor."""
         model_framework = "Huggingface"
         model_dir = "/path/to/model_dir"
         output_dir = "/path/to/output_dir"
         temp_dir = "/path/to/temp_dir"
 
-        translate_params = {"task": SupportedDiffusersTask.TEXT_TO_IMAGE.value}
-        mock_convertor = mock_diffusers_factory.create_mlflow_convertor.return_value
-        result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
-        self.assertEqual(result, mock_convertor)
-        mock_diffusers_factory.create_mlflow_convertor.assert_called_once_with(
-            model_dir,
-            output_dir,
-            temp_dir,
-            translate_params,
-        )
+        for task in [PyFuncSupportedTasks.TEXT_TO_IMAGE.value, PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value]:
+            translate_params = {"task": task}
+            mock_convertor = mock_text_to_image_factory.create_mlflow_convertor.return_value
+            result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
+            self.assertEqual(result, mock_convertor)
+            mock_text_to_image_factory.create_mlflow_convertor.assert_called_with(
+                model_dir,
+                output_dir,
+                temp_dir,
+                translate_params,
+            )
 
     @patch("azureml.model.mgmt.processors.factory.ASRMLflowConvertorFactory")
     def test_get_asr_mlflow_convertor(self, mock_asr_factory):
@@ -257,6 +259,46 @@ class TestFactoryModule(unittest.TestCase):
         result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
         self.assertEqual(result, mock_convertor)
         mock_clip_factory.create_mlflow_convertor.assert_called_once_with(
+            model_dir,
+            output_dir,
+            temp_dir,
+            translate_params,
+        )
+
+    @patch("azureml.model.mgmt.processors.factory.CLIPMLflowConvertorFactory")
+    def test_get_clip_embeddings_mlflow_convertor(self, mock_clip_factory):
+        """Test clip model MLflow convertor."""
+        model_framework = ModelFramework.HUGGINGFACE.value
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+
+        translate_params = {"task": PyFuncSupportedTasks.EMBEDDINGS.value}
+        mock_convertor = mock_clip_factory.create_mlflow_convertor.return_value
+        result = get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, translate_params)
+        self.assertEqual(result, mock_convertor)
+        mock_clip_factory.create_mlflow_convertor.assert_called_once_with(
+            model_dir,
+            output_dir,
+            temp_dir,
+            translate_params,
+        )
+
+    @patch("azureml.model.mgmt.processors.factory.BLIP2MLflowConvertorFactory")
+    def test_get_blip2_mlflow_convertor(self, mock_blip2_factory):
+        """Test BLIP2 model MLflow convertor."""
+        model_framework = ModelFramework.HUGGINGFACE.value
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+
+        translate_params = {
+            "task": PyFuncSupportedTasks.IMAGE_TO_TEXT.value}
+        mock_convertor = mock_blip2_factory.create_mlflow_convertor.return_value
+        result = get_mlflow_convertor(
+            model_framework, model_dir, output_dir, temp_dir, translate_params)
+        self.assertEqual(result, mock_convertor)
+        mock_blip2_factory.create_mlflow_convertor.assert_called_once_with(
             model_dir,
             output_dir,
             temp_dir,
@@ -427,3 +469,39 @@ class TestPyFunMLFLowConvertor:
         MMLabDetectionMLflowConvertor(
             model_dir=model_dir, output_dir=output_dir, temp_dir=temp_dir, translate_params=translate_params
         )
+
+
+class TestTextToImageMLflowConvertorFactory(unittest.TestCase):
+    """Test text to image mlflow convertor factory."""
+
+    def test_create_mlflow_convertor_unsupported_model_family(self):
+        """Test unsupported model family case."""
+        with self.assertRaises(Exception) as context:
+            TextToImageMLflowConvertorFactory.create_mlflow_convertor("model_dir", "output_dir", "temp_dir",
+                                                                      {"misc": "unsupported_model_family",
+                                                                       "task": "some_task"})
+        self.assertTrue('Unsupported model family for text to image model' in str(context.exception))
+
+    def test_create_mlflow_converter_for_text_to_image_task(self):
+        """Test text to image model mlflow convertor."""
+        model_dir = "model_dir"
+        output_dir = "output_dir"
+        temp_dir = "temp_dir"
+        translate_params = {"misc": [SupportedTextToImageModelFamily.STABLE_DIFFUSION.value],
+                            "task": PyFuncSupportedTasks.TEXT_TO_IMAGE.value}
+        convertor = TextToImageMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir,
+                                                                              translate_params)
+        assert convertor._task == PyFuncSupportedTasks.TEXT_TO_IMAGE.value
+        assert os.path.join("pyfunc", "text_to_image") in convertor.MODEL_DIR
+
+    def test_create_mlflow_converter_for_text_to_image_inpainting_task(self):
+        """Test text to image inpainting model mlflow convertor."""
+        model_dir = "model_dir"
+        output_dir = "output_dir"
+        temp_dir = "temp_dir"
+        translate_params = {"misc": [SupportedTextToImageModelFamily.STABLE_DIFFUSION.value],
+                            "task": PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value}
+        convertor = TextToImageMLflowConvertorFactory.create_mlflow_convertor(model_dir, output_dir, temp_dir,
+                                                                              translate_params)
+        assert convertor._task == PyFuncSupportedTasks.TEXT_TO_IMAGE_INPAINTING.value
+        assert os.path.join("pyfunc", "text_to_image") in convertor.MODEL_DIR

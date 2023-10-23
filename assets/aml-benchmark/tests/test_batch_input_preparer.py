@@ -11,7 +11,7 @@ import uuid
 from azure.ai.ml.entities import Job
 from azure.ai.ml import Input
 
-from utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,
@@ -27,6 +27,7 @@ class TestBatchInferencePreparerComponent:
     def test_batch_inference_preparer(self, temp_dir: str):
         """Test batch inference preparer."""
         ml_client = get_mlclient()
+        score_url = "https://test.com"
         pipeline_job = self._get_pipeline_job(
             self.test_batch_inference_preparer.__name__,
             '{'
@@ -42,7 +43,8 @@ class TestBatchInferencePreparerComponent:
             '   },'
             '   "_batch_request_metadata": ###<_batch_request_metadata>'
             '}',
-            temp_dir,
+            endpoint_url=score_url,
+            temp_dir=temp_dir,
         )
         # submit the pipeline job
         pipeline_job = ml_client.create_or_update(
@@ -55,7 +57,7 @@ class TestBatchInferencePreparerComponent:
         os.makedirs(out_dir, exist_ok=True)
         self._verify_output(
             pipeline_job, output_dir=out_dir, check_key=["input_data", "_batch_request_metadata"],
-            model_type='llama',
+            model_type='oss',
             check_param_dict={"temperature": 0.6, "max_new_tokens": 100, "do_sample": True}
         )
 
@@ -63,6 +65,7 @@ class TestBatchInferencePreparerComponent:
                 self,
                 display_name: str,
                 batch_input_pattern: str,
+                endpoint_url: str,
                 temp_dir: Optional[str] = None,
             ) -> Job:
         pipeline_job = load_yaml_pipeline("batch_inference_preparer.yaml")
@@ -79,7 +82,7 @@ class TestBatchInferencePreparerComponent:
             type="uri_folder", path=temp_dir
         )
         pipeline_job.inputs.batch_input_pattern = batch_input_pattern
-
+        pipeline_job.inputs.endpoint_url = endpoint_url
         pipeline_job.display_name = display_name
         pipeline_job.name = str(uuid.uuid4())
 
@@ -99,6 +102,6 @@ class TestBatchInferencePreparerComponent:
         for r in output_records:
             for k in check_key:
                 assert k in r, f"{k} not in records {r}"
-            if model_type == "llama":
+            if model_type == "oss":
                 for k, v in check_param_dict.items():
                     assert r['input_data']['parameters'][k] == v, f"{k} not equal to {v}"

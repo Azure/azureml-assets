@@ -3,7 +3,15 @@ name: CodeLlama-7b-hf
 path: ./
 properties:
   SHA: 3773f63b4511b9e47a9a7ffc765eed7eb0169486
+  inference-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3,
+    Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  evaluation-recommended-sku: Standard_NC12s_v3, Standard_NC24s_v3, Standard_NC24rs_v3,
+    Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  finetune-recommended-sku: Standard_NC24s_v3, Standard_NC24rs_v3,
+    Standard_ND40rs_v2, Standard_ND96asr_v4, Standard_ND96amsr_A100_v4
+  finetuning-tasks: text-generation
   languages: EN
+  azureml.copyRegistryFilesToWorkspace: true
 tags:
   Featured: ''
   Preview: ''
@@ -14,7 +22,25 @@ tags:
   - Standard_ND40rs_v2
   - Standard_ND96asr_v4
   - Standard_ND96amsr_A100_v4
+  evaluation_compute_allow_list:
+  - Standard_NC12s_v3
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  - Standard_ND96amsr_A100_v4
+  finetune_compute_allow_list:
+  - Standard_NC24s_v3
+  - Standard_NC24rs_v3
+  - Standard_ND40rs_v2
+  - Standard_ND96asr_v4
+  - Standard_ND96amsr_A100_v4
+  model_specific_defaults:
+    apply_deepspeed: 'true'
+    apply_lora: 'true'
+    precision: '16'
+  SharedComputeCapacityEnabled: ''
+  task: text-generation
   license: llama2
   author: meta
-  task: text-generation
-version: 1
+version: 2
