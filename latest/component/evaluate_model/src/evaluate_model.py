@@ -121,8 +121,11 @@ class EvaluateModel(BasePredictor):
         Returns: Dataframe
 
         """
+        all_cols = list(input_column_names)
+        if label_column_name is not None:
+            all_cols += [label_column_name]
         data = read_model_prediction_data(test_data, self.task, self.batch_size)
-        data = map(_clean_and_validate_dataset, data, repeat([input_column_names] + label_column_name),
+        data = map(_clean_and_validate_dataset, data, repeat(all_cols),
                    repeat(self.batch_size))
         data = map(prepare_data, data, repeat(self.task), repeat(label_column_name), repeat(self._has_multiple_output))
         return data  # X_test, y_test

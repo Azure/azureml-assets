@@ -714,15 +714,13 @@ def read_multiple_files(path):
     return iter([data])
 
 
-def prepare_data(data, task, label_column_name=None, input_column_names=None,
-                 _has_multiple_output=False, extra_y_test_cols=None):
+def prepare_data(data, task, label_column_name=None, _has_multiple_output=False, extra_y_test_cols=None):
     """Prepare data.
 
     Args:
         data (_type_): _description_
         task (_type_): _description_
         label_column_name (_type_, optional): _description_. Defaults to None.
-        input_column_names: (_type_, optional): _description_. Defaults to None.
         _has_multiple_output (bool, optional): _description_. Defaults to False.
         extra_y_test_cols (_type_, optional): _description_. Defaults to None.
 
