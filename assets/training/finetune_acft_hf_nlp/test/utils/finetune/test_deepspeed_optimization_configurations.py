@@ -4,6 +4,7 @@
 """File containing test cases for invalid user settings for deepspeed stage3."""
 
 import json
+import pytest
 from unittest import TestCase
 from argparse import Namespace
 from typing import Dict, Any
@@ -15,8 +16,10 @@ from src.finetune.finetune import (
     setup_and_validate_deepspeed,
     resolve_deepspeed_config,
     DEFAULT_DEEPSPEED_STAGE2_CONFIG,
-    DEFAULT_DEEPSPEED_STAGE3_CONFIG
+    DEFAULT_DEEPSPEED_STAGE3_CONFIG,
 )
+
+from azureml.acft.contrib.hf.nlp.constants.constants import Tasks, HfModelTypes
 
 
 def read_json_file(file_path: str) -> Dict[str, Any]:
@@ -65,15 +68,36 @@ def test_invalid_fail_run_setting_ds3_ort():
 
 def test_invalid_fail_run_setting_ds3_lora():
     """Test can_apply_ort return true for generation task."""
-    args = Namespace(apply_lora=True, apply_deepspeed=True, deepspeed="test/utils/finetune/data/valid_ds3_config.json")
+    args = Namespace(
+        apply_lora=True,
+        apply_deepspeed=True,
+        deepspeed="test/utils/finetune/data/valid_ds3_config.json",
+        task_name=Tasks.SINGLE_LABEL_CLASSIFICATION,
+        model_type=HfModelTypes.GPT2,
+    )
     ut_obj = TestCase()
     with ut_obj.assertRaises(Exception) as context:
         check_for_invalid_ds_zero3_settings(args)
 
     ut_obj.assertTrue(
-        f"Invalid settings found. Deep Speed stage3 doesn't work with {dict(apply_lora=True)}"
+        "Invalid settings found. Deep Speed stage3 doesn't work with "
         in str(context.exception)
     )
+
+
+def test_valid_run_setting_ds3_lora():
+    """Test can_apply_ort return true for generation task."""
+    args = Namespace(
+        apply_lora=True,
+        apply_deepspeed=True,
+        deepspeed="test/utils/finetune/data/valid_ds3_config.json",
+        task_name=Tasks.TEXT_GENERATION,
+        model_type=HfModelTypes.LLAMA,
+    )
+    try:
+        check_for_invalid_ds_zero3_settings(args)
+    except Exception as e:
+        pytest.fail(str(e))
 
 
 def test_invalid_setting_ds3_auto_find_bs():
