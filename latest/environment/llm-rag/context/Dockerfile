@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:20231011.v1
 # Set the shared environment path
 ENV AZUREML_CONDA_ENVIRONMENT_PATH /azureml-envs/rag
 
-# Prepend path to AzureML conda environment
+# Prepend the path to AzureML conda environment
 ENV PATH $AZUREML_CONDA_ENVIRONMENT_PATH/bin:$PATH
 
 # Create conda environment
