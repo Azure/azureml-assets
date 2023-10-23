@@ -71,6 +71,7 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
 
     def _post_process_model_results(self, batch_results: List) -> List[Dict[str, Any]]:
         """Convert model results to OD or IS output format.
+
         :param batch_results: List of model results for images in batch.
         :type batch_results: List
         :return: List of predictions for images in batch.
