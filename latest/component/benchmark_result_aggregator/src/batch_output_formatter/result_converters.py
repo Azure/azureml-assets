@@ -26,6 +26,7 @@ class ResultConverters:
     PREDICTION_COL_NAME = 'prediction'
     DEFAULT_ISO_FORMAT = '2000-01-01T00:00:00.000000+00:00'
     DEFAULT_PERF_INPUT_TOKEN = 512
+    DEFAULT_GROUND_TRUTH = 'ground_truth'
 
     def __init__(
             self, model_type: str, metadata_key: str, data_id_key: str,
@@ -106,7 +107,7 @@ class ResultConverters:
             request_payload = self._get_request(result)
             payload_hash = EndpointUtilities.hash_payload_prompt(request_payload, self._model)
             ground_truth = self._lookup_dict.get(payload_hash, '')
-        return {'ground_truth': ground_truth}
+        return {self.ground_truth_column_name: ground_truth}
 
     def _get_raw_output(self, result: Dict[str, Any]) -> Dict[str, Any]:
         prediction = ''
@@ -143,6 +144,11 @@ class ResultConverters:
     def _get_oss_output_token(self, result: Any, perf_metrics: Any) -> Tuple[int, int]:
         input_parameters = ResultConverters._get_oss_input_parameters(result)
         return input_parameters.get("max_new_tokens", perf_metrics.get('output_token_count', -1))
+
+    @property
+    def ground_truth_column_name(self) -> str:
+        """Get the output ground truth column name."""
+        return self._label_key if self._label_key else ResultConverters.DEFAULT_GROUND_TRUTH
 
     @staticmethod
     def _get_oss_input_parameters(result: Any) -> Any:
