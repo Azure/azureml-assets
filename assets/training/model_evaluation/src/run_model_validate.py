@@ -23,16 +23,16 @@ custom_dims_dict = vars(custom_dimensions)
 @command_component
 @swallow_all_exceptions(logger)
 def validate(
-        task: Input(type="string", optional=False),
-        data: Input(type="uri_folder", optional=False),
-        mlflow_model: Input(type="mlflow_model", optional=False, default=None),
-        label_column_name: Input(type="string", optional=True, default=None),
-        input_column_names: Input(type="string", optional=True, default=None),
-        device: Input(type="string", optional=False),
-        batch_size: Input(type="integer", optional=True, default=None),
-        config_file_name: Input(type="uri_file", optional=True, default=None),
-        config_str: Input(type="string", optional=True, default=None),
-) -> Output(type="boolean", is_control=True):
+        task: Input(type="string", optional=False),  # type: ignore
+        data: Input(type="uri_folder", optional=False),  # type: ignore
+        mlflow_model: Input(type="mlflow_model", optional=False, default=None),  # type: ignore
+        label_column_name: Input(type="string", optional=True, default=None),  # type: ignore
+        input_column_names: Input(type="string", optional=True, default=None),  # type: ignore
+        device: Input(type="string", optional=False),  # type: ignore
+        batch_size: Input(type="integer", optional=True, default=None),  # type: ignore
+        config_file_name: Input(type="uri_file", optional=True, default=None),  # type: ignore
+        config_str: Input(type="string", optional=True, default=None),  # type: ignore
+) -> Output(type="boolean", is_control=True):  # type: ignore
     """Entry function of model validation script."""
 
     if label_column_name:

@@ -109,7 +109,7 @@ class EvaluateModel(BasePredictor):
                 log_traceback(exception, logger)
                 raise exception
 
-    def load_data(self, test_data, label_column_name, input_column_names=None, is_mltable=True):
+    def load_data(self, test_data, label_column_name, input_column_names=None):
         """
         Load data in required format.
 
@@ -258,7 +258,7 @@ def run():
                       custom_dimensions=custom_dims_dict):
         try:
             data = runner.load_data(test_data=data, label_column_name=args[ArgumentLiterals.LABEL_COLUMN_NAME],
-                                    input_column_names=args[ArgumentLiterals.INPUT_COLUMN_NAMES], is_mltable=is_mltable)
+                                    input_column_names=args[ArgumentLiterals.INPUT_COLUMN_NAMES])
         except Exception as e:
             exception = get_azureml_exception(DataLoaderException, BadInputData, e, error=repr(e))
             log_traceback(exception, logger)
