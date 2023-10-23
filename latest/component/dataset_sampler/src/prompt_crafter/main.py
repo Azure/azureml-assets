@@ -142,7 +142,8 @@ def main(
         system_message=system_message,
         random_seed=random_seed,
         test_dataset_checksum=resolve_io_path(test_data),
-        few_shot_dataset_checksum=resolve_io_path(few_shot_data),
+        few_shot_dataset_checksum=resolve_io_path(few_shot_data)
+        if few_shot_data else None,
         output_dataset_checksum=resolve_io_path(output_file))
 
 
