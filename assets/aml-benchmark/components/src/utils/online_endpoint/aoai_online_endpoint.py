@@ -206,7 +206,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
     def _aoai_subscription_usage_url(self) -> str:
         url_list = [
             self._arm_base_subscription, 'providers/Microsoft.CognitiveServices',
-            'locations', self._location, 'usages?api-version={self._api_version}'
+            'locations', self._location, f'usages?api-version={self._api_version}'
         ]
         return "/".join(url_list)
 

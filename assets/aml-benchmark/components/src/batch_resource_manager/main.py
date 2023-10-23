@@ -149,9 +149,10 @@ def _online_endpoint_generator(
         do_quota_validation: bool,
         additional_deployment_env_vars: str,
         use_max_quota: bool
-) -> Generator[OnlineEndpoint]:
-    if sku is None:
-        sku = 1
+) -> Generator[OnlineEndpoint, None, None]:
+    if deployment_sku is None:
+        deployment_sku = 1
+        use_max_quota = True
     for subscription in subscription_lists:
         for region in region_lists:
             logger.info("Checking {} in region {}.".format(subscription, region))

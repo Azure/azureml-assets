@@ -22,6 +22,13 @@ inputs:
     type: string
     optional: True
     description: Model name or model asset path. Only needed for managed deployment.
+  model_type:
+    type: string
+    optional: True
+    enum:
+      - oss
+      - oai
+    description: Model name or model asset path. Only needed for managed deployment.
   model_version:
     type: string
     optional: True
@@ -84,6 +91,7 @@ command: >-
   python -m batch_resource_manager.main
   --output_metadata ${{outputs.output_metadata}}
   $[[--endpoint_name ${{inputs.endpoint_name}}]]
+  $[[--model_type ${{inputs.model_type}}]]
   $[[--deployment_name ${{inputs.deployment_name}}]]
   $[[--model ${{inputs.model}}]]
   $[[--model_version ${{inputs.model_version}}]]
