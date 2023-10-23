@@ -1,6 +1,6 @@
 path:
   container_name: models
-  container_path: meta/llama-2-13b/1692168478/mlflow_model_folder
+  container_path: meta/llama-2-13b/1698059909/mlflow_model_folder
   storage_name: automlcesdkdataresources
   type: azureblob
 publish:

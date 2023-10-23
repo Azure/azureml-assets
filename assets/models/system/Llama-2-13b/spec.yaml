@@ -39,13 +39,12 @@ tags:
   license: custom
   author: meta
   model_specific_defaults:
-    apply_deepspeed: 'true'
-    deepspeed_stage: '3'
+    apply_deepspeed: 'false'
     apply_lora: 'true'
-    precision: '16'
+    precision: '4'
   task: text-generation
   inference_supported_envs:
   - vllm
   - ds_mii
   SharedComputeCapacityEnabled: ''
-version: 12
+version: 13
