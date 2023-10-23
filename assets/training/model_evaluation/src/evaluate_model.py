@@ -30,7 +30,6 @@ from logging_utilities import (
 from azureml.telemetry.activity import log_activity
 from utils import (
     ArgumentParser,
-    check_and_return_if_mltable,
     read_model_prediction_data,
     prepare_data,
     get_predictor,
@@ -241,7 +240,6 @@ def run():
         config.update(pipeline_params)
 
     data = args[ArgumentLiterals.DATA]
-    is_mltable = check_and_return_if_mltable(data)
 
     with log_activity(logger, constants.TelemetryConstants.INITIALISING_RUNNER,
                       custom_dimensions=custom_dims_dict):
