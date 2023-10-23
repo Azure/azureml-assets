@@ -28,8 +28,7 @@ from responsibleai_text import (
 from raiutils.data_processing import serialize_json_safe
 
 from azureml.rai.utils import ModelSerializer
-
-from _telemetry._loggerfactory import _LoggerFactory, track
+from azureml.rai.utils.telemetry import LoggerFactory, track
 
 # Local
 from constants import TaskType
@@ -41,6 +40,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 TEXT_DATA_TYPE = "text"
+COMPONENT_NAME = "azureml.rai.text"
 
 _ai_logger = None
 
@@ -48,11 +48,22 @@ _ai_logger = None
 def _get_logger():
     global _ai_logger
     if _ai_logger is None:
-        _ai_logger = _LoggerFactory.get_logger(__file__)
+        run = Run.get_context()
+        module_name = run.properties["azureml.moduleName"]
+        module_version = run.properties["azureml.moduleid"]
+        _ai_logger = LoggerFactory.get_logger(
+            __file__, module_name, module_version, COMPONENT_NAME)
     return _ai_logger
 
 
 _get_logger()
+
+
+class ModelTypes:
+    FASTAI = "fastai"
+    PYFUNC = "pyfunc"
+    PYTORCH = "pytorch"
+    HFTRANSFORMERS = "hftransformers"
 
 
 class DashboardInfo:
@@ -126,7 +137,8 @@ def parse_args():
     parser.add_argument(
         "--task_type", type=str, required=True,
         choices=[TaskType.TEXT_CLASSIFICATION,
-                 TaskType.MULTILABEL_TEXT_CLASSIFICATION]
+                 TaskType.MULTILABEL_TEXT_CLASSIFICATION,
+                 TaskType.QUESTION_ANSWERING]
     )
 
     parser.add_argument(
@@ -281,14 +293,23 @@ def main(args):
         raise ValueError(
             "Both model info and model input need to be supplied.")
 
+    model_meta = mlflow.models.Model.load(
+                    os.path.join(args.model_input, "MLmodel"))
+    model_type = None
+    if ModelTypes.HFTRANSFORMERS in model_meta.flavors:
+        model_type = ModelTypes.HFTRANSFORMERS
+
     model_id = args.model_info
     _logger.info("Loading model: {0}".format(model_id))
 
     tracking_uri = mlflow.get_tracking_uri()
     model_serializer = ModelSerializer(
         model_id,
+        mlflow_model=args.model_input,
+        model_type=model_type,
         use_model_dependency=args.use_model_dependency,
         use_conda=args.use_conda,
+        task_type=args.task_type,
         tracking_uri=tracking_uri)
     text_model = model_serializer.load("Ignored path")
 

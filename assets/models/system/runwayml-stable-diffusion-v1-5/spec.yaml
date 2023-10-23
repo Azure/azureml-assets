@@ -1,0 +1,17 @@
+$schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
+name: runwayml-stable-diffusion-v1-5
+path: ./
+properties:
+  SHA: 1d0c4ebf6ff58a5caecab40fa1406526bca4b5b9
+  datasets: LAION-2B (en)
+  inference-min-sku-spec: 4|1|28|176
+  inference-recommended-sku: Standard_NC6s_v3, Standard_NC12s_v3, Standard_NC24s_v3,
+    Standard_NC24rs_v3, Standard_NC16as_T4_v3, Standard_NC24ads_A100_v4, Standard_NC48ads_A100_v4,
+    Standard_NC4as_T4_v3, Standard_NC64as_T4_v3, Standard_NC8as_T4_v3, Standard_NC96ads_A100_v4,
+    Standard_ND40rs_v2, Standard_ND96amsr_A100_v4, Standard_ND96asr_v4
+  model_id: runwayml/stable-diffusion-v1-5
+tags:
+  Preview: ''
+  license: creativeml-openrail-m
+  task: text-to-image
+version: 4

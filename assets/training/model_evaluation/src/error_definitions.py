@@ -52,6 +52,20 @@ class ComputeMetricsInternalError(ClientError):
 
 
 @error_decorator(use_parent_error_code=True)
+class DownloadDependenciesError(ClientError):
+    """Download Dependencies error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.DownloadDependenciesFailed
+
+
+@error_decorator(use_parent_error_code=True)
 class InvalidTaskType(BadArgument):
     """Task Validation error."""
 
@@ -108,6 +122,20 @@ class InvalidTestData(BadArgument):
 
 
 @error_decorator(use_parent_error_code=True)
+class InvalidFileInputSource(BadArgument):
+    """Invalid Test Data Source error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.InvalidFileInputSource
+
+
+@error_decorator(use_parent_error_code=True)
 class InvalidPredictionsData(BadArgument):
     """Invalid Predictions file error."""
 
@@ -150,6 +178,20 @@ class InvalidGroundTruthData(BadArgument):
 
 
 @error_decorator(use_parent_error_code=True)
+class ArgumentParsingError(BadArgument):
+    """Argument Parsing Error error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.ArgumentParsingError
+
+
+@error_decorator(use_parent_error_code=True)
 class InvalidGroundTruthColumnNameData(BadArgument):
     """Invalid Ground Truth Column Name data error."""
 
@@ -164,6 +206,48 @@ class InvalidGroundTruthColumnNameData(BadArgument):
 
 
 @error_decorator(use_parent_error_code=True)
+class InvalidYTestCasesColumnNameData(BadArgument):
+    """Invalid Ground Truth Column Name data error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.InvalidYTestCasesColumnNameData
+
+
+@error_decorator(use_parent_error_code=True)
+class InvalidGroundTruthColumnNameCodeGen(BadArgument):
+    """Invalid Ground Truth Column Name data error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.InvalidGroundTruthColumnNameCodeGen
+
+
+@error_decorator(use_parent_error_code=True)
+class InvalidGroundTruthColumnName(BadArgument):
+    """Ground Truth Column Name should be passed."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.InvalidGroundTruthColumnName
+
+
+@error_decorator(use_parent_error_code=True)
 class BadInputData(BadData):
     """Bad Input Data error."""
 
@@ -175,6 +259,20 @@ class BadInputData(BadData):
             str: _description_
         """
         return ErrorStrings.BadInputData
+
+
+@error_decorator(use_parent_error_code=True)
+class EmptyInputData(BadData):
+    """Bad Input Data error."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.EmptyInputData
 
 
 @error_decorator(use_parent_error_code=True)
@@ -231,6 +329,20 @@ class BadEvaluationConfigParam(BadData):
             str: _description_
         """
         return ErrorStrings.BadEvaluationConfigParam
+
+
+@error_decorator(use_parent_error_code=True)
+class BadEvaluationConfig(BadData):
+    """Bad Evaluation Config data."""
+
+    @property
+    def message_format(self) -> str:
+        """Message Format.
+
+        Returns:
+            str: _description_
+        """
+        return ErrorStrings.BadEvaluationConfig
 
 
 @error_decorator(use_parent_error_code=True)

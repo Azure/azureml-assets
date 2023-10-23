@@ -1,0 +1,8 @@
+path:
+  container_name: finetuning-image-models
+  container_path: mmtracking-mlflow/bytetrack_yolox_x_crowdhuman_mot17-private-half/1697823448/mlflow_model_folder
+  storage_name: automlcesdkdataresources
+  type: azureblob
+publish:
+  description: description.md
+  type: mlflow_model

@@ -18,7 +18,7 @@ BUILD_CONTEXT = Path("../context")
 JOB_SOURCE_CODE = "src"
 DATA_SOURCE_CLASSIFICATION = "data/training-mltable-folder/classification"
 DATA_SOURCE_REGRESSION = "data/training-mltable-folder/regression"
-TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 30)
+TIMEOUT_MINUTES = os.environ.get("timeout_minutes", 45)
 STD_LOG = Path("artifacts/user_logs/std_log.txt")
 
 

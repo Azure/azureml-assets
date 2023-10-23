@@ -5,6 +5,7 @@
 
 import re
 import os
+import psutil
 import shutil
 import sys
 import time
@@ -12,13 +13,19 @@ from argparse import Namespace
 from azure.ai.ml import MLClient
 from azureml._common._error_definition import AzureMLError
 from azureml._common.exceptions import AzureMLException
-from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
-from azureml.core.run import Run, _OfflineRun
-from azureml.model.mgmt.utils.exceptions import HuggingFaceErrorInFetchingModelInfo
+from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
+from azure.identity import ManagedIdentityCredential
+from azureml.core.run import Run
+from azureml.model.mgmt.utils.exceptions import (
+    GenericRunCMDError,
+    HuggingFaceErrorInFetchingModelInfo,
+    UserIdentityMissingError
+    )
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from subprocess import PIPE, run, STDOUT
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from azureml.model.mgmt.utils.logging_utils import get_logger
 from huggingface_hub.hf_api import HfApi, ModelInfo, ModelFilter
 
@@ -29,6 +36,7 @@ KV_COLON_SEP = ":"
 KV_EQ_SEP = "="
 ITEM_COMMA_SEP = ","
 ITEM_SEMI_COLON_SEP = ";"
+BUFFER_SPACE = 1048576  # 1024 * 1024 KB (1GB)
 
 hf_api = HfApi(endpoint=HF_ENDPOINT)
 logger = get_logger(__name__)
@@ -83,22 +91,30 @@ def get_json_header(token: str) -> Dict:
     }
 
 
-def get_mlclient(registry_name=None, use_default=False):
-    """Return mlclient object."""
-    if use_default:
-        credential = DefaultAzureCredential()
-    else:
+def get_mlclient(registry_name: str = None):
+    """Return ML Client."""
+    has_msi_succeeded = False
+    try:
         msi_client_id = os.environ.get("DEFAULT_IDENTITY_CLIENT_ID")
         credential = ManagedIdentityCredential(client_id=msi_client_id)
+        credential.get_token("https://management.azure.com/.default")
+        has_msi_succeeded = True
+    except Exception:
+        # Fall back to AzureMLOnBehalfOfCredential in case ManagedIdentityCredential does not work
+        has_msi_succeeded = False
+        logger.warning("ManagedIdentityCredential was not found in the compute. "
+                       "Falling back to AzureMLOnBehalfOfCredential")
 
-    if registry_name:
-        return MLClient(
-            credential=credential,
-            registry_name=registry_name,
-        )
+    if not has_msi_succeeded:
+        try:
+            credential = AzureMLOnBehalfOfCredential()
+            # Check if given credential can get token successfully.
+            credential.get_token("https://management.azure.com/.default")
+        except Exception as ex:
+            raise AzureMLException._with_error(AzureMLError.create(UserIdentityMissingError, exception=ex))
 
-    run = Run.get_context()
-    if not isinstance(run, _OfflineRun):
+    if registry_name is None:
+        run = Run.get_context(allow_offline=False)
         ws = run.experiment.workspace
         return MLClient(
             credential=credential,
@@ -106,20 +122,47 @@ def get_mlclient(registry_name=None, use_default=False):
             resource_group_name=ws._resource_group,
             workspace_name=ws._workspace_name,
         )
-    return MLClient.from_config(credential)
+    logger.info(f"Creating MLClient with registry name {registry_name}")
+    return MLClient(credential=credential, registry_name=registry_name)
 
 
-def copy_file_paths_to_destination(src_dir: Path, destn_dir: Path, regex: str) -> None:
+@log_execution_time
+def copy_files(
+    src_dir: Path,
+    destn_dir: Path,
+    include_pattern_str: str = r"^.*$",
+    exclude_pattern_str: Optional[str] = None
+) -> None:
     """Copy files to destination directory [Non-recursively] based on regex pattern provided."""
     if not Path(src_dir).is_dir():
         raise Exception("src path provided should be a dir")
-    if Path(destn_dir).exists():
-        raise Exception("destination dir should be empty")
-    os.makedirs(destn_dir)
-    pattern = re.compile(regex)
+
+    os.makedirs(destn_dir, exist_ok=True)
+
+    include_pattern = re.compile(include_pattern_str)
+    exclude_pattern = None if not exclude_pattern_str else re.compile(exclude_pattern_str)
     for file_name in os.listdir(src_dir):
-        if pattern.match(file_name):
+        if exclude_pattern and exclude_pattern.match(file_name):
+            continue
+        if include_pattern.match(file_name):
             shutil.copy(os.path.join(src_dir, file_name), destn_dir)
+
+
+@log_execution_time
+def move_files(src_dir: Path, destn_dir: Path, include_pattern_str: str = r"^.*$", ignore_case: bool = False) -> None:
+    """Move files to destination directory [Non-recursively] based on regex pattern provided."""
+    if not Path(src_dir).is_dir():
+        raise Exception("src path provided should be a dir")
+
+    os.makedirs(destn_dir, exist_ok=True)
+
+    include_pattern = re.compile(include_pattern_str)
+    if ignore_case:
+        include_pattern = re.compile(include_pattern_str, re.IGNORECASE)
+
+    for file_name in os.listdir(src_dir):
+        if include_pattern.match(file_name):
+            shutil.move(os.path.join(src_dir, file_name), destn_dir)
 
 
 def create_namespace_from_dict(var: Any):
@@ -221,3 +264,68 @@ def fetch_huggingface_model_info(model_id) -> ModelInfo:
         raise AzureMLException._with_error(
             AzureMLError.create(HuggingFaceErrorInFetchingModelInfo, model_id=model_id, error=e)
         )
+
+
+def get_system_time_utc():
+    """Return formatted system time in UTC."""
+    return "{0:%Y-%m-%d %H:%M:%S}".format(datetime.utcnow())
+
+
+def get_file_or_folder_size(path: Path, size: int = 0) -> int:
+    """Return file or folder size in bytes."""
+    if os.path.isfile(path):
+        return os.stat(path).st_size
+    for entry in os.scandir(path):
+        size += get_file_or_folder_size(entry)
+    return size
+
+
+def round_size(size: int) -> str:
+    """Round size."""
+    CONST = 1024
+    dim = ["B", "KB", "MB", "GB", "TB"]
+    count = 0
+    while size / CONST > 1:
+        count += 1
+        size /= CONST
+    return f"{size:.2f} {dim[count]}"
+
+
+def get_filesystem_available_space_in_kb(path: Path = "./"):
+    """Return filesystem available size in KB.
+
+    :return: Return available size on VM in KB
+    :rtype: int
+    """
+    partition = psutil.disk_usage(path)
+    available_size_bytes = partition.free
+    return available_size_bytes / 1024
+
+
+def get_git_lfs_blob_size_in_kb(git_dir: Path) -> int:
+    """Return total LFS blob size in KB.
+
+    :param git_dir: git directory containing LFS file pointers
+    :type git_dir: Path
+    :return: total LFS blob size in KB
+    :rtype: int
+    """
+    try:
+        # 1. Execute git lfs ls-files -s command to get size of all blobs recursively
+        # 2. Filter size using awk utility and translate them to KB.
+        #    Expectation is that each blob dimension would be in [KB, MB, GB]
+        # 3. Perform sum and return total size in KB
+        cmd = (
+            f"cd {str(git_dir)} && "
+            "git lfs ls-files -s | "
+            "awk -F'[()]| ' '{size=$5; unit=$6; if(unit==\"GB\") "
+            "size*=1024*1024; else if(unit==\"MB\") size*=1024; print size}' | "
+            "awk '{sum += $1} END {printf(\"%d\", sum)}'"
+        )
+        exit_code, stdout = run_command(cmd)
+        if exit_code:
+            raise Exception(f"Failed in fetching lfs blobsize: {stdout}")
+        logger.info(f"total size: {stdout} KB")
+        return int(stdout)
+    except Exception as e:
+        raise AzureMLException._with_error(AzureMLError.create(GenericRunCMDError, error=e))

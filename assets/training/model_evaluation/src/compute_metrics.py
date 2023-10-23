@@ -3,41 +3,52 @@
 
 """Main script for compute metrics."""
 
-import argparse
 import azureml.evaluate.mlflow as aml_mlflow
 import os
 import glob
-import json
 import pandas as pd
 import numpy as np
 from azureml.telemetry.activity import log_activity
 
 import constants
-from exceptions import DataLoaderException, DataValidationException, ComputeMetricsException
-from error_definitions import (ComputeMetricsInternalError,
-                               BadForecastData,
-                               BadEvaluationConfigParam,
-                               InvalidGroundTruthColumnNameData,
-                               BadInputData)
-from logging_utilities import custom_dimensions, get_logger, log_traceback
-from utils import (read_config,
-                   check_and_return_if_mltable,
-                   read_data,
-                   evaluate_predictions)
-from run_utils import TestRun
+from exceptions import (
+    DataLoaderException,
+    DataValidationException,
+    ComputeMetricsException,
+    swallow_all_exceptions,
+)
+from error_definitions import (
+    ComputeMetricsInternalError,
+    BadForecastData,
+    InvalidGroundTruthColumnName,
+    InvalidGroundTruthColumnNameData,
+    InvalidPredictionColumnNameData,
+    BadInputData,
+)
+from logging_utilities import custom_dimensions, current_run, get_logger, log_traceback
+from utils import (
+    ArgumentParser,
+    fetch_compute_metrics_args,
+    check_and_return_if_mltable,
+    read_data,
+    evaluate_predictions,
+    parse_input_ground_truth_col
+)
 from validation import validate_compute_metrics_args
 from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 from azureml._common._error_definition.azureml_error import AzureMLError
 
 logger = get_logger(name=__name__)
-current_run = TestRun()
+custom_dimensions.app_name = constants.TelemetryConstants.COMPUTE_METRICS_NAME
+# current_run = TestRun()
 test_run = current_run.run
 root_run = current_run.root_run
 ws = current_run.workspace
 aml_mlflow.set_tracking_uri(ws.get_mlflow_tracking_uri())
+custom_dims_dict = vars(custom_dimensions)
 
 
-class ModelEvaluationRunner:
+class ComputeMetricsRunner:
     """Model Evaluation Runner."""
 
     def __init__(self,
@@ -46,39 +57,35 @@ class ModelEvaluationRunner:
                  predictions: str,
                  prediction_probabilities: str,
                  output: str,
-                 custom_dimensions: dict,
-                 config_file: str = None,
-                 metrics_config: dict = None,
+                 config: dict = None,
                  is_ground_truth_mltable: str = None,
                  is_predictions_mltable: str = None,
                  is_prediction_probabilities_mltable: str = None,
                  ground_truths_column_name: str = None,
-                 predictions_column_name: str = None):
+                 predictions_column_name: str = constants.PREDICTIONS_COLUMN_NAME):
         """__init__.
 
         Args:
             task (str): _description_
-            custom_dimensions (dict): _description_
         """
         self.task = task
         self.ground_truth = ground_truth
         self.predictions = predictions
         self.predictions_probabilities = prediction_probabilities if prediction_probabilities != '' else None
-        self.config_file = config_file
         self.output = output
         self.is_ground_truth_mltable = is_ground_truth_mltable
         self.is_predictions_mltable = is_predictions_mltable
         self.is_predictions_probabilities_mltable = is_prediction_probabilities_mltable
-        self.ground_truths_column_name = ground_truths_column_name
+        if self.task != constants.TASK.CHAT_COMPLETION and ground_truths_column_name is not None:
+            self.ground_truths_column_name, self.extra_y_test_cols = \
+                parse_input_ground_truth_col(ground_truths_column_name)
+        else:
+            self.ground_truths_column_name = None
+            self.extra_y_test_cols = None
         self.predictions_column_name = predictions_column_name
 
-        self.label_column_name, self.prediction_column_name, self.metrics_config = None, None, {}
-        if config_file:
-            self.metrics_config = read_config(config_file, self.task)
-        elif metrics_config:
-            self.metrics_config = metrics_config
-        self._is_multilabel = self.metrics_config.get("multilabel", False)
-        self.custom_dimensions = custom_dimensions
+        self.config = config
+        self._is_multilabel = self.config.get("multilabel", False)
         self._has_multiple_output = self._is_multilabel or self.task == constants.TASK.NER
 
     def read_multiple_files(self, path):
@@ -118,14 +125,16 @@ class ModelEvaluationRunner:
         else:
             ground_truth = read_data(self.ground_truth, is_mltable=self.is_ground_truth_mltable)
         ground_truth = list(ground_truth)[0]
-        ground_truth = filter_ground_truths(ground_truth, self.task, self.ground_truths_column_name)
+
+        ground_truth = filter_ground_truths(ground_truth, self.task, self.ground_truths_column_name,
+                                            self.config)
 
         if os.path.isdir(self.predictions) and not self.is_predictions_mltable:
             predictions = self.read_multiple_files(path=self.predictions)
         else:
             predictions = read_data(self.predictions, is_mltable=self.is_predictions_mltable)
         predictions = list(predictions)[0]
-        predictions = filter_ground_truths(predictions, self.task, self.predictions_column_name)
+        predictions = filter_predictions(predictions, self.task, self.predictions_column_name)
 
         predictions_probabilities = None
         if self.predictions_probabilities is not None:
@@ -135,26 +144,19 @@ class ModelEvaluationRunner:
                 predictions_probabilities = read_data(self.predictions_probabilities,
                                                       is_mltable=self.is_predictions_probabilities_mltable)
             predictions_probabilities = list(predictions_probabilities)[0]
-        return ground_truth, predictions, predictions_probabilities
-
-    def fetch_mode_runner(self):
-        """Get Runner function.
-
-        Returns:
-            _type_: _description_
-        """
-        return getattr(self)
+        self.ground_truth, self.predictions, self.predictions_probabilities = \
+            ground_truth, predictions, predictions_probabilities
 
     def compute_metrics(self):
         """Compute Metrics Mode."""
         try:
             ground_true_regressors = None
-            rename_columns = {}
+            self.rename_columns = {}
             if self.task == constants.TASK.FORECASTING:
                 ground_truth = self.ground_truth.pop(self.ground_truths_column_name).values
                 ground_true_regressors = self.ground_truth
                 self.ground_truth = ground_truth
-                forecast_origin_column = self.metrics_config.get(
+                forecast_origin_column = self.config.get(
                     constants.ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME,
                     constants.ForecastColumns._FORECAST_ORIGIN_COLUMN_DEFAULT)
                 if isinstance(self.predictions, pd.DataFrame):
@@ -162,72 +164,53 @@ class ModelEvaluationRunner:
                     # and give it a default name. Later we will rename this column back.
                     if forecast_origin_column in ground_true_regressors:
                         ground_true_regressors[forecast_origin_column] = pd.to_datetime(
-                            self.predictions[forecast_origin_column], unit='ms')
+                            ground_true_regressors[forecast_origin_column], unit='ms')
                         if forecast_origin_column != constants.ForecastColumns._FORECAST_ORIGIN_COLUMN_DEFAULT:
                             ground_true_regressors.rename({
                                 forecast_origin_column: constants.ForecastColumns._FORECAST_ORIGIN_COLUMN_DEFAULT},
                                 inplace=True, axis=1)
-                            rename_columns = {
+                            self.rename_columns = {
                                 constants.ForecastColumns._FORECAST_ORIGIN_COLUMN_DEFAULT: forecast_origin_column}
                     if self.predictions_column_name:
                         self.predictions = self.predictions.pop(self.predictions_column_name)
-            result = evaluate_predictions(self.ground_truth, self.predictions, self.predictions_probabilities,
-                                          self.task, self.metrics_config, ground_true_regressors)
-            if result:
-                scalar_metrics = result.metrics
-                logger.info("Computed metrics:")
-                for metrics, value in scalar_metrics.items():
-                    formatted = f"{metrics}: {value}"
-                    logger.info(formatted)
-                if self.task == constants.TASK.FORECASTING and rename_columns \
-                        and 'forecast_time_series_id_distribution_table' in result.artifacts:
-                    artifact_content = result.artifacts['forecast_time_series_id_distribution_table'].content
-                    ts_id_table = pd.DataFrame(artifact_content['data'])
-                    ts_id_table.rename(rename_columns, axis=1, inplace=True)
-                    artifact_content['data'] = ts_id_table.to_dict(orient='recrds')
-                    new_table = JsonEvaluationArtifact(
-                        uri=result.artifacts['forecast_time_series_id_distribution_table'].uri,
-                        content=artifact_content)
-                    result.artifacts['forecast_time_series_id_distribution_table'] = new_table
-                result.save(os.path.join(self.output, constants.EVALUATION_RESULTS_PATH))
+            extra_args = {}
+            if self.extra_y_test_cols is not None:
+                extra_args[constants.DataFrameParams.Extra_Cols] = self.extra_y_test_cols
+            if self.ground_truths_column_name is not None:
+                extra_args[constants.DataFrameParams.Ground_Truth_Column_Name] = self.ground_truths_column_name
+
+            return evaluate_predictions(self.ground_truth, self.predictions, self.predictions_probabilities,
+                                        self.task, self.config, ground_true_regressors, **extra_args)
         except Exception as e:
             exception = ComputeMetricsException._with_error(
-                AzureMLError.create(ComputeMetricsInternalError, error=repr(e))
+                AzureMLError.create(ComputeMetricsInternalError, error=repr(e)),
+                inner_exception=e
             )
-            exception.inner_exception = e
-            log_traceback(exception, logger)
-            raise exception
-        return
-
-    def run(self):
-        """Model Evaluation Runner.
-
-        Raises:
-            DataLoaderException: _description_
-        """
-        with log_activity(logger, activity_name=constants.TelemetryConstants.DATA_LOADING,
-                          custom_dimensions=self.custom_dimensions):
-            try:
-                self.ground_truth, self.predictions, self.predictions_probabilities = self.load_data()
-            except Exception as e:
-                exception = DataLoaderException._with_error(
-                    AzureMLError.create(BadInputData, error=repr(e))
-                )
-                exception.inner_exception = e
-                log_traceback(exception, logger)
-                raise exception
-        try:
-            self.compute_metrics()
-        except Exception as e:
-            exception = ComputeMetricsException._with_error(
-                AzureMLError.create(ComputeMetricsInternalError, error=repr(e))
-            )
-            exception.inner_exception = e
             log_traceback(exception, logger)
             raise exception
 
+    def log_and_write_outputs(self, result):
+        """Log and Save Outputs."""
+        if result:
+            scalar_metrics = result.metrics
+            logger.info("Computed metrics:")
+            for metrics, value in scalar_metrics.items():
+                formatted = f"{metrics}: {value}"
+                logger.info(formatted)
+            if self.task == constants.TASK.FORECASTING and self.rename_columns \
+                    and 'forecast_time_series_id_distribution_table' in result.artifacts:
+                artifact_content = result.artifacts['forecast_time_series_id_distribution_table'].content
+                ts_id_table = pd.DataFrame(artifact_content['data'])
+                ts_id_table.rename(self.rename_columns, axis=1, inplace=True)
+                artifact_content['data'] = ts_id_table.to_dict(orient='recrds')
+                new_table = JsonEvaluationArtifact(
+                    uri=result.artifacts['forecast_time_series_id_distribution_table'].uri,
+                    content=artifact_content)
+                result.artifacts['forecast_time_series_id_distribution_table'] = new_table
+            result.save(os.path.join(self.output, constants.EVALUATION_RESULTS_PATH))
 
-def filter_ground_truths(data, task_type, column_name=None):
+
+def filter_ground_truths(data, task_type, column_name=None, config=None):
     """Read Json file utility function.
 
     Args:
@@ -237,6 +220,11 @@ def filter_ground_truths(data, task_type, column_name=None):
     Returns:
         _type_: _description_
     """
+    if task_type in [constants.TASK.IMAGE_INSTANCE_SEGMENTATION, constants.TASK.IMAGE_OBJECT_DETECTION] or \
+            (task_type == constants.TASK.TEXT_GENERATION and
+             config.get(constants.TextGenerationColumns.SUBTASKKEY, "") == constants.SubTask.CODEGENERATION):
+        # do not filter as these contains multiple required columns
+        return data
     #  for Question-Answering checking for multiple columns in ground truth
     if task_type == constants.TASK.QnA and column_name:
         if isinstance(data[data.columns[0]][0], dict) and len(data[data.columns[0]][0].keys()) > 1:
@@ -250,9 +238,9 @@ def filter_ground_truths(data, task_type, column_name=None):
                     )
             except Exception as e:
                 exception = DataValidationException._with_error(
-                    AzureMLError.create(InvalidGroundTruthColumnNameData)
+                    AzureMLError.create(InvalidGroundTruthColumnNameData),
+                    inner_exception=e
                 )
-                exception.inner_exception = e
                 log_traceback(exception, logger)
                 raise exception
         if column_name in data.columns:
@@ -260,46 +248,100 @@ def filter_ground_truths(data, task_type, column_name=None):
                 logger.warning("Multiple ground truths are not supported for the Question and Answering currently.\
                                 Considering only the first ground truth in case of multiple values.")
                 data[column_name] = data[column_name].apply(lambda x: x[0])
-            if len(data.columns) > 0:
+    if len(data.columns) > 1:
+        if column_name:
+            if column_name in data.columns:
                 data = data[[column_name]]
+            else:
+                exception = DataValidationException._with_error(
+                    AzureMLError.create(InvalidGroundTruthColumnNameData)
+                )
+                log_traceback(exception, logger)
+                raise exception
+        else:
+            exception = DataValidationException._with_error(
+                AzureMLError.create(InvalidGroundTruthColumnName)
+            )
+            log_traceback(exception, logger)
+            raise exception
 
     return data
 
 
-def test_component():
+def filter_predictions(data, task_type, column_name):
+    """Read Json file utility function.
+
+    Args:
+        data (_type_): _description_
+        column_name (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
+    #  for Question-Answering checking for multiple columns in ground truth
+    if task_type == constants.TASK.QnA:
+        if isinstance(data[data.columns[0]][0], dict) and len(data[data.columns[0]][0].keys()) > 1:
+            try:
+                if isinstance(data, pd.DataFrame):
+                    logger.warning("Multiple predictions are not supported for the \
+                                   Question and Answering currently.\
+                                   Considering only the first prediction in case of multiple values.")
+                    data[data.columns[0]] = data[data.columns[0]].apply(
+                        lambda x: x[column_name][0] if len(x[column_name]) > 0 else ""
+                    )
+            except Exception as e:
+                exception = DataValidationException._with_error(
+                    AzureMLError.create(InvalidPredictionColumnNameData),
+                    inner_exception=e
+                )
+                log_traceback(exception, logger)
+                raise exception
+        if column_name in data.columns:
+            if isinstance(data[column_name].iloc[0], list) or isinstance(data[column_name].iloc[0], np.ndarray):
+                logger.warning("Multiple predictions are not supported for the Question and Answering currently.\
+                                Considering only the first prediction in case of multiple values.")
+                data[column_name] = data[column_name].apply(lambda x: x[0])
+    if len(data.columns) > 1:
+        logger.info("Multiple columns found. Picking only prediction column.")
+        if column_name in data.columns:
+            data = data[[column_name]]
+        else:
+            exception = DataValidationException._with_error(
+                AzureMLError.create(InvalidPredictionColumnNameData)
+            )
+            log_traceback(exception, logger)
+            raise exception
+
+    return data
+
+
+@swallow_all_exceptions(logger)
+def run():
     """Entry point for compute metrics component."""
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
+    # Inputs
     parser.add_argument("--task", type=str, dest="task", choices=constants.ALL_TASKS)
-    parser.add_argument("--ground_truths", type=str, dest="ground_truths", required=False, default="")
-    parser.add_argument("--predictions", type=str, dest="predictions", required=False, default="")
-    parser.add_argument("--prediction_probabilities", type=str, dest="prediction_probabilities",
-                        required=False, default="")
-    parser.add_argument("--output", type=str, dest="output")
-    parser.add_argument("--config-file-name", dest="config_file_name", required=False, type=str, default="")
-    # parser.add_argument("--ground_truths_mltable", type=str, dest="ground_truths_mltable",
-    #                    required=False, default="")
-    # parser.add_argument("--predictions_mltable", type=str, dest="predictions_mltable", required=False, default="")
-    # parser.add_argument("--prediction_probabilities_mltable", type=str,
-    #                    dest="prediction_probabilities_mltable", required=False, default="")
+    parser.add_argument("--ground_truths", type=str, dest="ground_truths", required=True)
     parser.add_argument("--ground_truths_column_name", type=str,
                         dest="ground_truths_column_name", required=False, default=None)
+    parser.add_argument("--predictions", type=str, dest="predictions", required=True)
     parser.add_argument("--predictions_column_name", type=str,
                         dest="predictions_column_name", required=False, default=None)
+    parser.add_argument("--prediction_probabilities", type=str, dest="prediction_probabilities",
+                        required=False, default="")
     parser.add_argument("--config_str", type=str, dest="config_str", required=False, default=None)
-    args = parser.parse_args()
+    parser.add_argument("--config-file-name", type=str, dest="config_file_name", required=False, default="")
 
-    custom_dimensions.app_name = constants.TelemetryConstants.COMPUTE_METRICS_NAME
-    custom_dims_dict = vars(custom_dimensions)
-    with log_activity(logger, constants.TelemetryConstants.COMPUTE_METRICS_NAME,
-                      custom_dimensions=custom_dims_dict) as compute_metrics_activity:
-        logger.info("Validating arguments")
-        with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME,
-                          custom_dimensions=custom_dims_dict) as validation_activity:
-            try:
-                validate_compute_metrics_args(args)
-            except Exception as e:
-                validation_activity.exception(repr(e))
-                raise e
+    # Outputs
+    parser.add_argument("--output", type=str, dest="output")
+
+    args, unknown_args_ = parser.parse_known_args()
+
+    with log_activity(logger, constants.TelemetryConstants.VALIDATION_NAME,
+                      custom_dimensions=custom_dims_dict):
+        logger.info("Validating arguments: " + repr(args.__dict__))
+        validate_compute_metrics_args(args)
+        config = fetch_compute_metrics_args(args.config, args.task)
 
         ground_truths = args.ground_truths
         is_ground_truths_mltable = check_and_return_if_mltable(ground_truths)
@@ -310,37 +352,12 @@ def test_component():
             args.prediction_probabilities
         )
 
-        met_config = None
-        if args.config_str:
-            if args.config_file_name:
-                logger.warning("Both evaluation_config and evaluation_config_params are passed. \
-                               Using evaluation_config as additional params.")
-            else:
-                try:
-                    met_config = json.loads(args.config_str)
-                except Exception as e:
-                    message = "Unable to load evaluation_config_params. String is not JSON serielized."
-                    exception = DataLoaderException._with_error(
-                        AzureMLError.create(BadEvaluationConfigParam, error=repr(e))
-                    )
-                    log_traceback(exception=exception, logger=logger, message=message)
-                    raise exception
         if args.task == constants.TASK.FORECASTING:
-            metrics_config = {}
-            if met_config:
-                metrics_config = met_config
-            else:
-                try:
-                    with open(args.config_file_name) as f:
-                        metrics_config = json.load(f)
-                except BaseException:
-                    # Nothing here we will raise the error later.
-                    pass
             if not args.ground_truths_column_name:
                 # If the ground true column name was not provided, we will try to take it from the config.
-                args.ground_truths_column_name = metrics_config.get('ground_truths_column_name')
+                args.ground_truths_column_name = config.get('ground_truths_column_name', '')
             if not args.predictions_column_name:
-                args.predictions_column_name = metrics_config.get('predictions_column_name')
+                args.predictions_column_name = config.get('predictions_column_name', '')
             if not args.ground_truths_column_name or (not is_ground_truths_mltable and not args.ground_truths):
                 exception = DataValidationException._with_error(
                     AzureMLError.create(BadForecastData)
@@ -348,26 +365,42 @@ def test_component():
                 log_traceback(exception, logger)
                 raise exception
 
+    with log_activity(logger, constants.TelemetryConstants.INITIALISING_RUNNER,
+                      custom_dimensions=custom_dims_dict):
+        runner = ComputeMetricsRunner(
+            task=args.task,
+            ground_truth=ground_truths,
+            predictions=predictions,
+            prediction_probabilities=prediction_probabilities,
+            output=args.output,
+            config=config,
+            is_ground_truth_mltable=is_ground_truths_mltable,
+            is_predictions_mltable=is_predictions_mltable,
+            is_prediction_probabilities_mltable=is_prediction_probabilities_mltable,
+            ground_truths_column_name=args.ground_truths_column_name,
+            predictions_column_name=args.predictions_column_name
+        )
+
+    with log_activity(logger, activity_name=constants.TelemetryConstants.DATA_LOADING,
+                      custom_dimensions=custom_dims_dict):
         try:
-            runner = ModelEvaluationRunner(
-                task=args.task,
-                ground_truth=ground_truths,
-                predictions=predictions,
-                prediction_probabilities=prediction_probabilities,
-                output=args.output,
-                custom_dimensions=custom_dims_dict,
-                config_file=args.config_file_name,
-                metrics_config=met_config,
-                is_ground_truth_mltable=is_ground_truths_mltable,
-                is_predictions_mltable=is_predictions_mltable,
-                is_prediction_probabilities_mltable=is_prediction_probabilities_mltable,
-                ground_truths_column_name=args.ground_truths_column_name,
-                predictions_column_name=args.predictions_column_name
-            )
-            runner.run()
+            logger.info("Loading Data.")
+            runner.load_data()
         except Exception as e:
-            compute_metrics_activity.exception(repr(e))
-            raise e
+            exception = DataLoaderException._with_error(
+                AzureMLError.create(BadInputData, error=repr(e)),
+                inner_exception=e
+            )
+            log_traceback(exception, logger)
+            raise exception
+
+    with log_activity(logger, activity_name=constants.TelemetryConstants.COMPUTE_METRICS_NAME,
+                      custom_dimensions=custom_dims_dict):
+        logger.info("Computing metrics.")
+        result = runner.compute_metrics()
+
+    logger.info("Logging and Saving outputs.")
+    runner.log_and_write_outputs(result)
 
     test_run.add_properties(properties=constants.RUN_PROPERTIES)
     try:
@@ -379,4 +412,4 @@ def test_component():
 
 
 if __name__ == "__main__":
-    test_component()
+    run()

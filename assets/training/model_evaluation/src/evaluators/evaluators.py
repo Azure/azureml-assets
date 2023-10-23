@@ -4,15 +4,28 @@
 """Evaluator."""
 
 import ast
-from abc import abstractmethod
-
-# TODO: Import ForecastColumns from azureml.evaluate.mlflow, when it will be
-# available.
-from constants import TASK, ForecastingConfigContract, ForecastColumns
 import pandas as pd
 import numpy as np
+from abc import abstractmethod
+
+from exceptions import (
+    DataValidationException,
+)
+from error_definitions import (
+    InvalidGroundTruthColumnNameData,
+    InvalidYTestCasesColumnNameData,
+    InvalidGroundTruthColumnNameCodeGen
+)
+# TODO: Import ForecastColumns from azureml.evaluate.mlflow, when it will be
+# available.
+from constants import TASK, ForecastingConfigContract, ForecastColumns, TextGenerationColumns, DataFrameParams, SubTask
+from image_constants import ImageDataFrameParams, ODISLiterals
+from azureml.evaluate.mlflow.models.evaluation.azureml._image_od_is_evaluator import (
+    ImageOdIsEvaluator,
+)
+from azureml._common._error_definition.azureml_error import AzureMLError
 from azureml.metrics import compute_metrics, constants
-from logging_utilities import get_logger
+from logging_utilities import get_logger, log_traceback
 
 logger = get_logger(name=__name__)
 
@@ -37,9 +50,12 @@ class EvaluatorFactory:
             TASK.QnA: QnAEvaluator,
             TASK.FILL_MASK: FillMaskEvaluator,
             TASK.TEXT_GENERATION: TextGenerationEvaluator,
+            TASK.CHAT_COMPLETION: ChatCompletionEvaluator,
             TASK.FORECASTING: ForecastingEvaluator,
             TASK.IMAGE_CLASSIFICATION: ClassifierEvaluator,
             TASK.IMAGE_CLASSIFICATION_MULTILABEL: ClassifierMultilabelEvaluator,
+            TASK.IMAGE_OBJECT_DETECTION: ImageObjectDetectionInstanceSegmentationEvaluator,
+            TASK.IMAGE_INSTANCE_SEGMENTATION: ImageObjectDetectionInstanceSegmentationEvaluator
         }
 
     def get_evaluator(self, task_type, metrics_config=None):
@@ -52,6 +68,8 @@ class EvaluatorFactory:
         Returns:
             _type_: _description_
         """
+        if metrics_config.get(TextGenerationColumns.SUBTASKKEY, "") == SubTask.CODEGENERATION:
+            return CodeGenerationEvaluator(task_type, metrics_config)
         return self._evaluators[task_type](task_type, metrics_config)
 
     def register(self, name, obj):
@@ -488,6 +506,113 @@ class TextGenerationEvaluator(Evaluator):
         return metrics
 
 
+class CodeGenerationEvaluator(Evaluator):
+    """Code Generation Evaluator.
+
+    Args:
+        Evaluator (_type_): _description_
+    """
+
+    def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
+        super().__init__(task_type, metrics_config)
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """Evaluate TextGeneration.
+
+        Args:
+            y_test (_type_): _description_
+            y_pred (_type_): _description_
+            y_test_cases: list of strings
+
+        Returns:
+            _type_: _description_
+        """
+        y_test_cases = None
+        extra_cols = kwargs.get(DataFrameParams.Extra_Cols, None)
+        y_test_col_name = kwargs.get(DataFrameParams.Ground_Truth_Column_Name, None)
+        # TodO: This validaion should ideally be done while data loading. Design needs to be reconsidered
+        if extra_cols is None and y_test_col_name is None:
+            exception = DataValidationException._with_error(
+                AzureMLError.create(InvalidGroundTruthColumnNameCodeGen)
+            )
+            log_traceback(exception, logger)
+            raise exception
+        y_test_case_col_name = extra_cols[0] if extra_cols is not None and len(extra_cols) > 0 else None
+        if y_test_case_col_name is not None:
+            if y_test_case_col_name in y_test.columns:
+                y_test_cases = y_test[[y_test_case_col_name]]
+            else:
+                exception = DataValidationException._with_error(
+                    AzureMLError.create(InvalidYTestCasesColumnNameData)
+                )
+                log_traceback(exception, logger)
+                raise exception
+
+        if y_test_col_name is not None:
+            if y_test_col_name in y_test.columns:
+                y_test = y_test[[y_test_col_name]]
+            else:
+                exception = DataValidationException._with_error(
+                    AzureMLError.create(InvalidGroundTruthColumnNameData)
+                )
+                log_traceback(exception, logger)
+                raise exception
+        else:
+            y_test = None
+
+        y_pred = self._convert_predictions(y_pred)
+        if y_test is not None:
+            y_test = self._convert_predictions(y_test)
+            if y_test.ndim == 1:
+                y_test = np.reshape(y_test, (-1, 1))
+                y_test = y_test.tolist()
+        if y_test_cases is not None:
+            y_test_cases = self._convert_predictions(y_test_cases).tolist()
+        if y_pred.ndim == 1:
+            y_pred = np.reshape(y_pred, (-1, 1))
+        metrics = compute_metrics(task_type=constants.Tasks.CODE_GENERATION, y_test=y_test,
+                                  y_pred=y_pred.tolist(), test_cases=y_test_cases, **self.metrics_config)
+        return metrics
+
+
+class ChatCompletionEvaluator(Evaluator):
+    """Chat Completion Evaluator.
+
+    Args:
+        Evaluator (_type_): _description_
+    """
+
+    def __init__(self, task_type, metrics_config):
+        """__init__.
+
+        Args:
+            task_type (_type_): _description_
+            metrics_config (_type_): _description_
+        """
+        super().__init__(task_type, metrics_config)
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """Evaluate Chat Completion.
+
+        Args:
+            y_test (_type_): _description_
+            y_pred (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        y_pred_formatted = y_pred.iloc[:, 0].apply(lambda x: [item['input_string'] for item in x])
+        metrics = compute_metrics(task_type=constants.Tasks.CHAT_COMPLETION, y_pred=y_pred_formatted.tolist(),
+                                  **self.metrics_config)
+        return metrics
+
+
 class ForecastingEvaluator(Evaluator):
     """Forecasting Evaluator.
 
@@ -536,4 +661,69 @@ class ForecastingEvaluator(Evaluator):
         )
         X_test[ForecastColumns._ACTUAL_COLUMN_NAME] = y_test
         X_test[ForecastColumns._FORECAST_COLUMN_NAME] = y_pred
+        return metrics
+
+
+class ImageObjectDetectionInstanceSegmentationEvaluator(Evaluator):
+    """Image object detection and instance segmentation Evaluator."""
+
+    def __init__(self, task_type, metrics_config):
+        """Initialize evaluator.
+
+        Args:
+            task_type (str): evaluator task type
+            metrics_config (Dict): Dict of metrics config
+        """
+        super().__init__(task_type, metrics_config)
+        self.masks_required = task_type == TASK.IMAGE_INSTANCE_SEGMENTATION
+
+    def evaluate(self, y_test, y_pred, **kwargs):
+        """Evaluate Object Detection/Instance Segmentation.
+
+        Args:
+            y_test (pd.DataFrame): pandas DataFrame with columns ["labels"]
+            y_pred (pd.DataFrame): pandas DataFrame with columns ["predictions"]
+            X_test (pd.DataFrame): Pandas DataFrame with columns ["image", "image_meta_info"].
+        Returns:
+            Dict: Dict of metrics
+
+        """
+
+        def _recast(label_or_pred_dict):
+            if len(label_or_pred_dict[ODISLiterals.BOXES]) == 0:
+                return label_or_pred_dict
+            if isinstance(label_or_pred_dict[ODISLiterals.BOXES][0], np.ndarray):
+                # When using MLTable input, the boxes are stored as a array of numpy arrays
+                label_or_pred_dict[ODISLiterals.BOXES] = np.stack(label_or_pred_dict[ODISLiterals.BOXES], axis=0)
+            elif isinstance(label_or_pred_dict[ODISLiterals.BOXES][0], list):
+                # When using json, the boxes, classes, scores, labels are stored as a lists (of lists)
+                label_or_pred_dict[ODISLiterals.BOXES] = np.array(label_or_pred_dict[ODISLiterals.BOXES])
+                if ODISLiterals.SCORES in label_or_pred_dict:
+                    label_or_pred_dict[ODISLiterals.SCORES] = np.array(label_or_pred_dict[ODISLiterals.SCORES])
+                else:
+                    label_or_pred_dict[ODISLiterals.LABELS] = np.array(label_or_pred_dict[ODISLiterals.LABELS])
+
+            if ODISLiterals.MASKS in label_or_pred_dict and isinstance(label_or_pred_dict[ODISLiterals.MASKS],
+                                                                       np.ndarray):
+                label_or_pred_dict[ODISLiterals.MASKS] = list(label_or_pred_dict[ODISLiterals.MASKS])
+
+            return label_or_pred_dict
+
+        image_meta_info = y_test[ImageDataFrameParams.IMAGE_META_INFO]
+
+        y_test = y_test.drop(ImageDataFrameParams.IMAGE_META_INFO, axis=1)
+
+        # Convert predictions to expected format
+        y_test[ImageDataFrameParams.LABEL_COLUMN_NAME] = \
+            y_test[ImageDataFrameParams.LABEL_COLUMN_NAME].apply(lambda x: _recast(x))
+
+        y_pred = self._convert_predictions(y_pred)
+        y_test = self._convert_predictions(y_test)
+
+        metrics = ImageOdIsEvaluator.compute_metrics(y_test=y_test,
+                                                     y_pred=y_pred,
+                                                     image_meta_info=image_meta_info,
+                                                     masks_required=self.masks_required,
+                                                     **self.metrics_config)
+
         return metrics

@@ -1,0 +1,13 @@
+image:
+  name: azureml/curated/foundation-model-inference
+  os: linux
+  context:
+    dir: context
+    dockerfile: Dockerfile
+    template_files:
+    - Dockerfile
+    - requirements.txt
+    - score.py
+  publish:
+    location: mcr
+    visibility: public

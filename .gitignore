@@ -136,3 +136,7 @@ mlruns/
 
 # Exclusions
 !test/resources/environment/build
+
+# ignore config files
+config.json
+out*

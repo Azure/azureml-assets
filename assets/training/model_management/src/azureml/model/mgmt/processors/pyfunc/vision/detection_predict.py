@@ -3,9 +3,6 @@
 
 """MLflow PythonModel wrapper class that loads the MLflow model, preprocess inputs and performs inference."""
 
-import base64
-import io
-import re
 import subprocess
 import sys
 import tempfile
@@ -14,91 +11,15 @@ from typing import Any, Dict, List, Tuple
 import mlflow
 import numpy as np
 import pandas as pd
-import requests
 import torch
-from PIL import Image
 from config import Tasks, MMDetLiterals, MLflowSchemaLiterals, ODLiterals, ISLiterals
 
-
-def _create_temp_file(request_body: bytes, parent_dir: str) -> str:
-    """Create temporory file, save image and return path to the file.
-
-    :param request_body: Image
-    :type request_body: bytes
-    :param parent_dir: directory name
-    :type parent_dir: str
-    :return: Path to the file
-    :rtype: str
-    """
-    with tempfile.NamedTemporaryFile(dir=parent_dir, mode="wb", delete=False) as image_file_fp:
-        img_path = image_file_fp.name + ".png"
-        img = Image.open(io.BytesIO(request_body))
-        img.save(img_path)
-        return img_path
-
-
-def _process_image(img: pd.Series) -> pd.Series:
-    """Process input image.
-
-    If input image is in bytes format, return it as it is.
-    If input image is in base64 string format, decode it to bytes.
-    If input image is in url format, download it and return bytes.
-    https://github.com/mlflow/mlflow/blob/master/examples/flower_classifier/image_pyfunc.py
-
-    :param img: pandas series with image in base64 string format or url or bytes.
-    :type img: pd.Series
-    :return: decoded image in pandas series format.
-    :rtype: Pandas Series
-    """
-    image = img[0]
-    if isinstance(image, bytes):
-        return img
-    elif isinstance(image, str):
-        if _is_valid_url(image):
-            image = requests.get(image).content
-            return pd.Series(image)
-        else:
-            try:
-                return pd.Series(base64.b64decode(image))
-            except ValueError:
-                raise ValueError(
-                    "The provided image string cannot be decoded. Expected format is Base64 or URL string."
-                )
-    else:
-        raise ValueError(
-            f"Image received in {type(image)} format which is not supported."
-            "Expected format is bytes, base64 string or url string."
-        )
-
-
-def _is_valid_url(text: str) -> bool:
-    """Check if text is url or base64 string.
-
-    :param text: text to validate
-    :type text: str
-    :return: True if url else false
-    :rtype: bool
-    """
-    regex = (
-        "((http|https)://)(www.)?"
-        + "[a-zA-Z0-9@:%._\\+~#?&//=]"
-        + "{2,256}\\.[a-z]"
-        + "{2,6}\\b([-a-zA-Z0-9@:%"
-        + "._\\+~#?&//=]*)"
-    )
-    p = re.compile(regex)
-
-    # If the string is empty
-    # return false
-    if str is None:
-        return False
-
-    # Return if the string
-    # matched the ReGex
-    if re.search(p, text):
-        return True
-    else:
-        return False
+try:
+    # Use try/except since vision_utils is added as part of model export and not available when initializing
+    # model wrapper for save_model().
+    from vision_utils import create_temp_file, process_image_pandas_series
+except ImportError:
+    pass
 
 
 def _normalize_polygon(polygon: List[np.ndarray], image_size: Tuple[int, int]) -> List[np.ndarray]:
@@ -120,6 +41,15 @@ def _normalize_polygon(polygon: List[np.ndarray], image_size: Tuple[int, int]) -
             normalized_points.extend([x, y])
         normalized_polygon.append(normalized_points)
     return normalized_polygon
+
+
+def _remove_invalid_segments(polygon: List[List[float]]) -> List[List[float]]:
+    """Remove invalid segments. Segment is valid if it contains more than or equal to 6 co-ordinates (triangle).
+
+    :param polygon: List of polygon.
+    :return: List of polygon.
+    """
+    return [segment for segment in polygon if len(segment) >= 6]
 
 
 class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
@@ -230,12 +160,12 @@ class ImagesDetectionMLflowModelWrapper(mlflow.pyfunc.PythonModel):
         """
         # process the images in image column
         processed_images = input_data.loc[:, [MLflowSchemaLiterals.INPUT_COLUMN_IMAGE]].apply(
-            axis=1, func=_process_image
+            axis=1, func=process_image_pandas_series
         )
 
         with tempfile.TemporaryDirectory() as tmp_output_dir:
             image_path_list = (
-                processed_images.iloc[:, 0].map(lambda row: _create_temp_file(row, tmp_output_dir)).tolist()
+                processed_images.iloc[:, 0].map(lambda row: create_temp_file(row, tmp_output_dir)).tolist()
             )
 
             results = self._inference_detector(imgs=image_path_list, model=self._model)

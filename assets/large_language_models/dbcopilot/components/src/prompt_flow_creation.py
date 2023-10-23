@@ -109,23 +109,16 @@ class PromptFlowCreation(ComponentBase):
         ):
             chat_aoai_deployment_name = self.parse_llm_config(llm_config)
 
-        if example_embedding_uri is not None:
-            logging.warning("Example embedding is not supported yet")
-
         # create flow
-        flow_name = index_name + "-sample-flow"
         with open(self.FLOW_JSON, "r") as f:
             flow_string = f.read()
-            flow_string = flow_string.replace("@@FLOW_NAME@@", flow_name)
             flow_string = flow_string.replace(
                 "@@EMBEDDING_CONNECTION@@", embedding_aoai_connection
             )
-
             # TODO: add chat connection into tool
             flow_string = flow_string.replace(
                 "@@CHAT_CONNECTION@@", chat_aoai_connection
             )
-
             flow_string = flow_string.replace("@@FLOW_NAME@@", index_name + "_Flow")
             flow_string = flow_string.replace(
                 "@@EMBEDDING_AOAI_DEPLOYMENT_NAME@@", embedding_aoai_deployment_name
@@ -139,6 +132,8 @@ class PromptFlowCreation(ComponentBase):
             )
             flow_string = flow_string.replace("@@DB_CONTEXT_URI@@", db_context_uri)
             flow_string = flow_string.replace("@@DATASTORE_URI@@", datastore_uri)
+            flow_string = flow_string.replace("@@EXAMPLE_EMBEDDING_URI@@", example_embedding_uri
+                                              if example_embedding_uri else "")
             flow_json = json.loads(flow_string)
         response = request(
             "post", self.prompt_flow_url, json=flow_json, headers=self.default_headers

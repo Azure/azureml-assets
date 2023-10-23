@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import sys
+import time
 from functools import cached_property
 from typing import Dict, Optional
 
@@ -16,16 +17,19 @@ from azure.ai.ml.identity import AzureMLOnBehalfOfCredential
 from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
 from azureml.core import Run, Workspace
 from azureml.core.authentication import AzureCliAuthentication, MsiAuthentication
+from db_copilot_tool.telemetry import set_print_logger, track_function
 
 
 def main_entry_point(function_name: str):
     """main_entry_point."""
 
     def decorator(cls):
+        @track_function(name=f"{cls.__name__}.{function_name}")
         def wrapper(**kwargs):
             instance = cls()
             getattr(instance, function_name)(**kwargs)
 
+        set_print_logger()
         if len(sys.argv) > 0:
             class_file_name = os.path.abspath(inspect.getsourcefile(cls))
             entry_file_name = os.path.abspath(sys.argv[0])
@@ -42,22 +46,30 @@ def main_entry_point(function_name: str):
                 for param in sig.parameters.values():
                     if param.name == "self":
                         continue
+                    type_value = (
+                        param.annotation
+                        if param.annotation != bool
+                        else lambda x: x in ("True", "true", "1", True)
+                    )
                     if param.default == inspect.Parameter.empty:
                         parser.add_argument(
-                            f"--{param.name}", type=param.annotation, required=True
+                            f"--{param.name}", type=type_value, required=True
                         )
                     else:
                         parser.add_argument(
-                            f"--{param.name}",
-                            type=param.annotation,
-                            default=param.default,
+                            f"--{param.name}", type=type_value, default=param.default
                         )
 
                 # Parse the command-line arguments
                 args = parser.parse_args()
                 logging.info("\n".join(f"{k}={v}" for k, v in vars(args).items()))
-                wrapper(**vars(args))
-
+                try:
+                    wrapper(**vars(args))
+                except Exception as ex:
+                    raise ex
+                finally:
+                    logging.info("finally")
+                    time.sleep(5)
         return cls
 
     return decorator

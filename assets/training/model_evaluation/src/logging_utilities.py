@@ -9,7 +9,7 @@ import uuid
 import json
 import azureml.core
 import traceback
-import atexit
+import sys
 
 from azureml.telemetry.logging_handler import get_appinsights_log_handler
 from azureml.telemetry import INSTRUMENTATION_KEY
@@ -65,58 +65,58 @@ class CustomDimensions:
     """Custom Dimensions Class for App Insights."""
 
     def __init__(self,
+                 run_details,
                  app_name=constants.TelemetryConstants.COMPONENT_NAME,
-                 run_id=None,
-                 common_core_version=azureml.core.__version__,
-                 model_evaluation_version="0.0.9",
-                 compute_target=None,
-                 experiment_id=None,
-                 parent_run_id=None,
+                 model_evaluation_version="0.0.16",
                  os_info=platform.system(),
-                 region=None,
-                 subscription_id=None,
-                 task_type="",
-                 root_attribute="") -> None:
+                 task_type="") -> None:
         """__init__.
 
         Args:
+            run_details (_type_, optional): _description_. Defaults to None.
             app_name (_type_, optional): _description_. Defaults to constants.TelemetryConstants.COMPONENT_NAME.
-            run_id (_type_, optional): _description_. Defaults to None.
-            common_core_version (_type_, optional): _description_. Defaults to azureml.core.__version__.
-            model_evaluation_version (str, optional): _description_. Defaults to "0.0.19".
-            compute_target (_type_, optional): _description_. Defaults to None.
-            experiment_id (_type_, optional): _description_. Defaults to None.
-            parent_run_id (_type_, optional): _description_. Defaults to None.
+            model_evaluation_version (str, optional): _description_. Defaults to "0.0.10".
             os_info (_type_, optional): _description_. Defaults to platform.system().
-            region (_type_, optional): _description_. Defaults to None.
-            subscription_id (_type_, optional): _description_. Defaults to None.
             task_type (str, optional): _description_. Defaults to "".
-            mode (str, optional): _description_. Defaults to "".
         """
         self.app_name = app_name
-        self.run_id = run_id
-        self.common_core_version = common_core_version
-        self.moduleVersion = model_evaluation_version
-        self.compute_target = compute_target
-        self.experiment_id = experiment_id
-        self.parent_run_id = parent_run_id
+        self.run_id = run_details.run.id
+        self.common_core_version = azureml.core.__version__
+        self.compute_target = run_details.compute
+        self.experiment_id = run_details.experiment.id
+        self.parent_run_id = run_details.parent_run.id
+        self.root_run_id = run_details.root_run.id
         self.os_info = os_info
-        self.region = region
-        self.subscription_id = subscription_id
+        self.region = run_details.region
+        self.subscription_id = run_details.subscription
         self.task_type = task_type
-        self.rootAttribution = root_attribute
-        if self.run_id is None:
-            run_obj = TestRun()
-            self.run_id = run_obj.run.id
-            self.compute_target = run_obj.compute
-            self.region = run_obj.region
-            self.experiment_id = run_obj.experiment.id
-            self.subscription_id = run_obj.subscription
-            self.parent_run_id = run_obj.root_run.id
-            self.rootAttribution = run_obj.root_attribute
-            run_info = run_obj.get_extra_run_info
-            self.moduleVersion = run_info.get("moduleVersion", model_evaluation_version)
-            self.location = run_info.get("location", "")
+        self.rootAttribution = run_details.root_attribute
+        run_info = run_details.get_extra_run_info
+        self.location = run_info.get("location", "")
+
+        self.moduleVersion = run_info.get("moduleVersion", model_evaluation_version)
+        if run_info.get("moduleId", None):
+            self.moduleId = run_info.get("moduleId")
+        if run_info.get("moduleSource", None):
+            self.moduleSource = run_info.get("moduleSource")
+        if run_info.get("moduleRegistryName", None):
+            self.moduleRegistryName = run_info.get("moduleRegistryName")
+
+        if run_info.get("model_asset_id", None):
+            self.model_asset_id = run_info.get("model_asset_id")
+        if run_info.get("model_source", None):
+            self.model_source = run_info.get("model_source")
+        if run_info.get("model_registry_name", None):
+            self.model_registry_name = run_info.get("model_registry_name")
+        if run_info.get("model_name", None):
+            self.model_name = run_info.get("model_name")
+        if run_info.get("model_version", None):
+            self.model_version = run_info.get("model_version")
+
+        if run_info.get("pipeline_type", None):
+            self.pipeline_type = run_info.get("pipeline_type")
+        if run_info.get("source", None):
+            self.source = run_info.get("source")
         if self.task_type == "":
             import sys
             args = sys.argv
@@ -125,7 +125,8 @@ class CustomDimensions:
                 self.task_type = sys.argv[ind + 1]
 
 
-custom_dimensions = CustomDimensions()
+current_run = TestRun()
+custom_dimensions = CustomDimensions(current_run)
 
 
 class ModelEvaluationHandler(logging.StreamHandler):
@@ -209,7 +210,6 @@ def get_logger(logging_level: str = 'DEBUG',
         appinsights_handler.setFormatter(formatter)
         appinsights_handler.setLevel(numeric_log_level)
         appinsights_handler.set_name(constants.TelemetryConstants.APP_INSIGHT_HANDLER_NAME)
-        atexit.register(appinsights_handler.flush)
         logger.addHandler(appinsights_handler)
 
     return logger
@@ -269,20 +269,35 @@ def log_traceback(exception: AzureMLException, logger, message=None, is_critical
     exception_class_name = exception.__class__.__name__
 
     error_code, error_type, exception_target = _get_error_details(exception, logger)
-    traceback_obj = exception.__traceback__
     traceback_message = message
+    traceback_obj = exception.__traceback__ if hasattr(exception, "__traceback__") else None
     if traceback_obj is None:
-        if getattr(traceback_obj, "inner_exception", None):
-            traceback_obj = exception.inner_exception.__traceback__
+        inner_exception = getattr(exception, "inner_exception", None)
+        if inner_exception and hasattr(inner_exception, "__traceback__"):
+            traceback_obj = inner_exception.__traceback__
+        else:
+            traceback_obj = sys.exc_info()[2]
     if traceback_obj is not None:
         traceback_message = "\n".join(traceback.format_tb(traceback_obj))
-    logger_message = [
+    logger_message = "\n".join([
         "Type: {}".format(error_type),
         "Code: {}".format(error_code),
         "Class: {}".format(exception_class_name),
         "Message: {}".format(message),
         "Traceback: {}".format(traceback_message),
         "ExceptionTarget: {}".format(exception_target)
-    ]
+    ])
 
-    logger.info("\n".join(logger_message))
+    extra = {
+        "properties": {
+            "error_code": error_code,
+            "error_type": error_type,
+            "exception_class": exception_class_name,
+            "exception_message": message,
+            "exception_traceback": traceback_message,
+            "exception_target": exception_target,
+        },
+        "exception_tb_obj": traceback_obj,
+    }
+
+    logger.error(logger_message, extra=extra)

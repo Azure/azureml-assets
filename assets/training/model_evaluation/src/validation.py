@@ -2,43 +2,33 @@
 # Licensed under the MIT License.
 
 """Script for argument validation."""
-import os
-import traceback
-from exceptions import ModelValidationException, DataValidationException, ArgumentValidationException
+from exceptions import (
+    ModelValidationException,
+    DataValidationException,
+    ArgumentValidationException,
+    AzureMLException,
+)
 from constants import ALL_TASKS, TASK
 from logging_utilities import get_logger, log_traceback
-from utils import assert_and_raise
+from utils import assert_and_raise, read_config, read_config_str
 from typing import Union
 from error_definitions import (
     InvalidTaskType,
     InvalidGroundTruthData,
     InvalidPredictionsData,
     InvalidModel,
+    BadInputData,
     BadLabelColumnData,
     BadFeatureColumnData,
-    InvalidTestData
+    EmptyInputData,
+    InvalidTestData,
+    InvalidFileInputSource,
+    BadEvaluationConfig,
 )
 from azureml._common._error_definition.azureml_error import AzureMLError
+from azureml.evaluate.mlflow.models import Model
 
 logger = get_logger(name=__name__)
-
-
-def check_model_uri(model_uri):
-    """Validate Model URI.
-
-    Args:
-        model_uri (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    if model_uri.startswith("runs:/"):
-        return True
-    if model_uri.startswith("models:/"):
-        return True
-    if os.path.exists(model_uri):
-        return True
-    return False
 
 
 def _validate_model(args):
@@ -47,29 +37,17 @@ def _validate_model(args):
     Args:
         args (_type_): _description_
     """
-    assert_and_raise(condition=(len(args.model_uri) > 0) or (args.mlflow_model is not None),
-                     exception_cls=ModelValidationException,
-                     error_cls=InvalidModel)
+    logger.info("Validating Model is passed")
 
-    mlflow_model, model_uri = False, False
-
-    if args.mlflow_model:
-        mlflow_model = "MLmodel" in os.listdir(args.mlflow_model)
-        if not mlflow_model:
-            logger.warn("Invalid mlflow model passed. Trying model_uri.")
-            args.mlflow_model = None
-
-    if args.model_uri:
-        model_uri = check_model_uri(args.model_uri)
-        if not model_uri:
-            logger.warn("Invalid model uri passed")
-            args.model_uri = ""
-
-    assert_and_raise(
-        condition=(len(args.model_uri) > 0) or (args.mlflow_model is not None),
-        exception_cls=ModelValidationException,
-        error_cls=InvalidModel
-    )
+    try:
+        _ = Model.load(args.mlflow_model)
+    except Exception as e:
+        exception = ModelValidationException._with_error(
+            AzureMLError.create(InvalidModel, error=repr(e)),
+            inner_exception=e
+        )
+        log_traceback(exception, logger)
+        raise exception
 
 
 def _validate_task(args):
@@ -78,8 +56,6 @@ def _validate_task(args):
     Args:
         args (_type_): _description_
     """
-    # if args.task is None:
-    #     return
     logger.info("Validating Task Type: " + args.task)
     assert_and_raise(
         condition=args.task in ALL_TASKS,
@@ -89,28 +65,24 @@ def _validate_task(args):
     )
 
 
-# Deprecated
-def _validate_mode(args):
-    """Validate Mode.
-
-    Args:
-        args (_type_): _description_
-    """
+def _validate_input_source_mount(data, input_port):
     assert_and_raise(
-        condition=args.mode in ["predict", "compute_metrics", "score"],
-        exception_cls=ArgumentValidationException,
-        message="Invalid mode type. It should be either predict, compute_metrics or score"
+        condition=(not data.startswith("azureml://")),
+        exception_cls=DataValidationException,
+        error_cls=InvalidFileInputSource,
+        message_kwargs={"input_port": input_port}
     )
 
 
 def _validate_test_data(args):
-    # _, _data = check_and_return_if_mltable(args.data)
+    logger.info("Validating Test Data is passed")
     _data = args.data
     assert_and_raise(
         condition=(_data is not None and _data != ""),
         exception_cls=DataValidationException,
         error_cls=InvalidTestData
     )
+    _validate_input_source_mount(_data, "test_data")
 
 
 def _validate_compute_metrics_data(args):
@@ -121,6 +93,8 @@ def _validate_compute_metrics_data(args):
         exception_cls=DataValidationException,
         error_cls=InvalidPredictionsData
     )
+    _validate_input_source_mount(predictions, "predictions")
+
     if args.task != TASK.FILL_MASK:
         # _, ground_truths = check_and_return_if_mltable(args.ground_truths, args.ground_truths_mltable)
         ground_truths = args.ground_truths
@@ -129,6 +103,37 @@ def _validate_compute_metrics_data(args):
             exception_cls=DataValidationException,
             error_cls=InvalidGroundTruthData
         )
+        _validate_input_source_mount(ground_truths, "ground_truths")
+
+
+def _validate_config(args):
+    if args.config_file_name:
+        _validate_input_source_mount(args.config_file_name, "evaluation_config")
+    file_config = read_config(args.config_file_name)
+    str_config = read_config_str(args.config_str)
+
+    try:
+        config = dict(file_config)
+        str_config = dict(str_config)
+        if args.config_file_name and args.config_str:
+            logger.warning("Both evaluation_config and evaluation_config_params are passed. \
+                           Overriding evaluation_config file params with evaluation_config string params.")
+        config.update(str_config)
+        args.config = config
+    except Exception as e:
+        message = "Unable to load Evaluation Config. Config passed is not JSON serialized."
+        exception = DataValidationException._with_error(
+            AzureMLError.create(BadEvaluationConfig, error=repr(e))
+        )
+        log_traceback(exception=exception, logger=logger, message=message)
+        raise exception
+
+
+def _validate_batch_size(args):
+    if "batch_size" in args:
+        if args.batch_size is not None and args.batch_size < 1:
+            logger.warning("Batch size should be > 0. Ignoring parameter.")
+            args.batch_size = None
 
 
 def validate_args(args):
@@ -140,6 +145,8 @@ def validate_args(args):
     _validate_model(args)
     _validate_task(args)
     _validate_test_data(args)
+    _validate_config(args)
+    _validate_batch_size(args)
 
 
 def validate_compute_metrics_args(args):
@@ -150,36 +157,7 @@ def validate_compute_metrics_args(args):
     """
     _validate_task(args)
     _validate_compute_metrics_data(args)
-
-
-# Deprecated
-def _validate_Xy(X_test, y_test, y_pred, mode):
-    """Validate Input X and Y.
-
-    Args:
-        X_test (_type_): _description_
-        y_test (_type_): _description_
-        y_pred (_type_): _description_
-        mode (_type_): _description_
-    """
-    message = "Invalid data. No feature matrix found."
-    assert_and_raise(
-        condition=X_test is not None,
-        exception_cls=DataValidationException,
-        message=message
-    )
-    if mode == "score":
-        assert_and_raise(
-            condition=y_test is not None,
-            exception_cls=DataValidationException,
-            message="No label column found in test data. Required for mode 'score'"
-        )
-    if mode == "compute_metrics":
-        assert_and_raise(
-            condition=y_pred is not None,
-            exception_cls=DataValidationException,
-            message="No predictions column name found in test data. Required for mode 'compute_metrics'"
-        )
+    _validate_config(args)
 
 
 def validate_Xy(X_test, y_test):
@@ -188,8 +166,6 @@ def validate_Xy(X_test, y_test):
     Args:
         X_test (_type_): _description_
         y_test (_type_): _description_
-        y_pred (_type_): _description_
-        mode (_type_): _description_
     """
     # message = "Invalid data. No feature matrix found."
     assert_and_raise(
@@ -220,26 +196,34 @@ def _check_if_non_empty(val: Union[str, list, int]) -> bool:
     return True
 
 
-def _validate(data, input_column_names=None, label_column_name=None):
+def _validate(data, input_column_names=None, label_column_name=None, extra_cols=None, batch_size=None):
     try:
         # If input_column_names are not sent as argument we are retaining all columns
         if input_column_names is None:
             input_column_names = list(data.columns)
             if label_column_name in input_column_names:
                 input_column_names.remove(label_column_name)
-        if label_column_name is not None and label_column_name not in input_column_names:
-            data = _clean_and_validate_dataset(data, input_column_names + [label_column_name])
-        else:
-            data = _clean_and_validate_dataset(data, input_column_names)
+        if extra_cols is not None:
+            input_column_names += extra_cols
+        if label_column_name is not None:
+            input_column_names += [label_column_name]
+        data = _clean_and_validate_dataset(data, input_column_names, batch_size)
+
     except Exception as e:
-        traceback.print_exc()
-        error_message = f"Failed to open test data with following error {repr(e)}"
-        log_traceback(e, logger, error_message, is_critical=True)
-        raise DataValidationException(error_message)
+        if isinstance(e, AzureMLException):
+            exception = e
+        else:
+            error_message = f"Failed to open test data with following error {repr(e)}"
+            exception = DataValidationException._with_error(
+                AzureMLError.create(BadInputData, error=repr(e)),
+                inner_exception=e
+            )
+            log_traceback(exception, logger, error_message, is_critical=True)
+        raise exception
     return data
 
 
-def _clean_and_validate_dataset(data, keep_columns):
+def _clean_and_validate_dataset(data, keep_columns, batch_size=None):
     """
     Clean the data for irrelevant columns and null values.
 
@@ -263,17 +247,18 @@ def _clean_and_validate_dataset(data, keep_columns):
     )
 
     # remove the null values
-    pre_filter_examples = data.shape[0]
+    pre_filter_examples = len(data)
+    logger.info("Filtering rows with 'None' values")
     logger.info(f"Number of examples before filter: {pre_filter_examples}")
     # TODO support batched=True and handle processing multiple examples in lambda
     data['to_filter'] = data.apply(lambda x: all(_check_if_non_empty(x[col]) for col in keep_columns), axis=1)
     data = data.loc[data['to_filter']]
     data = data.drop('to_filter', axis=1)
-    post_filter_examples = data.shape[0]
+    post_filter_examples = len(data)
     logger.info(f"Number of examples after postprocessing: {post_filter_examples}")
-    if post_filter_examples == 0:
+    if post_filter_examples == 0 and batch_size is None:
         exception = DataValidationException._with_error(
-            AzureMLError.create(InvalidTestData)
+            AzureMLError.create(EmptyInputData)
         )
         log_traceback(exception=exception, logger=logger)
         raise exception

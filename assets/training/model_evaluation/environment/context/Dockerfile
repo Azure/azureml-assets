@@ -1,4 +1,8 @@
-FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
+# PTCA Image (enabling Singularity Support)
+FROM mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu117-py38-torch200:{{latest-image-tag:biweekly\.\d{6}\.\d{1}.*}}
+#FROM mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04:{{latest-image-tag}}
+
+RUN apt-get update && apt-get -y upgrade
 
 WORKDIR /
 ENV CONDA_PREFIX=/azureml-envs/model-evaluation
@@ -17,6 +21,5 @@ ENV PATH=$CONDA_PREFIX/bin:$PATH
 # This is needed for mpi to locate libpython
 ENV LD_LIBRARY_PATH $CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-RUN pip install azureml-acft-common-components["image"]==0.0.9
-# Note: need to remove torchvision after the next common-components pypi release
-RUN pip install torchvision==0.14.0
+# not able to install packages with extra requires in conda.yaml
+RUN pip install azureml-acft-common-components["image"]>=0.0.9

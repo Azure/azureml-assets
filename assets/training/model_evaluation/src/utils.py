@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 import pickle
 import os
+import sys
+import argparse
 
 from constants import TASK, ForecastingConfigContract
 from logging_utilities import get_logger, log_traceback
@@ -14,6 +16,7 @@ from mltable import load
 from task_factory.tabular.classification import TabularClassifier
 from task_factory.text.classification import TextClassifier
 from task_factory.tabular.regression import TabularRegressor
+from task_factory.tabular.forecast import TabularForecast
 # from task_factory.text.regression import TextRegressor
 from task_factory.text.ner import TextNerPredictor
 from task_factory.text.qna import QnAPredictor
@@ -21,24 +24,53 @@ from task_factory.text.summarization import Summarizer
 from task_factory.text.translation import Translator
 from task_factory.text.text_generation import TextGenerator
 from task_factory.text.fill_mask import FillMask
+from task_factory.text.chat_completion import ChatCompletion
 from task_factory.image.classification import ImageMulticlassClassifier, ImageMultilabelClassifier
+from task_factory.image.od_is import ImageOdIsPredictor
 from evaluators.evaluators import EvaluatorFactory
-from run_utils import TestRun
+from logging_utilities import current_run
 from azureml.metrics import _scoring_utilities, constants as metrics_constants
 from mlflow.models.evaluation.artifacts import JsonEvaluationArtifact
 import azureml.evaluate.mlflow as aml_mlflow
 from azureml.evaluate.mlflow.models.evaluation import EvaluationResult
 from azureml._common._error_definition.azureml_error import AzureMLError
-from error_definitions import (BadRegressionData,
-                               MetricsLoggingError,
-                               BadInputData,
-                               BadEvaluationConfigFile)
-from exceptions import (DataValidationException,
-                        DataLoaderException,
-                        ComputeMetricsException)
+from error_definitions import (
+    BadRegressionData,
+    MetricsLoggingError,
+    BadInputData,
+    ArgumentParsingError,
+    BadEvaluationConfigFile,
+    BadEvaluationConfigParam,
+)
+from exceptions import (
+    DataValidationException,
+    DataLoaderException,
+    ComputeMetricsException,
+    ModelEvaluationException,
+    ArgumentValidationException,
+)
 from copy import deepcopy
 
 logger = get_logger(name=__name__)
+
+
+class ArgumentParser(argparse.ArgumentParser):
+    """Model Evaluation Custom Argument.
+
+    Args:
+        argparse.ArgumentParser (_type_): _description_
+    """
+
+    def error(self, message):
+        """Override ArgumentParser internal error call."""
+        self.print_usage(sys.stderr)
+        args = {'prog': self.prog, 'message': message}
+        message = '%(prog)s: error: %(message)s\n' % args
+        exception = ArgumentValidationException._with_error(
+            AzureMLError.create(ArgumentParsingError, error=message),
+        )
+        log_traceback(exception, logger)
+        raise exception
 
 
 def assert_and_raise(condition, exception_cls, error_cls, message_kwargs={}):
@@ -83,7 +115,7 @@ def filter_pipeline_params(evaluation_config):
     """Filter Pipeline params in evaluation_config.
 
     Args:
-        filename (_type_): _description_
+        evaluation_config (_type_): _description_
 
     Returns:
         _type_: _description_
@@ -105,15 +137,15 @@ def sanitize_device_and_device_map(evaluation_config, device):
     has_device_map_auto = False
     if evaluation_config.get("pipeline_init_args"):
         if evaluation_config["pipeline_init_args"].get("device_map"):
-            has_device_map_auto = evaluation_config["pipeline_init_args"]["device_map"] == "auto"
+            has_device_map_auto = evaluation_config["pipeline_init_args"]["device_map"] == constants.DEVICE.AUTO
     if has_device_map_auto:
         return evaluation_config, None
     else:
-        if device == "auto":
+        if device == constants.DEVICE.AUTO:
             new_evaluation_config = deepcopy(evaluation_config)
             if not new_evaluation_config.get("pipeline_init_args"):
                 new_evaluation_config["pipeline_init_args"] = {}
-            new_evaluation_config["pipeline_init_args"]["device_map"] = "auto"
+            new_evaluation_config["pipeline_init_args"]["device_map"] = constants.DEVICE.AUTO
             return new_evaluation_config, None
         return evaluation_config, device
 
@@ -153,8 +185,9 @@ def _log_metrics(metrics, artifacts):
     table_scores = {}
     nonscalar_scores = {}
     list_metrics = [metrics_constants.Metric.FMPerplexity]
-    run = TestRun().run
+    run = current_run.run
     list_scores = {}
+    classwise_scores = {}
 
     for name, score in artifacts.items():
         if score is None:
@@ -168,57 +201,44 @@ def _log_metrics(metrics, artifacts):
                     metrics["mean_" + name] = np.mean(score)
             except TypeError:
                 logger.warning(f"{name} is not of type list.")
-        elif name in metrics_constants.Metric.NONSCALAR_FULL_SET:
+        elif name in metrics_constants.Metric.NONSCALAR_FULL_SET or \
+                name in metrics_constants.FULL_NONSCALAR_SET:
             nonscalar_scores[name] = score
         elif name in metrics_constants.TrainingResultsType.ALL_TIME:
             # Filter out time metrics as we do not log these
             pass
+        elif name in metrics_constants.FULL_CLASSWISE_SET:
+            classwise_scores[name] = score
         else:
             logger.warning("Unknown metric {}. Will not log.".format(name))
 
-    # Log the scalar metrics. (Currently, these are stored in CosmosDB)
-    for name, score in metrics.items():
-        try:
+    try:
+        # Log the scalar metrics. (Currently, these are stored in CosmosDB)
+        for name, score in metrics.items():
+            if isinstance(score, list):
+                list_scores[name] = list(score)
+                continue
             run.log(name, score)
-        except Exception as e:
-            exception = ComputeMetricsException._with_error(
-                AzureMLError.create(MetricsLoggingError, metric_name=name, error=repr(e))
-            )
-            exception.inner_exception = e
-            log_traceback(exception, logger)
-            raise exception
 
-    for name, score in table_scores.items():
-        try:
+        for name, score in table_scores.items():
             run.log_table(name, score)
-        except Exception as e:
-            exception = ComputeMetricsException._with_error(
-                AzureMLError.create(MetricsLoggingError, metric_name=name, error=repr(e))
-            )
-            exception.inner_exception = e
-            log_traceback(exception, logger)
-            raise exception
 
-    for name, score in list_scores.items():
-        try:
-            # TODO: Add checks for logging longer lists
-            pass
-            # run.log_list(name, score)
-        except Exception as e:
-            exception = ComputeMetricsException._with_error(
-                AzureMLError.create(MetricsLoggingError, metric_name=name, error=repr(e))
-            )
-            exception.inner_exception = e
-            log_traceback(exception, logger)
-            raise exception
+        # for name, score in list_scores.items():
+        #     # TODO: Add checks for logging longer lists
+        #     pass
+        #     # run.log_list(name, score)
 
-    # Log the non-scalar metrics. (Currently, these are all artifact-based.)
-    for name, score in nonscalar_scores.items():
-        try:
+        # Log the non-scalar metrics. (Currently, these are all artifact-based.)
+        for name, score in nonscalar_scores.items():
             if name == metrics_constants.Metric.AccuracyTable:
                 run.log_accuracy_table(name, score)
+            elif name in metrics_constants.Metric.IMAGE_LEVEL_BINARY_CLASSIFIER_METRICS:
+                run.log_table(name, score)
             elif name == metrics_constants.Metric.ConfusionMatrix:
                 run.log_confusion_matrix(name, score)
+            elif name == metrics_constants.Metric.CONFUSION_MATRICES_PER_SCORE_THRESHOLD:
+                for key, confusion_matrix in score.items():
+                    run.log_confusion_matrix(key, confusion_matrix)
             elif name == metrics_constants.Metric.Residuals:
                 run.log_residuals(name, score)
             elif name == metrics_constants.Metric.PredictedTrue:
@@ -228,16 +248,31 @@ def _log_metrics(metrics, artifacts):
                 pass
             else:
                 logger.warning("Unsupported non-scalar metric {}. Will not log.".format(name))
-        except Exception as e:
-            exception = ComputeMetricsException._with_error(
-                AzureMLError.create(MetricsLoggingError, metric_name=name, error=repr(e))
-            )
-            exception.inner_exception = e
-            log_traceback(exception, logger)
-            raise exception
+
+        # Log the classwise metrics. (Currently, these are all artifact-based.)
+        for name, score in classwise_scores.items():
+            try:
+                if name == metrics_constants.Metric.PER_LABEL_METRICS:
+                    for metrics in score.values():
+                        run.log_table(name, metrics)
+                else:
+                    logger.warning("Unsupported non-scalar metric {}. Will not log.".format(name))
+            except Exception:
+                e = ModelEvaluationException(f"Failed to log classwise metric {name} with value {score}")
+                log_traceback(e, logger)
+                raise e
+    except Exception as e:
+        if isinstance(e, ModelEvaluationException):
+            raise e
+        exception = ComputeMetricsException._with_error(
+            AzureMLError.create(MetricsLoggingError, metric_name=name, error=repr(e)),
+            inner_exception=e
+        )
+        log_traceback(exception, logger)
+        raise exception
 
 
-def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config, X_test=None):
+def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config, X_test=None, **kwargs):
     """Compute metrics mode method.
 
     Args:
@@ -252,7 +287,7 @@ def evaluate_predictions(y_test, y_pred, y_pred_proba, task_type, metrics_config
         _type_: _description_
     """
     evaluator = EvaluatorFactory().get_evaluator(task_type, metrics_config)
-    res = evaluator.evaluate(y_test, y_pred, y_pred_proba=y_pred_proba, X_test=X_test)
+    res = evaluator.evaluate(y_test, y_pred, y_pred_proba=y_pred_proba, X_test=X_test, **kwargs)
     metrics = res[metrics_constants.Metric.Metrics]
     artifacts = res[metrics_constants.Metric.Artifacts]
     _log_metrics(metrics, artifacts)
@@ -287,8 +322,12 @@ def get_predictor(task):
         TASK.TRANSLATION: Translator,
         TASK.TEXT_GENERATION: TextGenerator,
         TASK.FILL_MASK: FillMask,
+        TASK.CHAT_COMPLETION: ChatCompletion,
+        TASK.FORECASTING: TabularForecast,
         TASK.IMAGE_CLASSIFICATION: ImageMulticlassClassifier,
         TASK.IMAGE_CLASSIFICATION_MULTILABEL: ImageMultilabelClassifier,
+        TASK.IMAGE_OBJECT_DETECTION: ImageOdIsPredictor,
+        TASK.IMAGE_INSTANCE_SEGMENTATION: ImageOdIsPredictor
     }
     return predictor_map.get(task)
 
@@ -353,6 +392,12 @@ class ArgumentsSet:
             self.args_set = self.fill_mask
         if task_type == TASK.FORECASTING:
             self.args_set = self.forecasting
+        if task_type in [TASK.IMAGE_OBJECT_DETECTION, TASK.IMAGE_INSTANCE_SEGMENTATION]:
+            self.args_set = self.image_od_is
+        if task_type == TASK.IMAGE_CLASSIFICATION:
+            self.args_set = self.image_classification
+        if task_type == TASK.IMAGE_CLASSIFICATION_MULTILABEL:
+            self.args_set = self.image_classification_multilabel
 
     @property
     def classification(self):
@@ -447,7 +492,12 @@ class ArgumentsSet:
             "metrics": "list(val)",
             "smoothing": "bool(val)",
             "aggregator": "bool(val)",
-            "stemmer": "bool(val)"
+            "stemmer": "bool(val)",
+            "sub_task": "str(val)",
+            "allow_code_eval": "bool(val)",
+            "no_of_candidates": "list(val)",
+            "num_workers": "int(val)",
+            "timeout": "int(val)"
         }
         return args_map
 
@@ -492,7 +542,51 @@ class ArgumentsSet:
         args_map = {
             ForecastingConfigContract.TIME_COLUMN_NAME: "str(val)",
             ForecastingConfigContract.TIME_SERIES_ID_COLUMN_NAMES: "val",
-            ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)"
+            ForecastingConfigContract.FORECAST_FLAVOR: "str(val)",
+            ForecastingConfigContract.ROLLING_FORECAST_STEP: "int(val)",
+            ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)",
+            ForecastingConfigContract.FORECAST_ORIGIN_COLUMN_NAME: "str(val)",
+            ForecastingConfigContract.FORECAST_PREDICTIONS: "val",
+            ForecastingConfigContract.FORECAST_GROUND_TRUTH: "val"
+        }
+        return args_map
+
+    @property
+    def image_od_is(self):
+        """Image OD/IS arguments.
+
+        Returns:
+            _type_: Dictionary of arguments.
+        """
+        args_map = {
+            "metrics": "list(val)",
+            "iou_threshold": "float(val)",
+            "box_score_threshold": "float(val)",
+        }
+        return args_map
+
+    @property
+    def image_classification(self):
+        """Image Classification arguments.
+
+        Returns:
+            _type_: _description_
+        """
+        args_map = {
+            "metrics": "list(val)",
+        }
+        return args_map
+
+    @property
+    def image_classification_multilabel(self):
+        """Image Classification Multilabel arguments.
+
+        Returns:
+            _type_: _description_
+        """
+        args_map = {
+            "metrics": "list(val)",
+            "threshold": "float(val)",
         }
         return args_map
 
@@ -514,7 +608,6 @@ def check_and_return_if_mltable(data):
 
     Args:
         data (_type_): _description_
-        data_mltable (_type_): _description_
 
     Returns:
         _type_: _description_
@@ -532,9 +625,8 @@ def read_data(file_path, is_mltable=True, batch_size=None):
 
     Args:
         file_path (_type_): _description_
-        input_column_names (_type_, optional): _description_. Defaults to None.
-        label_column_name (_type_, optional): _description_. Defaults to None.
         is_mltable: (_type_, optional): _description_. Defaults to True.
+        batch_size (_type_): _description_
 
     Raises:
         DataValidationException: _description_
@@ -561,7 +653,7 @@ def read_data(file_path, is_mltable=True, batch_size=None):
         if is_mltable:
             data = iter([load(file_path).to_pandas_dataframe()])
         else:
-            data = pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
+            data = read_dataframe(file_path, batch_size=batch_size)
             if not batch_size:
                 data = iter([data])
     except Exception as e:
@@ -574,7 +666,37 @@ def read_data(file_path, is_mltable=True, batch_size=None):
     return data
 
 
-def prepare_data(data, task, label_column_name=None, _has_multiple_output=False):
+def read_dataframe(file_path, batch_size=None):
+    """Util function for reading a DataFrame based on the file extension.
+
+    Args:
+        file_path (_type_): _description_
+        batch_size: (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
+    file_extension = os.path.splitext(file_path)[1]
+
+    if file_extension == '.csv':
+        # Reading a CSV file with the specified batch_size
+        return pd.read_csv(file_path, chunksize=batch_size)
+    elif file_extension == '.tsv':
+        # Reading a TSV file with the specified batch_size and skipping initial spaces
+        return pd.read_csv(file_path, sep='\t', chunksize=batch_size, skipinitialspace=True)
+    elif file_extension == '.jsonl':
+        try:
+            # Reading a JSONL file with the specified batch_size
+            return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
+        except Exception as e:
+            logger.info("Loading the data without chunksize. Exception: {}".format(str(e)))
+            return pd.read_json(file_path)
+    else:
+        # Default to reading JSONL files without raising an exception
+        return pd.read_json(file_path, lines=True, dtype=False, chunksize=batch_size)
+
+
+def prepare_data(data, task, label_column_name=None, _has_multiple_output=False, extra_y_test_cols=None):
     """Prepare data.
 
     Args:
@@ -583,6 +705,7 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
         label_column_name (_type_, optional): _description_. Defaults to None.
         input_column_names (_type_, optional): _description_. Defaults to None.
         _has_multiple_output (bool, optional): _description_. Defaults to False.
+        extra_y_test_cols (_type_, optional): _description_. Defaults to None.
 
     Raises:
         ModelEvaluationException: _description_
@@ -592,20 +715,26 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
         _type_: _description_
     """
     X_test, y_test = data, None
-    if label_column_name is not None:
+    if extra_y_test_cols is not None and label_column_name is not None:
+        # IF extra_y_test_cols is not None, label_column_name should also be not None;
+        # extra_y_test_cols is accepted only for text-gen
+        X_test, y_test = X_test.drop(extra_y_test_cols + [label_column_name], axis=1), \
+                         data[extra_y_test_cols + [label_column_name]]
+    elif label_column_name is not None:
         X_test, y_test = data.drop(label_column_name, axis=1), data[label_column_name]
+    elif extra_y_test_cols is not None:
+        X_test, y_test = data.drop(extra_y_test_cols, axis=1), data[extra_y_test_cols]
     if task == constants.TASK.REGRESSION:
         if y_test is not None:
             try:
                 y_test = y_test.astype(np.float64)
             except Exception as e:
                 exception = DataLoaderException._with_error(
-                    AzureMLError.create(BadRegressionData, error=repr(e))
+                    AzureMLError.create(BadRegressionData, error=repr(e)),
+                    inner_exception=e
                 )
-                exception.inner_exception = e
                 log_traceback(exception, logger)
                 raise exception
-
     if task == constants.TASK.NER:
         if len(X_test.columns) > 1 and "tokens" not in X_test.columns:
             message = "Too many feature columns in dataset. Only 1 feature column should be passed for NER."
@@ -648,8 +777,17 @@ def prepare_data(data, task, label_column_name=None, _has_multiple_output=False)
             exception = DataLoaderException(exception_message=message)
             log_traceback(exception, logger, message)
             raise exception
+
     if y_test is not None:
         y_test = y_test.values
+
+    if task == constants.TASK.CHAT_COMPLETION:
+        X_test = []
+        y_test = None
+        for conversation in data[label_column_name]:
+            df = pd.DataFrame({"input_string": conversation})
+            X_test.append(df)
+
     return X_test, y_test
 
 
@@ -668,40 +806,69 @@ def fetch_compute_metrics_args(data, task_type):
                 metrics_config[arg] = eval(func)
             except TypeError:
                 message = "Invalid dtype passed for config param '" + arg + "'."
-                logger.error(message)
-                raise DataValidationException(message)
+                exception = DataValidationException(message)
+                log_traceback(exception, logger)
+                raise exception
 
     return metrics_config
 
 
-def read_config(conf_folder, task_type, for_prediction=False):
+def read_config(conf_file):
     """Util function for reading config.
 
     Args:
-        conf_folder (_type_): _description_
-        task_type (_type_): _description_
+        conf_file (_type_): _description_
 
     Raises:
-        DataValidationException: _description_
+        DataLoaderException: _description_
 
     Returns:
         _type_: _description_
     """
+    if not conf_file:
+        return dict()
     try:
         import json
-        with open(conf_folder, "r") as f:
+        with open(conf_file, "r") as f:
             data = json.load(f)
     except Exception as e:
-        exception = DataValidationException._with_error(
-            AzureMLError.create(BadEvaluationConfigFile, error=repr(e))
+        exception = DataLoaderException._with_error(
+            AzureMLError.create(BadEvaluationConfigFile, error=repr(e)),
+            inner_exception=e
         )
-        exception.inner_exception = e
-        log_traceback(e, logger, is_critical=True)
+        log_traceback(exception, logger, is_critical=True)
         raise exception
 
-    if for_prediction:
-        return data
-    return fetch_compute_metrics_args(data, task_type)
+    return data
+
+
+def read_config_str(conf_str):
+    """Util function for reading config string.
+
+    Args:
+        conf_str (_type_): _description_
+
+    Raises:
+        DataLoaderException: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    if not conf_str:
+        return dict()
+    try:
+        import json
+        data = json.loads(conf_str)
+    except Exception as e:
+        message = "Unable to load evaluation_config_params. String is not JSON serialized."
+        exception = DataLoaderException._with_error(
+            AzureMLError.create(BadEvaluationConfigParam, error=repr(e)),
+            inner_exception=e
+        )
+        log_traceback(exception=exception, logger=logger, message=message, is_critical=True)
+        raise exception
+
+    return data
 
 
 def read_conll(stream_info, labels=None):
@@ -755,3 +922,14 @@ def read_conll(stream_info, labels=None):
         tokens.append(np.array(cur_sentence))
         targets.append(np.array(cur_target))
     return np.asarray(tokens), np.asarray(targets), labels_list
+
+
+def parse_input_ground_truth_col(col_name):
+    """Parse input ground truth columns."""
+    extra_cols = None
+    if col_name is not None and "," in col_name:
+        col_name, extra_cols = col_name.split(",", 1)
+        # Adding this to be consistent with how it is being used elsewhere, ideally it should be ""
+        col_name = None if col_name == "" else col_name
+        extra_cols = extra_cols.split(",") if extra_cols != "" else None
+    return col_name, extra_cols

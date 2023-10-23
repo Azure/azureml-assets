@@ -10,19 +10,33 @@ from argparse import Namespace
 
 
 from azureml.acft.contrib.hf.nlp.task_factory import get_task_runner
-from azureml.acft.contrib.hf.nlp.constants.constants import SaveFileConstants, Tasks, HfModelTypes
+from azureml.acft.contrib.hf.nlp.constants.constants import (
+    SaveFileConstants,
+    Tasks,
+    HfModelTypes,
+    LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+)
 from azureml.acft.contrib.hf.nlp.utils.data_utils import copy_and_overwrite
 from azureml.acft.contrib.hf.nlp.nlp_auto.config import AzuremlAutoConfig
 from azureml.acft.contrib.hf.nlp.tasks.translation.preprocess.preprocess_for_finetune import T5_CODE2LANG_MAP
 
-from azureml.acft.accelerator.utils.logging_utils import get_logger_app
-from azureml.acft.accelerator.utils.error_handling.exceptions import ValidationException
-from azureml.acft.accelerator.utils.error_handling.error_definitions import PathNotFound, ValidationError
-from azureml.acft.accelerator.utils.decorators import swallow_all_exceptions
+from azureml.acft.common_components.utils.error_handling.exceptions import ACFTValidationException, ACFTSystemException
+from azureml.acft.common_components.utils.error_handling.error_definitions import (
+    PathNotFound,
+    ACFTSystemError,
+    ACFTUserError,
+)
+from azureml.acft.common_components.utils.error_handling.swallow_all_exceptions_decorator import (
+    swallow_all_exceptions,
+)
+from azureml.acft.common_components import get_logger_app, set_logging_parameters, LoggingLiterals
+from azureml.acft.contrib.hf import VERSION, PROJECT_NAME
 from azureml._common._error_definition.azureml_error import AzureMLError  # type: ignore
 
 
-logger = get_logger_app()
+logger = get_logger_app(__name__)
+
+COMPONENT_NAME = "ACFT-Preprocess"
 
 
 def str2bool(arg):
@@ -143,10 +157,11 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
     # Model Selector Component ---> Preprocessor Component
     model_selector_args_path = Path(parsed_args.model_selector_output, SaveFileConstants.MODEL_SELECTOR_ARGS_SAVE_PATH)
     if not model_selector_args_path.exists():
-        raise ValidationException._with_error(AzureMLError.create(PathNotFound, path=model_selector_args_path))
+        raise ACFTValidationException._with_error(AzureMLError.create(PathNotFound, path=model_selector_args_path))
 
     with open(model_selector_args_path, "r") as rptr:
         model_selector_args = json.load(rptr)
+        parsed_args.model_asset_id = model_selector_args.get("model_asset_id")
         parsed_args.model_name = model_selector_args.get("model_name")
         model_name_or_path = Path(parsed_args.model_selector_output, parsed_args.model_name)
         # Transformers lib searches for tokenizer files locally only if the folder path is same as model's name
@@ -154,9 +169,21 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
             copy_and_overwrite(str(model_name_or_path), parsed_args.model_name)
         parsed_args.model_name_or_path = parsed_args.model_name
 
+    # read FT config
+    ft_config_path = Path(parsed_args.model_selector_output, SaveFileConstants.ACFT_CONFIG_SAVE_PATH)
+    if ft_config_path.is_file():
+        with open(ft_config_path, "r") as rptr:
+            ft_config = json.load(rptr)
+            setattr(parsed_args, "finetune_config", ft_config)
+            logger.info("Added finetune config to `component_args`")
+    else:
+        logger.info(f"{SaveFileConstants.ACFT_CONFIG_SAVE_PATH} does not exist")
+        setattr(parsed_args, "finetune_config", {})
+
     # additional logging
     logger.info(f"Model name: {getattr(parsed_args, 'model_name', None)}")
     logger.info(f"Task name: {getattr(parsed_args, 'task_name', None)}")
+    logger.info(f"Model asset id: {getattr(parsed_args, 'model_asset_id', None)}")
 
     if getattr(parsed_args, "task_name", None) == Tasks.TRANSLATION and \
             getattr(parsed_args, "model_name", None) is not None:
@@ -173,8 +200,8 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
 
         if model_type == HfModelTypes.T5 and \
                 (src_lang not in T5_CODE2LANG_MAP or tgt_lang not in T5_CODE2LANG_MAP):
-            raise ValidationException._with_error(
-                AzureMLError.create(ValidationError, error=(
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(ACFTUserError, error=(
                     "Either source or target language is not supported for T5. Supported languages are "
                     f"{list(T5_CODE2LANG_MAP.keys())}"
                 ))
@@ -193,8 +220,8 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
 
     # raise errors and warnings
     if not parsed_args.train_data_path:
-        raise ValidationException._with_error(
-            AzureMLError.create(ValidationError, error=(
+        raise ACFTSystemException._with_error(
+            AzureMLError.create(ACFTSystemError, pii_safe_message=(
                 "train_file_path or train_mltable_path need to be passed"
             ))
         )
@@ -255,13 +282,23 @@ def pre_process(parsed_args: Namespace, unparsed_args: list):
     hf_task_runner.run_preprocess_for_finetune(parsed_args, unparsed_args)  # type: ignore
 
 
-@swallow_all_exceptions(logger)
+@swallow_all_exceptions(time_delay=60)
 def main():
     """Parse args and pre process."""
     parser = get_parser()
     # unknown args are the command line strings that could not be parsed by the argparser
     parsed_args, unparsed_args = parser.parse_known_args()
     logger.info(f"Component Args: {parsed_args}")
+
+    set_logging_parameters(
+        task_type=parsed_args.task_name,
+        acft_custom_dimensions={
+            LoggingLiterals.PROJECT_NAME: PROJECT_NAME,
+            LoggingLiterals.PROJECT_VERSION_NUMBER: VERSION,
+            LoggingLiterals.COMPONENT_NAME: COMPONENT_NAME
+        },
+        azureml_pkg_denylist_logging_patterns=LOGS_TO_BE_FILTERED_IN_APPINSIGHTS,
+    )
 
     pre_process(parsed_args, unparsed_args)
 
