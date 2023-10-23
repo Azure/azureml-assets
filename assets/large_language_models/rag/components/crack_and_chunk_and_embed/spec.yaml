@@ -91,6 +91,7 @@ command: >-
   --use_rcts '${{inputs.use_rcts}}'
   $[[--citation_url ${{inputs.citation_url}}]]
   $[[--citation_replacement_regex '${{inputs.citation_replacement_regex}}']]
+  $[[--doc_intel_connection_id ${{inputs.doc_intel_connection_id}}]]
   --embeddings_model ${{inputs.embeddings_model}}
   $[[--embeddings_connection_id ${{inputs.embeddings_connection_id}}]]
   $[[--embeddings_container ${{inputs.embeddings_container}}]]

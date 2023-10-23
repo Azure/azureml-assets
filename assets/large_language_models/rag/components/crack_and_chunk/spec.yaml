@@ -87,6 +87,7 @@ command: >-
   --output_chunks ${{outputs.output_chunks}}
   --chunk_size ${{inputs.chunk_size}}
   --chunk_overlap ${{inputs.chunk_overlap}}
+  $[[--doc_intel_connection_id ${{inputs.doc_intel_connection_id}}]]
   $[[--data_source_url ${{inputs.data_source_url}}]]
   $[[--document_path_replacement_regex '${{inputs.document_path_replacement_regex}}']]
   --max_sample_files ${{inputs.max_sample_files}}
