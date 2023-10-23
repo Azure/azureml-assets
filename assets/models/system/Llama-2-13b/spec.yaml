@@ -42,6 +42,7 @@ tags:
     apply_deepspeed: 'false'
     apply_lora: 'true'
     precision: '4'
+    max_seq_length: 256
   task: text-generation
   inference_supported_envs:
   - vllm
