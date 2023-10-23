@@ -28,14 +28,16 @@ NOTE: We highly recommend to finetune the model on your dataset before deploying
 { 
  "input_data": { 
         "columns": ["column1","column2","column3","column4","column5","column6"], 
-        "data": [22,11.2,"It was a great experience!",image1,"Categorical value",True]
+        "data": [[22,11.2,"It was a great experience!",image1,"Categorical value",True],
+                 [111,8.2,"I may not consider this option again.",image2,"Categorical value",False]
+                ]
      } 
 } 
 ``` 
 
 > Note:
 >
-> - "image1" string is in base64 format.
+> - "image1", "image2" are strings in base64 format.
   
 #### Sample output 
   
@@ -46,7 +48,12 @@ NOTE: We highly recommend to finetune the model on your dataset before deploying
         "label1": 0.1,
         "label2": 0.7,
         "label3": 0.2
-     } 
+     }, 
+     {
+        "label1": 0.3,
+        "label2": 0.3,
+        "label3": 0.4
+     },
 ] 
   
 ```
