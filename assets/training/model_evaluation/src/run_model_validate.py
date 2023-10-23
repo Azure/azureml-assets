@@ -34,7 +34,6 @@ def validate(
         config_str: Input(type="string", optional=True, default=None),  # noqa: F821
 ) -> Output(type="boolean", is_control=True):  # noqa: F821
     """Entry function of model validation script."""
-
     if label_column_name:
         label_column_name = label_column_name.split(",")
 

@@ -567,6 +567,20 @@ def check_and_return_if_mltable(data):
 
 
 def read_model_prediction_data(file_path, task=None, batch_size=None, nrows=None):
+    """Util function for reading test data for model prediction.
+
+    Args:
+        file_path (_type_): _description_
+        task (_type_): _description_
+        batch_size (_type_): _description_
+        nrows (_type_): _description_
+
+    Raises:
+        DataValidationException: _description_
+
+    Returns:
+        _type_: _description_
+    """
     if task in constants.IMAGE_TASKS:
         from image_dataset import get_image_dataset
         df = get_image_dataset(task_type=task, test_mltable=file_path)
@@ -588,7 +602,6 @@ def read_data(file_path, batch_size=None, nrows=None):
         DataValidationException: _description_
 
     Returns:
-        _type_: _description_
         _type_: _description_
     """
     is_mltable = check_and_return_if_mltable(file_path)
@@ -877,6 +890,7 @@ def parse_input_ground_truth_col(col_name):
 
 
 def get_column_names(args, data):
+    """Get Column names from test data."""
     task = args[ArgumentLiterals.TASK]
     if task in constants.IMAGE_TASKS:
         input_column_names = [ImageDataFrameParams.IMAGE_COLUMN_NAME]

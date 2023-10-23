@@ -220,6 +220,7 @@ def get_logger(logging_level: str = 'DEBUG',
 
 
 def flush_logger(logger):
+    """Flush logger."""
     for handler in logger.handlers:
         handler.flush()
     time.sleep(20)
@@ -320,6 +321,13 @@ def _log_traceback(exception: (AzureMLException, BaseException), logger, message
 
 
 def log_traceback(exception: (AzureMLException, BaseException), logger, message=None):
+    """Log exceptions without PII in APP Insights and full tracebacks in logger. Calls _log_traceback.
+
+    Args:
+        exception (_type_): _description_
+        logger (_type_): _description_
+        message (_type_): _description_
+    """
     try:
         _log_traceback(exception, logger, message)
     except Exception as traceback_exception:
@@ -328,6 +336,16 @@ def log_traceback(exception: (AzureMLException, BaseException), logger, message=
 
 
 def get_azureml_exception(exception_cls, error_cls, exception, target=None, wrap_azureml_ex=True, **message_kwargs):
+    """Get azureml wrapped exception object.
+
+    Args:
+        exception_cls (_type_): _description_
+        error_cls (_type_): _description_
+        exception (_type_): _description_
+        target (_type_): _description_
+        wrap_azureml_ex (_type_): _description_
+        message_kwargs (_type_): _description_
+    """
     if not wrap_azureml_ex and isinstance(exception, (AzureMLException, MetricsException)):
         azureml_exception = exception
     else:

@@ -123,6 +123,11 @@ def _validate_config(args):
 
 
 def _validate_batch_size(args):
+    """Validate batch size.
+
+    Args:
+        args (_type_): _description_
+    """
     if ArgumentLiterals.BATCH_SIZE in args:
         logger.info("Validating batch_size.")
         if args[ArgumentLiterals.BATCH_SIZE] is not None and args[ArgumentLiterals.BATCH_SIZE] < 1:
@@ -131,12 +136,17 @@ def _validate_batch_size(args):
 
 
 def validate_common_args(args):
+    """Validate Compute Metrics Args.
+
+    Args:
+        args (_type_): _description_
+    """
     _validate_task(args)
     _validate_config(args)
 
 
 def validate_model_prediction_args(args):
-    """Validate All args.
+    """Validate args for model prediction.
 
     Args:
         args (_type_): _description_
@@ -172,6 +182,12 @@ def validate_compute_metrics_label_column_arg(args):
 
 
 def validate_input_column_names(input_column_names, data):
+    """Validate input Column.
+
+    Args:
+        input_column_names (_type_): _description_
+        data (_type_): _description_
+    """
     logger.info("Validating input columns in data.")
     if len(input_column_names) == 0:
         exception = get_azureml_exception(DataValidationException, BadInputColumnData, None)
@@ -189,6 +205,12 @@ def validate_input_column_names(input_column_names, data):
 
 
 def validate_label_column_names(label_column_names, data):
+    """Validate Label Column.
+
+    Args:
+        label_column_names (_type_): _description_
+        data (_type_): _description_
+    """
     try:
         logger.info("Validating label columns in data.")
         data = data[label_column_names]
@@ -202,6 +224,11 @@ def validate_label_column_names(label_column_names, data):
 
 
 def validate_and_get_columns(args):
+    """Validate and return column names.
+
+    Args:
+        args (_type_): _description_
+    """
     logger.info("Reading top row in data for validation.")
     data = list(read_model_prediction_data(args[ArgumentLiterals.DATA], args[ArgumentLiterals.TASK], nrows=1))[0]
     input_column_names, label_column_name, extra_y_test_cols = get_column_names(args, data)

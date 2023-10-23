@@ -23,6 +23,8 @@ ROOT_RUN_PROPERTIES = {
 
 
 class ArgumentLiterals:
+    """Input Argument literals list."""
+
     TASK = "task"
     DATA = "data"
     MLFLOW_MODEL = "mlflow_model"
