@@ -39,9 +39,10 @@ tags:
   license: custom
   author: meta
   model_specific_defaults:
-    apply_deepspeed: 'false'
+    apply_deepspeed: 'true'
+    deepspeed_stage: '3'
     apply_lora: 'true'
-    precision: '4'
+    precision: '16'
   task: text-generation
   inference_supported_envs:
   - vllm
