@@ -52,10 +52,16 @@ class TestMDCPreprocessor:
         print("working dir:", os.getcwd())
         python_path = sys.executable
         os.environ["PYSPARK_PYTHON"] = python_path
-        os.environ["PYTHONPATH"] = f"{os.environ.get('PYTHONPATH','')};./src"
+        module_path = f"{os.getcwd()}/src"
+        old_python_path = os.environ.get("PYTHONPATH", None)
+        old_python_path = f"{old_python_path};" if old_python_path else ""
+        os.environ["PYTHONPATH"] = f"{old_python_path}{module_path}"
+        print("PYTHONPATH:", os.environ["PYTHONPATH"])
+
         fs = fsspec.filesystem("file")
         preprocessed_output = "tests/unit/preprocessed_mdc_data"
         shutil.rmtree(f"{preprocessed_output}temp", True)
+
         sdf = _raw_mdc_uri_folder_to_preprocessed_spark_df(
             window_start_time,
             window_end_time,
