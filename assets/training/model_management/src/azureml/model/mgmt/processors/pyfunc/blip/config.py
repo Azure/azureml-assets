@@ -19,6 +19,11 @@ class Tasks(_CustomEnum):
 
     IMAGE_TO_TEXT = "image-to-text"
 
+class HfBlipModelId(_CustomEnum):
+    """Models supported."""
+
+    BLIP_IMAGE_TO_TEXT = "Salesforce/blip-image-captioning-base"
+    BLIP2_IMAGE_TO_TEXT = "Salesforce/blip2-opt-2.7b"
 
 class MLflowSchemaLiterals:
     """MLflow model signature related schema."""
