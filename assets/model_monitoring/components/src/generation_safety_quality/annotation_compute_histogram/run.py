@@ -755,7 +755,7 @@ class _APITokenManager(ABC):
         pass
 
 
-class WorkspaceConnectionTokenManager(_APITokenManager):
+class _WorkspaceConnectionTokenManager(_APITokenManager):
     def __init__(
         self,
         *,
@@ -1595,7 +1595,7 @@ def apply_annotation(
     }
     try:
         # Define authorization token manager
-        token_manager_class = WorkspaceConnectionTokenManager
+        token_manager_class = _WorkspaceConnectionTokenManager
 
         token_manager = token_manager_class(
             connection_name=workspace_connection_arm_id,
