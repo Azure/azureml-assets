@@ -771,7 +771,7 @@ class WorkspaceConnectionTokenManager(_APITokenManager):
 
             credential = AzureMLTokenAuthentication._initialize_aml_token_auth()
 
-            uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices/workspaces/(.*)/connections/(.*)", connection_name) # noqa: E501
+            uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices/workspaces/(.*)/connections/(.*)", connection_name)  # noqa: E501
 
             ml_client = MLClient(
                 credential=credential,
@@ -781,7 +781,7 @@ class WorkspaceConnectionTokenManager(_APITokenManager):
             )
 
             if os.environ.get("AZUREML_RUN_ID", None) is not None:
-                # In AzureML Run context, we need to use workspaces internal endpoint that will accept 
+                # In AzureML Run context, we need to use workspaces internal endpoint that will accept
                 # AzureMLToken auth.
                 ml_client.connections._operation._client._base_url = f"{os.environ.get('AZUREML_SERVICE_ENDPOINT')}/rp/workspaces"  # noqa: E501
             _logger.info(f"Using ml_client base_url: {ml_client.connections._operation._client._base_url}")
