@@ -8,6 +8,7 @@ import re
 import sys
 from collections import defaultdict
 from pathlib import Path
+from ruamel.yaml import YAML
 from typing import List
 
 import azureml.assets as assets
@@ -313,6 +314,53 @@ def validate_categories(asset_config: assets.AssetConfig) -> int:
     return 0
 
 
+def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) -> int:
+    """Validate proper tags for an asset.
+
+    Args:
+        asset_config (AssetConfig): Asset config.
+        valid_tags_filename (str): Yaml file defining valid tags for the asset.
+
+    Returns:
+        int: Number of errors.
+    """
+    error_count = 0
+
+    with open(Path(__file__).with_name(valid_tags_filename)) as f:
+        valid_tags = YAML().load(f)
+
+    asset_spec = asset_config._spec._yaml
+    asset_tags = asset_spec.get('tags')
+
+    for tag in valid_tags:
+        tag_info = valid_tags[tag]
+        if tag_info.get('required') and (not asset_tags or tag not in asset_tags):
+            _log_error(asset_config.file_name_with_path, f"Asset '{asset_config.name}' is missing required tag '{tag}'")
+            error_count += 1
+            continue
+
+        if not asset_tags or tag not in asset_tags:
+            continue
+        
+        tag_value = asset_tags[tag]
+        if not isinstance(tag_value, str):
+            _log_error(asset_config.file_name_with_path, f"Asset '{asset_config.name}' has non-string '{type(tag_value)}' for tag '{tag}'")
+            error_count += 1
+            continue
+
+        valid_tag_values = tag_info.get('values')
+        if tag_info.get('allow_multiple'):
+            tag_values = tag_value.split(',')
+            for single_tag_value in tag_values:
+                if single_tag_value not in valid_tag_values:
+                    _log_error(asset_config.file_name_with_path, f"Asset '{asset_config.name}' has invalid value '{single_tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")
+        else:
+            if tag_value not in valid_tag_values:
+                _log_error(asset_config.file_name_with_path, f"Asset '{asset_config.name}' has invalid value '{tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")
+
+    return error_count
+
+
 def validate_assets(input_dirs: List[Path],
                     asset_config_filename: str,
                     changed_files: List[Path] = None,
@@ -399,6 +447,9 @@ def validate_assets(input_dirs: List[Path],
                 if check_build_context:
                     error_count += validate_build_context(asset_config.extra_config_as_object())
 
+            if asset_config.type == assets.AssetType.PROMPT:
+                error_count += validate_tags(asset_config, 'prompt_tags.yml')
+                    
             # Validate categories
             if check_categories:
                 error_count += validate_categories(asset_config)
