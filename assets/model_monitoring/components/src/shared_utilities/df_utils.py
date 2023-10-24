@@ -12,9 +12,9 @@ def get_numerical_columns(column_dtype_map: dict) -> list:
     numerical_columns = [
         column
         for column in column_dtype_map
-        if column_dtype_map[column] in ["float", "double", "decimal"] or
-          column_dtype_map[column] == "int" and
-            len(set(column))/len(column) >= 0.05
+        if column_dtype_map[column] in ["float", "double", "decimal"]
+        or column_dtype_map[column] == "int"
+        and len(set(column))/len(column) >= 0.05
     ]
     return numerical_columns
 
@@ -26,9 +26,9 @@ def get_categorical_columns(column_dtype_map: dict) -> list:
     categorical_columns = [
         column
         for column in column_dtype_map
-        if column_dtype_map[column] in ["string", "bool"] or
-          column_dtype_map[column] == "int" and
-            len(set(column))/len(column) >= 0.05
+        if column_dtype_map[column] in ["string", "bool"]
+        or column_dtype_map[column] == "int"
+        and len(set(column))/len(column) >= 0.05
     ]
     return categorical_columns
 
