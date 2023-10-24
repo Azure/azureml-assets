@@ -764,7 +764,7 @@ class WorkspaceConnectionTokenManager(_APITokenManager):
         **kwargs,
     ):
         super().__init__(auth_header=auth_header)
-        
+
         try:
             from azureml.dataprep.api._aml_auth._azureml_token_authentication import AzureMLTokenAuthentication
             from azure.ai.ml import MLClient
@@ -774,7 +774,7 @@ class WorkspaceConnectionTokenManager(_APITokenManager):
 
             uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices/workspaces/(.*)/connections/(.*)",  # noqa: E501
                                  connection_name, flags=re.IGNORECASE)
-                
+
             ml_client = MLClient(
                 credential=credential,
                 subscription_id=uri_match.group(1),
@@ -1604,7 +1604,6 @@ def apply_annotation(
     except Exception as e:
         print(f"Unable to process request: {e}")
         return
-
 
     endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
     api_version = token_manager.get_api_version()
