@@ -26,7 +26,7 @@ import json5
 import pandas as pd
 import requests
 import tiktoken
-from azure.ai.ml.identity import CredentialUnavailableError, AzureMLOnBehalfOfCredential
+from azure.ai.ml.identity import CredentialUnavailableError
 from azure.ai.ml.identity._internal import _scopes_to_resource
 from azure.core.credentials import AccessToken, TokenCredential
 from pyspark.sql import DataFrame, Window
@@ -755,7 +755,6 @@ class _APITokenManager(ABC):
         pass
 
 
-
 class WorkspaceConnectionTokenManager(_APITokenManager):
     def __init__(
         self,
@@ -765,14 +764,14 @@ class WorkspaceConnectionTokenManager(_APITokenManager):
         **kwargs,
     ):
         super().__init__(auth_header=auth_header)
-        try: 
+        try:
             from azureml.dataprep.api._aml_auth._azureml_token_authentication import AzureMLTokenAuthentication
             from azure.ai.ml import MLClient
             from azure.ai.ml.entities import WorkspaceConnection
-        
+
             credential = AzureMLTokenAuthentication._initialize_aml_token_auth()
 
-            uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices/workspaces/(.*)/connections/(.*)", connection_name)
+            uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices/workspaces/(.*)/connections/(.*)", connection_name) # noqa: E501
 
             ml_client = MLClient(
                 credential=credential,
@@ -782,27 +781,27 @@ class WorkspaceConnectionTokenManager(_APITokenManager):
             )
 
             if os.environ.get("AZUREML_RUN_ID", None) is not None:
-                # In AzureML Run context, we need to use workspaces internal endpoint that will accept AzureMLToken auth.
-                ml_client.connections._operation._client._base_url = f"{os.environ.get('AZUREML_SERVICE_ENDPOINT')}/rp/workspaces"
+                # In AzureML Run context, we need to use workspaces internal endpoint that will accept 
+                # AzureMLToken auth.
+                ml_client.connections._operation._client._base_url = f"{os.environ.get('AZUREML_SERVICE_ENDPOINT')}/rp/workspaces"  # noqa: E501
             _logger.info(f"Using ml_client base_url: {ml_client.connections._operation._client._base_url}")
             list_secrets_response = ml_client.connections._operation.list_secrets(
                 connection_name=uri_match.group(4),
                 resource_group_name=ml_client.resource_group_name,
                 workspace_name=ml_client.workspace_name,
-            )    
+            )
             connection = WorkspaceConnection._from_rest_object(list_secrets_response)
             _logger.info(f"Got Connection: {connection.id}")
 
-            if connection.type != "azure_open_ai": 
+            if connection.type != "azure_open_ai":
                 raise Exception(f"Received unexpected endpoint type {connection.type}"
-                                    "only Azure Open AI endpoints are supported at this time")
-                
+                                "only Azure Open AI endpoints are supported at this time")
+
             self.api_version = connection.metadata["ApiVersion"]
             self.domain_name = connection.target
             self.token = connection.credentials["key"]
         except Exception:
             raise Exception("Error encountered while attempting to authentication token")
-            
 
     def get_api_version(self):
         return self.api_version
