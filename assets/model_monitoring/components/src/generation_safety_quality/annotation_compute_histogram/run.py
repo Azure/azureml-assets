@@ -764,6 +764,7 @@ class WorkspaceConnectionTokenManager(_APITokenManager):
         **kwargs,
     ):
         super().__init__(auth_header=auth_header)
+        
         try:
             from azureml.dataprep.api._aml_auth._azureml_token_authentication import AzureMLTokenAuthentication
             from azure.ai.ml import MLClient
@@ -771,8 +772,9 @@ class WorkspaceConnectionTokenManager(_APITokenManager):
 
             credential = AzureMLTokenAuthentication._initialize_aml_token_auth()
 
-            uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices/workspaces/(.*)/connections/(.*)", connection_name)  # noqa: E501
-
+            uri_match = re.match(r"/subscriptions/(.*)/resourceGroups/(.*)/providers/Microsoft.MachineLearningServices/workspaces/(.*)/connections/(.*)",  # noqa: E501
+                                 connection_name, flags=re.IGNORECASE)
+                
             ml_client = MLClient(
                 credential=credential,
                 subscription_id=uri_match.group(1),
@@ -784,24 +786,26 @@ class WorkspaceConnectionTokenManager(_APITokenManager):
                 # In AzureML Run context, we need to use workspaces internal endpoint that will accept
                 # AzureMLToken auth.
                 ml_client.connections._operation._client._base_url = f"{os.environ.get('AZUREML_SERVICE_ENDPOINT')}/rp/workspaces"  # noqa: E501
-            _logger.info(f"Using ml_client base_url: {ml_client.connections._operation._client._base_url}")
-            list_secrets_response = ml_client.connections._operation.list_secrets(
-                connection_name=uri_match.group(4),
-                resource_group_name=ml_client.resource_group_name,
-                workspace_name=ml_client.workspace_name,
-            )
-            connection = WorkspaceConnection._from_rest_object(list_secrets_response)
-            _logger.info(f"Got Connection: {connection.id}")
+                print(f"Using ml_client base_url: {ml_client.connections._operation._client._base_url}")
+                list_secrets_response = ml_client.connections._operation.list_secrets(
+                    connection_name=uri_match.group(4),
+                    resource_group_name=ml_client.resource_group_name,
+                    workspace_name=ml_client.workspace_name,
+                )
+                connection = WorkspaceConnection._from_rest_object(list_secrets_response)
+                print(f"Retrieved Workspace Connection: {connection.id}")
 
-            if connection.type != "azure_open_ai":
-                raise Exception(f"Received unexpected endpoint type {connection.type}"
-                                "only Azure Open AI endpoints are supported at this time")
+                if connection.type != "azure_open_ai":
+                    raise Exception(f"Received unexpected endpoint type {connection.type}"
+                                    "only Azure Open AI endpoints are supported at this time")
 
-            self.api_version = connection.metadata["ApiVersion"]
-            self.domain_name = connection.target
-            self.token = connection.credentials["key"]
-        except Exception:
-            raise Exception("Error encountered while attempting to authentication token")
+                self.api_version = connection.metadata["ApiVersion"]
+                self.domain_name = connection.target
+                self.token = connection.credentials["key"]
+            else:
+                raise Exception("Unable to retrieve the token to establish a Workspace Connection")
+        except Exception as e:
+            raise Exception(f"Error encountered while attempting to authentication token: {e}")
 
     def get_api_version(self):
         return self.api_version
@@ -1589,13 +1593,19 @@ def apply_annotation(
             "TID",
         ]
     }
-    # Define authorization token manager
-    token_manager_class = WorkspaceConnectionTokenManager
+    try:
+        # Define authorization token manager
+        token_manager_class = WorkspaceConnectionTokenManager
 
-    token_manager = token_manager_class(
-        connection_name=workspace_connection_arm_id,
-        auth_header=API_KEY
-    )
+        token_manager = token_manager_class(
+            connection_name=workspace_connection_arm_id,
+            auth_header=API_KEY
+        )
+    except Exception as e:
+        print(f"Unable to process request: {e}")
+        return
+
+
     endpoint_domain_name = token_manager.get_endpoint_domain().replace("https://", "")
     api_version = token_manager.get_api_version()
 
@@ -1606,9 +1616,10 @@ def apply_annotation(
     endpoint_args["azure_endpoint_domain_name"] = endpoint_domain_name
     endpoint_args["azure_openai_api_version"] = api_version
 
+    # use fixed API version since newer versions aren't supported
     get_model_endpoint = _check_and_format_azure_endpoint_url(AZURE_OPENAI_API_DEPLOYMENT_URL_PATTERN,
                                                               AZURE_ENDPOINT_DOMAIN_VALID_PATTERN_RE,
-                                                              endpoint_domain_name, api_version,
+                                                              endpoint_domain_name, "2022-12-01",
                                                               model_deployment_name)
     try:
         headers = {
