@@ -7,7 +7,7 @@ display_name: Hiking recommendations chatbot
 
 tags:
   modality: chat
-  task: chatbot
+  task: chat-completions
   industry: sustainability
 
 data_uri: ./prompt
