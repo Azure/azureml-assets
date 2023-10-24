@@ -8,7 +8,7 @@ is_deterministic: true
 display_name: Text Generation DataPreProcess
 description: Component to preprocess data for text generation task
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/27
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/28
 
 code: ../../../src/preprocess
 
@@ -24,7 +24,7 @@ inputs:
 
   ground_truth_key:
     type: string
-    optional: false
+    optional: true
     description: key for ground_truth in an example. we take separate column for ground_truth
       to enable use cases like summarization, translation, question_answering, etc.
       which can be repurposed in form of text-generation where both text and ground_truth
@@ -117,7 +117,7 @@ outputs:
 
 command: >-
   python preprocess.py --task_name TextGeneration --text_key '${{inputs.text_key}}'
-  --ground_truth_key '${{inputs.ground_truth_key}}' $[[--batch_size '${{inputs.batch_size}}']]
+  $[[--ground_truth_key '${{inputs.ground_truth_key}}']] $[[--batch_size '${{inputs.batch_size}}']]
   $[[--pad_to_max_length '${{inputs.pad_to_max_length}}']] $[[--max_seq_length '${{inputs.max_seq_length}}']]
   $[[--train_file_path '${{inputs.train_file_path}}']] $[[--validation_file_path '${{inputs.validation_file_path}}']]
   $[[--test_file_path '${{inputs.test_file_path}}']] $[[--train_mltable_path '${{inputs.train_mltable_path}}']]
