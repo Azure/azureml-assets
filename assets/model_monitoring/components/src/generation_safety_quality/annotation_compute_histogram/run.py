@@ -797,12 +797,9 @@ class WorkspaceConnectionTokenManager(_APITokenManager):
                 raise Exception(f"Received unexpected endpoint type {connection.type}"
                                     "only Azure Open AI endpoints are supported at this time")
                 
-            self.api_version = connection.metadata.ApiVersion
-            print(self.api_version)
+            self.api_version = connection.metadata["ApiVersion"]
             self.domain_name = connection.target
-            print(self.domain_name)
-            self.token = connection.credentials.key
-            print(self.token)
+            self.token = connection.credentials["key"]
         except Exception:
             raise Exception("Error encountered while attempting to authentication token")
             
