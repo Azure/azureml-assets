@@ -1,4 +1,4 @@
-# Valid tag values that can be applied to prompt gallery entities for modality, industry, and task.
+# Valid tag values that can be applied to prompt gallery assets.
 # These map to filters in the prompt gallery UX.
 modality:
   required: True
@@ -34,9 +34,28 @@ task:
   - entity-extraction
   - data-parsing
   - translation
-  - nl2code
+  - natural-language-to-code
   - explain-code
   - question-answering
   - reasoning-and-insights
   - recommendation
   - chat-completions
+  - automatic-speech-recognition
+  - chat-completion
+  - completions
+  - conversational
+  - embeddings
+  - fill-mask
+  - image-classification
+  - image-segmentation
+  - object-detection
+  - table-question-answering
+  - text2text-generation
+  - text-generation
+  - text-summarization
+  - text-to-image
+  - text-translation
+  - token-classification
+  - video-classification
+  - zero-shot-classification
+  - zero-shot-image-classification

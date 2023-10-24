@@ -354,9 +354,13 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
             for single_tag_value in tag_values:
                 if single_tag_value not in valid_tag_values:
                     _log_error(asset_config.file_name_with_path, f"Asset '{asset_config.name}' has invalid value '{single_tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")
+                    error_count += 1
+                    continue
         else:
             if tag_value not in valid_tag_values:
                 _log_error(asset_config.file_name_with_path, f"Asset '{asset_config.name}' has invalid value '{tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")
+                error_count += 1
+                continue
 
     return error_count
 
