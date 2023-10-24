@@ -1,6 +1,6 @@
 $schema: http://azureml/sdk-2-0/PipelineComponent.json
 type: pipeline
-version: 0.0.10
+version: 0.0.11
 name: openai_completions_finetune_pipeline
 display_name: OpenAI Completions Finetune Pipeline
 description: Finetune your own OAI model. Visit https://learn.microsoft.com/en-us/azure/cognitive-services/openai/
@@ -67,7 +67,7 @@ outputs:
 jobs:
   openai_data_import:
     type: command
-    component: azureml://registries/azure-openai-v2/components/openai_data_import/versions/0.3.2
+    component: azureml://registries/azure-openai-v2/components/openai_data_import/versions/0.3.3
     inputs:
       train_dataset: ${{parent.inputs.train_dataset}}
       validation_dataset: ${{parent.inputs.validation_dataset}}
