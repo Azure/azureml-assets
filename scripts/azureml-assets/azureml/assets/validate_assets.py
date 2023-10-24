@@ -335,16 +335,18 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
     for tag in valid_tags:
         tag_info = valid_tags[tag]
         if tag_info.get('required') and (not asset_tags or tag not in asset_tags):
-            _log_error(asset_config.file_name_with_path, f"Asset '{asset_config.name}' is missing required tag '{tag}'")
+            _log_error(asset_config.file_name_with_path,
+                       f"Asset '{asset_config.name}' is missing required tag '{tag}'")
             error_count += 1
             continue
 
         if not asset_tags or tag not in asset_tags:
             continue
-        
+
         tag_value = asset_tags[tag]
         if not isinstance(tag_value, str):
-            _log_error(asset_config.file_name_with_path, f"Asset '{asset_config.name}' has non-string '{type(tag_value)}' for tag '{tag}'")
+            _log_error(asset_config.file_name_with_path,
+                       f"Asset '{asset_config.name}' has non-string '{type(tag_value)}' for tag '{tag}'")
             error_count += 1
             continue
 
@@ -353,12 +355,14 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
             tag_values = tag_value.split(',')
             for single_tag_value in tag_values:
                 if single_tag_value not in valid_tag_values:
-                    _log_error(asset_config.file_name_with_path, f"Asset '{asset_config.name}' has invalid value '{single_tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")
+                    _log_error(asset_config.file_name_with_path,
+                               f"Asset '{asset_config.name}' has invalid value '{single_tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")  # noqa: E501
                     error_count += 1
                     continue
         else:
             if tag_value not in valid_tag_values:
-                _log_error(asset_config.file_name_with_path, f"Asset '{asset_config.name}' has invalid value '{tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")
+                _log_error(asset_config.file_name_with_path,
+                           f"Asset '{asset_config.name}' has invalid value '{tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")  # noqa: E501
                 error_count += 1
                 continue
 
@@ -453,7 +457,7 @@ def validate_assets(input_dirs: List[Path],
 
             if asset_config.type == assets.AssetType.PROMPT:
                 error_count += validate_tags(asset_config, 'prompt_tags.yml')
-                    
+
             # Validate categories
             if check_categories:
                 error_count += validate_categories(asset_config)
