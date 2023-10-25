@@ -3,8 +3,8 @@ type: command
 
 version: 0.0.1
 name: mmtracking_video_multi_object_tracking_finetune
-display_name: Image Tracking MMTracking Model Finetune
-description: Component to finetune MMTracking models for image object detection and instance segmentation.
+display_name: Video Multi Object Tracking MMTracking Model Finetune
+description: Component to finetune MMTracking models for video multi-object tracking task.
 
 is_deterministic: false
 

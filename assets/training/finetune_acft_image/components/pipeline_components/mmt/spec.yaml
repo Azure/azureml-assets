@@ -3,7 +3,7 @@ type: pipeline
 
 version: 0.0.1
 name: mmtracking_video_multi_object_tracking_pipeline
-display_name: Image Tracking MMTracking Pipeline
+display_name: Video Multi-Object Tracking MMTracking Pipeline
 description: Pipeline component for multi-object tracking using MMTracking models.
 
 is_deterministic: false
