@@ -13,6 +13,7 @@ from azureml.model.mgmt.processors.transformers.config import (
 )
 from azureml.model.mgmt.processors.pyfunc.config import (
     MMLabDetectionTasks,
+    MMLabTrackingTasks,
     SupportedTasks as PyFuncSupportedTasks,
     SupportedTextToImageModelFamily,
 )
@@ -25,6 +26,7 @@ from azureml.model.mgmt.processors.transformers.convertors import (
 from azureml.model.mgmt.processors.pyfunc.convertors import (
     BLIP2MLFlowConvertor,
     MMLabDetectionMLflowConvertor,
+    MMLabTrackingMLflowConvertor,
     CLIPMLFlowConvertor,
     StableDiffusionMlflowConvertor,
     StableDiffusionInpaintingMlflowConvertor,
@@ -75,6 +77,10 @@ def get_mlflow_convertor(model_framework, model_dir, output_dir, temp_dir, trans
         # Models from MMLAB model framework exported in PyFunc mlflow flavor
         if MMLabDetectionTasks.has_value(task):
             return MMLabDetectionMLflowConvertorFactory.create_mlflow_convertor(
+                model_dir, output_dir, temp_dir, translate_params
+            )
+        elif MMLabTrackingTasks.has_value(task):
+            return MMLabTrackingMLflowConvertorFactory.create_mlflow_convertor(
                 model_dir, output_dir, temp_dir, translate_params
             )
         else:
@@ -225,6 +231,19 @@ class SegmentAnythingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
     def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
         """Create MLflow convertor for segment anything (SAM) model."""
         return SegmentAnythingMLFlowConvertor(
+            model_dir=model_dir,
+            output_dir=output_dir,
+            temp_dir=temp_dir,
+            translate_params=translate_params,
+        )
+
+
+class MMLabTrackingMLflowConvertorFactory(MLflowConvertorFactoryInterface):
+    """Factory class for MMTrack video model family."""
+
+    def create_mlflow_convertor(model_dir, output_dir, temp_dir, translate_params):
+        """Create MLflow convertor for vision tasks."""
+        return MMLabTrackingMLflowConvertor(
             model_dir=model_dir,
             output_dir=output_dir,
             temp_dir=temp_dir,
