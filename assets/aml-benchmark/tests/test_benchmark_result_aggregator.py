@@ -99,7 +99,7 @@ class TestBenchmarkResultAggregatorComponent:
         if has_quality_step:
             assert len(data['quality_metrics']) > 0
             assert (
-                'confusion_matrix' in data['quality_metrics'] or \
+                'confusion_matrix' in data['quality_metrics'] or
                 'bertscore' in data['quality_metrics']
             )
         else:
