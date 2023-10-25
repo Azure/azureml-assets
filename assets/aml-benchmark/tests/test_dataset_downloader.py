@@ -12,7 +12,7 @@ from azure.ai.ml import Input
 import pytest
 from datasets import get_dataset_config_names, get_dataset_split_names
 
-from test_utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     Constants,

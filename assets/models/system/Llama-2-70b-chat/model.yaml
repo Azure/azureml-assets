@@ -1,8 +1,0 @@
-path:
-  container_name: models
-  container_path: meta/llama-2-70b-chat/1691681998/mlflow_model_folder
-  storage_name: automlcesdkdataresources
-  type: azureblob
-publish:
-  description: description.md
-  type: mlflow_model
