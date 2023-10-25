@@ -209,9 +209,11 @@ def _get_pipeline_params() -> Tuple[
 def _log_params_and_metrics(parameters: Dict[str, Any], metrics: Dict[str, Any]) -> None:
     """Log mlflow params and metrics to current run and parent run."""
     filtered_metrics = {}
-    allowed_metrics_type = [int, float, bool]
     for key in metrics:
-        if any(map(lambda type: isinstance(metrics[key], type), allowed_metrics_type)):
+        if isinstance(metrics[key], bool):
+            # For bool value, latest version of mlflow throws an error.
+            filtered_metrics[key] = float(metrics[key])
+        elif isinstance(metrics[key], (int, float)):
             filtered_metrics[key] = metrics[key]
     # Log to current run
     log_mlflow_params(**parameters)
