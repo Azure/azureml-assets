@@ -60,13 +60,15 @@ def run():
 
     samples_index: List[Row] = None
     if args_dict["samples_index"]:
-        print("Processing samples index.")
-        samples_index_df = try_read_mltable_in_spark(
-            args.samples_index, "samples_index"
-        )
-        if not samples_index_df:
-            print("Samples index is empty. Skipping processing of the samples index.")
-        else:
+        try: 
+            print("Processing samples index.")
+            samples_index_df = try_read_mltable_in_spark(
+                args.samples_index, "samples_index"
+            )
+        except Exception as e:
+            print(f"Samples index is empty. Skipping processing of the samples index. {e}")
+
+        if samples_index_df:
             samples_index: List[Row] = samples_index_df.collect()
             result = merge_dicts(
                 result, SamplesOutputBuilder(samples_index).get_samples_dict()
