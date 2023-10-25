@@ -135,7 +135,8 @@ def compute_max_violation(
             )
         else:
             feature_name_list.append(feature_name)
-            max_threshold_violation_count.append(None)
+            # max_threshold_violation_count.append(None)
+            max_threshold_violation_count.append(0)
     max_violation_df = spark.createDataFrame(
         zip(max_threshold_violation_count, feature_name_list),
         StructType(
@@ -192,7 +193,7 @@ def compute_min_violation(
             )
         else:
             feature_name_list.append(feature_name)
-            min_threshold_violation_count.append(None)
+            min_threshold_violation_count.append(0)
 
     min_violation_df = spark.createDataFrame(
         zip(min_threshold_violation_count, feature_name_list),
@@ -539,6 +540,17 @@ def compute_data_quality_metrics(df, data_stats_table):
         when(col("dataType") == "DoubleType()", "Numerical")
         .when(col("dataType") == "LongType()", "Numerical")
         .when(col("dataType") == "StringType()", "Categorical")
+        .when(col("dataType") == "IntegerType()", "Numerical")
+        .when(col("dataType") == "TimestampType()", "Categorical")
+        .when(col("dataType") == "BooleanType()", "Categorical")
+        .when(col("dataType") == "BinaryType()", "Categorical")
+        .when(col("dataType") == "DateType()", "Categorical")
+        .when(col("dataType") == "DecimalType()", "Numerical")
+        .when(col("dataType") == "FloatType()", "Numerical")
+        .when(col("dataType") == "ShortType()", "Numerical")
+        .when(col("dataType") == "CharType()", "Categorical")
+        .when(col("dataType") == "VarcharType()", "Categorical")
+        .when(col("dataType") == "ByteType()", "Categorical")
         .otherwise(col("dataType")),
     )
 

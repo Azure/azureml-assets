@@ -97,7 +97,6 @@ class TestModelMonitorDataQuality:
         for rows in df_conversion_errors.select("violationCount").collect():
             assert rows[0] == 0
 
-    @pytest.mark.local
     def test_modify_type(self):
         """Test modify datatype from Datatype() to datatype."""
         data = [("BinaryType()", "featureName1"),  ("TimestampType()", "featureName1"),
