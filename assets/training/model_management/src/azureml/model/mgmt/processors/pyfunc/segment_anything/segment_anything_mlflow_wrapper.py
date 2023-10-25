@@ -10,7 +10,6 @@ Has methods to load the model and predict.
 
 import io
 import mlflow
-import numpy as np
 import pandas as pd
 from PIL import Image
 import torch
@@ -127,44 +126,11 @@ class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
         ):
             # Decode the image and make a PIL Image object.
             pil_image = Image.open(io.BytesIO(process_image(image)))
-            # check if input_points, input_boxes, input_labels are numpy arrays as inference endpoint converts list to
-            # numpy array for no mlflow input schema
-            if input_points is not None:
-                if not isinstance(input_points, np.ndarray):
-                    raise ValueError(
-                        f"Input points must be a list of list of floating points but got {type(input_points)} instead."
-                    )
-                else:
-                    input_points = input_points.tolist()
-            if input_boxes is not None:
-                if not isinstance(input_boxes, np.ndarray):
-                    # inference endpoint converts list to numpy array for no mlflow input schema
-                    raise ValueError(
-                        f"Input boxes must be a list of list of floating points but got {type(input_boxes)} instead."
-                    )
-                else:
-                    # convert the numpy array back to list as SAM processor expects list of list of floats
-                    input_boxes = input_boxes.tolist()
-            if input_labels is not None:
-                if not isinstance(input_labels, np.ndarray):
-                    raise ValueError(
-                        f"Input labels must be a list of list of floating points but got {type(input_labels)} instead."
-                    )
-                else:
-                    # convert the numpy array back to list as SAM processor expects list of list of floats
-                    input_labels = input_labels.tolist()
-            if multimask_output is not None:
-                # check if multimask_output is a boolean
-                if not isinstance(multimask_output, bool):
-                    raise ValueError(
-                        f"multimask_output should be a boolean value, but got {type(multimask_output)} instead."
-                    )
-            else:
-                multimask_output = True
-
-            input_points = [input_points] if input_points else None
-            input_boxes = [input_boxes] if input_boxes else None
-            input_labels = [input_labels] if input_labels else None
+            # check if input_points, input_boxes, input_labels are nested lists
+            input_points = None if not isinstance(input_points, list) else [input_points]
+            input_boxes = None if not isinstance(input_boxes, list) else [input_boxes]
+            input_labels = None if not isinstance(input_labels, list) else [input_labels]
+            multimask_output = True if not isinstance(multimask_output, bool) else multimask_output
 
             # Do inference.
             _map_location = "cuda" if torch.cuda.is_available() else "cpu"

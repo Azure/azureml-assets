@@ -32,14 +32,8 @@ class MLflowSchemaLiterals:
     INPUT_COLUMN_INPUT_POINTS = "input_points"
     INPUT_COLUMN_INPUT_BOXES = "input_boxes"
     INPUT_COLUMN_INPUT_LABELS = "input_labels"
-    INPUT_COLUMN_IMAGE_DATA_TYPE = DataType.string
-    INPUT_COLUMN_INPUT_POINTS_DATA_TYPE = DataType.string
-    INPUT_COLUMN_INPUT_BOXES_DATA_TYPE = DataType.string
-    INPUT_COLUMN_INPUT_LABELS_DATA_TYPE = DataType.string
     INPUT_PARAM_MULTIMASK_OUTPUT = "multimask_output"
-    INPUT_PARAM_MULTIMASK_OUTPUT_DATA_TYPE = DataType.boolean
     OUTPUT_COLUMN_RESPONSE = "response"
-    OUTPUT_COLUMN_DATA_TYPE = DataType.string
     RESPONSE_DF_PREDICTIONS = "predictions"
     RESPONSE_DF_MASKS_PER_PREDICTION = "masks_per_prediction"
     RESPONSE_DF_ENCODED_BINARY_MASK = "encoded_binary_mask"

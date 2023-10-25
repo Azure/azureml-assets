@@ -201,7 +201,7 @@ def get_current_device() -> torch.device:
         return torch.device(type="cpu")
 
 
-def bool_array_to_pil_image(bool_array):
+def bool_array_to_pil_image(bool_array)-> PIL.Image.Image:
     """Convert boolean array to PIL Image.
     
     :param bool_array: boolean array
