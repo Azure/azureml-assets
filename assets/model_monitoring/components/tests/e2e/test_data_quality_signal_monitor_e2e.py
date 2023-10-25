@@ -56,7 +56,7 @@ def _submit_data_quality_signal_monitor_job(
     return ml_client.jobs.get(pipeline_job.name)
 
 
-@pytest.mark.e2edataquality
+@pytest.mark.e2e
 class TestDataQualityModelMonitor:
     """Test class."""
 

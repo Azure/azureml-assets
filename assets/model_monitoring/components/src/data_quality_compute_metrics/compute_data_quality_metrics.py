@@ -135,8 +135,7 @@ def compute_max_violation(
             )
         else:
             feature_name_list.append(feature_name)
-            # max_threshold_violation_count.append(None)
-            max_threshold_violation_count.append(0)
+            max_threshold_violation_count.append(None)
     max_violation_df = spark.createDataFrame(
         zip(max_threshold_violation_count, feature_name_list),
         StructType(
@@ -193,7 +192,7 @@ def compute_min_violation(
             )
         else:
             feature_name_list.append(feature_name)
-            min_threshold_violation_count.append(0)
+            min_threshold_violation_count.append(None)
 
     min_violation_df = spark.createDataFrame(
         zip(min_threshold_violation_count, feature_name_list),
