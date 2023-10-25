@@ -41,7 +41,6 @@ task:
   - recommendation
   - chat-completions
   - automatic-speech-recognition
-  - chat-completion
   - completions
   - conversational
   - embeddings
