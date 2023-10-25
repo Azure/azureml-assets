@@ -140,13 +140,7 @@ inputs:
     type: string
     default: ""
     optional: true
-    description: Optional additional arguments that are supplied to SGD Optimizer. The arguments should be semi-colon separated key value pairs and 
-              should be enclosed in double quotes. 
-              For example, "momentum=0.5; nesterov=True" for sgd.
-              Please make sure to use a valid parameter names for the chosen optimizer. For exact parameter
-              names, please refer https://pytorch.org/docs/1.13/generated/torch.optim.SGD.html#torch.optim.SGD for SGD. Parameters supplied in extra_optim_args
-              will take precedence over the parameter supplied via other arguments such as weight_decay. If weight_decay is provided via "weight_decay"
-              parameter and via extra_optim_args both, values specified in extra_optim_args will be used.
+    description: Optional additional arguments that are supplied to SGD Optimizer. The arguments should be semi-colon separated key value pairs and should be enclosed in double quotes. For example, "momentum=0.5; nesterov=True" for sgd. Please make sure to use a valid parameter names for the chosen optimizer. For exact parameter names, please refer https://pytorch.org/docs/1.13/generated/torch.optim.SGD.html#torch.optim.SGD for SGD. Parameters supplied in extra_optim_args will take precedence over the parameter supplied via other arguments such as weight_decay. If weight_decay is provided via "weight_decay" parameter and via extra_optim_args both, values specified in extra_optim_args will be used.
 
   # gradient accumulation
   gradient_accumulation_step:
@@ -188,8 +182,7 @@ inputs:
   box_score_threshold:
     type: number
     optional: true
-    description: During inference, only return proposals with a score greater than `box_score_threshold`. \
-     The score is the multiplication of the objectness score and classification probability.
+    description: During inference, only return proposals with a score greater than `box_score_threshold`. The score is the multiplication of the objectness score and classification probability.
 
   # random seed
   random_seed:
@@ -206,15 +199,13 @@ inputs:
     enum:
       - epoch
       - steps
-    description: The evaluation strategy to adopt during training. Please note that the save_strategy and  
-     evaluation_strategy should match.
+    description: The evaluation strategy to adopt during training. Please note that the save_strategy and evaluation_strategy should match.
 
   evaluation_steps:
     type: integer
     default: 500
     optional: true
-    description: Number of update steps between two evals if evaluation_strategy='steps'. Please note that the 
-     saving steps should be a multiple of the evaluation steps.
+    description: Number of update steps between two evals if evaluation_strategy='steps'. Please note that the saving steps should be a multiple of the evaluation steps.
 
   # logging strategy parameters
   logging_strategy:
@@ -240,15 +231,13 @@ inputs:
     enum:
       - epoch
       - steps
-    description: The checkpoint save strategy to adopt during training. Please note that the save_strategy and  
-     evaluation_strategy should match.
+    description: The checkpoint save strategy to adopt during training. Please note that the save_strategy and evaluation_strategy should match.
 
   save_steps:
     type: integer
     default: 500
     optional: true
-    description: Number of updates steps before two checkpoint saves if save_strategy="steps". Please note that the 
-     saving steps should be a multiple of the evaluation steps.
+    description: Number of updates steps before two checkpoint saves if save_strategy="steps". Please note that the saving steps should be a multiple of the evaluation steps.
 
   # model checkpointing limit
   save_total_limit:
