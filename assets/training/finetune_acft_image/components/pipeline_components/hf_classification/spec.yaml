@@ -460,14 +460,14 @@ jobs:
     compute: '${{parent.inputs.compute_model_evaluation}}'
     inputs:
       task: '${{parent.inputs.task_name}}'
+      test_data: '${{parent.inputs.test_data}}'
+      mlflow_model: '${{parent.jobs.image_classification_finetune.outputs.mlflow_model_folder}}'
       label_column_name: '${{parent.inputs.label_column_name}}'
       input_column_names: '${{parent.inputs.input_column_names}}'
       batch_size: '${{parent.inputs.test_batch_size}}'
       device: auto
       evaluation_config: '${{parent.inputs.evaluation_config}}'
       evaluation_config_params: '${{parent.inputs.evaluation_config_params}}'
-      test_data: '${{parent.inputs.test_data}}'
-      mlflow_model: '${{parent.jobs.image_classification_finetune.outputs.mlflow_model_folder}}'
   compute_metrics:
     type: command
     component: azureml:compute_metrics:0.0.17
