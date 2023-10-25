@@ -201,20 +201,6 @@ def get_current_device() -> torch.device:
         return torch.device(type="cpu")
 
 
-def check_if_nested_list(input_list) -> None:
-    """Check if input is a nested list.
-
-    :param input_list: input list
-    :type input_list: list
-    :return: None
-    """
-    # Check if string matches the expected format using a regex pattern.
-    # This pattern ensures that the string only contains brackets, numbers, dots, and commas.
-    s = str(input_list)
-    if not re.match(r"^\[((\[|\]|\s|\d|\,|\.|-)*?)\]$", s):
-        raise ValueError("Invalid input format, please use a nested list of ints or floats.")
-
-
 def bool_array_to_pil_image(bool_array):
     """Convert boolean array to PIL Image.
     

@@ -10,13 +10,14 @@ Has methods to load the model and predict.
 
 import io
 import mlflow
+import numpy as np
 import pandas as pd
 from PIL import Image
 import torch
 from transformers import SamModel, SamProcessor
 
 from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, SAMHFLiterals, DatatypeLiterals
-from vision_utils import process_image, check_if_nested_list, image_to_base64, bool_array_to_pil_image
+from vision_utils import process_image, image_to_base64, bool_array_to_pil_image
 
 
 class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -126,20 +127,40 @@ class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
         ):
             # Decode the image and make a PIL Image object.
             pil_image = Image.open(io.BytesIO(process_image(image)))
-
-            # check if input_points, input_boxes, input_labels are nested lists
-            if input_points:
-                check_if_nested_list(input_points)
-            if input_boxes:
-                check_if_nested_list(input_boxes)
-            if input_labels:
-                check_if_nested_list(input_labels)
-            if multimask_output:
+            # check if input_points, input_boxes, input_labels are numpy arrays as inference endpoint converts list to
+            # numpy array for no mlflow input schema
+            if input_points is not None:
+                if not isinstance(input_points, np.ndarray):
+                    raise ValueError(
+                        f"Input points must be a list of list of floating points but got {type(input_points)} instead."
+                    )
+                else:
+                    input_points = input_points.tolist()
+            if input_boxes is not None:
+                if not isinstance(input_boxes, np.ndarray):
+                    # inference endpoint converts list to numpy array for no mlflow input schema
+                    raise ValueError(
+                        f"Input boxes must be a list of list of floating points but got {type(input_boxes)} instead."
+                    )
+                else:
+                    # convert the numpy array back to list as SAM processor expects list of list of floats
+                    input_boxes = input_boxes.tolist()
+            if input_labels is not None:
+                if not isinstance(input_labels, np.ndarray):
+                    raise ValueError(
+                        f"Input labels must be a list of list of floating points but got {type(input_labels)} instead."
+                    )
+                else:
+                    # convert the numpy array back to list as SAM processor expects list of list of floats
+                    input_labels = input_labels.tolist()
+            if multimask_output is not None:
                 # check if multimask_output is a boolean
                 if not isinstance(multimask_output, bool):
                     raise ValueError(
                         f"multimask_output should be a boolean value, but got {type(multimask_output)} instead."
                     )
+            else:
+                multimask_output = True
 
             input_points = [input_points] if input_points else None
             input_boxes = [input_boxes] if input_boxes else None
@@ -156,10 +177,7 @@ class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
             ).to(_map_location)
 
             with torch.no_grad():
-                if multimask_output in [True, False]:
-                    outputs = self._model(**processed_inputs, multimask_output=multimask_output)
-                else:
-                    outputs = self._model(**processed_inputs)
+                outputs = self._model(**processed_inputs, multimask_output=multimask_output)
 
             masks = self._processor.image_processor.post_process_masks(
                 outputs.pred_masks.to(_map_location),
