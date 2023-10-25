@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 name: ft_nlp_common_validation
-version: 0.0.21
+version: 0.0.23
 type: command
 
 is_deterministic: True
@@ -8,7 +8,7 @@ is_deterministic: True
 display_name: Common Validation Component
 description: Component to validate the finetune job against Validation Service
 
-environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/25
+environment: azureml://registries/azureml/environments/acft-hf-nlp-gpu/versions/28
 
 code: ../../../src/validation
 
@@ -92,7 +92,13 @@ inputs:
     type: string
     optional: true
     description: Comma separated list of column names to be used for training
-  
+
+  # Validation parameters
+  system_properties:
+    type: string
+    optional: true
+    description: Validation parameters propagated from pipeline.
+
 outputs:
   validation_info:
     type: uri_file
@@ -100,4 +106,4 @@ outputs:
     mode: rw_mount
 
 command: >-
-  python validation.py --validation-info '${{outputs.validation_info}}'
+  python validation.py $[[--system_properties '${{inputs.system_properties}}']] --validation-info '${{outputs.validation_info}}'
