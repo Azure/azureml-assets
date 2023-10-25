@@ -74,7 +74,6 @@ def run():
         except Exception as e:
             print(f"Samples index is empty. Skipping processing of the samples index. {e}")
 
-
     output_payload = to_output_payload(args.signal_name, args.signal_type, result)
 
     local_path = str(uuid.uuid4())
