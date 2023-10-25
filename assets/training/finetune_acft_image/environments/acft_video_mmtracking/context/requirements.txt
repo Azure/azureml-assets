@@ -1,8 +1,8 @@
-azureml-metrics[video]=={{latest-pypi-version}}
+azureml-metrics[video]====0.0.31
 azureml-evaluate-mlflow=={{latest-pypi-version}}
 azureml-acft-accelerator=={{latest-pypi-version}}
 azureml-acft-common-components[image]=={{latest-pypi-version}}
-azureml-acft-image-components=={{latest-pypi-version}}
+azureml-acft-image-components==0.0.31
 azureml-core==1.52.0
 azure-ai-ml==1.5.0
 requests
