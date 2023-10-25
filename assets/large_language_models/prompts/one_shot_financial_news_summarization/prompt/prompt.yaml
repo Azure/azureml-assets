@@ -11,7 +11,11 @@ messages:
 - role: user
   content: |
     Please summarize the following news article for financial analysts in a concise manner. Your summary should only include the most important information and avoid unnecessary words.
+
     news article: Artificial Intelligence (AI) tech is an $800 billion market opportunity over the next decade as it pervades into the enterprise and consumer tech space, said Wedbush analyst Daniel Ives in a recent note.  Despite's Apple, Inc.`s not-so-proactive approach, the analyst said Cupertino could be the "one to benefit no matter where the industry goes."  Apple Preps To Press The Pedal? Given Apple is a leading player in nearly everything regarding tech and consumer technology, the company will likely step up its AI efforts over the coming months, Ives said in a recent note.  The company's thrust on AI is evident from the 2020 acquisition of Xnor.ai, a spin-off from the non-profit Allen Institute for AI, he said. The tech giant would have the opportunity to leverage Xnor.ai capabilities into standard features within every iPhone, iPad and MacBook, including object and person recognition tools, he added. The analyst also noted that Xnor.ai has recently developed a self-service platform for software developers to drop AI-centric code and data libraries into device-centric apps, allowing users to use AI models anywhere. Ives said Apple has been investing in generative AI technologies in various ways although not disclosing the specifics of the current status and location. This is in line with the company's habit of being very secretive about its research and product development.  Apple's AI Applications: The object/facial recognition features seen in iPhones currently is an example of AI used in Apple's product offerings, Ives said. The company now uses AI features across its portfolio, ranging from Siri to hardware, even pairing up with automakers to have its phone function as a key, he said.  "Apple has always been at the forefront of technology and we expect the company to continue to innovate in its famous strategic ways," the analyst said.  Installed Base A Positive: Apple's customer base act as a moat for the company with impressive loyalty rates, the analyst said, adding that the company could be a key AI player or contributor in the iPhone area.  The analyst noted that more than 90% of search queries are being done from a mobile device, with Android controlling 70% of the smartphone market. This has helped Alphabet, Inc.'s  Google Search to capture nearly all of the market share in mobile search, he said.  Google, however, has to pay Apple about $20 billion annually to integrate Google Search as the default search engine for its product base, the analyst said.  If Microsoft Corp. is able to chip away at market share in the search query battle and manages to boost its share significantly, Apple could have the opportunity to integrate Bing, entertain both players or even charge more for its accessibility to the platform, Ive said.  "With this fight continuing out, we believe Apple is in a great position to benefit in the mobile market regardless of the search query victor as the company will have options given its current place on the chess board."
+
+
+
     Desired response format and layout:
     [Short summary of the news article, highlighting the key points relevant to financial analysts. The summary should be concise and avoid unnecessary words. The summary should be outputted in bullet points and ordered by relevance and importance.]
 - role: assistant
@@ -23,7 +27,10 @@ messages:
 - role: user
   content: |
     Please summarize the following news article for financial analysts in a concise manner. Your summary should only include the most important information and avoid unnecessary words.
+
     {{news_article}}
+
+
     Desired response format and layout:
     [Short summary of the news article, highlighting the key points relevant to financial analysts. The summary should be concise and avoid unnecessary words. The summary should be outputted in bullet points and ordered by relevance and importance.]
 

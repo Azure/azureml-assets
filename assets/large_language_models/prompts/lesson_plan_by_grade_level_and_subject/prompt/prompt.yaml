@@ -6,10 +6,15 @@ messages:
 - role: user
   content: |
     I am a {{grade_level}} {{subject}} teacher trying to teach my students about {{content_area}}. Please generate a lesson plan that helps me teach {{concept}}, to {{grade_level}} {{subject}}. In the lesson plan, include:
+
     - A bulleted list of learning outcomes
+
     - Materials (a video, presentation, or article) for learning the concepts
+
     - A small group activity
+
     - A set of exit ticket prompts to assess student understanding. First prompt should check for basic understanding, second prompt should prompt students to think more deeply, and third prompt should push higher order thinking.
+
     - An overview of standards alignment
 
 input_variables:
