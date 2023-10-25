@@ -622,7 +622,7 @@ jobs:
       output_dir: '${{parent.outputs.mlflow_model_folder}}'
   model_prediction:
     type: command
-    component: azureml:model_prediction:0.0.16
+    component: azureml:model_prediction:0.0.17
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
@@ -631,12 +631,12 @@ jobs:
       test_data: '${{parent.jobs.summarization_datapreprocess.outputs.output_dir}}'
       label_column_name: '${{parent.inputs.summary_key}}'
       input_column_names: '${{parent.inputs.document_key}}'
-      # batch_size: '${{parent.inputs.batch_size}}'
+      batch_size: '${{parent.inputs.batch_size}}'
       device: auto
       mlflow_model: '${{parent.jobs.ft_nlp_model_converter.outputs.output_dir}}'
   compute_metrics:
     type: command
-    component: azureml:compute_metrics:0.0.16
+    component: azureml:compute_metrics:0.0.17
     compute: '${{parent.inputs.compute_model_evaluation}}'
     resources:
       instance_type: '${{parent.inputs.instance_type_model_evaluation}}'
