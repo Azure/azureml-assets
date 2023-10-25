@@ -8,4 +8,4 @@
 /assets/models/ @azure/aml-training @azure/azureml-inference-idc
 /assets/common/ @azure/aml-training
 /assets/model_monitoring/ @Azure/aml-model-monitoring
-/assets/large_language_models/ @azure/aml-training
+/assets/large_language_models/ @azure/aml-training @azure/aml-llm

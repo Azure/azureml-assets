@@ -1,0 +1,21 @@
+$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
+
+template: | 
+    Classify the following news headline into 1 of the following categories: Business, Tech, Politics, Sport, Entertainment
+    {{headline_text}}
+
+input_variables:
+  - name: headline_text
+    description: Headline Text
+    default: Chancellor on brink of second bailout for banks
+
+# optional, only add this section when the prompts have been evaluated and get best result with the setting here
+execution_settings:
+  default:
+    temperature: 0
+  gpt-4:
+    model_id: gpt-4
+    temperature: 0
+    evaluation: xxx (for future use to add evaluation results)
+    
+template_format: handlebars

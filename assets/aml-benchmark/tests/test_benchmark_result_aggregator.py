@@ -9,7 +9,7 @@ import json
 from azure.ai.ml.entities import Job
 import pytest
 
-from test_utils import (
+from .test_utils import (
     load_yaml_pipeline,
     get_mlclient,
     download_outputs,
@@ -98,7 +98,10 @@ class TestBenchmarkResultAggregatorComponent:
 
         if has_quality_step:
             assert len(data['quality_metrics']) > 0
-            assert 'confusion_matrix' in data['quality_metrics']
+            assert (
+                'confusion_matrix' in data['quality_metrics'] or
+                'bertscore' in data['quality_metrics']
+            )
         else:
             assert len(data['quality_metrics']) == 0
 

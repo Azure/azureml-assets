@@ -1,0 +1,58 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+name: test_inference_postprocessor
+display_name: Test Inference Postprocessor
+description: Pipeline to test Inference Postprocessor component
+settings:
+  default_compute: azureml:serverless
+
+inputs:
+  prediction_dataset:
+    type: uri_file
+    path: ../data/sample_predictions.jsonl
+  prediction_column_name: prediction
+  ground_truth_dataset:
+    type: uri_file
+    path: ../data/sample_ground_truths.jsonl
+  ground_truth_column_name: final_answer
+  separator: '\n\n'
+  regex_expr: '(\d)'
+  remove_prefixes: '###,>>>'
+  strip_characters: '\n\n'
+  extract_number: 'first'
+  template: '{{prediction}}'
+  script_path:
+    type: uri_file
+    path: ../data/test_custom_postprocessor.py
+  label_map: '{"column_name":"label", "0":"NEUTRAL", "1":"ENTAILMENT", "2":"CONTRADICTION"}'
+  find_first: 'A,B,C'
+
+outputs:
+  output_dataset_result:
+    type: uri_file
+    path: azureml://datastores/${{default_datastore}}/paths/${{name}}/output.jsonl
+
+jobs:
+  run_inference_postprocessor:
+    type: command
+    component: ../../components/inference-postprocessor/spec.yaml
+    limits:
+      timeout: 900
+    inputs:
+      prediction_dataset: ${{parent.inputs.prediction_dataset}}
+      prediction_column_name: ${{parent.inputs.prediction_column_name}}
+      ground_truth_dataset: ${{parent.inputs.ground_truth_dataset}}
+      ground_truth_column_name: ${{parent.inputs.ground_truth_column_name}}
+      separator: ${{parent.inputs.separator}}
+      regex_expr: ${{parent.inputs.regex_expr}}
+      remove_prefixes: ${{parent.inputs.remove_prefixes}}
+      strip_characters: ${{parent.inputs.strip_characters}}
+      extract_number: ${{parent.inputs.extract_number}}
+      template: ${{parent.inputs.template}}
+      script_path: ${{parent.inputs.script_path}}
+      label_map: ${{parent.inputs.label_map}}
+      find_first: ${{parent.inputs.find_first}}
+
+    outputs:
+      output_dataset_result : ${{parent.outputs.output_dataset_result}}
