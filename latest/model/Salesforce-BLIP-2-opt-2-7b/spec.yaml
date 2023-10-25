@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: salesforce-blip2-opt-2.7b
+name: Salesforce-BLIP-2-opt-2-7b
 path: ./
 properties:
   SHA: 6e723d92ee91ebcee4ba74d7017632f11ff4217b
@@ -68,4 +68,4 @@ description: |-
 
   #### Model inference: Text for the sample image
 
-  <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_blip2_opt_2.7b_image_to_text.png" alt="blip2-opt-2.7b image-to-text">
+  <img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_blip2_opt_2-7b_image_to_text.png" alt="blip2-opt-2.7b image-to-text">
