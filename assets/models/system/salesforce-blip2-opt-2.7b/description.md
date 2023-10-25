@@ -45,4 +45,4 @@ Note:
 
 #### Model inference: Text for the sample image
 
-<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_blip2_opt_2.7b_image_to_text.png" alt="blip2-opt-2.7b image-to-text">
+<img src="https://automlcesdkdataresources.blob.core.windows.net/finetuning-image-models/images/Model_Result_Visualizations(Do_not_delete)/output_blip2_opt_2-7b_image_to_text.png" alt="blip2-opt-2.7b image-to-text">
