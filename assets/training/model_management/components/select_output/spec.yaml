@@ -1,0 +1,67 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+
+name: select_output
+version: 0.0.1.cond1
+type: command
+
+is_deterministic: True
+
+display_name: Select Outputs
+description: Chooses the outputs of the component based on the condition. If condition is True Input A is chosen, else Input B is chosen.
+
+environment: azureml://registries/azureml/environments/model-management/versions/15
+
+code: ../../src/
+command: >
+  python run_select_output.py
+  --condition ${{inputs.condition}}
+  $[[--input_a_registration_details_folder '${{inputs.input_a_registration_details_folder}}']]
+  $[[--input_a_mlflow_model_folder '${{inputs.input_a_mlflow_model_folder}}']]
+  $[[--input_b_registration_details_folder '${{inputs.input_b_registration_details_folder}}']]
+  $[[--input_b_mlflow_model_folder '${{inputs.input_b_mlflow_model_folder}}']]
+  --output_registration_detail_folder ${{outputs.regsitration_details_folder}}
+  --output_mlflow_model_folder ${{outputs.mlflow_model_folder}}
+
+inputs:
+  condition:
+    type: boolean
+    description: Condition to choose between input_a and input_b
+
+  input_a_registration_details_folder:
+    type: uri_folder
+    optional: true
+    mode: mount
+    description: Input A Registration Details Folder
+
+  input_a_mlflow_model_folder:
+    type: mlflow_model
+    optional: true
+    mode: mount
+    description: Input A MLFlow Model Folder
+
+  input_b_registration_details_folder:
+    type: uri_folder
+    optional: true
+    mode: mount
+    description: Input B Registration Details Folder
+
+  input_b_mlflow_model_folder:
+    type: mlflow_model
+    optional: true
+    mode: mount
+    description: Input B MLFlow Model Folder
+
+outputs:
+  regsitration_details_folder:
+    type: uri_folder
+    description: Output Registration Details Folder
+    mode: rw_mount
+  
+  mlflow_model_folder:
+    type: mlflow_model
+    description: Output MLFlow Model Folder
+    mode: rw_mount
+
+tags:
+  Preview: ""
+  Internal: ""
