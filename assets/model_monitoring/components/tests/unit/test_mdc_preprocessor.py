@@ -50,13 +50,17 @@ class TestMDCPreprocessor:
         """Test uri_folder_to_spark_df()."""
         print("testing test_uri_folder_to_spark_df...")
         print("working dir:", os.getcwd())
-        python_path = sys.executable
-        os.environ["PYSPARK_PYTHON"] = python_path
-        module_path = f"{os.getcwd()}/src"
-        old_python_path = os.environ.get("PYTHONPATH", None)
-        old_python_path = f"{old_python_path};" if old_python_path else ""
-        os.environ["PYTHONPATH"] = f"{old_python_path}{module_path}"
-        print("PYTHONPATH:", os.environ["PYTHONPATH"])
+        # python_path = sys.executable
+        # os.environ["PYSPARK_PYTHON"] = python_path
+        print("PYSPARK_PYTHON", os.environ.get("PYSPARK_PYTHON", "NA"))
+        # module_path = f"{os.getcwd()}/src"
+        # old_python_path = os.environ.get("PYTHONPATH", None)
+        # old_python_path = f"{old_python_path};" if old_python_path else ""
+        # os.environ["PYTHONPATH"] = f"{old_python_path}{module_path}"
+        print("PYTHONPATH:", os.environ.get("PYTHONPATH", "NA"))
+        print("JAVA_HOME:", os.environ.get("JAVA_HOME", "NA"))
+        # os.environ["JAVA_HOME"] = "C:\\Program Files\\Microsoft\\jdk-11.0.16.101-hotspot"
+        # os.environ["PYSPARK_SUBMIT_ARGS"] = f"--py-files {module_path}"
 
         fs = fsspec.filesystem("file")
         preprocessed_output = "tests/unit/preprocessed_mdc_data"
