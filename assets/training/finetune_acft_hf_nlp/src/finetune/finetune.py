@@ -645,7 +645,8 @@ def validate_ds_zero3_config(deepspeed_config_json: Dict[str, Any]):
         )
 
 
-def setup_deepspeed_nebula(ds_config_json: Dict[str, Any], pytorch_model_folder: str, model_name_or_path: Path) -> Dict[str, Any]:
+def setup_deepspeed_nebula(ds_config_json: Dict[str, Any], pytorch_model_folder: str,
+                           model_name_or_path: Path) -> Dict[str, Any]:
     """Set nebula settings in ds config if it has been enabled."""
     nebula: Dict = ds_config_json.get("nebula", {})
     if not nebula:
@@ -667,7 +668,8 @@ def setup_deepspeed_nebula(ds_config_json: Dict[str, Any], pytorch_model_folder:
             shutil.copytree(model_name_or_path, pytorch_model_folder, dirs_exist_ok=True)
         except Exception as e:
             shutil.rmtree(pytorch_model_folder, ignore_errors=True)
-            raise ACFTValidationException._with_error(AzureMLError.create(ACFTSystemError, pii_safe_message=f"shutil copy failed with err: {e}"))
+            raise ACFTValidationException._with_error(
+                AzureMLError.create(ACFTSystemError, pii_safe_message=f"shutil copy failed with err: {e}"))
 
     ds_config_json["nebula"] = nebula
     return ds_config_json
