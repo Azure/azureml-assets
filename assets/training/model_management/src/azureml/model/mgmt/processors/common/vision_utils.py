@@ -201,11 +201,13 @@ def get_current_device() -> torch.device:
         return torch.device(type="cpu")
 
 
-def bool_array_to_pil_image(bool_array)-> PIL.Image.Image:
+def bool_array_to_pil_image(bool_array: np.ndarray) -> PIL.Image.Image:
     """Convert boolean array to PIL Image.
-    
+
     :param bool_array: boolean array
     :type bool_array: np.array
+    :return: PIL Image
+    :rtype: PIL.Image.Image
     """
     # Convert boolean array to uint8
     uint8_array = bool_array.astype(np.uint8) * 255

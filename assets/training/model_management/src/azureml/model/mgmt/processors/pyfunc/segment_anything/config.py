@@ -4,7 +4,6 @@
 """Constants for SAM."""
 
 from enum import Enum
-from mlflow.types import DataType
 
 
 class _CustomEnum(Enum):
