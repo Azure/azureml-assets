@@ -27,8 +27,9 @@ from azureml.metrics import constants as metrics_constants
 
 from azureml.acft.image import VERSION, PROJECT_NAME
 from azureml.acft.image.components.common.constants import LOGS_TO_BE_FILTERED_IN_APPINSIGHTS
+from azureml.acft.image.components.model_selector.constants import ImageModelSelectorConstants
 from azureml.acft.image.components.finetune.common.constants.constants import (
-    SettingParameters
+    InferenceParameters, SettingParameters
 )
 from azureml.acft.image.components.finetune.factory.mappings import MODEL_FAMILY_CLS
 from azureml.acft.image.components.finetune.factory.task_definitions import Tasks
@@ -493,6 +494,10 @@ def get_parser():
             metrics_constants.MEAN_AVERAGE_PRECISION,
             metrics_constants.PRECISION,
             metrics_constants.RECALL,
+            metrics_constants.MOTA,
+            metrics_constants.MOTP,
+            metrics_constants.IDF1,
+            metrics_constants.IDSW
         ),
         help=(
             "Specify the metric to use to compare two different models."
@@ -669,6 +674,7 @@ def main():
         Tasks.MM_INSTANCE_SEGMENTATION,
         Tasks.HF_MULTI_CLASS_IMAGE_CLASSIFICATION,
         Tasks.HF_MULTI_LABEL_IMAGE_CLASSIFICATION,
+        Tasks.MM_MULTI_OBJECT_TRACKING,
     ]:
         training_defaults = TrainingDefaults(
             task=args.task_name,
