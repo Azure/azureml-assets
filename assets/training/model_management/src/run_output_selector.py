@@ -38,5 +38,5 @@ else:
     source_registration_folder = args.input_b_mlflow_model_folder
 
 
-shutil.copytree(source_model_folder, destination_mlflow_model_folder)
-shutil.copytree(source_registration_folder, destination_registration_folder)
+shutil.copytree(source_model_folder, destination_mlflow_model_folder,dirs_exist_ok=True)
+shutil.copytree(source_registration_folder, destination_registration_folder,dirs_exist_ok=True)
