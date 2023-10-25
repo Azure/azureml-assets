@@ -29,7 +29,6 @@ logger = configure_logger(__name__)
 
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 8000
-WAIT_TIME_MIN = 15  # time to wait for the server to become healthy
 
 
 # fmt: off
@@ -75,12 +74,11 @@ class VLLMEngine(AbstractEngine):
     @log_execution_time
     def load_model(self):
         """Load the model from the pretrained model specified in the engine configuration."""
-        server_args = self._load_vllm_defaults()
-        self._start_server(server_args)
+        self._start_server(self._vllm_args)
 
     def init_client(self):
         """Initialize client[s] for the engine to receive requests on."""
-        self._wait_until_server_healthy()
+        self.wait_until_server_healthy(self._vllm_args["host"], self._vllm_args["port"])
 
     def _load_vllm_defaults(self):
         """Load default values for VLLM server arguments, if not provided."""
@@ -89,11 +87,13 @@ class VLLMEngine(AbstractEngine):
         if "port" not in self._vllm_args:
             self._vllm_args["port"] = DEFAULT_PORT
         if "tensor-parallel-size" not in self._vllm_args:
-            self._vllm_args["tensor-parallel-size"] = torch.cuda.device_count()
+            self._vllm_args["tensor-parallel-size"] = (
+                self.engine_config.tensor_parallel
+                if self.engine_config.tensor_parallel is not None
+                else torch.cuda.device_count()
+            )
         if "model" not in self._vllm_args:
             self._vllm_args["model"] = self.engine_config.model_id
-
-        return self._vllm_args
 
     def _start_server(self, server_args: Dict):
         """Start the VLLM server with the given arguments."""
@@ -102,19 +102,6 @@ class VLLMEngine(AbstractEngine):
         logger.info(f"Starting VLLM server with command: {cmd}")
         self._server_process = subprocess.Popen(cmd)
         logger.info("Starting VLLM server...")
-
-    @log_execution_time
-    def _wait_until_server_healthy(self):
-        """Wait until the VLLM server is healthy."""
-        start_time = time.time()
-        while time.time() - start_time < WAIT_TIME_MIN * 60:
-            is_healthy = is_port_open(self._vllm_args["host"], self._vllm_args["port"])
-            if is_healthy:
-                logger.info("VLLM server is healthy.")
-                return
-            logger.info("Waiting for VLLM server to start...")
-            time.sleep(30)
-        raise Exception("VLLM server did not become healthy within 15 minutes.")
 
     def _stop_server(self):
         """Stop the VLLM server."""
@@ -215,13 +202,3 @@ class VLLMEngine(AbstractEngine):
             res = InferenceResult(None, None, None, error=response.content)
 
         return res
-
-
-# Helper function to check if a port is open
-def is_port_open(host: str = "0.0.0.0", port: int = 8000, timeout: float = 1.0) -> bool:
-    """Check if a port is open on the given host."""
-    try:
-        with socket.create_connection((host, port), timeout=timeout):
-            return True
-    except (ConnectionRefusedError, TimeoutError, OSError):
-        return False

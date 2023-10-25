@@ -22,6 +22,7 @@ class Tasks(_CustomEnum):
 
     MM_OBJECT_DETECTION = "image-object-detection"
     MM_INSTANCE_SEGMENTATION = "image-instance-segmentation"
+    MM_MULTI_OBJECT_TRACKING = "video-multi-object-tracking"
 
 
 class MMDetLiterals:
@@ -31,6 +32,7 @@ class MMDetLiterals:
     WEIGHTS_PATH = "weights_path"
     AUGMENTATIONS_PATH = "augmentations_path"
     METAFILE_PATH = "model_metadata"
+    CLASSES = "classes"
 
 
 class MLflowSchemaLiterals:
@@ -39,6 +41,9 @@ class MLflowSchemaLiterals:
     INPUT_IMAGE_KEY = "image_base64"
     INPUT_COLUMN_IMAGE_DATA_TYPE = DataType.binary
     INPUT_COLUMN_IMAGE = "image"
+    INPUT_COLUMN_VIDEO_DATA_TYPE = DataType.string
+    INPUT_COLUMN_VIDEO = "video"
+
     OUTPUT_COLUMN_DATA_TYPE = DataType.string
     OUTPUT_COLUMN_FILENAME = "filename"
     OUTPUT_COLUMN_PROBS = "probs"
@@ -64,7 +69,21 @@ class ODLiterals:
     BOTTOM_Y = "bottomY"
 
 
-class ISLiterals(ODLiterals):
+class ISLiterals:
     """IS constants."""
 
     POLYGON = "polygon"
+
+
+class MOTLiterals(ODLiterals):
+    """MMTracking dataset constants."""
+
+    DET_BBOXES = "det_bboxes"
+    DET_LABELS = "det_labels"
+    TRACK_BBOXES = "track_bboxes"
+    TRACK_LABELS = "track_labels"
+    INSTANCE_ID = "instance_id"
+
+    IMG_INFO = "img_info"
+    FRAME_ID = "frame_id"
+    VIDEO_URL = "video_url"

@@ -284,6 +284,27 @@ class TestFactoryModule(unittest.TestCase):
             translate_params,
         )
 
+    @patch("azureml.model.mgmt.processors.factory.BLIP2MLflowConvertorFactory")
+    def test_get_blip2_mlflow_convertor(self, mock_blip2_factory):
+        """Test BLIP2 model MLflow convertor."""
+        model_framework = ModelFramework.HUGGINGFACE.value
+        model_dir = "/path/to/model_dir"
+        output_dir = "/path/to/output_dir"
+        temp_dir = "/path/to/temp_dir"
+
+        translate_params = {
+            "task": PyFuncSupportedTasks.IMAGE_TO_TEXT.value}
+        mock_convertor = mock_blip2_factory.create_mlflow_convertor.return_value
+        result = get_mlflow_convertor(
+            model_framework, model_dir, output_dir, temp_dir, translate_params)
+        self.assertEqual(result, mock_convertor)
+        mock_blip2_factory.create_mlflow_convertor.assert_called_once_with(
+            model_dir,
+            output_dir,
+            temp_dir,
+            translate_params,
+        )
+
     @patch("azureml.model.mgmt.processors.factory.LLaVAMLflowConvertorFactory")
     def test_get_llava_mlflow_convertor(self, mock_llava_factory):
         """Test LLaVA model MLflow convertor."""

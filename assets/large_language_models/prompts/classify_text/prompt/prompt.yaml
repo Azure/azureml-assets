@@ -1,9 +1,0 @@
-$schema: https://azuremlschemas.azureedge.net/latest/prompt.schema.json
-
-template: | 
-    Classify the following news headline into 1 of the following categories: Business, Tech, Politics, Sport, Entertainment
-    {{input}}
-
-input_variables: ['input']
-
-template_format: jinja2

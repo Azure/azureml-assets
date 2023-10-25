@@ -16,6 +16,8 @@ setup(
     author="Microsoft",
     author_email="",
     description="",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     url="",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
