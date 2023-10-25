@@ -143,6 +143,3 @@ args: >-
   --similarity_violations ${{outputs.similarity_violations}}
   --coherence_violations ${{outputs.coherence_violations}}
   --relevance_violations ${{outputs.relevance_violations}}
-
-identity:
-  type: managed
