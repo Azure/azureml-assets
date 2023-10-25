@@ -60,7 +60,7 @@ def run():
 
     samples_index: List[Row] = None
     if args_dict["samples_index"]:
-        try: 
+        try:
             print("Processing samples index.")
             samples_index_df = try_read_mltable_in_spark(
                 args.samples_index, "samples_index"
