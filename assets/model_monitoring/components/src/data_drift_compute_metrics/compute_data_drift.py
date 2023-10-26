@@ -26,8 +26,9 @@ def compute_data_drift_measures_tests(
 ):
     """Compute Data drift metrics and tests."""
     common_columns_dict = get_common_columns(baseline_df, production_df)
-    numerical_columns_names = get_numerical_columns(common_columns_dict)
-    categorical_columns_names = get_categorical_columns(common_columns_dict)
+    print(common_columns_dict)
+    numerical_columns_names = get_numerical_columns(common_columns_dict, baseline_df)
+    categorical_columns_names = get_categorical_columns(common_columns_dict, baseline_df)
 
     baseline_df = baseline_df.dropna()
     production_df = production_df.dropna()
