@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-
+"""This file contains unit tests for the df utilities."""
 from shared_utilities.df_utils import (
         get_numerical_columns,
         get_categorical_columns,
@@ -13,7 +13,7 @@ import pytest
 
 @pytest.mark.unit
 class TestDFUtils:
-    """This file contains tests that are applicable to utilities."""
+    """Test class for df utilities."""
 
     def test_get_numerical_columns(self):
         """Test numerical columns."""
