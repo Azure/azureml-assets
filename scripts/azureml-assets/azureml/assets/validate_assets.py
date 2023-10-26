@@ -337,7 +337,7 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
             logger.log_error("version mismatch")
             logger.log_warning(f"latest_model tags: [[{latest_model.version}]]")
             logger.log_warning(f"validated_model: [[{validated_model.version}]]")
-            return 1        
+            return 1
 
         if latest_model.tags != validated_model.tags:
             logger.log_error("tags mismatch")
@@ -372,7 +372,7 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
             logger.log_warning(f"latest_model_config: [{latest_model_config._yaml}]")
             logger.log_warning(f"validated_model_config: [{validated_model_config._yaml}]")
             if latest_model_config.description != validated_model_config.description:
-                logger.log_warning(f"Description does not match, for latest and validated asset")
+                logger.log_warning("Description does not match, for latest and validated asset")
             return 1
 
         # check validation results now
