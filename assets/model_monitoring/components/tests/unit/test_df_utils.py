@@ -59,7 +59,8 @@ class TestDFUtils:
                             }
         baseline_df = pd.DataFrame({
                                     'col1': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                                            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+                                             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                                             1]
                                     })
         categorical_columns = get_categorical_columns(column_dtype_map,
                                                       baseline_df)
