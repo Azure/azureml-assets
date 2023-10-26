@@ -2,3 +2,4 @@ name: microsoft-thing
 version: 1
 type: model
 spec: spec.yaml
+extra_config: model.yaml

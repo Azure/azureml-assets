@@ -1,7 +1,7 @@
 # This isn't a proper model YAML, but we're not testing this here
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: "{{asset.name}}"
-version: "{{asset.version}}"
+name: microsoft-thing
+version: 1
 path: ./
 tags:
   author: microsoft

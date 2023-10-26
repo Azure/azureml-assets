@@ -333,27 +333,50 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
         latest_model = load_model(latest_asset_config.spec_with_path)
         validated_model = load_model(validated_asset_config.spec_with_path)
 
-        if latest_model != validated_model:
-            logger.log_error(
-                "Validated model is not same as latest model. "
-                "Either last validation run for model had failed or its still running."
-            )
+        if latest_model.version != validated_model.version:
+            logger.log_error("version mismatch")
+            logger.log_warning(f"latest_model tags: [[{latest_model.version}]]")
+            logger.log_warning(f"validated_model: [[{validated_model.version}]]")
+            return 1        
+
+        if latest_model.tags != validated_model.tags:
+            logger.log_error("tags mismatch")
+            logger.log_warning(f"latest_model tags: [{latest_model.tags}]")
+            logger.log_warning(f"validated_model: [{validated_model.tags}]")
+            return 1
+
+        if latest_model.properties != validated_model.properties:
+            logger.log_error("properties mismatch")
+            logger.log_warning(f"latest_model properties: [{latest_model.properties}]")
+            logger.log_warning(f"validated_model properties: [{validated_model.properties}]")
+            return 1
+
+        if latest_model.description != validated_model.description:
+            logger.log_error("description mismatch")
+            logger.log_warning(f"latest_model description: [{latest_model.description}]")
+            logger.log_warning(f"validated_model description: [{validated_model.description}]")
             return 1
 
         latest_model_config: assets.ModelConfig = latest_asset_config.extra_config_as_object()
         validated_model_config: assets.ModelConfig = validated_asset_config.extra_config_as_object()
         if not (
             latest_model_config.path.type == validated_model_config.path.type and
-            latest_model_config.path.uri == validated_model_config.path.uri
+            latest_model_config.path.uri == validated_model_config.path.uri and
+            latest_model_config.description == validated_model_config.description and
+            latest_model_config.type == validated_model_config.type
         ):
             logger.log_error(
                 "Validated model config does not match with latest model. "
                 "Either last validation run for model had failed or its still running."
             )
+            logger.log_warning(f"latest_model_config: [{latest_model_config._yaml}]")
+            logger.log_warning(f"validated_model_config: [{validated_model_config._yaml}]")
+            if latest_model_config.description != validated_model_config.description:
+                logger.log_warning(f"Description does not match, for latest and validated asset")
             return 1
 
         # check validation results now
-        validation_results_dir = validated_asset_config.file_path.parent / MODEL_VALIDATION_RESULTS_FOLDER
+        validation_results_dir = validated_asset_config.file_path / MODEL_VALIDATION_RESULTS_FOLDER
         validation_job_details_path = validation_results_dir / MODEL_VALIDATION_JOB_DETAILS
         if not validation_job_details_path.exists():
             logger.log_error(
@@ -365,7 +388,7 @@ def validate_model_assets(latest_asset_config: assets.AssetConfig, validated_ass
         with open(validation_job_details_path) as f:
             job_details = json.load(f)
             run_status = job_details.get("status", JobStatus.NOT_STARTED)
-            if run_status is not JobStatus.COMPLETED:
+            if run_status != JobStatus.COMPLETED:
                 logger.log_error(
                     f"run status for model {latest_asset_config.name} is {run_status}. "
                     "Please ensure that there is a completed model validation job."
