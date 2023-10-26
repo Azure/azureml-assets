@@ -1,7 +1,7 @@
-# Valid tag values that can be applied to prompt gallery assets.
-# These map to filters in the prompt gallery UX.
+# Valid tag values that can be applied to assets such as prompts, models, and evaluation results.
+# For prompts, tehse map to filters in the prompt gallery UX.
 modality:
-  required: True
+  required: False
   allow_multiple: False
   values:
     - completion

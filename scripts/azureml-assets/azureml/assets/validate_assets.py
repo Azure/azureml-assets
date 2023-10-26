@@ -351,20 +351,21 @@ def validate_tags(asset_config: assets.AssetConfig, valid_tags_filename: str) ->
             continue
 
         valid_tag_values = tag_info.get('values')
-        if tag_info.get('allow_multiple'):
-            tag_values = tag_value.split(',')
-            for single_tag_value in tag_values:
-                if single_tag_value not in valid_tag_values:
+        if valid_tag_values:
+            if tag_info.get('allow_multiple'):
+                tag_values = tag_value.split(',')
+                for single_tag_value in tag_values:
+                    if single_tag_value not in valid_tag_values:
+                        _log_error(asset_config.file_name_with_path,
+                                   f"Asset '{asset_config.name}' has invalid value '{single_tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")  # noqa: E501
+                        error_count += 1
+                        continue
+            else:
+                if tag_value not in valid_tag_values:
                     _log_error(asset_config.file_name_with_path,
-                               f"Asset '{asset_config.name}' has invalid value '{single_tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")  # noqa: E501
+                               f"Asset '{asset_config.name}' has invalid value '{tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")  # noqa: E501
                     error_count += 1
                     continue
-        else:
-            if tag_value not in valid_tag_values:
-                _log_error(asset_config.file_name_with_path,
-                           f"Asset '{asset_config.name}' has invalid value '{tag_value}' for tag '{tag}'. Valid values are {valid_tag_values}")  # noqa: E501
-                error_count += 1
-                continue
 
     return error_count
 
@@ -455,8 +456,11 @@ def validate_assets(input_dirs: List[Path],
                 if check_build_context:
                     error_count += validate_build_context(asset_config.extra_config_as_object())
 
+            if asset_config.type == assets.AssetType.PROMPT or asset_config.type == assets.AssetType.EVALUATIONRESULT:
+                error_count += validate_tags(asset_config, 'tag_values_shared.yml')
+
             if asset_config.type == assets.AssetType.PROMPT:
-                error_count += validate_tags(asset_config, 'prompt_tags.yml')
+                error_count += validate_tags(asset_config, 'tag_values_prompt.yml')
 
             # Validate categories
             if check_categories:
