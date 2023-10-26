@@ -9,6 +9,7 @@ import re
 
 from utils.online_endpoint.online_endpoint_model import OnlineEndpointModel
 from utils.online_endpoint.endpoint_utils import EndpointUtilities
+from utils.io import remove_non_printable_char
 
 
 class EndpointDataPreparer:
@@ -72,12 +73,12 @@ class EndpointDataPreparer:
                 if isinstance(v, str):
                     # replace special characters to avoid error when doing json deserialization
                     new_json_string = new_json_string.replace(
-                        placeholder, v.replace('\\', '\\\\').replace("\n", "\\n").replace('"', '\\"'))
+                    placeholder, v.replace('\\', '\\\\').replace("\n", "\\n").replace("\t", "\\t").replace("\r", "\\r").replace('"', '\\"'))
                 elif isinstance(v, dict) or isinstance(v, list):
                     new_json_string = new_json_string.replace(placeholder, json.dumps(v))
                 else:
                     new_json_string = new_json_string.replace(placeholder, str(v))
-        return json.loads(new_json_string)
+        return json.loads(remove_non_printable_char(new_json_string))
 
     @staticmethod
     def from_args(args):
