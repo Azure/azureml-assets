@@ -3,12 +3,12 @@
 
 """This file contains the core logic for data drift compute metrics component."""
 
-import pyspark
-import pyspark.pandas as ps
 from pyspark.context import SparkContext
 from pyspark.sql.functions import col
 from pyspark.sql.session import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
+import pyspark
+import pyspark.pandas as ps
 
 
 # Init spark session
@@ -53,6 +53,24 @@ def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
 
     return metadata_df
 
+def exclude_boolean_feature_from_df(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
+    """
+    Compute a Spark DataFrame exclude the columns of boolean type.
+
+    Args:
+        df: Input Spark DataFrame.
+
+    Returns:
+        df_excluding_boolean_type: A Spark DataFrame without boolean type col
+    """
+    dtypes = df.dtypes
+    boolean_columns = []
+    for dtype in dtypes:
+        if dtype[1] == "boolean":
+            boolean_columns.append(dtype[0])
+    df_excluding_boolean_type = df.select([column for column in df.columns if column not in boolean_columns])
+
+    return df_excluding_boolean_type
 
 def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
     """
@@ -87,7 +105,8 @@ def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
         [(cat_col_names[i], unique_vals[i]) for i in range(len(cat_col_names))],
         schema=metadata_schema,
     )
-
+    unique_vals_df.show()
+    unique_vals_df.printSchema()
     unique_vals_df = unique_vals_df.to_pandas_on_spark()
 
     return unique_vals_df
@@ -133,8 +152,11 @@ def compute_data_quality_statistics(df):
     """Compute data quality statistics."""
     dtype_df = get_df_schema(df=df).to_pandas_on_spark()
     unique_vals_df = get_unique_value_list(df=df)
-    max_vals = compute_max_df(df=df.to_pandas_on_spark())
-    min_vals = compute_min_df(df=df.to_pandas_on_spark())
+    # Note: excluding boolean type column as the boolean type do not need to be calculated
+    # for max_vals and min_vals.
+    df_exclude_boolean = exclude_boolean_feature_from_df(df=df)
+    max_vals = compute_max_df(df=df_exclude_boolean.to_pandas_on_spark())
+    min_vals = compute_min_df(df=df_exclude_boolean.to_pandas_on_spark())
 
     # Join tables to get all metrics into one table
     min_max_df = max_vals.merge(min_vals, left_on="featureName", right_on="featureName")
