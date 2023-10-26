@@ -15,7 +15,6 @@ def get_numerical_columns(column_dtype_map: dict, baseline_df) -> list:
         for column in column_dtype_map
         if column_dtype_map[column] in ["float", "double", "decimal"] or column_dtype_map[column] == "int" and is_numerical(pd.Series(baseline_df[column]))
     ]
-    print(numerical_columns)
     return numerical_columns
 
 
@@ -28,7 +27,6 @@ def get_categorical_columns(column_dtype_map: dict, baseline_df) -> list:
         for column in column_dtype_map
         if column_dtype_map[column] in ["string", "bool"] or column_dtype_map[column] == "int" and is_categorical(pd.Series(baseline_df[column]))
     ]
-    print(categorical_columns)
     return categorical_columns
 
 
