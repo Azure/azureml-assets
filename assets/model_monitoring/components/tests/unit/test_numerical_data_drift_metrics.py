@@ -426,8 +426,8 @@ class TestComputeNumericalDataDriftMetrics(unittest.TestCase):
                     print('-------------------------')
                     print(f'test: {test_case["name"]}')
                     print(f'test scenario: {test_case["scenario"]}')
-                    print(f'expected value: {self.round_to_n_significant_digits(expected_distance,4)}')
-                    print(f'measured value: {self.round_to_n_significant_digits(metric_value,4)}')
+                    print(f'expected value: {self.round_to_n_significant_digits(expected_distance, 4)}')
+                    print(f'measured value: {self.round_to_n_significant_digits(metric_value, 4)}')
 
                     if (abs(expected_distance) < 1e-6):
                         self.assertAlmostEqual(metric_value, 0, 6)
