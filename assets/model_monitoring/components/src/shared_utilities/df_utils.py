@@ -23,7 +23,7 @@ def get_numerical_columns(column_dtype_map: dict, baseline_df) -> list:
 
 def get_categorical_columns(column_dtype_map: dict, baseline_df) -> list:
     """Get categorical columns from all columns."""
-    # NOTE: byte, short, long are not included in the list because they 
+    # NOTE: byte, short, long are not included in the list because they
     # are ambiguous with numerical columns. They should be added to the
     # list based on some heuristics or user preference.
     categorical_columns = [

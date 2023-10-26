@@ -44,7 +44,7 @@ def test_get_categorical_columns():
     categorical_columns = get_categorical_columns(column_dtype_map,
                                                   baseline_df)
     assert categorical_columns == []
-    
+
     # Test with int being same value
     column_dtype_map = {
                         'col1': 'int'
@@ -95,4 +95,3 @@ def test_is_numerical():
     # Test with integer column with low distinct value ratio
     baseline_column = pd.Series([1, 1, 1, 1, 1])
     assert is_numerical(baseline_column) == result
-    
