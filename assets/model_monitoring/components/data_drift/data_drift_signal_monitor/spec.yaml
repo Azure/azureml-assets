@@ -87,7 +87,7 @@ jobs:
       type: aml_token
   compute_drift_metrics:
     type: spark
-    component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.6
+    component: azureml://registries/azureml/components/data_drift_compute_metrics/versions/0.3.7
     inputs:
       production_dataset:
         type: mltable
