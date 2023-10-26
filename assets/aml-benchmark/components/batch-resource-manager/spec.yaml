@@ -1,6 +1,6 @@
 $schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
 type: command
-
+is_deterministic: False
 name: batch_resource_manager
 display_name: Batch Inference Resource Manager
 description: Resource Manager for batch inference.
@@ -67,6 +67,11 @@ inputs:
     optional: True
     default: True
     description: If doing quota valiation or not for AOAI model.
+  redeploy_model:
+    type: boolean
+    optional: True
+    default: False
+    description: If doing quota valiation or not for AOAI model.
   use_max_quota:
     type: boolean
     optional: True
@@ -104,5 +109,6 @@ command: >-
   $[[--delete_managed_resources ${{inputs.delete_managed_resources}}]]
   $[[--use_max_quota ${{inputs.use_max_quota}}]]
   $[[--do_quota_validation ${{inputs.do_quota_validation}}]]
+  $[[--redeploy_model ${{inputs.redeploy_model}}]]
   $[[--deployment_metadata_dir ${{inputs.deployment_metadata_dir}}]]
   $[[--additional_deployment_env_vars  '${{inputs.additional_deployment_env_vars}}']]

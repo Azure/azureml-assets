@@ -7,6 +7,7 @@
 from typing import Any, Optional
 from abc import abstractmethod
 from enum import Enum
+import time
 import json
 import os
 import uuid
@@ -199,10 +200,16 @@ class OnlineEndpoint:
     def _call_endpoint(
             self, call_method: Any, url: str, payload: Optional[dict] = None
     ) -> Response:
-        headers = self.get_resource_authorization_header()
-        resp = ClientBase._execute_func(
-            call_method, url, params={}, headers=headers, json=payload
-        )
+        should_retry = True
+        while should_retry:
+            headers = self.get_resource_authorization_header()
+            resp = ClientBase._execute_func(
+                call_method, url, params={}, headers=headers, json=payload
+            )
+            if resp.status_code not in {409, 429}:
+                should_retry = False
+            else:
+                time.sleep(30)
         return resp
 
     @property

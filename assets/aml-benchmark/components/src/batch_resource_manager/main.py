@@ -52,6 +52,11 @@ def parse_args() -> argparse.Namespace:
         help="If doing quota valiation or not for AOAI model.",
     )
     parser.add_argument(
+        "--redeploy_model",
+        default=False, type=str2bool,
+        help="Force redeploymodels or not.",
+    )
+    parser.add_argument(
         "--use_max_quota",
         default=True, type=str2bool,
         help="If using max quota or not for AOAI model.",
@@ -111,7 +116,7 @@ def deploy_endpoint_maybe(online_endpoint: OnlineEndpoint) -> bool:
 
 def deploy_model_maybe(
         online_endpoint: OnlineEndpoint, output_metadata_dir: str,
-        managed_endpoint: bool
+        managed_endpoint: bool, redeploy_model: bool
 ) -> bool:
     """Deploy the model if it is not deployed."""
     managed_deployment = False
@@ -123,7 +128,7 @@ def deploy_model_maybe(
     if online_endpoint.deployment_state() == ResourceState.FAILURE:
         logger.info("Deployment is in failure state, delete it now.")
         online_endpoint.delete_deployment()
-    if online_endpoint.deployment_state() == ResourceState.NOT_FOUND:
+    if online_endpoint.deployment_state() == ResourceState.NOT_FOUND or redeploy_model:
         logger.info("Deployment is not found, create it now.")
         online_endpoint.create_deployment()
         managed_deployment = True
@@ -174,7 +179,7 @@ def _online_endpoint_generator(
                 current_quota = online_endpoint.model_quota()
                 logger.info(
                     "Current quota for model {} is {}.".format(online_model.model_name, current_quota))
-                if current_quota < sku:
+                if current_quota < deployment_sku:
                     continue
                 if use_max_quota:
                     online_endpoint._sku = current_quota
@@ -199,7 +204,8 @@ def main(
     connections_name: str,
     additional_deployment_env_vars: str,
     do_quota_validation: bool,
-    use_max_quota: bool
+    use_max_quota: bool,
+    redeploy_model: bool
 ) -> None:
     """
     Entry function of the script.
@@ -223,8 +229,10 @@ def main(
     :return: None
     """
     if not delete_managed_resources:
-        subscriptions_list = [s.strip() for s in endpoint_subscription_id.split(',')]
-        locations_list = [s.strip() for s in endpoint_location.split(',')]
+        subscriptions_list = [
+            s.strip() for s in endpoint_subscription_id.split(',')] if endpoint_subscription_id else [None]
+        locations_list = [
+            s.strip() for s in endpoint_location.split(',')] if endpoint_location else [None]
         for online_endpoint in _online_endpoint_generator(
                 subscriptions_list,
                 locations_list,
@@ -249,7 +257,7 @@ def main(
                 continue
             try:
                 managed_deployment = deploy_model_maybe(
-                    online_endpoint, output_metadata_dir, managed_endpoint)
+                    online_endpoint, output_metadata_dir, managed_endpoint, redeploy_model)
                 if managed_deployment:
                     break
             except Exception as e:
@@ -298,5 +306,6 @@ if __name__ == "__main__":
         args.connections_name,
         args.additional_deployment_env_vars,
         args.do_quota_validation,
-        args.use_max_quota
+        args.use_max_quota,
+        args.redeploy_model
     )

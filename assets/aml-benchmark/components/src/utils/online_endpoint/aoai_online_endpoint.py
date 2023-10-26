@@ -233,6 +233,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
 
     def model_quota(self):
         """Get the model quota."""
+        logger.info(self._aoai_subscription_usage_url)
         resp = self._call_endpoint(get_requests_session().get, self._aoai_subscription_usage_url)
         content = {}
         quota = -1
@@ -242,7 +243,7 @@ class AOAIOnlineEndpoint(OnlineEndpoint):
         except Exception as e:
             logger.error(f'Failed to get the model quota. {e}')
         for result in content.get('value'):
-            if result.get('resourceName').lower() == f"OpenAI.Standard.{self._model.model_name}".lower():
+            if result.get("name", {}).get("value", "").lower() == f"OpenAI.Standard.{self._model.model_name}".lower():
                 quota = result['limit'] - result['currentValue']
                 break
         return quota
