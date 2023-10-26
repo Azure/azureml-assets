@@ -1,0 +1,14 @@
+{
+    "name": "honest_ocean_pg0b2y98m2",
+    "endpoint": "https://ml.azure.com/runs/honest_ocean_pg0b2y98m2",
+    "status": "Completed",
+    "inputs": {
+        "compute": "standard-nc6s-v3",
+        "compute_evaluation": "standard-nc6s-v3",
+        "compute_finetune": "standard-nc6s-v3",
+        "model_source": "Huggingface",
+        "model_id": "microsoft/thing",
+        "task_name": "fill-mask",
+        "hf_use_experimental_features": "false"
+    }
+}
