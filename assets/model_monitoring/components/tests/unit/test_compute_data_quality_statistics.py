@@ -4,7 +4,6 @@
 """This file contains unit tests for the Model Monitor Data Quality Compute Metric component."""
 
 from pandas.testing import assert_frame_equal
-from pyspark.sql.functions import current_timestamp
 from src.data_quality_statistics.compute_data_quality_statistics import (
     compute_data_quality_statistics,
     exclude_boolean_feature_from_df)
@@ -31,10 +30,10 @@ columns = ["feature_string", "feature_int", "feature_double"]
 df_exclude_boolean = create_pyspark_dataframe(df_exclude_boolean, columns)
 
 data_stat_df = [
-                ("feature_string", None, None,  "StringType()",  "[string1]"),
-                ("feature_int",    5.0,  2.0,     "LongType()",   None),
-                ("feature_boolean",None, None,  "BooleanType()",  None),
-                ("feature_double", 90.1, 2.8987,"DoubleType()",   None),
+                ("feature_string",  None, None,   "StringType()",   "[string1]"),
+                ("feature_int",     5.0,  2.0,    "LongType()",     None),
+                ("feature_boolean", None, None,   "BooleanType()",  None),
+                ("feature_double",  90.1, 2.8987, "DoubleType()",   None),
 ]
 data_stat_colums = ["featureName", "max_value", "min_value", "dataType", "set"]
 
@@ -57,7 +56,6 @@ class TestModelMonitorDataQualityStatistic:
         assert_frame_equal(actual_data_stats_table.to_pandas(), data_stats_table.toPandas())
 
 
-
     @pytest.mark.parametrize("df, df_exclude_boolean",
                              [(df, df_exclude_boolean)])
     def test_exclude_boolean_feature_from_df(
@@ -68,4 +66,3 @@ class TestModelMonitorDataQualityStatistic:
         """Test exclude the boolean columns from dataframe."""
         actual_df_exclude_boolean = exclude_boolean_feature_from_df(df)
         assert_frame_equal(actual_df_exclude_boolean.toPandas(), df_exclude_boolean.toPandas())
-

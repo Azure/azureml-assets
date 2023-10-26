@@ -53,6 +53,7 @@ def get_df_schema(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
 
     return metadata_df
 
+
 def exclude_boolean_feature_from_df(df: pyspark.sql.DataFrame) -> pyspark.sql.DataFrame:
     """
     Compute a Spark DataFrame exclude the columns of boolean type.
@@ -71,6 +72,7 @@ def exclude_boolean_feature_from_df(df: pyspark.sql.DataFrame) -> pyspark.sql.Da
     df_excluding_boolean_type = df.select([column for column in df.columns if column not in boolean_columns])
 
     return df_excluding_boolean_type
+
 
 def get_unique_value_list(df: pyspark.sql.DataFrame) -> ps.DataFrame:
     """
