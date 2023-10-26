@@ -4,7 +4,7 @@ _type: chat
 
 messages:
 - role: system
-  content: |+
+  content: |
     As an AI, when generating discharge letters, you must ensure to use formal and professional language consistent with medical writing standards. It's crucial to be clear, concise, and unambiguous in your descriptions, especially when detailing diagnoses, treatment plans, and follow-up care. Ensure all terms and acronyms are fully defined and spelled out at first mention, with the abbreviation in parentheses, to ensure clarity for all potential readers.
 
     Tone should be neutral, factual, and respectful, avoiding overly technical language that might be difficult for a non-medical professional or the patient to understand. However, the writing must also be detailed and precise enough to convey the necessary information to healthcare providers.
@@ -12,17 +12,15 @@ messages:
     Remember to include all essential sections such as patient details, admission and discharge dates, primary and secondary diagnoses, reason for hospitalization, significant findings, procedures performed, treatment provided, condition at discharge, discharge medications, and follow-up care.
 
     Emphasize any vital instructions for patient's aftercare, changes to medication regimen, and future appointments to ensure smooth transition of care. Please make sure to use a respectful and empathetic tone when writing instructions for the patient.
-
-
 - role: user
   content: |
     Write a discharge letter for the patient with following information:
 
-    Patient's Name: Mary Jones
+    Patient's Name: Hailey Clark
     Patient's Date of Birth: April 14, 1985
     Date of Admission: July 1, 2023
     Date of Discharge: July 8, 2023
-    Doctor's Name: John Wick
+    Doctor's Name: Briana Hernandez
     Primary Diagnosis: Pneumonia
 
     Secondary Diagnosis: Type 2 Diabetes Mellitus
@@ -56,15 +54,15 @@ messages:
 - role: assistant
   content: |
     Discharge Letter:
-    Mary Jones, born April 14, 1985, was admitted to the hospital on July 1, 2023, due to persistent cough with fever and difficulty breathing. She was diagnosed with pneumonia as her primary condition and Type 2 Diabetes Mellitus as a secondary diagnosis. During her stay, significant findings included a chest X-Ray that revealed right lower lobe consolidation and a sputum culture that identified Streptococcus pneumoniae. Blood tests also showed an elevated white blood cell (WBC) count and slightly elevated HbA1c levels.
+    Hailey Clark, born April 14, 1985, was admitted to the hospital on July 1, 2023, due to persistent cough with fever and difficulty breathing. She was diagnosed with pneumonia as her primary condition and Type 2 Diabetes Mellitus as a secondary diagnosis. During her stay, significant findings included a chest X-Ray that revealed right lower lobe consolidation and a sputum culture that identified Streptococcus pneumoniae. Blood tests also showed an elevated white blood cell (WBC) count and slightly elevated HbA1c levels.
 
-    Under the care of Dr. John Wick, she received treatment with intravenous (IV) ceftriaxone (2g daily), IV azithromycin (500mg daily), and metformin (1000mg twice daily) for diabetes management. No procedures were performed during her stay.
+    Under the care of Dr. Briana Hernandez, she received treatment with intravenous (IV) ceftriaxone (2g daily), IV azithromycin (500mg daily), and metformin (1000mg twice daily) for diabetes management. No procedures were performed during her stay.
 
     Upon discharge on July 8, 2023, her condition had significantly improved. She reported no more fever or difficulty breathing, and her cough had substantially reduced. She was prescribed amoxicillin (500mg three times daily for seven days) for the continued treatment of pneumonia and metformin (1000mg twice daily) for diabetes management.
 
     For follow-up care, an outpatient clinic appointment has been scheduled in two weeks to check her symptoms and conduct blood tests. Home health nursing has been arranged to assist with medication management and provide diabetes education. She has been advised to monitor her blood glucose levels regularly, maintain a balanced low-sugar diet, and engage in regular exercise as tolerated.
 
-    Regards, John Wick
+    Regards, Briana Hernandez
 - role: user
   content: |
     Write a discharge letter for the patient with following information:
@@ -116,7 +114,7 @@ input_variables:
     Aspirin 81mg daily - Antithrombotic agent Atorvastatin 40mg daily - For cholesterol control Clopidogrel 75mg daily - Antiplatelet agent Lisinopril 10mg daily - For blood pressure control
 - name: doctor_name
   description: doctor name
-  default: Hailey Clark
+  default: Hannah Jarvis
 - name: follow_up_care
   description: follow up care
   default: |
@@ -126,14 +124,14 @@ input_variables:
   default: '1234567'
 - name: patient_name
   description: patient name
-  default: John Smith
+  default: Gabriel Diaz
 - name: primary_diagnosis
   description: primary diagnosis
   default: Acute Myocardial Infarction (Heart Attack)
 - name: procedures_performed
   description: procedures performed
   default: |
-    Emergency Cardiac Catheterization: Revealed 90% occlusion in the right coronary artery Percutaneous coronary intervention (PCI) with drug-eluting stent placement in the right coronary artery..
+    Emergency Cardiac Catheterization: Revealed 90% occlusion in the right coronary artery Percutaneous coronary intervention (PCI) with drug-eluting stent placement in the right coronary artery.
 - name: reason_for_hospitalization
   description: reason for hospitalization
   default: Patient experienced severe chest pain with shortness of breath.
