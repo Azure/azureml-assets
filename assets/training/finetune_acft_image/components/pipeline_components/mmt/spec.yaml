@@ -318,7 +318,7 @@ jobs:
       download_from_source: ${{parent.inputs.download_from_source}}
   finetune:
     type: command
-    component: azureml:mmtracking_video_multi_object_tracking_finetune_test:0.0.1
+    component: azureml:mmtracking_video_multi_object_tracking_finetune:0.0.1
     compute: ${{parent.inputs.compute_finetune}}
     resources:
       shm_size: '16g'
