@@ -535,7 +535,9 @@ class AzureBlobstoreAssetPath(AssetPath):
         try:
             blob_service_client = BlobServiceClient(
                     account_url=account_uri,
-                    credential=AzureCliCredential(process_timeout=AzureBlobstoreAssetPath.AZURE_CLI_PROCESS_LOGIN_TIMEOUT)
+                    credential=AzureCliCredential(
+                        process_timeout=AzureBlobstoreAssetPath.AZURE_CLI_PROCESS_LOGIN_TIMEOUT
+                    )
                 )
             container_client = blob_service_client.get_container_client(container=container_name)
 
