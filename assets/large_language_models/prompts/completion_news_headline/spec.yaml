@@ -1,7 +1,7 @@
 $schema: https://azuremlschemas.azureedge.net/latest/asset.prompt.schema.json
 
 type: prompt  
-version: 0.0.1
+version: 0.0.3
 name: completion_news_headline
 display_name: Classify News Headline
 description: Classify news headline for different categories
@@ -9,7 +9,7 @@ description: Classify news headline for different categories
 tags:
   modality: completion
   industry: financial-services
-  task: classification
+  task: text-classification
 
 data_uri: ./prompt
 template_path: prompt.yaml
