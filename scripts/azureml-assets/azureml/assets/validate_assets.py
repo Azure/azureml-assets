@@ -401,8 +401,8 @@ def get_validated_models_assets_map(model_validation_results_dir: str):
 
 
 def validate_assets(input_dirs: List[Path],
-                    model_validation_results_dir: str,
                     asset_config_filename: str,
+                    model_validation_results_dir: str = None,
                     changed_files: List[Path] = None,
                     check_names: bool = False,
                     check_names_skip_pattern: re.Pattern = None,
@@ -413,8 +413,8 @@ def validate_assets(input_dirs: List[Path],
 
     Args:
         input_dirs (List[Path]): Directories containing assets.
-        model_validation_results_dir (str): Dir containing model validation results
         asset_config_filename (str): Asset config filename to search for.
+        model_validation_results_dir (str, optional): Dir containing model validation results
         changed_files (List[Path], optional): List of changed files, used to filter assets. Defaults to None.
         check_names (bool, optional): Whether to check asset names. Defaults to False.
         check_names_skip_pattern (re.Pattern, optional): Regex pattern to skip name validation. Defaults to None.
@@ -570,13 +570,13 @@ if __name__ == '__main__':
 
     # Validate assets
     success = validate_assets(input_dirs=input_dirs,
-                              model_validation_results_dir=args.model_validation_results_dir,
                               asset_config_filename=args.asset_config_filename,
                               changed_files=changed_files,
                               check_names=args.check_names,
                               check_names_skip_pattern=args.check_names_skip_pattern,
                               check_images=args.check_images,
                               check_categories=args.check_categories,
-                              check_build_context=args.check_build_context)
+                              check_build_context=args.check_build_context,
+                              model_validation_results_dir=args.model_validation_results_dir)
     if not success:
         sys.exit(1)
