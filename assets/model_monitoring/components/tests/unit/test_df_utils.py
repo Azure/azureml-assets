@@ -73,23 +73,26 @@ def test_get_categorical_columns():
 
 def test_is_categorical():
     # Test with integer column
+    result = False
     baseline_column = pd.Series([1, 2, 3, 4, 5])
-    assert is_categorical(baseline_column) == False
+    assert is_categorical(baseline_column) == result
 
     # Test with integer column with low distinct value ratio
     baseline_column = pd.Series([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-    assert is_categorical(baseline_column) == False
+    assert is_categorical(baseline_column) == result
 
     # Test with integer column with high distinct value ratio
     baseline_column = pd.Series([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    assert is_categorical(baseline_column) == False
+    assert is_categorical(baseline_column) == result
 
 
 def test_is_numerical():
     # Test with integer column with high distinct value ratio
     baseline_column = pd.Series([1, 2, 3, 4, 5])
-    assert is_numerical(baseline_column) == True
+    result = True
+    assert is_numerical(baseline_column) == result
 
     # Test with integer column with low distinct value ratio
     baseline_column = pd.Series([1, 1, 1, 1, 1])
-    assert is_numerical(baseline_column) == True
+    assert is_numerical(baseline_column) == result
+    
