@@ -16,7 +16,7 @@ import torch
 from transformers import SamModel, SamProcessor
 
 from config import MLflowSchemaLiterals, Tasks, MLflowLiterals, SAMHFLiterals, DatatypeLiterals
-from vision_utils import process_image, image_to_base64, bool_array_to_pil_image
+from vision_utils import process_image, string_to_nested_float_list, image_to_base64, bool_array_to_pil_image
 
 
 class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
@@ -126,11 +126,11 @@ class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
         ):
             # Decode the image and make a PIL Image object.
             pil_image = Image.open(io.BytesIO(process_image(image)))
-            # check if input_points, input_boxes, input_labels are nested lists
-            input_points = None if not isinstance(input_points, list) else [input_points]
-            input_boxes = None if not isinstance(input_boxes, list) else [input_boxes]
-            input_labels = None if not isinstance(input_labels, list) else [input_labels]
-            multimask_output = True if not isinstance(multimask_output, bool) else multimask_output
+
+            input_points = string_to_nested_float_list(input_points) if input_points else None
+            input_boxes = string_to_nested_float_list(input_boxes) if input_boxes else None
+            input_labels = string_to_nested_float_list(input_labels) if input_labels else None
+            multimask_output  = multimask_output if isinstance(multimask_output, bool) else True
 
             # Do inference.
             _map_location = "cuda" if torch.cuda.is_available() else "cpu"
@@ -143,7 +143,10 @@ class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
             ).to(_map_location)
 
             with torch.no_grad():
-                outputs = self._model(**processed_inputs, multimask_output=multimask_output)
+                if multimask_output in [True, False]:
+                    outputs = self._model(**processed_inputs, multimask_output=multimask_output)
+                else:
+                    outputs = self._model(**processed_inputs)
 
             masks = self._processor.image_processor.post_process_masks(
                 outputs.pred_masks.to(_map_location),
