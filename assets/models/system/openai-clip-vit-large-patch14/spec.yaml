@@ -1,5 +1,5 @@
 $schema: https://azuremlschemas.azureedge.net/latest/model.schema.json
-name: openai-clip-vit-large-patch14
+name: OpenAI-CLIP-ViT-Large-Patch14
 path: ./
 properties:
     inference-min-sku-spec: 2|0|7|14
@@ -20,4 +20,4 @@ tags:
    Preview: ''
    license: mit
    task: zero-shot-image-classification
-version: 1
+version: 2
