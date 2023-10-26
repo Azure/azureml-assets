@@ -130,7 +130,7 @@ class SegmentAnythingMLflowWrapper(mlflow.pyfunc.PythonModel):
             input_points = string_to_nested_float_list(input_points) if input_points else None
             input_boxes = string_to_nested_float_list(input_boxes) if input_boxes else None
             input_labels = string_to_nested_float_list(input_labels) if input_labels else None
-            multimask_output  = multimask_output if isinstance(multimask_output, bool) else True
+            multimask_output = multimask_output if isinstance(multimask_output, bool) else True
 
             # Do inference.
             _map_location = "cuda" if torch.cuda.is_available() else "cpu"
