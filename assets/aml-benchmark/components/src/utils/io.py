@@ -193,13 +193,3 @@ def save_json_to_file(json_dict: Dict[Any, Any], path: str) -> None:
     """
     with open(path, mode='w') as file:
         json.dump(json_dict, file, indent=4)
-
-
-def remove_non_printable_char(text: str) -> str:
-    """
-    Remove non-printable characters from text.
-
-    :param text: Text to clean.
-    :return: Cleaned text.
-    """
-    return "".join([char for char in text if char.isprintable()])
