@@ -6,11 +6,13 @@
 import numpy as np
 from pyspark.sql import SparkSession, DataFrame
 from shared_utilities.event_utils import post_warning_event
+import os
 
 
 def init_spark():
     """Get or create spark session."""
-    spark = SparkSession.builder.appName("AccessParquetFiles").getOrCreate()
+    module_path = os.path.abspath(f"{os.path.dirname(__file__)}/..")
+    spark = SparkSession.builder.appName("AccessParquetFiles").config("spark.executorEnv.PYTHONPATH", module_path).getOrCreate()
     return spark
 
 

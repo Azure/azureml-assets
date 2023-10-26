@@ -12,7 +12,7 @@ import mltable
 from mltable import MLTable
 import tempfile
 
-from src.model_data_collector_preprocessor.mdc_preprocessor_helper import (
+from model_data_collector_preprocessor.mdc_preprocessor_helper import (
     convert_to_azureml_long_form,
     get_datastore_from_input_path
 )
