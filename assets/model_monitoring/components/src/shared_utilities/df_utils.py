@@ -37,14 +37,14 @@ def get_categorical_columns(column_dtype_map: dict, baseline_df) -> list:
 
 
 def get_distinct_ratio(column):
-    """gets distict ratio for values in a column."""
+    """Get distict ratio for values in a column."""
     distinct_values = column.nunique()
     total_values = column.size
     return distinct_values / total_values
 
 
 def is_numerical(column):
-    """checks if int column should be numerical."""
+    """Check if int column should be numerical."""
     if pd.api.types.is_numeric_dtype(column):
         distinct_value_ratio = get_distinct_ratio(column)
         return distinct_value_ratio >= 0.05
@@ -52,7 +52,7 @@ def is_numerical(column):
 
 
 def is_categorical(column):
-    """checks if int column should be categorical."""
+    """Check if int column should be categorical."""
     if pd.api.types.is_numeric_dtype(column):
         distinct_value_ratio = get_distinct_ratio(column)
         return distinct_value_ratio < 0.05
